@@ -1,0 +1,256 @@
+// 	$Id: Bounds.h,v 1.2 2009/11/02 22:48:53 garyb Exp $	
+// Define 2d positions and rectangles.
+//---------------------------------------------------------------------------
+#ifndef Bounds_H
+#define Bounds_H
+
+#include "Std.h"
+#include <vector>
+//---------------------------------------------------------------------------
+
+template <class T = float>
+class Position {
+public:
+  T x,y;
+  Position(const T xin=0, const T yin=0) : x(xin),y(yin) {}
+  Position& operator=(const Position rhs) {
+    if (&rhs == this) return *this;
+    else {x=rhs.x; y=rhs.y; return *this;}
+  }
+  Position operator+=(const Position rhs) {
+    x+=rhs.x; y+=rhs.y; 
+    return *this;
+  }
+  Position operator-=(const Position rhs) {
+    x-=rhs.x; y-=rhs.y; 
+    return *this;
+  }
+  Position operator*=(const T rhs) {
+    x*=rhs; y*=rhs; 
+    return *this;
+  }
+  Position operator/=(const T rhs) {
+    x/=rhs; y/=rhs; 
+    return *this;
+  }
+  Position operator*(const T rhs) const {
+    return Position(x*rhs, y*rhs); 
+  }
+  Position operator/(const T rhs) const {
+    return Position(x/rhs, y/rhs); 
+  }
+  Position operator-() const {
+    return Position(-x,-y);
+  }
+  Position operator+(Position<T> rhs) const {
+    return Position(x+rhs.x,y+rhs.y);
+  }
+  Position operator-(const Position<T> rhs) const {
+    return Position(x-rhs.x,y-rhs.y);
+  }
+  bool operator==(const Position& rhs) const {
+    return (x==rhs.x && y==rhs.y);
+  }
+  bool operator!=(const Position& rhs) const {
+    return (x!=rhs.x || y!=rhs.y);
+  }
+
+  void write(ostream& fout) const {
+    fout << "(" << x << "," << y << ")";
+  }
+
+  void read(istream& fin) {
+    char ch;
+    fin >> ch >> x >> ch >> y >> ch;
+  }
+
+}; // Position
+
+template <class T>
+inline ostream& operator<<(ostream& os, const Position<T> p) {
+  p.write(os); return os;
+}
+
+template <class T>
+inline istream& operator>>(istream& is, Position<T> &p) {
+  p.read(is);  return is;
+}
+
+template <class T = float>
+class Bounds {
+  // Basically just a rectangle.  This is used to keep track of the bounds of
+  // catalogs and fields.  You can set values, but generally you just keep
+  // including positions of each galaxy or the bounds of each catalog
+  // respectively using the += operators
+
+  // Rectangle is undefined if min>max in either direction.
+
+public:
+  Bounds(const T x1, const T x2, const T y1, const T y2):
+    defined(x1<=x2 && y1<=y2),xmin(x1),xmax(x2),ymin(y1),ymax(y2) {}
+  Bounds(const Position<T> &pos):
+    defined(1),xmin(pos.x),xmax(pos.x),ymin(pos.y),ymax(pos.y) {}
+  Bounds(const Position<T> &pos1, const Position<T> &pos2):
+    defined(1),xmin(MIN(pos1.x,pos2.x)),xmax(MAX(pos1.x,pos2.x)),
+    ymin(MIN(pos1.y,pos2.y)),ymax(MAX(pos1.y,pos2.y)) {}
+  Bounds(): defined(0),xmin(0),xmax(0),ymin(0),ymax(0) {}
+  ~Bounds() {}
+  void setXMin(const T x) {xmin = x; defined= xmin<=xmax && ymin<=ymax;}
+  void setXMax(const T x) {xmax = x; defined= xmin<=xmax && ymin<=ymax;}
+  void setYMin(const T y) {ymin = y; defined= xmin<=xmax && ymin<=ymax;}
+  void setYMax(const T y) {ymax = y; defined= xmin<=xmax && ymin<=ymax;}
+  T getXMin() const {return xmin;}
+  T getXMax() const {return xmax;}
+  T getYMin() const {return ymin;}
+  T getYMax() const {return ymax;}
+  bool isDefined() const {return defined;}
+  operator bool() const {return defined;} //Boolean test is false if no area
+  Position<T> center() const;
+  void operator+=(const Position<T> &pos);	//expand to include point
+  void operator+=(const Bounds<T> &rec);	//bounds of union
+  void addBorder(const T d);
+  void operator+=(const T d) {addBorder(d);}
+  void expand(const double m); // expand by a multiple m, about bounds center
+  const Bounds<T> operator&(const Bounds<T> &rhs) const; // Finds intersection
+  void shift(const T dx, const T dy) {xmin+=dx; xmax+=dx; ymin+=dy; ymax+=dy;}
+  void shift(Position<T> dx) {shift(dx.x,dx.y);}
+  bool includes(const Position<T> &pos) const
+  {return (defined && pos.x<=xmax && pos.x>=xmin
+	   && pos.y<=ymax && pos.y>=ymin);}
+  bool includes(const T x, const T y) const
+  {return (defined && x<=xmax && x>=xmin
+	   && y<=ymax && y>=ymin);}
+  bool includes(const Bounds<T>& rhs) const
+  {return (defined && rhs.defined && 
+	   rhs.xmin>=xmin && rhs.xmax<=xmax &&
+	   rhs.ymin>=ymin && rhs.ymax<=ymax);}
+  bool operator==(const Bounds<T> &rhs) const {
+    return defined && rhs.defined && (xmin==rhs.xmin) &&
+      (ymin==rhs.ymin) && (xmax==rhs.xmax) && (ymax==rhs.ymax);
+  }
+  bool operator!=(const Bounds<T> &rhs) const {
+    return !defined || !rhs.defined || (xmin!=rhs.xmin) ||
+      (ymin!=rhs.ymin) || (xmax!=rhs.xmax) || (ymax!=rhs.ymax);
+  }
+
+  T area() const
+  {return defined ? (xmax-xmin)*(ymax-ymin) : 0.;}
+  typename std::vector<Bounds<T> > divide(uint nx, uint ny) const;
+  void write(ostream& fout) const
+  {if (defined) 
+    fout << xmin << ' ' << xmax << ' ' << ymin << ' ' << ymax << ' ';
+  else
+    fout << "Undefined ";
+  }
+  void read(istream& fin)
+  {fin >> xmin >> xmax >> ymin >> ymax; defined = xmin<=xmax && ymin<=ymax; }
+
+private:
+  bool defined;
+  T xmin,xmax,ymin,ymax;
+
+};
+
+template <class T>
+inline ostream& operator<<(ostream& fout, const Bounds<T>& b)
+{ b.write(fout); return fout;}
+
+template <class T>
+inline istream& operator>>(istream& fin, Bounds<T>& b)
+{ b.read(fin); return fin;}
+
+///////////////////////////////////////////////////////////////////////
+//  Following are the implementations:
+///////////////////////////////////////////////////////////////////////
+
+template <class T>
+void Bounds<T>::operator+=(const Position<T> &pos)
+// Expand the bounds to include the given position.
+{
+  if(defined) {
+    if(pos.x < xmin) xmin = pos.x;
+    else if (pos.x > xmax) xmax = pos.x;
+    if(pos.y < ymin) ymin = pos.y;
+    else if (pos.y > ymax) ymax = pos.y;
+  }
+  else {
+    xmin = xmax = pos.x;
+    ymin = ymax = pos.y;
+    defined = 1;
+  }
+}
+
+template <class T>
+void Bounds<T>::operator+=(const Bounds<T> &rec)
+// Expand the bounds to include the given rectangle (ie. bounds)
+{
+  if(!rec.isDefined()) return;
+  if(defined) {
+    if(rec.getXMin() < xmin) xmin = rec.getXMin();
+    if(rec.getXMax() > xmax) xmax = rec.getXMax();
+    if(rec.getYMin() < ymin) ymin = rec.getYMin();
+    if(rec.getYMax() > ymax) ymax = rec.getYMax();
+  }
+  else {
+    *this = rec;
+    defined = 1;
+  }
+}
+
+template <class T>
+Position<T> Bounds<T>::center() const
+{
+  return Position<T>((xmin + xmax)/2.,(ymin + ymax)/2.);
+}
+
+// & operator finds intersection, if any
+template <class T>
+const Bounds<T> Bounds<T>::operator&(const Bounds<T> &rhs) const
+{
+  if (!defined || !rhs.defined) return Bounds<T>();
+  Bounds<T> temp(xmin<rhs.xmin ? rhs.xmin : xmin,
+    xmax>rhs.xmax ? rhs.xmax : xmax,
+    ymin<rhs.ymin ? rhs.ymin : ymin,
+    ymax>rhs.ymax ? rhs.ymax : ymax);
+  if (temp.xmin>temp.xmax || temp.ymin>temp.ymax) return Bounds<T>();
+  else return temp;
+}
+
+template <class T>
+void 
+Bounds<T>::addBorder(T d)
+{
+  if(defined) {xmax += d; xmin -= d; ymax += d; ymin -= d;}
+}
+
+template <class T>
+std::vector< Bounds<T> > 
+Bounds<T>::divide(uint nx,uint ny) const
+{
+  if (!defined) return std::vector< Bounds<T> >(nx,ny);
+  typename std::vector< Bounds<T> > temp(nx*ny);
+  std::vector<double> x(nx+1);
+  std::vector<double> y(ny+1);
+  x[0] = xmin;  x[nx] = xmax;
+  y[0] = ymin;  y[ny] = ymax;
+  double xstep = (xmax-xmin)/nx;
+  double ystep = (ymax-ymin)/ny;
+  for(uint i=1;i<nx;i++) x[i] = x[0]+i*xstep;
+  for(uint j=1;j<ny;j++) y[j] = y[0]+j*ystep;
+  typename std::vector< Bounds<T> >::iterator ii=temp.begin();
+  for(uint i=0;i<nx;i++) for(uint j=0;j<ny;j++, ++i)
+    *ii = Bounds<T>(x[i],x[i+1],y[j],y[j+1]);
+  return temp;
+}
+
+template <class T>
+void Bounds<T>::expand(const double m) {
+  T dx = xmax-xmin;
+  T dy = ymax-ymin;
+  dx = dx*0.5*(m-1); 
+  dy = dy*0.5*(m-1);
+  xmax += dx;  xmin -= dx;
+  ymax += dy;  ymin -= dy;
+}
+
+#endif

@@ -1,0 +1,207 @@
+#include "Table.h"
+#include <cmath>
+
+// Look up an index.  Use STL binary search; maybe faster to use
+template<class V, class A>
+typename Table<V,A>::iter Table<V,A>::upperIndex(const A a) const {
+  setup();
+  if (v.size()==0 || a<argMin())  throw TableOutOfRange();
+  // Go directly to index if arguments are regularly spaced.
+  if (equalSpaced) {
+    int index = static_cast<int> ( std::ceil( (a-argMin()) / dx) );
+    if (index >= v.size()) throw TableOutOfRange();
+    // check if we need to move ahead or back one step due to rounding errors
+    if (a > v[index].arg) { 
+      ++index;
+      if (index >= v.size()) throw TableOutOfRange();
+    } else if (index>0 && a<v[index-1].arg) {
+      --index;
+    }
+    lastIndex = index;  //interpolate() uses lastIndex
+    return v.begin() + index;
+  }
+  // First see if the previous index is still ok
+  if (lastIndex>0 && lastIndex<v.size()) {
+    iter p = (v.begin()+lastIndex);
+    if ( (p->arg >= a) && (a > (p-1)->arg) ) return p;
+  }
+
+  // This STL algorithm uses binary search to get 1st element >= ours.
+  Entry e(a,0); 
+  iter p = std::lower_bound(v.begin(), v.end(), e);
+  // bounds check
+  if (p==v.end()) throw TableOutOfRange();
+  lastIndex = p-v.begin();
+  return p;
+}
+
+//new element for table.
+template<class V, class A>
+void Table<V,A>::addEntry(const A _arg, const V _val) {
+  Entry e(_arg,_val);
+  v.push_back(e);
+  isReady = false;	//re-sort array next time used
+}
+
+template<class V, class A>
+Table<V,A>::Table(const A* argvec, const V* valvec, int N, 
+		  interpolant in): v(), iType(in), y2() {
+  v.reserve(N);
+  const A* aptr;
+  const V* vptr;
+  int i;
+  for (i=0, aptr=argvec, vptr=valvec; i<N; i++, aptr++, vptr++) {
+    Entry e(*aptr,*vptr);
+    v.push_back(e);
+  }
+  isReady = false;	//set flag for setup next use.
+}
+
+template<class V, class A>
+Table<V,A>::Table(const vector<A> &aa, const vector<V> &vv, 
+		  interpolant in): v(), iType(in), y2() {
+  v.reserve(aa.size());
+  if (vv.size()<aa.size()) 
+    throw TableError("input vector lengths don't match");
+  typename vector<A>::const_iterator aptr=aa.begin();
+  typename vector<V>::const_iterator vptr=vv.begin();
+  for (int i=0; i<aa.size(); i++, ++aptr, ++vptr) {
+    Entry e(*aptr,*vptr);
+    v.push_back(e);
+  }
+  isReady = false;
+}
+
+//lookup & interp. function value. - this one returns 0 out of bounds.
+template<class V, class A>
+V Table<V,A>::operator() (const A a) const {
+  try {
+    citer p1(upperIndex(a));
+    return interpolate(a,p1);
+  } catch (TableOutOfRange) {
+    return static_cast<V> (0);
+  }
+}
+//lookup & interp. function value.
+template<class V, class A>
+V Table<V,A>::lookup(const A a) const {
+  citer p1(upperIndex(a));
+  return interpolate(a,p1);
+}
+
+template<class V, class A>
+V Table<V,A>::interpolate(const A a, const citer p1) const { 
+  setup();	//do any necessary prep
+  // First case when there is for single-point table
+  if (v.size()==1) return p1->val;
+  else if (iType==linear) {
+    if (p1==v.begin())  return p1->val;
+    citer p0 = p1-1;
+    if (p1->arg==p0->arg) return p0->val;
+    double frac=(a - p0->arg) / (p1->arg - p0->arg);
+    return frac*p1->val + (1-frac) * p0->val;
+  } else if (iType==spline) {
+    if (p1==v.begin())  return p1->val;
+    citer p0 = p1-1;
+    A h = p1->arg-p0->arg;
+    A aa=(p1->arg - a)/h;
+    A bb=(a - p0->arg)/h;
+    return aa*p0->val +bb*p1->val +
+      ((aa*aa*aa-aa)*y2[lastIndex-1]+(bb*bb*bb-bb)*y2[lastIndex])
+      * (h*h)/6.0;
+  } else if (iType==floor) {
+    if (p1==v.begin())  return p1->val;
+    else {
+      citer p2 = p1;
+      return (--p2)->val;
+    }
+  } else if (iType==ceil) {
+    return p1->val;
+  } else {
+    throw TableError("interpolation method not yet implemented");
+  }
+}
+
+template<class V, class A>
+void Table<V,A>::read(istream &is) {
+  string line;
+  const string comments="#;!";	//starts comment
+  V vv;
+  A aa;
+  while (is) {
+    getline(is,line);
+    // skip leading white space:
+    int i;
+    for (i=0;  isspace(line[i]) && i<line.length(); i++) ;
+    // skip line if blank or just comment
+    if (i==line.length()) continue;
+    if (comments.find(line[i])!=string::npos) continue;
+    // try reading arg & val from line:
+    std::istringstream iss(line);
+    iss >> aa >> vv;
+    if (iss.fail()) throw TableReadError(line) ;
+    addEntry(aa,vv);
+  }
+}
+
+// Do any necessary setup of the table before using
+template<class V, class A>
+void Table<V,A>::setup() const {
+  if (isReady) return;
+  equalSpaced = false;
+  sortIt();
+  if (v.size()<=1) {
+    // Nothing to do if the table is degenerate
+    isReady = true;
+    return;
+  }
+
+  // See if arguments are equally spaced
+  // ...within this fractional error:
+  const double tolerance = 0.01;
+  dx = (v.back().arg - v.front().arg) / (v.size()-1);
+  equalSpaced = true;
+  for (int i=1; i<v.size(); i++) {
+    if ( abs( ((v[i].arg-v[0].arg)/dx - i)) > tolerance) {
+      equalSpaced = false;
+      break;
+    }
+  }
+
+  if (iType==spline) {
+    // Set up the 2nd-derivative table for splines
+    // Derive this from Numerical Recipes spline.c
+    int n = v.size();
+    if (n<2) throw TableError("Spline Table with only 1 entry");
+
+    V  p,qn,sig,un;
+
+    vector<V> u(n-1);
+    y2.resize(n);
+    y2[0]=u[0]= static_cast<V>(0);
+
+    for (int i=1;i<=n-2;i++) {
+      sig=(v[i].arg-v[i-1].arg)/(v[i+1].arg-v[i-1].arg);
+      p=sig*y2[i-1]+2.0;
+      y2[i]=(sig-1.0)/p;
+      u[i]=(v[i+1].val-v[i].val)/(v[i+1].arg-v[i].arg) 
+	- (v[i].val-v[i-1].val)/(v[i].arg-v[i-1].arg);
+      u[i]=(6.0*u[i]/(v[i+1].arg-v[i-1].arg)-sig*u[i-1])/p;
+    }
+	
+    qn=un=0.0;
+
+    y2[n-1]=(un-qn*u[n-2])/(qn*y2[n-2]+1.0);
+    for (int k=n-2;k>=0;k--)
+      y2[k]=y2[k]*y2[k+1]+u[k];
+
+    isReady = true;
+    return;
+  } else {
+    // Nothing to do for any other interpolant
+    isReady = true;
+    return;
+  }
+}
+
+template class Table<>;

@@ -1,0 +1,27 @@
+$Id: images.txt,v 1.1 2002/07/16 19:09:28 garyb Exp $
+Documentation for the FITS and Image classes.
+
+Kinds of objects the user will deal with:
+
+FITSFile  is a FITS file.  FITS.h/cpp automatically keeps track of
+number of opened files so they don't exceed CFITSIO maximum.  User
+can create arbitrary number of FITSFile objects and not worry about
+it.   A FITSFile can of course contain many HDU's (images), so
+FITSFile has methods to ask how many and what type are there.
+Opening multiple FITSFile classes that are referrals to the same file
+is permissible (CFITSIO can do this), but if you try anything tricky
+about conflicting permissions (e.g. one readonly and one overwrite),
+there is no gaurantee what will happen.
+
+FITSImage<class T=float> refers to a single image (HDU) in a FITS
+file.  Each FITSImage has a memory buffering system that is
+transparent to the user (see FITSImage.h for more).  All or part of
+the FITSImage can be copied to an Image<> structure using the
+FITSImage.extract() method.  This data then has no connection to that
+on the FITS disk file.  Alternatively one can call the FITSImage.use()
+method to get an Image<> that is tied to the disk data: any changes to
+the Image<> are automatically written back to the disk version.
+If the FITSImage is read-only, then it should be const, and Image<>
+acquired by use() method are also const.  For a writable FITSImage,
+one can write() an existing Image<> into the disk version.
+
