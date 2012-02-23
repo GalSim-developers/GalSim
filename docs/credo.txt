@@ -1,0 +1,70 @@
+***The hopefully not-too-crippling dogma of GalSim development***, v0.1
+
+1. Style: 
+
+Use the LSST documents on C++, Python and Documentation overall as a guide for new code,
+exert pragmatism with pre-existing code.  Unless you have good reason for hating LSST style,
+or the style suggested here, in which case share it!
+
+Biggish things to highlight/add are...
+ 4 space indentation, rather than 2 space.
+
+ No tabs.  Just spaces.
+
+ No using statements.  Now all namespaces (especially std::) are explicit (equvalent will be
+ adopted in Python, i.e. no "import * from moduleX" or "from moduleY import Z").
+
+ Use C++ std library when possible.  e.g. MAX -> std::max, Assert -> assert, PI -> M_PI, etc.
+
+ Will be readable at 100 character width (this is a departure from LSST style, which specifies
+ 120 but is slightly annoying for laptop use).
+
+ Python 2.7.x will be supported, not Python 3.x...
+
+ We adhere to the Zen of Python; open python, type "import this", hit enter.
+
+For vim users, Mike Jarvis has put the c.vim file in the devutils/ directory.  If you put that 
+in  .vim/ftplugin/ and add the line "filetype plugin on" in your .vimrc file, then you will 
+automatically get the formatting to match what is currently in SBProfile.  We don't (yet) 
+have a corresponding file for emacs.  (Sorry.)
+
+LSST Style Guides available here --
+http://dev.lsstcorp.org/trac/wiki/DocumentationStandards
+http://dev.lsstcorp.org/trac/wiki/PythonCodeStandards
+http://dev.lsstcorp.org/trac/wiki/C%2B%2BStandard
+
+Broad reasons for choice of LSST style: These documents just seem to be a fairly sensible 
+source of code and  documentation formatting guidance.  See also Peter Melichior's slides 
+for sound advice in general, and on documentation:
+dl.dropbox.com/u/26820102/talks/software_engineering_150410.pdf
+
+
+2. Version control: 
+Git
+
+Broad reasons why: Modern/distributed. Slightly better general purpose/branching capabilities 
+than Hg, albeit at the cost of a mildly steeper learning curve.  Neither is rocket science!
+
+
+3. Repository hosting: 
+Github, with push/pull access to all those in the GalSim-developers organization (based on
+the great3-code@princeton.edu mailing list).
+
+Broad reasons why: Code review features, wiki features, popularity within GalSim-developers, 
+project forking.
+
+
+4. Documentation: DOxygen
+Broad reasons why: Well-supported by many in GalSim-developers.
+
+
+5. Builds: SCons
+Broad reasons why: Seemingly greater experience among GalSim-developers.
+
+
+6. Libraries: 
+FFTW, Numpy, Pyfits, TMV (+BLAS & LAPACK if tuned versions present), Boost.python, 
+Boost.shared_ptr, Boost.random (flexibility to other RNGs)
+
+Notes: will add more if really useful/necessary, but want to keep this list as short as 
+possible.  Matplotlib plotting  in Python not featured by default.
