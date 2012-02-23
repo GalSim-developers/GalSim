@@ -23,7 +23,7 @@ USE_LAGUERRE = true
 USE_TMV = true
 
 # Info on where to find fftw:
-FFTW_PATH = /sw64
+FFTW_PATH = /sw
 FFTW_INCLUDE = $(FFTW_PATH)/include
 FFTW_LIB = $(FFTW_PATH)/lib
 INCLUDES += -I $(FFTW_INCLUDE)
@@ -31,7 +31,7 @@ LIBS += -L$(FFTW_LIB) -lfftw3
 export FFTW_INCLUDE
 
 # and CFITSIO
-CFITSIO_PATH = /sw64
+CFITSIO_PATH = /sw
 CFITSIO_INCLUDE = $(CFITSIO_PATH)/include
 CFITSIO_LIB = $(CFITSIO_PATH)/lib
 export CFITSIO_INCLUDE
