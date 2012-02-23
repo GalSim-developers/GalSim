@@ -46,7 +46,7 @@ namespace galsim {
         percentileFunction(int N_, T pct_): N(static_cast<T> (N_)), pct(pct_) {}
         T operator()(const T mean) const 
         {
-            Assert(N>=0.);
+            assert(N>=0.);
             if (N==0.) return exp(-mean) - pct;
             if (mean==0.) return 1.-pct; // Know N is positive
             //      return gammq(N+1, mean) - pct;
@@ -59,8 +59,8 @@ namespace galsim {
     {
         if (N<0) throw PoissonError("Negative counts");
         percentileFunction<T> f(N, pctile);
-        solve::Solve<percentileFunction<T> > 
-            solver(f, 0., MAX(20.,N+10.*sqrt(1.*N))); // Upper limit is not foolproof!
+        galsim::Solve<percentileFunction<T> > 
+            solver(f, 0., std::max(20.,N+10.*sqrt(1.*N))); // Upper limit is not foolproof!
         return solver.root();
     }
 
@@ -101,7 +101,7 @@ namespace galsim {
     void gser(T& gamser, const T a, const T x, T& gln) 
     {
         const int ITMAX=200;
-        const T   EPS=numeric_limits<T>::epsilon();
+        const T EPS=std::numeric_limits<T>::epsilon();
 
         gln=lgamma(a);
         if (x <= 0.0) {
@@ -130,8 +130,8 @@ namespace galsim {
     void gcf(T& gammcf, const T a, const T x, T& gln) 
     {
         const int ITMAX=100;
-        const T EPS=numeric_limits<T>::epsilon();
-        const T FPMIN = numeric_limits<T>::min()/EPS;
+        const T EPS = std::numeric_limits<T>::epsilon();
+        const T FPMIN = std::numeric_limits<T>::min()/EPS;
 
         gln=lgamma(a);
         T b=x+1.0-a;

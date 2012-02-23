@@ -11,7 +11,7 @@ namespace galsim {
     class PoissonError : public std::runtime_error 
     {
     public:
-        PoissonError(const string m) : std::runtime_error("Poisson error: "+m) {}
+        PoissonError(const std::string m) : std::runtime_error("Poisson error: "+m) {}
     };
 
     template <class T=double>
