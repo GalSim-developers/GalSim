@@ -1,93 +1,128 @@
-//---------------------------------------------------------------------------
+
+// A few generically useful utilities.
+
 #ifndef StdH
 #define StdH
-//---------------------------------------------------------------------------
-// 	$Id: Std.h,v 1.3 2009/11/02 22:48:53 garyb Exp $
 
-// Things to include in every program
-
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <iomanip>
-#include <string>
-#include <cstdlib>
 #include <cmath>
-#include <complex>
-#include <exception>
-#include <stdexcept>
+#include <iostream>
+#include <sstream>
+#include <cstdlib>
+#include <string>
+#include <cassert>
 
-using namespace std;
+namespace galsim {
 
-//************** Useful templates:
-template <class T>
-void SWAP(T& a,T& b) {T temp=a; a=b; b=temp;}
-
-template <class T>
-T SQR(const T& x) {return x*x;}
-
-template <class T>
-const T& MAX(const T& a, const T& b) {return a>b ? a : b;}
-
-template <class T>
-const T& MIN(const T& a, const T& b) {return a<b ? a : b;}
-
-//************* typedefs:
-typedef unsigned int uint;
-typedef unsigned short ushort;
-typedef unsigned long ulong;
-typedef std::complex<double> DComplex;
-
-//************** constants:
-#ifndef PI
-#ifdef M_PI
-#define PI M_PI
-#else
-#define PI 3.14159265358979323846
-#endif
+    // Not all cmath libraries define this:
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
 #endif
 
-//********** Debugging classes:
+    // A nice memory checker if you need to track down some memory problem.
+#ifdef MEM_TEST
+#include "mmgr.h"
+#endif
+
+    // Convenient debugging.
+    // Use as a normal C++ stream:
+    // dbg << "Here x = "<<x<<" and y = "<<y<<std::endl;
+    // If DEBUGLOGGING is not enabled, the compiler optimizes it away, so it 
+    // doesn't take any CPU cycles.
+    //
+    // You need to define dbgout and verbose_level in the .cpp file with main().
+    // And if you are using OpenMP, you can get debugging output from each thread into
+    // a separate file by calling ThreadDebug(name).
+    // Then each thread other than the main thread will actually write to a file 
+    // name_threadnum and not clobber each other.  (The main thread will write to name.)
 
 #ifdef DEBUGLOGGING
-extern ostream* dbgout;
-#define dbg if(dbgout) (*dbgout)
+#if defined(__GNUC__) && defined _OPENMP
+    extern __thread std::ostream* dbgout;
+    extern __thread int verbose_level;
 #else
-#define dbg if(false) (cerr)
+    extern std::ostream* dbgout;
+    extern int verbose_level;
+#endif
+#ifdef _OPENMP
+#pragma omp threadprivate( dbgout , XDEBUG )
 #endif
 
-#ifdef ASSERT
-  #define Assert(x) \
-    { if(!(x)) { \
-      cerr << "Error - Assert " #x " failed"<<endl; \
-      cerr << "on line "<<__LINE__<<" in file "<<__FILE__<<endl; \
-      exit(1);} }
-#else
-  #define Assert(x)
+#define dbg if(dbgout && verbose_level >= 1) (*dbgout)
+#define xdbg if(dbgout && verbose_level >= 2) (*dbgout)
+#define xxdbg if(dbgout && verbose_level >= 3) (*dbgout)
+
+    inline void ThreadDebug(std::string debugFile)
+    {
+        dbgout = new std::ofstream(debugFile.c_str());
+        dbgout->setf(std::ios_base::unitbuf);
+
+#ifndef __PGI
+        // This gives errors with pgCC, so just skip it.
+#ifdef _OPENMP
+        // For openmp runs, we use a cool feature known as threadprivate 
+        // variables.  
+        // In dbg.h, dbgout and XDEBUG are both set to be threadprivate.
+        // This means that openmp sets up a separate value for each that
+        // persists between threads.  
+        // So here, we open a parallel block and initialize each thread's
+        // copy of dbgout to be a different file.
+
+        // To use this feature, dynamic threads must be off.  (Otherwise,
+        // openmp doesn't know how many copies of each variable to make.)
+        omp_set_dynamic(0);
+
+#pragma omp parallel copyin(dbgout, XDEBUG)
+        {
+            int threadNum = omp_get_thread_num();
+            std::stringstream ss;
+            ss << threadNum;
+            std::string debugFile2 = debugFile + "_" + ss.str();
+            if (threadNum > 0) {
+                // This is a memory leak, but a tiny one.
+                dbgout = new std::ofstream(debugFile2.c_str());
+                dbgout->setf(std::ios_base::unitbuf);
+            }
+        }
+#endif
 #endif
 
-// Convenience feature for std::exception catching
-inline void
-quit(const std::exception& s, const int exit_code=1) throw () {
+#else
+
+    inline void ThreadDebug(std::string ) {}
+#define dbg if(false) (std::cerr)
+#define xdbg if(false) (std::cerr)
+#define xxdbg if(false) (std::cerr)
+
+#endif
+
+    // Convenience feature for std::exception catching
+    inline void quit(const std::exception& s, const int exit_code=1) throw () 
+    {
 #ifdef DEBUGLOGGING
-  dbg << s.what() << endl;
+        dbg << s.what() << std::endl;
 #endif
-  cerr << s.what() << endl;
-  exit(exit_code);
+        std::cerr << s.what() << std::endl;
+        exit(exit_code);
+    }
+
+    // A nice way to throw exceptions that take a string argument and have that string
+    // include double or int information as well.
+    // e.g. FormatAndThrow<std::runtime_error>() << "x = "<<x<<" is invalid.";
+    template <class E>
+    class FormatAndThrow 
+    {
+    public:
+        FormatAndThrow() {}
+
+        template <class T>
+        FormatAndThrow& operator<<(const T& t) 
+        { oss << t; return *this; }
+
+        ~FormatAndThrow() { throw E(oss.str()); }
+    private:
+        std::ostringstream oss;
+    };
+
 }
-
-template <class E>
-class FormatAndThrow {
-public:
-  FormatAndThrow() {}
-  template <class T>
-  FormatAndThrow& operator<<(const T& t) {oss << t; return *this;}
-  ~FormatAndThrow() {throw E(oss.str());}
-private:
-  ostringstream oss;
-};
-
-// For limited backward compatibility with old Std.h class:
-typedef std::runtime_error MyException;
 
 #endif

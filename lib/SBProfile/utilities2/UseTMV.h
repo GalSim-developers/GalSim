@@ -1,5 +1,6 @@
-// $Id: UseTMV.h,v 1.1.1.1 2009/10/30 21:20:52 garyb Exp $
+
 // Short header file that includes TMV and sets up some typedefs to use
+
 #ifndef USETMV_H
 #define USETMV_H
 

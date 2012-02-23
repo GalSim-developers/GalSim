@@ -5,8 +5,8 @@
 # and perhaps edit the lines where TMV libraries are specified, depeding on your TMV setup.
 # Also there are compilation 
 
-CXX = g++
-OPTFLAGS = -O3 -DASSERT
+CXX = g++-4
+OPTFLAGS = -O2 -Wall -Werror -g
 
 SUBDIRS = utilities2 sbprofile
 INCLUDES = -I utilities2 -I sbprofile
@@ -27,7 +27,7 @@ FFTW_PATH = /sw
 FFTW_INCLUDE = $(FFTW_PATH)/include
 FFTW_LIB = $(FFTW_PATH)/lib
 INCLUDES += -I $(FFTW_INCLUDE)
-LIBS += -L $(FFTW_LIB) -lfftw3
+LIBS += -L$(FFTW_LIB) -lfftw3
 export FFTW_INCLUDE
 
 # and CFITSIO
@@ -37,7 +37,7 @@ CFITSIO_LIB = $(CFITSIO_PATH)/lib
 export CFITSIO_INCLUDE
 
 # and TMV
-TMV_PATH = /sw
+TMV_PATH = /Users/Mike
 TMV_INCLUDE = $(TMV_PATH)/include
 TMV_LIB = $(TMV_PATH)/lib
 export TMV_INCLUDE
@@ -74,10 +74,8 @@ ifdef USE_TMV
 export USE_TMV
 INCLUDES += -I $(TMV_INCLUDE)
 CXXFLAGS += -DUSE_TMV
-LIBS += -L$(TMV_LIB) -ltmv -ltmv_symband -lblas -llapack -lpthread -fopenmp
-# might do this: 
-#TMVLINK := $(shell cat /usr/local/share/tmv-link)
-#LIBS += -L$(TMV_LIB) -ltmv_symband $(TMVLINK)
+TMVLINK := $(shell cat $(TMV_PATH)/share/tmv-link)
+LIBS += -L$(TMV_LIB) -ltmv_symband $(TMVLINK)
 endif
 
 all: depend subs SBDraw Shera
