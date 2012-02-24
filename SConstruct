@@ -515,6 +515,7 @@ int main()
         if not result:
             context.Result(0)
             print 'Error: TMV file failed to link correctly'
+            print 'Check that the correct location is specified for TMV_DIR'
             Exit(1)
 
         context.Result(1)
@@ -523,6 +524,7 @@ int main()
     else:
         context.Result(0)
         print 'Error: TMV file failed to compile.'
+        print 'Check that the correct location is specified for TMV_DIR'
         Exit(1)
 
 
@@ -581,18 +583,21 @@ def DoLibraryAndHeaderChecks(config):
     # Check for cfitsio
     if not config.CheckLibWithHeader('cfitsio','fitsio.h',language='C++'):
         print 'cfitsio not found'
+        print 'You should specify the location of cfitsio CFITSIO_DIR=...'
         Exit(1)
 
     # Check for fftw3
     if not config.CheckLibWithHeader('fftw3','fftw3.h',language='C++'):
-        print 'fftw3 library or header not found'
+        print 'fftw3 not found'
+        print 'You should specify the location of fftw3 as FFTW_DIR=...'
         Exit(1)
 
     # Check for tmv
     # First do a simple check that the library and header are in the path.
     # We check the linking with the BLAS library below.
     if not config.CheckHeader('TMV.h',language='C++'):
-        print 'TMV.h not found'
+        print 'TMV not found'
+        print 'You should specify the location of TMV as TMV_DIR=...'
         Exit(1)
 
     compiler = config.env['CXXTYPE']
