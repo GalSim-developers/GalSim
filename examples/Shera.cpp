@@ -1,9 +1,7 @@
-// $Id$
+
 // Mimic what Rachel has done in SHERA code and compare to her results.
-#include "SBPixel.h"
-#include "FITSImage.h"
-#include "SBDeconvolve.h"
 #include <iostream>
+#include "GalSim.h"
 
 int main(int argc, char *argv[]) try 
 {

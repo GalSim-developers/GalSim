@@ -9,19 +9,29 @@
 
 #ifndef SBPROFILE_H
 #define SBPROFILE_H
+
 #include <cmath>
 #include <list>
 #include <map>
 #include <vector>
 #include <algorithm>
 
+// Remove this to disable the drawing routines.
+// Also removes dependencies on Image and FITS classes.
+#define USE_IMAGES
+
+// Remove this to skip the SBLaguerre classes.
+#define USE_LAGUERRE
+
 #include "Std.h"
 #include "Shear.h"
-#include "fft.h"
+#include "FFT.h"
 #include "Table.h"
+
 #ifdef USE_IMAGES
 #include "Image.h"
 #endif
+
 #ifdef USE_LAGUERRE
 #include "Laguerre.h"
 #endif

@@ -1,8 +1,5 @@
-//
-#include "SBParse.h"
-#include "StringStuff.h"
-#include "Std.h"
-#include "FITSImage.h"
+
+#include "GalSim.h"
 
 int main(int argc, char *argv[])
 {

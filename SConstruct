@@ -7,8 +7,8 @@ from sys import stdout,stderr
 
 # Subdirectories containing SConscript files.  We always process src but
 # there are some other optional ones
-src_dir = '.'
-subdirs=['src','examples','galsim']
+src_dir = 'src'
+subdirs=['examples','galsim']
 
 # Configurations will be saved here so command line options don't
 # have to be sent more than once
@@ -478,7 +478,8 @@ def CheckTMV(context):
 #include "TMV_Sym.h"
 int main()
 {
-  tmv::SymMatrix<double> S(10,4.);
+  //tmv::SymMatrix<double> S(10,4.);
+  tmv::Matrix<double> S(10,10,4.);
   tmv::Matrix<double> m(10,3,2.);
   tmv::Matrix<double> m2 = m / S;
   return 0;
@@ -490,9 +491,12 @@ int main()
 
     if context.TryCompile(tmv_source_file,'.cpp'):
 
+        #result = (
+            #CheckLibs(context,['tmv_symband','tmv'],tmv_source_file) or
+            #CheckLibs(context,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
         result = (
-            CheckLibs(context,['tmv_symband','tmv'],tmv_source_file) or
-            CheckLibs(context,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
+            CheckLibs(context,['tmv'],tmv_source_file) or
+            CheckLibs(context,['tmv','irc','imf'],tmv_source_file) )
         
         # If that didn't work, we might need to add the openmp flag to the 
         # linking step.  This should be there now with my new way of reading the tmv-link
@@ -501,9 +505,12 @@ int main()
             env1 = context.env.Clone()
             AddOpenMPFlag(env1)
             context.env['LINKFLAGS'] = env1['LINKFLAGS']
+            #result = (
+                #CheckLibs(context,['tmv_symband','tmv'],tmv_source_file) or
+                #CheckLibs(context,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
             result = (
-                CheckLibs(context,['tmv_symband','tmv'],tmv_source_file) or
-                CheckLibs(context,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
+                CheckLibs(context,['tmv'],tmv_source_file) or
+                CheckLibs(context,['tmv','irc','imf'],tmv_source_file) )
 
         if not result:
             context.Result(0)
@@ -619,7 +626,6 @@ def DoLibraryAndHeaderChecks(config):
 
 
     config.CheckTMV()
-    config.env.Append(CPPDEFINES=['USE_TMV'])
 
  
 def GetNCPU():

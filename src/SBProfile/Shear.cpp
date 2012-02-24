@@ -216,7 +216,6 @@ namespace galsim {
         hasMatrix = true;
     }
 
-#ifdef USE_TMV
     tmv::Matrix<double> Ellipse::getMatrix() const 
     {
         double a, b, c;
@@ -264,7 +263,6 @@ namespace galsim {
         rotation = atan2(-c*m(0,0)+a*m(1,0), b*m(0,0)-c*m(1,0));
         return Ellipse(s,mu, Position<double>(0.,0.));
     }
-#endif
 
     // Ellipses share the ordering conventions:  e1 + e2 is transform
     // e1 followed by transform e2.  Transform objects, not coords.

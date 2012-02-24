@@ -3,7 +3,7 @@
 //
 #include "SBProfile.h"
 #include "Simpson.h"
-#include "UseTMV.h"
+#include "TMV.h"
 #include "Solve.h"
 
 namespace galsim {
@@ -574,7 +574,7 @@ namespace galsim {
     SBDistort::SBDistort(const SBProfile& sbin, const Ellipse e_) 
     {
         // First get what we need from the Ellipse:
-        DMatrix m = e_.getMatrix();
+        tmv::Matrix<double> m = e_.getMatrix();
         matrixA = m(0,0);
         matrixB = m(0,1);
         matrixC = m(1,0);

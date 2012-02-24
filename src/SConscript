@@ -19,7 +19,6 @@ subdirs = ['SBProfile']
 
 lib_files = []
 for d in subdirs:
-    print 'Processing files for ',d
     # This file is typicall created by:
     # ls *.cpp > files.txt
     # in each subdirectory.  But after that, it allows you to remove a file from
@@ -27,19 +26,15 @@ for d in subdirs:
     # than having to delete the .cpp file.
     lib_files1 = ReadFileList(os.path.join(d,'files.txt'))
     for f in lib_files1:
-        print 'f = ',f
-        print 'd/f = ',os.path.join(d,f)
         lib_files += [os.path.join(d,f)]
-    print 'lib_files => ',lib_files
 
 if env1['MEM_TEST']:
     print 'Using mmgr.cpp'
     lib_files += ['mmgr.cpp']
-    print 'lib_files => ',lib_files
 
 # Library file containing generic code
 obj_lib = env1.SharedObject(lib_files)
-lib = env1.StaticLibrary('#lib/galsim', obj_lib)
+lib = env1.SharedLibrary('#lib/galsim', obj_lib)
 lib_targets = [lib]
 
 if 'install' in COMMAND_LINE_TARGETS:

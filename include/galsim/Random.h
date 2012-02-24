@@ -9,6 +9,7 @@
 #endif
 
 #include <sys/time.h>
+#include <complex>
 
 #include "Std.h"
 
@@ -139,14 +140,14 @@ namespace galsim {
         CGaussianDeviate(const long lseed) : g(lseed) {} //seed with specific number
         CGaussianDeviate(UniformDeviate& u_) : g(u_) {} //use supplied uniform deviate
 
-        DComplex operator() () { return newvalue(); }
-        operator DComplex() { return newvalue(); }
+        std::complex<double> operator() () { return newvalue(); }
+        operator std::complex<double>() { return newvalue(); }
         void Seed() { g.Seed(); }
         void Seed(const long lseed) { g.Seed(lseed); }
 
     private:
         GaussianDeviate g;
-        DComplex newvalue() { return DComplex(g(), g()); }
+        std::complex<double> newvalue() { return std::complex<double>(g(), g()); }
     };
 
     // A unit-mean exponential deviate
