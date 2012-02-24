@@ -6,7 +6,7 @@ Use the LSST documents on C++, Python and Documentation overall as a guide for n
 exert pragmatism with pre-existing code.  Unless you have good reason for hating LSST style,
 or the style suggested here, in which case share it!
 
-Biggish things to highlight/add are...
+Biggish things to highlight/add/modify are...
  4 space indentation, rather than 2 space.
 
  No tabs.  Just spaces.
@@ -23,6 +23,10 @@ Biggish things to highlight/add are...
 
  We adhere to the Zen of Python; open python, type "import this", hit enter.
 
+ We use all lowercase letters for all Python packages.  That's a bit of a Python convention, 
+ and while it's mostly aimed at compatibility with case-insensitive filesystems, we think we 
+ should stick with it anyway.
+
 For vim users, Mike Jarvis has put the c.vim file in the devutils/ directory.  If you put that 
 in  .vim/ftplugin/ and add the line "filetype plugin on" in your .vimrc file, then you will 
 automatically get the formatting to match what is currently in SBProfile.  We don't (yet) 
@@ -34,7 +38,7 @@ http://dev.lsstcorp.org/trac/wiki/PythonCodeStandards
 http://dev.lsstcorp.org/trac/wiki/C%2B%2BStandard
 
 Broad reasons for choice of LSST style: These documents just seem to be a fairly sensible 
-source of code and  documentation formatting guidance.  See also Peter Melichior's slides 
+source of code and  documentation formatting guidance.  See also Peter Melchior's slides 
 for sound advice in general, and on documentation:
 dl.dropbox.com/u/26820102/talks/software_engineering_150410.pdf
 
