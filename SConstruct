@@ -390,18 +390,6 @@ def AddExtraPaths(env):
     cpp_paths = ['#include']
     lib_paths = ['#lib']
 
-    # PREFIX directory
-    # If none given, then don't add them to the -L and -I directories.
-    # But still use the default /usr/local for installation
-    if env['PREFIX'] == '':
-        env['INSTALL_PREFIX'] = default_prefix
-    else:
-        if env['INCLUDE_PREFIX_PATHS']:
-            AddPath(bin_paths, os.path.join(env['PREFIX'], 'bin'))
-            AddPath(lib_paths, os.path.join(env['PREFIX'], 'lib'))
-            AddPath(cpp_paths, os.path.join(env['PREFIX'], 'include'))
-        env['INSTALL_PREFIX'] = env['PREFIX']
-    
     # Add directories specified explicitly for our dependencies on the command
     # line or as an environment variable.
     AddDepPaths(bin_paths,cpp_paths,lib_paths)
