@@ -4,7 +4,7 @@
 #include <limits>
 #include <vector>
 #include <cassert>
-#include "fft.h"
+#include "FFT.h"
 #include "Std.h"
 
 namespace galsim {
