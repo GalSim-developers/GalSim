@@ -16,7 +16,9 @@ sbdraw = env1.Program('#'+bin_dir+'/sbdraw', 'SBDraw.cpp')
 
 shera = env1.Program('#'+bin_dir+'/shera', 'Shera.cpp')
 
-bin_targets = [ sbdraw, shera ]
+int_example = env1.Program('#'+bin_dir+'/int_example', 'IntExample.cpp')
+
+bin_targets = [ sbdraw, shera, int_example ]
 
 if 'install' in COMMAND_LINE_TARGETS:
 
