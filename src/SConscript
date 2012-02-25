@@ -42,13 +42,21 @@ if 'install' in COMMAND_LINE_TARGETS:
     installed_lib = env1.Install(dir=lib_install_dir, source=lib_targets)
     env1.Alias(target='install', source=installed_lib)
 
-    hglob = os.path.join('#'+header_dir,'*')
-    installed_h = env1.Install(dir=header_install_dir, source=Glob(hglob))
+    hfiles1 = os.listdir(GetBuildPath('#'+header_dir))
+    hfiles = []
+    for f in hfiles1:
+        hfiles += [os.path.join('#'+header_dir,f)]
+    print 'hfiles = ',hfiles
+    installed_h = env1.Install(dir=header_install_dir, source=hfiles)
     env1.Alias(target='install', source=installed_h)
 
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
     # There is no env.Uninstall method, we must build our own
+    # MJ: The scons delete function doesn't actually delete directories a la rm -rf
+    # I think this is a feature they will add someday, so maybe not worth worrying about it.
+    # but if we really want the galsim directory to be deleted on an uninstall, we
+    # should change this.  Proabaly roll our own Delete function.
     deltarget = Delete("$TARGET")
 
     # Delete files from include
@@ -56,9 +64,10 @@ if 'uninstall' in COMMAND_LINE_TARGETS:
     # Looks like it will delete all files from INSTALL_PREFIX/include,
     # which isn't what we want.  (Other things might also me installed there.)
     # Need to make sure we only delete our own files from there.
-    hfiles = Glob(os.path.join(header_install_dir, '*'))
+    hfiles = os.listdir(GetBuildPath('#'+header_dir))
+    print 'hfiles = ',hfiles
     for f in hfiles:
-        env1.Alias('uninstall', env1.Command(f, None, deltarget))
+        env1.Alias('uninstall', env1.Command(os.path.join(header_install_dir,f), None, deltarget))
 
     libfiles = [os.path.join(lib_install_dir, os.path.basename(str(f[0]))) for f in lib_targets]
 
