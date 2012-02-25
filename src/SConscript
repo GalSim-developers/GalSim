@@ -12,8 +12,8 @@ env1.Prepend(CPPPATH=['#include/galsim'])
 
 lib_dir = 'lib'
 header_dir = 'include'
-lib_install_dir = os.path.join(env1['PREFIX'], lib_dir)
-header_install_dir = os.path.join(env1['PREFIX'], header_dir)
+lib_install_dir = os.path.join(env1['INSTALL_PREFIX'], lib_dir)
+header_install_dir = os.path.join(env1['INSTALL_PREFIX'], header_dir)
 
 subdirs = ['SBProfile']
 
@@ -52,7 +52,8 @@ if 'uninstall' in COMMAND_LINE_TARGETS:
     deltarget = Delete("$TARGET")
 
     # Delete files from include
-    # MJ: Not sure if this is right.  Looks like it will delete all files from PREFIX/include,
+    # MJ: Not sure if this is right.
+    # Looks like it will delete all files from INSTALL_PREFIX/include,
     # which isn't what we want.  (Other things might also me installed there.)
     # Need to make sure we only delete our own files from there.
     hfiles = Glob(os.path.join(header_install_dir, '*'))

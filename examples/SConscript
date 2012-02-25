@@ -10,7 +10,7 @@ libs=['galsim']
 env1 = env.Clone(CPPDEFINES=[],LIBS=libs+env['LIBS'])
 
 bin_dir = 'bin'
-bin_install_dir = os.path.join(env['PREFIX'], bin_dir)
+bin_install_dir = os.path.join(env['INSTALL_PREFIX'], bin_dir)
 
 sbdraw = env1.Program('#'+bin_dir+'/sbdraw', 'SBDraw.cpp')
 
