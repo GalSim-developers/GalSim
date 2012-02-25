@@ -8,6 +8,7 @@ ReadFileList=env['__readfunc']
 
 env1 = env.Clone()
 
+env1['OBJPREFIX'] = '.obj/'
 env1.Prepend(CPPPATH=['#include/galsim'])
 
 lib_dir = 'lib'

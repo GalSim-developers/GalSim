@@ -9,6 +9,8 @@ libs=['galsim']
 
 env1 = env.Clone(CPPDEFINES=[],LIBS=libs+env['LIBS'])
 
+env1['OBJPREFIX'] = '.obj/'
+
 bin_dir = 'bin'
 bin_install_dir = os.path.join(env['INSTALL_PREFIX'], bin_dir)
 
