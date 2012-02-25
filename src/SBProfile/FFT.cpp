@@ -7,7 +7,7 @@
 #include "fft.h"
 #include "Std.h"
 
-namespace galsim {
+namespace sbp {
 
     // A helper function that will return the smallest 2^n or 3x2^n value that is
     // even and >= the input integer.

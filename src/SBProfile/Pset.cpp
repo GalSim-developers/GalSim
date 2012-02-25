@@ -3,7 +3,7 @@
 //#include <cctype>
 #include "Pset.h"
 
-namespace galsim {
+namespace sbp {
 
     void Pset::addMemberNoValue(const char *k, const int _f, const char *c) 
     { l.push_back( new PsetMember(k, _f, c) ); }

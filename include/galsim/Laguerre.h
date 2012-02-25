@@ -13,7 +13,7 @@
 #include "Std.h"
 #include "Shear.h"
 
-namespace galsim {
+namespace sbp {
 
     class LaguerreError : public std::runtime_error 
     {

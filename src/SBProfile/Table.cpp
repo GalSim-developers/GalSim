@@ -2,7 +2,7 @@
 #include <cmath>
 #include <vector>
 
-namespace galsim {
+namespace sbp {
 
     // Look up an index.  Use STL binary search; maybe faster to use
     template<class V, class A>

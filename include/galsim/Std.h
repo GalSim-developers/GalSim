@@ -11,7 +11,7 @@
 #include <string>
 #include <cassert>
 
-namespace galsim {
+namespace sbp {
 
     // Not all cmath libraries define this:
 #ifndef M_PI

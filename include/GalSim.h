@@ -16,4 +16,6 @@
 #include "galsim/Random.h"
 #include "galsim/Poisson.h"
 
+#include "galsim/Int.h"
+
 #endif

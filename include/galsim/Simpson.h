@@ -8,7 +8,7 @@
 
 #include "Std.h"
 
-namespace galsim {
+namespace sbp {
 
     //Exception thrown when too many steps required:
     class IntegralNonConvergent : public std::runtime_error 

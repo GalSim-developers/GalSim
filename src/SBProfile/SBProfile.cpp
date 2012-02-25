@@ -6,7 +6,7 @@
 #include "TMV.h"
 #include "Solve.h"
 
-namespace galsim {
+namespace sbp {
 
     // ????? Change treatement of aliased images to simply add in the aliased
     // FT components instead of doing a larger FT and then subsampling!

@@ -1,7 +1,7 @@
 #include "Interpolant.h"
 #include "Simpson.h"
 
-namespace galsim {
+namespace sbp {
 
     double Interpolant::xvalWrapped(double x, int N) const 
     {

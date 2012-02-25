@@ -7,7 +7,7 @@
 #include "Std.h"
 #include "Table.h"
 
-namespace galsim {
+namespace sbp {
 
     // One-dimensional interpolant base function
     // Assumed symmetric so that frequency-domain values are real too.

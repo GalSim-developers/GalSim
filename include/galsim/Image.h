@@ -122,7 +122,7 @@
 #include "Bounds.h"
 #include "FITStypes.h"
 
-namespace galsim {
+namespace sbp {
 
     // Exception classes:
     class ImageError : public std::runtime_error

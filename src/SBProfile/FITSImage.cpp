@@ -4,7 +4,7 @@
 #include <typeinfo>
 #include <cstring> 
 
-namespace galsim {
+namespace sbp {
 
     const int MAX_IMAGE_DIMENSIONS=10; //maximal number of img dimensions
 

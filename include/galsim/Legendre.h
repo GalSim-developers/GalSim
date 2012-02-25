@@ -6,7 +6,7 @@
 
 #include "TMV.h"
 
-namespace galsim {
+namespace sbp {
 
     class Legendre 
     {

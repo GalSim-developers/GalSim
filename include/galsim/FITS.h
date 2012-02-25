@@ -31,7 +31,7 @@
 #include "Std.h"
 #include "FITStypes.h"
 
-namespace galsim {
+namespace sbp {
 
     // Utility function to throw FITSError and dump CFITSIO message stack.
     void throw_CFITSIO(const std::string m="");

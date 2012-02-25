@@ -9,7 +9,7 @@
 
 #include "Image.h"
 
-namespace galsim {
+namespace sbp {
 
     ImageHeader HeaderFromStream(std::istream& is);
 

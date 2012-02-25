@@ -38,7 +38,7 @@
 
 // ??? could += for SBAdd, or *= to SBConvolve
 // ??? Ask for super-Nyquist sampling factor in draw??
-namespace galsim {
+namespace sbp {
 
     class SBError : public std::runtime_error 
     {

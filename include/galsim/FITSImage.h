@@ -77,7 +77,7 @@
 #include "FITS.h"
 #include "Image.h"
 
-namespace galsim {
+namespace sbp {
 
     const int DEFAULT_IMAGE_BUFFER_SIZE=32; //Megabytes of data to buffer per img
     const int DEFAULT_TOTAL_BUFFER_SIZE=128; //Megabytes of data to buffer, total

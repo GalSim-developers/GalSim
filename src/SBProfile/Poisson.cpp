@@ -4,7 +4,7 @@
 #include "Poisson.h"
 #include "Solve.h"
 
-namespace galsim {
+namespace sbp {
 
     // From Numerical Recipes:
     template <class T>
@@ -59,7 +59,7 @@ namespace galsim {
     {
         if (N<0) throw PoissonError("Negative counts");
         percentileFunction<T> f(N, pctile);
-        galsim::Solve<percentileFunction<T> > 
+        Solve<percentileFunction<T> > 
             solver(f, 0., std::max(20.,N+10.*sqrt(1.*N))); // Upper limit is not foolproof!
         return solver.root();
     }

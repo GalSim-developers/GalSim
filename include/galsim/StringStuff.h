@@ -8,7 +8,7 @@
 #include <sstream>
 #include <string>
 
-namespace galsim {
+namespace sbp {
 
     extern bool isComment(const std::string& instr);
 

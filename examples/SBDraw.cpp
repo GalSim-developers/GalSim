@@ -17,14 +17,14 @@ int main(int argc, char *argv[])
         std::string sbs=argv[1];
         double dx = argc>3 ? atof(argv[3]) : 0.;
         int wmult = argc>4 ? atoi(argv[4]) : 1;
-        galsim::SBProfile* sbp = galsim::SBParse(sbs);
-        galsim::Image<float> img=sbp->draw(dx, wmult);
+        sbp::SBProfile* sbprofile = sbp::SBParse(sbs);
+        sbp::Image<float> img=sbprofile->draw(dx, wmult);
         std::cout << "Pixel scale chosen: " << dx << std::endl;
         img.shift(1,1);
-        galsim::FITSImage<float>::writeToFITS(argv[2],img);
-        delete sbp;
+        sbp::FITSImage<float>::writeToFITS(argv[2],img);
+        delete sbprofile;
     } catch (std::runtime_error& m) {
-        galsim::quit(m,1);
+        sbp::quit(m,1);
     }
     return 0;
 }

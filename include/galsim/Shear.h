@@ -23,7 +23,7 @@
 // eta is "conformal shear" such that a/b = exp(eta).
 // Beta is always the position angle of major axis.
 
-namespace galsim {
+namespace sbp {
 
     class Shear 
     {

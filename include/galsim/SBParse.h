@@ -4,7 +4,7 @@
 #include "Std.h"
 #include "SBProfile.h"
 
-namespace galsim {
+namespace sbp {
 
     SBProfile* SBParse(std::string in);
 

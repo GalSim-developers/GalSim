@@ -10,7 +10,7 @@
 
 #include "Std.h"
 
-namespace galsim {
+namespace sbp {
 
     //const int MAX_FITS_FILES_OPEN=NIOBUF;
     const int MAX_FITS_FILES_OPEN=40;

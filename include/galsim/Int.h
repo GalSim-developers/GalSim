@@ -229,24 +229,6 @@ namespace integ {
     inline T MinRep() 
     { return std::numeric_limits<T>::min(); }
 
-#if 0
-    template <> 
-    inline double Epsilon<double>()
-    { return 2.2204460492503131e-16; }
-    template <> 
-    inline double MinRep<double>()
-    { return 2.2250738585072014e-308; }
-#endif
-
-#ifdef EXTRA_PREC_H
-    template <> 
-    inline Quad Epsilon<Quad>()
-    { return 3.08148791094e-33; }
-    template <> 
-    inline Quad MinRep<Quad>()
-    { return 2.2250738585072014e-308; }
-#endif
-
     template <class T> 
     inline T rescale_error (T err, const T& resabs, const T& resasc)
     {

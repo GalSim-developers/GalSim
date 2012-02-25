@@ -3,7 +3,7 @@
 #include "Std.h"
 #include <vector>
 
-namespace galsim {
+namespace sbp {
 
     double fact(int i)
     {

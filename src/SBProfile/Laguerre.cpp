@@ -15,7 +15,7 @@
 
 const int BLOCKING_FACTOR=1024;
 
-namespace galsim {
+namespace sbp {
 
     // Build an LVector from a Vector for the real degrees of freedom.
     // Vector must have same dimension as needed for LVector of chosen order
