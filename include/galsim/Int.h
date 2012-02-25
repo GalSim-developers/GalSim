@@ -7,7 +7,7 @@
 #include <map>
 #include <cmath>
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <limits>
 #include <ostream>
 #include <complex>
@@ -24,57 +24,45 @@
 // Gaussian, use something along the lines of this:
 //
 // class Gauss :
-//   public std::unary_function<double,double>
+//     public std::unary_function<double,double>
 // {   
-//   public :
+// public :
 // 
 //     Gauss(double _mu, double _sig) :   
-//       mu(_mu), sig(_sig), sigsq(_sig*_sig) {}
+//         mu(_mu), sig(_sig), sigsq(_sig*_sig) {}
 // 
 //     double operator()(double x) const
 //     {
-//       const double SQRTTWOPI = 2.50662827463;
-//       return exp(-pow(x-mu,2)/2./sigsq)/SQRTTWOPI/sig;
+//         const double SQRTTWOPI = 2.50662827463;
+//         return exp(-pow(x-mu,2)/2./sigsq)/SQRTTWOPI/sig;
 //     }
 // 
 //   private :
-//     double mu,sig,sigsq;
+//       double mu,sig,sigsq;
 // };
 //
-// Next, make an IntRegion object with the bounds of the integration region.
-// You need to give it the type to use for the bounds and the value of the
-// functions (which need to be the same currently - some day I'll allow 
-// complex functions...).  
 //
-// For example, to integrate something from -1 to 1, use:
+// Then to perform an integral, over the range (min ... max) you would write:
 //
-// integ::IntRegion<double> reg1(-1.,1.);
+// double integ1 = integ::int1d(Gauss(mu,sigma),min,max);
 //
-// (The integ:: is because everything here is in the integ namespace to
-// help prevent name conflicts with other header files.)
+// e.g. integ::int1d(Gauss(0.,1.),0.,1.)
 //
-// If a value is > 1.e10 or < -1.e10, then these values are taken to be
-// infinity, rather than the actual value.  
+// should yield a value of 0.68.
+//
+// If either min or max are > 1.e10 or < -1.e10, then these values are taken to be
+// infinity / -infinity, rather than the actual value.  
 // So to integrate from 0 to infinity:
 //
-// integ::IntRegion<double> reg2(0.,1.e100);
+// double integ2 = integ::int1d(Gauss(0.,2.),0.,1.e100);
 //
-// Or, you can use the variable integ::MOCK_INF which might be clearer.
+// which should yield a value of 0.5.  Or, you can also use the variable integ::MOCK_INF, 
+// which might be clearer.
 //
-//
-// Finally, to perform the integral, the line would be:
-//
-// double integ1 = int1d(Gauss(0.,1.),reg1,1.e-10,1.e-4);
-// double integ2 = int1d(Gauss(0.,2.),reg2,1.e-10,1.e-4);
-//
-// which should yield 0.68 and 0.5 in our case.
-//
-// Those last two numbers indicate the precision required.  
-// 1.e-10 is the required absolute error, and 
-// 1.e-4 is the required relative error.
-//
-// If you want, you can omit these and 1.e-15,1.e-6 will be used as the 
-// default precision (which are generally fine for most purposes).
+// There are two final arguments, which we've omitted so far, that can be used to specify
+// the precision required.  First the relative error, then the absolute error.
+// The defaults are 1.e-6 and 1.e-15 respectively, which are generally fine for most
+// purposes, but you can specify different values if you prefer.
 //
 // The absolute error only comes into play for results which are close to 
 // 0 to prevent requiring an error of 0 for integrals which evaluate to 0 
@@ -84,17 +72,29 @@
 //
 // Advanced Usage:
 //
-// When an integration fails to converge with the usual GKP algorithm,
+// Sometimes it is useful to provide more information into how to split up a region
+// when the GKP algorithm fails to converge on the whole region.  To do this,
+// we need to start by making an IntRegion object.  e.g. the above integ1 integral
+// could use:
+//
+// integ::IntRegion reg1(0.,1.);
+//
+// And the above call could instead be called as:
+//
+// int1d(Gauss(0.,1.), reg1);
+//
+// For that integral, there is nothing weird going on, so the default works fine.
+// But when an integration fails to converge with the usual GKP algorithm,
 // it splits the region into 2 (or more) and tries again with each sub-region.
 // The default is to just bisect the region (or something similarly smart for
 // infinite regions), but if you know of a good place to split the region,
-// you can tell it using:
+// you can tell it using the method addSplit(x).
+// For example, if your integral has a singularity at 1/3, then it would help the 
+// program a lot to split there, so you can add a split point:
 //
-// reg.AddSplit(10.)
+// reg1.addSplit(1./3.);
 //
-// For example, if you know that you have a singularity somewhere in your
-// region, it would help the program a lot to split there, so you 
-// should add that as a split point.  Zeros can also be good choices.
+// Zeros of the integrand can also be good choices for splitting.
 //
 // In addition to the integral being returned from int1d, int2d, or int3d as
 // the return value, the value is also stored in the region itself. 
@@ -120,10 +120,9 @@
 // int(3x^2 + xy + y , x=0..1, y=0..1):
 //
 // struct Integrand :
-//   public std::binary_function<double,double,double>
+//     public std::binary_function<double,double,double>
 // {
-//   double operator()(double x, double y) const
-//   { return x*(3.*x + y) + y; }
+//     double operator()(double x, double y) const { return x*(3.*x + y) + y; }
 // };
 //
 // integ::IntRegion<double> reg3(0.,1.);
@@ -162,7 +161,7 @@ namespace integ {
     inline T real(const T& x) { return x; }
     using std::real;
 
-    //#define COUNTFEVAL 
+//#define COUNTFEVAL 
     // If defined, then count the number of function evaluations
 
 #ifdef COUNTFEVAL
@@ -180,7 +179,8 @@ namespace integ {
         { return error < r2.error; }
         bool operator>(const IntRegion<T>& r2) const 
         { return error > r2.error; }
-        void SubDivide(std::vector<IntRegion<T> >* children) {
+        void SubDivide(std::vector<IntRegion<T> >* children) 
+        {
             assert(children->size() == 0);
             if (splitpoints.size() == 0) Bisect();
             if (splitpoints.size() > 1) 
@@ -241,14 +241,14 @@ namespace integ {
             const T min_err = 50. * Epsilon<T>() * resabs;
             if (min_err > err) err = min_err;
         }
-        return err ;
+        return err;
     }
 
     template <class UF> 
     inline bool IntGKPNA(
         const UF& func, IntRegion<typename UF::result_type>& reg,
-        const typename UF::result_type epsabs, 
-        const typename UF::result_type epsrel,
+        const typename UF::result_type epsrel, 
+        const typename UF::result_type epsabs,
         std::map<typename UF::result_type,
         typename UF::result_type>* fxmap=0)
     {
@@ -374,8 +374,8 @@ namespace integ {
     template <class UF> 
     inline void IntGKP(
         const UF& func, IntRegion<typename UF::result_type>& reg,
-        const typename UF::result_type epsabs,
         const typename UF::result_type epsrel,
+        const typename UF::result_type epsabs,
         std::map<typename UF::result_type,
         typename UF::result_type>* fxmap=0)
     {
@@ -401,7 +401,7 @@ namespace integ {
         assert(epsrel > 0.);
 
         // perform the first integration 
-        bool done = IntGKPNA(func, reg, epsabs, epsrel, fxmap);
+        bool done = IntGKPNA(func, reg, epsrel, epsabs, fxmap);
         if (done) return;
 
         integ_dbg2<<"In adaptive GKP, failed first pass... subdividing\n";
@@ -447,7 +447,7 @@ namespace integ {
                 integ_dbg2<<"Integrating child "<<child.Left();
                 integ_dbg2<<".."<<child.Right()<<std::endl;
                 bool converged;
-                converged = IntGKPNA(func, child, newepsabs, newepsrel);
+                converged = IntGKPNA(func, child, newepsrel, newepsabs);
                 integ_dbg2<<"child ("<<i+1<<'/'<<children.size()<<") ";
                 if (converged) {
                     integ_dbg2<<" converged."; 
@@ -535,8 +535,8 @@ namespace integ {
         }
     }
 
-    const double DEFABSERR = 1.e-15;
     const double DEFRELERR = 1.e-6;
+    const double DEFABSERR = 1.e-15;
 
     template <class UF> 
     struct AuxFunc1 : // f(1/x-1) for int(a..infinity)
@@ -578,8 +578,8 @@ namespace integ {
     inline typename UF::result_type int1d(
         const UF& func, 
         IntRegion<typename UF::result_type>& reg,
-        const typename UF::result_type& abserr=DEFABSERR,
-        const typename UF::result_type& relerr=DEFRELERR)
+        const typename UF::result_type& relerr=DEFRELERR,
+        const typename UF::result_type& abserr=DEFABSERR)
     {
         typedef typename UF::result_type T;
 
@@ -601,7 +601,7 @@ namespace integ {
                 integ_dbg2<<"i = "<<i;
                 integ_dbg2<<": bounds = "<<child.Left()<<
                     ','<<child.Right()<<std::endl;
-                answer += int1d(func,child,abserr,relerr);
+                answer += int1d(func,child,relerr,abserr);
                 err += child.Err();
                 integ_dbg2<<"subint = "<<child.Area()<<
                     " +- "<<child.Err()<<std::endl;
@@ -614,23 +614,34 @@ namespace integ {
                     reg.Right()<<std::endl;
                 assert(reg.Right() <= 0.);
                 IntRegion<T> modreg(1./(reg.Right()-1.),0.,reg.dbgout);
-                IntGKP(Aux2<UF>(func),modreg,abserr,relerr);
+                IntGKP(Aux2<UF>(func),modreg,relerr,abserr);
                 reg.SetArea(modreg.Area(),modreg.Err());
             } else if (reg.Right() >= MOCK_INF) {
                 integ_dbg2<<"left = "<<reg.Left()<<", right = infinity\n";
                 assert(reg.Left() >= 0.);
                 IntRegion<T> modreg(0.,1./(reg.Left()+1.),reg.dbgout);
-                IntGKP(Aux1<UF>(func),modreg,abserr,relerr);
+                IntGKP(Aux1<UF>(func),modreg,relerr,abserr);
                 reg.SetArea(modreg.Area(),modreg.Err());
             } else {
                 integ_dbg2<<"left = "<<reg.Left();
                 integ_dbg2<<", right = "<<reg.Right()<<std::endl;
-                IntGKP(func,reg,abserr,relerr);
+                IntGKP(func,reg,relerr,abserr);
             }
             integ_dbg2<<"done int1d  answer = "<<reg.Area();
             integ_dbg2<<" +- "<<reg.Err()<<std::endl;
             return reg.Area();
         }
+    }
+
+    template <class UF> 
+    inline typename UF::result_type int1d(
+        const UF& func, 
+        typename UF::result_type min, typename UF::result_type max,
+        const typename UF::result_type& relerr=DEFRELERR,
+        const typename UF::result_type& abserr=DEFABSERR)
+    {
+        IntRegion<typename UF::result_type> reg(min,max);
+        return int1d(func,reg,relerr,abserr); 
     }
 
     template <class BF, class YREG> 
@@ -640,9 +651,9 @@ namespace integ {
     {
     public:
         Int2DAuxType(const BF& _func, const YREG& _yreg,
-                     const typename BF::result_type& _abserr,
-                     const typename BF::result_type& _relerr) :
-            func(_func),yreg(_yreg),abserr(_abserr),relerr(_relerr) 
+                     const typename BF::result_type& _relerr,
+                     const typename BF::result_type& _abserr) :
+            func(_func),yreg(_yreg),relerr(_relerr),abserr(_abserr) 
         {}
 
         typename BF::result_type operator()(
@@ -650,7 +661,7 @@ namespace integ {
         {
             typename YREG::result_type tempreg = yreg(x);
             typename BF::result_type result = 
-                int1d(bind21(func,x),tempreg,abserr,relerr);
+                int1d(bind21(func,x),tempreg,relerr,abserr);
             integ_dbg3<<"Evaluated int2dAux at x = "<<x;
             integ_dbg3<<": f = "<<result<<" +- "<<tempreg.Err()<<std::endl;
             return result;
@@ -659,20 +670,20 @@ namespace integ {
     private:
         const BF& func;
         const YREG& yreg;
-        typename BF::result_type abserr,relerr;
+        typename BF::result_type relerr,abserr;
     };
 
     template <class BF, class YREG> 
     inline typename BF::result_type int2d(
         const BF& func,
         IntRegion<typename BF::result_type>& reg,
-        const YREG& yreg, const typename BF::result_type& abserr=DEFABSERR,
-        const typename BF::result_type& relerr=DEFRELERR)
+        const YREG& yreg, const typename BF::result_type& relerr=DEFRELERR,
+        const typename BF::result_type& abserr=DEFABSERR)
     {
         integ_dbg2<<"Starting int2d: range = ";
         integ_dbg2<<reg.Left()<<".."<<reg.Right()<<std::endl;
-        Int2DAuxType<BF,YREG> faux(func,yreg,abserr*1.e-3,relerr*1.e-3);
-        typename BF::result_type answer = int1d(faux,reg,abserr,relerr);
+        Int2DAuxType<BF,YREG> faux(func,yreg,relerr*1.e-3,abserr*1.e-3);
+        typename BF::result_type answer = int1d(faux,reg,relerr,abserr);
         integ_dbg2<<"done int2d  answer = "<<answer<<
             " +- "<<reg.Err()<<std::endl;
         return answer;
@@ -685,9 +696,9 @@ namespace integ {
     {
     public:
         Int3DAuxType(const TF& _func, const YREG& _yreg, const ZREG& _zreg, 
-                     const typename TF::result_type& _abserr,
-                     const typename TF::result_type& _relerr) :
-            func(_func),yreg(_yreg),zreg(_zreg),abserr(_abserr),relerr(_relerr) 
+                     const typename TF::result_type& _relerr,
+                     const typename TF::result_type& _abserr) :
+            func(_func),yreg(_yreg),zreg(_zreg),relerr(_relerr),abserr(_abserr) 
         {}
 
         typename TF::result_type operator()(
@@ -695,7 +706,7 @@ namespace integ {
         {
             typename YREG::result_type tempreg = yreg(x);
             typename TF::result_type result = 
-                int2d(bind31(func,x),tempreg,bind21(zreg,x),abserr,relerr);
+                int2d(bind31(func,x),tempreg,bind21(zreg,x),relerr,abserr);
             integ_dbg3<<"Evaluated int3dAux at x = "<<x;
             integ_dbg3<<": f = "<<result<<" +- "<<tempreg.Err()<<std::endl;
             return result;
@@ -705,7 +716,7 @@ namespace integ {
         const TF& func;
         const YREG& yreg;
         const ZREG& zreg;
-        typename TF::result_type abserr,relerr;
+        typename TF::result_type relerr,abserr;
     };
 
     template <class TF, class YREG, class ZREG> 
@@ -713,14 +724,14 @@ namespace integ {
         const TF& func,
         IntRegion<typename TF::result_type>& reg,
         const YREG& yreg, const ZREG& zreg,
-        const typename TF::result_type& abserr=DEFABSERR,
-        const typename TF::result_type& relerr=DEFRELERR)
+        const typename TF::result_type& relerr=DEFRELERR,
+        const typename TF::result_type& abserr=DEFABSERR)
     {
         integ_dbg2<<"Starting int3d: range = ";
         integ_dbg2<<reg.Left()<<".."<<reg.Right()<<std::endl;
         Int3DAuxType<TF,YREG,ZREG> faux(
-            func,yreg,zreg,abserr*1.e-3,relerr*1.e-3);
-        typename TF::result_type answer = int1d(faux,reg,abserr,relerr);
+            func,yreg,zreg,relerr*1.e-3,abserr*1.e-3);
+        typename TF::result_type answer = int1d(faux,reg,relerr,abserr);
         integ_dbg2<<"done int3d  answer = "<<answer<<
             "+- "<<reg.Err()<<std::endl;
         return answer;
@@ -751,13 +762,26 @@ namespace integ {
         const BF& func,
         IntRegion<typename BF::result_type>& reg,
         IntRegion<typename BF::result_type>& yreg,
-        const typename BF::result_type& abserr=DEFABSERR,
-        const typename BF::result_type& relerr=DEFRELERR)
+        const typename BF::result_type& relerr=DEFRELERR,
+        const typename BF::result_type& abserr=DEFABSERR)
     { 
         return int2d(
             func,reg,
             ConstantReg1<typename BF::result_type>(yreg),
-            abserr,relerr); 
+            relerr,abserr); 
+    }
+
+    template <class BF>
+    inline typename BF::result_type int2d(
+        const BF& func,
+        typename BF::result_type xmin, typename BF::result_type xmax, 
+        typename BF::result_type ymin, typename BF::result_type ymax, 
+        const typename BF::result_type& relerr=DEFRELERR,
+        const typename BF::result_type& abserr=DEFABSERR)
+    { 
+        IntRegion<typename BF::result_type> xreg(xmin,xmax);
+        IntRegion<typename BF::result_type> yreg(ymin,ymax);
+        return int2d(func,xreg,yreg,relerr,abserr);
     }
 
     template <class TF> 
@@ -766,15 +790,31 @@ namespace integ {
         IntRegion<typename TF::result_type>& reg,
         IntRegion<typename TF::result_type>& yreg,
         IntRegion<typename TF::result_type>& zreg,
-        const typename TF::result_type& abserr=DEFABSERR,
-        const typename TF::result_type& relerr=DEFRELERR)
+        const typename TF::result_type& relerr=DEFRELERR,
+        const typename TF::result_type& abserr=DEFABSERR)
     {
         return int3d(
             func,reg,
             ConstantReg1<typename TF::result_type>(yreg),
             ConstantReg2<typename TF::result_type>(zreg),
-            abserr,relerr);
+            relerr,abserr);
     }
-}
+
+    template <class TF>
+    inline typename TF::result_type int3d(
+        const TF& func,
+        typename TF::result_type xmin, typename TF::result_type xmax, 
+        typename TF::result_type ymin, typename TF::result_type ymax, 
+        typename TF::result_type zmin, typename TF::result_type zmax, 
+        const typename TF::result_type& relerr=DEFRELERR,
+        const typename TF::result_type& abserr=DEFABSERR)
+    { 
+        IntRegion<typename TF::result_type> xreg(xmin,xmax);
+        IntRegion<typename TF::result_type> yreg(ymin,ymax);
+        IntRegion<typename TF::result_type> zreg(zmin,zmax);
+        return int2d(func,xreg,yreg,zreg,relerr,abserr);
+    }
+
+ }
 
 #endif

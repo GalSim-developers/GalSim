@@ -1,5 +1,5 @@
 #include "Interpolant.h"
-#include "Simpson.h"
+#include "Int.h"
 
 namespace sbp {
 
@@ -49,7 +49,7 @@ namespace sbp {
         u1 = uCalc(1.);
     }
 
-    class CubicIntegrand 
+    class CubicIntegrand : public std::unary_function<double,double>
     {
     public:
         CubicIntegrand(double u_, const Cubic& c_): u(u_), c(c_) {}
@@ -63,8 +63,8 @@ namespace sbp {
     double Cubic::uCalc(double u) const 
     {
         CubicIntegrand ci(u, *this);
-        return 2.*( Simp1d(ci, 0., 1., 0.1*tolerance, 0.1*tolerance)
-                    + Simp1d(ci, 1., 2., 0.1*tolerance, 0.1*tolerance));
+        return 2.*( integ::int1d(ci, 0., 1., 0.1*tolerance, 0.1*tolerance)
+                    + integ::int1d(ci, 1., 2., 0.1*tolerance, 0.1*tolerance));
     }
 
     void Cubic::setup() 
@@ -83,7 +83,7 @@ namespace sbp {
         }
     }
 
-    class QuinticIntegrand 
+    class QuinticIntegrand : public std::unary_function<double,double>
     {
     public:
         QuinticIntegrand(double u_, const Quintic& c_): u(u_), c(c_) {}
@@ -95,10 +95,10 @@ namespace sbp {
 
     double Quintic::uCalc(double u) const 
     {
-        QuinticIntegrand ci(u, *this);
-        return 2.*( Simp1d(ci, 0., 1., 0.1*tolerance, 0.1*tolerance)
-                    + Simp1d(ci, 1., 2., 0.1*tolerance, 0.1*tolerance)
-                    + Simp1d(ci, 2., 3., 0.1*tolerance, 0.1*tolerance));
+        QuinticIntegrand qi(u, *this);
+        return 2.*( integ::int1d(qi, 0., 1., 0.1*tolerance, 0.1*tolerance)
+                    + integ::int1d(qi, 1., 2., 0.1*tolerance, 0.1*tolerance)
+                    + integ::int1d(qi, 2., 3., 0.1*tolerance, 0.1*tolerance));
     }
 
     void Quintic::setup() 

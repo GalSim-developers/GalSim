@@ -2,7 +2,7 @@
 // Functions for the Surface Brightness Profile Class
 //
 #include "SBProfile.h"
-#include "Simpson.h"
+#include "Int.h"
 #include "TMV.h"
 #include "Solve.h"
 
@@ -1079,7 +1079,7 @@ namespace sbp {
     }
 
     // Integrand class for the Hankel transform of Sersic
-    class SersicIntegrand 
+    class SersicIntegrand : public std::unary_function<double,double>
     {
     public:
         SersicIntegrand(double n, double b_, double k_):
@@ -1180,8 +1180,8 @@ namespace sbp {
         {
             SersicIntegrand I(n, b, 0.);
             // Integrate with at least 2^10 steps and up to 2^16:
-            norm = Simp1d(
-                I, 0., integrateMax, INTEGRATION_RELTOL, INTEGRATION_ABSTOL, 16, 10);
+            norm = integ::int1d(
+                I, 0., integrateMax, INTEGRATION_RELTOL, INTEGRATION_ABSTOL);
         }
 
         // Now start building the lookup table for FT of the profile.
@@ -1199,13 +1199,8 @@ namespace sbp {
         while (lk < log(maxK*10.) && lastVal>ALIAS_THRESHOLD/10.) {
             SersicIntegrand I(n, b, exp(lk));
             // Need to make sure we are resolving oscillations in the integral:
-            double ncycles = integrateMax * exp(lk) / 2. / M_PI;
-            int minSplit = static_cast<int> ( ceil(log(ncycles*4.) / log(2.) ) );
-            minSplit = std::max(10, minSplit);
-            //std::cerr << "minSplit " << minSplit << std::endl;
-            double val = Simp1d(
-                I, 0., integrateMax, INTEGRATION_RELTOL, INTEGRATION_ABSTOL*norm,
-                minSplit+6, minSplit);
+            double val = integ::int1d(
+                I, 0., integrateMax, INTEGRATION_RELTOL, INTEGRATION_ABSTOL*norm);
             //std::cerr << "Integrate k " << exp(lk) << " result " << val/norm << std::endl;
             val /= norm;
             lookup.push_back(val);
@@ -1217,7 +1212,7 @@ namespace sbp {
     }
 
     // Integrand class for the flux integrals of Moffat
-    class MoffatFluxInt 
+    class MoffatFluxInt : public std::unary_function<double,double>
     {
     public:
         MoffatFluxInt(double beta_): beta(beta_) {}
@@ -1233,7 +1228,7 @@ namespace sbp {
         MoffatFlux(double beta): mfi(beta), target(0.) {}
         void setTarget(double target_) {target=target_;}
         double operator()(double r) const 
-        { return 2.*M_PI*Simp1d(mfi, 0., r) - target; }
+        { return 2.*M_PI*integ::int1d(mfi, 0., r) - target; }
     private:
         MoffatFluxInt mfi;
         double target;
