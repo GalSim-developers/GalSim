@@ -63,8 +63,8 @@ namespace sbp {
         Bounds(const Position<T>& pos) :
             defined(1),xmin(pos.x),xmax(pos.x),ymin(pos.y),ymax(pos.y) {}
         Bounds(const Position<T>& pos1, const Position<T>& pos2) :
-            defined(1),xmin(MIN(pos1.x,pos2.x)),xmax(MAX(pos1.x,pos2.x)),
-            ymin(MIN(pos1.y,pos2.y)),ymax(MAX(pos1.y,pos2.y)) {}
+            defined(1),xmin(std::min(pos1.x,pos2.x)),xmax(std::max(pos1.x,pos2.x)),
+            ymin(std::min(pos1.y,pos2.y)),ymax(std::max(pos1.y,pos2.y)) {}
         Bounds() : defined(0),xmin(0),xmax(0),ymin(0),ymax(0) {}
         ~Bounds() {}
         void setXMin(const T x) { xmin = x; defined= xmin<=xmax && ymin<=ymax; }
