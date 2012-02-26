@@ -14,8 +14,15 @@ env1['OBJPREFIX'] = '.obj/'
 bin_dir = 'bin'
 bin_install_dir = os.path.join(env['INSTALL_PREFIX'], bin_dir)
 
+lib_dir = 'lib'
+lib_install_dir = os.path.join(env['INSTALL_PREFIX'], lib_dir)
+
 # Include the library location within the executable.
-env1.Append( RPATH = Dir('#.').abspath )
+if 'install' in COMMAND_LINE_TARGETS:
+    env1.Append( RPATH = Dir(lib_install_dir).abspath )
+else:
+    env1.Append( RPATH = Dir('#lib').abspath )
+
 # Workaround for SCons bug: The above doesn't always work correctly.
 # RPATH clashes with LINKFLAGS.  So if LINKFLAGS is already set, we need this workaround.
 # See: http://scons.tigris.org/issues/show_bug.cgi?id=1644
@@ -37,7 +44,7 @@ env.Alias(target='examples',source=example_targets)
 # to have installed:
 if 'install' in COMMAND_LINE_TARGETS:
 
-    installed_bin = env1.Install(dir=bin_install_dir, source=bin_targets)
+    installed_bin = env1.Install(dir=bin_install_dir, source=example_targets)
     env1.Alias(target='install', source=installed_bin)
 
 
@@ -45,7 +52,7 @@ if 'uninstall' in COMMAND_LINE_TARGETS:
     # There is no env.Uninstall method, we must build our own
     deltarget = Delete("$TARGET")
 
-    binfiles = [os.path.join(bin_install_dir, os.path.basename(str(f[0]))) for f in bin_targets]
+    binfiles = [os.path.join(bin_install_dir, os.path.basename(str(f[0]))) for f in example_targets]
 
     for f in binfiles:
         env1.Alias('uninstall', env1.Command(f, None, deltarget))
