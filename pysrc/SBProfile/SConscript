@@ -10,10 +10,10 @@ ReadFileList=pyenv['__readfunc']
 env1 = pyenv.Clone()
 
 env1['OBJPREFIX'] = '.obj/'
-env1.Prepend(CPPPATH=['#include/galsim'])
+env1.Prepend(CPPPATH=[os.path.join('#include','galsim')])
 
 python_dir = os.path.join('galsim', 'sbprofile')
-python_install_dir = os.path.join(env1['INSTALL_PREFIX'], python_dir)
+python_install_dir = os.path.join(env1['PYPREFIX'], python_dir)
 
 mod_files = []
 # This file is typically created by:
@@ -25,13 +25,27 @@ mod_files.extend(ReadFileList('files.txt'))
 
 # Library file containing generic code
 obj_mod = env1.SharedObject(mod_files)
-mod = env1.SharedLibrary('#galsim/sbprofile/_sbprofile', obj_mod, SHLIBPREFIX="")
+mod = env1.SharedLibrary(os.path.join('#galsim','sbprofile','_sbprofile'), obj_mod, SHLIBPREFIX="")
 mod_targets = [mod]
+
+# See src/SConstruct for why we need this next bit:
+dummy_targets = []
+if env1['PLATFORM'] == 'darwin':
+    for m in mod_targets:
+        if 'install' in COMMAND_LINE_TARGETS:
+	    mod_name = os.path.join(python_install_dir,os.path.basename(str(m[0])))
+	else:
+	    mod_name = str(m[0].abspath)
+        dummy_targets += env1.RenameLib('.' + str(m[0]) + '_dummy.os' , mod_name)
+
+Default(mod_targets,dummy_targets)
 
 if 'install' in COMMAND_LINE_TARGETS:
 
     installed_mod = env1.Install(dir=python_install_dir, source=mod_targets)
     env1.Alias(target='install', source=installed_mod)
+    # Need this too to make sure the installed libraries get the right absolute path on Macs
+    env1.Alias(target='install', source=dummy_targets)
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
     # There is no env.Uninstall method, we must build our own

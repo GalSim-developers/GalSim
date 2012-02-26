@@ -2,11 +2,15 @@
 
 import os
 import sys
+import distutils
 from sys import stdout,stderr
+
+# Require SCons version >= 2.0
+EnsureSConsVersion(2, 0)
 
 # Subdirectories containing SConscript files.  We always process these, but
 # there are some other optional ones
-subdirs=['src','pysrc','galsim']
+subdirs=['src','pysrc']
 
 # Configurations will be saved here so command line options don't
 # have to be sent more than once
@@ -19,7 +23,11 @@ config_file = 'gs_scons.conf'
 # extra paths are not needed, but I wish I knew how to get the default 
 # prefix for the system so I didn't have to set this.
 
-default_prefix = '/usr/local'
+# MJ: Is there a python function that might return this in a more platform-independent way?
+default_prefix = '/usr/local'  
+
+# TODO: This is JB's recommendation.  Cool?
+default_py_prefix = distutils.sysconfig.get_python_lib() 
 
 # first check for a saved conf file
 opts = Variables(config_file)
@@ -31,6 +39,8 @@ opts.Add('EXTRA_FLAGS','Extra flags to send to the compiler','')
 opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
 opts.Add(BoolVariable('EXTRA_DEBUG','Turn on extra debugging statements',False))
 opts.Add(PathVariable('PREFIX','prefix for installation','', PathVariable.PathAccept))
+opts.Add(PathVariable('PYPREFIX','prefix for installation of python modules',
+        default_py_prefix,PathVariable.PathAccept))
 
 opts.Add(PathVariable('EXTRA_PATH',
             'Extra paths for executables (separated by : if more than 1)',
@@ -890,6 +900,12 @@ if not GetOption('help'):
     env['_InstallProgram'] = RunInstall
     env['_UninstallProgram'] = RunUninstall
     env['_DoPythonConfig'] = DoPythonConfig
+
+    # See src/SConscript to see what this is for...
+    if env['PLATFORM'] == 'darwin':
+        rename_lib = Builder(action = 
+                'install_name_tool -id $SOURCE.abspath $SOURCE; touch $TARGET')
+        env.Append(BUILDERS = { 'RenameLib' : rename_lib })
 
     #if env['WITH_UPS']:
         #subdirs += ['ups']

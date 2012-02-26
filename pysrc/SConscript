@@ -13,7 +13,7 @@ DoPythonConfig(pyenv)
 pyenv.Append(LIBS=["galsim"])
 
 lib_dir = 'lib'
-lib_install_dir = os.path.join(env['INSTALL_PREFIX'], lib_dir)
+lib_install_dir = os.path.join(env['PYPREFIX'], lib_dir)
 
 # Include the library location within the modules.
 if 'install' in COMMAND_LINE_TARGETS:

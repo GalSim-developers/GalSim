@@ -51,16 +51,14 @@ dummy_targets = []
 # i.e. A path relative to the root directory of GalSim, not an absolute path.
 # So wee need to make sure the library has the full path name so the executable can find it.
 if env['PLATFORM'] == 'darwin':
-    rename_lib = Builder(action = 'install_name_tool -id $SOURCE.abspath $SOURCE')
-    env1.Append(BUILDERS = { 'RenameLib' : rename_lib })
-    lib2 = []
     for l in lib_targets:
         if 'install' in COMMAND_LINE_TARGETS:
 	    lib_name = os.path.join(lib_install_dir,os.path.basename(str(l[0])))
 	else:
 	    lib_name = str(l[0].abspath)
-        lib2 += env1.RenameLib(str(l[0]) + '_dummy' , lib_name)
-    dummy_targets += [lib2]
+	# Add .os to the end so the touched file is ignored by typical .gitignore files
+	# and the . in front so it is hidden.
+        dummy_targets += env1.RenameLib('.' + str(l[0]) + '_dummy.os' , lib_name)
 
 Default(lib_targets, dummy_targets)
 
@@ -68,7 +66,7 @@ if 'install' in COMMAND_LINE_TARGETS:
 
     installed_lib = env1.Install(dir=lib_install_dir, source=lib_targets)
     env1.Alias(target='install', source=installed_lib)
-    # Need this too to make sure the installed libraries get the right absolute path
+    # Need this too to make sure the installed libraries get the right absolute path on Macs
     env1.Alias(target='install', source=dummy_targets)
 
     hfiles1 = os.listdir(GetBuildPath('#include'))
