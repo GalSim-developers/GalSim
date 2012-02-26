@@ -2,8 +2,12 @@
 
 import os
 import sys
+import SCons
+import platform
 import distutils.sysconfig
 from sys import stdout,stderr
+
+print 'SCons is version',SCons.__version__,'using python version',platform.python_version()
 
 # Require SCons version >= 2.0
 EnsureSConsVersion(2, 0)
