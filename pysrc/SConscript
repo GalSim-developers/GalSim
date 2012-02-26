@@ -12,5 +12,20 @@ DoPythonConfig(pyenv)
 
 pyenv.Append(LIBS=["galsim"])
 
+lib_dir = 'lib'
+lib_install_dir = os.path.join(env['INSTALL_PREFIX'], lib_dir)
+
+# Include the library location within the modules.
+if 'install' in COMMAND_LINE_TARGETS:
+    pyenv.Append( RPATH = Dir(lib_install_dir).abspath )
+else:
+    pyenv.Append( RPATH = Dir('#lib').abspath )
+
+# Workaround for SCons bug: The above doesn't always work correctly.
+# RPATH clashes with LINKFLAGS.  So if LINKFLAGS is already set, we need this workaround.
+# See: http://scons.tigris.org/issues/show_bug.cgi?id=1644
+# Fixed in version 2.1, but leave this next line until scons 2.1 is the version in fink.
+pyenv.Append( LINKFLAGS = ["$__RPATH"] )
+
 for d in ['SBProfile']:
     SConscript(os.path.join(d, 'SConscript'), exports='pyenv')
