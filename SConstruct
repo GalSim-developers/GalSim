@@ -545,35 +545,40 @@ int main()
         context.Result(0)
         print 'Failed to import distutils.sysconfig.'
         Exit(1)
-    flags = " ".join(v for v in distutils.sysconfig.get_config_vars("BASECFLAGS", "BLDLIBRARY", "LIBS")
-                     if v is not None).split()
-    try: 
-        flags.remove("-Wstrict-prototypes")  # only valid for C, not C++
-    except ValueError: pass
-    try:
-        flags.remove("-L.")
-    except ValueError: pass
-    context.env.Append(CPPPATH=distutils.sysconfig.get_python_inc())
-    context.env.MergeFlags(context.env.ParseFlags(flags))
-    context.env.Prepend(LIBPATH=[os.path.join(distutils.sysconfig.PREFIX, "lib")])
+    context.env.AppendUnique(CPPPATH=distutils.sysconfig.get_python_inc())
+    libDir = distutils.sysconfig.get_config_var("LIBDIR")
+    context.env.AppendUnique(LIBPATH=libDir)
+    libfile = distutils.sysconfig.get_config_var("LIBRARY")
+    import re
+    match = re.search("(python.*)\.(a|so|dylib)", libfile)
+    if match:
+        context.env.AppendUnique(LIBS=match.group(1))
+    flags = " ".join(distutils.sysconfig.get_config_vars("MODLIBS", "SHLIBS"))
+    context.env.MergeFlags(flags)
 
-    result = (
-        CheckLibs(context,[''],python_source_file) or
-        CheckLibs(context,['python'],python_source_file) or
-        CheckLibs(context,['python2.7'],python_source_file) or
-        CheckLibs(context,['python2.6'],python_source_file) or
-        CheckLibs(context,['python2.5'],python_source_file) )
+    result, output = context.TryRun(python_source_file,'.cpp')
+
+    if not result:
+        # Sometimes we need some extra stuff on Mac OS
+        frameworkDir = libDir           # search up the libDir tree for the proper home for frameworks
+        while frameworkDir and frameworkDir != "/":
+            frameworkDir, d2 = os.path.split(frameworkDir)
+            if d2 == "Python.framework":
+                if not "Python" in os.listdir(os.path.join(frameworkDir, d2)):
+                    context.Result(0)
+                    print (
+                        "Expected to find Python in framework directory %s, but it isn't there"
+                        % frameworkDir)
+                    Exit(1)
+                break
+        opt = "-F%s" % frameworkDir
+        if opt not in conf.env["LDFLAGS"]:
+            context.env.Append(LDFLAGS = [opt,])
+        result, output = context.TryRun(python_source_file,'.cpp')
 
     if not result:
         context.Result(0)
         print "Cannot build against Python."
-        Exit(1)
-
-    result = context.TryRun(python_source_file,'.cpp')
-
-    if not result:
-        context.Result(0)
-        print "Cannot run Python code."
         Exit(1)
 
     context.Result(1)

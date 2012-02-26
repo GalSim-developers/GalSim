@@ -25,7 +25,7 @@ mod_files.extend(ReadFileList('files.txt'))
 
 # Library file containing generic code
 obj_mod = env1.SharedObject(mod_files)
-mod = env1.SharedLibrary(os.path.join('#galsim','sbprofile','_sbprofile'), obj_mod, SHLIBPREFIX="")
+mod = env1.LoadableModule(os.path.join('#galsim','sbprofile','_sbprofile'), obj_mod, SHLIBPREFIX="")
 mod_targets = [mod]
 
 # See src/SConstruct for why we need this next bit:
