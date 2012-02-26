@@ -28,6 +28,7 @@ struct PyPosition {
             .def(bp::self == bp::self)
             .def(bp::self != bp::self)
             .def(str(bp::self))
+            .def("assign", &Position<T>::operator=, bp::return_self<>())
             ;
     }
 
@@ -66,6 +67,7 @@ struct PyBounds {
             .def(bp::self != bp::self)
             .def("area", &Bounds<T>::area)
             .def(str(bp::self))
+            .def("assign", &Bounds<T>::operator=, bp::return_self<>())
             ;
     }
 

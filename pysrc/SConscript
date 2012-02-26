@@ -10,5 +10,7 @@ pyenv = env.Clone()
 
 DoPythonConfig(pyenv)
 
+pyenv.Append(LIBS=["galsim"])
+
 for d in ['SBProfile']:
     SConscript(os.path.join(d, 'SConscript'), exports='pyenv')
