@@ -4,12 +4,9 @@ import os
 import sys
 from sys import stdout,stderr
 
-
-# Subdirectories containing SConscript files.  We always process src and pysrc but
+# Subdirectories containing SConscript files.  We always process these, but
 # there are some other optional ones
-src_dir = 'src'
-pysrc_dir = 'pysrc'
-subdirs=['examples','galsim']
+subdirs=['src','pysrc','galsim']
 
 # Configurations will be saved here so command line options don't
 # have to be sent more than once
@@ -856,9 +853,11 @@ if not GetOption('help'):
 
     #if env['WITH_UPS']:
         #subdirs += ['ups']
+    if 'examples' in COMMAND_LINE_TARGETS:
+        subdirs += ['examples']
 
     # subdirectores to process.  We process src and pysrc by default
-    script_files = [os.path.join(src_dir,'SConscript'), os.path.join(pysrc_dir,'SConscript')]
+    script_files = []
     for d in subdirs:
         script_files.append(os.path.join(d,'SConscript'))
 

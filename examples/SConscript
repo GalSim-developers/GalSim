@@ -14,19 +14,29 @@ env1['OBJPREFIX'] = '.obj/'
 bin_dir = 'bin'
 bin_install_dir = os.path.join(env['INSTALL_PREFIX'], bin_dir)
 
-sbdraw = env1.Program('#'+bin_dir+'/sbdraw', 'SBDraw.cpp')
+# Include the library location within the executable.
+env1.Append( RPATH = Dir('#.').abspath )
+# Workaround for SCons bug: The above doesn't always work correctly.
+# RPATH clashes with LINKFLAGS.  So if LINKFLAGS is already set, we need this workaround.
+# See: http://scons.tigris.org/issues/show_bug.cgi?id=1644
+# Fixed in version 2.1, but leave this next line until scons 2.1 is the version in fink.
+env1.Append( LINKFLAGS = ["$__RPATH"] )
 
-shera = env1.Program('#'+bin_dir+'/shera', 'Shera.cpp')
+sbdraw = env1.Program(os.path.join('#bin','sbdraw'), 'SBDraw.cpp')
 
-int_example = env1.Program('#'+bin_dir+'/int_example', 'IntExample.cpp')
+shera = env1.Program(os.path.join('#bin','shera'), 'Shera.cpp')
 
-bin_targets = [ sbdraw, shera, int_example ]
+int_example = env1.Program(os.path.join('#bin','int_example'), 'IntExample.cpp')
 
+example_targets = [ sbdraw, shera, int_example ]
+
+env.Alias(target='examples',source=example_targets)
+
+# I think we don't actually want to install the example programs.
+# But here is how we would do it for real programs that the user will want
+# to have installed:
 if 'install' in COMMAND_LINE_TARGETS:
 
-    # I think we don't actually want to install the example programs.
-    # But here is how we would do it for real programs that the user will want
-    # to have installed:
     installed_bin = env1.Install(dir=bin_install_dir, source=bin_targets)
     env1.Alias(target='install', source=installed_bin)
 
