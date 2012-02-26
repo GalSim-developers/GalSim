@@ -5,9 +5,10 @@ import sys
 from sys import stdout,stderr
 
 
-# Subdirectories containing SConscript files.  We always process src but
+# Subdirectories containing SConscript files.  We always process src and pysrc but
 # there are some other optional ones
 src_dir = 'src'
+pysrc_dir = 'pysrc'
 subdirs=['examples','galsim']
 
 # Configurations will be saved here so command line options don't
@@ -515,6 +516,77 @@ int main()
         print 'Check that the correct location is specified for TMV_DIR'
         Exit(1)
 
+def CheckPython(context):
+    python_source_file = """
+#include "Python.h"
+int main()
+{
+  Py_Initialize();
+  Py_Finalize();
+  return 0;
+}
+"""
+    context.Message('Checking for Python... ')
+    try:
+        import distutils.sysconfig
+    except ImportError:
+        context.Result(0)
+        print 'Failed to import distutils.sysconfig.'
+        Exit(1)
+    flags = " ".join(v for v in distutils.sysconfig.get_config_vars("BASECFLAGS", "BLDLIBRARY", "LIBS")
+                     if v is not None).split()
+    try: 
+        flags.remove("-Wstrict-prototypes")  # only valid for C, not C++
+    except ValueError: pass
+    try:
+        flags.remove("-L.")
+    except ValueError: pass
+    context.env.Append(CPPPATH=distutils.sysconfig.get_python_inc())
+    context.env.MergeFlags(context.env.ParseFlags(flags))
+    context.env.Prepend(LIBPATH=[os.path.join(distutils.sysconfig.PREFIX, "lib")])
+    result, null = context.TryRun(python_source_file,'.cpp')
+    if not result:
+        context.Result(0)
+        print "Cannot build against Python."
+        Exit(1)
+    context.Result(1)
+    return 1
+
+def CheckNumPy(context):
+    numpy_source_file = """
+#include "Python.h"
+#include "numpy/arrayobject.h"
+void doImport() {
+  import_array();
+}
+int main()
+{
+  int result = 0;
+  Py_Initialize();
+  doImport();
+  npy_intp dims = 2;
+  PyObject * a = PyArray_SimpleNew(1, &dims, NPY_INT);
+  if (!a) result = 1;
+  Py_DECREF(a);
+  Py_Finalize();
+  return result;
+}
+"""
+    context.Message('Checking for NumPy... ')
+    try:
+        import numpy
+    except ImportError:
+        context.Result(0)
+        print 'Failed to import numpy.'
+        Exit(1)
+    context.env.Append(CPPPATH=numpy.get_include())
+    result, null = context.TryRun(numpy_source_file,'.cpp')
+    if not result:
+        context.Result(0)
+        print "Cannot build against NumPy."
+        Exit(1)
+    context.Result(1)
+    return 1
 
 def FindPathInEnv(env, dirtag):
     """
@@ -619,7 +691,6 @@ def DoLibraryAndHeaderChecks(config):
 
 
     config.CheckTMV()
-
  
 def GetNCPU():
     """
@@ -691,6 +762,7 @@ def DoConfig(env):
         SCons.SConf.SetCacheMode('force')
     config = env.Configure(custom_tests = {
         'CheckTMV' : CheckTMV ,
+        'CheckPython' : CheckPython ,
         })
     DoLibraryAndHeaderChecks(config)
     env = config.Finish()
@@ -705,6 +777,25 @@ def DoConfig(env):
     # the DoLibraryAndHeaderChecks call.
     if env['MEM_TEST']:
         env.Append(CPPDEFINES=['MEM_TEST'])
+
+
+def DoPythonConfig(env):
+    """
+    Configure an environment to build against Python and NumPy.
+    """
+    # See note by similar code in DoLibraryAndHeaderChecks
+    if not env['CACHE_LIB']:
+        SCons.SConf.SetCacheMode('force')
+    config = env.Configure(custom_tests = {
+        'CheckPython' : CheckPython ,
+        'CheckNumPy' : CheckNumPy ,
+        })
+    config.CheckPython()
+    config.CheckNumPy()
+    env = config.Finish()
+    # Turn the cache back on now, since we always want it for the main compilation steps.
+    if not env['CACHE_LIB']:
+        SCons.SConf.SetCacheMode('auto')
 
 
 #
@@ -732,12 +823,13 @@ if not GetOption('help'):
     env['__readfunc'] = ReadFileList
     env['_InstallProgram'] = RunInstall
     env['_UninstallProgram'] = RunUninstall
+    env['_DoPythonConfig'] = DoPythonConfig
 
     #if env['WITH_UPS']:
         #subdirs += ['ups']
 
-    # subdirectores to process.  We process src by default
-    script_files = [os.path.join(src_dir,'SConscript')]
+    # subdirectores to process.  We process src and pysrc by default
+    script_files = [os.path.join(src_dir,'SConscript'), os.path.join(pysrc_dir,'SConscript')]
     for d in subdirs:
         script_files.append(os.path.join(d,'SConscript'))
 
