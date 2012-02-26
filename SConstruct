@@ -2,7 +2,7 @@
 
 import os
 import sys
-import distutils
+import distutils.sysconfig
 from sys import stdout,stderr
 
 # Require SCons version >= 2.0
