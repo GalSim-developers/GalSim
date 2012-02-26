@@ -542,11 +542,26 @@ int main()
     context.env.Append(CPPPATH=distutils.sysconfig.get_python_inc())
     context.env.MergeFlags(context.env.ParseFlags(flags))
     context.env.Prepend(LIBPATH=[os.path.join(distutils.sysconfig.PREFIX, "lib")])
-    result, null = context.TryRun(python_source_file,'.cpp')
+
+    result = (
+        CheckLibs(context,[''],python_source_file) or
+        CheckLibs(context,['python'],python_source_file) or
+        CheckLibs(context,['python2.7'],python_source_file) or
+        CheckLibs(context,['python2.6'],python_source_file) or
+        CheckLibs(context,['python2.5'],python_source_file) )
+
     if not result:
         context.Result(0)
         print "Cannot build against Python."
         Exit(1)
+
+    result = context.TryRun(python_source_file,'.cpp')
+
+    if not result:
+        context.Result(0)
+        print "Cannot run Python code."
+        Exit(1)
+
     context.Result(1)
     return 1
 
@@ -578,28 +593,53 @@ int main()
         print 'Failed to import numpy.'
         Exit(1)
     context.env.Append(CPPPATH=numpy.get_include())
-    result, null = context.TryRun(numpy_source_file,'.cpp')
+
+    result = CheckLibs(context,[''],numpy_source_file)
+
     if not result:
         context.Result(0)
         print "Cannot build against NumPy."
         Exit(1)
+
+    result = context.TryRun(numpy_source_file,'.cpp')
+
+    if not result:
+        context.Result(0)
+        print "Cannot run NumPy code."
+        Exit(1)
+
     context.Result(1)
     return 1
 
 def CheckBoostPython(context):
     bp_source_file = """
 #include "boost/python.hpp"
+
+class Foo { public: Foo() {} };
+
 int main()
 {
   Py_Initialize();
   boost::python::object obj;
+  boost::python::class_< Foo >("Foo", boost::python::init<>());
   Py_Finalize();
   return 0;
 }
 """
     context.Message('Checking if we can build against Boost.Python... ')
-    context.env.Append(LIBS="boost_python")
-    result, null = context.TryRun(bp_source_file,'.cpp')
+
+    result = (
+        CheckLibs(context,[''],bp_source_file) or
+        CheckLibs(context,['boost_python'],bp_source_file) or
+        CheckLibs(context,['boost_python-mt'],bp_source_file) )
+
+    if not result:
+        context.Result(0)
+        print "Cannot build against Boost.Python."
+        Exit(1)
+
+    result = context.TryRun(bp_source_file,'.cpp')
+
     if not result:
         context.Result(0)
         print "Cannot build against Boost.Python."

@@ -30,7 +30,7 @@ mod_targets = [mod]
 
 if 'install' in COMMAND_LINE_TARGETS:
 
-    installed_module = env1.Install(dir=python_install_dir, source=mod_targets)
+    installed_mod = env1.Install(dir=python_install_dir, source=mod_targets)
     env1.Alias(target='install', source=installed_mod)
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
