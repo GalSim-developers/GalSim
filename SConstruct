@@ -56,6 +56,7 @@ opts.Add(BoolVariable('INCLUDE_PREFIX_PATHS',
 opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
 opts.Add('CFITSIO_DIR','Explicitly give the cfitsio prefix','')
 opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
+opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
 #opts.Add('CCFITS_DIR','Explicitly give the ccfits prefix','')
 
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
@@ -354,7 +355,7 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
 
     """
 
-    types = ['TMV','CFITSIO','FFTW']
+    types = ['TMV','CFITSIO','FFTW','BOOST']
 
     for t in types:
         dirtag = t+'_DIR'
@@ -526,7 +527,7 @@ int main()
   return 0;
 }
 """
-    context.Message('Checking for Python... ')
+    context.Message('Checking if we can build against Python... ')
     try:
         import distutils.sysconfig
     except ImportError:
@@ -572,7 +573,7 @@ int main()
   return result;
 }
 """
-    context.Message('Checking for NumPy... ')
+    context.Message('Checking if we can build against NumPy... ')
     try:
         import numpy
     except ImportError:
@@ -584,6 +585,27 @@ int main()
     if not result:
         context.Result(0)
         print "Cannot build against NumPy."
+        Exit(1)
+    context.Result(1)
+    return 1
+
+def CheckBoostPython(context):
+    bp_source_file = """
+#include "boost/python.hpp"
+int main()
+{
+  Py_Initialize();
+  boost::python::object obj;
+  Py_Finalize();
+  return 0;
+}
+"""
+    context.Message('Checking if we can build against Boost.Python... ')
+    context.env.Append(LIBS="boost_python")
+    result, null = context.TryRun(bp_source_file,'.cpp')
+    if not result:
+        context.Result(0)
+        print "Cannot build against Boost.Python."
         Exit(1)
     context.Result(1)
     return 1
@@ -650,6 +672,12 @@ def DoLibraryAndHeaderChecks(config):
     if not config.CheckLibWithHeader('fftw3','fftw3.h',language='C++'):
         print 'fftw3 not found'
         print 'You should specify the location of fftw3 as FFTW_DIR=...'
+        Exit(1)
+
+    # Check for boost
+    if not config.CheckHeader('boost/shared_ptr.hpp',language='C++'):
+        print 'Boost not found'
+        print 'You should specify the location of Boost as BOOST_DIR=...'
         Exit(1)
 
     # Check for tmv
@@ -762,7 +790,6 @@ def DoConfig(env):
         SCons.SConf.SetCacheMode('force')
     config = env.Configure(custom_tests = {
         'CheckTMV' : CheckTMV ,
-        'CheckPython' : CheckPython ,
         })
     DoLibraryAndHeaderChecks(config)
     env = config.Finish()
@@ -789,9 +816,11 @@ def DoPythonConfig(env):
     config = env.Configure(custom_tests = {
         'CheckPython' : CheckPython ,
         'CheckNumPy' : CheckNumPy ,
+        'CheckBoostPython' : CheckBoostPython ,
         })
     config.CheckPython()
     config.CheckNumPy()
+    config.CheckBoostPython()
     env = config.Finish()
     # Turn the cache back on now, since we always want it for the main compilation steps.
     if not env['CACHE_LIB']:

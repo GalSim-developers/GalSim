@@ -1,5 +1,5 @@
-#include "Python.h"
+#include "boost/python.hpp"
 
-PyMODINIT_FUNC init_sbprofile(void) {
-    PyObject * m = Py_InitModule("_sbprofile", 0);
-};
+BOOST_PYTHON_MODULE(_sbprofile) {
+    
+}
