@@ -1,0 +1,47 @@
+# vim: set filetype=python :
+
+import os
+import glob
+
+
+Import('pyenv')
+ReadFileList=pyenv['__readfunc']
+
+env1 = pyenv.Clone()
+
+env1['OBJPREFIX'] = '.obj/'
+env1.Prepend(CPPPATH=['#include/galsim'])
+
+python_dir = os.path.join('galsim', 'sbprofile')
+python_install_dir = os.path.join(env1['INSTALL_PREFIX'], python_dir)
+
+mod_files = []
+# This file is typically created by:
+# ls *.cpp > files.txt
+# in each subdirectory.  But after that, it allows you to remove a file from
+# being included in the library by just deleting it from files.txt, rather
+# than having to delete the .cpp file.
+mod_files.extend(ReadFileList('files.txt'))
+
+# Library file containing generic code
+obj_mod = env1.SharedObject(mod_files)
+mod = env1.SharedLibrary('#galsim/sbprofile/_sbprofile', obj_mod, SHLIBPREFIX="")
+mod_targets = [mod]
+
+if 'install' in COMMAND_LINE_TARGETS:
+
+    installed_module = env1.Install(dir=python_install_dir, source=mod_targets)
+    env1.Alias(target='install', source=installed_mod)
+
+if 'uninstall' in COMMAND_LINE_TARGETS:
+    # There is no env.Uninstall method, we must build our own
+    # MJ: The scons delete function doesn't actually delete directories a la rm -rf
+    # I think this is a feature they will add someday, so maybe not worth worrying about it.
+    # but if we really want the galsim directory to be deleted on an uninstall, we
+    # should change this.  Proabaly roll our own Delete function.
+    deltarget = Delete("$TARGET")
+
+    modfiles = [os.path.join(mod_install_dir, os.path.basename(str(f[0]))) for f in mod_targets]
+
+    for f in modfiles:
+        env1.Alias('uninstall', env1.Command(f, None, deltarget))
