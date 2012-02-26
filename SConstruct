@@ -4,10 +4,9 @@ import os
 import sys
 from sys import stdout,stderr
 
-
 # Subdirectories containing SConscript files.  We always process these, but
 # there are some other optional ones
-subdirs=['src','galsim']
+subdirs=['src','pysrc','galsim']
 
 # Configurations will be saved here so command line options don't
 # have to be sent more than once
@@ -54,6 +53,7 @@ opts.Add(BoolVariable('INCLUDE_PREFIX_PATHS',
 opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
 opts.Add('CFITSIO_DIR','Explicitly give the cfitsio prefix','')
 opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
+opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
 #opts.Add('CCFITS_DIR','Explicitly give the ccfits prefix','')
 
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
@@ -352,7 +352,7 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
 
     """
 
-    types = ['TMV','CFITSIO','FFTW']
+    types = ['TMV','CFITSIO','FFTW','BOOST']
 
     for t in types:
         dirtag = t+'_DIR'
@@ -514,6 +514,98 @@ int main()
         print 'Check that the correct location is specified for TMV_DIR'
         Exit(1)
 
+def CheckPython(context):
+    python_source_file = """
+#include "Python.h"
+int main()
+{
+  Py_Initialize();
+  Py_Finalize();
+  return 0;
+}
+"""
+    context.Message('Checking if we can build against Python... ')
+    try:
+        import distutils.sysconfig
+    except ImportError:
+        context.Result(0)
+        print 'Failed to import distutils.sysconfig.'
+        Exit(1)
+    flags = " ".join(v for v in distutils.sysconfig.get_config_vars("BASECFLAGS", "BLDLIBRARY", "LIBS")
+                     if v is not None).split()
+    try: 
+        flags.remove("-Wstrict-prototypes")  # only valid for C, not C++
+    except ValueError: pass
+    try:
+        flags.remove("-L.")
+    except ValueError: pass
+    context.env.Append(CPPPATH=distutils.sysconfig.get_python_inc())
+    context.env.MergeFlags(context.env.ParseFlags(flags))
+    context.env.Prepend(LIBPATH=[os.path.join(distutils.sysconfig.PREFIX, "lib")])
+    result, null = context.TryRun(python_source_file,'.cpp')
+    if not result:
+        context.Result(0)
+        print "Cannot build against Python."
+        Exit(1)
+    context.Result(1)
+    return 1
+
+def CheckNumPy(context):
+    numpy_source_file = """
+#include "Python.h"
+#include "numpy/arrayobject.h"
+void doImport() {
+  import_array();
+}
+int main()
+{
+  int result = 0;
+  Py_Initialize();
+  doImport();
+  npy_intp dims = 2;
+  PyObject * a = PyArray_SimpleNew(1, &dims, NPY_INT);
+  if (!a) result = 1;
+  Py_DECREF(a);
+  Py_Finalize();
+  return result;
+}
+"""
+    context.Message('Checking if we can build against NumPy... ')
+    try:
+        import numpy
+    except ImportError:
+        context.Result(0)
+        print 'Failed to import numpy.'
+        Exit(1)
+    context.env.Append(CPPPATH=numpy.get_include())
+    result, null = context.TryRun(numpy_source_file,'.cpp')
+    if not result:
+        context.Result(0)
+        print "Cannot build against NumPy."
+        Exit(1)
+    context.Result(1)
+    return 1
+
+def CheckBoostPython(context):
+    bp_source_file = """
+#include "boost/python.hpp"
+int main()
+{
+  Py_Initialize();
+  boost::python::object obj;
+  Py_Finalize();
+  return 0;
+}
+"""
+    context.Message('Checking if we can build against Boost.Python... ')
+    context.env.Append(LIBS="boost_python")
+    result, null = context.TryRun(bp_source_file,'.cpp')
+    if not result:
+        context.Result(0)
+        print "Cannot build against Boost.Python."
+        Exit(1)
+    context.Result(1)
+    return 1
 
 def FindPathInEnv(env, dirtag):
     """
@@ -579,6 +671,12 @@ def DoLibraryAndHeaderChecks(config):
         print 'You should specify the location of fftw3 as FFTW_DIR=...'
         Exit(1)
 
+    # Check for boost
+    if not config.CheckHeader('boost/shared_ptr.hpp',language='C++'):
+        print 'Boost not found'
+        print 'You should specify the location of Boost as BOOST_DIR=...'
+        Exit(1)
+
     # Check for tmv
     # First do a simple check that the library and header are in the path.
     # We check the linking with the BLAS library below.
@@ -618,7 +716,6 @@ def DoLibraryAndHeaderChecks(config):
 
 
     config.CheckTMV()
-
  
 def GetNCPU():
     """
@@ -706,6 +803,27 @@ def DoConfig(env):
         env.Append(CPPDEFINES=['MEM_TEST'])
 
 
+def DoPythonConfig(env):
+    """
+    Configure an environment to build against Python and NumPy.
+    """
+    # See note by similar code in DoLibraryAndHeaderChecks
+    if not env['CACHE_LIB']:
+        SCons.SConf.SetCacheMode('force')
+    config = env.Configure(custom_tests = {
+        'CheckPython' : CheckPython ,
+        'CheckNumPy' : CheckNumPy ,
+        'CheckBoostPython' : CheckBoostPython ,
+        })
+    config.CheckPython()
+    config.CheckNumPy()
+    config.CheckBoostPython()
+    env = config.Finish()
+    # Turn the cache back on now, since we always want it for the main compilation steps.
+    if not env['CACHE_LIB']:
+        SCons.SConf.SetCacheMode('auto')
+
+
 #
 # main program
 #
@@ -731,13 +849,14 @@ if not GetOption('help'):
     env['__readfunc'] = ReadFileList
     env['_InstallProgram'] = RunInstall
     env['_UninstallProgram'] = RunUninstall
+    env['_DoPythonConfig'] = DoPythonConfig
 
     #if env['WITH_UPS']:
         #subdirs += ['ups']
     if 'examples' in COMMAND_LINE_TARGETS:
         subdirs += ['examples']
 
-    # subdirectores to process.  We process src by default
+    # subdirectores to process.  We process src and pysrc by default
     script_files = []
     for d in subdirs:
         script_files.append(os.path.join(d,'SConscript'))
