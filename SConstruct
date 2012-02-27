@@ -659,12 +659,12 @@ int main()
         print "Cannot build against Boost.Python."
         Exit(1)
 
-    #result, output = context.TryRun(bp_source_file,'.cpp')
+    result, output = context.TryRun(bp_source_file,'.cpp')
 
-    #if not result:
-    #    context.Result(0)
-    #    print "Cannot build against Boost.Python."
-    #    Exit(1)
+    if not result:
+        context.Result(0)
+        print "Cannot build against Boost.Python."
+        Exit(1)
     context.Result(1)
     return 1
 
