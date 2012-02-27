@@ -657,7 +657,7 @@ int main()
         print "Cannot build against Boost.Python."
         Exit(1)
 
-    result = context.TryRun(bp_source_file,'.cpp')
+    result, output = context.TryRun(bp_source_file,'.cpp')
 
     if not result:
         context.Result(0)
