@@ -49,7 +49,7 @@ if 'uninstall' in COMMAND_LINE_TARGETS:
     # should change this.  Proabaly roll our own Delete function.
     deltarget = Delete("$TARGET")
 
-    modfiles = [os.path.join(mod_install_dir, os.path.basename(str(f[0]))) for f in mod_targets]
+    modfiles = [os.path.join(python_install_dir, os.path.basename(str(f[0]))) for f in mod_targets]
 
     for f in modfiles:
         env1.Alias('uninstall', env1.Command(f, None, deltarget))
