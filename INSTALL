@@ -77,7 +77,8 @@ you will be running the galsim package from, and on which you have installed Num
 
 ldd <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.dylib  (on Linux)
 
-otool -L <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.dylib  (on OSX 10.7 #TODO: Check other versions)
+otool -L <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.dylib  (on OSX 10.7 #TODO: 
+Check other versions)
 
 If the Python executable listed is the one you will be using, all is well.  If not, Boost can
 be forced to use a different version by specifying the following options to the ./bootstrap.sh
