@@ -40,8 +40,6 @@ if 'install' in COMMAND_LINE_TARGETS:
 
     installed_mod = env1.Install(dir=python_install_dir, source=mod_targets)
     env1.Alias(target='install', source=installed_mod)
-    # Need this too to make sure the installed libraries get the right absolute path on Macs
-    env1.Alias(target='install', source=dummy_targets)
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
     # There is no env.Uninstall method, we must build our own
