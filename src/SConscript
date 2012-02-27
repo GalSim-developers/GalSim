@@ -58,7 +58,7 @@ if env['PLATFORM'] == 'darwin':
 	    lib_name = str(l[0].abspath)
 	# Add .os to the end so the touched file is ignored by typical .gitignore files
 	# and the . in front so it is hidden.
-        dummy_targets += env1.RenameLib('.' + str(l[0]) + '_dummy.os' , lib_name)
+        dummy_targets += env1.RenameLib('.' + os.path.basename(str(l[0])) + '_dummy.os' , lib_name)
 
 Default(lib_targets, dummy_targets)
 

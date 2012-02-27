@@ -29,20 +29,12 @@ obj_mod = env1.SharedObject(mod_files)
 # set to this (at least with SCons 2.0), and .so is required.
 mod = env1.LoadableModule(
         os.path.join('#galsim','sbprofile','_sbprofile'), obj_mod,
-	SHLIBPREFIX="", LDMODULESUFFIX='.so')
+        SHLIBPREFIX="", LDMODULESUFFIX='.so')
 mod_targets = [mod]
 
-# See src/SConstruct for why we need this next bit:
-dummy_targets = []
-if env1['PLATFORM'] == 'darwin':
-    for m in mod_targets:
-        if 'install' in COMMAND_LINE_TARGETS:
-	    mod_name = os.path.join(python_install_dir,os.path.basename(str(m[0])))
-	else:
-	    mod_name = str(m[0].abspath)
-        dummy_targets += env1.RenameLib('.' + str(m[0]) + '_dummy.os' , mod_name)
+# NB: With LoadableModule (rather than SharedLibrary), we don't need the RenameLib stuff on Macs.
 
-Default(mod_targets,dummy_targets)
+Default(mod_targets)
 
 if 'install' in COMMAND_LINE_TARGETS:
 

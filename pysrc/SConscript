@@ -16,6 +16,7 @@ lib_dir = 'lib'
 lib_install_dir = os.path.join(env['PYPREFIX'], lib_dir)
 
 # Include the library location within the modules.
+# TODO: Do we still need this, now that we are using LoadableModule?
 if 'install' in COMMAND_LINE_TARGETS:
     pyenv.Append( RPATH = Dir(lib_install_dir).abspath )
 else:
