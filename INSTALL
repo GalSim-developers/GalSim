@@ -1,17 +1,96 @@
 --- GalSim Installation Instructions ---
 
-1. Required libraries
+Here are some notes on the installation of the GalSim toolkit, which uses SCons as its primary
+build system.  Currently, these notes are aimed at GalSim developers: they may need to be
+tightened up for public consumption!
 
-Python with Numpy
+For info regarding SCons usage (once installed, see below) you can type:
 
-FFTW
+scons --help
 
-CFITSIO
+at prompt, or see http://www.scons.org/documentation.php
 
-Boost
+Table of Contents:
+1. Libraries/software required before building
+2. Installing the galsim Python package
+3. Installing example executables
+4. Platform-specific notes
 
 
-2. Installing the galsim package
+1. Libraries/software required before building
+
+i) SCons (http://www.scons.org)
+
+This build system manager needs to be installed (#TODO: which minimum version?), as it is used
+by the GalSim installation process.  Check if it is installed, and if so which version, by
+typing:
+
+scons --version
+
+at prompt. See Section 4 of this document (platform-specific notes) for some easy to install 
+sources of the SCons software.
+
+
+ii) Python (with Numpy and Pyfits modules installed)
+
+The heart of this code is the Python package galsim and its associated modules.  So you need 
+Python (#TODO: Make a decision about versions).  
+
+The galsim package will also assume that the Numpy (http://numpy.scipy.org) module and the 
+astronomical FITS file format input/output module Pyfits 
+(http://www.stsci.edu/institute/software_hardware/pyfits) are installed onto your Python system
+so that they can both be imported by
+
+import numpy
+import pyfits
+
+You can test this by loading up the Python interpreter for the version of python you'll be
+using with the GalSim toolkit, and typing the two import commands above.  If you get no
+warning messge, things are OK.
+
+Some users will find they have a few versions of Python around their operating system.  It will
+be important to make sure that the version of Python for which Numpy and Pyfits are installed
+is also the one being used for GalSim, and that this is the one *you* want to use GalSim from!
+Knowing which installed version of Python will be used is also important for the installation
+of the Boost libraries (see v).  See Section 4 of this document for some suggestions about
+getting Python, numpy, pyfits and Boost all working well together on your system.
+
+
+iii) FFTW (http://www.fftw.org)
+
+These Fast Fourier Transform libraries must be installed; see Section 4 for some suggestions
+about installing this on your platform.
+
+
+iv) CFITSIO
+
+#TODO: Remove this. This is, I guess, only temporary once we handle all FITS i/o in python.
+Install CFITSIO.
+
+
+v) Boost C++ (http://www.boost.org)
+
+GalSim makes use of some of the Boost C++ libraries, and Boost must be installed.  It is
+particularly important that your installed Boost library links to the version of Python
+you will be running the galsim package from, and on which you have installed Numpy and Pyfits
+(see ii, above).  Once you have installed Boost, you can check that this is the same by typing
+
+ldd <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.dylib  (on Linux)
+
+otool -L <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.dylib  (on OSX 10.7 #TODO: Check other versions)
+
+If the Python executable listed is the one you will be using, all is well.  If not, Boost can
+be forced to use a different version by specifying the following options to the ./bootstrap.sh
+installation script (defaults in [] brackets):
+
+  --with-python=PYTHON      specify the Python executable [python]
+  --with-python-root=DIR    specify the root of the Python installation
+                            [automatically detected]
+
+#TODO: Add Windows checks??
+
+
+2. Installing the galsim Python package
 
 
 3. Installing example executables
