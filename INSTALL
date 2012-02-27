@@ -1,0 +1,26 @@
+--- GalSim Installation Instructions ---
+
+1. Required libraries
+
+Python with Numpy
+
+FFTW
+
+CFITSIO
+
+Boost
+
+
+2. Installing the galsim package
+
+
+3. Installing example executables
+
+
+4. Platform-specific notes 
+
+
+
+
+
+
