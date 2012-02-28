@@ -9,8 +9,9 @@ from sys import stdout,stderr
 
 print 'SCons is version',SCons.__version__,'using python version',platform.python_version()
 
-# Require SCons version >= 2.0
-EnsureSConsVersion(2, 0)
+# Require SCons version >= 1.1
+# (This is the earliest version I could find to test on.  Probably works with 1.0.)
+EnsureSConsVersion(1, 1)
 
 # Subdirectories containing SConscript files.  We always process these, but
 # there are some other optional ones
