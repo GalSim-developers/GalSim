@@ -27,7 +27,7 @@ versions.  Check if it is installed, and if so which version, by typing
 
 scons --version
 
-See Section 4 of this document (platform-specific notes) for some easy to install sources 
+See Section 4 of this document (platform-specific notes) for some easy-to-install sources 
 of the SCons software.
 
 
@@ -46,7 +46,7 @@ import pyfits
 
 You can test this by loading up the Python interpreter for the version of python you'll be
 using with the GalSim toolkit, and typing the two import commands above.  If you get no
-warning messge, things are OK.
+warning message, things are OK.
 
 Some users will find they have a few versions of Python around their operating system.  It will
 be important to make sure that the version of Python for which Numpy and Pyfits are installed
@@ -70,8 +70,12 @@ Usually it just requires the command
 
 scons install PREFIX=<installdir>
 
-but there are additional options you might consider, so you should read its INSTALL file
-for full details.
+but there are additional options you might consider, so you should
+read its INSTALL file for full details (also note, you may not need to
+specify the installation directory if you are comfortable with the
+default that is noted in the scons INSTALL file).  Note: if you are
+trying to install into a system directory then you need to use sudo,
+i.e.  sudo scons install PREFIX=<installdir>
 
 
 v) Boost C++ (http://www.boost.org)
