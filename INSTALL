@@ -90,16 +90,111 @@ installation script (defaults in [] brackets):
 
 #TODO: Add Windows checks??
 
+Finally, when building and installing Boost using the "./b2" or "./bjam" executables that get 
+constructed by running the bootstrap script, do specify that they are built as shared libraries
+by setting the link=shared property. Example:
+
+./b2 --prefix=<INSTALL_DIR> link=shared install
+
+at prompt.
+
 
 2. Installing the galsim Python package
+
+From the GalSim base directory (in which this INSTALL file is found) type
+
+scons galsim
+
+at prompt.  If everything above was installed, you *might* be lucky enough to have this work
+first time.  Otherwise, you may have to tell scons where to find some of those libraries.
+This can be done by providing command line options as instructed by the scons error message,
+for example
+
+scons galsim TMV_DIR=<mylibdir>
+
+at prompt, if the TMV library and include files were installed into <mylibdir>/lib and 
+<mylibdir>/include.
+
+#TODO: Add more here... perhaps link to Wiki FAQs?
+#TODO: Windows?
+
+To clean all compiled objects from the GalSim directory, you can use
+
+scons -c
+
+at prompt (this is rather like a make clean command).
+
+If you want to install the galsim dynamic library libgalsim.dylib and others (#TODO: which?) 
+in a system visible location (#TODO: is this correct terminology, even correct factually?) 
+then this can be done using
+
+scons install PREFIX=<INSTALL_DIR>
+
+at prompt, where <INSTALL_DIR> is the directory you wish to install to (default if the PREFIX
+property is unset is /usr/local).  These changes can be undone using
+
+sudo scons uninstall
+
+at prompt.
 
 
 3. Installing example executables
 
+There are some example executables that come with GalSim, and will be useful for testing and
+development particularly outside the python layer.  
+
+These can be built by typing
+
+scons examples
+
+at prompt.  The executables will then be visible in GalSim/bin/.  If you wish to install them 
+to some other directory (e.g. one visible to $PATH) then this can be done by
+
+sudo scons install examples PREFIX=<INSTALL_DIR>
+
+at prompt, where <INSTALL_DIR> is the directory you wish to install to (default if unset is 
+/usr/local).  These changes can be reversed using
+
+sudo scons uninstall examples
+
+at prompt.
+
 
 4. Platform-specific notes 
 
+i) Linux
+#TODO: Add something here after testing!
 
+
+ii) Mac OSX  (#TODO: Expand this, maybe move it to a Wiki FAQ)
+
+a) Use of Fink -- the fink (http://www.finkproject.org) package management software is popular
+with Mac users.  Once it is installed, many of the library dependencies of GalSim can be
+added simply by commands such as
+
+fink install cfitsio
+fink install fftw 
+fink install scons
+
+TMV may soon be added to the list of fink packages, which would make GalSim installation even
+easier.  However, there is a slight caveat regarding the use of fink-installed Boost C++ and
+the Enthought Python Distribution, see below...
+
+Macports is another popular Mac package management project.
+
+
+b) The Enthought Python Distribution (EPD) is a single-install package that provides Python,
+Numpy, and SCons, along with many other useful Python modules in a well-maintined single 
+framework.  It is free for academic use (http://enthought.com/products/edudownload.php).
+
+However, it is not automatically detected as the installed version of Python when fink installs
+the Boost C++ library.  For GalSim to work, it needs to be.
+
+The solution is then to install Boost C++ manually, which luckily is relatively straightforward.
+This can be done by following the instructions of Section 1.v), above.
+
+(#TODO: This maybe is not even truly a Mac-only issue, as EPD is also available for Linux and
+Windows...)
 
 
 
