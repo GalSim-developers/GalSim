@@ -3,5 +3,6 @@
 config.log
 *.so
 *.os
+*.pyc
 .obj
 gs_scons.conf
