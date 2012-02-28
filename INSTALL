@@ -130,8 +130,9 @@ installation script (defaults in [] brackets):
 
 vi) CFITSIO
 
-#TODO: Remove this. This is, I guess, only temporary once we handle all FITS i/o in python.
 Install CFITSIO.
+
+#TODO: Remove this once we handle all FITS i/o in python.  But for now, we do need it. 
 
 
 2. Installing the galsim Python package
