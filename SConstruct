@@ -43,7 +43,7 @@ opts.Add('CXX','Name of c++ compiler')
 opts.Add('FLAGS','Compile flags to send to the compiler','')
 opts.Add('EXTRA_FLAGS','Extra flags to send to the compiler','')
 opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
-opts.Add(BoolVariable('EXTRA_DEBUG','Turn on extra debugging statements',False))
+
 opts.Add(PathVariable('PREFIX','prefix for installation','', PathVariable.PathAccept))
 opts.Add(PathVariable('PYPREFIX','prefix for installation of python modules',
         default_py_prefix,PathVariable.PathAccept))
@@ -73,7 +73,7 @@ opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
 #opts.Add('CCFITS_DIR','Explicitly give the ccfits prefix','')
 
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
-opts.Add('LIBS','Libraries to send to the linker','')
+opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
 
 opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
@@ -122,12 +122,13 @@ def BasicCCFlags(env):
     compiler = env['CXXTYPE']
     version = env['CXXVERSION_NUMERICAL']
 
-    # First parse the LIBS option if present
-    if env['LIBS'] == '':
+    # First parse the EXTRA_LIBS option if present
+    if env['EXTRA_LIBS'] == '':
         env.Replace(LIBS=[])
     else:
-        libs = env['LIBS'].split(' ')
-        env.Replace(LIGS=libs)
+        libs = env['EXTRA_LIBS'].split(' ')
+        env.Replace(LIBS=libs)
+
     if compiler == 'g++' and version >= 4.4:
         # Workaround for a bug in the g++ v4.4 exception handling
         # I don't think 4.5 or 4.6 actually need it, but keep >= for now

@@ -4,11 +4,11 @@ Here are some notes on the installation of the GalSim toolkit, which uses SCons 
 build system.  Currently, these notes are aimed at GalSim developers: they may need to be
 tightened up for public consumption!
 
-For info regarding SCons usage (once installed, see below) you can type:
+For info regarding SCons usage (once installed, see below) you can type
 
 scons --help
 
-at prompt, or see http://www.scons.org/documentation.php
+or see http://www.scons.org/documentation.php
 
 Table of Contents:
 1. Libraries/software required before building
@@ -21,14 +21,14 @@ Table of Contents:
 
 i) SCons (http://www.scons.org)
 
-This build system manager needs to be installed (#TODO: which minimum version?), as it is used
-by the GalSim installation process.  Check if it is installed, and if so which version, by
-typing:
+This build system manager needs to be installed, as it is used by the GalSim installation 
+process.  Versions 2.0 and 2.1 get reasonable testing, but it should also work with 1.x 
+versions.  Check if it is installed, and if so which version, by typing
 
 scons --version
 
-at prompt. See Section 4 of this document (platform-specific notes) for some easy to install 
-sources of the SCons software.
+See Section 4 of this document (platform-specific notes) for some easy to install sources 
+of the SCons software.
 
 
 ii) Python (with Numpy and Pyfits modules installed)
@@ -62,10 +62,16 @@ These Fast Fourier Transform libraries must be installed; see Section 4 for some
 about installing this on your platform.
 
 
-iv) CFITSIO
+iv) TMV (http://code.google.com/p/tmv-cpp/)
 
-#TODO: Remove this. This is, I guess, only temporary once we handle all FITS i/o in python.
-Install CFITSIO.
+GalSim uses the TMV library for its linear algebra routines.  You should download it
+from the above site and follow the instructions in its INSTALL file for how to install it.
+Usually it just requires the command
+
+scons install PREFIX=<installdir>
+
+but there are additional options you might consider, so you should read its INSTALL file
+for full details.
 
 
 v) Boost C++ (http://www.boost.org)
@@ -75,12 +81,10 @@ particularly important that your installed Boost library links to the version of
 you will be running the galsim package from, and on which you have installed Numpy and Pyfits
 (see ii, above).  Once you have installed Boost, you can check that this is the same by typing
 
-ldd <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.dylib  (on Linux)
+ldd <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.so  (on Linux)
+otool -L <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.dylib  (on OSX)
 
-otool -L <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.dylib  (on OSX 10.7 #TODO: 
-Check other versions)
-
-If the Python executable listed is the one you will be using, all is well.  If not, Boost can
+If the Python library listed is the one you will be using, all is well.  If not, Boost can
 be forced to use a different version by specifying the following options to the ./bootstrap.sh
 installation script (defaults in [] brackets):
 
@@ -91,54 +95,98 @@ installation script (defaults in [] brackets):
 #TODO: Add Windows checks??
 
 Finally, when building and installing Boost using the "./b2" or "./bjam" executables that get 
-constructed by running the bootstrap script, do specify that they are built as shared libraries
-by setting the link=shared property. Example:
+constructed by running the bootstrap script, you should specify that they are built as shared 
+libraries by setting the link=shared property. Example:
 
 ./b2 --prefix=<INSTALL_DIR> link=shared install
 
-at prompt.
+
+vi) CFITSIO
+
+#TODO: Remove this. This is, I guess, only temporary once we handle all FITS i/o in python.
+Install CFITSIO.
 
 
 2. Installing the galsim Python package
 
 From the GalSim base directory (in which this INSTALL file is found) type
 
-scons galsim
+scons
 
-at prompt.  If everything above was installed, you *might* be lucky enough to have this work
-first time.  Otherwise, you may have to tell scons where to find some of those libraries.
-This can be done by providing command line options as instructed by the scons error message,
-for example
+If everything above was installed, you *might* be lucky enough to have this work first time.
+Otherwise, you may have to tell SCons where to find some of those libraries.  There are quite 
+a few options that you can use to tell SCons where to look, as well as other things about the 
+build process.  To see a list of options you can pass to SCons, type
 
-scons galsim TMV_DIR=<mylibdir>
+scons -h
 
-at prompt, if the TMV library and include files were installed into <mylibdir>/lib and 
-<mylibdir>/include.
+(See also section 5 below.) 
+For example, to specify where your TMV library is located, you can type
+
+scons TMV_DIR=<mylibdir>
+
+where <mylibdir> would be the same as the PREFIX you specified when installing TMV.
+i.e. The TMV library and include files are installed in <mylibdir>/lib and <mylibdir>/include.
+
+Another common option is CXX=<c++compiler>.  So to compile with icpc rather than the 
+default g++, type
+
+scons CXX=icpc
+
+One nice feature of SCons is that once you have specified a parameter, it will save that
+value for future builds in the file gs_scons.conf, so once you have the build process working,
+for later builds you only need to type scons.  It can also be useful to edit this file
+directly -- mostly if you want to unset a parameter and return to the default value, it 
+can be easier to just delete the line from this file, rather than explicitly set it back
+to the default value.
+
+Also, SCons caches the results of the various checks it does for the required external 
+libraries (tmv, boost, etc.).  This is usually very helpful, since they don't generally
+change, so it makes later builds much faster.  However, sometimes you don't want SCons
+to remember the results while you are initally setting things up.  For example, you might
+recompile the boost library with a different compiler or python version.  In this case,
+you can tell SCons not to cache the results of previous library tests with 
+
+scons CACHE_LIB=false
+
+Once everything is working, you can set it back to true.  Sometimes (rarely) this won't be
+sufficient, and you might need to completely blow away everything scons knows about what 
+it has tried to build previously.  You can do this with 
+
+/bin/rm -rf .scon*
+
+This will force SCons to recheck and recompile everything from scratch.
 
 #TODO: Add more here... perhaps link to Wiki FAQs?
 #TODO: Windows?
 
-To clean all compiled objects from the GalSim directory, you can use
+Once you have a successful build, you can install the GalSim library, python modules, 
+and header files into standard locations (like /usr/local and your Python site-packages 
+directory) with
+
+scons install
+or 
+sudo scons install
+
+If you want to install into a different location, the prefix for the library and header files
+can be specified with PREFIX=<installdir>, and the location for the python modules can be 
+specified with PYPREFIX=<pythondir>.  So the command would be
+
+scons install PREFIX=<installdir> PYPREFIX=<pythondir>
+
+The installed files are removed with the command
+
+scons uninstall
+
+Finally, to clean all compiled objects from the GalSim directory, you can use
 
 scons -c
 
-at prompt (this is rather like a make clean command).
-
-If you want to install the galsim dynamic library libgalsim.dylib and others (#TODO: which?) 
-in a system visible location (#TODO: is this correct terminology, even correct factually?) 
-then this can be done using
-
-scons install PREFIX=<INSTALL_DIR>
-
-at prompt, where <INSTALL_DIR> is the directory you wish to install to (default if the PREFIX
-property is unset is /usr/local).  These changes can be undone using
-
-sudo scons uninstall
-
-at prompt.
+This is rather like a "make clean" command.
 
 
-3. Installing example executables
+
+3. Installing example and test executables
 
 There are some example executables that come with GalSim, and will be useful for testing and
 development particularly outside the python layer.  
@@ -147,17 +195,21 @@ These can be built by typing
 
 scons examples
 
-at prompt.  The executables will then be visible in GalSim/bin/.  If you wish to install them 
+The executables will then be visible in GalSim/bin/.  If you wish to install them 
 to some other directory (e.g. one visible to $PATH) then this can be done by
 
-sudo scons install examples PREFIX=<INSTALL_DIR>
+scons install examples PREFIX=<installdir>
 
-at prompt, where <INSTALL_DIR> is the directory you wish to install to (default if unset is 
-/usr/local).  These changes can be reversed using
+where <installdir> is the directory you wish to install to (default if unset is /usr/local).
+These changes can be reversed using
 
-sudo scons uninstall examples
+scons uninstall examples
 
-at prompt.
+We don't have any test programs yet, but once we do, they will be built and run by typing
+
+scons tests
+
+This should compile the test suite and run it. 
 
 
 4. Platform-specific notes 
@@ -197,5 +249,103 @@ This can be done by following the instructions of Section 1.v), above.
 Windows...)
 
 
+5. More SCons options
 
+   Here is a fairly complete list of the options you can pass to SCons to control
+   the build process.  The options are listed with their default value. 
+   You change them simply by specifying a different value on the command line.  
+   For example:
+
+     scons CXX=icpc TMV_DIR=~
+
+   (Unlike autotools, SCons correctly expands ~ to your home directory.)
+   You can list these options from the command line with 
+
+     scons -h
+
+   Basic flags about the C++ compilation:
+
+     CXX=g++ specifies which C++ compiler to use.
+     FLAGS='' specifies the basic flags to pass to the compiler.  
+           The default behavior is to automatically choose good flags to use according 
+	   to which kind of compiler you are using.  This option overrides that and 
+	   lets you specify exactly what flags to use.
+     EXTRA_FLAGS='' specifies some extra flags that you want to use in addition to 
+           the defaults that SCons determines on its own.  Unlike the above option,
+	   this doesn't override the defaults, it just adds to them.
+     DEBUG=true specifies whether to keep the debugging assert statements in the compiled 
+           library code.  They aren't much of a performance hit, so it is generally worth
+	   keeping them in, but if you need to squeeze out every last bit of performance,
+	   you can set this to false.
+     WARN=false specifies whether to add warning compiler flags such as -Wall.
+           Developers should set this to true and fix everything that comes up as a warning
+	   (on both g++ and icpc).  However, end users can leave it as false in case their
+	   compiler is a stickler for something that didn't get caught in development.
+	   #TODO: Move this prescription that developers should set it to true somewhere
+	   else.  Maybe in the credo.txt file?
+     WITH_OPENMP=true specifies whether to use OpenMP to parallelize some parts of the code.
+
+   Flags about where to install the library and modules:
+
+     PREFIX=/usr/local specifies where to install the library when running scons install.
+     PYPREFIX=[your python dir]/site-packages specifies where to install the Python 
+           modules when running scons install.
+
+   Flags that specify where to look for external libraries:
+
+     TMV_DIR='' specifies the location of TMV if it is not in a standard location.
+           This should be the same value as you used for PREFIX when installing TMV.
+     TMV_LINK='' specifies the location of the tmv-link file.  Normally, this is in
+           TMV_DIR/share, but if not, you can specify the correct location here.
+     FFTW_DIR='' specifies the root location of FFTW.  The header files should be in
+           FFTW_DIR/include and the library files in FFTW_DIR/lib.
+     CFITSIO_DIR='' specifies the root location of CFITSIO  The header files should be in
+           CFITSIO_DIR/include and the library files in CFITSIO_DIR/lib.
+     BOOST_DIR='' specifies the root location of BOOST  The header files should be in
+           BOOST_DIR/include/boost and the library files in BOOST_DIR/lib.
+     EXTRA_INCLUDE_PATH='' specifies extra directories in which to search for 
+           header files in addition to the standard locations such as /usr/include and 
+           /usr/local/include and the ones derived from the above options.  
+	   Sometimes the above options don't quite work, so you may need to specify 
+	   other locations, which is what this option is for.  These directories are 
+	   specified as -I flags to the compiler.  If you are giving multiple directories,
+	   they should be separated by colons.
+     EXTRA_LIB_PATH='' specifies extra directories in which to search for libraries
+           in addition to the standard locations such as /usr/lib and /usr/local/lib.
+	   These directories are specified as -L flags to the linker.  If you are giving 
+           multiple directories, they should be separated by colons.
+     EXTRA_PATH='' specifies directories in which to search for executables (notably the 
+           compiler, although you can also just give the full path in the CXX parameter) 
+	   in addition to the standard locations such as /usr/bin and /usr/local/bin.  
+	   If you are giving multiple directories, they should be separated by colons.
+     IMPORT_PATHS=false specifies whether to import extra path directories from the 
+           environment variables: PATH, C_INCLUDE_PATH, LD_LIBRARY_PATH and LIBRARY_PATH.
+	   If you have a complicated setup in which you use these environment variables to 
+	   control everything, this can be an easy way to let SCons know about these 
+	   locations.
+     IMPORT_ENV=true specifies whether to import the entire environment from the calling 
+           shell.  The default is for SCons to use the same environment as the shell from 
+	   which it is called.  However, sometimes it can be useful to start with a clean 
+	   environment and manually add paths for various things, in which case you would 
+	   want to set this to false.
+     EXTRA_LIBS='' specifies libraries to use in addition to what SCons finds on
+           its own.  This might be useful if you have a non-standard name for one of 
+	   the external libraries.  e.g. If you want to use the Intel MKL library for
+	   the fftw3 library, SCons won't automatically try that, so you could add those
+	   libraries here.  If there is more than one, they should be quoted with 
+	   spaces between the different libraries.  e.g. 
+	   EXTRA_LIBS = "mkl_intel mkl_intel_thread mkl_core"
+
+   Miscellaneous flags:
+
+     CACHE_LIB=true specifies whether to cache the results of the library checks
+           While you are working one getting the prerequisites installed properly, it can
+	   be useful to set this to false to force SCons to redo all of its library checks
+	   each time.  Once you have a successful build, you should set it back to true
+	   so that later builds can skip those checks.
+     WITH_PROF=false specifies whether to use the compiler flag -pg to include profiling
+           info for gprof.
+     MEM_TEST=false specifies whether to test the code for memory leaks.
+     TMV_DEBUG=false specifies whether to turn on extra (slower) debugging statements 
+           within the TMV library.
 
