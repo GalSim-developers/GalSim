@@ -1,7 +1,7 @@
 ;; LSST
 (load "lsst")
 (load "lsst-utils")
-(let ( (lsst t) (width 110) )
+(let ( (lsst t) (width 96) )
   (if lsst
       (lsst-c++-default))
 
