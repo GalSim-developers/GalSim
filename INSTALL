@@ -30,6 +30,11 @@ scons --version
 See Section 4 of this document (platform-specific notes) for some easy-to-install sources 
 of the SCons software.
 
+SCons itself is written in Python, and running "scons" invokes a Python interpreter.
+GalSim will be configured to build against the same Python that is being used to run SCons.
+Making sure that matches the Python you'd like to use can help you avoid a lot of problems
+later on.
+
 
 ii) Python (with Numpy and Pyfits modules installed)
 
@@ -51,6 +56,7 @@ warning message, things are OK.
 Some users will find they have a few versions of Python around their operating system.  It will
 be important to make sure that the version of Python for which Numpy and Pyfits are installed
 is also the one being used for GalSim, and that this is the one *you* want to use GalSim from!
+
 Knowing which installed version of Python will be used is also important for the installation
 of the Boost libraries (see v).  See Section 4 of this document for some suggestions about
 getting Python, numpy, pyfits and Boost all working well together on your system.
@@ -90,19 +96,18 @@ essentially amount to using a command
 
 ./bootstrap.sh
 
-(possibly with arguments to point it to the proper python
-installation: use --with-python-root=DIR if you have multiple python
-installations and want to make sure you are using the one on which you
-have installed Numpy and Pyfits, or --with-python=PYTHON to specify
-the Python executable)
+Additional to bootstrap.sh options may be necessary to ensure Boost is
+built against the correct version of Python; see below.
 
 followed by
 
 ./b2 link=shared
 ./b2 --prefix=<INSTALL_DIR> link=shared install
-(if you are installing to a system directory, the second needs to be sudo ./b2...)
+(if you are installing to a system directory, the second needs to be run as
+ root, of course ./b2...)
 
-The link=shared is necessary to ensure that they are built as shared libraries.
+The link=shared is necessary to ensure that they are built as shared libraries;
+this is automatic on some platforms, but not all.
 
 Note: if you don't want to install everything related to boost (which
 takes a while), you can restrict to boost python and math by using
@@ -123,7 +128,8 @@ installation script (defaults in [] brackets):
 
   --with-python=PYTHON      specify the Python executable [python]
   --with-python-root=DIR    specify the root of the Python installation
-                            [automatically detected, but some users have found they have to force it to use a specific one because it detected the wrong one] 
+                            [automatically detected, but some users have found they have to
+                            force it to use a specific one because it detected the wrong one] 
 
 #TODO: Add Windows checks??
 
@@ -243,7 +249,10 @@ This should compile the test suite and run it.
 4. Platform-specific notes 
 
 i) Linux
-#TODO: Add something here after testing!
+
+The vast majority of Linux distributions provide installable packages for most of our dependencies. 
+In may cases, however, it is also necessary to install "-devel" or "-dev" packages (e.g. python-dev
+or libboost-dev on Debian-derivatives).
 
 
 ii) Mac OSX  (#TODO: Expand this, maybe move it to a Wiki FAQ)
