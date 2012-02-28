@@ -34,7 +34,7 @@ struct PyShear {
             "g is \"reduced shear\" such that g=(a-b)/(a+b)\n"
             "eta is \"conformal shear\" such that a/b = exp(eta).\n"
             "Beta is always the position angle of major axis.\n"
-            "FIXME: what convention for position angle?\n";
+            "FIXME: what convention for position angle?\n"
             "\n"
             "The + and - operators for Shear are overloaded to do\n"
             "Composition: returns ellipticity of\n"
