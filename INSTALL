@@ -80,10 +80,39 @@ i.e.  sudo scons install PREFIX=<installdir>
 
 v) Boost C++ (http://www.boost.org)
 
-GalSim makes use of some of the Boost C++ libraries, and Boost must be installed.  It is
-particularly important that your installed Boost library links to the version of Python
-you will be running the galsim package from, and on which you have installed Numpy and Pyfits
-(see ii, above).  Once you have installed Boost, you can check that this is the same by typing
+GalSim makes use of some of the Boost C++ libraries, and Boost must be
+installed.  It is particularly important that your installed Boost
+library links to the version of Python you will be running the galsim
+package from, and on which you have installed Numpy and Pyfits (see
+ii, above).  Boost can be downloaded from the above website, and must
+be installed per the (rather poor) instructions there, which
+essentially amount to using a command 
+
+./bootstrap.sh
+
+(possibly with arguments to point it to the proper python
+installation: use --with-python-root=DIR if you have multiple python
+installations and want to make sure you are using the one on which you
+have installed Numpy and Pyfits, or --with-python=PYTHON to specify
+the Python executable)
+
+followed by
+
+./b2 link=shared
+./b2 --prefix=<INSTALL_DIR> link=shared install
+(if you are installing to a system directory, the second needs to be sudo ./b2...)
+
+The link=shared is necessary to ensure that they are built as shared libraries.
+
+Note: if you don't want to install everything related to boost (which
+takes a while), you can restrict to boost python and math by using
+--with-python --with-math on the ./b2 commands.  Currently we are only
+using boost python, but there are plans to use the RNG in boost math,
+so installing these two seems like the best bet for now.
+
+Once you have installed Boost, you can check that it links to the
+version of python that will be used for GalSim and on which you have
+installed Numpy and Pyfits by typing
 
 ldd <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.so  (on Linux)
 otool -L <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.dylib  (on OSX)
@@ -94,15 +123,9 @@ installation script (defaults in [] brackets):
 
   --with-python=PYTHON      specify the Python executable [python]
   --with-python-root=DIR    specify the root of the Python installation
-                            [automatically detected]
+                            [automatically detected, but some users have found they have to force it to use a specific one because it detected the wrong one] 
 
 #TODO: Add Windows checks??
-
-Finally, when building and installing Boost using the "./b2" or "./bjam" executables that get 
-constructed by running the bootstrap script, you should specify that they are built as shared 
-libraries by setting the link=shared property. Example:
-
-./b2 --prefix=<INSTALL_DIR> link=shared install
 
 
 vi) CFITSIO
