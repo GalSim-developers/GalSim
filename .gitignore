@@ -1,0 +1,7 @@
+.sconf_temp
+.sconsign.dblite
+config.log
+*.so
+*.os
+.obj
+gs_scons.conf

@@ -18,4 +18,6 @@
 
 #include "galsim/Int.h"
 
+#include "galsim/psfcorr.h"
+
 #endif

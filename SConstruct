@@ -9,6 +9,8 @@ from sys import stdout,stderr
 
 print 'SCons is version',SCons.__version__,'using python version',platform.python_version()
 
+print "Python is from", distutils.sysconfig.get_python_inc()
+
 # Require SCons version >= 1.1
 # (This is the earliest version I could find to test on.  Probably works with 1.0.)
 EnsureSConsVersion(1, 1)
@@ -42,7 +44,7 @@ opts.Add('CXX','Name of c++ compiler')
 opts.Add('FLAGS','Compile flags to send to the compiler','')
 opts.Add('EXTRA_FLAGS','Extra flags to send to the compiler','')
 opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
-opts.Add(BoolVariable('EXTRA_DEBUG','Turn on extra debugging statements',False))
+
 opts.Add(PathVariable('PREFIX','prefix for installation','', PathVariable.PathAccept))
 opts.Add(PathVariable('PYPREFIX','prefix for installation of python modules',
         default_py_prefix,PathVariable.PathAccept))
@@ -72,7 +74,7 @@ opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
 #opts.Add('CCFITS_DIR','Explicitly give the ccfits prefix','')
 
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
-opts.Add('LIBS','Libraries to send to the linker','')
+opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
 
 opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
@@ -121,12 +123,13 @@ def BasicCCFlags(env):
     compiler = env['CXXTYPE']
     version = env['CXXVERSION_NUMERICAL']
 
-    # First parse the LIBS option if present
-    if env['LIBS'] == '':
+    # First parse the EXTRA_LIBS option if present
+    if env['EXTRA_LIBS'] == '':
         env.Replace(LIBS=[])
     else:
-        libs = env['LIBS'].split(' ')
-        env.Replace(LIGS=libs)
+        libs = env['EXTRA_LIBS'].split(' ')
+        env.Replace(LIBS=libs)
+
     if compiler == 'g++' and version >= 4.4:
         # Workaround for a bug in the g++ v4.4 exception handling
         # I don't think 4.5 or 4.6 actually need it, but keep >= for now
@@ -546,35 +549,40 @@ int main()
         context.Result(0)
         print 'Failed to import distutils.sysconfig.'
         Exit(1)
-    flags = " ".join(v for v in distutils.sysconfig.get_config_vars("BASECFLAGS", "BLDLIBRARY", "LIBS")
-                     if v is not None).split()
-    try: 
-        flags.remove("-Wstrict-prototypes")  # only valid for C, not C++
-    except ValueError: pass
-    try:
-        flags.remove("-L.")
-    except ValueError: pass
-    context.env.Append(CPPPATH=distutils.sysconfig.get_python_inc())
-    context.env.MergeFlags(context.env.ParseFlags(flags))
-    context.env.Prepend(LIBPATH=[os.path.join(distutils.sysconfig.PREFIX, "lib")])
+    context.env.AppendUnique(CPPPATH=distutils.sysconfig.get_python_inc())
+    libDir = distutils.sysconfig.get_config_var("LIBDIR")
+    context.env.AppendUnique(LIBPATH=libDir)
+    libfile = distutils.sysconfig.get_config_var("LIBRARY")
+    import re
+    match = re.search("(python.*)\.(a|so|dylib)", libfile)
+    if match:
+        context.env.AppendUnique(LIBS=match.group(1))
+    flags = " ".join(distutils.sysconfig.get_config_vars("MODLIBS", "SHLIBS"))
+    context.env.MergeFlags(flags)
 
-    result = (
-        CheckLibs(context,[''],python_source_file) or
-        CheckLibs(context,['python'],python_source_file) or
-        CheckLibs(context,['python2.7'],python_source_file) or
-        CheckLibs(context,['python2.6'],python_source_file) or
-        CheckLibs(context,['python2.5'],python_source_file) )
+    result, output = context.TryRun(python_source_file,'.cpp')
+
+    if not result:
+        # Sometimes we need some extra stuff on Mac OS
+        frameworkDir = libDir           # search up the libDir tree for the proper home for frameworks
+        while frameworkDir and frameworkDir != "/":
+            frameworkDir, d2 = os.path.split(frameworkDir)
+            if d2 == "Python.framework":
+                if not "Python" in os.listdir(os.path.join(frameworkDir, d2)):
+                    context.Result(0)
+                    print (
+                        "Expected to find Python in framework directory %s, but it isn't there"
+                        % frameworkDir)
+                    Exit(1)
+                break
+        opt = "-F%s" % frameworkDir
+        if opt not in conf.env["LDFLAGS"]:
+            context.env.Append(LDFLAGS = [opt,])
+        result, output = context.TryRun(python_source_file,'.cpp')
 
     if not result:
         context.Result(0)
         print "Cannot build against Python."
-        Exit(1)
-
-    result = context.TryRun(python_source_file,'.cpp')
-
-    if not result:
-        context.Result(0)
-        print "Cannot run Python code."
         Exit(1)
 
     context.Result(1)
@@ -653,7 +661,7 @@ int main()
         print "Cannot build against Boost.Python."
         Exit(1)
 
-    result = context.TryRun(bp_source_file,'.cpp')
+    result, output = context.TryRun(bp_source_file,'.cpp')
 
     if not result:
         context.Result(0)

@@ -25,27 +25,21 @@ mod_files.extend(ReadFileList('files.txt'))
 
 # Library file containing generic code
 obj_mod = env1.SharedObject(mod_files)
-mod = env1.SharedLibrary(os.path.join('#galsim','sbprofile','_sbprofile'), obj_mod, SHLIBPREFIX="")
+# MJ: Seems weird that we need to explicitly specify the suffix, but on Macs it doesn't get
+# set to this (at least with SCons 2.0), and .so is required.
+mod = env1.LoadableModule(
+        os.path.join('#galsim','sbprofile','_sbprofile'), obj_mod,
+        SHLIBPREFIX="", LDMODULESUFFIX='.so')
 mod_targets = [mod]
 
-# See src/SConstruct for why we need this next bit:
-dummy_targets = []
-if env1['PLATFORM'] == 'darwin':
-    for m in mod_targets:
-        if 'install' in COMMAND_LINE_TARGETS:
-	    mod_name = os.path.join(python_install_dir,os.path.basename(str(m[0])))
-	else:
-	    mod_name = str(m[0].abspath)
-        dummy_targets += env1.RenameLib('.' + str(m[0]) + '_dummy.os' , mod_name)
+# NB: With LoadableModule (rather than SharedLibrary), we don't need the RenameLib stuff on Macs.
 
-Default(mod_targets,dummy_targets)
+Default(mod_targets)
 
 if 'install' in COMMAND_LINE_TARGETS:
 
     installed_mod = env1.Install(dir=python_install_dir, source=mod_targets)
     env1.Alias(target='install', source=installed_mod)
-    # Need this too to make sure the installed libraries get the right absolute path on Macs
-    env1.Alias(target='install', source=dummy_targets)
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
     # There is no env.Uninstall method, we must build our own
@@ -55,7 +49,7 @@ if 'uninstall' in COMMAND_LINE_TARGETS:
     # should change this.  Proabaly roll our own Delete function.
     deltarget = Delete("$TARGET")
 
-    modfiles = [os.path.join(mod_install_dir, os.path.basename(str(f[0]))) for f in mod_targets]
+    modfiles = [os.path.join(python_install_dir, os.path.basename(str(f[0]))) for f in mod_targets]
 
     for f in modfiles:
         env1.Alias('uninstall', env1.Command(f, None, deltarget))

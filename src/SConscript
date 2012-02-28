@@ -18,7 +18,7 @@ header_dir = 'include'
 lib_install_dir = os.path.join(env1['INSTALL_PREFIX'], lib_dir)
 header_install_dir = os.path.join(env1['INSTALL_PREFIX'], header_dir)
 
-subdirs = ['SBProfile']
+subdirs = ['SBProfile','meas_shape_hsm']
 
 lib_files = []
 for d in subdirs:
@@ -58,7 +58,7 @@ if env['PLATFORM'] == 'darwin':
 	    lib_name = str(l[0].abspath)
 	# Add .os to the end so the touched file is ignored by typical .gitignore files
 	# and the . in front so it is hidden.
-        dummy_targets += env1.RenameLib('.' + str(l[0]) + '_dummy.os' , lib_name)
+        dummy_targets += env1.RenameLib('.' + os.path.basename(str(l[0])) + '_dummy.os' , lib_name)
 
 Default(lib_targets, dummy_targets)
 
