@@ -100,8 +100,10 @@ namespace sbp {
         PsetMember(const char *k, const int _f=0, const char *c="") : 
             keyword(k), f(flags(_f)), comment(c) {}
 
-        virtual void setValue(const std::string& valstring) {};
-        virtual void setDefault() {};
+        virtual ~PsetMember() {}
+
+        virtual void setValue(const std::string& valstring) {}
+        virtual void setDefault() {}
 
         virtual void dump(std::ostream& os) const 
         {
@@ -187,7 +189,8 @@ namespace sbp {
     class PsetMem<bool> : public PsetMember 
     {
     public:
-        PsetMem(const char *k, bool* vptr, const int _f=0, const char *c="", const bool d=false) : 
+        PsetMem(const char *k, bool* vptr, const int _f=0, const char *c="",
+                const bool d=false) : 
             PsetMember(k, _f, c), valueptr(vptr), defval(d) {}
 
         virtual PsetMem* clone() { return new PsetMem(*this); }

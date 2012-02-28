@@ -102,7 +102,7 @@ namespace sbp {
 
         KTable() : array(0), N(0), dk(0), scaleby(0) {} // dummy constructor
 
-        virtual KTable& operator=(const KTable& rhs) 
+        KTable& operator=(const KTable& rhs) 
         {
             if (&rhs==this) return *this;
             copy_array(rhs);
