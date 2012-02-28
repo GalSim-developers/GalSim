@@ -7,6 +7,7 @@ namespace sbp {
 
 void pyExportBounds();
 void pyExportShear();
+void pyExportSBProfile();
 
 } // namespace sbp
 
@@ -14,4 +15,5 @@ BOOST_PYTHON_MODULE(_sbprofile) {
     import_array(); // for numpy
     sbp::pyExportBounds();
     sbp::pyExportShear();
+    sbp::pyExportSBProfile();
 }
