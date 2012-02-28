@@ -645,7 +645,6 @@ namespace sbp {
         if (!I1.getBounds().includes(b) || !I2.getBounds().includes(b))
             throw ImageError("transform_pixel range exceeds image range");
         for (int y=b.getYMin(); y<=b.getYMax(); y++) {
-            int x=b.getXMin();
             typename Img1::iter ee=I1.getIter(b.getXMax()+1,y);      
             typename Img2::citer it2=I2.getIter(b.getXMin(),y);
             for (typename Img1::iter it1=I1.getIter(b.getXMin(),y);
