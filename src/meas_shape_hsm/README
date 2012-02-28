@@ -1,0 +1,241 @@
+This file describes the contents of the meas_shape package.
+
+******************Basic information and history*****************
+ 
+This code was developed and tested by Christopher Hirata, modified in
+minor ways and further tested on SDSS data and simulations by
+Rachel Mandelbaum.
+
+******************Contact information***************************
+
+Contact Christopher Hirata (chirata@tapir.caltech.edu) and Rachel
+Mandelbaum (rmandelb@astro.princeton.edu) with questions regarding
+this package.  
+
+**********************References***************************
+
+We request that when using this code for science, you cite the
+paper by Hirata & Seljak (2003) for which this code was originally
+developed: 
+http://adsabs.harvard.edu/abs/2003MNRAS.343..459H
+If you rely on the re-Gaussianization method of PSF correction, and
+the tests of this method that were performed on SDSS data, then you
+should also cite Mandelbaum et al. (2005):
+http://adsabs.harvard.edu/abs/2005MNRAS.361.1287M
+
+******************License***************************************
+
+This package is distributed under the Gnu Public License (GPL), see
+COPYING for a copy.
+
+******************Warranty**************************************
+
+Two of the PSF correction techniques that are performed by this code
+has been tested very extensively (linear and re-Gaussianization), and
+one of those was used for numerous science applications
+(re-Gaussianization), as will be described in more detail below.
+Several other techniques are provided and were tested in some detail
+but not used for science.  Consequently while they can be shown to
+give reasonable results on the test cases, we cannot promise
+science-quality outputs for these methods.  Before using the other
+techniques for science, we recommend extensive testing.
+
+******************Contents**************************************
+
+The following files are included with this package -
+  (a) Makefile
+  (b) README_EXAMPLES = script that can be used to run the code on the test
+		        cases, to compare with results in examples/
+  (c) examples/ = directory containing images and other information
+		  for the test cases, plus the ideal outputs 
+  (d) meas_shape.c = code to read in the necessary inputs and
+		     prepare for the PSF correction
+  (e) meas_moments.c = code to measure adaptive moments of an image
+  (f) psfcorr.c = code to perform the PSF correction (includes functions that are called by meas_shape.c and meas_moments.c)
+  (g) psfcorr.h
+
+******************Package dependencies**************************
+
+This package relies on the cfitsio package to read FITS images into C
+code.  It also utilizes several of the Numerical Recipes routines that
+are in the public domain such as dvector, dmatrix, etc. (code provided
+with the package and modified as needed).
+
+******************Purpose***************************************
+
+The purpose of this code is to perform PSF correction to measure
+galaxy shapes for the purpose of weak lensing.  The code can do
+several methods of PSF correction, described and tested on simulated
+data in Hirata & Seljak (2003),
+http://adsabs.harvard.edu/abs/2003MNRAS.343..459H.
+
+The PSF correction methods are specified on the command line:
+
+  (a) KSB: an implementation of the method from Kaiser, Squires,
+      & Broadhurst (1995) described in
+      http://adsabs.harvard.edu/abs/1995ApJ...449..460K.  This method
+      is specified using KSB for the shear estimator.
+
+  (b) Bernstein & Jarvis (2002), appendix C: Method to apply a
+      rounding kernel, and then correct the galaxy image moments using an
+      equation that is valid in the limit that the galaxy and PSF are
+      approximately Gaussian.  This method is specified using BJ for
+      the shear estimator.
+
+  (c) Linear: a variation of method (b) described in Appendix B of
+      Hirata & Seljak (2003).  This method accounts for the first
+      order departure of both the galaxy and PSF from Gaussianity, and
+      is specified using LINEAR for the shear estimator.
+
+  (d) Re-Gaussianization: Method described in section 2.4 of Hirata &
+      Seljak (2003) that includes a correction for the full departure of the
+      PSF from Gaussianity.  Note that this method has been tested more
+      extensively in, e.g., 
+	http://adsabs.harvard.edu/abs/2005MNRAS.361.1287M
+	http://adsabs.harvard.edu/abs/2007MNRAS.376...13M
+      for ground-based data only.  This method is specified using
+      REGAUSS for the shear estimator.
+
+  (e) Shapelets: an implementation of the method from Refregier
+      (2003).  This method is specified using SHAPELET plus two numbers
+      specifying the order of expansion for the PSF and galaxy,
+      respectively.  For example, an 8th order expansion for both would be
+      specified using SHAPELET8,8.
+
+The shapes are defined using e = (1-q^2)/(1+q^2) for an axis ratio
+0<=q<=1. We also have a routine meas_moments.c that can be used to
+simply determine the adaptive moments of a galaxy image.
+
+******************Inputs****************************************
+
+The meas_shape.c code requires the specification of several pieces of information
+on the command line:
+
+  (a) A FITS image file containing the observed galaxy image.
+
+  (b) A FITS image file containing the image of the PSF at the
+      position of the galaxy (where the PSF is assumed to be approximately
+      centered in the postage stamp). 
+
+  (c, d) Guess for the centroid of the galaxy relative to the lower
+	 left corner of the galaxy postage stamp.  Note that this means the
+	 galaxy does not have to be centered within the postage stamp for the
+	 code to work.  Furthermore, only a rough guess is needed, because the
+	 centroid is recalculated in the process of estimating the adaptive
+	 moments.  
+
+  (e) Sky variance (counts^2/pixel) in the galaxy image.  Currently the code
+      does not support the input of a variable sky variance map.
+
+  (f) Code for which shear estimator to use, as described above.
+
+  (g) Sky level in the galaxy and PSF images (e.g., SDSS images such
+  as in examples/ contain a "soft bias" of 1000 counts per pixel,
+  whereas sbprofile outputs contain sky=0).
+
+For meas_moments.c, the code requires the image file and a guess at
+the size in pixels.
+
+******************Hard-coded numbers**********************************
+
+There are several numbers that are currently hard-coded in
+meas_shape.c that may need to be changed depending on the situation:
+
+  (a) In meas_shape.c, ARCSEC: the number of pixels per arcsec, currently hard-coded to
+      the value for SDSS.  This number is only used to provide initial
+      (very rough) guesses for the galaxy and PSF sizes (2.5" and 1") - the
+      code itself works with pixels as the standard length scale.
+
+  (b) In meas_moments.c, FLUX_OFFSET: a number that is subtracted from all galaxy postage
+      stamps and PSF images. 
+
+  (c) MPIX: maximum allowable number of pixels in the images.
+
+
+******************Outputs**********************************
+
+The output of the shape measurement code is a single line containing
+the following 9 numbers:
+  (a) Status of the measurement (hex). 
+  (b) PSF-corrected e_1 in image coordinates.
+  (c) PSF-corrected e_2 in image coordinates.
+  (d) Measurement type: shear or ellipticity.
+  (e) Responsivity, currently set to 1 for all methods.  For those
+methods with shear responsivity not equal to one, this number should
+be determined for the entire galaxy ensemble from the data.
+  (f) Resolution factor, which is 0 for a PSF and 1 for cases where
+the PSF size is negligible compared to the galaxy size.
+  (g) Measurement error on the *shear*.  Note that if the measurement
+type is ellipticity, then to get an ellipticity error, this number
+must be multiplied by 2.
+  (h) A crude size estimate from the adaptive moments.
+  (i) A crude flux (counts) estimate.
+
+The meaning of the outputs depends on the particular PSF correction
+scheme.  In some cases, the output numbers are ellipticities that have
+to be converted to shear estimates.  In other cases (KSB and
+shapelets), the output numbers are shears.  The type of measurement
+that is being returned is indicated in the output as "measurement
+type," and should be handled appropriately before being used for weak
+lensing - for example, division by shear responsivities,
+etc. depending on the particular method. 
+
+Other operations that typically must be done to the output: rotation
+to an overall coordinate system (e.g. RA/dec); correction for camera
+shear; application of cuts on the resolution factor to remove those
+galaxies that are too small to resolve well.
+
+The output of the moments code is a single line containing the
+following 10 numbers:
+  (a) status (should be zero for success)
+  (b-d) Mxx, Myy, Mxy
+  (e,f) e_1, e_2
+  (g) number of iterations
+  (h) 4th moment
+  (i, j) adaptive centroid
+  
+
+******************Errors and failures**********************************
+
+In the case of some error in the shape measurement, the status flag
+will be nonzero and the ellipticities and resolution factors returned
+by the code will be precisely zero.  
+
+Note that this code has been optimized towards SDSS data, and on this
+dataset, a typical field with ~180 useful galaxies will have
+successful measurements for ~178 of them.  The failures can occur for
+many reasons, such as failure of adaptive moments to converge.
+Additional optimization or changes in convergence criteria may be
+necessary for other datasets with very different noise properties or
+seeing.  However, the behavior on the (very different) STEP2 simulations
+was found to be reasonable, with a similar failure rate, so we do not
+envision significant difficulties in adapting the code for other
+datasets. 
+
+
+******************Examples**********************************
+
+As test cases, we have included in the examples/ directory the
+necessary information for five galaxies in SDSS: galaxy images, PSF
+images, and image information.  Our outputs for each of the shape
+measurement methods is given in that directory, in files named
+example.$method.out for $method = bj, ksb, linear, regauss, and
+shapelet8 (where the last is 8th order shapelets).  In order to
+generate comparable output, run the commands in the included file
+EXAMPLES, which will create files myexample.$method.out. 
+
+
+******************Masking**********************************
+
+The code has one additional capability that is not used in the current
+distribution: masking images.  The SDSS atlas images do not include
+separate masks (instead, masking is done by setting the pixel values
+to zero), and thus the routine to read in the images in meas_shape.c
+does not read in a mask.  However, the structures containing the
+images also have an array allocated for the mask, and computations on
+the images check this mask array to ensure that only unmasked pixels
+are used.  For datasets in which masking is needed, it is therefore
+only necessary to change the file readin section of meas_shape.c to
+read in the mask as well.
+
+
