@@ -27,8 +27,13 @@ versions.  Check if it is installed, and if so which version, by typing
 
 scons --version
 
-See Section 4 of this document (platform-specific notes) for some easy to install sources 
+See Section 4 of this document (platform-specific notes) for some easy-to-install sources 
 of the SCons software.
+
+SCons itself is written in Python, and running "scons" invokes a Python interpreter.
+GalSim will be configured to build against the same Python that is being used to run SCons.
+Making sure that matches the Python you'd like to use can help you avoid a lot of problems
+later on.
 
 
 ii) Python (with Numpy and Pyfits modules installed)
@@ -46,11 +51,12 @@ import pyfits
 
 You can test this by loading up the Python interpreter for the version of python you'll be
 using with the GalSim toolkit, and typing the two import commands above.  If you get no
-warning messge, things are OK.
+warning message, things are OK.
 
 Some users will find they have a few versions of Python around their operating system.  It will
 be important to make sure that the version of Python for which Numpy and Pyfits are installed
 is also the one being used for GalSim, and that this is the one *you* want to use GalSim from!
+
 Knowing which installed version of Python will be used is also important for the installation
 of the Boost libraries (see v).  See Section 4 of this document for some suggestions about
 getting Python, numpy, pyfits and Boost all working well together on your system.
@@ -70,16 +76,48 @@ Usually it just requires the command
 
 scons install PREFIX=<installdir>
 
-but there are additional options you might consider, so you should read its INSTALL file
-for full details.
+but there are additional options you might consider, so you should
+read its INSTALL file for full details (also note, you may not need to
+specify the installation directory if you are comfortable with the
+default that is noted in the scons INSTALL file).  Note: if you are
+trying to install into a system directory then you need to use sudo,
+i.e.  sudo scons install PREFIX=<installdir>
 
 
 v) Boost C++ (http://www.boost.org)
 
-GalSim makes use of some of the Boost C++ libraries, and Boost must be installed.  It is
-particularly important that your installed Boost library links to the version of Python
-you will be running the galsim package from, and on which you have installed Numpy and Pyfits
-(see ii, above).  Once you have installed Boost, you can check that this is the same by typing
+GalSim makes use of some of the Boost C++ libraries, and Boost must be
+installed.  It is particularly important that your installed Boost
+library links to the version of Python you will be running the galsim
+package from, and on which you have installed Numpy and Pyfits (see
+ii, above).  Boost can be downloaded from the above website, and must
+be installed per the (rather poor) instructions there, which
+essentially amount to using a command 
+
+./bootstrap.sh
+
+Additional to bootstrap.sh options may be necessary to ensure Boost is
+built against the correct version of Python; see below.
+
+followed by
+
+./b2 link=shared
+./b2 --prefix=<INSTALL_DIR> link=shared install
+(if you are installing to a system directory, the second needs to be run as
+ root, of course ./b2...)
+
+The link=shared is necessary to ensure that they are built as shared libraries;
+this is automatic on some platforms, but not all.
+
+Note: if you don't want to install everything related to boost (which
+takes a while), you can restrict to boost python and math by using
+--with-python --with-math on the ./b2 commands.  Currently we are only
+using boost python, but there are plans to use the RNG in boost math,
+so installing these two seems like the best bet for now.
+
+Once you have installed Boost, you can check that it links to the
+version of python that will be used for GalSim and on which you have
+installed Numpy and Pyfits by typing
 
 ldd <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.so  (on Linux)
 otool -L <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.dylib  (on OSX)
@@ -90,21 +128,17 @@ installation script (defaults in [] brackets):
 
   --with-python=PYTHON      specify the Python executable [python]
   --with-python-root=DIR    specify the root of the Python installation
-                            [automatically detected]
+                            [automatically detected, but some users have found they have to
+                            force it to use a specific one because it detected the wrong one] 
 
 #TODO: Add Windows checks??
-
-Finally, when building and installing Boost using the "./b2" or "./bjam" executables that get 
-constructed by running the bootstrap script, you should specify that they are built as shared 
-libraries by setting the link=shared property. Example:
-
-./b2 --prefix=<INSTALL_DIR> link=shared install
 
 
 vi) CFITSIO
 
-#TODO: Remove this. This is, I guess, only temporary once we handle all FITS i/o in python.
 Install CFITSIO.
+
+#TODO: Remove this once we handle all FITS i/o in python.  But for now, we do need it. 
 
 
 2. Installing the galsim Python package
@@ -215,7 +249,10 @@ This should compile the test suite and run it.
 4. Platform-specific notes 
 
 i) Linux
-#TODO: Add something here after testing!
+
+The vast majority of Linux distributions provide installable packages for most of our dependencies. 
+In may cases, however, it is also necessary to install "-devel" or "-dev" packages (e.g. python-dev
+or libboost-dev on Debian-derivatives).
 
 
 ii) Mac OSX  (#TODO: Expand this, maybe move it to a Wiki FAQ)
