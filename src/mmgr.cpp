@@ -68,8 +68,8 @@
 #define LINE_END "\r\n"
 #endif
 
-#include "util/mmgr.h"
-#include "util/extra_mmgr.h"
+#include "galsim/mmgr.h"
+//#include "galsim/extra_mmgr.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // -DOC- If you're like me, it's hard to gain trust in foreign code. This memory manager will try to INDUCE your code to crash (for

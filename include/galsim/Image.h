@@ -907,9 +907,13 @@ namespace sbp {
         // Constructor for use by other image-manipulation routines:
         // Create from a data and a header object: note that both will be
         // deleted when this object is deleted unless [dh]count are given.  
-        Image(ImageData<T>* Din, ImageHeader* Hin, int* _dc=new int(0), int* _hc=new int(0)) : 
+        Image(ImageData<T>* Din, ImageHeader* Hin, int* _dc=0, int* _hc=0) : 
             D(Din), H(Hin), dcount(_dc), hcount(_hc) 
-        { (*dcount)++; (*hcount)++; }
+        {
+            if (!_dc) dcount = new int(0);
+            if (!_hc) hcount = new int(0);
+            (*dcount)++; (*hcount)++; 
+        }
 
         // Make this image (or just data) be a duplicate of another's.
         // Note this can change size, which is illegal if there exist

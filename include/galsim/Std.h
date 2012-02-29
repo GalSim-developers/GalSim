@@ -11,16 +11,16 @@
 #include <string>
 #include <cassert>
 
+// A nice memory checker if you need to track down some memory problem.
+#ifdef MEM_TEST
+#include "mmgr.h"
+#endif
+
 namespace sbp {
 
     // Not all cmath libraries define this:
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
-#endif
-
-    // A nice memory checker if you need to track down some memory problem.
-#ifdef MEM_TEST
-#include "mmgr.h"
 #endif
 
     // Convenient debugging.
