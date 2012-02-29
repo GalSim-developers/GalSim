@@ -111,9 +111,9 @@ syntax match cTodo /\todo/
 " Don't try to be vi
 setlocal nocompatible
 
-" Auto-wrap comments at 96 characters
+" Auto-wrap comments at 100 characters
 setlocal formatoptions=crq
-setlocal textwidth=96
+setlocal textwidth=100
 setlocal comments=sr:/*,mb:*,ex:*/
 
 " Highlight strings inside C comments
