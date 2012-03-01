@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
             << std::endl;
         exit(1);
     }
+
     try {
         std::string sbs=argv[1];
         double dx = argc>3 ? atof(argv[3]) : 0.;
