@@ -3,7 +3,7 @@
 
 #include "SBPixel.h"
 
-namespace sbp {
+namespace galsim {
 
     const double TWOPI = 2.*M_PI;
     const double OVERSAMPLE_X = 4.;  // FT must be at least this much larger than input

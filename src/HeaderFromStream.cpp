@@ -1,7 +1,7 @@
 #include "HeaderFromStream.h"
 #include "Std.h"
 
-namespace sbp {
+namespace galsim {
 
     HdrRecordBase* ReadASCIIHeader(std::string in) 
     {

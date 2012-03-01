@@ -4,7 +4,7 @@
 
 #include <sys/time.h>
 
-namespace sbp {
+namespace galsim {
 
 class Stopwatch 
 {

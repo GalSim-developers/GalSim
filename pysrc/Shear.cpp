@@ -7,7 +7,7 @@
 
 namespace bp = boost::python;
 
-namespace sbp {
+namespace galsim {
 namespace {
 
 struct PyShear {
@@ -161,4 +161,4 @@ void pyExportShear() {
     PyEllipse::wrap();
 }
 
-} // namespace sbp
+} // namespace galsim

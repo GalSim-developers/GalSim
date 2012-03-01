@@ -37,7 +37,7 @@
 #define MPIX 1000000
 
 /* Arguments: argv[1] = input file, argv[2] = output file */
-static int read_image(char FileName[], hsm::RECT_IMAGE *MyImage) 
+static int read_image(char FileName[], galsim::hsm::RECT_IMAGE *MyImage) 
 {
 
     fitsfile *fptr;
@@ -155,10 +155,10 @@ static int read_image(char FileName[], hsm::RECT_IMAGE *MyImage)
 int main(int argc, char **argv) 
 {
 
-    hsm::RECT_IMAGE AtlasImage;
+    galsim::hsm::RECT_IMAGE AtlasImage;
     int status,num_iter;
     long i,j;
-    hsm::OBJECT_DATA GalaxyData;
+    galsim::hsm::OBJECT_DATA GalaxyData;
     double x00, y00;
     double A_gal, Mxx_gal, Mxy_gal, Myy_gal, rho4_gal;
     float ARCSEC;

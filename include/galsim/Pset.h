@@ -14,7 +14,7 @@
 
 #include "StringStuff.h"
 
-namespace sbp {
+namespace galsim {
 
     // Parameter setting class
     // Pset is a collection of parameters attached to variables in the code.

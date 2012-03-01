@@ -5,6 +5,7 @@
 
 #include <vector>
 
+namespace galsim {
 namespace integ {
 
     static const int NGKPLEVELS = 5;
@@ -374,4 +375,4 @@ namespace integ {
         return *wb[level];
     }
 
-}
+}}

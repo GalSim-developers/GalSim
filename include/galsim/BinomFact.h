@@ -7,7 +7,7 @@
 #ifndef BinomFactH
 #define BinomFactH
 
-namespace sbp {
+namespace galsim {
 
     double fact(int i);
     double sqrtfact(int i);

@@ -17,7 +17,7 @@
 
 #include "Std.h"
 
-namespace sbp {
+namespace galsim {
 
     // Exception classes:
     class TableError : public std::runtime_error 

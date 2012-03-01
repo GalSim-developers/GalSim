@@ -38,7 +38,7 @@
 
 /* Arguments: argv[1] = input file, argv[2] = output file */
 
-static int read_image(char FileName[], hsm::RECT_IMAGE *MyImage) 
+static int read_image(char FileName[], galsim::hsm::RECT_IMAGE *MyImage) 
 {
 
     fitsfile *fptr;
@@ -160,10 +160,10 @@ static int read_image(char FileName[], hsm::RECT_IMAGE *MyImage)
 int main(int argc, char **argv) 
 {
 
-    hsm::RECT_IMAGE AtlasImage, PSFImage;
+    galsim::hsm::RECT_IMAGE AtlasImage, PSFImage;
     int status;
     long i,j;
-    hsm::OBJECT_DATA GalaxyData, PSFData;
+    galsim::hsm::OBJECT_DATA GalaxyData, PSFData;
     double x00, y00, shearsig, skyvar,FLUX_OFFSET;
 
     /* Check the number of arguments */

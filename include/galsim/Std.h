@@ -16,32 +16,30 @@
 #include "mmgr.h"
 #endif
 
-namespace sbp {
-
-    // Not all cmath libraries define this:
+// Not all cmath libraries define this:
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
-    // Convenient debugging.
-    // Use as a normal C++ stream:
-    // dbg << "Here x = "<<x<<" and y = "<<y<<std::endl;
-    // If DEBUGLOGGING is not enabled, the compiler optimizes it away, so it 
-    // doesn't take any CPU cycles.
-    //
-    // You need to define dbgout and verbose_level in the .cpp file with main().
-    // And if you are using OpenMP, you can get debugging output from each thread into
-    // a separate file by calling ThreadDebug(name).
-    // Then each thread other than the main thread will actually write to a file 
-    // name_threadnum and not clobber each other.  (The main thread will write to name.)
+// Convenient debugging.
+// Use as a normal C++ stream:
+// dbg << "Here x = "<<x<<" and y = "<<y<<std::endl;
+// If DEBUGLOGGING is not enabled, the compiler optimizes it away, so it 
+// doesn't take any CPU cycles.
+//
+// You need to define dbgout and verbose_level in the .cpp file with main().
+// And if you are using OpenMP, you can get debugging output from each thread into
+// a separate file by calling SetupThreadDebug(name).
+// Then each thread other than the main thread will actually write to a file 
+// name_threadnum and not clobber each other.  (The main thread will write to name.)
 
 #ifdef DEBUGLOGGING
 #if defined(__GNUC__) && defined _OPENMP
-    extern __thread std::ostream* dbgout;
-    extern __thread int verbose_level;
+extern __thread std::ostream* dbgout;
+extern __thread int verbose_level;
 #else
-    extern std::ostream* dbgout;
-    extern int verbose_level;
+extern std::ostream* dbgout;
+extern int verbose_level;
 #endif
 #ifdef _OPENMP
 #pragma omp threadprivate( dbgout , XDEBUG )
@@ -51,78 +49,68 @@ namespace sbp {
 #define xdbg if(dbgout && verbose_level >= 2) (*dbgout)
 #define xxdbg if(dbgout && verbose_level >= 3) (*dbgout)
 
-    inline void ThreadDebug(std::string debugFile)
-    {
-        dbgout = new std::ofstream(debugFile.c_str());
-        dbgout->setf(std::ios_base::unitbuf);
+inline void SetupThreadDebug(std::string debugFile)
+{
+    dbgout = new std::ofstream(debugFile.c_str());
+    dbgout->setf(std::ios_base::unitbuf);
 
 #ifndef __PGI
-        // This gives errors with pgCC, so just skip it.
+    // This gives errors with pgCC, so just skip it.
 #ifdef _OPENMP
-        // For openmp runs, we use a cool feature known as threadprivate 
-        // variables.  
-        // In dbg.h, dbgout and XDEBUG are both set to be threadprivate.
-        // This means that openmp sets up a separate value for each that
-        // persists between threads.  
-        // So here, we open a parallel block and initialize each thread's
-        // copy of dbgout to be a different file.
+    // For openmp runs, we use a cool feature known as threadprivate 
+    // variables.  
+    // In dbg.h, dbgout and XDEBUG are both set to be threadprivate.
+    // This means that openmp sets up a separate value for each that
+    // persists between threads.  
+    // So here, we open a parallel block and initialize each thread's
+    // copy of dbgout to be a different file.
 
-        // To use this feature, dynamic threads must be off.  (Otherwise,
-        // openmp doesn't know how many copies of each variable to make.)
-        omp_set_dynamic(0);
+    // To use this feature, dynamic threads must be off.  (Otherwise,
+    // openmp doesn't know how many copies of each variable to make.)
+    omp_set_dynamic(0);
 
 #pragma omp parallel copyin(dbgout, XDEBUG)
-        {
-            int threadNum = omp_get_thread_num();
-            std::stringstream ss;
-            ss << threadNum;
-            std::string debugFile2 = debugFile + "_" + ss.str();
-            if (threadNum > 0) {
-                // This is a memory leak, but a tiny one.
-                dbgout = new std::ofstream(debugFile2.c_str());
-                dbgout->setf(std::ios_base::unitbuf);
-            }
+    {
+        int threadNum = omp_get_thread_num();
+        std::stringstream ss;
+        ss << threadNum;
+        std::string debugFile2 = debugFile + "_" + ss.str();
+        if (threadNum > 0) {
+            // This is a memory leak, but a tiny one.
+            dbgout = new std::ofstream(debugFile2.c_str());
+            dbgout->setf(std::ios_base::unitbuf);
         }
+    }
 #endif
 #endif
+}
 
 #else
 
-    inline void ThreadDebug(std::string ) {}
+inline void SetupThreadDebug(std::string ) {}
 #define dbg if(false) (std::cerr)
 #define xdbg if(false) (std::cerr)
 #define xxdbg if(false) (std::cerr)
 
 #endif
 
-    // Convenience feature for std::exception catching
-    inline void quit(const std::exception& s, const int exit_code=1) throw () 
-    {
-#ifdef DEBUGLOGGING
-        dbg << s.what() << std::endl;
-#endif
-        std::cerr << s.what() << std::endl;
-        exit(exit_code);
-    }
+// A nice way to throw exceptions that take a string argument and have that string
+// include double or int information as well.
+// e.g. FormatAndThrow<std::runtime_error>() << "x = "<<x<<" is invalid.";
+template <class E>
+class FormatAndThrow 
+{
+public:
+    FormatAndThrow() {}
 
-    // A nice way to throw exceptions that take a string argument and have that string
-    // include double or int information as well.
-    // e.g. FormatAndThrow<std::runtime_error>() << "x = "<<x<<" is invalid.";
-    template <class E>
-    class FormatAndThrow 
-    {
-    public:
-        FormatAndThrow() {}
+    template <class T>
+    FormatAndThrow& operator<<(const T& t) 
+    { oss << t; return *this; }
 
-        template <class T>
-        FormatAndThrow& operator<<(const T& t) 
-        { oss << t; return *this; }
+    ~FormatAndThrow() { throw E(oss.str()); }
+private:
+    std::ostringstream oss;
+};
 
-        ~FormatAndThrow() { throw E(oss.str()); }
-    private:
-        std::ostringstream oss;
-    };
-
-}
 
 #endif

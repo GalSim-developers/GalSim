@@ -4,7 +4,7 @@
 #include "Poisson.h"
 #include "Solve.h"
 
-namespace sbp {
+namespace galsim {
 
     // From Numerical Recipes:
     template <class T>

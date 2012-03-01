@@ -46,7 +46,7 @@
 #include "Std.h"
 #include "Interpolant.h"
 
-namespace sbp {
+namespace galsim {
 
     // Class for errors
     class FFTError : public std::runtime_error 

@@ -38,7 +38,7 @@
 
 // ??? could += for SBAdd, or *= to SBConvolve
 // ??? Ask for super-Nyquist sampling factor in draw??
-namespace sbp {
+namespace galsim {
 
     class SBError : public std::runtime_error 
     {
@@ -828,8 +828,8 @@ namespace sbp {
     {
     public:
         // constructor #1
-        SBRotate(const SBProfile& sbp, const double theta) :
-            SBDistort(sbp, cos(theta), -sin(theta), sin(theta), cos(theta)) {}
+        SBRotate(const SBProfile& s, const double theta) :
+            SBDistort(s, cos(theta), -sin(theta), sin(theta), cos(theta)) {}
     };
 
     class SBDeVaucouleurs : public SBSersic 

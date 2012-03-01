@@ -11,7 +11,7 @@
 #include "SBProfile.h"
 #include "Interpolant.h"
 
-namespace sbp {
+namespace galsim {
 
     class SBDeconvolve : public SBProfile 
     {

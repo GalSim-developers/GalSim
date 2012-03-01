@@ -9,7 +9,7 @@
 
 #include "Std.h"
 
-namespace sbp {
+namespace galsim {
 
     template <class T>
     class Position 

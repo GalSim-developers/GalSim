@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstring> 
 
-namespace sbp {
+namespace galsim {
 
     int FITS_fitsiofile::filesOpen=0;
 

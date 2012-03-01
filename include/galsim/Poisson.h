@@ -6,7 +6,7 @@
 
 #include <stdexcept>
 
-namespace sbp {
+namespace galsim {
 
     class PoissonError : public std::runtime_error 
     {

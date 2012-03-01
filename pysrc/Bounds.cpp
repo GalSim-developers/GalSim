@@ -3,7 +3,7 @@
 
 namespace bp = boost::python;
 
-namespace sbp {
+namespace galsim {
 namespace {
 
 template <typename T>
@@ -80,4 +80,4 @@ void pyExportBounds() {
     PyBounds<double>::wrap("D");
 }
 
-} // namespace sbp
+} // namespace galsim

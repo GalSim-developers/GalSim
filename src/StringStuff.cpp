@@ -2,7 +2,7 @@
 #include <cctype>
 #include <ctime>
 
-namespace sbp {
+namespace galsim {
 
     bool isComment(const std::string& instr) 
     {

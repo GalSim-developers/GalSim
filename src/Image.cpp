@@ -4,7 +4,7 @@
 #include <sstream>
 #include <cstring> // For memmove
 
-namespace sbp {
+namespace galsim {
 
     // Case-raising & blank-stripping function for keywords.
     std::string KeyFormat(const std::string input) 

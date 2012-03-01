@@ -13,7 +13,7 @@
 
 #include "Std.h"
 
-namespace sbp {
+namespace galsim {
 
     class UniformDeviate 
     {

@@ -4,7 +4,7 @@
 
 namespace bp = boost::python;
 
-namespace sbp {
+namespace galsim {
 namespace {
 
 typedef bp::return_value_policy<bp::manage_new_object> ManageNew;
@@ -227,4 +227,4 @@ void pyExportSBProfile() {
     PySBDeVaucouleurs::wrap();
 }
 
-} // namespace sbp
+} // namespace galsim

@@ -10,7 +10,7 @@
 // followed by shear of s2.  Note that this differs from the
 // notation in the methods paper.
 
-namespace sbp {
+namespace galsim {
 
     Shear& Shear::setE1E2(double e1in, double e2in) 
     {

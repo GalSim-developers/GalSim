@@ -9,7 +9,7 @@
 #include "SBParse.h"
 #include "StringStuff.h"
 
-namespace sbp {
+namespace galsim {
 
     // Characters that separate words:
     const std::string whitespace=" \t\n\v\f\r";

@@ -10,7 +10,7 @@
 
 #include "Std.h"
 
-namespace sbp {
+namespace galsim {
 
     class SolveError : public std::runtime_error 
     {

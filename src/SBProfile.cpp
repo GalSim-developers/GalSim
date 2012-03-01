@@ -2,11 +2,11 @@
 // Functions for the Surface Brightness Profile Class
 //
 #include "SBProfile.h"
-#include "Int.h"
+#include "integ/Int.h"
 #include "TMV.h"
 #include "Solve.h"
 
-namespace sbp {
+namespace galsim {
 
     // ????? Change treatement of aliased images to simply add in the aliased
     // FT components instead of doing a larger FT and then subsampling!

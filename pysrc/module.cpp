@@ -3,17 +3,17 @@
 #define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
 #include "numpy/arrayobject.h"
 
-namespace sbp {
+namespace galsim {
 
 void pyExportBounds();
 void pyExportShear();
 void pyExportSBProfile();
 
-} // namespace sbp
+} // namespace galsim
 
-BOOST_PYTHON_MODULE(_sbprofile) {
+BOOST_PYTHON_MODULE(_galsim) {
     import_array(); // for numpy
-    sbp::pyExportBounds();
-    sbp::pyExportShear();
-    sbp::pyExportSBProfile();
+    galsim::pyExportBounds();
+    galsim::pyExportShear();
+    galsim::pyExportSBProfile();
 }

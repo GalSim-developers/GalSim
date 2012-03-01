@@ -10,7 +10,7 @@
 #include "SBProfile.h"
 #include "Interpolant.h"
 
-namespace sbp {
+namespace galsim {
 
     class SBPixel : public SBProfile 
     {

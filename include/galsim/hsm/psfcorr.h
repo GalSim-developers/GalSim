@@ -25,6 +25,7 @@
 
 /* object data type */
 
+namespace galsim {
 namespace hsm {
 
     struct OBJECT_DATA 
@@ -69,4 +70,4 @@ namespace hsm {
         RECT_IMAGE *data, double *A, double *x0, double *y0,
         double *Mxx, double *Mxy, double *Myy, double *rho4, double epsilon, int *num_iter);
 
-}
+}}

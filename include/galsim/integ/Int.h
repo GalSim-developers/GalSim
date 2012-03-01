@@ -133,6 +133,7 @@
 //
 //
 
+namespace galsim {
 namespace integ {
 
     const double MOCK_INF = 1.e10;
@@ -161,7 +162,7 @@ namespace integ {
     inline T real(const T& x) { return x; }
     using std::real;
 
-//#define COUNTFEVAL 
+    //#define COUNTFEVAL 
     // If defined, then count the number of function evaluations
 
 #ifdef COUNTFEVAL
@@ -815,6 +816,6 @@ namespace integ {
         return int2d(func,xreg,yreg,zreg,relerr,abserr);
     }
 
- }
+}} 
 
 #endif

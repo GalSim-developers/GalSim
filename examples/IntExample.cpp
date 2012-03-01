@@ -105,28 +105,31 @@ double Cosmology::calc_w(double z)
 
     W_Integrator winteg(*this);
 
-    return integ::int1d(winteg,1./(1.+z),1);
+    return galsim::integ::int1d(winteg,1./(1.+z),1);
 }
 
 int main()
 {
+    using galsim::integ::int1d;
+    using galsim::integ::int2d;
+    using galsim::integ::MOCK_INF;
 
     // First some integrations of a Gaussian:
 
     Gauss g01(0.,1.); // mu = 0, sigma = 1.
     Gauss g02(0.,2.); // mu = 0, sigma = 2.
 
-    std::cout<<"int(Gauss(0.,1.) , -1..1) = "<<integ::int1d(g01,-1.,1.)<<std::endl;;
-    std::cout<<"int(Gauss(0.,2.) , -1..1) = "<<integ::int1d(g02,-1.,1.)<<std::endl;;
+    std::cout<<"int(Gauss(0.,1.) , -1..1) = "<<int1d(g01,-1.,1.)<<std::endl;;
+    std::cout<<"int(Gauss(0.,2.) , -1..1) = "<<int1d(g02,-1.,1.)<<std::endl;;
 
-    std::cout<<"int(Gauss(0.,1.) , -2..2) = "<<integ::int1d(g01,-2.,2.)<<std::endl;;
-    std::cout<<"int(Gauss(0.,2.) , -2..2) = "<<integ::int1d(g02,-2.,2.)<<std::endl;;
+    std::cout<<"int(Gauss(0.,1.) , -2..2) = "<<int1d(g01,-2.,2.)<<std::endl;;
+    std::cout<<"int(Gauss(0.,2.) , -2..2) = "<<int1d(g02,-2.,2.)<<std::endl;;
 
-    std::cout<<"int(Gauss(0.,1.) , 0..inf) = "<<integ::int1d(g01,0.,integ::MOCK_INF)<<std::endl;;
-    std::cout<<"int(Gauss(0.,2.) , 0..inf) = "<<integ::int1d(g02,0.,integ::MOCK_INF)<<std::endl;;
+    std::cout<<"int(Gauss(0.,1.) , 0..inf) = "<<int1d(g01,0.,MOCK_INF)<<std::endl;;
+    std::cout<<"int(Gauss(0.,2.) , 0..inf) = "<<int1d(g02,0.,MOCK_INF)<<std::endl;;
 
     std::cout<<"\nint(x*(3*x+y)+y, 0..1, 0..1) = "<<
-        integ::int2d(std::ptr_fun(foo),0.,1.,0.,1.)<<std::endl;
+        int2d(std::ptr_fun(foo),0.,1.,0.,1.)<<std::endl;
 
     std::cout<<"\nIn a universe with:\n\n";
     std::cout<<"Omega_m = 0.3\n";
