@@ -11,7 +11,6 @@
 
 // An interface for dealing with images (FITSImage is deprecated)
 #include "galsim/Image.h"
-#include "galsim/FITSImage.h"
 
 // FFT's
 #include "galsim/FFT.h"

@@ -120,7 +120,6 @@
 
 #include "Std.h"
 #include "Bounds.h"
-#include "FITStypes.h"
 
 namespace galsim {
 
