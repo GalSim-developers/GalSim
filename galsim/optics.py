@@ -11,7 +11,7 @@ def roll2d(image, nroll):
 	"""
 	return np.roll(np.roll(image, nroll, axis=1), nroll, axis=0)
 
-def wavefront(defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0., kmax=32., npix = 64,
+def wavefront(defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0., kmax=32., npix=64,
 			  circular_pupil=True):
 	"""Construct a complex, aberrated wavefront across a circular pupil (default) or full image.
 
@@ -51,3 +51,8 @@ def wavefront(defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0., km
 	# Spherical abberation
 	wf[in_pupil] *= np.exp(1j * spher * (6. * rho[in_pupil]**4 - 6. * rho[in_pupil]**2 + 1.))
 	return wf
+
+#def obstruct
+
+
+
