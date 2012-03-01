@@ -11,12 +11,13 @@ def roll2d(image, nroll):
 	"""
 	return np.roll(np.roll(image, nroll, axis=1), nroll, axis=0)
 
-def wavefront(defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0., kmax=32., npix=64,
+def wavefront(defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0., kmax=.5, npix=64,
 			  circular_pupil=True):
 	"""Construct a complex, aberrated wavefront across a circular pupil (default) or full image.
 
-	Outputs a complex (npix, npix) image of a circular pupil of radius kmax (in pixels), in standard
-	DFT element ordering format.
+	Outputs a complex (npix, npix) image of a circular pupil of radius kmax (in units of the sampling
+	frequency), in standard DFT element ordering format.  The default kmax=0.5, i.e. the Nyquist
+	frequency.
 
 	Input abberation coefficients are assumed to be supplied in units of 1/kmax.
 	"""
@@ -52,7 +53,10 @@ def wavefront(defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0., km
 	wf[in_pupil] *= np.exp(1j * spher * (6. * rho[in_pupil]**4 - 6. * rho[in_pupil]**2 + 1.))
 	return wf
 
-#def obstruct
+#def cobstruct(pupil, kobs=None):
+#	"""Place a circular obstruction (e.g. secondary mirror) in the middle of a supplied image.
+#
+#	Sets all regions of supplied pupil with |k| < kobs [assumed to be laid out in s
 
 
 
