@@ -27,7 +27,7 @@ def kxky(shape=(256, 256)):
     return kx, ky
 
 def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-	      kmax=np.pi, circular_pupil=True):
+              kmax=np.pi, circular_pupil=True):
     """Construct a complex, aberrated wavefront across a circular pupil (default) or square
 	array extent.
     
