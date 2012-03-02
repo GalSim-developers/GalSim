@@ -118,6 +118,8 @@
 #include <typeinfo>
 #include <string>
 
+#include <boost/shared_array.hpp>
+
 #include "Std.h"
 #include "Bounds.h"
 
@@ -142,353 +144,6 @@ namespace galsim {
 
         ImageBounds(const int x, const int y, const Bounds<int> b);
     };
-
-    class ImageHeaderError : public std::runtime_error
-    {
-    public:
-        ImageHeaderError(const std::string m="") : 
-            std::runtime_error("Image Header Error: " + m) {}
-    };
-
-
-    //////////////////////////////////////////////////////////////////////////
-    // Auxiliary information held for all images
-    //////////////////////////////////////////////////////////////////////////
-
-    // First the classes that are individual ImageHeader records:
-    std::string KeyFormat(const std::string input);
-
-    // Base class for all header entries
-    class HdrRecordBase 
-    {
-    public:
-        HdrRecordBase(const std::string _kw, const std::string _com="", const std::string _un="") : 
-            keyword(KeyFormat(_kw)), comment(_com), units(_un) {}
-
-        virtual ~HdrRecordBase() {}
-        virtual HdrRecordBase* duplicate() const 
-        { return new HdrRecordBase(*this); }
-
-        bool matchesKey(const std::string _k) const 
-        { return keyword==KeyFormat(_k); }
-
-        std::string getComment() const { return comment; }
-        void setComment(const std::string _c) { comment=_c; }
-
-        std::string getUnits() const { return units; }
-        void setUnits(const std::string _u) { units=_u; }
-
-        std::string getKeyword() const { return keyword; }
-        void setKeyword(const std::string _k) { keyword=KeyFormat(_k); }
-
-        virtual void reset(
-            const std::string _kw, const std::string _com="", const std::string _un="") 
-        { keyword=_kw; comment=_com; units=_un; }
-
-        // Two functions needed for easy interface to CFITSIO:
-        virtual DataType dataType() const { return Tnull; }
-
-        // return (void *) pointer to the value, if any
-        virtual void* voidPtr() { return 0; }
-        virtual const void* voidPtr() const { return 0; }
-
-        // Set value for this entry from string; return true on failure
-        virtual bool setValueString(const std::string _v) { return false; }
-        virtual std::string getValueString() const { return ""; }
-
-        std::string writeCard() const;
-
-    protected:
-        std::string keyword;
-        std::string comment;
-        std::string units;
-    };
-
-
-    class HdrRecordNull : public HdrRecordBase 
-    {
-    public:
-        // no additional data over base class
-        HdrRecordNull(const std::string _kw, const std::string _com="", const std::string _un="") : 
-            HdrRecordBase(_kw,_com,_un) {}
-
-        virtual HdrRecordNull* duplicate() const 
-        { return new HdrRecordNull(*this); }
-    };
-
-    // Header Record that holds arbitary data class:
-    template <class T>
-    class HdrRecord : public HdrRecordBase 
-    {
-    private:
-        T val;
-        mutable std::string valString; //string representation of value
-
-    public:
-        HdrRecord(
-            const std::string _kw, const T _val,
-            const std::string _com="", const std::string _un="") : 
-            HdrRecordBase(_kw, _com, _un), val(_val) 
-        {}
-
-        virtual HdrRecord* duplicate() const 
-        { return new HdrRecord(*this); }
-
-        T& Value() { return val; }
-        const T& Value() const { return val; }
-
-        void* voidPtr() { return static_cast<void *> (&val); }
-        const void* voidPtr() const { return static_cast<const void *> (&val); }
-
-        bool setValueString(const std::string _v) 
-        {
-            std::istringstream iss(_v.c_str());
-            std::string leftover;
-            return !(iss >> val) || (iss >> leftover);
-        };
-
-        std::string getValueString() const 
-        {
-            std::ostringstream os;
-            os  << val; // ??? compiler bug here ???
-            return os.str();
-        }
-
-        DataType dataType() const 
-        { return MatchType<T>(); }
-    };
-
-    //specializations for bool
-    template<>
-    std::string HdrRecord<bool>::getValueString() const; 
-
-    template<>
-    bool HdrRecord<bool>::setValueString(const std::string _v);
-
-    //and for string - enclose in quotes
-    template<>
-    std::string HdrRecord<std::string>::getValueString() const;
-
-    // ??? bother to fix lack of decimal point on float/double?
-
-
-    ///////////////////////////////////////////////////////////////
-    // Now the class for ImageHeader itself:
-    class ImageHeader 
-    {
-    private: 
-        mutable std::list<HdrRecordBase*> hlist;
-        mutable std::list<HdrRecordBase*>::iterator hptr;  //current record
-        bool isAltered;
-        std::list<std::string> lcomment; //Comment and History strings
-        std::list<std::string> lhistory;
-
-    public:
-        ImageHeader(): hlist(), hptr(hlist.begin()), isAltered(false) {}
-
-        ImageHeader(const ImageHeader& rhs) 
-        {
-            copyFrom(rhs);
-            isAltered = false;
-        }
-
-        void copyFrom(const ImageHeader& rhs) 
-        {
-            hlist.clear(); lcomment.clear(); lhistory.clear();
-            std::list<HdrRecordBase*>::const_iterator rhsptr;
-            for (rhsptr=rhs.hlist.begin(); rhsptr!=rhs.hlist.end(); ++rhsptr)
-                hlist.push_back( (*rhsptr)->duplicate());
-            hptr = hlist.begin();
-            std::list<std::string>::const_iterator sptr;
-            for (sptr=rhs.lcomment.begin(); sptr!=rhs.lcomment.end(); ++sptr)
-                lcomment.push_back(*sptr);
-            for (sptr=rhs.lhistory.begin(); sptr!=rhs.lhistory.end(); ++sptr)
-                lhistory.push_back(*sptr);
-            touch();
-        }
-
-        ImageHeader& operator=(const ImageHeader& rhs) 
-        {
-            if (this==&rhs) return *this;
-            copyFrom(rhs);
-            return *this;
-        }
-
-        ~ImageHeader() 
-        {
-            for (hptr=hlist.begin(); hptr!=hlist.end(); ++hptr)
-                delete *hptr;
-        }
-
-        ImageHeader* duplicate() const 
-        { return new ImageHeader(*this); }
-
-        // Clear all header records, plus comments & history
-        void clear() 
-        {
-            hlist.clear();
-            hptr=hlist.begin(); 
-            lcomment.clear();
-            lhistory.clear();
-            touch();
-        }
-
-        void reset() { clear(); }
-
-        // History/Comment accessors
-        const std::list<std::string>& comments() const { return lcomment; }
-        const std::list<std::string>& history() const { return lhistory; }
-
-        void addComment(const std::string s) { lcomment.push_back(s); touch(); }
-        void addHistory(const std::string s) { lhistory.push_back(s); touch(); }
-
-        bool isChanged() const { return isAltered; }  //changed since creation?
-        void notAltered() { isAltered=false; } //reset altered flag
-        void touch() { isAltered=true; }
-
-        // Manipulate the pointer to current header record:
-        void rewind() const { hptr=hlist.begin(); }
-        bool atEnd() const { return hptr==hlist.end(); }
-        int size() const 
-        { return hlist.size() + lcomment.size() + lhistory.size(); }
-
-        HdrRecordBase* current() { return *hptr; }
-        void incr() const { ++hptr; }
-        const HdrRecordBase* current() const { return *hptr; }
-
-        // Append contents of another header to this one
-        void operator+=(const ImageHeader& rhs) 
-        {
-            if (this==&rhs) return;
-            std::list<HdrRecordBase*>::const_iterator rptr;
-            for (rptr=rhs.hlist.begin(); rptr!=rhs.hlist.end(); ++rptr)
-                hlist.push_back( (*rptr)->duplicate());
-            lcomment.insert(lcomment.end(), rhs.lcomment.begin(), rhs.lcomment.end());
-            lhistory.insert(lhistory.end(), rhs.lhistory.begin(), rhs.lhistory.end());
-            touch();
-        }
-
-        // Add/remove header records, by base class ptr or keyword
-        void append(HdrRecordBase* record) { hlist.push_back(record); touch(); }
-        void insert(HdrRecordBase* record) { hlist.insert(hptr,record); touch(); }
-
-        void erase() { delete *hptr; hptr=hlist.erase(hptr); touch(); }
-
-        void erase(const std::string kw) 
-        {
-            if (find(kw)) {
-                delete *hptr; 
-                hptr=hlist.erase(hptr); 
-                touch();
-            } else {
-                throw ImageHeaderError("Cannot find record with keyword " + kw);
-            }
-        }
-
-        template <class T>
-        void append(
-            const std::string keyword, const T& value, 
-            const std::string comment="", const std::string units="") 
-        {
-            hlist.push_back(new HdrRecord<T>(keyword, value, comment,units));
-            touch();
-        }
-
-        template <class T>
-        void replace(
-            const std::string keyword, const T& value, 
-            const std::string comment="", const std::string units="") 
-        {
-            try { 
-                erase(keyword);
-            } catch (ImageHeaderError& i) {}
-            append(keyword, value, comment, units);
-        }
-
-        void appendNull(const std::string keyword, const std::string comment="") 
-        {
-            hlist.push_back(new HdrRecordNull(keyword, comment));
-            touch();
-        }
-
-        template <class T>
-        void insert(
-            const std::string keyword, const T& value, 
-            const std::string comment="", const std::string units="") 
-        {
-            hlist.insert(hptr, new HdrRecord<T>(keyword, value, comment,units));
-            touch();
-        }
-
-        void insertNull(const std::string keyword, const std::string comment="") 
-        {
-            hlist.insert(hptr, new HdrRecordNull(keyword, comment));
-            touch();
-        }
-
-        HdrRecordBase* find(const std::string keyword) 
-        {
-            std::list<HdrRecordBase*>::iterator start(hptr);
-            touch(); // ?? note header is marked as altered just for returning
-            // a non-const pointer to header record.
-            for ( ; hptr!=hlist.end(); ++hptr)
-                if ((*hptr)->matchesKey(keyword)) return *hptr;
-            // search from beginning to starting point
-            for (hptr=hlist.begin(); hptr!=hlist.end() && hptr!=start; ++hptr)
-                if ((*hptr)->matchesKey(keyword)) return *hptr;
-            return 0; //null pointer if nothing found
-        }
-
-        const HdrRecordBase* findConst(const std::string keyword) const 
-        {
-            std::list<HdrRecordBase*>::iterator start(hptr);
-            for ( ; hptr!=hlist.end(); ++hptr)
-                if ((*hptr)->matchesKey(keyword)) return *hptr;
-            // search from beginning to starting point
-            for (hptr=hlist.begin(); hptr!=hlist.end() && hptr!=start; ++hptr)
-                if ((*hptr)->matchesKey(keyword)) return *hptr;
-            return 0; //null pointer if nothing found
-        }
-
-        const HdrRecordBase* find(const std::string keyword) const 
-        { return findConst(keyword); }
-
-        // Get/set the value of an existing record.  Bool returns false if
-        // keyword doesn't exist or does not match type of argument.
-        template <class T> 
-        bool getValue(const std::string keyword, T& outVal) const;
-
-        template <class T> 
-        bool setValue(const std::string keyword, const T& inVal);
-
-
-    };  
-
-    template <class T> 
-    bool ImageHeader::getValue(const std::string keyword, T& outVal) const 
-    {
-        const HdrRecordBase* b=findConst(keyword);
-        if (!b) return false;
-        const HdrRecord<T> *dhdr;
-        dhdr = dynamic_cast<const HdrRecord<T>*> (b);
-        if (!dhdr) return false;
-        outVal = dhdr->Value();
-        return true;
-    }
-
-    template <class T> 
-    bool ImageHeader::setValue(const std::string keyword, const T& inVal) 
-    {
-        HdrRecordBase* b=find(keyword);
-        if (!b) return false;
-        HdrRecord<T> *dhdr;
-        dhdr = dynamic_cast<HdrRecord<T>*> (b);
-        if (!dhdr) return false;
-        dhdr->Value() = inVal;
-        touch();
-        return true;
-    }
-
 
     //////////////////////////////////////////////////////////////////////////
     // Templates for stepping through image pixels
@@ -764,89 +419,6 @@ namespace galsim {
         void linkChild(const ImageData<T>* child) const;
     };
 
-    //////////////////////////////////////////////////////////////////////////
-    // Checked iterator for images
-    //////////////////////////////////////////////////////////////////////////
-    // ??? need conversion from iter to const iter??
-    template <class T>
-    class ImageChk_iter 
-    {
-    private:
-        ImageData<T>* I;
-        T* ptr;
-        int col; //keep track of column number
-    public:
-        ImageChk_iter(ImageData<T>* ii, const int x, const int y) : I(ii), col(x) 
-        {
-            if (y<I->getBounds().getYMin() || y>I->getBounds().getYMax()) {
-                throw ImageBounds(
-                    "row", I->getBounds().getYMin(), I->getBounds().getYMax(), y);
-            }
-            ptr = &( (*I)(x,y));
-        }
-
-        T& operator*() const 
-        {
-            if (col<I->getBounds().getXMin() || col>I->getBounds().getXMax()) {
-                throw ImageBounds(
-                    "column", I->getBounds().getXMin(), I->getBounds().getXMax(), col);
-            }
-            return *ptr;
-        }
-
-        ImageChk_iter operator++() { ++ptr; ++col; return *this; }
-        ImageChk_iter operator--() { ++ptr; ++col; return *this; }
-        ImageChk_iter operator+=(int i) { ptr+=i; col+=i; return *this; }
-        ImageChk_iter operator-=(int i) { ptr-=i; col-=i; return *this; }
-        
-        bool operator<(const ImageChk_iter rhs) const { return ptr<rhs.ptr; }
-        bool operator<=(const ImageChk_iter rhs) const { return ptr<=rhs.ptr; }
-        bool operator>(const ImageChk_iter rhs) const { return ptr>rhs.ptr; }
-        bool operator>=(const ImageChk_iter rhs) const { return ptr>=rhs.ptr; }
-        bool operator==(const ImageChk_iter rhs) const { return ptr==rhs.ptr; }
-        bool operator!=(const ImageChk_iter rhs) const { return ptr!=rhs.ptr; }
-    };
-
-    template <class T>
-    class ImageChk_citer 
-    {
-    private:
-        const ImageData<T>* I;
-        const T* ptr;
-        int col; //keep track of column number
-
-    public:
-        ImageChk_citer(const ImageData<T>* ii, const int x, const int y) : I(ii), col(x) 
-        {
-            if (y<I->getBounds().getYMin() || y>I->getBounds().getYMax()) {
-                throw ImageBounds(
-                    "row", I->getBounds().getYMin(), I->getBounds().getYMax(), y);
-            }
-            ptr = &( (*I)(x,y));
-        }
-
-        const T& operator*() const 
-        {
-            if (col<I->getBounds().getXMin() || col>I->getBounds().getXMax()) {
-                throw ImageBounds(
-                    "column", I->getBounds().getXMin(), I->getBounds().getXMax(), col);
-            }
-            return *ptr;
-        }
-
-        ImageChk_citer operator++() { ++ptr; ++col; return *this; }
-        ImageChk_citer operator--() { ++ptr; ++col; return *this; }
-        ImageChk_citer operator+=(int i) { ptr+=i; col+=i; return *this; }
-        ImageChk_citer operator-=(int i) { ptr-=i; col-=i; return *this; }
-
-        bool operator<(const ImageChk_citer rhs) const { return ptr<rhs.ptr; }
-        bool operator<=(const ImageChk_citer rhs) const { return ptr<=rhs.ptr; }
-        bool operator>(const ImageChk_citer rhs) const { return ptr>rhs.ptr; }
-        bool operator>=(const ImageChk_citer rhs) const { return ptr>=rhs.ptr; }
-        bool operator==(const ImageChk_citer rhs) const { return ptr==rhs.ptr; }
-        bool operator!=(const ImageChk_citer rhs) const { return ptr!=rhs.ptr; }
-    };
-
 
     //////////////////////////////////////////////////////////////////////////
     // The Image handle:  this is what outside programs use.
@@ -856,11 +428,9 @@ namespace galsim {
     class Image 
     {
     private:
-        ImageData<T>* D; //pixel data
-        ImageHeader* H; //the "header"
-        mutable int* dcount;  // link count for the data structure
-        mutable int* hcount;
-
+        T * _data;
+        Position<int> _bounds;
+        boost::shared_array<T> _owner;
     public:
         Image(const int ncol, const int nrow) :
             D(new ImageData<T>(Bounds<int>(1,ncol,1,nrow))), H(new ImageHeader()),
@@ -940,25 +510,6 @@ namespace galsim {
         // Shift origin of image - same caveats apply as above
         void shift(int x0, int y0) { D->shift(x0,y0); }
 
-        bool isLastData() const { return *dcount==1; }
-        bool isLastHeader() const { return *hcount==1; }
-
-        ImageHeader* header() { return H; }
-        const ImageHeader* header() const { return H; }
-
-        ImageData<T>* data() { return D; }
-        const ImageData<T>* data() const { return D; }
-
-        // Get/set the value of header records.  Bool returns false if
-        // keyword doesn't exist or does not match type of argument.
-        template <class U> 
-        bool getHdrValue(const std::string keyword, U& outVal) const 
-        { return header()->getValue(keyword, outVal); }
-
-        template <class U> 
-        bool setHdrValue(const std::string keyword, const U& inVal) 
-        { return header()->setValue(keyword,inVal); }
-
 #ifdef IMAGE_BOUNDS_CHECK
         // Element access is checked always
         const T& operator()(const int xpos, const int ypos) const 
@@ -982,25 +533,6 @@ namespace galsim {
         T& at(const int xpos, const int ypos) 
         { return D->at(xpos,ypos); }
 
-        // iterators, rowBegin()/end()
-        typedef ImageChk_iter<T> checked_iter;
-        checked_iter Chk_iter(const int x, const int y) 
-        { return checked_iter(D,x,y); }
-
-        typedef ImageChk_citer<T> checked_citer;
-        checked_citer Chk_citer(const int x, const int y) const 
-        { return checked_citer(D,x,y); }
-
-#ifdef IMAGE_BOUNDS_CHECK
-        typedef checked_iter iter;
-        typedef checked_citer citer;
-        iter rowBegin(int r) { return Chk_iter(XMin(), r); }
-        citer rowBegin(int r) const { return Chk_citer(XMin(), r); }
-        iter rowEnd(int r) { return Chk_iter(XMax()+1, r); }
-        citer rowEnd(int r) const { return Chk_citer(XMax()+1, r ); }
-        iter getIter(const int x, const int y) { return Chk_iter(x,y); }
-        citer getIter(const int x, const int y) const { return Chk_citer(x,y); }
-#else
         typedef T* iter;
         typedef const T* citer;
         iter rowBegin(int r) { return &(*D)(XMin(),r); }
@@ -1009,7 +541,6 @@ namespace galsim {
         citer rowEnd(int r) const { return &(*D)(XMax()+1,r); }
         iter getIter(const int x, const int y) { return &(*D)(x,y); }
         citer getIter(const int x, const int y) const { return &(*D)(x,y); }
-#endif
 
         // bounds access functions
         Bounds<int> getBounds() const { return D->getBounds(); }
