@@ -27,12 +27,12 @@ def kxky(shape=(256, 256)):
     return kx, ky
 
 def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-			  kmax=np.pi, circular_pupil=True):
+	      kmax=np.pi, circular_pupil=True):
     """Construct a complex, aberrated wavefront across a circular pupil (default) or square
 	array extent.
     
-    Outputs a complex image (shape=shape) of a circular pupil wavefront of radius kmax.  We adopt the
-    conventions of SBProfile so that the Nyquist frequency of an image with unit integer pixel
+    Outputs a complex image (shape=shape) of a circular pupil wavefront of radius kmax.  We adopt 
+    the conventions of SBProfile so that the Nyquist frequency of an image with unit integer pixel
     spacing is \pi.  The default output is a circular pupil of radius \pi in k-space, i.e. one which
     fills to the edge of the array but does not cross it.
     
@@ -77,7 +77,7 @@ def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     return wf
 
 def psf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-	kmax=np.pi, circular_pupil=True, secondary=None):
+        kmax=np.pi, circular_pupil=True, secondary=None):
     """Generate an image of a circular (default) or square pupil PSF with specified low-order
     wavefront abberations.
 
