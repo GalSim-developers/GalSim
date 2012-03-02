@@ -691,28 +691,47 @@ def FindPathInEnv(env, dirtag):
 
 
 def FindTmvLinkFile(config):
+
+    # First check for an explict value for TMV_LINK
     if (config.env['TMV_LINK'] != '') :
         tmv_link = config.env['TMV_LINK']
         if os.path.exists(tmv_link):
             return tmv_link
         else:
-            raise ValueError("Specified TMV_LINK does not "
-                             "exist: %s" % tmv_link)
+            raise ValueError("Specified TMV_LINK does not exist: %s" % tmv_link)
 
+    # Next check in TMV_DIR/share
     tmv_dir = FindPathInEnv(config.env, 'TMV_DIR')
-
     if tmv_dir is not None:
         tmv_share_dir = os.path.join(tmv_dir,'share')
         tmv_link = os.path.join(tmv_share_dir, 'tmv-link')
         if os.path.exists(tmv_link):
             return tmv_link
 
-    # Finally try the install prefix/share
-    prefix=config.env['INSTALL_PREFIX']
-    tmv_share_dir =  os.path.join(prefix,'share')
-    tmv_link = os.path.join(tmv_share_dir, 'tmv-link')
-    if os.path.exists(tmv_link):
-        return tmv_link
+    # If TMV_DIR is not given explicitly, it still probably found TMV.h somewhere,
+    # And we want to make sure we use the tmv-link file that correspond with that TMV.h 
+    # file, since there could be multiple installations of TMV on the machine, and 
+    # we want to use the one that corresponds to the header file we found.
+    for dir in config.env['CPPPATH']:
+        h_file = os.path.join(ExpandPath(dir),'TMV.h')
+        if os.path.exists(h_file):
+            tmv_include_dir, junk = os.path.split(h_file)
+            tmv_root_dir, incl = os.path.split(tmv_include_dir)
+            if incl != 'include':
+                # Weird, but possible.
+                # If TMV.h is not in d/include/, then don't look in d/share for tmv-link
+                continue
+            tmv_share_dir = os.path.join(tmv_root_dir,'share')
+            tmv_link = os.path.join(tmv_share_dir, 'tmv-link')
+            if os.path.exists(tmv_link):
+                return tmv_link
+
+    # Finally try /usr/local and also the install prefix (in case different)
+    for prefix in [config.env['INSTALL_PREFIX'] , default_prefix ]:
+        tmv_share_dir =  os.path.join(prefix,'share')
+        tmv_link = os.path.join(tmv_share_dir, 'tmv-link')
+        if os.path.exists(tmv_link):
+            return tmv_link
 
     raise ValueError("No tmv-link file could be found")
 
@@ -777,9 +796,9 @@ def DoLibraryAndHeaderChecks(config):
         config.env['LINKFLAGS'].remove('-openmp')
         config.env.AppendUnique(LINKFLAGS='-fopenmp')
 
-
     config.CheckTMV()
  
+
 def GetNCPU():
     """
     Detects the number of CPUs on a system. Cribbed from pp.
@@ -848,11 +867,14 @@ def DoConfig(env):
     # To do that set CACHE_LIB=false
     if not env['CACHE_LIB']:
         SCons.SConf.SetCacheMode('force')
+
+    # Add out custom configuration tests
     config = env.Configure(custom_tests = {
         'CheckTMV' : CheckTMV ,
         })
     DoLibraryAndHeaderChecks(config)
     env = config.Finish()
+
     # Turn the cache back on now, since we always want it for the main compilation steps.
     if not env['CACHE_LIB']:
         SCons.SConf.SetCacheMode('auto')
