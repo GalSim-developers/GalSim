@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copy this file to .git/hooks/commit-msg to enable automatically appending the 
-# branch name to commit messages (when on a branch).
+# branch name to commit messages (when on a branch).  Ensure it remains exectuable.
 # Branches should usually be named according to the issue number they are for.
 # e.g. "#12" for a branch that works on issue 12.
 # Then commits will automatically be linked in the comments for that issue.
