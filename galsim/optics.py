@@ -43,7 +43,8 @@ def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     to the defintions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
     
-    Outputs the wavefront for kx, ky locations corresponding to kxky(shape).
+    Outputs the wavefront for kx, ky locations corresponding to kxky(shape), in a C-contiguous
+    array ordering.
     """
     pi = np.pi # minor but saves Python checking the entire np. namespace every time I need pi
 	# Build kx, ky coords
@@ -82,6 +83,8 @@ def psf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., 
 
     Image has unit total flux, and is centred on the image[shape[0] / 2, shape[1] / 2] pixel,
     by default.
+
+    Ouput numpy array is C-contiguous.
     """
     if secondary == None:  # TODO: Build a secondary mirror obstruction function!
 	wf = wavefront(shape=shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
@@ -99,6 +102,8 @@ def mtf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., 
     wavefront abberations.
 
     MTF has mtf[0, 0] = 1 by default, and array elements follow the DFT standard of kxky(shape).
+
+    Output numpy array is C-contiguous.
     """
     if secondary == None:  # TODO: Build a secondary mirror obstruction function!
 	wf = wavefront(shape=shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
