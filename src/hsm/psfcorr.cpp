@@ -1403,7 +1403,8 @@ namespace hsm {
         double R;
         double a4i;
         double ca4i,ca4p;
-        double deltaeta,etai,deltamu;
+        double deltaeta,deltamu;
+        //double etai;
         double Ti,Tp;
         double EI;
 
@@ -1429,7 +1430,9 @@ namespace hsm {
 
         /* 4th moment correction for R: must find etai */
         EI = sqrt(e1red*e1red + e2red*e2red);
-        etai = 0.5 * log( (1./a2-1) / (1./b2-1) );
+        // TODO: etai was set, but not used.
+        // Is this a bug?  Or just a legacy of an old calculation?
+        //etai = 0.5 * log( (1./a2-1) / (1./b2-1) ); 
         coshetao = 1./sqrt(1-e1red*e1red-e2red*e2red);
         deltamu = (-1.5*A*A - A*B - 1.5*B*B +2*(A+B)) * a4i
             + (-1.5*a2*a2 - a2*b2 - 1.5*b2*b2 + 2*(a2+b2))*a4p;
