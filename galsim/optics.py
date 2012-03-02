@@ -29,7 +29,7 @@ def kxky(shape=(256, 256)):
 def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
               kmax=np.pi, circular_pupil=True):
     """Construct a complex, aberrated wavefront across a circular pupil (default) or square
-	array extent.
+    array extent.
     
     Outputs a complex image (shape=shape) of a circular pupil wavefront of radius kmax.  We adopt 
     the conventions of SBProfile so that the Nyquist frequency of an image with unit integer pixel
