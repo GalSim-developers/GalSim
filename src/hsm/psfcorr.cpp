@@ -515,6 +515,64 @@ namespace hsm {
 
     }
 
+    /* find_mom_1
+     * *** FINDS MOMENTS OF AN IMAGE ***
+     *
+     * Computes the shapelet moments of an image by integration of
+     * int f(x,y) psi_m(x) psi_n(y) for the relevant weight
+     *
+     * Arguments:
+     *   data: RECT_IMAGE structure containing the image to be measured
+     * > moments: moments[m][n] is the m:n coefficient
+     *   max_order: maximum order of moments to compute
+     *   x0: center around which to compute moments (x-coordinate)
+     *   y0: " (y-coordinate)
+     *   sigma: width of Gaussian to measure image
+     */
+
+    void find_mom_1(
+		    RECT_IMAGE *data, double **moments, int max_order, double x0, double y0, double sigma) 
+    {
+
+        int m,n;
+        long x, y, xmin, xmax, ymin, ymax, nx, ny;
+        double **psi_x, **psi_y;
+
+        /* Setup */
+        xmin = data->xmin;
+        xmax = data->xmax;
+        ymin = data->ymin;
+        ymax = data->ymax;
+        nx = xmax-xmin+1;
+        ny = ymax-ymin+1;
+        psi_x = dmatrix(0,max_order,0,nx-1);
+        psi_y = dmatrix(0,max_order,0,ny-1);
+
+        /* Compute wavefunctions */
+        qho1d_wf_1(nx, (double)xmin - x0, 1., max_order, sigma, psi_x);
+        qho1d_wf_1(ny, (double)ymin - y0, 1., max_order, sigma, psi_y);
+
+        /* Now let's compute moments -- outer loop is over (m,n) */
+        for(m=0;m<=max_order;m++) for(n=0;n<=max_order-m;n++) {
+
+            /* Initialize moments[m][n], then loop over map */
+            moments[m][n] = 0;
+            for(x=xmin;x<=xmax;x++) for(y=ymin;y<=ymax;y++) {
+                if (data->mask[x][y]) {
+
+                    /* Moment "integral" (here simply a finite sum) */
+                    moments[m][n] += data->image[x][y] * psi_x[m][x-xmin]
+                        * psi_y[n][y-ymin];
+
+                } /* End mask condition */
+            } /* End (x,y) loop */
+        } /* End (m,n) loop */
+
+        /* Cleanup memory */
+        free_dmatrix(psi_x,0,max_order,0,nx-1);
+        free_dmatrix(psi_y,0,max_order,0,ny-1);
+    }
+
     /* find_mom_2
      * *** FINDS ADAPTIVE CIRCULAR MOMENTS OF AN IMAGE ***
      *
