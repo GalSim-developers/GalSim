@@ -704,6 +704,11 @@ def FindTmvLinkFile(config):
     tmv_dir = FindPathInEnv(config.env, 'TMV_DIR')
     if tmv_dir is not None:
         tmv_share_dir = os.path.join(tmv_dir,'share')
+        tmv_link = os.path.join(tmv_share_dir, 'tmv', 'tmv-link')
+        if os.path.exists(tmv_link):
+            return tmv_link
+        # Older TMV was installed in prefix/share/ rather than prefix/share/tmv/
+        # so check that too.  (At least for now.)
         tmv_link = os.path.join(tmv_share_dir, 'tmv-link')
         if os.path.exists(tmv_link):
             return tmv_link
@@ -722,6 +727,9 @@ def FindTmvLinkFile(config):
                 # If TMV.h is not in d/include/, then don't look in d/share for tmv-link
                 continue
             tmv_share_dir = os.path.join(tmv_root_dir,'share')
+            tmv_link = os.path.join(tmv_share_dir, 'tmv', 'tmv-link')
+            if os.path.exists(tmv_link):
+                return tmv_link
             tmv_link = os.path.join(tmv_share_dir, 'tmv-link')
             if os.path.exists(tmv_link):
                 return tmv_link
@@ -729,6 +737,9 @@ def FindTmvLinkFile(config):
     # Finally try /usr/local and also the install prefix (in case different)
     for prefix in [config.env['INSTALL_PREFIX'] , default_prefix ]:
         tmv_share_dir =  os.path.join(prefix,'share')
+        tmv_link = os.path.join(tmv_share_dir, 'tmv','tmv-link')
+        if os.path.exists(tmv_link):
+            return tmv_link
         tmv_link = os.path.join(tmv_share_dir, 'tmv-link')
         if os.path.exists(tmv_link):
             return tmv_link
@@ -814,7 +825,7 @@ def GetNCPU():
             return int(os.popen2('sysctl -n hw.ncpu')[1].read())
     # Windows:
     if os.environ.has_key('NUMBER_OF_PROCESSORS'):
-        ncpus = int(os.environ['NUMBER_OF_PROCESSORS']);
+        ncpus = int(os.environ['NUMBER_OF_PROCESSORS'])
         if ncpus > 0:
             return ncpus
     return 1 # Default
@@ -853,11 +864,6 @@ def DoConfig(env):
         if env['TMV_DEBUG']:
             print 'TMV Extra Debugging turned on'
             env.Append(CPPDEFINES=['TMV_EXTRA_DEBUG'])
-    #if env['STATIC'] :
-        #if env['CXXTYPE'] == 'pgCC':
-            #env.Append(LINKFLAGS=['-Bstatic'])
-        #else:
-            #env.Append(LINKFLAGS=['-static'])
 
     import SCons.SConf
 
@@ -921,8 +927,13 @@ if env['IMPORT_ENV']:
     env = Environment(ENV=os.environ)
     opts.Update(env)
 
-opts.Save(config_file,env)
+# Check for unknown variables in case something is misspelled
+unknown = opts.UnknownVariables()
+if unknown:
+    print "Unknown variables:", unknown.keys()
+    Exit(1)
 
+opts.Save(config_file,env)
 Help(opts.GenerateHelpText(env))
 
 if not GetOption('help'):
@@ -935,12 +946,6 @@ if not GetOption('help'):
     env['_InstallProgram'] = RunInstall
     env['_UninstallProgram'] = RunUninstall
     env['_DoPythonConfig'] = DoPythonConfig
-
-    # See src/SConscript to see what this is for...
-    if env['PLATFORM'] == 'darwin':
-        rename_lib = Builder(action = 
-                'install_name_tool -id $SOURCE.abspath $SOURCE; touch $TARGET')
-        env.Append(BUILDERS = { 'RenameLib' : rename_lib })
 
     #if env['WITH_UPS']:
         #subdirs += ['ups']

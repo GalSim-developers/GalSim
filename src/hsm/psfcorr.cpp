@@ -1657,7 +1657,8 @@ namespace hsm {
         OBJECT_DATA *gal_data, OBJECT_DATA *PSF_data, char *shear_est, unsigned long flags) 
     {
 
-        int max_order_psf, max_order_gal, length_shear_est, num_args;
+        //int max_order_psf, max_order_gal, num_args;
+        int length_shear_est;
         unsigned short int est_id = 0; /* which estimator do we want? */
         unsigned int status = 0;
         int num_iter;

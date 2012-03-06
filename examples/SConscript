@@ -1,7 +1,7 @@
 # vim: set filetype=python :
 
+import SCons
 import os
-import glob
 
 Import('env')
 
@@ -26,8 +26,10 @@ else:
 # Workaround for SCons bug: The above doesn't always work correctly.
 # RPATH clashes with LINKFLAGS.  So if LINKFLAGS is already set, we need this workaround.
 # See: http://scons.tigris.org/issues/show_bug.cgi?id=1644
-# Fixed in version 2.1, but leave this next line until scons 2.1 is the version in fink.
-env1.Append( LINKFLAGS = ["$__RPATH"] )
+# Fixed in version 2.1.
+major , minor , junk = SCons.__version__.split('.',2)
+if major < 2 or (major == 2 and minor == 0):
+    env1.Append( LINKFLAGS = ["$__RPATH"] )
 
 sbdraw = env1.Program(os.path.join('#bin','sbdraw'), 'SBDraw.cpp')
 

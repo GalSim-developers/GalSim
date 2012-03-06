@@ -1,6 +1,7 @@
 # vim: set filetype=python :
 
 import os
+import sys
 import glob
 
 Import('env')
@@ -38,36 +39,74 @@ if env1['MEM_TEST']:
 # Library file containing generic code
 obj_lib = env1.SharedObject(lib_files)
 
+# TODO: Should get this from somewhere.  Not hard-coded here.
+version = 0,1
+compat_version = 0,1
+
+if 'install' in COMMAND_LINE_TARGETS:
+    lib_final_dir = os.path.join(env['INSTALL_PREFIX'],'lib')
+else:
+    lib_final_dir = os.path.join(GetBuildPath('#lib'))
+
+if sys.platform == 'darwin':
+    # Some stuff to get it to set the right compatibility version and library name:
+    lib_final_name = os.path.join(lib_final_dir,'libgalsim.%s.dylib'%version[0])
+    #lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.%s.%s.dylib'%version)
+    lib_short_name = os.path.join(GetBuildPath('#lib'),'libgalsim.%s.dylib'%version[0])
+    link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.dylib')
+    # TODO: If we have more than one lib, we need a different SHLINKFLAGS for each one.
+    # The easiest way to do this is to have multiple environments that differ in their
+    # SHLINKFLAGS values.  For now we just have the one, so this is fine.
+    env1.AppendUnique( SHLINKFLAGS=[
+	'-dynamic',
+	'-Wl,-install_name,%s'%lib_final_name,
+	'-Wl,-compatibility_version,%s.%s'%compat_version,
+	'-Wl,-current_version,%s.%s'%version ] )
+    env1.Replace(SHLIBSUFFIX = '.%s.dylib'%version[0])
+
+elif sys.platform == 'linux2':
+    # If any of the linked libraries are static, then including them in the SharedLibrary
+    # build will fail on some linux systems.  On the other hand, the link step doesn't 
+    # seem to require the other libraries like it does on OSX.  So I think it's safe to 
+    # just clear out LIBS here.
+    env1.Replace(LIBS=[])
+    lib_final_name = os.path.join(lib_final_dir,'libgalsim.so.%s'%version[0])
+    #lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s.%s'%version)
+    lib_short_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s'%version[0])
+    link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so')
+    env1.AppendUnique( SHLINKFLAGS=['-Wl,-soname,%s'%lib_final_name ])
+    env1.Replace(SHLIBSUFFIX = '.so.%s'%version)
+
+elif sys.platform == 'win32':
+    raise ValueError('Sorry, building on windows is not supported yet...')
+
+else:
+    raise ValueError('Sorry, building on platform ',sys.platform,' is not supported yet.')
+
 lib = env1.SharedLibrary(os.path.join('#lib','galsim'), obj_lib)
 
+def SymLink(target, source, env):
+    t = os.path.abspath(str(target[0]))
+    if os.path.exists(t): os.remove(t)
+    os.symlink(env['LibName'], t)
+
+# This just makes a link in the #lib directory.  Need to redo this in the install directory.
+link = env1.Command( link_name , lib , SymLink, LibName=lib_short_name)
+Default(link)
+
 lib_targets = [lib]
-dummy_targets = []
 
-# The RPATH stuff that normally helps an executable figure out where its shared libraries
-# live doesn't work on Macs.  Instead, they keep track of the location of the library
-# as part of the library itself.  And then when linking, that information is copied 
-# to the executable, so it knows where to look.
-# Great.  Except that scons makes the library as "lib/libgalsim.dylib".
-# i.e. A path relative to the root directory of GalSim, not an absolute path.
-# So wee need to make sure the library has the full path name so the executable can find it.
-if env['PLATFORM'] == 'darwin':
-    for l in lib_targets:
-        if 'install' in COMMAND_LINE_TARGETS:
-	    lib_name = os.path.join(lib_install_dir,os.path.basename(str(l[0])))
-	else:
-	    lib_name = str(l[0].abspath)
-	# Add .os to the end so the touched file is ignored by typical .gitignore files
-	# and the . in front so it is hidden.
-        dummy_targets += env1.RenameLib('.' + os.path.basename(str(l[0])) + '_dummy.os' , lib_name)
-
-Default(lib_targets, dummy_targets)
+Default(lib_targets)
 
 if 'install' in COMMAND_LINE_TARGETS:
 
     installed_lib = env1.Install(dir=lib_install_dir, source=lib_targets)
-    env1.Alias(target='install', source=installed_lib)
-    # Need this too to make sure the installed libraries get the right absolute path on Macs
-    env1.Alias(target='install', source=dummy_targets)
+
+    installed_link_name = os.path.join(lib_install_dir, os.path.basename(link_name))
+    installed_link = env1.Command( installed_link_name, installed_lib, SymLink,
+        LibName=lib_final_name)
+
+    env1.Alias(target='install', source=[installed_lib, installed_link])
 
     hfiles1 = os.listdir(GetBuildPath('#include'))
     hfiles = []
