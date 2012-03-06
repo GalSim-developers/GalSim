@@ -164,7 +164,8 @@ int main(int argc, char **argv)
     int status;
     long i,j;
     galsim::hsm::OBJECT_DATA GalaxyData, PSFData;
-    double x00, y00, shearsig, skyvar,FLUX_OFFSET;
+    //double x00, y00;
+    double shearsig, skyvar,FLUX_OFFSET;
 
     /* Check the number of arguments */
     if (argc!=8) {
@@ -195,8 +196,8 @@ int main(int argc, char **argv)
     sscanf(argv[3], "%lf", &(GalaxyData.x0));
     sscanf(argv[4], "%lf", &(GalaxyData.y0));
     GalaxyData.sigma = 2.5 * ARCSEC;
-    x00 = GalaxyData.x0;
-    y00 = GalaxyData.y0;
+    //x00 = GalaxyData.x0;
+    //y00 = GalaxyData.y0;
 
     /* Read PSF and initialize */
     status = read_image(argv[2], &PSFImage);
