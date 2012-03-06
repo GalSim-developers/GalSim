@@ -576,7 +576,7 @@ int main()
                     Exit(1)
                 break
         opt = "-F%s" % frameworkDir
-        if opt not in conf.env["LDFLAGS"]:
+        if opt not in context.env["LDFLAGS"]:
             context.env.Append(LDFLAGS = [opt,])
         result, output = context.TryRun(python_source_file,'.cpp')
 
