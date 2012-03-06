@@ -40,7 +40,7 @@ def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     (kx, ky) = (0, 0) is the [0, 0] array element.
 	
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
-    to the defintions given here:
+    to the definitions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
     
     Outputs the wavefront for kx, ky locations corresponding to kxky(shape), in a C-contiguous
