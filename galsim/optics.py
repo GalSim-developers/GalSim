@@ -39,7 +39,7 @@ def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     The pupil sample locations are arranged in standard DFT element ordering format, so that
     (kx, ky) = (0, 0) is the [0, 0] array element.
 	
-    Input abberation coefficients are assumed to be supplied in units of wavelength, and correspond
+    Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the defintions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
     
@@ -79,7 +79,7 @@ def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
 def psf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, secondary=None):
     """Generate an image of a circular (default) or square pupil PSF with specified low-order
-    wavefront abberations.
+    wavefront aberrations.
 
     Image has unit total flux, and is centred on the image[shape[0] / 2, shape[1] / 2] pixel,
     by default.
@@ -99,7 +99,7 @@ def psf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., 
 def mtf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, secondary=None):
     """Generate the complex MTF of a circular (default) or square pupil with specified low-order
-    wavefront abberations.
+    wavefront aberrations.
 
     MTF has mtf[0, 0] = 1 by default, and array elements follow the DFT standard of kxky(shape).
 
