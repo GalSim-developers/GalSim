@@ -5,4 +5,4 @@ config.log
 *.os
 *.pyc
 .obj
-gs_scons.conf
+gs_scons.*
