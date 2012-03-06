@@ -503,20 +503,6 @@ int main()
             CheckLibs(context,['tmv'],tmv_source_file) or
             CheckLibs(context,['tmv','irc','imf'],tmv_source_file) )
         
-        # If that didn't work, we might need to add the openmp flag to the 
-        # linking step.  This should be there now with my new way of reading the tmv-link
-        # file, but it used to be a problem, so I'm leaving the code here just in case.
-        if not result and not env['WITH_OPENMP']:
-            env1 = context.env.Clone()
-            AddOpenMPFlag(env1)
-            context.env['LINKFLAGS'] = env1['LINKFLAGS']
-            #result = (
-                #CheckLibs(context,['tmv_symband','tmv'],tmv_source_file) or
-                #CheckLibs(context,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
-            result = (
-                CheckLibs(context,['tmv'],tmv_source_file) or
-                CheckLibs(context,['tmv','irc','imf'],tmv_source_file) )
-
         if not result:
             context.Result(0)
             print 'Error: TMV file failed to link correctly'
@@ -582,7 +568,7 @@ int main()
 
     if not result:
         context.Result(0)
-        print "Cannot build against Python."
+        print "Cannot run program built with Python."
         Exit(1)
 
     context.Result(1)
@@ -628,7 +614,7 @@ int main()
 
     if not result:
         context.Result(0)
-        print "Cannot run NumPy code."
+        print "Cannot run program built with NumPy."
         Exit(1)
 
     context.Result(1)
@@ -665,7 +651,7 @@ int main()
 
     if not result:
         context.Result(0)
-        print "Cannot build against Boost.Python."
+        print "Cannot run program built with Boost.Python."
         Exit(1)
     context.Result(1)
     return 1
@@ -754,9 +740,12 @@ def DoLibraryAndHeaderChecks(config):
 
     # Check for cfitsio
     if not config.CheckLibWithHeader('cfitsio','fitsio.h',language='C++'):
-        print 'cfitsio not found'
-        print 'You should specify the location of cfitsio CFITSIO_DIR=...'
-        Exit(1)
+        # Sometimes cfitsio uses include/cfitsio as the location for fitsio.h, so try that.
+        config.env.AppendUnique(CPPPATH=os.path.join(config.env['CFITSIO_DIR'],'include','cfitsio'))
+        if not config.CheckLibWithHeader('cfitsio','fitsio.h',language='C++'):
+            print 'cfitsio not found'
+            print 'You should specify the location of cfitsio CFITSIO_DIR=...'
+            Exit(1)
 
     # Check for fftw3
     if not config.CheckLibWithHeader('fftw3','fftw3.h',language='C++'):
