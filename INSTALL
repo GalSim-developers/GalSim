@@ -249,13 +249,15 @@ or libboost-dev on Debian-derivatives).
 ii) Mac OSX  (#TODO: Expand this, maybe move it to a Wiki FAQ)
 
 a) Use of Fink -- the fink (http://www.finkproject.org) package management software is popular with
-Mac users.  Once it is installed, many of the library dependencies of GalSim can be added simply by
-commands such as
+Mac users.  Once it is installed, all of the library dependencies of GalSim can be added 
+with the following commands:
 
-fink install cfitsio
-fink install fftw 
 fink install scons
+fink install python26
+fink install fftw3
 fink install tmv0
+fink install boost1.46.1.cmake
+fink install cfitsio
 
 However, there is a slight caveat regarding the use of fink-installed Boost C++ and the 
 Enthought Python Distribution, see below...
