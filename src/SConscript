@@ -75,7 +75,7 @@ elif sys.platform == 'linux2':
     lib_short_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s'%version[0])
     link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so')
     env1.AppendUnique( SHLINKFLAGS=['-Wl,-soname,%s'%lib_final_name ])
-    env1.Replace(SHLIBSUFFIX = '.so.%s'%version)
+    env1.Replace(SHLIBSUFFIX = '.so.%s'%version[0])
 
 elif sys.platform == 'win32':
     raise ValueError('Sorry, building on windows is not supported yet...')
