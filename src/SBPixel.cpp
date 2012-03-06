@@ -247,8 +247,7 @@ namespace galsim {
         if ( dynamic_cast<const InterpolantXY*> (xInterp)) {
             int N = xt.getN();
             double dx = xt.getDx();
-            // Only need ix>=0 because it's Hermitian:
-            for (int ix = 0; ix <= N/2; ix++) {
+            for (int ix = -N/2; ix < N/2; ix++) {
                 for (int iy = -N/2; iy < N/2; iy++) {
                     Position<double> x(ix*dx,iy*dx);
                     xt.xSet(ix,iy,xValue(x));
