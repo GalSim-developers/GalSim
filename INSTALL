@@ -255,12 +255,13 @@ commands such as
 fink install cfitsio
 fink install fftw 
 fink install scons
+fink install tmv0
 
-TMV may soon be added to the list of fink packages, which would make GalSim installation even 
-easier.  However, there is a slight caveat regarding the use of fink-installed Boost C++ and the 
+However, there is a slight caveat regarding the use of fink-installed Boost C++ and the 
 Enthought Python Distribution, see below...
 
-Macports is another popular Mac package management project with similar functionality.
+Macports is another popular Mac package management project with similar functionality 
+(although TMV isn't on that one).
 
 
 b) The Enthought Python Distribution (EPD) is a single-install package that provides Python, Numpy,
