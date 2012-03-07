@@ -29,7 +29,6 @@
 #include "GalSim.h"
 
 #define Pi 3.141592653589793
-#define FLUX_OFFSET 0.0 /* offset of atlas images */
 
 /* Code to convert 2D integer images from FITS to TEXT */
 
@@ -149,7 +148,11 @@ static int read_image(char FileName[], galsim::hsm::RECT_IMAGE *MyImage)
 
 /* Arguments:
  * argv[1] = galaxy image image (FITS) file
- * argv[2] = initial guess for size (radius in units of pixels)
+ * then there are a set of args that can be specified or not (all or nothing)
+ * argv[2] = initial guess for size (radius in units of pixels), default = 5 pix
+ * argv[3] = sky value to subtract off from all pixels in galaxy image (default = 0)
+ * argv[4] = initial value for x centroid, default = center of image
+ * argv[5] = initial value for y centroid, default = center of image
  */
 
 int main(int argc, char **argv) 
@@ -159,18 +162,21 @@ int main(int argc, char **argv)
     int status,num_iter;
     long i,j;
     galsim::hsm::OBJECT_DATA GalaxyData;
-    double x00, y00;
+    double x00, y00, FLUX_OFFSET=0.0;
     double A_gal, Mxx_gal, Mxy_gal, Myy_gal, rho4_gal;
-    float ARCSEC;
+    float ARCSEC=5.0;
 
     /* Check the number of arguments */
-    if (argc!=3) {
-        fprintf(stderr,"Usage:\n\t%s image_file guesssig\n",argv[0]);
+    if (argc!=2 && argc!=6) {
+        fprintf(stderr,"Usage:\n\t%s image_file [guesssig sky_level x_centroid y_centroid]\n",argv[0]);
         exit(1);
     }
 
-    /* Get guess for size */
-    sscanf(argv[2],"%f",&ARCSEC);
+    /* Get guesses for various values */
+    if (argc==6) {
+      sscanf(argv[2],"%f",&ARCSEC);
+      sscanf(argv[3],"%lf",&FLUX_OFFSET);
+    }
 
     /* Read atlas images, initialize their data */
     status = read_image(argv[1], &AtlasImage);
@@ -184,8 +190,13 @@ int main(int argc, char **argv)
             AtlasImage.image[i][j] -= FLUX_OFFSET;
         }
     }
-    GalaxyData.x0 = 0.5 * (AtlasImage.xmin + AtlasImage.xmax);
-    GalaxyData.y0 = 0.5 * (AtlasImage.ymin + AtlasImage.ymax);
+    if (argc == 2) {
+      GalaxyData.x0 = 0.5 * (AtlasImage.xmin + AtlasImage.xmax);
+      GalaxyData.y0 = 0.5 * (AtlasImage.ymin + AtlasImage.ymax);
+    } else {
+      sscanf(argv[4],"%lf",&GalaxyData.x0);
+      sscanf(argv[5],"%lf",&GalaxyData.y0);
+    }
     GalaxyData.sigma = ARCSEC;
     x00 = GalaxyData.x0;
     y00 = GalaxyData.y0;
