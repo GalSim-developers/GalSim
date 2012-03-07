@@ -253,11 +253,11 @@ Mac users.  Once it is installed, all of the library dependencies of GalSim can 
 with the following commands:
 
 fink install scons
-fink install python26
 fink install fftw3
 fink install tmv0
 fink install boost1.46.1.cmake
 fink install cfitsio
+(Python 2.6 should already be in /usr/bin/python.)
 
 However, there is a slight caveat regarding the use of fink-installed Boost C++ and the 
 Enthought Python Distribution, see below...
