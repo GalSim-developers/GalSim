@@ -1,6 +1,7 @@
 # vim: set filetype=python et ts=4 sw=4:
 
 import os
+import subprocess
 import sys
 import SCons
 import platform
@@ -46,7 +47,7 @@ opts.Add('EXTRA_FLAGS','Extra flags to send to the compiler','')
 opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
 
 opts.Add(PathVariable('PREFIX','prefix for installation','', PathVariable.PathAccept))
-opts.Add(PathVariable('PYPREFIX','prefix for installation of python modules',
+opts.Add(PathVariable('PYPREFIX','location of your site-packages directory',
         default_py_prefix,PathVariable.PathAccept))
 
 opts.Add(PathVariable('EXTRA_PATH',
@@ -273,37 +274,66 @@ def AddOpenMPFlag(env):
     env.AppendUnique(LINKFLAGS=ldflag)
     env.AppendUnique(LIBS=xlib)
 
+def which(program):
+    """
+    Mimic functionality of unix which command
+    """
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    if sys.platform == "win32" and not program.endswith(".exe"):
+        program += ".exe"
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+         for path in os.environ["PATH"].split(os.pathsep):
+             exe_file = os.path.join(path, program)
+             if is_exe(exe_file):
+                 return exe_file
+
+    return None
+
 def GetCompilerVersion(env):
     """
     """
-    compiler = env['CXX']
+    compiler = which(env['CXX'])
+    print 'Using compiler:',compiler
 
+    compiler_real = os.path.realpath(compiler)
+    compiler_base = os.path.basename(compiler)
     # Get the compiler type without suffix or path.  
     # e.g. /sw/bin/g++-4 -> g++
-    if 'icpc' in compiler :
+    if 'icpc' in compiler_base :
         compilertype = 'icpc'
         versionflag = '--version'
         linenum=0
-    elif 'pgCC' in compiler :
+    elif 'pgCC' in compiler_base :
         compilertype = 'pgCC'
         versionflag = '--version'
         linenum=1
         # pgCC puts the version number on the second line of output.
-    elif 'clang++' in compiler :
+    elif 'clang++' in compiler_base :
         compilertype = 'clang++'
         versionflag = '--version'
         linenum=0
-    elif 'g++' in compiler :
+    elif 'g++' in compiler_base :
         compilertype = 'g++'
         versionflag = '--version'
         linenum=0
-    elif 'CC' in compiler :
+    elif 'CC' in compiler_base :
         compilertype = 'CC'
         versionflag = '-V'
         linenum=0
-    elif 'cl' in compiler :
+    elif 'cl' in compiler_base :
         compilertype = 'cl'
         versionflag = ''
+        linenum=0
+    elif 'c++' in compiler_base :
+        compilertype = 'c++'
+        versionflag = '--version'
         linenum=0
     else :
         compilertype = 'unknown'
@@ -313,8 +343,30 @@ def GetCompilerVersion(env):
     if compilertype != 'unknown':
         cmd = compiler + ' ' + versionflag + ' 2>&1'
         lines = os.popen(cmd).readlines()
-        line = lines[linenum]
     
+        # Check if g++ is a symlink for something else:
+        if compilertype is 'g++':
+            if 'clang' in lines[0]:
+                print 'Detected clang++ masquerading as g++'
+                compilertype = 'clang++'
+            # Any others I should look for?
+
+        # Check if c++ is a symlink for something else:
+        if compilertype is 'c++':
+            if 'clang' in lines[0]:
+                print 'Detected clang++ masquerading as c++'
+                compilertype = 'clang++'
+            elif 'g++' in lines[0] or 'gcc' in lines[0]:
+                print 'Detected g++ masquerading as c++'
+                compilertype = 'g++'
+            else:
+                print 'Cannot determine what kind of compiler c++ really is'
+                compilertype = 'unknown'
+            # Any others I should look for?
+
+    # redo this check in case was c++ -> unknown
+    if compilertype != 'unknown':
+        line = lines[linenum]
         import re
         match = re.search(r'[0-9]+(\.[0-9]+)+', line)
     
@@ -327,7 +379,6 @@ def GetCompilerVersion(env):
             version = 0
             vnum = 0
 
-    print '\nUsing compiler:',compiler
     print 'compiler version:',version
 
     env['CXXTYPE'] = compilertype
@@ -453,6 +504,13 @@ def AddExtraPaths(env):
     env.Prepend(LIBPATH= lib_paths)
     env.Prepend(CPPPATH= cpp_paths)
 
+    # Also make sure PYPREFIX and environ(PYTHONPATH) are in sys.path
+    if not os.path.abspath(env['PYPREFIX']) in sys.path:
+        sys.path.append(os.path.abspath(env['PYPREFIX']))
+    if (env['IMPORT_ENV'] and os.environ.has_key('PYTHONPATH') and
+        not os.path.abspath(os.environ['PYTHONPATH']) in sys.path):
+        sys.path.append(os.path.abspath(os.environ['PYTHONPATH']))
+
 
 def ReadFileList(fname):
     """
@@ -529,6 +587,7 @@ int main()
 }
 """
     context.Message('Checking if we can build against Python... ')
+
     try:
         import distutils.sysconfig
     except ImportError:
@@ -598,6 +657,18 @@ int main()
     except ImportError:
         context.Result(0)
         print 'Failed to import numpy.'
+        print 'Things to try:'
+        print '1) Check that the command line python (with which you probably installed numpy):'
+        print '   ',
+        sys.stdout.flush()
+        subprocess.call('which python',shell=True)
+        print '  is the same as the one used by SCons:'
+        print '  ',sys.executable
+        print '   If not, then you probably need to reinstall numpy with %s.'%sys.executable
+        print '   And remember to use that when running python for use with GalSim.'
+        print '   Alternatively, you can reinstall SCons with your preferred python.'
+        print '2) Check that if you open a python session from the command line,'
+        print '   import numpy is successful there.'
         Exit(1)
     context.env.Append(CPPPATH=numpy.get_include())
 
