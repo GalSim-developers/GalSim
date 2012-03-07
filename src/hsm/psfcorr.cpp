@@ -860,11 +860,11 @@ namespace hsm {
 
             /* If the moments have gotten too large, or the centroid is out of range,
              * report a failure */
-#define MAX_AMOMENT 5000.0
-#define MAX_ASHIFT 5.0
+#define MAX_AMOMENT 8000.0
+#define MAX_ASHIFT 15.0
             if (fabs(*Mxx)>MAX_AMOMENT || fabs(*Mxy)>MAX_AMOMENT || fabs(*Myy)>MAX_AMOMENT
                 || fabs(*x0-x00)>MAX_ASHIFT || fabs(*y0-y00)>MAX_ASHIFT) {
-                fprintf(stderr, "Error: adaptive moment failed\n");
+	      fprintf(stderr, "Error: adaptive moment failed: %lf %lf %lf %lf %lf %d\n",fabs(*Mxx),fabs(*Mxy),fabs(*Myy),fabs(*x0-x00),fabs(*y0-y00),*num_iter);
                 exit(1);
             }
 
