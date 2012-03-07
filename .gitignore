@@ -6,3 +6,4 @@ config.log
 *.pyc
 .obj
 gs_scons.*
+.*.swp
