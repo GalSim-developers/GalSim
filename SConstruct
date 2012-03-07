@@ -548,9 +548,9 @@ int main()
 
     result, output = context.TryRun(python_source_file,'.cpp')
 
-    if not result:
+    if not result and sys.platform == 'darwin':
         # Sometimes we need some extra stuff on Mac OS
-        frameworkDir = libDir           # search up the libDir tree for the proper home for frameworks
+        frameworkDir = libDir       # search up the libDir tree for the proper home for frameworks
         while frameworkDir and frameworkDir != "/":
             frameworkDir, d2 = os.path.split(frameworkDir)
             if d2 == "Python.framework":
@@ -561,9 +561,7 @@ int main()
                         % frameworkDir)
                     Exit(1)
                 break
-        opt = "-F%s" % frameworkDir
-        if opt not in context.env["LDFLAGS"]:
-            context.env.Append(LDFLAGS = [opt,])
+        context.env.AppendUnique(LDFLAGS="-F%s"%frameworkDir)
         result, output = context.TryRun(python_source_file,'.cpp')
 
     if not result:
