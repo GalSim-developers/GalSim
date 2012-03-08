@@ -310,190 +310,51 @@ namespace galsim {
     }
 
 
-    ////////////////////////////////////////////////////////////////
-    // The pixel data structure - never used by outside programs
-    ////////////////////////////////////////////////////////////////
     template <class T>
-    class ImageData 
-    {
-    public:
-        // Create:
-        // image with unspecified data values:
-        ImageData(const Bounds<int> inBounds) ;
-
-        // image filled with a scalar:
-        ImageData(const Bounds<int> inBounds, const T initValue) ;
-
-        // image for which the data array has been set up by someone else:
-        ImageData(const Bounds<int> inBounds, T** rptrs, bool _contig=false);
-
-        ~ImageData();
-
-        // This routine used by some other object rearranging the storage
-        // array.  If ownRowPointers was set, then this routine deletes the
-        // old array and assumes responsibility for deleting the new one.
-        void replaceRowPointers(T** newRptrs) const 
-        {
-            if (ownRowPointers) delete[] (rowPointers + bounds.getYMin()); 
-            rowPointers=newRptrs;
-        }
-
-        // Make a new ImageData that is subimage of this one.  Data will be
-        // shared in memory, just pixel bounds are different.  subimages
-        // a.k.a. children must be destroyed before the parent.
-        ImageData* subimage(const Bounds<int> bsub);
-        const ImageData* const_subimage(const Bounds<int> bsub) const;  //return const
-        const ImageData* subimage(const Bounds<int> bsub) const;  //if this const
-        void deleteSubimages() const; // delete all living subimages
-
-        // Create a new subimage that is duplicate of this ones data
-        ImageData* duplicate() const;
-
-        // Resize the image - this will throw exception if data array
-        // is not owned or if there are subimages in use.
-        // Data are undefined afterwards
-        void resize(const Bounds<int> newBounds);
-
-        // Copy in the data (and size) from another image.
-        void copyFrom(const ImageData<T>& rhs);
-
-        // move origin of coordinates, preserving data.  Throws exception
-        // if data are not owned or if there are subimages in use.
-        void shift(int x0, int y0);
-
-        // Element access - unchecked
-        const T& operator()(const int xpos, const int ypos) const 
-        { return *location(xpos,ypos); }
-        T& operator()(const int xpos, const int ypos) 
-        { return *location(xpos,ypos); }
-
-        // Element access - checked
-        const T& at(const int xpos, const int ypos) const 
-        {
-            if (!bounds.includes(xpos,ypos)) throw ImageBounds(xpos,ypos,bounds);
-            return *location(xpos,ypos);
-        }
-
-        T& at(const int xpos, const int ypos) 
-        {
-            if (!bounds.includes(xpos,ypos)) throw ImageBounds(xpos,ypos,bounds);
-            return *location(xpos,ypos);
-        }
-
-        // give pointer to a pixel in the storage array, 
-        // for use by routines that buffer image data for us.
-        T* location(const int xpos, const int ypos) const 
-        { return *(rowPointers+ypos)+xpos; } 
-
-        // Access functions
-        Bounds<int> getBounds() const { return bounds; }
-        bool contiguousData() const { return isContiguous; }
-
+    class Image {
     private:
-        // image which will be a subimage of a parent:
-        ImageData(const Bounds<int> inBounds, const ImageData<T>* _parent);
-
-        // No inadvertent copying allowed! Use copyFrom() to be explicit.
-        ImageData(const ImageData& );
-        ImageData& operator=(const ImageData&);
-
-        Bounds<int> bounds;
-
-        const ImageData<T>* parent; // If this is a subimage, what's parent?
-
-        // Does this object own (i.e. have responsibility for destroying):
-        bool ownDataArray; // the actual data array
-        bool ownRowPointers; // the rowpointer array
-
-        mutable T** rowPointers; // Pointers to start of the data rows
-
-        mutable bool  isContiguous; // Set if entire image is contiguous in memory
-
-        //list of subimages of this (sub)image:
-        mutable std::list<const ImageData<T>*> children; 
-
-        // class utility functions:
-        void acquireArrays(Bounds<int> inBounds);
-        void discardArrays();
-        void unlinkChild(const ImageData<T>* child) const;
-        void linkChild(const ImageData<T>* child) const;
-    };
-
-
-    //////////////////////////////////////////////////////////////////////////
-    // The Image handle:  this is what outside programs use.
-    //////////////////////////////////////////////////////////////////////////
-
-    template <class T>
-    class Image 
-    {
-    private:
-        T * _data;
+        template <typename U> friend class Image;
+        
+        boost::shared_array<T> _owner;  // manages ownership; _owner.get() != _data if subimage
+        T * _data;                      // pointer to be used for this image
+        int _stride;                    // number of elements between rows (!= width for subimages)
         Position<int> _bounds;
-        boost::shared_array<T> _owner;
     public:
-        Image(const int ncol, const int nrow) :
-            D(new ImageData<T>(Bounds<int>(1,ncol,1,nrow))), H(new ImageHeader()),
-            dcount(new int(1)), hcount(new int(1)) 
-        {}
+
+        Image(const int ncol, const int nrow);
 
         // Default constructor builds a null image:
-        explicit Image(const Bounds<int> inBounds=Bounds<int>()) : 
-            D(new ImageData<T>(inBounds)), H(new ImageHeader()),
-            dcount(new int(1)), hcount(new int(1)) 
-        {}
+        explicit Image(const Bounds<int> bounds=Bounds<int>());
 
-        explicit Image(const Bounds<int> inBounds, const T initValue) : 
-            D(new ImageData<T>(inBounds, initValue)), H(new ImageHeader()),
-            dcount(new int(1)), hcount(new int(1)) 
-        {}
+        explicit Image(const Bounds<int> inBounds, const T initValue);
 
-        Image(const Image& rhs) : 
-            D(rhs.D), H(rhs.H), dcount(rhs.dcount), hcount(rhs.hcount) 
-        { (*dcount)++; (*hcount)++; }
+        // Shallow copy constructor.
+        Image(const Image& rhs) : _owner(rhs._owner), _data(rhs._data), _bounds(rhs._bounds) {}
 
-        Image& operator=(const Image& rhs) 
-        {
-            // Note no assignment of const image to non-const image. ???
-            if (&rhs == this) return *this;
-            if (D!=rhs.D) {
-                if (--(*dcount)==0) { delete D; delete dcount; }
-                D = rhs.D; dcount=rhs.dcount; (*dcount)++;
-            }
-            if (H!=rhs.H) {
-                if (--(*hcount)==0) { delete H; delete hcount; }
-                H = rhs.H; hcount=rhs.hcount; (*hcount)++;
+        // Shallow conversion constructor; only compiles when U* is convertible to T* (i.e. T == const U).
+        template <typename U>
+        Image(const Image<U> & rhs) : _owner(rhs._owner), _data(rhs._data), _bounds(rhs._bounds) {}
+
+        // Shallow assignment operator.
+        Image & operator=(const Image& rhs); {
+            if (&rhs != this) {
+                _owner = rhs._owner;
+                _data = rhs._data;
+                _bounds = rhs._bounds;
             }
             return *this;
         }
 
-        ~Image() 
-        {
-            if (--(*dcount)==0) { delete D; delete dcount; }
-            if (--(*hcount)==0) { delete H; delete hcount; }
+        // Shallow conversion assignment; only compiles when U* is convertible to T* (i.e. T == const U).
+        template <typename U>
+        Image & operator=(const Image<U>& rhs) {
+            _owner = rhs._owner;
+            _data = rhs._data;
+            _bounds = rhs._bounds;
+            return *this;
         }
 
-        // Constructor for use by other image-manipulation routines:
-        // Create from a data and a header object: note that both will be
-        // deleted when this object is deleted unless [dh]count are given.  
-        Image(ImageData<T>* Din, ImageHeader* Hin, int* _dc=0, int* _hc=0) : 
-            D(Din), H(Hin), dcount(_dc), hcount(_hc) 
-        {
-            if (!_dc) dcount = new int(0);
-            if (!_hc) hcount = new int(0);
-            (*dcount)++; (*hcount)++; 
-        }
-
-        // Make this image (or just data) be a duplicate of another's.
-        // Note this can change size, which is illegal if there exist
-        // open subimages.  All Images that refer to same data are changed.
-        void copyDataFrom(const Image& rhs) { D->copyFrom(*(rhs.D)); }
-
-        void copyFrom(const Image& rhs) 
-        {
-            *H = *(rhs.H);
-            D->copyFrom(*(rhs.D));
-        }
+        void copyFrom(const Image& rhs);
 
         // Create new image with fresh copies of data & header
         Image duplicate() const;
