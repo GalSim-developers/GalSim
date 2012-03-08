@@ -131,4 +131,7 @@ in particular ensure that
 
 Check out the np.copy() function in Numpy, or array.copy() method to see how to make a c_contiguous array, also see np.ascontiguousarray() or the array.transpose() method.
 
-
+Finally, the FITS standard is to begin indexing all arrays at (1, 1), and this is the convention
+SBProfile currently adopts.  However, we think that our image objects will also carry around an
+attribute for the coordinate origin, so this should not be too much of a headache at the interface 
+with Python/Numpy (famous last words).
