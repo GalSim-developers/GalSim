@@ -72,3 +72,63 @@ Boost.shared_ptr, Boost.random (flexibility to other RNGs)
 
 Notes: will add more if really useful/necessary, but want to keep this list as short as 
 possible.  Matplotlib plotting  in Python not featured by default.
+
+7. Array/pixel indexing:
+
+Numpy arrays in Python use the (matrix-style) indexing [y, x], whereas the SBProfile class and the
+more arguably natural ordering is (x, y).  PyFITS, and a number of other Numpy-dependent Python
+libraries have also adopted the [y, x] paradigm, as well as a number of astronomers who do a lot in
+Python.
+
+We will write our Python classes to accept arguments in the (x, y) order, particularly the
+galsim.Image class.  However, it will be possible to create an Image using a Numpy array, and also
+to get a Numpy view into an image.
+
+This places the boundary between our classes and NumPy.  Our classes would be (x,y) in both C++ and
+Python, but we wouldn't make any effort to fit NumPy into that paradigm.
+
+Jim gives a couple more reasons on why this is a good place to put the boundary:
+- Square brackets will consistently be [y,x], and parentheses will consistently be (x,y), due to 
+  the (usually annoying) fact that you can't overload operator[] with two argument in C++.
+
+- Even in Python, [y,x] is really only used for NumPy arrays - note that matplotlib's plot 
+  function takes 1-d x and y arrays in that order, for instance, even though matplotlib expects 
+  arrays used as images to be [y,x].
+
+Jim gives a nice example of this functionality for what he has in mind for the Python API of the
+galsim.Image class:
+
+>>> import galsim
+>>> import numpy
+>>> arr1 = numpy.arange(6).reshape(2,3)
+>>> print arr1
+[[0 1 2]
+[3 4 5]]
+>>> im1 = galsim.ImageD(arr1, x0=10, y0=100)  # im shares data with arr1
+>>> arr2 = im1.array
+>>> assert(arr2 is arr1)
+>>> print im1(12, 101) # (x, y); includes offsets passed in constructor
+5
+>>> im2 = galsim.ImageD(x0=1, y0=2, w=3, h=4)
+>>> arr3 = im2.array   # arr3 shares data with m3
+>>> print arr3.shape   # shape is (h, w)
+(4, 3)
+>>> arr4 = arr1.transpose()    # arr4 is column-major
+>>> im3 = galsim.ImageD(arr4)  # can't do this
+Traceback (most recent call last):
+ File "<stdin>", line 1, in <module>
+ValueError: Cannot create image from noncontiguous array.
+
+This last point is important: Numpy arrays must be kept in c_contiguous storage order, i.e. row-
+major.  Some of numpy's array routines invisibly change arrays to Fortran-style (i.e. column-major)
+storage, or disrupt contiguous storage altogether.  While developing, keep track of this using
+
+>>> array.flags
+
+in particular ensure that
+
+>>> array.flags.c_contiguous == True
+
+Check out the np.copy() function in Numpy, or array.copy() method to see how to make a c_contiguous array, also see np.ascontiguousarray() or the array.transpose() method.
+
+
