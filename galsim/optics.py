@@ -15,18 +15,16 @@ def kxky(shape=(256, 256)):
     Uses the most common DFT element ordering conventions (and those of FFTW), so that (0, 0) array
     element corresponds to (kx, ky) = (0, 0).
 
-    See also the docstring for np.fftfreq, which uses the same DFT convention.
+    See also the docstring for np.fftfreq, which uses the same DFT convention, and is called here,
+    but misses a factor of pi.
     
     Adopts Numpy array index ordering so that the trailing axis corresponds to kx, rather than the
     leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
     uses this convention.
     """
-    kxax = (np.arange(shape[1], dtype=float) - .5 * float(shape[1])) * 2. * np.pi / float(shape[1])
-    kyax = (np.arange(shape[0], dtype=float) - .5 * float(shape[0])) * 2. * np.pi / float(shape[0])
-    kx, ky = np.meshgrid(kxax, kyax)
-    kx = np.roll(kx, shape[1] / 2, axis=1)
-    ky = np.roll(ky, shape[0] / 2, axis=0)
-    return kx, ky
+    k_xaxis = np.fft.fftfreq(shape[1]) * np.pi
+    k_yaxis = np.fft.fftfreq(shape[0]) * np.pi
+    return np.meshgrid(k_xaxis, k_yaxis)
 
 def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
               kmax=np.pi, circular_pupil=True):
