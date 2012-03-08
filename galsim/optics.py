@@ -14,6 +14,8 @@ def kxky(shape=(256, 256)):
     Uses the SBProfile conventions for Fourier space, so k varies in approximate range (-\pi, \pi].
     Uses the most common DFT element ordering conventions (and those of FFTW), so that (0, 0) array
     element corresponds to (kx, ky) = (0, 0).
+
+    See also the docstring for np.fftfreq, which uses the same DFT convention.
     
     Adopts Numpy array index ordering so that the trailing axis corresponds to kx, rather than the
     leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
