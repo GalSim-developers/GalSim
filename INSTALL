@@ -263,7 +263,9 @@ However, there is a slight caveat regarding the use of fink-installed Boost C++ 
 Enthought Python Distribution, see below...
 
 Macports is another popular Mac package management project with similar functionality 
-(although TMV isn't on that one).
+(although TMV isn't on that one).  Note that when using MacPorts to install boost, you may need to explicitly indicate Boost.Python, e.g., using
+
+sudo port install boost +python27
 
 
 b) The Enthought Python Distribution (EPD) is a single-install package that provides Python, Numpy,
