@@ -73,6 +73,7 @@ Boost.shared_ptr, Boost.random (flexibility to other RNGs)
 Notes: will add more if really useful/necessary, but want to keep this list as short as 
 possible.  Matplotlib plotting  in Python not featured by default.
 
+
 7. Array/pixel indexing:
 
 Numpy arrays in Python use the (matrix-style) indexing [y, x], whereas the SBProfile class and the
@@ -135,3 +136,14 @@ Finally, the FITS standard is to begin indexing all arrays at (1, 1), and this i
 SBProfile currently adopts.  However, we think that our image objects will also carry around an
 attribute for the coordinate origin, so this should not be too much of a headache at the interface 
 with Python/Numpy (famous last words).
+
+
+8. Compiler warning flags
+
+By default, Mike will set warn=TRUE as the default SCons build setting to output pretty pedantic 
+compiler warnings to us developers when building GalSim routines.  This will be switched off again
+before we start actively encouraging the public to download the software.  Though some find these
+annoying, we'd rather know about any non-standard usage as it might be the kind of thing that causes
+portability/stability issues later on.
+
+
