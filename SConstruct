@@ -78,11 +78,11 @@ opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
 opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
 
+# None of the code uses openmp yet.  Probably make this default True if we start using it.
 opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
 opts.Add(BoolVariable('MEM_TEST','Test for memory leaks', False))
-opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', False))
-opts.Add(BoolVariable('TMV_DEBUG',
-            'Turn on extra debugging statements within TMV library',False))
+opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', True))
+opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
 
 #opts.Add(BoolVariable('WITH_UPS',
             #'Create ups/galsim.table.  Install the ups directory under PREFIX/ups',
