@@ -69,12 +69,12 @@ namespace galsim {
 		    if (ix*ix+iy*iy <= maxiksq) 
 		        kt.kSet(ix,iy,1./kt.kval(ix,iy));
 		    else
-		        kt.kSet(ix,iy,DComplex(0.,0.));
+		        kt.kSet(ix,iy,std::complex<double>(0.,0.));
 		    ix=N/2;
 		    if (ix*ix+iy*iy <= maxiksq) 
 		        kt.kSet(ix,iy,1./kt.kval(ix,iy));
 		    else
-		        kt.kSet(ix,iy,DComplex(0.,0.));
+		        kt.kSet(ix,iy,std::complex<double>(0.,0.));
 	        }
                 for (int ix = 0; ix <= N/2; ix++) {
                     if (ix*ix+iy*iy <= maxiksq) 
