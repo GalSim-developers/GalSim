@@ -31,10 +31,16 @@ def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     """Construct a complex, aberrated wavefront across a circular pupil (default) or square
     array extent.
     
-    Outputs a complex image (shape=shape) of a circular pupil wavefront of radius kmax.  We adopt 
-    the conventions of SBProfile so that the Nyquist frequency of an image with unit integer pixel
-    spacing is \pi.  The default output is a circular pupil of radius \pi in k-space, i.e. one which
-    fills to the edge of the array but does not cross it.
+    Outputs a complex image (shape=shape) of a circular pupil wavefront that will produce a PSF
+    with bandlimit kmax.  We adopt the conventions of SBProfile so that the Nyquist frequency of
+    an image with unit integer pixel spacing is pi.
+
+    The default output is a circular pupil of radius pi/2 in k-space (=kmax/2), i.e. one
+    which fills to a diameter of half the array dimension.  The OTF thus has maximum radius pi in
+    k-space at this default kmax, and so the output PSF will be fully sampled (just).
+
+    Typically, therefore, kmax should be chosen to be less than pi and will depend on the pixel
+    scale desired in the output.
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
     (kx, ky) = (0, 0) is the [0, 0] array element.
@@ -50,13 +56,13 @@ def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
 	# Build kx, ky coords
     kx, ky = kxky(shape)
 	# Then define unit disc rho and theta pupil coords for Zernike polynomials
-    rho = np.sqrt((kx**2 + ky**2) / kmax**2)
+    rho = np.sqrt((kx**2 + ky**2) / (.5 * kmax)**2)
     theta = np.arctan2(ky, kx)
 	# Cut out circular pupil if desired (default)
     if circular_pupil:
         in_pupil = (rho <= 1.)
     else:
-        in_pupil = (np.abs(kx) <= kmax) * (np.abs(ky) <= kmax)
+        in_pupil = (np.abs(kx) <= .5 * kmax) * (np.abs(ky) <= .5 * kmax)
 	# Then make wavefront image
     wf = np.zeros(shape, dtype=complex)
     wf[in_pupil] = 1.
@@ -82,7 +88,7 @@ def psf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., 
     wavefront aberrations.
 
     Image has unit total flux, and is centred on the image[shape[0] / 2, shape[1] / 2] pixel,
-    by default.
+    by default.  Function is bandlimited at kmax (default = pi; Nyquist frequency).
 
     Ouput numpy array is C-contiguous.
     """
@@ -102,7 +108,7 @@ def otf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., 
     wavefront aberrations.
 
     OTF has otf[0, 0] = 1+0j by default, and array element ordering follows the DFT standard of
-    kxky(shape).
+    kxky(shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
 
     Output complex numpy array is C-contiguous, but real and imaginary parts from otf.real or
     otf.imag will not be.
@@ -123,7 +129,7 @@ def mtf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., 
     wavefront aberrations.
 
     MTF has mtf[0, 0] = 1 by default, and array element ordering follows the DFT standard of
-    kxky(shape).
+    kxky(shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
 
     Output float numpy array is C-contiguous.
     """
@@ -136,7 +142,7 @@ def ptf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., 
     low-order wavefront aberrations.
 
     PTF has ptf[0, 0] = 0 by default, and array element ordering follows the DFT standard of
-    kxky(shape).
+    kxky(shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
 
     Output float numpy array is C-contiguous.
     """
