@@ -90,30 +90,56 @@ def psf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., 
 	wf = wavefront(shape=shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
 		       coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil)
     else:
-	raise NotImplementedError('Secondar mirror obstruction not yet implemented')
+	raise NotImplementedError('Secondary mirror obstruction not yet implemented')
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
     im = roll2d((ftwf * ftwf.conj()).real, (shape[0] / 2, shape[1] / 2)) 
     return im / im.sum()
 
-def mtf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+def otf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, secondary=None):
-    """Generate the complex MTF of a circular (default) or square pupil with specified low-order
+    """Generate the complex OTF of a circular (default) or square pupil with specified low-order
     wavefront aberrations.
 
-    MTF has mtf[0, 0] = 1 by default, and array elements follow the DFT standard of kxky(shape).
+    OTF has otf[0, 0] = 1+0j by default, and array element ordering follows the DFT standard of
+    kxky(shape).
 
-    Output numpy array is C-contiguous.
+    Output complex numpy array is C-contiguous, but real and imaginary parts from otf.real or
+    otf.imag will not be.
     """
     if secondary == None:  # TODO: Build a secondary mirror obstruction function!
 	wf = wavefront(shape=shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
 		       coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil)
     else:
-	raise NotImplementedError('Secondar mirror obstruction not yet implemented')
+	raise NotImplementedError('Secondary mirror obstruction not yet implemented')
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
-    mtf = np.fft.ifft2((ftwf * ftwf.conj()).real)
+    otf = np.fft.ifft2((ftwf * ftwf.conj()).real)
     # Make C contiguous and unit flux before returning
-    return np.ascontiguousarray(mtf) / mtf[0, 0].real
+    return np.ascontiguousarray(otf) / otf[0, 0].real
 
+def mtf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+        kmax=np.pi, circular_pupil=True, secondary=None):
+    """Generate the MTF of a circular (default) or square pupil with specified low-order
+    wavefront aberrations.
 
+    MTF has mtf[0, 0] = 1 by default, and array element ordering follows the DFT standard of
+    kxky(shape).
+
+    Output float numpy array is C-contiguous.
+    """
+    return np.abs(otf(shape=shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
+		      coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil))
+
+def ptf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+        kmax=np.pi, circular_pupil=True, secondary=None):
+    """Generate the PTF (in radians) of a circular (default) or square pupil with specified
+    low-order wavefront aberrations.
+
+    PTF has ptf[0, 0] = 0 by default, and array element ordering follows the DFT standard of
+    kxky(shape).
+
+    Output float numpy array is C-contiguous.
+    """
+    return np.angle(otf(shape=shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
+		    coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil))
 
