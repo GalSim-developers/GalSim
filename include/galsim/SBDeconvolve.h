@@ -60,9 +60,22 @@ namespace galsim {
             adaptee->fillKGrid(kt);
             // Flip or clip:
             int N = kt.getN();
-            int maxiksq = maxksq / kt.getDk();
-            for (int iy = -N/2; iy < N/2; iy++) {
-                // Only need ix>=0 because it's Hermitian:
+            int maxiksq = maxksq / (kt.getDk()*kt.getDk());
+	    // Only need ix>=0 because it's Hermitian, but also
+	    // don't want to repeat the ix=0, N/2 twice:
+	    for (int iy = -N/2; iy < N/2; iy++) {
+	        if (iy>=0) {
+	            int ix=0;
+		    if (ix*ix+iy*iy <= maxiksq) 
+		        kt.kSet(ix,iy,1./kt.kval(ix,iy));
+		    else
+		        kt.kSet(ix,iy,DComplex(0.,0.));
+		    ix=N/2;
+		    if (ix*ix+iy*iy <= maxiksq) 
+		        kt.kSet(ix,iy,1./kt.kval(ix,iy));
+		    else
+		        kt.kSet(ix,iy,DComplex(0.,0.));
+	        }
                 for (int ix = 0; ix <= N/2; ix++) {
                     if (ix*ix+iy*iy <= maxiksq) 
                         kt.kSet(ix,iy,1./kt.kval(ix,iy));
