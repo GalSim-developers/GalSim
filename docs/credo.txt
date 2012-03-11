@@ -140,10 +140,26 @@ with Python/Numpy (famous last words).
 
 8. Compiler warning flags
 
-By default, Mike will set warn=TRUE as the default SCons build setting to output pretty pedantic 
-compiler warnings to us developers when building GalSim routines.  This will be switched off again
-before we start actively encouraging the public to download the software.  Though some find these
-annoying, we'd rather know about any non-standard usage as it might be the kind of thing that causes
-portability/stability issues later on.
+By default, SCons adds the flags -Wall -Werror to the list of compiler flags.  This tends to 
+catch a lot of things that cause portability issues as we use the code on different systems
+as well as outright bugs in the coding that are otherwise missed.  Not all of the things 
+that come up are bugs per se, but it catches enough things that really are bugs that we feel 
+it worthwhile to make that the default.  Developers are expected to fix their code to get rid 
+of all these warnings before committing.
 
+Even if everyone does this, it is possible that you might come across warnings from someone
+else's code.  e.g. They may use a different compiler that warns about somewhat different things.
+If you know how to fix the problem, go ahead and do so.  If you don't, please email the 
+person responsible (or go to our GitHub page and comment on the commit that causes the problem) 
+to ask them to fix it.  Basically the same thing you would do if code failed to compile for a 
+non-warning compiler error.
+
+When we eventually release the code to the public, we will switch the default to not use
+these warning flags in case some users have a different compiler that none of us tested on.
+The code is regularly tested with various versions of g++, clang++ and icpc.  Maybe more.
+But if they use something different, we don't want the code to fail because it is a stickler
+for some C++ detail that we didn't catch in our builds.  Turning on and off the warnings is 
+done with the SCons option WARN.  Use WARN=false to turn them off, and WARN=true to turn them 
+back on.  But again, you shouldn't really have to do this.  You should fix the warnings rather 
+than ignore them by turning them off.
 

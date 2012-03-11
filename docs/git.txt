@@ -1,0 +1,110 @@
+--- Quick reference for working with git ---
+
+The internet is full of resources on doing various things with git,
+but we've included a brief synopsis of the most important commands
+here.
+
+Much of this has been lifted from Mario Juric's excellent LSST git
+tutorial, which can be found in full here:
+
+http://lsstdev.ncsa.uiuc.edu/trac/wiki/GitDemoAndTutorial
+
+--- Basic workflow ---
+
+# 0. clone the repo (only need to do this once, of course)
+git clone git@github.com:GalSim-developers/GalSim.git
+
+# 1. check which branch you are on, 
+# mostly like you want to be on the master branch
+git branch
+
+# 2. create new branch for issue X, both locally and remotely
+git checkout -b #X
+git push -u origin #X
+
+# 3. do work, commit often, push periodically
+... do work ...
+git commit -a
+git push
+
+# 4. when the issue work is complete, merge it master
+# note that merge will commit automatically if there are no conflicts
+git checkout master
+git merge #X      
+... fix any merge conflicts ...
+... run unit tests, make sure things still work ...
+git push
+
+--- Initial configuration ---
+
+# Configure your name; this will appear in commits
+git config --global user.name "Firstname Lastname"
+
+# Configure you e-mail; this will appear in commits
+git config --global user.email "your_email@youremail.com"
+
+# Use colors if terminal is capable
+git config --global color.ui true
+
+# Make 'git push' push only the current branch, and not all of them
+# (probably won't matter, but git's default behavior is confusing)
+git config --global push.default tracking
+
+--- Add a new file ---
+
+echo '# New build system!' > CMakeList.txt
+git status            # See the status of files in the working directory
+git status -s         # The same in format familiar to SVN users
+git add CMakeList.txt       # Add a new file to be tracked by git
+git status
+git commit				 # Commit the changes (the file addition)
+git log
+
+--- Editing a file ---
+
+echo '#more stuff' >> CMakeList.txt   # Change the file
+git status                            # See that the file is now "dirty"
+git diff                              # See the changes
+git commit -a               # Commit all changes (don't forget the -a!)
+
+# You can also use "git add" and "git commit" separately, to only commit some
+# of the files you've made changes to.  This is called the "staging area",
+# and it makes it easier to make your commits more atomic and meaningful,
+# which makes it easer to use the logs and fix merge conflicts.
+
+--- Branches ---
+
+git branch        # Show the branch we're on
+git branch -a     # List all the branches
+
+git checkout -b mybranch   # make a new branch and check it out
+git checkout mybranch      # checkout an existing branch
+
+# checking out a branch that wasn't created locally
+git fetch         # sync with remote repositories (pull does this too)
+git checkout -t origin/otherbranch  # make a "tracking branch" and check it out
+
+# With recent versions of git, you can also just say "git checkout otherbranch"
+# as an equivalent of the last line (it won't work at all for earlier versions,
+# so it's safe to try).
+
+--- About Tracking and Remote Branches ---
+
+When you do a "git fetch", git gets all the changes in the repository
+you cloned from.  That repo is called "origin", and it's what git
+calls a "remote".  You can have multiple remotes if you like, or
+change their names (see "git remote --help"), but most of the time
+you'll just deal with origin.  Anyhow, when you fetch, the branches in
+the remote repository are synced into local branches with names like
+"origin/master" and "origin/someotherbranch".  These are "remote branches",
+and you should never check them out directly.
+
+Instead, you make a local branch that "tracks" the remote branch, with
+"git push -u <remote>" (if you made the branch) or
+"git checkout -t <remote>/<branch>" (if someone else did), as above.
+A tracking branch tells git where to push your changes when you say
+"git push", and where to pull from when you say "git pull".  In fact,
+"git pull" is basically equivalent to doing "git fetch" (which puts
+remote changes into the remote branches) and "git merge <remote>"
+(which merges the remote branch into the tracking branch).
+
