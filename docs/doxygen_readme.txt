@@ -147,6 +147,26 @@ def __init__(self, name, ...):
 
 
 
+BEST PRACTICE HINTS
+===================
+
+Because this is a developer-focued project we should document both private and public methods.  In python, note in the description if a method is mainly internal and not used by other classes.  Do the same in C++ if a class should probably not be used directly from outside a particular part of the code.
+
+You should describe the typical use for a function or class (e.g. "Usually instantiated by an SBProfile object", "should be passed to the optics module to generate output, etc.")
+
+In python, briefly describe what types the input and output to a class are expected to be by starting the description with [string],  [integer], or [float], or whatever.
+
+You don't need to described *how* a function or method achieves what it does unless it has significant interaction with other functions or classes - you can leave that to the code comments.  Use the doxygen comment to describe *what* it does.
+
+If an input to a function is modified by the function and this is not immediately obvious it is a good idea to note this in the docs.
+
+If you only have limited time, focus on the functions that will be end users of the code.
+
+If a function input may have units, say what they are expected to be  (e.g. degrees or radians for an angle).
+
+
+
+
 
 [0] Oddly enough choosing the OPTIMIZE_FOR_JAVA option in the Doxyfile seems to be the best way to nicely document both C++ and Python at once.
 [1] This is an option in the Doxyfile that I have set.
