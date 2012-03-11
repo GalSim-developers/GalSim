@@ -7,3 +7,6 @@ config.log
 .obj
 gs_scons.*
 .*.swp
+doc/html/*
+doc/latex/*
+docs/doxygen_example_output/*
