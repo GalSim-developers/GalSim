@@ -204,7 +204,7 @@ OPTIMIZE_OUTPUT_FOR_C  = NO
 # Java. For instance, namespaces will be presented as packages, qualified
 # scopes will look different, etc.
 
-OPTIMIZE_OUTPUT_JAVA   = NO
+OPTIMIZE_OUTPUT_JAVA   = YES
 
 # Set the OPTIMIZE_FOR_FORTRAN tag to YES if your project consists of Fortran
 # sources only. Doxygen will then generate output that is more tailored for
@@ -314,7 +314,7 @@ EXTRACT_ALL            = YES
 # If the EXTRACT_PRIVATE tag is set to YES all private members of a class
 # will be included in the documentation.
 
-EXTRACT_PRIVATE        = NO
+EXTRACT_PRIVATE        = YES
 
 # If the EXTRACT_STATIC tag is set to YES all static members of a file
 # will be included in the documentation.
@@ -598,7 +598,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories
 # with spaces.
 
-INPUT                  = pysrc/SBProfile src
+INPUT                  = include galsim
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is
@@ -687,7 +687,7 @@ IMAGE_PATH             =
 # If FILTER_PATTERNS is specified, this tag will be
 # ignored.
 
-INPUT_FILTER           =
+INPUT_FILTER           = 
 
 # The FILTER_PATTERNS tag can be used to specify filters on a per file pattern
 # basis.
@@ -698,13 +698,13 @@ INPUT_FILTER           =
 # info on how filters are used. If FILTER_PATTERNS is empty or if
 # non of the patterns match the file name, INPUT_FILTER is applied.
 
-FILTER_PATTERNS        =
+FILTER_PATTERNS        = *.py=doc/doxypy.py
 
 # If the FILTER_SOURCE_FILES tag is set to YES, the input filter (if set using
 # INPUT_FILTER) will be used to filter the input files when producing source
 # files to browse (i.e. when SOURCE_BROWSER is set to YES).
 
-FILTER_SOURCE_FILES    = NO
+FILTER_SOURCE_FILES    = YES
 
 # The FILTER_SOURCE_PATTERNS tag can be used to specify source filters per file
 # pattern. A pattern will override the setting for FILTER_PATTERN (if any)
