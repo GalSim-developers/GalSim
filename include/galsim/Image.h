@@ -53,60 +53,6 @@
 // Many unary and binary arithmetic operations are supplied, with
 // templates provided to build others quickly.
 //
-//**********************  ImageHeader ****************************
-// Contains auxiliary information for Images.  This includes:
-// a list of COMMENT strings
-// a list of HISTORY strings
-// a list of other keyword-indexed records, a la FITS headers.
-//
-// ???? Add WCS information to Header structure ???
-//
-// Header records have a keyword string, a value, and optional comment 
-// and units strings.  Individual records have a base class
-//   HdrRecordBase
-// and the derived classes are
-//   HdrRecordNull (no value)
-//   HdrRecord<T>  (value of type T).
-// Header keywords are case-insensitive and at least for FITS are
-// limited to 8 characters.
-//
-// Usually the client will not construct ImageHeaders, but always get
-// them from Images.  The most common methods will be:
-//   append("keyword",value,"comment")
-//        ...to append a new keyword/value pair to the header.
-//   replace("keyword",value,"comment")
-//        ...replaces old keyword header, or appends if no old one
-//   getValue("keyword", value)
-//        ...returns true & fills the value if keyword is in header
-//           returns false if keyword is not already in header.
-//   addComment("comment") 
-//        ...appends a new COMMENT record.
-//   addHistory("history")  is a new HISTORY entry.
-//
-// Less frequently the client will use a list-oriented access to all
-// the header records.
-// There is an internal pointer to the header record list.
-// It is manipulated by rewind(), atEnd(), incr().  Pointer to the
-// "current" record is current().  find() moves the pointer to next
-// record that matches a keyword.
-// append() or insert() add new records at end or at current pointer.
-// You can call either of these with a keyword,value pair, and the
-// correct type for HdrRecord<T> will be inferred from the value.
-// erase() gets rid of either a certain keyword, or the current record.
-//
-// clear() flushes all records, plus the HISTORY and COMMENT lists.
-// size() is total number of records, HISTORY, and COMMENT entries.
-//
-// A copy or assignment of an ImageHeader is a deep copy (as long as
-// all the header types T are).  ImageHeader owns all the HdrRecords
-// and will delete them upon deletion of hte ImageHeader.
-//
-// Each ImageHeader keeps an "isAltered"
-// flag so one can note whether it is unchanged since its creation or
-// last call to notAltered().
-//
-// You can't erase individual comments or history entries.
-//****************************************************************/
 
 #ifndef Image_H
 #define Image_H
@@ -145,304 +91,420 @@ namespace galsim {
         ImageBounds(const int x, const int y, const Bounds<int> b);
     };
 
-    //////////////////////////////////////////////////////////////////////////
-    // Templates for stepping through image pixels
-    //////////////////////////////////////////////////////////////////////////
-    // Execute function on each pixel value
-    template <class Img, class Op>
-    Op for_each_pixel(Img I, Op f) 
-    {
-        for (int i=I.YMin(); i<=I.YMax(); i++)
-            f=for_each(I.rowBegin(i), I.rowEnd(i), f);
-        return f;
-    }
+    template <typename T> class Image;
 
-    // Execute function on a range of pixels
-    template <class Img, class Op>
-    Op for_each_pixel(Img I, Bounds<int> b, Op& f) 
-    {
-        if (!I.getBounds().includes(b))
-            throw ImageError("for_each_pixel range exceeds image range");
-        for (int i=b.getYMin(); i<=b.getYMax(); i++)
-            f=for_each(I.getIter(b.getXMin(),i), 
-                       I.getIter(b.getXMax()+1,i), f);
-        return f;
-    }
-
-    // Replace image with function of itself
-    template <class Img, class Op>
-    Op transform_pixel(Img I, Op f) 
-    {
-        for (int y=I.YMin(); y<=I.YMax(); y++) {
-            typename Img::iter ee=I.rowEnd(y);      
-            for (typename Img::iter it=I.rowBegin(y);
-                 it!=ee; 
-                 ++it) 
-                *it=f(*it);
-        }
-        return f;
-    }
-
-    // Replace image with function of itself over range
-    template <class Img, class Op>
-    Op transform_pixel(Img I, Bounds<int> b, Op f) 
-    {
-        if (!I.getBounds().includes(b))
-            throw ImageError("transform_pixel range exceeds image range");
-        for (int y=b.getYMin(); y<=b.getYMax(); y++) {
-            typename Img::iter ee=I.getIter(b.getXMax()+1,y);      
-            for (typename Img::iter it=I.getIter(b.getXMin(),y);
-                 it!=ee; 
-                 ++it) 
-                *it=f(*it);
-        }
-        return f;
-    }
-
-    // Add function of pixel coords to image
-    template <class Img, class Op>
-    Op add_function_pixel(Img I, Op f) 
-    {
-        for (int y=I.YMin(); y<=I.YMax(); y++) {
-            int x=I.XMin();
-            typename Img::iter ee=I.rowEnd(y);      
-            for (typename Img::iter it=I.rowBegin(y);
-                 it!=ee; 
-                 ++it, ++x) 
-                *it+=f(x,y);
-        }
-        return f;
-    }
-
-    // Add function of pixel coords to image over a range
-    template <class Img, class Op>
-    Op add_function_pixel(Img I, Bounds<int> b, Op f) 
-    {
-        if (b && !I.getBounds().includes(b))
-            throw ImageError("add_function_pixel range exceeds image range");
-        for (int y=b.getYMin(); y<=b.getYMax(); y++) {
-            int x=b.getXMin();
-            typename Img::iter ee=I.getIter(b.getXMax()+1,y);      
-            for (typename Img::iter it=I.getIter(b.getXMin(),y);
-                 it!=ee; 
-                 ++it, ++x) 
-                *it+=f(x,y);
-        }
-        return f;
-    }
-
-    // Replace image with function of pixel coords
-    template <class Img, class Op>
-    Op fill_pixel(Img I, Op f) 
-    {
-        for (int y=I.YMin(); y<=I.YMax(); y++) {
-            int x=I.XMin();
-            typename Img::iter ee=I.rowEnd(y);      
-            for (typename Img::iter it=I.rowBegin(y);
-                 it!=ee; 
-                 ++it, ++x) 
-                *it=f(x,y);
-        }
-        return f;
-    }
-
-    // Replace image with function of pixel coords, over specified bounds
-    template <class Img, class Op>
-    Op fill_pixel(Img I, Bounds<int> b, Op f) 
-    {
-        if (!I.getBounds().includes(b))
-            throw ImageError("add_function_pixel range exceeds image range");
-        for (int y=b.getYMin(); y<=b.getYMax(); y++) {
-            int x=b.getXMin();
-            typename Img::iter ee=I.getIter(b.getXMax()+1,y);      
-            for (typename Img::iter it=I.getIter(b.getXMin(),y);
-                 it!=ee; 
-                 ++it, ++x) 
-                *it=f(x,y);
-        }
-        return f;
-    }
-
-    // Assign function of 2 images to 1st
-    template <class Img1, class Img2, class Op>
-    Op transform_pixel(Img1 I1, const Img2 I2, Op f) 
-    {
-        for (int y=I1.YMin(); y<=I1.YMax(); y++) {
-            typename Img2::citer it2=I2.getIter(I1.XMin(),y);
-            typename Img1::iter ee=I1.rowEnd(y);      
-            for (typename Img1::iter it1=I1.rowBegin(y); 
-                 it1!=ee; ++it1, ++it2) *it1=f(*it1,*it2);
-        }
-        return f;
-    }
-
-    // Assign function of Img2 & Img3 to Img1
-    template <class Img1, class Img2, class Img3, class Op>
-    Op transform_pixel(Img1 I1, const Img2 I2, const Img3 I3, Op f) 
-    {
-        for (int y=I1.YMin(); y<=I1.YMax(); y++) {
-            typename Img2::citer it2=I2.getIter(I1.XMin(),y);
-            typename Img3::citer it3=I3.getIter(I1.XMin(),y);
-            typename Img1::iter ee=I1.rowEnd(y);      
-            for (typename Img1::iter it1=I1.rowBegin(y);
-                 it1!=ee; 
-                 ++it1, ++it2, ++it3) 
-                *it1=f(*it2,*it3);
-        }
-        return f;
-    }
-
-    // Assign function of 2 images to 1st over bounds
-    template <class Img1, class Img2, class Op>
-    Op transform_pixel(Img1 I1, const Img2 I2, Op f, Bounds<int> b) 
-    {
-        if (!I1.getBounds().includes(b) || !I2.getBounds().includes(b))
-            throw ImageError("transform_pixel range exceeds image range");
-        for (int y=b.getYMin(); y<=b.getYMax(); y++) {
-            typename Img1::iter ee=I1.getIter(b.getXMax()+1,y);      
-            typename Img2::citer it2=I2.getIter(b.getXMin(),y);
-            for (typename Img1::iter it1=I1.getIter(b.getXMin(),y);
-                 it1!=ee; 
-                 ++it1, ++it2) 
-                *it1=f(*it1,*it2);
-        }
-        return f;
-    }
-
-
-    template <class T>
-    class Image {
-    private:
-        template <typename U> friend class Image;
+    template <typename T>
+    class Image<const T> {
+    protected:
         
         boost::shared_array<T> _owner;  // manages ownership; _owner.get() != _data if subimage
         T * _data;                      // pointer to be used for this image
         int _stride;                    // number of elements between rows (!= width for subimages)
         Position<int> _bounds;
+
+        inline int addressPixel(const int y) const {
+            return (y - getYMin()) * _stride;
+        }
+        
+        inline int addressPixel(const int x, const int y) {
+            return (x - getXMin()) + addressPixel(y);
+        }
+
+        void makeSubimageInPlace(const Bounds<int> & bounds);
+
     public:
 
         Image(const int ncol, const int nrow);
 
         // Default constructor builds a null image:
-        explicit Image(const Bounds<int> bounds=Bounds<int>());
+        explicit Image(const Bounds<int> & bounds=Bounds<int>(), const T initValue);
 
-        explicit Image(const Bounds<int> inBounds, const T initValue);
+        /**
+         *  @brief Shallow constructor.
+         *
+         *  The new image will share pixel data (but nothing else) with the input image.
+         */
+        Image(const Image& rhs) :
+            _owner(rhs._owner), _data(rhs._data), _stride(rhs._stride), _bounds(rhs._bounds)
+        {}
 
-        // Shallow copy constructor.
-        Image(const Image& rhs) : _owner(rhs._owner), _data(rhs._data), _bounds(rhs._bounds) {}
+        /**
+         *  @brief Shallow conversion constructor.
+         *
+         *  We can construct an Image<const T> from an Image<T>, but not the reverse.
+         *
+         *  The new image will share pixel data (but nothing else) with the input image.
+         */
+        Image(const Image<T>& rhs);
 
-        // Shallow conversion constructor; only compiles when U* is convertible to T* (i.e. T == const U).
-        template <typename U>
-        Image(const Image<U> & rhs) : _owner(rhs._owner), _data(rhs._data), _bounds(rhs._bounds) {}
-
-        // Shallow assignment operator.
+        /**
+         *  @brief Shallow assignment.
+         *
+         *  The two images will share pixel data (but nothing else).
+         */
         Image & operator=(const Image& rhs); {
             if (&rhs != this) {
                 _owner = rhs._owner;
                 _data = rhs._data;
+                _stride = rhs._stride;
                 _bounds = rhs._bounds;
             }
             return *this;
         }
 
-        // Shallow conversion assignment; only compiles when U* is convertible to T* (i.e. T == const U).
-        template <typename U>
-        Image & operator=(const Image<U>& rhs) {
-            _owner = rhs._owner;
-            _data = rhs._data;
-            _bounds = rhs._bounds;
-            return *this;
-        }
+        /**
+         *  @brief Return a shared array that manages the lifetime of the image's pixels.
+         *
+         *  The actual pointer will point to a parent image rather than the image itself
+         *  if this is a subimage.
+         */
+        boost::shared_array<const T> getOwner() const { return _owner; }
 
-        void copyFrom(const Image& rhs);
+        /// @brief Return a pointer to the first pixel in the image.
+        const T * getData() const { return _data; }
 
-        // Create new image with fresh copies of data & header
-        Image duplicate() const;
+        /// @brief Return the number of elements between rows in memory.
+        int getStride() const { return _stride; }
 
-        // New image that is subimage of this (shares pixels & header data)
-        Image subimage(const Bounds<int> bsub);
-        const Image subimage(const Bounds<int> bsub) const ;
+        /**
+         *  @brief Deep copy the image.
+         *
+         *  The returned image will have the same bounding box and pixel values as this,
+         *  but will they will not share data.
+         */
+        Image<T> duplicate() const;
 
-        // Resize the image - will throw if data aren't owned or if subimages
-        // exist.  Note all Images sharing this ImageData will be affected.
-        // Data are destroyed in the process
-        void resize(const Bounds<int> newBounds) { D->resize(newBounds); }
+        /// @brief New image that is a subimage of this (shares pixels)
+        Image subimage(const Bounds<int> & bounds) const;
 
-        // Shift origin of image - same caveats apply as above
-        void shift(int x0, int y0) { D->shift(x0,y0); }
+        /**
+         *  @brief Resize the image.
+         *
+         *  Images sharing pixel with this one will cease to share, but will otherwise be unaffected.
+         *
+         *  The image will be reallocated unless the new bounds are the same size as the current bounds,
+         *  and will be left uninitialized.
+         */
+        void resize(const Bounds<int> & bounds);
+
+        // Shift the bounding box of the image by the given offsets (just shifts the box).
+        void shift(int x0, int y0) { _bounds.shift(x0, y0); }
 
 #ifdef IMAGE_BOUNDS_CHECK
         // Element access is checked always
         const T& operator()(const int xpos, const int ypos) const 
         { return at(xpos,ypos); }
-
-        T& operator()(const int xpos, const int ypos) 
-        { return at(xpos,ypos); }
 #else
         // Unchecked access
         const T& operator()(const int xpos, const int ypos) const 
-        { return (*D)(xpos,ypos); }
-
-        T& operator()(const int xpos, const int ypos) 
-        { return (*D)(xpos,ypos); }
+        { return _data[addressPixel(xpos, ypos)]; }
 #endif
 
         // Element access - checked
-        const T& at(const int xpos, const int ypos) const 
-        { return D->at(xpos,ypos); }
+        const T& at(const int xpos, const int ypos) const {
+            if (!_bounds.includes(xpos, ypos)) throw ImageBounds(xpos, ypos, _bounds);
+            return _data[addressPixel(xpos, ypos)];
+        }
 
-        T& at(const int xpos, const int ypos) 
-        { return D->at(xpos,ypos); }
-
-        typedef T* iter;
-        typedef const T* citer;
-        iter rowBegin(int r) { return &(*D)(XMin(),r); }
-        citer rowBegin(int r) const { return &(*D)(XMin(),r); }
-        iter rowEnd(int r) { return &(*D)(XMax()+1,r); }
-        citer rowEnd(int r) const { return &(*D)(XMax()+1,r); }
-        iter getIter(const int x, const int y) { return &(*D)(x,y); }
-        citer getIter(const int x, const int y) const { return &(*D)(x,y); }
+        typedef const T* Iter;
+        Iter rowBegin(int r) const { return _data + addressPixel(r); }
+        Iter rowEnd(int r) const { return _data + addressPixel(getXMax() + 1, r); }
+        Iter getIter(const int x, const int y) const { return _data + addressPixel(x, y); }
 
         // bounds access functions
-        Bounds<int> getBounds() const { return D->getBounds(); }
-        int XMin() const { return D->getBounds().getXMin(); }
-        int XMax() const { return D->getBounds().getXMax(); }
-        int YMin() const { return D->getBounds().getYMin(); }
-        int YMax() const { return D->getBounds().getYMax(); }
-
-        // Image/scalar arithmetic operations
-        void  operator+=(T x) { transform_pixel(*this, bind2nd(std::plus<T>(),x)); }
-        void  operator-=(T x) { transform_pixel(*this, bind2nd(std::minus<T>(),x)); }
-        void  operator*=(T x) { transform_pixel(*this, bind2nd(std::multiplies<T>(),x)); }
-        void  operator/=(T x) { transform_pixel(*this, bind2nd(std::divides<T>(),x)); }
-        void  operator-() { transform_pixel(*this, std::negate<T>()); }
-
-        class ConstReturn 
-        {
-        public: 
-            ConstReturn(const T v): val(v) {}
-            T operator()(const T dummy) const { return val; }
-        private:
-            T val;
-        };
-
-        void  operator=(const T val) { transform_pixel(*this, ConstReturn(val)); }
-
-        // Image/Image arithmetic ops: rhs must include this bounds
-        void  operator+=(const Image<T> rhs);
-        void  operator-=(const Image<T> rhs);
-        void  operator*=(const Image<T> rhs);
-        void  operator/=(const Image<T> rhs);
-
-        // Image/Image arithmetic binops: output image is intersection
-        // of bounds of two input images.  Exception for null output.
-        Image<T> operator+(const Image<T> rhs) const;
-        Image<T> operator-(const Image<T> rhs) const;
-        Image<T> operator*(const Image<T> rhs) const;
-        Image<T> operator/(const Image<T> rhs) const;
+        Bounds<int> const & getBounds() const { return _bounds; }
+        int getXMin() const { return _bounds.getXMin(); }
+        int getXMax() const { return _bounds.getXMax(); }
+        int getYMin() const { return _bounds.getYMin(); }
+        int getYMax() const { return _bounds.getYMax(); }
 
     };
 
-}
+    template <typename T>
+    class Image : public Image<const T> {
+    public:
+
+        Image(const int ncol, const int nrow) : Image<const T>(ncol, nrow) {}
+
+        explicit Image(const Bounds<int> & bounds=Bounds<int>()) : Image<const T>(bounds) {}
+
+        explicit Image(const Bounds<int> & bounds, const T initValue) :
+            Image<const T>(bounds, initValue)
+        {}
+
+        Image(const Image& rhs) : Image<const T>(rhs) {}
+
+        Image(const Image<const T>& rhs) : Image<const T>(rhs) {}
+
+        Image & operator=(const Image& rhs); {
+            Image<const T>::operator=(rhs);
+            return *this;
+        }
+
+        Image & operator=(const Image<const T>& rhs); {
+            Image<const T>::operator=(rhs);
+            return *this;
+        }
+
+        /**
+         *  @brief Return a shared array that manages the lifetime of the image's pixels.
+         *
+         *  The actual pointer will point to a parent image rather than the image itself
+         *  if this is a subimage.
+         */
+        boost::shared_array<T> getOwner() const { return this->_owner; }
+
+        /// @brief Return a pointer to the first pixel in the image.
+        T * getData() const { return this->_data; }
+
+        /// @brief New image that is a subimage of this (shares pixels)
+        Image subimage(const Bounds<int> & bounds) const;
+
+#ifdef IMAGE_BOUNDS_CHECK
+        // Element access is checked always
+        T& operator()(const int xpos, const int ypos) const 
+        { return at(xpos,ypos); }
+#else
+        // Unchecked access
+        T& operator()(const int xpos, const int ypos) const 
+        { return this->_data[this->addressPixel(xpos, ypos)]; }
+#endif
+
+        // Element access - checked
+        T& at(const int xpos, const int ypos) const {
+            if (!this->_bounds.includes(xpos, ypos)) throw ImageBounds(xpos, ypos, this->_bounds);
+            return this->_data[this->addressPixel(xpos, ypos)];
+        }
+
+        typedef T* Iter;
+        Iter rowBegin(int r) const { return this->_data + this->addressPixel(r); }
+        Iter rowEnd(int r) const {
+            return this->_data + this->addressPixel(this->getXMax() + 1, r);
+        }
+        Iter getIter(const int x, const int y) const {
+            return this->_data + this->addressPixel(x, y);
+        }
+
+        //@{
+        /**
+         *  @brief Assignment and augmented assignment with scalars.
+         *
+         *  We don't overload the actual assignment operator to fill with a scalar, because
+         *  the assignment operator that takes an image resets the pointers rather than
+         *  copying pixels, and it's nice to be consistent.
+         *
+         *  Also note that all these are const member functions, but they are only defined on
+         *  image's with non-const pixel values, in keeping with the overall "smart-pointer-like"
+         *  
+         */
+        void fill(T x) const;
+        Image & operator+=(T x) const;
+        Image & operator-=(T x) const;
+        Image & operator*=(T x) const;
+        Image & operator/=(T x) const;
+        //@}
+
+        /**
+         *  @brief Deep-copy pixel values from rhs to this.
+         *
+         *  Only pixels in the intersection of the images' bounding boxes will be copied.
+         */
+        void copyFrom(const Image<const T> & rhs);
+
+        //@{
+        /**
+         *  @brief Augmented assignment.
+         *
+         *  Only the region in the intersection of the two images will be affected.
+         */
+        Image & operator+=(const Image<const T> & rhs) const;
+        Image & operator-=(const Image<const T> & rhs) const;
+        Image & operator*=(const Image<const T> & rhs) const;
+        Image & operator/=(const Image<const T> & rhs) const;
+        //@}
+
+        // Image/Image arithmetic binops: output image is intersection
+        // of bounds of two input images.  Exception for null output.
+        Image<T> operator+(const Image<const T> & rhs) const;
+        Image<T> operator-(const Image<const T> & rhs) const;
+        Image<T> operator*(const Image<const T> & rhs) const;
+        Image<T> operator/(const Image<const T> & rhs) const;
+
+    };
+
+    template <typename T>
+    inline Image<const T>::Image(Image<T> const & image) :
+        _owner(other.getOwner()),
+        _data(other.getData()),
+        _stride(other.getStride()),
+        _bounds(other.getBounds())
+    {}
+
+
+    //////////////////////////////////////////////////////////////////////////
+    // Templates for stepping through image pixels
+    //////////////////////////////////////////////////////////////////////////
+
+    /// @brief Call a unary function on each pixel value
+    template <typename T, typename Op>
+    Op for_each_pixel(const Image<T> & image, Op f) {
+        for (int i = image.getYMin(); i <= image.getYMax(); i++)
+            f = std::for_each(image.rowBegin(i), image.rowEnd(i), f);
+        return f;
+    }
+
+    /// @brief Call a unary function on each pixel in a subset of the image.
+    template <typename T, typename Op>
+    Op for_each_pixel(const Image<T> & image, const Bounds<int> & bounds, Op f) {
+        if (!I.getBounds().includes(bounds))
+            throw ImageError("for_each_pixel range exceeds image range");
+        
+        for (int i = bounds.getYMin(); i <= bounds.getYMax(); i++)
+            f = std::for_each(image.getIter(bounds.getXMin(),i),
+                              image.getIter(bounds.getXMax()+1,i), f);
+        return f;
+    }
+
+    /// @brief Replace image with a function of its pixel values.
+    template <typename T, typename Op>
+    Op transform_pixel(const Image<T> & image, Op f) {
+        typedef typename Image<T>::Iter Iter;
+        for (int y = image.getYMin(); y <= image.getYMax(); y++) {
+            const Iter ee = image.rowEnd(y);
+            for (Iter it = image.rowBegin(y); it != ee; ++it) 
+                *it = f(*it);
+        }
+        return f;
+    }
+
+    /// @brief Replace a subset of the image with a function of its pixel values.
+    template <typename T, typename Op>
+    Op transform_pixel(const Image<T> & image, const Bounds<int> & bounds, Op f) {
+        typedef typename Image<T>::Iter Iter;
+        if (!image.getBounds().includes(bounds))
+            throw ImageError("transform_pixel range exceeds image range");
+        for (int y = bounds.getYMin(); y <= bounds.getYMax(); y++) {
+            const Iter ee = image.getIter(bounds.getXMax()+1,y);      
+            for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it) 
+                *it = f(*it);
+        }
+        return f;
+    }
+
+    /// @brief Add a function of pixel coords to an image.
+    template <typename T, typename Op>
+    Op add_function_pixel(const Image<T> & image, Op f) {
+        typedef typename Image<T>::Iter Iter;
+        for (int y = image.getYMin(); y <= image.getYMax(); y++) {
+            int x = image.getXMin();
+            const Iter ee = image.rowEnd(y);
+            for (Iter it = image.rowBegin(y); it != ee; ++it, ++x) 
+                *it += f(x,y);
+        }
+        return f;
+    }
+
+    /// @brief Add a function of pixel coords to a subset of an image.
+    template <typename T, typename Op>
+    Op add_function_pixel(const Image<T> & image, const Bounds<int> & bounds, Op f) {
+        typedef typename Image<T>::Iter Iter;
+        if (!bounds.isDefined()) return f;
+        if (!image.getBounds().includes(bounds))
+            throw ImageError("add_function_pixel range exceeds image range");
+        for (int y = bounds.getYMin(); y <= bounds.getYMax(); y++) {
+            int x = bounds.getXMin();
+            const Iter ee = image.getIter(bounds.getXMax()+1,y);      
+            for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it, ++x) 
+                *it += f(x,y);
+        }
+        return f;
+    }
+
+    /// @brief Replace image with a function of pixel coords.
+    template <typename T, typename Op>
+    Op fill_pixel(const Image<T> & image, Op f) {
+        typedef typename Image<T>::Iter Iter;
+        for (int y = image.getYMin(); y <= image.getYMax(); y++) {
+            int x = image.getXMin();
+            const Iter ee = image.rowEnd(y);      
+            for (Iter it = image.rowBegin(y); it != ee; ++it, ++x) 
+                *it = f(x,y);
+        }
+        return f;
+    }
+
+    /// @brief Replace subset of an image with a function of pixel coords.
+    template <typename T, typename Op>
+    Op fill_pixel(const Image<T> & image, const Bounds<int> & bounds, Op f) {
+        typedef typename Image<T>::Iter Iter;
+        if (!image.getBounds().includes(bounds))
+            throw ImageError("add_function_pixel range exceeds image range");
+        for (int y = bounds.getYMin(); y <= bounds.getYMax(); y++) {
+            int x = bounds.getXMin();
+            const Iter ee = image.getIter(b.getXMax()+1,y);      
+            for (Iter it = image.getIter(b.getXMin(),y); it != ee; ++it, ++x) 
+                *it = f(x,y);
+        }
+        return f;
+    }
+
+    // Assign function of 2 images to 1st
+    template <typename T1, typename T2, typename Op>
+    Op transform_pixel(const Image<T1> & image1, const Image<const T2> & image2, Op f) {
+        typedef typename Image<T1>::Iter Iter1;
+        typedef typename Image<const T2>::Iter Iter2;
+        for (int y = image1.getYMin(); y <= image1.getYMax(); y++) {
+            Iter2 it2 = image2.getIter(image1.getXMin(),y);
+            const Iter1 ee = image1.rowEnd(y);      
+            for (Iter1 it1 = image1.rowBegin(y); it1 != ee; ++it1, ++it2)
+                *it1 = f(*it1,*it2);
+        }
+        return f;
+    }
+
+    // Assign function of Img2 & Img3 to Img1
+    template <typename T1, typename T2, typename T3, typename Op>
+    Op transform_pixel(
+        const Image<T1> & image1,
+        const Image<const T2> & image2, 
+        const Image<const T3> & image3,
+        Op f
+    ) {
+        typedef typename Image<T1>::Iter Iter1;
+        typedef typename Image<const T2>::Iter Iter2;
+        typedef typename Image<const T3>::Iter Iter3;
+        for (int y = image1.getYMin(); y <= image1.getYMax(); y++) {
+            Iter2 it2 = image2.getIter(image1.getXMin(),y);
+            Iter3 it3 = image3.getIter(image1.getXMin(),y);
+            const Iter1 ee = image1.rowEnd(y);      
+            for (Iter1 it1 = image1.rowBegin(y); it1 != ee; ++it1, ++it2, ++it3) 
+                *it1 = f(*it2,*it3);
+        }
+        return f;
+    }
+
+    // Assign function of 2 images to 1st over bounds
+    template <typename T1, typename T2, typename Op>
+    Op transform_pixel(
+        const Image<T1> & image1,
+        const Image<T2> & image2,
+        const Bounds<int> & bounds,
+        Op f
+    ) {
+        typedef typename Image<T1>::Iter Iter1;
+        if (!image1.getBounds().includes(bounds) || !image2.getBounds().includes(bounds))
+            throw ImageError("transform_pixel range exceeds image range");
+        for (int y = bounds.getYMin(); y <= bounds.getYMax(); y++) {
+            const Iter1 ee = image1.getIter(bounds.getXMax()+1,y);      
+            Iter2 it2 = image2.getIter(bounds.getXMin(),y);
+            for (Iter1 it1 = image1.getIter(bounds.getXMin(),y); it1 != ee; ++it1, ++it2) 
+                *it1 = f(*it1,*it2);
+        }
+        return f;
+    }
+
+
+
+} // namespace galsim
 
 #endif

@@ -1,7 +1,5 @@
 BinomFact.cpp
 FFT.cpp
-FITS.cpp
-FITSImage.cpp
 HeaderFromStream.cpp
 Image.cpp
 Interpolant.cpp
