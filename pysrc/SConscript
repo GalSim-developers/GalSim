@@ -6,10 +6,7 @@ import glob
 
 Import('env')
 ReadFileList=env['__readfunc']
-DoPythonConfig=env['_DoPythonConfig']
 pyenv = env.Clone()
-
-DoPythonConfig(pyenv)
 
 pyenv.Append(LIBS=["galsim"])
 pyenv['OBJPREFIX'] = '.obj/'

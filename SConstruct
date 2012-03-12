@@ -866,6 +866,9 @@ def DoLibraryAndHeaderChecks(config):
         config.env.AppendUnique(LINKFLAGS='-fopenmp')
 
     config.CheckTMV()
+    config.CheckPython()
+    config.CheckNumPy()
+    config.CheckBoostPython()
  
 
 def GetNCPU():
@@ -925,23 +928,28 @@ def DoConfig(env):
 
     import SCons.SConf
 
-    # Sometimes when you are changing around things in other directories, SCons doesn't notice.
-    # e.g. You hadn't installed fftw3, so you go and do that.  Now you want SCons to redo
-    # the check for it, rather than use the cached result.  
-    # To do that set CACHE_LIB=false
-    if not env['CACHE_LIB']:
-        SCons.SConf.SetCacheMode('force')
+    # Don't bother with checks if doing scons -c
+    if not env.GetOption('clean'):
+        # Sometimes when you are changing around things in other directories, SCons doesn't notice.
+        # e.g. You hadn't installed fftw3, so you go and do that.  Now you want SCons to redo
+        # the check for it, rather than use the cached result.  
+        # To do that set CACHE_LIB=false
+        if not env['CACHE_LIB']:
+            SCons.SConf.SetCacheMode('force')
 
-    # Add out custom configuration tests
-    config = env.Configure(custom_tests = {
-        'CheckTMV' : CheckTMV ,
-        })
-    DoLibraryAndHeaderChecks(config)
-    env = config.Finish()
+        # Add out custom configuration tests
+        config = env.Configure(custom_tests = {
+            'CheckTMV' : CheckTMV ,
+            'CheckPython' : CheckPython ,
+            'CheckNumPy' : CheckNumPy ,
+            'CheckBoostPython' : CheckBoostPython ,
+            })
+        DoLibraryAndHeaderChecks(config)
+        env = config.Finish()
 
-    # Turn the cache back on now, since we always want it for the main compilation steps.
-    if not env['CACHE_LIB']:
-        SCons.SConf.SetCacheMode('auto')
+        # Turn the cache back on now, since we always want it for the main compilation steps.
+        if not env['CACHE_LIB']:
+            SCons.SConf.SetCacheMode('auto')
 
     # This one should be done after DoLibraryAndHeaderChecks
     # otherwise the TMV link test fails, since TMV wasn't compiled
@@ -952,25 +960,6 @@ def DoConfig(env):
         env.Append(CPPDEFINES=['MEM_TEST'])
 
 
-def DoPythonConfig(env):
-    """
-    Configure an environment to build against Python and NumPy.
-    """
-    # See note by similar code in DoLibraryAndHeaderChecks
-    if not env['CACHE_LIB']:
-        SCons.SConf.SetCacheMode('force')
-    config = env.Configure(custom_tests = {
-        'CheckPython' : CheckPython ,
-        'CheckNumPy' : CheckNumPy ,
-        'CheckBoostPython' : CheckBoostPython ,
-        })
-    config.CheckPython()
-    config.CheckNumPy()
-    config.CheckBoostPython()
-    env = config.Finish()
-    # Turn the cache back on now, since we always want it for the main compilation steps.
-    if not env['CACHE_LIB']:
-        SCons.SConf.SetCacheMode('auto')
 
 
 #
@@ -1003,7 +992,6 @@ if not GetOption('help'):
     env['__readfunc'] = ReadFileList
     env['_InstallProgram'] = RunInstall
     env['_UninstallProgram'] = RunUninstall
-    env['_DoPythonConfig'] = DoPythonConfig
 
     #if env['WITH_UPS']:
         #subdirs += ['ups']
