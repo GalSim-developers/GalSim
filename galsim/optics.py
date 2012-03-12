@@ -55,34 +55,32 @@ def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     pi = np.pi # minor but saves Python checking the entire np. namespace every time I need pi
     # Build kx, ky coords
     kx, ky = kxky(shape)
-    #    kx *= 2.
-    #ky *= 2.
-	# Then define unit disc rho and theta pupil coords for Zernike polynomials
+    # Then define unit disc rho and theta pupil coords for Zernike polynomials
     rho = np.sqrt((kx**2 + ky**2) / (.5 * kmax)**2)
     theta = np.arctan2(ky, kx)
-	# Cut out circular pupil if desired (default)
+    # Cut out circular pupil if desired (default)
     if circular_pupil:
-        in_pupil = (rho <= 1.)
+        in_pupil = (rho < 1.)
     else:
         in_pupil = (np.abs(kx) <= .5 * kmax) * (np.abs(ky) <= .5 * kmax)
-	# Then make wavefront image
+    # Then make wavefront image
     wf = np.zeros(shape, dtype=complex)
     wf[in_pupil] = 1.
-	# Defocus
+    # Defocus
     wf[in_pupil] *= np.exp(2j * pi * defocus * (2. * rho[in_pupil]**2 - 1.))
-	# Astigmatism (like e1)
+    # Astigmatism (like e1)
     wf[in_pupil] *= np.exp(2j * pi * astig1 * rho[in_pupil]**2 * np.cos(2. * theta[in_pupil]))
     # Astigmatism (like e2)
     wf[in_pupil] *= np.exp(2j * pi * astig2 * rho[in_pupil]**2 * np.sin(2. * theta[in_pupil]))
-	# Coma along x1
+    # Coma along x1
     wf[in_pupil] *= np.exp(2j * pi * coma1 * (3. * rho[in_pupil]**2 - 2.) * rho[in_pupil]
                            * np.cos(theta[in_pupil]))
-	# Coma along x2
+    # Coma along x2
     wf[in_pupil] *= np.exp(2j * pi * coma2 * (3. * rho[in_pupil]**2 - 2.) * rho[in_pupil]
                            * np.sin(theta[in_pupil]))
-	# Spherical abberation
+    # Spherical abberation
     wf[in_pupil] *= np.exp(2j * pi * spher * (6. * rho[in_pupil]**4 - 6. * rho[in_pupil]**2 + 1.))
-    return wf, rho
+    return wf
 
 def psf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, secondary=None):
