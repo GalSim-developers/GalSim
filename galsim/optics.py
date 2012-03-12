@@ -146,6 +146,12 @@ def ptf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., 
 
     Output float numpy array is C-contiguous.
     """
-    return np.angle(otf(shape=shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
-		    coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil))
+    kx, ky = kxky(shape)
+    k2 = (kx**2 + ky**2)
+    ptf = np.zeros(shape)
+    # Try to handle where both real and imag tend to zero...
+    ptf[k2 < kmax**2] = np.angle(otf(shape=shape, defocus=defocus, astig1=astig1, astig2=astig2,
+                                 coma1=coma1, coma2=coma2, spher=spher, kmax=kmax,
+                                 circular_pupil=circular_pupil)[k2 < kmax**2])
+    return ptf
 
