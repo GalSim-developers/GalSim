@@ -63,8 +63,8 @@ def test_kxky():
     """Test that the basic properties of kx and ky are right.
     """
     kx, ky = galsim.optics.kxky((4, 4))
-    kxref = np.array([0., 0.25, -0.5, -0.25]) * np.pi
-    kyref = np.array([0., 0.25, -0.5, -0.25]) * np.pi
+    kxref = np.array([0., 0.25, -0.5, -0.25]) * 2. * np.pi
+    kyref = np.array([0., 0.25, -0.5, -0.25]) * 2. * np.pi
     for i in xrange(4):
         np.testing.assert_array_almost_equal(kx[i, :], kxref, decimal=decimal,
                                              err_msg='failed kx equivalence on row i = '+str(i))
@@ -77,8 +77,8 @@ def test_kxky_plusone():
     But increment testshape used in test_kxky by one to test both odd and even cases.
     """
     kx, ky = galsim.optics.kxky((4 + 1, 4 + 1))
-    kxref = np.array([0., 0.2, 0.4, -0.4, -0.2]) * np.pi
-    kyref = np.array([0., 0.2, 0.4, -0.4, -0.2]) * np.pi
+    kxref = np.array([0., 0.2, 0.4, -0.4, -0.2]) * 2. * np.pi
+    kyref = np.array([0., 0.2, 0.4, -0.4, -0.2]) * 2. * np.pi
     for i in xrange(4 + 1):
         np.testing.assert_array_almost_equal(kx[i, :], kxref, decimal=decimal,
                                              err_msg='failed kx equivalence on row i = '+str(i))

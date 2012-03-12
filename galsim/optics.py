@@ -22,8 +22,8 @@ def kxky(shape=(256, 256)):
     leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
     uses this convention.
     """
-    k_xaxis = np.fft.fftfreq(shape[1]) * np.pi
-    k_yaxis = np.fft.fftfreq(shape[0]) * np.pi
+    k_xaxis = np.fft.fftfreq(shape[1]) * 2. * np.pi
+    k_yaxis = np.fft.fftfreq(shape[0]) * 2. * np.pi
     return np.meshgrid(k_xaxis, k_yaxis)
 
 def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
@@ -53,8 +53,10 @@ def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     array ordering.
     """
     pi = np.pi # minor but saves Python checking the entire np. namespace every time I need pi
-	# Build kx, ky coords
+    # Build kx, ky coords
     kx, ky = kxky(shape)
+    #    kx *= 2.
+    #ky *= 2.
 	# Then define unit disc rho and theta pupil coords for Zernike polynomials
     rho = np.sqrt((kx**2 + ky**2) / (.5 * kmax)**2)
     theta = np.arctan2(ky, kx)
@@ -80,7 +82,7 @@ def wavefront(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
                            * np.sin(theta[in_pupil]))
 	# Spherical abberation
     wf[in_pupil] *= np.exp(2j * pi * spher * (6. * rho[in_pupil]**4 - 6. * rho[in_pupil]**2 + 1.))
-    return wf
+    return wf, rho
 
 def psf(shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, secondary=None):
