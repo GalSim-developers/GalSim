@@ -1,9 +1,16 @@
 import galsim.optics
 import numpy as np
 
-testshape = (128, 128)  # shape of image arrays for all tests
-decimal = 10 # Last decimal place used for checking equality of float arrays, see
-             # np.testing.assert_array_almost_equal()
+testshape = (512, 512)  # shape of image arrays for all tests
+
+decimal = 10     # Last decimal place used for checking equality of float arrays, see
+                 # np.testing.assert_array_almost_equal()
+
+decimal_dft = 3  # Last decimal place used for checking near equality of DFT product matrices to
+                 # continuous-result derived check values... note this is not as stringent as
+                 # decimal, because this is tough, because the DFT representation of a function is
+                 # not precisely equivalent to its continuous counterpart.
+                 # See http://en.wikipedia.org/wiki/File:From_Continuous_To_Discrete_Fourier_Transform.gif
 
 def test_roll2d_circularity():
     """Test both integer and float arrays are unchanged by full circular roll.
@@ -107,3 +114,54 @@ def test_check_all_contiguous():
     assert galsim.optics.otf(shape=testshape).flags.c_contiguous
     assert galsim.optics.mtf(shape=testshape).flags.c_contiguous
     assert galsim.optics.ptf(shape=testshape).flags.c_contiguous
+
+def test_simple_wavefront():
+    """Test the MTF of a pure circular pupil against the known result.
+    """
+    kx, ky = galsim.optics.kxky(testshape)
+    kmax_test = 0.75 * np.pi # Choose some kmax for the test
+    kmag = np.sqrt(kx**2 + ky**2) / kmax_test # Set up array of |k| in units of kmax_test
+    # Simple pupil wavefront should merely be unit ordinate tophat of radius kmax / 2: 
+    in_pupil = kmag < .5
+    wf_true = np.zeros(kmag.shape)
+    wf_true[in_pupil] = 1.
+    # Compare
+    wf = galsim.optics.wavefront(shape=testshape, kmax=kmax_test)
+    np.testing.assert_array_almost_equal(wf, wf_true, decimal=decimal)
+
+def test_simple_mtf():
+    """Test the MTF of a pure circular pupil against the known result.
+    """
+    kx, ky = galsim.optics.kxky(testshape)
+    kmax_test = 0.75 * np.pi # Choose some kmax for the test
+    kmag = np.sqrt(kx**2 + ky**2) / kmax_test # Set up array of |k| in units of kmax_test
+    in_pupil = kmag < 1.
+    # Then use analytic formula for MTF of circ pupil (fun to derive)
+    mtf_true = np.zeros(kmag.shape)
+    mtf_true[in_pupil] = (np.arccos(kmag[in_pupil]) - kmag[in_pupil] *
+                          np.sqrt(1. - kmag[in_pupil]**2)) * 2. / np.pi
+    # Compare
+    mtf = galsim.optics.mtf(shape=testshape, kmax=kmax_test)
+    np.testing.assert_array_almost_equal(mtf, mtf_true, decimal=decimal_dft)
+
+def test_simple_ptf():
+    """Test the PTF of a pure circular pupil against the known result (zero).
+    """
+    ptf_true = np.zeros(testshape)
+    # Compare
+    ptf = galsim.optics.ptf(shape=testshape)
+    # Test via median absolute deviation, since occasionally things around the edge of the OTF get
+    # hairy when dividing a small number by another small number
+    nmad_ptfdiff = np.median(np.abs(ptf - np.median(ptf_true)))
+    assert nmad_ptfdiff <= 10.**(-decimal)
+
+def test_consistency_psf_mtf():
+    """Test that the MTF of a pure circular pupil is |FT{PSF}|.
+    """
+    kx, ky = galsim.optics.kxky(testshape)
+    kmax_test = 0.75 * np.pi # Choose some kmax for the test
+    psf = galsim.optics.psf(shape=testshape, kmax=kmax_test)
+    mtf_test = np.abs(np.fft.fft2(psf))
+    # Compare
+    mtf = galsim.optics.mtf(shape=testshape, kmax=kmax_test)
+    np.testing.assert_array_almost_equal(mtf, mtf_test, decimal=decimal_dft)
