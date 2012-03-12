@@ -60,29 +60,29 @@ def test_roll2d_join():
                                   err_msg='galsim.optics.roll2D failed flt array -/+ join test')
 
 def test_kxky():
-    """Test that the basic properties of kx and ky are right, by reference to np.fft.fftfreq.
+    """Test that the basic properties of kx and ky are right.
     """
-    kx, ky = galsim.optics.kxky(testshape)
-    kxref = np.fft.fftfreq(testshape[1]) * np.pi
-    kyref = np.fft.fftfreq(testshape[0]) * np.pi
-    for i in xrange(testshape[0]):
+    kx, ky = galsim.optics.kxky((4, 4))
+    kxref = np.array([0., 0.25, -0.5, -0.25]) * np.pi
+    kyref = np.array([0., 0.25, -0.5, -0.25]) * np.pi
+    for i in xrange(4):
         np.testing.assert_array_almost_equal(kx[i, :], kxref, decimal=decimal,
                                              err_msg='failed kx equivalence on row i = '+str(i))
-    for j in xrange(testshape[1]):
+    for j in xrange(4):
         np.testing.assert_array_almost_equal(ky[:, j], kyref, decimal=decimal,
                                              err_msg='failed ky equivalence on row j = '+str(j))
 
 def test_kxky_plusone():
-    """Test that the basic properties of kx and ky are right, by reference to np.fft.fftfreq,
-    but increment testshape used in test_kxky by one to test both odd and even cases.
+    """Test that the basic properties of kx and ky are right...
+    But increment testshape used in test_kxky by one to test both odd and even cases.
     """
-    kx, ky = galsim.optics.kxky((testshape[0] + 1, testshape[1] + 1))
-    kxref = np.fft.fftfreq(testshape[1] + 1) * np.pi
-    kyref = np.fft.fftfreq(testshape[0] + 1) * np.pi
-    for i in xrange(testshape[0] + 1):
+    kx, ky = galsim.optics.kxky((4 + 1, 4 + 1))
+    kxref = np.array([0., 0.2, 0.4, -0.4, -0.2]) * np.pi
+    kyref = np.array([0., 0.2, 0.4, -0.4, -0.2]) * np.pi
+    for i in xrange(4 + 1):
         np.testing.assert_array_almost_equal(kx[i, :], kxref, decimal=decimal,
                                              err_msg='failed kx equivalence on row i = '+str(i))
-    for j in xrange(testshape[1] + 1):
+    for j in xrange(4 + 1):
         np.testing.assert_array_almost_equal(ky[:, j], kyref, decimal=decimal,
                                              err_msg='failed ky equivalence on row j = '+str(j))
 
