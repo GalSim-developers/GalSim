@@ -80,10 +80,10 @@ namespace hsm {
   /// Carry out one of the multiple possible methods of PSF correction
   /// using the HSM package.  Results for the shape measurement are
   /// returned by modifying the galaxy data directly.
-  /// \param *gal_image A pointer to the RECT_IMAGE object for the galaxy
-  /// \param *PSF A pointer to the RECT_IMAGE object for the PSF
-  /// \param *gal_data A pointer to the OBJECT_DATA object for the galaxy
-  /// \param *PSF_data A pointer to the OBJECT_DATA object for the PSF
+  /// \param *gal_image Input: the RECT_IMAGE object for the galaxy
+  /// \param *PSF Input: the RECT_IMAGE object for the PSF
+  /// \param *gal_data Input: the OBJECT_DATA object for the galaxy
+  /// \param *PSF_data Input: the OBJECT_DATA object for the PSF
   /// \param *shear_est A string indicating the desired method of PSF correction: REGAUSS, LINEAR, BJ, or KSB
   /// \param flags A parameter that is only needed for REGAUSS.  0x1=recompute galaxy flux by summing unmasked pixels, 0x2=recompute galaxy flux from Gaussian-quartic fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save time, 0x8=cut off PSF residual at NSIG_RG2 to save time.  meas_shape.cpp now has hardcoded flags==0xe.
   /// \return A status flag that should be zero if the measurement was successful.
@@ -102,16 +102,16 @@ namespace hsm {
   /// of the previous step as the weight function, and so on until the
   /// moments that are measured are the same as those used for the
   /// weight function.
-  /// \param *data A pointer to the RECT_IMAGE for the object being measured.
-  /// \param *A A pointer to the variable that this function will use to store the amplitude of the best-fit elliptical Gaussian (defined such that total image intensity for the Gaussian is 2A)
-  /// \param *x0 A pointer to the variable that will be used to store the x centroid of the best-fit elliptical Gaussian
-  /// \param *y0 A pointer to the variable that will be used to store the y centroid of the best-fit elliptical Gaussian
-  /// \param *Mxx A pointer to the variable that will be used to store the xx component of the moment matrix
-  /// \param *Mxy A pointer to the variable that will be used to store the xy component of the moment matrix
-  /// \param *Myy A pointer to the variable that will be used to store the yy component of the moment matrix
-  /// \param *rho4 A pointer to the variable that will be used to store the weighted radial fourth moment
-  /// \param epsilon Required level of accuracy
-  /// \param *num_iter A pointer to the variable that will be used to store the number of iterations needed to converge
+  /// \param *data Input: the RECT_IMAGE for the object being measured.
+  /// \param *A Output: the amplitude of the best-fit elliptical Gaussian (defined such that total image intensity for the Gaussian is 2A)
+  /// \param *x0 Output: the x centroid of the best-fit elliptical Gaussian
+  /// \param *y0 Output: the y centroid of the best-fit elliptical Gaussian
+  /// \param *Mxx Output: the xx component of the moment matrix
+  /// \param *Mxy Output: the xy component of the moment matrix
+  /// \param *Myy Output: the yy component of the moment matrix
+  /// \param *rho4 Output: the weighted radial fourth moment
+  /// \param epsilon Input: the required level of accuracy
+  /// \param *num_iter Output: the number of iterations needed to converge
   void find_ellipmom_2(
 		       RECT_IMAGE *data, double *A, double *x0, double *y0,
 		       double *Mxx, double *Mxy, double *Myy, double *rho4, double epsilon, int *num_iter);
