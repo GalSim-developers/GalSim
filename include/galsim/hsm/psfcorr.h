@@ -32,17 +32,20 @@ namespace galsim {
 namespace hsm {
 
   /// Describe the hsm shape-related parameters of some object (usually
-  /// galaxy) before and after PSF correction.
+  /// galaxy) before and after PSF correction.  All ellipticities are
+  /// defined as (1-q^2)/(1+q^2), with the 1st component aligned with
+  /// the pixel grid and the 2nd aligned at 45 degrees with respect to
+  /// it.  There are two choices for measurement type: 'e' = Bernstein & Jarvis (2002) ellipticity, 'g' = shear estimator = shear*responsivity
   struct OBJECT_DATA 
   {
     double x0; ///< x centroid position within the postage stamp
     double y0; ///< y centroid position within the postage stamp
     double sigma; ///< size parameter
     double flux; ///< total flux
-    double e1; ///< ellipticity component aligned with pixel grid (unless meas_type==g, in which case this field contains the shear, not ellipticity)
-    double e2; ///< x ellipticity component (unless meas_type==g, in which case this field contains the shear, not ellipticity)
+    double e1; ///< first ellipticity component
+    double e2; ///< second ellipticity component
     double responsivity; ///< responsivity of ellipticity estimator 
-    char meas_type; ///< type of measurement: 'e' = Bernstein & Jarvis (2002) ellipticity, 'g' = shear estimator = shear*responsivity
+    char meas_type; ///< type of measurement (see function description) 
     double resolution; ///< resolution factor (0=unresolved, 1=resolved) 
   };
   
@@ -50,6 +53,11 @@ namespace hsm {
   
   /// The hsm representation of an image of some object, with
   /// arbitrary pixel indexing, the image itself, and a mask image.
+  /// The mask image indicates which pixels to use (1) and which to
+  /// ignore (0).  All values must be 0 or 1.  While the mask
+  /// functionality underwent basic testing to weed out obvious
+  /// mistakes, it was not used for the science that came out of the
+  /// hsm code, so it could conceivably have some subtle bugs. 
   struct RECT_IMAGE 
   {
     long xmin; ///< Lower x boundary for image
@@ -57,7 +65,7 @@ namespace hsm {
     long ymin; ///< Lower y boundary for image
     long ymax; ///< Upper y boundary for image
     double **image; ///< The actual image
-    int **mask; ///< A mask image indicating which pixels to use (1) and which to ignore (0).  All values must be 0 or 1.  While the mask functionality underwent basic testing to weed out obvious mistakes, it was not used for the science that came out of the hsm code, so it could conceivably have some subtle bugs.
+    int **mask; ///< The mask image 
   };
 
     /* functions that the user will want to call from outside */
@@ -79,13 +87,18 @@ namespace hsm {
   //
   /// Carry out one of the multiple possible methods of PSF correction
   /// using the HSM package.  Results for the shape measurement are
-  /// returned by modifying the galaxy data directly.
+  /// returned by modifying the galaxy data directly.  The flags
+  /// parameter is only used for the REGAUSS shape measurement method,
+  /// and is defined as follows: 0x1=recompute galaxy flux by summing
+  /// unmasked pixels, 0x2=recompute galaxy flux from Gaussian-quartic
+  /// fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save
+  /// time, 0x8=cut off PSF residual at NSIG_RG2 to save time.   
   /// \param *gal_image Input: the RECT_IMAGE object for the galaxy
   /// \param *PSF Input: the RECT_IMAGE object for the PSF
   /// \param *gal_data Input: the OBJECT_DATA object for the galaxy
   /// \param *PSF_data Input: the OBJECT_DATA object for the PSF
   /// \param *shear_est Input: a string indicating the desired method of PSF correction: REGAUSS, LINEAR, BJ, or KSB
-  /// \param flags Input: a parameter that is only needed for REGAUSS.  0x1=recompute galaxy flux by summing unmasked pixels, 0x2=recompute galaxy flux from Gaussian-quartic fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save time, 0x8=cut off PSF residual at NSIG_RG2 to save time.  meas_shape.cpp now has hardcoded flags==0xe.
+  /// \param flags Input: a parameter for REGAUSS, which is hardcoded in meas_shape.cpp to 0xe.
   /// \return A status flag that should be zero if the measurement was successful.
   unsigned int general_shear_estimator(
 				       RECT_IMAGE *gal_image, RECT_IMAGE *PSF, OBJECT_DATA *gal_data, OBJECT_DATA *PSF_data,
@@ -103,7 +116,7 @@ namespace hsm {
   /// moments that are measured are the same as those used for the
   /// weight function.
   /// \param *data Input: the RECT_IMAGE for the object being measured.
-  /// \param *A Output: the amplitude of the best-fit elliptical Gaussian (defined such that total image intensity for the Gaussian is 2A)
+  /// \param *A Output: the amplitude of the best-fit elliptical Gaussian (total image intensity for the Gaussian is 2A)
   /// \param *x0 Output: the x centroid of the best-fit elliptical Gaussian
   /// \param *y0 Output: the y centroid of the best-fit elliptical Gaussian
   /// \param *Mxx Output: the xx component of the moment matrix
