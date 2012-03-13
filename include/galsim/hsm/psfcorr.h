@@ -1,3 +1,6 @@
+/// \file psfcorr.h Contains functions in the hsm namespace, which are
+/// required to run the hsm shape measurement and moment estimation code. 
+
 /****************************************************************
   Copyright 2003, 2004 Christopher Hirata: original code
   2007, 2009 Rachel Mandelbaum: minor modifications
@@ -28,46 +31,89 @@
 namespace galsim {
 namespace hsm {
 
-    struct OBJECT_DATA 
-    {
-        double x0;           /* x centroid */
-        double y0;           /* y centroid */
-        double sigma;        /* width */
-        double flux;         /* total flux */
-        double e1;           /* + ellipticity */
-        double e2;           /* x ellipticity */
-        double responsivity; /* responsivity of ellipticity estimator */
-        char meas_type;      /* type of ellipticity measurement:
-                              *   'e' = Bernstein & Jarvis (2002) ellipticity
-                              *   'g' = shear estimator = shear * responsivity
-                              */
-        double resolution;   /* resolution factor (0=unresolved, 1=resolved) */
-    };
-
-    /* rectangular image type */
-
-    struct RECT_IMAGE 
-    {
-        long xmin; /* bounding box */
-        long xmax; /* " */
-        long ymin; /* " */
-        long ymax; /* " */
-        double **image; /* the actual map */
-        int **mask; /* mask = 0 (masked) or 1 (unmasked) */
-    };
+  /// Describe the hsm shape-related parameters of some object (usually
+  /// galaxy) before and after PSF correction.
+  struct OBJECT_DATA 
+  {
+    double x0; ///< x centroid position within the postage stamp
+    double y0; ///< y centroid position within the postage stamp
+    double sigma; ///< size parameter
+    double flux; ///< total flux
+    double e1; ///< ellipticity component aligned with pixel grid
+    double e2; ///< x ellipticity component
+    double responsivity; ///< responsivity of ellipticity estimator 
+    char meas_type; ///< type of measurement: 'e' = Bernstein & Jarvis (2002) ellipticity, 'g' = shear estimator = shear*responsivity
+    double resolution; ///< resolution factor (0=unresolved, 1=resolved) 
+  };
+  
+  /* rectangular image type */
+  
+  /// The hsm representation of an image of some object, with
+  /// arbitrary pixel indexing, the image itself, and a mask image.
+  struct RECT_IMAGE 
+  {
+    long xmin; ///< Lower x boundary for image
+    long xmax; ///< Upper x boundary for image
+    long ymin; ///< Lower y boundary for image
+    long ymax; ///< Upper y boundary for image
+    double **image; ///< The actual image
+    int **mask; ///< A mask image indicating which pixels to use
+  };
 
     /* functions that the user will want to call from outside */
 
-    void allocate_rect_image(RECT_IMAGE *A, long xmin, long xmax, long ymin, long ymax);
-
-    void deallocate_rect_image(RECT_IMAGE *A);
-
-    unsigned int general_shear_estimator(
-        RECT_IMAGE *gal_image, RECT_IMAGE *PSF, OBJECT_DATA *gal_data, OBJECT_DATA *PSF_data,
-        char *shear_est, unsigned long flags);
-
-    void find_ellipmom_2(
-        RECT_IMAGE *data, double *A, double *x0, double *y0,
-        double *Mxx, double *Mxy, double *Myy, double *rho4, double epsilon, int *num_iter);
-
+  /// Allocate memory for a RECT_IMAGE representing the image of some
+  /// object
+  /// \param *A The pointer to the RECT_IMAGE
+  /// \param xmin The lower x boundary for the image
+  /// \param xmax The upper x boundary for the imgae
+  /// \param ymin The lower y boundary for the image
+  /// \param ymax The upper y boundary for the image
+  void allocate_rect_image(RECT_IMAGE *A, long xmin, long xmax, long ymin, long ymax);
+  
+  /// De-allocate memory for a RECT_IMAGE
+  /// \param *A The pointer to the RECT_IMAGE
+  void deallocate_rect_image(RECT_IMAGE *A);
+  
+  /// Carry out PSF correction.
+  //
+  /// Carry out one of the multiple possible methods of PSF correction
+  /// using the HSM package.  Results for the shape measurement are
+  /// returned by modifying the galaxy data directly.
+  /// \param *gal_image A pointer to the RECT_IMAGE object for the galaxy
+  /// \param *PSF A pointer to the RECT_IMAGE object for the PSF
+  /// \param *gal_data A pointer to the OBJECT_DATA object for the galaxy
+  /// \param *PSF_data A pointer to the OBJECT_DATA object for the PSF
+  /// \param *shear_est A string indicating the desired method of PSF correction: REGAUSS, LINEAR, BJ, or KSB
+  /// \param flags A parameter that is only needed for REGAUSS.  0x1=recompute galaxy flux by summing unmasked pixels, 0x2=recompute galaxy flux from Gaussian-quartic fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save time, 0x8=cut off PSF residual at NSIG_RG2 to save time.  meas_shape.cpp now has hardcoded flags==0xe.
+  /// \return A status flag that should be zero if the measurement was successful.
+  unsigned int general_shear_estimator(
+				       RECT_IMAGE *gal_image, RECT_IMAGE *PSF, OBJECT_DATA *gal_data, OBJECT_DATA *PSF_data,
+				       char *shear_est, unsigned long flags);
+  
+  /// Measure the adaptive moments of an object.
+  //
+  /// This function iteratively computes the adaptive moments of an
+  /// image, and tells the user the results plus other diagnostic
+  /// information.  The key result is the best-fit elliptical Gaussian
+  /// to the object, which is computed by initially guessing a
+  /// circular Gaussian that is used as a weight function, computing
+  /// the weighted moments, recomputing the moments using the result
+  /// of the previous step as the weight function, and so on until the
+  /// moments that are measured are the same as those used for the
+  /// weight function.
+  /// \param *data A pointer to the RECT_IMAGE for the object being measured.
+  /// \param *A A pointer to the variable that this function will use to store the amplitude of the best-fit elliptical Gaussian (defined such that total image intensity for the Gaussian is 2A)
+  /// \param *x0 A pointer to the variable that will be used to store the x centroid of the best-fit elliptical Gaussian
+  /// \param *y0 A pointer to the variable that will be used to store the y centroid of the best-fit elliptical Gaussian
+  /// \param *Mxx A pointer to the variable that will be used to store the xx component of the moment matrix
+  /// \param *Mxy A pointer to the variable that will be used to store the xy component of the moment matrix
+  /// \param *Myy A pointer to the variable that will be used to store the yy component of the moment matrix
+  /// \param *rho4 A pointer to the variable that will be used to store the weighted radial fourth moment
+  /// \param epsilon Required level of accuracy
+  /// \param *num_iter A pointer to the variable that will be used to store the number of iterations needed to converge
+  void find_ellipmom_2(
+		       RECT_IMAGE *data, double *A, double *x0, double *y0,
+		       double *Mxx, double *Mxy, double *Myy, double *rho4, double epsilon, int *num_iter);
+  
 }}
