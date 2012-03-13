@@ -84,8 +84,8 @@ namespace hsm {
   /// \param *PSF Input: the RECT_IMAGE object for the PSF
   /// \param *gal_data Input: the OBJECT_DATA object for the galaxy
   /// \param *PSF_data Input: the OBJECT_DATA object for the PSF
-  /// \param *shear_est A string indicating the desired method of PSF correction: REGAUSS, LINEAR, BJ, or KSB
-  /// \param flags A parameter that is only needed for REGAUSS.  0x1=recompute galaxy flux by summing unmasked pixels, 0x2=recompute galaxy flux from Gaussian-quartic fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save time, 0x8=cut off PSF residual at NSIG_RG2 to save time.  meas_shape.cpp now has hardcoded flags==0xe.
+  /// \param *shear_est Input: a string indicating the desired method of PSF correction: REGAUSS, LINEAR, BJ, or KSB
+  /// \param flags Input: a parameter that is only needed for REGAUSS.  0x1=recompute galaxy flux by summing unmasked pixels, 0x2=recompute galaxy flux from Gaussian-quartic fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save time, 0x8=cut off PSF residual at NSIG_RG2 to save time.  meas_shape.cpp now has hardcoded flags==0xe.
   /// \return A status flag that should be zero if the measurement was successful.
   unsigned int general_shear_estimator(
 				       RECT_IMAGE *gal_image, RECT_IMAGE *PSF, OBJECT_DATA *gal_data, OBJECT_DATA *PSF_data,
