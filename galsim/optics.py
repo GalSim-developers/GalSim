@@ -1,4 +1,31 @@
 """Module containing the optical PSF generation routines.
+
+Currently these are just functions; the plan will be for these to be included as methods in some
+kind of 'optical' class, or perhaps as methods in a more fundamental psf class.
+
+They work in largely dimensionless units.  The size of the optical PSF is specified using the kmax
+input parameter, where kmax is the bandlimit of the optical MTF and kmax = pi (default) is the
+Nyquist frequency for the generated image.
+
+This default kmax therefore produces the *smallest* image of an optical PSF model that is not
+undersampled.  Most likely, you will want to specify kmax < pi to generate larger, nice,
+high-resolution oversampled images of the optical PSF!  But this is, of course, up to you.
+kmax = pi is chosen as default since it is a clearly understandable physical scale for the image.
+
+Glossary of key terms used in function names:
+
+PSF = point spread function
+
+OTF = optical transfer function = FT{PSF}
+
+MTF = modulation transfer function = |FT{PSF}|
+
+PTF = phase transfer function = p, where OTF = MTF * exp(i * p)
+
+Wavefront = the amplitude and phase of the incident light on the telescope pupil, encoded as a
+complex number. The OTF is the autocorrelation function of the wavefront.
+
+TODO: Implement a centrally-obstructed pupil plane (e.g. such as is caused by secondary mirrors).
 """
 import numpy as np
 
