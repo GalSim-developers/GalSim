@@ -39,8 +39,8 @@ namespace hsm {
     double y0; ///< y centroid position within the postage stamp
     double sigma; ///< size parameter
     double flux; ///< total flux
-    double e1; ///< ellipticity component aligned with pixel grid
-    double e2; ///< x ellipticity component
+    double e1; ///< ellipticity component aligned with pixel grid (unless meas_type==g, in which case this field contains the shear, not ellipticity)
+    double e2; ///< x ellipticity component (unless meas_type==g, in which case this field contains the shear, not ellipticity)
     double responsivity; ///< responsivity of ellipticity estimator 
     char meas_type; ///< type of measurement: 'e' = Bernstein & Jarvis (2002) ellipticity, 'g' = shear estimator = shear*responsivity
     double resolution; ///< resolution factor (0=unresolved, 1=resolved) 
@@ -57,7 +57,7 @@ namespace hsm {
     long ymin; ///< Lower y boundary for image
     long ymax; ///< Upper y boundary for image
     double **image; ///< The actual image
-    int **mask; ///< A mask image indicating which pixels to use
+    int **mask; ///< A mask image indicating which pixels to use (1) and which to ignore (0).  All values must be 0 or 1.  While the mask functionality underwent basic testing to weed out obvious mistakes, it was not used for the science that came out of the hsm code, so it could conceivably have some subtle bugs.
   };
 
     /* functions that the user will want to call from outside */
