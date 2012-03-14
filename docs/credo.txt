@@ -191,4 +191,13 @@ collisions if anyone uses other parts of Boost.  I've confirmed that the Boost.R
 routines work when the 1.46 versions of the other Boost libraries are included (that's the one that
 fink likes).
 
+At the Python level, we want to be using this same RNG.  This means we'll need to make a Python
+wrapper for the C++ Random class, and use it, which means we need to avoid the temptation to use 
+numpy.random.  Work on this wrapper will begin ASAP (we'll probably want to put some effort into 
+making the wrappers for the C++ RNG class very NumPy-friendly anyway).
+
 There remains the risk that future Boost releases will break our "frozen" Boost.Random.  We'll need
+to record that possibility for posterity.
+
+
+
