@@ -130,7 +130,8 @@ in particular ensure that
 
 >>> array.flags.c_contiguous == True
 
-Check out the np.copy() function in Numpy, or array.copy() method to see how to make a c_contiguous array, also see np.ascontiguousarray() or the array.transpose() method.
+Check out the np.copy() function in Numpy, or array.copy() method to see how to make a c_contiguous
+array, also see np.ascontiguousarray() or the array.transpose() method.
 
 Finally, the FITS standard is to begin indexing all arrays at (1, 1), and this is the convention
 SBProfile currently adopts.  However, we think that our image objects will also carry around an
@@ -163,3 +164,31 @@ done with the SCons option WARN.  Use WARN=false to turn them off, and WARN=true
 back on.  But again, you shouldn't really have to do this.  You should fix the warnings rather 
 than ignore them by turning them off.
 
+
+9. Random number generators (RNG)
+
+First, we realize that it's unlikely that *any* library RNG would come with a guarantee that a 
+given seed will produce the same sequence in all past and future versions (unless it's software 
+that is never revised, like NR!).  So if we want to GalSim to have this property (we do), then we 
+need to package some fixed version of something with GalSim.
+
+Gary has created a subdirectory GalSim/include/galsim/boost1_48_0.random which contains the needed 
+files (and subdirectory) from Boost.Random.  If the compiler flag DIVERT_BOOST_RANDOM is defined, 
+then all of the include directives for Random.h are directed to this directory instead of to 
+boost/random.  And I hacked all these Boost files so that their includes for any element of 
+Boost.Random are also sent to galsim/boost1_48_0.random.  Hence a compilation will not reach the 
+local boost/random and there will be no name collisions... 
+
+***as long as no module that includes our Random.h also explicitly includes the normal boost/random
+files.***
+
+In other words we need to have a rule that any use of RNG's accesses them ONLY via our Random.h 
+wrappers.  This would be good practice in any case.
+
+Some of the hacked Boost.Random files refer to other parts of Boost.  I have *not* diverted these to
+private copies - they will come from the user's distribution so there will be no name or code 
+collisions if anyone uses other parts of Boost.  I've confirmed that the Boost.Random 1.48.0 
+routines work when the 1.46 versions of the other Boost libraries are included (that's the one that
+fink likes).
+
+There remains the risk that future Boost releases will break our "frozen" Boost.Random.  We'll need
