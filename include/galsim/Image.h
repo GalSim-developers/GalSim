@@ -62,9 +62,10 @@
 #include <list>
 #include <sstream>
 #include <typeinfo>
+#include <stdexcept>
 #include <string>
 
-#include <boost/shared_array.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "Std.h"
 #include "Bounds.h"
@@ -97,16 +98,16 @@ namespace galsim {
     class Image<const T> {
     protected:
         
-        boost::shared_array<T> _owner;  // manages ownership; _owner.get() != _data if subimage
+        boost::shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage
         T * _data;                      // pointer to be used for this image
         int _stride;                    // number of elements between rows (!= width for subimages)
-        Position<int> _bounds;
+        Bounds<int> _bounds;
 
         inline int addressPixel(const int y) const {
             return (y - getYMin()) * _stride;
         }
         
-        inline int addressPixel(const int x, const int y) {
+        inline int addressPixel(const int x, const int y) const {
             return (x - getXMin()) + addressPixel(y);
         }
 
@@ -117,7 +118,7 @@ namespace galsim {
         Image(const int ncol, const int nrow);
 
         // Default constructor builds a null image:
-        explicit Image(const Bounds<int> & bounds=Bounds<int>(), const T initValue);
+        explicit Image(const Bounds<int> & bounds=Bounds<int>(), const T initValue=T(0));
 
         /**
          *  @brief Shallow constructor.
@@ -142,7 +143,7 @@ namespace galsim {
          *
          *  The two images will share pixel data (but nothing else).
          */
-        Image & operator=(const Image& rhs); {
+        Image & operator=(const Image& rhs) {
             if (&rhs != this) {
                 _owner = rhs._owner;
                 _data = rhs._data;
@@ -153,12 +154,21 @@ namespace galsim {
         }
 
         /**
-         *  @brief Return a shared array that manages the lifetime of the image's pixels.
+         *  @brief Shallow conversion assignment.
+         *
+         *  We can assign an Image<T> to an Image<const T>, but not the reverse.
+         *
+         *  The two images will share pixel data (but nothing else).
+         */
+        Image & operator=(const Image<T>& rhs);
+
+        /**
+         *  @brief Return a shared pointer that manages the lifetime of the image's pixels.
          *
          *  The actual pointer will point to a parent image rather than the image itself
          *  if this is a subimage.
          */
-        boost::shared_array<const T> getOwner() const { return _owner; }
+        boost::shared_ptr<const T> getOwner() const { return _owner; }
 
         /// @brief Return a pointer to the first pixel in the image.
         const T * getData() const { return _data; }
@@ -234,25 +244,18 @@ namespace galsim {
 
         Image(const Image& rhs) : Image<const T>(rhs) {}
 
-        Image(const Image<const T>& rhs) : Image<const T>(rhs) {}
-
-        Image & operator=(const Image& rhs); {
-            Image<const T>::operator=(rhs);
-            return *this;
-        }
-
-        Image & operator=(const Image<const T>& rhs); {
+        Image & operator=(const Image& rhs) {
             Image<const T>::operator=(rhs);
             return *this;
         }
 
         /**
-         *  @brief Return a shared array that manages the lifetime of the image's pixels.
+         *  @brief Return a shared pointer that manages the lifetime of the image's pixels.
          *
          *  The actual pointer will point to a parent image rather than the image itself
          *  if this is a subimage.
          */
-        boost::shared_array<T> getOwner() const { return this->_owner; }
+        boost::shared_ptr<T> getOwner() const { return this->_owner; }
 
         /// @brief Return a pointer to the first pixel in the image.
         T * getData() const { return this->_data; }
@@ -298,10 +301,10 @@ namespace galsim {
          *  
          */
         void fill(T x) const;
-        Image & operator+=(T x) const;
-        Image & operator-=(T x) const;
-        Image & operator*=(T x) const;
-        Image & operator/=(T x) const;
+        Image const & operator+=(T x) const;
+        Image const & operator-=(T x) const;
+        Image const & operator*=(T x) const;
+        Image const & operator/=(T x) const;
         //@}
 
         /**
@@ -317,10 +320,10 @@ namespace galsim {
          *
          *  Only the region in the intersection of the two images will be affected.
          */
-        Image & operator+=(const Image<const T> & rhs) const;
-        Image & operator-=(const Image<const T> & rhs) const;
-        Image & operator*=(const Image<const T> & rhs) const;
-        Image & operator/=(const Image<const T> & rhs) const;
+        Image const & operator+=(const Image<const T> & rhs) const;
+        Image const & operator-=(const Image<const T> & rhs) const;
+        Image const & operator*=(const Image<const T> & rhs) const;
+        Image const & operator/=(const Image<const T> & rhs) const;
         //@}
 
         // Image/Image arithmetic binops: output image is intersection
@@ -333,13 +336,23 @@ namespace galsim {
     };
 
     template <typename T>
-    inline Image<const T>::Image(Image<T> const & image) :
+    inline Image<const T>::Image(Image<T> const & other) :
         _owner(other.getOwner()),
         _data(other.getData()),
         _stride(other.getStride()),
         _bounds(other.getBounds())
     {}
 
+    template <typename T>
+    inline Image<const T> & Image<const T>::operator=(Image<T> const & rhs) {
+        if (&rhs != this) {
+            _owner = rhs.getOwner();
+            _data = rhs.getData();
+            _stride = rhs.getStride();
+            _bounds = rhs.getBounds();
+        }
+        return *this;
+    }
 
     //////////////////////////////////////////////////////////////////////////
     // Templates for stepping through image pixels
@@ -356,7 +369,7 @@ namespace galsim {
     /// @brief Call a unary function on each pixel in a subset of the image.
     template <typename T, typename Op>
     Op for_each_pixel(const Image<T> & image, const Bounds<int> & bounds, Op f) {
-        if (!I.getBounds().includes(bounds))
+        if (!image.getBounds().includes(bounds))
             throw ImageError("for_each_pixel range exceeds image range");
         
         for (int i = bounds.getYMin(); i <= bounds.getYMax(); i++)
@@ -441,8 +454,8 @@ namespace galsim {
             throw ImageError("add_function_pixel range exceeds image range");
         for (int y = bounds.getYMin(); y <= bounds.getYMax(); y++) {
             int x = bounds.getXMin();
-            const Iter ee = image.getIter(b.getXMax()+1,y);      
-            for (Iter it = image.getIter(b.getXMin(),y); it != ee; ++it, ++x) 
+            const Iter ee = image.getIter(bounds.getXMax()+1,y);      
+            for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it, ++x) 
                 *it = f(x,y);
         }
         return f;
@@ -492,6 +505,7 @@ namespace galsim {
         Op f
     ) {
         typedef typename Image<T1>::Iter Iter1;
+        typedef typename Image<T2>::Iter Iter2;
         if (!image1.getBounds().includes(bounds) || !image2.getBounds().includes(bounds))
             throw ImageError("transform_pixel range exceeds image range");
         for (int y = bounds.getYMin(); y <= bounds.getYMax(); y++) {

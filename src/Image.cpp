@@ -50,16 +50,26 @@ ImageBounds::ImageBounds(const int x, const int y, const Bounds<int> b) :
 //// Image<const T> Implementation
 ///////////////////////////////////////////////////////////////////////
 
+namespace {
+
+template <typename T>
+class ArrayDeleter {
+public:
+    void operator()(T * p) const { delete [] p; }
+};
+
+} // anonymous
+
 template <typename T>
 Image<const T>::Image(const int ncol, const int nrow) :
-    _owner(new T[ncol * nrow]),
+    _owner(new T[ncol * nrow], ArrayDeleter<T>()),
     _data(_owner.get()),
     _stride(ncol),
     _bounds(1, ncol, 1, nrow)
 {}
 
 template <typename T>
-Image<const T>::Image(const Bounds<int> bounds=Bounds<int>(), const T initValue) :
+Image<const T>::Image(const Bounds<int> & bounds, const T initValue) :
     _owner(),
     _data(0),
     _stride(0),
@@ -68,7 +78,7 @@ Image<const T>::Image(const Bounds<int> bounds=Bounds<int>(), const T initValue)
     if (_bounds.isDefined()) {
         _stride = _bounds.getXMax() - _bounds.getXMin() + 1;
         int nElements = _stride * (_bounds.getYMax() - _bounds.getYMin() + 1);
-        _owner.reset(new T[nElements]);
+        _owner.reset(new T[nElements], ArrayDeleter<T>());
         _data = _owner.get();
         std::fill(_data, _data + nElements, initValue);
     }
@@ -95,7 +105,7 @@ Image<T> Image<const T>::duplicate() const {
 }
 
 template <typename T>
-Image<const T> Image<const T>::subimage(const Bounds<int> & bounds) {
+Image<const T> Image<const T>::subimage(const Bounds<int> & bounds) const {
     Image<const T> result(*this);
     result.makeSubimageInPlace(bounds);
     return result;
@@ -116,7 +126,7 @@ void Image<const T>::resize(const Bounds<int> & bounds) {
 ///////////////////////////////////////////////////////////////////////
 
 template <typename T>
-Image<T> Image<T>::subimage(const Bounds<int> & bounds) {
+Image<T> Image<T>::subimage(const Bounds<int> & bounds) const {
     Image<T> result(*this);
     result.makeSubimageInPlace(bounds);
     return result;
@@ -137,65 +147,65 @@ template <typename T>
 class ReturnSecond {
 public:
     T operator()(T, T v) const { return v; }
-}
+};
 
 } // anonymous
 
 template <typename T>
 void Image<T>::fill(T x) const {
-    transform_pixel(*this, ConstReturn(x));
+    transform_pixel(*this, ConstReturn<T>(x));
 }
 
 template <typename T>
-Image<T> & Image<T>::operator+=(T x) const {
+Image<T> const & Image<T>::operator+=(T x) const {
     transform_pixel(*this, bind2nd(std::plus<T>(),x));
     return *this;
 }
 
 template <typename T>
-Image<T> & Image<T>::operator-=(T x) const {
+Image<T> const & Image<T>::operator-=(T x) const {
     transform_pixel(*this, bind2nd(std::minus<T>(),x));
     return *this;
 }
 
 template <typename T>
-Image<T> & Image<T>::operator*=(T x) const {
+Image<T> const & Image<T>::operator*=(T x) const {
     transform_pixel(*this, bind2nd(std::multiplies<T>(),x));
     return *this;
 }
 
 template <typename T>
-Image<T> & Image<T>::operator/=(T x) const {
+Image<T> const & Image<T>::operator/=(T x) const {
     transform_pixel(*this, bind2nd(std::divides<T>(),x));
     return *this;
 }
 
 template <typename T>
 void Image<T>::copyFrom(const Image<const T> & rhs) {
-    transform_pixel(*this, rhs, _bounds & rhs.getBounds(), ReturnSecond<T>());
+    transform_pixel(*this, rhs, this->_bounds & rhs.getBounds(), ReturnSecond<T>());
 }
 
 template <typename T>
-Image<T> & Image<T>::operator+=(const Image<const T> & rhs) const {
-    transform_pixel(*this, rhs, _bounds & rhs.getBounds(), std::plus<T>());
+Image<T> const & Image<T>::operator+=(const Image<const T> & rhs) const {
+    transform_pixel(*this, rhs, this->_bounds & rhs.getBounds(), std::plus<T>());
     return *this;
 }
 
 template <typename T>
-Image<T> & Image<T>::operator-=(const Image<const T> & rhs) const {
-    transform_pixel(*this, rhs, _bounds & rhs.getBounds(), std::minus<T>());
+Image<T> const & Image<T>::operator-=(const Image<const T> & rhs) const {
+    transform_pixel(*this, rhs, this->_bounds & rhs.getBounds(), std::minus<T>());
     return *this;    
 }
 
 template <typename T>
-Image<T> & Image<T>::operator*=(const Image<const T> & rhs) const {
-    transform_pixel(*this, rhs, _bounds & rhs.getBounds(), std::multiplies<T>());
+Image<T> const & Image<T>::operator*=(const Image<const T> & rhs) const {
+    transform_pixel(*this, rhs, this->_bounds & rhs.getBounds(), std::multiplies<T>());
     return *this;    
 }
 
 template <typename T>
-Image<T> & Image<T>::operator/=(const Image<const T> & rhs) const {
-    transform_pixel(*this, rhs, _bounds & rhs.getBounds(), std::divides<T>());
+Image<T> const & Image<T>::operator/=(const Image<const T> & rhs) const {
+    transform_pixel(*this, rhs, this->_bounds & rhs.getBounds(), std::divides<T>());
     return *this;    
 }
 
