@@ -84,7 +84,7 @@ Image<const T>::Image(const Bounds<int> & bounds, const T initValue) :
 }
 
 template <typename T>
-void Image<const T>::relocate(const Bounds<int> & bounds) {
+void Image<const T>::redefine(const Bounds<int> & bounds) {
     _data += (bounds.getYMin() - _bounds.getYMin()) * _stride
         + (bounds.getXMin() - _bounds.getXMin());
     _bounds = bounds;
@@ -106,7 +106,7 @@ Image<const T> Image<const T>::subimage(const Bounds<int> & bounds) const {
         throw ImageError(os.str());
     }
     Image<const T> result(*this);
-    result.relocate(bounds);
+    result.redefine(bounds);
     return result;
 }
 
@@ -168,7 +168,7 @@ Image<T> Image<T>::subimage(const Bounds<int> & bounds) const {
         throw ImageError(os.str());
     }
     Image<T> result(*this);
-    result.relocate(bounds);
+    result.redefine(bounds);
     return result;
 }
 

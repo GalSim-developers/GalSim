@@ -44,6 +44,7 @@ struct PyImage {
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
             .def("shift", &Image<const T>::shift, bp::args("dx", "dy"))
+            .def("move", &Image<const T>::move, bp::args("x0", "y0"))
             .def(bp::self + bp::self)
             .def(bp::self - bp::self)
             .def(bp::self * bp::self)

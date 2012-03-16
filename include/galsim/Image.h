@@ -154,7 +154,7 @@ namespace galsim {
         void resize(const Bounds<int> & bounds);
 
         /**
-         *  @brief Redefine the image's bounds within a larger array.
+         *  @brief Redefine the image's bounds within a larger image.
          *
          *  This is a more dangerous, in-place version of subimage that also allows you to
          *  increase the bounds (or otherwise move them outside the current bounds to
@@ -165,15 +165,21 @@ namespace galsim {
          *  by the current bounds.  But the image has no way of checking whether the new
          *  origin is valid, or even whether it is a subimage at all; use with caution!
          */
-        void relocate(const Bounds<int> & bounds);
+        void redefine(const Bounds<int> & bounds);
 
         /**
-         *  @brief Shift the bounding box of the image, changing the logical location of the
-         *         image's without actually touching them.
+         *  @brief Shift the bounding box of the image, changing the logical location of the pixels.
          *
          *  This does not affect subimages.
          */
         void shift(int dx, int dy) { _bounds.shift(dx, dy); }
+
+        /**
+         *  @brief Move the origin of the image, changing the logical location of the pixels.
+         *
+         *  This does not affect subimages.
+         */
+        void move(int x0, int y0) { shift(x0 - getXMin(), y0 - getYMin()); }
 
 #ifdef IMAGE_BOUNDS_CHECK
         /// Element access is checked always

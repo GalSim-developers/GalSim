@@ -71,7 +71,7 @@ namespace galsim {
         } else {
             // recenter an existing image, to be consistent with fourierDraw:
             int xSize = I.getXMax()-I.getXMin()+1, ySize = I.getYMax()-I.getYMin()+1;
-            I.shift(-xSize/2, -ySize/2);
+            I.move(-xSize/2, -ySize/2);
         }
 
         return fillXImage(I, dx);
@@ -154,11 +154,11 @@ namespace galsim {
             imgBounds = Bounds<int>(-Nimg/2, Nimg/2-1, -Nimg/2, Nimg/2-1);
             I.resize(imgBounds);
         } else {
-            // Going to shift the output image to be centered near zero
+            // Going to move the output image to be centered near zero
             int xSize, ySize;
             xSize = I.getXMax()-I.getXMin()+1;
             ySize = I.getYMax()-I.getYMin()+1;
-            I.shift(-xSize/2, -ySize/2);
+            I.move(-xSize/2, -ySize/2);
         }
         double dk = 2.*M_PI/(NFT*dx);
 #ifdef DEBUG
@@ -238,8 +238,8 @@ namespace galsim {
         } else {
             // recenter an existing image, to be consistent with fourierDrawK:
             int xSize = Re.getXMax()-Re.getXMin()+1, ySize = Re.getYMax()-Re.getYMin()+1;
-            Re.shift(-xSize/2, -ySize/2);
-            Im.shift(-xSize/2, -ySize/2);
+            Re.move(-xSize/2, -ySize/2);
+            Im.move(-xSize/2, -ySize/2);
         }
 
         // ??? Make this into a virtual function to allow pipelining?
@@ -330,12 +330,12 @@ namespace galsim {
                 dk = kRange / Nimg; 
             }
         } else {
-            // Going to shift the output image to be centered near zero
+            // Going to move the output image to be centered near zero
             int xSize, ySize;
             xSize = Re.getXMax()-Re.getXMin()+1;
             ySize = Re.getYMax()-Re.getYMin()+1;
-            Re.shift(-xSize/2, -ySize/2);
-            Im.shift(-xSize/2, -ySize/2);
+            Re.move(-xSize/2, -ySize/2);
+            Im.move(-xSize/2, -ySize/2);
         }
 
         double dx = 2.*M_PI*oversamp/(NFT*dk);
