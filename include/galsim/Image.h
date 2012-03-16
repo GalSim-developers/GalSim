@@ -99,8 +99,6 @@ namespace galsim {
             return (x - getXMin()) + addressPixel(y);
         }
 
-        void makeSubimageInPlace(const Bounds<int> & bounds);
-
     public:
 
         /// @brief Create a new image with origin at (1,1).
@@ -155,8 +153,27 @@ namespace galsim {
          */
         void resize(const Bounds<int> & bounds);
 
-        /// @brief Shift the bounding box of the image by the given offsets (just shifts the box).
-        void shift(int x0, int y0) { _bounds.shift(x0, y0); }
+        /**
+         *  @brief Redefine the image's bounds within a larger array.
+         *
+         *  This is a more dangerous, in-place version of subimage that also allows you to
+         *  increase the bounds (or otherwise move them outside the current bounds to
+         *  somewhere else within a parent image).
+         *
+         *  WARNING: this will modify the image's data pointer to point to a new location,
+         *  meaning that it must already be a subimage unless the new bounds are contained
+         *  by the current bounds.  But the image has no way of checking whether the new
+         *  origin is valid, or even whether it is a subimage at all; use with caution!
+         */
+        void relocate(const Bounds<int> & bounds);
+
+        /**
+         *  @brief Shift the bounding box of the image, changing the logical location of the
+         *         image's without actually touching them.
+         *
+         *  This does not affect subimages.
+         */
+        void shift(int dx, int dy) { _bounds.shift(dx, dy); }
 
 #ifdef IMAGE_BOUNDS_CHECK
         /// Element access is checked always

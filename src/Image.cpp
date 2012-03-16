@@ -84,13 +84,7 @@ Image<const T>::Image(const Bounds<int> & bounds, const T initValue) :
 }
 
 template <typename T>
-void Image<const T>::makeSubimageInPlace(const Bounds<int> & bounds) {
-    if (!_bounds.includes(bounds)) {
-        std::ostringstream os;
-        os << "Subimage bounds (" << bounds << ") are outside original image bounds (" 
-           << _bounds << ")";
-        throw ImageError(os.str());
-    }
+void Image<const T>::relocate(const Bounds<int> & bounds) {
     _data += (bounds.getYMin() - _bounds.getYMin()) * _stride
         + (bounds.getXMin() - _bounds.getXMin());
     _bounds = bounds;
@@ -105,8 +99,14 @@ Image<T> Image<const T>::duplicate() const {
 
 template <typename T>
 Image<const T> Image<const T>::subimage(const Bounds<int> & bounds) const {
+    if (!_bounds.includes(bounds)) {
+        std::ostringstream os;
+        os << "Subimage bounds (" << bounds << ") are outside original image bounds (" 
+           << _bounds << ")";
+        throw ImageError(os.str());
+    }
     Image<const T> result(*this);
-    result.makeSubimageInPlace(bounds);
+    result.relocate(bounds);
     return result;
 }
 
@@ -161,8 +161,14 @@ Image<T> Image<const T>::operator/(const Image<const T> & rhs) const {
 
 template <typename T>
 Image<T> Image<T>::subimage(const Bounds<int> & bounds) const {
+    if (!this->_bounds.includes(bounds)) {
+        std::ostringstream os;
+        os << "Subimage bounds (" << bounds << ") are outside original image bounds (" 
+           << this->_bounds << ")";
+        throw ImageError(os.str());
+    }
     Image<T> result(*this);
-    result.makeSubimageInPlace(bounds);
+    result.relocate(bounds);
     return result;
 }
 
