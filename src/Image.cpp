@@ -120,6 +120,41 @@ void Image<const T>::resize(const Bounds<int> & bounds) {
     }
 }
 
+// note: There are lots of unnecessary bbox intersections in these, but I'll keep the
+// implementation simple unless we know we need to optimize it.
+
+template <typename T>
+Image<T> Image<const T>::operator+(const Image<const T> & rhs) const {
+    Image<T> result(this->_bounds & rhs.getBounds());
+    result.copyFrom(*this);
+    result += rhs;
+    return result;
+}
+
+template <typename T>
+Image<T> Image<const T>::operator-(const Image<const T> & rhs) const {
+    Image<T> result(this->_bounds & rhs.getBounds());
+    result.copyFrom(*this);
+    result -= rhs;
+    return result;
+}
+
+template <typename T>
+Image<T> Image<const T>::operator*(const Image<const T> & rhs) const {
+    Image<T> result(this->_bounds & rhs.getBounds());
+    result.copyFrom(*this);
+    result *= rhs;
+    return result;
+}
+
+template <typename T>
+Image<T> Image<const T>::operator/(const Image<const T> & rhs) const {
+    Image<T> result(this->_bounds & rhs.getBounds());
+    result.copyFrom(*this);
+    result /= rhs;
+    return result;
+}
+
 /////////////////////////////////////////////////////////////////////
 //// Image<T> Implementation
 ///////////////////////////////////////////////////////////////////////
@@ -206,41 +241,6 @@ template <typename T>
 Image<T> const & Image<T>::operator/=(const Image<const T> & rhs) const {
     transform_pixel(*this, rhs, this->_bounds & rhs.getBounds(), std::divides<T>());
     return *this;    
-}
-
-// note: There are lots of unnecessary bbox intersections in these, but I'll keep the
-// implementation simple unless we know we need to optimize it.
-
-template <typename T>
-Image<T> Image<T>::operator+(const Image<const T> & rhs) const {
-    Image<T> result(this->_bounds & rhs.getBounds());
-    result.copyFrom(*this);
-    result += rhs;
-    return result;
-}
-
-template <typename T>
-Image<T> Image<T>::operator-(const Image<const T> & rhs) const {
-    Image<T> result(this->_bounds & rhs.getBounds());
-    result.copyFrom(*this);
-    result -= rhs;
-    return result;
-}
-
-template <typename T>
-Image<T> Image<T>::operator*(const Image<const T> & rhs) const {
-    Image<T> result(this->_bounds & rhs.getBounds());
-    result.copyFrom(*this);
-    result *= rhs;
-    return result;
-}
-
-template <typename T>
-Image<T> Image<T>::operator/(const Image<const T> & rhs) const {
-    Image<T> result(this->_bounds & rhs.getBounds());
-    result.copyFrom(*this);
-    result /= rhs;
-    return result;
 }
 
 // instantiate for expected types

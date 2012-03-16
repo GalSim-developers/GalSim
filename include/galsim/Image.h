@@ -79,7 +79,7 @@ namespace galsim {
      *  Note that the bounding box and the pixel scale are not shared between images, and these
      *  have the regular constness semantics: member functions that modify them are not const.
      *
-     *  Image templates for short, int, and float are explicitly instantiated in Image.cpp.
+     *  Image templates for short, int, float, and double are explicitly instantiated in Image.cpp.
      */
     template <typename T>
     class Image<const T> {
@@ -196,6 +196,19 @@ namespace galsim {
         int getYMin() const { return _bounds.getYMin(); }
         int getYMax() const { return _bounds.getYMax(); }
         //@}
+
+        //@{
+        /**
+         *  @brief Binary arithmetic operators.
+         *
+         *  The output image is the intersection of the bounding boxes of the two images;
+         *  returns a null image if there is no intersection.
+         */
+        Image<T> operator+(const Image<const T> & rhs) const;
+        Image<T> operator-(const Image<const T> & rhs) const;
+        Image<T> operator*(const Image<const T> & rhs) const;
+        Image<T> operator/(const Image<const T> & rhs) const;
+        //@}
         
     };
 
@@ -304,19 +317,6 @@ namespace galsim {
         Image const & operator-=(const Image<const T> & rhs) const;
         Image const & operator*=(const Image<const T> & rhs) const;
         Image const & operator/=(const Image<const T> & rhs) const;
-        //@}
-
-        //@{
-        /**
-         *  @brief Binary arithmetic operators.
-         *
-         *  The output image is the intersection of the bounding boxes of the two images;
-         *  returns a null image if there is no intersection.
-         */
-        Image<T> operator+(const Image<const T> & rhs) const;
-        Image<T> operator-(const Image<const T> & rhs) const;
-        Image<T> operator*(const Image<const T> & rhs) const;
-        Image<T> operator/(const Image<const T> & rhs) const;
         //@}
     };
 
