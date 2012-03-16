@@ -5,6 +5,8 @@
 /// If you have not defined USE_IMAGES, all of the drawing routines are disabled but you will no 
 /// longer be dependent on the Image and FITS classes.
 
+
+
 #ifndef SBPROFILE_H
 #define SBPROFILE_H
 
@@ -113,49 +115,51 @@ namespace galsim {
         /// \param flux_ Input: flux
         virtual void setFlux(double flux_=1.) =0; ///< Set flux scaling of SBProfile.
 
-        //
         // Methods implemented in base class:
 
         // Transformations (all are special cases of affine transformations via SBDistort):
 
         /// Ellipse distortion transformation (affine without rotation).
+        //
         /// \param e Input: Ellipse class distortion
         virtual SBProfile* distort(const Ellipse e) const; 
 
         /// Shear distortion transformation (affine without rotation or dilation).
+        //
         /// \param e1 Input: first component of ellipticity
         /// \param e2 Input: second component of ellipticity
         virtual SBProfile* shear(double e1, double e2) const { return distort(Ellipse(e1,e2)); }
         
         /// Rotation distortion transformation
+        //
         /// \param theta Input: rotation, in radians, anticlockwise
         virtual SBProfile* rotate(const double theta) const;
 
         /// Translation distortion transformation
+        //
         /// \param dx Input: shift in X
         /// \param dy Input: shift in Y
         virtual SBProfile* shift(double dx, double dy) const;
 
 #ifdef USE_IMAGES
         // **** Drawing routines ****
-        // Grid on which SBProfile is drawn has pitch dx; given dx=0. default, routine will
-        // choose dx to be at least fine enough for Nyquist sampling at maxK().
-        // If you specify dx, image will be drawn with this dx and you will receive an image
-        // with the aliased frequencies included.
 
-        // If input image is not specified or has null dimension, a square image will be
-        // drawn which is big enough to avoid "folding."  If drawing is done using FFT,
-        // it will be scaled up to a power of 2, or 3x2^n, whicher fits.
-        // If input image has finite dimensions then these will be used, although in an FFT the image 
-        // may be calculated internally on a larger grid to avoid folding.
-        // Specifying wmult>1 will draw an image that is wmult times larger than the default choice,
-        //  i.e. it will have finer sampling in k space and have less folding.
-
-        // The default draw() routines decide internally whether image can be drawn directly
-        // in real space or needs to be done via FFT from k space:
+        /// Draw an image of the SBProfile.
+        //
+        /// If input image is not specified or has null dimension, a square image will be
+        /// drawn which is big enough to avoid "folding."  If drawing is done using FFT,
+        /// it will be scaled up to a power of 2, or 3x2^n, whicher fits.
+        /// If input image has finite dimensions then these will be used, although in an FFT the 
+        /// image 
+        /// may be calculated internally on a larger grid to avoid folding.
+        /// The default draw() routines decide internally whether image can be drawn directly
+        /// in real space or needs to be done via FFT from k space.
+        //
+        /// \param dx Input: grid on which SBProfile is drawn has pitch dx; given dx=0. default, routine will choose dx to be at least fine enough for Nyquist sampling at maxK().  If you specify dx, image will be drawn with this dx and you will receive an image with the aliased frequencies included.
+        /// \param wmult Input: specifying wmult>1 will draw an image that is wmult times larger than the default choice, i.e. it will have finer sampling in k space and have less folding.
         virtual Image<float> draw(double dx=0., int wmult=1) const;
 
-        // This version returns the summed flux of image:
+        /// This version of the draw method returns the summed flux of image.
         virtual double draw(Image<float> img, double dx=0., int wmult=1) const; 
 
         // Methods below force either real or Fourier methods:
