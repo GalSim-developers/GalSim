@@ -1,6 +1,5 @@
 BinomFact.cpp
 FFT.cpp
-HeaderFromStream.cpp
 Image.cpp
 Interpolant.cpp
 Laguerre.cpp
