@@ -115,7 +115,7 @@ namespace galsim {
         /// \param flux_ Input: flux
         virtual void setFlux(double flux_=1.) =0; ///< Set flux scaling of SBProfile.
 
-        // Methods implemented in base class:
+        // ****Methods implemented in base class****
 
         // Transformations (all are special cases of affine transformations via SBDistort):
 
@@ -144,6 +144,7 @@ namespace galsim {
 #ifdef USE_IMAGES
         // **** Drawing routines ****
 
+
         /// Draw an image of the SBProfile.
         //
         /// If input image is not specified or has null dimension, a square image will be
@@ -160,6 +161,10 @@ namespace galsim {
         virtual Image<float> draw(double dx=0., int wmult=1) const;
 
         /// This version of the draw method returns the summed flux of image.
+        //
+        /// \param img Input: image
+        /// \param dx Input: grid on which SBProfile is drawn has pitch dx; given dx=0. default, routine will choose dx to be at least fine enough for Nyquist sampling at maxK().  If you specify dx, image will be drawn with this dx and you will receive an image with the aliased frequencies included.
+        /// \param wmult Input: specifying wmult>1 will draw an image that is wmult times larger than the default choice, i.e. it will have finer sampling in k space and have less folding.
         virtual double draw(Image<float> img, double dx=0., int wmult=1) const; 
 
         // Methods below force either real or Fourier methods:
