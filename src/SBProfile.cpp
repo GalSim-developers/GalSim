@@ -58,7 +58,7 @@ namespace galsim {
     {
         // Determine desired dx:
         if (dx<=0.) dx = M_PI / maxK();
-        if (I.getBounds().isDefined()) {
+        if (!I.getBounds().isDefined()) {
             if (wmult<1) throw SBError("Requested wmult<1 in plainDraw()");
             // Need to choose an image size
             int N = static_cast<int> (ceil(2*M_PI/(dx*stepK())));

@@ -1,4 +1,5 @@
 module.cpp
 Bounds.cpp
 Shear.cpp
+Image.cpp
 SBProfile.cpp

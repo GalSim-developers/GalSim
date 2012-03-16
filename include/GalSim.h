@@ -9,7 +9,7 @@
 #include "galsim/SBParse.h"
 #include "galsim/SBPixel.h"
 
-// An interface for dealing with images (FITSImage is deprecated)
+// An interface for dealing with images
 #include "galsim/Image.h"
 
 // FFT's
