@@ -1,15 +1,11 @@
 #include "boost/python.hpp"
 #include "Image.h"
 
+#define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
+#define NO_IMPORT_ARRAY
+#include "numpy/arrayobject.h"
+
 namespace bp = boost::python;
-
-namespace galsim {
-namespace {
-
-template <typename T> struct PyImage;
-
-template <typename T>
-struct PyImage {
 
 #define ADD_CORNER(getter, prop)                                      \
     do {                                                                \
@@ -17,6 +13,28 @@ struct PyImage {
         pyConstImage.def(#getter, fget);                                \
         pyConstImage.add_property(#prop, fget);                   \
     } while (false)
+
+namespace galsim {
+namespace {
+
+template <typename T> struct NumpyTraits;
+template <> struct NumpyTraits<npy_short> { static int getCode() { return NPY_SHORT; } };
+template <> struct NumpyTraits<npy_int> { static int getCode() { return NPY_INT; } };
+template <> struct NumpyTraits<npy_float> { static int getCode() { return NPY_FLOAT; } };
+template <> struct NumpyTraits<npy_double> { static int getCode() { return NPY_DOUBLE; } };
+
+template <typename T>
+struct PyImage {
+
+    static void destroyCObjectOwner(void * p) {
+        boost::shared_ptr<T const> * owner = reinterpret_cast< boost::shared_ptr<T const> *>(p);
+        delete owner;
+    }
+
+    struct PythonDeleter {
+        void operator()(T * p) { owner.reset(); }
+        bp::handle<> owner;
+    };
 
     template <typename U, typename W>
     static void wrapCommon(W & wrapper) {
@@ -29,6 +47,41 @@ struct PyImage {
             .def("subimage", &Image<U>::subimage, bp::args("bounds"))
             .def("assign", &Image<U>::operator=, bp::return_self<>())
             ;
+    }
+
+    static bp::object getArrayImpl(Image<T const> const & image, bool isConst) {
+
+        // --- Create array ---
+        int flags = NPY_ALIGNED | NPY_C_CONTIGUOUS;
+        if (!isConst) flags |= NPY_WRITEABLE;
+        npy_intp shape[2] = {
+            image.getYMax() - image.getYMin() + 1,
+            image.getXMax() - image.getXMin() + 1
+        };
+        npy_intp strides[2] = { image.getStride() * sizeof(T), sizeof(T), };
+        bp::handle<> result(
+            PyArray_New(
+                &PyArray_Type, 2, shape, NumpyTraits<T>::getCode(), strides,
+                const_cast<T*>(image.getData()), sizeof(T), flags, NULL
+            )
+        );
+
+        // --- Manage ownership ---
+        boost::shared_ptr<T const> owner = image.getOwner();
+        PythonDeleter * pyDeleter = owner.template get_deleter<PythonDeleter>();
+        bp::handle<> pyOwner;
+        if (pyDeleter) {
+            // If memory was original allocated by Python, we use that Python object as the owner...
+            pyOwner = pyDeleter->owner;
+        } else {
+            // ..if not, we put a shared_ptr in an opaque Python object.
+            pyOwner = bp::handle<>(
+                PyCObject_FromVoidPtr(new boost::shared_ptr<T const>(owner), &destroyCObjectOwner)
+            );
+        }
+        reinterpret_cast<PyArrayObject*>(result.get())->base = pyOwner.release();
+
+        return bp::object(result);
     }
 
     static void wrap(std::string const & suffix) {

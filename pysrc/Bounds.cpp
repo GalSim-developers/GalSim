@@ -3,6 +3,15 @@
 
 namespace bp = boost::python;
 
+#define ADD_CORNER(getter, setter, prop)\
+    do {                                                            \
+        bp::object fget = bp::make_function(&Bounds<T>::getter);    \
+        bp::object fset = bp::make_function(&Bounds<T>::setter);    \
+        pyBounds.def(#getter, fget);                                \
+        pyBounds.def(#setter, fset);                                \
+        pyBounds.add_property(#prop, fget, fset);                   \
+    } while (false)
+
 namespace galsim {
 namespace {
 
@@ -36,15 +45,6 @@ struct PyPosition {
 
 template <typename T>
 struct PyBounds {
-
-#define ADD_CORNER(getter, setter, prop)\
-    do {                                                            \
-        bp::object fget = bp::make_function(&Bounds<T>::getter);    \
-        bp::object fset = bp::make_function(&Bounds<T>::setter);    \
-        pyBounds.def(#getter, fget);                                \
-        pyBounds.def(#setter, fset);                                \
-        pyBounds.add_property(#prop, fget, fset);                   \
-    } while (false)
 
     static void wrap(std::string const & suffix) {
         bp::class_< Bounds<T> > pyBounds(("Bounds" + suffix).c_str(), bp::init<>());
