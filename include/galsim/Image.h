@@ -99,9 +99,10 @@ namespace galsim {
     protected:
         
         boost::shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage
-        T * _data;                      // pointer to be used for this image
-        int _stride;                    // number of elements between rows (!= width for subimages)
-        Bounds<int> _bounds;
+        T * _data;                    // pointer to be used for this image
+        int _stride;                  // number of elements between rows (!= width for subimages)
+        double _scale;                // pixel scale (used by SBPixel and SBProfile; units?!)
+        Bounds<int> _bounds;          // bounding box
 
         inline int addressPixel(const int y) const {
             return (y - getYMin()) * _stride;
@@ -126,7 +127,8 @@ namespace galsim {
          *  The new image will share pixel data (but nothing else) with the input image.
          */
         Image(const Image& rhs) :
-            _owner(rhs._owner), _data(rhs._data), _stride(rhs._stride), _bounds(rhs._bounds)
+            _owner(rhs._owner), _data(rhs._data), _stride(rhs._stride), _scale(rhs._scale),
+            _bounds(rhs._bounds)
         {}
 
         /**
@@ -148,6 +150,7 @@ namespace galsim {
                 _owner = rhs._owner;
                 _data = rhs._data;
                 _stride = rhs._stride;
+                _scale = rhs._scale;
                 _bounds = rhs._bounds;
             }
             return *this;
@@ -161,6 +164,12 @@ namespace galsim {
          *  The two images will share pixel data (but nothing else).
          */
         Image & operator=(const Image<T>& rhs);
+
+        /// @brief Return the pixel scale.
+        double getScale() const { return _scale; }
+
+        /// @brief Set the pixel scale.
+        void setScale(double scale) { _scale = scale; }
 
         /**
          *  @brief Return a shared pointer that manages the lifetime of the image's pixels.
@@ -340,6 +349,7 @@ namespace galsim {
         _owner(other.getOwner()),
         _data(other.getData()),
         _stride(other.getStride()),
+        _scale(other.getScale()),
         _bounds(other.getBounds())
     {}
 
@@ -349,6 +359,7 @@ namespace galsim {
             _owner = rhs.getOwner();
             _data = rhs.getData();
             _stride = rhs.getStride();
+            _scale = rhs.getScale();
             _bounds = rhs.getBounds();
         }
         return *this;

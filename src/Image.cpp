@@ -65,6 +65,7 @@ Image<const T>::Image(const int ncol, const int nrow) :
     _owner(new T[ncol * nrow], ArrayDeleter<T>()),
     _data(_owner.get()),
     _stride(ncol),
+    _scale(1.0),
     _bounds(1, ncol, 1, nrow)
 {}
 
@@ -73,6 +74,7 @@ Image<const T>::Image(const Bounds<int> & bounds, const T initValue) :
     _owner(),
     _data(0),
     _stride(0),
+    _scale(1.0),
     _bounds(bounds)
 {
     if (_bounds.isDefined()) {
