@@ -1,59 +1,4 @@
-
-// Image<T> class is a 2d array of any class T.  Data are stored 
-// in a form that allows rapid iteration along rows, and a number of
-// templates are provided that execute operations on all pixels or
-// a subset of pixels in one or more images.
-//
-// Will be linked with Image.o from Image.cpp.  Note that Image types
-// float, int, and short are instantiated at end of Image.cpp.  If you
-// need other types, you'll have to add them there.
-//
-// Image is actually a handle that contains a pointer to an ImageHeader<T>
-// structure ("header") and an ImageData<T> structure ("data").  Copy
-// and assignment semantics are that a new Image refers to same data
-// and header structures as the old one.  Link counting insures deletion
-// of the header & data structures when they become unused.  To get a
-// fresh deep copy of an Image, use Image::duplicate().
-//
-// The ImageData<T> class should never be needed by the user.  It
-// is used by FITSImage class (and maybe other disk image formats) 
-// that reads/writes Image objects from disk.
-//
-// All specifications of pixel areas use Bounds<int> objects - see Bounds.h.
-// Bounds<int>(x1,x2,y1,y2) is usual constructor, Bounds<int>() creates a
-// null region.
-//
-// Image::subimage creates a new image that is contained within the original
-// image AND SHARES ITS DATA.  Deleting the parent Image before any
-// of its derived subimages throws an exception.
-//
-// Iterators Image::iter and Image::citer are provided to traverse rows 
-// of images.  These are only valid to traverse a row, going past end of 
-// row will give unpredictable results.  Functions rowBegin() and rowEnd() 
-// give bounds for row iteration.  getIter() gets iterator to arbitrary 
-// point.  
-// Range-checked iterators are ImageChk_iter and ImageChk_citer, which are 
-// also typedef'd as Image::checked_iter and checked_citer.  Range-checked 
-// access is via Image::at() calls.  Range-checked iterators are used for 
-// all calls if
-// #define IMAGE_BOUNDS_CHECK
-// is compiled in. 
-//
-// A const Image has read-only header and data access.
-//
-// Image constructors are:
-// Image(ncol, nrows) makes new image with origin at (1,1)
-// Image(Bounds<int>) makes new image with arbitrary row/col range
-// Image(Bounds<int>, value) makes new image w/all pixels set to value.
-//   also a constructor directly from ImageHeader & ImageData structures,
-//   which should be used only by FITSImage or routines that build Images.
-//
-// You can access image elements with (int x, int y) syntax:
-//  theImage(4,12)=15.2;
-// Many unary and binary arithmetic operations are supplied, with
-// templates provided to build others quickly.
-//
-
+// -*- c++ -*-
 #ifndef Image_H
 #define Image_H
 
@@ -72,17 +17,16 @@
 
 namespace galsim {
 
-    // Exception classes:
-    class ImageError : public std::runtime_error
-    {
+    /// @brief Exception class usually thrown by images.
+    class ImageError : public std::runtime_error {
     public: 
         ImageError(const std::string& m="") : 
             std::runtime_error("Image Error: " + m) {}
 
     };
 
-    class ImageBounds : public ImageError 
-    {
+    /// @brief Exception class thrown when out-of-bounds pixels are accessed on an image.
+    class ImageBounds : public ImageError {
     public: 
         ImageBounds(const std::string& m="") : 
             ImageError("Access to out-of-bounds pixel " + m) {}
@@ -94,6 +38,49 @@ namespace galsim {
 
     template <typename T> class Image;
 
+    /**
+     *  @brief Image class with const pixels.
+     *
+     *  The Image class is a 2-d array with pixel values stored contiguously in memory along
+     *  rows (but not necessarily between rows).  An image's pixel values may be shared between
+     *  multiple image objects (with reference counting), and a subimage may share data with
+     *  its parent and multiple siblings.  Images may also share pixel values with NumPy arrays.
+     *
+     *  An Image also contains a bounding box; its origin need not be (0,0) or (1,1).  It also
+     *  contains a single floating-point pixel scale, though this may be intepreted differently
+     *  in different contexts.
+     *
+     *  The fact that images share memory makes their constness semantics a lot more complicated.
+     *  The copy constructor and the assignment operator (these are implicitly defined by the
+     *  compiler) for images are both "shallow" - they simply create new references to the
+     *  same underlying memory, or change what memory an image object points at.  This means
+     *  the usual constness semantics don't work: if we have a "const Image &", we could
+     *  trivially copy it to a non-const Image object that shares data with it, so there's
+     *  no point to preventing pixel modifications on const Images.
+     *
+     *  Instead, the Image<const T> template is specialized, and should be used to represent
+     *  Images whose pixels cannot be modified.  Furthermore, Image<T> inherits from
+     *  Image<const T>, so you can use an Image<T> anywhere an Image<const T> is expected.
+     *  This is similar to how constness semantics work with pointers and smart pointers,
+     *  and once you get used to it it makes a lot of sense.
+     *
+     *  However, it does have some surprising implications:
+     *   - Member functions that modify the pixels are marked as const (but are not defined for
+     *     Image<const T>).
+     *   - Because the main assignment operator is shallow, there is no assignment operator that
+     *     accepts a scalar (because it would have to be deep).  Instead, there's a "fill" member
+     *     function that sets the entire image to scalar.
+     *   - Similarly, there's "copyFrom" member function that does deep assignment of an image.
+     *     You can also use "duplicate" to return a new image that is a deep copy.
+     *   - The augmented assignment operators ARE deep, and hence behave very differently from
+     *     the regular assignment operators.  And, because they just modify pixel values, they're
+     *     const member functions and retern const references to this/
+     *
+     *  Note that the bounding box and the pixel scale are not shared between images, and these
+     *  have the regular constness semantics: member functions that modify them are not const.
+     *
+     *  Image templates for short, int, and float are explicitly instantiated in Image.cpp.
+     */
     template <typename T>
     class Image<const T> {
     protected:
@@ -116,54 +103,15 @@ namespace galsim {
 
     public:
 
+        /// @brief Create a new image with origin at (1,1).
         Image(const int ncol, const int nrow);
 
-        // Default constructor builds a null image:
+        /**
+         *  @brief Create a new image with the given bounding box and initial value.
+         *
+         *  If !bounds.isDefined(), the image's data pointer will be null.
+         */
         explicit Image(const Bounds<int> & bounds=Bounds<int>(), const T initValue=T(0));
-
-        /**
-         *  @brief Shallow constructor.
-         *
-         *  The new image will share pixel data (but nothing else) with the input image.
-         */
-        Image(const Image& rhs) :
-            _owner(rhs._owner), _data(rhs._data), _stride(rhs._stride), _scale(rhs._scale),
-            _bounds(rhs._bounds)
-        {}
-
-        /**
-         *  @brief Shallow conversion constructor.
-         *
-         *  We can construct an Image<const T> from an Image<T>, but not the reverse.
-         *
-         *  The new image will share pixel data (but nothing else) with the input image.
-         */
-        Image(const Image<T>& rhs);
-
-        /**
-         *  @brief Shallow assignment.
-         *
-         *  The two images will share pixel data (but nothing else).
-         */
-        Image & operator=(const Image& rhs) {
-            if (&rhs != this) {
-                _owner = rhs._owner;
-                _data = rhs._data;
-                _stride = rhs._stride;
-                _scale = rhs._scale;
-                _bounds = rhs._bounds;
-            }
-            return *this;
-        }
-
-        /**
-         *  @brief Shallow conversion assignment.
-         *
-         *  We can assign an Image<T> to an Image<const T>, but not the reverse.
-         *
-         *  The two images will share pixel data (but nothing else).
-         */
-        Image & operator=(const Image<T>& rhs);
 
         /// @brief Return the pixel scale.
         double getScale() const { return _scale; }
@@ -199,64 +147,78 @@ namespace galsim {
         /**
          *  @brief Resize the image.
          *
-         *  Images sharing pixel with this one will cease to share, but will otherwise be unaffected.
+         *  Images sharing pixel with this one will cease to share, but will otherwise be
+         *  unaffected.
          *
-         *  The image will be reallocated unless the new bounds are the same size as the current bounds,
-         *  and will be left uninitialized.
+         *  The image will be reallocated unless the new bounds are the same size as the current
+         *  bounds, and will be left uninitialized.
          */
         void resize(const Bounds<int> & bounds);
 
-        // Shift the bounding box of the image by the given offsets (just shifts the box).
+        /// @brief Shift the bounding box of the image by the given offsets (just shifts the box).
         void shift(int x0, int y0) { _bounds.shift(x0, y0); }
 
 #ifdef IMAGE_BOUNDS_CHECK
-        // Element access is checked always
+        /// Element access is checked always
         const T& operator()(const int xpos, const int ypos) const 
         { return at(xpos,ypos); }
 #else
-        // Unchecked access
+        /// Unchecked element access
         const T& operator()(const int xpos, const int ypos) const 
         { return _data[addressPixel(xpos, ypos)]; }
 #endif
 
-        // Element access - checked
+        /// Element access - checked
         const T& at(const int xpos, const int ypos) const {
             if (!_bounds.includes(xpos, ypos)) throw ImageBounds(xpos, ypos, _bounds);
             return _data[addressPixel(xpos, ypos)];
         }
 
+        /// @brief Iterator type for pixels within a row (unchecked).
         typedef const T* Iter;
-        Iter rowBegin(int r) const { return _data + addressPixel(r); }
-        Iter rowEnd(int r) const { return _data + addressPixel(getXMax() + 1, r); }
+
+        /// @brief Return an iterator to the beginning of a row.
+        Iter rowBegin(int y) const { return _data + addressPixel(y); }
+
+        /// @brief Return an iterator to one-past-the-end of a row.
+        Iter rowEnd(int y) const { return _data + addressPixel(getXMax() + 1, y); }
+
+        /// @brief Return an iterator to an arbitrary pixel.
         Iter getIter(const int x, const int y) const { return _data + addressPixel(x, y); }
 
-        // bounds access functions
+        /// @brief Return the bounding box of the image.
         Bounds<int> const & getBounds() const { return _bounds; }
+
+        //@{
+        /// Convenience accessors for the bounding box corners.
         int getXMin() const { return _bounds.getXMin(); }
         int getXMax() const { return _bounds.getXMax(); }
         int getYMin() const { return _bounds.getYMin(); }
         int getYMax() const { return _bounds.getYMax(); }
-
+        //@}
+        
     };
 
+    /**
+     *  @brief Image class (non-const).
+     *
+     *  @copydetails Image<const T>
+     */
     template <typename T>
     class Image : public Image<const T> {
     public:
 
+        /// @brief Create a new image with origin at (1,1).
         Image(const int ncol, const int nrow) : Image<const T>(ncol, nrow) {}
 
-        explicit Image(const Bounds<int> & bounds=Bounds<int>()) : Image<const T>(bounds) {}
-
-        explicit Image(const Bounds<int> & bounds, const T initValue) :
+        /**
+         *  @brief Create a new image with the given bounding box and initial value.
+         *
+         *  If !bounds.isDefined(), the image's data pointer will be null.
+         */
+        explicit Image(const Bounds<int> & bounds=Bounds<int>(), const T initValue=T(0)) :
             Image<const T>(bounds, initValue)
         {}
-
-        Image(const Image& rhs) : Image<const T>(rhs) {}
-
-        Image & operator=(const Image& rhs) {
-            Image<const T>::operator=(rhs);
-            return *this;
-        }
 
         /**
          *  @brief Return a shared pointer that manages the lifetime of the image's pixels.
@@ -273,26 +235,33 @@ namespace galsim {
         Image subimage(const Bounds<int> & bounds) const;
 
 #ifdef IMAGE_BOUNDS_CHECK
-        // Element access is checked always
+        /// Element access is checked always
         T& operator()(const int xpos, const int ypos) const 
         { return at(xpos,ypos); }
 #else
-        // Unchecked access
+        /// Unchecked access
         T& operator()(const int xpos, const int ypos) const 
         { return this->_data[this->addressPixel(xpos, ypos)]; }
 #endif
 
-        // Element access - checked
+        /// Element access - checked
         T& at(const int xpos, const int ypos) const {
             if (!this->_bounds.includes(xpos, ypos)) throw ImageBounds(xpos, ypos, this->_bounds);
             return this->_data[this->addressPixel(xpos, ypos)];
         }
 
+        /// @brief Iterator type for pixels within a row (unchecked).
         typedef T* Iter;
+
+        /// @brief Return an iterator to the beginning of a row.
         Iter rowBegin(int r) const { return this->_data + this->addressPixel(r); }
+
+        /// @brief Return an iterator to one-past-the-end of a row.
         Iter rowEnd(int r) const {
             return this->_data + this->addressPixel(this->getXMax() + 1, r);
         }
+
+        /// @brief Return an iterator to an arbitrary pixel.
         Iter getIter(const int x, const int y) const {
             return this->_data + this->addressPixel(x, y);
         }
@@ -307,7 +276,7 @@ namespace galsim {
          *
          *  Also note that all these are const member functions, but they are only defined on
          *  image's with non-const pixel values, in keeping with the overall "smart-pointer-like"
-         *  
+         *  constness semantics.
          */
         void fill(T x) const;
         Image const & operator+=(T x) const;
@@ -319,7 +288,8 @@ namespace galsim {
         /**
          *  @brief Deep-copy pixel values from rhs to this.
          *
-         *  Only pixels in the intersection of the images' bounding boxes will be copied.
+         *  Only pixels in the intersection of the images' bounding boxes will be copied;
+         *  silent no-op if there is no intersection.
          */
         void copyFrom(const Image<const T> & rhs);
 
@@ -327,7 +297,8 @@ namespace galsim {
         /**
          *  @brief Augmented assignment.
          *
-         *  Only the region in the intersection of the two images will be affected.
+         *  Only pixels in the intersection of the images' bounding boxes will be affected;
+         *  silent no-op if there is no intersection.
          */
         Image const & operator+=(const Image<const T> & rhs) const;
         Image const & operator-=(const Image<const T> & rhs) const;
@@ -335,35 +306,19 @@ namespace galsim {
         Image const & operator/=(const Image<const T> & rhs) const;
         //@}
 
-        // Image/Image arithmetic binops: output image is intersection
-        // of bounds of two input images.  Exception for null output.
+        //@{
+        /**
+         *  @brief Binary arithmetic operators.
+         *
+         *  The output image is the intersection of the bounding boxes of the two images;
+         *  returns a null image if there is no intersection.
+         */
         Image<T> operator+(const Image<const T> & rhs) const;
         Image<T> operator-(const Image<const T> & rhs) const;
         Image<T> operator*(const Image<const T> & rhs) const;
         Image<T> operator/(const Image<const T> & rhs) const;
-
+        //@}
     };
-
-    template <typename T>
-    inline Image<const T>::Image(Image<T> const & other) :
-        _owner(other.getOwner()),
-        _data(other.getData()),
-        _stride(other.getStride()),
-        _scale(other.getScale()),
-        _bounds(other.getBounds())
-    {}
-
-    template <typename T>
-    inline Image<const T> & Image<const T>::operator=(Image<T> const & rhs) {
-        if (&rhs != this) {
-            _owner = rhs.getOwner();
-            _data = rhs.getData();
-            _stride = rhs.getStride();
-            _scale = rhs.getScale();
-            _bounds = rhs.getBounds();
-        }
-        return *this;
-    }
 
     //////////////////////////////////////////////////////////////////////////
     // Templates for stepping through image pixels

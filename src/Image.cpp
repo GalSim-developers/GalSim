@@ -1,8 +1,5 @@
-// Implementation code for Image class and related classes.
 #include "Image.h"
-#include <iomanip>
 #include <sstream>
-#include <cstring> // For memmove
 
 namespace galsim {
 
@@ -209,6 +206,41 @@ template <typename T>
 Image<T> const & Image<T>::operator/=(const Image<const T> & rhs) const {
     transform_pixel(*this, rhs, this->_bounds & rhs.getBounds(), std::divides<T>());
     return *this;    
+}
+
+// note: There are lots of unnecessary bbox intersections in these, but I'll keep the
+// implementation simple unless we know we need to optimize it.
+
+template <typename T>
+Image<T> Image<T>::operator+(const Image<const T> & rhs) const {
+    Image<T> result(this->_bounds & rhs.getBounds());
+    result.copyFrom(*this);
+    result += rhs;
+    return result;
+}
+
+template <typename T>
+Image<T> Image<T>::operator-(const Image<const T> & rhs) const {
+    Image<T> result(this->_bounds & rhs.getBounds());
+    result.copyFrom(*this);
+    result -= rhs;
+    return result;
+}
+
+template <typename T>
+Image<T> Image<T>::operator*(const Image<const T> & rhs) const {
+    Image<T> result(this->_bounds & rhs.getBounds());
+    result.copyFrom(*this);
+    result *= rhs;
+    return result;
+}
+
+template <typename T>
+Image<T> Image<T>::operator/(const Image<const T> & rhs) const {
+    Image<T> result(this->_bounds & rhs.getBounds());
+    result.copyFrom(*this);
+    result /= rhs;
+    return result;
 }
 
 // instantiate for expected types
