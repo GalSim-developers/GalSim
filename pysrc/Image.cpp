@@ -11,6 +11,13 @@ template <typename T> struct PyImage;
 template <typename T>
 struct PyImage {
 
+#define ADD_CORNER(getter, prop)                                      \
+    do {                                                                \
+        bp::object fget = bp::make_function(&Image<const T>::getter);   \
+        pyConstImage.def(#getter, fget);                                \
+        pyConstImage.add_property(#prop, fget);                   \
+    } while (false)
+
     template <typename U, typename W>
     static void wrapCommon(W & wrapper) {
         wrapper
@@ -33,7 +40,12 @@ struct PyImage {
             bp::return_value_policy<bp::copy_const_reference>(),
             bp::args("x", "y")
         );
-        bp::class_< Image<const T> > pyConstImage(("ConstImage" + suffix).c_str(), bp::no_init);
+        bp::object getBounds = bp::make_function(
+            &Image<const T>::getBounds, 
+            bp::return_value_policy<bp::copy_const_reference>()
+        ); 
+        bp::class_< Image<const T> >
+            pyConstImage(("ConstImage" + suffix).c_str(), bp::no_init);
         wrapCommon<const T>(pyConstImage);
         pyConstImage
             .def("getScale", getScale)
@@ -45,13 +57,20 @@ struct PyImage {
             .def("at", at)
             .def("shift", &Image<const T>::shift, bp::args("dx", "dy"))
             .def("move", &Image<const T>::move, bp::args("x0", "y0"))
+            .def("getBounds", getBounds)
+            .add_property("bounds", getBounds)
             .def(bp::self + bp::self)
             .def(bp::self - bp::self)
             .def(bp::self * bp::self)
             .def(bp::self / bp::self)
             ;
+        ADD_CORNER(getXMin, xMin);
+        ADD_CORNER(getYMin, yMin);
+        ADD_CORNER(getXMax, xMax);
+        ADD_CORNER(getYMax, yMax);
 
-        bp::class_< Image<T>, bp::bases< Image<const T> > > pyImage(("Image" + suffix).c_str(), bp::no_init);
+        bp::class_< Image<T>, bp::bases< Image<const T> > >
+            pyImage(("Image" + suffix).c_str(), bp::no_init);
         wrapCommon<T>(pyImage);
         pyImage
             .def("copyFrom", &Image<T>::copyFrom)
