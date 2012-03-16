@@ -47,9 +47,7 @@ namespace galsim {
         assert(Ninitial%2==0);
         assert(Ninitial>=2);
         if (dx<=0.) {
-            // If dx was not specified, see if the header has a value, if not just dx=1.
-            if (!img.header()->getValue("DX", dx))
-                dx = 1.;
+            dx = img.getScale();
         }
         if (padFactor <= 0.) padFactor = OVERSAMPLE_X;
         // Choose the padded size for input array - size 2^N or 3*2^N
