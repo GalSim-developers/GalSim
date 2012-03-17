@@ -86,12 +86,12 @@ namespace galsim {
         /// xValue() may not be implemented for derived classes (SBConvolve) that
         /// require an FFT to determine real-space values.
         /// \param _p Input: 2D position in real space.
-        virtual double xValue(Position<double> _p) const =0; ///< Return value of SBProfile at a chosen 2D position in real space.
+        virtual double xValue(Position<double> _p) const =0;
 
         /// Return value of SBProfile at a chosen 2D position in k space.
         //
         /// \param _p Input: 2D position in k space.
-        virtual std::complex<double> kValue(Position<double> _p) const =0; ///< Return value of SBProfile at a chosen 2D position in k space.
+        virtual std::complex<double> kValue(Position<double> _p) const =0; 
 
         virtual double maxK() const =0; ///< Value of k beyond which aliasing can be neglected:
         virtual double nyquistDx() const { return M_PI / maxK(); } ///< Image pixel spacing that does not alias maxK.
@@ -266,9 +266,9 @@ namespace galsim {
 
 #endif
 
-        // Utilities for drawing into FFT data structures - not intended for public
-        // use, but need to be public so that derived classes can call them:
+        /// Utility for drawing a K grid into FFT data structures - not intended for public use, but need to be public so that derived classes can call them.
         virtual void fillKGrid(KTable& kt) const;
+        /// Utility for drawing an X grid into FFT data structures - not intended for public use, but need to be public so that derived classes can call them.
         virtual void fillXGrid(XTable& xt) const;
 
     };
