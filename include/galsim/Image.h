@@ -111,6 +111,18 @@ namespace galsim {
          */
         explicit Image(const Bounds<int> & bounds=Bounds<int>(), const T initValue=T(0));
 
+        /**
+         *  @brief Construct from external data.
+         *
+         *  This is mostly intended for use by the Python interface.
+         */
+        Image(
+            const T * data,
+            boost::shared_ptr<const T> const & owner, 
+            int stride,
+            const Bounds<int> & bounds
+        );
+
         /// @brief Return the pixel scale.
         double getScale() const { return _scale; }
 
@@ -254,6 +266,15 @@ namespace galsim {
          */
         explicit Image(const Bounds<int> & bounds=Bounds<int>(), const T initValue=T(0)) :
             Image<const T>(bounds, initValue)
+        {}
+
+        /**
+         *  @brief Construct from external data.
+         *
+         *  This is mostly intended for use by the Python interface.
+         */
+        Image(T * data, boost::shared_ptr<T> const & owner, int stride, const Bounds<int> & bounds)
+            : Image<const T>(data, owner, stride, bounds)
         {}
 
         /**

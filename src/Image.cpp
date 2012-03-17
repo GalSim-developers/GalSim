@@ -59,20 +59,19 @@ public:
 
 template <typename T>
 Image<const T>::Image(const int ncol, const int nrow) :
-    _owner(new T[ncol * nrow], ArrayDeleter<T>()),
-    _data(_owner.get()),
-    _stride(ncol),
-    _scale(1.0),
-    _bounds(1, ncol, 1, nrow)
-{}
+    _owner(), _data(0), _stride(ncol), _scale(1.0), _bounds(1, ncol, 1, nrow)
+{
+    int nElements = ncol * nrow;
+    if (nElements) {
+        _owner.reset(new T[nElements], ArrayDeleter<T>());
+        _data = _owner.get();
+        std::fill(_data, _data + nElements, T(0));
+    }
+}
 
 template <typename T>
 Image<const T>::Image(const Bounds<int> & bounds, const T initValue) :
-    _owner(),
-    _data(0),
-    _stride(0),
-    _scale(1.0),
-    _bounds(bounds)
+    _owner(), _data(0), _stride(0), _scale(1.0), _bounds(bounds)
 {
     if (_bounds.isDefined()) {
         _stride = _bounds.getXMax() - _bounds.getXMin() + 1;
@@ -82,6 +81,16 @@ Image<const T>::Image(const Bounds<int> & bounds, const T initValue) :
         std::fill(_data, _data + nElements, initValue);
     }
 }
+
+template <typename T>
+Image<const T>::Image(
+    const T * data,
+    boost::shared_ptr<const T> const & owner, 
+    int stride,
+    const Bounds<int> & bounds
+) : _owner(boost::const_pointer_cast<T>(owner)), _data(const_cast<T*>(data)), _stride(stride),
+    _scale(1.0), _bounds(bounds)
+{}
 
 template <typename T>
 void Image<const T>::redefine(const Bounds<int> & bounds) {

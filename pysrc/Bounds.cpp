@@ -85,6 +85,8 @@ struct PyBounds {
 void pyExportBounds() {
     PyPosition<double>::wrap("D");
     PyBounds<double>::wrap("D");
+    PyPosition<int>::wrap("I");
+    PyBounds<int>::wrap("I");
 }
 
 } // namespace galsim

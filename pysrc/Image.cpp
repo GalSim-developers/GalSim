@@ -33,6 +33,9 @@ struct PyImage {
 
     struct PythonDeleter {
         void operator()(T * p) { owner.reset(); }
+
+        explicit PythonDeleter(PyObject * o) : owner(bp::borrowed(o)) {}
+
         bp::handle<> owner;
     };
 
@@ -49,26 +52,33 @@ struct PyImage {
             ;
     }
 
-    static bp::object getArrayImpl(Image<T const> const & image, bool isConst) {
+    static bp::object getArrayImpl(bp::object self, bool isConst) {
+
+        // --- Try to get cached array ---
+        if (PyObject_HasAttrString(self.ptr(), "_array")) return self.attr("_array");
+
+        Image<const T> const & image = bp::extract<Image<const T> const &>(self);
 
         // --- Create array ---
-        int flags = NPY_ALIGNED | NPY_C_CONTIGUOUS;
+        int flags = NPY_ALIGNED;
         if (!isConst) flags |= NPY_WRITEABLE;
         npy_intp shape[2] = {
             image.getYMax() - image.getYMin() + 1,
             image.getXMax() - image.getXMin() + 1
         };
         npy_intp strides[2] = { image.getStride() * sizeof(T), sizeof(T), };
-        bp::handle<> result(
-            PyArray_New(
-                &PyArray_Type, 2, shape, NumpyTraits<T>::getCode(), strides,
-                const_cast<T*>(image.getData()), sizeof(T), flags, NULL
+        bp::object result(
+            bp::handle<>(
+                PyArray_New(
+                    &PyArray_Type, 2, shape, NumpyTraits<T>::getCode(), strides,
+                    const_cast<T*>(image.getData()), sizeof(T), flags, NULL
+                )
             )
         );
 
         // --- Manage ownership ---
         boost::shared_ptr<T const> owner = image.getOwner();
-        PythonDeleter * pyDeleter = owner.template get_deleter<PythonDeleter>();
+        PythonDeleter * pyDeleter = boost::get_deleter<PythonDeleter>(owner);
         bp::handle<> pyOwner;
         if (pyDeleter) {
             // If memory was original allocated by Python, we use that Python object as the owner...
@@ -79,9 +89,88 @@ struct PyImage {
                 PyCObject_FromVoidPtr(new boost::shared_ptr<T const>(owner), &destroyCObjectOwner)
             );
         }
-        reinterpret_cast<PyArrayObject*>(result.get())->base = pyOwner.release();
+        reinterpret_cast<PyArrayObject*>(result.ptr())->base = pyOwner.release();
 
-        return bp::object(result);
+        self.attr("_array") = result;
+        return result;
+    }
+
+    static bp::object getArray(bp::object image) { return getArrayImpl(image, false); }
+    static bp::object getConstArray(bp::object image) { return getArrayImpl(image, true); }
+
+    static void buildConstructorArgs(
+        bp::object const & array, int x0, int y0, bool isConst,
+        T * & data, boost::shared_ptr<T> & owner, int & stride, Bounds<int> & bounds
+    ) {
+        if (!PyArray_Check(array.ptr())) {
+            PyErr_SetString(PyExc_TypeError, "numpy.ndarray argument required");
+            bp::throw_error_already_set();
+        }
+        int actualType = PyArray_TYPE(array.ptr());
+        int requiredType = NumpyTraits<T>::getCode();
+        if (actualType != requiredType) {
+            PyErr_SetString(PyExc_ValueError, "numpy.ndarray argument has incorrect data type");
+            bp::throw_error_already_set();
+        }
+        if (PyArray_NDIM(array.ptr()) != 2) {
+            PyErr_SetString(PyExc_ValueError, "numpy.ndarray argument has must be 2-d");
+            bp::throw_error_already_set();
+        }
+        if (!isConst && !(PyArray_FLAGS(array.ptr()) & NPY_WRITEABLE)) {
+            PyErr_SetString(PyExc_TypeError, "numpy.ndarray argument must be writeable");
+            bp::throw_error_already_set();
+        }
+        if (PyArray_STRIDE(array.ptr(), 1) != sizeof(T)) {
+            PyErr_SetString(PyExc_ValueError, "numpy.ndarray argument must have contiguous rows");
+            bp::throw_error_already_set();
+        }
+        stride = PyArray_STRIDE(array.ptr(), 0) / sizeof(T);
+        data = reinterpret_cast<T*>(PyArray_DATA(array.ptr()));
+        PyObject * pyOwner = PyArray_BASE(array.ptr());
+        if (pyOwner) {
+            if (PyArray_Check(pyOwner) && PyArray_TYPE(pyOwner) == requiredType) {
+                // Not really important, but we try to use the full array for 
+                // the owner pointer if this is a subarray, just to be consistent
+                // with how it works for subimages.
+                // The deleter is really all that matters.
+                owner = boost::shared_ptr<T>(
+                    reinterpret_cast<T*>(PyArray_DATA(pyOwner)),
+                    PythonDeleter(pyOwner)
+                );
+            } else {
+                owner = boost::shared_ptr<T>(
+                    reinterpret_cast<T*>(PyArray_DATA(array.ptr())),
+                    PythonDeleter(pyOwner)
+                );
+            }
+        } else {
+            owner = boost::shared_ptr<T>(
+                reinterpret_cast<T*>(PyArray_DATA(array.ptr())),
+                PythonDeleter(array.ptr())
+            );
+        }
+        bounds = Bounds<int>(
+            x0, x0 + PyArray_DIM(array.ptr(), 1) - 1,
+            y0, y0 + PyArray_DIM(array.ptr(), 0) - 1
+        );
+    }
+
+    static Image<T> * makeFromArray(bp::object const & array, int x0, int y0) {
+        Bounds<int> bounds;
+        int stride = 0;
+        T * data = 0;
+        boost::shared_ptr<T> owner;
+        buildConstructorArgs(array, x0, y0, false, data, owner, stride, bounds);
+        return new Image<T>(data, owner, stride, bounds);
+    }
+
+    static Image<const T> * makeConstFromArray(bp::object const & array, int x0, int y0) {
+        Bounds<int> bounds;
+        int stride = 0;
+        T * data = 0;
+        boost::shared_ptr<T> owner;
+        buildConstructorArgs(array, x0, y0, true, data, owner, stride, bounds);
+        return new Image<const T>(data, owner, stride, bounds);
     }
 
     static void wrap(std::string const & suffix) {
@@ -101,6 +190,14 @@ struct PyImage {
             pyConstImage(("ConstImage" + suffix).c_str(), bp::no_init);
         wrapCommon<const T>(pyConstImage);
         pyConstImage
+            .def(
+                "__init__",
+                bp::make_constructor(
+                    makeConstFromArray, bp::default_call_policies(),
+                    (bp::arg("array"), bp::arg("x0")=1, bp::arg("y0")=1)
+                )
+            )
+            .add_property("array", &getConstArray)
             .def("getScale", getScale)
             .def("setScale", setScale)
             .add_property("scale", getScale, setScale)
@@ -126,6 +223,14 @@ struct PyImage {
             pyImage(("Image" + suffix).c_str(), bp::no_init);
         wrapCommon<T>(pyImage);
         pyImage
+            .def(
+                "__init__",
+                bp::make_constructor(
+                    makeFromArray, bp::default_call_policies(),
+                    (bp::arg("array"), bp::arg("x0")=1, bp::arg("y0")=1)
+                )
+            )
+            .add_property("array", &getArray)
             .def("copyFrom", &Image<T>::copyFrom)
             .def(bp::self += bp::self)
             .def(bp::self -= bp::self)
