@@ -602,8 +602,9 @@ int main()
     match = re.search("(python.*)\.(a|so|dylib)", libfile)
     if match:
         context.env.AppendUnique(LIBS=match.group(1))
-    flags = " ".join(distutils.sysconfig.get_config_vars("MODLIBS", "SHLIBS"))
-    context.env.MergeFlags(flags)
+    flags = [f for f in " ".join(distutils.sysconfig.get_config_vars("MODLIBS", "SHLIBS")).split()
+             if f != "-L"]
+    context.env.MergeFlags(" ".join(flags))
 
     result, output = context.TryRun(python_source_file,'.cpp')
 
@@ -643,10 +644,14 @@ int main()
   int result = 0;
   Py_Initialize();
   doImport();
-  npy_intp dims = 2;
-  PyObject * a = PyArray_SimpleNew(1, &dims, NPY_INT);
-  if (!a) result = 1;
-  Py_DECREF(a);
+  if (PyErr_Occurred()) {
+    result = 1;
+  } else {
+    npy_intp dims = 2;
+    PyObject * a = PyArray_SimpleNew(1, &dims, NPY_INT);
+    if (!a) result = 1;
+    Py_DECREF(a);
+  }
   Py_Finalize();
   return result;
 }
@@ -664,28 +669,23 @@ int main()
         subprocess.call('which python',shell=True)
         print '  is the same as the one used by SCons:'
         print '  ',sys.executable
-        print '   If not, then you probably need to reinstall numpy with %s.'%sys.executable
+        print '   If not, then you probably need to reinstall numpy with %s.' % sys.executable
         print '   And remember to use that when running python for use with GalSim.'
         print '   Alternatively, you can reinstall SCons with your preferred python.'
         print '2) Check that if you open a python session from the command line,'
         print '   import numpy is successful there.'
         Exit(1)
     context.env.Append(CPPPATH=numpy.get_include())
-
     result = CheckLibs(context,[''],numpy_source_file)
-
     if not result:
         context.Result(0)
         print "Cannot build against NumPy."
         Exit(1)
-
-    result = context.TryRun(numpy_source_file,'.cpp')
-
+    result, output = context.TryRun(numpy_source_file,'.cpp')
     if not result:
         context.Result(0)
         print "Cannot run program built with NumPy."
         Exit(1)
-
     context.Result(1)
     return 1
 
