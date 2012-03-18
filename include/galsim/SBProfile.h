@@ -367,39 +367,49 @@ namespace galsim {
         virtual void fillXGrid(XTable& xt) const;
     };
 
-    // SBDistort is an affine transformation of another SBProfile.
-    // Stores a duplicate of its target.
-    // Origin of original shape will now appear at x0.
-    // Flux is NOT conserved in transformation - SB is preserved.
+    /// An affine transformation of another SBProfile.
+    //
+    /// Stores a duplicate of its target.
+    /// Origin of original shape will now appear at `x0`.
+    /// Flux is NOT conserved in transformation - surface brightness is preserved.
+    /// We keep track of all distortions in a 2x2 matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1),
+    /// with an additional determinant multiplier `absdet`, plus a 2-element `x0` for the shift.
     class SBDistort : public SBProfile 
     {
-        // keep track of all distortions in a 2x2 matrix M = (A B) (detM=1)
-        // x0 is shift                                       (C D)
-        // 
+        
     private:
-        SBProfile* adaptee;
-        double matrixA, matrixB, matrixC, matrixD;
+        SBProfile* adaptee; ///< SBProfile being adapted/distorted
+        double matrixA; ///< A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
+        double matrixB; ///< B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
+        double matrixC; ///< C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
+        double matrixD; ///< D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
         // Calculate and save these:
-        Position<double> x0;  // centroid position
-        double absdet;            // determinant (flux magnification) of matrix
-        double invdet;
-        double major, minor; // major/minor axes of ellipse produced from unit circle
-        bool stillIsAxisymmetric; // is output shape still circular?
+        Position<double> x0;  ///< Centroid position
+        double absdet;  ///< Determinant (flux magnification) of `M` matrix
+        double invdet;  ///< Inverse determinant of `M` matrix
+        double major; ///< Major axis of ellipse produced from unit circle
+        double minor; ///< Minor axis of ellipse produced from unit circle
+        bool stillIsAxisymmetric; ///< Is output SBProfile shape still circular?
 
-    private:  
+    private:
+        /// Initialize the SBDistort
         void initialize();
+
+        /// Forward coordinate transform with `M` matrix
         Position<double> fwd(Position<double> p) const 
         {
             Position<double> out(matrixA*p.x+matrixB*p.y,matrixC*p.x+matrixD*p.y);
             return out; 
         }
 
+        /// Forward coordinate transform with transpose of `M` matrix
         Position<double> fwdT(Position<double> p) const 
         {
             Position<double> out(matrixA*p.x+matrixC*p.y,matrixB*p.x+matrixD*p.y);
             return out; 
         }
 
+        /// Inverse coordinate transform with `M` matrix
         Position<double> inv(Position<double> p) const 
         {
             Position<double> out(invdet*(matrixD*p.x-matrixB*p.y),
@@ -407,20 +417,33 @@ namespace galsim {
             return out; 
         }
 
+        /// Returns the the k value (no phase)
         std::complex<double> kValNoPhase(Position<double> k) const 
         { return absdet*adaptee->kValue(fwdT(k)); }
 
 
     public:
-        // general constructor:
+        /// General constructor.
+        //
+        /// \param sbin Input: SBProfile being distorted
+        /// \param mA Input: A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
+        /// \param mB Input: B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
+        /// \param mC Input: C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
+        /// \param mD Input: D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
+        /// \param x0_ Input: 2-element (x, y) Position for the translational shift
         SBDistort(
             const SBProfile& sbin, double mA, double mB, double mC, double mD,
             Position<double> x0_=Position<double>(0.,0.));
 
-        // Construct from Ellipse class:
+        /// Construct from an input Ellipse class object
+        //
+        /// \param sbin Input: SBProfile being distorted
+        /// \param e_ Input: Ellipse
         SBDistort(const SBProfile& sbin, const Ellipse e_=Ellipse());
 
-        // copy constructor
+        /// Copy constructor
+        //
+        /// \param rhs Input: SBProfile being duplicated
         SBDistort(const SBDistort& rhs) 
         {
             adaptee = rhs.adaptee->duplicate();
@@ -432,10 +455,10 @@ namespace galsim {
             initialize();
         }
 
-        // destructor
+        /// Destructor
         ~SBDistort() { delete adaptee; adaptee=0; }
 
-        // methods
+        // methods doxy described in base clase SBProfile
         SBProfile* duplicate() const 
         { return new SBDistort(*this); } 
 
@@ -465,6 +488,9 @@ namespace galsim {
         void fillKGrid(KTable& kt) const; // optimized phase calculation
     };
 
+    /// Convolve SBProfiles
+    //
+    /// Convolve one, two, three or more SBProfiles together (TODO: Add a more detailed description here)
     class SBConvolve : public SBProfile 
     {
     private:
