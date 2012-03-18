@@ -581,17 +581,27 @@ namespace galsim {
         virtual void fillKGrid(KTable& kt) const;
     };
 
+    /// Gaussian Surface Brightness Profile
+    //
+    /// The Gaussian Surface Brightness Profile is characterized by two properties, its `flux`
+    /// and the characteristic size `sigma` where the radial profile of the circular Gaussian
+    /// drops off as `exp[-r^2 / (2. * sigma^2)]`.
+    /// The maxK() and stepK() are for the SBGaussian are chosen to extend to 4 sigma in both 
+    /// real and k domains, or more if needed to reach the `ALIAS_THRESHOLD` spec.
     class SBGaussian : public SBProfile 
     {
     private:
-        double flux;
-        double sigma; // characteristic size:  exp[-r^2/(2.*sigma^2)]
+        double flux; ///< Flux of the Surface Brightness Profile
+        double sigma; ///< Characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`
 
     public:
-        // Constructor
+        /// Constructor
+        //
+        /// \param flux_ Input: Flux of the Surface Brightness Profile
+        /// \param sigma_ Input: Characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`
         SBGaussian(double flux_=1., double sigma_=1.) : flux(flux_), sigma(sigma_) {}
 
-        // Destructor
+        /// Destructor
         ~SBGaussian() {}                        
 
         double xValue(Position<double> _p) const;
