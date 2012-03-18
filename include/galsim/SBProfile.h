@@ -64,7 +64,7 @@ namespace galsim {
     protected:
         static const int MINIMUM_FFT_SIZE; ///< Constant giving minimum FFT sizes we're willing to do
         static const int MAXIMUM_FFT_SIZE; ///< Constant giving maximum FFT size we're willing to do
-        static const double ALIAS_THRESHOLD; ///< A rough indicator of how good the FFTs need to be for setting maxK and stepK values
+        static const double ALIAS_THRESHOLD; ///< A rough indicator of how good the FFTs need to be for setting `maxK()` and `stepK()` values
 
     public:
 
@@ -271,37 +271,43 @@ namespace galsim {
 
     };
 
-    /// Sum of two SBProfiles. 
+    /// Sums SBProfiles. 
     // 
     /// Note that this class stores duplicates of its summands,
     /// so they cannot be changed after adding them.
     class SBAdd : public SBProfile 
     {
     protected:
-        std::list<SBProfile*> plist;  // the plist content is a pointer to a fresh copy
-        // Keep track of the cumulated properties of all summands:
+        std::list<SBProfile*> plist; ///< the plist content is a pointer to a fresh copy of the summands
     private:
-        double sumflux;
-        double sumfx;
-        double sumfy;
-        double maxMaxK;
-        double minStepK;
-        bool allAxisymmetric;
-        bool allAnalyticX;
-        bool allAnalyticK;
-        void initialize();  // set all above variables to starting state
+        double sumflux; ///< Keeps track of the cumulated flux of all summands
+        double sumfx; ///< Keeps track of the cumulated `fx` of all summands
+        double sumfy; ///< Keeps track of the cumulated `fy` of all summands
+        double maxMaxK; ///< Keeps track of the cumulated `maxK()` of all summands
+        double minStepK; ///< Keeps track of the cumulated `minStepK()` of all summands
+        bool allAxisymmetric; ///< Keeps track of the cumulated `isAxisymmetric()` properties of all summands
+        bool allAnalyticX; ///< Keeps track of the cumulated `isAnalyticX()` property of all summands
+        bool allAnalyticK; ///< Keeps track of the cumulated `isAnalyticK()` properties of all summands
+        void initialize();  ///< Sets all private book-keeping variables to starting state
     public:
-        // constructor, empty
+        /// Constructor, empty
         SBAdd() : plist() { initialize(); }
 
-        // constructor, 1 input
+        /// Constructor, 1 input
+        //
+        /// \param s1 Input: SBProfile
         SBAdd(const SBProfile& s1) : plist() { initialize(); add(s1); }
 
-        // constructor, 2 inputs
+        /// Constructor, 2 inputs
+        //
+        /// \param s1 Input: first SBProfile
+        /// \param s2 Input: second SBProfile
         SBAdd(const SBProfile& s1, const SBProfile& s2) : plist() 
         { initialize(); add(s1);  add(s2); }
 
-        // constructor, list of inputs
+        /// Constructor, list of inputs
+        //
+        /// \param slist Input: list of SBProfiles
         SBAdd(const std::list<SBProfile*> slist) : plist() 
         {
             std::list<SBProfile*>::const_iterator sptr;
@@ -309,7 +315,7 @@ namespace galsim {
                 add(*(*sptr)->duplicate()); 
         }
 
-        // copy constructor
+        /// Copy constructor
         SBAdd(const SBAdd& rhs) : 
             plist(), sumflux(rhs.sumflux), sumfx(rhs.sumfx),
             sumfy(rhs.sumfy), maxMaxK(rhs.maxMaxK), minStepK(rhs.minStepK), 
@@ -321,20 +327,26 @@ namespace galsim {
                 plist.push_back((*sbptr)->duplicate());
         }
 
-        // destructor
+        /// Destructor
         ~SBAdd() 
         { 
             std::list<SBProfile*>::iterator pptr;
             for (pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; 
         }
 
-        // SBAdd specific method
+        /// SBAdd specific method for adding additional SBProfiles
+        //
+        /// \param rhs Input: SBProfile
+        /// \param scale Input: allows for rescaling flux by this factor
         void add(const SBProfile& rhs, double scale=1.);
 
-        // implementation dependent methods
+        /// Returns a duplicate of the SBAdd object
         SBProfile* duplicate() const { return new SBAdd(*this); } 
 
+        // Barney's note: the methods below are documented at the SBProfile level (I think)
+
         double xValue(Position<double> _p) const;
+
         std::complex<double> kValue(Position<double> _p) const;
 
         double maxK() const { return maxMaxK; }
