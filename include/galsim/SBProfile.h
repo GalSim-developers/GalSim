@@ -99,8 +99,8 @@ namespace galsim {
         virtual bool isAnalyticX() const =0; ///< Characteristic that can affect efficiency of evaluation.  SBProfile is "analytic" in the real domain if values can be determined immediately at any position through formula or a stored table (no DFT).
         virtual bool isAnalyticK() const =0; ///< Characteristic that can affect efficiency of evaluation.  SBProfile is "analytic" in the k domain if values can be determined immediately at any position through formula or a stored table (no DFT).
 
-        virtual double centroidX() const =0; ///<Centroid of SBProfile in X.
-        virtual double centroidY() const =0; ///<Centroid of SBProfile in Y.
+        virtual double centroidX() const =0; ///<Centroid of SBProfile in x.
+        virtual double centroidY() const =0; ///<Centroid of SBProfile in y.
 
         /// Returns (X, Y) centroid of SBProfile.
         Position<double> centroid() const 
@@ -125,19 +125,19 @@ namespace galsim {
 
         /// Shear distortion transformation (affine without rotation or dilation).
         //
-        /// \param e1 Input: first component of ellipticity
-        /// \param e2 Input: second component of ellipticity
+        /// \param e1 Input: first component of ellipticity.
+        /// \param e2 Input: second component of ellipticity.
         virtual SBProfile* shear(double e1, double e2) const { return distort(Ellipse(e1,e2)); }
         
-        /// Rotation distortion transformation
+        /// Rotation distortion transformation.
         //
-        /// \param theta Input: rotation, in radians, anticlockwise
+        /// \param theta Input: rotation, in radians, anticlockwise.
         virtual SBProfile* rotate(const double theta) const;
 
-        /// Translation distortion transformation
+        /// Translation distortion transformation.
         //
-        /// \param dx Input: shift in X
-        /// \param dy Input: shift in Y
+        /// \param dx Input: shift in x.
+        /// \param dy Input: shift in y.
         virtual SBProfile* shift(double dx, double dy) const;
 
 #ifdef USE_IMAGES
@@ -264,9 +264,9 @@ namespace galsim {
 
 #endif
 
-        /// Utility for drawing a K grid into FFT data structures - not intended for public use, but need to be public so that derived classes can call them.
+        /// Utility for drawing a k grid into FFT data structures - not intended for public use, but need to be public so that derived classes can call them.
         virtual void fillKGrid(KTable& kt) const;
-        /// Utility for drawing an X grid into FFT data structures - not intended for public use, but need to be public so that derived classes can call them.
+        /// Utility for drawing an x grid into FFT data structures - not intended for public use, but need to be public so that derived classes can call them.
         virtual void fillXGrid(XTable& xt) const;
 
     };
@@ -495,8 +495,8 @@ namespace galsim {
     private:
         std::list<SBProfile*> plist;  ///< The plist content is a copy_ptr (cf. smart ptrs) listing SBProfiles.
         double fluxScale; ///< Flux scaling.
-        double x0; ///< Centroid position in X.
-        double y0; ///< Centroid position in Y.
+        double x0; ///< Centroid position in x.
+        double y0; ///< Centroid position in y.
         bool isStillAxisymmetric; ///< Is output SBProfile shape still circular?
         double minMaxK; ///< Minimum maxK() of the convolved SBProfiles.
         double minStepK; ///< Minimum stepK() of the convolved SBProfiles.
@@ -618,8 +618,8 @@ namespace galsim {
     public:
         /// Constructor
         //
-        /// \param flux_ Input: Flux of the Surface Brightness Profile
-        /// \param sigma_ Input: Characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`
+        /// \param flux_ Input: flux of the Surface Brightness Profile
+        /// \param sigma_ Input: characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`
         SBGaussian(double flux_=1., double sigma_=1.) : flux(flux_), sigma(sigma_) {}
 
         /// Destructor
@@ -714,8 +714,8 @@ namespace galsim {
         /// Constructor.
         //
         /// \param n_ Input: Sersic index.
-        /// \param flux_ Input: Flux (default `flux_ = 1.`).
-        /// \param re_ Input: Half-light radius.
+        /// \param flux_ Input: flux (default `flux_ = 1.`).
+        /// \param re_ Input: half-light radius.
         SBSersic(double n_, double flux_=1., double re_=1.) :
             n(n_), flux(flux_), re(re_), info(nmap.get(n)) {}
 
@@ -770,7 +770,7 @@ namespace galsim {
     public:
         /// Constructor - note that `r0` is scale length, NOT half-light radius `re` as in SBSersic.
         //
-        /// \param flux_ Input: Flux.
+        /// \param flux_ Input: flux.
         /// \param r0_ Input: scale length for the profile that scales as `exp[-(r / r0)]`, NOT the half-light radius `re` as in SBSersic.
         SBExponential(double flux_=1., double r0_=1.) : r0(r0_), flux(flux_) {}
 
@@ -814,8 +814,8 @@ namespace galsim {
         /// Constructor.
         //
         /// \param D_ Input: D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, else `D` = (telescope diam) / lambda if arg is in radians of field angle.
-        /// \param obs_ Input: Radius ratio of central obscuration.
-        /// \param flux_ Input: Flux.
+        /// \param obs_ Input: radius ratio of central obscuration.
+        /// \param flux_ Input: flux.
         SBAiry(double D_=1., double obs_=0., double flux_=1.) :
             D(D_), obscuration(obs_), flux(flux_) {}
 
@@ -859,23 +859,32 @@ namespace galsim {
         double annuli_autocorrelation(const double k) const; ///< Beam pattern of annular aperture, in k space, which is just the autocorrelation of two annuli.  Normalized to unity at `k=0` for now.
     };
 
+    /// Surface Brightness profile for the Boxcar function.
+    //
+    /// Convolution with a Boxcar function of dimensions `xw` x `yw` and sampling at pixel centres
+    /// is equivalent to pixelation (i.e. Surface Brightness integration) across rectangular pixels
+    /// of the same dimensions.  This class is therefore useful for pixelating SBProfiles. 
     class SBBox : public SBProfile 
     {
     private:
-        double xw;  // box is xw x yw across.
-        double yw;
-        double flux;
-        double sinc(const double u) const;
+        double xw;  ///< Boxcar function is `xw` x `yw` across.
+        double yw;  ///< Boxcar function is `xw` x `yw` across.
+        double flux; ///< Flux.
+        double sinc(const double u) const; ///< Sinc function used to describe Boxcar in k space. \param u Input: Normalized wavenumber.
     public:
-        // Constructor
+        /// Constructor.
+        //
+        /// \param xw_ Input: width of Boxcar function along x.
+        /// \param yw_ Input: width of Boxcar function along y.
+        /// \param flux_ Input: flux (default `flux_ = 1.`).
         SBBox(double xw_=1., double yw_=0., double flux_=1.) :
             xw(xw_), yw(yw_), flux(flux_) 
         { if (yw==0.) yw=xw; }
 
-        // Destructor
+        /// Destructor.
         ~SBBox() {}
 
-        // Methods
+        // Methods (Barney: public methods Doxified via SBProfile).
         double xValue(Position<double> _p) const;
         std::complex<double> kValue(Position<double> _p) const;
 
@@ -904,21 +913,25 @@ namespace galsim {
     };
 
 #ifdef USE_LAGUERRE
+    /// Class for describing Gauss-Laguerre polynomial Surface Brightness profiles.
     class SBLaguerre : public SBProfile 
     {
     private:
-        LVector bvec;  // bvec[n,n] contains flux information
-        double sigma;
+        LVector bvec;  ///< `bvec[n,n]` contains flux information for the `(n, n)` basis function.
+        double sigma;  ///< Scale size of Gauss-Laguerre basis set.
     public:
-        // Constructor 
+        /// Constructor.
+        //
+        /// \param bvec_ Input: `bvec[n,n]` contains flux information for the `(n, n)` basis function.
+        /// \param sigma_ Input: scale size of Gauss-Laguerre basis set (default `sigma_ = 1.` pixel).
         SBLaguerre(LVector bvec_=LVector(), double sigma_=1.) : 
             bvec(bvec_.duplicate()), sigma(sigma_) {}
 
-        // Copy Constructor 
+        /// Copy Constructor. 
         SBLaguerre(const SBLaguerre& rhs) :
             bvec(rhs.bvec.duplicate()), sigma(rhs.sigma) {}
 
-        // Destructor 
+        /// Destructor. 
         ~SBLaguerre() {}
 
         // implementation dependent methods
