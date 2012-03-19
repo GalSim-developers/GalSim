@@ -149,34 +149,30 @@ namespace galsim {
         virtual Image<float> draw(double dx=0., int wmult=1) const;
 
         // This version returns the summed flux of image:
-        virtual double draw(Image<float> img, double dx=0., int wmult=1) const; 
+        virtual double draw(Image<float> & image, double dx=0., int wmult=1) const; 
 
         // Methods below force either real or Fourier methods:
-        virtual double plainDraw(
-            Image<float> img = Image<float>(), double dx=0., int wmult=1) const; 
-        virtual double fourierDraw(
-            Image<float> img = Image<float>(), double dx=0., int wmult=1) const; 
+        virtual double plainDraw(Image<float> & image, double dx=0., int wmult=1) const; 
+        virtual double fourierDraw(Image<float> & image, double dx=0., int wmult=1) const; 
 
         // For drawing in k space: routines are analagous to real space, except 2 images are needed.
         // wmult > 1 will expand the size drawn in k space. 
 
         // Choose drawing method automatically:
-        virtual void drawK(
-            Image<float> Re= Image<float>(), Image<float> Im= Image<float>(),
-            double dk=0., int wmult=1) const; 
+        virtual void drawK(Image<float> & re, Image<float> & im, double dk=0., int wmult=1) const; 
 
         // evaluate in k space:
         virtual void plainDrawK(
-            Image<float> Re= Image<float>(), Image<float> Im= Image<float>(), 
+            Image<float> & re, Image<float> & im, 
             double dk=0., int wmult=1) const; 
 
         // FT from x space
         virtual void fourierDrawK(
-            Image<float> Re= Image<float>(), Image<float> Im= Image<float>(),
+            Image<float> & re, Image<float> & im,
             double dk=0., int wmult=1) const; 
 
         // Utilities for drawing into Img data structures:
-        virtual double fillXImage(Image<float> I, double dx) const;  // return flux integral
+        virtual double fillXImage(Image<float> & image, double dx) const;  // return flux integral
 
 #endif
 

@@ -34,7 +34,7 @@ namespace galsim {
     }
 
 #ifdef USE_IMAGES
-    SBPixel::SBPixel(Image<float> img, const Interpolant2d& i, double dx_, double padFactor) : 
+    SBPixel::SBPixel(Image<float> const & img, const Interpolant2d& i, double dx_, double padFactor) : 
         dx(dx_), Nimages(1),
         xInterp(&i), kInterp(&defaultKInterpolant2d),
         wts(Nimages, 1.), fluxes(Nimages, 1.), 
@@ -261,7 +261,7 @@ namespace galsim {
 #ifdef USE_IMAGES
     // One more time: for images now
     // Returns total flux
-    double SBPixel::fillXImage(Image<float> I, double dx) const 
+    double SBPixel::fillXImage(Image<float> & I, double dx) const 
     {
 #ifdef DANIELS_TRACING
         cout << "SBPixel::fillXImage called" << endl;

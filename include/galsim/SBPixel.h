@@ -18,7 +18,7 @@ namespace galsim {
         SBPixel(int Npix, double dx_, const Interpolant2d& i, int Nimages_=1);
 
 #ifdef USE_IMAGES
-        SBPixel(Image<float> img, const Interpolant2d& i, double dx_=0., double padFactor=0.);
+        SBPixel(Image<float> const & img, const Interpolant2d& i, double dx_=0., double padFactor=0.);
 #endif
 
         SBPixel(const SBPixel& rhs);
@@ -84,7 +84,7 @@ namespace galsim {
         virtual void fillXGrid(XTable& xt) const;
 
 #ifdef USE_IMAGES
-        virtual double fillXImage(Image<float> I, double dx) const;
+        virtual double fillXImage(Image<float> & I, double dx) const;
 #endif
 
     private:

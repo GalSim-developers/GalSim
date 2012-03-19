@@ -45,7 +45,7 @@ namespace galsim {
         return img;
     }
 
-    double SBProfile::draw(Image<float> img, double dx, int wmult) const 
+    double SBProfile::draw(Image<float> & img, double dx, int wmult) const 
     {
         if (isAnalyticX())
             return plainDraw(img, dx, wmult);
@@ -54,7 +54,7 @@ namespace galsim {
     }
 
     // First is a simple case wherein we have a formula for x values:
-    double SBProfile::plainDraw(Image<float> I, double dx, int wmult) const 
+    double SBProfile::plainDraw(Image<float> & I, double dx, int wmult) const 
     {
         // Determine desired dx:
         if (dx<=0.) dx = M_PI / maxK();
@@ -77,7 +77,7 @@ namespace galsim {
         return fillXImage(I, dx);
     }
  
-    double SBProfile::fillXImage(Image<float> I, double dx) const 
+    double SBProfile::fillXImage(Image<float> & I, double dx) const 
     {
         double totalflux=0;
         for (int y = I.getYMin(); y <= I.getYMax(); y++) {
@@ -104,7 +104,7 @@ namespace galsim {
     // Aliasing will be handled by folding the k values before transforming
     // And enforce no image folding
     //**/ #define DEBUG
-    double SBProfile::fourierDraw(Image<float> I, double dx, int wmult) const 
+    double SBProfile::fourierDraw(Image<float> & I, double dx, int wmult) const 
     {
         Bounds<int> imgBounds; // Bounds for output image
         bool sizeIsFree = I.getBounds().isDefined();
@@ -208,7 +208,7 @@ namespace galsim {
     }
 
     void SBProfile::drawK(
-        Image<float> Re, Image<float> Im, double dk, int wmult) const 
+        Image<float> & Re, Image<float> & Im, double dk, int wmult) const 
     {
         if (isAnalyticK()) 
             plainDrawK(Re, Im, dk, wmult);   // calculate in k space
@@ -218,7 +218,7 @@ namespace galsim {
     }
 
     void SBProfile::plainDrawK(
-        Image<float> Re, Image<float> Im, double dk, int wmult) const 
+        Image<float> & Re, Image<float> & Im, double dk, int wmult) const 
     {
         // Make sure input images match or are both null
         assert(!(Re.getBounds().isDefined() || Im.getBounds().isDefined()) 
@@ -270,7 +270,7 @@ namespace galsim {
     // power of 2 for transform
 
     void SBProfile::fourierDrawK(
-        Image<float> Re, Image<float> Im, double dk, int wmult) const 
+        Image<float> & Re, Image<float> & Im, double dk, int wmult) const 
     {
         assert(!(Re.getBounds().isDefined() || Im.getBounds().isDefined()) 
                || (Re.getBounds() == Im.getBounds()));
