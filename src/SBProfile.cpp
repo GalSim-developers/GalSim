@@ -107,7 +107,7 @@ namespace galsim {
     double SBProfile::fourierDraw(Image<float> & I, double dx, int wmult) const 
     {
         Bounds<int> imgBounds; // Bounds for output image
-        bool sizeIsFree = I.getBounds().isDefined();
+        bool sizeIsFree = !I.getBounds().isDefined();
         if (wmult<1) throw SBError("Requested wmult<1 in fourierDraw()");
         // First choose desired dx if we were not given one:
         if (dx<=0.) {
