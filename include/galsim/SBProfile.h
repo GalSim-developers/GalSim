@@ -851,12 +851,12 @@ namespace galsim {
         SBProfile* duplicate() const { return new SBAiry(*this); }
 
     private: 
-        double chord(const double r, const double h) const; ///< Circle chord length at distance h < r.
+        double chord(const double r, const double h) const; ///< Circle chord length at `h < r`.
         double circle_intersection(
-				   double r, double s, double t) const; ///< Area inside intersection of 2 circles radii r & s, seperated by t.
+				   double r, double s, double t) const; ///< Area inside intersection of 2 circles radii `r` & `s`, seperated by `t`.
         double annuli_intersect(
 				double r1, double r2, double t) const; ///< Area of two intersecting identical annuli.
-        double annuli_autocorrelation(const double k) const; ///< Beam pattern of annular aperture, in k space, which is just the autocorrelation of two annuli.  Normalized to unity at k=0 for now.
+        double annuli_autocorrelation(const double k) const; ///< Beam pattern of annular aperture, in k space, which is just the autocorrelation of two annuli.  Normalized to unity at `k=0` for now.
     };
 
     class SBBox : public SBProfile 
