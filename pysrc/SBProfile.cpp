@@ -1,6 +1,7 @@
 #include "boost/python.hpp"
 #include "boost/python/stl_iterator.hpp"
 #include "SBProfile.h"
+#include "SBDeconvolve.h"
 #include "SBParse.h"
 
 namespace bp = boost::python;
@@ -116,7 +117,7 @@ struct PySBAdd {
             "so they cannot be changed after adding them."
             ;
             
-        bp::class_<SBAdd,bp::bases<SBProfile>,boost::noncopyable>("SBAdd", doc, bp::init<>())
+        bp::class_< SBAdd, bp::bases<SBProfile> >("SBAdd", doc, bp::init<>())
             // bp tries the overloads in reverse order, so we wrap the most general one first
             // to ensure we try it last
             .def("__init__", bp::make_constructor(&construct, bp::default_call_policies(),
@@ -140,7 +141,7 @@ struct PySBDistort {
             "Flux is NOT conserved in transformation - SB is preserved."
             ;
             
-        bp::class_<SBDistort,bp::bases<SBProfile>,boost::noncopyable>("SBDistort", doc, bp::no_init)
+        bp::class_< SBDistort, bp::bases<SBProfile> >("SBDistort", doc, bp::no_init)
             .def(bp::init<const SBProfile &, double, double, double, double, Position<double> >(
                      (bp::args("sbin", "mA", "mB", "mC", "mD"),
                       bp::arg("x0")=Position<double>(0.,0.))
@@ -164,7 +165,7 @@ struct PySBConvolve {
     }
 
     static void wrap() {
-        bp::class_<SBConvolve,bp::bases<SBProfile>,boost::noncopyable>("SBConvolve", bp::init<>())
+        bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::init<>())
             // bp tries the overloads in reverse order, so we wrap the most general one first
             // to ensure we try it last
             .def("__init__", 
@@ -182,6 +183,17 @@ struct PySBConvolve {
                  ))
             .def(bp::init<const SBConvolve &>())
             .def("add", &SBConvolve::add)
+            ;
+    }
+
+};
+
+struct PySBDeconvolve {
+
+    static void wrap() {
+        bp::class_< SBDeconvolve, bp::bases<SBProfile> >("SBDeconvolve", bp::no_init)
+            .def(bp::init<const SBProfile &>(bp::args("adaptee")))
+            .def(bp::init<const SBDeconvolve &>())
             ;
     }
 
@@ -264,6 +276,7 @@ void pyExportSBProfile() {
     PySBAdd::wrap();
     PySBDistort::wrap();
     PySBConvolve::wrap();
+    PySBDeconvolve::wrap();
     PySBGaussian::wrap();
     PySBSersic::wrap();
     PySBExponential::wrap();
