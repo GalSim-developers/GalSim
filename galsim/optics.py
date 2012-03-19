@@ -147,11 +147,11 @@ def psf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     
     """
     if secondary == None:  # TODO: Build a secondary mirror obstruction function!
-	wf = wavefront(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
+        wf = wavefront(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
                        coma1=coma1, coma2=coma2, spher=spher, kmax=kmax,
                        circular_pupil=circular_pupil)
     else:
-	raise NotImplementedError('Secondary mirror obstruction not yet implemented')
+        raise NotImplementedError('Secondary mirror obstruction not yet implemented')
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
     im = roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
@@ -179,11 +179,11 @@ def otf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     \param secondary [Boolean] Optional: central obstruction due to secondary mirror?   
     """
     if secondary == None:  # TODO: Build a secondary mirror obstruction function!
-	wf = wavefront(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
+        wf = wavefront(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
                        coma1=coma1, coma2=coma2, spher=spher, kmax=kmax,
                        circular_pupil=circular_pupil)
     else:
-	raise NotImplementedError('Secondary mirror obstruction not yet implemented')
+        raise NotImplementedError('Secondary mirror obstruction not yet implemented')
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     otf = np.fft.ifft2((ftwf * ftwf.conj()).real)
     # Make C contiguous and unit flux before returning
