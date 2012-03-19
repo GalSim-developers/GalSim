@@ -1,3 +1,6 @@
+// This file is deprecated in favor of Shera.py, which does the same thing in Python
+// (and actually works; C++ FITS output has been removed, so this program does not
+// compile and is ignored by scons).
 
 // Mimic what Rachel has done in SHERA code and compare to her results.
 #include <iostream>
