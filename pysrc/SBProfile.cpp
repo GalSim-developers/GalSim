@@ -116,7 +116,7 @@ struct PySBAdd {
             "so they cannot be changed after adding them."
             ;
             
-        bp::class_<SBAdd>("SBAdd", doc, bp::init<>())
+        bp::class_<SBAdd,bp::bases<SBProfile>,boost::noncopyable>("SBAdd", doc, bp::init<>())
             // bp tries the overloads in reverse order, so we wrap the most general one first
             // to ensure we try it last
             .def("__init__", bp::make_constructor(&construct, bp::default_call_policies(),
@@ -140,7 +140,7 @@ struct PySBDistort {
             "Flux is NOT conserved in transformation - SB is preserved."
             ;
             
-        bp::class_<SBDistort>("SBDistort", doc, bp::no_init)
+        bp::class_<SBDistort,bp::bases<SBProfile>,boost::noncopyable>("SBDistort", doc, bp::no_init)
             .def(bp::init<const SBProfile &, double, double, double, double, Position<double> >(
                      (bp::args("sbin", "mA", "mB", "mC", "mD"),
                       bp::arg("x0")=Position<double>(0.,0.))
@@ -164,7 +164,7 @@ struct PySBConvolve {
     }
 
     static void wrap() {
-        bp::class_<SBConvolve>("SBConvolve", bp::init<>())
+        bp::class_<SBConvolve,bp::bases<SBProfile>,boost::noncopyable>("SBConvolve", bp::init<>())
             // bp tries the overloads in reverse order, so we wrap the most general one first
             // to ensure we try it last
             .def("__init__", 
@@ -189,7 +189,7 @@ struct PySBConvolve {
 
 struct PySBGaussian {
     static void wrap() {
-        bp::class_<SBGaussian>(
+        bp::class_<SBGaussian,bp::bases<SBProfile>,boost::noncopyable>(
             "SBGaussian",
             bp::init<double,double>((bp::arg("flux")=1., bp::arg("sigma")=1.))
         );
@@ -198,7 +198,7 @@ struct PySBGaussian {
 
 struct PySBSersic {
     static void wrap() {
-        bp::class_<SBSersic>(
+        bp::class_<SBSersic,bp::bases<SBProfile>,boost::noncopyable>(
             "SBSersic",
             bp::init<double,double,double>((bp::arg("n"), bp::arg("flux")=1., bp::arg("re")=1.))
         );
@@ -207,7 +207,7 @@ struct PySBSersic {
 
 struct PySBExponential {
     static void wrap() {
-        bp::class_<SBExponential>(
+        bp::class_<SBExponential,bp::bases<SBProfile>,boost::noncopyable>(
             "SBExponential",
             bp::init<double,double>((bp::arg("flux")=1., bp::arg("r0")=1.))
         );
@@ -216,7 +216,7 @@ struct PySBExponential {
 
 struct PySBAiry {
     static void wrap() {
-        bp::class_<SBAiry>(
+        bp::class_<SBAiry,bp::bases<SBProfile>,boost::noncopyable>(
             "SBAiry",
             bp::init<double,double,double>(
                 (bp::arg("D")=1., bp::arg("obs")=1., bp::arg("flux")=1.)
@@ -227,7 +227,7 @@ struct PySBAiry {
 
 struct PySBBox {
     static void wrap() {
-        bp::class_<SBBox>(
+        bp::class_<SBBox,bp::bases<SBProfile>,boost::noncopyable>(
             "SBBox",
             bp::init<double,double,double>(
                 (bp::arg("xw")=1., bp::arg("yw")=0., bp::arg("flux")=1.)
@@ -238,7 +238,7 @@ struct PySBBox {
 
 struct PySBMoffat {
     static void wrap() {
-        bp::class_<SBMoffat>(
+        bp::class_<SBMoffat,bp::bases<SBProfile>,boost::noncopyable>(
             "SBMoffat",
             bp::init<double,double,double,double>(
                 (bp::arg("beta"), bp::arg("truncationFWHM")=2.,
@@ -250,7 +250,7 @@ struct PySBMoffat {
 
 struct PySBDeVaucouleurs {
     static void wrap() {
-        bp::class_<SBDeVaucouleurs>(
+        bp::class_<SBDeVaucouleurs,bp::bases<SBProfile>,boost::noncopyable>(
             "SBDeVaucouleurs",
             bp::init<double,double>((bp::arg("flux")=1., bp::arg("r0")=1.))
         );
