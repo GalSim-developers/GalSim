@@ -109,11 +109,11 @@ def test_check_all_contiguous():
     assert ky.flags.c_contiguous
     # Check basic outputs from wavefront, psf and mtf (array contents won't matter, so we'll use
     # a pure circular pupil)
-    assert galsim.optics.wavefront(shape=testshape).flags.c_contiguous
-    assert galsim.optics.psf(shape=testshape).flags.c_contiguous
-    assert galsim.optics.otf(shape=testshape).flags.c_contiguous
-    assert galsim.optics.mtf(shape=testshape).flags.c_contiguous
-    assert galsim.optics.ptf(shape=testshape).flags.c_contiguous
+    assert galsim.optics.wavefront(array_shape=testshape).flags.c_contiguous
+    assert galsim.optics.psf(array_shape=testshape).flags.c_contiguous
+    assert galsim.optics.otf(array_shape=testshape).flags.c_contiguous
+    assert galsim.optics.mtf(array_shape=testshape).flags.c_contiguous
+    assert galsim.optics.ptf(array_shape=testshape).flags.c_contiguous
 
 def test_simple_wavefront():
     """Test the MTF of a pure circular pupil against the known result.
@@ -126,7 +126,7 @@ def test_simple_wavefront():
     wf_true = np.zeros(kmag.shape)
     wf_true[in_pupil] = 1.
     # Compare
-    wf = galsim.optics.wavefront(shape=testshape, kmax=kmax_test)
+    wf = galsim.optics.wavefront(array_shape=testshape, kmax=kmax_test)
     np.testing.assert_array_almost_equal(wf, wf_true, decimal=decimal)
 
 def test_simple_mtf():
@@ -141,7 +141,7 @@ def test_simple_mtf():
     mtf_true[in_pupil] = (np.arccos(kmag[in_pupil]) - kmag[in_pupil] *
                           np.sqrt(1. - kmag[in_pupil]**2)) * 2. / np.pi
     # Compare
-    mtf = galsim.optics.mtf(shape=testshape, kmax=kmax_test)
+    mtf = galsim.optics.mtf(array_shape=testshape, kmax=kmax_test)
     np.testing.assert_array_almost_equal(mtf, mtf_true, decimal=decimal_dft)
 
 def test_simple_ptf():
@@ -149,7 +149,7 @@ def test_simple_ptf():
     """
     ptf_true = np.zeros(testshape)
     # Compare
-    ptf = galsim.optics.ptf(shape=testshape)
+    ptf = galsim.optics.ptf(array_shape=testshape)
     # Test via median absolute deviation, since occasionally things around the edge of the OTF get
     # hairy when dividing a small number by another small number
     nmad_ptfdiff = np.median(np.abs(ptf - np.median(ptf_true)))
@@ -160,8 +160,8 @@ def test_consistency_psf_mtf():
     """
     kx, ky = galsim.optics.kxky(testshape)
     kmax_test = 0.75 * np.pi # Choose some kmax for the test
-    psf = galsim.optics.psf(shape=testshape, kmax=kmax_test)
+    psf = galsim.optics.psf(array_shape=testshape, kmax=kmax_test)
     mtf_test = np.abs(np.fft.fft2(psf))
     # Compare
-    mtf = galsim.optics.mtf(shape=testshape, kmax=kmax_test)
+    mtf = galsim.optics.mtf(array_shape=testshape, kmax=kmax_test)
     np.testing.assert_array_almost_equal(mtf, mtf_test, decimal=decimal_dft)

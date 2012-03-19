@@ -56,17 +56,17 @@ def kxky(array_shape=(256, 256)):
 
     \param array_shape [2 element tuple] Optional: the Numpy array shape desired for `kx, ky`. 
     """
-    k_xaxis = np.fft.fftfreq(shape[1]) * 2. * np.pi
-    k_yaxis = np.fft.fftfreq(shape[0]) * 2. * np.pi
+    k_xaxis = np.fft.fftfreq(array_shape[1]) * 2. * np.pi
+    k_yaxis = np.fft.fftfreq(array_shape[0]) * 2. * np.pi
     return np.meshgrid(k_xaxis, k_yaxis)
 
 def wavefront(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
               spher=0., kmax=np.pi, circular_pupil=True):
     """Return a complex, aberrated wavefront across a circular pupil (default) or square array extent.
     
-    Outputs a complex image (shape=shape) of a circular pupil wavefront that will produce a PSF
-    with bandlimit kmax.  We adopt the conventions of SBProfile so that the Nyquist frequency of
-    an image with unit integer pixel spacing is pi.
+    Outputs a complex image (shape=array_shape) of a circular pupil wavefront that will
+    produce a PSF with bandlimit kmax.  We adopt the conventions of SBProfile so that the Nyquist
+    frequency of an image with unit integer pixel spacing is pi.
 
     The default output is a circular pupil of radius pi/2 in k-space (`= kmax / 2`), i.e. one
     which fills to a diameter of half the array dimension.  The OTF thus has maximum radius pi in
@@ -92,12 +92,12 @@ def wavefront(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0.
     \param kmax [float] Optional: bandlimit of output PSF scaled so that the Nyquist frequency of an image with unit integer pixel spacing is pi.
     \param circular_pupil [Boolean] Optional: Adopt a circular pupil?
     
-    Outputs the wavefront for kx, ky locations corresponding to kxky(shape), in a C-contiguous
+    Outputs the wavefront for kx, ky locations corresponding to kxky(array_shape), in a C-contiguous
     array ordering.
     """
     pi = np.pi # minor but saves Python checking the entire np. namespace every time I need pi
     # Build kx, ky coords
-    kx, ky = kxky(shape)
+    kx, ky = kxky(array_shape)
     # Then define unit disc rho and theta pupil coords for Zernike polynomials
     rho = np.sqrt((kx**2 + ky**2) / (.5 * kmax)**2)
     theta = np.arctan2(ky, kx)
@@ -107,7 +107,7 @@ def wavefront(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0.
     else:
         in_pupil = (np.abs(kx) <= .5 * kmax) * (np.abs(ky) <= .5 * kmax)
     # Then make wavefront image
-    wf = np.zeros(shape, dtype=complex)
+    wf = np.zeros(array_shape, dtype=complex)
     wf[in_pupil] = 1.
     # Defocus
     wf[in_pupil] *= np.exp(2j * pi * defocus * (2. * rho[in_pupil]**2 - 1.))
@@ -129,8 +129,8 @@ def psf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
         kmax=np.pi, circular_pupil=True, secondary=None):
     """Return an image of a circular (default) or square pupil PSF with specified low-order wavefront aberrations.
 
-    Image has unit total flux, and is centred on the image[shape[0] / 2, shape[1] / 2] pixel,
-    by default.  Function is bandlimited at kmax (default = pi; Nyquist frequency).
+    Image has unit total flux, and is centred on the image[array_shape[0] / 2, array_shape[1] / 2]
+    pixel, by default.  Function is bandlimited at kmax (default = pi; Nyquist frequency).
 
     Ouput numpy array is C-contiguous.
 
@@ -147,13 +147,14 @@ def psf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     
     """
     if secondary == None:  # TODO: Build a secondary mirror obstruction function!
-	wf = wavefront(shape=shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
-		       coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil)
+	wf = wavefront(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
+                       coma1=coma1, coma2=coma2, spher=spher, kmax=kmax,
+                       circular_pupil=circular_pupil)
     else:
 	raise NotImplementedError('Secondary mirror obstruction not yet implemented')
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
-    im = roll2d((ftwf * ftwf.conj()).real, (shape[0] / 2, shape[1] / 2)) 
+    im = roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
     return im / im.sum()
 
 def otf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
@@ -161,7 +162,7 @@ def otf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     """Return the complex OTF of a circular (default) or square pupil with specified low-order wavefront aberrations.
 
     OTF has otf[0, 0] = 1+0j by default, and array element ordering follows the DFT standard of
-    kxky(shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
+    kxky(array_shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
 
     Output complex numpy array is C-contiguous, but real and imaginary parts from otf.real or
     otf.imag will not be.
@@ -178,8 +179,9 @@ def otf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     \param secondary [Boolean] Optional: central obstruction due to secondary mirror?   
     """
     if secondary == None:  # TODO: Build a secondary mirror obstruction function!
-	wf = wavefront(shape=shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
-		       coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil)
+	wf = wavefront(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
+                       coma1=coma1, coma2=coma2, spher=spher, kmax=kmax,
+                       circular_pupil=circular_pupil)
     else:
 	raise NotImplementedError('Secondary mirror obstruction not yet implemented')
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
@@ -193,7 +195,7 @@ def mtf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     wavefront aberrations.
 
     MTF has mtf[0, 0] = 1 by default, and array element ordering follows the DFT standard of
-    kxky(shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
+    kxky(array_shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
 
     Output float numpy array is C-contiguous.
 
@@ -208,8 +210,9 @@ def mtf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     \param circular_pupil [Boolean] Optional: adopt a circular pupil?
     \param secondary [Boolean] Optional: central obstruction due to secondary mirror?  
     """
-    return np.abs(otf(shape=shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
-		      coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil))
+    return np.abs(otf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
+                      coma1=coma1, coma2=coma2, spher=spher, kmax=kmax,
+                      circular_pupil=circular_pupil))
 
 def ptf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, secondary=None):
@@ -217,7 +220,7 @@ def ptf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     low-order wavefront aberrations.
 
     PTF has ptf[0, 0] = 0 by default, and array element ordering follows the DFT standard of
-    kxky(shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
+    kxky(array_shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
 
     Output float numpy array is C-contiguous.
 
@@ -232,12 +235,12 @@ def ptf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     \param circular_pupil [Boolean] Optional: adopt a circular pupil?
     \param secondary [Boolean] Optional: central obstruction due to secondary mirror? 
     """
-    kx, ky = kxky(shape)
+    kx, ky = kxky(array_shape)
     k2 = (kx**2 + ky**2)
-    ptf = np.zeros(shape)
+    ptf = np.zeros(array_shape)
     # Try to handle where both real and imag tend to zero...
-    ptf[k2 < kmax**2] = np.angle(otf(shape=shape, defocus=defocus, astig1=astig1, astig2=astig2,
-                                 coma1=coma1, coma2=coma2, spher=spher, kmax=kmax,
-                                 circular_pupil=circular_pupil)[k2 < kmax**2])
+    ptf[k2 < kmax**2] = np.angle(otf(array_shape=array_shape, defocus=defocus, astig1=astig1,
+                                     astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
+                                     kmax=kmax, circular_pupil=circular_pupil)[k2 < kmax**2])
     return ptf
 
