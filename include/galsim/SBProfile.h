@@ -798,23 +798,32 @@ namespace galsim {
         SBProfile* duplicate() const { return new SBExponential(*this); }
     };
 
+    /// Surface Brightness profile for the Airy disk (perfect diffraction-limited PSF for a circular aperture), with central obscuration.
+    //
+    /// maxK() is set at the hard limit for Airy disks, stepK() makes transforms go to at least 
+    /// 5 lam/D or EE>(1-ALIAS_THRESHOLD).  Schroeder (10.1.18) gives limit of EE at large radius.
+    /// This stepK could probably be relaxed, it makes overly accurate FFTs.
     class SBAiry : public SBProfile 
     {
     private:
-        double D;    // D = (telescope diam) / (lambda * focal length) if arg is focal plane
-        // position, else D = diam / lambda if arg is in radians of field angle.
-        double obscuration; // radius ratio of central obscuration
-        double flux;
+        double D;    ///< `D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, else `D` = (telescope diam) / lambda if arg is in radians of field angle.
+        double obscuration; ///< Radius ratio of central obscuration.
+        double flux; ///< Flux.
 
     public:
-        // Constructor
+        /// Constructor.
+        //
+        /// \param D_ Input: D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, else `D` = (telescope diam) / lambda if arg is in radians of field angle.
+        /// \param obs_ Input: Radius ratio of central obscuration.
+        /// \param flux_ Input: Flux.
         SBAiry(double D_=1., double obs_=0., double flux_=1.) :
             D(D_), obscuration(obs_), flux(flux_) {}
 
-        // Destructor
+        /// Destructor.
         ~SBAiry() {}
 
-        // Methods
+        // Methods (Barney: mostly described by SBProfile Doxys, with maxK() and stepK() 
+        // prescription described in class description).
         double xValue(Position<double> _p) const;
         std::complex<double> kValue(Position<double> _p) const;
 
@@ -822,7 +831,7 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        double maxK() const { return 2*M_PI*D; } // hard limit for Airy
+        double maxK() const { return 2*M_PI*D; } ///< Set at hard limit for Airy disk.
 
         // stepK makes transforms go to at least 5 lam/D or EE>(1-ALIAS_THRESHOLD).
         // Schroeder (10.1.18) gives limit of EE at large radius.
@@ -842,12 +851,12 @@ namespace galsim {
         SBProfile* duplicate() const { return new SBAiry(*this); }
 
     private: 
-        double chord(const double r, const double h) const;
+        double chord(const double r, const double h) const; ///< Circle chord length at distance h < r.
         double circle_intersection(
-            double r, double s, double t) const;
+				   double r, double s, double t) const; ///< Area inside intersection of 2 circles radii r & s, seperated by t.
         double annuli_intersect(
-            double r1, double r2, double t) const;
-        double annuli_autocorrelation(const double k) const;
+				double r1, double r2, double t) const; ///< Area of two intersecting identical annuli.
+        double annuli_autocorrelation(const double k) const; ///< Beam pattern of annular aperture, in k space, which is just the autocorrelation of two annuli.  Normalized to unity at k=0 for now.
     };
 
     class SBBox : public SBProfile 
