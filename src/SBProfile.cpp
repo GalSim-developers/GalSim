@@ -58,7 +58,7 @@ namespace galsim {
     {
         // Determine desired dx:
         if (dx<=0.) dx = M_PI / maxK();
-        if (!I.getBounds()) {
+        if (!I.getBounds().isDefined()) {
             if (wmult<1) throw SBError("Requested wmult<1 in plainDraw()");
             // Need to choose an image size
             int N = static_cast<int> (ceil(2*M_PI/(dx*stepK())));
@@ -70,20 +70,20 @@ namespace galsim {
             I.resize(imgsize);
         } else {
             // recenter an existing image, to be consistent with fourierDraw:
-            int xSize = I.XMax()-I.XMin()+1, ySize = I.YMax()-I.YMin()+1;
-            I.shift(-xSize/2, -ySize/2);
+            int xSize = I.getXMax()-I.getXMin()+1, ySize = I.getYMax()-I.getYMin()+1;
+            I.move(-xSize/2, -ySize/2);
         }
 
         return fillXImage(I, dx);
     }
-
+ 
     double SBProfile::fillXImage(Image<float> I, double dx) const 
     {
         double totalflux=0;
-        for (int y = I.YMin(); y <= I.YMax(); y++) {
-            int x = I.XMin(); 
-            Image<float>::iter ee=I.rowEnd(y);
-            for (Image<float>::iter it=I.rowBegin(y);
+        for (int y = I.getYMin(); y <= I.getYMax(); y++) {
+            int x = I.getXMin(); 
+            Image<float>::Iter ee=I.rowEnd(y);
+            for (Image<float>::Iter it=I.rowBegin(y);
                  it!=ee;
                  ++it, ++x) {
                 Position<double> p(x*dx,y*dx); // since x,y are pixel indices
@@ -95,11 +95,7 @@ namespace galsim {
                 totalflux += *it;
             } 
         }
-        // add image header to include "dx" info
-        try {
-            I.header()->erase("DK");
-        } catch (ImageHeaderError& i) {}
-        I.header()->replace("DX", dx);
+        I.setScale(dx);
         return totalflux * (dx*dx);
     }
 
@@ -111,7 +107,7 @@ namespace galsim {
     double SBProfile::fourierDraw(Image<float> I, double dx, int wmult) const 
     {
         Bounds<int> imgBounds; // Bounds for output image
-        bool sizeIsFree = !I.getBounds();
+        bool sizeIsFree = I.getBounds().isDefined();
         if (wmult<1) throw SBError("Requested wmult<1 in fourierDraw()");
         // First choose desired dx if we were not given one:
         if (dx<=0.) {
@@ -134,8 +130,8 @@ namespace galsim {
         // the target image size:
         if (!sizeIsFree) {
             int xSize, ySize;
-            xSize = I.XMax()-I.XMin()+1;
-            ySize = I.YMax()-I.YMin()+1;
+            xSize = I.getXMax()-I.getXMin()+1;
+            ySize = I.getYMax()-I.getYMin()+1;
             if (xSize  > Nnofold) Nnofold = xSize;
             if (ySize  > Nnofold) Nnofold = ySize;
             xRange = Nnofold * dx;
@@ -158,11 +154,11 @@ namespace galsim {
             imgBounds = Bounds<int>(-Nimg/2, Nimg/2-1, -Nimg/2, Nimg/2-1);
             I.resize(imgBounds);
         } else {
-            // Going to shift the output image to be centered near zero
+            // Going to move the output image to be centered near zero
             int xSize, ySize;
-            xSize = I.XMax()-I.XMin()+1;
-            ySize = I.YMax()-I.YMin()+1;
-            I.shift(-xSize/2, -ySize/2);
+            xSize = I.getXMax()-I.getXMin()+1;
+            ySize = I.getYMax()-I.getYMin()+1;
+            I.move(-xSize/2, -ySize/2);
         }
         double dk = 2.*M_PI/(NFT*dx);
 #ifdef DEBUG
@@ -189,26 +185,23 @@ namespace galsim {
         }
         int Nxt = xtmp->getN();
         Bounds<int> xb(-Nxt/2, Nxt/2-1, -Nxt/2, Nxt/2-1);
-        if (I.YMin() < xb.getYMin()
-            || I.YMax() > xb.getYMax()
-            || I.XMin() < xb.getXMin()
-            || I.XMax() > xb.getXMax()) {
+        if (I.getYMin() < xb.getYMin()
+            || I.getYMax() > xb.getYMax()
+            || I.getXMin() < xb.getXMin()
+            || I.getXMax() > xb.getXMax()) {
             std::cerr << "Bounds error!! target image bounds " << I.getBounds()
                 << " and FFT range " << xb
                 << std::endl;
             throw SBError("fourierDraw() FT bounds do not cover target image");
         }
         double sum=0.;
-        for (int y = I.YMin(); y <= I.YMax(); y++)
-            for (int x = I.XMin(); x <= I.XMax(); x++) {
+        for (int y = I.getYMin(); y <= I.getYMax(); y++)
+            for (int x = I.getXMin(); x <= I.getXMax(); x++) {
                 I(x,y) = xtmp->xval(x,y);
                 sum += I(x,y);
             }
 
-        try { 
-            I.header()->erase("DK");
-        } catch (ImageHeaderError& i) {}
-        I.header()->replace("DX", dx);
+        I.setScale(dx);
 
         delete xtmp;  // no memory leak!
         return sum*dx*dx;;
@@ -228,10 +221,11 @@ namespace galsim {
         Image<float> Re, Image<float> Im, double dk, int wmult) const 
     {
         // Make sure input images match or are both null
-        assert(!(Re.getBounds() || Im.getBounds()) || (Re.getBounds() == Im.getBounds()));
+        assert(!(Re.getBounds().isDefined() || Im.getBounds().isDefined()) 
+               || (Re.getBounds() == Im.getBounds()));
         if (dk<=0.) dk = stepK();
 
-        if (!Re.getBounds()) {
+        if (!Re.getBounds().isDefined()) {
             if (wmult<1) throw SBError("Requested wmult<1 in plainDrawK()");
             // Need to choose an image size
             int N = static_cast<int> (ceil(2.*maxK()*wmult / dk));
@@ -243,17 +237,17 @@ namespace galsim {
             Im.resize(imgsize);
         } else {
             // recenter an existing image, to be consistent with fourierDrawK:
-            int xSize = Re.XMax()-Re.XMin()+1, ySize = Re.YMax()-Re.YMin()+1;
-            Re.shift(-xSize/2, -ySize/2);
-            Im.shift(-xSize/2, -ySize/2);
+            int xSize = Re.getXMax()-Re.getXMin()+1, ySize = Re.getYMax()-Re.getYMin()+1;
+            Re.move(-xSize/2, -ySize/2);
+            Im.move(-xSize/2, -ySize/2);
         }
 
         // ??? Make this into a virtual function to allow pipelining?
-        for (int y = Re.YMin(); y <= Re.YMax(); y++) {
-            int x = Re.XMin(); 
-            Image<float>::iter ee=Re.rowEnd(y);
-            Image<float>::iter it;
-            Image<float>::iter it2;
+        for (int y = Re.getYMin(); y <= Re.getYMax(); y++) {
+            int x = Re.getXMin(); 
+            Image<float>::Iter ee=Re.rowEnd(y);
+            Image<float>::Iter it;
+            Image<float>::Iter it2;
             for (it=Re.rowBegin(y), it2=Im.rowBegin(y);
                  it!=ee;
                  ++it, ++it2, ++x) {
@@ -264,16 +258,8 @@ namespace galsim {
             } 
         }
 
-        // add image header to include dk
-        try {
-            Re.header()->erase("DX"); 
-        } catch (ImageHeaderError& i) {}
-        Re.header()->replace("DK", dk);
-
-        try {
-            Im.header()->erase("DX");
-        } catch (ImageHeaderError& i) {}
-        Im.header()->replace("DK", dk);
+        Re.setScale(dk);
+        Im.setScale(dk);
 
         return;
     }
@@ -286,11 +272,12 @@ namespace galsim {
     void SBProfile::fourierDrawK(
         Image<float> Re, Image<float> Im, double dk, int wmult) const 
     {
-        assert(!(Re.getBounds() || Im.getBounds()) || (Re.getBounds() == Im.getBounds()));
+        assert(!(Re.getBounds().isDefined() || Im.getBounds().isDefined()) 
+               || (Re.getBounds() == Im.getBounds()));
 
         int oversamp =1; // oversampling factor
         Bounds<int> imgBounds; // Bounds for output image
-        bool sizeIsFree = !Re.getBounds();
+        bool sizeIsFree = !Re.getBounds().isDefined();
         if (wmult<1) throw SBError("Requested wmult<1 in fourierDrawK()");
         bool canReduceDk=true;
         // First choose desired dx
@@ -314,8 +301,8 @@ namespace galsim {
         // the target image size:
         if (!sizeIsFree) {
             int xSize, ySize;
-            xSize = Re.XMax()-Re.XMin()+1;
-            ySize = Re.YMax()-Re.YMin()+1;
+            xSize = Re.getXMax()-Re.getXMin()+1;
+            ySize = Re.getYMax()-Re.getYMin()+1;
             if (xSize * oversamp > Nnofold) Nnofold = xSize*oversamp;
             if (ySize * oversamp > Nnofold) Nnofold = ySize*oversamp;
             kRange = Nnofold * dk / oversamp;
@@ -343,12 +330,12 @@ namespace galsim {
                 dk = kRange / Nimg; 
             }
         } else {
-            // Going to shift the output image to be centered near zero
+            // Going to move the output image to be centered near zero
             int xSize, ySize;
-            xSize = Re.XMax()-Re.XMin()+1;
-            ySize = Re.YMax()-Re.YMin()+1;
-            Re.shift(-xSize/2, -ySize/2);
-            Im.shift(-xSize/2, -ySize/2);
+            xSize = Re.getXMax()-Re.getXMin()+1;
+            ySize = Re.getYMax()-Re.getYMin()+1;
+            Re.move(-xSize/2, -ySize/2);
+            Im.move(-xSize/2, -ySize/2);
         }
 
         double dx = 2.*M_PI*oversamp/(NFT*dk);
@@ -358,10 +345,10 @@ namespace galsim {
 
         int Nkt = ktmp->getN();
         Bounds<int> kb(-Nkt/2, Nkt/2-1, -Nkt/2, Nkt/2-1);
-        if (Re.YMin() < kb.getYMin()
-            || Re.YMax()*oversamp > kb.getYMax()
-            || Re.XMin()*oversamp < kb.getXMin()
-            || Re.XMax()*oversamp > kb.getXMax()) {
+        if (Re.getYMin() < kb.getYMin()
+            || Re.getYMax()*oversamp > kb.getYMax()
+            || Re.getXMin()*oversamp < kb.getXMin()
+            || Re.getXMax()*oversamp > kb.getXMax()) {
             std::cerr << "Bounds error!! oversamp is " << oversamp
                 << " target image bounds " << Re.getBounds()
                 << " and FFT range " << kb
@@ -369,21 +356,14 @@ namespace galsim {
             throw SBError("fourierDrawK() FT bounds do not cover target image");
         }
 
-        for (int y = Re.YMin(); y <= Re.YMax(); y++)
-            for (int x = Re.XMin(); x <= Re.XMax(); x++) {
+        for (int y = Re.getYMin(); y <= Re.getYMax(); y++)
+            for (int x = Re.getXMin(); x <= Re.getXMax(); x++) {
                 Re(x,y) = ktmp->kval(x*oversamp,y*oversamp).real();
                 Im(x,y) = ktmp->kval(x*oversamp,y*oversamp).imag();
             }
 
-        try { 
-            Re.header()->erase("DX"); 
-        } catch (ImageHeaderError& i) {}
-        Re.header()->replace("DK", dk);
-
-        try {
-            Im.header()->erase("DX");
-        } catch (ImageHeaderError& i) {}
-        Im.header()->replace("DK", dk);
+        Re.setScale(dk);
+        Im.setScale(dk);
 
         delete ktmp;  // no memory leak!
     }
@@ -946,23 +926,19 @@ namespace galsim {
 
         double totalflux = 0.;
         double xfac;
-        for (int i = I.XMin(); i <= I.XMax(); i++) {
+        for (int i = I.getXMin(); i <= I.getXMax(); i++) {
             if ( abs(i) > xedge ) xfac = 0.;
             else if (abs(i)==xedge) xfac = norm*xfrac;
             else xfac = norm;
 
-            for (int j = I.YMin(); j <= I.YMax(); j++) {
+            for (int j = I.getYMin(); j <= I.getYMax(); j++) {
                 if (xfac==0. || abs(j)>yedge) I(i,j)=0.;
                 else if (abs(j)==yedge) I(i,j)=xfac*yfrac;
                 else I(i,j)=xfac;
                 totalflux += I(i,j);
             }
         }
-        // add image header to include "dx" info
-        try {
-            I.header()->erase("DK");
-        } catch (ImageHeaderError& i) {}
-        I.header()->replace("DX", dx);
+        I.setScale(dx);
 
         return totalflux * (dx*dx);
     }

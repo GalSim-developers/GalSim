@@ -76,7 +76,7 @@ namespace galsim {
         T getYMin() const { return ymin; }
         T getYMax() const { return ymax; }
         bool isDefined() const { return defined; }
-        operator bool() const { return defined; } //Boolean test is false if no area
+
         Position<T> center() const;
         void operator+=(const Position<T>& pos); //expand to include point
         void operator+=(const Bounds<T>& rec); //bounds of union
