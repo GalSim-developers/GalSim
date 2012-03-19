@@ -43,7 +43,7 @@ def kxky(array_shape=(256, 256)):
     """Return the tuple kx, ky corresponding to the DFT of a unit integer-sampled array of input
     shape.
     
-    Uses the SBProfile conventions for Fourier space, so k varies in approximate range (-\pi, \pi].
+    Uses the SBProfile conventions for Fourier space, so k varies in approximate range (-pi, pi].
     Uses the most common DFT element ordering conventions (and those of FFTW), so that `(0, 0)`
     array element corresponds to `(kx, ky) = (0, 0)`.
 
