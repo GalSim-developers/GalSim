@@ -1,4 +1,7 @@
-"""Module containing the optical PSF generation routines.
+
+import numpy as np
+
+"""\file optics.py Module containing the optical PSF generation routines.
 
 Currently these are just functions; the plan will be for these to be included as methods in some
 kind of 'optical' class, or perhaps as methods in a more fundamental psf class.
@@ -27,7 +30,6 @@ complex number. The OTF is the autocorrelation function of the wavefront.
 
 TODO: Implement a centrally-obstructed pupil plane (e.g. such as is caused by secondary mirrors).
 """
-import numpy as np
 
 def roll2d(image, (iroll, jroll)):
     """Perform a 2D roll (circular shift) on a supplied 2D image, conveniently.
