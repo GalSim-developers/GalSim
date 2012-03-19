@@ -17,11 +17,18 @@ namespace bp = boost::python;
 namespace galsim {
 namespace {
 
-template <typename T> struct NumpyTraits;
-template <> struct NumpyTraits<npy_short> { static int getCode() { return NPY_SHORT; } };
-template <> struct NumpyTraits<npy_int> { static int getCode() { return NPY_INT; } };
-template <> struct NumpyTraits<npy_float> { static int getCode() { return NPY_FLOAT; } };
-template <> struct NumpyTraits<npy_double> { static int getCode() { return NPY_DOUBLE; } };
+template <typename T> struct NumPyTraits;
+template <> struct NumPyTraits<npy_short> { static int getCode() { return NPY_SHORT; } };
+template <> struct NumPyTraits<npy_int> { static int getCode() { return NPY_INT; } };
+template <> struct NumPyTraits<npy_float> { static int getCode() { return NPY_FLOAT; } };
+template <> struct NumPyTraits<npy_double> { static int getCode() { return NPY_DOUBLE; } };
+
+// return the NumPy type for a C++ class (e.g. float -> numpy.float32)
+template <typename T>
+bp::object getNumPyType() {
+    bp::handle<> h(reinterpret_cast<PyObject*>(PyArray_DescrFromType(NumPyTraits<T>::getCode())));
+    return bp::object(h).attr("type");
+}
 
 template <typename T>
 struct PyImage {
@@ -70,7 +77,7 @@ struct PyImage {
         bp::object result(
             bp::handle<>(
                 PyArray_New(
-                    &PyArray_Type, 2, shape, NumpyTraits<T>::getCode(), strides,
+                    &PyArray_Type, 2, shape, NumPyTraits<T>::getCode(), strides,
                     const_cast<T*>(image.getData()), sizeof(T), flags, NULL
                 )
             )
@@ -99,7 +106,7 @@ struct PyImage {
     static bp::object getConstArray(bp::object image) { return getArrayImpl(image, true); }
 
     static void buildConstructorArgs(
-        bp::object const & array, int x0, int y0, bool isConst,
+        bp::object const & array, int xMin, int yMin, bool isConst,
         T * & data, boost::shared_ptr<T> & owner, int & stride, Bounds<int> & bounds
     ) {
         if (!PyArray_Check(array.ptr())) {
@@ -107,7 +114,7 @@ struct PyImage {
             bp::throw_error_already_set();
         }
         int actualType = PyArray_TYPE(array.ptr());
-        int requiredType = NumpyTraits<T>::getCode();
+        int requiredType = NumPyTraits<T>::getCode();
         if (actualType != requiredType) {
             PyErr_SetString(PyExc_ValueError, "numpy.ndarray argument has incorrect data type");
             bp::throw_error_already_set();
@@ -150,30 +157,30 @@ struct PyImage {
             );
         }
         bounds = Bounds<int>(
-            x0, x0 + PyArray_DIM(array.ptr(), 1) - 1,
-            y0, y0 + PyArray_DIM(array.ptr(), 0) - 1
+            xMin, xMin + PyArray_DIM(array.ptr(), 1) - 1,
+            yMin, yMin + PyArray_DIM(array.ptr(), 0) - 1
         );
     }
 
-    static Image<T> * makeFromArray(bp::object const & array, int x0, int y0) {
+    static Image<T> * makeFromArray(bp::object const & array, int xMin, int yMin) {
         Bounds<int> bounds;
         int stride = 0;
         T * data = 0;
         boost::shared_ptr<T> owner;
-        buildConstructorArgs(array, x0, y0, false, data, owner, stride, bounds);
+        buildConstructorArgs(array, xMin, yMin, false, data, owner, stride, bounds);
         return new Image<T>(data, owner, stride, bounds);
     }
 
-    static Image<const T> * makeConstFromArray(bp::object const & array, int x0, int y0) {
+    static Image<const T> * makeConstFromArray(bp::object const & array, int xMin, int yMin) {
         Bounds<int> bounds;
         int stride = 0;
         T * data = 0;
         boost::shared_ptr<T> owner;
-        buildConstructorArgs(array, x0, y0, true, data, owner, stride, bounds);
+        buildConstructorArgs(array, xMin, yMin, true, data, owner, stride, bounds);
         return new Image<const T>(data, owner, stride, bounds);
     }
 
-    static void wrap(std::string const & suffix) {
+    static bp::object wrap(std::string const & suffix) {
         
         bp::object getScale = bp::make_function(&Image<const T>::getScale);
         bp::object setScale = bp::make_function(&Image<const T>::setScale);
@@ -194,7 +201,7 @@ struct PyImage {
                 "__init__",
                 bp::make_constructor(
                     makeConstFromArray, bp::default_call_policies(),
-                    (bp::arg("array"), bp::arg("x0")=1, bp::arg("y0")=1)
+                    (bp::arg("array"), bp::arg("xMin")=1, bp::arg("yMin")=1)
                 )
             )
             .add_property("array", &getConstArray)
@@ -227,7 +234,7 @@ struct PyImage {
                 "__init__",
                 bp::make_constructor(
                     makeFromArray, bp::default_call_policies(),
-                    (bp::arg("array"), bp::arg("x0")=1, bp::arg("y0")=1)
+                    (bp::arg("array"), bp::arg("xMin")=1, bp::arg("yMin")=1)
                 )
             )
             .add_property("array", &getArray)
@@ -242,7 +249,8 @@ struct PyImage {
             .def(bp::self *= bp::other<T>())
             .def(bp::self /= bp::other<T>())
             ;
-
+        
+        return pyImage;
     }
 
 };
@@ -250,11 +258,15 @@ struct PyImage {
 } // anonymous
 
 void pyExportImage() {
-    PyImage<short>::wrap("S");
-    PyImage<int>::wrap("I");
-    PyImage<float>::wrap("F");
-    PyImage<double>::wrap("D");
+    bp::dict pyImageDict;  // dict that lets us say "Image[numpy.float32]", etc.
 
+    pyImageDict[getNumPyType<short>()] = PyImage<short>::wrap("S");
+    pyImageDict[getNumPyType<int>()] = PyImage<int>::wrap("I");
+    pyImageDict[getNumPyType<float>()] = PyImage<float>::wrap("F");
+    pyImageDict[getNumPyType<double>()] = PyImage<double>::wrap("D");
+
+    bp::scope scope;  // a default constructed scope represents the module we're creating
+    scope.attr("Image") = pyImageDict;
 }
 
 } // namespace galsim
