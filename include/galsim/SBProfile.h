@@ -91,11 +91,11 @@ namespace galsim {
         /// \param _p Input: 2D position in k space.
         virtual std::complex<double> kValue(Position<double> _p) const =0; 
 
-        virtual double maxK() const =0; ///< Value of k beyond which aliasing can be neglected:
+        virtual double maxK() const =0; ///< Value of k beyond which aliasing can be neglected.
         virtual double nyquistDx() const { return M_PI / maxK(); } ///< Image pixel spacing that does not alias maxK.
         virtual double stepK() const =0; ///< Sampling in k space necessary to avoid folding of image in x space.
 
-        virtual bool isAxisymmetric() const =0; ///< Characteristic that can affect efficiency of evaluation
+        virtual bool isAxisymmetric() const =0; ///< Characteristic that can affect efficiency of evaluation.
         virtual bool isAnalyticX() const =0; ///< Characteristic that can affect efficiency of evaluation.  SBProfile is "analytic" in the real domain if values can be determined immediately at any position through formula or a stored table (no DFT).
         virtual bool isAnalyticK() const =0; ///< Characteristic that can affect efficiency of evaluation.  SBProfile is "analytic" in the k domain if values can be determined immediately at any position through formula or a stored table (no DFT).
 
@@ -278,36 +278,36 @@ namespace galsim {
     class SBAdd : public SBProfile 
     {
     protected:
-        std::list<SBProfile*> plist; ///< the plist content is a pointer to a fresh copy of the summands
+        std::list<SBProfile*> plist; ///< the plist content is a pointer to a fresh copy of the summands.
     private:
-        double sumflux; ///< Keeps track of the cumulated flux of all summands
-        double sumfx; ///< Keeps track of the cumulated `fx` of all summands
-        double sumfy; ///< Keeps track of the cumulated `fy` of all summands
-        double maxMaxK; ///< Keeps track of the cumulated `maxK()` of all summands
-        double minStepK; ///< Keeps track of the cumulated `minStepK()` of all summands
-        bool allAxisymmetric; ///< Keeps track of the cumulated `isAxisymmetric()` properties of all summands
-        bool allAnalyticX; ///< Keeps track of the cumulated `isAnalyticX()` property of all summands
-        bool allAnalyticK; ///< Keeps track of the cumulated `isAnalyticK()` properties of all summands
-        void initialize();  ///< Sets all private book-keeping variables to starting state
+        double sumflux; ///< Keeps track of the cumulated flux of all summands.
+        double sumfx; ///< Keeps track of the cumulated `fx` of all summands.
+        double sumfy; ///< Keeps track of the cumulated `fy` of all summands.
+        double maxMaxK; ///< Keeps track of the cumulated `maxK()` of all summands.
+        double minStepK; ///< Keeps track of the cumulated `minStepK()` of all summands.
+        bool allAxisymmetric; ///< Keeps track of the cumulated `isAxisymmetric()` properties of all summands.
+        bool allAnalyticX; ///< Keeps track of the cumulated `isAnalyticX()` property of all summands.
+        bool allAnalyticK; ///< Keeps track of the cumulated `isAnalyticK()` properties of all summands.
+        void initialize();  ///< Sets all private book-keeping variables to starting state.
     public:
-        /// Constructor, empty
+        /// Constructor, empty.
         SBAdd() : plist() { initialize(); }
 
-        /// Constructor, 1 input
+        /// Constructor, 1 input.
         //
-        /// \param s1 Input: SBProfile
+        /// \param s1 Input: SBProfile.
         SBAdd(const SBProfile& s1) : plist() { initialize(); add(s1); }
 
         /// Constructor, 2 inputs
         //
-        /// \param s1 Input: first SBProfile
-        /// \param s2 Input: second SBProfile
+        /// \param s1 Input: first SBProfile.
+        /// \param s2 Input: second SBProfile.
         SBAdd(const SBProfile& s1, const SBProfile& s2) : plist() 
         { initialize(); add(s1);  add(s2); }
 
-        /// Constructor, list of inputs
+        /// Constructor, list of inputs.
         //
-        /// \param slist Input: list of SBProfiles
+        /// \param slist Input: list of SBProfiles.
         SBAdd(const std::list<SBProfile*> slist) : plist() 
         {
             std::list<SBProfile*>::const_iterator sptr;
@@ -340,10 +340,9 @@ namespace galsim {
         /// \param scale Input: allows for rescaling flux by this factor
         void add(const SBProfile& rhs, double scale=1.);
 
-        /// Returns a duplicate of the SBAdd object
-        SBProfile* duplicate() const { return new SBAdd(*this); } 
-
         // Barney's note: the methods below are documented at the SBProfile level (I think)
+
+        SBProfile* duplicate() const { return new SBAdd(*this); } 
 
         double xValue(Position<double> _p) const;
 
@@ -488,40 +487,56 @@ namespace galsim {
         void fillKGrid(KTable& kt) const; // optimized phase calculation
     };
 
-    /// Convolve SBProfiles
+    /// Convolve SBProfiles.
     //
-    /// Convolve one, two, three or more SBProfiles together (TODO: Add a more detailed description here)
+    /// Convolve one, two, three or more SBProfiles together (TODO: Add a more detailed description here).
     class SBConvolve : public SBProfile 
     {
     private:
-        std::list<SBProfile*> plist;  // the plist content is a copy_ptr (cf. smart ptrs)
-        double fluxScale;
-        double x0, y0;
-        bool isStillAxisymmetric;
-        double minMaxK;
-        double minStepK;
-        double fluxProduct;
+        std::list<SBProfile*> plist;  ///< The plist content is a copy_ptr (cf. smart ptrs) listing SBProfiles.
+        double fluxScale; ///< Flux scaling.
+        double x0; ///< Centroid position in X.
+        double y0; ///< Centroid position in Y.
+        bool isStillAxisymmetric; ///< Is output SBProfile shape still circular?
+        double minMaxK; ///< Minimum maxK() of the convolved SBProfiles.
+        double minStepK; ///< Minimum stepK() of the convolved SBProfiles.
+        double fluxProduct; ///< Flux of the product.
 
     public:
-        // constructor, empty
+        /// Constructor, empty.
         SBConvolve() : plist(), fluxScale(1.) {} 
 
-        // constructor, 1 input; f is optional scaling factor for final flux
+        /// Constructor, 1 input.
+        //
+        /// \param s1 Input: SBProfile.
+        /// \param f Input: optional scaling factor for final flux.
         SBConvolve(const SBProfile& s1, double f=1.) : plist(), fluxScale(f) 
         { add(s1); }
 
-        // constructor, 2 inputs
+        /// Constructor, 2 inputs.
+        //
+        /// \param s1 Input: first SBProfile.
+        /// \param s2 Input: second SBProfile.
+        /// \param f Input: optional scaling factor for final flux.
         SBConvolve(const SBProfile& s1, const SBProfile& s2, double f=1.) : 
             plist(), fluxScale(f) 
         { add(s1);  add(s2); }
 
-        // constructor, 3 inputs
+        /// Constructor, 3 inputs.
+        //
+        /// \param s1 Input: first SBProfile.
+        /// \param s2 Input: second SBProfile.
+        /// \param s3 Input: third SBProfile.
+        /// \param f Input: optional scaling factor for final flux.
         SBConvolve(
             const SBProfile& s1, const SBProfile& s2, const SBProfile& s3, double f=1.) :
             plist(), fluxScale(f) 
         { add(s1);  add(s2);  add(s3); }
 
-        // constructor, list of inputs
+        /// Constructor, list of inputs.
+        //
+        /// \param slist Input: list of SBProfiles.
+        /// \param f Input: optional scaling factor for final flux.
         SBConvolve(const std::list<SBProfile*> slist, double f=1.) :
             plist(), fluxScale(f) 
         { 
@@ -529,7 +544,9 @@ namespace galsim {
             for (sptr = slist.begin(); sptr!=slist.end(); ++sptr) add(**sptr); 
         }
 
-        // copy constructor
+        /// Copy constructor.
+        //
+        /// \param rhs Input: SBProfile.
         SBConvolve(const SBConvolve& rhs) : 
             plist(), fluxScale(rhs.fluxScale),
             x0(rhs.x0), y0(rhs.y0),
@@ -542,15 +559,19 @@ namespace galsim {
                 plist.push_back((*rhsptr)->duplicate()); 
         }
 
-        // destructor
+        /// Destructor.
         ~SBConvolve() 
         { 
             std::list<SBProfile*>::iterator pptr;
             for (pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; 
         }
 
-        // SBConvolve specific method
+        /// SBConvolve specific method for adding new members.
+        //
+        /// \param rhs Input: SBProfile for adding.
         void add(const SBProfile& rhs); 
+
+        // Barney's note: I think the methods below are documented at the SBProfile level
 
         // implementation dependent methods:
         SBProfile* duplicate() const { return new SBConvolve(*this); } 
@@ -621,43 +642,47 @@ namespace galsim {
         SBProfile* duplicate() const { return new SBGaussian(*this); }
     };
 
+    /// Sersic Surface Brightness Profile.
+    //
+    /// The Sersic Surface Brightness Profile is characterized by three properties: its Sersic 
+    /// index `n`, its `flux` and the half-light radius `re`.
     class SBSersic : public SBProfile 
     {
     private:
-        // First define some private classes that will cache the
-        // needed parameters for each Sersic index n.
+        /// A private class that caches the needed parameters for each Sersic index `n`.
         class SersicInfo 
         {
-            // This private class contains all the info needed 
-            // to calculate values for a given n.  
         public:
-            SersicInfo(double n);
-            double inv2n;   // 1/2n
-            double maxK;
-            double stepK;
-            double xValue(double xsq) const { return norm*exp(-b*pow(xsq,inv2n)); }
-            double kValue(double ksq) const; // Look up k value in table
+            SersicInfo(double n); ///< This class contains all the info needed to calculate values for a given Sersic index `n`.  
+            double inv2n;   ///< `1 / (2 * n)`
+            double maxK;    ///< Value of k beyond which aliasing can be neglected.
+            double stepK;   ///< Sampling in k space necessary to avoid folding of image in x space.
+            double xValue(double xsq) const { return norm*exp(-b*pow(xsq,inv2n)); } ///< Returns the real space value of the Sersic using the formula `exp(-b*pow(xsq,inv2n))` (see private attributes).
+            double kValue(double ksq) const; ///< Looks up the k value for the SBProfile from a lookup table.
 
         private:
-            SersicInfo(const SersicInfo& rhs) {} // Hide the copy constructor.
-            double b;
-            double norm;
-            double kderiv2; // quadratic dependence near k=0;
-            double kderiv4; // quartic dependence near k=0;
-            double logkMin;
-            double logkMax;
-            double logkStep;
-            std::vector<double> lookup;
+            SersicInfo(const SersicInfo& rhs) {} ///< Hides the copy constructor.
+            double b; ///< Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`, calculated from Sersic index `n` and half-light radius `re`.
+            double norm; ///< Amplitude scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`.
+            double kderiv2; ///< Quadratic dependence near k=0.
+            double kderiv4; ///< Quartic dependence near k=0.
+            double logkMin; ///< Minimum log(k) in lookup table.
+            double logkMax; ///< Maximum log(k) in lookup table.
+            double logkStep; ///< Stepsize in log(k) in lookup table.
+            std::vector<double> lookup; ///< Lookup table.
         };
 
-        // A map to hold one copy of the SersicInfo for each n ever used
-        // during the program run.  Make one static copy of this map.
+        /// A map to hold one copy of the SersicInfo for each `n` ever used during the program run.  Make one static copy of this map.
         class InfoBarn : public std::map<double, const SersicInfo*> 
         {
         public:
+
+	    /// Get the SersicInfo table for a specified `n`.
+            //
+            /// \param n Input: Sersic index for which the information table is required.
             const SersicInfo* get(double n) 
             {
-                const int MAX_SERSIC_TABLES = 100; // How many n's can be stored?
+                const int MAX_SERSIC_TABLES = 100; /// Contains `MAX_SERSIC_TABLES = 100`, the currently hardwired max number of Sersic `n` info tables that can be stored.  Should be plenty.
                 const SersicInfo* info = (*this)[n];
                 if (info==0) {
                     info = new SersicInfo(n);
@@ -667,7 +692,7 @@ namespace galsim {
                 }
                 return info;
             }
-
+            /// Destructor.
             ~InfoBarn() 
             {
                 typedef std::map<double,const SersicInfo*>::iterator mapit;
@@ -680,19 +705,26 @@ namespace galsim {
         static InfoBarn nmap;
 
         // Now the parameters of this instance of SBSersic:
-        double n;
-        double flux;
-        double re;   // half-light radius
+        double n; ///< Sersic index.
+        double flux; ///< Flux.
+        double re;   ///< Half-light radius.
         const SersicInfo* info; // point to info structure for this n
 
     public:
-        // Constructor
+        /// Constructor.
+        //
+        /// \param n_ Input: Sersic index.
+        /// \param flux_ Input: Flux (default `flux_ = 1.`).
+        /// \param re_ Input: Half-light radius.
         SBSersic(double n_, double flux_=1., double re_=1.) :
             n(n_), flux(flux_), re(re_), info(nmap.get(n)) {}
 
         // Default copy constructor should be fine.
-        // Destructor
+
+        /// Destructor
         ~SBSersic() {}
+
+        // Barney note: methods below already doxyfied via SBProfile, except for getN
 
         double xValue(Position<double> p) const 
         {
@@ -721,21 +753,28 @@ namespace galsim {
 
         SBProfile* duplicate() const { return new SBSersic(*this); }
 
-        // A method that only works for Sersic:
+        /// A method that only works for Sersic, returns the Sersic index `n`.
         double getN() const { return n; }
     };
 
-    // Keep distinct SBExponential since FT has closed form for this:
+    /// Exponential Surface Brightness profile.  
+    //
+    /// This is a special case of the Sersic profile, but is given a separate class since the 
+    /// Fourier transform has closed form and can be generated without lookup tables.
+    /// The maxK() is set to where the FT is down to 0.001, or via `ALIAS_THRESHOLD`, whichever is harder.
     class SBExponential : public SBProfile 
     {
     private:
-        double r0;   // characteristic size:  exp[-(r/r0)]
-        double flux;
+        double r0;   ///< Characteristic size of profile `exp[-(r / r0)]`.
+        double flux; ///< Flux.
     public:
-        // Constructor - note that r0 is scale length, not half-light
+        /// Constructor - note that `r0` is scale length, NOT half-light radius `re` as in SBSersic.
+        //
+        /// \param flux_ Input: Flux.
+        /// \param r0_ Input: scale length for the profile that scales as `exp[-(r / r0)]`, NOT the half-light radius `re` as in SBSersic.
         SBExponential(double flux_=1., double r0_=1.) : r0(r0_), flux(flux_) {}
 
-        // Destructor
+        /// Destructor.
         ~SBExponential() {}
 
         // Methods
