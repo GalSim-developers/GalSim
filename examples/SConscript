@@ -33,15 +33,13 @@ if major < 2 or (major == 2 and minor == 0):
 
 sbdraw = env1.Program(os.path.join('#bin','sbdraw'), 'SBDraw.cpp')
 
-shera = env1.Program(os.path.join('#bin','shera'), 'Shera.cpp')
-
 int_example = env1.Program(os.path.join('#bin','int_example'), 'IntExample.cpp')
 
 meas_shape = env1.Program(os.path.join('#bin','meas_shape'), 'meas_shape.cpp')
 
 meas_moments = env1.Program(os.path.join('#bin','meas_moments'), 'meas_moments.cpp')
 
-example_targets = [ sbdraw, shera, int_example, meas_shape, meas_moments ]
+example_targets = [ sbdraw, int_example, meas_shape, meas_moments ]
 
 env.Alias(target='examples',source=example_targets)
 

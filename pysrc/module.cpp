@@ -7,7 +7,9 @@ namespace galsim {
 
 void pyExportBounds();
 void pyExportShear();
+void pyExportImage();
 void pyExportSBProfile();
+void pyExportSBPixel();
 
 } // namespace galsim
 
@@ -15,5 +17,7 @@ BOOST_PYTHON_MODULE(_galsim) {
     import_array(); // for numpy
     galsim::pyExportBounds();
     galsim::pyExportShear();
+    galsim::pyExportImage();
     galsim::pyExportSBProfile();
+    galsim::pyExportSBPixel();
 }

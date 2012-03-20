@@ -1,5 +1,4 @@
-/// \file psfcorr.h Contains functions in the hsm namespace, which are
-/// required to run the hsm shape measurement and moment estimation code. 
+/// \file psfcorr.h Contains functions for the hsm shape measurement code. 
 
 /****************************************************************
   Copyright 2003, 2004 Christopher Hirata: original code

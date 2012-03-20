@@ -1,6 +1,8 @@
 #include "boost/python.hpp"
 #include "boost/python/stl_iterator.hpp"
 #include "SBProfile.h"
+#include "SBDeconvolve.h"
+#include "SBParse.h"
 
 namespace bp = boost::python;
 
@@ -13,16 +15,16 @@ struct PySBProfile {
 
     static void wrap() {
         static char const * doc = 
-            "SBProfile is an abstract base class represented all of the\n"
-            "2d surface brightness that we know how to draw.\n"
-            "Every SBProfile knows how to draw an Image<float> of itself in real\n"
-            "and k space.  Each also knows what is needed to prevent aliasing\n"
-            "or truncation of itself when drawn.\n"
             "\n"
-            "Note that when you use the SBProfile::draw() routines you\n"
-            "will get an image of **surface brightness** values in each pixel,\n"
-            "not the flux that fell into the pixel.  To get flux, you\n"
-            "must multiply the image by (dx*dx).\n"
+            "SBProfile is an abstract base class represented all of the 2d surface\n"
+            "brightness that we know how to draw.  Every SBProfile knows how to\n"
+            "draw an Image<float> of itself in real and k space.  Each also knows\n"
+            "what is needed to prevent aliasing or truncation of itself when drawn.\n"
+            "\n"
+            "Note that when you use the SBProfile::draw() routines you will get an\n"
+            "image of **surface brightness** values in each pixel, not the flux\n"
+            "that fell into the pixel.  To get flux, you must multiply the image by\n"
+            "(dx*dx).\n"
             "\n"
             "drawK() routines are normalized such that I(0,0) is the total flux.\n"
             "\n"
@@ -33,6 +35,21 @@ struct PySBProfile {
             "SBRotate: rotated version of another SBProfile\n"
             "SBAdd: sum of SBProfiles\n"
             "SBConvolve: convolution of other SBProfiles\n"
+            "\n"
+            "==== Drawing routines ==== \n"
+            "Grid on which SBProfile is drawn has pitch dx; given dx=0. default,\n"
+            "routine will choose dx to be at least fine enough for Nyquist sampling\n"
+            "at maxK().  If you specify dx, image will be drawn with this dx and\n"
+            "you will receive an image with the aliased frequencies included.\n"
+            "\n"
+            "If input image is not specified or has null dimension, a square image\n"
+            "will be drawn which is big enough to avoid folding.  If drawing is\n"
+            "done using FFT, it will be scaled up to a power of 2, or 3x2^n,\n"
+            "whicher fits.  If input image has finite dimensions then these will be\n"
+            "used, although in an FFT the image may be calculated internally on a\n"
+            "larger grid to avoid folding.  Specifying wmult>1 will draw an image\n"
+            "that is wmult times larger than the default choice, i.e. it will have\n"
+            "finer sampling in k space and have less folding.\n"
             ;
 
         bp::class_<SBProfile,boost::noncopyable>("SBProfile", doc, bp::no_init)
@@ -59,6 +76,27 @@ struct PySBProfile {
             .def("shear", &SBProfile::shear, bp::args("e1", "e2"), ManageNew())
             .def("rotate", &SBProfile::rotate, bp::args("theta"), ManageNew())
             .def("shift", &SBProfile::shift, bp::args("dx", "dy"), ManageNew())
+            .def("draw", (Image<float> (SBProfile::*)(double, int) const)&SBProfile::draw,
+                 (bp::arg("dx")=0., bp::arg("wmult")=1), "default draw routine")
+            .def("draw", 
+                 (double (SBProfile::*)(Image<float> &, double, int) const)&SBProfile::draw,
+                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "Draw in-place and return the summed flux.")
+            .def("plainDraw", &SBProfile::plainDraw,
+                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "Draw in place using only real methods")
+            .def("fourierDraw", &SBProfile::plainDraw,
+                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "Draw in place using only Fourier methods")
+            .def("drawK", &SBProfile::drawK,
+                 (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "Draw in k-space automatically")
+            .def("plainDrawK", &SBProfile::plainDrawK,
+                 (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "evaluate in k-space")
+            .def("fourierDrawK", &SBProfile::fourierDrawK,
+                 (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "FT from x-space")
             ;
     }
 
@@ -79,10 +117,11 @@ struct PySBAdd {
             "so they cannot be changed after adding them."
             ;
             
-        bp::class_<SBAdd>("SBAdd", doc, bp::init<>())
+        bp::class_< SBAdd, bp::bases<SBProfile> >("SBAdd", doc, bp::init<>())
             // bp tries the overloads in reverse order, so we wrap the most general one first
             // to ensure we try it last
-            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies(), bp::arg("slist")))
+            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies(),
+                                                  bp::args("slist")))
             .def(bp::init<const SBProfile &>(bp::args("s1")))
             .def(bp::init<const SBProfile &, const SBProfile &>(bp::args("s1", "s2")))
             .def(bp::init<const SBAdd &>())
@@ -102,11 +141,14 @@ struct PySBDistort {
             "Flux is NOT conserved in transformation - SB is preserved."
             ;
             
-        bp::class_<SBDistort>("SBDistort", doc, bp::no_init)
+        bp::class_< SBDistort, bp::bases<SBProfile> >("SBDistort", doc, bp::no_init)
             .def(bp::init<const SBProfile &, double, double, double, double, Position<double> >(
-                     (bp::args("sbin", "mA", "mB", "mC", "mD"), bp::arg("x0")=Position<double>(0.,0.))
+                     (bp::args("sbin", "mA", "mB", "mC", "mD"),
+                      bp::arg("x0")=Position<double>(0.,0.))
                  ))
-            .def(bp::init<const SBProfile &, const Ellipse &>((bp::arg("sbin"), bp::arg("e")=Ellipse())))
+            .def(bp::init<const SBProfile &, const Ellipse &>(
+                     (bp::arg("sbin"), bp::arg("e")=Ellipse())
+                 ))
             .def(bp::init<const SBDistort &>())
             ;
     }
@@ -123,7 +165,7 @@ struct PySBConvolve {
     }
 
     static void wrap() {
-        bp::class_<SBConvolve>("SBConvolve", bp::init<>())
+        bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::init<>())
             // bp tries the overloads in reverse order, so we wrap the most general one first
             // to ensure we try it last
             .def("__init__", 
@@ -146,9 +188,20 @@ struct PySBConvolve {
 
 };
 
+struct PySBDeconvolve {
+
+    static void wrap() {
+        bp::class_< SBDeconvolve, bp::bases<SBProfile> >("SBDeconvolve", bp::no_init)
+            .def(bp::init<const SBProfile &>(bp::args("adaptee")))
+            .def(bp::init<const SBDeconvolve &>())
+            ;
+    }
+
+};
+
 struct PySBGaussian {
     static void wrap() {
-        bp::class_<SBGaussian>(
+        bp::class_<SBGaussian,bp::bases<SBProfile>,boost::noncopyable>(
             "SBGaussian",
             bp::init<double,double>((bp::arg("flux")=1., bp::arg("sigma")=1.))
         );
@@ -157,7 +210,7 @@ struct PySBGaussian {
 
 struct PySBSersic {
     static void wrap() {
-        bp::class_<SBSersic>(
+        bp::class_<SBSersic,bp::bases<SBProfile>,boost::noncopyable>(
             "SBSersic",
             bp::init<double,double,double>((bp::arg("n"), bp::arg("flux")=1., bp::arg("re")=1.))
         );
@@ -166,7 +219,7 @@ struct PySBSersic {
 
 struct PySBExponential {
     static void wrap() {
-        bp::class_<SBExponential>(
+        bp::class_<SBExponential,bp::bases<SBProfile>,boost::noncopyable>(
             "SBExponential",
             bp::init<double,double>((bp::arg("flux")=1., bp::arg("r0")=1.))
         );
@@ -175,28 +228,33 @@ struct PySBExponential {
 
 struct PySBAiry {
     static void wrap() {
-        bp::class_<SBAiry>(
+        bp::class_<SBAiry,bp::bases<SBProfile>,boost::noncopyable>(
             "SBAiry",
-            bp::init<double,double,double>((bp::arg("D")=1., bp::arg("obs")=1., bp::arg("flux")=1.))
+            bp::init<double,double,double>(
+                (bp::arg("D")=1., bp::arg("obs")=1., bp::arg("flux")=1.)
+            )
         );
     }
 };
 
 struct PySBBox {
     static void wrap() {
-        bp::class_<SBBox>(
+        bp::class_<SBBox,bp::bases<SBProfile>,boost::noncopyable>(
             "SBBox",
-            bp::init<double,double,double>((bp::arg("xw")=1., bp::arg("yw")=0., bp::arg("flux")=1.))
+            bp::init<double,double,double>(
+                (bp::arg("xw")=1., bp::arg("yw")=0., bp::arg("flux")=1.)
+            )
         );
     }
 };
 
 struct PySBMoffat {
     static void wrap() {
-        bp::class_<SBMoffat>(
+        bp::class_<SBMoffat,bp::bases<SBProfile>,boost::noncopyable>(
             "SBMoffat",
             bp::init<double,double,double,double>(
-                (bp::arg("beta"), bp::arg("truncationFWHM")=2., bp::arg("flux")=1., bp::arg("re")=1.)
+                (bp::arg("beta"), bp::arg("truncationFWHM")=2.,
+                 bp::arg("flux")=1., bp::arg("re")=1.)
             )
         );
     }
@@ -204,7 +262,7 @@ struct PySBMoffat {
 
 struct PySBDeVaucouleurs {
     static void wrap() {
-        bp::class_<SBDeVaucouleurs>(
+        bp::class_<SBDeVaucouleurs,bp::bases<SBProfile>,boost::noncopyable>(
             "SBDeVaucouleurs",
             bp::init<double,double>((bp::arg("flux")=1., bp::arg("r0")=1.))
         );
@@ -218,6 +276,7 @@ void pyExportSBProfile() {
     PySBAdd::wrap();
     PySBDistort::wrap();
     PySBConvolve::wrap();
+    PySBDeconvolve::wrap();
     PySBGaussian::wrap();
     PySBSersic::wrap();
     PySBExponential::wrap();
@@ -225,6 +284,8 @@ void pyExportSBProfile() {
     PySBBox::wrap();
     PySBMoffat::wrap();
     PySBDeVaucouleurs::wrap();
+
+    bp::def("SBParse", &galsim::SBParse, galsim::ManageNew());
 }
 
 } // namespace galsim

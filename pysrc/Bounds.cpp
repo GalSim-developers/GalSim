@@ -3,6 +3,15 @@
 
 namespace bp = boost::python;
 
+#define ADD_CORNER(getter, setter, prop)\
+    do {                                                            \
+        bp::object fget = bp::make_function(&Bounds<T>::getter);    \
+        bp::object fset = bp::make_function(&Bounds<T>::setter);    \
+        pyBounds.def(#getter, fget);                                \
+        pyBounds.def(#setter, fset);                                \
+        pyBounds.add_property(#prop, fget, fset);                   \
+    } while (false)
+
 namespace galsim {
 namespace {
 
@@ -38,18 +47,11 @@ template <typename T>
 struct PyBounds {
 
     static void wrap(std::string const & suffix) {
-        bp::class_< Bounds<T> >(("Bounds" + suffix).c_str(), bp::init<>())
+        bp::class_< Bounds<T> > pyBounds(("Bounds" + suffix).c_str(), bp::init<>());
+        pyBounds
             .def(bp::init<T,T,T,T>(bp::args("x1","x2","y1","y2")))
             .def(bp::init< const Position<T> &>(bp::args("pos")))
             .def(bp::init< const Position<T> &, const Position<T> & >(bp::args("pos1", "pos2")))
-            .def("setXMin", &Bounds<T>::setXMin)
-            .def("setYMin", &Bounds<T>::setYMin)
-            .def("setXMax", &Bounds<T>::setXMax)
-            .def("setYMax", &Bounds<T>::setYMax)
-            .def("getXMin", &Bounds<T>::getXMin)
-            .def("getYMin", &Bounds<T>::getYMin)
-            .def("getXMax", &Bounds<T>::getXMax)
-            .def("getYMax", &Bounds<T>::getYMax)
             .def("isDefined", &Bounds<T>::isDefined)
             .def("center", &Bounds<T>::center)
             .def(bp::self += bp::self)
@@ -58,7 +60,8 @@ struct PyBounds {
             .def("addBorder", &Bounds<T>::addBorder)
             .def("expand", &Bounds<T>::expand, "grow by the given factor about center")
             .def(bp::self & bp::self)
-            .def("shift", (void (Bounds<T>::*)(const T, const T))&Bounds<T>::shift, bp::args("dx", "dy"))
+            .def("shift", (void (Bounds<T>::*)(const T, const T))&Bounds<T>::shift,
+                 bp::args("dx", "dy"))
             .def("shift", (void (Bounds<T>::*)(Position<T>))&Bounds<T>::shift, bp::args("d"))
             .def("includes", (bool (Bounds<T>::*)(const Position<T> &) const)&Bounds<T>::includes)
             .def("includes", (bool (Bounds<T>::*)(const T, const T) const)&Bounds<T>::includes)
@@ -69,6 +72,10 @@ struct PyBounds {
             .def(str(bp::self))
             .def("assign", &Bounds<T>::operator=, bp::return_self<>())
             ;
+        ADD_CORNER(getXMin, setXMin, xMin);
+        ADD_CORNER(getXMax, setXMax, xMax);
+        ADD_CORNER(getYMin, setYMin, yMin);
+        ADD_CORNER(getYMax, setYMax, yMax);
     }
 
 };
@@ -78,6 +85,8 @@ struct PyBounds {
 void pyExportBounds() {
     PyPosition<double>::wrap("D");
     PyBounds<double>::wrap("D");
+    PyPosition<int>::wrap("I");
+    PyBounds<int>::wrap("I");
 }
 
 } // namespace galsim

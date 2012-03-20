@@ -9,6 +9,21 @@ tutorial, which can be found in full here:
 
 http://lsstdev.ncsa.uiuc.edu/trac/wiki/GitDemoAndTutorial
 
+Before you start, you'll probably want to put the following in
+~/.gitconfig:
+
+[user]
+      name = Your Name
+      email = user@domain
+[push]
+      default = upstream
+
+The "push" section changes the default behavior of "git push" to
+operate on the current branch only, which makes it symmetric
+with "git pull", and will help you avoid confusing (but ultimately
+harmless) error messages about failing to push refs due to
+non-fast-forward merges on branches other than the current one.
+
 --- Basic workflow ---
 
 # 0. clone the repo (only need to do this once, of course)

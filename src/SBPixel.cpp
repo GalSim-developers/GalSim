@@ -34,7 +34,7 @@ namespace galsim {
     }
 
 #ifdef USE_IMAGES
-    SBPixel::SBPixel(Image<float> img, const Interpolant2d& i, double dx_, double padFactor) : 
+    SBPixel::SBPixel(Image<float> const & img, const Interpolant2d& i, double dx_, double padFactor) : 
         dx(dx_), Nimages(1),
         xInterp(&i), kInterp(&defaultKInterpolant2d),
         wts(Nimages, 1.), fluxes(Nimages, 1.), 
@@ -42,14 +42,12 @@ namespace galsim {
         xsum(0), ksum(0), xsumValid(false), ksumValid(false),
         ready(false) 
     {
-        Ninitial = std::max( img.YMax()-img.YMin()+1, img.XMax()-img.XMin()+1);
+        Ninitial = std::max( img.getYMax()-img.getYMin()+1, img.getXMax()-img.getXMin()+1);
         Ninitial = Ninitial + Ninitial%2;
         assert(Ninitial%2==0);
         assert(Ninitial>=2);
         if (dx<=0.) {
-            // If dx was not specified, see if the header has a value, if not just dx=1.
-            if (!img.header()->getValue("DX", dx))
-                dx = 1.;
+            dx = img.getScale();
         }
         if (padFactor <= 0.) padFactor = OVERSAMPLE_X;
         // Choose the padded size for input array - size 2^N or 3*2^N
@@ -61,11 +59,11 @@ namespace galsim {
         for (int i=0; i<Nimages; i++) 
             vx.push_back(new XTable(Nk, dx));
         // fill data from image, shifting to center the image in the table
-        int xStart = -((img.XMax()-img.XMin()+1)/2);
-        int yTab = -((img.YMax()-img.YMin()+1)/2);
-        for (int iy = img.YMin(); iy<= img.YMax(); iy++, yTab++) {
+        int xStart = -((img.getXMax()-img.getXMin()+1)/2);
+        int yTab = -((img.getYMax()-img.getYMin()+1)/2);
+        for (int iy = img.getYMin(); iy<= img.getYMax(); iy++, yTab++) {
             int xTab = xStart;
-            for (int ix = img.XMin(); ix<= img.XMax(); ix++, xTab++) 
+            for (int ix = img.getXMin(); ix<= img.getXMax(); ix++, xTab++) 
                 vx.front()->xSet(xTab, yTab, img(ix,iy));
         }
     }
@@ -262,15 +260,15 @@ namespace galsim {
 #ifdef USE_IMAGES
     // One more time: for images now
     // Returns total flux
-    double SBPixel::fillXImage(Image<float> I, double dx) const 
+    double SBPixel::fillXImage(Image<float> & I, double dx) const 
     {
 #ifdef DANIELS_TRACING
         cout << "SBPixel::fillXImage called" << endl;
 #endif
         if ( dynamic_cast<const InterpolantXY*> (xInterp)) {
             double sum=0.;
-            for (int ix = I.XMin(); ix <= I.XMax(); ix++) {
-                for (int iy = I.YMin(); iy <= I.YMax(); iy++) {
+            for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
+                for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {
                     Position<double> x(ix*dx,iy*dx);
                     double val = xValue(x);
                     sum += val;
