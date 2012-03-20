@@ -1,3 +1,5 @@
+// This file is deprecated in favor of SBDraw.py, which does the same thing in Python
+// (and actually works; C++ FITS output has been removed, so this program does nothing).
 
 #include "GalSim.h"
 
@@ -22,7 +24,9 @@ int main(int argc, char *argv[])
         galsim::Image<float> img=sbp->draw(dx, wmult);
         std::cout << "Pixel scale chosen: " << dx << std::endl;
         img.shift(1,1);
+#if 0 // FITSImage has been removed in favor PyFITS and the Python API; for exposition only
         galsim::FITSImage<float>::writeToFITS(argv[2],img);
+#endif
         delete sbp;
     } catch (std::runtime_error& err) {
         dbg << err.what() << std::endl;

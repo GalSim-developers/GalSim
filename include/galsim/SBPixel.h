@@ -40,7 +40,7 @@ namespace galsim {
         /// \param dx_ Input: stepsize between pixels in image data table (default value of `x0_ = 0.` checks the Image header for a suitable stepsize, sets to `1.` if none is found). 
         /// \param i Input: interpolation scheme to adopt between pixels (TODO: Add more, document Interpolant.h, describe the Interpolant2d class).
         /// \param padFactor Input: multiple by which to increase the image size when zero-padding or the Fourier transform (default `padFactor = 0.` forces adoption of the currently-hardwired `OVERSAMPLE_X = 4.` parameter value for `padFactor`).
-        SBPixel(Image<float> img, const Interpolant2d& i, double dx_=0., double padFactor=0.);
+        SBPixel(Image<float> const & img, const Interpolant2d& i, double dx_=0., double padFactor=0.);
 #endif
 
         /// Copy Constructor.
@@ -135,7 +135,7 @@ namespace galsim {
         virtual void fillXGrid(XTable& xt) const;
 
 #ifdef USE_IMAGES
-        virtual double fillXImage(Image<float> I, double dx) const;
+        virtual double fillXImage(Image<float> & I, double dx) const;
 #endif
 
     private:
