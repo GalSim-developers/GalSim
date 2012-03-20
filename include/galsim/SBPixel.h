@@ -12,7 +12,7 @@
 
 namespace galsim {
 
-    /// Surface Brightness Profile represented by interpolation over one or more pixel data tables such as images.
+    /// Surface Brightness Profile represented by interpolation over one or more data tables/images.
     //
     /// It is assumed that input images oversample the profiles they represent.  maxK() is set at 
     /// the Nyquist frequency of the input image, although it should be noted that interpolants 
@@ -21,7 +21,7 @@ namespace galsim {
     /// stepK() is set accordingly.  Multiple images can be stored as data tables in an SBPixel 
     /// object. A vector weight can then be used to
     /// express large families of Surface Brightness Profiles as sums of these interpolated images.
-    /// TODO: Add more!
+    /// (TODO: Add more!!!)
     class SBPixel : public SBProfile 
     {
     public:
