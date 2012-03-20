@@ -146,7 +146,7 @@ namespace galsim {
 
         /// Draw an image of the SBProfile in real space.
         //
-        /// If input image `img` is not specified or has null dimension, a square image will be
+        /// If input image `image` is not specified or has null dimension, a square image will be
         /// drawn which is big enough to avoid "folding."  If drawing is done using FFT,
         /// it will be scaled up to a power of 2, or 3x2^n, whicher fits.
         /// If input image has finite dimensions then these will be used, although in an FFT the 
@@ -170,7 +170,7 @@ namespace galsim {
         /// The default draw() routines decide internally whether image can be drawn directly
         /// in real space or needs to be done via FFT from k space.
         //
-        /// \param img Input/Output: image
+        /// \param image Input/Output: image
         /// \param dx Input: grid on which SBProfile is drawn has pitch `dx`; `given dx=0.` default, routine will choose `dx` to be at least fine enough for Nyquist sampling at `maxK()`.  If you specify `dx`, image will be drawn with this `dx` and you will receive an image with the aliased frequencies included.
         /// \param wmult Input: specifying `wmult>1` will draw an image that is `wmult` times larger than the default choice, i.e. it will have finer sampling in k space and have less folding.
         virtual double draw(Image<float> & image, double dx=0., int wmult=1) const; 
@@ -183,7 +183,7 @@ namespace galsim {
         /// image 
         /// may be calculated internally on a larger grid to avoid folding.
         //
-        /// \param img Input/Output: image
+        /// \param image Input/Output: image
         /// \param dx Input: grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, routine will choose `dx` to be at least fine enough for Nyquist sampling at maxK().  If you specify `dx`, image will be drawn with this `dx` and you will receive an image with the aliased frequencies included.
         /// \param wmult Input: specifying `wmult>1` will draw an image that is `wmult` times larger than the default choice, i.e. it will have finer sampling in k space and have less folding.
         virtual double plainDraw(Image<float> & image, double dx=0., int wmult=1) const; 
@@ -197,7 +197,7 @@ namespace galsim {
         /// image 
         /// may be calculated internally on a larger grid to avoid folding.
         //
-        /// \param img Input/Output: image
+        /// \param image Input/Output: image
         /// \param dx Input: grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, routine will choose `dx` to be at least fine enough for Nyquist sampling at `maxK()`.  If you specify `dx`, image will be drawn with this `dx` and you will receive an image with the aliased frequencies included.
         /// \param wmult Input: specifying `wmult>1` will draw an image that is `wmult` times larger than the default choice, i.e. it will have finer sampling in k space and have less folding.
         virtual double fourierDraw(Image<float> & image, double dx=0., int wmult=1) const; 
@@ -214,8 +214,8 @@ namespace galsim {
         /// The default draw() routines decide internally whether image can be drawn directly
         /// in real space or needs to be done via FFT from k space.
         //
-        /// \param Re Input/Output: image of real argument of SBProfile in k space
-        /// \param Im Input/Output: image of imaginary argument of SBProfile in k space
+        /// \param re Input/Output: image of real argument of SBProfile in k space
+        /// \param im Input/Output: image of imaginary argument of SBProfile in k space
         /// \param dk Input: grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default, routine will choose `dk` necessary to avoid folding of image in x space.  If you specify `dk`, image will be drawn with this `dk` and you will receive an image with folding artifacts included.
         /// \param wmult Input: specifying `wmult>1` will expand the size drawn in k space.
         virtual void drawK(Image<float> & re, Image<float> & im, double dk=0., int wmult=1) const; 
@@ -226,8 +226,8 @@ namespace galsim {
         /// If on input either image `Re` or `Im` is not specified or has null dimension, square images will be
         /// drawn which are big enough to avoid "folding."
         //
-        /// \param Re Input/Output: image of real argument of SBProfile in k space
-        /// \param Im Input/Output: image of imaginary argument of SBProfile in k space
+        /// \param re Input/Output: image of real argument of SBProfile in k space
+        /// \param im Input/Output: image of imaginary argument of SBProfile in k space
         /// \param dk Input: grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default, routine will choose `dk` necessary to avoid folding of image in x space.  If you specify `dk`, image will be drawn with this `dk` and you will receive an image with folding artifacts included.
         /// \param wmult Input: specifying `wmult>1` will expand the size drawn in k space.
         virtual void plainDrawK(
@@ -244,8 +244,8 @@ namespace galsim {
         /// image 
         /// may be calculated internally on a larger grid to avoid folding in real space.
         //
-        /// \param Re Input/Output: image of real argument of SBProfile in k space
-        /// \param Im Input/Output: image of imaginary argument of SBProfile in k space
+        /// \param re Input/Output: image of real argument of SBProfile in k space
+        /// \param im Input/Output: image of imaginary argument of SBProfile in k space
         /// \param dk Input: grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default, routine will choose `dk` necessary to avoid folding of image in x space.  If you specify `dk`, image will be drawn with this `dk` and you will receive an image with folding artifacts included.
         /// \param wmult Input: specifying `wmult>1` will expand the size drawn in k space.
         virtual void fourierDrawK(

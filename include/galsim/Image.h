@@ -41,45 +41,7 @@ namespace galsim {
     /**
      *  @brief Image class with const pixels.
      *
-     *  The Image class is a 2-d array with pixel values stored contiguously in memory along
-     *  rows (but not necessarily between rows).  An image's pixel values may be shared between
-     *  multiple image objects (with reference counting), and a subimage may share data with
-     *  its parent and multiple siblings.  Images may also share pixel values with NumPy arrays.
-     *
-     *  An Image also contains a bounding box; its origin need not be (0,0) or (1,1).  It also
-     *  contains a single floating-point pixel scale, though this may be intepreted differently
-     *  in different contexts.
-     *
-     *  The fact that images share memory makes their constness semantics a lot more complicated.
-     *  The copy constructor and the assignment operator (these are implicitly defined by the
-     *  compiler) for images are both "shallow" - they simply create new references to the
-     *  same underlying memory, or change what memory an image object points at.  This means
-     *  the usual constness semantics don't work: if we have a "const Image &", we could
-     *  trivially copy it to a non-const Image object that shares data with it, so there's
-     *  no point to preventing pixel modifications on const Images.
-     *
-     *  Instead, the Image<const T> template is specialized, and should be used to represent
-     *  Images whose pixels cannot be modified.  Furthermore, Image<T> inherits from
-     *  Image<const T>, so you can use an Image<T> anywhere an Image<const T> is expected.
-     *  This is similar to how constness semantics work with pointers and smart pointers,
-     *  and once you get used to it it makes a lot of sense.
-     *
-     *  However, it does have some surprising implications:
-     *   - Member functions that modify the pixels are marked as const (but are not defined for
-     *     Image<const T>).
-     *   - Because the main assignment operator is shallow, there is no assignment operator that
-     *     accepts a scalar (because it would have to be deep).  Instead, there's a "fill" member
-     *     function that sets the entire image to scalar.
-     *   - Similarly, there's "copyFrom" member function that does deep assignment of an image.
-     *     You can also use "duplicate" to return a new image that is a deep copy.
-     *   - The augmented assignment operators ARE deep, and hence behave very differently from
-     *     the regular assignment operators.  And, because they just modify pixel values, they're
-     *     const member functions and retern const references to this/
-     *
-     *  Note that the bounding box and the pixel scale are not shared between images, and these
-     *  have the regular constness semantics: member functions that modify them are not const.
-     *
-     *  Image templates for short, int, float, and double are explicitly instantiated in Image.cpp.
+     *  @copydetails Image
      */
     template <typename T>
     class Image<const T> {
@@ -250,10 +212,52 @@ namespace galsim {
     /**
      *  @brief Image class (non-const).
      *
-     *  @copydetails Image<const T>
+     *  The Image class is a 2-d array with pixel values stored contiguously in memory along
+     *  rows (but not necessarily between rows).  An image's pixel values may be shared between
+     *  multiple image objects (with reference counting), and a subimage may share data with
+     *  its parent and multiple siblings.  Images may also share pixel values with NumPy arrays.
+     *
+     *  An Image also contains a bounding box; its origin need not be (0,0) or (1,1).  It also
+     *  contains a single floating-point pixel scale, though this may be intepreted differently
+     *  in different contexts.
+     *
+     *  The fact that images share memory makes their constness semantics a lot more complicated.
+     *  The copy constructor and the assignment operator (these are implicitly defined by the
+     *  compiler) for images are both "shallow" - they simply create new references to the
+     *  same underlying memory, or change what memory an image object points at.  This means
+     *  the usual constness semantics don't work: if we have a "const Image &", we could
+     *  trivially copy it to a non-const Image object that shares data with it, so there's
+     *  no point to preventing pixel modifications on const Images.
+     *
+     *  Instead, the Image<const T> template is specialized, and should be used to represent
+     *  Images whose pixels cannot be modified.  Furthermore, Image<T> inherits from
+     *  Image<const T>, so you can use an Image<T> anywhere an Image<const T> is expected.
+     *  This is similar to how constness semantics work with pointers and smart pointers,
+     *  and once you get used to it it makes a lot of sense.
+     *
+     *  However, it does have some surprising implications:
+     *   - Member functions that modify the pixels are marked as const (but are not defined for
+     *     Image<const T>).
+     *   - Because the main assignment operator is shallow, there is no assignment operator that
+     *     accepts a scalar (because it would have to be deep).  Instead, there's a "fill" member
+     *     function that sets the entire image to scalar.
+     *   - Similarly, there's "copyFrom" member function that does deep assignment of an image.
+     *     You can also use "duplicate" to return a new image that is a deep copy.
+     *   - The augmented assignment operators ARE deep, and hence behave very differently from
+     *     the regular assignment operators.  And, because they just modify pixel values, they're
+     *     const member functions and retern const references to this/
+     *
+     *  Note that the bounding box and the pixel scale are not shared between images, and these
+     *  have the regular constness semantics: member functions that modify them are not const.
+     *
+     *  Image templates for short, int, float, and double are explicitly instantiated in Image.cpp.
      */
     template <typename T>
-    class Image : public Image<const T> {
+    class Image : public Image<const T> { 
+    // NOTE: Doxygen is confused by this inheritance and warns that it's recursive.
+    // It's not recursive; Doxygen just isn't parsing partial specialization.  We
+    // could hide the inheritance from Doxygen completely, but that would reduce
+    // the quality of the outputs.  I think it's best just to live with the warning.
     public:
 
         /// @brief Create a new image with origin at (1,1).
