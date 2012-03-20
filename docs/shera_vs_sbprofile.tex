@@ -1,0 +1,202 @@
+\documentclass[preprint]{aastex}
+
+% packages for figures
+\usepackage{graphicx}
+% packages for symbols
+\usepackage{latexsym,amssymb}
+% AMS-LaTeX package for e.g. subequations
+\usepackage{amsmath}
+
+%=====================================================================
+% FRONT MATTER
+%=====================================================================
+
+\slugcomment{Draft \today}
+
+%=====================================================================
+% BEGIN DOCUMENT
+%=====================================================================
+
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\newcommand{\shera}{{\sc shera}}
+\newcommand{\sbp}{SBProfile}
+\newcommand{\mxx}{\ensuremath{M_{xx}}}
+\newcommand{\myy}{\ensuremath{M_{yy}}}
+
+\begin{document}
+
+\title{Comparison between \shera\ and \sbp}
+
+\begin{abstract}
+This document describes the results of tests of \shera\ and \sbp\ to
+ensure that (a) they give consistent results for realistic galaxies
+and PSFs and (b) they are applying the shears sufficiently accurately
+for the purposes of the GREAT3 challenge.
+\end{abstract}
+
+\section{Motivation}
+
+The \shera\ software was designed specifically to simulate 
+ground-based data using realistic training data from HST, and was
+written in IDL.  Recently \sbp, which was designed as a more
+general-purpose image simulator, was extended to include \shera-like
+functionality using the SBPixel class to represent general, non-parametric galaxy and
+PSF images.  We
+want to ensure that the two codes give consistent results, and that
+the shears are applied to sufficiently high accuracy for use in GalSim
+and GREAT3.
+
+\subsection{The approaches}
+
+There are a few differences between the approaches in \shera\ and in
+\sbp\ when mapping a COSMOS galaxy to a sheared one at lower
+resolution.  
+
+\begin{itemize}
+\item The main difference is that \sbp\ supports any ratio of output
+  to input pixel scale, which requires it to interpolate the target
+  PSF in Fourier space.  In contrast, \shera\ has more restrictive
+  rules about the ratio of output to input pixel scale (requiring that
+  $5\times$ (output pixel scale)$/$(input pixel scale) be an integer),
+  but this requirement allows the code to avoid explicitly
+  interpolating the target PSF.  Instead, it is implicitly
+  interpolated, via padding in Fourier space, which is equivalent to
+  the ideal sinc interpolation in real space.  Clearly, we require the
+  more general \sbp\ treatment for GalSim, and it will be interesting
+  to compare these approaches.
+\item Due to the aforementioned rules about ratios of output to input
+  pixel scale, and method of dealing with target PSFs, \sbp\ requires
+  images with linear dimension $2^n$ or $3\times 2^n$ for FFTs, but \shera\ has rather
+  more arcane rules that require the galaxy image and the target PSF
+  to be related by a factor of output vs. input pixel scale.
+\item \shera\ suffers from some annoying centroiding issues
+  due to the use of IDL convolution routines.
+\item \shera\ and \sbp\ have different flux normalization conventions
+  due to their different purposes.  In particular, \sbp\ seeks to
+  preserve the surface brightness whereas \shera\ asks the user to specify a target
+  flux normalization.
+\item \shera\ is carrying out a pseudo-deconvolution whereas \sbp\ is
+  carrying out a full deconvolution.  This should not matter as long
+  as the pseudo-deconvolution properly looks like a deconvolution for
+  all $k$ that are not killed off by the target PSF.
+\item The final resampling (via interpolation or subsampling) takes
+  place in Fourier domain for \sbp, in real space for \shera.
+\end{itemize}
+
+Note that the standard interpolation method that is used by the two is
+the same: cubic interpolation (a windowed
+appoximation to a sinc based on cubic polynomials, using 16 points for
+a 2d image).  But the place where it is applied differs, which could
+be important.  However, this difference in interpolation only relates to the
+PSF-matching and resampling;
+for both pieces of software, the lensing shear is applied via cubic
+interpolation in Fourier space.
+
+\subsection{Issues}
+
+Comparison of results between the two codes is complicated by the
+different conventions for centroiding and flux normalization, and by
+the different rules for array sizes. For our initial tests, to allow for compatible input
+image sizes between the codes, we require output vs. input pixel size
+$=2^n$.  We chose $n=3$, so the ground-based telescope for which we
+carry out the tests has $0.24$ arcsec pixels.  (Note that we still use
+SDSS PSFs when we need real ones.  We are simply lying to the code
+about the pixel size for those PSFs, for our own convenience.)  Also,
+since output vs. input pixel sizes are an integer, the final
+resampling to the target pixel size is simply a resampling process.
+We will eventually want to test the effects of resampling via
+interpolation, but that test can take place at a later stage.
+
+\section{The PSF test and non-sheared galaxy tests}
+
+We begin with a test for which we know the answer: we choose some
+typical COSMOS PSF as our ``galaxy,'' so that when we carry out
+PSF-matching, the final ``galaxy'' image should equal the target PSF.
+This test does not involve shearing, it only tests PSF-matching for
+rather arbitrary images.  We also carry out the PSF-matching for three
+sample galaxies, where the true answer is not known.  
+
+For this test, we compare three types of outputs: we compare the final
+image on the target pixel scale; and we compare it on the original pixel
+scale (after PSF-matching, which includes the target pixel response
+function).  Since the ratio of pixel scales is an integer, the
+first image comes from strict subsampling of the second image.
+
+As an aside, we also compare a real-space version of the target PSF
+interpolated to the original COSMOS pixel scale, as a test of our
+interpolators. This test 
+suggests that our cubic convolution implementations do essentially the
+same thing: the moments of the interpolated PSFs agree at the
+$10^{-5}$ level.
+
+In the initial version of the 1st and 2nd tests (final simulated image
+on target and initial pixel scales), we found that the first test gave
+results that agree down to the $3\times 10^{-4}$ level for the sum of
+$\mxx+\myy$, and $3 \times 10^{-6}$ in ellipticity -- but the second
+test gave differences of order a few percent, with \sbp\ outputs being
+larger and rounder than the \shera\ outputs.  
+
+Gary's theory is that
+this relates to the fact that his Fourier-domain treatment includes
+operations to represent the (by default cubic) interpolation of the
+target PSF.  The cubic interpolation effectively broadens the PSF
+slightly, so \sbp\ gives broader outputs at the initial pixel scale,
+but not at the final pixel scale (where the resampling essentially
+means there is no interpolation).  To test the theory that
+this difference comes from the \sbp\ inclusion of the cubic
+interpolant as part of the definition of the PSF, Gary replaced the
+cubic interpolation of the target PSF with an $N=7$ Lanczos filter.
+This filter should more closely approximate what \shera\ does, i.e. no
+interpolation of the target PSF, but rather padding and embedding it
+into some larger array, which is equivalent to sinc interpolation.
+When he does this, the $\mxx+\myy$ from \shera\ and \sbp\ at the
+initial COSMOS pixel scale agree to a few $\times 10^{-4}$, and the
+ellipticities agree to the fifth decimal place.  
+
+Conclusion for GalSim: we need to keep in mind that interpolation of
+the target PSF (either implicitly via FTing and padding, or explicitly
+in real or Fourier space) can amount to a different definition of the
+PSF, and we must decide what definition to use.
+
+\section{Shear}
+
+We have to test the accuracy of applied shears.  There is no serious
+reason to expect the methods to disagree with each other (given that
+we established that they carry out cubic interpolation nearly
+identically), but this test is still important, particularly a test of
+absolute rather than relative accuracy.
+
+\subsection{Relative accuracy}
+
+Real galaxies, \sbp\ vs. \shera.
+
+\subsection{Absolute accuracy}
+
+Parametric models, both \sbp\ and \shera\ compared to a known
+reference that can be sheared analytically.
+
+\section{Resampling}
+
+Once we understand the results of the above tests, we need to do some tests that 
+require resampling to non-integer ratio pixel scales.
+
+\section{Outstanding issues and conclusions}
+
+As we found in the first test, we need to be sure to understand the impact of
+resampling with a given interpolant in Fourier space (which gives
+errors periodic in $k$, and real-space ghosts) or real space (which
+gives errors periodic in $x$, and Fourier-space ghosts), and the
+impact on the effective PSF.
+
+A point that Gary raised to consider for the future: are our images
+giving surface brightness (the assumption of \sbp) or flux per pixel
+(the assumption of \shera, which means to match to some known object
+flux in ground-based data)?  And when we add magnification to the
+pixel, do we want to conserve flux or surface brightness?  (\sbp\ does
+the latter.  We should make this choice clear and decide whether it
+makes sense for us for GalSim.  I think it does.)
+
+
+
+\end{document}
