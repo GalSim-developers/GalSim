@@ -10,6 +10,8 @@ I have installed a helper program into docs/doxypy.py which makes it possible to
 
 There are many different options for structuring doxygen comments - I suggest we stick with the one described here.
 
+While Doxygen supports both "\" and "@" as a markup symbol, we recommend "@", because "\" is also used as an escape character in many other contexts.
+
 The examples briefly shown here are fleshed out a little in docs/astronomer.py and docs/astronomy.hpp.  Run doxygen in the docs directory to generate  docs/doxygen_example_output.  You can then open  docs/doxygen_example_output/index.html in a browser.
 
 Running Doxygen
@@ -29,25 +31,33 @@ Classes, methods, functions, files, and data declarations can all be doxy'd.  In
 DOCUMENTING CLASSES AND STRUCTS
 -------------------------------
 
-/// A telescope with a location and optical properties.
-//
-/// A telescope object simulates observations that are possible from its latitude and longitude.
-/// It has properties which specify the type of observations it can make and the colour the front
-/// door of the observatory is painted.  The main method to use on a Telescope is "observe".
+/**
+ *  @brief A telescope with a location and optical properties.
+ *
+ *  A telescope object simulates observations that are possible from its latitude and longitude.
+ *  It has properties which specify the type of observations it can make and the colour the front
+ *  door of the observatory is painted.  The main method to use on a Telescope is "observe".
+ */
 class Telescope
 {
 }
 
-The gap line (with only two slashes, though we could equally have left it blank) separates the description out into a brief overview description and a more detailed one.
+The gap line (with only '*', though we could equally have left it blank or used a different comment style) separates the description out into a brief overview description and a more detailed one.
 
 
 DOCUMENTING FILES
 -----------------
-A description of the purpose or usage of the whole file can be given at the top of it, using the same format as the class documentation, but with the \file keyword and the current filename specified:
+A description of the purpose or usage of the whole file can be given at the top of it, using the same format as the class documentation, but with the @file keyword and the current filename specified:
 
-/// \file Astronomy.hpp Contains astronomy functions except those involving individual astronomers
-//
-/// All functions are in Astronomy namespace. Constants useful for observational cosmology are also supplied
+/**
+ *  @file Astronomy.hpp
+ *
+ *  @brief Contains astronomy functions except those involving individual astronomers; this
+ *         brief documentation spans more than one line.
+ *
+ *  All functions are in Astronomy namespace. Constants useful for observational cosmology
+ *  are also supplied
+ */
 
 
 
@@ -55,16 +65,18 @@ A description of the purpose or usage of the whole file can be given at the top 
 DOCUMENTING METHODS AND FUNCTIONS
 ---------------------------------
 
-In GalSim all methods, including private ones, will be checked for documentation[1].  The parameters and return type of a method or function can be documented with the \param and \return lines.
+In GalSim all methods, including private ones, will be checked for documentation[1].  The parameters and return type of a method or function can be documented with the @param and @return lines.
 
-/// Construct a telescope at a location
-//
-/// Construct a telescope at the specified location parameters.  The optical properties and 
-/// interior decor will all use default values.
-/// \param latitude The latitude in degrees of the telescope
-/// \param longitude The longitude in degrees of the telescope (west is positive)
-/// \param altitude The telescope altitude above local sea level in meters.
-/// \return A telescope instance
+/**
+ *  @brief Construct a telescope at a location
+ *
+ *  Construct a telescope at the specified location parameters.  The optical properties and 
+ *  interior decor will all use default values.
+ *  @param[in] latitude    The latitude in degrees of the telescope
+ *  @param[in] longitude   The longitude in degrees of the telescope (west is positive)
+ *  @param[in] param       altitude The telescope altitude above local sea level in meters.
+ *  @return A telescope instance
+ */
 Telescope(float latitude, float longitude, float altitude);
 
 
@@ -84,7 +96,7 @@ This can also be used on #define quantities:
 CLASSES, METHODS, AND FUNCTIONS
 -------------------------------
 
-Since python has an in-build documentation string concept, doxygen can parse those strings to make its docs.  The docstrings of classes, functions and methods will be parsed straightforwardly.  As in C++, the first line is a brief description and the rest are a more detailed one, or parameters or return types.  Since python is dynamically typed and does not enforce what type of object function arguments are it is a good idea to put in the docstring of functions and methods what type of objects you typically expect it to be called with.  As in C++, the \param and \return keywords indicate a description of parameters and return values.
+Since python has an in-build documentation string concept, doxygen can parse those strings to make its docs.  The docstrings of classes, functions and methods will be parsed straightforwardly.  As in C++, the first line is a brief description and the rest are a more detailed one, or parameters or return types.  Since python is dynamically typed and does not enforce what type of object function arguments are it is a good idea to put in the docstring of functions and methods what type of objects you typically expect it to be called with.  As in C++, the @param and @return keywords indicate a description of parameters and return values.
 
 class Astronomer(object):
 	"""A single Astronomer.
@@ -100,17 +112,17 @@ class Astronomer(object):
 		Make up an astronomer object by specifying its components. All the normal properties of
 		astronomers are assumed.
 		
-		\param name (String) Mandatory - the astronomer's surname
-		\param papers (List of strings) Optional - a list of papers by the astronomer
-		\return (Astronomer) A new astronomer instance
+		@param name (String) Mandatory - the astronomer's surname
+		@param papers (List of strings) Optional - a list of papers by the astronomer
+		@return (Astronomer) A new astronomer instance
 		"""
 
 
 DOCUMENTING FILES
 -----------------
-The file docstring (which must be at the very top) is also parsed as the documentation for the whole file, but as with c++ you must use the \file keyword and specify the current filename to get this to work:
+The file docstring (which must be at the very top) is also parsed as the documentation for the whole file, but as with c++ you must use the @file keyword and specify the current filename to get this to work:
 """
-\file astronomer.py Contains Astronomer class and constants
+@file astronomer.py Contains Astronomer class and constants
 
 The constants are mainly default parameters for astronomer characteristics, like age and height.
 """
