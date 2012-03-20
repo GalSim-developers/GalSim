@@ -49,7 +49,7 @@ struct PyImage {
     template <typename U, typename W>
     static void wrapCommon(W & wrapper) {
         wrapper
-            .def(bp::init<int,int>(bp::args("nrows","ncols")))
+            .def(bp::init<int,int>(bp::args("ncol","nrow")))
             .def(bp::init<const Bounds<int> &, T>(
                      (bp::arg("bounds")=Bounds<int>(), bp::arg("initValue")=T(0))
                  ))
@@ -182,6 +182,42 @@ struct PyImage {
 
     static bp::object wrap(std::string const & suffix) {
         
+        char const * doc = \
+            "Image[SIFD] and ConstImage[SIFD] are the 2-d strided array classes\n"
+            "that represent the primary way to pass image data between Python\n"
+            "and the GalSim C++ library.\n\n"
+            "There is a separate Python class for each C++ template instantiation,\n"
+            "and these can be accessed using NumPy types as keys in the Image dict:\n"
+            "  ImageS == Image[numpy.int16]\n"
+            "  ImageI == Image[numpy.int32] # may be numpy.int64 on some platforms \n"
+            "  ImageF == Image[numpy.float32]\n"
+            "  ImageD == Image[numpy.float64]\n"
+            "\n"
+            "An Image can be thought of as containing a 2-d, row-contiguous NumPy\n"
+            "array (which it may share with other images), and origin point, and\n"
+            "a pixel scale (the origin and pixel scale are not shared).\n"
+            "\n"
+            "There are several ways to construct an Image:\n"
+            "  Image(ncol, nrol)              # zero-filled image with origin (1,1)\n"
+            "  Image(bounds=BoundsI(), initValue=0) # bounding box and initial value\n"
+            "  Image(array, xMin=1, yMin=1)  # NumPy array and origin\n"
+            "\n"
+            "The array argument to the last constructor must have contiguous values\n"
+            "along rows, which should be the case for newly-constructed arrays, but may\n"
+            "not be true for some views and generally will not be true for transposes.\n"
+            "\n"
+            "An Image also has a '.array' attribute that provides a NumPy view into the\n"
+            "Image's pixels.  Regardless of how the Image was constructed, this array\n"
+            "and the Image will point to the same underlying data, and modifying one\n"
+            "will affect the other.\n"
+            "\n"
+            "Note that both the attribute and the array constructor argument are\n"
+            "ordered [y,x], matching the standard NumPy convention, while the Image\n"
+            "class's own accessors are all (x,y).\n\n"
+            "Images can also be constructed from FITS files, using galsim.fits.read\n"
+            "(or equivalently Image[SIFD].read), and written to FITS with .write\n"
+            ;
+
         bp::object getScale = bp::make_function(&Image<const T>::getScale);
         bp::object setScale = bp::make_function(&Image<const T>::setScale);
         bp::object at = bp::make_function(
@@ -194,7 +230,7 @@ struct PyImage {
             bp::return_value_policy<bp::copy_const_reference>()
         ); 
         bp::class_< Image<const T> >
-            pyConstImage(("ConstImage" + suffix).c_str(), bp::no_init);
+            pyConstImage(("ConstImage" + suffix).c_str(), doc, bp::no_init);
         wrapCommon<const T>(pyConstImage);
         pyConstImage
             .def(
@@ -227,7 +263,7 @@ struct PyImage {
         ADD_CORNER(getYMax, yMax);
 
         bp::class_< Image<T>, bp::bases< Image<const T> > >
-            pyImage(("Image" + suffix).c_str(), bp::no_init);
+            pyImage(("Image" + suffix).c_str(), doc, bp::no_init);
         wrapCommon<T>(pyImage);
         pyImage
             .def(
