@@ -17,7 +17,6 @@
 
 // Noise stuff
 #include "galsim/Random.h"
-#include "galsim/Poisson.h"
 
 // An integration package by Mike Jarvis
 #include "galsim/integ/Int.h"
