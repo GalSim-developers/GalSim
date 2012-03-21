@@ -143,5 +143,5 @@ interpret the #.  We have to say
 
 git branch -d "#12"
 
-to get the branch to go away.
+to get the tracking branch to go away.
 
