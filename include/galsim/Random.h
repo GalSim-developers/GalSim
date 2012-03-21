@@ -1,4 +1,4 @@
-/// \file Random-number-generator classes
+/// \file Random.h Random-number-generator classes
 //
 /// Pseudo-random-number generators with various parent distributions: uniform, Gaussian,
 /// binomial, and Poisson.  
