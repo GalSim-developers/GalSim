@@ -123,3 +123,25 @@ A tracking branch tells git where to push your changes when you say
 remote changes into the remote branches) and "git merge <remote>"
 (which merges the remote branch into the tracking branch).
 
+--- About the impact of how we chose branch names ---
+
+We chose our branch names such that they will start with #.  This has
+an impact if we have local tracking branches that we want to delete.
+Say, for example, that we want to make a tracking branch for #12.  As
+above, this can be done using
+
+git checkout -t origin/#12
+
+When we use "branch" to check what branches we have, we will have a
+#12 on the list.  But let's say branch #12 gets merged to master and
+we no longer want the tracking branch sitting around.  If we do
+
+git branch -d #12
+
+then nothing will happen because either git or the shell is trying to
+interpret the #.  We have to say
+
+git branch -d "#12"
+
+to get the branch to go away.
+
