@@ -3,7 +3,6 @@ FFT.cpp
 Image.cpp
 Interpolant.cpp
 Laguerre.cpp
-Poisson.cpp
 Pset.cpp
 SBParse.cpp
 SBPixel.cpp
