@@ -133,14 +133,14 @@ namespace galsim {
 	double getSigma() {return normal.sigma();}
 	/// Set current distribution mean
 	//
-	/// \param New mean for distribution
+	/// \param mean New mean for distribution
 	void setMean(double mean) {
 	  normal.param(boost::random::normal_distribution<>::param_type(mean,
 								normal.sigma()));
 	}
 	/// Set current distribution standard deviation
 	//
-	/// \param New standard deviation for distribution.  Behavior for non-positive value is undefined.
+	/// \param sigma New standard deviation for distribution.  Behavior for non-positive value is undefined.
 	void setSigma(double sigma) {
 	  normal.param(boost::random::normal_distribution<>::param_type(normal.mean(),
 								sigma));
@@ -195,14 +195,14 @@ namespace galsim {
 	double getP() {return bd.p();}
 	/// Reset value of N
 	//
-	/// \param New value of N
+	/// \param N New value of N
 	void setN(int N) {
 	    bd.param(boost::random::binomial_distribution<>::param_type(N,
 								        bd.p()));
 	}
 	/// Reset value of p
 	//
-	/// \param New value of p
+	/// \param p New value of p
 	void setP(double p) {
 	    bd.param(boost::random::binomial_distribution<>::param_type(bd.t(),
 									p));
@@ -248,7 +248,7 @@ namespace galsim {
 	double getMean() {return pd.mean();}
 	/// Reset distribution mean
 	//
-	/// \param New mean value
+	/// \param mean New mean value
 	void setMean(double mean) {
 	  pd.param(boost::random::poisson_distribution<>::param_type(mean));
 	}
