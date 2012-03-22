@@ -194,7 +194,7 @@ namespace galsim {
         /** 
 	 * @brief Draw an image of the SBProfile in real space.
 	 *
-	 * If input image `image` is not specified or has null dimension, a square image will be
+	 * A square image will be
          * drawn which is big enough to avoid "folding."  If drawing is done using FFT,
          * it will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
@@ -209,12 +209,12 @@ namespace galsim {
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
 	 *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
+	 * @returns image
 	 */
         virtual Image<float> draw(double dx=0., int wmult=1) const;
 
         /** 
-	 * @brief Draw the SBProfile in real space returning the summed flux in each pixel as an 
-	 * image.
+	 * @brief Draw the SBProfile in real space returning the summed flux.
          *
          * If on input image `img` is not specified or has null dimension, a square image will be
          * drawn which is big enough to avoid "folding."  If drawing is done using FFT,
@@ -232,6 +232,7 @@ namespace galsim {
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
 	 *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
+	 * @returns summed flux.
 	 */
         virtual double draw(Image<float> & image, double dx=0., int wmult=1) const; 
 
@@ -252,6 +253,7 @@ namespace galsim {
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
 	 *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
+	 * @returns summed flux.
 	 */
         virtual double plainDraw(Image<float> & image, double dx=0., int wmult=1) const; 
 
@@ -273,6 +275,7 @@ namespace galsim {
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
 	 *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
+	 * @returns summed flux.
 	 */
         virtual double fourierDraw(Image<float> & image, double dx=0., int wmult=1) const; 
 
@@ -289,10 +292,10 @@ namespace galsim {
          *
          * @param[in,out]   re image of real argument of SBProfile in k space.
          * @param[in,out]   im image of imaginary argument of SBProfile in k space.
-         * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
-	 *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
-	 *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
-	 *                  you will receive an image with the aliased frequencies included.
+         * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
+         *                  routine will choose `dk` necessary to avoid folding of image in real 
+	 *                  space.  If you specify `dk`, image will be drawn with this `dk` and
+	 *                  you will receive an image with folding artifacts included.
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
 	 */
         virtual void drawK(Image<float> & re, Image<float> & im, double dk=0., int wmult=1) const; 
@@ -308,10 +311,10 @@ namespace galsim {
          *
          * @param[in,out]   re image of real argument of SBProfile in k space.
          * @param[in,out]   im image of imaginary argument of SBProfile in k space.
-         * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
-	 *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
-	 *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
-	 *                  you will receive an image with the aliased frequencies included.
+         * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
+         *                  routine will choose `dk` necessary to avoid folding of image in real 
+	 *                  space.  If you specify `dk`, image will be drawn with this `dk` and
+	 *                  you will receive an image with folding artifacts included.
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
 	 */
         virtual void plainDrawK(
@@ -319,7 +322,7 @@ namespace galsim {
             double dk=0., int wmult=1) const; 
 
         /**
-	 * @brief Draw an image of the SBProfile in k space forcing the use of Fourier transform 
+         * @brief Draw an image of the SBProfile in k space forcing the use of Fourier transform 
 	 * from real space.
          *
          * For drawing in k space: routines are analagous to real space, except 2 images are 
@@ -332,10 +335,10 @@ namespace galsim {
          *
          * @param[in,out]   re image of real argument of SBProfile in k space.
          * @param[in,out]   im image of imaginary argument of SBProfile in k space.
-         * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
-	 *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
-	 *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
-	 *                  you will receive an image with the aliased frequencies included.
+         * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
+         *                  routine will choose `dk` necessary to avoid folding of image in real 
+	 *                  space.  If you specify `dk`, image will be drawn with this `dk` and
+	 *                  you will receive an image with folding artifacts included.
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
 	 */
         virtual void fourierDrawK(
@@ -365,43 +368,59 @@ namespace galsim {
 
     };
 
-    /// Sums SBProfiles. 
-    // 
-    /// Note that this class stores duplicates of its summands,
-    /// so they cannot be changed after adding them.
+    /** 
+     * @brief Sums SBProfiles. 
+     *
+     * Note that this class stores duplicates of its summands,
+     * so they cannot be changed after adding them.
+     */
     class SBAdd : public SBProfile 
     {
     protected:
-        std::list<SBProfile*> plist; ///< the plist content is a pointer to a fresh copy of the summands.
+        /// @brief The plist content is a pointer to a fresh copy of the summands.
+        std::list<SBProfile*> plist; 
     private:
         double sumflux; ///< Keeps track of the cumulated flux of all summands.
         double sumfx; ///< Keeps track of the cumulated `fx` of all summands.
         double sumfy; ///< Keeps track of the cumulated `fy` of all summands.
         double maxMaxK; ///< Keeps track of the cumulated `maxK()` of all summands.
         double minStepK; ///< Keeps track of the cumulated `minStepK()` of all summands.
-        bool allAxisymmetric; ///< Keeps track of the cumulated `isAxisymmetric()` properties of all summands.
-        bool allAnalyticX; ///< Keeps track of the cumulated `isAnalyticX()` property of all summands.
-        bool allAnalyticK; ///< Keeps track of the cumulated `isAnalyticK()` properties of all summands.
+
+        /// @brief Keeps track of the cumulated `isAxisymmetric()` properties of all summands.
+        bool allAxisymmetric;
+
+        /// @brief Keeps track of the cumulated `isAnalyticX()` property of all summands. 
+        bool allAnalyticX; 
+
+        /// @brief Keeps track of the cumulated `isAnalyticK()` properties of all summands.
+        bool allAnalyticK; 
+
         void initialize();  ///< Sets all private book-keeping variables to starting state.
+
     public:
-        /// Constructor, empty.
+        /// @brief Constructor, empty.
         SBAdd() : plist() { initialize(); }
 
-        /// Constructor, 1 input.
-        //
-        /// @param s1 Input: SBProfile.
+        /** 
+	 * @brief Constructor, 1 input.
+         *
+         * @param[in] s1 SBProfile.
+	 */
         SBAdd(const SBProfile& s1) : plist() { initialize(); add(s1); }
 
-        /// Constructor, 2 inputs
-        //
-        /// @param s1 Input: first SBProfile.
-        /// @param s2 Input: second SBProfile.
+        /** @brief Constructor, 2 inputs.
+	 *
+         * @param[in] s1 first SBProfile.
+         * @param[in] s2 second SBProfile.
+	 */
         SBAdd(const SBProfile& s1, const SBProfile& s2) : plist() 
         { initialize(); add(s1);  add(s2); }
 
-        /// Constructor, list of inputs.
-        //
-        /// @param slist Input: list of SBProfiles.
+        /** 
+	 * @brief Constructor, list of inputs.
+         *
+         * @param[in] slist list of SBProfiles.
+	 */
         SBAdd(const std::list<SBProfile*> slist) : plist() 
         {
             std::list<SBProfile*>::const_iterator sptr;
@@ -409,7 +428,10 @@ namespace galsim {
                 add(*(*sptr)->duplicate()); 
         }
 
-        /// Copy constructor
+        /** 
+	 * @brief Copy constructor.
+	 * @param[in] rhs SBAdd to be copied.
+	 */
         SBAdd(const SBAdd& rhs) : 
             plist(), sumflux(rhs.sumflux), sumfx(rhs.sumfx),
             sumfy(rhs.sumfy), maxMaxK(rhs.maxMaxK), minStepK(rhs.minStepK), 
@@ -421,17 +443,19 @@ namespace galsim {
                 plist.push_back((*sbptr)->duplicate());
         }
 
-        /// Destructor
+        /// @brief Destructor.
         ~SBAdd() 
         { 
             std::list<SBProfile*>::iterator pptr;
             for (pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; 
         }
 
-        /// SBAdd specific method for adding additional SBProfiles
-        //
-        /// @param rhs Input: SBProfile
-        /// @param scale Input: allows for rescaling flux by this factor
+        /** 
+	 * @brief SBAdd specific method for adding additional SBProfiles
+         *
+         * @param[in] rhs SBProfile.
+         * @param[in] scale allows for rescaling flux by this factor.
+	 */
         void add(const SBProfile& rhs, double scale=1.);
 
         // Barney's note: the methods below are documented at the SBProfile level (I think)
@@ -460,49 +484,57 @@ namespace galsim {
         virtual void fillXGrid(XTable& xt) const;
     };
 
-    /// An affine transformation of another SBProfile.
-    //
-    /// Stores a duplicate of its target.
-    /// Origin of original shape will now appear at `x0`.
-    /// Flux is NOT conserved in transformation - surface brightness is preserved.
-    /// We keep track of all distortions in a 2x2 matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1),
-    /// with an additional determinant multiplier `absdet`, plus a 2-element `x0` for the shift.
+    /**
+     * @brief An affine transformation of another SBProfile.
+     *
+     * Stores a duplicate of its target.
+     * Origin of original shape will now appear at `x0`.
+     * Flux is NOT conserved in transformation - surface brightness is preserved.
+     * We keep track of all distortions in a 2x2 matrix `M = [(A B), (C D)]` = [row1, row2] 
+     * (det`M`=1), with an additional determinant multiplier `absdet`, plus a 2-element `x0` for
+     * the shift.
+     */
     class SBDistort : public SBProfile 
     {
         
     private:
         SBProfile* adaptee; ///< SBProfile being adapted/distorted
-        double matrixA; ///< A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
-        double matrixB; ///< B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
-        double matrixC; ///< C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
-        double matrixD; ///< D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
+        double matrixA; ///< A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+        double matrixB; ///< B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+        double matrixC; ///< C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+        double matrixD; ///< D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
         // Calculate and save these:
-        Position<double> x0;  ///< Centroid position
-        double absdet;  ///< Determinant (flux magnification) of `M` matrix
-        double invdet;  ///< Inverse determinant of `M` matrix
-        double major; ///< Major axis of ellipse produced from unit circle
-        double minor; ///< Minor axis of ellipse produced from unit circle
+        Position<double> x0;  ///< Centroid position.
+        double absdet;  ///< Determinant (flux magnification) of `M` matrix.
+        double invdet;  ///< Inverse determinant of `M` matrix.
+        double major; ///< Major axis of ellipse produced from unit circle.
+        double minor; ///< Minor axis of ellipse produced from unit circle.
         bool stillIsAxisymmetric; ///< Is output SBProfile shape still circular?
 
     private:
-        /// Initialize the SBDistort
+        /// @brief Initialize the SBDistort.
         void initialize();
 
-        /// Forward coordinate transform with `M` matrix
+        /** 
+	 * @brief Forward coordinate transform with `M` matrix.
+	 *
+	 * @param[in] p input position.
+	 * @returns transformed position.
+	 */
         Position<double> fwd(Position<double> p) const 
         {
             Position<double> out(matrixA*p.x+matrixB*p.y,matrixC*p.x+matrixD*p.y);
             return out; 
         }
 
-        /// Forward coordinate transform with transpose of `M` matrix
+        /// @brief Forward coordinate transform with transpose of `M` matrix.
         Position<double> fwdT(Position<double> p) const 
         {
             Position<double> out(matrixA*p.x+matrixC*p.y,matrixB*p.x+matrixD*p.y);
             return out; 
         }
 
-        /// Inverse coordinate transform with `M` matrix
+        /// @brief Inverse coordinate transform with `M` matrix.
         Position<double> inv(Position<double> p) const 
         {
             Position<double> out(invdet*(matrixD*p.x-matrixB*p.y),
@@ -510,33 +542,39 @@ namespace galsim {
             return out; 
         }
 
-        /// Returns the the k value (no phase)
+        /// @brief Returns the the k value (no phase).
         std::complex<double> kValNoPhase(Position<double> k) const 
         { return absdet*adaptee->kValue(fwdT(k)); }
 
 
     public:
-        /// General constructor.
-        //
-        /// @param sbin Input: SBProfile being distorted
-        /// @param mA Input: A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
-        /// @param mB Input: B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
-        /// @param mC Input: C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
-        /// @param mD Input: D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2] (det`M`=1)
-        /// @param x0_ Input: 2-element (x, y) Position for the translational shift
+        /** 
+	 * @brief General constructor.
+         *
+         * @param[in] sbin SBProfile being distorted
+         * @param[in] mA A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+         * @param[in] mB B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+         * @param[in] mC C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+         * @param[in] mD D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+         * @param[in] x0_ 2-element (x, y) Position for the translational shift.
+	 */
         SBDistort(
             const SBProfile& sbin, double mA, double mB, double mC, double mD,
             Position<double> x0_=Position<double>(0.,0.));
 
-        /// Construct from an input Ellipse class object
-        //
-        /// @param sbin Input: SBProfile being distorted
-        /// @param e_ Input: Ellipse
+        /** 
+	 * @brief Construct from an input Ellipse class object
+         *
+         * @param[in] sbin SBProfile being distorted.
+         * @param[in] e_ Ellipse.
+	 */
         SBDistort(const SBProfile& sbin, const Ellipse e_=Ellipse());
 
-        /// Copy constructor
-        //
-        /// @param rhs Input: SBProfile being duplicated
+        /** 
+	 * @brief Copy constructor
+         *
+         * @param[in] rhs SBProfile being copied.
+	 */
         SBDistort(const SBDistort& rhs) 
         {
             adaptee = rhs.adaptee->duplicate();
@@ -548,7 +586,7 @@ namespace galsim {
             initialize();
         }
 
-        /// Destructor
+        /// @brief Destructor.
         ~SBDistort() { delete adaptee; adaptee=0; }
 
         // methods doxy described in base clase SBProfile
