@@ -35,8 +35,7 @@ be configured to build against the same Python that is being used to run SCons. 
 matches the Python you'd like to use can help you avoid a lot of problems later on.
 
 
-ii) Python (with Numpy and Pyfits modules installed)
-
+ii) Python (with Numpy and PyFITS modules installed)
 The heart of this code is the Python package galsim and its associated modules.  So you need Python
 (#TODO: Make a decision about versions).  
 
