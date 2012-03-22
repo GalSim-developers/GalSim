@@ -165,7 +165,7 @@ namespace galsim {
         virtual SBProfile* distort(const Ellipse e) const; 
 
         /** 
-         * Shear distortion transformation (affine without rotation or dilation).
+         * @brief Shear distortion transformation (affine without rotation or dilation).
          *
          * @param[in] e1 first component of ellipticity.
          * @param[in] e2 second component of ellipticity.
@@ -180,7 +180,7 @@ namespace galsim {
         virtual SBProfile* rotate(const double theta) const;
 
        /**
-         * Translation transformation.
+         * @brief Translation transformation.
          *
          * @param[in] dx shift in x.
          * @param[in] dy shift in y.
@@ -772,9 +772,9 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] flux_ flux of the Surface Brightness Profile (default `flux_ = 1.`).
+         * @param[in] flux_  flux of the Surface Brightness Profile (default `flux_ = 1.`).
          * @param[in] sigma_ characteristic size, surface brightness scales as 
-         * `exp[-r^2 / (2. * sigma^2)] (default `sigma_ = 1.`).
+         *                   `exp[-r^2 / (2. * sigma^2)] (default `sigma_ = 1.`).
          */
         SBGaussian(double flux_=1., double sigma_=1.) : flux(flux_), sigma(sigma_) {}
 
@@ -899,9 +899,9 @@ namespace galsim {
         /**
          * @brief Constructor.
          *
-         * @param[in] n_ Sersic index.
+         * @param[in] n_    Sersic index.
          * @param[in] flux_ flux (default `flux_ = 1.`).
-         * @param[in] re_ half-light radius (default `re_ = 1.`).
+         * @param[in] re_   half-light radius (default `re_ = 1.`).
          */
         SBSersic(double n_, double flux_=1., double re_=1.) :
             n(n_), flux(flux_), re(re_), info(nmap.get(n)) {}
@@ -940,28 +940,35 @@ namespace galsim {
 
         SBProfile* duplicate() const { return new SBSersic(*this); }
 
-        /// A method that only works for Sersic, returns the Sersic index `n`.
+        /// @brief A method that only works for Sersic, @returns the Sersic index `n`.
         double getN() const { return n; }
     };
 
-    /// Exponential Surface Brightness Profile.  
-    //
-    /// This is a special case of the Sersic profile, but is given a separate class since the 
-    /// Fourier transform has closed form and can be generated without lookup tables.
-    /// The maxK() is set to where the FT is down to 0.001, or via `ALIAS_THRESHOLD`, whichever is harder.
+    /** 
+     * @brief Exponential Surface Brightness Profile.  
+     *
+     * This is a special case of the Sersic profile, but is given a separate class since the 
+     * Fourier transform has closed form and can be generated without lookup tables.
+     * The maxK() is set to where the FT is down to 0.001, or via `ALIAS_THRESHOLD`, whichever is 
+     * harder.
+     */
     class SBExponential : public SBProfile 
     {
     private:
         double r0;   ///< Characteristic size of profile `exp[-(r / r0)]`.
         double flux; ///< Flux.
     public:
-        /// Constructor - note that `r0` is scale length, NOT half-light radius `re` as in SBSersic.
-        //
-        /// @param flux_ Input: flux (default `flux_ = 1.`).
-        /// @param r0_ Input: scale length for the profile that scales as `exp[-(r / r0)]`, NOT the half-light radius `re` as in SBSersic (default `r0_ = 1.`).
+        /** 
+         * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in 
+         * SBSersic.
+         *
+         * @param[in] flux_ flux (default `flux_ = 1.`).
+         * @param[in] r0_   scale length for the profile that scales as `exp[-(r / r0)]`, NOT the 
+         *                  half-light radius `re` as in SBSersic (default `r0_ = 1.`).
+         */
         SBExponential(double flux_=1., double r0_=1.) : r0(r0_), flux(flux_) {}
 
-        /// Destructor.
+        /// @brief Destructor.
         ~SBExponential() {}
 
         // Methods
@@ -985,30 +992,41 @@ namespace galsim {
         SBProfile* duplicate() const { return new SBExponential(*this); }
     };
 
-    /// Surface Brightness Profile for the Airy disk (perfect diffraction-limited PSF for a circular aperture), with central obscuration.
-    //
-    /// maxK() is set at the hard limit for Airy disks, stepK() makes transforms go to at least 
-    /// 5 lam/D or EE>(1-ALIAS_THRESHOLD).  Schroeder (10.1.18) gives limit of EE at large radius.
-    /// This stepK could probably be relaxed, it makes overly accurate FFTs.
-    /// Note x & y are in units of lambda/D here.  Integral over area
-    /// will give unity in this normalization.
+    /** 
+     * @brief Surface Brightness Profile for the Airy disk (perfect diffraction-limited PSF for a 
+     * circular aperture), with central obscuration.
+     *
+     * maxK() is set at the hard limit for Airy disks, stepK() makes transforms go to at least 
+     * 5 lam/D or EE>(1-ALIAS_THRESHOLD).  Schroeder (10.1.18) gives limit of EE at large radius.
+     * This stepK could probably be relaxed, it makes overly accurate FFTs.
+     * Note x & y are in units of lambda/D here.  Integral over area will give unity in this 
+     * normalization.
+     */
     class SBAiry : public SBProfile 
     {
     private:
-        double D;    ///< `D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, else `D` = (telescope diam) / lambda if arg is in radians of field angle.
+        /** 
+         * @brief `D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, 
+         * else `D` = (telescope diam) / lambda if arg is in radians of field angle.
+         */
+        double D; 
+        
         double obscuration; ///< Radius ratio of central obscuration.
         double flux; ///< Flux.
 
     public:
-        /// Constructor.
-        //
-        /// @param D_ Input: `D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, else `D` = (telescope diam) / lambda if arg is in radians of field angle (default `D_ = 1.`).
-        /// @param obs_ Input: radius ratio of central obscuration (default `obs_ = 0.`).
-        /// @param flux_ Input: flux (default `flux_ = 1.`).
+        /** Brief Constructor.
+         *
+         * @param[in] D_    `D` = (telescope diam) / (lambda * focal length) if arg is focal plane 
+         *                  position, else `D` = (telescope diam) / lambda if arg is in radians of 
+         *                  field angle (default `D_ = 1.`).
+         * @param[in] obs_  radius ratio of central obscuration (default `obs_ = 0.`).
+         * @param[in] flux_ flux (default `flux_ = 1.`).
+         */
         SBAiry(double D_=1., double obs_=0., double flux_=1.) :
             D(D_), obscuration(obs_), flux(flux_) {}
 
-        /// Destructor.
+        /// @brief Destructor.
         ~SBAiry() {}
 
         // Methods (Barney: mostly described by SBProfile Doxys, with maxK() and stepK() 
@@ -1041,36 +1059,53 @@ namespace galsim {
 
     private: 
         double chord(const double r, const double h) const; ///< Circle chord length at `h < r`.
+
+        /// @brief Area inside intersection of 2 circles radii `r` & `s`, seperated by `t`.
         double circle_intersection(
-				   double r, double s, double t) const; ///< Area inside intersection of 2 circles radii `r` & `s`, seperated by `t`.
+				   double r, double s, double t) const; 
+        
+        /// @brief Area of two intersecting identical annuli.
         double annuli_intersect(
-				double r1, double r2, double t) const; ///< Area of two intersecting identical annuli.
-        double annuli_autocorrelation(const double k) const; ///< Beam pattern of annular aperture, in k space, which is just the autocorrelation of two annuli.  Normalized to unity at `k=0` for now.
+				double r1, double r2, double t) const; 
+        /** 
+         * @brief Beam pattern of annular aperture, in k space, which is just the autocorrelation 
+         * of two annuli.  Normalized to unity at `k=0` for now.
+         */
+        double annuli_autocorrelation(const double k) const; 
     };
 
-    /// Surface Brightness Profile for the Boxcar function.
-    //
-    /// Convolution with a Boxcar function of dimensions `xw` x `yw` and sampling at pixel centres
-    /// is equivalent to pixelation (i.e. Surface Brightness integration) across rectangular pixels
-    /// of the same dimensions.  This class is therefore useful for pixelating SBProfiles. 
+    /** 
+     * @brief Surface Brightness Profile for the Boxcar function.
+     *
+     * Convolution with a Boxcar function of dimensions `xw` x `yw` and sampling at pixel centres
+     * is equivalent to pixelation (i.e. Surface Brightness integration) across rectangular pixels
+     * of the same dimensions.  This class is therefore useful for pixelating SBProfiles.
+     */ 
     class SBBox : public SBProfile 
     {
     private:
         double xw;   ///< Boxcar function is `xw` x `yw` across.
         double yw;   ///< Boxcar function is `xw` x `yw` across.
         double flux; ///< Flux.
-        double sinc(const double u) const; ///< Sinc function used to describe Boxcar in k space. @param u Input: Normalized wavenumber.
+        /** 
+         * @brief Sinc function used to describe Boxcar in k space. 
+         * @param[in] u Normalized wavenumber.
+         */
+        double sinc(const double u) const; 
+        
     public:
-        /// Constructor.
-        //
-        /// @param xw_ Input: width of Boxcar function along x (default `xw_ = 1.`).
-        /// @param yw_ Input: width of Boxcar function along y (default `yw_ = 0.`).
-        /// @param flux_ Input: flux (default `flux_ = 1.`).
+        /** 
+         * @brief Constructor.
+         *
+         * @param[in] xw_   width of Boxcar function along x (default `xw_ = 1.`).
+         * @param[in] yw_   width of Boxcar function along y (default `yw_ = 0.`).
+         * @param[in] flux_ flux (default `flux_ = 1.`).
+         */
         SBBox(double xw_=1., double yw_=0., double flux_=1.) :
             xw(xw_), yw(yw_), flux(flux_) 
         { if (yw==0.) yw=xw; }
 
-        /// Destructor.
+        /// @brief Destructor.
         ~SBBox() {}
 
         // Methods (Barney: public methods Doxified via SBProfile).
@@ -1102,25 +1137,27 @@ namespace galsim {
     };
 
 #ifdef USE_LAGUERRE
-    /// Class for describing Gauss-Laguerre polynomial Surface Brightness Profiles.
+    /// @brief Class for describing Gauss-Laguerre polynomial Surface Brightness Profiles.
     class SBLaguerre : public SBProfile 
     {
     private:
         LVector bvec;  ///< `bvec[n,n]` contains flux information for the `(n, n)` basis function.
         double sigma;  ///< Scale size of Gauss-Laguerre basis set.
     public:
-        /// Constructor.
-        //
-        /// @param bvec_ Input: `bvec[n,n]` contains flux information for the `(n, n)` basis function.
-        /// @param sigma_ Input: scale size of Gauss-Laguerre basis set (default `sigma_ = 1.`).
+        /** 
+         * @brief Constructor.
+         *
+         * @param[in] bvec_  `bvec[n,n]` contains flux information for the `(n, n)` basis function.
+         * @param[in] sigma_ scale size of Gauss-Laguerre basis set (default `sigma_ = 1.`).
+         */
         SBLaguerre(LVector bvec_=LVector(), double sigma_=1.) : 
             bvec(bvec_.duplicate()), sigma(sigma_) {}
 
-        /// Copy Constructor. 
+        /// @brief Copy Constructor. 
         SBLaguerre(const SBLaguerre& rhs) :
             bvec(rhs.bvec.duplicate()), sigma(rhs.sigma) {}
 
-        /// Destructor. 
+        /// @brief Destructor. 
         ~SBLaguerre() {}
 
         // implementation dependent methods
@@ -1150,7 +1187,10 @@ namespace galsim {
     };
 #endif
 
-    /// Surface Brightness for the Moffat Profile (an approximate description of ground-based PSFs).
+    /**
+     * @brief Surface Brightness for the Moffat Profile (an approximate description of ground-based
+     * PSFs).
+     */
     class SBMoffat : public SBProfile 
     {
     private:
@@ -1168,18 +1208,20 @@ namespace galsim {
         Table<double,double> ft;  ///< Lookup table for Fourier transform of Moffat.
 
     public:
-        /// Constructor.
-        //
-        /// @param beta_ Input: Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
-        /// @param truncationFWHM Input: outer truncation in units of FWHM (default `truncationFWHM = 2.`).
-        /// @param flux_ Input: Flux (default `flux_ = 1.`).
-        /// @param re Input: Half-light radius (default `re = 1.`).
+        /** @brief Constructor.
+         *
+         * @param[in] beta_          Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
+         * @param[in] truncationFWHM outer truncation in units of FWHM (default `truncationFWHM = 
+         * 2.`).
+         * @param[in] flux_          Flux (default `flux_ = 1.`).
+         * @param[in] re             Half-light radius (default `re = 1.`).
+         */
         SBMoffat(
             double beta_, double truncationFWHM=2., double flux_=1., double re=1.);
 
         // Default copy constructor should be fine.
 
-        /// Destructor.
+        /// @brief Destructor.
         ~SBMoffat() {}
 
         double xValue(Position<double> p) const 
@@ -1209,44 +1251,54 @@ namespace galsim {
 
         // Methods that only work for Moffat:
 
-        /// Returns the Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
+        /// @brief Returns the Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
         double getBeta() const { return beta; }
 
-        /// Set the FWHM. @param fwhm Input: new FWHM.
+        /// @brief Set the FWHM. @param fwhm Input: new FWHM.
         void setFWHM(double fwhm) { rD = fwhm / FWHMrD; }
  
-        /// Set the Moffat scale radius for profile `[1 + (r / rD)^2]^beta`. @param rD_ Input: new `rD`.
+        /** 
+         * @brief Set the Moffat scale radius for profile `[1 + (r / rD)^2]^beta`. 
+         * @param rD_ Input: new `rD`.
+         */
         void setRd(double rD_) { rD = rD_; }
     };
 
 
-    /// This class is for backwards compatibility; prefer rotate() method.
+    /// @brief This class is for backwards compatibility; prefer rotate() method.
     class SBRotate : public SBDistort 
     {
     public:
         // constructor #1
 
-        /// Constructor.
-        //
-        /// @param s Input: SBProfile being rotated.
-        /// @param theta Input: Rotation angle in radians anticlockwise.
+        /** @brief Constructor.
+         *
+         * @param[in] s     SBProfile being rotated.
+         * @param[in] theta Rotation angle in radians anticlockwise.
+         */
         SBRotate(const SBProfile& s, const double theta) :
             SBDistort(s, cos(theta), -sin(theta), sin(theta), cos(theta)) {}
     };
 
-    /// Surface Brightness for the de Vaucouleurs Profile, a special case of the Sersic with `n = 4`.
+    /**
+     * @brief Surface Brightness for the de Vaucouleurs Profile, a special case of the Sersic with 
+     * `n = 4`.
+     */
     class SBDeVaucouleurs : public SBSersic 
     {
     public:
-        /// Constructor.
-        //
-        /// @param flux_ Input: flux (default `flux_ = 1.`).
-        /// @param r0_ Input: Half-light radius (default `r0_ = 1.`).
+        /** 
+         * @brief Constructor.
+         *
+         * @param[in] flux_ flux (default `flux_ = 1.`).
+         * @param[in] r0_   Half-light radius (default `r0_ = 1.`).
+         */
         SBDeVaucouleurs(double flux_=1., double r0_=1.) : SBSersic(4., flux_, r0_) {}
 
-        /// Destructor.
+        /// @brief Destructor.
         ~SBDeVaucouleurs() {}
 
+        /// @brief Copy constructor.
         SBProfile* duplicate() const { return new SBDeVaucouleurs(*this); }
     };
 
