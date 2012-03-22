@@ -798,27 +798,46 @@ namespace galsim {
         SBProfile* duplicate() const { return new SBGaussian(*this); }
     };
 
-    /// Sersic Surface Brightness Profile.
-    //
-    /// The Sersic Surface Brightness Profile is characterized by three properties: its Sersic 
-    /// index `n`, its `flux` and the half-light radius `re`.
+    /**
+     * @brief Sersic Surface Brightness Profile.
+     *
+     * The Sersic Surface Brightness Profile is characterized by three properties: its Sersic 
+     * index `n`, its `flux` and the half-light radius `re`.
+     */
     class SBSersic : public SBProfile 
     {
     private:
-        /// A private class that caches the needed parameters for each Sersic index `n`.
+        /// @brief A private class that caches the needed parameters for each Sersic index `n`.
         class SersicInfo 
         {
         public:
-            SersicInfo(double n); ///< This class contains all the info needed to calculate values for a given Sersic index `n`.  
+            /** 
+             * @brief This class contains all the info needed to calculate values for a given 
+             * Sersic index `n`.
+             */
+            SersicInfo(double n); 
             double inv2n;   ///< `1 / (2 * n)`
             double maxK;    ///< Value of k beyond which aliasing can be neglected.
             double stepK;   ///< Sampling in k space necessary to avoid folding of image in x space.
-            double xValue(double xsq) const { return norm*exp(-b*pow(xsq,inv2n)); } ///< Returns the real space value of the Sersic using the formula `exp(-b*pow(xsq,inv2n))` (see private attributes).
-            double kValue(double ksq) const; ///< Looks up the k value for the SBProfile from a lookup table.
+           
+            /** 
+             * @brief Returns the real space value of the Sersic using the formula 
+             * `exp(-b*pow(xsq,inv2n))` (see private attributes).
+             */
+            double xValue(double xsq) const { return norm*exp(-b*pow(xsq,inv2n)); } 
+            
+            /// @brief Looks up the k value for the SBProfile from a lookup table.
+            double kValue(double ksq) const;
 
         private:
             SersicInfo(const SersicInfo& rhs) {} ///< Hides the copy constructor.
-            double b; ///< Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`, calculated from Sersic index `n` and half-light radius `re`.
+            
+            /** 
+             * @brief Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`, calculated from Sersic 
+             * index `n` and half-light radius `re`.
+             */
+            double b; 
+            
             double norm; ///< Amplitude scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`.
             double kderiv2; ///< Quadratic dependence near k=0.
             double kderiv4; ///< Quartic dependence near k=0.
@@ -828,17 +847,27 @@ namespace galsim {
             std::vector<double> lookup; ///< Lookup table.
         };
 
-        /// A map to hold one copy of the SersicInfo for each `n` ever used during the program run.  Make one static copy of this map.
+        /** 
+         * @brief A map to hold one copy of the SersicInfo for each `n` ever used during the 
+         * program run.  Make one static copy of this map.
+         */
         class InfoBarn : public std::map<double, const SersicInfo*> 
         {
         public:
 
-	    /// Get the SersicInfo table for a specified `n`.
-            //
-            /// @param n Input: Sersic index for which the information table is required.
+	        /**
+             * @brief Get the SersicInfo table for a specified `n`.
+             *
+             * @param[in] n Sersic index for which the information table is required.
+             */
             const SersicInfo* get(double n) 
-            {
-                const int MAX_SERSIC_TABLES = 100; /// Contains `MAX_SERSIC_TABLES = 100`, the currently hardwired max number of Sersic `n` info tables that can be stored.  Should be plenty.
+            {i
+                /** 
+                 * @brief The currently hardwired max number of Sersic `n` info tables that can be 
+                 * stored.  Should be plenty.
+                 */
+                const int MAX_SERSIC_TABLES = 100; 
+                
                 const SersicInfo* info = (*this)[n];
                 if (info==0) {
                     info = new SersicInfo(n);
@@ -848,7 +877,7 @@ namespace galsim {
                 }
                 return info;
             }
-            /// Destructor.
+            /// @brief Destructor.
             ~InfoBarn() 
             {
                 typedef std::map<double,const SersicInfo*>::iterator mapit;
@@ -864,20 +893,22 @@ namespace galsim {
         double n; ///< Sersic index.
         double flux; ///< Flux.
         double re;   ///< Half-light radius.
-        const SersicInfo* info; // point to info structure for this n
+        const SersicInfo* info; ///< Points to info structure for this n.
 
     public:
-        /// Constructor.
-        //
-        /// @param n_ Input: Sersic index.
-        /// @param flux_ Input: flux (default `flux_ = 1.`).
-        /// @param re_ Input: half-light radius (default `re_ = 1.`).
+        /**
+         * @brief Constructor.
+         *
+         * @param[in] n_ Sersic index.
+         * @param[in] flux_ flux (default `flux_ = 1.`).
+         * @param[in] re_ half-light radius (default `re_ = 1.`).
+         */
         SBSersic(double n_, double flux_=1., double re_=1.) :
             n(n_), flux(flux_), re(re_), info(nmap.get(n)) {}
 
         // Default copy constructor should be fine.
 
-        /// Destructor
+        /// @brief Destructor.
         ~SBSersic() {}
 
         // Barney note: methods below already doxyfied via SBProfile, except for getN
