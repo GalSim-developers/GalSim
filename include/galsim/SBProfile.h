@@ -620,13 +620,18 @@ namespace galsim {
         void fillKGrid(KTable& kt) const; // optimized phase calculation
     };
 
-    /// Convolve SBProfiles.
-    //
-    /// Convolve one, two, three or more SBProfiles together (TODO: Add a more detailed description here).
+    /**
+     * @brief Convolve SBProfiles.
+     *
+     * Convolve one, two, three or more SBProfiles together (TODO: Add a more detailed description
+     * here).
+     */
     class SBConvolve : public SBProfile 
     {
     private:
-        std::list<SBProfile*> plist;  ///< The plist content is a copy_ptr (cf. smart ptrs) listing SBProfiles.
+        /// @brief The plist content is a copy_ptr (cf. smart ptrs) listing SBProfiles.
+        std::list<SBProfile*> plist;
+
         double fluxScale; ///< Flux scaling.
         double x0; ///< Centroid position in x.
         double y0; ///< Centroid position in y.
@@ -636,40 +641,48 @@ namespace galsim {
         double fluxProduct; ///< Flux of the product.
 
     public:
-        /// Constructor, empty.
+        /// @brief Constructor, empty.
         SBConvolve() : plist(), fluxScale(1.) {} 
 
-        /// Constructor, 1 input.
-        //
-        /// @param s1 Input: SBProfile.
-        /// @param f Input: optional scaling factor for final flux (default `f = 1.`).
+        /**
+         * @brief Constructor, 1 input.
+         *
+         * @param[in] s1 SBProfile.
+         * @param[in] f scaling factor for final flux (default `f = 1.`).
+         */
         SBConvolve(const SBProfile& s1, double f=1.) : plist(), fluxScale(f) 
         { add(s1); }
 
-        /// Constructor, 2 inputs.
-        //
-        /// @param s1 Input: first SBProfile.
-        /// @param s2 Input: second SBProfile.
-        /// @param f Input: optional scaling factor for final flux (default `f = 1.`).
-        SBConvolve(const SBProfile& s1, const SBProfile& s2, double f=1.) : 
+        /**
+         * @brief Constructor, 2 inputs.
+         *
+         * @param[in] s1 first SBProfile.
+         * @param[in] s2 second SBProfile.
+         * @param[in] f scaling factor for final flux (default `f = 1.`).
+         */
+         SBConvolve(const SBProfile& s1, const SBProfile& s2, double f=1.) : 
             plist(), fluxScale(f) 
         { add(s1);  add(s2); }
 
-        /// Constructor, 3 inputs.
-        //
-        /// @param s1 Input: first SBProfile.
-        /// @param s2 Input: second SBProfile.
-        /// @param s3 Input: third SBProfile.
-        /// @param f Input: optional scaling factor for final flux (default `f = 1.`).
+        /**
+         * @brief Constructor, 3 inputs.
+         *
+         * @param[in] s1 first SBProfile.
+         * @param[in] s2 second SBProfile.
+         * @param[in] s3 third SBProfile.
+         * @param[in] f scaling factor for final flux (default `f = 1.`).
+        */
         SBConvolve(
             const SBProfile& s1, const SBProfile& s2, const SBProfile& s3, double f=1.) :
             plist(), fluxScale(f) 
         { add(s1);  add(s2);  add(s3); }
 
-        /// Constructor, list of inputs.
-        //
-        /// @param slist Input: list of SBProfiles.
-        /// @param f Input: optional scaling factor for final flux (default `f = 1.`).
+        /**
+         * @brief Constructor, list of inputs.
+         *
+         * @param[in] slist Input: list of SBProfiles.
+         * @param[in] f Input: optional scaling factor for final flux (default `f = 1.`).
+         */
         SBConvolve(const std::list<SBProfile*> slist, double f=1.) :
             plist(), fluxScale(f) 
         { 
@@ -677,9 +690,10 @@ namespace galsim {
             for (sptr = slist.begin(); sptr!=slist.end(); ++sptr) add(**sptr); 
         }
 
-        /// Copy constructor.
-        //
-        /// @param rhs Input: SBProfile.
+        /** @brief Copy constructor.
+         *
+         * @param[in] rhs SBProfile.
+         */
         SBConvolve(const SBConvolve& rhs) : 
             plist(), fluxScale(rhs.fluxScale),
             x0(rhs.x0), y0(rhs.y0),
@@ -692,16 +706,18 @@ namespace galsim {
                 plist.push_back((*rhsptr)->duplicate()); 
         }
 
-        /// Destructor.
+        /// @brief Destructor.
         ~SBConvolve() 
         { 
             std::list<SBProfile*>::iterator pptr;
             for (pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; 
         }
 
-        /// SBConvolve specific method for adding new members.
-        //
-        /// @param rhs Input: SBProfile for adding.
+        /** 
+         * @brief SBConvolve specific method for adding new members.
+         *
+         * @param rhs Input: SBProfile for adding.
+         */
         void add(const SBProfile& rhs); 
 
         // Barney's note: I think the methods below are documented at the SBProfile level
@@ -735,27 +751,34 @@ namespace galsim {
         virtual void fillKGrid(KTable& kt) const;
     };
 
-    /// Gaussian Surface Brightness Profile
-    //
-    /// The Gaussian Surface Brightness Profile is characterized by two properties, its `flux`
-    /// and the characteristic size `sigma` where the radial profile of the circular Gaussian
-    /// drops off as `exp[-r^2 / (2. * sigma^2)]`.
-    /// The maxK() and stepK() are for the SBGaussian are chosen to extend to 4 sigma in both 
-    /// real and k domains, or more if needed to reach the `ALIAS_THRESHOLD` spec.
+    /**
+     * @brief Gaussian Surface Brightness Profile
+     *
+     * The Gaussian Surface Brightness Profile is characterized by two properties, its `flux`
+     * and the characteristic size `sigma` where the radial profile of the circular Gaussian
+     * drops off as `exp[-r^2 / (2. * sigma^2)]`.
+     * The maxK() and stepK() are for the SBGaussian are chosen to extend to 4 sigma in both 
+     * real and k domains, or more if needed to reach the `ALIAS_THRESHOLD` spec.
+     */
     class SBGaussian : public SBProfile 
     {
     private:
         double flux; ///< Flux of the Surface Brightness Profile.
-        double sigma; ///< Characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`.
+
+        /// @brief Characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`.
+        double sigma;
 
     public:
-        /// Constructor
-        //
-        /// @param flux_ Input: flux of the Surface Brightness Profile (default `flux_ = 1.`).
-        /// @param sigma_ Input: characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)] (default `sigma_ = 1.`).
+        /** 
+         * @brief Constructor.
+         *
+         * @param[in] flux_ flux of the Surface Brightness Profile (default `flux_ = 1.`).
+         * @param[in] sigma_ characteristic size, surface brightness scales as 
+         * `exp[-r^2 / (2. * sigma^2)] (default `sigma_ = 1.`).
+         */
         SBGaussian(double flux_=1., double sigma_=1.) : flux(flux_), sigma(sigma_) {}
 
-        /// Destructor
+        /// @brief Destructor.
         ~SBGaussian() {}                        
 
         double xValue(Position<double> _p) const;
