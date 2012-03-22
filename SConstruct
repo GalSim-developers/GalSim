@@ -689,6 +689,29 @@ int main()
     context.Result(1)
     return 1
 
+def CheckPyFITS(context):
+    context.Message('Checking for PyFITS... ')
+    try:
+        import pyfits
+    except ImportError:
+        context.Result(0)
+        print 'Failed to import PyFITS.'
+        print 'Things to try:'
+        print '1) Check that the command line python (with which you probably installed PyFITS):'
+        print '   ',
+        sys.stdout.flush()
+        subprocess.call('which python',shell=True)
+        print '  is the same as the one used by SCons:'
+        print '  ',sys.executable
+        print '   If not, then you probably need to reinstall PyFITS with %s.' % sys.executable
+        print '   And remember to use that when running python for use with GalSim.'
+        print '   Alternatively, you can reinstall SCons with your preferred python.'
+        print '2) Check that if you open a python session from the command line,'
+        print '   import pyfits is successful there.'
+        Exit(1)
+    context.Result(1)
+    return 1
+
 def CheckBoostPython(context):
     bp_source_file = """
 #include "boost/python.hpp"
@@ -869,7 +892,8 @@ def DoLibraryAndHeaderChecks(config):
     config.CheckPython()
     config.CheckNumPy()
     config.CheckBoostPython()
- 
+    config.CheckPyFITS() 
+
 
 def GetNCPU():
     """
@@ -943,6 +967,7 @@ def DoConfig(env):
             'CheckPython' : CheckPython ,
             'CheckNumPy' : CheckNumPy ,
             'CheckBoostPython' : CheckBoostPython ,
+            'CheckPyFITS' : CheckPyFITS ,
             })
         DoLibraryAndHeaderChecks(config)
         env = config.Finish()
