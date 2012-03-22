@@ -118,10 +118,17 @@ namespace galsim {
         /// @brief Image pixel spacing that does not alias maxK.
         virtual double nyquistDx() const { return M_PI / maxK(); }
 
-        /// @brief Sampling in k space necessary to avoid folding of image in x space.
+        /**
+         * @brief Sampling in k space necessary to avoid folding of image in x space.
+         * (TODO: Ensure that derived classes get additional info as needed).
+         */
         virtual double stepK() const =0;
 
-        /// @brief Characteristic that can affect efficiency of evaluation.
+        /**
+         *  @brief Characteristic that can affect efficiency of evaluation.
+         *
+         * (TODO: Ensure that derived classes get additional info as needed).
+         */
         virtual bool isAxisymmetric() const =0;
 
         /** 
@@ -129,14 +136,16 @@ namespace galsim {
          *
          * SBProfile is "analytic" in the real domain if values can be determined immediately at 
          * any position through formula or a stored table (no DFT).
+         * (TODO: Ensure that derived classes get additional info as needed).
          */
         virtual bool isAnalyticX() const =0; 
 
-       /**
+        /**
          * @brief Characteristic that can affect efficiency of evaluation.
          * 
          * SBProfile is "analytic" in the k domain if values can be determined immediately at any 
          * position through formula or a stored table (no DFT).
+         * (TODO: Ensure that derived classes get additional info as needed).
          */
         virtual bool isAnalyticK() const =0; 
 
