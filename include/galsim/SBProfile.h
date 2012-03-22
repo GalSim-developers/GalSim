@@ -66,6 +66,8 @@ namespace galsim {
      * SBRotate: rotated version of another SBProfile
      * SBAdd: sum of SBProfiles
      * SBConvolve: convolution of other SBProfiles
+     * SBPixel: surface brightness profiles defined by a table (image) and interpolant.
+     * SBDeconvolve: deconvolve one SBProfile with another
      */
     class SBProfile 
     {
@@ -146,12 +148,12 @@ namespace galsim {
         { Position<double> p(centroidX(),centroidY());  return p; }
 
 
-        virtual double getFlux() const =0; ///< Get flux scaling of SBProfile.
+        virtual double getFlux() const =0; ///< Get the total flux of the SBProfile.
 
-        /// @brief Set flux scaling of SBProfile
+        /// @brief Set the total flux of the SBProfile
         //
         /// @param[in] flux_ flux
-        virtual void setFlux(double flux_=1.) =0; ///< Set flux scaling of SBProfile.
+        virtual void setFlux(double flux_=1.) =0;
 
         // ****Methods implemented in base class****
 
@@ -160,13 +162,19 @@ namespace galsim {
         /**
          * @brief Ellipse distortion transformation (affine without rotation).
          *
+         * This returns a pointer to a new SBProfile that represents a new Surface Brightness 
+         * Profile with the requested transformation.  The type of the new object is currently 
+         * SBDistort, but that is an implementation choice, and should not be assumed.
          * @param[in] e Ellipse class distortion.
          */
         virtual SBProfile* distort(const Ellipse e) const; 
 
         /** 
          * @brief Shear distortion transformation (affine without rotation or dilation).
-         *
+         *           
+         * This returns a pointer to a new SBProfile that represents a new Surface Brightness 
+         * Profile with the requested transformation.  The type of the new object is currently 
+         * SBDistort, but that is an implementation choice, and should not be assumed.
          * @param[in] e1 first component of ellipticity.
          * @param[in] e2 second component of ellipticity.
          */
@@ -175,6 +183,9 @@ namespace galsim {
         /** 
          * @brief Rotation distortion transformation.
          *
+         * This returns a pointer to a new SBProfile that represents a new Surface Brightness 
+         * Profile with the requested transformation.  The type of the new object is currently 
+         * SBDistort, but that is an implementation choice, and should not be assumed.
          * @param[in] theta rotation, in radians, anticlockwise.
          */
         virtual SBProfile* rotate(const double theta) const;
@@ -182,6 +193,9 @@ namespace galsim {
        /**
          * @brief Translation transformation.
          *
+         * This returns a pointer to a new SBProfile that represents a new Surface Brightness 
+         * Profile with the requested transformation.  The type of the new object is currently 
+         * SBDistort, but that is an implementation choice, and should not be assumed.
          * @param[in] dx shift in x.
          * @param[in] dy shift in y.
          */
