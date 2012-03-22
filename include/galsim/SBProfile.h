@@ -861,7 +861,7 @@ namespace galsim {
              * @param[in] n Sersic index for which the information table is required.
              */
             const SersicInfo* get(double n) 
-            {i
+            {
                 /** 
                  * @brief The currently hardwired max number of Sersic `n` info tables that can be 
                  * stored.  Should be plenty.
