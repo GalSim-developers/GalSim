@@ -192,74 +192,74 @@ namespace galsim {
 
 
         /** 
-	 * @brief Draw an image of the SBProfile in real space.
-	 *
-	 * A square image will be
+         * @brief Draw an image of the SBProfile in real space.
+         *
+         * A square image will be
          * drawn which is big enough to avoid "folding."  If drawing is done using FFT,
          * it will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image  may be calculated internally on a larger grid to avoid folding.
          * The default draw() routines decide internally whether image can be drawn directly
          * in real space or needs to be done via FFT from k space.
-	 *
+         *
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
-	 *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
-	 *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
-	 *                  you will receive an image with the aliased frequencies included.
+         *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
+         *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
+         *                  you will receive an image with the aliased frequencies included.
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
-	 *                  than the default choice, i.e. it will have finer sampling in k space 
+         *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
-	 * @returns image
-	 */
+         * @returns image
+         */
         virtual Image<float> draw(double dx=0., int wmult=1) const;
 
         /** 
-	 * @brief Draw the SBProfile in real space returning the summed flux.
+         * @brief Draw the SBProfile in real space returning the summed flux.
          *
          * If on input image `img` is not specified or has null dimension, a square image will be
          * drawn which is big enough to avoid "folding."  If drawing is done using FFT,
          * it will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding.
-	 * The default draw() routines decide internally whether image can be drawn directly
+         * The default draw() routines decide internally whether image can be drawn directly
          * in real space or needs to be done via FFT from k space.
          *
          * @param[in,out]   image
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
-	 *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
-	 *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
-	 *                  you will receive an image with the aliased frequencies included.
+         *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
+         *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
+         *                  you will receive an image with the aliased frequencies included.
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
-	 *                  than the default choice, i.e. it will have finer sampling in k space 
+         *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
-	 * @returns summed flux.
-	 */
+         * @returns summed flux.
+         */
         virtual double draw(Image<float> & image, double dx=0., int wmult=1) const; 
 
         /** 
-	 * @brief Draw an image of the SBProfile in real space forcing the use of real methods 
-	 * where we have a formula for x values.
+         * @brief Draw an image of the SBProfile in real space forcing the use of real methods 
+         * where we have a formula for x values.
          *
          * If on input image `img` is not specified or has null dimension, a square image will be
          * drawn which is big enough to avoid "folding." 
-	 * If input image has finite dimensions then these will be used, although in an FFT the 
-	 * image may be calculated internally on a larger grid to avoid folding.
+         * If input image has finite dimensions then these will be used, although in an FFT the 
+         * image may be calculated internally on a larger grid to avoid folding.
          *
          * @param[in,out]   image
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
-	 *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
-	 *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
-	 *                  you will receive an image with the aliased frequencies included.
+         *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
+         *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
+         *                  you will receive an image with the aliased frequencies included.
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
-	 *                  than the default choice, i.e. it will have finer sampling in k space 
+         *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
-	 * @returns summed flux.
-	 */
+         * @returns summed flux.
+         */
         virtual double plainDraw(Image<float> & image, double dx=0., int wmult=1) const; 
 
         /** 
-	 * @brief Draw an image of the SBProfile in real space forcing the use of Fourier transform
-	 * from k space.
+         * @brief Draw an image of the SBProfile in real space forcing the use of Fourier transform
+         * from k space.
          *
          * If on input image `img` is not specified or has null dimension, a square image will be
          * drawn which is big enough to avoid "folding."  Drawing is done using FFT,
@@ -267,69 +267,26 @@ namespace galsim {
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding.
          *
-	 * @param[in,out]   image
+         * @param[in,out]   image
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
-	 *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
-	 *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
-	 *                  you will receive an image with the aliased frequencies included.
+         *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
+         *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
+         *                  you will receive an image with the aliased frequencies included.
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
-	 *                  than the default choice, i.e. it will have finer sampling in k space 
+         *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
-	 * @returns summed flux.
-	 */
+         * @returns summed flux.
+         */
         virtual double fourierDraw(Image<float> & image, double dx=0., int wmult=1) const; 
 
         /** 
-	 * @brief Draw an image of the SBProfile in k space.
+         * @brief Draw an image of the SBProfile in k space.
          *
          * For drawing in k space: routines are analagous to real space, except 2 images are 
-	 * needed since the SBProfile is complex.
+         * needed since the SBProfile is complex.
          * If on input either image `Re` or `Im` is not specified or has null dimension, square 
-	 * images will be drawn which are big enough to avoid "folding."  If drawing is done using 
-	 * FFT, they will be scaled up to a power of 2, or 3x2^n, whicher fits.
-         * If input image has finite dimensions then these will be used, although in an FFT the 
-	 * image may be calculated internally on a larger grid to avoid folding in real space.
-         *
-         * @param[in,out]   re image of real argument of SBProfile in k space.
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space.
-         * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
-         *                  routine will choose `dk` necessary to avoid folding of image in real 
-	 *                  space.  If you specify `dk`, image will be drawn with this `dk` and
-	 *                  you will receive an image with folding artifacts included.
-         * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
-	 */
-        virtual void drawK(Image<float> & re, Image<float> & im, double dk=0., int wmult=1) const; 
-
-        /** 
-	 * @brief Draw an image of the SBProfile in k space forcing the use of k space methods 
-	 * where we have a formula for k values.
-         *
-         * For drawing in k space: routines are analagous to real space, except 2 images are 
-	 * needed since the SBProfile is complex.  If on input either image `Re` or `Im` is not 
-	 * specified or has null dimension, square images will be drawn which are big enough to 
-	 * avoid "folding."
-         *
-         * @param[in,out]   re image of real argument of SBProfile in k space.
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space.
-         * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
-         *                  routine will choose `dk` necessary to avoid folding of image in real 
-	 *                  space.  If you specify `dk`, image will be drawn with this `dk` and
-	 *                  you will receive an image with folding artifacts included.
-         * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
-	 */
-        virtual void plainDrawK(
-            Image<float> & re, Image<float> & im, 
-            double dk=0., int wmult=1) const; 
-
-        /**
-         * @brief Draw an image of the SBProfile in k space forcing the use of Fourier transform 
-	 * from real space.
-         *
-         * For drawing in k space: routines are analagous to real space, except 2 images are 
-	 * needed since the SBProfile is complex.
-         * If on input either image `Re` or `Im` is not specified or has null dimension, square 
-	 * images will be drawn which are big enough to avoid "folding."  Drawing is done using FFT,
-	 * and the images will be scaled up to a power of 2, or 3x2^n, whicher fits.
+         * images will be drawn which are big enough to avoid "folding."  If drawing is done using 
+         * FFT, they will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding in real space.
          *
@@ -337,33 +294,77 @@ namespace galsim {
          * @param[in,out]   im image of imaginary argument of SBProfile in k space.
          * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
          *                  routine will choose `dk` necessary to avoid folding of image in real 
-	 *                  space.  If you specify `dk`, image will be drawn with this `dk` and
-	 *                  you will receive an image with folding artifacts included.
+         *                  space.  If you specify `dk`, image will be drawn with this `dk` and
+         *                  you will receive an image with folding artifacts included.
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
-	 */
+         */
+        virtual void drawK(Image<float> & re, Image<float> & im, double dk=0., int wmult=1) const; 
+
+        /** 
+         * @brief Draw an image of the SBProfile in k space forcing the use of k space methods 
+         * where we have a formula for k values.
+         *
+         * For drawing in k space: routines are analagous to real space, except 2 images are 
+         * needed since the SBProfile is complex.  If on input either image `Re` or `Im` is not 
+         * specified or has null dimension, square images will be drawn which are big enough to 
+         * avoid "folding."
+         *
+         * @param[in,out]   re image of real argument of SBProfile in k space.
+         * @param[in,out]   im image of imaginary argument of SBProfile in k space.
+         * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
+         *                  routine will choose `dk` necessary to avoid folding of image in real 
+         *                  space.  If you specify `dk`, image will be drawn with this `dk` and
+         *                  you will receive an image with folding artifacts included.
+         * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
+	     */
+        virtual void plainDrawK(
+            Image<float> & re, Image<float> & im, 
+            double dk=0., int wmult=1) const; 
+
+        /**
+         * @brief Draw an image of the SBProfile in k space forcing the use of Fourier transform 
+	     * from real space.
+         *
+         * For drawing in k space: routines are analagous to real space, except 2 images are 
+         * needed since the SBProfile is complex.
+         * If on input either image `Re` or `Im` is not specified or has null dimension, square 
+         * images will be drawn which are big enough to avoid "folding."  Drawing is done using FFT,
+         * and the images will be scaled up to a power of 2, or 3x2^n, whicher fits.
+         * If input image has finite dimensions then these will be used, although in an FFT the 
+         * image may be calculated internally on a larger grid to avoid folding in real space.
+         *
+         * @param[in,out]   re image of real argument of SBProfile in k space.
+         * @param[in,out]   im image of imaginary argument of SBProfile in k space.
+         * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
+         *                  routine will choose `dk` necessary to avoid folding of image in real 
+         *                  space.  If you specify `dk`, image will be drawn with this `dk` and
+         *                  you will receive an image with folding artifacts included.
+         * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
+	     */
         virtual void fourierDrawK(
             Image<float> & re, Image<float> & im,
             double dk=0., int wmult=1) const; 
 
         /** 
-	 * @brief Utility for drawing into Image data structures.
+	     * @brief Utility for drawing into Image data structures.
          *
          * @param[out] image    image to fill
          * @param[in]  dx       grid pitch on which SBProfile image is drawn
-	 */
+         */
         virtual double fillXImage(Image<float> & image, double dx) const;  // return flux integral
 
 #endif
 
-       /**
-        * @brief Utility for drawing a k grid into FFT data structures - not intended for public 
-        * use, but need to be public so that derived classes can call them.
-	*/
+        /**
+         * @brief Utility for drawing a k grid into FFT data structures - not intended for public 
+         * use, but need to be public so that derived classes can call them.
+	     */
         virtual void fillKGrid(KTable& kt) const;
-       /** 
-        * @brief Utility for drawing an x grid into FFT data structures - not intended for public 
-	* use, but need to be public so that derived classes can call them.
-	*/
+
+        /** 
+         * @brief Utility for drawing an x grid into FFT data structures - not intended for public 
+	     * use, but need to be public so that derived classes can call them.
+	     */
         virtual void fillXGrid(XTable& xt) const;
 
     };
@@ -402,25 +403,25 @@ namespace galsim {
         SBAdd() : plist() { initialize(); }
 
         /** 
-	 * @brief Constructor, 1 input.
+         * @brief Constructor, 1 input.
          *
          * @param[in] s1 SBProfile.
-	 */
+         */
         SBAdd(const SBProfile& s1) : plist() { initialize(); add(s1); }
 
         /** @brief Constructor, 2 inputs.
-	 *
+         *
          * @param[in] s1 first SBProfile.
          * @param[in] s2 second SBProfile.
-	 */
+         */
         SBAdd(const SBProfile& s1, const SBProfile& s2) : plist() 
         { initialize(); add(s1);  add(s2); }
 
         /** 
-	 * @brief Constructor, list of inputs.
+	     * @brief Constructor, list of inputs.
          *
          * @param[in] slist list of SBProfiles.
-	 */
+	     */
         SBAdd(const std::list<SBProfile*> slist) : plist() 
         {
             std::list<SBProfile*>::const_iterator sptr;
@@ -429,9 +430,9 @@ namespace galsim {
         }
 
         /** 
-	 * @brief Copy constructor.
-	 * @param[in] rhs SBAdd to be copied.
-	 */
+         * @brief Copy constructor.
+         * @param[in] rhs SBAdd to be copied.
+	     */
         SBAdd(const SBAdd& rhs) : 
             plist(), sumflux(rhs.sumflux), sumfx(rhs.sumfx),
             sumfy(rhs.sumfy), maxMaxK(rhs.maxMaxK), minStepK(rhs.minStepK), 
@@ -451,11 +452,11 @@ namespace galsim {
         }
 
         /** 
-	 * @brief SBAdd specific method for adding additional SBProfiles
+         * @brief SBAdd specific method for adding additional SBProfiles
          *
          * @param[in] rhs SBProfile.
          * @param[in] scale allows for rescaling flux by this factor.
-	 */
+         */
         void add(const SBProfile& rhs, double scale=1.);
 
         // Barney's note: the methods below are documented at the SBProfile level (I think)
@@ -516,11 +517,11 @@ namespace galsim {
         void initialize();
 
         /** 
-	 * @brief Forward coordinate transform with `M` matrix.
-	 *
-	 * @param[in] p input position.
-	 * @returns transformed position.
-	 */
+         * @brief Forward coordinate transform with `M` matrix.
+         *
+         * @param[in] p input position.
+         * @returns transformed position.
+	     */
         Position<double> fwd(Position<double> p) const 
         {
             Position<double> out(matrixA*p.x+matrixB*p.y,matrixC*p.x+matrixD*p.y);
@@ -549,7 +550,7 @@ namespace galsim {
 
     public:
         /** 
-	 * @brief General constructor.
+         * @brief General constructor.
          *
          * @param[in] sbin SBProfile being distorted
          * @param[in] mA A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
@@ -557,24 +558,24 @@ namespace galsim {
          * @param[in] mC C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
          * @param[in] mD D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
          * @param[in] x0_ 2-element (x, y) Position for the translational shift.
-	 */
+	     */
         SBDistort(
             const SBProfile& sbin, double mA, double mB, double mC, double mD,
             Position<double> x0_=Position<double>(0.,0.));
 
         /** 
-	 * @brief Construct from an input Ellipse class object
+         * @brief Construct from an input Ellipse class object
          *
          * @param[in] sbin SBProfile being distorted.
          * @param[in] e_ Ellipse.
-	 */
+	     */
         SBDistort(const SBProfile& sbin, const Ellipse e_=Ellipse());
 
         /** 
-	 * @brief Copy constructor
+         * @brief Copy constructor
          *
          * @param[in] rhs SBProfile being copied.
-	 */
+	     */
         SBDistort(const SBDistort& rhs) 
         {
             adaptee = rhs.adaptee->duplicate();
