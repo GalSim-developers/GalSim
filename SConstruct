@@ -689,6 +689,8 @@ int main()
     context.Result(1)
     return 1
 
+# Note from Barney to Mike: the code below always seems to say (cached) in the message at build
+# for me, even after rm .scons.dblite beforehand.  Is that right?  Otherwise, it seems to work...
 def CheckPyFITS(context):
     context.Message('Checking for PyFITS... ')
     try:
