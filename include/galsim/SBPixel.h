@@ -1,8 +1,7 @@
-
-/// @file SBPixel.h @brief Contains the class definition for SBPixel objects.
-
+// -*- c++ -*-
 #ifndef SBPIXEL_H
 #define SBPIXEL_H
+/// @file SBPixel.h @brief Contains the class definition for SBPixel objects.
 
 #include "TMV.h"
 
