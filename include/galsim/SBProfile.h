@@ -98,9 +98,9 @@ namespace galsim {
        /** 
          * @brief Return value of SBProfile at a chosen 2D position in real space.
          *
-         * Assume all are real-valued.
-         * xValue() may not be implemented for derived classes (SBConvolve) that
-         * require an FFT to determine real-space values.
+         * Assume all are real-valued.  xValue() may not be implemented for derived classes 
+         * (SBConvolve) that require an FFT to determine real-space values.  In this case, an 
+         * SBError will be thrown.
          *
          * @param[in] _p 2D position in real space.
          */
