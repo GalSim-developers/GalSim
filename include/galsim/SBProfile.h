@@ -120,6 +120,7 @@ namespace galsim {
 
         /**
          * @brief Sampling in k space necessary to avoid folding of image in x space.
+         *
          * (TODO: Ensure that derived classes get additional info as needed).
          */
         virtual double stepK() const =0;
