@@ -17,6 +17,7 @@ struct PyUniformDeviate {
             "UniformDeviate as construction argument and execute some transformation of the\n" 
             "distribution. Can be seeded with a long int, or by default will be seeded by the\n"
             "system microsecond counter.\n" 
+            "\n"
             "Copy constructor and assignment operator are kept private since you probably do not\n"
             "want two 'random' number generators producing the same sequence of numbers in your\n"
             "code!\n"
@@ -24,12 +25,12 @@ struct PyUniformDeviate {
 
         bp::class_<UniformDeviate,boost::noncopyable>("UniformDeviate", doc, bp::init<>())
             .def(bp::init<long>(bp::arg("lseed")))
-            .def("operator", &UniformDeviate::operator(), 
+            .def("__call__", &UniformDeviate::operator(), 
                  "Draw a new random number from the distribution.")
-	  .def("seed", (void (UniformDeviate::*) () )&UniformDeviate::seed, 
-               "Re-seed the PRNG using current time.")
-	  .def("seed", (void (UniformDeviate::*) (const long) )&UniformDeviate::seed, 
-               (bp::arg("lseed")), "Re-seed the PRNG using specified seed.")
+	    .def("seed", (void (UniformDeviate::*) () )&UniformDeviate::seed, 
+                 "Re-seed the PRNG using current time.")
+	    .def("seed", (void (UniformDeviate::*) (const long) )&UniformDeviate::seed, 
+                 (bp::arg("lseed")), "Re-seed the PRNG using specified seed.")
             ;
     }
 
