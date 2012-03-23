@@ -131,7 +131,7 @@ namespace galsim {
          * @brief Construct a new Gaussian-distributed RNG. 
          *
          * Constructor requires reference to a UniformDeviate that generates the randoms, which
-         * are then transformed to Gaussian distribution.
+         * are then transformed to a Gaussian distribution.
          * @param[in,out] u_ UniformDeviate that will be called to generate all randoms.
          * @param[in] mean   Mean of the output distribution (default `mean = 0.`).
          * @param[in] sigma  Standard deviation of the distribution (default `sigma = 1.`).
