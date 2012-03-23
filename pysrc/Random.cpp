@@ -22,9 +22,9 @@ struct PyUniformDeviate {
             "code!\n"
             ;
 
-        bp::class_<UniformDeviate,boost::noncopyable>("UniformDeviate", init<>())
-            .def(init<long>(bp::arg("lseed")))
-            .def("operator", (double)()&UniformDeviate::operator, 
+        bp::class_<UniformDeviate,boost::noncopyable>("UniformDeviate", doc, bp::init<>())
+            .def(bp::init<long>(bp::arg("lseed")))
+            .def("operator", (double)()&UniformDeviate::operator(), 
                  "Draw a new random number from the distribution.")
             .def("seed", (void)()&UniformDeviate::seed, "Re-seed the PRNG using current time.")
             .def("seed", (void)(long)&UniformDeviate::seed, (bp::arg("lseed")), 
