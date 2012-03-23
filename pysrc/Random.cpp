@@ -63,20 +63,45 @@ struct PyGaussianDeviate {
     static void wrap() {
         static char const * doc = 
             "\n"
-            "Construct a new Gaussian-distributed RNG.\n"
+            "Pseudo-random number generator with Gaussian distribution.\n"
             "\n"
-            "Constructor requires reference to a UniformDeviate that generates the randoms,\n"
-            "which are then transformed to Gaussian distribution.\n"
+            "GaussianDeviate is constructed with reference to a UniformDeviate that will actually\n"
+            "generate the randoms, which are then transformed to Gaussian distribution with\n"
+            "chosen mean and standard deviation.\n"
+            "\n"
+            "As for UniformDeviate, the copy constructor and assignment operator are kept private\n"
+            "since you probably do not want two random number generators producing the same\n"
+            "sequence of numbers in your code!\n"
+            "\n"
+            "Wraps the Boost.Random normal_distribution at the C++ layer so that the parent\n"
+            "UniformDeviate is given once at construction, and copy/assignment are hidden.\n"
+            "\n"
             ;
-        std::cout << doc;
+        bp::class_<GaussianDeviate,boost::noncopyable>(
+            "GaussianDeviate", doc, bp::init<UniformDeviate &,double,double>(
+                (bp::arg("u_"), bp::arg("mean"), bp::arg("sigma"))
+            )[
+                bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as GaussianDeviate lives
+            ]
+            )
+            .def("__call__", &GaussianDeviate::operator(),
+                 "Draw a new random number from the distribution.\n"
+                 "\n"
+                 "Returns a Gaussian deviate with current mean and sigma\n")
+            .def("getMean", &GaussianDeviate::getMean, "Get current distribution mean.")
+            .def("setMean", &GaussianDeviate::setMean, "Set current distribution mean.")
+            .def("getSigma", &GaussianDeviate::getSigma, "Get current distribution sigma.")
+            .def("setSigma", &GaussianDeviate::setSigma, "Set current distribution sigma.")
+            ;
     }
-};
+    };
 
 
 } // anonymous
 
 void pyExportRandom() {
     PyUniformDeviate::wrap();
+    PyGaussianDeviate::wrap();
 }
 
 } // namespace galsim
