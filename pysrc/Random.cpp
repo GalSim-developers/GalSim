@@ -24,11 +24,12 @@ struct PyUniformDeviate {
 
         bp::class_<UniformDeviate,boost::noncopyable>("UniformDeviate", doc, bp::init<>())
             .def(bp::init<long>(bp::arg("lseed")))
-            .def("operator", (double)()&UniformDeviate::operator(), 
+            .def("operator", &UniformDeviate::operator(), 
                  "Draw a new random number from the distribution.")
-            .def("seed", (void)()&UniformDeviate::seed, "Re-seed the PRNG using current time.")
-            .def("seed", (void)(long)&UniformDeviate::seed, (bp::arg("lseed")), 
-                 "Re-seed the PRNG using specified seed.")
+	  .def("seed", (void (UniformDeviate::*) () )&UniformDeviate::seed, 
+               "Re-seed the PRNG using current time.")
+	  .def("seed", (void (UniformDeviate::*) (const long) )&UniformDeviate::seed, 
+               (bp::arg("lseed")), "Re-seed the PRNG using specified seed.")
             ;
     }
 
