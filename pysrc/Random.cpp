@@ -89,9 +89,10 @@ struct PyGaussianDeviate {
             "mean    semi-optional mean for Gaussian distribution (default = 0.).\n"
             "sigma   optional sigma for Gaussian distribution (default = 1.).\n"
             "\n"
-            "The mean parameter is semi-optional since an ArgumentError exception will be raised\n"
-            "if sigma alone is specified without an accompanying mean. However, reversing their\n"
-            "ordering is handled OK provided keyword args are named. (TODO: Fix this if poss.!)\n"
+            "The mean parameter is semi-optional: an ArgumentError exception will be raised if\n"
+            "sigma alone is specified without an accompanying mean. However, reversing their\n"
+            "ordering is handled OK provided keyword args are named. (TODO: Fix this 'feature'\n"
+            "if possible!)\n"
             "\n"
             ;
         bp::class_<GaussianDeviate,boost::noncopyable>(
@@ -111,7 +112,65 @@ struct PyGaussianDeviate {
             .def("setSigma", &GaussianDeviate::setSigma, "Set current distribution sigma.")
             ;
     }
-    };
+
+};
+
+struct PyBinomialDeviate {
+
+    static void wrap() {
+        static char const * doc = 
+            "\n"
+            "Pseudo-random Binomial deviate for N trials each of probability p.\n"
+            "\n"
+            "BinomialDeviate is constructed with reference to a UniformDeviate that will actually\n"
+            "generate the randoms, which are then transformed to Binomial distribution.  N is\n"
+            "number of 'coin flips,' p is probability of 'heads,' and each call returns integer\n"
+            "0 <= value <= N giving number of heads.\n"  
+            "\n"
+            "As for UniformDeviate, the copy constructor and assignment operator are kept private\n"
+            "since you probably do not want two random number generators producing the same\n"
+            "sequence of numbers in your code!\n"
+            "\n"
+            "Wraps the Boost.Random binomial_distribution at the C++ layer so that the parent\n"
+            "UniformDeviate is given once at construction, and copy/assignment are hidden.\n"
+            "\n"
+            "Inititialization\n"
+            "----------------\n"
+            ">>> b = BinomialDeviate(u, N=1., p=0.5) \n"
+            "\n"
+            "Initializes b to be a GaussianDeviate instance, and repeated calls to b() will\n"
+            "return successive, psuedo-random Binomial deviates with specified N and p.\n"
+            "\n"
+            "Parameters:\n"
+            "\n"
+            "u       a UniformDeviate instance (seed set there).\n"
+            "N       number of 'coin flips' per trial (default `N = 1`).\n"
+            "p       probability of success per coin flip (default `p = 0.5`).\"
+            "\n"
+            "The N parameter is semi-optional: an ArgumentError exception will be raised if p\n"
+            "alone is specified without an accompanying N. However, reversing their ordering is\n"
+            "handled OK provided keyword args are named. (TODO: Fix this 'feature' if possible!)\n"
+            "\n"
+            ;
+        bp::class_<BinomialDeviate,boost::noncopyable>(
+            "BinomialDeviate", doc, bp::init< UniformDeviate&, bp::optional<double, double> >(
+                (bp::arg("u_"), bp::arg("N"), bp::arg("p"))
+            )[
+                bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as BinomialDeviate lives
+            ]
+            )
+            .def("__call__", &BinomialDeviate::operator(),
+                 "Draw a new random number from the distribution.\n"
+                 "\n"
+                 "Returns a Binomial deviate with current N and p.\n")
+            .def("getN", &GaussianDeviate::getMean, "Get current distribution N.")
+            .def("setN", &GaussianDeviate::setMean, "Set current distribution N.")
+            .def("getP", &GaussianDeviate::getSigma, "Get current distribution p.")
+            .def("setP", &GaussianDeviate::setSigma, "Set current distribution p.")
+            ;
+    }
+
+};
 
 
 } // anonymous
