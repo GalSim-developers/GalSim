@@ -76,9 +76,26 @@ struct PyGaussianDeviate {
             "Wraps the Boost.Random normal_distribution at the C++ layer so that the parent\n"
             "UniformDeviate is given once at construction, and copy/assignment are hidden.\n"
             "\n"
+            "Inititialization\n"
+            "----------------\n"
+            ">>> g = GaussianDeviate(u, mean=0., sigma=1.) \n"
+            "\n"
+            "Initializes g to be a GaussianDeviate instance, and repeated calls to g() will\n"
+            "return successive, psuedo-random Gaussian deviates with specified mean and sigma.\n"
+            "\n"
+            "Parameters:\n"
+            "\n"
+            "u       a UniformDeviate instance (seed set there).\n"
+            "mean    semi-optional mean for Gaussian distribution (default = 0.).\n"
+            "sigma   optional sigma for Gaussian distribution (default = 1.).\n"
+            "\n"
+            "The mean parameter is semi-optional since an ArgumentError exception will be raised\n"
+            "if sigma alone is specified without an accompanying mean. However, reversing their\n"
+            "ordering is handled OK provided keyword args are named. (TODO: Fix this if poss.!)\n"
+            "\n"
             ;
         bp::class_<GaussianDeviate,boost::noncopyable>(
-            "GaussianDeviate", doc, bp::init<UniformDeviate &,double,double>(
+            "GaussianDeviate", doc, bp::init< UniformDeviate&, bp::optional<double, double> >(
                 (bp::arg("u_"), bp::arg("mean"), bp::arg("sigma"))
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as GaussianDeviate lives
