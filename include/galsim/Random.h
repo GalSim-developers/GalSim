@@ -1,10 +1,13 @@
-/// \file Random.h Random-number-generator classes
-//
-/// Pseudo-random-number generators with various parent distributions: uniform, Gaussian,
-/// binomial, and Poisson.  
-//
-// Wraps Boost.Random classes in a way that lets us swap Boost RNG's without affecting
-// client code.
+/**
+ * @file Random.h 
+ * 
+ * @brief Random-number-generator classes
+ *
+ * Pseudo-random-number generators with various parent distributions: uniform, Gaussian, binomial,
+ * and Poisson, all living within the galsim namespace. 
+ * 
+ * Wraps Boost.Random classes in a way that lets us swap Boost RNG's without affecting client code.
+ */
 
 #ifndef RANDOM_H
 #define RANDOM_H
@@ -31,58 +34,78 @@
 #endif
 namespace galsim {
 
-    /// Pseudo-random number generator with uniform distribution in interval [0.,1.)
-    //
-    /// UniformDeviate is foundation of the Random.h classes: other distributions take a
-    /// UniformDeviate as construction argument and execute some transformation of the distribution. 
-    /// Can be seeded with a long int, or by default will be seeded by the system microsecond counter.
-    /// Copy constructor and assignment operator are kept private since you probably do not want two
-    /// "random" number generators producing the same sequence of numbers in your code!
+    /**
+     * @brief Pseudo-random number generator with uniform distribution in interval [0.,1.)
+     * 
+     * UniformDeviate is the foundation of the Random.h classes: other distributions take a
+     * UniformDeviate as construction argument and execute some transformation of the
+     * distribution. Can be seeded with a long int, or by default will be seeded by the system
+     * microsecond counter. Copy constructor and assignment operator are kept private since you
+     * probably do not want two "random" number generators producing the same sequence of numbers in
+     * your code! 
+     */
     class UniformDeviate 
     // Note that this class could be templated with the type of Boost.Random generator that
     // you want to use instead of mt19937
     {
     public:
-        /// Construct and seed a new UniformDeviate, using time of day as seed
-        //
-        /// Note that microsecond counter is the seed, so UniformDeviates constructed in rapid
-        /// succession will not be independent.
+        /**
+         * @brief Construct and seed a new UniformDeviate, using time of day as seed
+         *
+         * Note that microsecond counter is the seed, so UniformDeviates constructed in rapid
+         * succession will not be independent. 
+         */
         UniformDeviate(): urd(0.,1.) { seedtime(); } // seed with time
-        /// Construct and seed a new UniformDeviate, using time of day as seed
-        //
-        /// \param lseed A long-integer seed for the RNG.
+
+        /**
+         * @brief Construct and seed a new UniformDeviate, using time of day as seed
+         *
+         * @param[in] lseed A long-integer seed for the RNG.
+         */
         UniformDeviate(const long lseed): urng(lseed), urd(0.,1.) {} //seed with specific number
-        /// Draw a new random number from the distribution
-        //
-        /// \return A uniform deviate in the interval [0.,1.)
+
+        /**
+         * @brief Draw a new random number from the distribution
+         *
+         * @return A uniform deviate in the interval [0.,1.)
+         */
         double operator() () { return urd(urng); }
-        /// Cast to double draws a new random number from the distribution
-        //
-	/// Cast operator allows you to simply use your UniformDeviate instance in arithmetic 
-	/// assignments and every appearance will be replaced with a new deviate.
-        /// \return A uniform deviate in the interval [0.,1.)
-        operator double() { return urd(urng); }
-	/// Re-seed the PRNG using current time
+
+        /**
+         * @brief Re-seed the PRNG using current time
+         */
         void seed() { seedtime(); }
-	/// Re-seed the PRNG using specified seed
-        //
-        /// \param lseed A long-integer seed for the RNG.
+        
+        /**
+         * @brief Re-seed the PRNG using specified seed
+         *
+         * @param[in] lseed A long-integer seed for the RNG.
+         */
         void seed(const long lseed) { urng.seed(lseed); }
 
     private:
-	boost::mt19937 urng;
+        boost::mt19937 urng;
         boost::random::uniform_real_distribution<> urd;
-	/// Private routine to seed with microsecond counter from time-of-day structure.
+
+        /**
+         * @brief Private routine to seed with microsecond counter from time-of-day structure.
+         */
         void seedtime() 
         {
             struct timeval tp;
             gettimeofday(&tp,NULL);
             urng.seed(tp.tv_usec);
         }
-	/// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-	UniformDeviate(const UniformDeviate& rhs) {}
-	/// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-	void operator=(const UniformDeviate& rhs) {}
+
+        /**
+         * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's 
+         */
+        UniformDeviate(const UniformDeviate& rhs);
+
+        /**
+         * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's
+         */
+        void operator=(const UniformDeviate& rhs);
 
         // make friends able to see the RNG without the distribution wrapper:
         friend class GaussianDeviate;
@@ -91,174 +114,212 @@ namespace galsim {
 
     };
 
-    /// Pseudo-random number generator with Gaussian distribution
-    //
-    /// GaussianDeviate is constructed with reference to a UniformDeviate that will actually generate
-    /// the randoms, which are then transformed to Gaussian distribution with chosen mean and
-    /// standard deviation.
-    /// Copy constructor and assignment operator are kept private since you probably do not want two
-    /// "random" number generators producing the same sequence of numbers in your code!
-
+    /**
+     * @brief Pseudo-random number generator with Gaussian distribution
+     *
+     * GaussianDeviate is constructed with reference to a UniformDeviate that will actually generate
+     * the randoms, which are then transformed to Gaussian distribution with chosen mean and
+     * standard deviation. Copy constructor and assignment operator are kept private since you
+     * probably do not want two "random" number generators producing the same sequence of numbers in
+     * your code!
+     */
     //  Wraps the Boost.Random normal_distribution so that
     // the parent UniformDeviate is given once at construction, and copy/assignment are hidden.
     class GaussianDeviate 
     {
     public:
-        /// Construct a new Gaussian-distributed RNG 
-        //
-        /// Constructor requires reference to a UniformDeviate that generates the randoms, which
-        /// are then transformed to Gaussian distribution.
-        /// \param u_ UniformDeviate that will be called to generate all randoms
-        /// \param mean  Mean of the output distribution
-        /// \param sigma Standard deviation of the distribution
+
+        /**
+         * @brief Construct a new Gaussian-distributed RNG 
+         *
+         * Constructor requires reference to a UniformDeviate that generates the randoms, which are
+         * then transformed to Gaussian distribution. 
+         * @param[in] u_ UniformDeviate that will be called to generate all randoms
+         * @param[in] mean  Mean of the output distribution
+         * @param[in] sigma Standard deviation of the distribution
+         */
         GaussianDeviate(UniformDeviate& u_, double mean=0., double sigma=1.) : 
 	    u(u_), normal(mean,sigma) {}
-        /// Draw a new random number from the distribution
-        //
-        /// \return A Gaussian deviate with current mean and sigma
+
+        /**
+         * @brief Draw a new random number from the distribution
+         *
+         * @return A Gaussian deviate with current mean and sigma
+         */
         double operator() () { return normal(u.urng); }
-        /// Cast to double draws a new random number from the distribution
-        //
-	/// Cast operator allows you to simply use your GaussianDeviate instance in arithmetic 
-	/// assignments and every appearance will be replaced with a new deviate.
-        /// \return A Gaussian deviate with current mean and sigma
-        operator double() { return normal(u.urng); }
-	/// Get current distribution mean
-	//
-	/// \return Mean of distribution
-	double getMean() {return normal.mean();}
-	/// Get current distribution standard deviation
-	//
-	/// \return Standard deviation of distribution
-	double getSigma() {return normal.sigma();}
-	/// Set current distribution mean
-	//
-	/// \param mean New mean for distribution
-	void setMean(double mean) {
-	  normal.param(boost::random::normal_distribution<>::param_type(mean,
-								normal.sigma()));
-	}
-	/// Set current distribution standard deviation
-	//
-	/// \param sigma New standard deviation for distribution.  Behavior for non-positive value is undefined.
-	void setSigma(double sigma) {
-	  normal.param(boost::random::normal_distribution<>::param_type(normal.mean(),
-								sigma));
-	}
+
+        /**
+         * @brief Get current distribution mean
+         *
+         * @return Mean of distribution
+         */
+        double getMean() {return normal.mean();}
+        
+        /**
+         * @brief Get current distribution standard deviation
+         *
+         * @return Standard deviation of distribution
+         */
+        double getSigma() {return normal.sigma();}
+
+        /**
+         * @brief Set current distribution mean
+         *
+         * @param[in] mean New mean for distribution
+         */
+        void setMean(double mean) {
+            normal.param(boost::random::normal_distribution<>::param_type(mean,normal.sigma()));
+        }
+
+        /**
+         * @brief Set current distribution standard deviation
+         *
+         * @param[in] sigma New standard deviation for distribution.  Behavior for non-positive
+         * value is undefined. 
+         */
+        void setSigma(double sigma) {
+            normal.param(boost::random::normal_distribution<>::param_type(normal.mean(),sigma));
+        }
+        
     private:
+
         UniformDeviate& u;
         boost::random::normal_distribution<> normal;
+
+        /**
+         * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+         */
+        GaussianDeviate(const GaussianDeviate& rhs);
 	/// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-        GaussianDeviate(const GaussianDeviate& rhs): u(rhs.u) {}
-	/// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-        void operator=(const GaussianDeviate& rhs) {}
+        void operator=(const GaussianDeviate& rhs);
     };
 
-
-    /// A Binomial deviate for N trials each of probability p
-    //
-    /// BinomialDeviate is constructed with reference to a UniformDeviate that will actually generate
-    /// the randoms, which are then transformed to Binomial distribution.  N is number of "coin flips,"
-    /// p is probability of "heads," and each call returns integer 0<=value<=N giving number of heads.
-    /// Copy constructor and assignment operator are kept private since you probably do not want two
-    /// "random" number generators producing the same sequence of numbers in your code!
-
+    
+    /**
+     * @brief A Binomial deviate for N trials each of probability p
+     *
+     * BinomialDeviate is constructed with reference to a UniformDeviate that will actually generate
+     * the randoms, which are then transformed to Binomial distribution.  N is number of "coin
+     * flips," p is probability of "heads," and each call returns integer 0<=value<=N giving number
+     * of heads. Copy constructor and assignment operator are kept private since you probably do not
+     * want two "random" number generators producing the same sequence of numbers in your code!
+     */
     class BinomialDeviate 
     {
     public:
-        /// Construct a new binomial-distributed RNG 
-        //
-        /// Constructor requires reference to a UniformDeviate that generates the randoms, which
-        /// are then transformed to Binomial distribution.
-        /// \param u_ UniformDeviate that will be called to generate all randoms
-        /// \param N Number of "coin flips" per trial
-        /// \param p Probability of success per coin flip.
+
+        /**
+         * @brief Construct a new binomial-distributed RNG
+         *
+         * Constructor requires reference to a UniformDeviate that generates the randoms, which are
+         * then transformed to Binomial distribution. 
+         * @param[in] u_ UniformDeviate that will be called to generate all randoms
+         * @param[in] N Number of "coin flips" per trial
+         * @param[in] p Probability of success per coin flip.
+         */
         BinomialDeviate(UniformDeviate& u_, const int N=1, const double p=0.5): 
-	  u(u_), bd(N,p) {}
-        /// Draw a new random number from the distribution
-        //
-        /// \return A binomial deviate with current N and p
+        u(u_), bd(N,p) {}
+
+        /**
+         * @brief Draw a new random number from the distribution
+         *
+         * @return A binomial deviate with current N and p
+         */
         int operator()() { return bd(u.urng); }
-        /// Cast to int draws a new random number from the distribution
-        //
-	/// Cast operator allows you to simply use your BinomialDeviate instance in arithmetic 
-	/// assignments and every appearance will be replaced with a new deviate.
-        /// \return A binomial deviate with current N and p
-        operator int() { return bd(u.urng); }
-	/// Report current value of N
-	//
-	/// \return Current value of N
-	int getN() {return bd.t();}
-	/// Report current value of p
-	//
-	/// \return Current value of p
-	double getP() {return bd.p();}
-	/// Reset value of N
-	//
-	/// \param N New value of N
-	void setN(int N) {
-	    bd.param(boost::random::binomial_distribution<>::param_type(N,
-								        bd.p()));
-	}
-	/// Reset value of p
-	//
-	/// \param p New value of p
-	void setP(double p) {
-	    bd.param(boost::random::binomial_distribution<>::param_type(bd.t(),
-									p));
-	}
+
+        /**
+         * @brief Report current value of N
+         *
+         * @return Current value of N
+         */
+        int getN() {return bd.t();}
+
+        /**
+         * @brief Report current value of p
+         *
+         * @return Current value of p
+         */
+        double getP() {return bd.p();}
+
+        /**
+         * @brief Reset value of N
+         *
+         * @param[in] N New value of N
+         */
+        void setN(int N) {
+            bd.param(boost::random::binomial_distribution<>::param_type(N,bd.p()));
+        }
+
+        /**
+         * @brief Reset value of p
+         *
+         * @param[in] p New value of p
+         */
+        void setP(double p) {
+            bd.param(boost::random::binomial_distribution<>::param_type(bd.t(),p));
+        }
+
     private:
         UniformDeviate& u;
         boost::random::binomial_distribution<> bd;
-	/// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-        BinomialDeviate(const BinomialDeviate& rhs): u(rhs.u) {}
-	/// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-        void operator=(const BinomialDeviate& rhs) {}
+        /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+        BinomialDeviate(const BinomialDeviate& rhs);
+        /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+        void operator=(const BinomialDeviate& rhs);
     };
 
-    /// A Poisson deviate with specified mean
-    //
-    /// PoissonDeviate is constructed with reference to a UniformDeviate that will actually generate
-    /// the randoms, which are then transformed to Poisson distribution.  
-    /// Copy constructor and assignment operator are kept private since you probably do not want two
-    /// "random" number generators producing the same sequence of numbers in your code!
+    /**
+     * @brief A Poisson deviate with specified mean
+     *
+     * PoissonDeviate is constructed with reference to a UniformDeviate that will actually generate
+     * the randoms, which are then transformed to Poisson distribution.  Copy constructor and
+     * assignment operator are kept private since you probably do not want two "random" number
+     * generators producing the same sequence of numbers in your code!  
+     */
     class PoissonDeviate 
     {
     public:
-        /// Construct a new Poisson-distributed RNG 
-        //
-        /// Constructor requires reference to a UniformDeviate that generates the randoms, which
-        /// are then transformed to Poisson distribution.
-        /// \param u_ UniformDeviate that will be called to generate all randoms
-        /// \param mean Mean of the distribution
+
+        /**
+         * @brief Construct a new Poisson-distributed RNG 
+         *
+         * Constructor requires reference to a UniformDeviate that generates the randoms, which are
+         * then transformed to Poisson distribution. 
+         * @param[in] u_ UniformDeviate that will be called to generate all randoms
+         * @param[in] mean Mean of the distribution
+         */
         PoissonDeviate(UniformDeviate& u_, const double mean=1.): u(u_), pd(mean)  {}
-        /// Draw a new random number from the distribution
-        //
-        /// \return A Poisson deviate with current mean
+
+        /**
+         * @brief Draw a new random number from the distribution
+         *
+         * @return A Poisson deviate with current mean
+         */
         int operator()() { return pd(u.urng); }
-        /// Cast to int draws a new random number from the distribution
-        //
-	/// Cast operator allows you to simply use your PoissonDeviate instance in arithmetic 
-	/// assignments and every appearance will be replaced with a new deviate.
-        /// \return A binomial deviate with current mean
-        operator int() { return pd(u.urng); }
-	/// Report current distribution mean
-	//
-	/// \return Current mean value
-	double getMean() {return pd.mean();}
-	/// Reset distribution mean
-	//
-	/// \param mean New mean value
-	void setMean(double mean) {
-	  pd.param(boost::random::poisson_distribution<>::param_type(mean));
-	}
+
+        /**
+         * @brief Report current distribution mean
+         * 
+         * @return Current mean value
+         */
+        double getMean() {return pd.mean();}
+
+        /**
+         * @brief Reset distribution mean
+         *
+         * @param[in] mean New mean value
+         */
+        void setMean(double mean) {
+            pd.param(boost::random::poisson_distribution<>::param_type(mean));
+        }
+
     private:
         UniformDeviate& u;
         boost::random::poisson_distribution<> pd;
-	/// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-        PoissonDeviate(const PoissonDeviate& rhs): u(rhs.u) {}
-	/// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-        void operator=(const PoissonDeviate& rhs) {}
+        /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+        PoissonDeviate(const PoissonDeviate& rhs);
+        /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+        void operator=(const PoissonDeviate& rhs);
     };
 
 }  // namespace galsim
