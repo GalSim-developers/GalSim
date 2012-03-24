@@ -145,7 +145,7 @@ struct PyBinomialDeviate {
             "\n"
             "u       a UniformDeviate instance (seed set there).\n"
             "N       number of 'coin flips' per trial (default `N = 1`).\n"
-            "p       probability of success per coin flip (default `p = 0.5`).\"
+            "p       probability of success per coin flip (default `p = 0.5`).\n"
             "\n"
             "The N parameter is semi-optional: an ArgumentError exception will be raised if p\n"
             "alone is specified without an accompanying N. However, reversing their ordering is\n"
@@ -178,6 +178,7 @@ struct PyBinomialDeviate {
 void pyExportRandom() {
     PyUniformDeviate::wrap();
     PyGaussianDeviate::wrap();
+    PyBinomialDeviate::wrap();
 }
 
 } // namespace galsim
