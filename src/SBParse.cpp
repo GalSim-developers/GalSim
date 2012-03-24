@@ -15,6 +15,8 @@ namespace galsim {
     const std::string whitespace=" \t\n\v\f\r";
     // Note also the ( and ) can split words.
 
+    // Return true if the string can be read as number
+    // of the type of 2nd argument - and do so.
     template <typename T>
     bool isNumber(const std::string s, T& value) 
     {
@@ -23,6 +25,7 @@ namespace galsim {
         return !iss.fail();
     }
 
+    // Base class for atomic elements of parsed strings
     class Word 
     {
     public:
@@ -31,6 +34,7 @@ namespace galsim {
         virtual Word* duplicate() const=0;
     };
 
+    // A word that is still just a string, not yet any special meaning
     class StringWord : public Word, public std::string 
     {
     public:
@@ -41,6 +45,7 @@ namespace galsim {
         ~StringWord() {}
     };
 
+    // An ordered list of words
     class Phrase : public std::list<Word*> 
     {
     public:
@@ -68,6 +73,7 @@ namespace galsim {
         { for (iterator i=begin(); i!=end(); ++i) delete *i; }
     };
 
+    // Key words specified by single character, e.g. our modifiers
     template <char C>
     class KeyWord: public Word 
     {
@@ -94,6 +100,7 @@ namespace galsim {
     typedef KeyWord<'F'> FluxOp;
     typedef KeyWord<'R'> RotateOp;
 
+    // Break a string into words, breaking at white space and parentheses
     Phrase wordify(const std::string in) 
     {
         Phrase out;
@@ -132,6 +139,11 @@ namespace galsim {
         return out;
     }
 
+    // Divide a phrase into smaller phrases, divide at locations of work K
+    // The words of class K are removed.
+    // Breaks are inhibited inside any parentheses.
+    // If no works of class K are found, then output list has one element, which
+    // is duplicate of the input phrase.
     template <class K>
     std::list<Phrase> SplitAt(const Phrase in) 
     {
@@ -145,7 +157,7 @@ namespace galsim {
                 accum.push_back(new OpenParen);
             } else if (CloseParen::test(*ip)) {
                 if (paren_level==0) 
-                    throw SBError("SBParse unmatched parentheses:" + in.print());
+                    throw SBError("SBParse unmatched close parenthesis:" + in.print());
                 paren_level--;
                 accum.push_back(new CloseParen);
             } else if (paren_level==0 && K::test(*ip)) {
@@ -158,11 +170,12 @@ namespace galsim {
             ++ip;
         }
         if (paren_level!=0) 
-            throw SBError("SBParse unmatched parentheses:" + in.print());
+            throw SBError("SBParse unmatched open parenthesis:" + in.print());
         ls.push_back(accum);
         return ls;
     }
 
+    // Turn a phrase into an SBProfile, using recursive parsing.
     SBProfile* SBParse(Phrase in) 
     {
         if (in.empty())
@@ -170,12 +183,37 @@ namespace galsim {
 
         // Strip any bounding parentheses
         while (OpenParen::test(in.front()) && CloseParen::test(in.back())) {
-            delete in.front();
-            delete in.back();
-            in.pop_front();
-            in.pop_back();
-            if (in.empty())
-                throw SBError("SBParse: null expression");
+            // Make sure they are matched:  find the CloseParen that matches the initial open
+            int paren_level=0;
+            Phrase::const_iterator ip=in.begin();
+            while (ip!=in.end()) {
+                if (OpenParen::test(*ip)) {
+                    paren_level++;
+                } else if (CloseParen::test(*ip)) {
+                if (paren_level==0) 
+                    throw SBError("SBParse unmatched close parenthesis:" + in.print());
+                paren_level--;
+                // If paren_level is back to zero, ip now points to CloseParen matching initial open
+                if (paren_level==0) break;
+                } 
+                ++ip;
+            }
+            // First make sure that we found a closing match for opener:
+            if (ip==in.end())
+                throw SBError("SBParse unmatched initial open parenthesis:" + in.print());
+            // Now if ip points to last Word, we strip the open and close parentheses:
+            ++ip;
+            if (ip==in.end()) {
+                delete in.front();
+                delete in.back();
+                in.pop_front();
+                in.pop_back();
+                if (in.empty())
+                    throw SBError("SBParse: empty parentheses");
+            } else {
+                // If first and last parentheses do not match, stop stripping them:
+                break;
+            }
         }
 
         // See if this is a sum expression:
@@ -183,6 +221,7 @@ namespace galsim {
         if (ls.empty())
             throw SBError("SBParse: no arguments for +");
         if (ls.size()>1) {
+            // If so, the output is an SBAdd and call parser recursively on summand Phrases:
             SBAdd* sba = new SBAdd;
             for (std::list<Phrase>::iterator i=ls.begin(); i!=ls.end(); ++i) {
                 SBProfile* summand = SBParse(*i);
@@ -198,6 +237,7 @@ namespace galsim {
         if (ls.empty())
             throw SBError("SBParse: no arguments for *");
         if (ls.size()>1) {
+            // If so, the output is an SBConvolve and call parser recursively on convolvee Phrases:
             SBConvolve* sbc = new SBConvolve;
             for (std::list<Phrase>::iterator i=ls.begin(); i!=ls.end(); ++i) {
                 SBProfile* term = SBParse(*i);
@@ -273,7 +313,7 @@ namespace galsim {
             }
         }
 
-        // else: should be a primitive. Build and return
+        // else: should be a primitive, specified by first word and rest are arguments. Build and return
         int nargs = args.size()-1;
         // Translate arguments into doubles since that's what most primitives want.
         bool allNumbers=true;
