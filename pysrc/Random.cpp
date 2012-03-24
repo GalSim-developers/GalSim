@@ -172,6 +172,56 @@ struct PyBinomialDeviate {
 
 };
 
+struct PyPoissonDeviate {
+
+    static void wrap() {
+        static char const * doc = 
+            "\n"
+            "Pseudo-random Poisson deviate with specified mean.\n"
+            "\n"
+            "PoissonDeviate is constructed with reference to a UniformDeviate that will actually\n"
+            "generate the randoms, which are then transformed to Poisson distribution.  The input\n"
+            "mean sets the mean and variance of the Poisson deviate. An integer deviate with this\n"
+            "distribution is returned after each call.\n"
+            "\n"
+            "As for UniformDeviate, the copy constructor and assignment operator are kept private\n"
+            "since you probably do not want two random number generators producing the same\n"
+            "sequence of numbers in your code!\n"
+            "\n"
+            "Wraps the Boost.Random poisson_distribution at the C++ layer so that the parent\n"
+            "UniformDeviate is given once at construction, and copy/assignment are hidden.\n"
+            "\n"
+            "Inititialization\n"
+            "----------------\n"
+            ">>> p = PoissonDeviate(u, mean=1.)\n"
+            "\n"
+            "Initializes p to be a PoissonDeviate instance, and repeated calls to p() will\n"
+            "return successive, psuedo-random Poisson deviates with specified mean.\n"
+            "\n"
+            "Parameters:\n"
+            "\n"
+            "u       a UniformDeviate instance (seed set there).\n"
+            "mean    mean of the distribution (default `mean = 1`).\n"
+            "\n"
+            ;
+        bp::class_<PoissonDeviate,boost::noncopyable>(
+            "PoissonDeviate", doc, bp::init< UniformDeviate&, bp::optional<double> >(
+                (bp::arg("u_"), bp::arg("mean"))
+            )[
+                bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as PoissonDeviate lives
+            ]
+            )
+            .def("__call__", &PoissonDeviate::operator(),
+                 "Draw a new random number from the distribution.\n"
+                 "\n"
+                 "Returns a Poisson deviate with current mean.\n")
+            .def("getMean", &GaussianDeviate::getMean, "Get current distribution mean.")
+            .def("setMean", &GaussianDeviate::setMean, "Set current distribution mean.")
+            ;
+    }
+
+};
+
 
 } // anonymous
 
@@ -179,6 +229,7 @@ void pyExportRandom() {
     PyUniformDeviate::wrap();
     PyGaussianDeviate::wrap();
     PyBinomialDeviate::wrap();
+    PyPoissonDeviate::wrap();
 }
 
 } // namespace galsim
