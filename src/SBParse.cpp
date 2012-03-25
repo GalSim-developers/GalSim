@@ -362,7 +362,7 @@ namespace galsim {
         } else if (nocaseEqual(sbtype, "airy")) {
             // Airy: args are [D/lambda] [obscuration]
             if (nargs!=2 || !allNumbers)
-                throw SBError("SBParse: Bad arguments for SBBox: " + args.print());
+                throw SBError("SBParse: Bad arguments for SBAiry: " + args.print());
             double flux=1.;
             double D = dargs[0];
             double obs = dargs[1];
