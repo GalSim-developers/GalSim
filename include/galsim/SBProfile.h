@@ -225,6 +225,8 @@ namespace galsim {
          * image  may be calculated internally on a larger grid to avoid folding.
          * The default draw() routines decide internally whether image can be drawn directly
          * in real space or needs to be done via FFT from k space.
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
@@ -247,6 +249,8 @@ namespace galsim {
          * image may be calculated internally on a larger grid to avoid folding.
          * The default draw() routines decide internally whether image can be drawn directly
          * in real space or needs to be done via FFT from k space.
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in,out]   image
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
@@ -268,6 +272,8 @@ namespace galsim {
          * drawn which is big enough to avoid "folding." 
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding.
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in,out]   image
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
@@ -290,6 +296,8 @@ namespace galsim {
          * and the image will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding.
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in,out]   image
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
@@ -313,6 +321,8 @@ namespace galsim {
          * FFT, they will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding in real space.
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in,out]   re image of real argument of SBProfile in k space.
          * @param[in,out]   im image of imaginary argument of SBProfile in k space.
@@ -332,6 +342,8 @@ namespace galsim {
          * needed since the SBProfile is complex.  If on input either image `Re` or `Im` is not 
          * specified or has null dimension, square images will be drawn which are big enough to 
          * avoid "folding."
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in,out]   re image of real argument of SBProfile in k space.
          * @param[in,out]   im image of imaginary argument of SBProfile in k space.
@@ -356,6 +368,8 @@ namespace galsim {
          * and the images will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding in real space.
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in,out]   re image of real argument of SBProfile in k space.
          * @param[in,out]   im image of imaginary argument of SBProfile in k space.
