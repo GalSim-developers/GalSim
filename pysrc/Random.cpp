@@ -1,6 +1,14 @@
 #include "boost/python.hpp"
 #include "Random.h"
 
+/*
+ * Barney's note 24Mar12: currently these only generate single instances of each random deviate.
+ * This is not optimized for generating large arrays of random deviates.  I spoke with Jim and we 
+ * thought that it would be best to write this in C++, but Barney needs to learn a little more about
+ * the Numpy C API.  For now, we'll have to fill in arrays in Python manually; hopefully only a 
+ * temporary workaround.
+ */
+
 namespace bp = boost::python;
 
 namespace galsim {
