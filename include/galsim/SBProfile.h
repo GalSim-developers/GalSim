@@ -154,7 +154,7 @@ namespace galsim {
         virtual double centroidY() const =0; ///<Centroid of SBProfile in y.
 
         /// @brief Returns (X, Y) centroid of SBProfile.
-        Position<double> centroid() const 
+        virtual Position<double> centroid() const 
         { Position<double> p(centroidX(),centroidY());  return p; }
 
 
