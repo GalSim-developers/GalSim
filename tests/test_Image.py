@@ -4,7 +4,6 @@ import numpy as np
 testshape = (512, 512)  # shape of image arrays for all tests
 types = [np.int16, np.int32, np.float32, np.float64]
 
-
 def test_Image_XYmin_XYMax():
     """Test that all four types of supported arrays correctly set bounds based on an input array.
     """
