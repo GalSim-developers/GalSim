@@ -10,7 +10,7 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
                  # continuous-result derived check values... note this is not as stringent as
                  # decimal, because this is tough, because the DFT representation of a function is
                  # not precisely equivalent to its continuous counterpart.
-                 # See http://en.wikipedia.org/wiki/File:From_Continuous_To_Discrete_Fourier_Transform.gif
+           # See http://en.wikipedia.org/wiki/File:From_Continuous_To_Discrete_Fourier_Transform.gif
 
 def test_roll2d_circularity():
     """Test both integer and float arrays are unchanged by full circular roll.
