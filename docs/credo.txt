@@ -27,6 +27,19 @@ Biggish things to highlight/add/modify are...
  and while it's mostly aimed at compatibility with case-insensitive filesystems, we think we 
  should stick with it anyway.
 
+ We will adopt the SBProfile capitalization style wherever sensible for code filenames, as it's by 
+ far the most significant chunk of C/C++ we are currently using.  This makes include/*.h files
+ capitalized.
+ 
+ Python unit testing modules will be placed in tests/, and called test_<Module>.py
+
+ For executables we will tend to use descriptive underscores, such as exec_name*.  CamelCase or 
+ camelCase is optional, but not systematically encouraged unless for good reasons (e.g. SBDraw.py* 
+ does make it more immediately obvious what the exectuable does than sbdraw.py*).  For executables 
+ that perform tests (e.g. in non-Python code units) these will be called test_<function>* to match
+ the naming conventions of Python test modules.
+
+
 For vim users, Mike Jarvis has put the c.vim file in the devutils/ directory.  If you put that 
 in  .vim/ftplugin/ and add the line "filetype plugin on" in your .vimrc file, then you will 
 automatically get the formatting to match what is currently in SBProfile.  We don't (yet) 
@@ -38,8 +51,8 @@ http://dev.lsstcorp.org/trac/wiki/PythonCodeStandards
 http://dev.lsstcorp.org/trac/wiki/C%2B%2BStandard
 
 Broad reasons for choice of LSST style: These documents just seem to be a fairly sensible 
-source of code and  documentation formatting guidance.  See also Peter Melchior's slides 
-for sound advice in general, and on documentation:
+source of code and  documentation formatting guidance, although note that we have diverged in some
+places.  See also Peter Melchior's slides for sound advice in general, and on documentation:
 dl.dropbox.com/u/26820102/talks/software_engineering_150410.pdf
 
 

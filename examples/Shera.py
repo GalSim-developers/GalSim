@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """
 SBProfile-based implementation of SHERA, with comparison to actual
-SHERA results.
+SHERA results.  Currently, can only be run in the examples/ directory as 
+python Shera.py data/147246.0_150.416558_1.998697 
 """
 
 # This machinery lets us run Python examples even though they aren't positioned
@@ -19,7 +20,7 @@ def main(argv):
 
     # translation from C++ by Jim; comments after this one are in Gary's voice
 
-    l3 = galsim.Lanczos(3, true, 1E-4)
+    l3 = galsim.Lanczos(3, True, 1.0E-4)
     l32d = galsim.InterpolantXY(l3)
 
     dxHST = 0.03
@@ -29,8 +30,8 @@ def main(argv):
     psfSky = 1000.0
     
     rootname = argv[1]
-    xshift = float(argv[2]) if len(argv) > 2 : 0.
-    yshift = float(argv[3]) if len(argv) > 3 : 0.
+    xshift = float(argv[2]) if len(argv) > 2 else 0.
+    yshift = float(argv[3]) if len(argv) > 3 else 0.
     s = galsim.Shear()
     s.setG1G2(g1, g2)
     # Rachel is probably using the (1+g, 1-g) form of shear matrix,
@@ -38,7 +39,7 @@ def main(argv):
     e = galsim.Ellipse(s, -(g1*g1+g2*g2), galsim.PositionD(xshift,yshift));
 
     galaxyImg = galsim.fits.read(rootname + "_masknoise.fits")
-    galaxy = galsim.SBPixel(galasyImg, l32d, dxHST, 1.)
+    galaxy = galsim.SBPixel(galaxyImg, l32d, dxHST, 1.0)
     galaxy.setFlux(0.804*1000.*dxSDSS*dxSDSS)
 
     psf1Img = galsim.fits.read(rootname + ".psf.fits")
