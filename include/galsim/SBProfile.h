@@ -530,8 +530,7 @@ namespace galsim {
      * Origin of original shape will now appear at `x0`.
      * Flux is NOT conserved in transformation - surface brightness is preserved.
      * We keep track of all distortions in a 2x2 matrix `M = [(A B), (C D)]` = [row1, row2] 
-     * (det`M`=1), with an additional determinant multiplier `absdet`, plus a 2-element `x0` for
-     * the shift.
+     * plus a 2-element Positon object `x0` for the shift.
      */
     class SBDistort : public SBProfile 
     {
