@@ -35,7 +35,7 @@
 namespace galsim {
 
     /**
-     * @brief Pseudo-random number generator with uniform distribution in interval [0.,1.)
+     * @brief Pseudo-random number generator with uniform distribution in interval [0.,1.).
      * 
      * UniformDeviate is the foundation of the Random.h classes: other distributions take a
      * UniformDeviate as construction argument and execute some transformation of the
@@ -115,7 +115,7 @@ namespace galsim {
     };
 
     /**
-     * @brief Pseudo-random number generator with Gaussian distribution
+     * @brief Pseudo-random number generator with Gaussian distribution.
      *
      * GaussianDeviate is constructed with reference to a UniformDeviate that will actually generate
      * the randoms, which are then transformed to Gaussian distribution with chosen mean and
@@ -130,7 +130,7 @@ namespace galsim {
     public:
 
         /**
-         * @brief Construct a new Gaussian-distributed RNG 
+         * @brief Construct a new Gaussian-distributed RNG.
          *
          * Constructor requires reference to a UniformDeviate that generates the randoms, which are
          * then transformed to Gaussian distribution. 
@@ -146,7 +146,6 @@ namespace galsim {
          *
          * @return A Gaussian deviate with current mean and sigma
          */
-        double operator() () { return normal(u.urng); }
 
         /**
          * @brief Get current distribution mean
@@ -196,7 +195,7 @@ namespace galsim {
 
     
     /**
-     * @brief A Binomial deviate for N trials each of probability p
+     * @brief A Binomial deviate for N trials each of probability p.
      *
      * BinomialDeviate is constructed with reference to a UniformDeviate that will actually generate
      * the randoms, which are then transformed to Binomial distribution.  N is number of "coin
@@ -269,7 +268,7 @@ namespace galsim {
     };
 
     /**
-     * @brief A Poisson deviate with specified mean
+     * @brief A Poisson deviate with specified mean.
      *
      * PoissonDeviate is constructed with reference to a UniformDeviate that will actually generate
      * the randoms, which are then transformed to Poisson distribution.  Copy constructor and
