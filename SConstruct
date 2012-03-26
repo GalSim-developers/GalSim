@@ -663,11 +663,12 @@ int main()
         context.Result(0)
         print 'Failed to import numpy.'
         print 'Things to try:'
-        print '1) Check that the command line python (with which you probably installed numpy):'
+        print '1) Check that the python with which you installed numpy,'
+        print '   probably the command line python:'
         print '   ',
         sys.stdout.flush()
         subprocess.call('which python',shell=True)
-        print '  is the same as the one used by SCons:'
+        print '   is the same as the one used by SCons:'
         print '  ',sys.executable
         print '   If not, then you probably need to reinstall numpy with %s.' % sys.executable
         print '   And remember to use that when running python for use with GalSim.'
@@ -699,11 +700,12 @@ def CheckPyFITS(context):
         context.Result(0)
         print 'Failed to import PyFITS.'
         print 'Things to try:'
-        print '1) Check that the command line python (with which you probably installed PyFITS):'
+        print '1) Check that the python with which you installed PyFITS,'
+        print '   probably the command line python:'
         print '   ',
         sys.stdout.flush()
         subprocess.call('which python',shell=True)
-        print '  is the same as the one used by SCons:'
+        print '   is the same as the one used by SCons:'
         print '  ',sys.executable
         print '   If not, then you probably need to reinstall PyFITS with %s.' % sys.executable
         print '   And remember to use that when running python for use with GalSim.'

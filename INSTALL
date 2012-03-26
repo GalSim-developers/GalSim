@@ -267,6 +267,10 @@ Macports is another popular Mac package management project with similar function
 
 sudo port install boost +python27
 
+Note: You will still need to install numpy and pyfits manually, since the fink installations
+use /sw/bin/python2.6 (or similar) rather than the normal command line python, which is normally 
+/usr/bin/python.  
+
 
 b) The Enthought Python Distribution (EPD) is a single-install package that provides Python, Numpy,
 and SCons, along with many other useful Python modules in a well-maintined single framework.  It 
