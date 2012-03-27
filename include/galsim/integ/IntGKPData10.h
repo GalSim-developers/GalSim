@@ -1,7 +1,13 @@
-// Gauss-Kronrod-Patterson quadrature coefficients for use in
-// quadpack routine qng. These coefficients were calculated with
-// 101 decimal digit arithmetic by L. W. Fullerton, Bell Labs, Nov
-// 1981. 
+/**
+ * @file IntGKPData10.h
+ *
+ * @brief Gauss-Kronrod-Patterson quadrature coefficients using the 
+ *        10-, 20-, 43-, 87- and 175-point rule.
+ *
+ * The coefficients up through the 87-point rule  were calculated with 
+ * 101 decimal digit arithmetic by L. W. Fullerton, Bell Labs, Nov 1981. 
+ * The 175-point rule was calculated by Mike Jarvis using long double precision.
+ */
 
 #include <vector>
 
@@ -10,6 +16,7 @@ namespace integ {
 
     static const int NGKPLEVELS = 5;
 
+    /// The number of evaluation points at each level
     inline int gkp_n(int level) 
     { 
         assert(level >= 0 && level < NGKPLEVELS);
@@ -17,6 +24,19 @@ namespace integ {
         return ngkp[level]; 
     }
 
+    /**
+     * @brief The abscissa points for each level
+     *
+     * For level > 0, it only returns the additional points at which 
+     * to evaluate the function.
+     *
+     * The x values are normalized for an integral from -1 to 1.
+     * So when they are used for an arbitrary range, we typically 
+     * define center and half_length = (b-a)/2.
+     * Then the real evaluations points are center + x*half_length
+     * and center - x*half_length, each of which has the same weight
+     * value (given by gkp_wa or gkp_wb).
+     */
     template <class T> 
     inline const std::vector<T>& gkp_x(int level)
     {
@@ -139,6 +159,9 @@ namespace integ {
         return *x[level];
     }
 
+    /**
+     * @brief The weights at each of the evaluation points from previous levels
+     */
     template <class T> 
     inline const std::vector<T>& gkp_wa(int level)
     {
@@ -248,6 +271,13 @@ namespace integ {
         return *wa[level];
     }
 
+    /**
+     * @brief The weights at each of the evaluation points from the current level
+     *
+     * Note that the last value is for the implicit x=0, which isn't listed in the
+     * list of abscissae.  Hence these all have one extra element than the corresponding
+     * gkp_x vector.
+     */
     template <class T> 
     inline const std::vector<T>& gkp_wb(int level)
     {
