@@ -4,3 +4,5 @@ Shear.cpp
 Image.cpp
 SBProfile.cpp
 SBPixel.cpp
+Random.cpp
+
