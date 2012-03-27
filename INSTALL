@@ -267,10 +267,12 @@ explicitly indicate Boost.Python, e.g., using
 
 sudo port install boost +python27
 
-Note: You will still need to install numpy and pyfits manually, since the fink installations
-use /sw/bin/python2.6 (or similar) rather than the normal command line python, which is normally 
-/usr/bin/python.  
-
+Note: You may still need to install numpy and pyfits manually (simple enough using easy_install: 
+http://packages.python.org/distribute/easy_install.html#using-easy-install), since the fink 
+installations use /sw/bin/python2.6 (or similar) rather than the normal command line python, which 
+is normally /usr/bin/python. Of course, if you have setup your default python to be the 
+fink/Macports installed version, using these package managers to install numpy and pyfits will be 
+fine.
 
 b) The Enthought Python Distribution (EPD) is a single-install package that provides Python, Numpy,
 and SCons, along with many other useful Python modules in a well-maintined single framework.  It 
