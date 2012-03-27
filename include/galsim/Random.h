@@ -146,6 +146,7 @@ namespace galsim {
          *
          * @return A Gaussian deviate with current mean and sigma
          */
+        double operator() () { return normal(u.urng); }
 
         /**
          * @brief Get current distribution mean
