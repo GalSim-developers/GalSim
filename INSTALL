@@ -49,7 +49,8 @@ import pyfits
 
 You can test this by loading up the Python interpreter for the version of python you'll be using 
 with the GalSim toolkit, and typing the two import commands above.  If you get no warning message, 
-things are OK.
+things are OK.  If you do not have these modules, follow the links above or try easy_install:
+http://packages.python.org/distribute/easy_install.html#using-easy-install
 
 Some users will find they have a few versions of Python around their operating system.  It will be 
 important to make sure that the version of Python for which Numpy and Pyfits are installed is also 
