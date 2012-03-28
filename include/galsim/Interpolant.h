@@ -97,9 +97,9 @@ namespace galsim {
             // ain't this pretty?
             return M_PI/2.*((x>0)?1.:-1.) 
                 -(38.102495+x2*(335.677320+x2*(265.187033+x2*(38.027264+x2))))
-                / (x* (157.105423+x2*(570.236280+x2*(322.624911+x2*(40.021433+x2)))) ) * cos(x)
+                / (x* (157.105423+x2*(570.236280+x2*(322.624911+x2*(40.021433+x2)))) ) * std::cos(x)
                 -(21.821899+x2*(352.018498+x2*(302.757865+x2*(42.242855+x2))))
-                / (x2*(449.690326+x2*(1114.978885+x2*(482.485984+x2*(48.196927+x2)))))*sin(x);
+                / (x2*(449.690326+x2*(1114.978885+x2*(482.485984+x2*(48.196927+x2)))))*std::sin(x);
 
         } else {
             // x2<3.8: the series expansion is the better approximation, A&S 5.2.14
@@ -130,8 +130,8 @@ namespace galsim {
         double urange() const { return 1./(M_PI*tolerance); }
         double xval(double x) const 
         {
-            if (abs(x)>0.5) return 0.;
-            else if (abs(x)<0.5) return 1.;
+            if (std::abs(x)>0.5) return 0.;
+            else if (std::abs(x)<0.5) return 1.;
             else return 0.5;
         }
         double uval(double u) const { return sinc(u); }
@@ -152,8 +152,8 @@ namespace galsim {
         double urange() const { return 0.5; }
         double uval(double u) const 
         {
-            if (abs(u)>0.5) return 0.;
-            else if (abs(u)<0.5) return 1.;
+            if (std::abs(u)>0.5) return 0.;
+            else if (std::abs(u)<0.5) return 1.;
             else return 0.5;
         }
         double xval(double x) const { return sinc(x); }
@@ -162,11 +162,11 @@ namespace galsim {
             // Magic formula:
             x *= M_PI;
             if (N%2==0) {
-                if (abs(x) < 1e-4) return 1. - x*x*(1/6.+1/2.-1./(6.*N*N));
-                return sin(x) * cos(x/N) / (N*sin(x/N));
+                if (std::abs(x) < 1e-4) return 1. - x*x*(1/6.+1/2.-1./(6.*N*N));
+                return std::sin(x) * std::cos(x/N) / (N*std::sin(x/N));
             } else {
-                if (abs(x) < 1e-4) return 1. - x*x*(1-1./(N*N))/6.;
-                return sin(x) / (N*sin(x/N));
+                if (std::abs(x) < 1e-4) return 1. - x*x*(1-1./(N*N))/6.;
+                return std::sin(x) / (N*std::sin(x/N));
             }
         }
     private:
@@ -180,14 +180,14 @@ namespace galsim {
         ~Linear() {}
         double getTolerance() const { return tolerance; }
         double xrange() const { return 1.-0.5*tolerance; }  // Snip off endpoints near zero
-        double urange() const { return sqrt(1./tolerance)/M_PI; }
+        double urange() const { return std::sqrt(1./tolerance)/M_PI; }
         double xval(double x) const 
         {
-            x=abs(x);
+            x=std::abs(x);
             if (x>1.) return 0.;
             else return 1.-x;
         }
-        double uval(double u) const { return pow(sinc(u),2.); }
+        double uval(double u) const { return std::pow(sinc(u),2.); }
     private:
         double tolerance;
     };
@@ -213,7 +213,7 @@ namespace galsim {
             x = std::abs(x);
             if (x>=n) return 0.;
             double retval = sinc(x)*sinc(x/n);
-            if (fluxConserve) retval *= 1 + 2.*u1*(1-cos(2*M_PI*x));
+            if (fluxConserve) retval *= 1 + 2.*u1*(1-std::cos(2*M_PI*x));
             return retval;
         }
         double uval(double u) const 
@@ -223,7 +223,7 @@ namespace galsim {
             if (!fluxConserve) return retval;
             retval *= 1+2*u1;
             if (u+1 < uMax) retval -= u1*tab(u+1);
-            if (abs(u-1) < uMax) retval -= u1*tab(abs(u-1));
+            if (std::abs(u-1) < uMax) retval -= u1*tab(std::abs(u-1));
             return retval;
         }
         double uCalc(double u) const;

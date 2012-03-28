@@ -32,7 +32,7 @@ namespace galsim {
 
     void LVector::rotate(double theta) 
     {
-        std::complex<double> z(cos(theta), -sin(theta));
+        std::complex<double> z(std::cos(theta), -std::sin(theta));
         std::complex<double> imz(1., 0.);
         for (int m=1; m<=*order; m++) {
             imz *= z;
@@ -124,7 +124,7 @@ namespace galsim {
             }
             (*m)(rIndex1,rIndex2) = Cpq1pq2.real() * (pq2.isReal()? 1. : 2.);
             if (pq2.isReal()) {
-                if (abs(Cpq1pq2.imag()) > RoundoffTolerance) {
+                if (std::abs(Cpq1pq2.imag()) > RoundoffTolerance) {
                     std::ostringstream oss;
                     oss << "Nonzero imaginary LTransform elements for p1=q1, p2=q2: " 
                         << Cpq1pq2;
@@ -203,7 +203,7 @@ namespace galsim {
         std::complex<double> z(xunit,-yunit);
         double x = norm(z);
 
-        double tq = exp(-0.5*x) / (2*M_PI*sigma*sigma);
+        double tq = std::exp(-0.5*x) / (2*M_PI*sigma*sigma);
         double tqm1=tq;
         double tqm2;
 
@@ -387,7 +387,7 @@ namespace galsim {
         tmv::Vector<double> sinm(npts, 0.);
         for (int i=0; i<Rsq.size(); i++) {
             Rsq(i) = x[i]*x[i]+y[i]*y[i];
-            cosm[i] *= exp(-0.5*Rsq(i));
+            cosm[i] *= std::exp(-0.5*Rsq(i));
         }
         // Put 1/sigma factor into every point if doing a design matrix:
         if (invsig) 
@@ -617,7 +617,7 @@ namespace galsim {
             tmv::Vector<double> Lp(maxP+1);
             tmv::Vector<double> Qp(maxP+1);
             double x = R*R;
-            double efact = exp(-0.5*x);
+            double efact = std::exp(-0.5*x);
             Lp[0] = Qp[0]=1.;
             if (maxP>0) {
                 Lp[1] = 1. - x;
