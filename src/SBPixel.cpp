@@ -171,8 +171,8 @@ namespace galsim {
                 }
             }
             fluxes[i] = sum*dx*dx;
-            xFluxes[i] = sumx * pow(dx, 3.);
-            yFluxes[i] = sumy * pow(dx, 3.);
+            xFluxes[i] = sumx * std::pow(dx, 3.);
+            yFluxes[i] = sumy * std::pow(dx, 3.);
 
             // Conduct FFT
             vk.push_back( vx[i]->transform());

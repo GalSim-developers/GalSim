@@ -7,7 +7,7 @@ namespace galsim {
     {
         // sum over all arguments x+jN that are within range.
         // Start by finding x+jN closest to zero
-        double xdown = x - N*floor(x/N + 0.5);
+        double xdown = x - N*std::floor(x/N + 0.5);
         double xup = xdown+N;
         double sum = 0.;
         while (std::abs(xdown) <= xrange()) {
@@ -36,7 +36,7 @@ namespace galsim {
     {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
-        range = n*(1-0.1*sqrt(tolerance));
+        range = n*(1-0.1*std::sqrt(tolerance));
         const double uStep = 0.01/n;
         uMax = 0.;
         double u = tab.size()>0 ? tab.argMax() + uStep : 0.;
@@ -53,7 +53,7 @@ namespace galsim {
     {
     public:
         CubicIntegrand(double u_, const Cubic& c_): u(u_), c(c_) {}
-        double operator()(double x) const { return c.xval(x)*cos(2*M_PI*u*x); }
+        double operator()(double x) const { return c.xval(x)*std::cos(2*M_PI*u*x); }
 
     private:
         double u;
@@ -87,7 +87,7 @@ namespace galsim {
     {
     public:
         QuinticIntegrand(double u_, const Quintic& c_): u(u_), c(c_) {}
-        double operator()(double x) const { return c.xval(x)*cos(2*M_PI*u*x); }
+        double operator()(double x) const { return c.xval(x)*std::cos(2*M_PI*u*x); }
     private:
         double u;
         const Quintic& c;

@@ -18,7 +18,7 @@ namespace galsim {
         double insize = (1.-1e-5)*input;
         double log2n = std::log(2.)*std::ceil(std::log(insize)/std::log(2.));
         double log2n3 = std::log(3.) 
-	     + log(2.)*std::ceil((log(insize)-std::log(3.))/std::log(2.));
+	     + std::log(2.)*std::ceil((std::log(insize)-std::log(3.))/std::log(2.));
         log2n3 = std::max(log2n3, std::log(6.)); // must be even number
         int Nk = static_cast<int> (std::ceil(std::exp(std::min(log2n, log2n3))-1e-5));
         return Nk;

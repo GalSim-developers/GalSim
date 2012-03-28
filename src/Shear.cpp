@@ -33,7 +33,7 @@ namespace galsim {
         hasMatrix = false;
         // get ratio of e amplitude to eta amplitude:
         scale = std::sqrt(eta1in*eta1in + eta2in*eta2in);
-        if (scale>0.001) scale = tanh(scale)/scale;
+        if (scale>0.001) scale = std::tanh(scale)/scale;
         else scale=1.;
         e1 = eta1in*scale;
         e2 = eta2in*scale;
@@ -44,7 +44,7 @@ namespace galsim {
     {
         double e;
         hasMatrix = false;
-        e = tanh(etain);
+        e = std::tanh(etain);
         e1 = e * std::cos(2.*betain);
         e2 = e * std::sin(2.*betain);
         return *this;
@@ -138,7 +138,7 @@ namespace galsim {
         sum.getMatrix(ra, rb, rc);
         double cc = ra * tot11 + rc * tot21;
         double ss = rc * tot11 + rb * tot21;
-        return atan2(ss, cc);
+        return std::atan2(ss, cc);
     }
 
     Shear& Shear::operator*=(const double d) 

@@ -1081,7 +1081,7 @@ namespace galsim {
             + (131./1148175.)/(n*n*n)
             - (2194697./30690717750.)/(n*n*n*n);
 
-        double b2n = pow(b,2*n);  // used frequently here
+        double b2n = std::pow(b,2*n);  // used frequently here
         // The normalization factor to give unity flux integral:
         norm = b2n / (2*M_PI*n*tgamma(2.*n));
 
@@ -1120,7 +1120,7 @@ namespace galsim {
                 z = a - std::log(ALIAS_THRESHOLD*std::sqrt(2*M_PI*a)*(1+1./(12*a)+1./(288*a*a)))
                     +(a-1)*std::log(z/a) + std::log(1 + (a-1)/z + (a-1)*(a-2)/(z*z));
             }
-            double r=pow(z/b, n);
+            double r=std::pow(z/b, n);
             if (r>xMax) xMax = r;
         }
         stepK = M_PI / xMax;
@@ -1142,7 +1142,7 @@ namespace galsim {
                 z = a - std::log(integrationLoss*std::sqrt(2*M_PI*a)*(1+1./(12*a)+1./(288*a*a)))
                     +(a-1)*std::log(z/a) + std::log(1 + (a-1)/z + (a-1)*(a-2)/(z*z));
             }
-            double r=pow(z/b, n);
+            double r=std::pow(z/b, n);
             //std::cerr << "99.9% radius " << r <<std::endl;
             if (r>integrateMax) integrateMax = r;    
         }
@@ -1191,7 +1191,7 @@ namespace galsim {
     public:
         MoffatFluxInt(double beta_): beta(beta_) {}
         double operator()(double r) const 
-        { return r*pow(1.+r*r,-beta); }
+        { return r*std::pow(1.+r*r,-beta); }
     private:
         double beta;
     };
@@ -1214,7 +1214,7 @@ namespace galsim {
         ft(Table<double,double>::spline)
     {
         //First, relation between FWHM and rD:
-        FWHMrD = 2.* std::sqrt(pow(2., 1./beta)-1.);
+        FWHMrD = 2.* std::sqrt(std::pow(2., 1./beta)-1.);
         maxRrD = FWHMrD * truncationFWHM;
         // Make FFT's periodic at 4x truncation radius or 8x half-light radius:
         stepKrD = M_PI / (2*std::max(maxRrD, 16.));
@@ -1244,7 +1244,7 @@ namespace galsim {
         for (int iy=-N/2; iy<N/2; iy++)
             for (int ix=-N/2; ix<N/2; ix++) {
                 double rsq = dx*dx*(ix*ix+iy*iy);
-                xt.xSet(ix, iy, rsq<=maxRrD*maxRrD ? pow(1+rsq,-beta) : 0.);
+                xt.xSet(ix, iy, rsq<=maxRrD*maxRrD ? std::pow(1+rsq,-beta) : 0.);
             }
         KTable* kt = xt.transform();
         double dk = kt->getDk();
