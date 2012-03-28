@@ -24,7 +24,7 @@ namespace galsim {
 
         SBDeconvolve& operator=(const SBDeconvolve& rhs)
             {
-                if (&rhs = this) return *this;
+                if (&rhs == this) return *this;
                 if (adaptee) {
                     delete adaptee; 
                     adaptee = 0;
