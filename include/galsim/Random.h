@@ -35,7 +35,7 @@
 namespace galsim {
 
     /**
-     * @brief Pseudo-random number generator with uniform distribution in interval [0.,1.)
+     * @brief Pseudo-random number generator with uniform distribution in interval [0.,1.).
      * 
      * UniformDeviate is the foundation of the Random.h classes: other distributions take a
      * UniformDeviate as construction argument and execute some transformation of the
@@ -72,15 +72,6 @@ namespace galsim {
         double operator() () { return urd(urng); }
 
         /**
-         * @brief Cast to double draws a new random number from the distribution
-         *
-         * Cast operator allows you to simply use your UniformDeviate instance in arithmetic
-         * assignments and every appearance will be replaced with a new deviate.
-         * @return A uniform deviate in the interval [0.,1.)
-         */
-        operator double() { return urd(urng); }
-
-        /**
          * @brief Re-seed the PRNG using current time
          */
         void seed() { seedtime(); }
@@ -109,12 +100,12 @@ namespace galsim {
         /**
          * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's 
          */
-        UniformDeviate(const UniformDeviate& rhs) {}
+        UniformDeviate(const UniformDeviate& rhs);
 
         /**
          * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's
          */
-        void operator=(const UniformDeviate& rhs) {}
+        void operator=(const UniformDeviate& rhs);
 
         // make friends able to see the RNG without the distribution wrapper:
         friend class GaussianDeviate;
@@ -124,7 +115,7 @@ namespace galsim {
     };
 
     /**
-     * @brief Pseudo-random number generator with Gaussian distribution
+     * @brief Pseudo-random number generator with Gaussian distribution.
      *
      * GaussianDeviate is constructed with reference to a UniformDeviate that will actually generate
      * the randoms, which are then transformed to Gaussian distribution with chosen mean and
@@ -139,7 +130,7 @@ namespace galsim {
     public:
 
         /**
-         * @brief Construct a new Gaussian-distributed RNG 
+         * @brief Construct a new Gaussian-distributed RNG.
          *
          * Constructor requires reference to a UniformDeviate that generates the randoms, which are
          * then transformed to Gaussian distribution. 
@@ -156,15 +147,6 @@ namespace galsim {
          * @return A Gaussian deviate with current mean and sigma
          */
         double operator() () { return normal(u.urng); }
-
-        /**
-         * @brief Cast to double draws a new random number from the distribution
-         *
-         * Cast operator allows you to simply use your GaussianDeviate instance in arithmetic
-         * assignments and every appearance will be replaced with a new deviate. 
-         * @return A Gaussian deviate with current mean and sigma
-         */
-        operator double() { return normal(u.urng); }
 
         /**
          * @brief Get current distribution mean
@@ -207,14 +189,14 @@ namespace galsim {
         /**
          * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
          */
-        GaussianDeviate(const GaussianDeviate& rhs): u(rhs.u) {}
+        GaussianDeviate(const GaussianDeviate& rhs);
 	/// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-        void operator=(const GaussianDeviate& rhs) {}
+        void operator=(const GaussianDeviate& rhs);
     };
 
     
     /**
-     * @brief A Binomial deviate for N trials each of probability p
+     * @brief A Binomial deviate for N trials each of probability p.
      *
      * BinomialDeviate is constructed with reference to a UniformDeviate that will actually generate
      * the randoms, which are then transformed to Binomial distribution.  N is number of "coin
@@ -244,15 +226,6 @@ namespace galsim {
          * @return A binomial deviate with current N and p
          */
         int operator()() { return bd(u.urng); }
-
-        /**
-         * @brief Cast to int draws a new random number from the distribution
-         *
-         * Cast operator allows you to simply use your BinomialDeviate instance in arithmetic
-         * assignments and every appearance will be replaced with a new deviate. 
-         * @return A binomial deviate with current N and p
-         */
-        operator int() { return bd(u.urng); }
 
         /**
          * @brief Report current value of N
@@ -290,13 +263,13 @@ namespace galsim {
         UniformDeviate& u;
         boost::random::binomial_distribution<> bd;
         /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-        BinomialDeviate(const BinomialDeviate& rhs): u(rhs.u) {}
+        BinomialDeviate(const BinomialDeviate& rhs);
         /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-        void operator=(const BinomialDeviate& rhs) {}
+        void operator=(const BinomialDeviate& rhs);
     };
 
     /**
-     * @brief A Poisson deviate with specified mean
+     * @brief A Poisson deviate with specified mean.
      *
      * PoissonDeviate is constructed with reference to a UniformDeviate that will actually generate
      * the randoms, which are then transformed to Poisson distribution.  Copy constructor and
@@ -325,15 +298,6 @@ namespace galsim {
         int operator()() { return pd(u.urng); }
 
         /**
-         * @brief Cast to int draws a new random number from the distribution
-         *
-         * Cast operator allows you to simply use your PoissonDeviate instance in arithmetic
-         * assignments and every appearance will be replaced with a new deviate. 
-         * @return A binomial deviate with current mean
-         */
-        operator int() { return pd(u.urng); }
-
-        /**
          * @brief Report current distribution mean
          * 
          * @return Current mean value
@@ -353,9 +317,9 @@ namespace galsim {
         UniformDeviate& u;
         boost::random::poisson_distribution<> pd;
         /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-        PoissonDeviate(const PoissonDeviate& rhs): u(rhs.u) {}
+        PoissonDeviate(const PoissonDeviate& rhs);
         /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-        void operator=(const PoissonDeviate& rhs) {}
+        void operator=(const PoissonDeviate& rhs);
     };
 
 }  // namespace galsim
