@@ -471,7 +471,7 @@ namespace galsim {
         /** @brief Assignment
          *
          * @param[in] rhs SBAdd which this one will now be a copy of.
-	 * @return reference to this.
+         * @return reference to this.
          */
         SBAdd& operator=(const SBAdd& rhs)
         {
@@ -786,7 +786,7 @@ namespace galsim {
         /** @brief Assignment
          *
          * @param[in] rhs SBConvolve which this one will now be a copy of.
-	 * @return reference to this.
+         * @return reference to this.
          */
         SBConvolve& operator=(const SBConvolve& rhs)
         {
