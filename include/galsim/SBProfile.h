@@ -468,6 +468,38 @@ namespace galsim {
                 plist.push_back((*sbptr)->duplicate());
         }
 
+        /** @brief Assignment
+         *
+         * @param[in] rhs SBAdd which this one will now be a copy of.
+	 * @return reference to this.
+         */
+        SBAdd& operator=(const SBAdd& rhs)
+        {
+            // Null operation if rhs is this
+            if (&rhs == this) return *this;
+            // Clean up previous stuff
+            
+            for (std::list<SBProfile*>::iterator pptr = plist.begin(); 
+                 pptr!=plist.end(); 
+                 ++pptr)  
+                delete *pptr; 
+            // New copies of all convolve-ees:
+            plist.clear();
+            std::list<SBProfile*>::const_iterator rhsptr;
+            for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
+                plist.push_back((*rhsptr)->duplicate()); 
+            // And copy other configurations:
+            sumflux = rhs.sumflux;
+            sumfx = rhs.sumfx;
+            sumfy = rhs.sumfy;
+            maxMaxK = rhs.maxMaxK;
+            minStepK = rhs.minStepK;
+            allAxisymmetric = rhs.allAxisymmetric;
+            allAnalyticX = rhs.allAnalyticX;
+            allAnalyticK = rhs.allAnalyticK;
+	    return *this;
+        }
+
         /// @brief Destructor.
         ~SBAdd() 
         { 
@@ -779,6 +811,7 @@ namespace galsim {
             minMaxK = rhs.minMaxK;
             minStepK = rhs.minStepK;
             fluxProduct = rhs.fluxProduct;
+	    return *this;
         }
 
         /// @brief Destructor.

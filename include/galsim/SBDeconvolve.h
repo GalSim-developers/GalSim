@@ -17,10 +17,22 @@ namespace galsim {
     {
     public:
         SBDeconvolve(const SBProfile& adaptee_) : adaptee(adaptee_.duplicate()) 
-        { maxksq = pow(maxK(),2.); }
-
+            { maxksq = pow(maxK(),2.); }
+        
         SBDeconvolve(const SBDeconvolve& rhs) : adaptee(rhs.adaptee->duplicate()) 
-        { maxksq = pow(maxK(),2.); }
+            { maxksq = pow(maxK(),2.); }
+
+        SBDeconvolve& operator=(const SBDeconvolve& rhs)
+            {
+                if (&rhs = this) return *this;
+                if (adaptee) {
+                    delete adaptee; 
+                    adaptee = 0;
+                }
+                adaptee = rhs.adaptee->duplicate();
+                maxksq = rhs.maxksq;
+                return *this;
+            }
 
         ~SBDeconvolve() { delete adaptee; }
 
