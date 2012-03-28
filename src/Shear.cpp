@@ -1,4 +1,3 @@
-
 // Functions for the Shear class
 
 #include <limits>
@@ -23,8 +22,8 @@ namespace galsim {
     Shear& Shear::setEBeta(double ein, double betain) 
     {
         hasMatrix = false;
-        e1 = ein*cos(2.*betain);
-        e2 = ein*sin(2.*betain);
+        e1 = ein*std::cos(2.*betain);
+        e2 = ein*std::sin(2.*betain);
         return *this;
     }
 
@@ -33,7 +32,7 @@ namespace galsim {
         double scale;
         hasMatrix = false;
         // get ratio of e amplitude to eta amplitude:
-        scale = sqrt(eta1in*eta1in + eta2in*eta2in);
+        scale = std::sqrt(eta1in*eta1in + eta2in*eta2in);
         if (scale>0.001) scale = tanh(scale)/scale;
         else scale=1.;
         e1 = eta1in*scale;
@@ -46,8 +45,8 @@ namespace galsim {
         double e;
         hasMatrix = false;
         e = tanh(etain);
-        e1 = e * cos(2.*betain);
-        e2 = e * sin(2.*betain);
+        e1 = e * std::cos(2.*betain);
+        e2 = e * std::sin(2.*betain);
         return *this;
     }
 
@@ -55,7 +54,7 @@ namespace galsim {
     {
         double scale;
         // get ratio of eta amplitude to e amplitude:
-        scale = sqrt(e1*e1 + e2*e2);
+        scale = std::sqrt(e1*e1 + e2*e2);
         if (scale>0.001) scale = atanh(scale)/scale;
         else scale=1.;
         eta1 = e1*scale;
@@ -66,7 +65,7 @@ namespace galsim {
     {
         // get ratio of eta amplitude to e amplitude:
         double esq = getESq();
-        double scale = (esq>1e-6) ? (1-sqrt(1-esq))/esq : 1.;
+        double scale = (esq>1e-6) ? (1-std::sqrt(1-esq))/esq : 1.;
         g1 = e1*scale;
         g2 = e2*scale;
     }
@@ -94,7 +93,7 @@ namespace galsim {
         double denom=1.+e1*s2.e1 + e2*s2.e2;
         if (denom==0.) {e1=e2=0.; return *this;}
 
-        double temp = 1.-sqrt(1.-s1sq);
+        double temp = 1.-std::sqrt(1.-s1sq);
         e1new = e1 + s2.e1 + temp*(e1 * s2.e2 - e2 * s2.e1)*e2/s1sq;
         e2    = e2 + s2.e2 + temp*(e2 * s2.e1 - e1 * s2.e2)*e1/s1sq;
         e1 = e1new/denom;
@@ -206,8 +205,8 @@ namespace galsim {
             matrixB = 1.-0.5*e1;
             matrixC = +0.5*e2;
         } else {
-            double temp = sqrt(1-esq);
-            double cc=sqrt(0.5*(1+1./temp));
+            double temp = std::sqrt(1-esq);
+            double cc=std::sqrt(0.5*(1+1./temp));
             temp = (1-temp)/esq;
             matrixA = cc*(1+temp*e1);
             matrixB = cc*(1-temp*e1);
@@ -219,7 +218,7 @@ namespace galsim {
     tmv::Matrix<double> Ellipse::getMatrix() const 
     {
         double a, b, c;
-        double scale=exp(mu);
+        double scale=std::exp(mu);
         s.getMatrix(a,b,c);
         tmv::Matrix<double> m(2,2);
         m(0,0) = a*scale;
@@ -245,7 +244,7 @@ namespace galsim {
             scale = det;
         }
         // Determine and remove the dilation
-        double mu = 0.5*log(scale);
+        double mu = 0.5*std::log(scale);
 
         // Now make m m^T matrix, which is symmetric
         // a & b are diagonal elements here
@@ -254,13 +253,13 @@ namespace galsim {
         double c = m(1,1)*m(0,1) + m(1,0)*m(0,0);
 
         double eta = acosh(std::max(1.,0.5*(a+b)/scale));
-        double beta = 0.5*atan2(2.*c, a-b);
+        double beta = 0.5*std::atan2(2.*c, a-b);
         Shear s;
         s.setEtaBeta(eta,beta);
         s.getMatrix(a,b,c);
 
         // Now look for the rotation
-        rotation = atan2(-c*m(0,0)+a*m(1,0), b*m(0,0)-c*m(1,0));
+        rotation = std::atan2(-c*m(0,0)+a*m(1,0), b*m(0,0)-c*m(1,0));
         return Ellipse(s,mu, Position<double>(0.,0.));
     }
 
@@ -280,7 +279,7 @@ namespace galsim {
         x0 = x3;
         s += e2.getS();
         mu += e2.getMu();
-        expmu = exp(mu);
+        expmu = std::exp(mu);
         return *this;
     }
 
@@ -313,8 +312,8 @@ namespace galsim {
         s.getMatrix(a,b,c);
         // ??? note that below depends on s matrix being inverse and
         // with unit determinant
-        double xmax=sqrt(a*a+c*c);
-        double ymax=sqrt(b*b+c*c);
+        double xmax=std::sqrt(a*a+c*c);
+        double ymax=std::sqrt(b*b+c*c);
         return Bounds<double>( 
             x0.x - xmax*expmu*sig, x0.x + xmax*expmu*sig,
             x0.y - ymax*expmu*sig, x0.y + ymax*expmu*sig);

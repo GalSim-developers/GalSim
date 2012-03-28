@@ -9,6 +9,9 @@
 #include "SBParse.h"
 #include "StringStuff.h"
 
+// For detailed debugging info:
+// #define PARSER_DUMP
+
 namespace galsim {
 
     // Characters that separate words:
@@ -181,6 +184,9 @@ namespace galsim {
         if (in.empty())
             throw SBError("SBParse: null expression");
 
+#ifdef PARSER_DUMP
+        std::cerr << "**Starting parser on phrase " << in.print() << std::endl;
+#endif
         // Strip any bounding parentheses
         while (OpenParen::test(in.front()) && CloseParen::test(in.back())) {
             // Make sure they are matched:  find the CloseParen that matches the initial open
@@ -223,11 +229,19 @@ namespace galsim {
         if (ls.size()>1) {
             // If so, the output is an SBAdd and call parser recursively on summand Phrases:
             SBAdd* sba = new SBAdd;
+#ifdef PARSER_DUMP
+            std::cerr << "Creating SBAdd from phrases: " << std::endl;
+            for (std::list<Phrase>::iterator i=ls.begin(); i!=ls.end(); ++i) 
+                std::cerr << "* " << i->print() << std::endl;
+#endif
             for (std::list<Phrase>::iterator i=ls.begin(); i!=ls.end(); ++i) {
                 SBProfile* summand = SBParse(*i);
                 sba->add(*summand);
                 delete summand;
             }
+#ifdef PARSER_DUMP
+            std::cerr << "**Leaving parser after SBAdd" << std::endl;
+#endif
             return sba;
         }
 
@@ -239,11 +253,19 @@ namespace galsim {
         if (ls.size()>1) {
             // If so, the output is an SBConvolve and call parser recursively on convolvee Phrases:
             SBConvolve* sbc = new SBConvolve;
+#ifdef PARSER_DUMP
+            std::cerr << "Creating SBConvolve from phrases: " << std::endl;
+            for (std::list<Phrase>::iterator i=ls.begin(); i!=ls.end(); ++i) 
+                std::cerr << "* " << i->print() << std::endl;
+#endif
             for (std::list<Phrase>::iterator i=ls.begin(); i!=ls.end(); ++i) {
                 SBProfile* term = SBParse(*i);
                 sbc->add(*term);
                 delete term;
             }
+#ifdef PARSER_DUMP
+            std::cerr << "**Leaving parser after SBConvolve" << std::endl;
+#endif
             return sbc;
         }
 
@@ -256,6 +278,9 @@ namespace galsim {
                 TranslateOp::test(i) || FluxOp::test(i) || RotateOp::test(i)) {
 
                 // Found a modifier.  Parse the LHS and apply modification
+#ifdef PARSER_DUMP
+                std::cerr << "Found modifier, phrase to modify is " << in.print() << std::endl;
+#endif
                 SBProfile* base = SBParse(in);
                 // Apply appropriate modification:
                 Phrase::iterator ia=args.begin();
@@ -268,6 +293,9 @@ namespace galsim {
                         throw SBError("SBParse: bad arguments for shear: " + args.print());
                     SBProfile* out = base->shear(e1,e2);
                     delete base;
+#ifdef PARSER_DUMP
+                    std::cerr << "** Leaving SBParse after shearing by " << e1 << " " << e2 << std::endl;
+#endif
                     return out;
                 } else if (DilateOp::test(i)) {
                     delete i;
@@ -275,9 +303,12 @@ namespace galsim {
                     if (args.size()!=1
                         || !isNumber((*ia)->print(),f))
                         throw SBError("SBParse: bad arguments for dilation: " + args.print());
-                    Ellipse e(0., 0., log(f));
+                    Ellipse e(0., 0., std::log(f));
                     SBProfile* out = base->distort(e);
                     delete base;
+#ifdef PARSER_DUMP
+                    std::cerr << "** Leaving SBParse after dilating by " << f << std::endl;
+#endif
                     return out;
                 } else if (TranslateOp::test(i)) {
                     delete i;
@@ -288,6 +319,10 @@ namespace galsim {
                         throw SBError("SBParse: bad arguments for translation: " + args.print());
                     SBProfile* out = base->shift(dx,dy);
                     delete base;
+#ifdef PARSER_DUMP
+                    std::cerr << "** Leaving SBParse after translating by " << dx << " " 
+                              << dy << std::endl;
+#endif
                     return out;
                 } else if (RotateOp::test(i)) {
                     delete i;
@@ -297,6 +332,9 @@ namespace galsim {
                         throw SBError("SBParse: bad arguments for rotation: " + args.print());
                     SBProfile* out = base->rotate(theta);
                     delete base;
+#ifdef PARSER_DUMP
+                    std::cerr << "** Leaving SBParse after rotating by " << theta << std::endl;
+#endif
                     return out;
                 } else if (FluxOp::test(i)) {
                     delete i;
@@ -305,6 +343,9 @@ namespace galsim {
                         || !isNumber((*ia)->print(),f))
                         throw SBError("SBParse: bad arguments for flux: " + args.print());
                     base->setFlux(f);
+#ifdef PARSER_DUMP
+                    std::cerr << "** Leaving SBParse after flux set to " << f << std::endl;
+#endif
                     return base;
                 }
             } else {
@@ -331,6 +372,9 @@ namespace galsim {
                 throw SBError("SBParse: Bad arguments for SBGaussian: " + args.print());
             double flux=1.;
             double sigma = (nargs>0) ? dargs[0] : 1.;
+#ifdef PARSER_DUMP
+            std::cerr << "**Returning gaussian with flux, sigma " << flux << " " << sigma << std::endl;
+#endif
             return new SBGaussian(flux, sigma);
 
         } else if (nocaseEqual(sbtype, "exp")) {
@@ -339,6 +383,9 @@ namespace galsim {
                 throw SBError("SBParse: Bad arguments for SBExponential: " + args.print());
             double flux=1.;
             double re = (nargs>0) ? dargs[0] : 1.;
+#ifdef PARSER_DUMP
+            std::cerr << "**Returning exp with flux, re " << flux << " " << re << std::endl;
+#endif
             return new SBExponential(flux, re/1.67839);
 
         } else if (nocaseEqual(sbtype, "sersic")) {
@@ -348,6 +395,10 @@ namespace galsim {
             double flux=1.;
             double n=dargs[0];
             double re = (nargs>1) ? dargs[1] : 1.;
+#ifdef PARSER_DUMP
+            std::cerr << "**Returning sersic with n, flux, re " << n 
+                      << " " << flux << " " << re << std::endl;
+#endif
             return new SBSersic(n, flux, re);
 
         } else if (nocaseEqual(sbtype, "box")) {
@@ -358,6 +409,10 @@ namespace galsim {
             double xw =(nargs>0) ? dargs[0] : 1.;
             double yw = (nargs>1) ? dargs[1] : xw;
             return new SBBox(xw,yw,flux);
+#ifdef PARSER_DUMP
+            std::cerr << "**Returning sersic with xw, yw, flux " << xw
+                      << " " << yw << " " << flux << std::endl;
+#endif
 
         } else if (nocaseEqual(sbtype, "airy")) {
             // Airy: args are [D/lambda] [obscuration]
@@ -366,6 +421,10 @@ namespace galsim {
             double flux=1.;
             double D = dargs[0];
             double obs = dargs[1];
+#ifdef PARSER_DUMP
+            std::cerr << "**Returning airy with D, obs, flux " << D
+                      << " " << obs << " " << flux << std::endl;
+#endif
             return new SBAiry(D,obs,flux);
 
         } else if (nocaseEqual(sbtype, "moffat")) {
@@ -376,6 +435,10 @@ namespace galsim {
             double beta = dargs[0];
             double truncationFWHM = dargs[1];
             double re = (nargs>2) ? dargs[2] : 1.;
+#ifdef PARSER_DUMP
+            std::cerr << "**Returning moffat with beta, truncation, flux, re " << beta
+                      << " " << truncationFWHM << " " << flux << " " << re << std::endl;
+#endif
             return new SBMoffat(beta, truncationFWHM, flux, re);
 
 #ifdef USE_LAGUERRE
@@ -397,7 +460,7 @@ namespace galsim {
             if (!(cpsf >> bPSF))
                 throw SBError("SBParse error reading Laguerre PSF file " + psfName);
 
-            SBLaguerre sbl(bPSF, exp(mu));
+            SBLaguerre sbl(bPSF, std::exp(mu));
             return sbl.shear(e1, e2);
 #endif
         } else {

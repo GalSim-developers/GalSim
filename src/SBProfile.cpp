@@ -28,7 +28,8 @@ namespace galsim {
     { return new SBDistort(*this,e); }
 
     SBProfile* SBProfile::rotate(const double theta) const 
-    { return new SBDistort(*this,cos(theta),-sin(theta),sin(theta),cos(theta)); }
+    { return new SBDistort(*this,std::cos(theta),-std::sin(theta),
+			   std::sin(theta),std::cos(theta)); }
 
     SBProfile* SBProfile::shift(double dx, double dy) const 
     { return new SBDistort(*this,1.,0.,0.,1., Position<double>(dx,dy)); }
@@ -61,7 +62,7 @@ namespace galsim {
         if (!I.getBounds().isDefined()) {
             if (wmult<1) throw SBError("Requested wmult<1 in plainDraw()");
             // Need to choose an image size
-            int N = static_cast<int> (ceil(2*M_PI/(dx*stepK())));
+            int N = static_cast<int> (std::ceil(2*M_PI/(dx*stepK())));
 
             // Round up to an even value
             N = 2*( (N+1)/2);
@@ -121,7 +122,7 @@ namespace galsim {
 
         // Now decide how big the FT must be to avoid folding:
         double xRange = 2*M_PI*wmult / stepK();
-        int Nnofold = static_cast<int> (ceil(xRange / dx -0.0001));
+        int Nnofold = static_cast<int> (std::ceil(xRange / dx -0.0001));
 #ifdef DEBUG
         std::cerr << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
 #endif
@@ -176,7 +177,7 @@ namespace galsim {
         } else {
             // There will be aliasing.  Construct a KTable out to maxK() and
             // then wrap it
-            int Nk = static_cast<int> (ceil(maxK()/dk)) * 2;
+            int Nk = static_cast<int> (std::ceil(maxK()/dk)) * 2;
             KTable kt(Nk, dk);
             fillKGrid(kt);
             KTable* kt2 = kt.wrap(NFT);
@@ -228,7 +229,7 @@ namespace galsim {
         if (!Re.getBounds().isDefined()) {
             if (wmult<1) throw SBError("Requested wmult<1 in plainDrawK()");
             // Need to choose an image size
-            int N = static_cast<int> (ceil(2.*maxK()*wmult / dk));
+            int N = static_cast<int> (std::ceil(2.*maxK()*wmult / dk));
             // Round up to an even value
             N = 2*( (N+1)/2);
 
@@ -289,13 +290,13 @@ namespace galsim {
             // We have a value we must produce.  Do we need to oversample in k
             // to avoid folding from real space?
             // Note a little room for numerical slop before triggering oversampling:
-            oversamp = static_cast<int> ( ceil(dk/stepK() - 0.0001));
+            oversamp = static_cast<int> ( std::ceil(dk/stepK() - 0.0001));
             canReduceDk = false; // Force output image to input dx.
         }
 
         // Now decide how big the FT must be to avoid folding
         double kRange = 2*maxK()*wmult;
-        int Nnofold = static_cast<int> (ceil(oversamp*kRange / dk -0.0001));
+        int Nnofold = static_cast<int> (std::ceil(oversamp*kRange / dk -0.0001));
 
         // And if there is a target image size, we must make something big enough to cover
         // the target image size:
@@ -586,21 +587,18 @@ namespace galsim {
     {
         double det = matrixA*matrixD-matrixB*matrixC;
         if (det==0.) throw SBError("Attempt to SBDistort with degenerate matrix");
-        absdet = abs(det);
+        absdet = std::abs(det);
         invdet = 1./det;
 
-        //std::cerr << "Matrix: " << matrixA << " " << matrixB
-        // << " " << matrixC << " " << matrixD << std::endl;
         double h1 = hypot( matrixA+matrixD, matrixB-matrixC);
         double h2 = hypot( matrixA-matrixD, matrixB+matrixC);
-        major = 0.5*abs(h1+h2);
-        minor = 0.5*abs(h1-h2);
+        major = 0.5*std::abs(h1+h2);
+        minor = 0.5*std::abs(h1-h2);
         if (major<minor) std::swap(major,minor);
         stillIsAxisymmetric = adaptee->isAxisymmetric() 
             && (matrixB==-matrixC) 
             && (matrixA==matrixD)
             && (x0.x==0.) && (x0.y==0.); // Need pure rotation
-        //**/std::cerr << "Set major = " << major << " and minor " << minor << std::endl;
     }
 
     // Specialization of fillKGrid is desired since the phase terms from shift 
@@ -621,9 +619,9 @@ namespace galsim {
             }
         } else {
             std::complex<double> dxexp(0,-dk*x0.x),   dyexp(0,-dk*x0.y);
-            std::complex<double> dxphase(exp(dxexp)), dyphase(exp(dyexp));
+            std::complex<double> dxphase(std::exp(dxexp)), dyphase(std::exp(dyexp));
             // xphase, yphase: current phase value
-            std::complex<double> yphase(exp(-dyexp*N/2.));
+            std::complex<double> yphase(std::exp(-dyexp*N/2.));
             for (int iy = -N/2; iy < N/2; iy++) {
                 std::complex<double> phase = yphase; // since kx=0 to start
                 // Only ix>=0 since it's Hermitian:
@@ -713,7 +711,7 @@ namespace galsim {
     double SBGaussian::xValue(Position<double> p) const
     {
         double r2 = p.x*p.x + p.y*p.y;
-        double xval = flux * exp( -r2/2./sigma/sigma );
+        double xval = flux * std::exp( -r2/2./sigma/sigma );
         xval /= 2*M_PI*sigma*sigma;  // normalize
         return xval;
     }
@@ -721,7 +719,7 @@ namespace galsim {
     std::complex<double> SBGaussian::kValue(Position<double> p) const
     {
         double r2 = p.x*p.x + p.y*p.y;
-        std::complex<double> kval(flux * exp(-(r2)*sigma*sigma/2.),0);
+        std::complex<double> kval(flux * std::exp(-(r2)*sigma*sigma/2.),0);
         return kval;
     }
 
@@ -735,16 +733,16 @@ namespace galsim {
     double SBExponential::stepK() const
     {
         // A fast solution to (1+R)exp(-R)=ALIAS_THRESHOLD:
-        double R = -log(ALIAS_THRESHOLD);
-        for (int i=0; i<3; i++) R = -log(ALIAS_THRESHOLD) + log(1+R);
+        double R = -std::log(ALIAS_THRESHOLD);
+        for (int i=0; i<3; i++) R = -std::log(ALIAS_THRESHOLD) + std::log(1+R);
         R = std::max(6., R);
         return M_PI / (R*r0);
     }
 
     double SBExponential::xValue(Position<double> p) const
     {
-        double r = sqrt(p.x*p.x + p.y*p.y);
-        double xval = flux * exp(-r/r0);
+        double r = std::sqrt(p.x*p.x + p.y*p.y);
+        double xval = flux * std::exp(-r/r0);
         xval /= r0*r0*2*M_PI;   // normalize
         return xval;
     }
@@ -753,7 +751,7 @@ namespace galsim {
     {
         double kk = p.x*p.x+p.y*p.y;
         double temp = 1 + kk*r0*r0;         // [1+k^2*r0^2]
-        std::complex<double> kval( flux/sqrt(temp*temp*temp), 0.);
+        std::complex<double> kval( flux/std::sqrt(temp*temp*temp), 0.);
         return kval;
     }
 
@@ -766,7 +764,7 @@ namespace galsim {
 
     double SBAiry::xValue(Position<double> p) const 
     {
-        double radius = sqrt(p.x*p.x+p.y*p.y);
+        double radius = std::sqrt(p.x*p.x+p.y*p.y);
         double nu = radius*M_PI*D;
         double xval;
         if (nu<0.01)
@@ -787,7 +785,7 @@ namespace galsim {
         if (r<h) throw SBError("Airy calculation r<h");
         else if (r==0.) return 0.;
         else if (r<0 || h<0) throw SBError("Airy calculation (r||h)<0");
-        return r*r*asin(h/r) -h*sqrt(r*r-h*h);
+        return r*r*std::asin(h/r) -h*std::sqrt(r*r-h*h);
     }
 
     /* area inside intersection of 2 circles radii r & s, seperated by t*/
@@ -806,11 +804,11 @@ namespace galsim {
         if (t<= r-s) return M_PI*s*s;
 
         /* in between we calculate half-height at intersection */
-        h = 0.5*(r*r + s*s) - (pow(t,4.) + (r*r-s*s)*(r*r-s*s))/(4.*t*t);
+        h = 0.5*(r*r + s*s) - (std::pow(t,4.) + (r*r-s*s)*(r*r-s*s))/(4.*t*t);
         if (h<0) {
             throw SBError("Airy calculation half-height invalid");
         }
-        h = sqrt(h);
+        h = std::sqrt(h);
 
         if (t*t < r*r - s*s) 
             return M_PI*s*s - chord(s,h) + chord(r,h);
@@ -843,7 +841,7 @@ namespace galsim {
 
     std::complex<double> SBAiry::kValue(Position<double> p) const
     {
-        double radius = sqrt(p.x*p.x+p.y*p.y);
+        double radius = std::sqrt(p.x*p.x+p.y*p.y);
         // calculate circular FT(PSF) on p'=(x',y')
         double r = annuli_autocorrelation(radius);
         std::complex<double> kval(r, 0.);
@@ -866,7 +864,7 @@ namespace galsim {
         if (u<0.001 && u>-0.001)
             return 1.-u*u/6.;
         else
-            return sin(u)/u;
+            return std::sin(u)/u;
     }
 
     std::complex<double> SBBox::kValue(Position<double> p) const
@@ -883,8 +881,8 @@ namespace galsim {
         double norm = flux/xw/yw;
 
         // Pixel index where edge of box falls:
-        int xedge = static_cast<int> ( ceil(xw / (2*dx) - 0.5) );
-        int yedge = static_cast<int> ( ceil(yw / (2*dx) - 0.5) );
+        int xedge = static_cast<int> ( std::ceil(xw / (2*dx) - 0.5) );
+        int yedge = static_cast<int> ( std::ceil(yw / (2*dx) - 0.5) );
         // Fraction of edge pixel that is filled by box:
         double xfrac = xw / (2*dx) - xedge + 0.5;
         assert(xfrac>0. && xfrac<=1.);
@@ -895,13 +893,13 @@ namespace galsim {
 
         double yfac;
         for (int iy = -N/2; iy < N/2; iy++) {
-            if ( abs(iy) < yedge ) yfac = 0.;
-            else if (abs(iy)==yedge) yfac = norm*yfrac;
+            if ( std::abs(iy) < yedge ) yfac = 0.;
+            else if (std::abs(iy)==yedge) yfac = norm*yfrac;
             else yfac = norm;
 
             for (int ix = -N/2; ix < N/2; ix++) {
-                if (yfac==0. || abs(ix)>xedge) xt.xSet(ix, iy ,0.);
-                else if (abs(ix)==xedge) xt.xSet(ix, iy ,xfrac*yfac);
+                if (yfac==0. || std::abs(ix)>xedge) xt.xSet(ix, iy ,0.);
+                else if (std::abs(ix)==xedge) xt.xSet(ix, iy ,xfrac*yfac);
                 else xt.xSet(ix,iy,yfac);
             }
         }
@@ -914,8 +912,8 @@ namespace galsim {
         double norm = flux/xw/yw;
 
         // Pixel index where edge of box falls:
-        int xedge = static_cast<int> ( ceil(xw / (2*dx) - 0.5) );
-        int yedge = static_cast<int> ( ceil(yw / (2*dx) - 0.5) );
+        int xedge = static_cast<int> ( std::ceil(xw / (2*dx) - 0.5) );
+        int yedge = static_cast<int> ( std::ceil(yw / (2*dx) - 0.5) );
         // Fraction of edge pixel that is filled by box:
         double xfrac = xw / (2*dx) - xedge + 0.5;
         assert(xfrac>0. && xfrac<=1.);
@@ -927,13 +925,13 @@ namespace galsim {
         double totalflux = 0.;
         double xfac;
         for (int i = I.getXMin(); i <= I.getXMax(); i++) {
-            if ( abs(i) > xedge ) xfac = 0.;
-            else if (abs(i)==xedge) xfac = norm*xfrac;
+            if ( std::abs(i) > xedge ) xfac = 0.;
+            else if (std::abs(i)==xedge) xfac = norm*xfrac;
             else xfac = norm;
 
             for (int j = I.getYMin(); j <= I.getYMax(); j++) {
-                if (xfac==0. || abs(j)>yedge) I(i,j)=0.;
-                else if (abs(j)==yedge) I(i,j)=xfac*yfrac;
+                if (xfac==0. || std::abs(j)>yedge) I(i,j)=0.;
+                else if (std::abs(j)==yedge) I(i,j)=xfac*yfrac;
                 else I(i,j)=xfac;
                 totalflux += I(i,j);
             }
@@ -954,18 +952,18 @@ namespace galsim {
     double SBLaguerre::maxK() const 
     {
         // Start with value for plain old Gaussian:
-        double m=std::max(4., sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma;
+        double m=std::max(4., std::sqrt(-2.*std::log(ALIAS_THRESHOLD))) / sigma;
         // Grow as sqrt of order
-        if (bvec.getOrder()>1) m *= sqrt(bvec.getOrder()/1.);
+        if (bvec.getOrder()>1) m *= std::sqrt(bvec.getOrder()/1.);
         return m;
     }
 
     double SBLaguerre::stepK() const 
     {
         // Start with value for plain old Gaussian:
-        double m= M_PI/std::max(4., sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma;
+        double m= M_PI/std::max(4., std::sqrt(-2.*std::log(ALIAS_THRESHOLD))) / sigma;
         // Shrink as sqrt of order
-        if (bvec.getOrder()>1) m /= sqrt(bvec.getOrder()/1.);
+        if (bvec.getOrder()>1) m /= std::sqrt(bvec.getOrder()/1.);
         return m;
     }
 
@@ -1039,7 +1037,7 @@ namespace galsim {
         if (ksq==0.) 
             return 1.;
 
-        double lk=0.5*log(ksq); // Lookup table is logarithmic
+        double lk=0.5*std::log(ksq); // Lookup table is logarithmic
 
         if (lk<logkMin)
             return 1 + ksq*(kderiv2 + ksq*kderiv4); // Use quartic approx at low k
@@ -1048,7 +1046,7 @@ namespace galsim {
 
         // simple linear interpolation to this value
         double fstep = (lk-logkMin)/logkStep;
-        int index = static_cast<int> (floor(fstep));
+        int index = static_cast<int> (std::floor(fstep));
         assert(index < int(lookup.size())-1);
         fstep -= index;
         return lookup[index]*(1.-fstep) + fstep*lookup[index+1];
@@ -1061,7 +1059,7 @@ namespace galsim {
         SersicIntegrand(double n, double b_, double k_):
             invn(1./n), b(b_), k(k_) {}
         double operator()(double r) const 
-        { return r*exp(-b*pow(r, invn))*j0(k*r); }
+            { return r*std::exp(-b*std::pow(r, invn))*j0(k*r); }
 
     private:
         double invn;
@@ -1101,9 +1099,9 @@ namespace galsim {
         // quartic term is at threshold
         double lookupMin = 0.05; // Default lower limit for lookup table
         const double kAccuracy=0.001; // What errors in FT coefficients are acceptable?
-        double smallK = pow(kAccuracy / kderiv4, 0.25);
+        double smallK = std::pow(kAccuracy / kderiv4, 0.25);
         if (smallK < lookupMin) lookupMin = smallK;
-        logkMin = log(lookupMin);
+        logkMin = std::log(lookupMin);
 
         // How far should nominal profile extend?
         // Estimate number of effective radii needed to enclose
@@ -1116,11 +1114,11 @@ namespace galsim {
             double oldz=0.;
             int niter=0;
             const int MAXIT = 15;
-            while ( abs(oldz-z)>0.01 && niter<MAXIT) {
+            while ( std::abs(oldz-z)>0.01 && niter<MAXIT) {
                 niter++;
                 oldz = z;
-                z = a - log(ALIAS_THRESHOLD*sqrt(2*M_PI*a)*(1+1./(12*a)+1./(288*a*a)))
-                    +(a-1)*log(z/a) + log(1 + (a-1)/z + (a-1)*(a-2)/(z*z));
+                z = a - std::log(ALIAS_THRESHOLD*std::sqrt(2*M_PI*a)*(1+1./(12*a)+1./(288*a*a)))
+                    +(a-1)*std::log(z/a) + std::log(1 + (a-1)/z + (a-1)*(a-2)/(z*z));
             }
             double r=pow(z/b, n);
             if (r>xMax) xMax = r;
@@ -1138,11 +1136,11 @@ namespace galsim {
             double oldz=0.;
             int niter=0;
             const int MAXIT = 15;
-            while ( abs(oldz-z)>0.01 && niter<MAXIT) {
+            while ( std::abs(oldz-z)>0.01 && niter<MAXIT) {
                 niter++;
                 oldz = z;
-                z = a - log(integrationLoss*sqrt(2*M_PI*a)*(1+1./(12*a)+1./(288*a*a)))
-                    +(a-1)*log(z/a) + log(1 + (a-1)/z + (a-1)*(a-2)/(z*z));
+                z = a - std::log(integrationLoss*std::sqrt(2*M_PI*a)*(1+1./(12*a)+1./(288*a*a)))
+                    +(a-1)*std::log(z/a) + std::log(1 + (a-1)/z + (a-1)*(a-2)/(z*z));
             }
             double r=pow(z/b, n);
             //std::cerr << "99.9% radius " << r <<std::endl;
@@ -1172,15 +1170,15 @@ namespace galsim {
         maxK = MINMAXK;
         double lastVal=1.;
         double lk = logkMin;
-        while (lk < log(maxK*10.) && lastVal>ALIAS_THRESHOLD/10.) {
-            SersicIntegrand I(n, b, exp(lk));
+        while (lk < std::log(maxK*10.) && lastVal>ALIAS_THRESHOLD/10.) {
+            SersicIntegrand I(n, b, std::exp(lk));
             // Need to make sure we are resolving oscillations in the integral:
             double val = integ::int1d(
                 I, 0., integrateMax, INTEGRATION_RELTOL, INTEGRATION_ABSTOL*norm);
             //std::cerr << "Integrate k " << exp(lk) << " result " << val/norm << std::endl;
             val /= norm;
             lookup.push_back(val);
-            if (val >= ALIAS_THRESHOLD) maxK = std::max(maxK, exp(lk));
+            if (val >= ALIAS_THRESHOLD) maxK = std::max(maxK, std::exp(lk));
             logkMax = lk;
             lk += logkStep;
         }
@@ -1216,7 +1214,7 @@ namespace galsim {
         ft(Table<double,double>::spline)
     {
         //First, relation between FWHM and rD:
-        FWHMrD = 2.* sqrt(pow(2., 1./beta)-1.);
+        FWHMrD = 2.* std::sqrt(pow(2., 1./beta)-1.);
         maxRrD = FWHMrD * truncationFWHM;
         // Make FFT's periodic at 4x truncation radius or 8x half-light radius:
         stepKrD = M_PI / (2*std::max(maxRrD, 16.));

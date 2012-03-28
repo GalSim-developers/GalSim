@@ -10,7 +10,7 @@ namespace galsim {
         double xdown = x - N*floor(x/N + 0.5);
         double xup = xdown+N;
         double sum = 0.;
-        while (abs(xdown) <= xrange()) {
+        while (std::abs(xdown) <= xrange()) {
             sum += xval(xdown);
             xdown -= N;
         }
@@ -43,7 +43,7 @@ namespace galsim {
         while ( u - uMax < 1./n || u<1.1) {
             double ft = uCalc(u);
             tab.addEntry(u, ft);
-            if (abs(ft) > tolerance) uMax = u;
+            if (std::abs(ft) > tolerance) uMax = u;
             u += uStep;
         }
         u1 = uCalc(1.);
@@ -78,7 +78,7 @@ namespace galsim {
         while ( u - uMax < 1. || u<1.1) {
             double ft = uCalc(u);
             tab.addEntry(u, ft);
-            if (abs(ft) > tolerance) uMax = u;
+            if (std::abs(ft) > tolerance) uMax = u;
             u += uStep;
         }
     }
@@ -112,7 +112,7 @@ namespace galsim {
         while ( u - uMax < 1. || u<1.1) {
             double ft = uCalc(u);
             tab.addEntry(u, ft);
-            if (abs(ft) > tolerance) uMax = u;
+            if (std::abs(ft) > tolerance) uMax = u;
             u += uStep;
         }
     }
