@@ -165,3 +165,13 @@ def test_consistency_psf_mtf():
     # Compare
     mtf = galsim.optics.mtf(array_shape=testshape, kmax=kmax_test)
     np.testing.assert_array_almost_equal(mtf, mtf_test, decimal=decimal_dft)
+
+def test_wavefront_image_view():
+    """Test that the ImageD.array view of the wavefront is consistent with the wavefront array.
+    """
+    array = galsim.optics.wavefront(array_shape=testshape)
+    (real, imag) = galsim.optics.wavefront_image(array_shape=testshape)
+    np.testing.assert_array_equal(array.real, real)
+    np.testing.assert_array_equal(array.imag, imag)
+
+    
