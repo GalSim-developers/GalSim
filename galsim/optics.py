@@ -363,7 +363,7 @@ def mtf_image(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0.
     @param circular_pupil  adopt a circular pupil?
     @param secondary       add a central obstruction due to secondary mirror?
     """
-    array = otf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
+    array = mtf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
                 coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil)
     return galsim.ImageD(array)
 
