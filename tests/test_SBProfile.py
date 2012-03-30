@@ -11,8 +11,6 @@ def test_sbprofile_gaussian():
     myGauss = galsim.SBGaussian(1)
     myImg = myGauss.draw(dx=0.2)
     testImg = galsim.fits.read(os.path.join(imgdir,"gauss_1.fits"))
-    #np.testing.assert_almost_equal(np.max(myImg.array),np.max(testImg.array),5,
-    #                               err_msg="Peak value of Gaussian disagrees with expected result")
     np.testing.assert_array_almost_equal(myImg.array,testImg.array,5,
                                          err_msg="Gaussian profile disagrees with expected result") 
 
