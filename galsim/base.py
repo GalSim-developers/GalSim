@@ -82,7 +82,6 @@ class GSObject:
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
 # SBPs...
 
-
 # Gaussian class inherits the GSObject method interface, but therefore has a "has a" relationship 
 # with the C++ SBProfile class rather than an "is a"... The __init__ method is very simple and all
 # the GSObject methods & attributes are inherited.
@@ -123,4 +122,19 @@ class GSSersic(GSObject):
         GSObject.__init__(self, galsim.SBSersic(n, flux=flux, re=re))
     # Ditto!
 
+
+class GSExponential(GSObject):
+    """GalSim Exponential, which has an SBExponential in the SBProfile attribute.
+    """
+    def __init__(self, flux=1., r0=1.):
+        GSObject.__init__(self, galsim.SBExponential(n, flux=flux, r0=r0))
+    # Ditto!
+
+
+class GSAiry(GSObject):
+    """GalSim Airy, which has an SBAiry in the SBProfile attribute.
+    """
+    def __init__(self, D=1., obs=0., flux=1.):
+        GSObject.__init__(self, galsim.SBAiry(D=D, obs=obs, flux=flux))
+    # Ditto!
 
