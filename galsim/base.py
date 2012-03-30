@@ -5,7 +5,7 @@ class GSObject:
     methods and attributes, particularly those from the C++ SBProfile classes.
     """
     def __init__(self, SBProfile):
-        self.SBProfile = SBProfile
+        self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
     #
