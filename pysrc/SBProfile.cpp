@@ -67,8 +67,6 @@ struct PySBProfile {
             .def("isAxisymmetric", &SBProfile::isAxisymmetric)
             .def("isAnalyticX", &SBProfile::isAnalyticX,
                  "True if real-space values can be determined immediately at any position with FT")
-            .def("centroidX", &SBProfile::centroidX)
-            .def("centroidY", &SBProfile::centroidY)
             .def("centroid", &SBProfile::centroid)
             .def("getFlux", &SBProfile::getFlux)
             .def("setFlux", &SBProfile::setFlux)
