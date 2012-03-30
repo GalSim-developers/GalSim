@@ -49,7 +49,8 @@ import pyfits
 
 You can test this by loading up the Python interpreter for the version of python you'll be using 
 with the GalSim toolkit, and typing the two import commands above.  If you get no warning message, 
-things are OK.
+things are OK.  If you do not have these modules, follow the links above or try easy_install:
+http://packages.python.org/distribute/easy_install.html#using-easy-install
 
 Some users will find they have a few versions of Python around their operating system.  It will be 
 important to make sure that the version of Python for which Numpy and Pyfits are installed is also 
@@ -262,10 +263,17 @@ However, there is a slight caveat regarding the use of fink-installed Boost C++ 
 Enthought Python Distribution, see below...
 
 Macports is another popular Mac package management project with similar functionality 
-(although TMV isn't on that one).  Note that when using MacPorts to install boost, you may need to explicitly indicate Boost.Python, e.g., using
+(although TMV isn't on that one).  Note that when using MacPorts to install boost, you may need to 
+explicitly indicate Boost.Python, e.g., using
 
 sudo port install boost +python27
 
+Note: You may still need to install numpy and pyfits manually (simple enough using easy_install: 
+http://packages.python.org/distribute/easy_install.html#using-easy-install), since the fink 
+installations use /sw/bin/python2.6 (or similar) rather than the normal command line python, which 
+is normally /usr/bin/python. Of course, if you have setup your default python to be the 
+fink/Macports installed version, using these package managers to install numpy and pyfits will be 
+fine.
 
 b) The Enthought Python Distribution (EPD) is a single-install package that provides Python, Numpy,
 and SCons, along with many other useful Python modules in a well-maintined single framework.  It 
