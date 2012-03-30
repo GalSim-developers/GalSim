@@ -89,8 +89,7 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        double centroidX() const;
-        double centroidY() const;
+        Position<double> centroid() const;
 
         double getFlux() const;
         void setFlux(double flux=1.);  // This will scale the weights vector
