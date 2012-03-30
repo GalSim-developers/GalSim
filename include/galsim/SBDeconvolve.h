@@ -1,6 +1,7 @@
-
-// SBProfile adapter which inverts its subject in k space to
-// effecta  deconvolution
+/** 
+ * @file SBDeconvolve.h @brief SBProfile adapter which inverts its subject in k space to effect a
+ * deconvolution.
+ */
 
 #ifndef SBDECONVOLVE_H
 #define SBDECONVOLVE_H
@@ -13,15 +14,23 @@
 
 namespace galsim {
 
+    /**
+     * @brief SBProfile adapter which inverts its subject in k space to effect a deconvolvution.
+     *
+     * (TODO: Add more docs here!)
+     */
     class SBDeconvolve : public SBProfile 
     {
     public:
+        /// @brief Constructor.
         SBDeconvolve(const SBProfile& adaptee_) : adaptee(adaptee_.duplicate()) 
             { maxksq = pow(maxK(),2.); }
         
+        /// @brief Copy constructor.
         SBDeconvolve(const SBDeconvolve& rhs) : adaptee(rhs.adaptee->duplicate()) 
             { maxksq = pow(maxK(),2.); }
 
+        /// @brief Operator (TODO: ask Gary about this bit...)
         SBDeconvolve& operator=(const SBDeconvolve& rhs)
             {
                 if (&rhs == this) return *this;
@@ -34,11 +43,14 @@ namespace galsim {
                 return *this;
             }
 
+        /// @brief Destructor.
         ~SBDeconvolve() { delete adaptee; }
 
         SBProfile* duplicate() const { return new SBDeconvolve(*this); }
 
         // These are all the base class members that must be implemented:
+
+        /// @brief xValue() not implemented for SBDeconvolve.
         double xValue(Position<double> p) const 
         { throw SBError("SBDeconvolve::xValue() not implemented"); }
 
@@ -60,6 +72,8 @@ namespace galsim {
 
         double centroidX() const { return -adaptee->centroidX(); }
         double centroidY() const { return -adaptee->centroidY(); }
+
+        /// @brief setCentroid() not implemented for SBDeconvolve.
         void setCentroid(Position<double> _p) 
         { throw SBError("setCentroid not allowed for SBDeconvolve"); }
 
