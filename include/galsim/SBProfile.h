@@ -696,11 +696,7 @@ namespace galsim {
         double maxK() const { return adaptee->maxK() / minor; }
         double stepK() const { return adaptee->stepK() / major; }
 
-        Position<double> centroid() const 
-        { 
-            Position<double> p((x0+fwd(adaptee->centroid())).x, (x0+fwd(adaptee->centroid())).y); 
-            return p; 
-        }
+        Position<double> centroid() const { return x0+fwd(adaptee->centroid()); }
 
         double getFlux() const { return adaptee->getFlux()*absdet; }
         void setFlux(double flux_=1.) { adaptee->setFlux(flux_/absdet); }
