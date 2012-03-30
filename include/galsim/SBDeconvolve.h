@@ -70,8 +70,7 @@ namespace galsim {
         bool isAnalyticX() const { return false; }
         bool isAnalyticK() const { return true; }
 
-        double centroidX() const { return -adaptee->centroidX(); }
-        double centroidY() const { return -adaptee->centroidY(); }
+        Position<double> centroid() const { return -adaptee->centroid(); }
 
         /// @brief setCentroid() not implemented for SBDeconvolve.
         void setCentroid(Position<double> _p) 
