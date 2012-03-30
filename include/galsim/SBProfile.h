@@ -150,13 +150,8 @@ namespace galsim {
          */
         virtual bool isAnalyticK() const =0; 
 
-        virtual double centroidX() const =0; ///<Centroid of SBProfile in x.
-        virtual double centroidY() const =0; ///<Centroid of SBProfile in y.
-
         /// @brief Returns (X, Y) centroid of SBProfile.
-        virtual Position<double> centroid() const 
-        { Position<double> p(centroidX(),centroidY());  return p; }
-
+        virtual Position<double> centroid() const = 0;
 
         virtual double getFlux() const =0; ///< Get the total flux of the SBProfile.
 
@@ -544,8 +539,8 @@ namespace galsim {
         bool isAnalyticX() const { return allAnalyticX; }
         bool isAnalyticK() const { return allAnalyticK; }
 
-        virtual double centroidX() const { return sumfx / sumflux; }
-        virtual double centroidY() const { return sumfy / sumflux; }
+        virtual Position<double> centroid() const 
+        {Position<double> p(sumfx / sumflux, sumfy / sumflux); return p; }
 
         virtual double getFlux() const { return sumflux; }
         virtual void setFlux(double flux_=1.);
@@ -701,8 +696,11 @@ namespace galsim {
         double maxK() const { return adaptee->maxK() / minor; }
         double stepK() const { return adaptee->stepK() / major; }
 
-        double centroidX() const { return (x0+fwd(adaptee->centroid())).x; }
-        double centroidY() const { return (x0+fwd(adaptee->centroid())).y; }
+        Position<double> centroid() const 
+        { 
+            Position<double> p((x0+fwd(adaptee->centroid())).x, (x0+fwd(adaptee->centroid())).y); 
+            return p; 
+        }
 
         double getFlux() const { return adaptee->getFlux()*absdet; }
         void setFlux(double flux_=1.) { adaptee->setFlux(flux_/absdet); }
@@ -863,8 +861,10 @@ namespace galsim {
         bool isAnalyticK() const { return true; }    // convolvees must all meet this
         double maxK() const { return minMaxK; }
         double stepK() const { return minStepK; }
-        double centroidX() const { return x0; }
-        double centroidY() const { return y0; }
+
+        Position<double> centroid() const 
+        { Position<double> p(x0, y0); return p; }
+
         double getFlux() const { return fluxScale * fluxProduct; }
         void setFlux(double flux_=1.) { fluxScale = flux_/fluxProduct; }
 
@@ -913,8 +913,9 @@ namespace galsim {
         double maxK() const { return std::max(4., std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
         double stepK() const { return M_PI/std::max(4., 
                                                     std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
-        double centroidX() const { return 0.; } 
-        double centroidY() const { return 0.; } 
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
+
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
         SBProfile* duplicate() const { return new SBGaussian(*this); }
@@ -1054,8 +1055,8 @@ namespace galsim {
         double maxK() const { return info->maxK / re; }
         double stepK() const { return info->stepK / re; }
 
-        double centroidX() const { return 0.; } 
-        double centroidY() const { return 0.; } 
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1105,8 +1106,8 @@ namespace galsim {
         double maxK() const { return std::max(10., pow(ALIAS_THRESHOLD, -1./3.))/r0; }
         double stepK() const;
 
-        double centroidX() const { return 0.; } 
-        double centroidY() const { return 0.; } 
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1171,8 +1172,9 @@ namespace galsim {
                 ALIAS_THRESHOLD * 0.5 * D * pow(M_PI,3.) * (1-obscuration) ,
                 M_PI * D / 5.);
         }
-        double centroidX() const { return 0.; } 
-        double centroidY() const { return 0.; } 
+
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1241,8 +1243,8 @@ namespace galsim {
         double maxK() const { return 2. / ALIAS_THRESHOLD / std::max(xw,yw); }  
         double stepK() const { return M_PI/std::max(xw,yw)/2; } 
 
-        double centroidX() const { return 0.; } 
-        double centroidY() const { return 0.; } 
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1295,9 +1297,7 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        double centroidX() const 
-        { throw SBError("SBLaguerre::centroid calculations not yet implemented"); }
-        double centroidY() const 
+        Position<double> centroid() const 
         { throw SBError("SBLaguerre::centroid calculations not yet implemented"); }
 
         double getFlux() const;
@@ -1363,8 +1363,9 @@ namespace galsim {
         double maxK() const { return maxKrD / rD; }   
         double stepK() const { return stepKrD / rD; } 
 
-        double centroidX() const { return 0.; } 
-        double centroidY() const { return 0.; } 
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
+
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1422,6 +1423,11 @@ namespace galsim {
 
         /// @brief Copy constructor.
         SBProfile* duplicate() const { return new SBDeVaucouleurs(*this); }
+
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
+
+
     };
 
 
