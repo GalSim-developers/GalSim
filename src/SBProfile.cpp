@@ -445,8 +445,8 @@ namespace galsim {
         // Accumulate properties of all summands
         while (newptr != plist.end()) {
             sumflux += (*newptr)->getFlux();
-            sumfx += (*newptr)->getFlux() * (*newptr)->centroidX();
-            sumfy += (*newptr)->getFlux() * (*newptr)->centroidY();
+            sumfx += (*newptr)->getFlux() * (*newptr)->centroid().x;
+            sumfy += (*newptr)->getFlux() * (*newptr)->centroid().x;
             if ( (*newptr)->maxK() > maxMaxK) maxMaxK = (*newptr)->maxK();
             if ( minStepK<=0. || ((*newptr)->stepK() < minStepK)) minStepK = (*newptr)->stepK();
             allAxisymmetric = allAxisymmetric && (*newptr)->isAxisymmetric();
@@ -679,8 +679,8 @@ namespace galsim {
         // Accumulate properties of all terms
         while (newptr != plist.end()) {
             fluxProduct *= (*newptr)->getFlux();
-            x0 += (*newptr)->centroidX();
-            y0 += (*newptr)->centroidY();
+            x0 += (*newptr)->centroid().x;
+            y0 += (*newptr)->centroid().y;
             if ( minMaxK<=0. || (*newptr)->maxK() < minMaxK) minMaxK = (*newptr)->maxK();
             if ( minStepK<=0. || ((*newptr)->stepK() < minStepK)) minStepK = (*newptr)->stepK();
             isStillAxisymmetric = isStillAxisymmetric && (*newptr)->isAxisymmetric();

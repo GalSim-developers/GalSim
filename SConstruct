@@ -300,6 +300,9 @@ def GetCompilerVersion(env):
     """
     """
     compiler = which(env['CXX'])
+    if compile is None:
+        raise ValueError("Specified compiler not found in path: %s" % env['CXX'])
+
     print 'Using compiler:',compiler
 
     compiler_real = os.path.realpath(compiler)

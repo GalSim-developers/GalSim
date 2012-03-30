@@ -105,16 +105,12 @@ namespace galsim {
         if (ksumValid) *ksum *= factor;
     }
 
-    double SBPixel::centroidX() const 
+    Position<double> SBPixel::centroid() const 
     {
         checkReady();
-        return (wts * xFluxes) / (wts*fluxes);
-    }
-
-    double SBPixel::centroidY() const 
-    {
-        checkReady();
-        return (wts * yFluxes) / (wts*fluxes);
+        double wtsfluxes = wts * fluxes;
+        Position<double> p((wts * xFluxes) / wtsfluxes, (wts * yFluxes) / wtsfluxes);
+        return p;
     }
 
     void SBPixel::setPixel(double value, int ix, int iy, int iz) 
