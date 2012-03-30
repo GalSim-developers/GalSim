@@ -144,7 +144,7 @@ def test_sbprofile_shift():
     """Test the translation of a Box profile against a known result.
     """
     mySBP = galsim.SBBox(0.2)
-    mySBP.shift(2,2)
+    mySBP.shift(0.2,-0.2)
     myImg = mySBP.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir,"box_shift.fits"))
     np.testing.assert_array_almost_equal(myImg.array,savedImg.array,5,

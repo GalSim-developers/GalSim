@@ -63,7 +63,7 @@ $origexec "exp 1 D 1.5" $outdir/exp_mag.fits 0.2
 $origexec "(gauss 1 F 0.75) + (gauss 3 F 0.25)" $outdir/double_gaussian.fits 0.2
 
 # Shifting a box profile (translation)
-$origexec "box 0.2 T 2 2" $outdir/box_shift.fits 0.2
+$origexec "box 0.2 T 0.2 -0.2" $outdir/box_shift.fits 0.2
 
 # Double the flux of what was initially a Sersic profile with unit flux
 $origexec "sersic 3 1 F 2" $outdir/sersic_doubleflux.fits 0.2
