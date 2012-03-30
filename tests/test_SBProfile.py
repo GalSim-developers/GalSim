@@ -92,8 +92,8 @@ def test_sbprofile_smallshear():
     """Test the application of a small shear to a Gaussian SBProfile against a known result.
     """
     mySBP = galsim.SBGaussian(1)
-    mySBP.shear(0.02,0.02)
-    myImg = mySBP.draw(dx=0.2)
+    mySBP_shear = mySBP.shear(0.02,0.02)
+    myImg = mySBP_shear.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir,"gauss_smallshear.fits"))
     printval(myImg,savedImg)
     np.testing.assert_array_almost_equal(myImg.array,savedImg.array,5,
@@ -103,8 +103,8 @@ def test_sbprofile_largeshear():
     """Test the application of a large shear to a Sersic SBProfile against a known result.
     """
     mySBP = galsim.SBSersic(4,1)
-    mySBP.shear(0.0,0.5)
-    myImg = mySBP.draw(dx=0.2)
+    mySBP_shear = mySBP.shear(0.0,0.5)
+    myImg = mySBP_shear.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir,"sersic_largeshear.fits"))
     printval(myImg,savedImg)
     np.testing.assert_array_almost_equal(myImg.array,savedImg.array,5,
@@ -127,9 +127,9 @@ def test_sbprofile_shearconvolve():
     """Test the convolution of a sheared Gaussian and a Box SBProfile against a known result.
     """
     mySBP = galsim.SBGaussian(1)
-    mySBP.shear(0.04,0.0)
+    mySBP_shear = mySBP.shear(0.04,0.0)
     mySBP2 = galsim.SBBox(0.2)
-    myConv = galsim.SBConvolve(mySBP)
+    myConv = galsim.SBConvolve(mySBP_shear)
     myConv.add(mySBP2)
     myImg = myConv.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir,"gauss_smallshear_convolve_box.fits"))
@@ -141,9 +141,9 @@ def test_sbprofile_rotate():
     """Test the 45 degree rotation of a sheared Sersic profile against a known result.
     """
     mySBP = galsim.SBSersic(2.5,1)
-    mySBP.shear(0.2,0.0)
-    mySBP.rotate(45.0)
-    myImg = mySBP.draw(dx=0.2)
+    mySBP_shear = mySBP.shear(0.2,0.0)
+    mySBP_shear_rotate = mySBP_shear.rotate(45.0)
+    myImg = mySBP_shear_rotate.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir,"sersic_ellip_rotated.fits"))
     printval(myImg,savedImg)
     np.testing.assert_array_almost_equal(myImg.array,savedImg.array,5,
@@ -154,8 +154,8 @@ def test_sbprofile_mag():
     """
     mySBP = galsim.SBExponential(1)
     myEll = galsim.Ellipse(0.,0.,np.log(1.5))
-    mySBP.distort(myEll)
-    myImg = mySBP.draw(dx=0.2)
+    mySBP_mag = mySBP.distort(myEll)
+    myImg = mySBP_mag.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir,"exp_mag.fits"))
     printval(myImg,savedImg)
     np.testing.assert_array_almost_equal(myImg.array,savedImg.array,5,
@@ -180,8 +180,8 @@ def test_sbprofile_shift():
     """Test the translation of a Box profile against a known result.
     """
     mySBP = galsim.SBBox(0.2)
-    mySBP.shift(0.2,-0.2)
-    myImg = mySBP.draw(dx=0.2)
+    mySBP_shift = mySBP.shift(0.2,-0.2)
+    myImg = mySBP_shift.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir,"box_shift.fits"))
     printval(myImg,savedImg)
     np.testing.assert_array_almost_equal(myImg.array,savedImg.array,5,
