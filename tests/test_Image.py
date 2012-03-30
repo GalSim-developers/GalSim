@@ -71,7 +71,6 @@ def test_FITS_IO():
                                               +"filename input.")
         # TODO: test reading from an HDU list (e.g. for multi-extension FITS).
 
-
 def test_Image_array_view():
     """Test that all four types of supported arrays correctly provide a view on an input array.
     """
