@@ -468,6 +468,38 @@ namespace galsim {
                 plist.push_back((*sbptr)->duplicate());
         }
 
+        /** @brief Assignment
+         *
+         * @param[in] rhs SBAdd which this one will now be a copy of.
+         * @return reference to this.
+         */
+        SBAdd& operator=(const SBAdd& rhs)
+        {
+            // Null operation if rhs is this
+            if (&rhs == this) return *this;
+            // Clean up previous stuff
+            
+            for (std::list<SBProfile*>::iterator pptr = plist.begin(); 
+                 pptr!=plist.end(); 
+                 ++pptr)  
+                delete *pptr; 
+            // New copies of all convolve-ees:
+            plist.clear();
+            std::list<SBProfile*>::const_iterator rhsptr;
+            for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
+                plist.push_back((*rhsptr)->duplicate()); 
+            // And copy other configurations:
+            sumflux = rhs.sumflux;
+            sumfx = rhs.sumfx;
+            sumfy = rhs.sumfy;
+            maxMaxK = rhs.maxMaxK;
+            minStepK = rhs.minStepK;
+            allAxisymmetric = rhs.allAxisymmetric;
+            allAnalyticX = rhs.allAnalyticX;
+            allAnalyticK = rhs.allAnalyticK;
+	    return *this;
+        }
+
         /// @brief Destructor.
         ~SBAdd() 
         { 
@@ -611,6 +643,27 @@ namespace galsim {
             initialize();
         }
 
+        /** 
+         * @brief Assignment operator
+         *
+         * @param[in] rhs SBDistort being copied.
+         * @return   reference to this object.
+         */
+        SBDistort& operator=(const SBDistort& rhs) 
+        {
+            // Self-assignment is nothing:
+            if (&rhs == this) return *this;
+            if (adaptee) {delete adaptee; adaptee=0; }
+            adaptee = rhs.adaptee->duplicate();
+            matrixA = (rhs.matrixA); 
+            matrixB = (rhs.matrixB); 
+            matrixC = (rhs.matrixC);
+            matrixD = (rhs.matrixD); 
+            x0 = (rhs.x0);
+            initialize();
+            return *this;
+        }
+
         /// @brief Destructor.
         ~SBDistort() { delete adaptee; adaptee=0; }
 
@@ -624,7 +677,7 @@ namespace galsim {
         std::complex<double> kValue(Position<double> k) const 
         {
             std::complex<double> phaseexp(0,-k.x*x0.x-k.y*x0.y); // phase exponent
-            std::complex<double> kv(absdet*adaptee->kValue(fwdT(k))*exp(phaseexp));
+            std::complex<double> kv(absdet*adaptee->kValue(fwdT(k))*std::exp(phaseexp));
             return kv; 
         }
 
@@ -730,6 +783,37 @@ namespace galsim {
                 plist.push_back((*rhsptr)->duplicate()); 
         }
 
+        /** @brief Assignment
+         *
+         * @param[in] rhs SBConvolve which this one will now be a copy of.
+         * @return reference to this.
+         */
+        SBConvolve& operator=(const SBConvolve& rhs)
+        {
+            // Null operation if rhs is this
+            if (&rhs == this) return *this;
+            // Clean up previous stuff
+            
+            for (std::list<SBProfile*>::iterator pptr = plist.begin(); 
+                 pptr!=plist.end(); 
+                 ++pptr)  
+                delete *pptr; 
+            // New copies of all convolve-ees:
+            plist.clear();
+            std::list<SBProfile*>::const_iterator rhsptr;
+            for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
+                plist.push_back((*rhsptr)->duplicate()); 
+            // And copy other configurations:
+            fluxScale = rhs.fluxScale;
+            x0 = rhs.x0;
+            y0 = rhs.y0;
+            isStillAxisymmetric = rhs.isStillAxisymmetric;
+            minMaxK = rhs.minMaxK;
+            minStepK = rhs.minStepK;
+            fluxProduct = rhs.fluxProduct;
+	    return *this;
+        }
+
         /// @brief Destructor.
         ~SBConvolve() 
         { 
@@ -813,8 +897,9 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
 
         // Extend to 4 sigma in both domains, or more if needed to reach EE spec
-        double maxK() const { return std::max(4., sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
-        double stepK() const { return M_PI/std::max(4., sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
+        double maxK() const { return std::max(4., std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
+        double stepK() const { return M_PI/std::max(4., 
+                                                    std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
         double centroidX() const { return 0.; } 
         double centroidY() const { return 0.; } 
         double getFlux() const { return flux; }
@@ -848,7 +933,7 @@ namespace galsim {
              * @brief Returns the real space value of the Sersic using the formula 
              * `exp(-b*pow(xsq,inv2n))` (see private attributes).
              */
-            double xValue(double xsq) const { return norm*exp(-b*pow(xsq,inv2n)); } 
+            double xValue(double xsq) const { return norm*std::exp(-b*std::pow(xsq,inv2n)); } 
             
             /// @brief Looks up the k value for the SBProfile from a lookup table.
             double kValue(double ksq) const;
@@ -1301,7 +1386,7 @@ namespace galsim {
          * @param[in] theta Rotation angle in radians anticlockwise.
          */
         SBRotate(const SBProfile& s, const double theta) :
-            SBDistort(s, cos(theta), -sin(theta), sin(theta), cos(theta)) {}
+            SBDistort(s, std::cos(theta), -std::sin(theta), std::sin(theta), std::cos(theta)) {}
     };
 
     /**

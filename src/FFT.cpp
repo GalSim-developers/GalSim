@@ -16,11 +16,11 @@ namespace galsim {
         if (input<=2) return 2;
         // Reduce slightly to eliminate potential rounding errors:
         double insize = (1.-1e-5)*input;
-        double log2n = log(2.)*ceil(log(insize)/log(2.));
-        double log2n3 = log(3.) 
-            + log(2.)*ceil((log(insize)-log(3.))/log(2.));
-        log2n3 = std::max(log2n3, log(6.)); // must be even number
-        int Nk = static_cast<int> (ceil(exp(std::min(log2n, log2n3))-1e-5));
+        double log2n = std::log(2.)*std::ceil(std::log(insize)/std::log(2.));
+        double log2n3 = std::log(3.) 
+	     + std::log(2.)*std::ceil((std::log(insize)-std::log(3.))/std::log(2.));
+        log2n3 = std::max(log2n3, std::log(6.)); // must be even number
+        int Nk = static_cast<int> (std::ceil(std::exp(std::min(log2n, log2n3))-1e-5));
         return Nk;
     }
 
@@ -216,9 +216,9 @@ namespace galsim {
         ky /= dk;
         int ixMin, ixMax, iyMin, iyMax;
         if ( interp.isExactAtNodes() 
-             && abs(kx - floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+             && std::abs(kx - std::floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // x coord lies right on integer value, no interpolation in x direction
-            ixMin = static_cast<int> (floor(kx+0.01)) % N;
+            ixMin = static_cast<int> (std::floor(kx+0.01)) % N;
             if (ixMin < -N/2) ixMin += N;
             if (ixMin >= N/2) ixMin -= N;
             ixMax = ixMin;
@@ -228,18 +228,18 @@ namespace galsim {
             ixMax = N/2-1;
         } else {
             // Put both bounds of kernel footprint in range [-N/2,N/2-1]
-            ixMin = static_cast<int> (ceil(kx-interp.xrange())) % N;
+            ixMin = static_cast<int> (std::ceil(kx-interp.xrange())) % N;
             if (ixMin < -N/2) ixMin += N;
             if (ixMin >= N/2) ixMin -= N;
-            ixMax = static_cast<int> (floor(kx+interp.xrange())) % N;
+            ixMax = static_cast<int> (std::floor(kx+interp.xrange())) % N;
             if (ixMax < -N/2) ixMax += N;
             if (ixMax >= N/2) ixMax -= N;
         }
 
         if ( interp.isExactAtNodes() 
-             && abs(ky - floor(ky+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+             && std::abs(ky - std::floor(ky+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // y coord lies right on integer value, no interpolation in y direction
-            iyMin = static_cast<int> (floor(ky+0.01)) % N;
+            iyMin = static_cast<int> (std::floor(ky+0.01)) % N;
             if (iyMin < -N/2) iyMin += N;
             if (iyMin >= N/2) iyMin -= N;
             iyMax = iyMin;
@@ -249,10 +249,10 @@ namespace galsim {
             iyMax = N/2-1;
         } else {
             // Put both bounds of kernel footprint in range [-N/2,N/2-1]
-            iyMin = static_cast<int> (ceil(ky-interp.xrange())) % N;
+            iyMin = static_cast<int> (std::ceil(ky-interp.xrange())) % N;
             if (iyMin < -N/2) iyMin += N;
             if (iyMin >= N/2) iyMin -= N;
-            iyMax = static_cast<int> (floor(ky+interp.xrange())) % N;
+            iyMax = static_cast<int> (std::floor(ky+interp.xrange())) % N;
             if (iyMax < -N/2) iyMax += N;
             if (iyMax >= N/2) iyMax -= N;
         }
@@ -503,10 +503,10 @@ namespace galsim {
         check_array();
         x*=dk; y*=dk;
         // Don't evaluate if x not in fundamental period +-PI/dk:
-        if (abs(x) > M_PI || abs(y) > M_PI) throw FFTOutofRange(" (x,y) too big in xval()");
+        if (std::abs(x) > M_PI || std::abs(y) > M_PI) throw FFTOutofRange(" (x,y) too big in xval()");
         std::complex<double> I(0.,1.);
-        std::complex<double> dxphase=exp(I*x);
-        std::complex<double> dyphase=exp(I*y);
+        std::complex<double> dxphase=std::exp(I*x);
+        std::complex<double> dyphase=std::exp(I*y);
         std::complex<double> phase(1.,0.);
         std::complex<double> z;
         double sum=0.;
@@ -530,7 +530,7 @@ namespace galsim {
         }
 
         // wrap to the negative ky's
-        yphase = exp(I*(y*(-N/2)));
+        yphase = std::exp(I*(y*(-N/2)));
         for (int iy=-N/2; iy< 0; iy++) {
             phase = yphase;
             z= *(zptr++);
@@ -560,8 +560,8 @@ namespace galsim {
         // too big will just be wrapping around:
         if (x0 > M_PI || y0 > M_PI) throw FFTOutofRange("(x0,y0) too big in translate()");
         std::complex<double> I(0.,1.);
-        std::complex<double> dxphase=exp(std::complex<double>(0.,-x0));
-        std::complex<double> dyphase=exp(std::complex<double>(0.,-y0));
+        std::complex<double> dxphase=std::exp(std::complex<double>(0.,-x0));
+        std::complex<double> dyphase=std::exp(std::complex<double>(0.,-y0));
         std::complex<double> phase(1.,0.);
 
         std::complex<double> yphase=1.;
@@ -581,7 +581,7 @@ namespace galsim {
         }
 
         // wrap to the negative ky's
-        yphase = exp(I*((N/2)*y0));
+        yphase = std::exp(I*((N/2)*y0));
         for (int iy=-N/2; iy< 0; iy++) {
             phase = yphase;
             for (int ix=0; ix<= N/2 ; ix++) {
@@ -691,24 +691,24 @@ namespace galsim {
         y /= dx;
         int ixMin, ixMax, iyMin, iyMax;
         if ( interp.isExactAtNodes() 
-             && abs(x - floor(x+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+             && std::abs(x - std::floor(x+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // x coord lies right on integer value, no interpolation in x direction
-            ixMin = ixMax = static_cast<int> (floor(x+0.01));
+            ixMin = ixMax = static_cast<int> (std::floor(x+0.01));
         } else {
-            ixMin = static_cast<int> (ceil(x-interp.xrange()));
-            ixMax = static_cast<int> (floor(x+interp.xrange()));
+            ixMin = static_cast<int> (std::ceil(x-interp.xrange()));
+            ixMax = static_cast<int> (std::floor(x+interp.xrange()));
         }
         ixMin = std::max(ixMin, -N/2);
         ixMax = std::min(ixMax, N/2-1);
         if (ixMin > ixMax) return 0.;
 
         if ( interp.isExactAtNodes() 
-             && abs(y - floor(y+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+             && std::abs(y - std::floor(y+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // y coord lies right on integer value, no interpolation in y direction
-            iyMin = iyMax = static_cast<int> (floor(y+0.01));
+            iyMin = iyMax = static_cast<int> (std::floor(y+0.01));
         } else {
-            iyMin = static_cast<int> (ceil(y-interp.xrange()));
-            iyMax = static_cast<int> (floor(y+interp.xrange()));
+            iyMin = static_cast<int> (std::ceil(y-interp.xrange()));
+            iyMax = static_cast<int> (std::floor(y+interp.xrange()));
         }
         iyMin = std::max(iyMin, -N/2);
         iyMax = std::min(iyMax, N/2-1);
@@ -846,20 +846,20 @@ namespace galsim {
         check_array();
         // Don't evaluate if k not in fundamental period 
         kx*=dx; ky*=dx;
-        if (abs(kx) > M_PI || abs(ky) > M_PI) 
+        if (std::abs(kx) > M_PI || std::abs(ky) > M_PI) 
             throw FFTOutofRange("XTable::kval() args out of range");
         std::complex<double> I(0.,1.);
-        std::complex<double> dxphase=exp(-I*kx);
-        std::complex<double> dyphase=exp(-I*ky);
+        std::complex<double> dxphase=std::exp(-I*kx);
+        std::complex<double> dyphase=std::exp(-I*ky);
         std::complex<double> phase(1.,0.);
         std::complex<double> z;
         std::complex<double> sum=0.;
 
         double* zptr=array;
-        std::complex<double> yphase=exp(I*(ky*N/2));
+        std::complex<double> yphase=std::exp(I*(ky*N/2));
         for (int iy=0; iy< N; iy++) {
             phase = yphase;
-            phase *= exp(I*(kx*N/2));
+            phase *= std::exp(I*(kx*N/2));
             for (int ix=0; ix< N ; ix++) {
                 sum += phase* (*(zptr++));
                 phase *= dxphase;
