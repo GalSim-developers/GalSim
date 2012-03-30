@@ -3,7 +3,11 @@ Support for reading and writing galsim.Image* objects to FITS, via new
 Python-only methods injected into the Image classes.
 """
 
+from sys import byteorder
 from . import _galsim
+
+# Convert sys.byteorder into the notation numpy dtypes use
+native_byteorder = {'big': '>', 'little': '<'}[byteorder]
 
 def write(image, fits, add_wcs=True):
     """
@@ -44,8 +48,10 @@ def write(image, fits, add_wcs=True):
             wcsname = ""
         hdu.header.update("CTYPE1" + wcsname, "LINEAR", "name of the coordinate axis")
         hdu.header.update("CTYPE2" + wcsname, "LINEAR", "name of the coordinate axis")
-        hdu.header.update("CRVAL1" + wcsname, image.xMin, "coordinate system value at reference pixel")
-        hdu.header.update("CRVAL2" + wcsname, image.yMin, "coordinate system value at reference pixel")
+        hdu.header.update("CRVAL1" + wcsname, image.xMin, 
+                          "coordinate system value at reference pixel")
+        hdu.header.update("CRVAL2" + wcsname, image.yMin, 
+                          "coordinate system value at reference pixel")
         hdu.header.update("CRPIX1" + wcsname, 1, "coordinate system reference pixel")
         hdu.header.update("CRPIX2" + wcsname, 1, "coordinate system reference pixel")
     
@@ -86,6 +92,18 @@ def read(fits):
         Class = _galsim.Image[pixel]
     except KeyError:
         raise TypeError("No C++ Image template instantiation for pixel type %s" % pixel)
+    # Check through byteorder possibilities, compare to native (used for numpy and our default) and
+    # swap if necessary so that C++ gets the correct view.
+    if fits.data.dtype.byteorder == '!':
+        if native_byteorder == '>':
+            pass
+        else:
+            fits.data.byteswap(True)
+    elif fits.data.dtype.byteorder in (native_byteorder, '=', '@'):
+        pass
+    else:
+        fits.data.byteswap(True)   # Note inplace is just an arg, not a kwarg, inplace=True throws
+                                   # a TypeError exception in EPD Python 2.7.2
     image = Class(array=fits.data, xMin=xMin, yMin=yMin)
     image.scale = scale
     return image
