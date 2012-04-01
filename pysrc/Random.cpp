@@ -94,13 +94,8 @@ struct PyGaussianDeviate {
             "Parameters:\n"
             "\n"
             "uniform  a UniformDeviate instance (seed set there).\n"
-            "mean     semi-optional mean for Gaussian distribution (default = 0.).\n"
+            "mean     optional mean for Gaussian distribution (default = 0.).\n"
             "sigma    optional sigma for Gaussian distribution (default = 1.).\n"
-            "\n"
-            "The mean parameter is semi-optional: an ArgumentError exception will be raised if\n"
-            "sigma alone is specified without an accompanying mean. However, reversing their\n"
-            "ordering is handled OK provided keyword args are named. (TODO: Fix this 'feature'\n"
-            "if possible!)\n"
             "\n"
             ;
         bp::class_<GaussianDeviate,boost::noncopyable>(
@@ -152,12 +147,8 @@ struct PyBinomialDeviate {
             "Parameters:\n"
             "\n"
             "uniform  a UniformDeviate instance (seed set there).\n"
-            "N        number of 'coin flips' per trial (default `N = 1`).\n"
-            "p        probability of success per coin flip (default `p = 0.5`).\n"
-            "\n"
-            "The N parameter is semi-optional: an ArgumentError exception will be raised if p\n"
-            "alone is specified without an accompanying N. However, reversing their ordering is\n"
-            "handled OK provided keyword args are named. (TODO: Fix this 'feature' if possible!)\n"
+            "N        optional number of 'coin flips' per trial (default `N = 1`).\n"
+            "p        optional probability of success per coin flip (default `p = 0.5`).\n"
             "\n"
             ;
         bp::class_<BinomialDeviate,boost::noncopyable>(
@@ -209,7 +200,7 @@ struct PyPoissonDeviate {
             "Parameters:\n"
             "\n"
             "uniform  a UniformDeviate instance (seed set there).\n"
-            "mean     mean of the distribution (default `mean = 1`).\n"
+            "mean     optional mean of the distribution (default `mean = 1`).\n"
             "\n"
             ;
         bp::class_<PoissonDeviate,boost::noncopyable>(
