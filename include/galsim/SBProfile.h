@@ -150,13 +150,8 @@ namespace galsim {
          */
         virtual bool isAnalyticK() const =0; 
 
-        virtual double centroidX() const =0; ///<Centroid of SBProfile in x.
-        virtual double centroidY() const =0; ///<Centroid of SBProfile in y.
-
         /// @brief Returns (X, Y) centroid of SBProfile.
-        Position<double> centroid() const 
-        { Position<double> p(centroidX(),centroidY());  return p; }
-
+        virtual Position<double> centroid() const = 0;
 
         virtual double getFlux() const =0; ///< Get the total flux of the SBProfile.
 
@@ -225,6 +220,8 @@ namespace galsim {
          * image  may be calculated internally on a larger grid to avoid folding.
          * The default draw() routines decide internally whether image can be drawn directly
          * in real space or needs to be done via FFT from k space.
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
@@ -247,6 +244,8 @@ namespace galsim {
          * image may be calculated internally on a larger grid to avoid folding.
          * The default draw() routines decide internally whether image can be drawn directly
          * in real space or needs to be done via FFT from k space.
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in,out]   image
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
@@ -268,6 +267,8 @@ namespace galsim {
          * drawn which is big enough to avoid "folding." 
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding.
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in,out]   image
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
@@ -290,6 +291,8 @@ namespace galsim {
          * and the image will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding.
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in,out]   image
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
@@ -313,6 +316,8 @@ namespace galsim {
          * FFT, they will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding in real space.
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in,out]   re image of real argument of SBProfile in k space.
          * @param[in,out]   im image of imaginary argument of SBProfile in k space.
@@ -332,6 +337,8 @@ namespace galsim {
          * needed since the SBProfile is complex.  If on input either image `Re` or `Im` is not 
          * specified or has null dimension, square images will be drawn which are big enough to 
          * avoid "folding."
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in,out]   re image of real argument of SBProfile in k space.
          * @param[in,out]   im image of imaginary argument of SBProfile in k space.
@@ -356,6 +363,8 @@ namespace galsim {
          * and the images will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding in real space.
+         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * back.
          *
          * @param[in,out]   re image of real argument of SBProfile in k space.
          * @param[in,out]   im image of imaginary argument of SBProfile in k space.
@@ -468,6 +477,38 @@ namespace galsim {
                 plist.push_back((*sbptr)->duplicate());
         }
 
+        /** @brief Assignment
+         *
+         * @param[in] rhs SBAdd which this one will now be a copy of.
+         * @return reference to this.
+         */
+        SBAdd& operator=(const SBAdd& rhs)
+        {
+            // Null operation if rhs is this
+            if (&rhs == this) return *this;
+            // Clean up previous stuff
+            
+            for (std::list<SBProfile*>::iterator pptr = plist.begin(); 
+                 pptr!=plist.end(); 
+                 ++pptr)  
+                delete *pptr; 
+            // New copies of all convolve-ees:
+            plist.clear();
+            std::list<SBProfile*>::const_iterator rhsptr;
+            for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
+                plist.push_back((*rhsptr)->duplicate()); 
+            // And copy other configurations:
+            sumflux = rhs.sumflux;
+            sumfx = rhs.sumfx;
+            sumfy = rhs.sumfy;
+            maxMaxK = rhs.maxMaxK;
+            minStepK = rhs.minStepK;
+            allAxisymmetric = rhs.allAxisymmetric;
+            allAnalyticX = rhs.allAnalyticX;
+            allAnalyticK = rhs.allAnalyticK;
+	    return *this;
+        }
+
         /// @brief Destructor.
         ~SBAdd() 
         { 
@@ -498,8 +539,8 @@ namespace galsim {
         bool isAnalyticX() const { return allAnalyticX; }
         bool isAnalyticK() const { return allAnalyticK; }
 
-        virtual double centroidX() const { return sumfx / sumflux; }
-        virtual double centroidY() const { return sumfy / sumflux; }
+        virtual Position<double> centroid() const 
+        {Position<double> p(sumfx / sumflux, sumfy / sumflux); return p; }
 
         virtual double getFlux() const { return sumflux; }
         virtual void setFlux(double flux_=1.);
@@ -516,8 +557,7 @@ namespace galsim {
      * Origin of original shape will now appear at `x0`.
      * Flux is NOT conserved in transformation - surface brightness is preserved.
      * We keep track of all distortions in a 2x2 matrix `M = [(A B), (C D)]` = [row1, row2] 
-     * (det`M`=1), with an additional determinant multiplier `absdet`, plus a 2-element `x0` for
-     * the shift.
+     * plus a 2-element Positon object `x0` for the shift.
      */
     class SBDistort : public SBProfile 
     {
@@ -611,6 +651,27 @@ namespace galsim {
             initialize();
         }
 
+        /** 
+         * @brief Assignment operator
+         *
+         * @param[in] rhs SBDistort being copied.
+         * @return   reference to this object.
+         */
+        SBDistort& operator=(const SBDistort& rhs) 
+        {
+            // Self-assignment is nothing:
+            if (&rhs == this) return *this;
+            if (adaptee) {delete adaptee; adaptee=0; }
+            adaptee = rhs.adaptee->duplicate();
+            matrixA = (rhs.matrixA); 
+            matrixB = (rhs.matrixB); 
+            matrixC = (rhs.matrixC);
+            matrixD = (rhs.matrixD); 
+            x0 = (rhs.x0);
+            initialize();
+            return *this;
+        }
+
         /// @brief Destructor.
         ~SBDistort() { delete adaptee; adaptee=0; }
 
@@ -624,7 +685,7 @@ namespace galsim {
         std::complex<double> kValue(Position<double> k) const 
         {
             std::complex<double> phaseexp(0,-k.x*x0.x-k.y*x0.y); // phase exponent
-            std::complex<double> kv(absdet*adaptee->kValue(fwdT(k))*exp(phaseexp));
+            std::complex<double> kv(absdet*adaptee->kValue(fwdT(k))*std::exp(phaseexp));
             return kv; 
         }
 
@@ -635,8 +696,7 @@ namespace galsim {
         double maxK() const { return adaptee->maxK() / minor; }
         double stepK() const { return adaptee->stepK() / major; }
 
-        double centroidX() const { return (x0+fwd(adaptee->centroid())).x; }
-        double centroidY() const { return (x0+fwd(adaptee->centroid())).y; }
+        Position<double> centroid() const { return x0+fwd(adaptee->centroid()); }
 
         double getFlux() const { return adaptee->getFlux()*absdet; }
         void setFlux(double flux_=1.) { adaptee->setFlux(flux_/absdet); }
@@ -730,6 +790,37 @@ namespace galsim {
                 plist.push_back((*rhsptr)->duplicate()); 
         }
 
+        /** @brief Assignment
+         *
+         * @param[in] rhs SBConvolve which this one will now be a copy of.
+         * @return reference to this.
+         */
+        SBConvolve& operator=(const SBConvolve& rhs)
+        {
+            // Null operation if rhs is this
+            if (&rhs == this) return *this;
+            // Clean up previous stuff
+            
+            for (std::list<SBProfile*>::iterator pptr = plist.begin(); 
+                 pptr!=plist.end(); 
+                 ++pptr)  
+                delete *pptr; 
+            // New copies of all convolve-ees:
+            plist.clear();
+            std::list<SBProfile*>::const_iterator rhsptr;
+            for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
+                plist.push_back((*rhsptr)->duplicate()); 
+            // And copy other configurations:
+            fluxScale = rhs.fluxScale;
+            x0 = rhs.x0;
+            y0 = rhs.y0;
+            isStillAxisymmetric = rhs.isStillAxisymmetric;
+            minMaxK = rhs.minMaxK;
+            minStepK = rhs.minStepK;
+            fluxProduct = rhs.fluxProduct;
+	    return *this;
+        }
+
         /// @brief Destructor.
         ~SBConvolve() 
         { 
@@ -766,8 +857,10 @@ namespace galsim {
         bool isAnalyticK() const { return true; }    // convolvees must all meet this
         double maxK() const { return minMaxK; }
         double stepK() const { return minStepK; }
-        double centroidX() const { return x0; }
-        double centroidY() const { return y0; }
+
+        Position<double> centroid() const 
+        { Position<double> p(x0, y0); return p; }
+
         double getFlux() const { return fluxScale * fluxProduct; }
         void setFlux(double flux_=1.) { fluxScale = flux_/fluxProduct; }
 
@@ -813,10 +906,12 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
 
         // Extend to 4 sigma in both domains, or more if needed to reach EE spec
-        double maxK() const { return std::max(4., sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
-        double stepK() const { return M_PI/std::max(4., sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
-        double centroidX() const { return 0.; } 
-        double centroidY() const { return 0.; } 
+        double maxK() const { return std::max(4., std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
+        double stepK() const { return M_PI/std::max(4., 
+                                                    std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
+
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
         SBProfile* duplicate() const { return new SBGaussian(*this); }
@@ -848,7 +943,7 @@ namespace galsim {
              * @brief Returns the real space value of the Sersic using the formula 
              * `exp(-b*pow(xsq,inv2n))` (see private attributes).
              */
-            double xValue(double xsq) const { return norm*exp(-b*pow(xsq,inv2n)); } 
+            double xValue(double xsq) const { return norm*std::exp(-b*std::pow(xsq,inv2n)); } 
             
             /// @brief Looks up the k value for the SBProfile from a lookup table.
             double kValue(double ksq) const;
@@ -956,8 +1051,8 @@ namespace galsim {
         double maxK() const { return info->maxK / re; }
         double stepK() const { return info->stepK / re; }
 
-        double centroidX() const { return 0.; } 
-        double centroidY() const { return 0.; } 
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1007,8 +1102,8 @@ namespace galsim {
         double maxK() const { return std::max(10., pow(ALIAS_THRESHOLD, -1./3.))/r0; }
         double stepK() const;
 
-        double centroidX() const { return 0.; } 
-        double centroidY() const { return 0.; } 
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1073,8 +1168,9 @@ namespace galsim {
                 ALIAS_THRESHOLD * 0.5 * D * pow(M_PI,3.) * (1-obscuration) ,
                 M_PI * D / 5.);
         }
-        double centroidX() const { return 0.; } 
-        double centroidY() const { return 0.; } 
+
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1143,8 +1239,8 @@ namespace galsim {
         double maxK() const { return 2. / ALIAS_THRESHOLD / std::max(xw,yw); }  
         double stepK() const { return M_PI/std::max(xw,yw)/2; } 
 
-        double centroidX() const { return 0.; } 
-        double centroidY() const { return 0.; } 
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1197,9 +1293,7 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        double centroidX() const 
-        { throw SBError("SBLaguerre::centroid calculations not yet implemented"); }
-        double centroidY() const 
+        Position<double> centroid() const 
         { throw SBError("SBLaguerre::centroid calculations not yet implemented"); }
 
         double getFlux() const;
@@ -1265,8 +1359,9 @@ namespace galsim {
         double maxK() const { return maxKrD / rD; }   
         double stepK() const { return stepKrD / rD; } 
 
-        double centroidX() const { return 0.; } 
-        double centroidY() const { return 0.; } 
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
+
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1301,7 +1396,7 @@ namespace galsim {
          * @param[in] theta Rotation angle in radians anticlockwise.
          */
         SBRotate(const SBProfile& s, const double theta) :
-            SBDistort(s, cos(theta), -sin(theta), sin(theta), cos(theta)) {}
+            SBDistort(s, std::cos(theta), -std::sin(theta), std::sin(theta), std::cos(theta)) {}
     };
 
     /**
@@ -1324,6 +1419,11 @@ namespace galsim {
 
         /// @brief Copy constructor.
         SBProfile* duplicate() const { return new SBDeVaucouleurs(*this); }
+
+        Position<double> centroid() const 
+        { Position<double> p(0., 0.); return p; }
+
+
     };
 
 

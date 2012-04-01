@@ -300,6 +300,9 @@ def GetCompilerVersion(env):
     """
     """
     compiler = which(env['CXX'])
+    if compile is None:
+        raise ValueError("Specified compiler not found in path: %s" % env['CXX'])
+
     print 'Using compiler:',compiler
 
     compiler_real = os.path.realpath(compiler)
@@ -663,11 +666,12 @@ int main()
         context.Result(0)
         print 'Failed to import numpy.'
         print 'Things to try:'
-        print '1) Check that the command line python (with which you probably installed numpy):'
+        print '1) Check that the python with which you installed numpy,'
+        print '   probably the command line python:'
         print '   ',
         sys.stdout.flush()
         subprocess.call('which python',shell=True)
-        print '  is the same as the one used by SCons:'
+        print '   is the same as the one used by SCons:'
         print '  ',sys.executable
         print '   If not, then you probably need to reinstall numpy with %s.' % sys.executable
         print '   And remember to use that when running python for use with GalSim.'
@@ -685,6 +689,32 @@ int main()
     if not result:
         context.Result(0)
         print "Cannot run program built with NumPy."
+        Exit(1)
+    context.Result(1)
+    return 1
+
+# Note from Barney to Mike: the code below always seems to say (cached) in the message at build
+# for me, even after rm .scons.dblite beforehand.  Is that right?  Otherwise, it seems to work...
+def CheckPyFITS(context):
+    context.Message('Checking for PyFITS... ')
+    try:
+        import pyfits
+    except ImportError:
+        context.Result(0)
+        print 'Failed to import PyFITS.'
+        print 'Things to try:'
+        print '1) Check that the python with which you installed PyFITS,'
+        print '   probably the command line python:'
+        print '   ',
+        sys.stdout.flush()
+        subprocess.call('which python',shell=True)
+        print '   is the same as the one used by SCons:'
+        print '  ',sys.executable
+        print '   If not, then you probably need to reinstall PyFITS with %s.' % sys.executable
+        print '   And remember to use that when running python for use with GalSim.'
+        print '   Alternatively, you can reinstall SCons with your preferred python.'
+        print '2) Check that if you open a python session from the command line,'
+        print '   import pyfits is successful there.'
         Exit(1)
     context.Result(1)
     return 1
@@ -869,7 +899,8 @@ def DoLibraryAndHeaderChecks(config):
     config.CheckPython()
     config.CheckNumPy()
     config.CheckBoostPython()
- 
+    config.CheckPyFITS() 
+
 
 def GetNCPU():
     """
@@ -943,6 +974,7 @@ def DoConfig(env):
             'CheckPython' : CheckPython ,
             'CheckNumPy' : CheckNumPy ,
             'CheckBoostPython' : CheckBoostPython ,
+            'CheckPyFITS' : CheckPyFITS ,
             })
         DoLibraryAndHeaderChecks(config)
         env = config.Finish()

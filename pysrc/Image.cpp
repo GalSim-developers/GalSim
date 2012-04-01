@@ -198,7 +198,7 @@ struct PyImage {
             "a pixel scale (the origin and pixel scale are not shared).\n"
             "\n"
             "There are several ways to construct an Image:\n"
-            "  Image(ncol, nrol)              # zero-filled image with origin (1,1)\n"
+            "  Image(ncol, nrow)              # zero-filled image with origin (1,1)\n"
             "  Image(bounds=BoundsI(), initValue=0) # bounding box and initial value\n"
             "  Image(array, xMin=1, yMin=1)  # NumPy array and origin\n"
             "\n"
@@ -231,7 +231,6 @@ struct PyImage {
         ); 
         bp::class_< Image<const T> >
             pyConstImage(("ConstImage" + suffix).c_str(), doc, bp::no_init);
-        wrapCommon<const T>(pyConstImage);
         pyConstImage
             .def(
                 "__init__",
@@ -239,7 +238,9 @@ struct PyImage {
                     makeConstFromArray, bp::default_call_policies(),
                     (bp::arg("array"), bp::arg("xMin")=1, bp::arg("yMin")=1)
                 )
-            )
+            );
+        wrapCommon<const T>(pyConstImage);
+        pyConstImage
             .add_property("array", &getConstArray)
             .def("getScale", getScale)
             .def("setScale", setScale)
@@ -264,7 +265,6 @@ struct PyImage {
 
         bp::class_< Image<T>, bp::bases< Image<const T> > >
             pyImage(("Image" + suffix).c_str(), doc, bp::no_init);
-        wrapCommon<T>(pyImage);
         pyImage
             .def(
                 "__init__",
@@ -272,7 +272,9 @@ struct PyImage {
                     makeFromArray, bp::default_call_policies(),
                     (bp::arg("array"), bp::arg("xMin")=1, bp::arg("yMin")=1)
                 )
-            )
+            );            
+        wrapCommon<T>(pyImage);
+        pyImage
             .add_property("array", &getArray)
             .def("copyFrom", &Image<T>::copyFrom)
             .def(bp::self += bp::self)

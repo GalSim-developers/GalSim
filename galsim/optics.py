@@ -1,7 +1,7 @@
-
 import numpy as np
+import galsim
 
-"""\file optics.py Module containing the optical PSF generation routines.
+"""@file optics.py @brief Module containing the optical PSF generation routines.
 
 Currently these are just functions; the plan will be for these to be included as methods in some
 kind of 'optical' class, or perhaps as methods in a more fundamental psf class.
@@ -32,12 +32,14 @@ TODO: Implement a centrally-obstructed pupil plane (e.g. such as is caused by se
 """
 
 def roll2d(image, (iroll, jroll)):
-    """Perform a 2D roll (circular shift) on a supplied 2D image, conveniently.
+    """Perform a 2D roll (circular shift) on a supplied 2D numpy array, conveniently.
 
-    \param image [2d Numpy array] Mandatory: the image to be circular shifted.
-    \param (iroll, jroll) [2 element tuple] Mandatory: the roll in the i and j dimensions, respectively.
+    Parameters
+    ----------
+    @param image            the numpy array to be circular shifted.
+    @param (iroll, jroll)   the roll in the i and j dimensions, respectively.
 
-    Returns the rolled image.
+    @returns the rolled image.
     """
     return np.roll(np.roll(image, jroll, axis=1), iroll, axis=0)
 
@@ -56,7 +58,9 @@ def kxky(array_shape=(256, 256)):
     leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
     uses this convention.
 
-    \param array_shape [2 element tuple] Optional: the Numpy array shape desired for `kx, ky`. 
+    Parameters
+    ----------
+    @param array_shape   the Numpy array shape desired for `kx, ky`. 
     """
     k_xaxis = np.fft.fftfreq(array_shape[1]) * 2. * np.pi
     k_yaxis = np.fft.fftfreq(array_shape[0]) * 2. * np.pi
@@ -64,7 +68,7 @@ def kxky(array_shape=(256, 256)):
 
 def wavefront(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
               spher=0., kmax=np.pi, circular_pupil=True):
-    """Return a complex, aberrated wavefront across a circular pupil (default) or square array extent.
+    """Return a complex, aberrated wavefront across a circular (default) or square pupil.
     
     Outputs a complex image (shape=array_shape) of a circular pupil wavefront that will
     produce a PSF with bandlimit kmax.  We adopt the conventions of SBProfile so that the Nyquist
@@ -84,18 +88,22 @@ def wavefront(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0.
     to the definitions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
 
-    \param array_shape [2 element tuple] Optional: the Numpy array shape desired for `kx, ky`.
-    \param defocus [float] Optional: defocus in units of incident light wavelength.
-    \param astig1 [float] Optional: first component of astigmatism (like e1) in units of incident light wavelength.
-    \param astig2 [float] Optional: second component of astigmatism (like e2) in units of incident light wavelength.
-    \param coma1 [float] Optional: coma along x in units of incident light wavelength.
-    \param coma2 [float] Optional: coma along y in units of incident light wavelength.
-    \param spher [float] Optional: spherical aberration in units of incident light wavelength.
-    \param kmax [float] Optional: bandlimit of output PSF scaled so that the Nyquist frequency of an image with unit integer pixel spacing is pi.
-    \param circular_pupil [Boolean] Optional: Adopt a circular pupil?
+    Parameters
+    ----------
+    @param array_shape     the Numpy array shape desired for the output array.
+    @aram defocus          defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param kmax            bandlimit of output PSF scaled so that the Nyquist frequency of an image
+                           with unit integer pixel spacing is pi.
+    @param circular_pupil  adopt a circular pupil?
     
-    Outputs the wavefront for kx, ky locations corresponding to kxky(array_shape), in a C-contiguous
-    array ordering.
+    Outputs the wavefront for kx, ky locations corresponding to kxky(array_shape).
     """
     pi = np.pi # minor but saves Python checking the entire np. namespace every time I need pi
     # Build kx, ky coords
@@ -127,26 +135,75 @@ def wavefront(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0.
     wf[in_pupil] *= np.exp(2j * pi * spher * (6. * rho[in_pupil]**4 - 6. * rho[in_pupil]**2 + 1.))
     return wf
 
+def wavefront_image(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
+                    spher=0., kmax=np.pi, circular_pupil=True):
+    """@brief Return wavefront as a (real, imag) tuple of ImageD objects rather than complex numpy
+    array.
+
+    Outputs a circular pupil wavefront that will produce a PSF with bandlimit kmax.  We adopt the
+    conventions of SBProfile so that the Nyquist frequency of an image with unit integer pixel
+    spacing is pi.
+
+    The default output is a circular pupil of radius pi/2 in k-space (`= kmax / 2`), i.e. one
+    which fills to a diameter of half the array dimension.  The OTF thus has maximum radius pi in
+    k-space at this default kmax, and so the output PSF will be fully sampled (just).
+
+    Typically, therefore, kmax should be chosen to be less than pi and will depend on the pixel
+    scale desired in the output.
+    
+    The pupil sample locations are arranged in standard DFT element ordering format, so that
+    (kx, ky) = (0, 0) is the [0, 0] array element.
+	
+    Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
+    to the definitions given here:
+    http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
+
+    Parameters
+    ----------
+    @param array_shape     the Numpy array shape desired for the output array.
+    @aram defocus          defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param kmax            bandlimit of output PSF scaled so that the Nyquist frequency of an image
+                           with unit integer pixel spacing is pi.
+    @param circular_pupil  adopt a circular pupil?
+    """
+    array = wavefront(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
+                      coma1=coma1, coma2=coma2, spher=spher, kmax=kmax,
+                      circular_pupil=circular_pupil)
+    return (galsim.ImageD(np.ascontiguousarray(array.real)),
+            galsim.ImageD(np.ascontiguousarray(array.imag)))
+
 def psf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, secondary=None):
-    """Return an image of a circular (default) or square pupil PSF with specified low-order wavefront aberrations.
+    """@brief Return numpy array containing circular (default) or square pupil PSF with low-order
+    aberrations.
 
-    Image has unit total flux, and is centred on the image[array_shape[0] / 2, array_shape[1] / 2]
+    The PSF has unit total flux, and is centred on the array[array_shape[0] / 2, array_shape[1] / 2]
     pixel, by default.  Function is bandlimited at kmax (default = pi; Nyquist frequency).
 
     Ouput numpy array is C-contiguous.
 
-    \param array_shape [2 element tuple] Optional: the Numpy array shape desired for the PSF.
-    \param defocus [float] Optional: defocus in units of incident light wavelength.
-    \param astig1 [float] Optional: first component of astigmatism (like e1) in units of incident light wavelength.
-    \param astig2 [float] Optional: second component of astigmatism (like e2) in units of incident light wavelength.
-    \param coma1 [float] Optional: coma along x in units of incident light wavelength.
-    \param coma2 [float] Optional: coma along y in units of incident light wavelength.
-    \param spher [float] Optional: spherical aberration in units of incident light wavelength.
-    \param kmax [float] Optional: bandlimit of output PSF scaled so that the Nyquist frequency of an image with unit integer pixel spacing is pi.
-    \param circular_pupil [Boolean] Optional: adopt a circular pupil?
-    \param secondary [Boolean] Optional: central obstruction due to secondary mirror?
-    
+    Parameters
+    ----------
+    @param array_shape     the Numpy array shape desired for the output array.
+    @aram defocus          defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param kmax            bandlimit of output PSF scaled so that the Nyquist frequency of an image
+                           with unit integer pixel spacing is pi.
+    @param circular_pupil  adopt a circular pupil?
+    @param secondary       add a central obstruction due to secondary mirror?
     """
     if secondary == None:  # TODO: Build a secondary mirror obstruction function!
         wf = wavefront(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
@@ -159,26 +216,58 @@ def psf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
     im = roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
     return im / im.sum()
 
+def psf_image(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
+              spher=0., kmax=np.pi, circular_pupil=True):
+    """@brief Return circular (default) or square pupil PSF with low-order aberrations as an ImageD.
+
+    The PSF has unit total flux, and is centred on the array[array_shape[0] / 2, array_shape[1] / 2]
+    pixel, by default.  Function is bandlimited at kmax (default = pi; Nyquist frequency).
+
+    Parameters
+    ----------
+    @param array_shape     the Numpy array shape desired for the array view on the Image.
+    @aram defocus          defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param kmax            bandlimit of output PSF scaled so that the Nyquist frequency of an image
+                           with unit integer pixel spacing is pi.
+    @param circular_pupil  adopt a circular pupil?
+    @param secondary       add a central obstruction due to secondary mirror?
+    """
+    array = psf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
+                coma1=coma1, coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil)
+    return galsim.ImageD(array)
+
 def otf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, secondary=None):
-    """Return the complex OTF of a circular (default) or square pupil with specified low-order wavefront aberrations.
+    """@brief Return the complex OTF of a circular (default) or square pupil with low-order
+    aberrations as a numpy array.
 
     OTF has otf[0, 0] = 1+0j by default, and array element ordering follows the DFT standard of
     kxky(array_shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
 
-    Output complex numpy array is C-contiguous, but real and imaginary parts from otf.real or
-    otf.imag will not be.
-
-    \param array_shape [2 element tuple] Optional: the Numpy array shape desired for the OTF.
-    \param defocus [float] Optional: defocus in units of incident light wavelength.
-    \param astig1 [float] Optional: first component of astigmatism (like e1) in units of incident light wavelength.
-    \param astig2 [float] Optional: second component of astigmatism (like e2) in units of incident light wavelength.
-    \param coma1 [float] Optional: coma along x in units of incident light wavelength.
-    \param coma2 [float] Optional: coma along y in units of incident light wavelength.
-    \param spher [float] Optional: spherical aberration in units of incident light wavelength.
-    \param kmax [float] Optional: bandlimit of output PSF scaled so that the Nyquist frequency of an image with unit integer pixel spacing is pi.
-    \param circular_pupil [Boolean] Optional: adopt a circular pupil?
-    \param secondary [Boolean] Optional: central obstruction due to secondary mirror?   
+    Output complex numpy array is C-contiguous.
+    
+    Parameters
+    ----------
+    @param array_shape     the Numpy array shape desired for the output array.
+    @aram defocus          defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param kmax            bandlimit of output PSF scaled so that the Nyquist frequency of an image
+                           with unit integer pixel spacing is pi.
+    @param circular_pupil  adopt a circular pupil?
+    @param secondary       add a central obstruction due to secondary mirror?
     """
     if secondary == None:  # TODO: Build a secondary mirror obstruction function!
         wf = wavefront(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
@@ -188,54 +277,121 @@ def otf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
         raise NotImplementedError('Secondary mirror obstruction not yet implemented')
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     otf = np.fft.ifft2((ftwf * ftwf.conj()).real)
-    # Make C contiguous and unit flux before returning
+    # Make unit flux before returning
     return np.ascontiguousarray(otf) / otf[0, 0].real
+
+def otf_image(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
+              spher=0., kmax=np.pi, circular_pupil=True):
+    """@brief Return the complex OTF of a circular (default) or square pupil with low-order
+    aberrations as a (real, imag) tuple of ImageD objects rather than a complex numpy array.
+
+    OTF has otf[0, 0] = 1+0j by default, and array element ordering follows the DFT standard of
+    kxky(array_shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
+    
+    Parameters
+    ----------
+    @param array_shape     the Numpy array shape desired for array views into image.
+    @aram defocus          defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param kmax            bandlimit of output PSF scaled so that the Nyquist frequency of an image
+                           with unit integer pixel spacing is pi.
+    @param circular_pupil  adopt a circular pupil?
+    @param secondary       add a central obstruction due to secondary mirror?
+    """
+    array = otf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
+                coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil)
+    return (galsim.ImageD(np.ascontiguousarray(array.real)),
+            galsim.ImageD(np.ascontiguousarray(array.imag)))
 
 def mtf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, secondary=None):
-    """Return the MTF of a circular (default) or square pupil with specified low-order
-    wavefront aberrations.
+    """@brief Return numpy array containing the MTF of a circular (default) or square pupil with
+    low-order aberrations.
 
     MTF has mtf[0, 0] = 1 by default, and array element ordering follows the DFT standard of
     kxky(array_shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
 
     Output float numpy array is C-contiguous.
 
-    \param array_shape [2 element tuple] Optional: the Numpy array shape desired for the MTF.
-    \param defocus [float] Optional: defocus in units of incident light wavelength.
-    \param astig1 [float] Optional: first component of astigmatism (like e1) in units of incident light wavelength.
-    \param astig2 [float] Optional: second component of astigmatism (like e2) in units of incident light wavelength.
-    \param coma1 [float] Optional: coma along x in units of incident light wavelength.
-    \param coma2 [float] Optional: coma along y in units of incident light wavelength.
-    \param spher [float] Optional: spherical aberration in units of incident light wavelength.
-    \param kmax [float] Optional: bandlimit of output PSF scaled so that the Nyquist frequency of an image with unit integer pixel spacing is pi.
-    \param circular_pupil [Boolean] Optional: adopt a circular pupil?
-    \param secondary [Boolean] Optional: central obstruction due to secondary mirror?  
+    Parameters
+    ----------
+    @param array_shape     the Numpy array shape desired for the output array.
+    @aram defocus          defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param kmax            bandlimit of output PSF scaled so that the Nyquist frequency of an image
+                           with unit integer pixel spacing is pi.
+    @param circular_pupil  adopt a circular pupil?
+    @param secondary       add a central obstruction due to secondary mirror?
     """
     return np.abs(otf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
                       coma1=coma1, coma2=coma2, spher=spher, kmax=kmax,
                       circular_pupil=circular_pupil))
 
+def mtf_image(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
+              spher=0., kmax=np.pi, circular_pupil=True, secondary=None):
+    """@brief Return the MTF of a circular (default) or square pupil with low-order aberrations as
+    an ImageD.
+
+    MTF array has mtf[0, 0] = 1 by default, and array element ordering follows the DFT standard of
+    kxky(array_shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
+
+    Parameters
+    ----------
+    @param array_shape     the Numpy array shape desired for the array view on the Image.
+    @aram defocus          defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param kmax            bandlimit of output PSF scaled so that the Nyquist frequency of an image
+                           with unit integer pixel spacing is pi.
+    @param circular_pupil  adopt a circular pupil?
+    @param secondary       add a central obstruction due to secondary mirror?
+    """
+    array = mtf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
+                coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil)
+    return galsim.ImageD(array)
+
 def ptf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, secondary=None):
-    """Return the PTF (in radians) of a circular (default) or square pupil with specified
-    low-order wavefront aberrations.
+    """@brief Return numpy array containing the PTF [radians] of a circular (default) or square
+    pupil with low-order aberrations.
 
-    PTF has ptf[0, 0] = 0 by default, and array element ordering follows the DFT standard of
+    PTF array has ptf[0, 0] = 0 by default, and array element ordering follows the DFT standard of
     kxky(array_shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
 
     Output float numpy array is C-contiguous.
 
-    \param array_shape [2 element tuple] Optional: the Numpy array shape desired for the PTF.
-    \param defocus [float] Optional: defocus in units of incident light wavelength.
-    \param astig1 [float] Optional: first component of astigmatism (like e1) in units of incident light wavelength.
-    \param astig2 [float] Optional: second component of astigmatism (like e2) in units of incident light wavelength.
-    \param coma1 [float] Optional: coma along x in units of incident light wavelength.
-    \param coma2 [float] Optional: coma along y in units of incident light wavelength.
-    \param spher [float] Optional: spherical aberration in units of incident light wavelength.
-    \param kmax [float] Optional: bandlimit of output PSF scaled so that the Nyquist frequency of an image with unit integer pixel spacing is pi.
-    \param circular_pupil [Boolean] Optional: adopt a circular pupil?
-    \param secondary [Boolean] Optional: central obstruction due to secondary mirror? 
+    Parameters
+    ----------
+    @param array_shape     the Numpy array shape desired for the output array.
+    @aram defocus          defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param kmax            bandlimit of output PSF scaled so that the Nyquist frequency of an image
+                           with unit integer pixel spacing is pi.
+    @param circular_pupil  adopt a circular pupil?
+    @param secondary       add a central obstruction due to secondary mirror?
     """
     kx, ky = kxky(array_shape)
     k2 = (kx**2 + ky**2)
@@ -245,4 +401,32 @@ def ptf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
                                      astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
                                      kmax=kmax, circular_pupil=circular_pupil)[k2 < kmax**2])
     return ptf
+
+def ptf_image(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
+              spher=0., kmax=np.pi, circular_pupil=True, secondary=None):
+    """@brief Return the PTF [radians] of a circular (default) or square pupil with low-order
+    aberrations as an ImageD.
+
+    PTF array has ptf[0, 0] = 0 by default, and array element ordering follows the DFT standard of
+    kxky(array_shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
+
+    Parameters
+    ----------
+    @param array_shape     the Numpy array shape desired for the array view on the Image.
+    @aram defocus          defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param kmax            bandlimit of output PSF scaled so that the Nyquist frequency of an image
+                           with unit integer pixel spacing is pi.
+    @param circular_pupil  adopt a circular pupil?
+    @param secondary       add a central obstruction due to secondary mirror?
+    """
+    array = ptf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
+                coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil)
+    return galsim.ImageD(array)
 

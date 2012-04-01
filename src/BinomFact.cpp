@@ -30,12 +30,12 @@ namespace galsim {
         static bool first=true;
         if (first) {
             f[0] = f[1] = 1.;
-            for(int j=2;j<10;j++) f[j] = f[j-1]*sqrt((double)j);
+            for(int j=2;j<10;j++) f[j] = f[j-1]*std::sqrt((double)j);
             first = false;
         }
         if (i>=(int)f.size())
             for(int j=f.size();j<=i;j++)
-                f.push_back(f[j-1]*sqrt((double)j));
+                f.push_back(f[j-1]*std::sqrt((double)j));
         assert(i<(int)f.size());
         return f[i];
     }
@@ -72,12 +72,12 @@ namespace galsim {
         static std::vector<double> f(10);
         static bool first=true;
         if (first) {
-            for(int j=0;j<10;j++) f[j] = sqrt((double)j);
+            for(int j=0;j<10;j++) f[j] = std::sqrt((double)j);
             first = false;
         }
         if (i>=(int)f.size())
             for(int j=f.size();j<=i;j++)
-                f.push_back(sqrt((double)j));
+                f.push_back(std::sqrt((double)j));
         assert(i<(int)f.size());
         return f[i];
     }
