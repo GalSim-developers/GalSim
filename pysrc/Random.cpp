@@ -104,8 +104,8 @@ struct PyGaussianDeviate {
             "\n"
             ;
         bp::class_<GaussianDeviate,boost::noncopyable>(
-            "GaussianDeviate", doc, bp::init< UniformDeviate&, bp::optional<double, double> >(
-                (bp::arg("uniform"), bp::arg("mean"), bp::arg("sigma"))
+            "GaussianDeviate", doc, bp::init< UniformDeviate&, double, double >(
+                (bp::arg("uniform"), bp::arg("mean")=0., bp::arg("sigma")=1.)
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as GaussianDeviate lives
             ]
@@ -161,8 +161,8 @@ struct PyBinomialDeviate {
             "\n"
             ;
         bp::class_<BinomialDeviate,boost::noncopyable>(
-            "BinomialDeviate", doc, bp::init< UniformDeviate&, bp::optional<double, double> >(
-                (bp::arg("uniform"), bp::arg("N"), bp::arg("p"))
+            "BinomialDeviate", doc, bp::init< UniformDeviate&, double, double >(
+                (bp::arg("uniform"), bp::arg("N")=1., bp::arg("p")=0.5)
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as BinomialDeviate lives
             ]
@@ -213,8 +213,8 @@ struct PyPoissonDeviate {
             "\n"
             ;
         bp::class_<PoissonDeviate,boost::noncopyable>(
-            "PoissonDeviate", doc, bp::init< UniformDeviate&, bp::optional<double> >(
-                (bp::arg("uniform"), bp::arg("mean"))
+            "PoissonDeviate", doc, bp::init< UniformDeviate&, double >(
+                (bp::arg("uniform"), bp::arg("mean")=1.)
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as PoissonDeviate lives
             ]
