@@ -86,16 +86,16 @@ struct PyGaussianDeviate {
             "\n"
             "Initialization\n"
             "----------------\n"
-            ">>> g = GaussianDeviate(u, mean=0., sigma=1.) \n"
+            ">>> g = GaussianDeviate(uniform, mean=0., sigma=1.) \n"
             "\n"
             "Initializes g to be a GaussianDeviate instance, and repeated calls to g() will\n"
             "return successive, psuedo-random Gaussian deviates with specified mean and sigma.\n"
             "\n"
             "Parameters:\n"
             "\n"
-            "u       a UniformDeviate instance (seed set there).\n"
-            "mean    semi-optional mean for Gaussian distribution (default = 0.).\n"
-            "sigma   optional sigma for Gaussian distribution (default = 1.).\n"
+            "uniform  a UniformDeviate instance (seed set there).\n"
+            "mean     semi-optional mean for Gaussian distribution (default = 0.).\n"
+            "sigma    optional sigma for Gaussian distribution (default = 1.).\n"
             "\n"
             "The mean parameter is semi-optional: an ArgumentError exception will be raised if\n"
             "sigma alone is specified without an accompanying mean. However, reversing their\n"
@@ -105,7 +105,7 @@ struct PyGaussianDeviate {
             ;
         bp::class_<GaussianDeviate,boost::noncopyable>(
             "GaussianDeviate", doc, bp::init< UniformDeviate&, bp::optional<double, double> >(
-                (bp::arg("u_"), bp::arg("mean"), bp::arg("sigma"))
+                (bp::arg("uniform"), bp::arg("mean"), bp::arg("sigma"))
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as GaussianDeviate lives
             ]
@@ -144,16 +144,16 @@ struct PyBinomialDeviate {
             "\n"
             "Initialization\n"
             "----------------\n"
-            ">>> b = BinomialDeviate(u, N=1., p=0.5) \n"
+            ">>> b = BinomialDeviate(uniform, N=1., p=0.5) \n"
             "\n"
             "Initializes b to be a GaussianDeviate instance, and repeated calls to b() will\n"
             "return successive, psuedo-random Binomial deviates with specified N and p.\n"
             "\n"
             "Parameters:\n"
             "\n"
-            "u       a UniformDeviate instance (seed set there).\n"
-            "N       number of 'coin flips' per trial (default `N = 1`).\n"
-            "p       probability of success per coin flip (default `p = 0.5`).\n"
+            "uniform  a UniformDeviate instance (seed set there).\n"
+            "N        number of 'coin flips' per trial (default `N = 1`).\n"
+            "p        probability of success per coin flip (default `p = 0.5`).\n"
             "\n"
             "The N parameter is semi-optional: an ArgumentError exception will be raised if p\n"
             "alone is specified without an accompanying N. However, reversing their ordering is\n"
@@ -162,7 +162,7 @@ struct PyBinomialDeviate {
             ;
         bp::class_<BinomialDeviate,boost::noncopyable>(
             "BinomialDeviate", doc, bp::init< UniformDeviate&, bp::optional<double, double> >(
-                (bp::arg("u_"), bp::arg("N"), bp::arg("p"))
+                (bp::arg("uniform"), bp::arg("N"), bp::arg("p"))
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as BinomialDeviate lives
             ]
@@ -201,20 +201,20 @@ struct PyPoissonDeviate {
             "\n"
             "Initialization\n"
             "----------------\n"
-            ">>> p = PoissonDeviate(u, mean=1.)\n"
+            ">>> p = PoissonDeviate(uniform, mean=1.)\n"
             "\n"
             "Initializes p to be a PoissonDeviate instance, and repeated calls to p() will\n"
             "return successive, psuedo-random Poisson deviates with specified mean.\n"
             "\n"
             "Parameters:\n"
             "\n"
-            "u       a UniformDeviate instance (seed set there).\n"
-            "mean    mean of the distribution (default `mean = 1`).\n"
+            "uniform  a UniformDeviate instance (seed set there).\n"
+            "mean     mean of the distribution (default `mean = 1`).\n"
             "\n"
             ;
         bp::class_<PoissonDeviate,boost::noncopyable>(
             "PoissonDeviate", doc, bp::init< UniformDeviate&, bp::optional<double> >(
-                (bp::arg("u_"), bp::arg("mean"))
+                (bp::arg("uniform"), bp::arg("mean"))
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as PoissonDeviate lives
             ]
