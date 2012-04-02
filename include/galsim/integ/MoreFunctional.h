@@ -1,3 +1,11 @@
+/**
+ * @file MoreFunctional.h
+ *
+ * @brief Some additional functional operators that aren't in the standard library's
+ *        <functional> but should be.
+ */
+
+
 #ifndef MoreFuncH
 #define MoreFuncH
 

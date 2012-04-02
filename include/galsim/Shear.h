@@ -57,16 +57,16 @@ namespace galsim {
 
         double getE1() const { return e1; }
         double getE2() const { return e2; }
-        double getE() const { return sqrt(e1*e1+e2*e2); }
+        double getE() const { return std::sqrt(e1*e1+e2*e2); }
         double getESq() const { return e1*e1+e2*e2; }
-        double getBeta() const { return atan2(e2,e1)*0.5; }
-        double getEta() const { return atanh(sqrt(e1*e1+e2*e2)); } //error checking?
+        double getBeta() const { return std::atan2(e2,e1)*0.5; }
+        double getEta() const { return atanh(std::sqrt(e1*e1+e2*e2)); } //error checking?
 
         // g = gamma / (1-kappa)
         double getG() const 
         {
             double e=getE();  
-            return e>0. ? (1-sqrt(1-e*e))/e : 0.;
+            return e>0. ? (1-std::sqrt(1-e*e))/e : 0.;
         }
 
         void getEta1Eta2(double& eta1, double& eta2) const;
@@ -162,15 +162,15 @@ namespace galsim {
         explicit Ellipse(
             double e1=0., double e2=0., double _m=0., 
             double _x=0., double _y=0.) : s(e1,e2), mu(_m), x0(_x,_y) 
-        { expmu=exp(mu); }
+        { expmu=std::exp(mu); }
 
         Ellipse(const Shear& _s, double _mu, const Position<double> _p) :
             s(_s), mu(_mu), x0(_p) 
-        { expmu=exp(mu); }
+        { expmu=std::exp(mu); }
 
         Ellipse(const Ellipse& rhs) : 
             s(rhs.s), mu(rhs.mu), x0(rhs.x0) 
-        { expmu=exp(mu); }
+        { expmu=std::exp(mu); }
 
         const Ellipse& operator=(const Ellipse& rhs) 
         {
@@ -191,10 +191,10 @@ namespace galsim {
         { return (mu!=rhs.mu || x0!=rhs.x0 || s != rhs.s); }
 
         void reset(double e1=0., double e2=0., double _m=0., double _x=0., double _y=0.) 
-        { s.setE1E2(e1,e2); mu=_m; expmu=exp(mu); x0.x=_x; x0.y=_y; }
+        { s.setE1E2(e1,e2); mu=_m; expmu=std::exp(mu); x0.x=_x; x0.y=_y; }
 
         void reset(const Shear& _s, double _mu, const Position<double> _p) 
-        { s=_s; mu=_mu; expmu=exp(mu); x0=_p; }
+        { s=_s; mu=_mu; expmu=std::exp(mu); x0=_p; }
 
         Position<double> fwd(const Position<double> x) const 
         { return (s.fwd(x)*expmu + x0); }
@@ -203,7 +203,7 @@ namespace galsim {
         { return s.inv((x-x0)/expmu); }
 
         Ellipse& setS(const Shear& _s) { s=_s; return *this; }
-        Ellipse& setMu(const double& _m) { mu=_m; expmu=exp(mu); return *this; }
+        Ellipse& setMu(const double& _m) { mu=_m; expmu=std::exp(mu); return *this; }
         Ellipse& setX0(const Position<double>& _x) { x0=_x; return *this; }
 
         Shear getS() const { return s; }
@@ -212,8 +212,8 @@ namespace galsim {
 
         // Calculate major, minor axes & PA of ellipse
         // resulting from source-plane circle:
-        double getMajor() const { return exp(mu+s.getEta()/2); }
-        double getMinor() const { return exp(mu-s.getEta()/2); }
+        double getMajor() const { return std::exp(mu+s.getEta()/2); }
+        double getMinor() const { return std::exp(mu-s.getEta()/2); }
         double getBeta() const { return s.getBeta(); }
 
         // Return a rectangle that circumscribes this ellipse (times nSigma)

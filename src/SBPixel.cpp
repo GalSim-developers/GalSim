@@ -52,7 +52,7 @@ namespace galsim {
         if (padFactor <= 0.) padFactor = OVERSAMPLE_X;
         // Choose the padded size for input array - size 2^N or 3*2^N
         // Make FFT either 2^n or 3x2^n
-        Nk = goodFFTSize(static_cast<int> (floor(padFactor*Ninitial)));
+        Nk = goodFFTSize(static_cast<int> (std::floor(padFactor*Ninitial)));
         dk = TWOPI / (Nk*dx);
 
         // allocate xTables
@@ -105,16 +105,12 @@ namespace galsim {
         if (ksumValid) *ksum *= factor;
     }
 
-    double SBPixel::centroidX() const 
+    Position<double> SBPixel::centroid() const 
     {
         checkReady();
-        return (wts * xFluxes) / (wts*fluxes);
-    }
-
-    double SBPixel::centroidY() const 
-    {
-        checkReady();
-        return (wts * yFluxes) / (wts*fluxes);
+        double wtsfluxes = wts * fluxes;
+        Position<double> p((wts * xFluxes) / wtsfluxes, (wts * yFluxes) / wtsfluxes);
+        return p;
     }
 
     void SBPixel::setPixel(double value, int ix, int iy, int iz) 
@@ -171,8 +167,8 @@ namespace galsim {
                 }
             }
             fluxes[i] = sum*dx*dx;
-            xFluxes[i] = sumx * pow(dx, 3.);
-            yFluxes[i] = sumy * pow(dx, 3.);
+            xFluxes[i] = sumx * std::pow(dx, 3.);
+            yFluxes[i] = sumy * std::pow(dx, 3.);
 
             // Conduct FFT
             vk.push_back( vx[i]->transform());
@@ -297,9 +293,9 @@ namespace galsim {
     {
         // Don't bother if the desired k value is cut off by the x interpolant:
         double ux = p.x*dx/TWOPI;
-        if (abs(ux) > xInterp->urange()) return std::complex<double>(0.,0.);
+        if (std::abs(ux) > xInterp->urange()) return std::complex<double>(0.,0.);
         double uy = p.y*dx/TWOPI;
-        if (abs(uy) > xInterp->urange()) return std::complex<double>(0.,0.);
+        if (std::abs(uy) > xInterp->urange()) return std::complex<double>(0.,0.);
         double xKernelTransform = xInterp->uval(ux, uy);
 
         checkKsum();
@@ -310,13 +306,13 @@ namespace galsim {
     double SBPixel::xValue(Position<double> p) const 
     {
         // Interpolate WITHOUT wrapping the image.
-        int ixMin = static_cast<int> ( ceil(p.x/dx - xInterp->xrange()));
+        int ixMin = static_cast<int> ( std::ceil(p.x/dx - xInterp->xrange()));
         ixMin = std::max(ixMin, -Ninitial/2);
-        int ixMax = static_cast<int> ( floor(p.x/dx + xInterp->xrange()));
+        int ixMax = static_cast<int> ( std::floor(p.x/dx + xInterp->xrange()));
         ixMax = std::min(ixMax, Ninitial/2-1);
-        int iyMin = static_cast<int> ( ceil(p.y/dx - xInterp->xrange()));
+        int iyMin = static_cast<int> ( std::ceil(p.y/dx - xInterp->xrange()));
         iyMin = std::max(iyMin, -Ninitial/2);
-        int iyMax = static_cast<int> ( floor(p.y/dx + xInterp->xrange()));
+        int iyMax = static_cast<int> ( std::floor(p.y/dx + xInterp->xrange()));
         iyMax = std::min(iyMax, Ninitial/2-1);
 
         if (ixMax < ixMin || iyMax < iyMin) return 0.;  // kernel does not overlap data
@@ -345,16 +341,16 @@ namespace galsim {
 
         // Don't bother if the desired k value is cut off by the x interpolant:
         double ux = p.x*dx/TWOPI;
-        if (abs(ux) > xInterp->urange()) return std::complex<double>(0.,0.);
+        if (std::abs(ux) > xInterp->urange()) return std::complex<double>(0.,0.);
         double uy = p.y*dx/TWOPI;
-        if (abs(uy) > xInterp->urange()) return std::complex<double>(0.,0.);
+        if (std::abs(uy) > xInterp->urange()) return std::complex<double>(0.,0.);
         double xKernelTransform = xInterp->uval(ux, uy);
 
         // Range of k points within kernel
-        int ixMin = static_cast<int> (ceil(p.x/dk - kInterp->xrange()));
-        int ixMax = static_cast<int> (floor(p.x/dk + kInterp->xrange()));
-        int iyMin = static_cast<int> (ceil(p.y/dk - kInterp->xrange()));
-        int iyMax = static_cast<int> (floor(p.y/dk + kInterp->xrange()));
+        int ixMin = static_cast<int> (std::ceil(p.x/dk - kInterp->xrange()));
+        int ixMax = static_cast<int> (std::floor(p.x/dk + kInterp->xrange()));
+        int iyMin = static_cast<int> (std::ceil(p.y/dk - kInterp->xrange()));
+        int iyMax = static_cast<int> (std::floor(p.y/dk + kInterp->xrange()));
 
         int ixLast = std::min(ixMax, ixMin+Nk-1);
         int iyLast = std::min(iyMax, iyMin+Nk-1);

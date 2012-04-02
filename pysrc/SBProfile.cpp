@@ -67,8 +67,6 @@ struct PySBProfile {
             .def("isAxisymmetric", &SBProfile::isAxisymmetric)
             .def("isAnalyticX", &SBProfile::isAnalyticX,
                  "True if real-space values can be determined immediately at any position with FT")
-            .def("centroidX", &SBProfile::centroidX)
-            .def("centroidY", &SBProfile::centroidY)
             .def("centroid", &SBProfile::centroid)
             .def("getFlux", &SBProfile::getFlux)
             .def("setFlux", &SBProfile::setFlux)
@@ -231,7 +229,7 @@ struct PySBAiry {
         bp::class_<SBAiry,bp::bases<SBProfile>,boost::noncopyable>(
             "SBAiry",
             bp::init<double,double,double>(
-                (bp::arg("D")=1., bp::arg("obs")=1., bp::arg("flux")=1.)
+                (bp::arg("D")=1., bp::arg("obs")=0., bp::arg("flux")=1.)
             )
         );
     }
