@@ -1,5 +1,11 @@
 #include "boost/python.hpp"
 #include "Random.h"
+#include "CcdNoise.h"
+#include "Image.h"
+
+#define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
+#define NO_IMPORT_ARRAY
+#include "numpy/arrayobject.h"
 
 /*
  * Barney's note 24Mar12: currently these only generate single instances of each random deviate.
@@ -13,6 +19,20 @@ namespace bp = boost::python;
 
 namespace galsim {
 namespace {
+
+template <typename T> struct NumPyTraits;
+template <> struct NumPyTraits<npy_short> { static int getCode() { return NPY_SHORT; } };
+template <> struct NumPyTraits<npy_int> { static int getCode() { return NPY_INT; } };
+template <> struct NumPyTraits<npy_float> { static int getCode() { return NPY_FLOAT; } };
+template <> struct NumPyTraits<npy_double> { static int getCode() { return NPY_DOUBLE; } };
+
+// return the NumPy type for a C++ class (e.g. float -> numpy.float32)
+template <typename T>
+bp::object getNumPyType() {
+    bp::handle<> h(reinterpret_cast<PyObject*>(PyArray_DescrFromType(NumPyTraits<T>::getCode())));
+    return bp::object(h).attr("type");
+}
+
 
 struct PyUniformDeviate {
 
@@ -31,7 +51,7 @@ struct PyUniformDeviate {
             "code!\n"
             "\n"
             "Initialization\n"
-            "----------------\n"
+            "--------------\n"
             ">>> u = UniformDeviate() : Initializes u to be a UniformDeviate instance, and seeds\n"
             "                           the PRNG using current time.\n"
             "\n"
@@ -85,7 +105,7 @@ struct PyGaussianDeviate {
             "UniformDeviate is given once at construction, and copy/assignment are hidden.\n"
             "\n"
             "Initialization\n"
-            "----------------\n"
+            "--------------\n"
             ">>> g = GaussianDeviate(u, mean=0., sigma=1.) \n"
             "\n"
             "Initializes g to be a GaussianDeviate instance, and repeated calls to g() will\n"
@@ -143,7 +163,7 @@ struct PyBinomialDeviate {
             "UniformDeviate is given once at construction, and copy/assignment are hidden.\n"
             "\n"
             "Initialization\n"
-            "----------------\n"
+            "--------------\n"
             ">>> b = BinomialDeviate(u, N=1., p=0.5) \n"
             "\n"
             "Initializes b to be a GaussianDeviate instance, and repeated calls to b() will\n"
@@ -200,7 +220,7 @@ struct PyPoissonDeviate {
             "UniformDeviate is given once at construction, and copy/assignment are hidden.\n"
             "\n"
             "Initialization\n"
-            "----------------\n"
+            "--------------\n"
             ">>> p = PoissonDeviate(u, mean=1.)\n"
             "\n"
             "Initializes p to be a PoissonDeviate instance, and repeated calls to p() will\n"
@@ -230,6 +250,63 @@ struct PyPoissonDeviate {
 
 };
 
+template <typename T>
+struct PyCcdNoise{
+
+    static void wrap() {
+
+        static char const * doc = 
+            "\n"
+            "Pseudo-random number generator with a basic CCD noise model.\n"
+            "\n"
+            "A CcdNoise instance is given a 'read noise' and gain level.  With these parameters\n" 
+            "set, it can operate on an Image by adding noise to each pixel.  The noise has two\n"
+            "components:\n" 
+            "    1) a Poisson deviate with variance equal to (max(pixel value, 0) / gain);\n"
+            "    2) Gaussian noise with RMS value of (readNoise / gain).\n"
+            "\n"
+            "The class must be given a reference to a UniformDeviate when constructed, which will\n"
+            "be the source of random values for the noise implementation.\n"
+            "\n"
+            "Initialization\n"
+            "--------------\n"
+            ">>> ccd_noise = CcdNoise(uniform, gain=1., readnoise=0.)\n"
+            "\n"
+            "Initializes ccd_noise to be a CcdNoise instance.  Subsequent calls with galsim.Image\n"
+            "instances will add noise following this model to that Image.\n"
+            "\n"
+            "Parameters:\n"
+            "\n"
+            "gain      the gain for each pixel; setting gain <=0 will shut off the Poisson noise,\n"
+            "          and the Gaussian RMS will take the value RMS=readNoise.\n"
+            "reanoise  the read noise on each pixel; setting readNoise=0 will shut off the\n"
+            "          Gaussian noise.\n"
+            "\n"
+            ;
+        bp::class_<CcdNoise,boost::noncopyable>(
+            "CcdNoise", doc, bp::init< UniformDeviate&, double, double >(
+                (bp::arg("uniform"), bp::arg("gain")=1., bp::arg("readnoise")=0.)
+            )[
+                bp::with_custodian_and_ward<1,2>() // keep uniform (2) as long as CcdNoise lives
+            ]
+            )
+            .def("__call__", (void (CcdNoise::*) (Image <T> &) )&CcdNoise::operator(),
+                 "Add noise to an input Image.\n"
+                 "\n"
+                 "On output the Image will have been given an additional stochastic noise\n"
+                 "according to the gain and read noise settings.\n",
+                 (bp::arg("Image")))
+            .def("getGain", &CcdNoise::getGain, "Get gain in current noise model.")
+            .def("setGain", &CcdNoise::setGain, "Set gain in current noise model.")
+            .def("getReadNoise", &CcdNoise::getReadNoise, 
+                 "Get read noise in current noise model.")
+            .def("setReadNoise", &CcdNoise::setReadNoise, 
+                 "Set read noise in current noise model.")
+            ;
+    }
+
+};
+
 
 } // anonymous
 
@@ -238,6 +315,7 @@ void pyExportRandom() {
     PyGaussianDeviate::wrap();
     PyBinomialDeviate::wrap();
     PyPoissonDeviate::wrap();
+    PyCcdNoise::wrap();
 }
 
 } // namespace galsim
