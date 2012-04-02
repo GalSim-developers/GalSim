@@ -13,7 +13,7 @@ class GSObject:
     # the SBP level but this scheme would demand that changes to SBProfile are kept updated here.
     #
     # The alternative is for these methods to always be accessed from the top level 
-    # via GSWhatever.SBProfile.method(), which I guess makes it explicit what is going on, but
+    # via Whatever.SBProfile.method(), which I guess makes it explicit what is going on, but
     # is starting to get clunky...
     #
     # Will add method specific docstrings later if we go for this overall layout
@@ -86,9 +86,9 @@ class GSObject:
 # with the C++ SBProfile class rather than an "is a"... The __init__ method is very simple and all
 # the GSObject methods & attributes are inherited.
 # 
-# In particular, the SBGaussian is now an attribute of the GSGaussian, an attribute named 
+# In particular, the SBGaussian is now an attribute of the Gaussian, an attribute named 
 # "SBProfile", which can be queried for type as desired.
-class GSGaussian(GSObject):
+class Gaussian(GSObject):
     """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
     """
     def __init__(self, flux=1., sigma=1.):
@@ -102,8 +102,7 @@ class GSGaussian(GSObject):
     # def setSigma(self, sigma):
     #     return self.SBProfile.setSigma(sigma)
 
-
-class GSMoffat(GSObject):
+class Moffat(GSObject):
     """GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
     def __init__(self, beta, truncationFWHM=2., flux=1., re=1.):
@@ -114,8 +113,7 @@ class GSMoffat(GSObject):
     #     return self.SBProfile.getBeta()
     # ...etc.
 
-
-class GSSersic(GSObject):
+class Sersic(GSObject):
     """GalSim Sersic, which has an SBSersic in the SBProfile attribute.
     """
     def __init__(self, n, flux=1., re=1.):
@@ -123,7 +121,7 @@ class GSSersic(GSObject):
     # Ditto!
 
 
-class GSExponential(GSObject):
+class Exponential(GSObject):
     """GalSim Exponential, which has an SBExponential in the SBProfile attribute.
     """
     def __init__(self, flux=1., r0=1.):
@@ -131,7 +129,7 @@ class GSExponential(GSObject):
     # Ditto!
 
 
-class GSAiry(GSObject):
+class Airy(GSObject):
     """GalSim Airy, which has an SBAiry in the SBProfile attribute.
     """
     def __init__(self, D=1., obs=0., flux=1.):
