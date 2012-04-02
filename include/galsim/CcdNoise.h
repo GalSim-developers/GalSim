@@ -3,7 +3,7 @@
 #define IMAGENOISE_H
 
 /** 
- * @file CcdNoise.h @brief Add noise to image using standard CCD model
+ * @file CcdNoise.h @brief Add noise to image using standard CCD model.
  *
  */
 
@@ -23,7 +23,8 @@ namespace galsim {
      * be given a reference to a UniformDeviate when constructed, which will be the source
      * of random values for the noise implementation.
      * readNoise=0 will shut off the Gaussian noise.
-     * gain<=0 will shut off the Poisson noise, and Gaussian value will just have value RMS=readNoise.
+     * gain<=0 will shut off the Poisson noise, and Gaussian value will just have value 
+     * RMS=readNoise.
      */
     class CcdNoise {
     private: 
