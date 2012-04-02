@@ -19,13 +19,13 @@ def printval(image1, image2):
     getmoments(image2)
 
 def getmoments(image1):
-    xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0])+image1.getXMin(), 
-                               np.arange(np.shape(image1.array)[1])+image1.getYMin())
-    mx = np.mean(xgrid*image1.array) / np.mean(image1.array)
-    my = np.mean(ygrid*image1.array) / np.mean(image1.array)
-    mxx = np.mean(((xgrid-mx)**2)*image1.array) / np.mean(image1.array)
-    myy = np.mean(((ygrid-my)**2)*image1.array) / np.mean(image1.array)
-    mxy = np.mean((xgrid-mx)*(ygrid-my)*image1.array) / np.mean(image1.array)
+    xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0]) + image1.getXMin(), 
+                               np.arange(np.shape(image1.array)[1]) + image1.getYMin())
+    mx = np.mean(xgrid * image1.array) / np.mean(image1.array)
+    my = np.mean(ygrid * image1.array) / np.mean(image1.array)
+    mxx = np.mean(((xgrid-mx)**2) * image1.array) / np.mean(image1.array)
+    myy = np.mean(((ygrid-my)**2) * image1.array) / np.mean(image1.array)
+    mxy = np.mean((xgrid-mx) * (ygrid-my) * image1.array) / np.mean(image1.array)
     print "    ", mx-image1.getXMin(), my-image1.getYMin(), mxx, myy, mxy
 
 def test_sbprofile_gaussian():
