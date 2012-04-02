@@ -182,10 +182,10 @@ struct PyBinomialDeviate {
                  "Draw a new random number from the distribution.\n"
                  "\n"
                  "Returns a Binomial deviate with current N and p.\n")
-            .def("getN", &GaussianDeviate::getMean, "Get current distribution N.")
-            .def("setN", &GaussianDeviate::setMean, "Set current distribution N.")
-            .def("getP", &GaussianDeviate::getSigma, "Get current distribution p.")
-            .def("setP", &GaussianDeviate::setSigma, "Set current distribution p.")
+            .def("getN", &BinomialDeviate::getN, "Get current distribution N.")
+            .def("setN", &BinomialDeviate::setN, "Set current distribution N.")
+            .def("getP", &BinomialDeviate::getP, "Get current distribution p.")
+            .def("setP", &BinomialDeviate::setP, "Set current distribution p.")
             ;
     }
 
@@ -234,8 +234,8 @@ struct PyPoissonDeviate {
                  "Draw a new random number from the distribution.\n"
                  "\n"
                  "Returns a Poisson deviate with current mean.\n")
-            .def("getMean", &GaussianDeviate::getMean, "Get current distribution mean.")
-            .def("setMean", &GaussianDeviate::setMean, "Set current distribution mean.")
+            .def("getMean", &PoissonDeviate::getMean, "Get current distribution mean.")
+            .def("setMean", &PoissonDeviate::setMean, "Set current distribution mean.")
             ;
     }
 
