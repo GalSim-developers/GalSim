@@ -2,7 +2,8 @@ import galsim
 import numpy as np
 import os
 
-imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference images.
+imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
+                                                          # images. 
 
 # define a series of tests
 
@@ -35,10 +36,10 @@ def test_sbprofile_gaussian():
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-                                         err_msg="Gaussian profile disagrees with expected result")   
+                                         err_msg="Gaussian profile disagrees with expected result")
 
 def test_sbprofile_exponential():
-    """Test the generation of a specific exponential profile using SBProfile against a known result. 
+    """Test the generation of a specific exp profile using SBProfile against a known result. 
     """
     re = 1.0
     r0 = re/1.67839
