@@ -1,7 +1,13 @@
 import galsim
 import numpy as np
 
+#
+# Note: all tests below were generated using the python interface to the RNG.  Eventually need tests
+# for comparison against the C++!
+#
+
 testseed = 1000 # seed used for UniformDeviate for all tests
+# Warning! If you change testseed, then all of the *Result variables below must change as well.
 
 # the right answer for the first three uniform deviates produced from testseed
 uResult = (0.6535895883571357, 0.20552172302268445, 0.11500694020651281)
