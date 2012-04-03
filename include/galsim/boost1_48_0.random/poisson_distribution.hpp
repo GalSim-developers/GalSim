@@ -20,10 +20,10 @@
 #include <iosfwd>
 #include <boost/assert.hpp>
 #include <boost/limits.hpp>
-#include <galsim/boost1_48_0.random/uniform_01.hpp>
-#include <galsim/boost1_48_0.random/detail/config.hpp>
+#include "galsim/boost1_48_0.random/uniform_01.hpp"
+#include "galsim/boost1_48_0.random/detail/config.hpp"
 
-#include <galsim/boost1_48_0.random/detail/disable_warnings.hpp>
+#include "galsim/boost1_48_0.random/detail/disable_warnings.hpp"
 
 namespace boost {
 namespace random {
@@ -355,6 +355,6 @@ using random::poisson_distribution;
 
 } // namespace boost
 
-#include <galsim/boost1_48_0.random/detail/enable_warnings.hpp>
+#include "galsim/boost1_48_0.random/detail/enable_warnings.hpp"
 
 #endif // BOOST_RANDOM_POISSON_DISTRIBUTION_HPP
