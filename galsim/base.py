@@ -47,7 +47,7 @@ class GSObject:
     def getFlux(self):
         return self.SBProfile.getFlux()
 
-    def applyDistort(self, ellipse):
+    def applyDistortion(self, ellipse):
         """Apply a galsim.Ellipse distortion to this object.
         """
         GSObject.__init__(self, self.SBProfile.distort(ellipse))
@@ -57,8 +57,8 @@ class GSObject:
         """
         GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
 
-    def applyRotate(self, theta):
-        """Apply an angular rotation [radians, +ve anticlockwise] to this object.
+    def applyRotation(self, theta):
+        """Apply an angular rotation theta [radians, +ve anticlockwise] to this object.
         """
         GSObject.__init__(self, self.SBProfile.rotate(theta))
         
