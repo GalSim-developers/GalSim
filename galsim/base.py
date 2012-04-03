@@ -47,17 +47,42 @@ class GSObject:
     def getFlux(self):
         return self.SBProfile.getFlux()
 
-    def distort(self, ellipse):
+    def applyDistort(self, ellipse):
+        """Apply a galsim.Ellipse distortion to this object.
+        """
         GSObject.__init__(self, self.SBProfile.distort(ellipse))
         
-    def shear(self, e1, e2):
+    def applyShear(self, e1, e2):
+        """Apply an (e1, e2) shear to this object.
+        """
         GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
 
-    def rotate(self, theta):
+    def applyRotate(self, theta):
+        """Apply an angular rotation [radians, +ve anticlockwise] to this object.
+        """
         GSObject.__init__(self, self.SBProfile.rotate(theta))
         
-    def shift(self, dx, dy):
+    def applyShift(self, dx, dy):
+        """Apply a (dx, dy) shift to this object.
+        """
         GSObject.__init__(self, self.SBProfile.shift(dx, dy))
+
+    # Barney: not sure about the below, kind of wanted not to have to let the user deal with
+    # GSObject instances... Might need to reconsider this scheme.
+    #
+    # Keeping them here as commented placeholders.
+    #
+    #def createDistorted(self, ellipse):
+    #    return GSObject(self.SBProfile.distort(ellipse))
+        
+    #def createSheared(self, e1, e2):
+    #    return GSObject(self.SBProfile.distort(galsim.Ellipse(e1, e2)))
+
+    #def createRotated(self, theta):
+    #    return GSObject(self.SBProfile.rotate(theta))
+        
+    #def createShifted(self, dx, dy):
+    #    return GSObject(self.SBProfile.shift(dx, dy))
             
     def draw(self, dx=0., wmult=1):
     # Raise an exception here since C++ is picky about the input types
