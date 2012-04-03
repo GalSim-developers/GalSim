@@ -33,7 +33,7 @@ tchar = ['S', 'I', 'F', 'D']
 ref_array = np.array([[00, 10, 20, 30], [01, 11, 21, 31], [02, 12, 22, 32],
                       [03, 13, 23, 33]]).astype(types[0])
 
-datadir = os.path.join(".", "data")
+datadir = os.path.join(".", "Image_comparison_images")
 
 def test_Image_XYmin_XYMax():
     """Test that all four types of supported arrays correctly set bounds based on an input array.
