@@ -34,32 +34,32 @@ def test_uniform_rand():
     """
     u = galsim.UniformDeviate(testseed)
     testResult = (u(), u(), u())
-    np.testing.assert_equal(testResult,uResult,
+    np.testing.assert_equal(testResult, uResult,
                             err_msg='Wrong uniform random number sequence generated')
 
 def test_gaussian_rand():
     """Test Gaussian random number generator for expected result given the above seed
     """
     u = galsim.UniformDeviate(testseed)
-    g = galsim.GaussianDeviate(u,mean=gMean,sigma=gSigma)
+    g = galsim.GaussianDeviate(u, mean=gMean, sigma=gSigma)
     testResult = (g(), g(), g())
-    np.testing.assert_equal(testResult,gResult,
+    np.testing.assert_equal(testResult, gResult,
                             err_msg='Wrong Gaussian random number sequence generated')
 
 def test_binomial_rand():
     """Test binomial random number generator for expected result given the above seed
     """
     u = galsim.UniformDeviate(testseed)
-    b = galsim.BinomialDeviate(u,N=bN,p=bp)
+    b = galsim.BinomialDeviate(u, N=bN, p=bp)
     testResult = (b(), b(), b())
-    np.testing.assert_equal(testResult,bResult,
+    np.testing.assert_equal(testResult, bResult,
                             err_msg='Wrong binomial random number sequence generated')
 
 def test_poisson_rand():
     """Test Poisson random number generator for expected result given the above seed
     """
     u = galsim.UniformDeviate(testseed)
-    p = galsim.PoissonDeviate(u,mean=pMean)
+    p = galsim.PoissonDeviate(u, mean=pMean)
     testResult = (p(), p(), p())
-    np.testing.assert_equal(testResult,pResult,
+    np.testing.assert_equal(testResult, pResult,
                             err_msg='Wrong Poisson random number sequence generated')
