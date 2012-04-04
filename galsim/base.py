@@ -1,3 +1,4 @@
+import numpy as np
 import galsim
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
