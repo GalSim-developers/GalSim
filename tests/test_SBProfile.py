@@ -51,7 +51,7 @@ def test_sbprofile_gaussian_properties():
     np.testing.assert_equal(psf.kValue(cen), 1+0j)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
-        psfFlux = galsim.atmosphere.moffat(2.0, flux=inFlux)
+        psfFlux = galsim.SBGaussian(flux=inFlux, sigma=2.)
         outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.15915494309189535)
@@ -122,7 +122,7 @@ def test_sbprofile_moffat_properties():
     np.testing.assert_equal(psf.kValue(cen), 1+0j)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
-        psfFlux = galsim.atmosphere.moffat(2.0, flux=inFlux)
+        psfFlux = galsim.SBMoffat(2.0, flux=inFlux)
         outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.28141470275895519)
