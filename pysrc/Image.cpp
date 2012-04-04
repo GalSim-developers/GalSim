@@ -19,7 +19,14 @@ namespace {
 
 template <typename T> struct NumPyTraits;
 template <> struct NumPyTraits<npy_short> { static int getCode() { return NPY_SHORT; } };
-template <> struct NumPyTraits<npy_int> { static int getCode() { return NPY_INT; } };
+template <> struct NumPyTraits<npy_int> {
+    static int getCode() {
+        if (sizeof(int) == sizeof(long) && sizeof(int) == 4) {
+            return PyArray_INT32;
+        }
+        return NPY_INT;
+    }
+};
 template <> struct NumPyTraits<npy_float> { static int getCode() { return NPY_FLOAT; } };
 template <> struct NumPyTraits<npy_double> { static int getCode() { return NPY_DOUBLE; } };
 
