@@ -1,5 +1,7 @@
 import galsim
 
+ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
+
 class GSObject:
     """Base class for defining the interface with which all GalSim Objects access their shared 
     methods and attributes, particularly those from the C++ SBProfile classes.
@@ -91,7 +93,7 @@ class GSObject:
         if type(dx) != float:
             raise Warning("Input dx not a float, converting...")
             dx = float(dx)
-        return self.SBProfile.draw(dx=0., wmult=1)
+        return self.SBProfile.draw(dx=dx, wmult=wmult)
 
     # Did not define all the other draw operations that operate on images inplace, would need to
     # work out slightly different return syntax for that in Python
@@ -156,4 +158,35 @@ class Airy(GSObject):
     def __init__(self, D=1., obs=0., flux=1.):
         GSObject.__init__(self, galsim.SBAiry(D=D, obs=obs, flux=flux))
     # Ditto!
+
+class Optics(GSObject):
+    """Class describing aberrated PSFs due to telescope optics.
+
+    Initialization
+    --------------
+    @param lod     lambda / D in angular units adopted elsewhere for GalSim lengths.
+    """
+    def __init__(self, lod, dx=None, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+                 circular_pupil=True, obs=None, interpolant2d=None):
+        import galsim.optics
+        # Use the same prescription as SBAiry to set maxK, stepK and thus image size
+        if dx == None:
+            self.maxk = 2. * np.pi / lod
+        else:
+            self.maxk = np.pi / dx
+        if obs == None:
+            self.stepk = min(ALIAS_THRESHOLD * .5 * np.pi**3 / lod, np.pi / 5. / lod)
+        else:
+            raise NotImplementedError('Secondary mirror obstruction not yet implemented')
+        # TODO: check that the above still makes sense even for large aberrations, probably not...
+        npix = np.ceil(2. * self.maxk / self.stepk).astype(int)
+        optimage = galsim.optics.psf_image(array_shape=(npix, npix), defocus=defocus, astig1=astig1,
+                                           astig2=astig2, coma1=coma1, coma2=coma2, spher=0.,
+                                           circular_pupil=circular_pupil, obs=obs)
+        # If interpolant not specified on input, use a high-ish lanczos
+        if interpolant2d == None:
+            l5 = galsim.Lanczos(5, True, 1.e-4)  # True and default 1.e-4 copied from Shera.py!
+            interpolant2d = galsim.InterpolantXY(l5)
+        galsim.GSObject.__init__(self, galsim.SBPixel(optimage, interpolant2d, dx=dx))
+
 
