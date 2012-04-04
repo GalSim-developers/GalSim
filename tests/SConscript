@@ -1,0 +1,88 @@
+# vim: set filetype=python :
+
+import SCons
+import os
+import sys
+import time
+import subprocess
+
+Import('env')
+
+libs=['galsim']
+
+env1 = env.Clone(CPPDEFINES=[],LIBS=libs+env['LIBS'])
+
+env1['OBJPREFIX'] = '.obj/'
+
+bin_dir = 'bin'
+bin_install_dir = os.path.join(env['INSTALL_PREFIX'], bin_dir)
+
+lib_dir = 'lib'
+lib_install_dir = os.path.join(env['INSTALL_PREFIX'], lib_dir)
+
+# Include the library location within the executable.
+env1.Append( RPATH = Dir('#lib').abspath )
+
+# Workaround for SCons bug: The above doesn't always work correctly.
+# RPATH clashes with LINKFLAGS.  So if LINKFLAGS is already set, we need this workaround.
+# See: http://scons.tigris.org/issues/show_bug.cgi?id=1644
+# Fixed in version 2.1.
+major , minor , junk = SCons.__version__.split('.',2)
+if major < 2 or (major == 2 and minor == 0):
+    env1.Append( LINKFLAGS = ["$__RPATH"] )
+
+
+# The following are the .cpp test programs.  These need to be compiled first.
+test_random = env1.Program(os.path.join('#bin','test_random'), 'testRandom.cpp')
+
+cpp_tests = [ test_random ]
+
+# Define an action for running nosetests, storing the output in a log file
+def run_nose(target, source, env):
+    f = open(str(target[0]),'w')
+    # This next line works, but doesn't output to the screen.
+    #ret = subprocess.call('nosetests', cwd='tests', stdout=f, stderr=f, shell=False)
+
+    # All these shennanigans are to mimic the effect of the linux tee command:
+    proc = subprocess.Popen(
+        'nosetests',
+        cwd='tests',
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        shell=False)
+
+    while proc.poll() == None:
+        buf = os.read(proc.stdout.fileno(),1)
+        sys.stdout.write(buf)
+        sys.stdout.flush()
+        f.write(buf)
+
+    f.close()
+
+    ret = proc.returncode
+    if ret < 0:
+        print 'Nosetests terminated by signal ',-ret
+    elif ret > 0:
+        print 'Nosetests returned error code ',ret
+    else:
+        print 'Nosetests finished successfully.'
+
+
+
+
+# The main thing we do is run nosetests.  We only do this if we found nosetests in the path.
+if env1['RUN_NOSETESTS']:
+
+    nosetests = Builder( action = run_nose )
+    env1.Append(BUILDERS = {'Nose' : nosetests} )
+
+    nose = env1.Nose(target = 'nose.log', source = cpp_tests)
+    AlwaysBuild(nose)
+
+    env1.Alias(target='tests', source=nose)
+
+# If we don't have nosetests, just build the cpp test programs
+else:
+
+    env1.Alias(target='tests', source=cpp_tests)
+

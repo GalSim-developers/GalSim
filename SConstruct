@@ -188,7 +188,7 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['/W2','/WX'])
 
         else:
-            print 'Warning: Unknown compiler.  You should set FLAGS directly.'
+            print '\nWARNING: Unknown compiler.  You should set FLAGS directly.\n'
             env.Replace(CCFLAGS=[])
 
     else :
@@ -265,7 +265,7 @@ def AddOpenMPFlag(env):
         env['WITH_OPENMP'] = False
         return
     else:
-        print 'Warning: No OpenMP support for compiler ',compiler
+        print '\nWARNING: No OpenMP support for compiler ',compiler,'\n'
         env['WITH_OPENMP'] = False
         return
 
@@ -300,7 +300,7 @@ def GetCompilerVersion(env):
     """
     """
     compiler = which(env['CXX'])
-    if compile is None:
+    if compiler is None:
         raise ValueError("Specified compiler not found in path: %s" % env['CXX'])
 
     print 'Using compiler:',compiler
@@ -1027,8 +1027,20 @@ if not GetOption('help'):
 
     #if env['WITH_UPS']:
         #subdirs += ['ups']
+
     if 'examples' in COMMAND_LINE_TARGETS:
         subdirs += ['examples']
+
+    if 'tests' in COMMAND_LINE_TARGETS:
+        nosetests = which('nosetests')
+        if nosetests is None:
+            print '\nWARNING: Could not find nosetests in path.'
+            print 'The cpp test programs will be compiled,',
+            print 'but you will have to run the tests manually.\n'
+            env['RUN_NOSETESTS'] = False
+        else:
+            env['RUN_NOSETESTS'] = True
+        subdirs += ['tests']
 
     # subdirectores to process.  We process src and pysrc by default
     script_files = []
