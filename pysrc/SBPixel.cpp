@@ -11,7 +11,7 @@ struct PySBPixel {
 
     static void wrap() {
         bp::class_< SBPixel, bp::bases<SBProfile> >("SBPixel", bp::init<const SBPixel &>())
-            .def(bp::init<int, double, const Interpolant2d &, int>(
+            .def(bp::init<int, double, const InterpolantXY &, int>(
                      (bp::args("nPix", "dx", "i"), bp::arg("nImages")=1)
                  ))
             .def(bp::init<const Image<float> &, const Interpolant2d &, double, double>(
