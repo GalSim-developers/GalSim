@@ -1034,9 +1034,6 @@ if not GetOption('help'):
     if 'tests' in COMMAND_LINE_TARGETS:
         nosetests = which('nosetests')
         if nosetests is None:
-            print '\nWARNING: Could not find nosetests in path.'
-            print 'The cpp test programs will be compiled,',
-            print 'but you will have to run the tests manually.\n'
             env['RUN_NOSETESTS'] = False
         else:
             env['RUN_NOSETESTS'] = True
