@@ -907,7 +907,7 @@ namespace galsim {
 
 #ifdef USE_IMAGES
     // Override x-domain writing so we can partially fill pixels at edge of box.
-    double SBBox::fillXImage(Image<float> I, double dx) const 
+    double SBBox::fillXImage(Image<float>& I, double dx) const 
     {
         double norm = flux/xw/yw;
 
