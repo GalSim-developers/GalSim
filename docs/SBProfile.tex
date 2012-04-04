@@ -62,7 +62,7 @@ Many of the evaluation methods take arguments as {\tt Position$<$double$>$} clas
 \begin{itemize}
 \item {\tt DComplex kValue(Position$<$double$>$ p)} returns the value of the \sbp\ transform at a specified position in $k$ space.
 \item {\tt double xValue(Position$<$double$>$ p)} returns the value of the \sbp\ at a specified position in real space.  Some derived classes, {\it e.g.} {\tt SBConvolve}, throw an exception for this method because real-space values are only obtainable via FFT, as indicated by a {\tt false} return from {\tt isAnalyticX()}.
-\item {\tt  double centroidX(), centroidY()} return the centroid of the \sbp.\footnote{Will fail if flux is zero.  Currently will throw an exception for {\tt SBLaguerre} because I have been too lazy to code the calculation.}
+\item {\tt  Position<double> centroid()} returns the (x, y) centroid of the \sbp.\footnote{Will fail if flux is zero.  Currently will throw an exception for {\tt SBLaguerre} because I have been too lazy to code the calculation.}
 \item {\tt  Position$<$double$>$ centroid()} simply returns both coordinates of the centroid in a {\tt Position} object.
 \item {\tt double getFlux()} returns the object flux $f$.
 \end{itemize}

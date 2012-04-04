@@ -23,9 +23,9 @@
 #include <boost/assert.hpp>
 #include <boost/limits.hpp>
 #include <boost/static_assert.hpp>
-#include <galsim/boost1_48_0.random/detail/config.hpp>
-#include <galsim/boost1_48_0.random/detail/operators.hpp>
-#include <galsim/boost1_48_0.random/uniform_01.hpp>
+#include "galsim/boost1_48_0.random/detail/config.hpp"
+#include "galsim/boost1_48_0.random/detail/operators.hpp"
+#include "galsim/boost1_48_0.random/uniform_01.hpp"
 
 namespace boost {
 namespace random {

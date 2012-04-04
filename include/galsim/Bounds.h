@@ -22,10 +22,10 @@ namespace galsim {
             if (&rhs == this) return *this;
             else { x=rhs.x; y=rhs.y; return *this; }
         }
-        Position operator+=(const Position rhs) { x+=rhs.x; y+=rhs.y; return *this; }
-        Position operator-=(const Position rhs) { x-=rhs.x; y-=rhs.y; return *this; }
-        Position operator*=(const T rhs) { x*=rhs; y*=rhs; return *this; }
-        Position operator/=(const T rhs) { x/=rhs; y/=rhs; return *this; }
+        Position& operator+=(const Position rhs) { x+=rhs.x; y+=rhs.y; return *this; }
+        Position& operator-=(const Position rhs) { x-=rhs.x; y-=rhs.y; return *this; }
+        Position& operator*=(const T rhs) { x*=rhs; y*=rhs; return *this; }
+        Position& operator/=(const T rhs) { x/=rhs; y/=rhs; return *this; }
         Position operator*(const T rhs) const { return Position(x*rhs, y*rhs); }
         Position operator/(const T rhs) const { return Position(x/rhs, y/rhs); }
         Position operator-() const { return Position(-x,-y); }
@@ -45,7 +45,7 @@ namespace galsim {
 
     template <class T>
     inline std::istream& operator>>(std::istream& is, Position<T>& p) 
-    { p.read(is);  return is; }
+    { p.read(is); return is; }
 
     template <class T>
     class Bounds 
