@@ -173,6 +173,7 @@ class Optics(GSObject):
         # Use the same prescription as SBAiry to set maxK, stepK and thus image size
         if dx == None:
             self.maxk = 2. * np.pi / lod
+            dx = np.pi / self.maxk
         else:
             self.maxk = np.pi / dx
         if obs == None:
@@ -182,11 +183,12 @@ class Optics(GSObject):
         # TODO: check that the above still makes sense even for large aberrations, probably not...
         npix = np.ceil(2. * self.maxk / self.stepk).astype(int)
         optimage = galsim.optics.psf_image(array_shape=(npix, npix), defocus=defocus, astig1=astig1,
-                                           astig2=astig2, coma1=coma1, coma2=coma2, spher=0.,
-                                           circular_pupil=circular_pupil, obs=obs)
+                                           astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
+                                           circular_pupil=circular_pupil, obs=obs,
+                                           kmax=dx*self.maxk)
         # If interpolant not specified on input, use a high-ish lanczos
         if interpolant2d == None:
-            l5 = galsim.Lanczos(5, True, 1.e-4)  # True and default 1.e-4 copied from Shera.py!
+            l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
             interpolant2d = galsim.InterpolantXY(l5)
         galsim.GSObject.__init__(self, galsim.SBPixel(optimage, interpolant2d, dx=dx))
 
