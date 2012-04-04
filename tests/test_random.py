@@ -6,6 +6,9 @@ import numpy as np
 # for comparison against the C++!
 #
 
+precision = 10
+# decimal point at which agreement is required for all tests
+
 testseed = 1000 # seed used for UniformDeviate for all tests
 # Warning! If you change testseed, then all of the *Result variables below must change as well.
 
@@ -34,8 +37,8 @@ def test_uniform_rand():
     """
     u = galsim.UniformDeviate(testseed)
     testResult = (u(), u(), u())
-    np.testing.assert_equal(testResult, uResult,
-                            err_msg='Wrong uniform random number sequence generated')
+    np.testing.assert_almost_equal(testResult, uResult, precision, 
+                                   err_msg='Wrong uniform random number sequence generated')
 
 def test_uniform_rand_reset():
     """Testing ability to reset uniform random number generator and reproduce sequence.
@@ -44,6 +47,8 @@ def test_uniform_rand_reset():
     testResult1 = (u(), u(), u())
     u = galsim.UniformDeviate(testseed)
     testResult2 = (u(), u(), u())
+# note this one is still equal, not almost_equal, because we should be able to achieve complete
+# equality for the same seed and the same exact system
     np.testing.assert_equal(testResult1, testResult2,
                             err_msg='Cannot reset generator with same seed to reproduce a sequence')
 
@@ -53,8 +58,8 @@ def test_gaussian_rand():
     u = galsim.UniformDeviate(testseed)
     g = galsim.GaussianDeviate(u, mean=gMean, sigma=gSigma)
     testResult = (g(), g(), g())
-    np.testing.assert_equal(testResult, gResult,
-                            err_msg='Wrong Gaussian random number sequence generated')
+    np.testing.assert_almost_equal(testResult, gResult, precision,
+                                   err_msg='Wrong Gaussian random number sequence generated')
 
 def test_binomial_rand():
     """Test binomial random number generator for expected result given the above seed.
@@ -62,8 +67,8 @@ def test_binomial_rand():
     u = galsim.UniformDeviate(testseed)
     b = galsim.BinomialDeviate(u, N=bN, p=bp)
     testResult = (b(), b(), b())
-    np.testing.assert_equal(testResult, bResult,
-                            err_msg='Wrong binomial random number sequence generated')
+    np.testing.assert_almost_equal(testResult, bResult, precision,
+                                   err_msg='Wrong binomial random number sequence generated')
 
 def test_poisson_rand():
     """Test Poisson random number generator for expected result given the above seed.
@@ -71,5 +76,5 @@ def test_poisson_rand():
     u = galsim.UniformDeviate(testseed)
     p = galsim.PoissonDeviate(u, mean=pMean)
     testResult = (p(), p(), p())
-    np.testing.assert_equal(testResult, pResult,
-                            err_msg='Wrong Poisson random number sequence generated')
+    np.testing.assert_almost_equal(testResult, pResult, precision, 
+                                   err_msg='Wrong Poisson random number sequence generated')
