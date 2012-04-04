@@ -91,7 +91,7 @@ class GSObject:
         if type(dx) != float:
             raise Warning("Input dx not a float, converting...")
             dx = float(dx)
-        return self.SBProfile.draw(dx=0., wmult=1)
+        return self.SBProfile.draw(dx=dx, wmult=wmult)
 
     # Did not define all the other draw operations that operate on images inplace, would need to
     # work out slightly different return syntax for that in Python
