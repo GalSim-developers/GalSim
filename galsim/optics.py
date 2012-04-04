@@ -218,7 +218,7 @@ def psf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
 
 def psf_image(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
               spher=0., kmax=np.pi, circular_pupil=True, obs=None):
-    """@brief Return circular (default) or square pupil PSF with low-order aberrations as an ImageD.
+    """@brief Return circular (default) or square pupil PSF with low-order aberrations as an ImageF.
 
     The PSF has unit total flux, and is centred on the array[array_shape[0] / 2, array_shape[1] / 2]
     pixel, by default.  Function is bandlimited at kmax (default = pi; Nyquist frequency).
@@ -241,7 +241,7 @@ def psf_image(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0.
     """
     array = psf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
                 coma2=coma2, spher=spher, kmax=kmax, circular_pupil=circular_pupil, obs=obs)
-    return galsim.ImageD(array)
+    return galsim.ImageF(array)
 
 def otf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, obs=None):
