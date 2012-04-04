@@ -7,6 +7,7 @@ import time
 import subprocess
 
 Import('env')
+ReadFileList=env['__readfunc']
 
 libs=['galsim']
 
@@ -15,10 +16,7 @@ env1 = env.Clone(CPPDEFINES=[],LIBS=libs+env['LIBS'])
 env1['OBJPREFIX'] = '.obj/'
 
 bin_dir = 'bin'
-bin_install_dir = os.path.join(env['INSTALL_PREFIX'], bin_dir)
-
 lib_dir = 'lib'
-lib_install_dir = os.path.join(env['INSTALL_PREFIX'], lib_dir)
 
 # Include the library location within the executable.
 env1.Append( RPATH = Dir('#lib').abspath )
@@ -31,11 +29,17 @@ major , minor , junk = SCons.__version__.split('.',2)
 if major < 2 or (major == 2 and minor == 0):
     env1.Append( LINKFLAGS = ["$__RPATH"] )
 
-
 # The following are the .cpp test programs.  These need to be compiled first.
-test_random = env1.Program(os.path.join('#bin','test_random'), 'testRandom.cpp')
+cpp_list = ReadFileList('files.txt')
 
-cpp_tests = [ test_random ]
+obj_list = env1.StaticObject(cpp_list)
+
+test_list = []
+
+for obj in obj_list:
+    base_name = os.path.basename(str(obj))
+    exec_name = os.path.join('#bin',base_name[:base_name.rfind('.')])
+    test_list += env1.Program(exec_name,obj)
 
 # Define an action for running nosetests, storing the output in a log file
 def run_nose(target, source, env):
@@ -76,7 +80,7 @@ if env1['RUN_NOSETESTS']:
     nosetests = Builder( action = run_nose )
     env1.Append(BUILDERS = {'Nose' : nosetests} )
 
-    nose = env1.Nose(target = 'nose.log', source = cpp_tests)
+    nose = env1.Nose(target = 'nose.log', source = test_list)
     AlwaysBuild(nose)
 
     env1.Alias(target='tests', source=nose)
@@ -84,5 +88,5 @@ if env1['RUN_NOSETESTS']:
 # If we don't have nosetests, just build the cpp test programs
 else:
 
-    env1.Alias(target='tests', source=cpp_tests)
+    env1.Alias(target='tests', source=test_list)
 
