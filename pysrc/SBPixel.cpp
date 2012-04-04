@@ -14,7 +14,7 @@ struct PySBPixel {
             .def(bp::init<int, double, const InterpolantXY &, int>(
                      (bp::args("nPix", "dx", "i"), bp::arg("nImages")=1)
                  ))
-            .def(bp::init<const Image<float> &, const Interpolant2d &, double, double>(
+            .def(bp::init<const Image<float> &, const InterpolantXY &, double, double>(
                      (bp::args("image", "i"), bp::arg("dx")=0., bp::arg("padFactor")=0.)
                  ))
             ;
