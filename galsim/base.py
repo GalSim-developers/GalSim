@@ -179,14 +179,16 @@ class Optics(GSObject):
                            with unit integer pixel spacing is pi.
     @param circular_pupil  adopt a circular pupil?
     @param obs             add a central obstruction due to secondary mirror?
+    @param oversampling    optional oversampling factor for the SBPixel table [default = 2.],
+                           ignored if dx is set.
     """
     def __init__(self, lod, dx=None, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-                 circular_pupil=True, obs=None, interpolant2d=None):
+                 circular_pupil=True, obs=None, interpolant2d=None, oversampling=2.):
         import galsim.optics
         # Use the same prescription as SBAiry to set maxK, stepK and thus image size
         if dx == None:
             self.maxk = 2. * np.pi / lod
-            dx = np.pi / self.maxk
+            dx = np.pi / self.maxk / oversampling
         else:
             self.maxk = np.pi / dx
         if obs == None:
