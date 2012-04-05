@@ -3,8 +3,7 @@ import galsim
 
 """@file optics.py @brief Module containing the optical PSF generation routines.
 
-Currently these are just functions; the plan will be for these to be included as methods in some
-kind of 'optical' class, or perhaps as methods in a more fundamental psf class.
+These are just functions; they are used to generate galsim.Optics() class instances (see base.py).
 
 They work in largely dimensionless units.  The size of the optical PSF is specified using the kmax
 input parameter, where kmax is the bandlimit of the optical MTF and kmax = pi (default) is the
