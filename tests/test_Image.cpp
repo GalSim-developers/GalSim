@@ -1,7 +1,9 @@
 #include "galsim/Image.h"
 #define BOOST_TEST_DYN_LINK
-#include <boost/test/unit_test.hpp>
 
+// The boost unit tests have some unused variables, so suppress the warnings about that.
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#include <boost/test/unit_test.hpp>
 
 
 BOOST_AUTO_TEST_SUITE(image_tests);
