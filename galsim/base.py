@@ -161,13 +161,24 @@ class Airy(GSObject):
     # Ditto!
 
 class Optics(GSObject):
-    """Class describing aberrated PSFs due to telescope optics.
+    """@brief Class describing aberrated PSFs due to telescope optics.
+
+    Input aberration coefficients are assumed to be supplied in units of incident light wavelength,
+    and correspond to the conventions adopted here:
+    http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
 
     Initialization
     --------------
-    @param lod             lambda / D in angular units adopted elsewhere for GalSim lengths.
+    >>> optical_psf = galsim.Optics(lod, dx=None, defocus=0., astig1=0., astig2=0., coma1=0.,
+                                    coma2=0., spher=0., circular_pupil=True, interpolantxy=None,
+                                    oversampling=2.)
+
+    Initializes optical_psf as a galsim.Optics() instance.
+
+    @param lod             lambda / D in the physical units adopted (user responsible for 
+                           consistency).
     @param dx              optional specifier for output pixel scale [default samples PSF well]
-    @param defocus          defocus in units of incident light wavelength.
+    @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
     @param astig2          second component of astigmatism (like e2) in units of incident light
@@ -175,15 +186,15 @@ class Optics(GSObject):
     @param coma1           coma along x in units of incident light wavelength.
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
-    @param kmax            bandlimit of output PSF scaled so that the Nyquist frequency of an image
-                           with unit integer pixel spacing is pi.
     @param circular_pupil  adopt a circular pupil?
     @param obs             add a central obstruction due to secondary mirror?
+    @param interpolantxy   optional keyword for specifiying the interpolation scheme [default = 
+                           galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))]
     @param oversampling    optional oversampling factor for the SBPixel table [default = 2.],
-                           ignored if dx is set.
+                           ignored if dx is set. Setting oversampling < 1 is silly.
     """
     def __init__(self, lod, dx=None, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-                 circular_pupil=True, obs=None, interpolant2d=None, oversampling=2.):
+                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=2.):
         import galsim.optics
         # Use the same prescription as SBAiry to set maxK, stepK and thus image size
         if dx == None:
@@ -202,9 +213,8 @@ class Optics(GSObject):
                                            circular_pupil=circular_pupil, obs=obs,
                                            kmax=dx*self.maxk)
         # If interpolant not specified on input, use a high-ish lanczos
-        if interpolant2d == None:
+        if interpolantxy == None:
             l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
-            interpolant2d = galsim.InterpolantXY(l5)
-        galsim.GSObject.__init__(self, galsim.SBPixel(optimage, interpolant2d, dx=dx))
-
+            self.Interpolant2D = galsim.InterpolantXY(l5)
+        GSObject.__init__(self, galsim.SBPixel(optimage, self.Interpolant2D, dx=dx))
 
