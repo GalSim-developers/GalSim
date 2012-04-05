@@ -91,7 +91,7 @@ class GSObject:
         if type(dx) != float:
             raise Warning("Input dx not a float, converting...")
             dx = float(dx)
-        return self.SBProfile.draw(dx=0., wmult=1)
+        return self.SBProfile.draw(dx=dx, wmult=wmult)
 
     # Did not define all the other draw operations that operate on images inplace, would need to
     # work out slightly different return syntax for that in Python
@@ -157,3 +157,13 @@ class Airy(GSObject):
         GSObject.__init__(self, galsim.SBAiry(D=D, obs=obs, flux=flux))
     # Ditto!
 
+class GSAdd(GSObject):
+    """Base class for defining the python interface to the SBAdd C++ class.
+    """
+    def __init__(self, SBAdd):
+        GSObject.__init__(self, SBAdd)
+        
+    def add(self, profile, scale=1.):
+        self.SBProfile.add(profile, scale)
+
+   
