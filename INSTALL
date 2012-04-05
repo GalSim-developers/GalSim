@@ -230,11 +230,15 @@ changes can be reversed using
 
 scons uninstall examples
 
-We don't have any test programs yet, but once we do, they will be built and run by typing
+You can also run our test suite by typing
 
 scons tests
 
-This should compile the test suite and run it. 
+This should compile the test suite and run it.  The tests of our C++ library will always
+be run, but we use nosetests for our python test suite, so that will only be run if 
+nosetests is present on your system.  We don't require this as a dependency, since you
+can still do everything with the GalSim library without this.  But it is required for
+a complete run of the test suite.
 
 
 4. Platform-specific notes 
