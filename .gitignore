@@ -10,3 +10,4 @@ gs_scons.*
 doc/html/*
 doc/latex/*
 docs/doxygen_example_output/*
+tests/nosetests.xml
