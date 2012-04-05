@@ -157,3 +157,13 @@ class Airy(GSObject):
         GSObject.__init__(self, galsim.SBAiry(D=D, obs=obs, flux=flux))
     # Ditto!
 
+class GSAdd(GSObject):
+    """Base class for defining the python interface to the SBAdd C++ class.
+    """
+    def __init__(self, SBAdd):
+        GSObject.__init__(self, SBAdd)
+        
+    def add(self, profile, scale=1.):
+        self.SBProfile.add(profile, scale)
+
+   
