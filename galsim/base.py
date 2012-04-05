@@ -166,4 +166,12 @@ class GSAdd(GSObject):
     def add(self, profile, scale=1.):
         self.SBProfile.add(profile, scale)
 
-   
+class GSConvolve(GSObject):
+    """Base class for defining the python interface to the SBConvolve C++ class.
+    """
+    def __init__(self, GSObjList):
+        SBList = []
+        for obj in GSObjList:
+            SBList.append(obj.SBProfile)
+        SBTuple = tuple(SBList)
+        GSObject.__init__(self, galsim.SBConvolve(SBTuple))
