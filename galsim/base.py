@@ -165,7 +165,20 @@ class Optics(GSObject):
 
     Initialization
     --------------
-    @param lod     lambda / D in angular units adopted elsewhere for GalSim lengths.
+    @param lod             lambda / D in angular units adopted elsewhere for GalSim lengths.
+    @param dx              optional specifier for output pixel scale [default samples PSF well]
+    @param defocus          defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param kmax            bandlimit of output PSF scaled so that the Nyquist frequency of an image
+                           with unit integer pixel spacing is pi.
+    @param circular_pupil  adopt a circular pupil?
+    @param obs             add a central obstruction due to secondary mirror?
     """
     def __init__(self, lod, dx=None, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
                  circular_pupil=True, obs=None, interpolant2d=None):
