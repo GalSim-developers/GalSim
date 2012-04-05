@@ -1252,7 +1252,7 @@ namespace galsim {
 
     protected:
 #ifdef USE_IMAGES
-        double fillXImage(Image<float> I, double dx) const;
+        double fillXImage(Image<float>& I, double dx) const;
 #endif
     };
 
