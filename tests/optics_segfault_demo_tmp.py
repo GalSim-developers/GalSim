@@ -21,8 +21,9 @@ image_test = sbpixel_test.draw()#.write('airy_sb_test.fits')
 
 #OK, so image_test works, now uncomment this and see if a segfault/bus error happens
 
-#opt_test = galsim.Optics(lod)
-#image_opt_test = opt_test.draw()
+opt_test = galsim.Optics(lod, defocus=0.5, astig1=0.2, coma2=-0.1)
+image_opt_test = opt_test.draw()
+
 
 
 
