@@ -173,5 +173,4 @@ class GSConvolve(GSObject):
         SBList = []
         for obj in GSObjList:
             SBList.append(obj.SBProfile)
-        SBTuple = tuple(SBList)
-        GSObject.__init__(self, galsim.SBConvolve(SBTuple))
+        GSObject.__init__(self, galsim.SBConvolve(SBList))
