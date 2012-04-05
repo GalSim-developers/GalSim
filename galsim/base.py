@@ -195,6 +195,7 @@ class Optics(GSObject):
     """
     def __init__(self, lod, dx=None, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
                  circular_pupil=True, obs=None, interpolantxy=None, oversampling=2.):
+        # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
         import galsim.optics
         # Use the same prescription as SBAiry to set maxK, stepK and thus image size
         if dx == None:
