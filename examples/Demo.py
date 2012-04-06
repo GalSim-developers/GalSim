@@ -58,7 +58,11 @@ def Script1():
     #   File "./Demo.py", line 60, in Script1
     #     addGaussian(image, rng, sigma=0.1)
     #   NameError: global name 'addGaussian' is not defined
-    #addGaussian(image, rng, sigma=0.1)
+
+    # Barney's note: the way it is currently set up is this:
+    galsim.noise.addGaussian(image, rng, sigma=0.1)
+    # ... I actually like going to the .noise. submodule namespace here as it differentiates the
+    # Gaussian in question from a Gaussian profile...
 
     # Write the image to a file
     fileName = os.path.join('output','demo1.fits')
