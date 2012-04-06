@@ -58,7 +58,7 @@ def write(image, fits, add_wcs=True, clobber=True):
         hdu.header.update("CRPIX2" + wcsname, 1, "coordinate system reference pixel")
     
     if isinstance(fits, basestring):
-        if os.path.isfile(fits):
+        if clobber and os.path.isfile(fits):
             os.remove(fits)
         hdus.writeto(fits)
 
