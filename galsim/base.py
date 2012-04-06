@@ -163,6 +163,14 @@ class Airy(GSObject):
     # Ditto!
 
 
+class Boxcar(GSObject):
+    """GalSim Boxcar, which has an SBBox in the SBProfile attribute.
+    """
+    def __init__(self, xw=1., yw=1., flux=1.):
+        GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
+    # Ditto!
+
+
 class OpticalPSF(GSObject):
     """@brief Class describing aberrated PSFs due to telescope optics.
 
