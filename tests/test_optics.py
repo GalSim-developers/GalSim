@@ -216,19 +216,23 @@ def test_Optics_flux():
 def test_Optics_Airy():
     """Compare the array view on an unaberrated Optics() PSF to that of an SBAiry.
     """
-    lod = 8.   # lambda / D: Don't choose unity in case symmetry hides something
-    D = 1. / lod
-    nlook = 100 # size of array region at the centre of each image to compare
-    airy_test = galsim.Airy(D=D, obs=0., flux=1.)
-    optics_test = galsim.Optics(lod)
-    airy_array = airy_test.draw(dx=1.).array
-    airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2:airy_array.shape[0]/2 + nlook/2,   
-                                 airy_array.shape[1]/2 - nlook/2:airy_array.shape[1]/2 + nlook/2]
-    optics_array = optics_test.draw(dx=1.).array 
-    optics_array_test = optics_array[optics_array.shape[0]/2 - nlook/2:
-                                     optics_array.shape[0]/2 + nlook/2, 
-                                     optics_array.shape[1]/2 - nlook/2:
-                                     optics_array.shape[1]/2 + nlook/2]
-    np.testing.assert_array_almost_equal(optics_array_test, airy_array_test, decimal_dft, 
-                                         err_msg="Unaberrated Optics not quite equal to SBAiry")
+    lods = (4., 9., 16., 25.) # lambda/D values: don't choose unity in case symmetry hides something
+    nlook = 100               # size of array region at the centre of each image to compare
+    for lod in lods:
+        D = 1. / lod
+        airy_test = galsim.Airy(D=D, obs=0., flux=1.)
+        optics_test = galsim.Optics(lod)
+        airy_array = airy_test.draw(dx=1.).array
+        airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2: 
+                                     airy_array.shape[0]/2 + nlook/2,   
+                                     airy_array.shape[1]/2 - nlook/2:
+                                     airy_array.shape[1]/2 + nlook/2]
+        optics_array = optics_test.draw(dx=1.).array 
+        optics_array_test = optics_array[optics_array.shape[0]/2 - nlook/2:
+                                         optics_array.shape[0]/2 + nlook/2, 
+                                         optics_array.shape[1]/2 - nlook/2:
+                                         optics_array.shape[1]/2 + nlook/2]
+        np.testing.assert_array_almost_equal(optics_array_test, airy_array_test, decimal_dft, 
+                                             err_msg="Unaberrated Optics not quite equal to SBAiry")
+
 
