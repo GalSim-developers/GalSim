@@ -191,7 +191,7 @@ class Optics(GSObject):
     @param obs             add a central obstruction due to secondary mirror?
     @param interpolantxy   optional keyword for specifiying the interpolation scheme [default = 
                            galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))]
-    @param oversampling    optional oversampling factor for the SBPixel table [default = 2.],
+    @param oversampling    optional oversampling factor for the SBPixel table [default = 3.],
                            ignored if dx is set. Setting oversampling < 1 is silly.
     """
     def __init__(self, lod, dx=None, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
