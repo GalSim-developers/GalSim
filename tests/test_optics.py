@@ -204,5 +204,16 @@ def test_ptf_image_view():
     image = galsim.optics.ptf_image(array_shape=testshape)
     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
 
-def test_Optics():
-    pass
+def test_Optics_flux():
+    """Compare an unaberrated Optics() PSF flux to unity.
+    """
+    lod = 8.   # lambda / D: Don't choose unity in case symmetry hides something
+    D = 1. / lod
+    airy_test = galsim.Airy(D=D, obs=0., flux=1.)
+    optics_test = galsim.Optics(lod)
+    airy_array = airy_test.draw(dx=1.).array
+    optics_array = optics_test.draw(dx=1.).array
+    # TODO: understand the root of the 2sf differences below 
+    np.testing.assert_almost_equal(optics_array.sum(), 1., 2, err_msg="Optics flux not nearly 1")
+
+
