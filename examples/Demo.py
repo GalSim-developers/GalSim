@@ -112,6 +112,68 @@ def Script2():
     fileName = os.path.join('output', 'demo2.fits')
     image.write(fileName, clobber=True)
 
+
+# Script 3: Sheared, Sersic galaxy, Gaussian + OpticalPSF (atmosphere + optics) PSF, Poisson noise
+def Script3():
+    """
+    A little bit more sophisticated again, but still pretty basic:
+      - Use a sheared, Sersic profile for the galaxy (n = 3., half_light_radius=4.).
+      - Convolve it by a circular Gaussian and an aberrated OpticalPSF with some defocus, coma and
+        astigmatism.
+      - Add Poisson noise to the image.
+    """
+
+    # Define the galaxy profile
+    gal = galsim.Sersic(3.5, flux=1.e5, re=4.)
+
+    # Shear the galaxy by some value:
+    # TODO: Double check.  These are called e1,e2 in the signature.
+    #       Are they distortions or shears?
+    g1 = 0.1
+    g2 = -0.2
+    gal.applyShear(g1, g2)
+
+    # Define the PSF profile
+    # TODO: re is not very clear for the half-light radius.
+    #       Should switch this to something more verbose, like half_light_radius
+    atmos = galsim.Gaussian(flux=1., sigma=1.)
+
+    optics = galsim.OpticalPSF(lod=0.1, defocus=0.15, coma1=0.04, coma2=-0.03, astig1=0.02, 
+                               astig2=0.01)
+
+    # Final profile is the convolution of these
+    final = galsim.GSConvolve([gal, atmos, optics])
+
+    # Draw the image with a particular pixel scale
+    # TODO: Again, how do we specify the size of the image that gets created?
+    #       This image is much larger than the one for script 1 (Barney: I'm guessing this is
+    #       the default stepK ends up being a lot smaller due to the wings of the exp).
+    image = final.draw(dx=0.2)
+
+    # Add some noise to the image
+
+    # For Poisson noise, we want to have a sky level as well.
+    skyLevel = 1.e4
+    # Barney: here's how we add a constant sky level to the image:
+    sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=skyLevel)
+    image += sky_image
+
+    # This time use a particular seed, so it the image is deterministic
+    rng = galsim.UniformDeviate(1314662)
+    # Use this to add Poisson noise
+    galsim.noise.addPoisson(image, rng, gain=1.)
+
+    # Barney: here's how we subtract the background again...
+    image -= sky_image
+
+    # Write the image to a file
+    if not os.path.isdir('output'):
+        os.mkdir('output')
+    fileName = os.path.join('output', 'demo3.fits')
+    image.write(fileName, clobber=True)
+
+
+
     
 def main(argv):
     try:
@@ -128,6 +190,10 @@ def main(argv):
     # Script 2: Sheared exponential galaxy, Moffat PSF, Poisson noise:
     if scriptNum == 0 or scriptNum == 2:
         Script2()
+
+    # Script 3: Sheared Sersic galaxy, Gaussian + aberrated Optics PSF, Poisson noise:
+    if scriptNum == 0 or scriptNum == 3:
+        Script3()
         
 
 if __name__ == "__main__":
