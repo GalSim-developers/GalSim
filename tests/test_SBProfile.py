@@ -38,6 +38,24 @@ def test_sbprofile_gaussian():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
                                          err_msg="Gaussian profile disagrees with expected result")
 
+def test_sbprofile_gaussian_properties():
+    """Test some basic properties of the SBGaussian profile.
+    """
+    psf = galsim.SBGaussian()
+    # Check that we are centered on (0, 0)
+    cen = galsim._galsim.PositionD(0, 0)
+    np.testing.assert_equal(psf.centroid(), cen)
+    # Check Fourier properties
+    np.testing.assert_equal(psf.maxK(), 4.0)
+    np.testing.assert_almost_equal(psf.stepK(), 0.78539816339744828)
+    np.testing.assert_equal(psf.kValue(cen), 1+0j)
+    # Check input flux vs output flux
+    for inFlux in np.logspace(-2, 2, 10):
+        psfFlux = galsim.SBGaussian(flux=inFlux, sigma=2.)
+        outFlux = psfFlux.getFlux()
+        np.testing.assert_almost_equal(outFlux, inFlux)
+    np.testing.assert_almost_equal(psf.xValue(cen), 0.15915494309189535)
+
 def test_sbprofile_exponential():
     """Test the generation of a specific exp profile using SBProfile against a known result. 
     """
@@ -91,6 +109,24 @@ def test_sbprofile_moffat():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
                                          err_msg="Moffat profile disagrees with expected result") 
 
+def test_sbprofile_moffat_properties():
+    """Test some basic properties of the SBMoffat profile.
+    """
+    psf = galsim.SBMoffat(2.0)
+    # Check that we are centered on (0, 0)
+    cen = galsim._galsim.PositionD(0, 0)
+    np.testing.assert_equal(psf.centroid(), cen)
+    # Check Fourier properties
+    np.testing.assert_almost_equal(psf.maxK(), 34.226259129031952)
+    np.testing.assert_almost_equal(psf.stepK(), 0.08604618622618046)
+    np.testing.assert_equal(psf.kValue(cen), 1+0j)
+    # Check input flux vs output flux
+    for inFlux in np.logspace(-2, 2, 10):
+        psfFlux = galsim.SBMoffat(2.0, flux=inFlux)
+        outFlux = psfFlux.getFlux()
+        np.testing.assert_almost_equal(outFlux, inFlux)
+    np.testing.assert_almost_equal(psf.xValue(cen), 0.28141470275895519)
+    
 def test_sbprofile_smallshear():
     """Test the application of a small shear to a Gaussian SBProfile against a known result.
     """

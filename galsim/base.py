@@ -126,6 +126,7 @@ class Gaussian(GSObject):
     # def setSigma(self, sigma):
     #     return self.SBProfile.setSigma(sigma)
 
+
 class Moffat(GSObject):
     """GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
@@ -136,6 +137,7 @@ class Moffat(GSObject):
     # def getBeta(self):
     #     return self.SBProfile.getBeta()
     # ...etc.
+
 
 class Sersic(GSObject):
     """GalSim Sersic, which has an SBSersic in the SBProfile attribute.
@@ -159,6 +161,7 @@ class Airy(GSObject):
     def __init__(self, D=1., obs=0., flux=1.):
         GSObject.__init__(self, galsim.SBAiry(D=D, obs=obs, flux=flux))
     # Ditto!
+
 
 class Optics(GSObject):
     """@brief Class describing aberrated PSFs due to telescope optics.
@@ -220,3 +223,22 @@ class Optics(GSObject):
             self.Interpolant2D = galsim.InterpolantXY(l5)
         GSObject.__init__(self, galsim.SBPixel(optimage, self.Interpolant2D, dx=dx))
 
+
+class GSAdd(GSObject):
+    """Base class for defining the python interface to the SBAdd C++ class.
+    """
+    def __init__(self, SBAdd):
+        GSObject.__init__(self, SBAdd)
+        
+    def add(self, profile, scale=1.):
+        self.SBProfile.add(profile, scale)
+
+
+class GSConvolve(GSObject):
+    """Base class for defining the python interface to the SBConvolve C++ class.
+    """
+    def __init__(self, GSObjList):
+        SBList = []
+        for obj in GSObjList:
+            SBList.append(obj.SBProfile)
+        GSObject.__init__(self, galsim.SBConvolve(SBList))
