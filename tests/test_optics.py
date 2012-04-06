@@ -1,10 +1,11 @@
-import galsim.optics
 import numpy as np
+import galsim
+import galsim.optics
 
 testshape = (512, 512)  # shape of image arrays for all tests
 
-decimal = 10     # Last decimal place used for checking equality of float arrays, see
-                 # np.testing.assert_array_almost_equal()
+decimal = 6     # Last decimal place used for checking equality of float arrays, see
+                # np.testing.assert_array_almost_equal(), low since many are ImageF
 
 decimal_dft = 3  # Last decimal place used for checking near equality of DFT product matrices to
                  # continuous-result derived check values... note this is not as stringent as
@@ -167,38 +168,72 @@ def test_consistency_psf_mtf():
     np.testing.assert_array_almost_equal(mtf, mtf_test, decimal=decimal_dft)
 
 def test_wavefront_image_view():
-    """Test that the ImageD.array view of the wavefront is consistent with the wavefront array.
+    """Test that the ImageF.array view of the wavefront is consistent with the wavefront array.
     """
     array = galsim.optics.wavefront(array_shape=testshape)
     (real, imag) = galsim.optics.wavefront_image(array_shape=testshape)
-    np.testing.assert_array_equal(array.real, real.array)
-    np.testing.assert_array_equal(array.imag, imag.array)
+    np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
+    np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
 
 def test_psf_image_view():
-    """Test that the ImageD.array view of the PSF is consistent with the PSF array.
+    """Test that the ImageF.array view of the PSF is consistent with the PSF array.
     """
     array = galsim.optics.psf(array_shape=testshape)
     image = galsim.optics.psf_image(array_shape=testshape)
-    np.testing.assert_array_equal(array, image.array)
+    np.testing.assert_array_almost_equal(array.astype(np.float32), image.array, decimal)
 
 def test_otf_image_view():
-    """Test that the ImageD.array view of the OTF is consistent with the OTF array.
+    """Test that the ImageF.array view of the OTF is consistent with the OTF array.
     """
     array = galsim.optics.otf(array_shape=testshape)
     (real, imag) = galsim.optics.otf_image(array_shape=testshape)
-    np.testing.assert_array_equal(array.real, real.array)
-    np.testing.assert_array_equal(array.imag, imag.array)
+    np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
+    np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
 
 def test_mtf_image_view():
-    """Test that the ImageD.array view of the MTF is consistent with the MTF array.
+    """Test that the ImageF.array view of the MTF is consistent with the MTF array.
     """
     array = galsim.optics.mtf(array_shape=testshape)
     image = galsim.optics.mtf_image(array_shape=testshape)
-    np.testing.assert_array_equal(array, image.array)
+    np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
 
 def test_ptf_image_view():
-    """Test that the ImageD.array view of the OTF is consistent with the OTF array.
+    """Test that the ImageF.array view of the OTF is consistent with the OTF array.
     """
     array = galsim.optics.ptf(array_shape=testshape)
     image = galsim.optics.ptf_image(array_shape=testshape)
-    np.testing.assert_array_equal(array, image.array)
+    np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
+
+def test_OpticalPSF_flux():
+    """Compare an unaberrated Optics() PSF flux to unity.
+    """
+    lods = (4., 9., 16.) # lambda/D values: don't choose unity in case symmetry hides something
+    for lod in lods:
+        optics_test = galsim.OpticalPSF(lod=lod)
+        optics_array = optics_test.draw(dx=1.).array 
+        np.testing.assert_almost_equal(optics_array.sum(), 1., decimal_dft, 
+                                       err_msg="OpticalPSF flux not nearly 1")
+
+def test_OpticalPSF_vs_Airy():
+    """Compare the array view on an unaberrated OpticalPSF to that of an Airy.
+    """
+    lods = (4., 9., 16.) # lambda/D values: don't choose unity in case symmetry hides something
+    nlook = 100          # size of array region at the centre of each image to compare
+    for lod in lods:
+        D = 1. / lod
+        airy_test = galsim.Airy(D=D, obs=0., flux=1.)
+        optics_test = galsim.OpticalPSF(lod=lod)
+        airy_array = airy_test.draw(dx=1.).array
+        airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2: 
+                                     airy_array.shape[0]/2 + nlook/2,   
+                                     airy_array.shape[1]/2 - nlook/2:
+                                     airy_array.shape[1]/2 + nlook/2]
+        optics_array = optics_test.draw(dx=1.).array 
+        optics_array_test = optics_array[optics_array.shape[0]/2 - nlook/2:
+                                         optics_array.shape[0]/2 + nlook/2, 
+                                         optics_array.shape[1]/2 - nlook/2:
+                                         optics_array.shape[1]/2 + nlook/2]
+        np.testing.assert_array_almost_equal(optics_array_test, airy_array_test, decimal_dft, 
+                                             err_msg="Unaberrated Optical not quite equal to Airy")
+
+
