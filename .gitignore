@@ -12,3 +12,4 @@ doc/latex/*
 docs/doxygen_example_output/*
 .DS_Store
 tests/nosetests.xml
+examples/output/*
