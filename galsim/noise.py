@@ -20,8 +20,9 @@ def addGaussian(Image, uniform, mean=0., sigma=1.):
     """
     g = galsim.GaussianDeviate(uniform, mean=mean, sigma=sigma)
     imtype = Image.array.dtype.type
-    Image += galsim.Image[imtype]( np.array([g() for i in xrange(np.product(Image.array.shape))],
-                                            dtype=imtype).reshape(Image.array.shape) )
+    Image += galsim.Image[imtype](np.array([g() for i in xrange(np.product(Image.array.shape))],
+                                           dtype=imtype).reshape(Image.array.shape), 
+                                  xMin=Image.getXMin(), yMin=Image.getYMin)
     return Image
 
 def addPoisson(Image, uniform, gain=1.):
@@ -44,7 +45,8 @@ def addPoisson(Image, uniform, gain=1.):
     imtype = Image.array.dtype.type
     elist = list(Image.array.flatten('C') * gain)
     Image += galsim.Image[imtype](np.array([poissonwithmean(p, elecs) / gain for elecs in elist],
-                                  dtype=imtype).reshape(Image.array.shape, order='C')) \
+                                  dtype=imtype).reshape(Image.array.shape, order='C'),
+                                  xMin=Image.getXmin(), yMin=Image.getYMin()) \
            - Image  # Barney note: need to understand image operations better, couldn't get
                     # other assignment to work on output after leaving function scope
     return Image
