@@ -2,14 +2,14 @@
 Support for reading and writing galsim.Image* objects to FITS, via new
 Python-only methods injected into the Image classes.
 """
-
+import os
 from sys import byteorder
 from . import _galsim
 
 # Convert sys.byteorder into the notation numpy dtypes use
 native_byteorder = {'big': '>', 'little': '<'}[byteorder]
 
-def write(image, fits, add_wcs=True):
+def write(image, fits, add_wcs=True, clobber=True):
     """
     Write the image to a FITS file, with details depending on the type of
     the 'fits' argument:
@@ -25,6 +25,8 @@ def write(image, fits, add_wcs=True):
 
     This function called be called directly as "galsim.fits.write(image, ...)",
     with the image as the first argument, or as an image method: "image.write(...)".
+
+    Setting clobber=True when 'fits' is a string will silently overwrite existing files.
     """
     import pyfits    # put this at function scope to keep pyfits optional
 
@@ -56,7 +58,10 @@ def write(image, fits, add_wcs=True):
         hdu.header.update("CRPIX2" + wcsname, 1, "coordinate system reference pixel")
     
     if isinstance(fits, basestring):
+        if os.path.isfile(fits):
+            os.remove(fits)
         hdus.writeto(fits)
+
 
 def read(fits):
     """
