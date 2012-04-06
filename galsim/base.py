@@ -177,7 +177,8 @@ class Optics(GSObject):
 
     @param lod             lambda / D in the physical units adopted (user responsible for 
                            consistency).
-    @param dx              optional specifier for output pixel scale [default samples PSF well]
+    @param dx              optional specifier for pixel scale of aberration lookup table images
+                           [default just samples PSF well]
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -194,7 +195,7 @@ class Optics(GSObject):
                            ignored if dx is set. Setting oversampling < 1 is silly.
     """
     def __init__(self, lod, dx=None, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=2.):
+                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=3.):
         # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
         import galsim.optics
         # Use the same prescription as SBAiry to set maxK, stepK and thus image size
@@ -209,10 +210,10 @@ class Optics(GSObject):
             raise NotImplementedError('Secondary mirror obstruction not yet implemented')
         # TODO: check that the above still makes sense even for large aberrations, probably not...
         npix = np.ceil(2. * self.maxk / self.stepk).astype(int)
-        optimage = galsim.optics.psf_image(array_shape=(npix, npix), defocus=defocus, astig1=astig1,
-                                           astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                                           circular_pupil=circular_pupil, obs=obs,
-                                           kmax=dx*self.maxk)
+        optimage = galsim.optics.psf_image(array_shape=(npix, npix), dx=dx, defocus=defocus,
+                                           astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
+                                           spher=spher, circular_pupil=circular_pupil, obs=obs,
+                                           kmax=self.maxk)
         # If interpolant not specified on input, use a high-ish lanczos
         if interpolantxy == None:
             l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
