@@ -212,8 +212,8 @@ def test_Optics_flux():
     airy_test = galsim.Airy(D=D, obs=0., flux=1.)
     optics_test = galsim.Optics(lod)
     airy_array = airy_test.draw(dx=1.).array
-    optics_array = optics_test.draw(dx=1.).array
-    # TODO: understand the root of the 2sf differences below 
-    np.testing.assert_almost_equal(optics_array.sum(), 1., 2, err_msg="Optics flux not nearly 1")
+    optics_array = optics_test.draw(dx=1.).array 
+    np.testing.assert_almost_equal(optics_array.sum(), 1., decimal_dft, 
+                                   err_msg="Optics flux not nearly 1")
 
 
