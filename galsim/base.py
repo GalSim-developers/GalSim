@@ -163,7 +163,7 @@ class Airy(GSObject):
     # Ditto!
 
 
-class Optics(GSObject):
+class OpticalPSF(GSObject):
     """@brief Class describing aberrated PSFs due to telescope optics.
 
     Input aberration coefficients are assumed to be supplied in units of incident light wavelength,
@@ -172,9 +172,9 @@ class Optics(GSObject):
 
     Initialization
     --------------
-    >>> optical_psf = galsim.Optics(lod, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
-                                    spher=0., circular_pupil=True, interpolantxy=None, dx=1.,
-                                    oversampling=2.)
+    >>> optical_psf = galsim.OpticalPSF(lod=1., defocus=0., astig1=0., astig2=0., coma1=0., 
+                                        coma2=0., spher=0., circular_pupil=True, interpolantxy=None,
+                                        dx=1., oversampling=2.)
 
     Initializes optical_psf as a galsim.Optics() instance.
 
@@ -191,11 +191,12 @@ class Optics(GSObject):
     @param circular_pupil  adopt a circular pupil?
     @param obs             add a central obstruction due to secondary mirror?
     @param interpolantxy   optional keyword for specifiying the interpolation scheme [default = 
-                           galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))]
+                           galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
     @param dx              optional specifier for pixel scale of aberration lookup table images
-                           [default just samples PSF well]
+                           [default just samples PSF well].
     @param oversampling    optional oversampling factor for the SBPixel table [default = 3.],
-                           ignored if dx is set. Setting oversampling < 1 is silly.
+                           ignored if dx is set. Setting oversampling < 1 is silly and will produce
+                           aliasing in the PSF.
     """
     def __init__(self, lod, dx=None, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
                  circular_pupil=True, obs=None, interpolantxy=None, oversampling=3.):
