@@ -1,4 +1,7 @@
+import numpy as np
 import galsim
+
+ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
 class GSObject:
     """Base class for defining the interface with which all GalSim Objects access their shared 
@@ -123,6 +126,7 @@ class Gaussian(GSObject):
     # def setSigma(self, sigma):
     #     return self.SBProfile.setSigma(sigma)
 
+
 class Moffat(GSObject):
     """GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
@@ -133,6 +137,7 @@ class Moffat(GSObject):
     # def getBeta(self):
     #     return self.SBProfile.getBeta()
     # ...etc.
+
 
 class Sersic(GSObject):
     """GalSim Sersic, which has an SBSersic in the SBProfile attribute.
@@ -157,6 +162,69 @@ class Airy(GSObject):
         GSObject.__init__(self, galsim.SBAiry(D=D, obs=obs, flux=flux))
     # Ditto!
 
+
+class OpticalPSF(GSObject):
+    """@brief Class describing aberrated PSFs due to telescope optics.
+
+    Input aberration coefficients are assumed to be supplied in units of incident light wavelength,
+    and correspond to the conventions adopted here:
+    http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
+
+    Initialization
+    --------------
+    >>> optical_psf = galsim.OpticalPSF(lod=1., defocus=0., astig1=0., astig2=0., coma1=0., 
+                                        coma2=0., spher=0., circular_pupil=True, interpolantxy=None,
+                                        dx=1., oversampling=3.)
+
+    Initializes optical_psf as a galsim.Optics() instance.
+
+    @param lod             lambda / D in the physical units adopted (user responsible for 
+                           consistency).
+    @param defocus         defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param circular_pupil  adopt a circular pupil?
+    @param obs             add a central obstruction due to secondary mirror?
+    @param interpolantxy   optional keyword for specifiying the interpolation scheme [default = 
+                           galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
+    @param dx              optional specifier for pixel scale of aberration lookup table images
+                           [default just samples PSF well].
+    @param oversampling    optional oversampling factor for the SBPixel table [default = 3.],
+                           ignored if dx is set. Setting oversampling < 1 is silly and will produce
+                           aliasing in the PSF.
+    """
+    def __init__(self, lod, dx=None, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=3.):
+        # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
+        import galsim.optics
+        # Use the same prescription as SBAiry to set maxK, stepK and thus image size
+        if dx == None:
+            self.maxk = 2. * np.pi / lod
+            dx = np.pi / self.maxk / oversampling
+        else:
+            self.maxk = np.pi / dx
+        if obs == None:
+            self.stepk = min(ALIAS_THRESHOLD * .5 * np.pi**3 / lod, np.pi / 5. / lod)
+        else:
+            raise NotImplementedError('Secondary mirror obstruction not yet implemented')
+        # TODO: check that the above still makes sense even for large aberrations, probably not...
+        npix = np.ceil(2. * self.maxk / self.stepk).astype(int)
+        optimage = galsim.optics.psf_image(array_shape=(npix, npix), dx=dx, defocus=defocus,
+                                           astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
+                                           spher=spher, circular_pupil=circular_pupil, obs=obs,
+                                           kmax=self.maxk)
+        # If interpolant not specified on input, use a high-ish lanczos
+        if interpolantxy == None:
+            l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
+            self.Interpolant2D = galsim.InterpolantXY(l5)
+        GSObject.__init__(self, galsim.SBPixel(optimage, self.Interpolant2D, dx=dx))
+
+
 class GSAdd(GSObject):
     """Base class for defining the python interface to the SBAdd C++ class.
     """
@@ -165,6 +233,7 @@ class GSAdd(GSObject):
         
     def add(self, profile, scale=1.):
         self.SBProfile.add(profile, scale)
+
 
 class GSConvolve(GSObject):
     """Base class for defining the python interface to the SBConvolve C++ class.
