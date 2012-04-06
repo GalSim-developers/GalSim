@@ -24,6 +24,11 @@ def Script1():
       - Add Gaussian noise to the image.
     """
 
+    # Pixel scale for output
+    dx_output = 0.2
+    # Boxcar function to represent this pixellation
+    pix = galsim.Boxcar(xw=dx_output, yw=dx_output)
+
     # Define the galaxy profile
     gal = galsim.Gaussian(flux=100, sigma=2.)
 
@@ -34,11 +39,11 @@ def Script1():
     # TODO: Are we ever going to convolve more than 2 things at a time?
     #       The syntax would be cleaner without the brackets [].
     #       Also, should remove the GS prefix.
-    final = galsim.GSConvolve([gal, psf])
+    final = galsim.GSConvolve([gal, psf, pix])
 
     # Draw the image with a particular pixel scale
     # TODO: How do we specify the size of the image that gets created?
-    image = final.draw(dx=0.2)
+    image = final.draw(dx=dx_output)
 
     # Add some noise to the image
     # First we need to set up a random number generator:
@@ -66,6 +71,11 @@ def Script2():
       - Add Poisson noise to the image.
     """
 
+    # Pixel scale for output
+    dx_output = 0.2
+    # Boxcar function to represent this pixellation
+    pix = galsim.Boxcar(xw=dx_output, yw=dx_output)
+
     # Define the galaxy profile
     gal = galsim.Exponential(flux=1.e5, r0=2.7)
 
@@ -82,13 +92,13 @@ def Script2():
     psf = galsim.Moffat(beta=5, flux=1., re=1.)
 
     # Final profile is the convolution of these
-    final = galsim.GSConvolve([gal, psf])
+    final = galsim.GSConvolve([gal, psf, pix])
 
     # Draw the image with a particular pixel scale
     # TODO: Again, how do we specify the size of the image that gets created?
     #       This image is much larger than the one for script 1 (Barney: I'm guessing this is
     #       the default stepK ends up being a lot smaller due to the wings of the exp).
-    image = final.draw(dx=0.2)
+    image = final.draw(dx=dx_output)
 
     # Add some noise to the image
 
@@ -123,6 +133,11 @@ def Script3():
       - Add Poisson noise to the image.
     """
 
+    # Pixel scale for output
+    dx_output = 0.2
+    # Boxcar function to represent this pixellation
+    pix = galsim.Boxcar(xw=dx_output, yw=dx_output)
+
     # Define the galaxy profile
     gal = galsim.Sersic(3.5, flux=1.e5, re=4.)
 
@@ -138,17 +153,17 @@ def Script3():
     #       Should switch this to something more verbose, like half_light_radius
     atmos = galsim.Gaussian(flux=1., sigma=1.)
 
-    optics = galsim.OpticalPSF(lod=0.1, defocus=0.15, coma1=0.04, coma2=-0.03, astig1=0.02, 
+    optics = galsim.OpticalPSF(lod=0.05, defocus=0.15, coma1=0.04, coma2=-0.03, astig1=0.02, 
                                astig2=0.01)
 
     # Final profile is the convolution of these
-    final = galsim.GSConvolve([gal, atmos, optics])
+    final = galsim.GSConvolve([gal, atmos, optics, pix])
 
     # Draw the image with a particular pixel scale
     # TODO: Again, how do we specify the size of the image that gets created?
     #       This image is much larger than the one for script 1 (Barney: I'm guessing this is
     #       the default stepK ends up being a lot smaller due to the wings of the exp).
-    image = final.draw(dx=0.2)
+    image = final.draw(dx=dx_output)
 
     # Add some noise to the image
 
