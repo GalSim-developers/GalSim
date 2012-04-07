@@ -3,6 +3,50 @@
 Some example scripts to see some basic usage of the GalSim library.
 """
 
+# List is issues that came up while making this.  These should be spawned into 
+# issues on GitHub.
+#
+# - Need a way to easily specify the size of the output image.
+#   This should work to write to a particular portion of a larger image as 
+#   well, since that will be the normal thing we'll be doing.
+#
+# - Probably want to use the name Pixel for what is now Boxcar.  
+#   This means that SBPixel should probably also be renamed.
+#
+# - Probably don't want noise.addGaussian to have mean as a variable, since 
+#   it doesn't really make sense.  Also, sigma should be a required variable, 
+#   not one with a default value of 1.
+#
+# - Should we move addGaussian to main galsim namespace?  
+#   If so, probably change the name to addGaussianNoise.
+#   Maybe even make it a method of image, rather than a free function:
+#   image.addGaussianNoise(rng, sigma = 0.3)
+#   This seems clearer than galsim.noise.addGaussian(image,rng,simga)
+#   Likewise:
+#   image.addPoissonNoise(rng, gain = 1.7)
+# 
+# - For Moffat, Sersic (others?) constructors: 
+#   re is not a very clear name for the half-light radius.
+#   Should switch this to something more verbose, like half_light_radius.
+#
+# - Could we overload the + operator for GSObject?
+#   So we could define a double gaussian as (atmos1 + atmos2)?
+#   Then each gaussian could be separately sheared for example.
+#   Or you might have an Airy + Gaussian.  Or a triple Gaussian.
+#   Better than defining specific new classes for every combination someone 
+#   might want.
+#   
+# - If not the above, then we need to make GSAdd more user-friendly.
+#   Currenly, its only constructor takes an SBAdd object, and we don't 
+#   really want the users to have to deal with that.  (Or anything that
+#   starts with SB I think.)
+#
+# - GSConvolve should drop the GS.  GSAdd too.
+#
+# - Should get python versions of hsm, so we can do the hsm checks
+#   directly here in the python code.
+
+
 import sys
 import os
 
@@ -24,42 +68,38 @@ def Script1():
       - Add Gaussian noise to the image.
     """
 
-    # Pixel scale for output
-    dx_output = 0.2
-    # Boxcar function to represent this pixellation
-    pix = galsim.Boxcar(xw=dx_output, yw=dx_output)
-
     # Define the galaxy profile
     gal = galsim.Gaussian(flux=100, sigma=2.)
 
     # Define the PSF profile
     psf = galsim.Gaussian(flux=1., sigma=1.) # psf flux should always = 1
 
+    # Define the pixel size
+    pixel_scale = 0.2  # arcsec / pixel
+    # Boxcar function to represent this pixellation
+    # The pixels could be rectangles, but normally xw = yw = pixel_scale
+    pix = galsim.Boxcar(xw=pixel_scale, yw=pixel_scale)
+
     # Final profile is the convolution of these
-    # TODO: Are we ever going to convolve more than 2 things at a time?
-    #       The syntax would be cleaner without the brackets [].
-    #       Also, should remove the GS prefix.
+    # Can include any number of things in the list, all of which are convolved 
+    # together to make the final flux profile.
     final = galsim.GSConvolve([gal, psf, pix])
 
     # Draw the image with a particular pixel scale
-    # TODO: How do we specify the size of the image that gets created?
-    image = final.draw(dx=dx_output)
+    image = final.draw(dx=pixel_scale)
 
     # Add some noise to the image
     # First we need to set up a random number generator:
-    # Defaut seed is set from the current time.  Can also speficy seed as argument.
+    # Defaut seed is set from the current time.
     rng = galsim.UniformDeviate()
     # Use this to add Gaussian noise with specified sigma
-    # TODO: Not sure if we want mean as an option to addGaussian.
-    #       Furthermore, we probably want to have sigma be required so we don't 
-    #       accidentally forget to specify it.
     galsim.noise.addGaussian(image, rng, sigma=0.1)
 
     # Write the image to a file
     if not os.path.isdir('output'):
         os.mkdir('output')
-    fileName = os.path.join('output','demo1.fits')
-    image.write(fileName, clobber=True)
+    file_name = os.path.join('output','demo1.fits')
+    image.write(file_name, clobber=True)
 
 
 # Script 2: Sheared, exponential galaxy, Moffat PSF, Poisson noise
@@ -71,122 +111,132 @@ def Script2():
       - Add Poisson noise to the image.
     """
 
-    # Pixel scale for output
-    dx_output = 0.2
-    # Boxcar function to represent this pixellation
-    pix = galsim.Boxcar(xw=dx_output, yw=dx_output)
-
-    # Define the galaxy profile
+    # Define the galaxy profile.
     gal = galsim.Exponential(flux=1.e5, r0=2.7)
 
-    # Shear the galaxy by some value:
+    # Shear the galaxy by some value.
     # TODO: Double check.  These are called e1,e2 in the signature.
     #       Are they distortions or shears?
     g1 = 0.1
     g2 = 0.2
     gal.applyShear(g1, g2)
 
-    # Define the PSF profile
-    # TODO: re is not very clear for the half-light radius.
-    #       Should switch this to something more verbose, like half_light_radius
+    # Define the PSF profile.
     psf = galsim.Moffat(beta=5, flux=1., re=1.)
 
-    # Final profile is the convolution of these
+    # Define the pixel size
+    pixel_scale = 0.2  # arcsec / pixel
+    pix = galsim.Boxcar(xw=pixel_scale, yw=pixel_scale)
+
+    # Final profile is the convolution of these.
     final = galsim.GSConvolve([gal, psf, pix])
 
-    # Draw the image with a particular pixel scale
-    # TODO: Again, how do we specify the size of the image that gets created?
-    #       This image is much larger than the one for script 1 (Barney: I'm guessing this is
-    #       the default stepK ends up being a lot smaller due to the wings of the exp).
-    image = final.draw(dx=dx_output)
+    # Draw the image with a particular pixel scale.
+    image = final.draw(dx=pixel_scale)
 
-    # Add some noise to the image
-
-    # For Poisson noise, we want to have a sky level as well.
-    skyLevel = 1.e4
-    # Barney: here's how we add a constant sky level to the image:
-    sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=skyLevel)
+    # Add a constant sky level to the image.
+    sky_level = 1.e4
+    # Create an image with the same bounds as image, with a constant
+    # sky level.
+    sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
     image += sky_image
 
-    # This time use a particular seed, so it the image is deterministic
+    # This time use a particular seed, so it the image is deterministic.
     rng = galsim.UniformDeviate(1534225)
-    # Use this to add Poisson noise
+    # Use this to add Poisson noise.
     galsim.noise.addPoisson(image, rng, gain=1.)
 
-    # Barney: here's how we subtract the background again...
+    # Subtract off the sky.
     image -= sky_image
 
-    # Write the image to a file
+    # Write the image to a file.
     if not os.path.isdir('output'):
         os.mkdir('output')
-    fileName = os.path.join('output', 'demo2.fits')
-    image.write(fileName, clobber=True)
+    file_name = os.path.join('output', 'demo2.fits')
+    image.write(file_name, clobber=True)
 
 
 # Script 3: Sheared, Sersic galaxy, Gaussian + OpticalPSF (atmosphere + optics) PSF, Poisson noise
 def Script3():
     """
-    A little bit more sophisticated again, but still pretty basic:
-      - Use a sheared, Sersic profile for the galaxy (n = 3., half_light_radius=4.).
-      - Convolve it by a circular Gaussian and an aberrated OpticalPSF with some defocus, coma and
-        astigmatism.
-      - Add Poisson noise to the image.
+    Getting reasonably close to including all the principle features of a 
+    ground-based telescope:
+      - Use a sheared, Sersic profile for the galaxy 
+        (n = 3., half_light_radius=4.).
+      - Let the PSF have both atmospheric and optical components.
+      - The atmospheric component is the sum of two non-circular Gaussians.
+      - The optical component has some defocus, coma, and astigmatism.
+      - Add both Poisson noise to the image and Gaussian read noise.
+      - Let the pixels be slightly distorted relative to the sky.
     """
 
-    # Pixel scale for output
-    dx_output = 0.2
-    # Boxcar function to represent this pixellation
-    pix = galsim.Boxcar(xw=dx_output, yw=dx_output)
-
-    # Define the galaxy profile
+    # Define the galaxy profile.
     gal = galsim.Sersic(3.5, flux=1.e5, re=4.)
 
-    # Shear the galaxy by some value:
-    # TODO: Double check.  These are called e1,e2 in the signature.
-    #       Are they distortions or shears?
+    # Shear the galaxy by some value.
     g1 = 0.1
     g2 = -0.2
     gal.applyShear(g1, g2)
 
-    # Define the PSF profile
-    # TODO: re is not very clear for the half-light radius.
-    #       Should switch this to something more verbose, like half_light_radius
-    atmos = galsim.Gaussian(flux=1., sigma=1.)
+    # Define the atmospheric part of the PSF.
+    atmos = galsim.atmosphere.DoubleGaussian(
+            flux1=0.3, sigma1=2.1, flux2=0.7, sigma2=0.9)
+    atmos_g1 = -0.13
+    atmos_g2 = -0.09
+    atmos.applyShear(atmos_g1 , atmos_g2)
 
-    optics = galsim.OpticalPSF(lod=0.05, defocus=0.15, coma1=0.04, coma2=-0.03, astig1=0.02, 
-                               astig2=0.01)
+    # Define the pixel scale here, since we need it for the optical PSF
+    pixel_scale = 0.23  # arcsec / pixel
 
-    # Final profile is the convolution of these
+    # Define the optical part of the PSF.
+    # The first argument of OpticalPSF below is lambda/D,
+    # which needs to be in pixel units, so do the calculation:
+    lam = 800 * 1.e-9 # 800 nm.  NB: don't use lambda - that's a reserved word.
+    D = 4.  # 4 meter telescope, say.
+    lam_over_D = lam / D # radians
+    lam_over_D *= 206265 # arcsec
+    lam_over_D *= pixel_scale # pixels
+    print 'lam_over_D = ',lam_over_D
+    # The rest of the values here should be given in units of the 
+    # wavelength of the incident light.
+    optics = galsim.OpticalPSF(lam_over_D, 
+            defocus=15.0, coma1=6.4, coma2=-3.3, astig1=-2.9, astig2=1.2)
+
+    # Start with square pixels
+    pix = galsim.Boxcar(xw=pixel_scale, yw=pixel_scale)
+    # Then shear them slightly
+    wcs_g1 = -0.02
+    wcs_g2 = 0.01
+    pix.applyShear(wcs_g1, wcs_g2)
+
+    # Final profile is the convolution of these.
     final = galsim.GSConvolve([gal, atmos, optics, pix])
 
-    # Draw the image with a particular pixel scale
-    # TODO: Again, how do we specify the size of the image that gets created?
-    #       This image is much larger than the one for script 1 (Barney: I'm guessing this is
-    #       the default stepK ends up being a lot smaller due to the wings of the exp).
-    image = final.draw(dx=dx_output)
+    # Draw the image with a particular pixel scale.
+    image = final.draw(dx=pixel_scale)
 
-    # Add some noise to the image
-
-    # For Poisson noise, we want to have a sky level as well.
-    skyLevel = 1.e4
-    # Barney: here's how we add a constant sky level to the image:
-    sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=skyLevel)
+    # Add a constant sky level to the image.
+    sky_level = 1.e4
+    sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
     image += sky_image
 
-    # This time use a particular seed, so it the image is deterministic
+    # Add Poisson noise to the image.
+    gain = 1.7
     rng = galsim.UniformDeviate(1314662)
-    # Use this to add Poisson noise
-    galsim.noise.addPoisson(image, rng, gain=1.)
+    galsim.noise.addPoisson(image, rng, gain=gain)
 
-    # Barney: here's how we subtract the background again...
+    # Also add (Gaussian) read noise.
+    read_noise = 0.3
+    galsim.noise.addGaussian(image, rng, sigma=read_noise)
+
+    # Subtract off the sky.
     image -= sky_image
 
     # Write the image to a file
     if not os.path.isdir('output'):
         os.mkdir('output')
-    fileName = os.path.join('output', 'demo3.fits')
-    image.write(fileName, clobber=True)
-
+    file_name = os.path.join('output', 'demo3.fits')
+    image.write(file_name, clobber=True)
 
 
     
@@ -198,15 +248,15 @@ def main(argv):
         print __doc__
         raise err
 
-    # Script 1: Gaussian galaxy, Gaussian PSF, Gaussian noise:
+    # Script 1: Gaussian galaxy, Gaussian PSF, Gaussian noise.
     if scriptNum == 0 or scriptNum == 1:
         Script1()
 
-    # Script 2: Sheared exponential galaxy, Moffat PSF, Poisson noise:
+    # Script 2: Sheared exponential galaxy, Moffat PSF, Poisson noise.
     if scriptNum == 0 or scriptNum == 2:
         Script2()
 
-    # Script 3: Sheared Sersic galaxy, Gaussian + aberrated Optics PSF, Poisson noise:
+    # Script 3: Essentially fully realistic ground-based image.
     if scriptNum == 0 or scriptNum == 3:
         Script3()
         
