@@ -45,10 +45,18 @@ Some example scripts to see some basic usage of the GalSim library.
 #
 # - Should get python versions of hsm, so we can do the hsm checks
 #   directly here in the python code.
+#
+# - The applyShear function has the "wrong" conventions for the shear.
+#   The arguments are taken to be (e1,e2) which are a distortion, not
+#   a shear.  Need to fix that.  We can also have applyDistortion if we 
+#   want to have something that uses this convention, but it shouldn't 
+#   be what applyShear does.
 
 
 import sys
 import os
+import subprocess
+import math
 
 # This machinery lets us run Python examples even though they aren't positioned
 # properly to find galsim as a package in the current directory.
@@ -59,6 +67,41 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+class HSM_Moments:
+    """
+    A class that runs the meas_moments program on an image
+    and stores the results.
+    This is temporary.  This functionality should be python wrapped.
+    """
+    
+    def __init__(self, file_name):
+        proc = subprocess.Popen('../bin/meas_moments %s'%file_name,
+            stdout=subprocess.PIPE, shell=True)
+        buf = os.read(proc.stdout.fileno(),1000)
+        while proc.poll() == None:
+            pass
+        if proc.returncode != 0:
+            raise RuntimeError("meas_moments exited with an error code")
+
+        results = buf.split()
+        if results[0] is not '0':
+            raise RuntimeError("meas_moments returned an error status")
+        self.mxx = float(results[1])
+        self.myy = float(results[2])
+        self.mxy = float(results[3])
+        self.e1 = float(results[4])
+        self.e2 = float(results[5])
+        # These are distortions e1,e2
+        # Find the corresponding shear:
+        esq = self.e1*self.e1 + self.e2*self.e2
+        e = math.sqrt(esq)
+        g = math.tanh(0.5 * math.atanh(e))
+        self.g1 = self.e1 * (g/e)
+        self.g2 = self.e2 * (g/e)
+
+
+
+
 # Script 1: Simple Gaussian for both galaxy and psf, with Gaussian noise
 def Script1():
     """
@@ -68,8 +111,11 @@ def Script1():
       - Add Gaussian noise to the image.
     """
 
+    print 'Script 1:'
+    print '    Starting script'
+
     # Define the galaxy profile
-    gal = galsim.Gaussian(flux=100, sigma=2.)
+    gal = galsim.Gaussian(flux=1000, sigma=2.)
 
     # Define the PSF profile
     psf = galsim.Gaussian(flux=1., sigma=1.) # psf flux should always = 1
@@ -93,13 +139,21 @@ def Script1():
     # Defaut seed is set from the current time.
     rng = galsim.UniformDeviate()
     # Use this to add Gaussian noise with specified sigma
-    galsim.noise.addGaussian(image, rng, sigma=0.1)
+    galsim.noise.addGaussian(image, rng, sigma=0.01)
 
     # Write the image to a file
     if not os.path.isdir('output'):
         os.mkdir('output')
     file_name = os.path.join('output','demo1.fits')
     image.write(file_name, clobber=True)
+    print '    Wrote image to',file_name
+
+    moments = HSM_Moments(file_name)
+    print '    HSM reports that the image has measured moments:'
+    print '       ',moments.mxx,moments.myy,moments.mxy
+    print '    e1,e2 = ',moments.e1,moments.e2
+    print '    g1,g2 = ',moments.g1,moments.g2
+
 
 
 # Script 2: Sheared, exponential galaxy, Moffat PSF, Poisson noise
@@ -110,19 +164,20 @@ def Script2():
       - Convolve it by a circular Moffat PSF.
       - Add Poisson noise to the image.
     """
+    
+    print 'Script 2:'
+    print '    Starting script'
 
     # Define the galaxy profile.
     gal = galsim.Exponential(flux=1.e5, r0=2.7)
 
     # Shear the galaxy by some value.
-    # TODO: Double check.  These are called e1,e2 in the signature.
-    #       Are they distortions or shears?
     g1 = 0.1
     g2 = 0.2
     gal.applyShear(g1, g2)
 
     # Define the PSF profile.
-    psf = galsim.Moffat(beta=5, flux=1., re=1.)
+    psf = galsim.Moffat(beta=5, flux=1., re=1.0)
 
     # Define the pixel size
     pixel_scale = 0.2  # arcsec / pixel
@@ -154,6 +209,14 @@ def Script2():
         os.mkdir('output')
     file_name = os.path.join('output', 'demo2.fits')
     image.write(file_name, clobber=True)
+    print '    Wrote image to',file_name
+
+    moments = HSM_Moments(file_name)
+    print '    HSM reports that the image has measured moments:'
+    print '       ',moments.mxx,moments.myy,moments.mxy
+    print '    e1,e2 = ',moments.e1,moments.e2
+    print '    g1,g2 = ',moments.g1,moments.g2
+
 
 
 # Script 3: Sheared, Sersic galaxy, Gaussian + OpticalPSF (atmosphere + optics) PSF, Poisson noise
@@ -169,6 +232,9 @@ def Script3():
       - Add both Poisson noise to the image and Gaussian read noise.
       - Let the pixels be slightly distorted relative to the sky.
     """
+
+    print 'Script 3:'
+    print '    Starting script'
 
     # Define the galaxy profile.
     gal = galsim.Sersic(3.5, flux=1.e5, re=4.)
@@ -196,7 +262,7 @@ def Script3():
     lam_over_D = lam / D # radians
     lam_over_D *= 206265 # arcsec
     lam_over_D *= pixel_scale # pixels
-    print 'lam_over_D = ',lam_over_D
+    print '    lambda over D = ',lam_over_D
     # The rest of the values here should be given in units of the 
     # wavelength of the incident light.
     optics = galsim.OpticalPSF(lam_over_D, 
@@ -207,10 +273,11 @@ def Script3():
     # Then shear them slightly
     wcs_g1 = -0.02
     wcs_g2 = 0.01
-    pix.applyShear(wcs_g1, wcs_g2)
+    #pix.applyShear(wcs_g1, wcs_g2)
 
     # Final profile is the convolution of these.
-    final = galsim.GSConvolve([gal, atmos, optics, pix])
+    #final = galsim.GSConvolve([gal, atmos, optics, pix])
+    final = galsim.GSConvolve([gal, pix])
 
     # Draw the image with a particular pixel scale.
     image = final.draw(dx=pixel_scale)
@@ -237,9 +304,16 @@ def Script3():
         os.mkdir('output')
     file_name = os.path.join('output', 'demo3.fits')
     image.write(file_name, clobber=True)
+    print '    Wrote image to',file_name
+
+    moments = HSM_Moments(file_name)
+    print '    HSM reports that the image has measured moments:'
+    print '       ',moments.mxx,moments.myy,moments.mxy
+    print '    e1,e2 = ',moments.e1,moments.e2
+    print '    g1,g2 = ',moments.g1,moments.g2
 
 
-    
+
 def main(argv):
     try:
         # If no argument, run all scripts (indicated by scriptNum = 0)
