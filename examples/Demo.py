@@ -273,11 +273,10 @@ def Script3():
     # Then shear them slightly
     wcs_g1 = -0.02
     wcs_g2 = 0.01
-    #pix.applyShear(wcs_g1, wcs_g2)
+    pix.applyShear(wcs_g1, wcs_g2)
 
     # Final profile is the convolution of these.
-    #final = galsim.GSConvolve([gal, atmos, optics, pix])
-    final = galsim.GSConvolve([gal, pix])
+    final = galsim.GSConvolve([gal, atmos, optics, pix])
 
     # Draw the image with a particular pixel scale.
     image = final.draw(dx=pixel_scale)
