@@ -57,6 +57,7 @@ import sys
 import os
 import subprocess
 import math
+import logging
 
 # This machinery lets us run Python examples even though they aren't positioned
 # properly to find galsim as a package in the current directory.
@@ -140,11 +141,13 @@ def Script1():
       - Convolve it by a circular Gaussian PSF.
       - Add Gaussian noise to the image.
     """
+    # In non-script code, use getLogger(__name__) at module scope instead.
+    logger = logging.getLogger("Script1") 
 
-    print 'Script 1:'
-    print '    Starting script to convolve circular Gaussian galaxy (flux=1000, sigma=2),'
-    print '                                circular Gaussian PSF (flux=1, sigma=1),'
-    print '                                and pixel response (dx=0.2), then add Gaussian noise.'
+    logger.info('Script 1:')
+    logger.info('Starting script to convolve circular Gaussian galaxy (flux=1000, sigma=2),'\
+                    ' circular Gaussian PSF (flux=1, sigma=1),'\
+                    ' and pixel response (dx=0.2), then add Gaussian noise.')
 
     # Define the galaxy profile
     gal = galsim.Gaussian(flux=1000, sigma=2.)
@@ -178,15 +181,16 @@ def Script1():
         os.mkdir('output')
     file_name = os.path.join('output','demo1.fits')
     image.write(file_name, clobber=True)
-    print '    Wrote image to',file_name
+    logger.info('Wrote image to %r' % file_name)  # using %r adds quotes around filename for us
 
     moments = HSM_Moments(file_name)
-    print '    HSM reports that the image has measured moments Mxx, Myy, Mxy:'
-    print '       ',moments.mxx,moments.myy,moments.mxy
-    print '    e1,e2 = ',moments.e1,moments.e2
-    print '    g1,g2 = ',moments.g1,moments.g2
-    print '    Expected value for moments in limit that pixel response and noise are negligible: '
-    print '       ',(1.0**2+2.0**2)/(pixel_scale**2),(1.0**2+2.0**2)/(pixel_scale**2),' 0'
+
+    logger.info('HSM reports that the image has measured moments Mxx, Myy, Mxy:'\
+                    ' %f, %f, %f', moments.mxx, moments.myy, moments.mxy)
+    logger.info('e1,e2 = %f,%f', moments.e1, moments.e2)
+    logger.info('g1,g2 = %f,%f', moments.g1, moments.g2)
+    logger.info('Expected value for moments in limit that pixel response and noise are negligible:'\
+                    ' %f, %f, 0', (1.0**2+2.0**2)/(pixel_scale**2), (1.0**2+2.0**2)/(pixel_scale**2))
 
 # Script 2: Sheared, exponential galaxy, Moffat PSF, Poisson noise
 def Script2():
@@ -196,11 +200,11 @@ def Script2():
       - Convolve it by a circular Moffat PSF.
       - Add Poisson noise to the image.
     """
-    
-    print 'Script 2:'
-    print '    Starting script to convolve sheared (0.1, 0.2) exponential galaxy,'
-    print '                                circular Moffat PSF,'
-    print '                                and pixel response, then add Poisson noise.'
+    # In non-script code, use getLogger(__name__) at module scope instead.    
+    logger = logging.getLogger("Script2") 
+    logger.info('Starting script to convolve sheared (0.1, 0.2) exponential galaxy,'\
+                    ' circular Moffat PSF,'\
+                    ' and pixel response, then add Poisson noise.')
 
     # Define the galaxy profile.
     gal = galsim.Exponential(flux=1.e5, r0=2.7)
@@ -247,18 +251,18 @@ def Script2():
     file_name_epsf = os.path.join('output','demo2_epsf.fits')
     image.write(file_name, clobber=True)
     image_epsf.write(file_name_epsf, clobber=True)
-    print '    Wrote image to',file_name
-    print '    Wrote effective PSF image to ',file_name_epsf
+    logger.info('Wrote image to %r',file_name)
+    logger.info('Wrote effective PSF image to %r',file_name_epsf)
 
     moments = HSM_Moments(file_name)
     moments_corr = HSM_Regauss(file_name, file_name_epsf, image.array.shape)
-    print '    HSM reports that the image has measured moments:'
-    print '       ',moments.mxx,moments.myy,moments.mxy
-    print '    e1,e2 = ',moments.e1,moments.e2
-    print '    g1,g2 = ',moments.g1,moments.g2
-    print '    When carrying out Regaussianization PSF correction, HSM reports'
-    print '    e1,e2 = ',moments_corr.e1,moments_corr.e2
-    print '    g1,g2 = ',moments_corr.g1,moments_corr.g2
+    logger.info('HSM reports that the image has measured moments:')
+    logger.info(' %f, %f, %f', moments.mxx, moments.myy, moments.mxy)
+    logger.info('e1,e2 = %f,%f', moments.e1, moments.e2)
+    logger.info('g1,g2 = %f,%f', moments.g1, moments.g2)
+    logger.info('When carrying out Regaussianization PSF correction, HSM reports')
+    logger.info('e1,e2 = %f,%f', moments_corr.e1, moments_corr.e2)
+    logger.info('g1,g2 = %f,%f', moments_corr.g1, moments_corr.g2)
 
 
 # Script 3: Sheared, Sersic galaxy, Gaussian + OpticalPSF (atmosphere + optics) PSF, Poisson noise 
@@ -274,13 +278,13 @@ def Script3():
       - Add both Poisson noise to the image and Gaussian read noise.
       - Let the pixels be slightly distorted relative to the sky.
     """
-
-    print 'Script 3:'
-    print '    Starting script to convolve sheared (0.1, -0.2) Sersic n=3 galaxy,'
-    print '                                optical PSF with defocus, coma, astigmatism'
-    print '                                non-circular double Gaussian atmospheric PSF'
-    print '                                pixel response + distortion, '
-    print '                                then add Poisson pixel noise and Gaussian read noise.'
+    # In non-script code, use getLogger(__name__) at module scope instead.
+    logger = logging.getLogger("Script3") 
+    logger.info('Starting script to convolve sheared (0.1, -0.2) Sersic n=3 galaxy,'\
+                    ' optical PSF with defocus, coma, astigmatism'\
+                    ' non-circular double Gaussian atmospheric PSF'\
+                    ' pixel response + distortion,'\
+                    ' then add Poisson pixel noise and Gaussian read noise.')
 
     # Define the galaxy profile.
     gal = galsim.Sersic(3.5, flux=1.e5, re=4.)
@@ -308,7 +312,7 @@ def Script3():
     lam_over_D = lam / D # radians
     lam_over_D *= 206265 # arcsec
     lam_over_D *= pixel_scale # pixels
-    print '    lambda over D = ',lam_over_D
+    logger.info('lambda over D = %f', lam_over_D)
     # The rest of the values here should be given in units of the 
     # wavelength of the incident light.
     optics = galsim.OpticalPSF(lam_over_D, 
@@ -352,21 +356,20 @@ def Script3():
     file_name = os.path.join('output', 'demo3.fits')
     file_name_epsf = os.path.join('output','demo3_epsf.fits')
     image.write(file_name, clobber=True)
+
     image_epsf.write(file_name_epsf, clobber=True)
-    print '    Wrote image to',file_name
-    print '    Wrote effective PSF image to ',file_name_epsf
+    logger.info('Wrote image to %r', file_name)
+    logger.info('Wrote effective PSF image to %r', file_name_epsf)
 
     moments = HSM_Moments(file_name)
     moments_corr = HSM_Regauss(file_name, file_name_epsf, image.array.shape)
-    print '    HSM reports that the image has measured moments:'
-    print '       ',moments.mxx,moments.myy,moments.mxy
-    print '    e1,e2 = ',moments.e1,moments.e2
-    print '    g1,g2 = ',moments.g1,moments.g2
-    print '    When carrying out Regaussianization PSF correction, HSM reports'
-    print '    e1,e2 = ',moments_corr.e1,moments_corr.e2
-    print '    g1,g2 = ',moments_corr.g1,moments_corr.g2
-
-
+    logger.info('HSM reports that the image has measured moments:'\
+                    ' %f, %f, %f', moments.mxx, moments.myy, moments.mxy)
+    logger.info('e1,e2 = %f,%f', moments.e1, moments.e2)
+    logger.info('g1,g2 = %f,%f', moments.g1, moments.g2)
+    logger.info('When carrying out Regaussianization PSF correction, HSM reports')
+    logger.info('e1,e2 = %f,%f', moments_corr.e1, moments_corr.e2)
+    logger.info('g1,g2 = %f,%f', moments_corr.g1, moments_corr.g2)
 
 def main(argv):
     try:
@@ -375,6 +378,17 @@ def main(argv):
     except Exception as err:
         print __doc__
         raise err
+    
+    # Setup logging here, rather than at module scope, so the user can do it
+    # differently if they import the module and run the scripts as functions.
+    # If this isn't called at all, no logging is done.
+    # For fancy logging setups (e.g. when running on a big cluster) we could
+    # use logging.fileConfig to use a config file to control logging.
+    logging.basicConfig(
+        format="%(name)s[%(levelname)s]: %(message)s", # could also add date/time, pid, etc...
+        level=logging.DEBUG,
+        stream=sys.stdout
+    )
 
     # Script 1: Gaussian galaxy, Gaussian PSF, Gaussian noise.
     if scriptNum == 0 or scriptNum == 1:
