@@ -114,7 +114,7 @@ def Script1():
     print 'Script 1:'
     print '    Starting script to convolve circular Gaussian galaxy (flux=1000, sigma=2),'
     print '                                circular Gaussian PSF (flux=1, sigma=1),'
-    print '                                and pixel response (dx=0.2)'
+    print '                                and pixel response (dx=0.2), then add Gaussian noise.'
 
     # Define the galaxy profile
     gal = galsim.Gaussian(flux=1000, sigma=2.)
@@ -169,7 +169,9 @@ def Script2():
     """
     
     print 'Script 2:'
-    print '    Starting script'
+    print '    Starting script to convolve sheared (0.1, 0.2) exponential galaxy,'
+    print '                                circular Moffat PSF,'
+    print '                                and pixel response, then add Poisson noise.'
 
     # Define the galaxy profile.
     gal = galsim.Exponential(flux=1.e5, r0=2.7)
@@ -237,7 +239,11 @@ def Script3():
     """
 
     print 'Script 3:'
-    print '    Starting script'
+    print '    Starting script to convolve sheared (0.1, -0.2) Sersic n=3 galaxy,'
+    print '                                optical PSF with defocus, coma, astigmatism'
+    print '                                non-circular double Gaussian atmospheric PSF'
+    print '                                pixel response + distortion, '
+    print '                                then add Poisson pixel noise and Gaussian read noise.'
 
     # Define the galaxy profile.
     gal = galsim.Sersic(3.5, flux=1.e5, re=4.)
