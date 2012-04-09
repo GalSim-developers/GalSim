@@ -183,8 +183,6 @@ def Script1():
     moments = HSM_Moments(file_name)
     print '    HSM reports that the image has measured moments Mxx, Myy, Mxy:'
     print '       ',moments.mxx,moments.myy,moments.mxy
-    print '    e1,e2 = ',moments.e1,moments.e2
-    print '    g1,g2 = ',moments.g1,moments.g2
     print '    Expected value for moments in limit that pixel response and noise are negligible: '
     print '       ',(1.0**2+2.0**2)/(pixel_scale**2),(1.0**2+2.0**2)/(pixel_scale**2),' 0'
 
@@ -254,11 +252,13 @@ def Script2():
     moments_corr = HSM_Regauss(file_name, file_name_epsf, image.array.shape)
     print '    HSM reports that the image has measured moments:'
     print '       ',moments.mxx,moments.myy,moments.mxy
-    print '    e1,e2 = ',moments.e1,moments.e2
-    print '    g1,g2 = ',moments.g1,moments.g2
+    print '        e1,e2 = ',moments.e1,moments.e2
+    print '        g1,g2 = ',moments.g1,moments.g2
     print '    When carrying out Regaussianization PSF correction, HSM reports'
-    print '    e1,e2 = ',moments_corr.e1,moments_corr.e2
-    print '    g1,g2 = ',moments_corr.g1,moments_corr.g2
+    print '        e1,e2 = ',moments_corr.e1,moments_corr.e2
+    print '        g1,g2 = ',moments_corr.g1,moments_corr.g2
+    print '    Expected value for measured shear in limit that noise is negligible: '
+    print '        g1,g2 = ',g1,g2
 
 
 # Script 3: Sheared, Sersic galaxy, Gaussian + OpticalPSF (atmosphere + optics) PSF, Poisson noise 
@@ -292,10 +292,10 @@ def Script3():
 
     # Define the atmospheric part of the PSF.
     atmos = galsim.atmosphere.DoubleGaussian(
-            flux1=0.3, sigma1=2.1, flux2=0.7, sigma2=0.9)
-    atmos_g1 = -0.13
-    atmos_g2 = -0.09
-    atmos.applyShear(atmos_g1 , atmos_g2)
+            flux1=0.0, sigma1=2.1, flux2=0.7, sigma2=0.9)
+    #atmos_g1 = -0.13
+    #atmos_g2 = -0.09
+    #atmos.applyShear(atmos_g1 , atmos_g2)
 
     # Define the pixel scale here, since we need it for the optical PSF
     pixel_scale = 0.23  # arcsec / pixel
@@ -308,43 +308,49 @@ def Script3():
     lam_over_D = lam / D # radians
     lam_over_D *= 206265 # arcsec
     lam_over_D *= pixel_scale # pixels
-    print '    lambda over D = ',lam_over_D
+    print '    lambda over D = ',lam_over_D,' pixels'
     # The rest of the values here should be given in units of the 
     # wavelength of the incident light.
-    optics = galsim.OpticalPSF(lam_over_D, 
-            defocus=15.0, coma1=6.4, coma2=-3.3, astig1=-2.9, astig2=1.2)
+    #optics = galsim.OpticalPSF(lam_over_D, 
+    #        defocus=15.0, coma1=6.4, coma2=-3.3, astig1=-2.9, astig2=1.2)
 
     # Start with square pixels
     pix = galsim.Boxcar(xw=pixel_scale, yw=pixel_scale)
     # Then shear them slightly
     wcs_g1 = -0.02
     wcs_g2 = 0.01
-    pix.applyShear(wcs_g1, wcs_g2)
+    pix.applyShear(-wcs_g1, -wcs_g2)
 
     # Final profile is the convolution of these.
-    final = galsim.GSConvolve([gal, atmos, optics, pix])
-    final_epsf = galsim.GSConvolve([atmos, optics, pix])
+    #final = galsim.GSConvolve([gal, atmos, optics, pix])
+    #final_epsf = galsim.GSConvolve([atmos, optics, pix])
+    final = galsim.GSConvolve([gal, atmos, pix])
+    final_epsf = galsim.GSConvolve([atmos, pix])
+
+    # Now apply the wcs shear to the final image.
+    final.applyShear(wcs_g1, wcs_g2)
+    final_epsf.applyShear(wcs_g1, wcs_g2)
 
     # Draw the image with a particular pixel scale.
     image = final.draw(dx=pixel_scale)
     image_epsf = final_epsf.draw(dx=pixel_scale)
 
     # Add a constant sky level to the image.
-    sky_level = 1.e4
-    sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
+    #sky_level = 1.e4
+    #sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
     image += sky_image
 
     # Add Poisson noise to the image.
-    gain = 1.7
-    rng = galsim.UniformDeviate(1314662)
-    galsim.noise.addPoisson(image, rng, gain=gain)
+    #gain = 1.7
+    #rng = galsim.UniformDeviate(1314662)
+    #galsim.noise.addPoisson(image, rng, gain=gain)
 
     # Also add (Gaussian) read noise.
-    read_noise = 0.3
-    galsim.noise.addGaussian(image, rng, sigma=read_noise)
+    #read_noise = 0.3
+    #galsim.noise.addGaussian(image, rng, sigma=read_noise)
 
     # Subtract off the sky.
-    image -= sky_image
+    #image -= sky_image
 
     # Write the image to a file
     if not os.path.isdir('output'):
@@ -360,11 +366,13 @@ def Script3():
     moments_corr = HSM_Regauss(file_name, file_name_epsf, image.array.shape)
     print '    HSM reports that the image has measured moments:'
     print '       ',moments.mxx,moments.myy,moments.mxy
-    print '    e1,e2 = ',moments.e1,moments.e2
-    print '    g1,g2 = ',moments.g1,moments.g2
+    print '        e1,e2 = ',moments.e1,moments.e2
+    print '        g1,g2 = ',moments.g1,moments.g2
     print '    When carrying out Regaussianization PSF correction, HSM reports'
-    print '    e1,e2 = ',moments_corr.e1,moments_corr.e2
-    print '    g1,g2 = ',moments_corr.g1,moments_corr.g2
+    print '        e1,e2 = ',moments_corr.e1,moments_corr.e2
+    print '        g1,g2 = ',moments_corr.g1,moments_corr.g2
+    print '    Expected value for measured shear in limit that noise is negligible: '
+    print '        g1,g2 = ',g1-wcs_g1,g2-wcs_g2
 
 
 
