@@ -104,7 +104,7 @@ def Script1():
     pixel_scale = 0.2  # arcsec / pixel
     noise = 0.03       # ADU / pixel
 
-    logger.info('Starting script using:')
+    logger.info('Starting script 1 using:')
     logger.info('    - circular Gaussian galaxy (flux = %.1e, sigma = %.1f),',gal_flux,gal_sigma)
     logger.info('    - circular Gaussian PSF (sigma = %.1f),',psf_sigma)
     logger.info('    - pixel scale = %.2f,',pixel_scale)
@@ -173,7 +173,7 @@ def Script2():
     sky_level = 1.e3   # ADU / pixel
     gain = 1.0         # ADU / e-
 
-    logger.info('Starting script using:')
+    logger.info('Starting script 2 using:')
     logger.info('    - sheared (%.2f,%.2f) exponential galaxy (flux = %.1e, r0 = %.2f),',
             g1, g2, gal_flux, gal_r0)
     logger.info('    - circular Moffat PSF (beta = %.1f, re = %.2f),', psf_beta,psf_re)
@@ -227,13 +227,10 @@ def Script2():
     moments = HSM_Moments(file_name)
     moments_corr = HSM_Regauss(file_name, file_name_epsf, image.array.shape)
     logger.info('HSM reports that the image has measured moments:')
-    logger.info('    %.3f, %.3f, %.3f', moments.mxx, moments.myy, moments.mxy)
-    logger.info('    e1,e2 = %.3f,%.3f', moments.e1, moments.e2)
-    logger.info('    g1,g2 = %.3f,%.3f', moments.g1, moments.g2)
+    logger.info('    Mxx = %.3f, Myy = %.3f, Mxy = %.3f', moments.mxx, moments.myy, moments.mxy)
     logger.info('When carrying out Regaussianization PSF correction, HSM reports')
-    logger.info('    e1,e2 = %.3f,%.3f', moments_corr.e1, moments_corr.e2)
     logger.info('    g1,g2 = %.3f,%.3f', moments_corr.g1, moments_corr.g2)
-    logger.info('Expected values in the limit that noise is negligible:')
+    logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
     logger.info('    g1,g2 = %.3f,%.3f', g1,g2)
     print
 
@@ -277,7 +274,7 @@ def Script3():
     gain = 1.7         # ADU / e-
     read_noise = 0.3   # ADU / pixel
 
-    logger.info('Starting script using:')
+    logger.info('Starting script 3 using:')
     logger.info('    - sheared (%.2f,%.2f) Sersic galaxy (flux = %.1e, n = %.1f, re = %.2f),', 
             g1, g2, gal_flux, gal_n, gal_re)
     logger.info('    - sheared (%.2f,%.2f) double-Gaussian atmospheric PSF', atmos_g1,atmos_g2)
@@ -310,7 +307,7 @@ def Script3():
     lam_over_D = lam * 1.e-9 / tel_diam # radians
     lam_over_D *= 206265 # arcsec
     lam_over_D *= pixel_scale # pixels
-    logger.info('lambda over D = %f pixels', lam_over_D)
+    logger.info('Calculated lambda over D = %f pixels', lam_over_D)
     # The rest of the values here should be given in units of the 
     # wavelength of the incident light.
     optics = galsim.OpticalPSF(lam_over_D, 
@@ -363,13 +360,10 @@ def Script3():
     moments_corr = HSM_Regauss(file_name, file_name_epsf, image.array.shape)
 
     logger.info('HSM reports that the image has measured moments:')
-    logger.info('    %f, %f, %f', moments.mxx, moments.myy, moments.mxy)
-    logger.info('    e1,e2 = %f,%f', moments.e1, moments.e2)
-    logger.info('    g1,g2 = %f,%f', moments.g1, moments.g2)
+    logger.info('    Mxx = %.3f, Myy = %.3f, Mxy = %.3f', moments.mxx, moments.myy, moments.mxy)
     logger.info('When carrying out Regaussianization PSF correction, HSM reports')
-    logger.info('    e1,e2 = %f,%f', moments_corr.e1, moments_corr.e2)
     logger.info('    g1,g2 = %f,%f', moments_corr.g1, moments_corr.g2)
-    logger.info('Expected values in the limit that noise is negligible:')
+    logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
     logger.info('    g1,g2 = %f,%f', g1+wcs_g1,g2+wcs_g2)
     print
 
