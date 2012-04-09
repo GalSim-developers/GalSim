@@ -323,9 +323,11 @@ def Script3():
 
     # Final profile is the convolution of these.
     final = galsim.GSConvolve([gal, atmos, optics, pix])
+    final_epsf = galsim.GSConvolve([atmos, optics, pix])
 
     # Draw the image with a particular pixel scale.
     image = final.draw(dx=pixel_scale)
+    image_epsf = final_epsf.draw(dx=pixel_scale)
 
     # Add a constant sky level to the image.
     sky_level = 1.e4
@@ -348,14 +350,21 @@ def Script3():
     if not os.path.isdir('output'):
         os.mkdir('output')
     file_name = os.path.join('output', 'demo3.fits')
+    file_name_epsf = os.path.join('output','demo3_epsf.fits')
     image.write(file_name, clobber=True)
+    image_epsf.write(file_name_epsf, clobber=True)
     print '    Wrote image to',file_name
+    print '    Wrote effective PSF image to ',file_name_epsf
 
     moments = HSM_Moments(file_name)
+    moments_corr = HSM_Regauss(file_name, file_name_epsf, image.array.shape)
     print '    HSM reports that the image has measured moments:'
     print '       ',moments.mxx,moments.myy,moments.mxy
     print '    e1,e2 = ',moments.e1,moments.e2
     print '    g1,g2 = ',moments.g1,moments.g2
+    print '    When carrying out Regaussianization PSF correction, HSM reports'
+    print '    e1,e2 = ',moments_corr.e1,moments_corr.e2
+    print '    g1,g2 = ',moments_corr.g1,moments_corr.g2
 
 
 
