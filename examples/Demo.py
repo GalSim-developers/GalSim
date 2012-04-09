@@ -99,6 +99,36 @@ class HSM_Moments:
         self.g1 = self.e1 * (g/e)
         self.g2 = self.e2 * (g/e)
 
+class HSM_Regauss:
+    """
+    A class that runs the meas_shape program (with re-Gaussianization PSF correction on an image
+    and stores the results. This is temporary.  This functionality should be python wrapped.
+    """
+    
+    def __init__(self, file_name, file_name_epsf, array_shape):
+        proc = subprocess.Popen('../bin/meas_shape %s %s %f %f 0.0 REGAUSS 0.0'%(file_name, file_name_epsf,
+                                                                                 0.5*array_shape[0], 0.5*array_shape[1]), 
+                                stdout=subprocess.PIPE, shell=True)
+        buf = os.read(proc.stdout.fileno(),1000)
+        while proc.poll() == None:
+            pass
+        if proc.returncode != 0:
+            raise RuntimeError('meas_shape exited with an error code, %d'%proc.returncode)
+
+        results = buf.split()
+        if results[0] is not '0':
+            raise RuntimeError("meas_shape returned an error status")
+        self.e1 = float(results[1])
+        self.e2 = float(results[2])
+        self.r2 = float(results[5])
+        # These are distortions e1,e2
+        # Find the corresponding shear:
+        esq = self.e1*self.e1 + self.e2*self.e2
+        e = math.sqrt(esq)
+        g = math.tanh(0.5 * math.atanh(e))
+        self.g1 = self.e1 * (g/e)
+        self.g2 = self.e2 * (g/e)
+
 
 
 
@@ -155,9 +185,8 @@ def Script1():
     print '       ',moments.mxx,moments.myy,moments.mxy
     print '    e1,e2 = ',moments.e1,moments.e2
     print '    g1,g2 = ',moments.g1,moments.g2
-    print '    Expected value for moments in limit that pixel response and noise is negligible: '
+    print '    Expected value for moments in limit that pixel response and noise are negligible: '
     print '       ',(1.0**2+2.0**2)/(pixel_scale**2),(1.0**2+2.0**2)/(pixel_scale**2),' 0'
-
 
 # Script 2: Sheared, exponential galaxy, Moffat PSF, Poisson noise
 def Script2():
@@ -190,9 +219,11 @@ def Script2():
 
     # Final profile is the convolution of these.
     final = galsim.GSConvolve([gal, psf, pix])
+    final_epsf = galsim.GSConvolve([psf, pix])
 
     # Draw the image with a particular pixel scale.
     image = final.draw(dx=pixel_scale)
+    image_epsf = final_epsf.draw(dx=pixel_scale)
 
     # Add a constant sky level to the image.
     sky_level = 1.e4
@@ -213,15 +244,21 @@ def Script2():
     if not os.path.isdir('output'):
         os.mkdir('output')
     file_name = os.path.join('output', 'demo2.fits')
+    file_name_epsf = os.path.join('output','demo2_epsf.fits')
     image.write(file_name, clobber=True)
+    image_epsf.write(file_name_epsf, clobber=True)
     print '    Wrote image to',file_name
+    print '    Wrote effective PSF image to ',file_name_epsf
 
     moments = HSM_Moments(file_name)
+    moments_corr = HSM_Regauss(file_name, file_name_epsf, image.array.shape)
     print '    HSM reports that the image has measured moments:'
     print '       ',moments.mxx,moments.myy,moments.mxy
     print '    e1,e2 = ',moments.e1,moments.e2
     print '    g1,g2 = ',moments.g1,moments.g2
-
+    print '    When carrying out Regaussianization PSF correction, HSM reports'
+    print '    e1,e2 = ',moments_corr.e1,moments_corr.e2
+    print '    g1,g2 = ',moments_corr.g1,moments_corr.g2
 
 
 # Script 3: Sheared, Sersic galaxy, Gaussian + OpticalPSF (atmosphere + optics) PSF, Poisson noise
