@@ -55,10 +55,24 @@ class GSObject:
         """
         GSObject.__init__(self, self.SBProfile.distort(ellipse))
         
-    def applyShear(self, e1, e2):
-        """Apply an (e1, e2) shear to this object.
+    def applyShear(self, g1, g2):
+        """Apply a (g1,g2) shear to this object.
         """
-        GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
+        # SBProfile expects an e1,e2 distortion, rather than a shear,
+        # so we need to convert:
+        # e = (a^2-b^2) / (a^2+b^2)
+        # g = (a-b) / (a+b)
+        # b/a = (1-g)/(1+g)
+        # e = (1-(b/a)^2) / (1+(b/a)^2)
+
+        import math
+        gsq = g1*g1 + g2*g2
+        g = math.sqrt(gsq)
+        boa = (1-g) / (1+g)
+        e = (1 - boa*boa) / (1 + boa*boa)
+        e1 = g1 * (e/g)
+        e2 = g2 * (e/g)
+        GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1,e2)))
 
     def applyRotation(self, theta):
         """Apply an angular rotation theta [radians, +ve anticlockwise] to this object.
@@ -151,7 +165,7 @@ class Exponential(GSObject):
     """GalSim Exponential, which has an SBExponential in the SBProfile attribute.
     """
     def __init__(self, flux=1., r0=1.):
-        GSObject.__init__(self, galsim.SBExponential(n, flux=flux, r0=r0))
+        GSObject.__init__(self, galsim.SBExponential(flux=flux, r0=r0))
     # Ditto!
 
 
