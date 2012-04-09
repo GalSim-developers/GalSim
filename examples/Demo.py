@@ -112,7 +112,9 @@ def Script1():
     """
 
     print 'Script 1:'
-    print '    Starting script'
+    print '    Starting script to convolve circular Gaussian galaxy (flux=1000, sigma=2),'
+    print '                                circular Gaussian PSF (flux=1, sigma=1),'
+    print '                                and pixel response (dx=0.2)'
 
     # Define the galaxy profile
     gal = galsim.Gaussian(flux=1000, sigma=2.)
@@ -149,11 +151,12 @@ def Script1():
     print '    Wrote image to',file_name
 
     moments = HSM_Moments(file_name)
-    print '    HSM reports that the image has measured moments:'
+    print '    HSM reports that the image has measured moments Mxx, Myy, Mxy:'
     print '       ',moments.mxx,moments.myy,moments.mxy
     print '    e1,e2 = ',moments.e1,moments.e2
     print '    g1,g2 = ',moments.g1,moments.g2
-
+    print '    Expected value for moments in limit that pixel response and noise is negligible: '
+    print '       ',(1.0**2+2.0**2)/(pixel_scale**2),(1.0**2+2.0**2)/(pixel_scale**2),' 0'
 
 
 # Script 2: Sheared, exponential galaxy, Moffat PSF, Poisson noise
