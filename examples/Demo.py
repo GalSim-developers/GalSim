@@ -106,8 +106,8 @@ class HSM_Regauss:
     """
     
     def __init__(self, file_name, file_name_epsf, array_shape):
-        proc = subprocess.Popen('../bin/meas_shape %s %s %f %f 0.0 REGAUSS 0.0'%(file_name, file_name_epsf,
-                                                                                 0.5*array_shape[0], 0.5*array_shape[1]), 
+        proc = subprocess.Popen('../bin/meas_shape %s %s %f %f 0.0 REGAUSS 0.0'%(file_name,
+                                file_name_epsf, 0.5*array_shape[0], 0.5*array_shape[1]), 
                                 stdout=subprocess.PIPE, shell=True)
         buf = os.read(proc.stdout.fileno(),1000)
         while proc.poll() == None:
@@ -261,7 +261,7 @@ def Script2():
     print '    g1,g2 = ',moments_corr.g1,moments_corr.g2
 
 
-# Script 3: Sheared, Sersic galaxy, Gaussian + OpticalPSF (atmosphere + optics) PSF, Poisson noise
+# Script 3: Sheared, Sersic galaxy, Gaussian + OpticalPSF (atmosphere + optics) PSF, Poisson noise 
 def Script3():
     """
     Getting reasonably close to including all the principle features of a 
