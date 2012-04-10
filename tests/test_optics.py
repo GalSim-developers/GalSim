@@ -205,14 +205,14 @@ def test_ptf_image_view():
     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
 
 def test_OpticalPSF_flux():
-    """Compare an unaberrated Optics() PSF flux to unity.
+    """Compare an unaberrated OpticalPSF flux to unity.
     """
     lods = (4., 9., 16.) # lambda/D values: don't choose unity in case symmetry hides something
     for lod in lods:
-        optics_test = galsim.OpticalPSF(lod=lod)
+        optics_test = galsim.OpticalPSF(lam_over_D=lod, padFactor=1)
         optics_array = optics_test.draw(dx=1.).array 
-        np.testing.assert_almost_equal(optics_array.sum(), 1., decimal_dft, 
-                                       err_msg="OpticalPSF flux not nearly 1")
+        np.testing.assert_almost_equal(optics_array.sum(), 1., 2, 
+                                       err_msg="Unaberrated Optical flux not quite unity.")
 
 def test_OpticalPSF_vs_Airy():
     """Compare the array view on an unaberrated OpticalPSF to that of an Airy.
@@ -222,7 +222,7 @@ def test_OpticalPSF_vs_Airy():
     for lod in lods:
         D = 1. / lod
         airy_test = galsim.Airy(D=D, obs=0., flux=1.)
-        optics_test = galsim.OpticalPSF(lod=lod)
+        optics_test = galsim.OpticalPSF(lam_over_D=lod, padFactor=1) #pad same as an Airy, natch!
         airy_array = airy_test.draw(dx=1.).array
         airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2: 
                                      airy_array.shape[0]/2 + nlook/2,   
