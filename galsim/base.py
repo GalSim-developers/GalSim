@@ -214,32 +214,29 @@ class OpticalPSF(GSObject):
     @param obs             add a central obstruction due to secondary mirror?
     @param interpolantxy   optional keyword for specifiying the interpolation scheme [default = 
                            galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
-    @param dx              optional specifier for pixel scale of aberration lookup table images
-                           [default just samples PSF well].
-    @param oversampling    optional oversampling factor for the SBPixel table [default = 3.],
-                           ignored if dx is set. Setting oversampling < 1 is silly and will produce
-                           aliasing in the PSF.
+    @param oversampling    optional oversampling factor for the SBPixel table [default = 2.],
+                           setting oversampling < 1 will produce aliasing in the PSF (not good).
+    @param padFactor       additional multiple by which to zero-pad the PSF image to avoid folding
+                           compared to what would be required for a simple Airy [default = 4].
     """
-    def __init__(self, lod, dx=None, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=3.):
+    def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=2., padFactor=4):
         # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
         import galsim.optics
-        # Use the same prescription as SBAiry to set maxK, stepK and thus image size
-        if dx == None:
-            self.maxk = 2. * np.pi / lod
-            dx = np.pi / self.maxk / oversampling
-        else:
-            self.maxk = np.pi / dx
+        # Use the same prescription as SBAiry to set dx, maxK, Airy stepK and thus image size
+        self.maxk = 2. * np.pi / lam_over_D
+        dx = .5 * lam_over_D / oversampling
         if obs == None:
-            self.stepk = min(ALIAS_THRESHOLD * .5 * np.pi**3 / lod, np.pi / 5. / lod)
+            stepk_airy = min(ALIAS_THRESHOLD * .5 * np.pi**3 / lam_over_D,
+                             np.pi / 5. / lam_over_D)
         else:
             raise NotImplementedError('Secondary mirror obstruction not yet implemented')
         # TODO: check that the above still makes sense even for large aberrations, probably not...
-        npix = np.ceil(2. * self.maxk / self.stepk).astype(int)
-        optimage = galsim.optics.psf_image(array_shape=(npix, npix), dx=dx, defocus=defocus,
+        npix = np.ceil(2. * padFactor * self.maxk / stepk_airy).astype(int)
+        optimage = galsim.optics.psf_image(array_shape=(npix, npix), defocus=defocus,
                                            astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
                                            spher=spher, circular_pupil=circular_pupil, obs=obs,
-                                           kmax=self.maxk)
+                                           kmax=self.maxk, dx=dx)
         # If interpolant not specified on input, use a high-ish lanczos
         if interpolantxy == None:
             l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
