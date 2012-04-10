@@ -67,12 +67,13 @@ class GSObject:
 
         import math
         gsq = g1*g1 + g2*g2
-        g = math.sqrt(gsq)
-        boa = (1-g) / (1+g)
-        e = (1 - boa*boa) / (1 + boa*boa)
-        e1 = g1 * (e/g)
-        e2 = g2 * (e/g)
-        GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1,e2)))
+        if gsq > 0.:
+            g = math.sqrt(gsq)
+            boa = (1-g) / (1+g)
+            e = (1 - boa*boa) / (1 + boa*boa)
+            e1 = g1 * (e/g)
+            e2 = g2 * (e/g)
+            GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1,e2)))
 
     def applyRotation(self, theta):
         """Apply an angular rotation theta [radians, +ve anticlockwise] to this object.
