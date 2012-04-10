@@ -50,7 +50,7 @@ namespace galsim {
          *                      to `1.` if none is found). 
          * @param[in] i         interpolation scheme to adopt between pixels (TODO: Add more, 
          *                      document Interpolant.h, describe the Interpolant2d class).
-         * @param[in] padFactor multiple by which to increase the image size when zero-padding or 
+         * @param[in] padFactor multiple by which to increase the image size when zero-padding for 
          *                      the Fourier transform (default `padFactor = 0.` forces adoption of 
          *                      the currently-hardwired `OVERSAMPLE_X = 4.` parameter value for 
          *                      `padFactor`).
