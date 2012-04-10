@@ -314,9 +314,11 @@ def Script3():
     lam_over_D *= pixel_scale # pixels
     logger.info('lambda over D = %f', lam_over_D)
     # The rest of the values here should be given in units of the 
-    # wavelength of the incident light.
+    # wavelength of the incident light. padFactor is used to here to reduce 'folding' for these
+    # quite strong aberration values
     optics = galsim.OpticalPSF(lam_over_D, 
-            defocus=15.0, coma1=6.4, coma2=-3.3, astig1=-2.9, astig2=1.2)
+                               defocus=5., coma1=6.4, coma2=-3.3, astig1=-2.9, astig2=1.2,
+                               padFactor=6)
 
     # Start with square pixels
     pix = galsim.Boxcar(xw=pixel_scale, yw=pixel_scale)
@@ -332,6 +334,8 @@ def Script3():
     # Draw the image with a particular pixel scale.
     image = final.draw(dx=pixel_scale)
     image_epsf = final_epsf.draw(dx=pixel_scale)
+    # Draw the optical PSF component at its Nyquist sample rate
+    image_opticalpsf = optics.draw(dx=lam_over_D/2.)
 
     # Add a constant sky level to the image.
     sky_level = 1.e4
@@ -354,11 +358,14 @@ def Script3():
     if not os.path.isdir('output'):
         os.mkdir('output')
     file_name = os.path.join('output', 'demo3.fits')
+    file_name_opticalpsf = os.path.join('output','demo3_opticalpsf.fits')
     file_name_epsf = os.path.join('output','demo3_epsf.fits')
+    
     image.write(file_name, clobber=True)
-
+    image_opticalpsf.write(file_name_opticalpsf, clobber=True)
     image_epsf.write(file_name_epsf, clobber=True)
     logger.info('Wrote image to %r', file_name)
+    logger.info('Wrote optics-only PSF image (Nyquist sampled) to %r', file_name_opticalpsf)
     logger.info('Wrote effective PSF image to %r', file_name_epsf)
 
     moments = HSM_Moments(file_name)
