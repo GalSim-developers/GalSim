@@ -124,7 +124,7 @@ def Script1():
     # Final profile is the convolution of these
     # Can include any number of things in the list, all of which are convolved 
     # together to make the final flux profile.
-    final = galsim.GSConvolve([gal, psf, pix])
+    final = galsim.Convolve([gal, psf, pix])
 
     # Draw the image with a particular pixel scale
     image = final.draw(dx=pixel_scale)
@@ -193,8 +193,8 @@ def Script2():
     pix = galsim.Boxcar(xw=pixel_scale, yw=pixel_scale)
 
     # Final profile is the convolution of these.
-    final = galsim.GSConvolve([gal, psf, pix])
-    final_epsf = galsim.GSConvolve([psf, pix])
+    final = galsim.Convolve([gal, psf, pix])
+    final_epsf = galsim.Convolve([psf, pix])
 
     # Draw the image with a particular pixel scale.
     image = final.draw(dx=pixel_scale)
@@ -300,7 +300,10 @@ def Script3():
     # Define the atmospheric part of the PSF.
     atmos = galsim.atmosphere.DoubleGaussian(
             flux1=atmos_f1, sigma1=atmos_sigma1, flux2=1-atmos_f1, sigma2=atmos_sigma2)
-    atmos.applyShear(atmos_g1 , atmos_g2)
+    #atmos.applyShear(atmos_g1 , atmos_g2)
+    #file_name_atmos = os.path.join('output', 'demo3.atmos.fits')
+    #image_atmos = atmos.draw(dx=pixel_scale)
+    #image_atmos.write(file_name_atmos, clobber=True)
 
     # Define the optical part of the PSF.
     # The first argument of OpticalPSF below is lambda/D,
@@ -323,8 +326,8 @@ def Script3():
     pix.applyShear(-wcs_g1, -wcs_g2)
 
     # Final profile is the convolution of these.
-    final = galsim.GSConvolve([gal, atmos, optics, pix])
-    final_epsf = galsim.GSConvolve([atmos, optics, pix])
+    final = galsim.Convolve([gal, atmos, optics, pix])
+    final_epsf = galsim.Convolve([atmos, optics, pix])
 
     # Now apply the wcs shear to the final image.
     final.applyShear(wcs_g1, wcs_g2)

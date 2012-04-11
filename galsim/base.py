@@ -245,17 +245,21 @@ class OpticalPSF(GSObject):
         GSObject.__init__(self, galsim.SBPixel(optimage, self.Interpolant2D, dx=dx))
 
 
-class GSAdd(GSObject):
+class Add(GSObject):
     """Base class for defining the python interface to the SBAdd C++ class.
     """
-    def __init__(self, SBAdd):
-        GSObject.__init__(self, SBAdd)
+    def __init__(self, GSObjList):
+        SBList = []
+        for obj in GSObjList:
+            SBList.append(obj.SBProfile)
+        GSObject.__init__(self, galsim.SBAdd(SBList))
+
         
     def add(self, profile, scale=1.):
         self.SBProfile.add(profile, scale)
 
 
-class GSConvolve(GSObject):
+class Convolve(GSObject):
     """Base class for defining the python interface to the SBConvolve C++ class.
     """
     def __init__(self, GSObjList):
@@ -263,3 +267,7 @@ class GSConvolve(GSObject):
         for obj in GSObjList:
             SBList.append(obj.SBProfile)
         GSObject.__init__(self, galsim.SBConvolve(SBList))
+
+    def add(self, profile):
+        self.SBProfile.add(profile)
+
