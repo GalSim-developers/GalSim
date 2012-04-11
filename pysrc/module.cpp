@@ -9,7 +9,7 @@ void pyExportBounds();
 void pyExportShear();
 void pyExportImage();
 void pyExportSBProfile();
-void pyExportSBPixel();
+void pyExportSBInterpolatedImage();
 void pyExportRandom();
 
 } // namespace galsim
@@ -20,6 +20,6 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportShear();
     galsim::pyExportImage();
     galsim::pyExportSBProfile();
-    galsim::pyExportSBPixel();
+    galsim::pyExportSBInterpolatedImage();
     galsim::pyExportRandom();
 }

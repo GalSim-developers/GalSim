@@ -178,8 +178,8 @@ class Airy(GSObject):
     # Ditto!
 
 
-class Boxcar(GSObject):
-    """GalSim Boxcar, which has an SBBox in the SBProfile attribute.
+class Pixel(GSObject):
+    """GalSim Pixel, which has an SBBox in the SBProfile attribute.
     """
     def __init__(self, xw=1., yw=1., flux=1.):
         GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
@@ -215,8 +215,9 @@ class OpticalPSF(GSObject):
     @param obs             add a central obstruction due to secondary mirror?
     @param interpolantxy   optional keyword for specifiying the interpolation scheme [default = 
                            galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
-    @param oversampling    optional oversampling factor for the SBPixel table [default = 2.],
-                           setting oversampling < 1 will produce aliasing in the PSF (not good).
+    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
+                           [default = 2.], setting oversampling < 1 will produce aliasing in the 
+                           PSF (not good).
     @param padFactor       additional multiple by which to zero-pad the PSF image to avoid folding
                            compared to what would be required for a simple Airy [default = 4].
     """
@@ -242,7 +243,7 @@ class OpticalPSF(GSObject):
         if interpolantxy == None:
             l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
             self.Interpolant2D = galsim.InterpolantXY(l5)
-        GSObject.__init__(self, galsim.SBPixel(optimage, self.Interpolant2D, dx=dx))
+        GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D, dx=dx))
 
 
 class GSAdd(GSObject):

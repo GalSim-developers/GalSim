@@ -117,9 +117,8 @@ def Script1():
     psf = galsim.Gaussian(flux=1., sigma=psf_sigma) # psf flux should always = 1
 
     # Define the pixel size
-    # Boxcar function to represent this pixellation
     # The pixels could be rectangles, but normally xw = yw = pixel_scale
-    pix = galsim.Boxcar(xw=pixel_scale, yw=pixel_scale)
+    pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
 
     # Final profile is the convolution of these
     # Can include any number of things in the list, all of which are convolved 
@@ -190,7 +189,7 @@ def Script2():
     psf = galsim.Moffat(beta=psf_beta, flux=1., re=psf_re)
 
     # Define the pixel size
-    pix = galsim.Boxcar(xw=pixel_scale, yw=pixel_scale)
+    pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
 
     # Final profile is the convolution of these.
     final = galsim.GSConvolve([gal, psf, pix])
@@ -317,7 +316,7 @@ def Script3():
                                astig2=opt_a2, padFactor=opt_padFactor)
 
     # Start with square pixels
-    pix = galsim.Boxcar(xw=pixel_scale, yw=pixel_scale)
+    pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
     # Then shear them slightly by the negative of the wcs shear.
     # This way the later distortion of the full image will bring them back to square.
     pix.applyShear(-wcs_g1, -wcs_g2)

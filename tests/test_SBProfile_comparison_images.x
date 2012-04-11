@@ -7,7 +7,7 @@
 # produced, and if others want to run it, they can change the path appropriately for their system.
 #
 # Important notes:
-## not currently testing SBLaguerre, SBPixel classes
+## not currently testing SBLaguerre, SBInterpolatedImage classes
 
 ##################################
 # File and directory definitions #

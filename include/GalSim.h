@@ -7,7 +7,7 @@
 #include "galsim/SBProfile.h"
 #include "galsim/SBDeconvolve.h"
 #include "galsim/SBParse.h"
-#include "galsim/SBPixel.h"
+#include "galsim/SBInterpolatedImage.h"
 
 // An interface for dealing with images
 #include "galsim/Image.h"
