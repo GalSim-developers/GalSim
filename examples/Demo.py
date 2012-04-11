@@ -396,6 +396,8 @@ def main(argv):
     # We do some fancier logging for Script3, just to demonstrate that we can:
     # - we log to both stdout and to a log file
     # - the log file has a lot more (mostly redundant) information
+    if not os.path.isdir('output'):
+        os.mkdir('output')
     logFile = logging.FileHandler(os.path.join("output", "script3.log"))
     logFile.setFormatter(logging.Formatter("%(name)s[%(levelname)s] %(asctime)s: %(message)s"))
     logging.getLogger("Script3").addHandler(logFile)
