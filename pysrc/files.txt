@@ -3,6 +3,6 @@ Bounds.cpp
 Shear.cpp
 Image.cpp
 SBProfile.cpp
-SBPixel.cpp
+SBInterpolatedImage.cpp
 Random.cpp
 

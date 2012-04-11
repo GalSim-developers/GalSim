@@ -1,16 +1,17 @@
 #include "boost/python.hpp"
 #include "Interpolant.h"
-#include "SBPixel.h"
+#include "SBInterpolatedImage.h"
 
 namespace bp = boost::python;
 
 namespace galsim {
 namespace {
 
-struct PySBPixel {
+struct PySBInterpolatedImage {
 
     static void wrap() {
-        bp::class_< SBPixel, bp::bases<SBProfile> >("SBPixel", bp::init<const SBPixel &>())
+        bp::class_< SBInterpolatedImage, bp::bases<SBProfile> >(
+            "SBInterpolatedImage", bp::init<const SBInterpolatedImage &>())
             .def(bp::init<int, double, const InterpolantXY &, int>(
                      (bp::args("nPix", "dx", "i"), bp::arg("nImages")=1)
                  ))
@@ -24,7 +25,7 @@ struct PySBPixel {
 
 } // anonymous
 
-void pyExportSBPixel() {
+void pyExportSBInterpolatedImage() {
     // We wrap Interpolant classes as opaque, construct-only objects; we just
     // need to be able to make them from Python and pass them to C++.
     bp::class_<Interpolant,boost::noncopyable>("Interpolant", bp::no_init);
@@ -56,7 +57,7 @@ void pyExportSBPixel() {
         "Quintic", bp::init<double>(bp::arg("tol")=1E-4)
     );
 
-    PySBPixel::wrap();
+    PySBInterpolatedImage::wrap();
 }
 
 } // namespace galsim

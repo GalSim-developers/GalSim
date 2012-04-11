@@ -1,7 +1,7 @@
 
 #include <algorithm>
 
-#include "SBPixel.h"
+#include "SBInterpolatedImage.h"
 
 namespace galsim {
 
@@ -11,9 +11,11 @@ namespace galsim {
     // Default k-space interpolant is quintic:
     Quintic defaultKInterpolant1d(1e-4);
 
-    InterpolantXY SBPixel::defaultKInterpolant2d(defaultKInterpolant1d);
+    InterpolantXY SBInterpolatedImage::defaultKInterpolant2d(defaultKInterpolant1d);
 
-    SBPixel::SBPixel(int Npix, double dx_, const Interpolant2d& i, int Nimages_) :  
+    SBInterpolatedImage::SBInterpolatedImage(
+        int Npix, double dx_, const Interpolant2d& i, int Nimages_) :  
+        
         Ninitial(Npix+Npix%2), dx(dx_), Nimages(Nimages_),
         xInterp(&i), kInterp(&defaultKInterpolant2d),
         wts(Nimages, 1.), fluxes(Nimages, 1.), 
@@ -34,7 +36,9 @@ namespace galsim {
     }
 
 #ifdef USE_IMAGES
-    SBPixel::SBPixel(Image<float> const & img, const Interpolant2d& i, double dx_, double padFactor) : 
+    SBInterpolatedImage::SBInterpolatedImage(
+        Image<float> const & img, const Interpolant2d& i, double dx_, double padFactor) : 
+
         dx(dx_), Nimages(1),
         xInterp(&i), kInterp(&defaultKInterpolant2d),
         wts(Nimages, 1.), fluxes(Nimages, 1.), 
@@ -69,7 +73,7 @@ namespace galsim {
     }
 #endif
 
-    SBPixel::SBPixel(const SBPixel& rhs):
+    SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs):
         Ninitial(rhs.Ninitial), dx(rhs.dx), Nk(rhs.Nk), Nimages(rhs.Nimages),
         xInterp(rhs.xInterp), kInterp(rhs.kInterp),
         wts(rhs.wts), fluxes(rhs.fluxes), xFluxes(rhs.xFluxes), yFluxes(rhs.yFluxes),
@@ -82,7 +86,7 @@ namespace galsim {
         }
     }
 
-    SBPixel::~SBPixel() 
+    SBInterpolatedImage::~SBInterpolatedImage() 
     {
         for (size_t i=0; i<vx.size(); i++) if (vx[i]) { delete vx[i]; vx[i]=0; }
         for (size_t i=0; i<vk.size(); i++) if (vk[i]) { delete vk[i]; vk[i]=0; }
@@ -90,13 +94,13 @@ namespace galsim {
         if (ksum) { delete ksum; ksum=0; }
     }
 
-    double SBPixel::getFlux() const 
+    double SBInterpolatedImage::getFlux() const 
     {
         checkReady();
         return wts * fluxes;
     }
 
-    void SBPixel::setFlux(double flux) 
+    void SBInterpolatedImage::setFlux(double flux) 
     {
         checkReady();
         double factor = flux/getFlux();
@@ -105,7 +109,7 @@ namespace galsim {
         if (ksumValid) *ksum *= factor;
     }
 
-    Position<double> SBPixel::centroid() const 
+    Position<double> SBInterpolatedImage::centroid() const 
     {
         checkReady();
         double wtsfluxes = wts * fluxes;
@@ -113,32 +117,32 @@ namespace galsim {
         return p;
     }
 
-    void SBPixel::setPixel(double value, int ix, int iy, int iz) 
+    void SBInterpolatedImage::setPixel(double value, int ix, int iy, int iz) 
     {
         if (iz < 0 || iz>=Nimages)
             FormatAndThrow<SBError>() << 
-                "SBPixel::setPixel image number " << iz << " out of bounds";
+                "SBInterpolatedImage::setPixel image number " << iz << " out of bounds";
         if (ix < -Ninitial/2 || ix >= Ninitial / 2)
             FormatAndThrow<SBError>() << 
-                "SBPixel::setPixel x coordinate " << ix << " out of bounds";
+                "SBInterpolatedImage::setPixel x coordinate " << ix << " out of bounds";
         if (iy < -Ninitial/2 || iy >= Ninitial / 2)
             FormatAndThrow<SBError>() << 
-                "SBPixel::setPixel x coordinate " << iy << " out of bounds";
+                "SBInterpolatedImage::setPixel x coordinate " << iy << " out of bounds";
 
         ready = false;
         vx[iz]->xSet(ix, iy, value);
     }
 
-    double SBPixel::getPixel(int ix, int iy, int iz) const 
+    double SBInterpolatedImage::getPixel(int ix, int iy, int iz) const 
     {
         if (iz < 0 || iz>=Nimages)
             FormatAndThrow<SBError>() << 
-                "SBPixel::getPixel image number " << iz << " out of bounds";
+                "SBInterpolatedImage::getPixel image number " << iz << " out of bounds";
 
         return vx[iz]->xval(ix, iy);
     }
 
-    void SBPixel::setWeights(const tmv::Vector<double>& wts_) 
+    void SBInterpolatedImage::setWeights(const tmv::Vector<double>& wts_) 
     {
         assert(wts_.size()==Nimages);
         wts = wts_;
@@ -146,7 +150,7 @@ namespace galsim {
         ksumValid = false;
     }
 
-    void SBPixel::checkReady() const 
+    void SBInterpolatedImage::checkReady() const 
     {
         if (ready) return;
         // Flush old kTables if any;
@@ -179,7 +183,7 @@ namespace galsim {
         assert(int(vk.size())==Nimages);
     }
 
-    void SBPixel::checkXsum() const 
+    void SBInterpolatedImage::checkXsum() const 
     {
         checkReady();
         if (xsumValid) return;
@@ -195,7 +199,7 @@ namespace galsim {
         xsumValid = true;
     }
 
-    void SBPixel::checkKsum() const 
+    void SBInterpolatedImage::checkKsum() const 
     {
         checkReady();
         if (ksumValid) return;
@@ -211,7 +215,7 @@ namespace galsim {
         ksumValid = true;
     }
 
-    void SBPixel::fillKGrid(KTable& kt) const 
+    void SBInterpolatedImage::fillKGrid(KTable& kt) const 
     {
         // This override of base class is to permit potential efficiency gain from
         // separable interpolant kernel.  If so, the KTable interpolation routine
@@ -233,10 +237,10 @@ namespace galsim {
     }
 
     // Same deal: reverse axis order if we have separable interpolant in X domain
-    void SBPixel::fillXGrid(XTable& xt) const 
+    void SBInterpolatedImage::fillXGrid(XTable& xt) const 
     {
 #ifdef DANIELS_TRACING
-        cout << "SBPixel::fillXGrid called" << endl;
+        cout << "SBInterpolatedImage::fillXGrid called" << endl;
 #endif
         if ( dynamic_cast<const InterpolantXY*> (xInterp)) {
             int N = xt.getN();
@@ -256,10 +260,10 @@ namespace galsim {
 #ifdef USE_IMAGES
     // One more time: for images now
     // Returns total flux
-    double SBPixel::fillXImage(Image<float> & I, double dx) const 
+    double SBInterpolatedImage::fillXImage(Image<float> & I, double dx) const 
     {
 #ifdef DANIELS_TRACING
-        cout << "SBPixel::fillXImage called" << endl;
+        cout << "SBInterpolatedImage::fillXImage called" << endl;
 #endif
         if ( dynamic_cast<const InterpolantXY*> (xInterp)) {
             double sum=0.;
@@ -280,7 +284,7 @@ namespace galsim {
 #endif
 
 #ifndef OLD_WAY
-    double SBPixel::xValue(Position<double> p) const 
+    double SBInterpolatedImage::xValue(Position<double> p) const 
     {
 #ifdef DANIELS_TRACING
         cout << "getting xValue at " << p << endl;
@@ -289,7 +293,7 @@ namespace galsim {
         return xsum->interpolate(p.x, p.y, *xInterp);
     }
 
-    std::complex<double> SBPixel::kValue(Position<double> p) const 
+    std::complex<double> SBInterpolatedImage::kValue(Position<double> p) const 
     {
         // Don't bother if the desired k value is cut off by the x interpolant:
         double ux = p.x*dx/TWOPI;
@@ -303,7 +307,7 @@ namespace galsim {
     }
 
 #else
-    double SBPixel::xValue(Position<double> p) const 
+    double SBInterpolatedImage::xValue(Position<double> p) const 
     {
         // Interpolate WITHOUT wrapping the image.
         int ixMin = static_cast<int> ( std::ceil(p.x/dx - xInterp->xrange()));
@@ -333,7 +337,7 @@ namespace galsim {
         return wts * data * kernel;
     }
 
-    std::complex<double> SBPixel::kValue(Position<double> p) const 
+    std::complex<double> SBInterpolatedImage::kValue(Position<double> p) const 
     {
         checkReady();
         // Interpolate in k space, first apply kInterp kernel to wrapped
