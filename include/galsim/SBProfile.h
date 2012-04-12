@@ -459,7 +459,7 @@ namespace galsim {
         {
             std::list<SBProfile*>::const_iterator sptr;
             for (sptr = slist.begin(); sptr!=slist.end(); ++sptr)
-                add(*(*sptr)->duplicate()); 
+                add(**sptr); 
         }
 
         /** 
@@ -907,8 +907,8 @@ namespace galsim {
 
         // Extend to 4 sigma in both domains, or more if needed to reach EE spec
         double maxK() const { return std::max(4., std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
-        double stepK() const { return M_PI/std::max(4., 
-                                                    std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
+        double stepK() const 
+        { return M_PI/std::max(4., std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
         Position<double> centroid() const 
         { Position<double> p(0., 0.); return p; }
 
