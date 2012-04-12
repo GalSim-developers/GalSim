@@ -39,15 +39,15 @@ def main(argv):
     e = galsim.Ellipse(s, -(g1*g1+g2*g2), galsim.PositionD(xshift,yshift));
 
     galaxyImg = galsim.fits.read(rootname + "_masknoise.fits")
-    galaxy = galsim.SBPixel(galaxyImg, l32d, dxHST, 1.0)
+    galaxy = galsim.SBInterpolatedImage(galaxyImg, l32d, dxHST, 1.0)
     galaxy.setFlux(0.804*1000.*dxSDSS*dxSDSS)
 
     psf1Img = galsim.fits.read(rootname + ".psf.fits")
-    psf1 = galsim.SBPixel(psf1Img, l32d, dxHST, 2.)
+    psf1 = galsim.SBInterpolatedImage(psf1Img, l32d, dxHST, 2.)
     psf1.setFlux(1.)
 
     psf2Img = galsim.fits.read(rootname + ".sdsspsf.fits")
-    psf2 = galsim.SBPixel(psf2Img, l32d, dxSDSS, 2.)
+    psf2 = galsim.SBInterpolatedImage(psf2Img, l32d, dxSDSS, 2.)
     psf2.setFlux(1.)
 
     outImg = galsim.fits.read(rootname + ".g1_0.02.g2_0.00.fits")

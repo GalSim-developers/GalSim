@@ -119,9 +119,8 @@ def Script1():
     logger.info('Made PSF profile')
 
     # Define the pixel size
-    # Boxcar function to represent this pixellation
     # The pixels could be rectangles, but normally xw = yw = pixel_scale
-    pix = galsim.Boxcar(xw=pixel_scale, yw=pixel_scale)
+    pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
     logger.info('Made pixel profile')
 
     # Final profile is the convolution of these
@@ -198,7 +197,7 @@ def Script2():
     logger.info('Made PSF profile')
 
     # Define the pixel size
-    pix = galsim.Boxcar(xw=pixel_scale, yw=pixel_scale)
+    pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
     logger.info('Made pixel profile')
 
     # Final profile is the convolution of these.
@@ -338,7 +337,7 @@ def Script3():
     logger.info('Made optical PSF profile')
 
     # Start with square pixels
-    pix = galsim.Boxcar(xw=pixel_scale, yw=pixel_scale)
+    pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
     # Then shear them slightly by the negative of the wcs shear.
     # This way the later distortion of the full image will bring them back to square.
     pix.applyShear(-wcs_g1, -wcs_g2)
