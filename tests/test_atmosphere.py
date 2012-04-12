@@ -23,11 +23,9 @@ def test_doublegaussian_vs_sbadd():
             for flux2 in np.linspace(0.2, 3, 3):
                 for sigma2 in np.linspace(0.2, 3, 3):
                     dbl1 = galsim.atmosphere.DoubleGaussian(flux1, sigma1, flux2, sigma2)
-                    ar1 = dbl1.draw().array
                     g1 = galsim.SBGaussian(flux1, sigma1)
                     g2 = galsim.SBGaussian(flux2, sigma2)
                     dbl2 = galsim.SBAdd(g1, g2)
-                    ar2 = dbl2.draw().array
                     np.testing.assert_almost_equal(dbl1.draw().array, dbl2.draw().array)
 
 def test_doublegaussian_vs_refimg():
