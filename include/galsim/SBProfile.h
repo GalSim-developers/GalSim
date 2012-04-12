@@ -457,6 +457,7 @@ namespace galsim {
          */
         SBAdd(const std::list<SBProfile*> slist) : plist() 
         {
+            initialize();
             std::list<SBProfile*>::const_iterator sptr;
             for (sptr = slist.begin(); sptr!=slist.end(); ++sptr)
                 add(**sptr); 
