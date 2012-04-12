@@ -19,7 +19,7 @@ namespace galsim {
     typedef boost::mt19937 OurURNG;
 
     class UniformDeviate 
-    // Uniform wrapper is given arguments to map RNG's to [0.,1.) interval.
+        // Uniform wrapper is given arguments to map RNG's to [0.,1.) interval.
     {
     public:
         UniformDeviate(): urd(0.,1.) { seedtime(); } // seed with time
@@ -30,7 +30,7 @@ namespace galsim {
         void seed(const long lseed) { urng.seed(lseed); }
 
     private:
-	OurURNG urng;
+        OurURNG urng;
         boost::uniform_real<> urd;
         void seedtime() 
         {
@@ -38,9 +38,9 @@ namespace galsim {
             gettimeofday(&tp,NULL);
             urng.seed(tp.tv_usec);
         }
-	// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
-	UniformDeviate(const UniformDeviate& rhs) {}
-	void operator=(const UniformDeviate& rhs) {}
+        // Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+        UniformDeviate(const UniformDeviate& rhs) {}
+        void operator=(const UniformDeviate& rhs) {}
 
         // make friends able to see the RNG without the distribution wrapper:
         friend class GaussianDeviate;
@@ -55,38 +55,38 @@ namespace galsim {
     class GaussianDeviate 
     {
         typedef boost::variate_generator<OurURNG&, 
-	                                 boost::normal_distribution<> > GaussGenerator;
+                boost::normal_distribution<> > GaussGenerator;
     public:
         GaussianDeviate(UniformDeviate& u_, double mean=0., double sigma=1.) : 
-	  u(u_), 
-	  normal(new boost::normal_distribution<>(mean,sigma)),
-	  gen(new GaussGenerator(u.urng,*normal))     {}
-	  ~GaussianDeviate() {if (gen) delete gen; if (normal) delete normal;}
-	double operator() () { return (*gen)(); }
+            u(u_), 
+            normal(new boost::normal_distribution<>(mean,sigma)),
+            gen(new GaussGenerator(u.urng,*normal))     {}
+        ~GaussianDeviate() {if (gen) delete gen; if (normal) delete normal;}
+        double operator() () { return (*gen)(); }
         operator double() { return (*gen)();}
-	double getMean() {return normal->mean();}
-	double getSigma() {return normal->sigma();}
-	void setMean(double mean) {
-	  boost::normal_distribution<>* normal2 = 
-	    new boost::normal_distribution<>(mean,normal->sigma());
-	  delete normal;
-	  delete gen;
-	  normal = normal2;
-	  gen = new GaussGenerator(u.urng,*normal);
-	}
-	void setSigma(double sigma) {
-	  boost::normal_distribution<>* normal2 = 
-	    new boost::normal_distribution<>(normal->mean(),sigma);
-	  delete normal;
-	  delete gen;
-	  normal = normal2;
-	  gen = new GaussGenerator(u.urng,*normal);
-	}
+        double getMean() {return normal->mean();}
+        double getSigma() {return normal->sigma();}
+        void setMean(double mean) {
+            boost::normal_distribution<>* normal2 = 
+                new boost::normal_distribution<>(mean,normal->sigma());
+            delete normal;
+            delete gen;
+            normal = normal2;
+            gen = new GaussGenerator(u.urng,*normal);
+        }
+        void setSigma(double sigma) {
+            boost::normal_distribution<>* normal2 = 
+                new boost::normal_distribution<>(normal->mean(),sigma);
+            delete normal;
+            delete gen;
+            normal = normal2;
+            gen = new GaussGenerator(u.urng,*normal);
+        }
     private:
         UniformDeviate& u;
         boost::normal_distribution<>* normal;
         GaussGenerator* gen;
-	// Hide:
+        // Hide:
         GaussianDeviate(const GaussianDeviate& rhs): u(rhs.u), gen(0), normal(0) {}
         void operator=(const GaussianDeviate& rhs) {}
     };
@@ -95,33 +95,33 @@ namespace galsim {
     class BinomialDeviate 
     {
         typedef boost::variate_generator<OurURNG&, 
-	                                 boost::binomial_distribution<> > BinomialGenerator;
+                boost::binomial_distribution<> > BinomialGenerator;
     public:
         BinomialDeviate(UniformDeviate& u_, const int N=1, const double p=0.5): 
-	    u(u_), 
-	    binomial(new boost::binomial_distribution<>(N,p)),
-	    gen(new BinomialGenerator(u.urng,*binomial))     {}
-	~BinomialDeviate() {if (gen) delete gen; if (binomial) delete binomial;}
-	int operator() () { return (*gen)(); }
+            u(u_), 
+            binomial(new boost::binomial_distribution<>(N,p)),
+            gen(new BinomialGenerator(u.urng,*binomial))     {}
+        ~BinomialDeviate() {if (gen) delete gen; if (binomial) delete binomial;}
+        int operator() () { return (*gen)(); }
         operator int() { return (*gen)();}
-	int getN() {return binomial->t();}
-	double getP() {return binomial->p();}
-	void setN(int N) {
-	  boost::binomial_distribution<>* binomial2 = 
-	    new boost::binomial_distribution<>(N,binomial->p());
-	  delete binomial;
-	  delete gen;
-	  binomial = binomial2;
-	  gen = new BinomialGenerator(u.urng,*binomial);
-	}
-	void setP(double p) {
-	  boost::binomial_distribution<>* binomial2 = 
-	    new boost::binomial_distribution<>(binomial->t(),p);
-	  delete binomial;
-	  delete gen;
-	  binomial = binomial2;
-	  gen = new BinomialGenerator(u.urng,*binomial);
-	}
+        int getN() {return binomial->t();}
+        double getP() {return binomial->p();}
+        void setN(int N) {
+            boost::binomial_distribution<>* binomial2 = 
+                new boost::binomial_distribution<>(N,binomial->p());
+            delete binomial;
+            delete gen;
+            binomial = binomial2;
+            gen = new BinomialGenerator(u.urng,*binomial);
+        }
+        void setP(double p) {
+            boost::binomial_distribution<>* binomial2 = 
+                new boost::binomial_distribution<>(binomial->t(),p);
+            delete binomial;
+            delete gen;
+            binomial = binomial2;
+            gen = new BinomialGenerator(u.urng,*binomial);
+        }
     private:
         UniformDeviate& u;
         boost::binomial_distribution<>* binomial;
@@ -135,29 +135,29 @@ namespace galsim {
     class PoissonDeviate 
     {
         typedef boost::variate_generator<OurURNG&, 
-	                                 boost::poisson_distribution<> > PoissonGenerator;
+                boost::poisson_distribution<> > PoissonGenerator;
     public:
         PoissonDeviate(UniformDeviate& u_, const double mean=1.): 
-	    u(u_), 
-	    poisson(new boost::poisson_distribution<>(mean)),
-	    gen(new PoissonGenerator(u.urng,*poisson))     {}
-	~PoissonDeviate() {if (gen) delete gen; if (poisson) delete poisson;}
-	int operator() () { return (*gen)(); }
+            u(u_), 
+            poisson(new boost::poisson_distribution<>(mean)),
+            gen(new PoissonGenerator(u.urng,*poisson))     {}
+        ~PoissonDeviate() {if (gen) delete gen; if (poisson) delete poisson;}
+        int operator() () { return (*gen)(); }
         operator int() { return (*gen)();}
-	int getMean() {return poisson->mean();}
-	void setMean(double mean) {
-	  boost::poisson_distribution<>* poisson2 = 
-	    new boost::poisson_distribution<>(mean);
-	  delete poisson;
-	  delete gen;
-	  poisson = poisson2;
-	  gen = new PoissonGenerator(u.urng,*poisson);
-	}
+        int getMean() {return poisson->mean();}
+        void setMean(double mean) {
+            boost::poisson_distribution<>* poisson2 = 
+                new boost::poisson_distribution<>(mean);
+            delete poisson;
+            delete gen;
+            poisson = poisson2;
+            gen = new PoissonGenerator(u.urng,*poisson);
+        }
     private:
         UniformDeviate& u;
         boost::poisson_distribution<>* poisson;
         PoissonGenerator* gen;
-	// Hide:
+        // Hide:
         PoissonDeviate(const PoissonDeviate& rhs): u(rhs.u), gen(0), poisson(0) {}
         void operator=(const PoissonDeviate& rhs) {}
     };

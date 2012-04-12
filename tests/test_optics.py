@@ -1,6 +1,15 @@
 import numpy as np
-import galsim
+import os
+import sys
+
+try:
+    import galsim
+except ImportError:
+    path, filename = os.path.split(__file__)
+    sys.path.append(os.path.abspath(os.path.join(path, "..")))
+    import galsim
 import galsim.optics
+
 
 testshape = (512, 512)  # shape of image arrays for all tests
 
@@ -237,3 +246,21 @@ def test_OpticalPSF_vs_Airy():
                                              err_msg="Unaberrated Optical not quite equal to Airy")
 
 
+if __name__ == "__main__":
+    test_roll2d_circularity()
+    test_roll2d_fwdbck()
+    test_roll2d_join()
+    test_kxky()
+    test_kxky_plusone()
+    test_check_all_contiguous()
+    test_simple_wavefront()
+    test_simple_mtf()
+    test_simple_ptf()
+    test_consistency_psf_mtf()
+    test_wavefront_image_view()
+    test_psf_image_view()
+    test_otf_image_view()
+    test_mtf_image_view()
+    test_ptf_image_view()
+    test_OpticalPSF_flux()
+    test_OpticalPSF_vs_Airy()

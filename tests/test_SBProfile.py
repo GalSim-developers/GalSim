@@ -1,9 +1,16 @@
-import galsim
 import numpy as np
 import os
+import sys
 
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
                                                           # images. 
+
+try:
+    import galsim
+except ImportError:
+    path, filename = os.path.split(__file__)
+    sys.path.append(os.path.abspath(os.path.join(path, "..")))
+    import galsim
 
 # define a series of tests
 
@@ -237,5 +244,21 @@ def test_sbprofile_rescale():
         err_msg="Flux-rescale sersic profile disagrees with expected result")   
 
 
-
-
+if __name__ == "__main__":
+    test_sbprofile_gaussian()
+    test_sbprofile_gaussian_properties()
+    test_sbprofile_exponential()
+    test_sbprofile_sersic()
+    test_sbprofile_airy()
+    test_sbprofile_box()
+    test_sbprofile_moffat()
+    test_sbprofile_moffat_properties()
+    test_sbprofile_smallshear()
+    test_sbprofile_largeshear()
+    test_sbprofile_convolve()
+    test_sbprofile_shearconvolve()
+    test_sbprofile_rotate()
+    test_sbprofile_mag()
+    test_sbprofile_add()
+    test_sbprofile_shift()
+    test_sbprofile_rescale()

@@ -1,8 +1,15 @@
 import os
+import sys
 
 import numpy as np
 
-import galsim
+try:
+    import galsim
+except ImportError:
+    path, filename = os.path.split(__file__)
+    sys.path.append(os.path.abspath(os.path.join(path, "..")))
+    import galsim
+
 import galsim.atmosphere
 
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
@@ -29,3 +36,7 @@ def test_doublegaussian_vs_refimg():
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Two Gaussian reference image disagrees with DoubleGaussian class")   
+
+if __name__ == "__main__":
+    test_doublegaussian_vs_sbadd()
+    test_doublegaussian_vs_refimg()

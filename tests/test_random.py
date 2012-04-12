@@ -1,5 +1,13 @@
-import galsim
 import numpy as np
+import os
+import sys
+
+try:
+    import galsim
+except ImportError:
+    path, filename = os.path.split(__file__)
+    sys.path.append(os.path.abspath(os.path.join(path, "..")))
+    import galsim
 
 #
 # Note: all tests below were generated using the python interface to the RNG.  Eventually need tests
@@ -78,3 +86,11 @@ def test_poisson_rand():
     testResult = (p(), p(), p())
     np.testing.assert_array_almost_equal(np.array(testResult), np.array(pResult), precision, 
                                          err_msg='Wrong Poisson random number sequence generated')
+
+
+if __name__ == "__main__":
+    test_uniform_rand()
+    test_uniform_rand_reset()
+    test_gaussian_rand()
+    test_binomial_rand()
+    test_poisson_rand()

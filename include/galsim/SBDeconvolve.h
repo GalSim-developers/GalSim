@@ -24,24 +24,24 @@ namespace galsim {
     public:
         /// @brief Constructor.
         SBDeconvolve(const SBProfile& adaptee_) : adaptee(adaptee_.duplicate()) 
-            { maxksq = pow(maxK(),2.); }
-        
+        { maxksq = pow(maxK(),2.); }
+
         /// @brief Copy constructor.
         SBDeconvolve(const SBDeconvolve& rhs) : adaptee(rhs.adaptee->duplicate()) 
-            { maxksq = pow(maxK(),2.); }
+        { maxksq = pow(maxK(),2.); }
 
         /// @brief Operator (TODO: ask Gary about this bit...)
         SBDeconvolve& operator=(const SBDeconvolve& rhs)
-            {
-                if (&rhs == this) return *this;
-                if (adaptee) {
-                    delete adaptee; 
-                    adaptee = 0;
-                }
-                adaptee = rhs.adaptee->duplicate();
-                maxksq = rhs.maxksq;
-                return *this;
+        {
+            if (&rhs == this) return *this;
+            if (adaptee) {
+                delete adaptee; 
+                adaptee = 0;
             }
+            adaptee = rhs.adaptee->duplicate();
+            maxksq = rhs.maxksq;
+            return *this;
+        }
 
         /// @brief Destructor.
         ~SBDeconvolve() { delete adaptee; }
@@ -86,21 +86,21 @@ namespace galsim {
             // Flip or clip:
             int N = kt.getN();
             int maxiksq = maxksq / (kt.getDk()*kt.getDk());
-	    // Only need ix>=0 because it's Hermitian, but also
-	    // don't want to repeat the ix=0, N/2 twice:
-	    for (int iy = -N/2; iy < N/2; iy++) {
-	        if (iy>=0) {
-	            int ix=0;
-		    if (ix*ix+iy*iy <= maxiksq) 
-		        kt.kSet(ix,iy,1./kt.kval(ix,iy));
-		    else
-		        kt.kSet(ix,iy,std::complex<double>(0.,0.));
-		    ix=N/2;
-		    if (ix*ix+iy*iy <= maxiksq) 
-		        kt.kSet(ix,iy,1./kt.kval(ix,iy));
-		    else
-		        kt.kSet(ix,iy,std::complex<double>(0.,0.));
-	        }
+            // Only need ix>=0 because it's Hermitian, but also
+            // don't want to repeat the ix=0, N/2 twice:
+            for (int iy = -N/2; iy < N/2; iy++) {
+                if (iy>=0) {
+                    int ix=0;
+                    if (ix*ix+iy*iy <= maxiksq) 
+                        kt.kSet(ix,iy,1./kt.kval(ix,iy));
+                    else
+                        kt.kSet(ix,iy,std::complex<double>(0.,0.));
+                    ix=N/2;
+                    if (ix*ix+iy*iy <= maxiksq) 
+                        kt.kSet(ix,iy,1./kt.kval(ix,iy));
+                    else
+                        kt.kSet(ix,iy,std::complex<double>(0.,0.));
+                }
                 for (int ix = 0; ix <= N/2; ix++) {
                     if (ix*ix+iy*iy <= maxiksq) 
                         kt.kSet(ix,iy,1./kt.kval(ix,iy));

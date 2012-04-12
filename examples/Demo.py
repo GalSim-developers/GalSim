@@ -112,21 +112,26 @@ def Script1():
 
     # Define the galaxy profile
     gal = galsim.Gaussian(flux=gal_flux, sigma=gal_sigma)
+    logger.info('Made galaxy profile')
 
     # Define the PSF profile
     psf = galsim.Gaussian(flux=1., sigma=psf_sigma) # psf flux should always = 1
+    logger.info('Made PSF profile')
 
     # Define the pixel size
     # The pixels could be rectangles, but normally xw = yw = pixel_scale
     pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
+    logger.info('Made pixel profile')
 
     # Final profile is the convolution of these
     # Can include any number of things in the list, all of which are convolved 
     # together to make the final flux profile.
-    final = galsim.GSConvolve([gal, psf, pix])
+    final = galsim.Convolve([gal, psf, pix])
+    logger.info('Convolved components into final profile')
 
     # Draw the image with a particular pixel scale
     image = final.draw(dx=pixel_scale)
+    logger.info('Made image of the profile')
 
     # Add some noise to the image
     # First we need to set up a random number generator:
@@ -134,6 +139,7 @@ def Script1():
     rng = galsim.UniformDeviate()
     # Use this to add Gaussian noise with specified sigma
     galsim.noise.addGaussian(image, rng, sigma=noise)
+    logger.info('Added Gaussian noise')
 
     # Write the image to a file
     if not os.path.isdir('output'):
@@ -184,20 +190,25 @@ def Script2():
 
     # Shear the galaxy by some value.
     gal.applyShear(g1, g2)
+    logger.info('Made galaxy profile')
 
     # Define the PSF profile.
     psf = galsim.Moffat(beta=psf_beta, flux=1., re=psf_re)
+    logger.info('Made PSF profile')
 
     # Define the pixel size
     pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
+    logger.info('Made pixel profile')
 
     # Final profile is the convolution of these.
-    final = galsim.GSConvolve([gal, psf, pix])
-    final_epsf = galsim.GSConvolve([psf, pix])
+    final = galsim.Convolve([gal, psf, pix])
+    final_epsf = galsim.Convolve([psf, pix])
+    logger.info('Convolved components into final profile')
 
     # Draw the image with a particular pixel scale.
     image = final.draw(dx=pixel_scale)
     image_epsf = final_epsf.draw(dx=pixel_scale)
+    logger.info('Made image of the profile')
 
     # Add a constant sky level to the image.
     # Create an image with the same bounds as image, with a constant
@@ -212,6 +223,7 @@ def Script2():
 
     # Subtract off the sky.
     image -= sky_image
+    logger.info('Added Poisson noise')
 
     # Write the image to a file.
     if not os.path.isdir('output'):
@@ -251,19 +263,21 @@ def Script3():
     logger = logging.getLogger("Script3") 
     gal_flux = 1.e5    # ADU
     gal_n = 3.5        #
-    gal_re = 2.7       # pixels
+    gal_re = 3.7       # pixels
     g1 = -0.23         #
     g2 = 0.15          #
-    atmos_sigma1=2.1   # pixels
-    atmos_sigma2=0.9   # pixels
-    atmos_f1=0.3       #
-    atmos_g1 = -0.13   #
-    atmos_g2 = -0.09   #
-    opt_defocus=5.0    # wavelengths
-    opt_a1=-2.9        # wavelengths
-    opt_a2=1.2         # wavelengths
-    opt_c1=6.4         # wavelengths
-    opt_c2=-3.3        # wavelengths
+    atmos_a_sigma=2.1  # pixels
+    atmos_a_g1 = -0.13 # (shear for "a")
+    atmos_a_g2 = -0.09 #
+    atmos_fa=0.2       # (fraction of flux in "a")
+    atmos_b_sigma=0.9  # pixels
+    atmos_b_g1 = 0.02  # (shear for "b")
+    atmos_b_g2 = -0.04 #
+    opt_defocus=0.53   # wavelengths
+    opt_a1=-0.29       # wavelengths
+    opt_a2=0.12        # wavelengths
+    opt_c1=0.64        # wavelengths
+    opt_c2=-0.33       # wavelengths
     opt_padFactor=6    # multiples of Airy padding required to avoid folding for aberrated PSFs
     lam = 800          # nm    NB: don't use lambda - that's a reserved word.
     tel_diam = 4.      # meters 
@@ -277,12 +291,14 @@ def Script3():
     logger.info('Starting script 3 using:')
     logger.info('    - sheared (%.2f,%.2f) Sersic galaxy (flux = %.1e, n = %.1f, re = %.2f),', 
             g1, g2, gal_flux, gal_n, gal_re)
-    logger.info('    - sheared (%.2f,%.2f) double-Gaussian atmospheric PSF', atmos_g1,atmos_g2)
-    logger.info('          (sigma1 = %.2f, sigma2 = %.2f, frac1 = %.2f)',
-            atmos_sigma1, atmos_sigma2, atmos_f1)
-    logger.info('    - optical PSF with defocus = %.1f, astigmatism = (%.1f,%.1f),',
+    logger.info('    - sheared double-Gaussian atmospheric PSF')
+    logger.info('          First component: sigma = %.2f, shear = (%.2f,%.2f), frac = %.2f',
+            atmos_a_sigma, atmos_a_g1, atmos_a_g2, atmos_fa)
+    logger.info('          Second component: sigma = %.2f, shear = (%.2f,%.2f), frac = %.2f',
+            atmos_b_sigma, atmos_b_g1, atmos_b_g2, 1-atmos_fa)
+    logger.info('    - optical PSF with defocus = %.2f, astigmatism = (%.2f,%.2f),',
             opt_defocus, opt_a1, opt_a2)
-    logger.info('          coma = (%.1f,%.1f), lambda = %.0f nm, D = %.1f m', 
+    logger.info('          coma = (%.2f,%.2f), lambda = %.0f nm, D = %.1f m', 
             opt_c1, opt_c2, lam, tel_diam)
     logger.info('    - pixel scale = %.2f,',pixel_scale)
     logger.info('    - WCS distortion = (%.2f,%.2f),',wcs_g1,wcs_g2)
@@ -295,11 +311,15 @@ def Script3():
 
     # Shear the galaxy by some value.
     gal.applyShear(g1, g2)
+    logger.info('Made galaxy profile')
 
     # Define the atmospheric part of the PSF.
-    atmos = galsim.atmosphere.DoubleGaussian(
-            flux1=atmos_f1, sigma1=atmos_sigma1, flux2=1-atmos_f1, sigma2=atmos_sigma2)
-    atmos.applyShear(atmos_g1 , atmos_g2)
+    atmos_a = galsim.Gaussian(flux=atmos_fa, sigma=atmos_a_sigma)
+    atmos_a.applyShear(atmos_a_g1 , atmos_a_g2)
+    atmos_b = galsim.Gaussian(flux=1-atmos_fa, sigma=atmos_b_sigma)
+    atmos_b.applyShear(atmos_b_g1 , atmos_b_g2)
+    atmos = galsim.Add([atmos_a, atmos_b])
+    logger.info('Made atmospheric PSF profile')
 
     # Define the optical part of the PSF.
     # The first argument of OpticalPSF below is lambda/D,
@@ -314,26 +334,31 @@ def Script3():
     optics = galsim.OpticalPSF(lam_over_D, 
                                defocus=opt_defocus, coma1=opt_c1, coma2=opt_c2, astig1=opt_a1,
                                astig2=opt_a2, padFactor=opt_padFactor)
+    logger.info('Made optical PSF profile')
 
     # Start with square pixels
     pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
     # Then shear them slightly by the negative of the wcs shear.
     # This way the later distortion of the full image will bring them back to square.
     pix.applyShear(-wcs_g1, -wcs_g2)
+    logger.info('Made pixel profile')
 
     # Final profile is the convolution of these.
-    final = galsim.GSConvolve([gal, atmos, optics, pix])
-    final_epsf = galsim.GSConvolve([atmos, optics, pix])
+    final = galsim.Convolve([gal, atmos, optics, pix])
+    final_epsf = galsim.Convolve([atmos, optics, pix])
+    logger.info('Convolved components into final profile')
 
     # Now apply the wcs shear to the final image.
     final.applyShear(wcs_g1, wcs_g2)
     final_epsf.applyShear(wcs_g1, wcs_g2)
+    logger.info('Applied WCS distortion')
 
     # Draw the image with a particular pixel scale.
     image = final.draw(dx=pixel_scale)
     image_epsf = final_epsf.draw(dx=pixel_scale)
     # Draw the optical PSF component at its Nyquist sample rate
     image_opticalpsf = optics.draw(dx=lam_over_D/2.)
+    logger.info('Made image of the profile')
 
     # Add a constant sky level to the image.
     sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
@@ -348,6 +373,7 @@ def Script3():
 
     # Subtract off the sky.
     image -= sky_image
+    logger.info('Added Gaussian and Poisson noise')
 
     # Write the image to a file
     if not os.path.isdir('output'):

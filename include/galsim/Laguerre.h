@@ -95,7 +95,7 @@ namespace galsim {
         int m() const { return p-q; }
         PQIndex& setNm(const int N, const int m) 
         {
-	     assert(std::abs(m)<=N && (N-m)%2==0);
+            assert(std::abs(m)<=N && (N-m)%2==0);
             p=(N+m)/2;
             q=(N-m)/2; 
             return *this;
