@@ -179,14 +179,14 @@ def Script2():
     gain = 1.0         # ADU / e-
 
     logger.info('Starting script 2 using:')
-    logger.info('    - sheared (%.2f,%.2f) exponential galaxy (flux = %.1e, r0 = %.2f),',
+    logger.info('    - sheared (%.2f,%.2f) exponential galaxy (flux = %.1e, scale radius = %.2f),',
             g1, g2, gal_flux, gal_r0)
     logger.info('    - circular Moffat PSF (beta = %.1f, re = %.2f),', psf_beta,psf_re)
     logger.info('    - pixel scale = %.2f,', pixel_scale)
     logger.info('    - Poisson noise (sky level = %.1e, gain = %.1f).', sky_level, gain)
 
     # Define the galaxy profile.
-    gal = galsim.Exponential(flux=gal_flux, r0=gal_r0)
+    gal = galsim.Exponential(flux=gal_flux, scale=gal_r0)
 
     # Shear the galaxy by some value.
     gal.applyShear(g1, g2)
@@ -307,7 +307,7 @@ def Script3():
 
  
     # Define the galaxy profile.
-    gal = galsim.Sersic(gal_n, flux=gal_flux, re=gal_re)
+    gal = galsim.Sersic(gal_n, flux=gal_flux, half_light_radius=gal_re)
 
     # Shear the galaxy by some value.
     gal.applyShear(g1, g2)
