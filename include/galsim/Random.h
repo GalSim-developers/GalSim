@@ -45,8 +45,8 @@ namespace galsim {
      * your code! 
      */
     class UniformDeviate 
-    // Note that this class could be templated with the type of Boost.Random generator that
-    // you want to use instead of mt19937
+        // Note that this class could be templated with the type of Boost.Random generator that
+        // you want to use instead of mt19937
     {
     public:
         /**
@@ -75,7 +75,7 @@ namespace galsim {
          * @brief Re-seed the PRNG using current time
          */
         void seed() { seedtime(); }
-        
+
         /**
          * @brief Re-seed the PRNG using specified seed
          *
@@ -139,7 +139,7 @@ namespace galsim {
          * @param[in] sigma Standard deviation of the distribution
          */
         GaussianDeviate(UniformDeviate& u_, double mean=0., double sigma=1.) : 
-	    u(u_), normal(mean,sigma) {}
+            u(u_), normal(mean,sigma) {}
 
         /**
          * @brief Draw a new random number from the distribution
@@ -154,7 +154,7 @@ namespace galsim {
          * @return Mean of distribution
          */
         double getMean() {return normal.mean();}
-        
+
         /**
          * @brief Get current distribution standard deviation
          *
@@ -180,7 +180,7 @@ namespace galsim {
         void setSigma(double sigma) {
             normal.param(boost::random::normal_distribution<>::param_type(normal.mean(),sigma));
         }
-        
+
     private:
 
         UniformDeviate& u;
@@ -190,11 +190,11 @@ namespace galsim {
          * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
          */
         GaussianDeviate(const GaussianDeviate& rhs);
-	/// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+        /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
         void operator=(const GaussianDeviate& rhs);
     };
 
-    
+
     /**
      * @brief A Binomial deviate for N trials each of probability p.
      *
@@ -218,7 +218,7 @@ namespace galsim {
          * @param[in] p Probability of success per coin flip.
          */
         BinomialDeviate(UniformDeviate& u_, const int N=1, const double p=0.5): 
-        u(u_), bd(N,p) {}
+            u(u_), bd(N,p) {}
 
         /**
          * @brief Draw a new random number from the distribution

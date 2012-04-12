@@ -95,7 +95,7 @@ namespace galsim {
         /// @brief Return a copy of self.
         virtual SBProfile* duplicate() const =0;
 
-       /** 
+        /** 
          * @brief Return value of SBProfile at a chosen 2D position in real space.
          *
          * Assume all are real-valued.  xValue() may not be implemented for derived classes 
@@ -106,7 +106,7 @@ namespace galsim {
          */
         virtual double xValue(Position<double> _p) const =0;
 
-       /**
+        /**
          * @brief Return value of SBProfile at a chosen 2D position in k space.
          *
          * @param[in] _p 2D position in k space.
@@ -184,7 +184,7 @@ namespace galsim {
          * @param[in] e2 second component of ellipticity.
          */
         virtual SBProfile* shear(double e1, double e2) const { return distort(Ellipse(e1,e2)); }
-         
+
         /** 
          * @brief Rotation distortion transformation.
          *
@@ -195,7 +195,7 @@ namespace galsim {
          */
         virtual SBProfile* rotate(const double theta) const;
 
-       /**
+        /**
          * @brief Translation transformation.
          *
          * This returns a pointer to a new SBProfile that represents a new Surface Brightness 
@@ -347,14 +347,14 @@ namespace galsim {
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
          *                  you will receive an image with folding artifacts included.
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
-	     */
+         */
         virtual void plainDrawK(
             Image<float> & re, Image<float> & im, 
             double dk=0., int wmult=1) const; 
 
         /**
          * @brief Draw an image of the SBProfile in k space forcing the use of Fourier transform 
-	     * from real space.
+         * from real space.
          *
          * For drawing in k space: routines are analagous to real space, except 2 images are 
          * needed since the SBProfile is complex.
@@ -373,13 +373,13 @@ namespace galsim {
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
          *                  you will receive an image with folding artifacts included.
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
-	     */
+         */
         virtual void fourierDrawK(
             Image<float> & re, Image<float> & im,
             double dk=0., int wmult=1) const; 
 
         /** 
-	     * @brief Utility for drawing into Image data structures.
+         * @brief Utility for drawing into Image data structures.
          *
          * @param[out] image    image to fill
          * @param[in]  dx       grid pitch on which SBProfile image is drawn
@@ -391,13 +391,13 @@ namespace galsim {
         /**
          * @brief Utility for drawing a k grid into FFT data structures - not intended for public 
          * use, but need to be public so that derived classes can call them.
-	     */
+         */
         virtual void fillKGrid(KTable& kt) const;
 
         /** 
          * @brief Utility for drawing an x grid into FFT data structures - not intended for public 
-	     * use, but need to be public so that derived classes can call them.
-	     */
+         * use, but need to be public so that derived classes can call them.
+         */
         virtual void fillXGrid(XTable& xt) const;
 
     };
@@ -451,10 +451,10 @@ namespace galsim {
         { initialize(); add(s1);  add(s2); }
 
         /** 
-	     * @brief Constructor, list of inputs.
+         * @brief Constructor, list of inputs.
          *
          * @param[in] slist list of SBProfiles.
-	     */
+         */
         SBAdd(const std::list<SBProfile*> slist) : plist() 
         {
             std::list<SBProfile*>::const_iterator sptr;
@@ -465,7 +465,7 @@ namespace galsim {
         /** 
          * @brief Copy constructor.
          * @param[in] rhs SBAdd to be copied.
-	     */
+         */
         SBAdd(const SBAdd& rhs) : 
             plist(), sumflux(rhs.sumflux), sumfx(rhs.sumfx),
             sumfy(rhs.sumfy), maxMaxK(rhs.maxMaxK), minStepK(rhs.minStepK), 
@@ -487,7 +487,7 @@ namespace galsim {
             // Null operation if rhs is this
             if (&rhs == this) return *this;
             // Clean up previous stuff
-            
+
             for (std::list<SBProfile*>::iterator pptr = plist.begin(); 
                  pptr!=plist.end(); 
                  ++pptr)  
@@ -506,7 +506,7 @@ namespace galsim {
             allAxisymmetric = rhs.allAxisymmetric;
             allAnalyticX = rhs.allAnalyticX;
             allAnalyticK = rhs.allAnalyticK;
-	    return *this;
+            return *this;
         }
 
         /// @brief Destructor.
@@ -561,7 +561,7 @@ namespace galsim {
      */
     class SBDistort : public SBProfile 
     {
-        
+
     private:
         SBProfile* adaptee; ///< SBProfile being adapted/distorted
         double matrixA; ///< A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
@@ -585,7 +585,7 @@ namespace galsim {
          *
          * @param[in] p input position.
          * @returns transformed position.
-	     */
+         */
         Position<double> fwd(Position<double> p) const 
         {
             Position<double> out(matrixA*p.x+matrixB*p.y,matrixC*p.x+matrixD*p.y);
@@ -622,7 +622,7 @@ namespace galsim {
          * @param[in] mC C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
          * @param[in] mD D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
          * @param[in] x0_ 2-element (x, y) Position for the translational shift.
-	     */
+         */
         SBDistort(
             const SBProfile& sbin, double mA, double mB, double mC, double mD,
             Position<double> x0_=Position<double>(0.,0.));
@@ -632,14 +632,14 @@ namespace galsim {
          *
          * @param[in] sbin SBProfile being distorted.
          * @param[in] e_ Ellipse.
-	     */
+         */
         SBDistort(const SBProfile& sbin, const Ellipse e_=Ellipse());
 
         /** 
          * @brief Copy constructor
          *
          * @param[in] rhs SBProfile being copied.
-	     */
+         */
         SBDistort(const SBDistort& rhs) 
         {
             adaptee = rhs.adaptee->duplicate();
@@ -744,7 +744,7 @@ namespace galsim {
          * @param[in] s2 second SBProfile.
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
-         SBConvolve(const SBProfile& s1, const SBProfile& s2, double f=1.) : 
+        SBConvolve(const SBProfile& s1, const SBProfile& s2, double f=1.) : 
             plist(), fluxScale(f) 
         { add(s1);  add(s2); }
 
@@ -755,7 +755,7 @@ namespace galsim {
          * @param[in] s2 second SBProfile.
          * @param[in] s3 third SBProfile.
          * @param[in] f scaling factor for final flux (default `f = 1.`).
-        */
+         */
         SBConvolve(
             const SBProfile& s1, const SBProfile& s2, const SBProfile& s3, double f=1.) :
             plist(), fluxScale(f) 
@@ -800,7 +800,7 @@ namespace galsim {
             // Null operation if rhs is this
             if (&rhs == this) return *this;
             // Clean up previous stuff
-            
+
             for (std::list<SBProfile*>::iterator pptr = plist.begin(); 
                  pptr!=plist.end(); 
                  ++pptr)  
@@ -818,7 +818,7 @@ namespace galsim {
             minMaxK = rhs.minMaxK;
             minStepK = rhs.minStepK;
             fluxProduct = rhs.fluxProduct;
-	    return *this;
+            return *this;
         }
 
         /// @brief Destructor.
@@ -938,25 +938,25 @@ namespace galsim {
             double inv2n;   ///< `1 / (2 * n)`
             double maxK;    ///< Value of k beyond which aliasing can be neglected.
             double stepK;   ///< Sampling in k space necessary to avoid folding of image in x space.
-           
+
             /** 
              * @brief Returns the real space value of the Sersic using the formula 
              * `exp(-b*pow(xsq,inv2n))` (see private attributes).
              */
             double xValue(double xsq) const { return norm*std::exp(-b*std::pow(xsq,inv2n)); } 
-            
+
             /// @brief Looks up the k value for the SBProfile from a lookup table.
             double kValue(double ksq) const;
 
         private:
             SersicInfo(const SersicInfo& rhs) {} ///< Hides the copy constructor.
-            
+
             /** 
              * @brief Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`, calculated from Sersic 
              * index `n` and half-light radius `re`.
              */
             double b; 
-            
+
             double norm; ///< Amplitude scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`.
             double kderiv2; ///< Quadratic dependence near k=0.
             double kderiv4; ///< Quartic dependence near k=0.
@@ -974,7 +974,7 @@ namespace galsim {
         {
         public:
 
-	        /**
+            /**
              * @brief Get the SersicInfo table for a specified `n`.
              *
              * @param[in] n Sersic index for which the information table is required.
@@ -986,7 +986,7 @@ namespace galsim {
                  * stored.  Should be plenty.
                  */
                 const int MAX_SERSIC_TABLES = 100; 
-                
+
                 const SersicInfo* info = (*this)[n];
                 if (info==0) {
                     info = new SersicInfo(n);
@@ -1129,7 +1129,7 @@ namespace galsim {
          * else `D` = (telescope diam) / lambda if arg is in radians of field angle.
          */
         double D; 
-        
+
         double obscuration; ///< Radius ratio of central obscuration.
         double flux; ///< Flux.
 
@@ -1182,11 +1182,11 @@ namespace galsim {
 
         /// @brief Area inside intersection of 2 circles radii `r` & `s`, seperated by `t`.
         double circle_intersection(
-				   double r, double s, double t) const; 
-        
+            double r, double s, double t) const; 
+
         /// @brief Area of two intersecting identical annuli.
         double annuli_intersect(
-				double r1, double r2, double t) const; 
+            double r1, double r2, double t) const; 
         /** 
          * @brief Beam pattern of annular aperture, in k space, which is just the autocorrelation 
          * of two annuli.  Normalized to unity at `k=0` for now.
@@ -1212,7 +1212,7 @@ namespace galsim {
          * @param[in] u Normalized wavenumber.
          */
         double sinc(const double u) const; 
-        
+
     public:
         /** 
          * @brief Constructor.
@@ -1375,7 +1375,7 @@ namespace galsim {
 
         /// @brief Set the FWHM. @param fwhm Input: new FWHM.
         void setFWHM(double fwhm) { rD = fwhm / FWHMrD; }
- 
+
         /** 
          * @brief Set the Moffat scale radius for profile `[1 + (r / rD)^2]^beta`. 
          * @param rD_ Input: new `rD`.
