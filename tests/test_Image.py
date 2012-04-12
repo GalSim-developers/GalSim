@@ -1,7 +1,7 @@
 import os
+import sys
 import pyfits
 import numpy as np
-import galsim
 
 """Unit tests for the Image class.
 
@@ -23,6 +23,13 @@ checks, etc.
 
 Images are in S, I, F & D flavours.
 """
+
+try:
+    import galsim
+except ImportError:
+    path, filename = os.path.split(__file__)
+    sys.path.append(os.path.abspath(os.path.join(path, "..")))
+    import galsim
 
 # Setup info for tests, not likely to change
 testshape = (4, 4)  # shape of image arrays for all tests
@@ -89,3 +96,7 @@ def test_Image_array_view():
  
 
 
+if __name__ == "__main__":
+    test_Image_XYmin_XYMax()
+    test_FITS_IO()
+    test_Image_array_view()
