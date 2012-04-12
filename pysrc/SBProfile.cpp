@@ -13,7 +13,7 @@ typedef bp::return_value_policy<bp::manage_new_object> ManageNew;
 
 // Used by multiple profile classes to ensure at most one radius is given.
 void checkRadii(const bp::object & r1, const bp::object & r2, const bp::object & r3) {
-    if ((r1.ptr() == Py_None) + (r2.ptr() == Py_None) + (r3.ptr() == Py_None)) {
+    if ((r1.ptr() != Py_None) + (r2.ptr() != Py_None) + (r3.ptr() != Py_None) > 1) {
         PyErr_SetString(PyExc_TypeError, "Multiple radius parameters given");
         bp::throw_error_already_set();
     }
@@ -222,7 +222,7 @@ struct PySBGaussian {
             s = bp::extract<double>(sigma);
         }
         if (fwhm.ptr() != Py_None) {
-            s = bp::extract<double>(half_light_radius) * 0.42466090014400953; // 1 / (2(2\ln2)^(1/2))
+            s = bp::extract<double>(fwhm) * 0.42466090014400953; // 1 / (2(2\ln2)^(1/2))
         }
         return new SBGaussian(flux, s);
     }
