@@ -23,7 +23,7 @@ I have also put three flags into the Makefile that, if you un-set them, will byp
 
 USE_LAGUERRE - unset this to skip the SBLaguerre class and all of the Gauss-Laguerre code (sbprofile/Laguerre.*).  This is also where (nearly) all of the essential uses of TMV occur.  Both top-level executables will build and run if you undefine this.
 USE_IMAGES - unset this to skip all code that makes use of my Image and FITSImage classes, so you're no longer dependent on anything in the images subdirectory nor on CFITSIO.  Of course you will no longer be able to build Shera or SBDraw or anything that produces or reads images, but at least you'll be able to see if the code compiles.  Also when/if you change to using a different image class (e.g. some Python array), you can search the sbprofile code for "#ifdef USE_IMAGES" to find every place where changes might be needed.
-USE_TMV - unset this to skip all routines that make use of TMV classes (USE_TMV is set automatically if you set USE_LAGUERRE).  But not quite: SBPixel.h / SBPixel.cpp use TMV in a way that was not trivially changed, so in fact if you un-set this your compilations will fail.  I can fix this easily but did not bother, given that you intend to use TMV.
+USE_TMV - unset this to skip all routines that make use of TMV classes (USE_TMV is set automatically if you set USE_LAGUERRE).  But not quite: SBInterpolatedImage.h / SBInterpolatedImage.cpp use TMV in a way that was not trivially changed, so in fact if you un-set this your compilations will fail.  I can fix this easily but did not bother, given that you intend to use TMV.
 
 Once things are set up the way you want, you should be able to just
 make clean
@@ -47,8 +47,8 @@ Random.h:  version of Numerical Recipes random-number generator(s) with nice C++
 Stopwatch.h: wall-clock timer
 
 DOCUMENTATION:
-I've put SBProfile.tex (and resultant SBProfile.pdf) in this package, which document the class design and the parser.  Have not documented SBPixel yet.
-finterp.pdf is draft paper describing why the interpolation in SBPixel is done the way it is.
+I've put SBProfile.tex (and resultant SBProfile.pdf) in this package, which document the class design and the parser.  Have not documented SBInterpolatedImage yet.
+finterp.pdf is draft paper describing why the interpolation in SBInterpolatedImage is done the way it is.
 images/images.txt is some documentation on my Image class, which you may want to discard.
 
 TO DO:
@@ -67,16 +67,16 @@ TO DO:
 
 7) Get rid of SBProfile::setCentroid() since it is not going to be implemented in most cases.  Use the shift() method instead.  ALREADY DID THIS!
 
-8) Think about the defaults for padding and interpolating of SBPixel.
+8) Think about the defaults for padding and interpolating of SBInterpolatedImage.
 
 9) Change the fill[XK]grid methods to allow filling non-square grids efficiently.
 
-10) Add SBPixel to the parser.
+10) Add SBInterpolatedImage to the parser.
 
 11) Write an SBFlexion someday.
 
 12) Multi-threading: would need to protect cached elements from data races to make sure we can use SBP's in read-only mode in parallel threads.  Also need to consider how the FFTW "wisdom" is handled in fft classes.
 
-13) Could replace the TMV usage in SBPixel with some other matrix package if desired, but right now it makes good use of TMV's operator overloading so the code is more readable without this change.
+13) Could replace the TMV usage in SBInterpolatedImage with some other matrix package if desired, but right now it makes good use of TMV's operator overloading so the code is more readable without this change.
 
 14) I'm sure there will be more!

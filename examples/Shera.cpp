@@ -28,18 +28,18 @@ int main(int argc, char *argv[]) try
 
     galsim::FITSImage<float> galaxyFits(rootname+"_masknoise.fits");
     galsim::Image<float> galaxyImg = galaxyFits.extract();
-    galsim::SBPixel galaxy(galaxyImg, l32d, dxHST, 1.);
+    galsim::SBInterpolatedImage galaxy(galaxyImg, l32d, dxHST, 1.);
     galaxy.setFlux(0.804*1000.*dxSDSS*dxSDSS);
 
     galsim::FITSImage<float> psf1Fits(rootname+".psf.fits");
     galsim::Image<float> psf1Img = psf1Fits.extract();
-    galsim::SBPixel psf1(psf1Img, l32d, dxHST, 2.);
+    galsim::SBInterpolatedImage psf1(psf1Img, l32d, dxHST, 2.);
     psf1.setFlux(1.);
 
     galsim::FITSImage<float> psf2Fits(rootname+".sdsspsf.fits");
     galsim::Image<float> psf2Img = psf2Fits.extract();
     psf2Img -= psfSky;
-    galsim::SBPixel psf2(psf2Img, l32d, dxSDSS, 2.);
+    galsim::SBInterpolatedImage psf2(psf2Img, l32d, dxSDSS, 2.);
     psf2.setFlux(1.);
 
     galsim::FITSImage<float> outFits(rootname+".g1_0.02.g2_0.00.fits");

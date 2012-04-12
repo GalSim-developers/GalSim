@@ -66,7 +66,7 @@ namespace galsim {
      * SBRotate: rotated version of another SBProfile
      * SBAdd: sum of SBProfiles
      * SBConvolve: convolution of other SBProfiles
-     * SBPixel: surface brightness profiles defined by a table (image) and interpolant.
+     * SBInterpolatedImage: surface brightness profiles defined by an image and interpolant.
      * SBDeconvolve: deconvolve one SBProfile with another
      */
     class SBProfile 

@@ -50,7 +50,8 @@ namespace galsim {
         boost::shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage
         T * _data;                    // pointer to be used for this image
         int _stride;                  // number of elements between rows (!= width for subimages)
-        double _scale;                // pixel scale (used by SBPixel and SBProfile; units?!)
+        double _scale;                // pixel scale (used by SBInterpolatedImage and SBProfile;
+                                      // units?!)
         Bounds<int> _bounds;          // bounding box
 
         inline int addressPixel(const int y) const {

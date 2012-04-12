@@ -1,7 +1,8 @@
 // -*- c++ -*-
 #ifndef SBPIXEL_H
 #define SBPIXEL_H
-/// @file SBPixel.h @brief Contains the class definition for SBPixel objects.
+/// @file SBInterpolatedImage.h 
+/// @brief Contains the class definition for SBInterpolatedImage objects.
 
 #include "TMV.h"
 
@@ -19,12 +20,12 @@ namespace galsim {
      * the Nyquist frequency of the input image, although it should be noted that interpolants 
      * other than the ideal sinc function may make the max frequency higher than this.  The output
      * is required to be periodic on a scale > original image extent + kernel footprint, and 
-     * stepK() is set accordingly.  Multiple images can be stored as data tables in an SBPixel 
-     * object. A vector weight can then be used to express Surface Brightness Profiles as sums of 
-     * these interpolated images.
+     * stepK() is set accordingly.  Multiple images can be stored as data tables in an 
+     * SBInterpolatedImage object. A vector weight can then be used to express Surface 
+     * Brightness Profiles as sums of these interpolated images.
      * (TODO: Add more!!!)
      */
-    class SBPixel : public SBProfile 
+    class SBInterpolatedImage : public SBProfile 
     {
     public:
         /**
@@ -37,7 +38,7 @@ namespace galsim {
         *                       class).
         * @param[in] Nimages_ number of images.
         */
-        SBPixel(int Npix, double dx_, const Interpolant2d& i, int Nimages_=1);
+        SBInterpolatedImage(int Npix, double dx_, const Interpolant2d& i, int Nimages_=1);
 
 #ifdef USE_IMAGES
         /** 
@@ -55,20 +56,21 @@ namespace galsim {
          *                      the currently-hardwired `OVERSAMPLE_X = 4.` parameter value for 
          *                      `padFactor`).
          */
-        SBPixel(Image<float> const & img, const Interpolant2d& i, double dx_=0., double padFactor=0.);
+        SBInterpolatedImage(Image<float> const & img, const Interpolant2d& i,
+                            double dx_=0., double padFactor=0.);
 #endif
 
         /** 
          * @brief Copy Constructor.
          *
-         * @param[in] rhs SBPixel to be copied.
+         * @param[in] rhs SBInterpolatedImage to be copied.
          */
-        SBPixel(const SBPixel& rhs);
+        SBInterpolatedImage(const SBInterpolatedImage& rhs);
 
         /// @brief Destructor
-        ~SBPixel();
+        ~SBInterpolatedImage();
 
-        SBProfile* duplicate() const { return new SBPixel(*this); }
+        SBProfile* duplicate() const { return new SBInterpolatedImage(*this); }
 
         // These are all the base class members that must be implemented:
         double xValue(Position<double> p) const;
@@ -95,7 +97,7 @@ namespace galsim {
         void setFlux(double flux=1.);  // This will scale the weights vector
 
         /////////////////////
-        // Methods peculiar to SBPixel
+        // Methods peculiar to SBInterpolatedImage
 
         /**
          * @brief Set the value at one input pixel (without any weights or flux scaling).
@@ -122,13 +124,14 @@ namespace galsim {
 
         /** 
          * @brief Set the weight vector applied for summing different planes in a multiple image 
-         * SBPixel.
+         * SBInterpolatedImage.
          *
          * @param[in] wts_ weight vector (??? check dimensions = `Nimages` first!)
          */
         void setWeights(const tmv::Vector<double>& wts_); // ??? check dimensions first!
 
-        /// @brief Get the weight vector applied to different planes in the multiple image SBPixel.
+        /// @brief Get the weight vector applied to different planes in the multiple image 
+        /// SBInterpolatedImage.
         tmv::Vector<double> getWeights() const { return wts; }
 
         /** 
@@ -182,16 +185,16 @@ namespace galsim {
         const Interpolant2d* xInterp; ///< Interpolant used in real space.
         const Interpolant2d* kInterp; ///< Interpolant used in k space.
 
-        /// @brief Vector of weights to use for sum over images of a multiple image SBPixel.
+        /// @brief Vector of weights to use for sum over images of a multiple image.
         tmv::Vector<double> wts;
 
-        /// @brief Vector of fluxes for each image plane of a multiple image SBPixel.
+        /// @brief Vector of fluxes for each image plane of a multiple image.
         mutable tmv::Vector<double> fluxes;
 
-        /// @brief Vector x weighted fluxes for each image plane of a multiple image SBPixel.
+        /// @brief Vector x weighted fluxes for each image plane of a multiple image.
         mutable tmv::Vector<double> xFluxes;
 
-        /// @brief Vector of y weighted fluxes for each image plane of a multiple image SBPixel.
+        /// @brief Vector of y weighted fluxes for each image plane of a multiple image.
         mutable tmv::Vector<double> yFluxes;
 
         // Arrays summed with weights:
