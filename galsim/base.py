@@ -10,16 +10,20 @@ class GSObject:
     def __init__(self, SBProfile):
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
 
+    # Make op+ of two GSObjects work to return an Add object
+    def __add__(self, other):
+        return Add(self,other)
+
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
     #
-    # ...Do we want to do this?  Barney is not sure... Surely most of these are pretty stable at,
+    # ...Do we want to do this?  Barney is not sure... Surely most of these are pretty stable at
     # the SBP level but this scheme would demand that changes to SBProfile are kept updated here.
     #
     # The alternative is for these methods to always be accessed from the top level 
     # via Whatever.SBProfile.method(), which I guess makes it explicit what is going on, but
     # is starting to get clunky...
     #
-    # Will add method specific docstrings later if we go for this overall layout
+    # Will add method-specific docstrings later if we go for this overall layout
     def maxK(self):
         maxk = self.SBProfile.maxK()
         return maxk
@@ -249,13 +253,23 @@ class OpticalPSF(GSObject):
 class Add(GSObject):
     """Base class for defining the python interface to the SBAdd C++ class.
     """
-    def __init__(self, GSObjList):
-        SBList = []
-        for obj in GSObjList:
-            SBList.append(obj.SBProfile)
-        GSObject.__init__(self, galsim.SBAdd(SBList))
+    def __init__(self, arg1, arg2=None):
+        # This is a workaround for the fact that Python doesn't allow multiple constructors.
+        # So check the number and type of the arguments here in the single __init__ method.
 
-        
+        if arg2 is None:
+            # Only 1 argument:
+            if isinstance(arg1, GSObject):
+                # If first argument is a GSObject, then use the SBAdd for a single SBProfile.
+                GSObject.__init__(self, galsim.SBAdd(arg1.SBProfile))
+            else:
+                # Otherwise, should be a list of GSObjects
+                SBList = [obj.SBProfile for obj in arg1]
+                GSObject.__init__(self, galsim.SBAdd(SBList))
+        else:
+            # 2 arguments.  Should both be GSObjects.
+            GSObject.__init__(self, galsim.SBAdd(arg1.SBProfile,arg2.SBProfile))
+
     def add(self, profile, scale=1.):
         self.SBProfile.add(profile, scale)
 
