@@ -35,6 +35,15 @@ def getmoments(image1):
     mxy = np.mean((xgrid-mx) * (ygrid-my) * image1.array) / np.mean(image1.array)
     print "    ", mx-image1.getXMin(), my-image1.getYMin(), mxx, myy, mxy
 
+def convertToShear(e1,e2):
+    # Convert a distortion (e1,e2) to a shear (g1,g2)
+    import math
+    e = math.sqrt(e1*e1 + e2*e2)
+    g = math.tanh( 0.5 * math.atanh(e) )
+    g1 = e1 * (g/e)
+    g2 = e2 * (g/e)
+    return (g1,g2)
+
 def test_sbprofile_gaussian():
     """Test the generation of a specific Gaussian profile using SBProfile against a known result.
     """
@@ -177,7 +186,9 @@ def test_sbprofile_smallshear():
     """Test the application of a small shear to a Gaussian SBProfile against a known result.
     """
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    mySBP_shear = mySBP.shear(0.02, 0.02)
+    e1 = 0.02
+    e2 = 0.02
+    mySBP_shear = mySBP.shear(e1,e2)
     myImg = mySBP_shear.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear.fits"))
     printval(myImg, savedImg)
@@ -185,17 +196,28 @@ def test_sbprofile_smallshear():
         err_msg="Small-shear Gaussian profile disagrees with expected result")  
     # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss.applyDistortion(galsim.Ellipse(0.02, 0.02))
+    gauss.applyDistortion(galsim.Ellipse(e1,e2))
     myImg = gauss.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyDistortion disagrees with expected result")
+    # The GSObject applyShear uses gamma version of shear, rather than distortion,
+    # which is what SBProfile (confusingly) uses.  So figure out the corresponding gamma:
+    g1,g2 = convertToShear(e1,e2)
+    gauss = galsim.Gaussian(flux=1, sigma=1)
+    gauss.applyShear(g1,g2)
+    myImg = gauss.draw(dx=0.2)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject applyShear disagrees with expected result")
     
 def test_sbprofile_largeshear():
     """Test the application of a large shear to a Sersic SBProfile against a known result.
     """
     mySBP = galsim.SBSersic(n=4, flux=1, re=1)
-    mySBP_shear = mySBP.shear(0.0, 0.5)
+    e1 = 0.0
+    e2 = 0.5
+    mySBP_shear = mySBP.shear(e1,e2)
     myImg = mySBP_shear.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
     printval(myImg, savedImg)
@@ -203,11 +225,18 @@ def test_sbprofile_largeshear():
         err_msg="Large-shear Sersic profile disagrees with expected result")  
     # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=4, flux=1, re=1)
-    sersic.applyDistortion(galsim.Ellipse(0.0, 0.5))
+    sersic.applyDistortion(galsim.Ellipse(e1,e2))
     myImg = sersic.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyDistortion disagrees with expected result")
+    sersic = galsim.Sersic(n=4, flux=1, re=1)
+    g1,g2 = convertToShear(e1,e2)
+    sersic.applyShear(g1,g2)
+    myImg = sersic.draw(dx=0.2)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject applyShear disagrees with expected result")
     
 def test_sbprofile_convolve():
     """Test the convolution of a Moffat and a Box SBProfile against a known result.
@@ -253,7 +282,9 @@ def test_sbprofile_shearconvolve():
     """Test the convolution of a sheared Gaussian and a Box SBProfile against a known result.
     """
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    mySBP_shear = mySBP.shear(0.04, 0.0)
+    e1 = 0.04
+    e2 = 0.0
+    mySBP_shear = mySBP.shear(e1,e2)
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve(mySBP_shear)
     myConv.add(mySBP2)
@@ -264,7 +295,8 @@ def test_sbprofile_shearconvolve():
         err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")  
     # Repeat with the GSObject version of this:
     psf = galsim.Gaussian(flux=1, sigma=1)
-    psf.applyDistortion(galsim.Ellipse(0.04,0.0));
+    g1,g2 = convertToShear(e1,e2)
+    psf.applyShear(g1,g2)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel])
     myImg = conv.draw(dx=0.2)
