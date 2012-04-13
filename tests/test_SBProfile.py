@@ -391,6 +391,12 @@ def test_sbprofile_add():
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")   
+    sum = gauss1.copy()
+    sum += gauss2
+    myImg = sum.draw(dx=0.2)
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
+        err_msg="Using GSObject sum = gauss1; sum += gauss2 disagrees with expected result")   
     sum = galsim.Add([gauss1,gauss2])
     myImg = sum.draw(dx=0.2)
     printval(myImg, savedImg)
@@ -416,6 +422,12 @@ def test_sbprofile_add():
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject 0.75 * gauss1 + 0.25 * gauss2 disagrees with expected result")   
+    sum = 0.75 * gauss1
+    sum += 0.25 * gauss2
+    myImg = sum.draw(dx=0.2)
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
+        err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")   
 
 
 def test_sbprofile_shift():
