@@ -318,7 +318,11 @@ def Script3():
     atmos_a.applyShear(atmos_a_g1 , atmos_a_g2)
     atmos_b = galsim.Gaussian(flux=1-atmos_fa, sigma=atmos_b_sigma)
     atmos_b.applyShear(atmos_b_g1 , atmos_b_g2)
-    atmos = galsim.Add([atmos_a, atmos_b])
+    atmos = atmos_a + atmos_b
+    # Could also have written either of the following, which do the same thing:
+    # atmos = galsim.Add(atmos_a, atmos_b)
+    # atmos = galsim.Add([atmos_a, atmos_b])
+    # For more than two summands, you can either string together +'s or use the list version.
     logger.info('Made atmospheric PSF profile')
 
     # Define the optical part of the PSF.
