@@ -662,6 +662,8 @@ int main()
     context.Message('Checking if we can build against NumPy... ')
     try:
         import numpy
+        print "NumPy version is %s; include path is %s" % (numpy.version.version, numpy.get_include())
+        sys.stdout.flush()
     except ImportError:
         context.Result(0)
         print 'Failed to import numpy.'
