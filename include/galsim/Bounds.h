@@ -1,5 +1,4 @@
-
-// Define 2d positions and rectangles.
+/// @file Bounds.h @brief Classes defining 2d positions and rectangles.
 
 #ifndef Bounds_H
 #define Bounds_H
@@ -12,25 +11,51 @@
 namespace galsim {
 
     template <class T>
+    /// @brief Class for storing 2d position vectors in an (x, y) format.
     class Position 
     {
     public:
+        /// @brief Publicly visible x & y attributes of the position.
         T x,y;
-        Position(const T xin=0, const T yin=0) : x(xin),y(yin) {}
+
+        ///@brief Constructor.
+        Position(const T xin=0, const T yin=0) : x(xin), y(yin) {}
+
+        ///@brief Assignment.
         Position& operator=(const Position rhs) 
         {
             if (&rhs == this) return *this;
             else { x=rhs.x; y=rhs.y; return *this; }
         }
+
+        /// @brief Overloaded += operator, following standard vector algebra rules.
         Position& operator+=(const Position rhs) { x+=rhs.x; y+=rhs.y; return *this; }
+
+        /// @brief Overloaded -= operator, following standard vector algebra rules.
         Position& operator-=(const Position rhs) { x-=rhs.x; y-=rhs.y; return *this; }
+
+        /// @brief Overloaded *= operator for scalar multiplication.
         Position& operator*=(const T rhs) { x*=rhs; y*=rhs; return *this; }
+
+        /// @brief Overloaded /= operator for scalar division.
         Position& operator/=(const T rhs) { x/=rhs; y/=rhs; return *this; }
+
+        /// @brief Overloaded * vector multiplication operator for scalar on rhs.
         Position operator*(const T rhs) const { return Position(x*rhs, y*rhs); }
+
+        /// @brief Overloaded / vector division operator for scalar on rhs.
         Position operator/(const T rhs) const { return Position(x/rhs, y/rhs); }
+
+        /// @brief Unary negation (x, y) -> (-x, -y).
         Position operator-() const { return Position(-x,-y); }
+
+        /// @brief Overloaded vector + addition operator with a Position on the rhs.
         Position operator+(Position<T> rhs) const { return Position(x+rhs.x,y+rhs.y); }
+
+        /// @brief Overloaded vector - subtraction operator with a Position on the rhs.
         Position operator-(const Position<T> rhs) const { return Position(x-rhs.x,y-rhs.y); }
+
+
         bool operator==(const Position& rhs) const { return (x==rhs.x && y==rhs.y); }
         bool operator!=(const Position& rhs) const { return (x!=rhs.x || y!=rhs.y); }
 
