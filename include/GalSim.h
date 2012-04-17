@@ -22,6 +22,6 @@
 #include "galsim/integ/Int.h"
 
 // Adaptive moments code by Hirata, Seljak, and Mandelbaum
-#include "galsim/hsm/psfcorr.h"
+#include "galsim/hsm/Psfcorr.h"
 
 #endif
