@@ -10,16 +10,47 @@ class GSObject:
     def __init__(self, SBProfile):
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
 
+    # Make op+ of two GSObjects work to return an Add object
+    def __add__(self, other):
+        return Add(self,other)
+
+    # op+= converts this into the equivalent of an Add object
+    def __iadd__(self, other):
+        print 'self = ',self
+        print 'other = ',other
+        GSObject.__init__(self, galsim.SBAdd(self.SBProfile, other.SBProfile))
+        print 'self => ',self
+        return self
+
+    # Make op* and op*= work to adjust the flux of an object
+    def __imul__(self, other):
+        self.setFlux(other * self.getFlux())
+        return self
+
+    def __mul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    def __rmul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    # Make a copy of an object
+    def copy(self):
+        return GSObject(self.SBProfile.duplicate())
+
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
     #
-    # ...Do we want to do this?  Barney is not sure... Surely most of these are pretty stable at,
+    # ...Do we want to do this?  Barney is not sure... Surely most of these are pretty stable at
     # the SBP level but this scheme would demand that changes to SBProfile are kept updated here.
     #
     # The alternative is for these methods to always be accessed from the top level 
     # via Whatever.SBProfile.method(), which I guess makes it explicit what is going on, but
     # is starting to get clunky...
     #
-    # Will add method specific docstrings later if we go for this overall layout
+    # Will add method-specific docstrings later if we go for this overall layout
     def maxK(self):
         maxk = self.SBProfile.maxK()
         return maxk
@@ -249,26 +280,60 @@ class OpticalPSF(GSObject):
 class Add(GSObject):
     """Base class for defining the python interface to the SBAdd C++ class.
     """
-    def __init__(self, GSObjList):
-        SBList = []
-        for obj in GSObjList:
-            SBList.append(obj.SBProfile)
-        GSObject.__init__(self, galsim.SBAdd(SBList))
+    def __init__(self, *args):
+        # This is a workaround for the fact that Python doesn't allow multiple constructors.
+        # So check the number and type of the arguments here in the single __init__ method.
+        if len(args) == 0:
+            # No arguments.  Start with none and add objects later with add(obj)
+            GSObject.__init__(self, galsim.SBAdd())
+        elif len(args) == 1:
+            # 1 argment.  Should be either a GSObject or a list of GSObjects
+            if isinstance(args[0], GSObject):
+                # If single argument is a GSObject, then use the SBAdd for a single SBProfile.
+                GSObject.__init__(self, galsim.SBAdd(args[0].SBProfile))
+            else:
+                # Otherwise, should be a list of GSObjects
+                SBList = [obj.SBProfile for obj in args[0]]
+                GSObject.__init__(self, galsim.SBAdd(SBList))
+        elif len(args) == 2:
+            # 2 arguments.  Should both be GSObjects.
+            GSObject.__init__(self, galsim.SBAdd(args[0].SBProfile,args[1].SBProfile))
+        else:
+            # > 2 arguments.  Convert to a list of SBProfiles
+            SBList = [obj.SBProfile for obj in args]
+            GSObject.__init__(self, galsim.SBAdd(SBList))
 
-        
-    def add(self, profile, scale=1.):
-        self.SBProfile.add(profile, scale)
+
+    def add(self, obj, scale=1.):
+        self.SBProfile.add(obj.SBProfile, scale)
 
 
 class Convolve(GSObject):
     """Base class for defining the python interface to the SBConvolve C++ class.
     """
-    def __init__(self, GSObjList):
-        SBList = []
-        for obj in GSObjList:
-            SBList.append(obj.SBProfile)
-        GSObject.__init__(self, galsim.SBConvolve(SBList))
+    def __init__(self, *args):
+        # This is a workaround for the fact that Python doesn't allow multiple constructors.
+        # So check the number and type of the arguments here in the single __init__ method.
+        if len(args) == 0:
+            # No arguments.  Start with none and add objects later with add(obj)
+            GSObject.__init__(self, galsim.SBConvolve())
+        elif len(args) == 1:
+            # 1 argment.  Should be either a GSObject or a list of GSObjects
+            if isinstance(args[0], GSObject):
+                # If single argument is a GSObject, then use the SBConvolve for a single SBProfile.
+                GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile))
+            else:
+                # Otherwise, should be a list of GSObjects
+                SBList = [obj.SBProfile for obj in args[0]]
+                GSObject.__init__(self, galsim.SBConvolve(SBList))
+        elif len(args) == 2:
+            # 2 arguments.  Should both be GSObjects.
+            GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile,args[1].SBProfile))
+        else:
+            # > 2 arguments.  Convert to a list of SBProfiles
+            SBList = [obj.SBProfile for obj in args]
+            GSObject.__init__(self, galsim.SBConvolve(SBList))
 
-    def add(self, profile):
-        self.SBProfile.add(profile)
+    def add(self, obj):
+        self.SBProfile.add(obj.SBProfile)
 
