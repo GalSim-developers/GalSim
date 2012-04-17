@@ -20,23 +20,23 @@ except ImportError:
 
 class HSM_Moments:
     """
-    A class that runs the meas_moments program on an image
+    A class that runs the MeasMoments program on an image
     and stores the results.
     This is temporary.  This functionality should be python wrapped.
     """
     
     def __init__(self, file_name):
-        proc = subprocess.Popen('../bin/meas_moments %s'%file_name,
+        proc = subprocess.Popen('../bin/MeasMoments %s'%file_name,
             stdout=subprocess.PIPE, shell=True)
         buf = os.read(proc.stdout.fileno(),1000)
         while proc.poll() == None:
             pass
         if proc.returncode != 0:
-            raise RuntimeError("meas_moments exited with an error code")
+            raise RuntimeError("MeasMoments exited with an error code")
 
         results = buf.split()
         if results[0] is not '0':
-            raise RuntimeError("meas_moments returned an error status")
+            raise RuntimeError("MeasMoments returned an error status")
         self.mxx = float(results[1])
         self.myy = float(results[2])
         self.mxy = float(results[3])
@@ -56,23 +56,23 @@ class HSM_Moments:
 
 class HSM_Regauss:
     """
-    A class that runs the meas_shape program (with re-Gaussianization PSF correction on an image
+    A class that runs the MeasShape program (with re-Gaussianization PSF correction on an image
     and stores the results. This is temporary.  This functionality should be python wrapped.
     """
     
     def __init__(self, file_name, file_name_epsf, array_shape):
-        proc = subprocess.Popen('../bin/meas_shape %s %s %f %f 0.0 REGAUSS 0.0'%(file_name,
+        proc = subprocess.Popen('../bin/MeasShape %s %s %f %f 0.0 REGAUSS 0.0'%(file_name,
                                 file_name_epsf, 0.5*array_shape[0], 0.5*array_shape[1]), 
                                 stdout=subprocess.PIPE, shell=True)
         buf = os.read(proc.stdout.fileno(),1000)
         while proc.poll() == None:
             pass
         if proc.returncode != 0:
-            raise RuntimeError('meas_shape exited with an error code, %d'%proc.returncode)
+            raise RuntimeError('MeasShape exited with an error code, %d'%proc.returncode)
 
         results = buf.split()
         if results[0] is not '0':
-            raise RuntimeError("meas_shape returned an error status")
+            raise RuntimeError("MeasShape returned an error status")
         self.e1 = float(results[1])
         self.e2 = float(results[2])
         self.r2 = float(results[5])
