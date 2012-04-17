@@ -249,7 +249,7 @@ namespace hsm {
 
     /* object data type */
 
-    struct OBJECT_DATA 
+    struct ObjectData 
     {
         double x0;           /* x centroid */
         double y0;           /* y centroid */
@@ -267,7 +267,7 @@ namespace hsm {
 
     /* rectangular image type */
 
-    struct RECT_IMAGE 
+    struct RectImage 
     {
         long xmin; /* bounding box */
         long xmax; /* " */
@@ -278,21 +278,21 @@ namespace hsm {
     };
 
     /* allocate_rect_image
-     * *** ALLOCATES A RECT_IMAGE STRUCTURE ***
+     * *** ALLOCATES A RectImage STRUCTURE ***
      *
-     * Allocates and initializes a RECT_IMAGE.  Note that the
+     * Allocates and initializes a RectImage.  Note that the
      * map is initialized to zero and the mask is initialized
      * to the unmasked state.
      *
      * Arguments:
-     * > A: RECT_IMAGE to be allocated
+     * > A: RectImage to be allocated
      *   xmin: bounding box xmin
      *   xmax: bounding box xmax
      *   ymin: bounding box ymin
      *   ymax: bounding box ymax
      */
 
-    void allocate_rect_image(RECT_IMAGE *A, long xmin, long xmax, long ymin, long ymax) 
+    void allocate_rect_image(RectImage *A, long xmin, long xmax, long ymin, long ymax) 
     {
 
         long x,y;
@@ -315,13 +315,13 @@ namespace hsm {
     }
 
     /* deallocate_rect_image
-     * *** DEALLOCATES A RECT_IMAGE STRUCTURE ***
+     * *** DEALLOCATES A RectImage STRUCTURE ***
      *
      * Arguemnts:
-     * > A: RECT_IMAGE to be deallocated
+     * > A: RectImage to be deallocated
      */
 
-    void deallocate_rect_image(RECT_IMAGE *A) 
+    void deallocate_rect_image(RectImage *A) 
     {
 
         free_dmatrix(A->image,A->xmin,A->xmax,A->ymin,A->ymax);
@@ -522,7 +522,7 @@ namespace hsm {
      * int f(x,y) psi_m(x) psi_n(y) for the relevant weight
      *
      * Arguments:
-     *   data: RECT_IMAGE structure containing the image to be measured
+     *   data: RectImage structure containing the image to be measured
      * > moments: moments[m][n] is the m:n coefficient
      *   max_order: maximum order of moments to compute
      *   x0: center around which to compute moments (x-coordinate)
@@ -531,7 +531,7 @@ namespace hsm {
      */
 
     void find_mom_1(
-		    RECT_IMAGE *data, double **moments, int max_order, double x0, double y0, double sigma) 
+		    RectImage *data, double **moments, int max_order, double x0, double y0, double sigma) 
     {
 
         int m,n;
@@ -580,7 +580,7 @@ namespace hsm {
      * must be given for x0, y0, and sigma.
      *
      * Arguments:
-     *   data: RECT_IMAGE structure containing the image to be measured
+     *   data: RectImage structure containing the image to be measured
      * > moments: moments[m][n] is the m:n coefficient
      *   max_order: maximum order of moments to compute
      * > x0: Gaussian-weighted centroid (x-coordinate)
@@ -593,7 +593,7 @@ namespace hsm {
      */
 
     void find_mom_2(
-        RECT_IMAGE *data, double **moments, int max_order,
+        RectImage *data, double **moments, int max_order,
         double *x0, double *y0, double *sigma, double epsilon, int *num_iter) 
     {
 
@@ -673,7 +673,7 @@ namespace hsm {
      * M = adaptive covariance matrix.
      *
      * Arguments:
-     *   data: the input image (RECT_IMAGE format)
+     *   data: the input image (RectImage format)
      *   x0: weight centroid (x coordinate)
      *   y0: weight centroid (y coordinate)
      *   Mxx: xx element of adaptive covariance
@@ -689,7 +689,7 @@ namespace hsm {
      */
 
     void find_ellipmom_1(
-        RECT_IMAGE *data, double x0, double y0, double Mxx,
+        RectImage *data, double x0, double y0, double Mxx,
         double Mxy, double Myy, double *A, double *Bx, double *By, double *Cxx,
         double *Cxy, double *Cyy, double *rho4w) 
     {
@@ -770,7 +770,7 @@ namespace hsm {
      * Note that the total image intensity for the Gaussian is 2A.
      *
      * Arguments:
-     *   data: RECT_IMAGE structure containing the image
+     *   data: RectImage structure containing the image
      * > A: adaptive amplitude
      * > x0: adaptive centroid (x)
      * > y0: adaptive centroid (y)
@@ -783,7 +783,7 @@ namespace hsm {
      */
 
     void find_ellipmom_2(
-        RECT_IMAGE *data, double *A, double *x0, double *y0,
+        RectImage *data, double *A, double *x0, double *y0,
         double *Mxx, double *Mxy, double *Myy, double *rho4, double epsilon, int *num_iter) 
     {
 
@@ -889,13 +889,13 @@ namespace hsm {
      * that this routine ADDS the convolution to the pre-existing image.
      *
      * Arguments:
-     *   image1: 1st image to be convolved, RECT_IMAGE format
-     *   image2: 2nd image to be convolved, RECT_IMAGE format
-     * > image_out: output (convolved) image, RECT_IMAGE format
+     *   image1: 1st image to be convolved, RectImage format
+     *   image2: 2nd image to be convolved, RectImage format
+     * > image_out: output (convolved) image, RectImage format
      */
 
     void fast_convolve_image_1(
-        RECT_IMAGE *image1, RECT_IMAGE *image2, RECT_IMAGE *image_out) 
+        RectImage *image1, RectImage *image2, RectImage *image_out) 
     {
 
         long dim1x, dim1y, dim1o, dim1, dim2, dim3, dim4;
@@ -1162,8 +1162,8 @@ namespace hsm {
      * to include the anisotropic PSF correction of Luppino and Kaiser (1997).
      *
      * Arguments:
-     *   gal_image: image of measured galaxy (RECT_IMAGE format)
-     *   PSF: PSF map (RECT_IMAGE format)
+     *   gal_image: image of measured galaxy (RectImage format)
+     *   PSF: PSF map (RectImage format)
      * > e1: + shear estimator, PSF-corrected
      * > e2: x shear estimator, PSF-corrected
      * > responsivity: shear responsivity of estimator
@@ -1179,7 +1179,7 @@ namespace hsm {
      */
 
     unsigned int psf_corr_ksb_1(
-        RECT_IMAGE *gal_image, RECT_IMAGE *PSF, double *e1, double *e2,
+        RectImage *gal_image, RectImage *PSF, double *e1, double *e2,
         double *responsivity, double *R, unsigned long flags, double *x0_gal, double *y0_gal,
         double *sig_gal, double *flux_gal, double *x0_psf, double *y0_psf, double *sig_psf) 
     {
@@ -1395,7 +1395,7 @@ namespace hsm {
      */
 
     unsigned int psf_corr_regauss(
-        RECT_IMAGE *gal_image, RECT_IMAGE *PSF, double *e1,
+        RectImage *gal_image, RectImage *PSF, double *e1,
         double *e2, double *R, unsigned long flags, double *x0_gal,
         double *y0_gal, double *sig_gal, double *x0_psf, double *y0_psf,
         double *sig_psf, double *flux_gal) 
@@ -1419,7 +1419,7 @@ namespace hsm {
         double x0_old=0., y0_old=0., Mfxx, Mfxy, Mfyy, detMf, Minvf_xx, Minvf_xy, Minvf_yy;
         double Tpsf, e1psf, e2psf;
         double Tgal, e1gal, e2gal;
-        RECT_IMAGE PSF_resid, fgauss, Iprime;
+        RectImage PSF_resid, fgauss, Iprime;
         long fgauss_xmin, fgauss_xmax, fgauss_ymin, fgauss_ymax;
         double fgauss_xctr, fgauss_yctr, fgauss_xsig, fgauss_ysig;
         long pxmin, pxmax, pymin, pymax;
@@ -1653,8 +1653,8 @@ namespace hsm {
      */
 
     unsigned int general_shear_estimator(
-        RECT_IMAGE *gal_image, RECT_IMAGE *PSF,
-        OBJECT_DATA *gal_data, OBJECT_DATA *PSF_data, char *shear_est, unsigned long flags) 
+        RectImage *gal_image, RectImage *PSF,
+        ObjectData *gal_data, ObjectData *PSF_data, char *shear_est, unsigned long flags) 
     {
 
         //int max_order_psf, max_order_gal, num_args;
