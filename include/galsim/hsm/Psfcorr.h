@@ -46,7 +46,7 @@ namespace hsm {
      * two choices for measurement type: 'e' = Bernstein & Jarvis (2002) ellipticity, 'g' = shear
      * estimator = shear*responsivity 
      */
-    struct OBJECT_DATA 
+    struct ObjectData 
     {
         double x0; ///< x centroid position within the postage stamp
         double y0; ///< y centroid position within the postage stamp
@@ -70,7 +70,7 @@ namespace hsm {
      * to weed out obvious mistakes, it was not used for the science that came out of the hsm code,
      * so it could conceivably have some subtle bugs. 
      */
-    struct RECT_IMAGE 
+    struct RectImage 
     {
         long xmin; ///< Lower x boundary for image
         long xmax; ///< Upper x boundary for image
@@ -83,21 +83,21 @@ namespace hsm {
     /* functions that the user will want to call from outside */
 
     /**
-     * @brief Allocate memory for a RECT_IMAGE representing the image of some object
+     * @brief Allocate memory for a RectImage representing the image of some object
      *
-     * @param[in] *A The pointer to the RECT_IMAGE
+     * @param[in] *A The pointer to the RectImage
      * @param[in] xmin The lower x boundary for the image
      * @param[in] xmax The upper x boundary for the imgae
      * @param[in] ymin The lower y boundary for the image
      * @param[in] ymax The upper y boundary for the image
      */
-    void allocate_rect_image(RECT_IMAGE *A, long xmin, long xmax, long ymin, long ymax);
+    void allocate_rect_image(RectImage *A, long xmin, long xmax, long ymin, long ymax);
   
     /**
-     * @brief De-allocate memory for a RECT_IMAGE
-     * @param[in] *A The pointer to the RECT_IMAGE
+     * @brief De-allocate memory for a RectImage
+     * @param[in] *A The pointer to the RectImage
      */
-    void deallocate_rect_image(RECT_IMAGE *A);
+    void deallocate_rect_image(RectImage *A);
   
     /**
      * @brief Carry out PSF correction.
@@ -108,17 +108,17 @@ namespace hsm {
      * follows: 0x1=recompute galaxy flux by summing unmasked pixels, 0x2=recompute galaxy flux from
      * Gaussian-quartic fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save time,
      * 0x8=cut off PSF residual at NSIG_RG2 to save time.    
-     * @param[in] *gal_image The RECT_IMAGE object for the galaxy
-     * @param[in] *PSF The RECT_IMAGE object for the PSF
-     * @param[in] *gal_data The OBJECT_DATA object for the galaxy
-     * @param[in] *PSF_data The OBJECT_DATA object for the PSF
+     * @param[in] *gal_image The RectImage object for the galaxy
+     * @param[in] *PSF The RectImage object for the PSF
+     * @param[in] *gal_data The ObjectData object for the galaxy
+     * @param[in] *PSF_data The ObjectData object for the PSF
      * @param[in] *shear_est A string indicating the desired method of PSF correction: REGAUSS,
      *            LINEAR, BJ, or KSB
      * @param[in] flags A parameter for REGAUSS, which is hardcoded in meas_shape.cpp to 0xe. 
      * @return A status flag that should be zero if the measurement was successful.
      */
     unsigned int general_shear_estimator(
-        RECT_IMAGE *gal_image, RECT_IMAGE *PSF, OBJECT_DATA *gal_data, OBJECT_DATA *PSF_data, 
+        RectImage *gal_image, RectImage *PSF, ObjectData *gal_data, ObjectData *PSF_data, 
         char *shear_est, unsigned long flags);  
 
     /**
@@ -130,7 +130,7 @@ namespace hsm {
      * used as a weight function, computing the weighted moments, recomputing the moments using the
      * result of the previous step as the weight function, and so on until the moments that are
      * measured are the same as those used for the weight function.
-     * @param[in] *data The RECT_IMAGE for the object being measured.
+     * @param[in] *data The RectImage for the object being measured.
      * @param[out] *A The amplitude of the best-fit elliptical Gaussian (total image intensity for
      *             the Gaussian is 2A). 
      * @param[out] *x0 The x centroid of the best-fit elliptical Gaussian
@@ -143,7 +143,7 @@ namespace hsm {
      * @param[out] *num_iter The number of iterations needed to converge
      */
     void find_ellipmom_2(
-        RECT_IMAGE *data, double *A, double *x0, double *y0,
+        RectImage *data, double *A, double *x0, double *y0,
         double *Mxx, double *Mxy, double *Myy, double *rho4, double epsilon, int *num_iter);
   
 }}
