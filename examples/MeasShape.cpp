@@ -29,6 +29,7 @@
 #include "GalSim.h"
 
 #define Pi 3.141592653589793
+#define ARCSEC 2.53 /* pixels */
 
 /* Code to convert 2D integer images from FITS to TEXT */
 
@@ -36,7 +37,8 @@
 #define MPIX 1000000
 
 /* Arguments: argv[1] = input file, argv[2] = output file */
-static int read_image(char FileName[], galsim::hsm::RECT_IMAGE *MyImage) 
+
+static int read_image(char FileName[], galsim::hsm::RectImage *MyImage) 
 {
 
     fitsfile *fptr;
@@ -117,8 +119,7 @@ static int read_image(char FileName[], galsim::hsm::RECT_IMAGE *MyImage)
                    printf("Error: I don't recognize the data type.\n");
                    exit(1);
             }
-        }
-    }
+        }}
 
     switch(bitpix) {
       case BYTE_IMG:
@@ -148,35 +149,38 @@ static int read_image(char FileName[], galsim::hsm::RECT_IMAGE *MyImage)
 
 /* Arguments:
  * argv[1] = galaxy image image (FITS) file
- * then there are a set of args that can be specified or not (all or nothing)
- * argv[2] = initial guess for size (radius in units of pixels), default = 5 pix
- * argv[3] = sky value to subtract off from all pixels in galaxy image (default = 0)
- * argv[4] = initial value for x centroid, default = center of image
- * argv[5] = initial value for y centroid, default = center of image
+ * argv[2] = PSF image (FITS) file
+ * argv[3] = centroid x guess
+ * argv[4] = centroid y guess
+ * argv[5] = sky variance per pixel
+ * argv[6] = estimator
+ * argv[7] = sky level in galaxy and PSf postage stamps, including soft bias
  */
 
 int main(int argc, char **argv) 
 {
 
-    galsim::hsm::RECT_IMAGE AtlasImage;
-    int status,num_iter;
+    galsim::hsm::RectImage AtlasImage, PSFImage;
+    int status;
     long i,j;
-    galsim::hsm::OBJECT_DATA GalaxyData;
-    double x00, y00, FLUX_OFFSET=0.0;
-    double A_gal, Mxx_gal, Mxy_gal, Myy_gal, rho4_gal;
-    float ARCSEC=5.0;
+    galsim::hsm::ObjectData GalaxyData, PSFData;
+    //double x00, y00;
+    double shearsig, skyvar,FLUX_OFFSET;
 
     /* Check the number of arguments */
-    if (argc!=2 && argc!=6) {
-        fprintf(stderr,"Usage:\n\t%s image_file [guesssig sky_level x_centroid y_centroid]\n",argv[0]);
+    if (argc!=8) {
+        fprintf(
+            stderr,
+            "Usage:\n\t%s gal_image_file PSF_image_file gal_x_centroid_guess "
+            "gal_y_centroid_guess skyvar shear_estimator sky\n",argv[0]);
         exit(1);
     }
 
-    /* Get guesses for various values */
-    if (argc==6) {
-      sscanf(argv[2],"%f",&ARCSEC);
-      sscanf(argv[3],"%lf",&FLUX_OFFSET);
-    }
+    /* Get sky variance */
+    sscanf(argv[5], "%lf", &skyvar);
+
+    /* get sky level, including soft bias, in galaxy and PSF images */
+    sscanf(argv[7],"%lf",&FLUX_OFFSET);
 
     /* Read atlas images, initialize their data */
     status = read_image(argv[1], &AtlasImage);
@@ -184,31 +188,52 @@ int main(int argc, char **argv)
         fprintf(stderr,"Error %d in reading atlas image from file %s.\n", status,argv[1]);
         exit(status);
     }
-
     for(i=AtlasImage.xmin;i<=AtlasImage.xmax;i++) {
         for(j=AtlasImage.ymin;j<=AtlasImage.ymax;j++) {
             AtlasImage.image[i][j] -= FLUX_OFFSET;
         }
     }
-    if (argc == 2) {
-      GalaxyData.x0 = 0.5 * (AtlasImage.xmin + AtlasImage.xmax);
-      GalaxyData.y0 = 0.5 * (AtlasImage.ymin + AtlasImage.ymax);
-    } else {
-      sscanf(argv[4],"%lf",&GalaxyData.x0);
-      sscanf(argv[5],"%lf",&GalaxyData.y0);
+    sscanf(argv[3], "%lf", &(GalaxyData.x0));
+    sscanf(argv[4], "%lf", &(GalaxyData.y0));
+    GalaxyData.sigma = 2.5 * ARCSEC;
+    //x00 = GalaxyData.x0;
+    //y00 = GalaxyData.y0;
+
+    /* Read PSF and initialize */
+    status = read_image(argv[2], &PSFImage);
+    if (status) {
+        fprintf(stderr,"Error %d in reading PSF image from file %s.\n", status,argv[2]);
+        exit(status);
     }
-    GalaxyData.sigma = ARCSEC;
-    x00 = GalaxyData.x0;
-    y00 = GalaxyData.y0;
+    for(i=PSFImage.xmin;i<=PSFImage.xmax;i++) {
+        for(j=PSFImage.ymin;j<=PSFImage.ymax;j++) {
+            PSFImage.image[i][j] -= FLUX_OFFSET;
+        }
+    }
 
-    Mxx_gal = Myy_gal = GalaxyData.sigma * GalaxyData.sigma; Mxy_gal = 0.;
-    find_ellipmom_2(&AtlasImage,&A_gal,&x00,&y00,&Mxx_gal,&Mxy_gal,&Myy_gal,&rho4_gal,
-                    1.0e-6,&num_iter);
+    PSFData.x0 = 0.5 * (PSFImage.xmin + PSFImage.xmax);
+    PSFData.y0 = 0.5 * (PSFImage.ymin + PSFImage.ymax);
+    PSFData.sigma = 1.0 * ARCSEC;
 
-    printf("%d %13.6lf %13.6lf %13.6lf %13.6lf %13.6lf %03d  %13.6lf %13.6lf %13.6lf\n", 
-           status, Mxx_gal,Myy_gal,Mxy_gal,(Mxx_gal-Myy_gal)/(Mxx_gal+Myy_gal),
-           2.0*Mxy_gal/(Mxx_gal+Myy_gal),num_iter,A_gal,x00,y00);
+    status = (int) general_shear_estimator(
+        &AtlasImage, &PSFImage, &GalaxyData, &PSFData, argv[6], 0xe);
+
+    /* Compute very rough error estimate */
+    shearsig = sqrt( 4. * Pi * skyvar ) * 
+        GalaxyData.sigma / (GalaxyData.resolution * GalaxyData.flux);
+
+    printf("%d %13.9lf %13.9lf %c %13.9lf %13.9f %13.9f %13.9f %13.9f\n",
+           status, GalaxyData.e1, GalaxyData.e2,GalaxyData.meas_type,
+           GalaxyData.responsivity, GalaxyData.resolution, shearsig,
+           GalaxyData.sigma, GalaxyData.flux);
+
     deallocate_rect_image(&AtlasImage);
+    deallocate_rect_image(&PSFImage);
+
+#if 1
+    if (GalaxyData.resolution <= 0.25) return 81;
+    if (GalaxyData.e1*GalaxyData.e1 + GalaxyData.e2*GalaxyData.e2 >= 100.0) return 80;
+#endif
 
     if (status) fprintf(stderr, "Error #%d: ", status);
     return (status);
