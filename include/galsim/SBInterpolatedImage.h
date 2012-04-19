@@ -56,12 +56,6 @@ namespace galsim {
          *                      the currently-hardwired `OVERSAMPLE_X = 4.` parameter value for 
          *                      `padFactor`).
          */
-        // MJ: Minor adjustment here in the location of const.
-        //     Both "const Image<T>&" and "Image<T> const &" are correct and mean the same thing.
-        //     I prefer having const in front.  Jim prefers it after.
-        //     However, it is good practice to stick to a single convention at least within
-        //     one file.  Since Gary used the former style in the rest of this file, 
-        //     better to keep that here.
         template <typename T> 
         SBInterpolatedImage(const Image<T>& img, const Interpolant2d& i,
                             double dx_=0., double padFactor=0.);

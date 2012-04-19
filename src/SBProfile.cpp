@@ -84,9 +84,6 @@ namespace galsim {
         double totalflux=0;
         for (int y = I.getYMin(); y <= I.getYMax(); y++) {
             int x = I.getXMin(); 
-            // MJ: Another adjustment here: Inside a template function, we need to put 
-            //     typename in front of Image<T>::Iter to tell the compiler that Iter
-            //     is a typedef, not a member object.
             typename Image<T>::Iter ee=I.rowEnd(y);
             for (typename Image<T>::Iter it=I.rowBegin(y);
                  it!=ee;

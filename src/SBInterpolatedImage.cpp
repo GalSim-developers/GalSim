@@ -280,8 +280,8 @@ namespace galsim {
             return sum;
         } else {
             // Otherwise just use the normal routine to fill the grid:
-            // MJ: Note that we need to call doFillXImage, not fillXImage here,
-            //     to avoid the virtual function resolution.
+            // Note that we need to call doFillXImage, not fillXImage here,
+            // to avoid the virtual function resolution.
             return SBProfile::doFillXImage(I,dx);
         }
     }
