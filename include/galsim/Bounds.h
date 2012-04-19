@@ -85,33 +85,64 @@ namespace galsim {
      *
      * This is used to keep track of the bounds of catalogs and fields.  You can set values, 
      * but generally you just keep including positions of each galaxy or the bounds of each 
-     * catalog respectively using the += operators
+     * catalog respectively using the += operators.
+     *
+     * The bounds are stored as four numbers in each instance, (xmin, ymin, xmax, ymax), with an
+     * additional boolean switch to say whether or not the Bounds rectangle has been defined.
      *
      * Rectangle is undefined if min>max in either direction.
      */
     class Bounds 
     {
     public:
-    //TODO: Write more dox here, need to start from scratch!
+    //TODO: Write more dox here, needed to start from scratch!
+        /// @brief Constructor using four scalar positions (xmin, xmax, ymin, ymax).
         Bounds(const T x1, const T x2, const T y1, const T y2) :
             defined(x1<=x2 && y1<=y2),xmin(x1),xmax(x2),ymin(y1),ymax(y2) {}
+
+        /// @brief Constructor using a single Position vector x/ymin = x/ymax.
         Bounds(const Position<T>& pos) :
             defined(1),xmin(pos.x),xmax(pos.x),ymin(pos.y),ymax(pos.y) {}
+
+        /// @brief Constructor using two Positions, first for x/ymin, second for x/ymax.
         Bounds(const Position<T>& pos1, const Position<T>& pos2) :
             defined(1),xmin(std::min(pos1.x,pos2.x)),xmax(std::max(pos1.x,pos2.x)),
             ymin(std::min(pos1.y,pos2.y)),ymax(std::max(pos1.y,pos2.y)) {}
+
+        /// @brief Constructor for empty Bounds, .isDefined() method will return false.
         Bounds() : defined(0),xmin(0),xmax(0),ymin(0),ymax(0) {}
+
+        /// @brief Destructor.
         ~Bounds() {}
+
+        /// @brief Set the xmin of the Bounds rectangle.
         void setXMin(const T x) { xmin = x; defined= xmin<=xmax && ymin<=ymax; }
+
+        /// @brief Set the xmax of the Bounds rectangle. 
         void setXMax(const T x) { xmax = x; defined= xmin<=xmax && ymin<=ymax; }
+
+        /// @brief Set the ymin of the Bounds rectangle.
         void setYMin(const T y) { ymin = y; defined= xmin<=xmax && ymin<=ymax; }
+
+        /// @brief Set the ymax of the Bounds rectangle.
         void setYMax(const T y) { ymax = y; defined= xmin<=xmax && ymin<=ymax; }
+
+        /// @brief Get the xmin of the Bounds rectangle.
         T getXMin() const { return xmin; }
+
+        /// @brief Get the xmax of the Bounds rectangle.
         T getXMax() const { return xmax; }
+
+        /// @brief Get the ymin of the Bounds rectangle.
         T getYMin() const { return ymin; }
+
+        /// @brief Get the ymax of the Bounds rectangle.
         T getYMax() const { return ymax; }
+
+        /// @brief Query whether the Bounds rectangle is defined.
         bool isDefined() const { return defined; }
 
+        // TODO: Understand what these do and document...
         Position<T> center() const;
         void operator+=(const Position<T>& pos); //expand to include point
         void operator+=(const Bounds<T>& rec); //bounds of union
