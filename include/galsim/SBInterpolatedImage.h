@@ -45,7 +45,7 @@ namespace galsim {
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
          * image.
          *
-         * @param[in] img       square input Image.
+         * @param[in] img       square input Image (not necessarily ImageF).
          * @param[in] dx_       stepsize between pixels in image data table (default value of 
          *                      `x0_ = 0.` checks the Image header for a suitable stepsize, sets 
          *                      to `1.` if none is found). 
@@ -56,7 +56,8 @@ namespace galsim {
          *                      the currently-hardwired `OVERSAMPLE_X = 4.` parameter value for 
          *                      `padFactor`).
          */
-        SBInterpolatedImage(Image<float> const & img, const Interpolant2d& i,
+        template <typename T> 
+        SBInterpolatedImage(const Image<T> & img, const Interpolant2d& i,
                             double dx_=0., double padFactor=0.);
 #endif
 
@@ -170,7 +171,8 @@ namespace galsim {
         virtual void fillXGrid(XTable& xt) const;
 
 #ifdef USE_IMAGES
-        virtual double fillXImage(Image<float> & I, double dx) const;
+        template <typename T>
+        virtual double fillXImage(const Image<T> & I, double dx) const;
 #endif
 
     private:
