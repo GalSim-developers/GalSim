@@ -398,5 +398,15 @@ namespace galsim {
 
 #endif
 
+    // instantiate template functions for expected image types
+    template void SBInterpolatedImage::SBInterpolatedImage(Image<float>);
+    template void SBInterpolatedImage::SBInterpolatedImage(Image<double>);
+    template void SBInterpolatedImage::SBInterpolatedImage(Image<short>);
+    template void SBInterpolatedImage::SBInterpolatedImage(Image<int>);
+
+    template double SBInterpolatedImage::fillXImage(Image<float>);
+    template double SBInterpolatedImage::fillXImage(Image<double>);
+    template double SBInterpolatedImage::fillXImage(Image<short>);
+    template double SBInterpolatedImage::fillXImage(Image<int>);
 }
 
