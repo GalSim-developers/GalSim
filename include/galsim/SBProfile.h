@@ -384,11 +384,9 @@ namespace galsim {
          * @param[out] image    image to fill
          * @param[in]  dx       grid pitch on which SBProfile image is drawn
          */
-        virtual double fillXImage(Image<float> & image, double dx) const;  // return flux integral
-        virtual double fillXImage(Image<double> & image, double dx) const;  // return flux integral
-        virtual double fillXImage(Image<short> & image, double dx) const;  // return flux integral
-        virtual double fillXImage(Image<int> & image, double dx) const;  // return flux integral
-
+        template <typename T>
+        double fillXImage(Image<T> & image, double dx) const  // return flux integral
+        { return doFillXImage(image, dx); }
 #endif
 
         /**
@@ -403,6 +401,29 @@ namespace galsim {
          */
         virtual void fillXGrid(XTable& xt) const;
 
+    protected:
+
+#ifdef USE_IMAGES
+        // Virtual functions cannot be templates, so to make fillXImage work like a virtual
+        // function, we have it call these, which need to include all the types of Image
+        // that we want to use.
+        //
+        // Then in the derived class, these functions should call a template version of 
+        // fillXImage in that derived class that implements the functionality you want.
+        virtual double doFillXImage(Image<float> & image, double dx) const
+        { return doFillXImage2(image,dx); }
+        virtual double doFillXImage(Image<double> & image, double dx) const
+        { return doFillXImage2(image,dx); }
+        virtual double doFillXImage(Image<short> & image, double dx) const
+        { return doFillXImage2(image,dx); }
+        virtual double doFillXImage(Image<int> & image, double dx) const
+        { return doFillXImage2(image,dx); }
+
+        // Here in the base class, we need yet another name for the version that actually
+        // implements this as a template:
+        template <typename T>
+        double doFillXImage2(Image<T>& image, double dx) const;
+#endif
     };
 
     /** 
@@ -1254,13 +1275,21 @@ namespace galsim {
         // Override to put in fractional edge values:
         void fillXGrid(XTable& xt) const;
 
+        template <typename T>
+        double fillXImage(Image<T>& I, double dx) const;
+
     protected:
 #ifdef USE_IMAGES
-        double fillXImage(Image<float>& I, double dx) const;
-        double fillXImage(Image<double>& I, double dx) const;
-        double fillXImage(Image<short>& I, double dx) const;
-        double fillXImage(Image<int>& I, double dx) const;
+        virtual double doFillXImage(Image<float>& I, double dx) const
+        { return fillXImage(I,dx); }
+        virtual double doFillXImage(Image<double>& I, double dx) const
+        { return fillXImage(I,dx); }
+        virtual double doFillXImage(Image<short>& I, double dx) const
+        { return fillXImage(I,dx); }
+        virtual double doFillXImage(Image<int>& I, double dx) const
+        { return fillXImage(I,dx); }
 #endif
+
     };
 
 #ifdef USE_LAGUERRE

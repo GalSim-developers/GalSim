@@ -78,79 +78,17 @@ namespace galsim {
         return fillXImage(I, dx);
     }
  
-    double SBProfile::fillXImage(Image<float> & I, double dx) const 
+    template <typename T>
+    double SBProfile::doFillXImage2(Image<T> & I, double dx) const 
     {
         double totalflux=0;
         for (int y = I.getYMin(); y <= I.getYMax(); y++) {
             int x = I.getXMin(); 
-            Image<float>::Iter ee=I.rowEnd(y);
-            for (Image<float>::Iter it=I.rowBegin(y);
-                 it!=ee;
-                 ++it, ++x) {
-                Position<double> p(x*dx,y*dx); // since x,y are pixel indices
-                *it = xValue(p);
-#ifdef DANIELS_TRACING
-                cout << "x=" << x << ", y=" << y << ": " << *it << std::endl;
-                cout << "--------------------------" << std::endl;
-#endif
-                totalflux += *it;
-            } 
-        }
-        I.setScale(dx);
-        return totalflux * (dx*dx);
-    }
-
-    double SBProfile::fillXImage(Image<double> & I, double dx) const 
-    {
-        double totalflux=0;
-        for (int y = I.getYMin(); y <= I.getYMax(); y++) {
-            int x = I.getXMin(); 
-            Image<double>::Iter ee=I.rowEnd(y);
-            for (Image<double>::Iter it=I.rowBegin(y);
-                 it!=ee;
-                 ++it, ++x) {
-                Position<double> p(x*dx,y*dx); // since x,y are pixel indices
-                *it = xValue(p);
-#ifdef DANIELS_TRACING
-                cout << "x=" << x << ", y=" << y << ": " << *it << std::endl;
-                cout << "--------------------------" << std::endl;
-#endif
-                totalflux += *it;
-            } 
-        }
-        I.setScale(dx);
-        return totalflux * (dx*dx);
-    }
-
-    double SBProfile::fillXImage(Image<short> & I, double dx) const 
-    {
-        double totalflux=0;
-        for (int y = I.getYMin(); y <= I.getYMax(); y++) {
-            int x = I.getXMin(); 
-            Image<short>::Iter ee=I.rowEnd(y);
-            for (Image<short>::Iter it=I.rowBegin(y);
-                 it!=ee;
-                 ++it, ++x) {
-                Position<double> p(x*dx,y*dx); // since x,y are pixel indices
-                *it = xValue(p);
-#ifdef DANIELS_TRACING
-                cout << "x=" << x << ", y=" << y << ": " << *it << std::endl;
-                cout << "--------------------------" << std::endl;
-#endif
-                totalflux += *it;
-            } 
-        }
-        I.setScale(dx);
-        return totalflux * (dx*dx);
-    }
-
-    double SBProfile::fillXImage(Image<int> & I, double dx) const 
-    {
-        double totalflux=0;
-        for (int y = I.getYMin(); y <= I.getYMax(); y++) {
-            int x = I.getXMin(); 
-            Image<int>::Iter ee=I.rowEnd(y);
-            for (Image<int>::Iter it=I.rowBegin(y);
+            // MJ: Another adjustment here: Inside a template function, we need to put 
+            //     typename in front of Image<T>::Iter to tell the compiler that Iter
+            //     is a typedef, not a member object.
+            typename Image<T>::Iter ee=I.rowEnd(y);
+            for (typename Image<T>::Iter it=I.rowBegin(y);
                  it!=ee;
                  ++it, ++x) {
                 Position<double> p(x*dx,y*dx); // since x,y are pixel indices
@@ -973,109 +911,8 @@ namespace galsim {
 
 #ifdef USE_IMAGES
     // Override x-domain writing so we can partially fill pixels at edge of box.
-    double SBBox::fillXImage(Image<float>& I, double dx) const 
-    {
-        double norm = flux/xw/yw;
-
-        // Pixel index where edge of box falls:
-        int xedge = static_cast<int> ( std::ceil(xw / (2*dx) - 0.5) );
-        int yedge = static_cast<int> ( std::ceil(yw / (2*dx) - 0.5) );
-        // Fraction of edge pixel that is filled by box:
-        double xfrac = xw / (2*dx) - xedge + 0.5;
-        assert(xfrac>0. && xfrac<=1.);
-        double yfrac = yw / (2*dx) - yedge + 0.5;
-        assert(yfrac>0. && yfrac<=1.);
-        if (xedge==0) xfrac = xw/dx;
-        if (yedge==0) yfrac = yw/dx;
-
-        double totalflux = 0.;
-        double xfac;
-        for (int i = I.getXMin(); i <= I.getXMax(); i++) {
-            if ( std::abs(i) > xedge ) xfac = 0.;
-            else if (std::abs(i)==xedge) xfac = norm*xfrac;
-            else xfac = norm;
-
-            for (int j = I.getYMin(); j <= I.getYMax(); j++) {
-                if (xfac==0. || std::abs(j)>yedge) I(i,j)=0.;
-                else if (std::abs(j)==yedge) I(i,j)=xfac*yfrac;
-                else I(i,j)=xfac;
-                totalflux += I(i,j);
-            }
-        }
-        I.setScale(dx);
-
-        return totalflux * (dx*dx);
-    }
-
-    double SBBox::fillXImage(Image<double>& I, double dx) const 
-    {
-        double norm = flux/xw/yw;
-
-        // Pixel index where edge of box falls:
-        int xedge = static_cast<int> ( std::ceil(xw / (2*dx) - 0.5) );
-        int yedge = static_cast<int> ( std::ceil(yw / (2*dx) - 0.5) );
-        // Fraction of edge pixel that is filled by box:
-        double xfrac = xw / (2*dx) - xedge + 0.5;
-        assert(xfrac>0. && xfrac<=1.);
-        double yfrac = yw / (2*dx) - yedge + 0.5;
-        assert(yfrac>0. && yfrac<=1.);
-        if (xedge==0) xfrac = xw/dx;
-        if (yedge==0) yfrac = yw/dx;
-
-        double totalflux = 0.;
-        double xfac;
-        for (int i = I.getXMin(); i <= I.getXMax(); i++) {
-            if ( std::abs(i) > xedge ) xfac = 0.;
-            else if (std::abs(i)==xedge) xfac = norm*xfrac;
-            else xfac = norm;
-
-            for (int j = I.getYMin(); j <= I.getYMax(); j++) {
-                if (xfac==0. || std::abs(j)>yedge) I(i,j)=0.;
-                else if (std::abs(j)==yedge) I(i,j)=xfac*yfrac;
-                else I(i,j)=xfac;
-                totalflux += I(i,j);
-            }
-        }
-        I.setScale(dx);
-
-        return totalflux * (dx*dx);
-    }
-
-    double SBBox::fillXImage(Image<short>& I, double dx) const 
-    {
-        double norm = flux/xw/yw;
-
-        // Pixel index where edge of box falls:
-        int xedge = static_cast<int> ( std::ceil(xw / (2*dx) - 0.5) );
-        int yedge = static_cast<int> ( std::ceil(yw / (2*dx) - 0.5) );
-        // Fraction of edge pixel that is filled by box:
-        double xfrac = xw / (2*dx) - xedge + 0.5;
-        assert(xfrac>0. && xfrac<=1.);
-        double yfrac = yw / (2*dx) - yedge + 0.5;
-        assert(yfrac>0. && yfrac<=1.);
-        if (xedge==0) xfrac = xw/dx;
-        if (yedge==0) yfrac = yw/dx;
-
-        double totalflux = 0.;
-        double xfac;
-        for (int i = I.getXMin(); i <= I.getXMax(); i++) {
-            if ( std::abs(i) > xedge ) xfac = 0.;
-            else if (std::abs(i)==xedge) xfac = norm*xfrac;
-            else xfac = norm;
-
-            for (int j = I.getYMin(); j <= I.getYMax(); j++) {
-                if (xfac==0. || std::abs(j)>yedge) I(i,j)=0.;
-                else if (std::abs(j)==yedge) I(i,j)=xfac*yfrac;
-                else I(i,j)=xfac;
-                totalflux += I(i,j);
-            }
-        }
-        I.setScale(dx);
-
-        return totalflux * (dx*dx);
-    }
-
-    double SBBox::fillXImage(Image<int>& I, double dx) const 
+    template <typename T>
+    double SBBox::fillXImage(Image<T>& I, double dx) const 
     {
         double norm = flux/xw/yw;
 

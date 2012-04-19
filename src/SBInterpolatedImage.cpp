@@ -261,7 +261,8 @@ namespace galsim {
 #ifdef USE_IMAGES
     // One more time: for images now
     // Returns total flux
-    virtual double SBInterpolatedImage::fillXImage(Image<float> const & I, double dx) const 
+    template <typename T>
+    double SBInterpolatedImage::fillXImage(Image<T>& I, double dx) const 
     {
 #ifdef DANIELS_TRACING
         cout << "SBInterpolatedImage::fillXImage called" << endl;
@@ -271,7 +272,7 @@ namespace galsim {
             for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
                 for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {
                     Position<double> x(ix*dx,iy*dx);
-                    float val = xValue(x);
+                    T val = xValue(x);
                     sum += val;
                     I(ix,iy) = val;
                 }
@@ -279,73 +280,9 @@ namespace galsim {
             return sum;
         } else {
             // Otherwise just use the normal routine to fill the grid:
-            return SBProfile::fillXImage(I,dx);
-        }
-    }
-
-    virtual double SBInterpolatedImage::fillXImage(Image<double> const & I, double dx) const 
-    {
-#ifdef DANIELS_TRACING
-        cout << "SBInterpolatedImage::fillXImage called" << endl;
-#endif
-        if ( dynamic_cast<const InterpolantXY*> (xInterp)) {
-            double sum=0.;
-            for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
-                for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {
-                    Position<double> x(ix*dx,iy*dx);
-                    double val = xValue(x);
-                    sum += val;
-                    I(ix,iy) = val;
-                }
-            }
-            return sum;
-        } else {
-            // Otherwise just use the normal routine to fill the grid:
-            return SBProfile::fillXImage(I,dx);
-        }
-    }
-
-    virtual double SBInterpolatedImage::fillXImage(Image<short> const & I, double dx) const 
-    {
-#ifdef DANIELS_TRACING
-        cout << "SBInterpolatedImage::fillXImage called" << endl;
-#endif
-        if ( dynamic_cast<const InterpolantXY*> (xInterp)) {
-            double sum=0.;
-            for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
-                for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {
-                    Position<double> x(ix*dx,iy*dx);
-                    short val = xValue(x);
-                    sum += val;
-                    I(ix,iy) = val;
-                }
-            }
-            return sum;
-        } else {
-            // Otherwise just use the normal routine to fill the grid:
-            return SBProfile::fillXImage(I,dx);
-        }
-    }
-
-    virtual double SBInterpolatedImage::fillXImage(Image<int> const & I, double dx) const 
-    {
-#ifdef DANIELS_TRACING
-        cout << "SBInterpolatedImage::fillXImage called" << endl;
-#endif
-        if ( dynamic_cast<const InterpolantXY*> (xInterp)) {
-            double sum=0.;
-            for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
-                for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {
-                    Position<double> x(ix*dx,iy*dx);
-                    int val = xValue(x);
-                    sum += val;
-                    I(ix,iy) = val;
-                }
-            }
-            return sum;
-        } else {
-            // Otherwise just use the normal routine to fill the grid:
-            return SBProfile::fillXImage(I,dx);
+            // MJ: Note that we need to call doFillXImage, not fillXImage here,
+            //     to avoid the virtual function resolution.
+            return SBProfile::doFillXImage(I,dx);
         }
     }
 #endif
