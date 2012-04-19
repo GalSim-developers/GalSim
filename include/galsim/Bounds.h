@@ -79,6 +79,7 @@ namespace galsim {
     inline std::istream& operator>>(std::istream& is, Position<T>& p) 
     { p.read(is); return is; }
 
+    template <class T>
     /** 
      * @brief Class for storing image bounds, essentially the vertices of a rectangle.  
      *
@@ -88,19 +89,10 @@ namespace galsim {
      *
      * Rectangle is undefined if min>max in either direction.
      */
-    template <class T>
     class Bounds 
     {
-        /** 
-         * @brief Class for storing image bounds, essentially the vertices of a rectangle.  
-         *
-         * This is used to keep track of the bounds of catalogs and fields.  You can set values, 
-         * but generally you just keep including positions of each galaxy or the bounds of each 
-         * catalog respectively using the += operators
-         *
-         * Rectangle is undefined if min>max in either direction.
-         */
     public:
+    //TODO: Write more dox here, need to start from scratch!
         Bounds(const T x1, const T x2, const T y1, const T y2) :
             defined(x1<=x2 && y1<=y2),xmin(x1),xmax(x2),ymin(y1),ymax(y2) {}
         Bounds(const Position<T>& pos) :
