@@ -55,19 +55,26 @@ namespace galsim {
         /// @brief Overloaded vector - subtraction operator with a Position on the rhs.
         Position operator-(const Position<T> rhs) const { return Position(x-rhs.x,y-rhs.y); }
 
-
+        /// @brief Overloaded == relational equality operator.
         bool operator==(const Position& rhs) const { return (x==rhs.x && y==rhs.y); }
+        
+        /// @brief Overloaded != relational non-equality operator.
         bool operator!=(const Position& rhs) const { return (x!=rhs.x || y!=rhs.y); }
 
+        /// @brief Write (x, y) position to output stream.
         void write(std::ostream& fout) const { fout << "(" << x << "," << y << ")"; }
+
+        /// @brief Read (x, y) position from input istream.
         void read(std::istream& fin) { char ch; fin >> ch >> x >> ch >> y >> ch; }
 
     }; // Position
 
+    /// @brief Overloaded << operator which uses write() method of Position class.
     template <class T>
     inline std::ostream& operator<<(std::ostream& os, const Position<T> p) 
     { p.write(os); return os; }
 
+    /// @brief Overloaded >> operator which uses read() method of Position class.
     template <class T>
     inline std::istream& operator>>(std::istream& is, Position<T>& p) 
     { p.read(is); return is; }
