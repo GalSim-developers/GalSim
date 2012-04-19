@@ -38,7 +38,7 @@ namespace galsim {
 #ifdef USE_IMAGES
     template <typename T>
     SBInterpolatedImage::SBInterpolatedImage(
-        Image<const T> & img, const Interpolant2d& i, double dx_, double padFactor) : 
+        Image<T> const & img, const Interpolant2d& i, double dx_, double padFactor) : 
 
         dx(dx_), Nimages(1),
         xInterp(&i), kInterp(&defaultKInterpolant2d),
@@ -262,7 +262,7 @@ namespace galsim {
     // One more time: for images now
     // Returns total flux
     template <typename T>
-    double SBInterpolatedImage::fillXImage(Image<const T> & I, double dx) const 
+    double SBInterpolatedImage::fillXImage(Image<T> const & I, double dx) const 
     {
 #ifdef DANIELS_TRACING
         cout << "SBInterpolatedImage::fillXImage called" << endl;
@@ -399,14 +399,15 @@ namespace galsim {
 #endif
 
     // instantiate template functions for expected image types
-    template void SBInterpolatedImage::SBInterpolatedImage(Image<float>);
-    template void SBInterpolatedImage::SBInterpolatedImage(Image<double>);
-    template void SBInterpolatedImage::SBInterpolatedImage(Image<short>);
-    template void SBInterpolatedImage::SBInterpolatedImage(Image<int>);
+#ifdef USE_IMAGES
+    template SBInterpolatedImage::SBInterpolatedImage(Image<float> const & img, const Interpolant2d& i, double dx_, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(Image<double> const & img, const Interpolant2d& i, double dx_, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(Image<short> const & img, const Interpolant2d& i, double dx_, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(Image<int> const & img, const Interpolant2d& i, double dx_, double padFactor);
 
-    template double SBInterpolatedImage::fillXImage(Image<float>);
-    template double SBInterpolatedImage::fillXImage(Image<double>);
-    template double SBInterpolatedImage::fillXImage(Image<short>);
-    template double SBInterpolatedImage::fillXImage(Image<int>);
+    template virtual double SBInterpolatedImage::fillXImage(Image<float> const & I, double dx) const;
+    template virtual double SBInterpolatedImage::fillXImage(Image<double> const & I, double dx) const;
+    template virtual double SBInterpolatedImage::fillXImage(Image<short> const & I, double dx) const;
+    template virtual double SBInterpolatedImage::fillXImage(Image<int> const & I, double dx) const;
 }
 
