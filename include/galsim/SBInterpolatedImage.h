@@ -171,8 +171,10 @@ namespace galsim {
         virtual void fillXGrid(XTable& xt) const;
 
 #ifdef USE_IMAGES
-        template <typename T>
-        virtual double fillXImage(Image<T> const & I, double dx) const;
+        virtual double fillXImage(Image<float> const & I, double dx) const;
+        virtual double fillXImage(Image<double> const & I, double dx) const;
+        virtual double fillXImage(Image<short> const & I, double dx) const;
+        virtual double fillXImage(Image<int> const & I, double dx) const;
 #endif
 
     private:

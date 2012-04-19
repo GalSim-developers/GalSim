@@ -385,6 +385,9 @@ namespace galsim {
          * @param[in]  dx       grid pitch on which SBProfile image is drawn
          */
         virtual double fillXImage(Image<float> & image, double dx) const;  // return flux integral
+        virtual double fillXImage(Image<double> & image, double dx) const;  // return flux integral
+        virtual double fillXImage(Image<short> & image, double dx) const;  // return flux integral
+        virtual double fillXImage(Image<int> & image, double dx) const;  // return flux integral
 
 #endif
 
@@ -1254,6 +1257,9 @@ namespace galsim {
     protected:
 #ifdef USE_IMAGES
         double fillXImage(Image<float>& I, double dx) const;
+        double fillXImage(Image<double>& I, double dx) const;
+        double fillXImage(Image<short>& I, double dx) const;
+        double fillXImage(Image<int>& I, double dx) const;
 #endif
     };
 
