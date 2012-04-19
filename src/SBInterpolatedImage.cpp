@@ -262,7 +262,7 @@ namespace galsim {
     // One more time: for images now
     // Returns total flux
     template <typename T>
-    double SBInterpolatedImage::fillXImage(Image<T> & I, double dx) const 
+    double SBInterpolatedImage::fillXImage(Image<const T> & I, double dx) const 
     {
 #ifdef DANIELS_TRACING
         cout << "SBInterpolatedImage::fillXImage called" << endl;
