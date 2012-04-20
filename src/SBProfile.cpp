@@ -46,7 +46,8 @@ namespace galsim {
         return img;
     }
 
-    double SBProfile::draw(Image<float> & img, double dx, int wmult) const 
+    template <typename T>
+    double SBProfile::draw(Image<T> & img, double dx, int wmult) const 
     {
         if (isAnalyticX())
             return plainDraw(img, dx, wmult);
@@ -55,7 +56,8 @@ namespace galsim {
     }
 
     // First is a simple case wherein we have a formula for x values:
-    double SBProfile::plainDraw(Image<float> & I, double dx, int wmult) const 
+    template <typename T>
+    double SBProfile::plainDraw(Image<T> & I, double dx, int wmult) const 
     {
         // Determine desired dx:
         if (dx<=0.) dx = M_PI / maxK();
@@ -106,7 +108,8 @@ namespace galsim {
     // Aliasing will be handled by folding the k values before transforming
     // And enforce no image folding
     //**/ #define DEBUG
-    double SBProfile::fourierDraw(Image<float> & I, double dx, int wmult) const 
+    template <typename T>
+    double SBProfile::fourierDraw(Image<T> & I, double dx, int wmult) const 
     {
         Bounds<int> imgBounds; // Bounds for output image
         bool sizeIsFree = !I.getBounds().isDefined();
@@ -209,8 +212,8 @@ namespace galsim {
         return sum*dx*dx;;
     }
 
-    void SBProfile::drawK(
-        Image<float> & Re, Image<float> & Im, double dk, int wmult) const 
+    template <typename T>
+    void SBProfile::drawK(Image<T> & Re, Image<T> & Im, double dk, int wmult) const 
     {
         if (isAnalyticK()) 
             plainDrawK(Re, Im, dk, wmult);   // calculate in k space
@@ -219,8 +222,8 @@ namespace galsim {
         return;
     }
 
-    void SBProfile::plainDrawK(
-        Image<float> & Re, Image<float> & Im, double dk, int wmult) const 
+    template <typename T>
+    void SBProfile::plainDrawK(Image<T> & Re, Image<T> & Im, double dk, int wmult) const 
     {
         // Make sure input images match or are both null
         assert(!(Re.getBounds().isDefined() || Im.getBounds().isDefined()) 
@@ -247,9 +250,9 @@ namespace galsim {
         // ??? Make this into a virtual function to allow pipelining?
         for (int y = Re.getYMin(); y <= Re.getYMax(); y++) {
             int x = Re.getXMin(); 
-            Image<float>::Iter ee=Re.rowEnd(y);
-            Image<float>::Iter it;
-            Image<float>::Iter it2;
+            typename Image<T>::Iter ee=Re.rowEnd(y);
+            typename Image<T>::Iter it;
+            typename Image<T>::Iter it2;
             for (it=Re.rowBegin(y), it2=Im.rowBegin(y);
                  it!=ee;
                  ++it, ++it2, ++x) {
@@ -271,8 +274,8 @@ namespace galsim {
     // by oversampling and extending x domain if needed.  Force
     // power of 2 for transform
 
-    void SBProfile::fourierDrawK(
-        Image<float> & Re, Image<float> & Im, double dk, int wmult) const 
+    template <typename T>
+    void SBProfile::fourierDrawK(Image<T> & Re, Image<T> & Im, double dk, int wmult) const 
     {
         assert(!(Re.getBounds().isDefined() || Im.getBounds().isDefined()) 
                || (Re.getBounds() == Im.getBounds()));
@@ -1263,5 +1266,38 @@ namespace galsim {
         if (kk > ft.argMax()) return 0.;
         else return flux*ft(kk);
     }
+
+    // instantiate template functions for expected image types
+#ifdef USE_IMAGES
+    template double SBProfile::draw(Image<float> & img, double dx, int wmult) const;
+    template double SBProfile::draw(Image<double> & img, double dx, int wmult) const;
+    template double SBProfile::draw(Image<short> & img, double dx, int wmult) const;
+    template double SBProfile::draw(Image<int> & img, double dx, int wmult) const;
+
+    template double SBProfile::plainDraw(Image<float> & I, double dx, int wmult) const;
+    template double SBProfile::plainDraw(Image<double> & I, double dx, int wmult) const;
+    template double SBProfile::plainDraw(Image<short> & I, double dx, int wmult) const;
+    template double SBProfile::plainDraw(Image<int> & I, double dx, int wmult) const;
+
+    template double SBProfile::fourierDraw(Image<float> & I, double dx, int wmult) const;
+    template double SBProfile::fourierDraw(Image<double> & I, double dx, int wmult) const;
+    template double SBProfile::fourierDraw(Image<short> & I, double dx, int wmult) const;
+    template double SBProfile::fourierDraw(Image<int> & I, double dx, int wmult) const;
+
+    template void SBProfile::drawK(Image<float> & Re, Image<float> & Im, double dk, int wmult) const;
+    template void SBProfile::drawK(Image<double> & Re, Image<double> & Im, double dk, int wmult) const;
+    template void SBProfile::drawK(Image<short> & Re, Image<short> & Im, double dk, int wmult) const;
+    template void SBProfile::drawK(Image<int> & Re, Image<int> & Im, double dk, int wmult) const;
+
+    template void SBProfile::plainDrawK(Image<float> & Re, Image<float> & Im, double dk, int wmult) const;
+    template void SBProfile::plainDrawK(Image<double> & Re, Image<double> & Im, double dk, int wmult) const;
+    template void SBProfile::plainDrawK(Image<short> & Re, Image<short> & Im, double dk, int wmult) const;
+    template void SBProfile::plainDrawK(Image<int> & Re, Image<int> & Im, double dk, int wmult) const;
+
+    template void SBProfile::fourierDrawK(Image<float> & Re, Image<float> & Im, double dk, int wmult) const;
+    template void SBProfile::fourierDrawK(Image<double> & Re, Image<double> & Im, double dk, int wmult) const;
+    template void SBProfile::fourierDrawK(Image<short> & Re, Image<short> & Im, double dk, int wmult) const;
+    template void SBProfile::fourierDrawK(Image<int> & Re, Image<int> & Im, double dk, int wmult) const;
+#endif
 
 }
