@@ -58,10 +58,10 @@ if sys.platform == 'darwin':
     # The easiest way to do this is to have multiple environments that differ in their
     # SHLINKFLAGS values.  For now we just have the one, so this is fine.
     env1.AppendUnique( SHLINKFLAGS=[
-	'-dynamic',
-	'-Wl,-install_name,%s'%lib_final_name,
-	'-Wl,-compatibility_version,%s.%s'%compat_version,
-	'-Wl,-current_version,%s.%s'%version ] )
+        '-dynamic',
+        '-Wl,-install_name,%s'%lib_final_name,
+        '-Wl,-compatibility_version,%s.%s'%compat_version,
+        '-Wl,-current_version,%s.%s'%version ] )
     env1.Replace(SHLIBSUFFIX = '.%s.dylib'%version[0])
 
 elif sys.platform == 'linux2':

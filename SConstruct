@@ -18,7 +18,7 @@ EnsureSConsVersion(1, 1)
 
 # Subdirectories containing SConscript files.  We always process these, but
 # there are some other optional ones
-subdirs=['src','pysrc']
+subdirs=['src','pysrc','galsim']
 
 # Configurations will be saved here so command line options don't
 # have to be sent more than once
@@ -188,7 +188,7 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['/W2','/WX'])
 
         else:
-            print 'Warning: Unknown compiler.  You should set FLAGS directly.'
+            print '\nWARNING: Unknown compiler.  You should set FLAGS directly.\n'
             env.Replace(CCFLAGS=[])
 
     else :
@@ -265,7 +265,7 @@ def AddOpenMPFlag(env):
         env['WITH_OPENMP'] = False
         return
     else:
-        print 'Warning: No OpenMP support for compiler ',compiler
+        print '\nWARNING: No OpenMP support for compiler ',compiler,'\n'
         env['WITH_OPENMP'] = False
         return
 
@@ -300,7 +300,7 @@ def GetCompilerVersion(env):
     """
     """
     compiler = which(env['CXX'])
-    if compile is None:
+    if compiler is None:
         raise ValueError("Specified compiler not found in path: %s" % env['CXX'])
 
     print 'Using compiler:',compiler
@@ -1027,8 +1027,17 @@ if not GetOption('help'):
 
     #if env['WITH_UPS']:
         #subdirs += ['ups']
+
     if 'examples' in COMMAND_LINE_TARGETS:
         subdirs += ['examples']
+
+    if 'tests' in COMMAND_LINE_TARGETS:
+        nosetests = which('nosetests')
+        if nosetests is None:
+            env['RUN_NOSETESTS'] = False
+        else:
+            env['RUN_NOSETESTS'] = True
+        subdirs += ['tests']
 
     # subdirectores to process.  We process src and pysrc by default
     script_files = []

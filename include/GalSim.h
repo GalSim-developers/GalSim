@@ -7,7 +7,7 @@
 #include "galsim/SBProfile.h"
 #include "galsim/SBDeconvolve.h"
 #include "galsim/SBParse.h"
-#include "galsim/SBPixel.h"
+#include "galsim/SBInterpolatedImage.h"
 
 // An interface for dealing with images
 #include "galsim/Image.h"
@@ -23,6 +23,6 @@
 #include "galsim/integ/Int.h"
 
 // Adaptive moments code by Hirata, Seljak, and Mandelbaum
-#include "galsim/hsm/psfcorr.h"
+#include "galsim/hsm/Psfcorr.h"
 
 #endif

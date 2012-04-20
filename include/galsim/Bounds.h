@@ -1,5 +1,4 @@
-
-// Define 2d positions and rectangles.
+/// @file Bounds.h @brief Classes defining 2d positions and rectangles.
 
 #ifndef Bounds_H
 #define Bounds_H
@@ -12,71 +11,138 @@
 namespace galsim {
 
     template <class T>
+    /// @brief Class for storing 2d position vectors in an (x, y) format.
     class Position 
     {
     public:
+        /// @brief Publicly visible x & y attributes of the position.
         T x,y;
-        Position(const T xin=0, const T yin=0) : x(xin),y(yin) {}
+
+        ///@brief Constructor.
+        Position(const T xin=0, const T yin=0) : x(xin), y(yin) {}
+
+        ///@brief Assignment.
         Position& operator=(const Position rhs) 
         {
             if (&rhs == this) return *this;
             else { x=rhs.x; y=rhs.y; return *this; }
         }
+
+        /// @brief Overloaded += operator, following standard vector algebra rules.
         Position& operator+=(const Position rhs) { x+=rhs.x; y+=rhs.y; return *this; }
+
+        /// @brief Overloaded -= operator, following standard vector algebra rules.
         Position& operator-=(const Position rhs) { x-=rhs.x; y-=rhs.y; return *this; }
+
+        /// @brief Overloaded *= operator for scalar multiplication.
         Position& operator*=(const T rhs) { x*=rhs; y*=rhs; return *this; }
+
+        /// @brief Overloaded /= operator for scalar division.
         Position& operator/=(const T rhs) { x/=rhs; y/=rhs; return *this; }
+
+        /// @brief Overloaded * vector multiplication operator for scalar on rhs.
         Position operator*(const T rhs) const { return Position(x*rhs, y*rhs); }
+
+        /// @brief Overloaded / vector division operator for scalar on rhs.
         Position operator/(const T rhs) const { return Position(x/rhs, y/rhs); }
+
+        /// @brief Unary negation (x, y) -> (-x, -y).
         Position operator-() const { return Position(-x,-y); }
+
+        /// @brief Overloaded vector + addition operator with a Position on the rhs.
         Position operator+(Position<T> rhs) const { return Position(x+rhs.x,y+rhs.y); }
+
+        /// @brief Overloaded vector - subtraction operator with a Position on the rhs.
         Position operator-(const Position<T> rhs) const { return Position(x-rhs.x,y-rhs.y); }
+
+        /// @brief Overloaded == relational equality operator.
         bool operator==(const Position& rhs) const { return (x==rhs.x && y==rhs.y); }
+        
+        /// @brief Overloaded != relational non-equality operator.
         bool operator!=(const Position& rhs) const { return (x!=rhs.x || y!=rhs.y); }
 
+        /// @brief Write (x, y) position to output stream.
         void write(std::ostream& fout) const { fout << "(" << x << "," << y << ")"; }
+
+        /// @brief Read (x, y) position from input istream.
         void read(std::istream& fin) { char ch; fin >> ch >> x >> ch >> y >> ch; }
 
     }; // Position
 
+    /// @brief Overloaded << operator which uses write() method of Position class.
     template <class T>
     inline std::ostream& operator<<(std::ostream& os, const Position<T> p) 
     { p.write(os); return os; }
 
+    /// @brief Overloaded >> operator which uses read() method of Position class.
     template <class T>
     inline std::istream& operator>>(std::istream& is, Position<T>& p) 
     { p.read(is); return is; }
 
     template <class T>
+    /** 
+     * @brief Class for storing image bounds, essentially the vertices of a rectangle.  
+     *
+     * This is used to keep track of the bounds of catalogs and fields.  You can set values, 
+     * but generally you just keep including positions of each galaxy or the bounds of each 
+     * catalog respectively using the += operators.
+     *
+     * The bounds are stored as four numbers in each instance, (xmin, ymin, xmax, ymax), with an
+     * additional boolean switch to say whether or not the Bounds rectangle has been defined.
+     *
+     * Rectangle is undefined if min>max in either direction.
+     */
     class Bounds 
     {
-        // Basically just a rectangle.  This is used to keep track of the bounds of
-        // catalogs and fields.  You can set values, but generally you just keep
-        // including positions of each galaxy or the bounds of each catalog
-        // respectively using the += operators
-
-        // Rectangle is undefined if min>max in either direction.
-
     public:
+    //TODO: Write more dox here, needed to start from scratch!
+        /// @brief Constructor using four scalar positions (xmin, xmax, ymin, ymax).
         Bounds(const T x1, const T x2, const T y1, const T y2) :
             defined(x1<=x2 && y1<=y2),xmin(x1),xmax(x2),ymin(y1),ymax(y2) {}
+
+        /// @brief Constructor using a single Position vector x/ymin = x/ymax.
         Bounds(const Position<T>& pos) :
             defined(1),xmin(pos.x),xmax(pos.x),ymin(pos.y),ymax(pos.y) {}
+
+        /// @brief Constructor using two Positions, first for x/ymin, second for x/ymax.
         Bounds(const Position<T>& pos1, const Position<T>& pos2) :
             defined(1),xmin(std::min(pos1.x,pos2.x)),xmax(std::max(pos1.x,pos2.x)),
             ymin(std::min(pos1.y,pos2.y)),ymax(std::max(pos1.y,pos2.y)) {}
+
+        /// @brief Constructor for empty Bounds, .isDefined() method will return false.
         Bounds() : defined(0),xmin(0),xmax(0),ymin(0),ymax(0) {}
+
+        /// @brief Destructor.
         ~Bounds() {}
+
+        /// @brief Set the xmin of the Bounds rectangle.
         void setXMin(const T x) { xmin = x; defined= xmin<=xmax && ymin<=ymax; }
+
+        /// @brief Set the xmax of the Bounds rectangle. 
         void setXMax(const T x) { xmax = x; defined= xmin<=xmax && ymin<=ymax; }
+
+        /// @brief Set the ymin of the Bounds rectangle.
         void setYMin(const T y) { ymin = y; defined= xmin<=xmax && ymin<=ymax; }
+
+        /// @brief Set the ymax of the Bounds rectangle.
         void setYMax(const T y) { ymax = y; defined= xmin<=xmax && ymin<=ymax; }
+
+        /// @brief Get the xmin of the Bounds rectangle.
         T getXMin() const { return xmin; }
+
+        /// @brief Get the xmax of the Bounds rectangle.
         T getXMax() const { return xmax; }
+
+        /// @brief Get the ymin of the Bounds rectangle.
         T getYMin() const { return ymin; }
+
+        /// @brief Get the ymax of the Bounds rectangle.
         T getYMax() const { return ymax; }
+
+        /// @brief Query whether the Bounds rectangle is defined.
         bool isDefined() const { return defined; }
 
+        // TODO: Understand what these do and document...
         Position<T> center() const;
         void operator+=(const Position<T>& pos); //expand to include point
         void operator+=(const Bounds<T>& rec); //bounds of union
