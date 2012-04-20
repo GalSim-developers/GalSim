@@ -215,7 +215,7 @@ namespace galsim {
          *
          * A square image will be
          * drawn which is big enough to avoid "folding."  If drawing is done using FFT,
-         * it will be scaled up to a power of 2, or 3x2^n, whicher fits.
+         * it will be scaled up to a power of 2, or 3x2^n, whichever fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image  may be calculated internally on a larger grid to avoid folding.
          * The default draw() routines decide internally whether image can be drawn directly
@@ -230,7 +230,8 @@ namespace galsim {
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
          *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
-         * @returns image
+         * @returns image (as ImageF; if another type is preferred, then use the draw method that
+         *                  takes an image as argument)
          */
         Image<float> draw(double dx=0., int wmult=1) const;
 
@@ -247,7 +248,7 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   image
+         * @param[in,out]   image (any of ImageF, ImageD, ImageS, ImageI)
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
@@ -271,7 +272,7 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   image
+         * @param[in,out]   image (any of ImageF, ImageD, ImageS, ImageI)
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
@@ -296,7 +297,7 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   image
+         * @param[in,out]   image (any of ImageF, ImageD, ImageS, ImageI)
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
@@ -322,8 +323,10 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   re image of real argument of SBProfile in k space.
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space.
+         * @param[in,out]   re image of real argument of SBProfile in k space (any of ImageF,
+         *                  ImageD, ImageS, ImageI). 
+         * @param[in,out]   im image of imaginary argument of SBProfile in k space (any of ImageF,
+         *                  ImageD, ImageS, ImageI).
          * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
          *                  routine will choose `dk` necessary to avoid folding of image in real 
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
@@ -344,8 +347,10 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   re image of real argument of SBProfile in k space.
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space.
+         * @param[in,out]   re image of real argument of SBProfile in k space (any of ImageF,
+         *                  ImageD, ImageS, ImageI).
+         * @param[in,out]   im image of imaginary argument of SBProfile in k space (any of ImageF,
+         *                  ImageD, ImageS, ImageI).
          * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
          *                  routine will choose `dk` necessary to avoid folding of image in real 
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
@@ -369,8 +374,10 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   re image of real argument of SBProfile in k space.
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space.
+         * @param[in,out]   re image of real argument of SBProfile in k space (any of ImageF,
+         *                  ImageD, ImageS, ImageI).
+         * @param[in,out]   im image of imaginary argument of SBProfile in k space (any of ImageF,
+         *                  ImageD, ImageS, ImageI).
          * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
          *                  routine will choose `dk` necessary to avoid folding of image in real 
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
@@ -383,7 +390,7 @@ namespace galsim {
         /** 
          * @brief Utility for drawing into Image data structures.
          *
-         * @param[out] image    image to fill
+         * @param[out] image    image to fill (any of ImageF, ImageD, ImageS, ImageI).
          * @param[in]  dx       grid pitch on which SBProfile image is drawn
          */
         template <typename T>

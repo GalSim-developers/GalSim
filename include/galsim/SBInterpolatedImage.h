@@ -45,7 +45,7 @@ namespace galsim {
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
          * image.
          *
-         * @param[in] img       square input Image (not necessarily ImageF).
+         * @param[in] img       square input Image (any of ImageF, ImageD, ImageS, ImageI).
          * @param[in] dx_       stepsize between pixels in image data table (default value of 
          *                      `x0_ = 0.` checks the Image header for a suitable stepsize, sets 
          *                      to `1.` if none is found). 
