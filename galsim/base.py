@@ -250,7 +250,9 @@ class OpticalPSF(GSObject):
                            [default = 2.], setting oversampling < 1 will produce aliasing in the 
                            PSF (not good).
     @param padFactor       additional multiple by which to zero-pad the PSF image to avoid folding
-                           compared to what would be required for a simple Airy [default = 2].
+                           compared to what would be required for a simple Airy [default = 2]. Note
+                           that padFactor may need to be increased for stronger aberrations, i.e.
+                           those larger than order unity. 
     """
     def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
                  circular_pupil=True, obs=None, interpolantxy=None, oversampling=2., padFactor=2):
