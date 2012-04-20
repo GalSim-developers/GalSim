@@ -86,6 +86,24 @@ namespace galsim {
             const Bounds<int> & bounds
         );
 
+        /**
+         *  @brief Shallow copy constructor.
+         *
+         *  The original image and its copy will share pixel values, but their bounding
+         *  boxes and scales will not be shared (even though they will be set to the same
+         *  values initially).
+         */
+        Image(const Image<const T> & other);
+
+        /**
+         *  @brief Shallow assignment operator.
+         *
+         *  After assignment, both images will share pixel values, but their bounding
+         *  boxes and scales will not be shared (even though they will be set to the same
+         *  values initially).
+         */
+        Image & operator=(const Image<const T> & other);
+
         /// @brief Return the pixel scale.
         double getScale() const { return _scale; }
 
@@ -281,6 +299,27 @@ namespace galsim {
         Image(T * data, boost::shared_ptr<T> const & owner, int stride, const Bounds<int> & bounds)
             : Image<const T>(data, owner, stride, bounds)
         {}
+
+        /**
+         *  @brief Shallow copy constructor.
+         *
+         *  The original image and its copy will share pixel values, but their bounding
+         *  boxes and scales will not be shared (even though they will be set to the same
+         *  values initially).
+         */
+        Image(const Image<T> & other) : Image<const T>(other) {}
+
+        /**
+         *  @brief Shallow assignment operator.
+         *
+         *  After assignment, both images will share pixel values, but their bounding
+         *  boxes and scales will not be shared (even though they will be set to the same
+         *  values initially).
+         */
+        Image & operator=(const Image<T> & other) {
+            Image<const T>::operator=(other);
+            return *this;
+        }
 
         /**
          *  @brief Return a shared pointer that manages the lifetime of the image's pixels.

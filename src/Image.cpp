@@ -93,6 +93,24 @@ Image<const T>::Image(
 {}
 
 template <typename T>
+Image<const T>::Image(const Image<const T> & other) :
+    _owner(other._owner), _data(other._data), _stride(other._stride), _scale(other._scale),
+    _bounds(other._bounds)
+{}
+
+template <typename T>
+Image<const T> & Image<const T>::operator=(const Image<const T> & other) {
+    if (&other != this) {
+        _owner = other._owner;
+        _data = other._data;
+        _stride = other._stride;
+        _scale = other._scale;
+        _bounds = other._bounds;
+    }
+    return *this;
+}
+
+template <typename T>
 void Image<const T>::redefine(const Bounds<int> & bounds) {
     _data += (bounds.getYMin() - _bounds.getYMin()) * _stride
         + (bounds.getXMin() - _bounds.getXMin());
