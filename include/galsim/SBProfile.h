@@ -257,7 +257,7 @@ namespace galsim {
          *                  and have less folding.
          * @returns summed flux.
          */
-        virtual double draw(Image<float> & image, double dx=0., int wmult=1) const; 
+        double draw(Image<float> & image, double dx=0., int wmult=1) const; 
 
         /** 
          * @brief Draw an image of the SBProfile in real space forcing the use of real methods 
@@ -280,7 +280,7 @@ namespace galsim {
          *                  and have less folding.
          * @returns summed flux.
          */
-        virtual double plainDraw(Image<float> & image, double dx=0., int wmult=1) const; 
+        double plainDraw(Image<float> & image, double dx=0., int wmult=1) const; 
 
         /** 
          * @brief Draw an image of the SBProfile in real space forcing the use of Fourier transform
@@ -304,7 +304,7 @@ namespace galsim {
          *                  and have less folding.
          * @returns summed flux.
          */
-        virtual double fourierDraw(Image<float> & image, double dx=0., int wmult=1) const; 
+        double fourierDraw(Image<float> & image, double dx=0., int wmult=1) const; 
 
         /** 
          * @brief Draw an image of the SBProfile in k space.
@@ -327,7 +327,7 @@ namespace galsim {
          *                  you will receive an image with folding artifacts included.
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
          */
-        virtual void drawK(Image<float> & re, Image<float> & im, double dk=0., int wmult=1) const; 
+        void drawK(Image<float> & re, Image<float> & im, double dk=0., int wmult=1) const; 
 
         /** 
          * @brief Draw an image of the SBProfile in k space forcing the use of k space methods 
@@ -348,9 +348,7 @@ namespace galsim {
          *                  you will receive an image with folding artifacts included.
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
          */
-        virtual void plainDrawK(
-            Image<float> & re, Image<float> & im, 
-            double dk=0., int wmult=1) const; 
+        void plainDrawK(Image<float> & re, Image<float> & im, double dk=0., int wmult=1) const; 
 
         /**
          * @brief Draw an image of the SBProfile in k space forcing the use of Fourier transform 
@@ -374,9 +372,7 @@ namespace galsim {
          *                  you will receive an image with folding artifacts included.
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
          */
-        virtual void fourierDrawK(
-            Image<float> & re, Image<float> & im,
-            double dk=0., int wmult=1) const; 
+        void fourierDrawK(Image<float> & re, Image<float> & im, double dk=0., int wmult=1) const; 
 
         /** 
          * @brief Utility for drawing into Image data structures.
