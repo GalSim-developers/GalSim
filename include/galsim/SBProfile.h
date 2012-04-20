@@ -232,7 +232,7 @@ namespace galsim {
          *                  and have less folding.
          * @returns image
          */
-        virtual Image<float> draw(double dx=0., int wmult=1) const;
+        Image<float> draw(double dx=0., int wmult=1) const;
 
         /** 
          * @brief Draw the SBProfile in real space returning the summed flux.
