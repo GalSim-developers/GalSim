@@ -13,6 +13,20 @@ typedef bp::return_value_policy<bp::manage_new_object> ManageNew;
 
 struct PySBProfile {
 
+    template <typename U, typename W>
+    static void wrapTemplates(W & wrapper) {
+        // We don't need to wrap templates in a separate function, but it keeps us
+        // from having to repeat each of the lines below for each type.
+        // We also don't need to make 'W' a template parameter in this case,
+        // but it's easier to do that than write out the full class_ type.
+        wrapper
+            .def("fillXImage", 
+                 (double (SBProfile::*)(Image<U> &, double) const)&SBProfile::fillXImage, 
+                 bp::args("image", "dx"),
+                 "Utility for drawing into Image data structures")
+            ;
+    }
+
     static void wrap() {
         static char const * doc = 
             "\n"
@@ -52,7 +66,8 @@ struct PySBProfile {
             "finer sampling in k space and have less folding.\n"
             ;
 
-        bp::class_<SBProfile,boost::noncopyable>("SBProfile", doc, bp::no_init)
+        bp::class_<SBProfile,boost::noncopyable> pySBProfile("SBProfile", doc, bp::no_init);
+        pySBProfile
             .def("duplicate", &SBProfile::duplicate, ManageNew())
             .def("xValue", &SBProfile::xValue,
                  "Return value of SBProfile at a chosen 2d position in real space.\n"
@@ -80,7 +95,7 @@ struct PySBProfile {
                  (double (SBProfile::*)(Image<float> &, double, int) const)&SBProfile::draw,
                  (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "Draw in-place and return the summed flux.")
-            .def("plainDraw", &SBProfile::plainDraw,
+           .def("plainDraw", &SBProfile::plainDraw,
                  (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "Draw in place using only real methods")
             .def("fourierDraw", &SBProfile::plainDraw,
@@ -96,6 +111,8 @@ struct PySBProfile {
                  (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "FT from x-space")
             ;
+        wrapTemplates<float>(pySBProfile);
+        wrapTemplates<double>(pySBProfile);
     }
 
 };
