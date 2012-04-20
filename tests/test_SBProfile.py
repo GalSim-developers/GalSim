@@ -12,6 +12,15 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+# Setup info for image tests
+testshape = (4, 4)  # shape of image arrays for all tests
+ntypes = 4
+types = [np.int16, np.int32, np.float32, np.float64]
+tchar = ['S', 'I', 'F', 'D']
+
+ref_array = np.array([[00, 10, 20, 30], [01, 11, 21, 31], [02, 12, 22, 32],
+                      [03, 13, 23, 33]]).astype(types[0])
+
 # define a series of tests
 
 def printval(image1, image2):
@@ -483,6 +492,25 @@ def test_sbprofile_rescale():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject 2 * obj disagrees with expected result")
 
+def test_sbprofile_sbinterpolatedimage():
+    """Test that we can make SBInterpolatedImages from Images of various types, and convert back.
+    """
+    # for each type, try to make an SBInterpolatedImage, and check that when we draw an image from
+    # that SBInterpolatedImage that it is the same as the original
+    l3 = galsim.Lanczos(3, True, 1.0E-4)
+    l32d = galsim.InterpolantXY(l3)
+    for array_type in types:
+        image_in = galsim.Image[array_type](ref_array.astype(array_type))
+        np.testing.assert_array_equal(
+            ref_array.astype(array_type),image_in.array,
+            err_msg="Array from input Image differs from reference array for type %s"%array_type)
+        sbinterp = galsim.SBInterpolatedImage(image_in, l32d, dx=1.0)
+        test_array = np.zeros(testshape, dtype=array_type)
+        image_out = galsim.Image[array_type](test_array)
+        sbinterp.draw(image_out, dx=1.0)
+        np.testing.assert_array_equal(
+            ref_array.astype(array_type),image_out.array,
+            err_msg="Array from output Image differs from reference array for type %s"%array_type)
 
 if __name__ == "__main__":
     test_sbprofile_gaussian()
@@ -502,3 +530,4 @@ if __name__ == "__main__":
     test_sbprofile_add()
     test_sbprofile_shift()
     test_sbprofile_rescale()
+    test_sbprofile_sbinterpolatedimage()
