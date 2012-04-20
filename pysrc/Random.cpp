@@ -244,49 +244,61 @@ struct PyPoissonDeviate {
 template <typename T>
 struct PyCcdNoise{
 
-    static void wrap() {
+    static void wrap(std::string const & suffix) {
 
         static char const * doc = 
-            "\n"
+            ("\n"
             "Pseudo-random number generator with a basic CCD noise model.\n"
             "\n"
-            "A CcdNoise instance is given a 'read noise' and gain level.  With these parameters\n" 
-            "set, it can operate on an Image by adding noise to each pixel.  The noise has two\n"
-            "components:\n" 
-            "    1) a Poisson deviate with variance equal to (max(pixel value, 0) / gain);\n"
-            "    2) Gaussian noise with RMS value of (readNoise / gain).\n"
+            "A CcdNoise instance is initialized given a UniformDeviate, a gain level in Electrons\n"
+            "per ADU used for the Poisson noise term, and a Gaussian read noise in electrons (if\n"
+            "gain > 0.) or ADU (if gain < 0.).  With these parameters set, the CcdNoise operates\n"
+            "on an Image, adding noise to each pixel following this model.\n" 
             "\n"
             "The class must be given a reference to a UniformDeviate when constructed, which will\n"
             "be the source of random values for the noise implementation.\n"
             "\n"
             "Initialization\n"
             "--------------\n"
-            ">>> ccd_noise = CcdNoise(uniform, gain=1., readnoise=0.)\n"
+            ">>> ccd_noise = CcdNoise"+suffix+"(uniform, gain=1., readnoise=0.)\n"
             "\n"
-            "Initializes ccd_noise to be a CcdNoise instance.  Subsequent calls with galsim.Image\n"
-            "instances will add noise following this model to that Image.\n"
+            "Initializes ccd_noise to be a CcdNoise"+suffix+" instance.\n"
+            "\n"
+            "Here "+suffix+" can be one of (S,I,F,D) and specifies whether the Image that will be\n"
+            "operated on is an ImageS, ImageF, ImageF or ImageD respectively (see galsim.Image\n"
+            "docstring for more details).  Subsequent calls with Image"+suffix+" instances as the\n"
+            "first argument will add noise following this model to that Image"+suffix+".\n"
             "\n"
             "Parameters:\n"
             "\n"
+            "uniform   a UniformDeviate instance (seed set there).\n"
             "gain      the gain for each pixel; setting gain <=0 will shut off the Poisson noise,\n"
-            "          and the Gaussian RMS will take the value RMS=readNoise.\n"
+            "          and the Gaussian RMS will take the value RMS=readNoise [default=1.].\n"
             "reanoise  the read noise on each pixel; setting readNoise=0 will shut off the\n"
-            "          Gaussian noise.\n"
+            "          Gaussian noise [default=0.].\n"
             "\n"
+            "Calling\n"
+            "-------\n"
+            ">>> ccd_noise(image)\n"
+            "\n"
+            "Assuming that the input image was of the correct type (S,I,F,D) it will have CCD\n"
+            "noise added following the instantiated model.\n"
+            "\n").c_str()
             ;
+        
         bp::class_<CcdNoise,boost::noncopyable>(
-            "CcdNoise", doc, bp::init< UniformDeviate&, double, double >(
+            ("CcdNoise"+suffix).c_str(), doc, bp::init< UniformDeviate&, double, double >(
                 (bp::arg("uniform"), bp::arg("gain")=1., bp::arg("readnoise")=0.)
             )[
                 bp::with_custodian_and_ward<1,2>() // keep uniform (2) as long as CcdNoise lives
             ]
             )
-            .def("__call__", (void (CcdNoise::*) (Image <T> &) )&CcdNoise::operator(),
-                 "Add noise to an input Image.\n"
+            .def("__call__", (void (CcdNoise::*) (Image<T> &) )&CcdNoise::operator(),
+                 ("Add noise to an input Image"+suffix+".\n"
                  "\n"
                  "On output the Image will have been given an additional stochastic noise\n"
-                 "according to the gain and read noise settings.\n",
-                 (bp::arg("Image")))
+                 "according to the gain and read noise settings.\n").c_str(),
+                 (bp::arg(("Image"+suffix).c_str())))
             .def("getGain", &CcdNoise::getGain, "Get gain in current noise model.")
             .def("setGain", &CcdNoise::setGain, "Set gain in current noise model.")
             .def("getReadNoise", &CcdNoise::getReadNoise, 
@@ -306,7 +318,11 @@ void pyExportRandom() {
     PyGaussianDeviate::wrap();
     PyBinomialDeviate::wrap();
     PyPoissonDeviate::wrap();
-    PyCcdNoise::wrap();
+    PyCcdNoise<short>::wrap("S");
+    PyCcdNoise<int>::wrap("I");
+    PyCcdNoise<float>::wrap("F");
+    PyCcdNoise<double>::wrap("D");
 }
+
 
 } // namespace galsim
