@@ -1269,6 +1269,11 @@ namespace galsim {
 
     // instantiate template functions for expected image types
 #ifdef USE_IMAGES
+    template double SBProfile::doFillXImage2(Image<float> & img, double dx) const;
+    template double SBProfile::doFillXImage2(Image<double> & img, double dx) const;
+    template double SBProfile::doFillXImage2(Image<short> & img, double dx) const;
+    template double SBProfile::doFillXImage2(Image<int> & img, double dx) const;
+
     template double SBProfile::draw(Image<float> & img, double dx, int wmult) const;
     template double SBProfile::draw(Image<double> & img, double dx, int wmult) const;
     template double SBProfile::draw(Image<short> & img, double dx, int wmult) const;
