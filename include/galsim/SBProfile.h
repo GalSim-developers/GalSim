@@ -423,10 +423,6 @@ namespace galsim {
         { return doFillXImage2(image,dx); }
         virtual double doFillXImage(Image<double> & image, double dx) const
         { return doFillXImage2(image,dx); }
-        virtual double doFillXImage(Image<short> & image, double dx) const
-        { return doFillXImage2(image,dx); }
-        virtual double doFillXImage(Image<int> & image, double dx) const
-        { return doFillXImage2(image,dx); }
 
         // Here in the base class, we need yet another name for the version that actually
         // implements this as a template:

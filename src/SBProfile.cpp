@@ -1271,38 +1271,24 @@ namespace galsim {
 #ifdef USE_IMAGES
     template double SBProfile::doFillXImage2(Image<float> & img, double dx) const;
     template double SBProfile::doFillXImage2(Image<double> & img, double dx) const;
-    template double SBProfile::doFillXImage2(Image<short> & img, double dx) const;
-    template double SBProfile::doFillXImage2(Image<int> & img, double dx) const;
 
     template double SBProfile::draw(Image<float> & img, double dx, int wmult) const;
     template double SBProfile::draw(Image<double> & img, double dx, int wmult) const;
-    template double SBProfile::draw(Image<short> & img, double dx, int wmult) const;
-    template double SBProfile::draw(Image<int> & img, double dx, int wmult) const;
 
     template double SBProfile::plainDraw(Image<float> & I, double dx, int wmult) const;
     template double SBProfile::plainDraw(Image<double> & I, double dx, int wmult) const;
-    template double SBProfile::plainDraw(Image<short> & I, double dx, int wmult) const;
-    template double SBProfile::plainDraw(Image<int> & I, double dx, int wmult) const;
 
     template double SBProfile::fourierDraw(Image<float> & I, double dx, int wmult) const;
     template double SBProfile::fourierDraw(Image<double> & I, double dx, int wmult) const;
-    template double SBProfile::fourierDraw(Image<short> & I, double dx, int wmult) const;
-    template double SBProfile::fourierDraw(Image<int> & I, double dx, int wmult) const;
 
     template void SBProfile::drawK(Image<float> & Re, Image<float> & Im, double dk, int wmult) const;
     template void SBProfile::drawK(Image<double> & Re, Image<double> & Im, double dk, int wmult) const;
-    template void SBProfile::drawK(Image<short> & Re, Image<short> & Im, double dk, int wmult) const;
-    template void SBProfile::drawK(Image<int> & Re, Image<int> & Im, double dk, int wmult) const;
 
     template void SBProfile::plainDrawK(Image<float> & Re, Image<float> & Im, double dk, int wmult) const;
     template void SBProfile::plainDrawK(Image<double> & Re, Image<double> & Im, double dk, int wmult) const;
-    template void SBProfile::plainDrawK(Image<short> & Re, Image<short> & Im, double dk, int wmult) const;
-    template void SBProfile::plainDrawK(Image<int> & Re, Image<int> & Im, double dk, int wmult) const;
 
     template void SBProfile::fourierDrawK(Image<float> & Re, Image<float> & Im, double dk, int wmult) const;
     template void SBProfile::fourierDrawK(Image<double> & Re, Image<double> & Im, double dk, int wmult) const;
-    template void SBProfile::fourierDrawK(Image<short> & Re, Image<short> & Im, double dk, int wmult) const;
-    template void SBProfile::fourierDrawK(Image<int> & Re, Image<int> & Im, double dk, int wmult) const;
 #endif
 
 }

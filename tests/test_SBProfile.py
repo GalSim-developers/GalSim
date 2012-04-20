@@ -16,7 +16,9 @@ except ImportError:
 testshape = (4, 4)  # shape of image arrays for all tests
 ntypes = 4
 types = [np.int16, np.int32, np.float32, np.float64]
+ftypes = [np.float32, np.float64]
 tchar = ['S', 'I', 'F', 'D']
+ftchar = ['F', 'D']
 
 ref_array = np.array([[00, 10, 20, 30], [01, 11, 21, 31], [02, 12, 22, 32],
                       [03, 13, 23, 33]]).astype(types[0])
@@ -499,7 +501,7 @@ def test_sbprofile_sbinterpolatedimage():
     # that SBInterpolatedImage that it is the same as the original
     l3 = galsim.Lanczos(3, True, 1.0E-4)
     l32d = galsim.InterpolantXY(l3)
-    for array_type in types:
+    for array_type in ftypes:
         image_in = galsim.Image[array_type](ref_array.astype(array_type))
         np.testing.assert_array_equal(
             ref_array.astype(array_type),image_in.array,

@@ -118,8 +118,6 @@ struct PySBProfile {
             ;
         wrapTemplates<float>(pySBProfile);
         wrapTemplates<double>(pySBProfile);
-        wrapTemplates<short>(pySBProfile);
-        wrapTemplates<int>(pySBProfile);
     }
 
 };

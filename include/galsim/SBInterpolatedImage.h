@@ -197,10 +197,6 @@ namespace galsim {
         { return fillXImage(I,dx); }
         virtual double doFillXImage(Image<double>& I, double dx) const
         { return fillXImage(I,dx); }
-        virtual double doFillXImage(Image<short>& I, double dx) const
-        { return fillXImage(I,dx); }
-        virtual double doFillXImage(Image<int>& I, double dx) const
-        { return fillXImage(I,dx); }
 #endif
 
     private:
