@@ -406,6 +406,10 @@ namespace galsim {
     template SBInterpolatedImage::SBInterpolatedImage(Image<double> const & img, const Interpolant2d& i, double dx_, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImage(Image<short> const & img, const Interpolant2d& i, double dx_, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImage(Image<int> const & img, const Interpolant2d& i, double dx_, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(Image<const float> const & img, const Interpolant2d& i, double dx_, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(Image<const double> const & img, const Interpolant2d& i, double dx_, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(Image<const short> const & img, const Interpolant2d& i, double dx_, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(Image<const int> const & img, const Interpolant2d& i, double dx_, double padFactor);
 #endif
 }
 
