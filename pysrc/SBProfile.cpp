@@ -24,6 +24,30 @@ struct PySBProfile {
                  (double (SBProfile::*)(Image<U> &, double) const)&SBProfile::fillXImage, 
                  bp::args("image", "dx"),
                  "Utility for drawing into Image data structures")
+            .def("draw", 
+                 (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::draw,
+                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "Draw in-place and return the summed flux.")
+            .def("plainDraw",
+                 (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::plainDraw,
+                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "Draw in place using only real methods")
+            .def("fourierDraw",
+                 (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::fourierDraw,
+                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "Draw in place using only Fourier methods")
+            .def("drawK",
+                 (void (SBProfile::*)(Image<U> &, Image<U> &, double, int) const)&SBProfile::drawK,
+                 (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "Draw in k-space automatically")
+            .def("plainDrawK",
+                 (void (SBProfile::*)(Image<U> &, Image<U> &, double, int) const)&SBProfile::plainDrawK,
+                 (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "evaluate in k-space automatically")
+            .def("fourierDrawK",
+                 (void (SBProfile::*)(Image<U> &, Image<U> &, double, int) const)&SBProfile::fourierDrawK,
+                 (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "FT from x-space")
             ;
     }
 
@@ -91,28 +115,11 @@ struct PySBProfile {
             .def("shift", &SBProfile::shift, bp::args("dx", "dy"), ManageNew())
             .def("draw", (Image<float> (SBProfile::*)(double, int) const)&SBProfile::draw,
                  (bp::arg("dx")=0., bp::arg("wmult")=1), "default draw routine")
-            .def("draw", 
-                 (double (SBProfile::*)(Image<float> &, double, int) const)&SBProfile::draw,
-                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
-                 "Draw in-place and return the summed flux.")
-           .def("plainDraw", &SBProfile::plainDraw,
-                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
-                 "Draw in place using only real methods")
-            .def("fourierDraw", &SBProfile::plainDraw,
-                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
-                 "Draw in place using only Fourier methods")
-            .def("drawK", &SBProfile::drawK,
-                 (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
-                 "Draw in k-space automatically")
-            .def("plainDrawK", &SBProfile::plainDrawK,
-                 (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
-                 "evaluate in k-space")
-            .def("fourierDrawK", &SBProfile::fourierDrawK,
-                 (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
-                 "FT from x-space")
             ;
         wrapTemplates<float>(pySBProfile);
         wrapTemplates<double>(pySBProfile);
+        wrapTemplates<short>(pySBProfile);
+        wrapTemplates<int>(pySBProfile);
     }
 
 };
