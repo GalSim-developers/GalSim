@@ -1,6 +1,6 @@
 // -*- c++ -*-
-#ifndef SBPIXEL_H
-#define SBPIXEL_H
+#ifndef SBINTERPOLATED_IMAGE_H
+#define SBINTERPOLATED_IMAGE_H
 /// @file SBInterpolatedImage.h 
 /// @brief Contains the class definition for SBInterpolatedImage objects.
 
@@ -33,11 +33,11 @@ namespace galsim {
          *
          * @param[in] Npix      extent of square image is `Npix` x `Npix`.
          * @param[in] dx_       stepsize between pixels in image data table.
-        *  @param[in] i         interpolation scheme to adopt between pixels 
-        *                       (TODO: Add more, document Interpolant.h, describe the Interpolant2d 
-        *                       class).
-        * @param[in] Nimages_ number of images.
-        */
+         * @param[in] i         interpolation scheme to adopt between pixels 
+         *                      (TODO: Add more, document Interpolant.h, describe the Interpolant2d 
+         *                      class).
+         * @param[in] Nimages_ number of images.
+         */
         SBInterpolatedImage(int Npix, double dx_, const Interpolant2d& i, int Nimages_=1);
 
 #ifdef USE_IMAGES
@@ -45,7 +45,7 @@ namespace galsim {
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
          * image.
          *
-         * @param[in] img       square input Image.
+         * @param[in] img       square input Image (any of ImageF, ImageD, ImageS, ImageI).
          * @param[in] dx_       stepsize between pixels in image data table (default value of 
          *                      `x0_ = 0.` checks the Image header for a suitable stepsize, sets 
          *                      to `1.` if none is found). 
@@ -56,7 +56,8 @@ namespace galsim {
          *                      the currently-hardwired `OVERSAMPLE_X = 4.` parameter value for 
          *                      `padFactor`).
          */
-        SBInterpolatedImage(Image<float> const & img, const Interpolant2d& i,
+        template <typename T> 
+        SBInterpolatedImage(const Image<T>& img, const Interpolant2d& i,
                             double dx_=0., double padFactor=0.);
 #endif
 
@@ -160,9 +161,9 @@ namespace galsim {
         int getNin() const { return Ninitial; }
 
         /** 
-          * @brief Returns linear dimension of square Discrete Fourier transform used to make k 
-          * space table.
-          */
+         * @brief Returns linear dimension of square Discrete Fourier transform used to make k 
+         * space table.
+         */
         int getNft() const { return Nk; }
 
         // Overrides for better efficiency with separable kernels:
@@ -170,7 +171,32 @@ namespace galsim {
         virtual void fillXGrid(XTable& xt) const;
 
 #ifdef USE_IMAGES
-        virtual double fillXImage(Image<float> & I, double dx) const;
+        template <typename T>
+        double fillXImage(Image<T>& I, double dx) const;
+#endif
+
+    protected:
+#ifdef USE_IMAGES
+        // These are the virtual functions, but we don't want to have to duplicate the
+        // code implement these.  So each one just calls the template version.  The
+        // C++ overloading rules mean that it will call the local fillXImage template 
+        // function defined above, not the one in SBProfile (which would lead to an 
+        // infinite loop!). 
+        //
+        // So here is what happens when someone calls fillXImage(I,dx):
+        // 1) If they are calling this from an SBInterpolatedImage object, then
+        //    it just directly uses the above template version.
+        // 2) If they are calling this from an SBProfile object, the template version
+        //    there immediately calls doFillXImage for the appropriate type.
+        //    That's a virtual function, so if the SBProfile is really an SBInterpolatedImage,
+        //    it will find these virtual functions instead of the ones defined in
+        //    SBProfile.  Then these functions immediately call the template version
+        //    of fillXImage defined above.
+        //
+        virtual double doFillXImage(Image<float>& I, double dx) const
+        { return fillXImage(I,dx); }
+        virtual double doFillXImage(Image<double>& I, double dx) const
+        { return fillXImage(I,dx); }
 #endif
 
     private:
@@ -204,9 +230,9 @@ namespace galsim {
         mutable bool ksumValid; ///< Is `ksum` valid?
 
         /** 
-          * @brief Set true if kTables, centroid/flux values,etc., are set for current x pixel 
-          * values.
-          */
+         * @brief Set true if kTables, centroid/flux values,etc., are set for current x pixel 
+         * values.
+         */
         mutable bool ready; 
 
         /// @brief The default k-space interpolant
@@ -223,4 +249,4 @@ namespace galsim {
 
 }
 
-#endif // SBPIXEL_H
+#endif // SBINTERPOLATED_IMAGE_H
