@@ -278,7 +278,7 @@ def Script3():
     opt_a2=0.12        # wavelengths
     opt_c1=0.64        # wavelengths
     opt_c2=-0.33       # wavelengths
-    opt_padFactor=6    # multiples of Airy padding required to avoid folding for aberrated PSFs
+    opt_padFactor=2    # multiples of Airy padding required to avoid folding for aberrated PSFs
     lam = 800          # nm    NB: don't use lambda - that's a reserved word.
     tel_diam = 4.      # meters 
     pixel_scale = 0.23 # arcsec / pixel
