@@ -7,32 +7,10 @@
 #define NO_IMPORT_ARRAY
 #include "numpy/arrayobject.h"
 
-/*
- * Barney's note 24Mar12: currently these only generate single instances of each random deviate.
- * This is not optimized for generating large arrays of random deviates.  I spoke with Jim and we 
- * thought that it would be best to write this in C++, but Barney needs to learn a little more about
- * the Numpy C API.  For now, we'll have to fill in arrays in Python manually; hopefully only a 
- * temporary workaround.
- */
-
 namespace bp = boost::python;
 
 namespace galsim {
 namespace {
-
-template <typename T> struct NumPyTraits;
-template <> struct NumPyTraits<npy_short> { static int getCode() { return NPY_SHORT; } };
-template <> struct NumPyTraits<npy_int> { static int getCode() { return NPY_INT; } };
-template <> struct NumPyTraits<npy_float> { static int getCode() { return NPY_FLOAT; } };
-template <> struct NumPyTraits<npy_double> { static int getCode() { return NPY_DOUBLE; } };
-
-// return the NumPy type for a C++ class (e.g. float -> numpy.float32)
-template <typename T>
-bp::object getNumPyType() {
-    bp::handle<> h(reinterpret_cast<PyObject*>(PyArray_DescrFromType(NumPyTraits<T>::getCode())));
-    return bp::object(h).attr("type");
-}
-
 
 struct PyUniformDeviate {
 
@@ -278,8 +256,8 @@ struct PyCcdNoise{
             "\n"
             "Initializes ccd_noise to be a CcdNoise instance.\n"
             "\n"
-            "Subsequent calls with Image instances as the first argument will add noise following\n"
-            "this model to that Image.\n"
+            "Subsequent calls to ccd_noise(Image) with an Image instance as the first argument \n"
+            "add noise following this model to that Image.\n"
             "\n"
             "Parameters:\n"
             "\n"
