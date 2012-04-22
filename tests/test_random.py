@@ -15,7 +15,12 @@ except ImportError:
 #
 
 precision = 10
-# decimal point at which agreement is required for all tests
+# decimal point at which agreement is required for all double precision tests
+
+precisionD = precision
+precisionF = 5  # precision=10 does not make sense at single precision
+precisionS = 1  # "precision" also a silly concept for ints, but allows all 4 tests to run in one go
+precisionI = 1
 
 testseed = 1000 # seed used for UniformDeviate for all tests
 # Warning! If you change testseed, then all of the *Result variables below must change as well.
@@ -39,6 +44,24 @@ bResult = (6, 8, 9)
 pMean = 7
 # the right answer for the first three Poisson deviates produced from testseed
 pResult = (8, 5, 4)
+
+# gain, read noise to use for CCD noise tests
+cGain = 3.
+cReadNoise = 5.
+
+# types to use in CCD tests
+types = (np.int16, np.int32, np.float32, np.float64)
+typestrings = ("S", "I", "F", "D")
+
+# constant sky background level to use for CCD noise test image
+sky = 50.
+
+# Tabulated results
+cResultS = np.array([[55, 47], [44, 54]], dtype=np.int16)
+cResultI = np.array([[55, 47], [44, 54]], dtype=np.int32)
+cResultF = np.array([[55.894428, 47.926445], [44.766380, 54.509399]], dtype=np.float32)
+cResultD = np.array([[55.894425874146336, 47.926443828684981],
+                     [44.766381648303245, 54.509402357022211]], dtype=np.float64)
 
 def test_uniform_rand():
     """Test uniform random number generator for expected result given the above seed.
@@ -87,6 +110,18 @@ def test_poisson_rand():
     np.testing.assert_array_almost_equal(np.array(testResult), np.array(pResult), precision, 
                                          err_msg='Wrong Poisson random number sequence generated')
 
+def test_ccdnoise_rand():
+    """Test CCD Noise generator on a 2x2 image against the expected result given the above seed.
+    """
+    for i in xrange(4):
+        u = galsim.UniformDeviate(testseed)
+        c = galsim.CcdNoise(u, gain=cGain, readnoise=cReadNoise)
+        testImage = galsim.Image[types[i]]((np.zeros((2, 2)) + sky).astype(types[i]))
+        c(testImage)
+        np.testing.assert_array_almost_equal(testImage.array, eval("cResult"+typestrings[i]),
+                                             eval("precision"+typestrings[i]),
+                                             err_msg="Wrong CCD noise random sequence generated "+
+                                                     "for Image"+typestrings[i]+" images.")
 
 if __name__ == "__main__":
     test_uniform_rand()
@@ -94,3 +129,4 @@ if __name__ == "__main__":
     test_gaussian_rand()
     test_binomial_rand()
     test_poisson_rand()
+    test_ccdnoise_rand()
