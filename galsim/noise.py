@@ -1,12 +1,12 @@
 import numpy as np
 import galsim
 
-def addGaussian(Image, uniform, mean=0., sigma=1.):
+def addGaussian(image, uniform, mean=0., sigma=1.):
     """@brief Add Gaussian noise to an input Image using a user-supplied UniformDeviate instance.
 
     Parameters
     ----------
-    @param[in,out] Image    input Image
+    @param[in,out] image    input Image instance
     @param[in,out] uniform  a galsim UniformDeviate instance to supply the random numbers
     @param[in]     mean     optional mean for the Gaussian noise (default mean = 0.)
     @param[in]     sigma    optional sigma for the Gaussian noise (default sigma = 1.)
@@ -19,18 +19,18 @@ def addGaussian(Image, uniform, mean=0., sigma=1.):
     TODO: Speed this up my moving repeated calls to C++/use the Ccd noise class.
     """
     g = galsim.GaussianDeviate(uniform, mean=mean, sigma=sigma)
-    imtype = Image.array.dtype.type
-    Image += galsim.Image[imtype](np.array([g() for i in xrange(np.product(Image.array.shape))],
-                                           dtype=imtype).reshape(Image.array.shape), 
-                                  xMin=Image.getXMin(), yMin=Image.getYMin())
-    return Image
+    imtype = image.array.dtype.type
+    image += galsim.Image[imtype](np.array([g() for i in xrange(np.product(image.array.shape))],
+                                           dtype=imtype).reshape(image.array.shape), 
+                                  xMin=image.getXMin(), yMin=image.getYMin())
+    return image
 
-def addPoisson(Image, uniform, gain=1.):
+def addPoisson(image, uniform, gain=1.):
     """@brief Add Poisson noise to an input Image using a user-supplied UniformDeviate instance.
 
     Parameters
     ----------
-    @param[in,out] Image    input Image
+    @param[in,out] image    input Image
     @param[in,out] uniform  a galsim UniformDeviate instance to supply the random numbers
     @param[in]     gain     optional gain e-/ADU for calculating the noise (default gain = 1.)
     
@@ -42,14 +42,14 @@ def addPoisson(Image, uniform, gain=1.):
     TODO: Speed this up my moving repeated calls to C++/use the Ccd noise class.
     """
     p = galsim.PoissonDeviate(uniform)
-    imtype = Image.array.dtype.type
-    elist = list(Image.array.flatten('C') * gain)
-    Image += galsim.Image[imtype](np.array([poissonwithmean(p, elecs) / gain for elecs in elist],
-                                  dtype=imtype).reshape(Image.array.shape, order='C'),
-                                  xMin=Image.getXMin(), yMin=Image.getYMin()) \
-           - Image  # Barney note: need to understand image operations better, couldn't get
+    imtype = image.array.dtype.type
+    elist = list(image.array.flatten('C') * gain)
+    image += galsim.Image[imtype](np.array([poissonwithmean(p, elecs) / gain for elecs in elist],
+                                  dtype=imtype).reshape(image.array.shape, order='C'),
+                                  xMin=image.getXMin(), yMin=image.getYMin()) \
+           - image  # Barney note: need to understand image operations better, couldn't get
                     # other assignment to work on output after leaving function scope
-    return Image
+    return image
 
 def poissonwithmean(p, mean):
     """Output a Poisson deviate with distribution updated to the specified mean in a single call.
@@ -60,3 +60,19 @@ def poissonwithmean(p, mean):
         p.setMean(float(mean))
         return p()
 
+def addNoise(image, noise):
+    """@brief Add noise according to a supplied noise model.
+
+    Parameters
+    ----------
+    @param[in,out]  noise  instantiated noise model (currently only CCDNoise instances supported).
+
+    If the supplied noise object does not have an applyTo() method, then this will raise an
+    AttributeError exception.
+    """
+    noise.applyTo(image)
+
+# inject addNoise as a method of Image classes
+for Class in galsim.Image.itervalues():
+    Class.addNoise = addNoise
+del Class
