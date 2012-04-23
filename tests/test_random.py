@@ -144,3 +144,4 @@ if __name__ == "__main__":
     test_binomial_rand()
     test_poisson_rand()
     test_ccdnoise_rand()
+    test_ccdnoise_image()
