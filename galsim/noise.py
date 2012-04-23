@@ -4,6 +4,8 @@ import galsim
 def addGaussian(image, uniform, mean=0., sigma=1.):
     """@brief Add Gaussian noise to an input Image using a user-supplied UniformDeviate instance.
 
+    DEPRECATED: Please use the CCDNoise class and addNoise() function / Image method.
+
     Parameters
     ----------
     @param[in,out] image    input Image instance
@@ -27,6 +29,8 @@ def addGaussian(image, uniform, mean=0., sigma=1.):
 
 def addPoisson(image, uniform, gain=1.):
     """@brief Add Poisson noise to an input Image using a user-supplied UniformDeviate instance.
+
+    DEPRECATED: Please use the CCDNoise class and addNoise() function / Image method.
 
     Parameters
     ----------
@@ -69,6 +73,9 @@ def addNoise(image, noise):
 
     If the supplied noise object does not have an applyTo() method, then this will raise an
     AttributeError exception.
+
+    Currently only CCDNoise instances have this method for quickly applying noise to images, see
+    documentation for galsim.CCDNoise objects.
     """
     noise.applyTo(image)
 
