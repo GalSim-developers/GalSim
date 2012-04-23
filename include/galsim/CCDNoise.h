@@ -3,7 +3,7 @@
 #define IMAGENOISE_H
 
 /** 
- * @file CcdNoise.h @brief Add noise to image using standard CCD model.
+ * @file CCDNoise.h @brief Add noise to image using standard CCD model.
  *
  */
 
@@ -26,7 +26,7 @@ namespace galsim {
      * gain<=0 will shut off the Poisson noise, and Gaussian value will just have value 
      * RMS=readNoise.
      */
-    class CcdNoise {
+    class CCDNoise {
     private: 
         double _gain;    // flux corresponding to one photon
         double _readNoise; // std. dev. of uniform Gaussian noise (when divided by _gain).
@@ -42,7 +42,7 @@ namespace galsim {
          * @param[in] gain Electrons per ADU in the input Images, used for Poisson noise.
          * @param[in] readNoise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
          */
-       CcdNoise(UniformDeviate& ud, double gain=1., double readNoise=0.):
+       CCDNoise(UniformDeviate& ud, double gain=1., double readNoise=0.):
             _gain(gain),
             _readNoise(readNoise),
             _ud(ud), 
