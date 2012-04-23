@@ -132,7 +132,7 @@ namespace galsim {
         /**
          * @brief Add noise to an Image and also report variance of each pixel.
          *
-         * Adds noise as in addTo(Image) signature, but second Image is filled with
+         * Adds noise as in applyTo(Image) signature, but second Image is filled with
          * variance of added noise.  
          * @param[in,out] data The Image to be noise-ified.
          * @param[in,out] variance Image to fill with variance of applied noise.  Will be resized
