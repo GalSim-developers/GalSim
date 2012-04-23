@@ -123,6 +123,20 @@ def test_ccdnoise_rand():
                                              err_msg="Wrong CCD noise random sequence generated "+
                                                      "for Image"+typestrings[i]+" images.")
 
+def test_ccdnoise_image():
+    """Test CCD Noise generator on a 2x2 image against the expected result given the above seed,
+    and using the image method version of the CCD Noise generator.
+    """
+    for i in xrange(4):
+        u = galsim.UniformDeviate(testseed)
+        ccdnoise = galsim.CcdNoise(u, gain=cGain, readnoise=cReadNoise)
+        testImage = galsim.Image[types[i]]((np.zeros((2, 2)) + sky).astype(types[i]))
+        testImage.addNoise(ccdnoise)
+        np.testing.assert_array_almost_equal(testImage.array, eval("cResult"+typestrings[i]),
+                                             eval("precision"+typestrings[i]),
+                                             err_msg="Wrong CCD noise random sequence generated "+
+                                                     "for Image"+typestrings[i]+" images.")
+
 if __name__ == "__main__":
     test_uniform_rand()
     test_uniform_rand_reset()
