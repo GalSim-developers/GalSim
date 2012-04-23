@@ -1,3 +1,6 @@
+// -*- c++ -*-
+#ifndef RANDOM_H
+#define RANDOM_H
 /**
  * @file Random.h 
  * 
@@ -8,9 +11,6 @@
  * 
  * Wraps Boost.Random classes in a way that lets us swap Boost RNG's without affecting client code.
  */
-
-#ifndef RANDOM_H
-#define RANDOM_H
 
 // Variable defined to use a private copy of Boost.Random, modified
 // to avoid any reference to Boost.Random elements that might be on
