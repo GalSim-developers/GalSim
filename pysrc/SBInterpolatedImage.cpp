@@ -9,16 +9,31 @@ namespace {
 
 struct PySBInterpolatedImage {
 
-    static void wrap() {
-        bp::class_< SBInterpolatedImage, bp::bases<SBProfile> >(
-            "SBInterpolatedImage", bp::init<const SBInterpolatedImage &>())
-            .def(bp::init<int, double, const InterpolantXY &, int>(
-                     (bp::args("nPix", "dx", "i"), bp::arg("nImages")=1)
-                 ))
-            .def(bp::init<const Image<float> &, const InterpolantXY &, double, double>(
+    template <typename U, typename W>
+    static void wrapTemplates(W & wrapper) {
+        // NOTE: We wrap only the Image<const U> versions because these are sufficient;
+        // Image<U> inherits from Image<const U>, so the former can be implicitly
+        // converted to the latter by Boost.Python.
+        wrapper
+            .def(bp::init<const Image<const U> &, const InterpolantXY &, double, double>(
                      (bp::args("image", "i"), bp::arg("dx")=0., bp::arg("padFactor")=0.)
                  ))
             ;
+    }
+
+    static void wrap() {
+        bp::class_< SBInterpolatedImage, bp::bases<SBProfile> > pySBInterpolatedImage(
+            "SBInterpolatedImage", bp::init<const SBInterpolatedImage &>()
+        );
+        pySBInterpolatedImage
+            .def(bp::init<int, double, const InterpolantXY &, int>(
+                     (bp::args("nPix", "dx", "i"), bp::arg("nImages")=1)
+                 ))
+            ;
+        wrapTemplates<float>(pySBInterpolatedImage);
+        wrapTemplates<double>(pySBInterpolatedImage);
+        wrapTemplates<short>(pySBInterpolatedImage);
+        wrapTemplates<int>(pySBInterpolatedImage);
     }
 
 };
