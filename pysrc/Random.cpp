@@ -223,16 +223,13 @@ struct PyCcdNoise{
 
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
-        // NOTE: We wrap only the Image<const U> versions because these are sufficient;
-        // Image<U> inherits from Image<const U>, so the former can be implicitly
-        // converted to the latter by Boost.Python.
         wrapper
             .def("__call__", (void (CcdNoise::*) (Image<U> &) )&CcdNoise::operator(),
                  "Add noise to an input Image\n"
                  "\n"
                  "On output the Image will have been given an additional stochastic noise\n"
                  "according to the gain and read noise settings.\n",
-                 (bp::arg("Image")))
+                 (bp::arg("image")))
             ;
     }
 
