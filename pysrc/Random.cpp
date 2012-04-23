@@ -1,6 +1,6 @@
 #include "boost/python.hpp"
 #include "Random.h"
-#include "CcdNoise.h"
+#include "CCDNoise.h"
 #include "Image.h"
 
 #define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
