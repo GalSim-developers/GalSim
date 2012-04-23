@@ -47,6 +47,13 @@ want to ensure that the two codes give consistent results, and that
 the shears are applied to sufficiently high accuracy for use in GalSim
 and GREAT3.
 
+A crucial step where differences can be introduced is interpolation.
+There are several steps where interpolation is needed: interpolation
+between pixels in real space, and in Fourier
+space for the shearing.   These two interpolations need not be done in
+the same way; SBProfile allows different interpolation kernels for
+real- and Fourier-space operations.
+
 \subsection{The approaches}
 
 There are a few differences between the approaches in \shera\ and in
@@ -64,7 +71,12 @@ resolution.
   interpolated, via padding in Fourier space, which is equivalent to
   the ideal sinc interpolation in real space.  Clearly, we require the
   more general \sbp\ treatment for GalSim, and it will be interesting
-  to compare these approaches.
+  to compare these different approaches to the 
+  interpolation of the PSFs.
+\item For the interpolation that is used for the Fourier-space
+  shearing step, \shera\ uses a specific interpolation kernel, cubic interpolation (a windowed
+appoximation to a sinc based on cubic polynomials, using 16 points for
+a 2d image). \sbp\ allows the choice of varying interpolation kernels for this step.
 \item Due to the aforementioned rules about ratios of output to input
   pixel scale, and method of dealing with target PSFs, \sbp\ requires
   images with linear dimension $2^n$ or $3\times 2^n$ for FFTs, but \shera\ has rather
@@ -84,14 +96,10 @@ resolution.
   place in Fourier domain for \sbp, in real space for \shera.
 \end{itemize}
 
-Note that the standard interpolation method that is used by the two is
-the same: cubic interpolation (a windowed
-appoximation to a sinc based on cubic polynomials, using 16 points for
-a 2d image).  But the place where it is applied differs, which could
-be important.  However, this difference in interpolation only relates to the
-PSF-matching and resampling;
-for both pieces of software, the lensing shear is applied via cubic
-interpolation in Fourier space.
+Note that the standard interpolation method that is used \shera\ is the aforementioned 
+cubic interpolation, whereas for \sbp, it is quintic interpolation.  But the place where the
+interpolations are applied differs, which could
+be important.  
 
 \subsection{Issues}
 
@@ -139,7 +147,7 @@ larger and rounder than the \shera\ outputs.
 
 Gary's theory is that
 this relates to the fact that his Fourier-domain treatment includes
-operations to represent the (by default cubic) interpolation of the
+operations to represent the interpolation of the
 target PSF.  The cubic interpolation effectively broadens the PSF
 slightly, so \sbp\ gives broader outputs at the initial pixel scale,
 but not at the final pixel scale (where the resampling essentially
@@ -157,7 +165,8 @@ ellipticities agree to the fifth decimal place.
 Conclusion for GalSim: we need to keep in mind that interpolation of
 the target PSF (either implicitly via FTing and padding, or explicitly
 in real or Fourier space) can amount to a different definition of the
-PSF, and we must decide what definition to use.
+PSF, and we must decide what definition to use. Ultimately it comes down to assumptions about what
+astronomical objects look like between the samples that make up the pixelated images.
 
 \section{Shear}
 
@@ -187,7 +196,17 @@ As we found in the first test, we need to be sure to understand the impact of
 resampling with a given interpolant in Fourier space (which gives
 errors periodic in $k$, and real-space ghosts) or real space (which
 gives errors periodic in $x$, and Fourier-space ghosts), and the
-impact on the effective PSF.
+impact on the effective PSF.  At some level, this will come down to arbitrary decisions about what
+the objects we are observing look like between/beyond the resampled pixel grid.  An important point
+to keep in mind, for perspective, is that there are systematic limitations in the training data that
+may be more important than the low-level differences we see here.  The main (but not only) such
+limitations include (1) the fact that we use MultiDrizzle outputs, which include some aliasing (see
+work by Fruchter 2011, or Rowe, Hirata, \& Rhodes 2011 on this topic; it arises because the undersampled individual exposures must be
+interpolated), and (2) the use of Tiny Tim PSFs, which do not perfectly represent the real ACS
+PSFs.  For GREAT3, we are likely to circumvent (2) by carrying out a PCA modeling of real stars in
+the ACS images, but we will almost certainly not do anything about (1).  Thus, very low-level
+systematic uncertainties in what the galaxies look like are tolerable, though of course we want to
+make sure that our shears that we apply are applied accurately.
 
 A point that Gary raised to consider for the future: are our images
 giving surface brightness (the assumption of \sbp) or flux per pixel

@@ -2,7 +2,9 @@
 #define BOOST_TEST_DYN_LINK
 
 // The boost unit tests have some unused variables, so suppress the warnings about that.
+#ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
 #include <boost/test/unit_test.hpp>
 
 
