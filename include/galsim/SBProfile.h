@@ -1321,8 +1321,8 @@ namespace galsim {
         double maxRrD; ///< Maximum `r` in units of `rD`.
         double maxKrD; ///< Maximum lookup table `k` in units of `rD`.
         double stepKrD; ///< Stepsize lookup table `k` in units of `rD`.
-        double FWHMrD;  ///< Full Width at Half Maximum corresponding to `rD`.
-        double rerD;    ///< Half-light radius corresponding to `rD`.
+        double FWHMrD;  ///< Full Width at Half Maximum in units of `rD`.
+        double rerD;    ///< Half-light radius in units of `rD`.
 
         Table<double,double> ft;  ///< Lookup table for Fourier transform of Moffat.
 
@@ -1333,10 +1333,19 @@ namespace galsim {
          * @param[in] truncationFWHM outer truncation in units of FWHM (default `truncationFWHM = 
          * 2.`).
          * @param[in] flux_          Flux (default `flux_ = 1.`).
-         * @param[in] re             Half-light radius (default `re = 1.`).
+         * @param[in] size           Size specification (default `size = 1.`).
+         * @param[in] rType          Kind of size being specified (default `HALF_LIGHT_RADIUS`).
          */
+        enum  RadiusType
+        {
+            FWHM,
+            HALF_LIGHT_RADIUS,
+            SCALE_RADIUS
+        };
+
         SBMoffat(
-            double beta_, double truncationFWHM=2., double flux_=1., double re=1.);
+            double beta_, double truncationFWHM=2., double flux_=1., double size=1.,
+            RadiusType rType=HALF_LIGHT_RADIUS);
 
         // Default copy constructor should be fine.
 
