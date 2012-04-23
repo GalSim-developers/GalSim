@@ -41,9 +41,7 @@ meas_moments = env1.Program(os.path.join('#bin','MeasMoments'), 'MeasMoments.cpp
 
 test_random = env1.Program(os.path.join('#bin','test_random'), 'testRandom.cpp')
 
-add_noise = env1.Program(os.path.join('#bin','add_noise'), 'AddNoise.cpp')
-
-example_targets = [ sbdraw, int_example, meas_shape, meas_moments, test_random, add_noise ]
+example_targets = [ sbdraw, int_example, meas_shape, meas_moments, test_random ]
 
 env.Alias(target='examples',source=example_targets)
 
