@@ -219,16 +219,21 @@ struct PyPoissonDeviate {
 
 };
 
-struct PyCcdNoise{
+struct PyCCDNoise{
 
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (CcdNoise::*) (Image<U> &) )&CcdNoise::applyTo,
-                 "Add noise to an input Image\n"
+            .def("applyTo", (void (CCDNoise::*) (Image<U> &) )&CCDNoise::applyTo,
+                 "Add noise to an input Image.\n"
                  "\n"
-                 "On output the Image will have been given an additional stochastic noise\n"
-                 "according to the gain and read noise settings.\n",
+                 "Calling\n"
+                 "-------\n"
+                 ">>> CCDNoise.applyTo(image) \n"
+                 "\n"
+                 "On output the Image instance image will have been given an additional\n"
+                 "stochastic noise according to the gain and read noise settings of the CCDNoise\n"
+                 "instance.\n",
                  (bp::arg("image")))
             ;
     }
@@ -239,9 +244,9 @@ struct PyCcdNoise{
             "\n"
             "Pseudo-random number generator with a basic CCD noise model.\n"
             "\n"
-            "A CcdNoise instance is initialized given a UniformDeviate, a gain level in Electrons\n"
+            "A CCDNoise instance is initialized given a UniformDeviate, a gain level in Electrons\n"
             "per ADU used for the Poisson noise term, and a Gaussian read noise in electrons (if\n"
-            "gain > 0.) or ADU (if gain < 0.).  With these parameters set, the CcdNoise operates\n"
+            "gain > 0.) or ADU (if gain < 0.).  With these parameters set, the CCDNoise operates\n"
             "on an Image, adding noise to each pixel following this model.\n" 
             "\n"
             "The class must be given a reference to a UniformDeviate when constructed, which will\n"
@@ -249,9 +254,9 @@ struct PyCcdNoise{
             "\n"
             "Initialization\n"
             "--------------\n"
-            ">>> ccd_noise = CcdNoise(uniform, gain=1., readnoise=0.)\n"
+            ">>> ccd_noise = CCDNoise(uniform, gain=1., readnoise=0.)\n"
             "\n"
-            "Initializes ccd_noise to be a CcdNoise instance.\n"
+            "Initializes ccd_noise to be a CCDNoise instance.\n"
             "\n"
             "Subsequent calls to ccd_noise(Image) with an Image instance as the first argument \n"
             "add noise following this model to that Image.\n"
@@ -272,25 +277,25 @@ struct PyCcdNoise{
             "\n"
             ;
         
-        bp::class_<CcdNoise,boost::noncopyable>pyCcdNoise(
-            "CcdNoise", doc, bp::init< UniformDeviate&, double, double >(
+        bp::class_<CCDNoise,boost::noncopyable>pyCCDNoise(
+            "CCDNoise", doc, bp::init< UniformDeviate&, double, double >(
                 (bp::arg("uniform"), bp::arg("gain")=1., bp::arg("readnoise")=0.)
             )[
-                bp::with_custodian_and_ward<1,2>() // keep uniform (2) as long as CcdNoise lives
+                bp::with_custodian_and_ward<1,2>() // keep uniform (2) as long as CCDNoise lives
             ]
 	);
-        pyCcdNoise
-            .def("getGain", &CcdNoise::getGain, "Get gain in current noise model.")
-            .def("setGain", &CcdNoise::setGain, "Set gain in current noise model.")
-            .def("getReadNoise", &CcdNoise::getReadNoise, 
+        pyCCDNoise
+            .def("getGain", &CCDNoise::getGain, "Get gain in current noise model.")
+            .def("setGain", &CCDNoise::setGain, "Set gain in current noise model.")
+            .def("getReadNoise", &CCDNoise::getReadNoise, 
                  "Get read noise in current noise model.")
-            .def("setReadNoise", &CcdNoise::setReadNoise, 
+            .def("setReadNoise", &CCDNoise::setReadNoise, 
                  "Set read noise in current noise model.")
             ;
-        wrapTemplates<int>(pyCcdNoise);
-        wrapTemplates<short>(pyCcdNoise);
-        wrapTemplates<float>(pyCcdNoise);
-        wrapTemplates<double>(pyCcdNoise);
+        wrapTemplates<int>(pyCCDNoise);
+        wrapTemplates<short>(pyCCDNoise);
+        wrapTemplates<float>(pyCCDNoise);
+        wrapTemplates<double>(pyCCDNoise);
     }
 
 };
@@ -303,7 +308,7 @@ void pyExportRandom() {
     PyGaussianDeviate::wrap();
     PyBinomialDeviate::wrap();
     PyPoissonDeviate::wrap();
-    PyCcdNoise::wrap();
+    PyCCDNoise::wrap();
 }
 
 
