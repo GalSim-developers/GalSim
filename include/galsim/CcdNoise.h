@@ -82,14 +82,14 @@ namespace galsim {
         }
 
         /**
-         * @brief Add noise to an Image
+         * @brief Add noise to an Image.
          *
          * Poisson and/or Gaussian noise are added to each pixel of the image according
          * to standard CCD model.
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void operator()(Image<T>& data) {
+        void applyTo(Image<T>& data) {
             // Above this many e's, assume Poisson distribution =Gaussian 
             static const double MAX_POISSON=1.e5;
 
@@ -132,14 +132,14 @@ namespace galsim {
         /**
          * @brief Add noise to an Image and also report variance of each pixel.
          *
-         * Adds noise as in operator()(Image) signature, but second Image is filled with
+         * Adds noise as in addTo(Image) signature, but second Image is filled with
          * variance of added noise.  
          * @param[in,out] data The Image to be noise-ified.
          * @param[in,out] variance Image to fill with variance of applied noise.  Will be resized
          * if it does not match dimensions of data.
          */
         template <class T>
-        void operator()(Image<T>& data, Image<T>& variance) {
+        void applyToVar(Image<T>& data, Image<T>& variance) {
             // Resize the variance image to match data image
             variance.resize(data.getBounds());
             // Fill with the (constant) Gaussian contribution to variance

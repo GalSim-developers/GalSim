@@ -224,7 +224,7 @@ struct PyCcdNoise{
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("__call__", (void (CcdNoise::*) (Image<U> &) )&CcdNoise::operator(),
+            .def("applyTo", (void (CcdNoise::*) (Image<U> &) )&CcdNoise::applyTo,
                  "Add noise to an input Image\n"
                  "\n"
                  "On output the Image will have been given an additional stochastic noise\n"
