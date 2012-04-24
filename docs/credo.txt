@@ -29,8 +29,19 @@ Biggish things to highlight/add/modify are...
 
  We will adopt the SBProfile capitalization style wherever sensible for code filenames, as it's by 
  far the most significant chunk of C/C++ we are currently using.  This makes include/*.h files
- capitalized.
- 
+ capitalized.  
+
+ Overall capitalization rules:
+ * File names are CamelCase**
+ * Classes (and structs) are CamelCase
+ * Free functions are CamelCase
+ * Member functions are camelCase
+ * Public variables (including function parameters and kwargs) are lower_case
+ * Private variables are _lower_case
+ * Local scope variables/functions can be whatever the author prefers.
+ ** Note that when using camelCase or CamelCase, acronyms should still be capitalized, i.e. CCD and
+ PSF, not Ccd and Psf.
+
  Python unit testing modules will be placed in tests/, and called test_<Module>.py
 
  For executables we will tend to use descriptive underscores, such as exec_name*.  CamelCase or 
