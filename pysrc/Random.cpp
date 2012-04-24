@@ -129,7 +129,7 @@ struct PyBinomialDeviate {
                  ">>> BinomialDeviate.applyTo(image) \n"
                  "\n"
                  "On output each element of the input Image will have a pseudo-random\n"
-                 "BinomialDeviate return value added to it.\n",
+                 "BinomialDeviate return value added to it, with current values of N and p.\n",
                  (bp::arg("image")))
             ;
     }
@@ -192,6 +192,22 @@ struct PyBinomialDeviate {
 
 struct PyPoissonDeviate {
 
+    template <typename U, typename W>
+    static void wrapTemplates(W & wrapper) {
+        wrapper
+            .def("applyTo", (void (PoissonDeviate::*) (Image<U> &) )&PoissonDeviate::applyTo,
+                 "Add Poisson deviates to every element in a supplied Image.\n"
+                 "\n"
+                 "Calling\n"
+                 "-------\n"
+                 ">>> PoissonDeviate.applyTo(image) \n"
+                 "\n"
+                 "On output each element of the input Image will have a pseudo-random\n"
+                 "PoissonDeviate return value added to it, with current mean.\n",
+                 (bp::arg("image")))
+            ;
+    }
+
     static void wrap() {
         static char const * doc = 
             "\n"
@@ -222,13 +238,14 @@ struct PyPoissonDeviate {
             "mean     optional mean of the distribution (default `mean = 1`).\n"
             "\n"
             ;
-        bp::class_<PoissonDeviate,boost::noncopyable>(
+        bp::class_<PoissonDeviate,boost::noncopyable>pyPoissonDeviate(
             "PoissonDeviate", doc, bp::init< UniformDeviate&, double >(
                 (bp::arg("uniform"), bp::arg("mean")=1.)
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as PoissonDeviate lives
             ]
-            )
+								      );
+        pyPoissonDeviate
             .def("__call__", &PoissonDeviate::operator(),
                  "Draw a new random number from the distribution.\n"
                  "\n"
@@ -236,6 +253,10 @@ struct PyPoissonDeviate {
             .def("getMean", &PoissonDeviate::getMean, "Get current distribution mean.")
             .def("setMean", &PoissonDeviate::setMean, "Set current distribution mean.")
             ;
+        wrapTemplates<int>(pyPoissonDeviate);
+        wrapTemplates<short>(pyPoissonDeviate);
+        wrapTemplates<float>(pyPoissonDeviate);
+        wrapTemplates<double>(pyPoissonDeviate);
     }
 
 };
