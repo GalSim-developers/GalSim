@@ -19,6 +19,7 @@
 #define DIVERT_BOOST_RANDOM
 
 #include <sys/time.h>
+#include "Image.h"
 #ifdef DIVERT_BOOST_RANDOM
 #include "galsim/boost1_48_0.random/mersenne_twister.hpp"
 #include "galsim/boost1_48_0.random/normal_distribution.hpp"
@@ -82,6 +83,23 @@ namespace galsim {
          * @param[in] lseed A long-integer seed for the RNG.
          */
         void seed(const long lseed) { urng.seed(lseed); }
+
+        /**
+         * @brief Add Uniform pseudo-random deviates to every element in a supplied Image.
+         *
+         * @param[in,out] data The Image to be noise-ified.
+         */
+        template <typename T>
+        void applyTo(Image<T>& data) {
+            // Typedef for image row iterable
+            typedef typename Image<T>::Iter ImIter;
+
+            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
+                ImIter ee = data.rowEnd(y);
+                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
+            }
+        }
+            
 
     private:
         boost::mt19937 urng;
@@ -181,6 +199,22 @@ namespace galsim {
             normal.param(boost::random::normal_distribution<>::param_type(normal.mean(),sigma));
         }
 
+        /**
+         * @brief Add Gaussian pseudo-random deviates to every element in a supplied Image.
+         *
+         * @param[in,out] data The Image to be noise-ified.
+         */
+        template <typename T>
+        void applyTo(Image<T>& data) {
+            // Typedef for image row iterable
+            typedef typename Image<T>::Iter ImIter;
+
+            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
+                ImIter ee = data.rowEnd(y);
+                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
+            }
+        }
+
     private:
 
         UniformDeviate& u;
@@ -259,6 +293,22 @@ namespace galsim {
             bd.param(boost::random::binomial_distribution<>::param_type(bd.t(),p));
         }
 
+        /**
+         * @brief Add Binomial pseudo-random deviates to every element in a supplied Image.
+         *
+         * @param[in,out] data The Image to be noise-ified.
+         */
+        template <typename T>
+        void applyTo(Image<T>& data) {
+            // Typedef for image row iterable
+            typedef typename Image<T>::Iter ImIter;
+
+            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
+                ImIter ee = data.rowEnd(y);
+                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
+            }
+        }
+
     private:
         UniformDeviate& u;
         boost::random::binomial_distribution<> bd;
@@ -311,6 +361,22 @@ namespace galsim {
          */
         void setMean(double mean) {
             pd.param(boost::random::poisson_distribution<>::param_type(mean));
+        }
+
+        /**
+         * @brief Add Poisson pseudo-random deviates to every element in a supplied Image.
+         *
+         * @param[in,out] data The Image to be noise-ified.
+         */
+        template <typename T>
+        void applyTo(Image<T>& data) {
+            // Typedef for image row iterable
+            typedef typename Image<T>::Iter ImIter;
+
+            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
+                ImIter ee = data.rowEnd(y);
+                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
+            }
         }
 
     private:
