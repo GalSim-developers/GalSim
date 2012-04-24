@@ -278,7 +278,7 @@ def Script3():
     opt_a2=0.12        # wavelengths
     opt_c1=0.64        # wavelengths
     opt_c2=-0.33       # wavelengths
-    opt_padFactor=2    # multiples of Airy padding required to avoid folding for aberrated PSFs
+    opt_padfactor=2    # multiples of Airy padding required to avoid folding for aberrated PSFs
     lam = 800          # nm    NB: don't use lambda - that's a reserved word.
     tel_diam = 4.      # meters 
     pixel_scale = 0.23 # arcsec / pixel
@@ -333,11 +333,11 @@ def Script3():
     lam_over_D /= pixel_scale # pixels
     logger.info('Calculated lambda over D = %f pixels', lam_over_D)
     # The rest of the values here should be given in units of the 
-    # wavelength of the incident light. padFactor is used to here to reduce 'folding' for these
+    # wavelength of the incident light. pad_factor is used to here to reduce 'folding' for these
     # quite strong aberration values
     optics = galsim.OpticalPSF(lam_over_D, 
                                defocus=opt_defocus, coma1=opt_c1, coma2=opt_c2, astig1=opt_a1,
-                               astig2=opt_a2, padFactor=opt_padFactor)
+                               astig2=opt_a2, pad_factor=opt_padfactor)
     logger.info('Made optical PSF profile')
 
     # Start with square pixels
