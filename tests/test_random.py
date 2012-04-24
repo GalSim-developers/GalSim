@@ -83,6 +83,17 @@ def test_uniform_rand_reset():
     np.testing.assert_array_equal(np.array(testResult1), np.array(testResult2),
                                err_msg='Cannot reset generator (same seed) to reproduce sequence')
 
+def test_uniform_image():
+    """Testing ability to apply uniform random numbers to images using their addNoise method, 
+    and reproduce sequence.
+    """
+    u = galsim.UniformDeviate(testseed)
+    testimage = galsim.ImageD(np.zeros((3, 1)))
+    testimage.addNoise(u)
+    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(uResult),
+                               err_msg="UniformDeviate generator applied to Images does not "
+                                       "reproduce expected sequence")
+
 def test_gaussian_rand():
     """Test Gaussian random number generator for expected result given the above seed.
     """
@@ -91,6 +102,18 @@ def test_gaussian_rand():
     testResult = (g(), g(), g())
     np.testing.assert_array_almost_equal(np.array(testResult), np.array(gResult), precision,
                                          err_msg='Wrong Gaussian random number sequence generated')
+
+def test_gaussian_image():
+    """Testing ability to apply Gaussian random numbers to images using their addNoise method, 
+    and reproduce sequence.
+    """
+    u = galsim.UniformDeviate(testseed)
+    g = galsim.GaussianDeviate(u, mean=gMean, sigma=gSigma)
+    testimage = galsim.ImageD(np.zeros((3, 1)))
+    testimage.addNoise(g)
+    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(gResult), precision,
+                               err_msg="GaussianDeviate generator applied to Images does not "
+                                       "reproduce expected sequence")
 
 def test_binomial_rand():
     """Test binomial random number generator for expected result given the above seed.
@@ -101,6 +124,18 @@ def test_binomial_rand():
     np.testing.assert_array_almost_equal(np.array(testResult), np.array(bResult), precision,
                                          err_msg='Wrong binomial random number sequence generated')
 
+def test_binomial_image():
+    """Testing ability to apply Binomial random numbers to images using their addNoise method, 
+    and reproduce sequence.
+    """
+    u = galsim.UniformDeviate(testseed)
+    b = galsim.BinomialDeviate(u, N=bN, p=bp)
+    testimage = galsim.ImageD(np.zeros((3, 1)))
+    testimage.addNoise(b)
+    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(bResult), precision,
+                               err_msg="BinomialDeviate generator applied to Images does not "
+                                       "reproduce expected sequence")
+
 def test_poisson_rand():
     """Test Poisson random number generator for expected result given the above seed.
     """
@@ -109,6 +144,18 @@ def test_poisson_rand():
     testResult = (p(), p(), p())
     np.testing.assert_array_almost_equal(np.array(testResult), np.array(pResult), precision, 
                                          err_msg='Wrong Poisson random number sequence generated')
+
+def test_poisson_image():
+    """Testing ability to apply Poisson random numbers to images using their addNoise method, 
+    and reproduce sequence.
+    """
+    u = galsim.UniformDeviate(testseed)
+    p = galsim.PoissonDeviate(u, mean=pMean)
+    testimage = galsim.ImageI(np.zeros((3, 1), dtype=np.int32))
+    testimage.addNoise(p)
+    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(pResult),
+                               err_msg="PoissonDeviate generator applied to Images does not "
+                                       "reproduce expected sequence")
 
 def test_ccdnoise_rand():
     """Test CCD Noise generator on a 2x2 image against the expected result given the above seed.
