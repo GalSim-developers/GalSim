@@ -116,6 +116,23 @@ def RunUninstall(env, targets, subdir):
     for f in files:
         env.Alias('uninstall', env.Command(f, None, deltarget))
 
+def ErrorExit():
+    # Whenever we get an error in the initial setup checking for the various
+    # libraries, compiler, etc., we don't want to cache the result.
+    # So before exiting, we call this function to clear out the cache files
+    # that SCons creates.
+    if os.path.exists(".sconsign.dblite"):
+        os.remove(".sconsign.dblite")
+    import shutil
+    if os.path.exists(".sconf_temp"):
+        shutil.rmtree(".sconf_temp")
+
+    print
+    print 'Please fix the above error(s) and rerun scons'
+    print
+    Exit(1)
+
+
 
 def BasicCCFlags(env):
     """
@@ -301,7 +318,8 @@ def GetCompilerVersion(env):
     """
     compiler = which(env['CXX'])
     if compiler is None:
-        raise ValueError("Specified compiler not found in path: %s" % env['CXX'])
+        print 'Specified compiler not found in path: %s' % env['CXX']
+        ErrorExit()
 
     print 'Using compiler:',compiler
 
@@ -568,7 +586,7 @@ int main()
             context.Result(0)
             print 'Error: TMV file failed to link correctly'
             print 'Check that the correct location is specified for TMV_DIR'
-            Exit(1)
+            ErrorExit()
 
         context.Result(1)
         return 1
@@ -577,7 +595,7 @@ int main()
         context.Result(0)
         print 'Error: TMV file failed to compile.'
         print 'Check that the correct location is specified for TMV_DIR'
-        Exit(1)
+        ErrorExit()
 
 def CheckPython(context):
     python_source_file = """
@@ -596,7 +614,7 @@ int main()
     except ImportError:
         context.Result(0)
         print 'Failed to import distutils.sysconfig.'
-        Exit(1)
+        ErrorExit()
     context.env.AppendUnique(CPPPATH=distutils.sysconfig.get_python_inc())
     libDir = distutils.sysconfig.get_config_var("LIBDIR")
     context.env.AppendUnique(LIBPATH=libDir)
@@ -622,7 +640,7 @@ int main()
                     print (
                         "Expected to find Python in framework directory %s, but it isn't there"
                         % frameworkDir)
-                    Exit(1)
+                    ErrorExit()
                 break
         context.env.AppendUnique(LDFLAGS="-F%s"%frameworkDir)
         result, output = context.TryRun(python_source_file,'.cpp')
@@ -630,7 +648,7 @@ int main()
     if not result:
         context.Result(0)
         print "Cannot run program built with Python."
-        Exit(1)
+        ErrorExit()
 
     context.Result(1)
     return 1
@@ -678,18 +696,18 @@ int main()
         print '   Alternatively, you can reinstall SCons with your preferred python.'
         print '2) Check that if you open a python session from the command line,'
         print '   import numpy is successful there.'
-        Exit(1)
+        ErrorExit()
     context.env.Append(CPPPATH=numpy.get_include())
     result = CheckLibs(context,[''],numpy_source_file)
     if not result:
         context.Result(0)
         print "Cannot build against NumPy."
-        Exit(1)
+        ErrorExit()
     result, output = context.TryRun(numpy_source_file,'.cpp')
     if not result:
         context.Result(0)
         print "Cannot run program built with NumPy."
-        Exit(1)
+        ErrorExit()
     context.Result(1)
     return 1
 
@@ -715,7 +733,7 @@ def CheckPyFITS(context):
         print '   Alternatively, you can reinstall SCons with your preferred python.'
         print '2) Check that if you open a python session from the command line,'
         print '   import pyfits is successful there.'
-        Exit(1)
+        ErrorExit()
     context.Result(1)
     return 1
 
@@ -744,14 +762,14 @@ int main()
     if not result:
         context.Result(0)
         print "Cannot build against Boost.Python."
-        Exit(1)
+        ErrorExit()
 
     result, output = context.TryRun(bp_source_file,'.cpp')
 
     if not result:
         context.Result(0)
         print "Cannot run program built with Boost.Python."
-        Exit(1)
+        ErrorExit()
     context.Result(1)
     return 1
 
@@ -783,7 +801,8 @@ def FindTmvLinkFile(config):
         if os.path.exists(tmv_link):
             return tmv_link
         else:
-            raise ValueError("Specified TMV_LINK does not exist: %s" % tmv_link)
+            print 'Specified TMV_LINK does not exist: %s' % tmv_link
+            ErrorExit()
 
     # Next check in TMV_DIR/share
     tmv_dir = FindPathInEnv(config.env, 'TMV_DIR')
@@ -829,7 +848,8 @@ def FindTmvLinkFile(config):
         if os.path.exists(tmv_link):
             return tmv_link
 
-    raise ValueError("No tmv-link file could be found")
+    print 'No tmv-link file could be found'
+    ErrorExit()
 
 
 def DoLibraryAndHeaderChecks(config):
@@ -844,19 +864,19 @@ def DoLibraryAndHeaderChecks(config):
         if not config.CheckLibWithHeader('cfitsio','fitsio.h',language='C++'):
             print 'cfitsio not found'
             print 'You should specify the location of cfitsio CFITSIO_DIR=...'
-            Exit(1)
+            ErrorExit()
 
     # Check for fftw3
     if not config.CheckLibWithHeader('fftw3','fftw3.h',language='C++'):
         print 'fftw3 not found'
         print 'You should specify the location of fftw3 as FFTW_DIR=...'
-        Exit(1)
+        ErrorExit()
 
     # Check for boost
     if not config.CheckHeader('boost/shared_ptr.hpp',language='C++'):
         print 'Boost not found'
         print 'You should specify the location of Boost as BOOST_DIR=...'
-        Exit(1)
+        ErrorExit()
 
     # Check for tmv
     # First do a simple check that the library and header are in the path.
@@ -864,7 +884,7 @@ def DoLibraryAndHeaderChecks(config):
     if not config.CheckHeader('TMV.h',language='C++'):
         print 'TMV not found'
         print 'You should specify the location of TMV as TMV_DIR=...'
-        Exit(1)
+        ErrorExit()
 
     compiler = config.env['CXXTYPE']
     version = config.env['CXXVERSION_NUMERICAL']
@@ -879,7 +899,7 @@ def DoLibraryAndHeaderChecks(config):
         tmv_link = open(tmv_link_file).read().strip()
     except:
         print 'Could not open TMV link file: ',tmv_link_file
-        Exit(1)
+        ErrorExit()
     print '    ',tmv_link
 
     # ParseFlags doesn't know about -fopenmp being a LINKFLAG, so it
@@ -999,24 +1019,17 @@ def DoConfig(env):
 #
 
 env = Environment()
-
-print 'Before opts.Update(env): CXX = ',env['CXX']
-
 opts.Update(env)
-
-print 'After opts.Update(env): CXX = ',env['CXX']
 
 if env['IMPORT_ENV']:
     env = Environment(ENV=os.environ)
-    print 'After import os.environ: CXX = ',env['CXX']
     opts.Update(env)
-    print 'After 2nd opts.Update(env): CXX = ',env['CXX']
 
 # Check for unknown variables in case something is misspelled
 unknown = opts.UnknownVariables()
 if unknown:
     print "Unknown variables:", unknown.keys()
-    Exit(1)
+    ErrorExit()
 
 opts.Save(config_file,env)
 Help(opts.GenerateHelpText(env))
