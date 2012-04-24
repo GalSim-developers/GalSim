@@ -146,9 +146,10 @@ class Gaussian(GSObject):
 class Moffat(GSObject):
     """GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
-    def __init__(self, beta, truncationFWHM=2., flux=1., re=1.):
+    def __init__(self, beta, truncationFWHM=2., flux=1.,
+                 half_light_radius=None, scale_radius=None, fwhm=None):
         GSObject.__init__(self, galsim.SBMoffat(beta, truncationFWHM=truncationFWHM, flux=flux,
-                          re=re))
+                          half_light_radius=half_light_radius, scale_radius=scale_radius, fwhm=fwhm))
     # As for the Gaussian currently only the base layer SBProfile methods are wrapped
     # def getBeta(self):
     #     return self.SBProfile.getBeta()
@@ -166,9 +167,9 @@ class Sersic(GSObject):
 class Exponential(GSObject):
     """GalSim Exponential, which has an SBExponential in the SBProfile attribute.
     """
-    def __init__(self, flux=1., half_light_radius=None, scale=None):
+    def __init__(self, flux=1., half_light_radius=None, scale_radius=None):
         GSObject.__init__(self, galsim.SBExponential(flux=flux, half_light_radius=half_light_radius,
-                                                     scale=scale))
+                                                     scale_radius=scale_radius))
     # Ditto!
 
 

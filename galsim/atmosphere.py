@@ -12,7 +12,7 @@ class DoubleGaussian(galsim.Add):
     """
     def __init__(self, flux1=1., sigma1=1., flux2=1., sigma2=1.):
         sblist = []
-        sblist.append(galsim.Gaussian(flux1,sigma1))
-        sblist.append(galsim.Gaussian(flux2,sigma2))
+        sblist.append(galsim.Gaussian(flux1, sigma=sigma1))
+        sblist.append(galsim.Gaussian(flux2, sigma=sigma2))
         galsim.Add.__init__(self, sblist)
 
