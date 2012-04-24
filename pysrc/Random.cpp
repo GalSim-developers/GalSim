@@ -118,6 +118,22 @@ struct PyGaussianDeviate {
 
 struct PyBinomialDeviate {
 
+    template <typename U, typename W>
+    static void wrapTemplates(W & wrapper) {
+        wrapper
+            .def("applyTo", (void (BinomialDeviate::*) (Image<U> &) )&BinomialDeviate::applyTo,
+                 "Add Binomial deviates to every element in a supplied Image.\n"
+                 "\n"
+                 "Calling\n"
+                 "-------\n"
+                 ">>> BinomialDeviate.applyTo(image) \n"
+                 "\n"
+                 "On output each element of the input Image will have a pseudo-random\n"
+                 "BinomialDeviate return value added to it.\n",
+                 (bp::arg("image")))
+            ;
+    }
+
     static void wrap() {
         static char const * doc = 
             "\n"
@@ -149,13 +165,14 @@ struct PyBinomialDeviate {
             "p        optional probability of success per coin flip (default `p = 0.5`).\n"
             "\n"
             ;
-        bp::class_<BinomialDeviate,boost::noncopyable>(
+        bp::class_<BinomialDeviate,boost::noncopyable>pyBinomialDeviate(
             "BinomialDeviate", doc, bp::init< UniformDeviate&, double, double >(
                 (bp::arg("uniform"), bp::arg("N")=1., bp::arg("p")=0.5)
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as BinomialDeviate lives
             ]
-            )
+	);
+        pyBinomialDeviate
             .def("__call__", &BinomialDeviate::operator(),
                  "Draw a new random number from the distribution.\n"
                  "\n"
@@ -165,6 +182,10 @@ struct PyBinomialDeviate {
             .def("getP", &BinomialDeviate::getP, "Get current distribution p.")
             .def("setP", &BinomialDeviate::setP, "Set current distribution p.")
             ;
+        wrapTemplates<int>(pyBinomialDeviate);
+        wrapTemplates<short>(pyBinomialDeviate);
+        wrapTemplates<float>(pyBinomialDeviate);
+        wrapTemplates<double>(pyBinomialDeviate);
     }
 
 };
