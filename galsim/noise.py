@@ -20,4 +20,4 @@ def addNoise(image, noise):
 # inject addNoise as a method of Image classes
 for Class in _galsim.Image.itervalues():
     Class.addNoise = addNoise
-del Class
+del Class # cleanup public namespace
