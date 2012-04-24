@@ -68,7 +68,7 @@ def test_sbprofile_exponential():
     """
     re = 1.0
     r0 = re/1.67839
-    mySBP = galsim.SBExponential(flux=1., r0=r0)
+    mySBP = galsim.SBExponential(flux=1., scale_radius=r0)
     myImg = mySBP.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
     printval(myImg, savedImg)
@@ -79,7 +79,7 @@ def test_sbprofile_exponential():
 def test_sbprofile_sersic():
     """Test the generation of a specific Sersic profile using SBProfile against a known result.
     """
-    mySBP = galsim.SBSersic(n=3, flux=1, re=1)
+    mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     myImg = mySBP.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
     printval(myImg, savedImg)
@@ -109,7 +109,7 @@ def test_sbprofile_box():
 def test_sbprofile_moffat():
     """Test the generation of a specific Moffat profile using SBProfile against a known result.
     """
-    mySBP = galsim.SBMoffat(beta=2, truncationFWHM=5, flux=1, re=1)
+    mySBP = galsim.SBMoffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
     myImg = mySBP.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
     printval(myImg, savedImg)
@@ -148,7 +148,7 @@ def test_sbprofile_smallshear():
 def test_sbprofile_largeshear():
     """Test the application of a large shear to a Sersic SBProfile against a known result.
     """
-    mySBP = galsim.SBSersic(n=4, flux=1, re=1)
+    mySBP = galsim.SBSersic(n=4, flux=1, half_light_radius=1)
     mySBP_shear = mySBP.shear(0.0, 0.5)
     myImg = mySBP_shear.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
@@ -159,7 +159,7 @@ def test_sbprofile_largeshear():
 def test_sbprofile_convolve():
     """Test the convolution of a Moffat and a Box SBProfile against a known result.
     """
-    mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, re=1)
+    mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     mySBP2 = galsim.SBBox(xw=0.2, yw=0., flux=1.)
     myConv = galsim.SBConvolve(mySBP)
     myConv.add(mySBP2)
@@ -186,7 +186,7 @@ def test_sbprofile_shearconvolve():
 def test_sbprofile_rotate():
     """Test the 45 degree rotation of a sheared Sersic profile against a known result.
     """
-    mySBP = galsim.SBSersic(n=2.5, flux=1, re=1)
+    mySBP = galsim.SBSersic(n=2.5, flux=1, half_light_radius=1)
     mySBP_shear = mySBP.shear(0.2, 0.0)
     mySBP_shear_rotate = mySBP_shear.rotate(45.0)
     myImg = mySBP_shear_rotate.draw(dx=0.2)
@@ -200,7 +200,7 @@ def test_sbprofile_mag():
     """
     re = 1.0
     r0 = re/1.67839
-    mySBP = galsim.SBExponential(flux=1, r0=r0)
+    mySBP = galsim.SBExponential(flux=1, scale_radius=r0)
     myEll = galsim.Ellipse(0., 0., np.log(1.5))
     mySBP_mag = mySBP.distort(myEll)
     myImg = mySBP_mag.draw(dx=0.2)
@@ -235,7 +235,7 @@ def test_sbprofile_shift():
 def test_sbprofile_rescale():
     """Test the flux rescaling of a Sersic profile against a known result.
     """
-    mySBP = galsim.SBSersic(n=3, flux=1, re=1)
+    mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     mySBP.setFlux(2)
     myImg = mySBP.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_doubleflux.fits"))
