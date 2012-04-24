@@ -110,6 +110,43 @@ namespace hsm {
     /* functions that the user will want to call from outside */
 
     /**
+     * @brief Carry out PSF correction directly using Images.
+     *
+     * A template function to carry out one of the multiple possible methods of PSF correction using
+     * the HSM package, directly accessing the input Images.  The input arguments get repackaged
+     * into RectImage and ObjectData structs before calling general_shear_estimator.  Results for
+     * the shape measurement are returned as HSMShapeData.  Currently this function does not accept
+     * a flags parameter like general_shear_estimator; instead, it calls general_shear_estimator
+     * with the most commonly-used value of 0xe.
+     *
+     * @param[in] gal_image The Image for the galaxy being measured
+     * @param[in] PSF_image The Image for the PSF
+     * @param[in] *shear_est A string indicating the desired method of PSF correction: REGAUSS,
+     *            LINEAR, BJ, or KSB
+     * @return A HSMShapeData object containing the results of shape measurement. 
+     */
+    template <typename T>
+        HSMShapeData EstimateShearHSM(Image<T> gal_image, Image<T> PSF_image, char *shear_est);  
+
+    /**
+     * @brief Measure the adaptive moments of an object directly using Images.
+     *
+     * This function repackages the input Image in a format that find_ellipmom_2 accepts, in order
+     * to iteratively compute the adaptive moments of an image.  The key result is the best-fit
+     * elliptical Gaussian to the object, which is computed by initially guessing a circular
+     * Gaussian that is used as a weight function, computing the weighted moments, recomputing the
+     * moments using the result of the previous step as the weight function, and so on until the
+     * moments that are measured are the same as those used for the weight function.  This function
+     * assumes that the desired level of accuracy for the adaptive moments in find_ellipmom_2 is
+     * 1.0e-6, which has proven to be a reasonable choice in the vast majority of cases.
+     *
+     * @param[in] *object_image The Image for the object being measured.
+     * @return A HSMShapeData object containing the results of moment measurement.
+     */
+    template <typename T>
+        HSMShapeData FindAdaptiveMom(Image <T> object_image);
+
+    /**
      * @brief Allocate memory for a RectImage representing the image of some object
      *
      * @param[in] *A The pointer to the RectImage
