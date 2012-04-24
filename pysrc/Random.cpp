@@ -14,6 +14,22 @@ namespace {
 
 struct PyUniformDeviate {
 
+    template <typename U, typename W>
+    static void wrapTemplates(W & wrapper) {
+        wrapper
+            .def("applyTo", (void (UniformDeviate::*) (Image<U> &) )&UniformDeviate::applyTo,
+                 "Add Uniform deviates to every element in a supplied Image.\n"
+                 "\n"
+                 "Calling\n"
+                 "-------\n"
+                 ">>> UniformDeviate.applyTo(image) \n"
+                 "\n"
+                 "On output each element of the input Image will have a pseudo-random\n"
+                 "UniformDeviate return value added to it.\n",
+                 (bp::arg("image")))
+            ;
+    }
+
     static void wrap() {
         static char const * doc = 
             "\n"
@@ -51,7 +67,10 @@ struct PyUniformDeviate {
             "\n"
             ;
 
-        bp::class_<UniformDeviate,boost::noncopyable>("UniformDeviate", doc, bp::init<>())
+        bp::class_<UniformDeviate,boost::noncopyable>pyUniformDeviate(
+            "UniformDeviate", doc, bp::init<>()
+        );
+        pyUniformDeviate
             .def(bp::init<long>(bp::arg("lseed")))
             .def("__call__", &UniformDeviate::operator(),
                  "Draw a new random number from the distribution.")
@@ -60,6 +79,10 @@ struct PyUniformDeviate {
             .def("seed", (void (UniformDeviate::*) (const long) )&UniformDeviate::seed, 
                  (bp::arg("lseed")), "Re-seed the PRNG using specified seed.")
             ;
+        wrapTemplates<int>(pyUniformDeviate);
+        wrapTemplates<short>(pyUniformDeviate);
+        wrapTemplates<float>(pyUniformDeviate);
+        wrapTemplates<double>(pyUniformDeviate);
     }
 
 };
@@ -119,7 +142,7 @@ struct PyGaussianDeviate {
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as GaussianDeviate lives
             ]
-									);
+	);
         pyGaussianDeviate
             .def("__call__", &GaussianDeviate::operator(),
                  "Draw a new random number from the distribution.\n"
@@ -266,7 +289,7 @@ struct PyPoissonDeviate {
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as PoissonDeviate lives
             ]
-								      );
+	);
         pyPoissonDeviate
             .def("__call__", &PoissonDeviate::operator(),
                  "Draw a new random number from the distribution.\n"
