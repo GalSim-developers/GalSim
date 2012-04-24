@@ -102,7 +102,7 @@ def Script1():
     gal_sigma = 2.     # pixels
     psf_sigma = 1.     # pixels
     pixel_scale = 0.2  # arcsec / pixel
-    noise = 0.03       # ADU / pixel
+    noise = 300.       # ADU / pixel
 
     logger.info('Starting script 1 using:')
     logger.info('    - circular Gaussian galaxy (flux = %.1e, sigma = %.1f),',gal_flux,gal_sigma)
@@ -138,7 +138,7 @@ def Script1():
     # Defaut seed is set from the current time.
     rng = galsim.UniformDeviate()
     # Use this to add Gaussian noise with specified sigma
-    galsim.noise.addGaussian(image, rng, sigma=noise)
+    image.addNoise(galsim.GaussianDeviate(rng, sigma=noise))
     logger.info('Added Gaussian noise')
 
     # Write the image to a file
@@ -218,8 +218,8 @@ def Script2():
 
     # This time use a particular seed, so it the image is deterministic.
     rng = galsim.UniformDeviate(1534225)
-    # Use this to add Poisson noise.
-    galsim.noise.addPoisson(image, rng, gain=gain)
+    # Use this to add Poisson noise using the CCDNoise class.
+    image.addNoise(galsim.CCDNoise(rng, gain=gain, readnoise=0.))
 
     # Subtract off the sky.
     image -= sky_image
@@ -368,12 +368,9 @@ def Script3():
     sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
     image += sky_image
 
-    # Add Poisson noise to the image.
+    # Add Poisson noise and Gaussian read noise to the image using the CCDNoise class.
     rng = galsim.UniformDeviate(1314662)
-    galsim.noise.addPoisson(image, rng, gain=gain)
-
-    # Also add (Gaussian) read noise.
-    galsim.noise.addGaussian(image, rng, sigma=read_noise)
+    image.addNoise(galsim.CCDNoise(rng, gain=gain, readnoise=read_noise))
 
     # Subtract off the sky.
     image -= sky_image
