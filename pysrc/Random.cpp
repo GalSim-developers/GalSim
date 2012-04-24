@@ -66,6 +66,23 @@ struct PyUniformDeviate {
 
 struct PyGaussianDeviate {
 
+    template <typename U, typename W>
+    static void wrapTemplates(W & wrapper) {
+        wrapper
+            .def("applyTo", (void (GaussianDeviate::*) (Image<U> &) )&GaussianDeviate::applyTo,
+                 "Add Gaussian deviates to every element in a supplied Image.\n"
+                 "\n"
+                 "Calling\n"
+                 "-------\n"
+                 ">>> GaussianDeviate.applyTo(image) \n"
+                 "\n"
+                 "On output each element of the input Image will have a pseudo-random\n"
+                 "GaussianDeviate return value added to it, with current values of mean and\n"
+                 "sigma.\n",
+                 (bp::arg("image")))
+            ;
+    }
+
     static void wrap() {
         static char const * doc = 
             "\n"
@@ -96,13 +113,14 @@ struct PyGaussianDeviate {
             "sigma    optional sigma for Gaussian distribution (default = 1.).\n"
             "\n"
             ;
-        bp::class_<GaussianDeviate,boost::noncopyable>(
+        bp::class_<GaussianDeviate,boost::noncopyable>pyGaussianDeviate(
             "GaussianDeviate", doc, bp::init< UniformDeviate&, double, double >(
                 (bp::arg("uniform"), bp::arg("mean")=0., bp::arg("sigma")=1.)
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as GaussianDeviate lives
             ]
-            )
+									);
+        pyGaussianDeviate
             .def("__call__", &GaussianDeviate::operator(),
                  "Draw a new random number from the distribution.\n"
                  "\n"
@@ -112,6 +130,10 @@ struct PyGaussianDeviate {
             .def("getSigma", &GaussianDeviate::getSigma, "Get current distribution sigma.")
             .def("setSigma", &GaussianDeviate::setSigma, "Set current distribution sigma.")
             ;
+        wrapTemplates<int>(pyGaussianDeviate);
+        wrapTemplates<short>(pyGaussianDeviate);
+        wrapTemplates<float>(pyGaussianDeviate);
+        wrapTemplates<double>(pyGaussianDeviate);
     }
 
 };
