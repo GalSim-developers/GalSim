@@ -80,6 +80,35 @@ namespace hsm {
         int **mask; ///< The mask image 
     };
 
+    /**
+     * @brief Class containing information about the shape of an object.
+     *
+     * This hsm representation of an object shape contains two Shear objects, one for the observed
+     * shape and one after PSF correction.  It also contains information about what PSF correction
+     * was used; if no PSF correction was carried out and only the observed moments were measured,
+     * the PSF correction method will be 'None'.
+     */
+    class HSMShapeData
+    {
+    public:
+        /// @brief galsim::Shear object representing the observed moments
+        galsim::Shear ObservedMoments;
+        
+        /// @brief galsim::Shear object representing the PSF-corrected moments
+        galsim::Shear CorrectedMoments;
+
+        /// @brief String indicating PSF-correction method; "None" if PSF correction was not done
+        char *CorrectionMethod="None";
+
+        /// @brief Status after measuring adaptive moments; -1 indicates no attempt to measure them
+        int MomentStatus = -1;
+
+        /// @brief Status after carrying out PSF correction; -1 indicates no attempt to do so
+        int CorrectionStatus = -1;
+
+        // Need to make constructors etc.
+    };
+
     /* functions that the user will want to call from outside */
 
     /**
