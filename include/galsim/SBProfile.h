@@ -29,6 +29,7 @@
 #include "Shear.h"
 #include "FFT.h"
 #include "Table.h"
+#include "Random.h"
 
 #ifdef USE_IMAGES
 #include "Image.h"
@@ -49,6 +50,123 @@ namespace galsim {
         SBError(const std::string& m="") : std::runtime_error("SB Error: " + m) {}
     };
 
+    /** @brief Class to hold a list of "photon" arrival positions
+     * 
+     * Class holds a vector of information about photon arrivals: x and y positions, and a flux
+     * carried by each photon.  It is the intention that fluxes of photons be nearly equal in absolute 
+     * value so that noise statistics can be estimated by counting number of positive and negative photons.
+     * This class holds the code that allows its flux to be added to a surface-brightness Image.
+     */
+    class PhotonArray 
+    {
+    public:
+        /** 
+         * @brief Construct an array of given size with zero-flux photons
+         *
+         * @param[in] N Size of desired array.
+         */
+        PhotonArray(int N): _x(N,0.), _y(N,0.), _flux(N,0.) {}
+
+        /** 
+         * @brief Construct from three vectors.  Exception if vector sizes do not match.
+         *
+         * @param[in] vx vector of photon x coordinates
+         * @param[in] vy vector of photon y coordinates
+         * @param[in] vflux vector of photon fluxes
+         */
+        PhotonArray(vector<double>& vx, vector<double>& vy, vector<double>& vflux);
+
+        /**
+         * @brief Accessor for array size
+         *
+         * @returns Array size
+         */
+        int size() const {return _x.size();}
+
+        /**
+         * @brief Set characteristics of a photon
+         *
+         * @param[in] i Index of desired photon (no bounds checking)
+         * @param[in] x x coordinate of photon
+         * @param[in] y y coordinate of photon
+         * @param[in] flux flux of photon
+         */
+        void setPhoton(int i, double x, double y, double flux) {
+            _x[i]=x; 
+            _y[i]=y;
+            _flux[i]=flux;
+        }
+        /**
+         * @brief Access x coordinate of a photon
+         *
+         * @param[in] i Index of desired photon (no bounds checking)
+         * @returns x coordinate of photon
+         */
+        double getX(int i) const {return _x[i];}
+        /**
+         * @brief Access y coordinate of a photon
+         *
+         * @param[in] i Index of desired photon (no bounds checking)
+         * @returns y coordinate of photon
+         */
+        double getY(int i) const {return _y[i];}
+        /**
+         * @brief Access flux of a photon
+         *
+         * @param[in] i Index of desired photon (no bounds checking)
+         * @returns flux of photon
+         */
+        double getFlux(int i) const {return _flux[i];}
+        /**
+         * @brief Return sum of all photons' fluxes
+         *
+         * @returns flux of photon
+         */
+        double getTotalFlux() const;
+        /**
+         * @brief Rescale all photon fluxes so that total flux matches argument
+         *
+         * If current total flux is zero, no rescaling is done.
+         *
+         * @param[in] flux desired total flux of all photons.
+         */
+        void setTotalFlux(double flux);
+
+        /**
+         * @brief Extend this array with the contents of another.
+         *
+         * @param[in] rhs PhotonArray whose contents to append to this one.
+         */
+        void append(const PhotonArray& rhs);
+        /**
+         * @brief Convolve this array with another.
+         *
+         * Convolution of two arrays is defined as adding the coordinates on a photon-by-photon basis
+         * and multiplying the fluxes on a photon-by-photon basis. Output photons' flux is renormalized
+         * so that output total flux is product of two input totals.
+         *
+         * @param[in] rhs PhotonArray to convolve with this one.  Must be same size.
+         */
+        void convolve(const PhotonArray& rhs);
+
+#ifdef USE_IMAGES
+        /**
+         * @brief Add flux of photons to an image by binning into pixels.
+         *
+         * Photon in this PhotonArray are binned into the pixels of the input
+         * Image and their flux summed into the pixels.  Image is assumed to represent 
+         * surface brightness, so photons' fluxes are divided by image pixel area.
+         * Photons past the edges of the image are discarded.
+         *
+         * @param[in] target the Image to which the photons' flux will be added.
+         */
+        void addTo(Image<float>& target);
+#endif
+    private:
+        vector<double> _x;      // Vector holding x coords of photons
+        vector<double> _y;      // Vector holding y coords of photons
+        vector<double> _flux;   // Vector holding flux of photons
+    };
     /** 
      * @brief An abstract base class representing all of the 2D surface brightness profiles that 
      * we know how to draw.
@@ -205,6 +323,22 @@ namespace galsim {
          * @param[in] dy shift in y.
          */
         virtual SBProfile* shift(double dx, double dy) const;
+
+        /**
+         * @brief Shoot photons through this SBProfile.
+         *
+         * Returns an array of photon coordinates and fluxes that are drawn from the light
+         * distribution of this SBProfile.  Absolute value of each photons' flux should be 
+         * approximately equal, but some can be negative as needed to represent negative regions.
+         * Note that the ray-shooting method is not intended to produce a randomized value of the total
+         * object flux, so do not assume that there will be sqrt(N) error on the flux.  In fact 
+         * most implementations will return a PhotonArray with exactly correct flux. It is only
+         * the distribution of flux on the sky that will definitely have sampling noise.
+         * @param[in] N Total umber of photons to produce.
+         * @param[in] u UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const=0;
 
 #ifdef USE_IMAGES
         // **** Drawing routines ****
@@ -575,6 +709,17 @@ namespace galsim {
         virtual double getFlux() const { return sumflux; }
         virtual void setFlux(double flux_=1.);
 
+        /**
+         * @brief Shoot photons through this SBAdd.
+         *
+         * SBAdd will divide the N photons among its summands with probabilities proportional
+         * to their fluxes.
+         * @param[in] N Total umber of photons to produce.
+         * @param[in] u UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
+
         // Overrides for better efficiency:
         virtual void fillKGrid(KTable& kt) const;
         virtual void fillXGrid(XTable& xt) const;
@@ -730,6 +875,17 @@ namespace galsim {
 
         double getFlux() const { return adaptee->getFlux()*absdet; }
         void setFlux(double flux_=1.) { adaptee->setFlux(flux_/absdet); }
+
+        /**
+         * @brief Shoot photons through this SBDistort.
+         *
+         * SBDistort will simply apply the affine distortion to coordinates of photons
+         * generated by its adaptee.
+         * @param[in] N Total umber of photons to produce.
+         * @param[in] u UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
 
         void fillKGrid(KTable& kt) const; // optimized phase calculation
     };
@@ -894,6 +1050,16 @@ namespace galsim {
         double getFlux() const { return fluxScale * fluxProduct; }
         void setFlux(double flux_=1.) { fluxScale = flux_/fluxProduct; }
 
+        /**
+         * @brief Shoot photons through this SBConvolve.
+         *
+         * SBConvolve will add the displacements of photons generated by each convolved component.
+         * @param[in] N Total umber of photons to produce.
+         * @param[in] u UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
+
         // Overrides for better efficiency:
         virtual void fillKGrid(KTable& kt) const;
     };
@@ -944,6 +1110,8 @@ namespace galsim {
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
+
         SBProfile* duplicate() const { return new SBGaussian(*this); }
     };
 
@@ -1087,6 +1255,8 @@ namespace galsim {
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
 
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
+
         SBProfile* duplicate() const { return new SBSersic(*this); }
 
         /// @brief A method that only works for Sersic, @returns the Sersic index `n`.
@@ -1137,6 +1307,8 @@ namespace galsim {
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
+
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
 
         SBProfile* duplicate() const { return new SBExponential(*this); }
     };
@@ -1205,6 +1377,8 @@ namespace galsim {
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
 
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
+
         SBProfile* duplicate() const { return new SBAiry(*this); }
 
     private: 
@@ -1265,8 +1439,8 @@ namespace galsim {
         bool isAxisymmetric() const { return false; } 
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
-
-        double maxK() const { return 2. / ALIAS_THRESHOLD / std::max(xw,yw); }  
+ 
+       double maxK() const { return 2. / ALIAS_THRESHOLD / std::max(xw,yw); }  
         double stepK() const { return M_PI/std::max(xw,yw)/2; } 
 
         Position<double> centroid() const 
@@ -1274,6 +1448,8 @@ namespace galsim {
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
+
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
 
         SBProfile* duplicate() const { return new SBBox(*this); }
 
@@ -1339,6 +1515,10 @@ namespace galsim {
 
         double getFlux() const;
         void setFlux(double flux_=1.);
+
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const {
+            throw SBError("SBLaguerre::shoot() is not implemented");
+        }
 
         // void fillKGrid(KTable& kt) const;
         // void fillXGrid(XTable& xt) const;
@@ -1406,6 +1586,8 @@ namespace galsim {
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
+
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
 
         SBProfile* duplicate() const { return new SBMoffat(*this); }
 
