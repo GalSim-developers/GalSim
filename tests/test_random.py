@@ -162,7 +162,7 @@ def test_ccdnoise_rand():
     """
     for i in xrange(4):
         u = galsim.UniformDeviate(testseed)
-        ccdnoise = galsim.CCDNoise(u, gain=cGain, readnoise=cReadNoise)
+        ccdnoise = galsim.CCDNoise(u, gain=cGain, read_noise=cReadNoise)
         testImage = galsim.Image[types[i]]((np.zeros((2, 2)) + sky).astype(types[i]))
         ccdnoise.applyTo(testImage)
         np.testing.assert_array_almost_equal(testImage.array, eval("cResult"+typestrings[i]),
@@ -176,7 +176,7 @@ def test_ccdnoise_image():
     """
     for i in xrange(4):
         u = galsim.UniformDeviate(testseed)
-        ccdnoise = galsim.CCDNoise(u, gain=cGain, readnoise=cReadNoise)
+        ccdnoise = galsim.CCDNoise(u, gain=cGain, read_noise=cReadNoise)
         testImage = galsim.Image[types[i]]((np.zeros((2, 2)) + sky).astype(types[i]))
         testImage.addNoise(ccdnoise)
         np.testing.assert_array_almost_equal(testImage.array, eval("cResult"+typestrings[i]),

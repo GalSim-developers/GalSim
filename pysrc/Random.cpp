@@ -341,7 +341,7 @@ struct PyCCDNoise{
             "\n"
             "Initialization\n"
             "--------------\n"
-            ">>> ccd_noise = CCDNoise(uniform, gain=1., readnoise=0.)\n"
+            ">>> ccd_noise = CCDNoise(uniform, gain=1., read_noise=0.)\n"
             "\n"
             "Initializes ccd_noise to be a CCDNoise instance.\n"
             "\n"
@@ -350,11 +350,12 @@ struct PyCCDNoise{
             "\n"
             "Parameters:\n"
             "\n"
-            "uniform   a UniformDeviate instance (seed set there).\n"
-            "gain      the gain for each pixel; setting gain <=0 will shut off the Poisson noise,\n"
-            "          and the Gaussian RMS will take the value RMS=readNoise [default=1.].\n"
-            "reanoise  the read noise on each pixel; setting readNoise=0 will shut off the\n"
-            "          Gaussian noise [default=0.].\n"
+            "uniform     a UniformDeviate instance (seed set there).\n"
+            "gain        the gain for each pixel in electrons per ADU; setting gain <=0 will shut\n"
+            "            off the Poisson noise, and the Gaussian rms will take the value\n" 
+            "            read_noise as being in units of ADU rather than electrons [default=1.].\n"
+            "read_noise  the read noise on each pixel in electrons (gain > 0.) or ADU (gain < 0.);n"
+            "            setting read_noise=0. will shut off the Gaussian noise [default=0.].\n"
             "\n"
             "Calling\n"
             "-------\n"
@@ -366,7 +367,7 @@ struct PyCCDNoise{
         
         bp::class_<CCDNoise,boost::noncopyable>pyCCDNoise(
             "CCDNoise", doc, bp::init< UniformDeviate&, double, double >(
-                (bp::arg("uniform"), bp::arg("gain")=1., bp::arg("readnoise")=0.)
+                (bp::arg("uniform"), bp::arg("gain")=1., bp::arg("read_noise")=0.)
             )[
                 bp::with_custodian_and_ward<1,2>() // keep uniform (2) as long as CCDNoise lives
             ]

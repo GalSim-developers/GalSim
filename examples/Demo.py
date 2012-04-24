@@ -219,7 +219,7 @@ def Script2():
     # This time use a particular seed, so it the image is deterministic.
     rng = galsim.UniformDeviate(1534225)
     # Use this to add Poisson noise using the CCDNoise class.
-    image.addNoise(galsim.CCDNoise(rng, gain=gain, readnoise=0.))
+    image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=0.))
 
     # Subtract off the sky.
     image -= sky_image
@@ -370,7 +370,7 @@ def Script3():
 
     # Add Poisson noise and Gaussian read noise to the image using the CCDNoise class.
     rng = galsim.UniformDeviate(1314662)
-    image.addNoise(galsim.CCDNoise(rng, gain=gain, readnoise=read_noise))
+    image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
 
     # Subtract off the sky.
     image -= sky_image
