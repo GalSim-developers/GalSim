@@ -92,15 +92,16 @@ namespace galsim {
         void applyTo(Image<T>& data) {
             // Above this many e's, assume Poisson distribution =Gaussian 
             static const double MAX_POISSON=1.e5;
+            // Typedef for image row iterable
+            typedef typename Image<T>::Iter ImIter;
 
             // Add the Poisson noise first:
             if (_gain > 0.) {
-                double sigma = _gd.getSigma();  // Save this 
+                double sigma = _gd.getSigma();  // Save this
+                
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                    typename Image<T>::Iter ee=data.rowEnd(y);
-                    for (typename Image<T>::Iter it = data.rowBegin(y);
-                         it!=ee;
-                         ++it) {
+		    ImIter ee = data.rowEnd(y);
+                    for (ImIter it = data.rowBegin(y); it != ee; ++it) {
                         double electrons=*it * _gain;
                         if (electrons <= 0.) continue;
                         if (electrons < MAX_POISSON) {
@@ -119,12 +120,8 @@ namespace galsim {
             // Next add the Gaussian noise:
             if (_readNoise > 0.) {
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                    typename Image<T>::Iter ee=data.rowEnd(y);
-                    for (typename Image<T>::Iter it=data.rowBegin(y);
-                         it!=ee;
-                         ++it) {
-                        *it += _gd(); 
-                    }
+		    ImIter ee = data.rowEnd(y);
+		    for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += _gd(); }
                 } 
             }
         }
@@ -140,6 +137,8 @@ namespace galsim {
          */
         template <class T>
         void applyToVar(Image<T>& data, Image<T>& variance) {
+            // Typedef for image row iterable
+            typedef typename Image<T>::Iter ImIter;
             // Resize the variance image to match data image
             variance.resize(data.getBounds());
             // Fill with the (constant) Gaussian contribution to variance
@@ -148,17 +147,15 @@ namespace galsim {
             // Add the Poisson variance:
             if (_gain > 0.) {
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                    typename Image<T>::Iter ee=data.rowEnd(y);
-                    typename Image<T>::Iter it2 = variance.rowBegin(y);
-                    for (typename Image<T>::Iter it = data.rowBegin(y);
-                         it!=ee;
-                         ++it, ++it2) {
+                    ImIter ee = data.rowEnd(y);
+                    ImIter it2 = variance.rowBegin(y);
+                    for (ImIter it = data.rowBegin(y); it != ee; ++it, ++it2) {
                         if (*it > 0.) *it2 += *it / _gain;
                     }
                 } 
             }
             // then call noise method to instantiate noise
-            (*this)(data);
+            (*this).applyTo(data);
         }
     };
 };  // namespace galsim
