@@ -13,7 +13,7 @@ typedef bp::return_value_policy<bp::manage_new_object> ManageNew;
 
 // Used by multiple profile classes to ensure at most one radius is given.
 void checkRadii(const bp::object & r1, const bp::object & r2, const bp::object & r3) {
-    if ((r1.ptr() != Py_None) + (r2.ptr() != Py_None) + (r3.ptr() != Py_None) > 1) {
+    if (!r1.is_none() + !r2.is_none() + !r3.is_none() > 1) {
         PyErr_SetString(PyExc_TypeError, "Multiple radius parameters given");
         bp::throw_error_already_set();
     }
@@ -215,13 +215,13 @@ struct PySBGaussian {
     ) {
         double s = 1.0;
         checkRadii(half_light_radius, sigma, fwhm);
-        if (half_light_radius.ptr() != Py_None) {
+        if (!half_light_radius.is_none()) {
             s = bp::extract<double>(half_light_radius) * 0.84932180028801907; // (2\ln2)^(-1/2)
         }
-        if (sigma.ptr() != Py_None) {
+        if (!sigma.is_none()) {
             s = bp::extract<double>(sigma);
         }
-        if (fwhm.ptr() != Py_None) {
+        if (!fwhm.is_none()) {
             s = bp::extract<double>(fwhm) * 0.42466090014400953; // 1 / (2(2\ln2)^(1/2))
         }
         return new SBGaussian(flux, s);
@@ -263,15 +263,15 @@ struct PySBExponential {
     static SBExponential * construct(
         double flux,
         const bp::object & half_light_radius,
-        const bp::object & scale
+        const bp::object & scale_radius
     ) {
         double s = 1.0;
-        checkRadii(half_light_radius, scale, bp::object());
-        if (half_light_radius.ptr() != Py_None) {
+        checkRadii(half_light_radius, scale_radius, bp::object());
+        if (!half_light_radius.is_none()) {
             s = bp::extract<double>(half_light_radius) / 1.6783469900166605; // not analytic
         }
-        if (scale.ptr() != Py_None) {
-            s = bp::extract<double>(scale);
+        if (!scale_radius.is_none()) {
+            s = bp::extract<double>(scale_radius);
         }
         return new SBExponential(flux, s);
     }
@@ -289,7 +289,7 @@ struct PySBExponential {
                 "__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
                     (bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(), 
-                     bp::arg("scale")=bp::object())
+                     bp::arg("scale_radius")=bp::object())
                 )
             );
     }
@@ -318,14 +318,41 @@ struct PySBBox {
 };
 
 struct PySBMoffat {
+
+    static SBMoffat * construct(
+        double beta, double truncationFWHM, double flux,
+        const bp::object & half_light_radius,
+        const bp::object & scale_radius,
+        const bp::object & fwhm
+    ) {
+        double s = 1.0;
+        checkRadii(half_light_radius, scale_radius, fwhm);
+        SBMoffat::RadiusType rType = SBMoffat::HALF_LIGHT_RADIUS;
+        if (!half_light_radius.is_none()) {
+            s = bp::extract<double>(half_light_radius);
+        }
+        if (!scale_radius.is_none()) {
+            s = bp::extract<double>(scale_radius);
+            rType = SBMoffat::SCALE_RADIUS;
+        }
+        if (!fwhm.is_none()) {
+            s = bp::extract<double>(fwhm);
+            rType = SBMoffat::FWHM;
+        }
+        return new SBMoffat(beta, truncationFWHM, flux, s, rType);
+    }
+
     static void wrap() {
-        bp::class_<SBMoffat,bp::bases<SBProfile>,boost::noncopyable>(
-            "SBMoffat",
-            bp::init<double,double,double,double>(
-                (bp::arg("beta"), bp::arg("truncationFWHM")=2.,
-                 bp::arg("flux")=1., bp::arg("re")=1.)
+        bp::class_<SBMoffat,bp::bases<SBProfile>,boost::noncopyable>("SBMoffat", bp::no_init)
+            .def("__init__", 
+                 bp::make_constructor(
+                     &construct, bp::default_call_policies(),
+                     (bp::arg("beta"), bp::arg("truncationFWHM")=2.,
+                      bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(),
+                      bp::arg("scale_radius")=bp::object(), bp::arg("fwhm")=bp::object())
+                 )
             )
-        );
+            ;
     }
 };
 
