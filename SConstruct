@@ -1000,11 +1000,17 @@ def DoConfig(env):
 
 env = Environment()
 
+print 'Before opts.Update(env): CXX = ',env['CXX']
+
 opts.Update(env)
+
+print 'After opts.Update(env): CXX = ',env['CXX']
 
 if env['IMPORT_ENV']:
     env = Environment(ENV=os.environ)
+    print 'After import os.environ: CXX = ',env['CXX']
     opts.Update(env)
+    print 'After 2nd opts.Update(env): CXX = ',env['CXX']
 
 # Check for unknown variables in case something is misspelled
 unknown = opts.UnknownVariables()
