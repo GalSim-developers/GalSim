@@ -105,8 +105,6 @@ namespace hsm {
 
         /// @brief Status after carrying out PSF correction; -1 indicates no attempt to do so
         int CorrectionStatus = -1;
-
-        // Need to make constructors etc.
     };
 
     /* functions that the user will want to call from outside */
