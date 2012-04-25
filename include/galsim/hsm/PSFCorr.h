@@ -100,7 +100,7 @@ namespace hsm {
         Shear corrected_shape;
 
         /// @brief String indicating PSF-correction method; "None" if PSF correction was not done
-        char *correction_method;
+        std::string correction_method;
 
         /// @brief Status after measuring adaptive moments; -1 indicates no attempt to measure them
         int moment_status;
