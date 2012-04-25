@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include "hsm/PSFCorr.h"
 
 namespace galsim {
 namespace hsm {
@@ -249,8 +250,9 @@ namespace hsm {
 
     /* Carry out PSF correction directly using Images, repackaging for general_shear_estimator.*/
     template <typename T>
-    HSMShapeData EstimateShearHSM(galsim::Image<T> const &gal_image, galsim::Image<T> const &PSF_image, const char *shear_est = "REGAUSS", unsigned long flags = 0xe) {
+    HSMShapeData EstimateShearHSM(Image<T> const &gal_image, Image<T> const &PSF_image, const char *shear_est = "REGAUSS", unsigned long flags = 0xe) {
         // define variables, create output HSMShapeData struct, etc.
+        HSMShapeData results;
 
         // repackage Images --> RectImage
 
@@ -259,18 +261,21 @@ namespace hsm {
         // call general_shear_estimator [generally, go through MeasMoments.cpp to make sure that I've done everything needed]
 
         // repackage outputs from the ObjectData to an HSMShapeData struct
+        return results;
     }
 
     /** Measure the adaptive moments of an object directly using Images, repackaging for find_ellipmom_2.*/
     template <typename T>
-    HSMShapeData FindAdaptiveMom(galsim::Image<T> const &object_image, double precision = 1.0e-6) {
+    HSMShapeData FindAdaptiveMom(Image<T> const &object_image, double precision = 1.0e-6) {
         // define variables, create output HSMShapeData struct, etc.
+        HSMShapeData results;
 
         // repackage input Image --> RectImage
 
         // call find_ellipmom_2
 
         // repackage outputs from find_ellipmom_2 to the output HSMShapeData struct
+        return results;
     }
 
 

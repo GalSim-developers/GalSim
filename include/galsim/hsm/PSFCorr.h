@@ -34,6 +34,9 @@
 
 /* object data type */
 
+#include "Shear.h"
+#include "Image.h"
+
 namespace galsim {
 namespace hsm {
 
@@ -91,10 +94,10 @@ namespace hsm {
     struct HSMShapeData
     {
         /// @brief galsim::Shear object representing the observed shape
-        galsim::Shear observed_shape;
+        Shear observed_shape;
         
         /// @brief galsim::Shear object representing the PSF-corrected shape
-        galsim::Shear corrected_shape;
+        Shear corrected_shape;
 
         /// @brief String indicating PSF-correction method; "None" if PSF correction was not done
         char *correction_method;
@@ -116,7 +119,7 @@ namespace hsm {
         float resolution_factor;
 
         /// @brief Constructor, setting defaults
-    HSMShapeData() : observed_shape(galsim::Shear()), correct_shape(galsim::Shear()), correction_method("None"), moment_status(-1), moment_sigma(-1.), moment_n_iter(0), correction_status(-1), resolution_factor(-1.)
+    HSMShapeData() : observed_shape(galsim::Shear()), corrected_shape(galsim::Shear()), correction_method("None"), moment_status(-1), moment_sigma(-1.), moment_n_iter(0), correction_status(-1), resolution_factor(-1.)
         {}
     };
 
@@ -141,7 +144,7 @@ namespace hsm {
      * @return A HSMShapeData object containing the results of shape measurement. 
      */
     template <typename T>
-        HSMShapeData EstimateShearHSM(galsim::Image<T> const &gal_image, galsim::Image<T> const &PSF_image, const char *shear_est = "REGAUSS", unsigned long flags = 0xe);
+        HSMShapeData EstimateShearHSM(Image<T> const &gal_image, Image<T> const &PSF_image, const char *shear_est = "REGAUSS", unsigned long flags = 0xe);
 
     /**
      * @brief Measure the adaptive moments of an object directly using Images.
@@ -158,7 +161,7 @@ namespace hsm {
      * @return A HSMShapeData object containing the results of moment measurement.
      */
     template <typename T>
-        HSMShapeData FindAdaptiveMom(galsim::Image<T> const &object_image, double precision = 1.0e-6);
+        HSMShapeData FindAdaptiveMom(Image<T> const &object_image, double precision = 1.0e-6);
 
     /**
      * @brief Allocate memory for a RectImage representing the image of some object
