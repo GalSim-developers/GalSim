@@ -277,6 +277,47 @@ namespace hsm {
         int **mask; /* mask = 0 (masked) or 1 (unmasked) */
     };
 
+
+   /* Struct containing information about the shape of an object. */
+    struct HSMShapeData
+    {
+        galsim::Shear observed_shape;
+        galsim::Shear corrected_shape;
+        char *correction_method;
+        int moment_status;
+        float moment_sigma;
+        int moment_n_iter;
+        int correction_status;
+        float resolution_factor;
+    };
+
+    /* Carry out PSF correction directly using Images, repackaging for general_shear_estimator.*/
+    template <typename T>
+    HSMShapeData EstimateShearHSM(Image<T> &gal_image, Image<T> &PSF_image, const char *shear_est = "REGAUSS", unsigned long flags = 0xe) {
+        // define variables, create output HSMShapeData struct, etc.
+
+        // repackage Images --> RectImage
+
+        // allocate ObjectData for setting defaults etc. and passing to general_shear_estimator
+
+        // call general_shear_estimator [generally, go through MeasMoments.cpp to make sure that I've done everything needed]
+
+        // repackage outputs from the ObjectData to an HSMShapeData struct
+    }
+
+    /** Measure the adaptive moments of an object directly using Images, repackaging for find_ellipmom_2.*/
+    template <typename T>
+    HSMShapeData FindAdaptiveMom(Image <T> &object_image, double precision = 1.0e-6) {
+        // define variables, create output HSMShapeData struct, etc.
+
+        // repackage input Image --> RectImage
+
+        // call find_ellipmom_2
+
+        // repackage outputs from find_ellipmom_2 to the output HSMShapeData struct
+    }
+
+
     /* allocate_rect_image
      * *** ALLOCATES A RectImage STRUCTURE ***
      *
@@ -1765,6 +1806,15 @@ namespace hsm {
         gal_data->resolution = R;
         return status;
     }
+
+    // instantiate template classes for expected types
+    template HSMShapeData PSFCorr::EstimateShearHSM(Image<float> &gal_image, Image<float> &PSF_Image, const char *shear_est, unsigned long flags);
+    template HSMShapeData PSFCorr::EstimateShearHSM(Image<double> &gal_image, Image<double> &PSF_Image, const char *shear_est, unsigned long flags);
+    template HSMShapeData PSFCorr::EstimateShearHSM(Image<int> &gal_image, Image<int> &PSF_Image, const char *shear_est, unsigned long flags);
+
+    template HSMShapeData PSFCorr::FindAdaptiveMom(Image<float> &object_image, double precision);
+    template HSMShapeData PSFCorr::FindAdaptiveMom(Image<double> &object_image, double precision);
+    template HSMShapeData PSFCorr::FindAdaptiveMom(Image<int> &object_image, double precision);
 
 }
 }
