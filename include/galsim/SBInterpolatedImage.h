@@ -94,6 +94,23 @@ namespace galsim {
 
         Position<double> centroid() const;
 
+        /**
+         * @brief Shoot photons through this object
+         *
+         * SBInterpolatedImage will assign photons to its input pixels with probability
+         * proportional to their flux.  Each photon will then be displaced from its pixel center
+         * by an (x,y) amount drawn from the interpolation kernel.  Note that if either the input
+         * image or the interpolation kernel have negative regions, then negative-flux photons can
+         * be generated.  Noisy images or ring-y kernels will generate a lot of shot noise in
+         * the shoot() output.  Not all kernels have photon-shooting implemented.  It may be best to
+         * stick to nearest-neighbor and linear interpolation kernels if you wish to avoid these issues.
+         *
+         * @param[in] N Total umber of photons to produce.
+         * @param[in] u UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
+
         double getFlux() const;
         void setFlux(double flux=1.);  // This will scale the weights vector
 

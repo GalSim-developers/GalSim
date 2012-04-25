@@ -6,6 +6,8 @@
 #include "TMV.h"
 #include "Solve.h"
 
+#include <numeric>
+
 namespace galsim {
 
     // ????? Change treatement of aliased images to simply add in the aliased
@@ -1267,6 +1269,90 @@ namespace galsim {
         else return flux*ft(kk);
     }
 
+    /*************************************************************
+     * Photon-shooting routines
+     *************************************************************/
+
+    PhotonArray::PhotonArray(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vflux)
+    {
+        if (vx.size() != vy.size() || vx.size() != vflux.size())
+            throw SBError("Size mismatch of input vectors to PhotonArray");
+        _x = vx;
+        _y = vy;
+        _flux = vflux;
+    }
+
+    double PhotonArray::getTotalFlux() const {
+        double total = 0.;
+        return std::accumulate(_flux.begin(), _flux.end(), total);
+    }
+
+    void PhotonArray::setTotalFlux(double flux) {
+        double oldFlux = getTotalFlux();
+        if (oldFlux==0.) return; // Do nothing if the flux is zero to start with
+        double factor = flux / oldFlux;
+        for (std::vector<double>::size_type i=0; i<_flux.size(); i++) {
+            _flux[i] *= factor;
+        }
+    }
+
+    void PhotonArray::append(const PhotonArray& rhs) 
+    {
+        if (rhs.size()==0) return;      // Nothing needed for empty RHS.
+        int oldSize = size();
+        int finalSize = oldSize + rhs.size();
+        _x.resize(finalSize);
+        _y.resize(finalSize);
+        _flux.resize(finalSize);
+        std::vector<double>::iterator destination=_x.begin()+oldSize;
+        std::copy(rhs._x.begin(), rhs._x.end(), destination);
+        destination=_y.begin()+oldSize;
+        std::copy(rhs._y.begin(), rhs._y.end(), destination);
+        destination=_flux.begin()+oldSize;
+        std::copy(rhs._flux.begin(), rhs._flux.end(), destination);
+    }
+
+    void PhotonArray::convolve(const PhotonArray& rhs) 
+    {
+        if (rhs.size() != size()) 
+            throw SBError("PhotonArray::convolve with unequal size arrays");
+        // Will set final flux to be equal to the product of input fluxes (if nonzero):
+        double finalFlux = getTotalFlux() * rhs.getTotalFlux();
+        // Add x coordinates:
+        std::vector<double>::iterator lIter = _x.begin();
+        std::vector<double>::const_iterator rIter = rhs._x.begin();
+        for ( ; lIter!=_x.end(); ++lIter, ++rIter) *lIter += *rIter;
+        // Add y coordinates:
+        lIter = _y.begin();
+        rIter = rhs._y.begin();
+        for ( ; lIter!=_y.end(); ++lIter, ++rIter) *lIter += *rIter;
+        // Multiply fluxes:
+        lIter = _flux.begin();
+        rIter = rhs._flux.begin();
+        for ( ; lIter!=_flux.end(); ++lIter, ++rIter) *lIter *= *rIter;
+
+        // Normalize fluxes to produce desired output
+        if (finalFlux!= 0.) setTotalFlux(finalFlux);
+    }
+
+#ifdef USE_IMAGES
+    void PhotonArray::addTo(Image<float>& target) {
+        double dx = target.getScale();
+        Bounds<int> b = target.getBounds();
+
+        if (dx==0. || !b.isDefined()) 
+            throw SBError("Attempting to PhotonArray::addTo an Image with zero pixel scale or undefined Bounds");
+
+        double fluxScale = 1./(dx*dx);  // Factor to turn flux into surface brightness in an Image pixel
+
+        for (int i=0; i<size(); i++) {
+            int ix = static_cast<int> (floor(_x[i]/dx + 0.5));
+            int iy = static_cast<int> (floor(_y[i]/dx + 0.5));
+            if (b.includes(ix,iy)) target(ix,iy) += _flux[i]*fluxScale;
+        }
+    }
+#endif
+            
     // instantiate template functions for expected image types
 #ifdef USE_IMAGES
     template double SBProfile::doFillXImage2(Image<float> & img, double dx) const;
