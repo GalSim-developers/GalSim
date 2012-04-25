@@ -34,8 +34,8 @@
 
 /* object data type */
 
-#include "Shear.h"
-#include "Image.h"
+#include "../Shear.h"
+#include "../Image.h"
 
 namespace galsim {
 namespace hsm {
