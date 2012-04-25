@@ -1,5 +1,5 @@
 /**
- * @file psfcorr.h 
+ * @file PSFCorr.h 
  *
  * @brief Contains functions for the hsm shape measurement code, which has functions to carry out
  *        PSF correction and measurement of adaptive moments. 
