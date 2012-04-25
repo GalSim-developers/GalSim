@@ -90,6 +90,17 @@ namespace hsm {
      */
     struct HSMShapeData
     {
+        /// @brief Constructor, setting defaults
+        HSMShapeData()
+        {
+            correction_method = "None";
+            moment_status = -1;
+            moment_sigma = -1.;
+            moment_n_iter = 0;
+            correction_status = -1;
+            resolution_factor = -1.;
+        };
+
         /// @brief galsim::Shear object representing the observed shape
         galsim::Shear observed_shape;
         
@@ -102,17 +113,17 @@ namespace hsm {
         /// @brief Status after measuring adaptive moments; -1 indicates no attempt to measure them
         int moment_status;
 
-        /// @brief Size sigma = (det M)^(1/4) from the adaptive moments
+        /// @brief Size sigma = (det M)^(1/4) from the adaptive moments; -1 if not measured
         float moment_sigma;
 
-        /// @brief Number of iterations needed to get adaptive moments
+        /// @brief Number of iterations needed to get adaptive moments; 0 if not measured
         int moment_n_iter;
 
         /// @brief Status after carrying out PSF correction; -1 indicates no attempt to do so
         int correction_status;
 
         /// @brief Resolution factor R_2; 0 indicates object is consistent with a PSF, 1 indicates
-        /// perfect resolution
+        /// perfect resolution; default -1
         float resolution_factor;
     };
 
@@ -137,7 +148,7 @@ namespace hsm {
      * @return A HSMShapeData object containing the results of shape measurement. 
      */
     template <typename T>
-        HSMShapeData EstimateShearHSM(Image<T> &gal_image, Image<T> &PSF_image, const char *shear_est = "REGAUSS", unsigned long flags = 0xe);
+        HSMShapeData EstimateShearHSM(galsim::Image<T> const &gal_image, galsim::Image<T> const &PSF_image, const char *shear_est = "REGAUSS", unsigned long flags = 0xe);
 
     /**
      * @brief Measure the adaptive moments of an object directly using Images.
@@ -154,7 +165,7 @@ namespace hsm {
      * @return A HSMShapeData object containing the results of moment measurement.
      */
     template <typename T>
-        HSMShapeData FindAdaptiveMom(Image <T> &object_image, double precision = 1.0e-6);
+        HSMShapeData FindAdaptiveMom(galsim::Image<T> const &object_image, double precision = 1.0e-6);
 
     /**
      * @brief Allocate memory for a RectImage representing the image of some object
