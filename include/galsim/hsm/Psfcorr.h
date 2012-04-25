@@ -81,30 +81,36 @@ namespace hsm {
     };
 
     /**
-     * @brief Class containing information about the shape of an object.
+     * @brief Struct containing information about the shape of an object.
      *
      * This hsm representation of an object shape contains two Shear objects, one for the observed
      * shape and one after PSF correction.  It also contains information about what PSF correction
      * was used; if no PSF correction was carried out and only the observed moments were measured,
      * the PSF correction method will be 'None'.
      */
-    class HSMShapeData
+    struct HSMShapeData
     {
-    public:
-        /// @brief galsim::Shear object representing the observed moments
-        galsim::Shear ObservedMoments;
+        /// @brief galsim::Shear object representing the observed shape
+        galsim::Shear observed_shape;
         
-        /// @brief galsim::Shear object representing the PSF-corrected moments
-        galsim::Shear CorrectedMoments;
+        /// @brief galsim::Shear object representing the PSF-corrected shape
+        galsim::Shear corrected_shape;
 
         /// @brief String indicating PSF-correction method; "None" if PSF correction was not done
-        char *CorrectionMethod="None";
+        char *correction_method;
 
         /// @brief Status after measuring adaptive moments; -1 indicates no attempt to measure them
-        int MomentStatus = -1;
+        int moment_status;
+
+        /// @brief Size sigma = (det M)^(1/4) from the adaptive moments
+        float moment_sigma;
 
         /// @brief Status after carrying out PSF correction; -1 indicates no attempt to do so
-        int CorrectionStatus = -1;
+        int correction_status;
+
+        /// @brief Resolution factor R_2; 0 indicates object is consistent with a PSF, 1 indicates
+        /// perfect resolution
+        float resolution_factor
     };
 
     /* functions that the user will want to call from outside */
@@ -128,7 +134,7 @@ namespace hsm {
      * @return A HSMShapeData object containing the results of shape measurement. 
      */
     template <typename T>
-        HSMShapeData EstimateShearHSM(Image<T> gal_image, Image<T> PSF_image, char *shear_est = "REGAUSS", unsigned long flags = 0xe);
+        HSMShapeData EstimateShearHSM(Image<T> gal_image, Image<T> PSF_image, const char *shear_est = "REGAUSS", unsigned long flags = 0xe);
 
     /**
      * @brief Measure the adaptive moments of an object directly using Images.
