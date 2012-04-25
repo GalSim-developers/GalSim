@@ -17,6 +17,7 @@
 
 // Noise stuff
 #include "galsim/Random.h"
+#include "galsim/CCDNoise.h"
 
 // An integration package by Mike Jarvis
 #include "galsim/integ/Int.h"

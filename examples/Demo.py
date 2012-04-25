@@ -102,7 +102,7 @@ def Script1():
     gal_sigma = 2.     # pixels
     psf_sigma = 1.     # pixels
     pixel_scale = 0.2  # arcsec / pixel
-    noise = 0.03       # ADU / pixel
+    noise = 300.       # ADU / pixel
 
     logger.info('Starting script 1 using:')
     logger.info('    - circular Gaussian galaxy (flux = %.1e, sigma = %.1f),',gal_flux,gal_sigma)
@@ -138,7 +138,7 @@ def Script1():
     # Defaut seed is set from the current time.
     rng = galsim.UniformDeviate()
     # Use this to add Gaussian noise with specified sigma
-    galsim.noise.addGaussian(image, rng, sigma=noise)
+    image.addNoise(galsim.GaussianDeviate(rng, sigma=noise))
     logger.info('Added Gaussian noise')
 
     # Write the image to a file
@@ -218,8 +218,8 @@ def Script2():
 
     # This time use a particular seed, so it the image is deterministic.
     rng = galsim.UniformDeviate(1534225)
-    # Use this to add Poisson noise.
-    galsim.noise.addPoisson(image, rng, gain=gain)
+    # Use this to add Poisson noise using the CCDNoise class.
+    image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=0.))
 
     # Subtract off the sky.
     image -= sky_image
@@ -278,7 +278,7 @@ def Script3():
     opt_a2=0.12        # wavelengths
     opt_c1=0.64        # wavelengths
     opt_c2=-0.33       # wavelengths
-    opt_padFactor=2    # multiples of Airy padding required to avoid folding for aberrated PSFs
+    opt_padfactor=2    # multiples of Airy padding required to avoid folding for aberrated PSFs
     lam = 800          # nm    NB: don't use lambda - that's a reserved word.
     tel_diam = 4.      # meters 
     pixel_scale = 0.23 # arcsec / pixel
@@ -333,11 +333,11 @@ def Script3():
     lam_over_D /= pixel_scale # pixels
     logger.info('Calculated lambda over D = %f pixels', lam_over_D)
     # The rest of the values here should be given in units of the 
-    # wavelength of the incident light. padFactor is used to here to reduce 'folding' for these
+    # wavelength of the incident light. pad_factor is used to here to reduce 'folding' for these
     # quite strong aberration values
     optics = galsim.OpticalPSF(lam_over_D, 
                                defocus=opt_defocus, coma1=opt_c1, coma2=opt_c2, astig1=opt_a1,
-                               astig2=opt_a2, padFactor=opt_padFactor)
+                               astig2=opt_a2, pad_factor=opt_padfactor)
     logger.info('Made optical PSF profile')
 
     # Start with square pixels
@@ -368,12 +368,9 @@ def Script3():
     sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
     image += sky_image
 
-    # Add Poisson noise to the image.
+    # Add Poisson noise and Gaussian read noise to the image using the CCDNoise class.
     rng = galsim.UniformDeviate(1314662)
-    galsim.noise.addPoisson(image, rng, gain=gain)
-
-    # Also add (Gaussian) read noise.
-    galsim.noise.addGaussian(image, rng, sigma=read_noise)
+    image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
 
     # Subtract off the sky.
     image -= sky_image

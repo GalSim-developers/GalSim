@@ -228,7 +228,7 @@ class OpticalPSF(GSObject):
     --------------
     >>> optical_psf = galsim.OpticalPSF(lod=1., defocus=0., astig1=0., astig2=0., coma1=0., 
                                         coma2=0., spher=0., circular_pupil=True, interpolantxy=None,
-                                        dx=1., oversampling=2., padFactor=2)
+                                        dx=1., oversampling=2., pad_factor=2)
 
     Initializes optical_psf as a galsim.Optics() instance.
 
@@ -249,13 +249,13 @@ class OpticalPSF(GSObject):
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
                            [default = 2.], setting oversampling < 1 will produce aliasing in the 
                            PSF (not good).
-    @param padFactor       additional multiple by which to zero-pad the PSF image to avoid folding
+    @param pad_factor      additional multiple by which to zero-pad the PSF image to avoid folding
                            compared to what would be required for a simple Airy [default = 2]. Note
                            that padFactor may need to be increased for stronger aberrations, i.e.
                            those larger than order unity. 
     """
     def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=2., padFactor=2):
+                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=2., pad_factor=2):
         # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
         import galsim.optics
         # Use the same prescription as SBAiry to set dx, maxK, Airy stepK and thus image size
@@ -267,7 +267,7 @@ class OpticalPSF(GSObject):
         else:
             raise NotImplementedError('Secondary mirror obstruction not yet implemented')
         # TODO: check that the above still makes sense even for large aberrations, probably not...
-        npix = np.ceil(2. * padFactor * self.maxk / stepk_airy).astype(int)
+        npix = np.ceil(2. * pad_factor * self.maxk / stepk_airy).astype(int)
         optimage = galsim.optics.psf_image(array_shape=(npix, npix), defocus=defocus,
                                            astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
                                            spher=spher, circular_pupil=circular_pupil, obs=obs,
