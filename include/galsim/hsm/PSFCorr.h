@@ -90,17 +90,6 @@ namespace hsm {
      */
     struct HSMShapeData
     {
-        /// @brief Constructor, setting defaults
-        HSMShapeData()
-        {
-            correction_method = "None";
-            moment_status = -1;
-            moment_sigma = -1.;
-            moment_n_iter = 0;
-            correction_status = -1;
-            resolution_factor = -1.;
-        };
-
         /// @brief galsim::Shear object representing the observed shape
         galsim::Shear observed_shape;
         
@@ -125,6 +114,9 @@ namespace hsm {
         /// @brief Resolution factor R_2; 0 indicates object is consistent with a PSF, 1 indicates
         /// perfect resolution; default -1
         float resolution_factor;
+
+        /// @brief Constructor, setting defaults
+    HSMShapeData() : correction_method("None"), moment_status(-1), moment_sigma(-1.), moment_n_iter(0), correction_status(-1), resolution_factor(-1.) {}
     };
 
     /* functions that the user will want to call from outside */
