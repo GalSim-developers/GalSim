@@ -247,36 +247,6 @@ namespace hsm {
 
     /* BEGIN OUR CODE HERE */
 
-    /* object data type */
-
-    struct ObjectData 
-    {
-        double x0;           /* x centroid */
-        double y0;           /* y centroid */
-        double sigma;        /* width */
-        double flux;         /* total flux */
-        double e1;           /* + ellipticity */
-        double e2;           /* x ellipticity */
-        double responsivity; /* responsivity of ellipticity estimator */
-        char meas_type;      /* type of ellipticity measurement:
-                              *   'e' = Bernstein & Jarvis (2002) ellipticity
-                              *   'g' = shear estimator = shear * responsivity
-                              */
-        double resolution;   /* resolution factor (0=unresolved, 1=resolved) */
-    };
-
-    /* rectangular image type */
-
-    struct RectImage 
-    {
-        long xmin; /* bounding box */
-        long xmax; /* " */
-        long ymin; /* " */
-        long ymax; /* " */
-        double **image; /* the actual map */
-        int **mask; /* mask = 0 (masked) or 1 (unmasked) */
-    };
-
     /* Carry out PSF correction directly using Images, repackaging for general_shear_estimator.*/
     template <typename T>
     HSMShapeData EstimateShearHSM(galsim::Image<T> const &gal_image, galsim::Image<T> const &PSF_image, const char *shear_est = "REGAUSS", unsigned long flags = 0xe) {
