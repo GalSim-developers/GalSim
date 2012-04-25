@@ -278,6 +278,18 @@ namespace hsm {
     };
 
 
+    HSMShapeData::HSMShapeData()
+    {
+        galsim::Shear() observed_shape;
+        galsim::Shear() corrected_shape;
+        correction_method = "None";
+        moment_status = -1;
+        moment_sigma = -1.;
+        moment_n_iter = 0;
+        correction_status = -1;
+        resolution_factor = -1.;
+    };
+    
     /* Carry out PSF correction directly using Images, repackaging for general_shear_estimator.*/
     template <typename T>
     HSMShapeData EstimateShearHSM(galsim::Image<T> const &gal_image, galsim::Image<T> const &PSF_image, const char *shear_est = "REGAUSS", unsigned long flags = 0xe) {

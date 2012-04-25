@@ -116,16 +116,7 @@ namespace hsm {
         float resolution_factor;
 
         /// @brief Constructor, setting defaults
-        HSMShapeData() {
-            observed_shape = galsim::Shear();
-            corrected_shape = galsim::Shear();
-            correction_method = "None";
-            moment_status = -1;
-            moment_sigma = -1.;
-            moment_n_iter = 0;
-            correction_status = -1;
-            resolution_factor = -1.;
-        };
+        HSMShapeData();
     }
 
     /* functions that the user will want to call from outside */
