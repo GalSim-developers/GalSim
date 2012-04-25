@@ -65,7 +65,7 @@ namespace galsim {
          *
          * @param[in] N Size of desired array.
          */
-        PhotonArray(int N): _x(N,0.), _y(N,0.), _flux(N,0.) {}
+        explicit PhotonArray(int N): _x(N,0.), _y(N,0.), _flux(N,0.) {}
 
         /** 
          * @brief Construct from three vectors.  Exception if vector sizes do not match.
@@ -74,7 +74,7 @@ namespace galsim {
          * @param[in] vy vector of photon y coordinates
          * @param[in] vflux vector of photon fluxes
          */
-        PhotonArray(vector<double>& vx, vector<double>& vy, vector<double>& vflux);
+        PhotonArray(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vflux);
 
         /**
          * @brief Accessor for array size
@@ -163,9 +163,9 @@ namespace galsim {
         void addTo(Image<float>& target);
 #endif
     private:
-        vector<double> _x;      // Vector holding x coords of photons
-        vector<double> _y;      // Vector holding y coords of photons
-        vector<double> _flux;   // Vector holding flux of photons
+        std::vector<double> _x;      // Vector holding x coords of photons
+        std::vector<double> _y;      // Vector holding y coords of photons
+        std::vector<double> _flux;   // Vector holding flux of photons
     };
     /** 
      * @brief An abstract base class representing all of the 2D surface brightness profiles that 
