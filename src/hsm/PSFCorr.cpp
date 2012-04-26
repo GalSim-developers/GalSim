@@ -21,10 +21,10 @@
   along with meas_shape.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cmath>
+#include <cstring>
 #include "hsm/PSFCorr.h"
 
 namespace galsim {
