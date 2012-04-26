@@ -1290,9 +1290,13 @@ namespace galsim {
     void PhotonArray::setTotalFlux(double flux) {
         double oldFlux = getTotalFlux();
         if (oldFlux==0.) return; // Do nothing if the flux is zero to start with
-        double factor = flux / oldFlux;
+        scaleFlux(flux / oldFlux);
+    }
+
+    void PhotonArray::scaleFlux(double scale)
+    {
         for (std::vector<double>::size_type i=0; i<_flux.size(); i++) {
-            _flux[i] *= factor;
+            _flux[i] *= scale;
         }
     }
 
@@ -1314,10 +1318,9 @@ namespace galsim {
 
     void PhotonArray::convolve(const PhotonArray& rhs) 
     {
-        if (rhs.size() != size()) 
+        int N = size();
+        if (rhs.size() != N) 
             throw SBError("PhotonArray::convolve with unequal size arrays");
-        // Will set final flux to be equal to the product of input fluxes (if nonzero):
-        double finalFlux = getTotalFlux() * rhs.getTotalFlux();
         // Add x coordinates:
         std::vector<double>::iterator lIter = _x.begin();
         std::vector<double>::const_iterator rIter = rhs._x.begin();
@@ -1326,13 +1329,10 @@ namespace galsim {
         lIter = _y.begin();
         rIter = rhs._y.begin();
         for ( ; lIter!=_y.end(); ++lIter, ++rIter) *lIter += *rIter;
-        // Multiply fluxes:
+        // Multiply fluxes, with a factor of N needed:
         lIter = _flux.begin();
         rIter = rhs._flux.begin();
-        for ( ; lIter!=_flux.end(); ++lIter, ++rIter) *lIter *= *rIter;
-
-        // Normalize fluxes to produce desired output
-        if (finalFlux!= 0.) setTotalFlux(finalFlux);
+        for ( ; lIter!=_flux.end(); ++lIter, ++rIter) *lIter *= *rIter*N;
     }
 
 #ifdef USE_IMAGES
@@ -1351,8 +1351,169 @@ namespace galsim {
             if (b.includes(ix,iy)) target(ix,iy) += _flux[i]*fluxScale;
         }
     }
+
+    void SBProfile::drawShoot(Image<float>& img, int N, UniformDeviate& u) const 
+    {
+        img.fill(0.);
+        PhotonArray pa = shoot(N, u);
+        pa.addTo(img);
+    }
 #endif
+    
+    PhotonArray SBAdd::shoot(int N, UniformDeviate& u) const 
+    {
+        // Segregate the positive-flux summands from negative
+        double totalPositiveFlux = 0.;
+        std::list<SBProfile*> positiveList;
+
+        double totalNegativeFlux = 0.;
+        std::list<SBProfile*> negativeList;
+
+        std::list<SBProfile*>::const_iterator pptr;
+        for (pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+            double flux = (*pptr)->getFlux();
+            if (flux > 0.) {
+                totalPositiveFlux += flux;
+                positiveList.push_back(*pptr);
+            } else if (flux < 0.) {
+                totalNegativeFlux += flux;
+                negativeList.push_back(*pptr);
+            }
+        }
+
+        // How much flux should each photon carry?
+        double fluxPerPhoton = (totalPositiveFlux + std::abs(totalNegativeFlux)) / N ;
+        double fractionPositive = totalPositiveFlux / (totalPositiveFlux + std::abs(totalNegativeFlux));
+        int nPos = static_cast<int> (floor( N*fractionPositive));
+        // Allocate the fraction of a photon that's left on a probabilistic basis:
+        double fractionLeft = N*fractionPositive - nPos;
+        if (u() < fractionLeft) nPos++;
+        int nNeg = N - nPos;
+
+        PhotonArray result(0);
+        result.reserve(N);
+
+        // Get photons from each positive summand, using BinomialDeviate to
+        // randomize distribution of photons among summands
+        for (pptr = positiveList.begin(); pptr!= positiveList.end(); ++pptr) {
+            double thisFlux = (*pptr)->getFlux();
+            int thisN = nPos;
+            std::list<SBProfile*>::const_iterator nextPtr = pptr;
+            ++nextPtr;
+            if (nextPtr!=positiveList.end()) {
+                // allocate a randomized fraction of the remaining photons to this summand:
+                BinomialDeviate bd(u, nPos, thisFlux/totalPositiveFlux);
+                thisN = bd();
+            }
+            PhotonArray thisPA = (*pptr)->shoot(thisN, u);
+            // Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
+            // whereas the shoot() routine would have made them each nominally thisFlux/thisN
+            thisPA.setTotalFlux(fluxPerPhoton*thisN);
+            result.append(thisPA);
+            nPos -= thisN;
+            totalPositiveFlux -= thisFlux;
+        }
+
+        // Now get photons from the summands that have negative flux
+        for (pptr = negativeList.begin(); pptr!= negativeList.end(); ++pptr) {
+            double thisFlux = (*pptr)->getFlux();
+            int thisN = nNeg;
+            std::list<SBProfile*>::const_iterator nextPtr = pptr;
+            ++nextPtr;
+            if (nextPtr!=negativeList.end()) {
+                // allocate a randomized fraction of the remaining photons to this summand:
+                BinomialDeviate bd(u, nNeg, thisFlux/totalNegativeFlux);
+                thisN = bd();
+            }
+            PhotonArray thisPA = (*pptr)->shoot(thisN, u);
+            // Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
+            // whereas the shoot() routine would have made them each nominally thisFlux/thisN
+            thisPA.setTotalFlux(-fluxPerPhoton*thisN);
+            result.append(thisPA);
+            nPos -= thisN;
+            totalNegativeFlux -= thisFlux;
+        }
+        
+        return result;
+    }
+
+    PhotonArray SBConvolve::shoot(int N, UniformDeviate& u) const 
+    {
+        std::list<SBProfile*>::const_iterator pptr = plist.begin();
+        if (pptr==plist.end())
+            throw SBError("Cannot shoot() for empty SBConvolve");
+        PhotonArray result = (*pptr)->shoot(N, u);
+        if (fluxScale!=1.) result.scaleFlux(fluxScale);
+        for (++pptr; pptr != plist.end(); ++pptr)
+            result.convolve( (*pptr)->shoot(N, u));
+        return result;
+    }
+
+    PhotonArray SBDistort::shoot(int N, UniformDeviate& u) const 
+    {
+        PhotonArray result = adaptee->shoot(N,u);
+        for (int i=0; i<result.size(); i++) {
+            Position<double> xy = fwd(Position<double>(result.getX(i),
+                                                       result.getY(i))-x0);
+            result.setPhoton(i,xy.x, xy.y, result.getFlux(i)*absdet);
+        }
+        return result;
+    }
+
+    PhotonArray SBGaussian::shoot(int N, UniformDeviate& u) const 
+    {
+        PhotonArray result(N);
+        double fluxPerPhoton = flux/N;
+        for (int i=0; i<N; i++) {
+            // First get a point uniformly distributed on unit circle
+            double xu, yu, rsq;
+            do {
+                xu = 2.*u()-1.;
+                yu = 2.*u()-1.;
+                rsq = xu*xu+yu*yu;
+            } while (rsq>=1. || rsq==0.);
             
+            // Then map it to desired Gaussian
+            double factor = sigma*sqrt( -2.*log(rsq)/rsq);
+            result.setPhoton(i,factor*xu, factor*yu, fluxPerPhoton);
+        }
+        return result;
+    }
+
+    PhotonArray SBSersic::shoot(int N, UniformDeviate& u) const
+    {
+        throw SBError("SBSersic::shoot() not implemented");
+        return PhotonArray(N);
+    }
+
+    PhotonArray SBExponential::shoot(int N, UniformDeviate& u) const
+    {
+        throw SBError("SBExponential::shoot() not implemented");
+        return PhotonArray(N);
+    }
+
+    PhotonArray SBAiry::shoot(int N, UniformDeviate& u) const
+    {
+        throw SBError("SBAiry::shoot() not implemented");
+        return PhotonArray(N);
+    }
+
+    PhotonArray SBBox::shoot(int N, UniformDeviate& u) const
+    {
+        PhotonArray result(N);
+        for (int i=0; i<result.size(); i++)
+            result.setPhoton(i, xw*(u()-0.5), yw*(u()-0.5), flux/N);
+        return result;
+    }
+
+    PhotonArray SBMoffat::shoot(int N, UniformDeviate& u) const
+    {
+        throw SBError("SBMoffat::shoot() not implemented");
+        return PhotonArray(N);
+    }
+
+
+
     // instantiate template functions for expected image types
 #ifdef USE_IMAGES
     template double SBProfile::doFillXImage2(Image<float> & img, double dx) const;

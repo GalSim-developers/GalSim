@@ -83,6 +83,16 @@ namespace galsim {
          */
         int size() const {return _x.size();}
 
+        /** @brief reserve space in arrays for future elements
+         *
+         * @param[in] N number of elements to reserve space for.
+         */
+        void reserve(int N) {
+            _x.reserve(N);
+            _y.reserve(N);
+            _flux.reserve(N);
+        }
+
         /**
          * @brief Set characteristics of a photon
          *
@@ -131,6 +141,13 @@ namespace galsim {
          * @param[in] flux desired total flux of all photons.
          */
         void setTotalFlux(double flux);
+
+        /**
+         * @brief Rescale all photon fluxes by the given factor
+         *
+         * @param[in] scale Scaling factor for all fluxes
+         */
+        void scaleFlux(double scale);
 
         /**
          * @brief Extend this array with the contents of another.
@@ -342,7 +359,17 @@ namespace galsim {
 
 #ifdef USE_IMAGES
         // **** Drawing routines ****
-
+        /**
+         * @brief Draw this SBProfile into Image by shooting photons.
+         *
+         * The input image must have defined boundaries and pixel scale.  The photons generated
+         * by shoot() method will be binned into the target Image.  See caveats in shoot() docstring.
+         * Input image will be cleared before drawing in the photons.
+         * @param[in] img Image to draw on.
+         * @param[in] N Total umber of photons to produce.
+         * @param[in] u UniformDeviate that will be used to draw photons from distribution.
+         */
+        virtual void drawShoot(Image<float>& img, int N, UniformDeviate& u) const;
 
         /** 
          * @brief Draw an image of the SBProfile in real space.
