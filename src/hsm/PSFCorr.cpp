@@ -411,8 +411,8 @@ namespace hsm {
              * functions, the sine and 1-cos. (Use 1-cos for stability.)
              */
             theta = TwoPi/lcurrent * isign;
-            sintheta = sin(theta);
-            oneminuscostheta = sin(0.5*theta);
+            sintheta = std::sin(theta);
+            oneminuscostheta = std::sin(0.5*theta);
             oneminuscostheta = 2.0*oneminuscostheta*oneminuscostheta;
 
             /* FFT the individual length-lcurrent segments */
@@ -495,11 +495,11 @@ namespace hsm {
         beta2__2 = 0.5*beta*beta;
 
         /* Get ground state */
-        norm0 = 0.75112554446494248285870300477623 * sqrt(beta);
+        norm0 = 0.75112554446494248285870300477623 * std::sqrt(beta);
         x=xmin;
         for(j=0;j<nx;j++) {
-            psi[0][j] = norm0 * exp( -beta2__2 * x*x );
-            if (Nmax>=1) psi[1][j] = sqrt(2.) * psi[0][j] * beta * x;
+            psi[0][j] = norm0 * std::exp( -beta2__2 * x*x );
+            if (Nmax>=1) psi[1][j] = std::sqrt(2.) * psi[0][j] * beta * x;
             x += xstep;
         }
 
@@ -512,8 +512,8 @@ namespace hsm {
         for(n=1;n<Nmax;n++) {
 
             /* Recursion relation coefficients */
-            coef1 = beta * sqrt( 2. / (n+1.) );
-            coef2 = -sqrt( (double)n / (n+1.) );
+            coef1 = beta * std::sqrt( 2. / (n+1.) );
+            coef2 = -std::sqrt( (double)n / (n+1.) );
 
             x=xmin;
             for(j=0;j<nx;j++) {
@@ -649,8 +649,8 @@ namespace hsm {
             if (dsigma < -BOUND_CORRECT_WEIGHT) dsigma = -BOUND_CORRECT_WEIGHT;
 
             /* Convergence */
-            convergence_factor = fabs(dx)>fabs(dy)? fabs(dx): fabs(dy);
-            if (fabs(dsigma)>convergence_factor) convergence_factor = fabs(dsigma);
+            convergence_factor = std::abs(dx)>std::abs(dy)? std::abs(dx): std::abs(dy);
+            if (std::abs(dsigma)>convergence_factor) convergence_factor = std::abs(dsigma);
             if (*sigma<sigma0) convergence_factor *= sigma0/(*sigma);
 
             /* Update numbers */
@@ -753,7 +753,7 @@ namespace hsm {
                      */
                     y_y0 += 1.;
                     rho2 = Minv_xx__x_x0__x_x0 + TwoMinv_xy__x_x0*y_y0 + *(myyptr++);
-                    intensity = exp(-0.5 * rho2) * *(imageptr++);
+                    intensity = std::exp(-0.5 * rho2) * *(imageptr++);
 
                     /* Now do the addition */
                     *A    += intensity;
@@ -824,8 +824,8 @@ namespace hsm {
                             &Cxx, &Cxy, &Cyy, rho4);
 
             /* Compute configuration of the weight function */
-            two_psi = atan2( 2* *Mxy, *Mxx- *Myy );
-            semi_a2 = 0.5 * ((*Mxx+*Myy) + (*Mxx-*Myy)*cos(two_psi)) + *Mxy*sin(two_psi);
+            two_psi = std::atan2( 2* *Mxy, *Mxx- *Myy );
+            semi_a2 = 0.5 * ((*Mxx+*Myy) + (*Mxx-*Myy)*std::cos(two_psi)) + *Mxy*std::sin(two_psi);
             semi_b2 = *Mxx + *Myy - semi_a2;
 
             if (semi_b2 <= 0) {
@@ -833,7 +833,7 @@ namespace hsm {
                 exit(1);
             }
 
-            shiftscale = sqrt(semi_b2);
+            shiftscale = std::sqrt(semi_b2);
             if (*num_iter == 0) shiftscale0 = shiftscale;
 
             /* Now compute changes to x0, etc. */
@@ -855,12 +855,12 @@ namespace hsm {
             if (dyy    < -BOUND_CORRECT_WEIGHT) dyy    = -BOUND_CORRECT_WEIGHT;
 
             /* Convergence tests */
-            convergence_factor = fabs(dx)>fabs(dy)? fabs(dx): fabs(dy);
+            convergence_factor = std::abs(dx)>std::abs(dy)? std::abs(dx): std::abs(dy);
             convergence_factor *= convergence_factor;
-            if (fabs(dxx)>convergence_factor) convergence_factor = fabs(dxx);
-            if (fabs(dxy)>convergence_factor) convergence_factor = fabs(dxy);
-            if (fabs(dyy)>convergence_factor) convergence_factor = fabs(dyy);
-            convergence_factor = sqrt(convergence_factor);
+            if (std::abs(dxx)>convergence_factor) convergence_factor = std::abs(dxx);
+            if (std::abs(dxy)>convergence_factor) convergence_factor = std::abs(dxy);
+            if (std::abs(dyy)>convergence_factor) convergence_factor = std::abs(dyy);
+            convergence_factor = std::sqrt(convergence_factor);
             if (shiftscale<shiftscale0) convergence_factor *= shiftscale0/shiftscale;
 
             /* Now update moments */
@@ -874,9 +874,9 @@ namespace hsm {
              * report a failure */
 #define MAX_AMOMENT 8000.0
 #define MAX_ASHIFT 15.0
-            if (fabs(*Mxx)>MAX_AMOMENT || fabs(*Mxy)>MAX_AMOMENT || fabs(*Myy)>MAX_AMOMENT
-                || fabs(*x0-x00)>MAX_ASHIFT || fabs(*y0-y00)>MAX_ASHIFT) {
-	      fprintf(stderr, "Error: adaptive moment failed: %lf %lf %lf %lf %lf %d\n",fabs(*Mxx),fabs(*Mxy),fabs(*Myy),fabs(*x0-x00),fabs(*y0-y00),*num_iter);
+            if (std::abs(*Mxx)>MAX_AMOMENT || std::abs(*Mxy)>MAX_AMOMENT || std::abs(*Myy)>MAX_AMOMENT
+                || std::abs(*x0-x00)>MAX_ASHIFT || std::abs(*y0-y00)>MAX_ASHIFT) {
+	      fprintf(stderr, "Error: adaptive moment failed: %lf %lf %lf %lf %lf %d\n",std::abs(*Mxx),std::abs(*Mxy),std::abs(*Myy),std::abs(*x0-x00),std::abs(*y0-y00),*num_iter);
                 exit(1);
             }
 
@@ -1042,7 +1042,7 @@ namespace hsm {
         double dotp, factor;
 
         dotp = e1a*e1b + e2a*e2b;
-        factor = (1.-sqrt(1-e1b*e1b-e2b*e2b)) / (e1b*e1b + e2b*e2b);
+        factor = (1.-std::sqrt(1-e1b*e1b-e2b*e2b)) / (e1b*e1b + e2b*e2b);
         *e1out = (e1a + e1b + e2b*factor*(e2a*e1b - e1a*e2b))/(1+dotp);
         *e2out = (e2a + e2b + e1b*factor*(e1a*e2b - e2a*e1b))/(1+dotp);
     }
@@ -1076,14 +1076,14 @@ namespace hsm {
         double R;
 
         /* Take us to sig2ratio = sigma2(P)/sigma2(O) since this is shear-invariant */
-        coshetap = 1./sqrt(1-e1p*e1p-e2p*e2p);
-        coshetao = 1./sqrt(1-e1o*e1o-e2o*e2o);
+        coshetap = 1./std::sqrt(1-e1p*e1p-e2p*e2p);
+        coshetao = 1./std::sqrt(1-e1o*e1o-e2o*e2o);
         sig2ratio = Tratio * coshetao/coshetap; /* since sigma2 = T / cosh eta */
 
         shearmult(e1o,e2o,-e1p,-e2p,&e1red,&e2red);
 
         /* compute resolution factor and un-dilute */
-        coshetao = 1./sqrt(1-e1red*e1red-e2red*e2red);
+        coshetao = 1./std::sqrt(1-e1red*e1red-e2red*e2red);
         R = 1. - sig2ratio * (1-a4p)/(1+a4p) * (1+a4o)/(1-a4o) / coshetao;
 
         e1red /= R;
@@ -1128,17 +1128,17 @@ namespace hsm {
         double EI;
 
         /* Take us to sig2ratio = sigma2(P)/sigma2(O) since this is shear-invariant */
-        coshetap = 1./sqrt(1-e1p*e1p-e2p*e2p);
-        coshetao = 1./sqrt(1-e1o*e1o-e2o*e2o);
+        coshetap = 1./std::sqrt(1-e1p*e1p-e2p*e2p);
+        coshetao = 1./std::sqrt(1-e1o*e1o-e2o*e2o);
         sig2ratio = Tratio * coshetao/coshetap; /* since sigma2 = T / cosh eta */
 
         shearmult(e1o,e2o,-e1p,-e2p,&e1red,&e2red);
 
         /* compute resolution factor and un-dilute */
-        e = sqrt(e1red*e1red+e2red*e2red);
+        e = std::sqrt(e1red*e1red+e2red*e2red);
         eta = atanh(e);
-        a2 = exp(-eta)*sig2ratio; /* fraction of major axis variance from PSF */
-        b2 = exp(eta)*sig2ratio; /* fraction of minor axis variance from PSF */
+        a2 = std::exp(-eta)*sig2ratio; /* fraction of major axis variance from PSF */
+        b2 = std::exp(eta)*sig2ratio; /* fraction of minor axis variance from PSF */
         A = 1-a2; B = 1-b2; /* fractions from intrinsic image */
         ca4p = 0.375*(a2*a2+b2*b2)+0.25*a2*b2;
         ca4i = 0.375*(A*A+B*B)+0.25*A*B;
@@ -1148,11 +1148,11 @@ namespace hsm {
         deltaeta = Ti * a4i + Tp * a4p;
 
         /* 4th moment correction for R: must find etai */
-        EI = sqrt(e1red*e1red + e2red*e2red);
+        EI = std::sqrt(e1red*e1red + e2red*e2red);
         // TODO: etai was set, but not used.
         // Is this a bug?  Or just a legacy of an old calculation?
         //etai = 0.5 * log( (1./a2-1) / (1./b2-1) ); 
-        coshetao = 1./sqrt(1-e1red*e1red-e2red*e2red);
+        coshetao = 1./std::sqrt(1-e1red*e1red-e2red*e2red);
         deltamu = (-1.5*A*A - A*B - 1.5*B*B +2*(A+B)) * a4i
             + (-1.5*a2*a2 - a2*b2 - 1.5*b2*b2 + 2*(a2+b2))*a4p;
         deltamu *= 0.5;
@@ -1497,8 +1497,8 @@ namespace hsm {
 #ifdef REGAUSS_TOO_SMALL
 
         /* Compute the semimajor and semiminor axes of Mf and the position angle */
-        two_phi = atan2(2*Mfxy, Mfxx-Mfyy);
-        a2 = 0.5 * ( Mfxx+Mfyy + (Mfxx-Mfyy)*cos(two_phi) ) + Mfxy*sin(two_phi);
+        two_phi = std::atan2(2*Mfxy, Mfxx-Mfyy);
+        a2 = 0.5 * ( Mfxx+Mfyy + (Mfxx-Mfyy)*std::cos(two_phi) ) + Mfxy*std::sin(two_phi);
         b2 = Mfxx + Mfyy - a2;
 
         /* Now impose restrictions to ensure this doesn't blow up */
@@ -1506,9 +1506,9 @@ namespace hsm {
         if (b2<=0.25) b2=0.25;
 
         /* Convert back to Mf matrix */
-        Mfxx = 0.5 * ( a2+b2 + (a2-b2)*cos(two_phi) );
-        Mfyy = 0.5 * ( a2+b2 - (a2-b2)*cos(two_phi) );
-        Mfxy = 0.5 * (a2-b2) * sin(two_phi);
+        Mfxx = 0.5 * ( a2+b2 + (a2-b2)*std::cos(two_phi) );
+        Mfyy = 0.5 * ( a2+b2 - (a2-b2)*std::cos(two_phi) );
+        Mfxy = 0.5 * (a2-b2) * std::sin(two_phi);
         detMf = Mfxx*Mfyy - Mfxy*Mfxy;
 
 #endif
@@ -1525,19 +1525,19 @@ namespace hsm {
         fgauss_ymax = gal_image->ymax - PSF->ymin;
         fgauss_xctr = *x0_gal - *x0_psf;
         fgauss_yctr = *y0_gal - *y0_psf;
-        fgauss_xsig = sqrt(Mfxx>1? Mfxx: 1);
-        fgauss_ysig = sqrt(Mfyy>1? Mfyy: 1);
+        fgauss_xsig = std::sqrt(Mfxx>1? Mfxx: 1);
+        fgauss_ysig = std::sqrt(Mfyy>1? Mfyy: 1);
 
         /* Shrink if the box extends beyond NSIG_RG sigma range */
         if (flags & 0x00000004) {
             if (fgauss_xmin < fgauss_xctr - NSIG_RG*fgauss_xsig)
-                fgauss_xmin = (long) floor(fgauss_xctr - NSIG_RG*fgauss_xsig);
+                fgauss_xmin = (long) std::floor(fgauss_xctr - NSIG_RG*fgauss_xsig);
             if (fgauss_xmax > fgauss_xctr + NSIG_RG*fgauss_xsig)
-                fgauss_xmax = (long) ceil (fgauss_xctr + NSIG_RG*fgauss_xsig);
+                fgauss_xmax = (long) std::ceil (fgauss_xctr + NSIG_RG*fgauss_xsig);
             if (fgauss_ymin < fgauss_yctr - NSIG_RG*fgauss_ysig)
-                fgauss_ymin = (long) floor(fgauss_yctr - NSIG_RG*fgauss_ysig);
+                fgauss_ymin = (long) std::floor(fgauss_yctr - NSIG_RG*fgauss_ysig);
             if (fgauss_ymax > fgauss_yctr + NSIG_RG*fgauss_ysig)
-                fgauss_ymax = (long) ceil (fgauss_yctr + NSIG_RG*fgauss_ysig);
+                fgauss_ymax = (long) std::ceil (fgauss_yctr + NSIG_RG*fgauss_ysig);
         }
 
         allocate_rect_image(&fgauss, fgauss_xmin, fgauss_xmax, fgauss_ymin, fgauss_ymax);
@@ -1570,10 +1570,10 @@ namespace hsm {
         pymin = PSF->ymin;
         pymax = PSF->ymax;
         if (flags & 0x00000008) {
-            pxmin = (long) floor(*x0_psf - NSIG_RG2*sqrt(Mxxgal) - NSIG_RG*fgauss_xsig );
-            pxmax = (long) ceil (*x0_psf + NSIG_RG2*sqrt(Mxxgal) + NSIG_RG*fgauss_xsig );
-            pymin = (long) floor(*y0_psf - NSIG_RG2*sqrt(Myygal) - NSIG_RG*fgauss_ysig );
-            pymax = (long) ceil (*y0_psf + NSIG_RG2*sqrt(Myygal) + NSIG_RG*fgauss_ysig );
+            pxmin = (long) std::floor(*x0_psf - NSIG_RG2*std::sqrt(Mxxgal) - NSIG_RG*fgauss_xsig );
+            pxmax = (long) std::ceil (*x0_psf + NSIG_RG2*std::sqrt(Mxxgal) + NSIG_RG*fgauss_xsig );
+            pymin = (long) std::floor(*y0_psf - NSIG_RG2*std::sqrt(Myygal) - NSIG_RG*fgauss_ysig );
+            pymax = (long) std::ceil (*y0_psf + NSIG_RG2*std::sqrt(Myygal) + NSIG_RG*fgauss_ysig );
             if (PSF->xmin >= pxmin) pxmin = PSF->xmin;
             if (PSF->xmax <= pxmax) pxmax = PSF->xmax;
             if (PSF->ymin >= pymin) pymin = PSF->ymin;
@@ -1588,7 +1588,7 @@ namespace hsm {
         Minvpsf_xx =  Myypsf/detM;
         Minvpsf_xy = -Mxypsf/detM;
         Minvpsf_yy =  Mxxpsf/detM;
-        center_amp_psf = flux_psf / (TwoPi * sqrt(detM));
+        center_amp_psf = flux_psf / (TwoPi * std::sqrt(detM));
         for(x=PSF_resid.xmin;x<=PSF_resid.xmax;x++)
             for(y=PSF_resid.ymin;y<=PSF_resid.ymax;y++) {
                 dx = x - *x0_psf;
@@ -1624,7 +1624,7 @@ namespace hsm {
         if (Mxxgal<=0 || Myygal<=0 || Mxxgal*Myygal<=Mxygal*Mxygal ) {
             fprintf(stderr, "Error: non positive definite adaptive moments.\n");
         }
-        *sig_gal = pow( Mxxgal*Myygal - Mxygal*Mxygal, 0.25);
+        *sig_gal = std::pow( Mxxgal*Myygal - Mxygal*Mxygal, 0.25);
 
         /* And do the PSF correction */
         Tgal  = Mxxgal + Myygal;
@@ -1713,7 +1713,7 @@ namespace hsm {
                } else {
                    PSF_data->x0 = x0;
                    PSF_data->y0 = y0;
-                   PSF_data->sigma = pow( Mxx_psf * Myy_psf - Mxy_psf * Mxy_psf, 0.25);
+                   PSF_data->sigma = std::pow( Mxx_psf * Myy_psf - Mxy_psf * Mxy_psf, 0.25);
                }
 
                /* Measure the galaxy */
@@ -1727,7 +1727,7 @@ namespace hsm {
                } else {
                    gal_data->x0 = x0;
                    gal_data->y0 = y0;
-                   gal_data->sigma = pow( Mxx_gal * Myy_gal - Mxy_gal * Mxy_gal, 0.25);
+                   gal_data->sigma = std::pow( Mxx_gal * Myy_gal - Mxy_gal * Mxy_gal, 0.25);
                    gal_data->flux = 2.0 * A_gal;
                }
 
