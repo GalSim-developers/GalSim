@@ -53,7 +53,8 @@ struct PyPhotonArray {
                 bp::make_constructor(&construct, bp::default_call_policies(), bp::args("vx", "vy", "vflux"))
             )
             .def(bp::init<int>(bp::args("n")))
-            .def("__len__", PhotonArray::size)
+            .def("__len__", &PhotonArray::size)
+            .def("reserve", &PhotonArray::reserve)
             .def("setPhoton", &PhotonArray::setPhoton, bp::args("i", "x", "y", "flux"))
             .def("getX", &PhotonArray::getX)
             .def("getY", &PhotonArray::getY)
@@ -171,6 +172,7 @@ struct PySBProfile {
             .def("rotate", &SBProfile::rotate, bp::args("theta"), ManageNew())
             .def("shift", &SBProfile::shift, bp::args("dx", "dy"), ManageNew())
             .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
+            .def("drawShoot", &SBProfile::drawShoot, bp::args("img","n", "u"))
             .def("draw", (Image<float> (SBProfile::*)(double, int) const)&SBProfile::draw,
                  (bp::arg("dx")=0., bp::arg("wmult")=1), "default draw routine")
             ;
