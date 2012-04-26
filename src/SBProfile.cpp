@@ -1454,7 +1454,7 @@ namespace galsim {
         PhotonArray result = adaptee->shoot(N,u);
         for (int i=0; i<result.size(); i++) {
             Position<double> xy = fwd(Position<double>(result.getX(i),
-                                                       result.getY(i))-x0);
+                                                       result.getY(i))+x0);
             result.setPhoton(i,xy.x, xy.y, result.getFlux(i)*absdet);
         }
         return result;
