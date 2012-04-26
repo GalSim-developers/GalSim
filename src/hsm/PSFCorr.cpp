@@ -35,6 +35,16 @@ namespace hsm {
 
 #define NSIG_RG   3.0
 #define NSIG_RG2  3.6
+#define REGAUSS_TOO_SMALL
+    // REGAUSS_TOO_SMALL: this prevents the re-Gaussianization PSF correction from completely
+    // failing at the beginning, before trying to do PSF correction, due to the crudest possible PSF
+    // correction (Gaussian approximation) suggesting that the galaxy is very small.  This could
+    // happen for some usable galaxies particularly when they have very non-Gaussian surface
+    // brightness profiles -- for example, if there's a prominent bulge that the adaptive moments
+    // attempt to fit, ignoring the more extended disk.  Setting REGAUSS_TOO_SMALL is useful for
+    // keeping galaxies that would have failed for that reason.  If they later turn out to be too
+    // small to really use, this will be reflected in the final estimate of the resolution factor,
+    // and they can be rejected after the fact.
 
     /* NUMERICAL RECIPES ROUTINES SECTION */
     /* Note: all NR routines included here are from nrutil.c, which is in
