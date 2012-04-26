@@ -1,3 +1,8 @@
 README for the inaugural commit of GalSim: the modular galaxy image simulation toolkit
 
-For installation instructions, please see INSTALL 
+For installation instructions, please see INSTALL.  There are tagged versions of the code
+corresponding to specific project milestones and releases.  During the code development process,
+these tagged versions may be the best ones to try if you want a stable version of the code with
+specific capabilities.  (For more info on tags, see docs/git.txt)
+
+
