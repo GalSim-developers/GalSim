@@ -67,7 +67,7 @@ These Fast Fourier Transform libraries must be installed; see Section 4 for some
 installing this on your platform.
 
 
-iv) TMV (http://code.google.com/p/tmv-cpp/)  (version >= 0.71 required)
+iv) TMV (http://code.google.com/p/tmv-cpp/)
 
 GalSim uses the TMV library for its linear algebra routines.  You should download it from the 
 above site and follow the instructions in its INSTALL file for how to install it.   Usually it 
