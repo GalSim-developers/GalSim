@@ -50,6 +50,7 @@ struct PyPhotonArray {
         bp::class_<PhotonArray> pyPhotonArray("PhotonArray", doc, bp::no_init);
         pyPhotonArray
             .def(
+                "__init__",
                 bp::make_constructor(&construct, bp::default_call_policies(), bp::args("vx", "vy", "vflux"))
             )
             .def(bp::init<int>(bp::args("n")))
