@@ -95,7 +95,7 @@ def test_Image_array_view():
                                               +" for dtype = "+str(types[i]))
 
 def test_Image_binary_add():
-    """Test that all four types of supported Images add correctly
+    """Test that all four types of supported Images add correctly.
     """
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
@@ -115,7 +115,7 @@ def test_Image_binary_add():
                                              +" not match reference for dtype = "+str(types[i]))
 
 def test_Image_binary_subtract():
-    """Test that all four types of supported Images subtract correctly
+    """Test that all four types of supported Images subtract correctly.
     """
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
@@ -135,7 +135,7 @@ def test_Image_binary_subtract():
                                              +" not match reference for dtype = "+str(types[i]))
 
 def test_Image_binary_multiply():
-    """Test that all four types of supported Images multiply correctly
+    """Test that all four types of supported Images multiply correctly.
     """
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
@@ -155,7 +155,7 @@ def test_Image_binary_multiply():
                                              +" not match reference for dtype = "+str(types[i]))
 
 def test_Image_binary_divide():
-    """Test that all four types of supported Images divide correctly
+    """Test that all four types of supported Images divide correctly.
     """
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
@@ -178,7 +178,7 @@ def test_Image_binary_divide():
                                              +" not match reference for dtype = "+str(types[i]))
 
 def test_Image_inplace_add():
-    """Test that all four types of supported Images inplace add correctly
+    """Test that all four types of supported Images inplace add correctly.
     """
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
@@ -198,7 +198,7 @@ def test_Image_inplace_add():
                                              +" not match reference for dtype = "+str(types[i]))
 
 def test_Image_inplace_subtract():
-    """Test that all four types of supported Images inplace subtract correctly
+    """Test that all four types of supported Images inplace subtract correctly.
     """
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
@@ -218,7 +218,7 @@ def test_Image_inplace_subtract():
                                              +" not match reference for dtype = "+str(types[i]))
 
 def test_Image_inplace_multiply():
-    """Test that all four types of supported Images inplace multiply correctly
+    """Test that all four types of supported Images inplace multiply correctly.
     """
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
@@ -238,7 +238,7 @@ def test_Image_inplace_multiply():
                                              +" not match reference for dtype = "+str(types[i]))
 
 def test_Image_inplace_divide():
-    """Test that all four types of supported Images inplace divide correctly
+    """Test that all four types of supported Images inplace divide correctly.
     """
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
@@ -257,8 +257,46 @@ def test_Image_inplace_divide():
                                       err_msg="Inplace divide in Image class does"
                                              +" not match reference for dtype = "+str(types[i]))
 
+def test_Image_inplace_scalar_add():
+    """Test that all four types of supported Images inplace scalar add correctly.
+    """
+    for i in xrange(ntypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.Image[types[i]](ref_array.astype(types[i]))
+        image1 += 1
+        np.testing.assert_array_equal((ref_array + 1).astype(types[i]), image1.array,
+                                      err_msg="Inplace scalar add in Image class (dictionary "
+                                             +"call) does not match reference for dtype = "
+                                             +str(types[i]))
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.Image"+tchar[i])
+        image1 = image_init_func(ref_array.astype(types[i]))
+        image1 += 1
+        np.testing.assert_array_equal((ref_array + 1).astype(types[i]), image1.array,
+                                      err_msg="Inplace scalar add in Image class does"
+                                             +" not match reference for dtype = "+str(types[i]))
+
+def test_Image_inplace_scalar_subtract():
+    """Test that all four types of supported Images inplace scalar subtract correctly.
+    """
+    for i in xrange(ntypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.Image[types[i]](ref_array.astype(types[i]))
+        image1 -= 1
+        np.testing.assert_array_equal((ref_array - 1).astype(types[i]), image1.array,
+                                      err_msg="Inplace scalar subtract in Image class (dictionary "
+                                             +"call) does not match reference for dtype = "
+                                             +str(types[i]))
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.Image"+tchar[i])
+        image1 = image_init_func(ref_array.astype(types[i]))
+        image1 -= 1
+        np.testing.assert_array_equal((ref_array - 1).astype(types[i]), image1.array,
+                                      err_msg="Inplace scalar subtract in Image class does"
+                                             +" not match reference for dtype = "+str(types[i]))
+
 def test_Image_inplace_scalar_multiply():
-    """Test that all four types of supported Images inplace scalar multiply correctly
+    """Test that all four types of supported Images inplace scalar multiply correctly.
     """
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
@@ -279,7 +317,7 @@ def test_Image_inplace_scalar_multiply():
                                              +" not match reference for dtype = "+str(types[i]))
 
 def test_Image_inplace_scalar_divide():
-    """Test that all four types of supported Images inplace scalar divide correctly
+    """Test that all four types of supported Images inplace scalar divide correctly.
     """
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
@@ -298,6 +336,7 @@ def test_Image_inplace_scalar_divide():
         np.testing.assert_array_equal(image1.array, image2.array,
                                       err_msg="Inplace scalar divide in Image class does"
                                              +" not match reference for dtype = "+str(types[i]))
+        
 
 if __name__ == "__main__":
     test_Image_XYmin_XYMax()
