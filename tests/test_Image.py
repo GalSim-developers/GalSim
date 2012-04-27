@@ -79,7 +79,7 @@ def test_FITS_IO():
         # TODO: test reading from an HDU list (e.g. for multi-extension FITS).
 
 def test_Image_array_view():
-    """Test that all four types of supported arrays correctly provide a view on an input array.
+    """Test that all four types of supported Images correctly provide a view on an input array.
     """
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
@@ -93,7 +93,46 @@ def test_Image_array_view():
         np.testing.assert_array_equal(ref_array.astype(types[i]), image.array,
                                       err_msg="Array look into Image class does not match input"
                                               +" for dtype = "+str(types[i]))
- 
+
+def test_Image_binary_add():
+    """Test that all four types of supported Images add correctly
+    """
+    for i in xrange(ntypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.Image[types[i]](ref_array.astype(types[i]))
+        image2 = galsim.Image[types[i]]((2 * ref_array).astype(types[i]))
+        image3 = image1 + image2
+        np.testing.assert_array_equal((3 * ref_array).astype(types[i]), image3.array,
+                                      err_msg="Binary add in Image class (dictionary call) does"
+                                             +" not match reference for dtype = "+str(types[i]))
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.Image"+tchar[i])
+        image1 = image_init_func(ref_array.astype(types[i]))
+        image2 = image_init_func((2 * ref_array).astype(types[i]))
+        image3 = image1 + image2
+        np.testing.assert_array_equal((3 * ref_array).astype(types[i]), image3.array,
+                                      err_msg="Binary add in Image class does"
+                                             +" not match reference for dtype = "+str(types[i]))
+
+def test_Image_binary_subtract():
+    """Test that all four types of supported Images add correctly
+    """
+    for i in xrange(ntypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.Image[types[i]](ref_array.astype(types[i]))
+        image2 = galsim.Image[types[i]]((2 * ref_array).astype(types[i]))
+        image3 = image2 - image1
+        np.testing.assert_array_equal(ref_array.astype(types[i]), image3.array,
+                                    err_msg="Binary subtract in Image class (dictionary call) does"
+                                             +" not match reference for dtype = "+str(types[i]))
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.Image"+tchar[i])
+        image1 = image_init_func(ref_array.astype(types[i]))
+        image2 = image_init_func((2 * ref_array).astype(types[i]))
+        image3 = image2 - image1
+        np.testing.assert_array_equal(ref_array.astype(types[i]), image3.array,
+                                      err_msg="Binary subtract in Image class does"
+                                             +" not match reference for dtype = "+str(types[i]))
 
 
 if __name__ == "__main__":
