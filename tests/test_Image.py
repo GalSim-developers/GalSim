@@ -237,6 +237,26 @@ def test_Image_inplace_multiply():
                                       err_msg="Inplace multiply in Image class does"
                                              +" not match reference for dtype = "+str(types[i]))
 
+def test_Image_inplace_divide():
+    """Test that all four types of supported Images inplace divide correctly
+    """
+    for i in xrange(ntypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.Image[types[i]]((ref_array + 1).astype(types[i]))
+        image2 = galsim.Image[types[i]]((2 * (ref_array + 1)**2).astype(types[i]))
+        image2 /= image1
+        np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image2.array,
+                                    err_msg="Inplace divide in Image class (dictionary call) does"
+                                             +" not match reference for dtype = "+str(types[i]))
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.Image"+tchar[i])
+        image1 = image_init_func((ref_array + 1).astype(types[i]))
+        image2 = image_init_func((2 * (ref_array + 1)**2).astype(types[i]))
+        image2 /= image1
+        np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image2.array,
+                                      err_msg="Inplace divide in Image class does"
+                                             +" not match reference for dtype = "+str(types[i]))
+
 def test_Image_inplace_scalar_multiply():
     """Test that all four types of supported Images inplace scalar multiply correctly
     """
