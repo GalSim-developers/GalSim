@@ -1,30 +1,37 @@
-
-// A class definition for shear.  Allows get/set via various
-// representations of the geometrical shear quantity.
-
-// Also contains "Ellipse" class which is combination of shear,
-// translation, and magnification, i.e. maps a circle into
-// and ellipse.
+// -*- c++ -*-
+#ifndef SHEAR_H
+#define SHEAR_H
+/**
+ * @file Shear.h @brief A class definition for shear.  
+ *
+ * Allows get/set via various representations of the geometrical shear quantity.
+ *
+ * Also contains "Ellipse" class which is combination of shear, translation, and magnification, 
+ * i.e. maps a circle into an ellipse.
+ *
+ */
 
 // Details on each below
 
-#ifndef SHEAR_H
-#define SHEAR_H
 #include <math.h>
 #include "TMV.h"
-
 #include "Std.h"
 #include "Bounds.h"
 
-// Shear is represented internally by e1 and e2, which are the second-moment
-// definitions: ellipse with axes a & b has e=(a^2-b^2)/(a^2+b^2).
-// But can get/set the ellipticity by two other measures:
-// g is "reduced shear" such that g=(a-b)/(a+b)
-// eta is "conformal shear" such that a/b = exp(eta).
-// Beta is always the position angle of major axis.
-
 namespace galsim {
 
+    /**
+     * @brief Class for describing a shear.
+     *
+     * Shear is represented internally by e1 and e2, which are the second-moment
+     * definitions: ellipse with axes a & b has e=(a^2-b^2)/(a^2+b^2).
+     * But you can also get/set the ellipticity by two other measures:
+     *
+     * g is "reduced shear" such that g=(a-b)/(a+b)
+     * eta is "conformal shear" such that a/b = exp(eta).
+     * Beta is always the position angle of major axis.
+     *
+     */
     class Shear 
     {
         friend Shear operator*(const double, const Shear& );
