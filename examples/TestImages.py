@@ -24,7 +24,7 @@ PSFFile = os.path.join('data','147246.0_150.416558_1.998697.psf.fits')
 outDir = os.path.join('output','testImage.')
 bulge2Total = [0.0, 1.0/3, 2.0/3, 1.0]
 bulgeEllip = [0.2]
-diskEllip = [0.2, 0.45, 0.7, 0.95]
+diskEllip = [0.2, 0.45, 0.7]
 invSN = [0.0, 0.005, 0.02]
 nRealization = [1, 10, 10]
 if len(invSN) is not len(nRealization):
@@ -51,9 +51,13 @@ PSF.setFlux(1.0)
 # S/N and number of noise realizations, radii
 rng = galsim.UniformDeviate()
 for bt in bulge2Total:
+    print "Beginning bulge-to-total ratio of ",bt
     for bell in bulgeEllip:
+        print "Beginning bulge ellipticity of ",bell
         for dell in diskEllip:
+            print "Beginning disk ellipticity of ",dell
             for dreind in range(len(diskRe)):
+                print "Beginning disk half-light radius of ",diskRe[dreind]
 
                 # Make the bulge: use a Sersic rather than a DeVauc specifically, because we want to
                 # allow more general bulges with other values of n
@@ -100,6 +104,7 @@ for bt in bulge2Total:
 
                 # More noise realizations?
                 for invsnind in range(len(invSN)):
+                    print "Beginning inverse S/N of ",invSN[invsnind]
                     if invSN[invsnind] > 0.0:
                         # Choose Gaussian sigma per pixel based on GREAT08-style S/N definition
                         gaussSig = invSN[invsnind] * np.sqrt(np.sum(convGalaxyImg.array**(2.0)))
