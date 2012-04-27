@@ -37,17 +37,25 @@ namespace galsim {
         friend Shear operator*(const double, const Shear& );
 
     public:
-        // Construct w/o variance
+        /** 
+         * @brief Construct without variance / without initializing transformation matrix.
+         *
+         * @param[in] _e1 e1 shear component (second moment definition).
+         * @param[in] _e2 e2 shear component (second moment definitiion).
+         *
+         */
         explicit Shear(double _e1=0., double _e2=0.) : 
             e1(_e1),e2(_e2), hasMatrix(false),
             matrixA(0), matrixB(0), matrixC(0)
         {} 
 
+        /// @brief Copy constructor.
         Shear(const Shear& rhs) :
             e1(rhs.e1), e2(rhs.e2), hasMatrix(rhs.hasMatrix),
             matrixA(rhs.matrixA), matrixB(rhs.matrixB), matrixC(rhs.matrixC) 
         {}
 
+        /// @brief Copy assignment.
         const Shear& operator=(const Shear& s)
         {
             e1 = s.e1; e2=s.e2;
@@ -56,31 +64,67 @@ namespace galsim {
             return *this;
         }
 
+        /// @brief Set (e1, e2) using second moment definition.
         Shear& setE1E2(double =0., double =0.);
+
+        /// @brief Set (|e|, beta) polar ellipticity representation using second moment definition.
         Shear& setEBeta(double etain=0., double betain=0.);
+
+        /// @brief Set (eta1, eta2) using conformal shear definition.
         Shear& setEta1Eta2(double =0., double =0.);
+
+        /// @brief Set (|eta|, beta) using conformal shear definition.
         Shear& setEtaBeta(double =0., double =0.);
+
+        /// @brief set (g1, g2) using reduced shear |g| = (a-b)/(a+b) definition.
         Shear& setG1G2(double =0., double =0.);
 
+        /// @brief Get e1 using second moment definition.
         double getE1() const { return e1; }
+
+        /// @brief Get e2 using second moment definition.
         double getE2() const { return e2; }
+
+        /// @brief Get |e| using second moment definition.
         double getE() const { return std::sqrt(e1*e1+e2*e2); }
+
+        /// @brief Get |e|^2 using second moment definition.
         double getESq() const { return e1*e1+e2*e2; }
+
+        /// @brief Get polar angle beta.
         double getBeta() const { return std::atan2(e2,e1)*0.5; }
+
+        /// @brief Get |eta| using conformal shear definition.
         double getEta() const { return atanh(std::sqrt(e1*e1+e2*e2)); } //error checking?
 
-        // g = gamma / (1-kappa)
+        // g = gamma / (1-kappa)  ...Barney: I don't think this is a helpful comment really!
+
+        /// @brief Get |g| using reduced shear |g| = (a-b)/(a+b) definition.
         double getG() const 
         {
             double e=getE();  
             return e>0. ? (1-std::sqrt(1-e*e))/e : 0.;
         }
 
+        /**
+         * @brief Get (eta1, eta2) using conformal shear definition.
+         *
+         * @param[in,out] eta1 Reference to eta1 variable.
+         * @param[in,out] eta2 Reference to eta2 variable.
+         *
+         */
         void getEta1Eta2(double& eta1, double& eta2) const;
+        
+        /**
+         * @brief Get (g1, g2) using reduced shear |g| = (a-b)/(a+b) definition.
+         *
+         * @param[in,out] g1 Reference to g1 variable.
+         * @param[in,out] g2 Reference to g2 variable.
+         *
+         */
         void getG1G2(double& g1, double& g2) const;
 
-
-        //negation
+        /// @brief Unary negation (both components negated).
         Shear operator-() const 
         { return Shear(-e1,-e2); }
 
