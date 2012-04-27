@@ -128,15 +128,51 @@ namespace galsim {
         Shear operator-() const 
         { return Shear(-e1,-e2); }
 
-        // Composition operation: returns ellipticity of
-        // circle that is sheared first by RHS and then by
-        // LHS Shear.  Note that this addition is
-        // ***not commutative***!
+        /**
+         * @brief Composition operation.
+         *
+         * @returns Ellipticity of circle that is sheared first by RHS and then by
+         * LHS Shear.  
+         *
+         * Note that this 'addition' is ***not commutative***!
+         */
+        Shear operator+(const Shear& ) const;
+
+        /**
+         * @brief Composition (with RHS negation) operation.
+         *
+         * @returns Ellipticity of circle that is sheared first by the negative RHS and then by
+         * LHS Shear.  
+         *
+         * Note that this 'subtraction' is ***not commutative***!
+         */ 
+        Shear operator-(const Shear& ) const;
+        
         // In the += and -= operations, this is LHS
         // and the operand is RHS of + or - .
-        Shear operator+(const Shear& ) const;
-        Shear operator-(const Shear& ) const;
+        
+        /**
+         * @brief Inplace composition operation.
+         *
+         * @returns Ellipticity of circle that is sheared first by RHS and then by
+         * LHS Shear.  
+         *
+         * Note that this 'addition' is ***not commutative***!
+         *
+         * In the += operation, this is LHS and the operand is RHS of +.
+         */
         Shear& operator+=(const Shear& );
+        
+        /**
+         * @brief Inplace composition (with RHS negation) operation.
+         *
+         * @returns Ellipticity of circle that is sheared first by the negative RHS and then by
+         * LHS Shear.  
+         *
+         * Note that this 'addition' is ***not commutative***!
+         *
+         * In the -= operation, this is LHS and the operand is RHS of -.
+         */
         Shear& operator-=(const Shear& );
 
         // Give the rotation angle for this+rhs:
