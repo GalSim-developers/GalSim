@@ -39,11 +39,6 @@ sigmaBulge = 1.0 # dispersion in Sersic n for bulge
 sigmaDisk = 0.2 # dispersion in Sersic n for disk
 pixelScale = 0.03 # we are simulating ACS data
 totFlux = 1000.0 # total flux for galaxy
-lam = 800. # typical wavelength for COSMOS
-tel_diam = 2.4 # meters
-lam_over_D = lam * 1.e-9 / tel_diam # radians
-lam_over_D *= 206265 # arcsec
-lam_over_D *= pixelScale # pixels
 
 # read in ePSF and normalize (note: already includes pixel response, don't have to do separately)
 l3 = galsim.Lanczos(3, True, 1.0E-4)
@@ -100,8 +95,7 @@ for bt in bulge2Total:
                 galaxy = bt*bulge + (1.0-bt)*disk
 
                 # Convolve with PSF, and draw image
-                convGalaxy = galsim.SBConvolve(PSF)
-                convGalaxy.add(galaxy)
+                convGalaxy = galsim.SBConvolve([PSF,galaxy.SBProfile])
                 convGalaxyImg = convGalaxy.draw(dx = pixelScale)
 
                 # More noise realizations?
@@ -112,9 +106,9 @@ for bt in bulge2Total:
 
                         # Add noise the appropriate number of times, and write each one to file
                         for iRealization in range(nRealization[invsnind]):
-                            tmpImg = galsim.ImageF.duplicate(convGalaxyImage)
-                            galsim.noise.addGaussian(tmpImg, rng, sigma=gaussSig)
-                            outFile = outDir + 'BT%5.3f.' % bt
+                            tmpImg = galsim.ImageF.duplicate(convGalaxyImg)
+                            tmpImg.addNoise(galsim.GaussianDeviate(rng, mean=0.0, sigma=gaussSig))
+                            outFile = outDir + ('BT%5.3f.' % bt)
                             outFile += 'bulgeellip%5.3f.' % bell
                             outFile += 'diskellip%5.3f.' % dell
                             outFile += 'diskRe%5.3f.' % diskRe[dreind]
@@ -129,8 +123,8 @@ for bt in bulge2Total:
                             outFile += 'diskellip%5.3f.' % dell
                             outFile += 'diskRe%5.3f.' % diskRe[dreind]
                             outFile += 'invSNR%5.3f.' % invSN[invsnind]
-                            outFile += 'image0.fits'
-                            convGalaxyImage.write(outFile, clobber=True)
+                            outFile += 'image00.fits'
+                            convGalaxyImg.write(outFile, clobber=True)
                             print 'Wrote image to file %s' % outFile
                         
 # For infinite S/N case, make some dispersion around the bulge and disk Sersic n values
