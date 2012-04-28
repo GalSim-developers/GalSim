@@ -215,6 +215,12 @@ def BasicCCFlags(env):
 
     extra_flags = env['EXTRA_FLAGS'].split(' ')
     env.AppendUnique(CCFLAGS=extra_flags)
+    if '-m64' in extra_flags:
+        # Then this also needs to be in LINKFLAGS
+        env.AppendUnique(LINKFLAGS='-m64')
+    if '-m32' in extra_flags:
+        # Likewise
+        env.AppendUnique(LINKFLAGS='-m32')
 
 
 def AddOpenMPFlag(env):
