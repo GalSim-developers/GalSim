@@ -9,6 +9,7 @@
 #include "Std.h"
 #include "SBProfile.h"
 #include "Interpolant.h"
+#include <set>
 
 namespace galsim {
 
@@ -109,10 +110,7 @@ namespace galsim {
          * @param[in] u UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& u) const {
-            throw SBError("SBInterpolatedArray::shoot() not yet implemented");
-            return PhotonArray(N);
-        }
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
 
         double getFlux() const;
         void setFlux(double flux=1.);  // This will scale the weights vector
@@ -254,6 +252,25 @@ namespace galsim {
          * values.
          */
         mutable bool ready; 
+
+        /// @brief Set true if the data structures for photon-shooting are valid
+        mutable bool readyToShoot;
+
+        // Structures used for photon shooting
+        /**
+         * @brief Simple structure used to index all pixels for photon shooting
+         */
+        struct Pixel {
+            Pixel(double x_=0., double y_=0., double flux_=0.): x(x_), y(y_), cumulativeFlux(flux_) {}
+            double x;
+            double y;
+            double cumulativeFlux;
+            bool operator<(const Pixel& rhs) const {return cumulativeFlux < rhs.cumulativeFlux;}
+        };
+        mutable double positiveFlux;    ///< Sum of all positive pixels
+        mutable double negativeFlux;    ///< Sum of all negative pixels
+        mutable std::set<Pixel> positivePixels; ///< Set of all positive pixels, for shooting
+        mutable std::set<Pixel> negativePixels; ///< Set of all negative pixels, for shooting
 
         /// @brief The default k-space interpolant
         static InterpolantXY defaultKInterpolant2d;

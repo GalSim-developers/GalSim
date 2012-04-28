@@ -21,7 +21,7 @@ namespace galsim {
         wts(Nimages, 1.), fluxes(Nimages, 1.), 
         xFluxes(Nimages, 0.), yFluxes(Nimages,0.),
         xsum(0), ksum(0), xsumValid(false), ksumValid(false),
-        ready(false) 
+        ready(false), readyToShoot(false) 
     {
         assert(Ninitial%2==0);
         assert(Ninitial>=2);
@@ -45,7 +45,7 @@ namespace galsim {
         wts(Nimages, 1.), fluxes(Nimages, 1.), 
         xFluxes(Nimages, 0.), yFluxes(Nimages,0.),
         xsum(0), ksum(0), xsumValid(false), ksumValid(false),
-        ready(false) 
+        ready(false), readyToShoot(false) 
     {
         Ninitial = std::max( img.getYMax()-img.getYMin()+1, img.getXMax()-img.getXMin()+1);
         Ninitial = Ninitial + Ninitial%2;
@@ -78,7 +78,8 @@ namespace galsim {
         Ninitial(rhs.Ninitial), dx(rhs.dx), Nk(rhs.Nk), Nimages(rhs.Nimages),
         xInterp(rhs.xInterp), kInterp(rhs.kInterp),
         wts(rhs.wts), fluxes(rhs.fluxes), xFluxes(rhs.xFluxes), yFluxes(rhs.yFluxes),
-        xsum(0), ksum(0), xsumValid(false), ksumValid(false), ready(rhs.ready) 
+        xsum(0), ksum(0), xsumValid(false), ksumValid(false), ready(rhs.ready),
+	readyToShoot(false) 
     {
         // copy tables
         for (int i=0; i<Nimages; i++) {
@@ -108,6 +109,7 @@ namespace galsim {
         wts *= factor;
         if (xsumValid) *xsum *= factor;
         if (ksumValid) *ksum *= factor;
+	readyToShoot = false;	// Need to rescale all the cumulative fluxes
     }
 
     Position<double> SBInterpolatedImage::centroid() const 
@@ -131,6 +133,7 @@ namespace galsim {
                 "SBInterpolatedImage::setPixel x coordinate " << iy << " out of bounds";
 
         ready = false;
+	readyToShoot = false;
         vx[iz]->xSet(ix, iy, value);
     }
 
@@ -149,6 +152,7 @@ namespace galsim {
         wts = wts_;
         xsumValid = false;
         ksumValid = false;
+	readyToShoot = false;
     }
 
     void SBInterpolatedImage::checkReady() const 
@@ -399,6 +403,68 @@ namespace galsim {
     }
 
 #endif
+
+    // Photon-shooting 
+    PhotonArray SBInterpolatedImage::shoot(int N, UniformDeviate& ud) const
+    {
+        /* The positive and negative pixels will be segregated and the cumulative flux
+         * stored in C++ standard libary sets, so the inversion is done with a binary
+         * search tree.  There are no doubt speed gains available from sorting the 
+         * pixels by flux, and somehow weighting the tree search to the elements holding
+         * the most flux.  But I'm doing it the simplest way right now.
+         */
+        assert(N>=0);
+        if (!readyToShoot) {
+            // Build the sets holding cumulative fluxes
+            checkXsum();
+            positiveFlux = 0.;
+            negativeFlux = 0.;
+            positivePixels.clear();
+            negativePixels.clear();
+
+            for (int iy=-Ninitial/2; iy<Ninitial/2; iy++) {
+                double y = iy*dx;
+                for (int ix=-Ninitial/2; ix<Ninitial/2; ix++) {
+                    double flux = xsum->xval(ix,iy) * dx*dx;
+                    if (flux==0.) continue;
+                    double x=ix*dx;
+                    if (flux > 0.) {
+                        positiveFlux += flux;
+                        positivePixels.insert(Pixel(x,y,flux));
+                    } else {
+                        flux = -flux;
+                        negativeFlux += flux;
+                        negativePixels.insert(Pixel(x,y,flux));
+                    }
+                }
+            }
+            readyToShoot = true;
+        }
+
+        PhotonArray result(N);
+        if (N<=0) return result;
+        double totalAbsFlux = positiveFlux + negativeFlux;
+        double fluxPerPhoton = totalAbsFlux / N;
+        typedef std::set<Pixel>::const_iterator citer;
+        for (int i=0; i<N; i++) {
+            Pixel p;
+            p.cumulativeFlux = ud()*totalAbsFlux;
+            if (p.cumulativeFlux < positiveFlux) {
+                // Need a positive pixel:
+                citer upper = positivePixels.lower_bound(p);
+                if (upper == positivePixels.end()) --upper;
+                result.setPhoton(i, upper->x, upper->y, fluxPerPhoton);
+            } else {
+                // Need a negative pixel:
+                p.cumulativeFlux -= positiveFlux;
+                citer upper = negativePixels.lower_bound(p);
+                if (upper == negativePixels.end()) --upper;
+                result.setPhoton(i, upper->x, upper->y, -fluxPerPhoton);
+            }
+        }
+
+        return result;
+    }
 
     // instantiate template functions for expected image types
 #ifdef USE_IMAGES

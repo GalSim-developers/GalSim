@@ -1362,6 +1362,9 @@ namespace galsim {
     
     PhotonArray SBAdd::shoot(int N, UniformDeviate& u) const 
     {
+        //  ???? Need to scramble these photons, another ud per point??
+        // ??? abandon the equal +/- division ???
+
         // Segregate the positive-flux summands from negative
         double totalPositiveFlux = 0.;
         std::list<SBProfile*> positiveList;
