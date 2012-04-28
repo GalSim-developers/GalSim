@@ -121,11 +121,11 @@ def ErrorExit():
     # libraries, compiler, etc., we don't want to cache the result.
     # So before exiting, we call this function to clear out the cache files
     # that SCons creates.
-    if os.path.exists(".sconsign.dblite"):
-        os.remove(".sconsign.dblite")
-    import shutil
-    if os.path.exists(".sconf_temp"):
-        shutil.rmtree(".sconf_temp")
+    #if os.path.exists(".sconsign.dblite"):
+    #    os.remove(".sconsign.dblite")
+    #import shutil
+    #if os.path.exists(".sconf_temp"):
+    #    shutil.rmtree(".sconf_temp")
 
     print
     print 'Please fix the above error(s) and rerun scons'
