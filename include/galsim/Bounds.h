@@ -173,6 +173,15 @@ namespace galsim {
             return !defined || !rhs.defined || (xmin!=rhs.xmin) ||
                 (ymin!=rhs.ymin) || (xmax!=rhs.xmax) || (ymax!=rhs.ymax);
         }
+        /**
+         *  @brief Check if two bounds have same shape, but maybe different origin.
+         */
+        bool isSameShapeAs(const Bounds<T>& rhs) const
+        {
+            return defined && rhs.defined && 
+                (xmax - xmin == rhs.xmax - rhs.xmin) &&
+                (ymax - ymin == rhs.ymax - rhs.ymin);
+        }
 
         /**
          *  @brief Return the area of the enclosed region
