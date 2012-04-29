@@ -404,63 +404,62 @@ namespace galsim {
 
 #endif
 
+    void SBInterpolatedImage::checkReadyToShoot() const {
+        if (readyToShoot) return;
+
+        // Build the sets holding cumulative fluxes
+        checkXsum();
+        positiveFlux = 0.;
+        negativeFlux = 0.;
+        allPixels.clear();
+        double cumulativeFlux = 0.;
+        for (int iy=-Ninitial/2; iy<Ninitial/2; iy++) {
+            double y = iy*dx;
+            for (int ix=-Ninitial/2; ix<Ninitial/2; ix++) {
+                double flux = xsum->xval(ix,iy) * dx*dx;
+                if (flux==0.) continue;
+                double x=ix*dx;
+                if (flux > 0.) {
+                    positiveFlux += flux;
+                    cumulativeFlux += flux;
+                    allPixels.insert(Pixel(x,y,cumulativeFlux,true));
+                } else {
+                    flux = -flux;
+                    negativeFlux += flux;
+                    cumulativeFlux += flux;
+                    allPixels.insert(Pixel(x,y,cumulativeFlux, false));
+                }
+            }
+        }
+        readyToShoot = true;
+    }
+
     // Photon-shooting 
     PhotonArray SBInterpolatedImage::shoot(int N, UniformDeviate& ud) const
     {
-        /* The positive and negative pixels will be segregated and the cumulative flux
-         * stored in C++ standard libary sets, so the inversion is done with a binary
+        assert(N>=0);
+        checkReadyToShoot();
+        /* The pixel coordinates are stored by cumulative absolute flux in 
+         * a C++ standard-libary set, so the inversion is done with a binary
          * search tree.  There are no doubt speed gains available from sorting the 
          * pixels by flux, and somehow weighting the tree search to the elements holding
          * the most flux.  But I'm doing it the simplest way right now.
          */
         assert(N>=0);
-        if (!readyToShoot) {
-            // Build the sets holding cumulative fluxes
-            checkXsum();
-            positiveFlux = 0.;
-            negativeFlux = 0.;
-            positivePixels.clear();
-            negativePixels.clear();
-
-            for (int iy=-Ninitial/2; iy<Ninitial/2; iy++) {
-                double y = iy*dx;
-                for (int ix=-Ninitial/2; ix<Ninitial/2; ix++) {
-                    double flux = xsum->xval(ix,iy) * dx*dx;
-                    if (flux==0.) continue;
-                    double x=ix*dx;
-                    if (flux > 0.) {
-                        positiveFlux += flux;
-                        positivePixels.insert(Pixel(x,y,flux));
-                    } else {
-                        flux = -flux;
-                        negativeFlux += flux;
-                        negativePixels.insert(Pixel(x,y,flux));
-                    }
-                }
-            }
-            readyToShoot = true;
-        }
 
         PhotonArray result(N);
-        if (N<=0) return result;
+        if (N<=0 || allPixels.empty()) return result;
         double totalAbsFlux = positiveFlux + negativeFlux;
         double fluxPerPhoton = totalAbsFlux / N;
         typedef std::set<Pixel>::const_iterator citer;
         for (int i=0; i<N; i++) {
             Pixel p;
             p.cumulativeFlux = ud()*totalAbsFlux;
-            if (p.cumulativeFlux < positiveFlux) {
-                // Need a positive pixel:
-                citer upper = positivePixels.lower_bound(p);
-                if (upper == positivePixels.end()) --upper;
-                result.setPhoton(i, upper->x, upper->y, fluxPerPhoton);
-            } else {
-                // Need a negative pixel:
-                p.cumulativeFlux -= positiveFlux;
-                citer upper = negativePixels.lower_bound(p);
-                if (upper == negativePixels.end()) --upper;
-                result.setPhoton(i, upper->x, upper->y, -fluxPerPhoton);
-            }
+            // Need a positive pixel:
+            citer upper = allPixels.lower_bound(p);
+            if (upper == allPixels.end()) --upper;  // use last pixel if we're past the end
+            result.setPhoton(i, upper->x, upper->y, 
+                             upper->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }
 
         return result;

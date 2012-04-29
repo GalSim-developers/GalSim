@@ -115,6 +115,9 @@ namespace galsim {
         double getFlux() const;
         void setFlux(double flux=1.);  // This will scale the weights vector
 
+        double getPositiveFlux() const {checkReadyToShoot(); return positiveFlux;}
+        double getNegativeFlux() const {checkReadyToShoot(); return negativeFlux;}
+
         /////////////////////
         // Methods peculiar to SBInterpolatedImage
 
@@ -255,22 +258,25 @@ namespace galsim {
 
         /// @brief Set true if the data structures for photon-shooting are valid
         mutable bool readyToShoot;
+        /// @brief Set up photon-shooting quantities, if not ready
+        void checkReadyToShoot() const;
 
         // Structures used for photon shooting
         /**
          * @brief Simple structure used to index all pixels for photon shooting
          */
         struct Pixel {
-            Pixel(double x_=0., double y_=0., double flux_=0.): x(x_), y(y_), cumulativeFlux(flux_) {}
+            Pixel(double x_=0., double y_=0., double flux_=0., bool pos=true): 
+                x(x_), y(y_), cumulativeFlux(flux_), isPositive(pos) {}
             double x;
             double y;
             double cumulativeFlux;
+            bool isPositive;
             bool operator<(const Pixel& rhs) const {return cumulativeFlux < rhs.cumulativeFlux;}
         };
-        mutable double positiveFlux;    ///< Sum of all positive pixels
-        mutable double negativeFlux;    ///< Sum of all negative pixels
-        mutable std::set<Pixel> positivePixels; ///< Set of all positive pixels, for shooting
-        mutable std::set<Pixel> negativePixels; ///< Set of all negative pixels, for shooting
+        mutable double positiveFlux;    ///< Sum of all positive pixels' flux
+        mutable double negativeFlux;    ///< Sum of all negative pixels' flux
+        mutable std::set<Pixel> allPixels; ///< Set of all pixels with cumulative absolute flux, for shooting
 
         /// @brief The default k-space interpolant
         static InterpolantXY defaultKInterpolant2d;

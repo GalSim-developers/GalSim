@@ -530,6 +530,22 @@ namespace galsim {
         return;
     }
 
+    double SBAdd::getPositiveFlux() const {
+        double result = 0.;
+        for (std::list<SBProfile*>::const_iterator pptr = plist.begin(); pptr != plist.end(); ++pptr) {
+            result += (*pptr)->getPositiveFlux();  
+        }
+        return result;
+    }
+    double SBAdd::getNegativeFlux() const {
+        double result = 0.;
+        for (std::list<SBProfile*>::const_iterator pptr = plist.begin(); pptr != plist.end(); ++pptr) {
+            result += (*pptr)->getNegativeFlux();  
+        }
+        return result;
+    }
+        
+
     //
     // "SBDistort" Class 
     //
@@ -709,6 +725,37 @@ namespace galsim {
             (*pptr)->fillKGrid(k2);
             kt*=k2;
         }
+    }
+
+    double SBConvolve::getPositiveFlux() const {
+        if (plist.empty()) return 0.;
+        std::list<SBProfile*>::const_iterator pptr = plist.begin();
+        double pResult = (*pptr)->getPositiveFlux() * fluxScale;
+        double nResult = (*pptr)->getNegativeFlux() * fluxScale;
+        for (++pptr; pptr!=plist.end(); ++pptr) {
+            double p = (*pptr)->getPositiveFlux();
+            double n = (*pptr)->getNegativeFlux();
+            double pNew = p*pResult + n*nResult;
+            nResult = p*nResult + n*pResult;
+            pResult = pNew;
+        }
+        return pResult;
+    }
+
+    // Note duplicated code here, could be caching results for tiny efficiency gain
+    double SBConvolve::getNegativeFlux() const {
+        if (plist.empty()) return 0.;
+        std::list<SBProfile*>::const_iterator pptr = plist.begin();
+        double pResult = (*pptr)->getPositiveFlux() * fluxScale;
+        double nResult = (*pptr)->getNegativeFlux() * fluxScale;
+        for (++pptr; pptr!=plist.end(); ++pptr) {
+            double p = (*pptr)->getPositiveFlux();
+            double n = (*pptr)->getNegativeFlux();
+            double pNew = p*pResult + n*nResult;
+            nResult = p*nResult + n*pResult;
+            pResult = pNew;
+        }
+        return nResult;
     }
 
     //
@@ -1335,6 +1382,37 @@ namespace galsim {
         for ( ; lIter!=_flux.end(); ++lIter, ++rIter) *lIter *= *rIter*N;
     }
 
+    void PhotonArray::convolveShuffle(const PhotonArray& rhs, UniformDeviate& ud) 
+    {
+        int N = size();
+        if (rhs.size() != N) 
+            throw SBError("PhotonArray::convolve with unequal size arrays");
+        double xSave=0.;
+        double ySave=0.;
+        double fluxSave=0.;
+
+        for (int iOut = N-1; iOut<=0; iOut--) {
+            // Randomly select an input photon to use at this output
+            int iIn = static_cast<int> (floor( (iOut+1)*ud()));
+            if (iIn > iOut) iIn=iOut;  // should not happen, but be safe
+            if (iIn < iOut) {
+                // Save input information
+                xSave = _x[iOut];
+                ySave = _y[iOut];
+                fluxSave = _flux[iOut];
+            }
+            _x[iOut] = _x[iIn] + rhs._x[iOut];
+            _y[iOut] = _y[iIn] + rhs._y[iOut];
+            _flux[iOut] = _flux[iIn] * rhs._flux[iOut] * N;
+            if (iIn < iOut) {
+                // Move saved info to new location in array
+                _x[iIn] = xSave;
+                _y[iIn] = ySave ;
+                _flux[iIn] = fluxSave;
+            }
+        }
+    }
+
 #ifdef USE_IMAGES
     void PhotonArray::addTo(Image<float>& target) {
         double dx = target.getScale();
@@ -1362,79 +1440,43 @@ namespace galsim {
     
     PhotonArray SBAdd::shoot(int N, UniformDeviate& u) const 
     {
-        //  ???? Need to scramble these photons, another ud per point??
-        // ??? abandon the equal +/- division ???
+        double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
+        double fluxPerPhoton = totalAbsoluteFlux / N;
 
-        // Segregate the positive-flux summands from negative
-        double totalPositiveFlux = 0.;
-        std::list<SBProfile*> positiveList;
-
-        double totalNegativeFlux = 0.;
-        std::list<SBProfile*> negativeList;
-
-        std::list<SBProfile*>::const_iterator pptr;
-        for (pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
-            double flux = (*pptr)->getFlux();
-            if (flux > 0.) {
-                totalPositiveFlux += flux;
-                positiveList.push_back(*pptr);
-            } else if (flux < 0.) {
-                totalNegativeFlux += flux;
-                negativeList.push_back(*pptr);
-            }
-        }
-
-        // How much flux should each photon carry?
-        double fluxPerPhoton = (totalPositiveFlux + std::abs(totalNegativeFlux)) / N ;
-        double fractionPositive = totalPositiveFlux / (totalPositiveFlux + std::abs(totalNegativeFlux));
-        int nPos = static_cast<int> (floor( N*fractionPositive));
-        // Allocate the fraction of a photon that's left on a probabilistic basis:
-        double fractionLeft = N*fractionPositive - nPos;
-        if (u() < fractionLeft) nPos++;
-        int nNeg = N - nPos;
-
+        // Initialize the output array
         PhotonArray result(0);
         result.reserve(N);
 
-        // Get photons from each positive summand, using BinomialDeviate to
-        // randomize distribution of photons among summands
-        for (pptr = positiveList.begin(); pptr!= positiveList.end(); ++pptr) {
-            double thisFlux = (*pptr)->getFlux();
-            int thisN = nPos;
-            std::list<SBProfile*>::const_iterator nextPtr = pptr;
-            ++nextPtr;
-            if (nextPtr!=positiveList.end()) {
-                // allocate a randomized fraction of the remaining photons to this summand:
-                BinomialDeviate bd(u, nPos, thisFlux/totalPositiveFlux);
-                thisN = bd();
-            }
-            PhotonArray thisPA = (*pptr)->shoot(thisN, u);
-            // Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
-            // whereas the shoot() routine would have made them each nominally thisFlux/thisN
-            thisPA.setTotalFlux(fluxPerPhoton*thisN);
-            result.append(thisPA);
-            nPos -= thisN;
-            totalPositiveFlux -= thisFlux;
-        }
+        double remainingAbsoluteFlux = totalAbsoluteFlux;
+        int remainingN = N;
 
-        // Now get photons from the summands that have negative flux
-        for (pptr = negativeList.begin(); pptr!= negativeList.end(); ++pptr) {
-            double thisFlux = (*pptr)->getFlux();
-            int thisN = nNeg;
+        // Get photons from each summand, using BinomialDeviate to
+        // randomize distribution of photons among summands
+        for (std::list<SBProfile*>::const_iterator pptr = plist.begin(); 
+             pptr!= plist.end();
+             ++pptr) {
+            double thisAbsoluteFlux = (*pptr)->getPositiveFlux() + (*pptr)->getNegativeFlux();
+
+            // How many photons to shoot from this summand?
+            int thisN = remainingN;  // All of what's left, if this is the last summand...
             std::list<SBProfile*>::const_iterator nextPtr = pptr;
             ++nextPtr;
-            if (nextPtr!=negativeList.end()) {
-                // allocate a randomized fraction of the remaining photons to this summand:
-                BinomialDeviate bd(u, nNeg, thisFlux/totalNegativeFlux);
+            if (nextPtr!=plist.end()) {
+                // otherwise allocate a randomized fraction of the remaining photons to this summand:
+                BinomialDeviate bd(u, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux);
                 thisN = bd();
             }
-            PhotonArray thisPA = (*pptr)->shoot(thisN, u);
-            // Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
-            // whereas the shoot() routine would have made them each nominally thisFlux/thisN
-            thisPA.setTotalFlux(-fluxPerPhoton*thisN);
-            result.append(thisPA);
-            nPos -= thisN;
-            totalNegativeFlux -= thisFlux;
+            if (thisN > 0) {
+                PhotonArray thisPA = (*pptr)->shoot(thisN, u);
+                // Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
+                // whereas the shoot() routine would have made them each nominally thisAbsoluteFlux/thisN
+                thisPA.scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux);
+                result.append(thisPA);
+            }
+            remainingN -= thisN;
+            remainingAbsoluteFlux -= thisAbsoluteFlux;
+            if (remainingN <=0) break;
+            if (remainingAbsoluteFlux <= 0.) break;
         }
         
         return result;
@@ -1447,8 +1489,12 @@ namespace galsim {
             throw SBError("Cannot shoot() for empty SBConvolve");
         PhotonArray result = (*pptr)->shoot(N, u);
         if (fluxScale!=1.) result.scaleFlux(fluxScale);
+        // It is necessary to shuffle when convolving because we do
+        // do not have a gaurantee that the convolvee's photons are
+        // uncorrelated, e.g. they might both have their negative ones
+        // at the end.
         for (++pptr; pptr != plist.end(); ++pptr)
-            result.convolve( (*pptr)->shoot(N, u));
+            result.convolveShuffle( (*pptr)->shoot(N, u), u);
         return result;
     }
 

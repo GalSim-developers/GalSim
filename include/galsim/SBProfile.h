@@ -160,11 +160,23 @@ namespace galsim {
          *
          * Convolution of two arrays is defined as adding the coordinates on a photon-by-photon basis
          * and multiplying the fluxes on a photon-by-photon basis. Output photons' flux is renormalized
-         * so that output total flux is product of two input totals.
+         * so that the expectation value of output total flux is product of two input totals, if
+	 * the two photon streams are uncorrelated.
          *
          * @param[in] rhs PhotonArray to convolve with this one.  Must be same size.
          */
         void convolve(const PhotonArray& rhs);
+
+        /**
+         * @brief Convolve this array with another, shuffling the order in which photons are combined.
+         *
+         * Same convolution behavior as convolve(), but the order in which the photons are
+	 * multiplied into the array is randomized to destroy any flux or position correlations.
+         *
+         * @param[in] rhs PhotonArray to convolve with this one.  Must be same size.
+         * @param[in] ud  A UniformDeviate used to shuffle the input photons.
+         */
+        void convolveShuffle(const PhotonArray& rhs, UniformDeviate& ud);
 
 #ifdef USE_IMAGES
         /**
@@ -349,13 +361,46 @@ namespace galsim {
          * approximately equal, but some can be negative as needed to represent negative regions.
          * Note that the ray-shooting method is not intended to produce a randomized value of the total
          * object flux, so do not assume that there will be sqrt(N) error on the flux.  In fact 
-         * most implementations will return a PhotonArray with exactly correct flux. It is only
-         * the distribution of flux on the sky that will definitely have sampling noise.
+         * most implementations will return a PhotonArray with exactly correct flux, with only
+         * the *distribution* of flux on the sky that will definitely have sampling noise. 
+         *
+         * The one definitive gaurantee is that, in the limit of large number of photons, the surface 
+         * brightness distribution of the photons will converge on the SB pattern defined by the object.
+         *
+         * Objects with regions of negative flux will result in creation of photons with negative flux. 
+         * Absolute value of negative photons' flux should be nearly equal to the standard flux
+         * of positive photons.  Shot-noise fluctuations between the number of positive and negative photons
+         * will produce noise in the total net flux carried by the output [PhotonArray](@ref PhotonArray).
+         *
          * @param[in] N Total umber of photons to produce.
          * @param[in] u UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
         virtual PhotonArray shoot(int N, UniformDeviate& u) const=0;
+
+        /**
+         * @brief Return expectation value of flux in positive photons when shoot() is called
+         *
+         * Returns expectation value of flux returned in positive-valued photons when 
+         * [shoot()](@ref shoot)
+         * is called for this object.  Default implementation is to return getFlux(), if it is
+         * positive, or 0 otherwise, which will be
+         * the case when the SBProfile is constructed entirely from elements of the same sign.
+         * @returns Expected positive-photon flux.
+         */
+        virtual double getPositiveFlux() const {return getFlux()>0. ? getFlux() : 0.;}
+
+        /**
+         * @brief Return expectation value of absolute value of flux in negative photons from shoot()
+         *
+         * Returns expectation value of (absolute value of) flux returned in positive-valued photons
+         * when shoot() is called for this object.  Default implementation is to return getFlux() if it
+         * is negative, 0 otherwise,
+         * which will be the case when the SBProfile is constructed entirely from elements that
+         * have the same sign.
+         * @returns Expected absolute value of negative-photon flux.
+         */
+        virtual double getNegativeFlux() const {return getFlux()>0. ? 0. : -getFlux();}
 
 #ifdef USE_IMAGES
         // **** Drawing routines ****
@@ -740,12 +785,30 @@ namespace galsim {
          * @brief Shoot photons through this SBAdd.
          *
          * SBAdd will divide the N photons among its summands with probabilities proportional
-         * to their fluxes.
+         * to their fluxes.  Note that the order of photons in output array will not be
+         * random as different summands' outputs are simply concatenated.
          * @param[in] N Total umber of photons to produce.
          * @param[in] u UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
         virtual PhotonArray shoot(int N, UniformDeviate& u) const;
+        /**
+         * @brief Give total positive flux of all summands
+         *
+         * Note that `getPositiveFlux()` return from SBAdd may not equal the integral of positive
+         * regions of the image, because summands could have positive and negative regions cancelling
+         * each other.
+         * @returns Total positive flux of all summands
+         */
+        virtual double getPositiveFlux() const;
+        /** @brief Give absolute value of total negative flux of all summands
+         *
+         * Note that `getNegativeFlux()` return from SBAdd may not equal the integral of negative
+         * regions of the image, because summands could have positive and negative regions cancelling
+         * each other.
+         * @returns Absolute value of total negative flux of all summands
+         */
+        virtual double getNegativeFlux() const;
 
         // Overrides for better efficiency:
         virtual void fillKGrid(KTable& kt) const;
@@ -902,6 +965,9 @@ namespace galsim {
 
         double getFlux() const { return adaptee->getFlux()*absdet; }
         void setFlux(double flux_=1.) { adaptee->setFlux(flux_/absdet); }
+
+        double getPositiveFlux() const {return adaptee->getPositiveFlux()*absdet;}
+        double getNegativeFlux() const {return adaptee->getNegativeFlux()*absdet;}
 
         /**
          * @brief Shoot photons through this SBDistort.
@@ -1077,6 +1143,8 @@ namespace galsim {
         double getFlux() const { return fluxScale * fluxProduct; }
         void setFlux(double flux_=1.) { fluxScale = flux_/fluxProduct; }
 
+        double getPositiveFlux() const;
+        double getNegativeFlux() const;
         /**
          * @brief Shoot photons through this SBConvolve.
          *
