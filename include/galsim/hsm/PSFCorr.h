@@ -36,6 +36,7 @@
 
 #include "../Shear.h"
 #include "../Image.h"
+#include "../Bounds.h"
 
 namespace galsim {
 namespace hsm {
@@ -108,6 +109,15 @@ namespace hsm {
         /// @brief Size sigma = (det M)^(1/4) from the adaptive moments; -1 if not measured
         float moment_sigma;
 
+        /// @brief Total image intensity for best-fit elliptical Gaussian from adaptive moments
+        float moment_amp;
+
+        /// @brief Centroid of best-fit elliptical Gaussian
+        Position<double> moment_centroid;
+
+        /// @brief The weighted radial fourth moment of the image
+        float moment_rho4;
+
         /// @brief Number of iterations needed to get adaptive moments; 0 if not measured
         int moment_n_iter;
 
@@ -119,7 +129,10 @@ namespace hsm {
         float resolution_factor;
 
         /// @brief Constructor, setting defaults
-    HSMShapeData() : observed_shape(galsim::Shear()), corrected_shape(galsim::Shear()), correction_method("None"), moment_status(-1), moment_sigma(-1.), moment_n_iter(0), correction_status(-1), resolution_factor(-1.)
+    HSMShapeData() : observed_shape(galsim::Shear()), corrected_shape(galsim::Shear()),
+            correction_method("None"), moment_status(-1), moment_sigma(-1.), moment_amp(-1.),
+            moment_centroid(galsim::Position<double>(0.,0.)), moment_rho4(-1.), moment_n_iter(0),
+            correction_status(-1), resolution_factor(-1.)
         {}
     };
 
