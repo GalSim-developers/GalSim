@@ -216,7 +216,12 @@ namespace galsim {
          *  yMin_new = y0
          *  yMax_new = y0 + yMax - yMin
          */
-        void setOriginTo(int x0, int y0) { shift(x0 - this->getXMin(), y0 - this->getYMin()); }
+        void setOrigin(int x0, int y0) { shift(x0 - this->getXMin(), y0 - this->getYMin()); }
+
+        /**
+         *  @brief Set the pixel scale 
+         */
+        void setScale(int scale) { _scale = scale; }
 
         /**
          *  @brief Move the center of the image, changing the logical location of the pixels.
@@ -230,7 +235,7 @@ namespace galsim {
          *  yMin_new = y0 - (yMax - yMin)/2
          *  yMax_new = yMin_new + yMax - yMin
          */
-        void setCenterTo(int x0, int y0) 
+        void setCenter(int x0, int y0) 
         { 
             shift(x0 - (this->getXMax()+this->getXMin())/2 ,
                   y0 - (this->getYMax()+this->getYMin())/2 ); 
