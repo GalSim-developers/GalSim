@@ -35,9 +35,9 @@ namespace galsim {
         ImageBoundsError(const std::string& m="") : 
             ImageError("Access to out-of-bounds pixel " + m) {}
 
-        ImageBoundsError(const std::string& m, const int min, const int max, const int tried);
+        ImageBoundsError(const std::string& m, int min, int max, int tried);
 
-        ImageBoundsError(const int x, const int y, const Bounds<int> b);
+        ImageBoundsError(int x, int y, const Bounds<int> b);
     };
 
     template <typename T> class AssignableToImage;
@@ -252,20 +252,20 @@ namespace galsim {
         /**
          *  @brief Element access is checked always
          */
-        const T& operator()(const int xpos, const int ypos) const 
+        const T& operator()(int xpos, int ypos) const 
         { return at(xpos,ypos); }
 #else
         /**
          *  @brief Unchecked element access
          */
-        const T& operator()(const int xpos, const int ypos) const 
+        const T& operator()(int xpos, int ypos) const 
         { return _data[addressPixel(xpos, ypos)]; }
 #endif
 
         /**
          *  @brief Element access - checked
          */
-        const T& at(const int xpos, const int ypos) const;
+        const T& at(int xpos, int ypos) const;
 
         /**
          *  @brief const_iterator type for pixels within a row (unchecked).
@@ -287,7 +287,7 @@ namespace galsim {
         /**
          *  @brief Return an iterator to an arbitrary pixel.
          */
-        const_iterator getIter(const int x, const int y) const 
+        const_iterator getIter(int x, int y) const 
         { return _data + addressPixel(x, y); }
 
         //@{
@@ -318,11 +318,11 @@ namespace galsim {
         double _scale;                // pixel scale (used by SBInterpolatedImage and SBProfile;
                                       // units?!)
 
-        inline int addressPixel(const int y) const {
+        inline int addressPixel(int y) const {
             return (y - this->getYMin()) * _stride;
         }
         
-        inline int addressPixel(const int x, const int y) const {
+        inline int addressPixel(int x, int y) const {
             return (x - this->getXMin()) + addressPixel(y);
         }
 
@@ -505,20 +505,31 @@ namespace galsim {
         /** 
          *  @brief Element access is checked always
          */
-        T& operator()(const int xpos, const int ypos) const 
+        T& operator()(int xpos, int ypos) const 
         { return at(xpos,ypos); }
 #else
         /**
          *  @brief Unchecked access
          */
-        T& operator()(const int xpos, const int ypos) const 
+        T& operator()(int xpos, int ypos) const 
         { return this->_data[this->addressPixel(xpos, ypos)]; }
 #endif
 
         /**
          *  @brief Element access - checked
          */
-        T& at(const int xpos, const int ypos) const;
+        T& at(int xpos, int ypos) const;
+
+        /**
+         *  @brief Another way to set a value.  Equivalent to im(x,y) = value.
+         *
+         *  The python layer can't implement the im(x,y) = value syntax, so 
+         *  we need something else to set a single pixel.  
+         *  This function is unnecessary at the C++ level, but in the interest of 
+         *  trying to keep the two layers as close as possible, we might as well include it.
+         */
+        void setValue(int x, int y, T value)
+        { (*this)(x,y) = value; }
 
         /**
          *  @brief iterator type for pixels within a row (unchecked).
@@ -540,7 +551,7 @@ namespace galsim {
         /**
          *  @brief Return an iterator to an arbitrary pixel.
          */
-        iterator getIter(const int x, const int y) const {
+        iterator getIter(int x, int y) const {
             return this->_data + this->addressPixel(x, y);
         }
 
@@ -697,9 +708,9 @@ namespace galsim {
         /**
          *  @brief Element access is checked always
          */
-        T& operator()(const int xpos, const int ypos)
+        T& operator()(int xpos, int ypos)
         { return at(xpos,ypos); }
-        const T& operator()(const int xpos, const int ypos) const 
+        const T& operator()(int xpos, int ypos) const 
         { return at(xpos,ypos); }
         //@}
 #else
@@ -707,9 +718,9 @@ namespace galsim {
         /**
          *  @brief Unchecked access
          */
-        T& operator()(const int xpos, const int ypos)
+        T& operator()(int xpos, int ypos)
         { return this->_data[this->addressPixel(xpos, ypos)]; }
-        const T& operator()(const int xpos, const int ypos) const 
+        const T& operator()(int xpos, int ypos) const 
         { return this->_data[this->addressPixel(xpos, ypos)]; }
         //@}
 #endif
@@ -718,9 +729,20 @@ namespace galsim {
         /**
          *  @brief Element access - checked
          */
-        T& at(const int xpos, const int ypos);
-        const T& at(const int xpos, const int ypos) const;
+        T& at(int xpos, int ypos);
+        const T& at(int xpos, int ypos) const;
         //@}
+
+        /**
+         *  @brief Another way to set a value.  Equivalent to im(x,y) = value.
+         *
+         *  The python layer can't implement the im(x,y) = value syntax, so 
+         *  we need something else to set a single pixel.  
+         *  This function is unnecessary at the C++ level, but in the interest of 
+         *  trying to keep the two layers as close as possible, we might as well include it.
+         */
+        void setValue(int x, int y, T value)
+        { (*this)(x,y) = value; }
 
         //@{
         /**
@@ -754,9 +776,9 @@ namespace galsim {
         /**
          *  @brief Return an iterator to an arbitrary pixel.
          */
-        iterator getIter(const int x, const int y)
+        iterator getIter(int x, int y)
         { return this->_data + this->addressPixel(x, y); }
-        const_iterator getIter(const int x, const int y) const 
+        const_iterator getIter(int x, int y) const 
         { return this->_data + this->addressPixel(x, y); }
         //@}
 

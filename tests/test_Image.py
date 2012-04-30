@@ -159,9 +159,7 @@ def test_Image_binary_divide():
     """
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
-        # Note that I am using refarray + 1: divide by zero results in a rather ugly floating
-        # point exception in C++, no Exception thrown in Python.  Prob. need to improve this
-        # error handling behaviour.
+        # Note that I am using refarray + 1 to avoid divide-by-zero. 
         image1 = galsim.ImageView[types[i]]((ref_array + 1).astype(types[i]))
         image2 = galsim.ImageView[types[i]]((3 * (ref_array + 1)**2).astype(types[i]))
         image3 = image2 / image1
@@ -176,6 +174,110 @@ def test_Image_binary_divide():
         np.testing.assert_array_equal((3 * (ref_array + 1)).astype(types[i]), image3.array,
                                       err_msg="Binary divide in Image class does"
                                              +" not match reference for dtype = "+str(types[i]))
+
+        # Test that the ZeroDivisionError is correctly thrown if some pixel = 0.
+        image1.setValue(1,3,0)
+        def div_helper(image1, image2, image3):
+            image3 = image2 / image1
+        # MJ: It turns out that numpy division doesn't throw a ZeroDivisionError.
+        #     Instead it just silently calculates Inf or Nan for floats.
+        #     For integers x / 0 -> 0.  Weird, but there you go.
+        #     So if we do want an exception thrown, it looks like we'll have to 
+        #     implement it ourselves.
+        #np.testing.assert_raises(ZeroDivisionError, div_helper, image1, image2, image3)
+
+def test_Image_binary_scalar_add():
+    """Test that all four types of supported Images add scalars correctly.
+    """
+    for i in xrange(ntypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image2 = image1 + 3
+        np.testing.assert_array_equal((ref_array + 3).astype(types[i]), image2.array,
+                err_msg="Binary add scalar in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
+        image2 = 3 + image1
+        np.testing.assert_array_equal((ref_array + 3).astype(types[i]), image2.array,
+                err_msg="Binary radd scalar in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.ImageView"+tchar[i])
+        image1 = image_init_func(ref_array.astype(types[i]))
+        image2 = image1 + 3
+        np.testing.assert_array_equal((ref_array + 3).astype(types[i]), image2.array,
+                err_msg="Binary add scalar in Image class does"
+                +" not match reference for dtype = "+str(types[i]))
+        image2 = 3 + image1
+        np.testing.assert_array_equal((ref_array + 3).astype(types[i]), image2.array,
+                err_msg="Binary radd scalar in Image class does"
+                +" not match reference for dtype = "+str(types[i]))
+
+def test_Image_binary_scalar_subtract():
+    """Test that all four types of supported Images binary scalar subtract correctly.
+    """
+    for i in xrange(ntypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image2 = image1 - 3
+        np.testing.assert_array_equal((ref_array - 3).astype(types[i]), image2.array,
+                err_msg="Binary add scalar in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.ImageView"+tchar[i])
+        image1 = image_init_func(ref_array.astype(types[i]))
+        image2 = image1 - 3
+        np.testing.assert_array_equal((ref_array - 3).astype(types[i]), image2.array,
+                err_msg="Binary add scalar in Image class does"
+                +" not match reference for dtype = "+str(types[i]))
+
+def test_Image_binary_scalar_multiply():
+    """Test that all four types of supported Images binary scalar multiply correctly.
+    """
+    for i in xrange(ntypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image2 = image1 * 3
+        np.testing.assert_array_equal((ref_array * 3).astype(types[i]), image2.array,
+                err_msg="Binary multiply scalar in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
+        image2 = 3 * image1
+        np.testing.assert_array_equal((ref_array * 3).astype(types[i]), image2.array,
+                err_msg="Binary rmultiply scalar in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.ImageView"+tchar[i])
+        image1 = image_init_func(ref_array.astype(types[i]))
+        image2 = image1 * 3
+        np.testing.assert_array_equal((ref_array * 3).astype(types[i]), image2.array,
+                err_msg="Binary multiply scalar in Image class does"
+                +" not match reference for dtype = "+str(types[i]))
+        image2 = 3 * image1
+        np.testing.assert_array_equal((ref_array * 3).astype(types[i]), image2.array,
+                err_msg="Binary rmultiply scalar in Image class does"
+                +" not match reference for dtype = "+str(types[i]))
+
+def test_Image_binary_scalar_divide():
+    """Test that all four types of supported Images binary scalar divide correctly.
+    """
+    for i in xrange(ntypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.ImageView[types[i]]((3 * ref_array).astype(types[i]))
+        image2 = image1 / 3
+        np.testing.assert_array_equal(ref_array.astype(types[i]), image2.array,
+                err_msg="Binary divide scalar in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.ImageView"+tchar[i])
+        image1 = image_init_func((3 * ref_array).astype(types[i]))
+        image2 = image1 / 3
+        np.testing.assert_array_equal(ref_array.astype(types[i]), image2.array,
+                err_msg="Binary divide scalar in Image class does"
+                +" not match reference for dtype = "+str(types[i]))
+        
+        def div_helper(image1, image2, val):
+            image2 = image1 / val
+        #np.testing.assert_raises(ZeroDivisionError, div_helper, image1, image2, 0)
+
 
 def test_Image_inplace_add():
     """Test that all four types of supported Images inplace add correctly.
@@ -257,6 +359,12 @@ def test_Image_inplace_divide():
                                       err_msg="Inplace divide in Image class does"
                                              +" not match reference for dtype = "+str(types[i]))
 
+        image1.setValue(1,3,0)
+        def idiv_helper(image1, image2):
+            image2 /= image1
+        #np.testing.assert_raises(ZeroDivisionError, idiv_helper, image1, image2)
+
+
 def test_Image_inplace_scalar_add():
     """Test that all four types of supported Images inplace scalar add correctly.
     """
@@ -337,6 +445,9 @@ def test_Image_inplace_scalar_divide():
                                       err_msg="Inplace scalar divide in Image class does"
                                              +" not match reference for dtype = "+str(types[i]))
         
+        def idiv_helper(image1, val):
+            image2 /= val
+        #np.testing.assert_raises(ZeroDivisionError, idivhelper, image2, 0)
 
 if __name__ == "__main__":
     test_Image_XYmin_XYMax()
@@ -346,9 +457,15 @@ if __name__ == "__main__":
     test_Image_binary_subtract()
     test_Image_binary_multiply()
     test_Image_binary_divide()
+    test_Image_binary_scalar_add()
+    test_Image_binary_scalar_subtract()
+    test_Image_binary_scalar_multiply()
+    test_Image_binary_scalar_divide()
     test_Image_inplace_add()
     test_Image_inplace_subtract()
     test_Image_inplace_multiply()
     test_Image_inplace_divide()
+    test_Image_inplace_scalar_add()
+    test_Image_inplace_scalar_subtract()
     test_Image_inplace_scalar_multiply()
     test_Image_inplace_scalar_divide()

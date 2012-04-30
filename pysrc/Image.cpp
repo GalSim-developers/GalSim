@@ -263,6 +263,7 @@ struct PyImage {
             // funtion (which is the im(x,y) syntax) is just the const version.
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
+            .def("setValue", &Image<T>::setValue, bp::args("x","y","value"))
             .def("copyFrom", &Image<T>::copyFrom)
             .def("fill", &Image<T>::fill)
             ;
@@ -324,6 +325,7 @@ struct PyImage {
             .add_property("array", &getArray)
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
+            .def("setValue", &ImageView<T>::setValue, bp::args("x","y","value"))
             .def("copyFrom", &ImageView<T>::copyFrom)
             .def("fill", &Image<T>::fill)
             ;
