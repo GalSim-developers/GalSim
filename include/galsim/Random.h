@@ -92,7 +92,7 @@ namespace galsim {
         template <typename T>
         void applyTo(Image<T>& data) {
             // Typedef for image row iterable
-            typedef typename Image<T>::Iter ImIter;
+            typedef typename Image<T>::iterator ImIter;
 
             for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                 ImIter ee = data.rowEnd(y);
@@ -207,7 +207,7 @@ namespace galsim {
         template <typename T>
         void applyTo(Image<T>& data) {
             // Typedef for image row iterable
-            typedef typename Image<T>::Iter ImIter;
+            typedef typename Image<T>::iterator ImIter;
 
             for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                 ImIter ee = data.rowEnd(y);
@@ -301,7 +301,7 @@ namespace galsim {
         template <typename T>
         void applyTo(Image<T>& data) {
             // Typedef for image row iterable
-            typedef typename Image<T>::Iter ImIter;
+            typedef typename Image<T>::iterator ImIter;
 
             for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                 ImIter ee = data.rowEnd(y);
@@ -371,7 +371,7 @@ namespace galsim {
         template <typename T>
         void applyTo(Image<T>& data) {
             // Typedef for image row iterable
-            typedef typename Image<T>::Iter ImIter;
+            typedef typename Image<T>::iterator ImIter;
 
             for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                 ImIter ee = data.rowEnd(y);

@@ -152,7 +152,7 @@ namespace galsim {
         /**
          *  @brief Return a pointer to the first pixel in the image.
          */
-        const T * getData() const { return _data; }
+        const T* getData() const { return _data; }
 
         /**
          *  @brief Return the number of elements between rows in memory.

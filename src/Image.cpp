@@ -341,6 +341,10 @@ const ImageView<T>& ImageView<T>::operator/=(const BaseImage<T>& rhs) const
 
 // instantiate for expected types
 
+template class BaseImage<double>;
+template class BaseImage<float>;
+template class BaseImage<int>;
+template class BaseImage<short>;
 template class Image<double>;
 template class Image<float>;
 template class Image<int>;

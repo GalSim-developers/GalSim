@@ -93,7 +93,7 @@ namespace galsim {
             // Above this many e's, assume Poisson distribution =Gaussian 
             static const double MAX_POISSON=1.e5;
             // Typedef for image row iterable
-            typedef typename Image<T>::Iter ImIter;
+            typedef typename Image<T>::iterator ImIter;
 
             // Add the Poisson noise first:
             if (_gain > 0.) {
@@ -138,7 +138,7 @@ namespace galsim {
         template <class T>
         void applyToVar(Image<T>& data, Image<T>& variance) {
             // Typedef for image row iterable
-            typedef typename Image<T>::Iter ImIter;
+            typedef typename Image<T>::iterator ImIter;
             // Resize the variance image to match data image
             variance.resize(data.getBounds());
             // Fill with the (constant) Gaussian contribution to variance
