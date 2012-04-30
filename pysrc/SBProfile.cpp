@@ -21,31 +21,31 @@ struct PySBProfile {
         // but it's easier to do that than write out the full class_ type.
         wrapper
             .def("fillXImage", 
-                 (double (SBProfile::*)(Image<U> &, double) const)&SBProfile::fillXImage, 
+                 (double (SBProfile::*)(ImageView<U> &, double) const)&SBProfile::fillXImage, 
                  bp::args("image", "dx"),
                  "Utility for drawing into Image data structures")
             .def("draw", 
-                 (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::draw,
+                 (double (SBProfile::*)(ImageView<U> &, double, int) const)&SBProfile::draw,
                  (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "Draw in-place and return the summed flux.")
             .def("plainDraw",
-                 (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::plainDraw,
+                 (double (SBProfile::*)(ImageView<U> &, double, int) const)&SBProfile::plainDraw,
                  (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "Draw in place using only real methods")
             .def("fourierDraw",
-                 (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::fourierDraw,
+                 (double (SBProfile::*)(ImageView<U> &, double, int) const)&SBProfile::fourierDraw,
                  (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "Draw in place using only Fourier methods")
             .def("drawK",
-                 (void (SBProfile::*)(Image<U> &, Image<U> &, double, int) const)&SBProfile::drawK,
+                 (void (SBProfile::*)(ImageView<U> &, ImageView<U> &, double, int) const)&SBProfile::drawK,
                  (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "Draw in k-space automatically")
             .def("plainDrawK",
-                 (void (SBProfile::*)(Image<U> &, Image<U> &, double, int) const)&SBProfile::plainDrawK,
+                 (void (SBProfile::*)(ImageView<U> &, ImageView<U> &, double, int) const)&SBProfile::plainDrawK,
                  (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "evaluate in k-space automatically")
             .def("fourierDrawK",
-                 (void (SBProfile::*)(Image<U> &, Image<U> &, double, int) const)&SBProfile::fourierDrawK,
+                 (void (SBProfile::*)(ImageView<U> &, ImageView<U> &, double, int) const)&SBProfile::fourierDrawK,
                  (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "FT from x-space")
             ;
@@ -113,7 +113,7 @@ struct PySBProfile {
             .def("shear", &SBProfile::shear, bp::args("e1", "e2"), ManageNew())
             .def("rotate", &SBProfile::rotate, bp::args("theta"), ManageNew())
             .def("shift", &SBProfile::shift, bp::args("dx", "dy"), ManageNew())
-            .def("draw", (Image<float> (SBProfile::*)(double, int) const)&SBProfile::draw,
+            .def("draw", (ImageView<float> (SBProfile::*)(double, int) const)&SBProfile::draw,
                  (bp::arg("dx")=0., bp::arg("wmult")=1), "default draw routine")
             ;
         wrapTemplates<float>(pySBProfile);
