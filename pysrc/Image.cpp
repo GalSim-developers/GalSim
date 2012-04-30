@@ -302,17 +302,11 @@ struct PyImage {
             "class's own accessors are all (x,y).\n\n"
             ;
 
-        bp::object getScale = bp::make_function(&BaseImage<T>::getScale);
-        bp::object setScale = bp::make_function(&BaseImage<T>::setScale);
         bp::object at = bp::make_function(
             &ImageView<T>::at,
             bp::return_value_policy<bp::copy_non_const_reference>(),
             bp::args("x", "y")
         );
-        bp::object getBounds = bp::make_function(
-            &BaseImage<T>::getBounds, 
-            bp::return_value_policy<bp::copy_const_reference>()
-        ); 
         bp::class_< ImageView<T>, bp::bases< BaseImage<T> > >
             pyImageView(("ImageView" + suffix).c_str(), doc, bp::no_init);
         pyImageView
@@ -354,17 +348,11 @@ struct PyImage {
             "\n"
             ;
 
-        bp::object getScale = bp::make_function(&BaseImage<T>::getScale);
-        bp::object setScale = bp::make_function(&BaseImage<T>::setScale);
         bp::object at = bp::make_function(
             &BaseImage<T>::at,
             bp::return_value_policy<bp::copy_const_reference>(),
             bp::args("x", "y")
         );
-        bp::object getBounds = bp::make_function(
-            &BaseImage<T>::getBounds, 
-            bp::return_value_policy<bp::copy_const_reference>()
-        ); 
         bp::class_< ConstImageView<T>, bp::bases< BaseImage<T> > >
             pyConstImageView(("ConstImageView" + suffix).c_str(), doc, bp::no_init);
         pyConstImageView

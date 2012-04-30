@@ -211,7 +211,7 @@ namespace galsim {
         /**
          *  @brief Set the pixel scale 
          */
-        void setScale(int scale) { _scale = scale; }
+        void setScale(double scale) { _scale = scale; }
 
         /**
          *  @brief Move the center of the image, changing the logical location of the pixels.
