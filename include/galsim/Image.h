@@ -71,18 +71,8 @@ namespace galsim {
         /**
          *  @brief Return the bounding box of the image.
          */
-        const Bounds<int>& getBounds() const { return _bounds; }
+        const Bounds<int>& getBounds() const { return this->_bounds; }
 
-        //@{
-        /**
-         *  @brief Convenience accessors for the bounding box corners.
-         */
-        int getXMin() const { return _bounds.getXMin(); }
-        int getXMax() const { return _bounds.getXMax(); }
-        int getYMin() const { return _bounds.getYMin(); }
-        int getYMax() const { return _bounds.getYMax(); }
-        //@}
-        
     protected:
 
         Bounds<int> _bounds;          // bounding box
@@ -240,6 +230,22 @@ namespace galsim {
             shift(x0 - (this->getXMax()+this->getXMin())/2 ,
                   y0 - (this->getYMax()+this->getYMin())/2 ); 
         }
+
+        /**
+         *  @brief Return the bounding box of the image.
+         */
+        const Bounds<int>& getBounds() const { return AssignableToImage<T>::getBounds(); }
+
+        //@{
+        /**
+         *  @brief Convenience accessors for the bounding box corners.
+         */
+        int getXMin() const { return getBounds().getXMin(); }
+        int getXMax() const { return getBounds().getXMax(); }
+        int getYMin() const { return getBounds().getYMin(); }
+        int getYMax() const { return getBounds().getYMax(); }
+        //@}
+        
 
 
 #ifdef IMAGE_BOUNDS_CHECK
@@ -798,11 +804,15 @@ namespace galsim {
     template <typename T, typename Op>
     Op for_each_pixel(const ImageView<T>& image, Op f) 
     {
-        if (image.isContiguous()) {
-            f = std::for_each(image.rowBegin(image.getYMin()), image.rowEnd(image.getYMax()), f);
-        } else {
-            for (int i = image.getYMin(); i <= image.getYMax(); i++)
-                f = std::for_each(image.rowBegin(i), image.rowEnd(i), f);
+        // Note: all of these functions have this guard to make sure we don't
+        // try to access the memory if the image is in an undefined state.
+        if (image.getData()) {
+            if (image.isContiguous()) {
+                f = std::for_each(image.rowBegin(image.getYMin()), image.rowEnd(image.getYMax()), f);
+            } else {
+                for (int i = image.getYMin(); i <= image.getYMax(); i++)
+                    f = std::for_each(image.rowBegin(i), image.rowEnd(i), f);
+            }
         }
         return f;
     }
@@ -813,14 +823,16 @@ namespace galsim {
     template <typename T, typename Op>
     Op for_each_pixel(const ImageView<T>& image, const Bounds<int>& bounds, Op f) 
     {
-        if (!image.getBounds().includes(bounds))
-            throw ImageError("for_each_pixel range exceeds image range");
+        if (image.getData()) {
+            if (!image.getBounds().includes(bounds))
+                throw ImageError("for_each_pixel range exceeds image range");
 
-        if (image.getBounds() == bounds) return for_each_pixel(image,f);
-        
-        for (int i = bounds.getYMin(); i <= bounds.getYMax(); i++)
-            f = std::for_each(image.getIter(bounds.getXMin(),i),
-                              image.getIter(bounds.getXMax()+1,i), f);
+            if (image.getBounds() == bounds) return for_each_pixel(image,f);
+
+            for (int i = bounds.getYMin(); i <= bounds.getYMax(); i++)
+                f = std::for_each(image.getIter(bounds.getXMin(),i),
+                                  image.getIter(bounds.getXMax()+1,i), f);
+        }
         return f;
     }
 
@@ -830,16 +842,18 @@ namespace galsim {
     template <typename T, typename Op>
     Op transform_pixel(const ImageView<T>& image, Op f) 
     {
-        typedef typename ImageView<T>::iterator Iter;
-        if (image.isContiguous()) {
-            const Iter ee = image.rowEnd(image.getYMax());
-            for (Iter it = image.rowBegin(image.getYMin()); it != ee; ++it) 
-                *it = f(*it);
-        } else {
-            for (int y = image.getYMin(); y <= image.getYMax(); ++y) {
-                const Iter ee = image.rowEnd(y);
-                for (Iter it = image.rowBegin(y); it != ee; ++it) 
+        if (image.getData()) {
+            typedef typename ImageView<T>::iterator Iter;
+            if (image.isContiguous()) {
+                const Iter ee = image.rowEnd(image.getYMax());
+                for (Iter it = image.rowBegin(image.getYMin()); it != ee; ++it) 
                     *it = f(*it);
+            } else {
+                for (int y = image.getYMin(); y <= image.getYMax(); ++y) {
+                    const Iter ee = image.rowEnd(y);
+                    for (Iter it = image.rowBegin(y); it != ee; ++it) 
+                        *it = f(*it);
+                }
             }
         }
         return f;
@@ -851,16 +865,18 @@ namespace galsim {
     template <typename T, typename Op>
     Op transform_pixel(const ImageView<T>& image, const Bounds<int>& bounds, Op f) 
     {
-        typedef typename ImageView<T>::iterator Iter;
-        if (!image.getBounds().includes(bounds))
-            throw ImageError("transform_pixel range exceeds image range");
+        if (image.getData()) {
+            typedef typename ImageView<T>::iterator Iter;
+            if (!image.getBounds().includes(bounds))
+                throw ImageError("transform_pixel range exceeds image range");
 
-        if (image.getBounds() == bounds) return transform_pixel(image,f); 
+            if (image.getBounds() == bounds) return transform_pixel(image,f); 
 
-        for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
-            const Iter ee = image.getIter(bounds.getXMax()+1,y);      
-            for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it) 
-                *it = f(*it);
+            for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
+                const Iter ee = image.getIter(bounds.getXMax()+1,y);      
+                for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it) 
+                    *it = f(*it);
+            }
         }
         return f;
     }
@@ -871,12 +887,14 @@ namespace galsim {
     template <typename T, typename Op>
     Op add_function_pixel(const ImageView<T>& image, Op f) 
     {
-        typedef typename ImageView<T>::iterator Iter;
-        for (int y = image.getYMin(); y <= image.getYMax(); ++y) {
-            int x = image.getXMin();
-            const Iter ee = image.rowEnd(y);
-            for (Iter it = image.rowBegin(y); it != ee; ++it, ++x) 
-                *it += f(x,y);
+        if (image.getData()) {
+            typedef typename ImageView<T>::iterator Iter;
+            for (int y = image.getYMin(); y <= image.getYMax(); ++y) {
+                int x = image.getXMin();
+                const Iter ee = image.rowEnd(y);
+                for (Iter it = image.rowBegin(y); it != ee; ++it, ++x) 
+                    *it += f(x,y);
+            }
         }
         return f;
     }
@@ -887,18 +905,20 @@ namespace galsim {
     template <typename T, typename Op>
     Op add_function_pixel(const ImageView<T>& image, const Bounds<int>& bounds, Op f) 
     {
-        typedef typename ImageView<T>::iterator Iter;
-        if (!bounds.isDefined()) return f;
-        if (!image.getBounds().includes(bounds))
-            throw ImageError("add_function_pixel range exceeds image range");
+        if (image.getData()) {
+            typedef typename ImageView<T>::iterator Iter;
+            if (!bounds.isDefined()) return f;
+            if (!image.getBounds().includes(bounds))
+                throw ImageError("add_function_pixel range exceeds image range");
 
-        if (image.getBounds() == bounds) return add_function_pixel(image,f);
+            if (image.getBounds() == bounds) return add_function_pixel(image,f);
 
-        for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
-            int x = bounds.getXMin();
-            const Iter ee = image.getIter(bounds.getXMax()+1,y);      
-            for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it, ++x) 
-                *it += f(x,y);
+            for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
+                int x = bounds.getXMin();
+                const Iter ee = image.getIter(bounds.getXMax()+1,y);      
+                for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it, ++x) 
+                    *it += f(x,y);
+            }
         }
         return f;
     }
@@ -909,12 +929,14 @@ namespace galsim {
     template <typename T, typename Op>
     Op fill_pixel(const ImageView<T>& image, Op f) 
     {
-        typedef typename ImageView<T>::iterator Iter;
-        for (int y = image.getYMin(); y <= image.getYMax(); ++y) {
-            int x = image.getXMin();
-            const Iter ee = image.rowEnd(y);      
-            for (Iter it = image.rowBegin(y); it != ee; ++it, ++x) 
-                *it = f(x,y);
+        if (image.getData()) {
+            typedef typename ImageView<T>::iterator Iter;
+            for (int y = image.getYMin(); y <= image.getYMax(); ++y) {
+                int x = image.getXMin();
+                const Iter ee = image.rowEnd(y);      
+                for (Iter it = image.rowBegin(y); it != ee; ++it, ++x) 
+                    *it = f(x,y);
+            }
         }
         return f;
     }
@@ -925,17 +947,19 @@ namespace galsim {
     template <typename T, typename Op>
     Op fill_pixel(const ImageView<T>& image, const Bounds<int>& bounds, Op f) 
     {
-        typedef typename ImageView<T>::iterator Iter;
-        if (!image.getBounds().includes(bounds))
-            throw ImageError("add_function_pixel range exceeds image range");
+        if (image.getData()) {
+            typedef typename ImageView<T>::iterator Iter;
+            if (!image.getBounds().includes(bounds))
+                throw ImageError("add_function_pixel range exceeds image range");
 
-        if (image.getBounds() == bounds) return fill_pixel(image,f);
+            if (image.getBounds() == bounds) return fill_pixel(image,f);
 
-        for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
-            int x = bounds.getXMin();
-            const Iter ee = image.getIter(bounds.getXMax()+1,y);      
-            for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it, ++x) 
-                *it = f(x,y);
+            for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
+                int x = bounds.getXMin();
+                const Iter ee = image.getIter(bounds.getXMax()+1,y);      
+                for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it, ++x) 
+                    *it = f(x,y);
+            }
         }
         return f;
     }
@@ -944,18 +968,20 @@ namespace galsim {
     template <typename T1, typename T2, typename Op>
     Op transform_pixel(const ImageView<T1>& image1, const BaseImage<T2>& image2, Op f) 
     {
-        typedef typename ImageView<T1>::iterator Iter1;
-        typedef typename BaseImage<T2>::const_iterator Iter2;
+        if (image1.getData()) {
+            typedef typename ImageView<T1>::iterator Iter1;
+            typedef typename BaseImage<T2>::const_iterator Iter2;
 
-        if (!image1.getBounds().isSameShapeAs(image2.getBounds()))
-            throw ImageError("transform_pixel image bounds are not same shape");
+            if (!image1.getBounds().isSameShapeAs(image2.getBounds()))
+                throw ImageError("transform_pixel image bounds are not same shape");
 
-        int y2 = image2.getYMin();
-        for (int y = image1.getYMin(); y <= image1.getYMax(); ++y, ++y2) {
-            Iter2 it2 = image2.rowBegin(y2);
-            const Iter1 ee = image1.rowEnd(y);      
-            for (Iter1 it1 = image1.rowBegin(y); it1 != ee; ++it1, ++it2)
-                *it1 = f(*it1,*it2);
+            int y2 = image2.getYMin();
+            for (int y = image1.getYMin(); y <= image1.getYMax(); ++y, ++y2) {
+                Iter2 it2 = image2.rowBegin(y2);
+                const Iter1 ee = image1.rowEnd(y);      
+                for (Iter1 it1 = image1.rowBegin(y); it1 != ee; ++it1, ++it2)
+                    *it1 = f(*it1,*it2);
+            }
         }
         return f;
     }
@@ -968,23 +994,25 @@ namespace galsim {
         const BaseImage<T3>& image3,
         Op f) 
     {
-        typedef typename ImageView<T1>::iterator Iter1;
-        typedef typename BaseImage<T2>::const_iterator Iter2;
-        typedef typename BaseImage<T3>::const_iterator Iter3;
+        if (image1.getData()) {
+            typedef typename ImageView<T1>::iterator Iter1;
+            typedef typename BaseImage<T2>::const_iterator Iter2;
+            typedef typename BaseImage<T3>::const_iterator Iter3;
 
-        if (!image1.getBounds().isSameShapeAs(image2.getBounds()))
-            throw ImageError("transform_pixel image1, image2 bounds are not same shape");
-        if (!image1.getBounds().isSameShapeAs(image3.getBounds()))
-            throw ImageError("transform_pixel image1, image3 bounds are not same shape");
+            if (!image1.getBounds().isSameShapeAs(image2.getBounds()))
+                throw ImageError("transform_pixel image1, image2 bounds are not same shape");
+            if (!image1.getBounds().isSameShapeAs(image3.getBounds()))
+                throw ImageError("transform_pixel image1, image3 bounds are not same shape");
 
-        int y2 = image2.getYMin();
-        int y3 = image3.getYMin();
-        for (int y = image1.getYMin(); y <= image1.getYMax(); ++y, ++y2, ++y3) {
-            Iter2 it2 = image2.rowBegin(y2);
-            Iter3 it3 = image3.rowBegin(y3);
-            const Iter1 ee = image1.rowEnd(y);      
-            for (Iter1 it1 = image1.rowBegin(y); it1 != ee; ++it1, ++it2, ++it3) 
-                *it1 = f(*it2,*it3);
+            int y2 = image2.getYMin();
+            int y3 = image3.getYMin();
+            for (int y = image1.getYMin(); y <= image1.getYMax(); ++y, ++y2, ++y3) {
+                Iter2 it2 = image2.rowBegin(y2);
+                Iter3 it3 = image3.rowBegin(y3);
+                const Iter1 ee = image1.rowEnd(y);      
+                for (Iter1 it1 = image1.rowBegin(y); it1 != ee; ++it1, ++it2, ++it3) 
+                    *it1 = f(*it2,*it3);
+            }
         }
         return f;
     }
@@ -1000,19 +1028,21 @@ namespace galsim {
         const Bounds<int>& bounds,
         Op f) 
     {
-        typedef typename ImageView<T1>::iterator Iter1;
-        typedef typename Image<T2>::iterator Iter2;
-        if (!image1.getBounds().includes(bounds) || !image2.getBounds().includes(bounds))
-            throw ImageError("transform_pixel range exceeds image range");
+        if (image1.getData()) {
+            typedef typename ImageView<T1>::iterator Iter1;
+            typedef typename Image<T2>::iterator Iter2;
+            if (!image1.getBounds().includes(bounds) || !image2.getBounds().includes(bounds))
+                throw ImageError("transform_pixel range exceeds image range");
 
-        if (image1.getBounds() == bounds && image2.getBounds() == bounds) 
-            return transform_pixel(image1,image2,f);
+            if (image1.getBounds() == bounds && image2.getBounds() == bounds) 
+                return transform_pixel(image1,image2,f);
 
-        for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
-            const Iter1 ee = image1.getIter(bounds.getXMax()+1,y);      
-            Iter2 it2 = image2.getIter(bounds.getXMin(),y);
-            for (Iter1 it1 = image1.getIter(bounds.getXMin(),y); it1 != ee; ++it1, ++it2) 
-                *it1 = f(*it1,*it2);
+            for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
+                const Iter1 ee = image1.getIter(bounds.getXMax()+1,y);      
+                Iter2 it2 = image2.getIter(bounds.getXMin(),y);
+                for (Iter1 it1 = image1.getIter(bounds.getXMin(),y); it1 != ee; ++it1, ++it2) 
+                    *it1 = f(*it1,*it2);
+            }
         }
         return f;
     }

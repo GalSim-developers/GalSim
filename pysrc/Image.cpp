@@ -41,7 +41,7 @@ template <typename T>
 struct PyImage {
 
     static void destroyCObjectOwner(void * p) {
-        boost::shared_ptr<T const> * owner = reinterpret_cast< boost::shared_ptr<T const> *>(p);
+        boost::shared_ptr<T> * owner = reinterpret_cast< boost::shared_ptr<T> *>(p);
         delete owner;
     }
 
@@ -58,7 +58,7 @@ struct PyImage {
         // --- Try to get cached array ---
         if (PyObject_HasAttrString(self.ptr(), "_array")) return self.attr("_array");
 
-        Image<const T> const & image = bp::extract<Image<const T> const &>(self);
+        BaseImage<T> const & image = bp::extract<BaseImage<T> const &>(self);
 
         // --- Create array ---
         int flags = NPY_ALIGNED;
@@ -78,7 +78,7 @@ struct PyImage {
         );
 
         // --- Manage ownership ---
-        boost::shared_ptr<T const> owner = image.getOwner();
+        boost::shared_ptr<T> owner = image.getOwner();
         PythonDeleter * pyDeleter = boost::get_deleter<PythonDeleter>(owner);
         bp::handle<> pyOwner;
         if (pyDeleter) {
@@ -87,7 +87,7 @@ struct PyImage {
         } else {
             // ..if not, we put a shared_ptr in an opaque Python object.
             pyOwner = bp::handle<>(
-                PyCObject_FromVoidPtr(new boost::shared_ptr<T const>(owner), &destroyCObjectOwner)
+                PyCObject_FromVoidPtr(new boost::shared_ptr<T>(owner), &destroyCObjectOwner)
             );
         }
         reinterpret_cast<PyArrayObject*>(result.ptr())->base = pyOwner.release();
@@ -224,7 +224,27 @@ struct PyImage {
             bp::return_value_policy<bp::copy_const_reference>()
         ); 
 
-        bp::class_< Image<T>, bp::bases< Image<const T> > >
+        bp::class_< BaseImage<T>, boost::noncopyable >
+            pyBaseImage(("BaseImage" + suffix).c_str(), doc, bp::no_init);
+        pyBaseImage
+            .def("getScale", getScale)
+            .def("setScale", setScale)
+            .add_property("scale", getScale, setScale)
+            .def("subImage", &BaseImage<T>::subImage, bp::args("bounds"))
+            .add_property("array", &getConstArray)
+            .def("shift", &BaseImage<T>::shift, bp::args("dx", "dy"))
+            .def("setOrigin", &BaseImage<T>::setOrigin, bp::args("x0", "y0"))
+            .def("setCenter", &BaseImage<T>::setCenter, bp::args("x0", "y0"))
+            .def("getBounds", getBounds)
+            .add_property("bounds", getBounds)
+            ;
+        ADD_CORNER(pyBaseImage, getXMin, xMin);
+        ADD_CORNER(pyBaseImage, getYMin, yMin);
+        ADD_CORNER(pyBaseImage, getXMax, xMax);
+        ADD_CORNER(pyBaseImage, getYMax, yMax);
+        
+
+        bp::class_< Image<T>, bp::bases< BaseImage<T> > >
             pyImage(("Image" + suffix).c_str(), doc, bp::no_init);
         pyImage
             .def(bp::init<int,int,T>(
@@ -238,34 +258,13 @@ struct PyImage {
             .def("view", view_func_type(&Image<T>::view))
             //.def("assign", &Image<T>::operator=, bp::return_self<>())
             .add_property("array", &getArray)
-            .def("getScale", getScale)
-            .def("setScale", setScale)
-            .add_property("scale", getScale, setScale)
-            .def("copy", &BaseImage<T>::copy)
             // In python, there is no way to have a function return a mutable reference
             // so you can't make im(x,y) = val work correctly.  Thus, the __call__
             // funtion (which is the im(x,y) syntax) is just the const version.
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
-            .def("shift", &BaseImage<T>::shift, bp::args("dx", "dy"))
-            .def("setOrigin", &BaseImage<T>::setOrigin, bp::args("x0", "y0"))
-            .def("setCenter", &BaseImage<T>::setCenter, bp::args("x0", "y0"))
-            .def("getBounds", getBounds)
-            .add_property("bounds", getBounds)
-            .def(bp::self + bp::self)
-            .def(bp::self - bp::self)
-            .def(bp::self * bp::self)
-            .def(bp::self / bp::self)
             .def("copyFrom", &Image<T>::copyFrom)
-            .def(bp::self += bp::self)
-            .def(bp::self -= bp::self)
-            .def(bp::self *= bp::self)
-            .def(bp::self /= bp::self)
             .def("fill", &Image<T>::fill)
-            .def(bp::self += bp::other<T>())
-            .def(bp::self -= bp::other<T>())
-            .def(bp::self *= bp::other<T>())
-            .def(bp::self /= bp::other<T>())
             ;
         
         return pyImage;
@@ -324,39 +323,16 @@ struct PyImage {
                     (bp::arg("array"), bp::arg("xMin")=1, bp::arg("yMin")=1)
                 )
             )
+            .def(bp::init<ImageView<T> const &>(bp::args("other")))
             .def("subImage", &ImageView<T>::subImage, bp::args("bounds"))
+            .def("view", &ImageView<T>::view, bp::return_self<>())
             //.def("assign", &ImageView<T>::operator=, bp::return_self<>())
             .add_property("array", &getArray)
-            .def("getScale", getScale)
-            .def("setScale", setScale)
-            .add_property("scale", getScale, setScale)
-            .def("copy", &BaseImage<T>::copy)
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
-            .def("shift", &BaseImage<T>::shift, bp::args("dx", "dy"))
-            .def("setOrigin", &BaseImage<T>::setOrigin, bp::args("x0", "y0"))
-            .def("setCenter", &BaseImage<T>::setCenter, bp::args("x0", "y0"))
-            .def("getBounds", getBounds)
-            .add_property("bounds", getBounds)
-            .def(bp::self + bp::self)
-            .def(bp::self - bp::self)
-            .def(bp::self * bp::self)
-            .def(bp::self / bp::self)
             .def("copyFrom", &ImageView<T>::copyFrom)
-            .def(bp::self += bp::self)
-            .def(bp::self -= bp::self)
-            .def(bp::self *= bp::self)
-            .def(bp::self /= bp::self)
             .def("fill", &Image<T>::fill)
-            .def(bp::self += bp::other<T>())
-            .def(bp::self -= bp::other<T>())
-            .def(bp::self *= bp::other<T>())
-            .def(bp::self /= bp::other<T>())
             ;
-        ADD_CORNER(pyImageView, getXMin, xMin);
-        ADD_CORNER(pyImageView, getYMin, yMin);
-        ADD_CORNER(pyImageView, getXMax, xMax);
-        ADD_CORNER(pyImageView, getYMax, yMax);
         
         return pyImageView;
     }
@@ -400,28 +376,10 @@ struct PyImage {
                 )
             )
             .def(bp::init<BaseImage<T> const &>(bp::args("other")))
-            .def("subImage", &BaseImage<T>::subImage, bp::args("bounds"))
-            .add_property("array", &getConstArray)
-            .def("getScale", getScale)
-            .def("setScale", setScale)
-            .add_property("scale", getScale, setScale)
-            .def("copy", &BaseImage<T>::copy)
+            .def("view", &ConstImageView<T>::view, bp::return_self<>())
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
-            .def("shift", &BaseImage<T>::shift, bp::args("dx", "dy"))
-            .def("setOrigin", &BaseImage<T>::setOrigin, bp::args("x0", "y0"))
-            .def("setCenter", &BaseImage<T>::setCenter, bp::args("x0", "y0"))
-            .def("getBounds", getBounds)
-            .add_property("bounds", getBounds)
-            .def(bp::self + bp::self)
-            .def(bp::self - bp::self)
-            .def(bp::self * bp::self)
-            .def(bp::self / bp::self)
             ;
-        ADD_CORNER(pyConstImageView, getXMin, xMin);
-        ADD_CORNER(pyConstImageView, getYMin, yMin);
-        ADD_CORNER(pyConstImageView, getXMax, xMax);
-        ADD_CORNER(pyConstImageView, getYMax, yMax);
 
         return pyConstImageView;
     }

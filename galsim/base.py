@@ -16,10 +16,7 @@ class GSObject:
 
     # op+= converts this into the equivalent of an Add object
     def __iadd__(self, other):
-        print 'self = ',self
-        print 'other = ',other
         GSObject.__init__(self, galsim.SBAdd(self.SBProfile, other.SBProfile))
-        print 'self => ',self
         return self
 
     # Make op* and op*= work to adjust the flux of an object

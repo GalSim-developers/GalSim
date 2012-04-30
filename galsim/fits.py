@@ -65,7 +65,7 @@ def write(image, fits, add_wcs=True, clobber=True):
 
 def read(fits):
     """
-    Construct a new Image from a FITS representation.
+    Construct a new ImageView from a FITS representation.
      - If 'fits' is a pyfits.HDUList, the Primary HDU will be used.
      - If 'fits' is a pyfits.PrimaryHDU or pyfits.ImageHDU, that HDU will be used.
      - If 'fits' is a string, it will be interpreted as a filename to open;
@@ -83,6 +83,13 @@ def read(fits):
     latter case the image type returned is determined by the type of the FITS file,
     not the image class (in other words, "ImageD.read(...)" might return an ImageF).
     """
+    # MJ: I find this last syntax: ImageD.read(...) a bit confusing, since as you 
+    # point out the return value isn't necessarily the class you call it from.
+    # Also, the return value is now an ImageView, not an Image, but that should
+    # be transparent to the user.
+    # So I'd recommend removing the ImageD.read(...) syntax and just having
+    # the galsim.fits.read(...) syntax.
+
     import pyfits     # put this at function scope to keep pyfits optional
     
     if isinstance(fits, basestring):
@@ -94,7 +101,7 @@ def read(fits):
     scale = fits.header.get("GS_SCALE", 1.0)
     pixel = fits.data.dtype.type
     try:
-        Class = _galsim.Image[pixel]
+        Class = _galsim.ImageView[pixel]
     except KeyError:
         raise TypeError("No C++ Image template instantiation for pixel type %s" % pixel)
     # Check through byteorder possibilities, compare to native (used for numpy and our default) and
@@ -117,4 +124,12 @@ def read(fits):
 for Class in _galsim.Image.itervalues():
     Class.write = write
     Class.read = staticmethod(read)
+
+for Class in _galsim.ImageView.itervalues():
+    Class.write = write
+    Class.read = staticmethod(read)
+
+for Class in _galsim.ConstImageView.itervalues():
+    Class.write = write
+
 del Class    # cleanup public namespace

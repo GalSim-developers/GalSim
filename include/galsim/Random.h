@@ -90,9 +90,9 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(Image<T>& data) {
-            // Typedef for image row iterable
-            typedef typename Image<T>::iterator ImIter;
+        void applyTo(ImageView<T> data) {
+            // typedef for image row iterable
+            typedef typename ImageView<T>::iterator ImIter;
 
             for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                 ImIter ee = data.rowEnd(y);
@@ -205,9 +205,9 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(Image<T>& data) {
+        void applyTo(ImageView<T> data) {
             // Typedef for image row iterable
-            typedef typename Image<T>::iterator ImIter;
+            typedef typename ImageView<T>::iterator ImIter;
 
             for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                 ImIter ee = data.rowEnd(y);
@@ -299,9 +299,9 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(Image<T>& data) {
+        void applyTo(ImageView<T> data) {
             // Typedef for image row iterable
-            typedef typename Image<T>::iterator ImIter;
+            typedef typename ImageView<T>::iterator ImIter;
 
             for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                 ImIter ee = data.rowEnd(y);
@@ -369,9 +369,9 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(Image<T>& data) {
+        void applyTo(ImageView<T> data) {
             // Typedef for image row iterable
-            typedef typename Image<T>::iterator ImIter;
+            typedef typename ImageView<T>::iterator ImIter;
 
             for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                 ImIter ee = data.rowEnd(y);

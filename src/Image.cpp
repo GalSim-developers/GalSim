@@ -72,6 +72,7 @@ void BaseImage<T>::allocateMem()
     // So the various functions that call this should do their (different) checks 
     // for whether this is necessary.
     _stride = this->_bounds.getXMax() - this->_bounds.getXMin() + 1;
+
     int nElements = _stride * (this->_bounds.getYMax() - this->_bounds.getYMin() + 1);
     if (_stride <= 0 || nElements <= 0) {
         std::ostringstream oss;
@@ -143,6 +144,7 @@ void Image<T>::resize(const Bounds<int>& new_bounds)
 template <typename T>
 const T& BaseImage<T>::at(const int xpos, const int ypos) const
 {
+    if (!_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
     return _data[addressPixel(xpos, ypos)];
 }
@@ -150,6 +152,7 @@ const T& BaseImage<T>::at(const int xpos, const int ypos) const
 template <typename T>
 T& ImageView<T>::at(const int xpos, const int ypos) const
 {
+    if (!this->_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
     return this->_data[this->addressPixel(xpos, ypos)];
 }
@@ -157,6 +160,7 @@ T& ImageView<T>::at(const int xpos, const int ypos) const
 template <typename T>
 T& Image<T>::at(const int xpos, const int ypos)
 {
+    if (!this->_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
     return this->_data[this->addressPixel(xpos, ypos)];
 }
@@ -164,6 +168,7 @@ T& Image<T>::at(const int xpos, const int ypos)
 template <typename T>
 const T& Image<T>::at(const int xpos, const int ypos) const
 {
+    if (!this->_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
     return this->_data[this->addressPixel(xpos, ypos)];
 }
@@ -171,6 +176,7 @@ const T& Image<T>::at(const int xpos, const int ypos) const
 template <typename T>
 ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const 
 {
+    if (!_data) throw ImageError("Attempt to make subImage of an undefined image");
     if (!this->_bounds.includes(bounds)) {
         std::ostringstream os;
         os << "Subimage bounds (" << bounds << ") are outside original image bounds (" 
@@ -186,6 +192,7 @@ ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const
 template <typename T>
 ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds) const 
 {
+    if (!this->_data) throw ImageError("Attempt to make subImage of an undefined image");
     if (!this->_bounds.includes(bounds)) {
         std::ostringstream os;
         os << "Subimage bounds (" << bounds << ") are outside original image bounds (" 

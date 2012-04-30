@@ -89,11 +89,11 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(Image<T>& data) {
+        void applyTo(ImageView<T> data) {
             // Above this many e's, assume Poisson distribution =Gaussian 
             static const double MAX_POISSON=1.e5;
             // Typedef for image row iterable
-            typedef typename Image<T>::iterator ImIter;
+            typedef typename ImageView<T>::iterator ImIter;
 
             // Add the Poisson noise first:
             if (_gain > 0.) {
@@ -136,9 +136,9 @@ namespace galsim {
          * if it does not match dimensions of data.
          */
         template <class T>
-        void applyToVar(Image<T>& data, Image<T>& variance) {
+        void applyToVar(ImageView<T> data, ImageView<T> variance) {
             // Typedef for image row iterable
-            typedef typename Image<T>::iterator ImIter;
+            typedef typename ImageView<T>::iterator ImIter;
             // Resize the variance image to match data image
             variance.resize(data.getBounds());
             // Fill with the (constant) Gaussian contribution to variance
