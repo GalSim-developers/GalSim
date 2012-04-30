@@ -135,9 +135,6 @@ namespace galsim {
     // Aliasing will be handled by folding the k values before transforming
     // And enforce no image folding
     //**/ #define DEBUG
-    // TODO: See how much of this can be made common code, rather than repeating for
-    // ImageView and Image.  Likewise for the various DrawK functions that also have 
-    // a lot of duplicated code.
     template <typename T>
     double SBProfile::fourierDraw(ImageView<T>& I, double dx, int wmult) const 
     {
@@ -226,6 +223,11 @@ namespace galsim {
         return sum*dx*dx;;
     }
 
+    // TODO: I'd like to try to separate out the resize operation.  
+    // Then this function can just take an ImageView<T>& argument, not also an Image<T>.
+    // Similar to what plainDraw does by passing the bulk of the work to fillXImage.
+    // In fact, if we could have a single resizer, than that could be called from draw()
+    // and both plainDraw and fourierDraw could drop to only having the ImageView argument.
     template <typename T>
     double SBProfile::fourierDraw(Image<T>& I, double dx, int wmult) const 
     {
@@ -1508,25 +1510,43 @@ namespace galsim {
     template double SBProfile::doFillXImage2(ImageView<float>& img, double dx) const;
     template double SBProfile::doFillXImage2(ImageView<double>& img, double dx) const;
 
+    template double SBProfile::draw(Image<float>& img, double dx, int wmult) const;
+    template double SBProfile::draw(Image<double>& img, double dx, int wmult) const;
     template double SBProfile::draw(ImageView<float>& img, double dx, int wmult) const;
     template double SBProfile::draw(ImageView<double>& img, double dx, int wmult) const;
 
+    template double SBProfile::plainDraw(Image<float>& I, double dx, int wmult) const;
+    template double SBProfile::plainDraw(Image<double>& I, double dx, int wmult) const;
     template double SBProfile::plainDraw(ImageView<float>& I, double dx, int wmult) const;
     template double SBProfile::plainDraw(ImageView<double>& I, double dx, int wmult) const;
 
+    template double SBProfile::fourierDraw(Image<float>& I, double dx, int wmult) const;
+    template double SBProfile::fourierDraw(Image<double>& I, double dx, int wmult) const;
     template double SBProfile::fourierDraw(ImageView<float>& I, double dx, int wmult) const;
     template double SBProfile::fourierDraw(ImageView<double>& I, double dx, int wmult) const;
 
     template void SBProfile::drawK(
+        Image<float>& Re, Image<float>& Im, double dk, int wmult) const;
+    template void SBProfile::drawK(
+        Image<double>& Re, Image<double>& Im, double dk, int wmult) const;
+    template void SBProfile::drawK(
         ImageView<float>& Re, ImageView<float>& Im, double dk, int wmult) const;
     template void SBProfile::drawK(
         ImageView<double>& Re, ImageView<double>& Im, double dk, int wmult) const;
 
     template void SBProfile::plainDrawK(
+        Image<float>& Re, Image<float>& Im, double dk, int wmult) const;
+    template void SBProfile::plainDrawK(
+        Image<double>& Re, Image<double>& Im, double dk, int wmult) const;
+    template void SBProfile::plainDrawK(
         ImageView<float>& Re, ImageView<float>& Im, double dk, int wmult) const;
     template void SBProfile::plainDrawK(
         ImageView<double>& Re, ImageView<double>& Im, double dk, int wmult) const;
 
+    template void SBProfile::fourierDrawK(
+        Image<float>& Re, Image<float>& Im, double dk, int wmult) const;
+    template void SBProfile::fourierDrawK(
+        Image<double>& Re, Image<double>& Im, double dk, int wmult) const;
     template void SBProfile::fourierDrawK(
         ImageView<float>& Re, ImageView<float>& Im, double dk, int wmult) const;
     template void SBProfile::fourierDrawK(

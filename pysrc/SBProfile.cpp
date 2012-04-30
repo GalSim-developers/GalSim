@@ -25,6 +25,10 @@ struct PySBProfile {
                  bp::args("image", "dx"),
                  "Utility for drawing into Image data structures")
             .def("draw", 
+                 (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::draw,
+                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 "Draw in-place, resizing if necessary, and return the summed flux.")
+            .def("draw", 
                  (double (SBProfile::*)(ImageView<U> &, double, int) const)&SBProfile::draw,
                  (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "Draw in-place and return the summed flux.")
