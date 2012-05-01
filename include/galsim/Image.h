@@ -318,13 +318,11 @@ namespace galsim {
         double _scale;                // pixel scale (used by SBInterpolatedImage and SBProfile;
                                       // units?!)
 
-        inline int addressPixel(int y) const {
-            return (y - this->getYMin()) * _stride;
-        }
+        inline int addressPixel(int y) const
+        { return (y - this->getYMin()) * _stride; }
         
-        inline int addressPixel(int x, int y) const {
-            return (x - this->getXMin()) + addressPixel(y);
-        }
+        inline int addressPixel(int x, int y) const
+        { return (x - this->getXMin()) + addressPixel(y); }
 
         /**
          *  @brief Constructor is protected since a BaseImage is a virtual base class.

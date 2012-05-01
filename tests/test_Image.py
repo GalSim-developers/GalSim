@@ -449,6 +449,96 @@ def test_Image_inplace_scalar_divide():
             image2 /= val
         #np.testing.assert_raises(ZeroDivisionError, idivhelper, image2, 0)
 
+def test_Image_subImage():
+    """Test that subImages are accessed and written correctly.
+    """
+    for i in xrange(ntypes):
+        image = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        bounds = galsim.BoundsI(2,3,2,3)
+        sub_array = np.array([[11, 21], [12, 22]]).astype(types[i])
+        np.testing.assert_array_equal(image.subImage(bounds).array, sub_array,
+            err_msg="image.subImage(bounds) does not match reference for dtype = "+str(types[i]))
+        np.testing.assert_array_equal(image[bounds].array, sub_array,
+            err_msg="image[bounds] does not match reference for dtype = "+str(types[i]))
+        image[bounds] = galsim.ImageView[types[i]](sub_array+100)
+        np.testing.assert_array_equal(image[bounds].array, (sub_array+100),
+            err_msg="image[bounds] = im2 does not set correctly for dtype = "+str(types[i]))
+        for xpos in range(1,4):
+            for ypos in range(1,4):
+                if (xpos >= 2 and xpos <= 3 and ypos >= 2 and ypos <= 3):
+                    value = ref_array[ypos-1,xpos-1] + 100
+                else:
+                    value = ref_array[ypos-1,xpos-1]
+                np.testing.assert_equal(image(xpos,ypos),value,
+                    err_msg="image[bounds] = im2 set wrong locations for dtype = "+str(types[i]))
+
+        image = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image[bounds] += 100
+        np.testing.assert_array_equal(image[bounds].array, (sub_array+100),
+            err_msg="image[bounds] += 100 does not set correctly for dtype = "+str(types[i]))
+        image[bounds] = galsim.ImageView[types[i]](sub_array)
+        np.testing.assert_array_equal(image.array, ref_array,
+            err_msg="image[bounds] += 100 set wrong locations for dtype = "+str(types[i]))
+
+        image = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image[bounds] -= 100
+        np.testing.assert_array_equal(image[bounds].array, (sub_array-100),
+            err_msg="image[bounds] -= 100 does not set correctly for dtype = "+str(types[i]))
+        image[bounds] = galsim.ImageView[types[i]](sub_array)
+        np.testing.assert_array_equal(image.array, ref_array,
+            err_msg="image[bounds] -= 100 set wrong locations for dtype = "+str(types[i]))
+
+        image = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image[bounds] *= 100
+        np.testing.assert_array_equal(image[bounds].array, (sub_array*100),
+            err_msg="image[bounds] *= 100 does not set correctly for dtype = "+str(types[i]))
+        image[bounds] = galsim.ImageView[types[i]](sub_array)
+        np.testing.assert_array_equal(image.array, ref_array,
+            err_msg="image[bounds] *= 100 set wrong locations for dtype = "+str(types[i]))
+
+        image = galsim.ImageView[types[i]]((100*ref_array).astype(types[i]))
+        image[bounds] /= 100
+        np.testing.assert_array_equal(image[bounds].array, (sub_array),
+            err_msg="image[bounds] /= 100 does not set correctly for dtype = "+str(types[i]))
+        image[bounds] = galsim.ImageView[types[i]](100*sub_array)
+        np.testing.assert_array_equal(image.array, (100*ref_array),
+            err_msg="image[bounds] /= 100 set wrong locations for dtype = "+str(types[i]))
+
+        im2 = galsim.ImageView[types[i]](sub_array.astype(types[i]))
+        image = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image[bounds] += im2
+        np.testing.assert_array_equal(image[bounds].array, (2*sub_array),
+            err_msg="image[bounds] += im2 does not set correctly for dtype = "+str(types[i]))
+        image[bounds] = galsim.ImageView[types[i]](sub_array)
+        np.testing.assert_array_equal(image.array, ref_array,
+            err_msg="image[bounds] += im2 set wrong locations for dtype = "+str(types[i]))
+
+        image = galsim.ImageView[types[i]](2*ref_array.astype(types[i]))
+        image[bounds] -= im2
+        np.testing.assert_array_equal(image[bounds].array, sub_array,
+            err_msg="image[bounds] -= im2 does not set correctly for dtype = "+str(types[i]))
+        image[bounds] = galsim.ImageView[types[i]](2*sub_array)
+        np.testing.assert_array_equal(image.array, (2*ref_array),
+            err_msg="image[bounds] -= im2 set wrong locations for dtype = "+str(types[i]))
+
+        image = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image[bounds] *= im2
+        np.testing.assert_array_equal(image[bounds].array, (sub_array**2),
+            err_msg="image[bounds] *= im2 does not set correctly for dtype = "+str(types[i]))
+        image[bounds] = galsim.ImageView[types[i]](sub_array)
+        np.testing.assert_array_equal(image.array, ref_array,
+            err_msg="image[bounds] *= im2 set wrong locations for dtype = "+str(types[i]))
+
+        image = galsim.ImageView[types[i]]((2 * ref_array**2).astype(types[i]))
+        image[bounds] /= im2
+        np.testing.assert_array_equal(image[bounds].array, (2*sub_array),
+            err_msg="image[bounds] /= im2 does not set correctly for dtype = "+str(types[i]))
+        image[bounds] = galsim.ImageView[types[i]](2*sub_array**2)
+        np.testing.assert_array_equal(image.array, (2*ref_array**2),
+            err_msg="image[bounds] /= im2 set wrong locations for dtype = "+str(types[i]))
+
+
+
 if __name__ == "__main__":
     test_Image_XYmin_XYMax()
     test_FITS_IO()
@@ -469,3 +559,4 @@ if __name__ == "__main__":
     test_Image_inplace_scalar_subtract()
     test_Image_inplace_scalar_multiply()
     test_Image_inplace_scalar_divide()
+    test_Image_subImage()
