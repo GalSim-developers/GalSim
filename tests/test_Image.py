@@ -576,7 +576,29 @@ def test_Image_subImage():
         np.testing.assert_array_equal(image.array, (2*ref_array**2),
             err_msg="image[bounds] /= im2 set wrong locations for dtype = "+str(types[i]))
 
-
+def test_ConstImageView_array_constness():
+    """Test that ConstImageView instances cannot be modified via their .array attributes, and that
+    if this is attempted a RuntimeError is raised.
+    """
+    for i in xrange(ntypes):
+        # First try using the dictionary-type Image init
+        image = galsim.ConstImageView[types[i]](ref_array.astype(types[i]))
+        try:
+            image.array[1, 2] = 666
+        except RuntimeError:
+            pass
+        except:
+            assert False, "Unexpected error: "+str(sys.exc_info()[0])
+        # Then try using the eval command to mimic use via ConstImageViewD, etc.
+        image_init_func = eval("galsim.ConstImageView"+tchar[i])
+        image = image_init_func(ref_array.astype(types[i]))
+        try:
+            image.array[1, 2] = 666
+        except RuntimeError:
+            pass
+        except:
+            assert False, "Unexpected error: "+str(sys.exc_info()[0])
+            
 
 if __name__ == "__main__":
     test_Image_XYmin_XYMax()
@@ -599,3 +621,4 @@ if __name__ == "__main__":
     test_Image_inplace_scalar_multiply()
     test_Image_inplace_scalar_divide()
     test_Image_subImage()
+    test_ConstImageView_array_constness()
