@@ -494,12 +494,10 @@ namespace hsm {
 
 #ifdef N_CHECKVAL
         if (nx<=0) {
-            fprintf(stderr,"Error: nx<=0 in qho1d_wf_1\n");
-            std::exit(1);
+            throw "Error: nx<=0 in qho1d_wf_1\n";
         }
         if (Nmax<0) {
-            fprintf(stderr,"Error: Nmax<0 in qho1d_wf_1\n");
-            std::exit(1);
+            throw "Error: Nmax<0 in qho1d_wf_1\n";
         }
 #endif
 
@@ -636,8 +634,7 @@ namespace hsm {
 
 #ifdef N_CHECKVAL
         if (epsilon <= 0) {
-            fprintf(stderr,"Error: epsilon out of range in find_mom_2.\n");
-            std::exit(1);
+            throw "Error: epsilon out of range in find_mom_2.\n";
         }
 #endif
 
@@ -735,8 +732,7 @@ namespace hsm {
         /* Compute M^{-1} for use in computing weights */
         detM = Mxx * Myy - Mxy * Mxy;
         if (detM<=0 || Mxx<=0 || Myy<=0) {
-            fprintf(stderr, "Error: non positive definite adaptive moments!\n");
-            std::exit(1);
+            throw "Error: non positive definite adaptive moments!\n";
         }
         Minv_xx    =  Myy/detM;
         TwoMinv_xy = -Mxy/detM * 2.0;
@@ -824,8 +820,7 @@ namespace hsm {
 
 #ifdef N_CHECKVAL
         if (epsilon <= 0) {
-            fprintf(stderr,"Error: epsilon out of range in find_mom_2.\n");
-            std::exit(1);
+            throw "Error: epsilon out of range in find_mom_2.\n";
         }
 #endif
 
@@ -842,8 +837,7 @@ namespace hsm {
             semi_b2 = *Mxx + *Myy - semi_a2;
 
             if (semi_b2 <= 0) {
-                fprintf(stderr,"Error: non positive-definite weight in find_ellipmom_2.\n");
-                std::exit(1);
+                throw "Error: non positive-definite weight in find_ellipmom_2.\n";
             }
 
             shiftscale = std::sqrt(semi_b2);
@@ -889,8 +883,7 @@ namespace hsm {
 #define MAX_ASHIFT 15.0
             if (std::abs(*Mxx)>MAX_AMOMENT || std::abs(*Mxy)>MAX_AMOMENT || std::abs(*Myy)>MAX_AMOMENT
                 || std::abs(*x0-x00)>MAX_ASHIFT || std::abs(*y0-y00)>MAX_ASHIFT) {
-	      fprintf(stderr, "Error: adaptive moment failed: %lf %lf %lf %lf %lf %d\n",std::abs(*Mxx),std::abs(*Mxy),std::abs(*Myy),std::abs(*x0-x00),std::abs(*y0-y00),*num_iter);
-                std::exit(1);
+                throw "Error: adaptive moment failed\n";
             }
 
             if (++ *num_iter > MAX_MOM2_ITER) {
