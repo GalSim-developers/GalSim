@@ -121,11 +121,11 @@ def ErrorExit():
     # libraries, compiler, etc., we don't want to cache the result.
     # So before exiting, we call this function to clear out the cache files
     # that SCons creates.
-    if os.path.exists(".sconsign.dblite"):
-        os.remove(".sconsign.dblite")
-    import shutil
-    if os.path.exists(".sconf_temp"):
-        shutil.rmtree(".sconf_temp")
+    #if os.path.exists(".sconsign.dblite"):
+    #    os.remove(".sconsign.dblite")
+    #import shutil
+    #if os.path.exists(".sconf_temp"):
+    #    shutil.rmtree(".sconf_temp")
 
     print
     print 'Please fix the above error(s) and rerun scons'
@@ -215,6 +215,12 @@ def BasicCCFlags(env):
 
     extra_flags = env['EXTRA_FLAGS'].split(' ')
     env.AppendUnique(CCFLAGS=extra_flags)
+    if '-m64' in extra_flags:
+        # Then this also needs to be in LINKFLAGS
+        env.AppendUnique(LINKFLAGS='-m64')
+    if '-m32' in extra_flags:
+        # Likewise
+        env.AppendUnique(LINKFLAGS='-m32')
 
 
 def AddOpenMPFlag(env):
