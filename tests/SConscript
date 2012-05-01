@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import subprocess
+import glob
 
 Import('env')
 ReadFileList=env['__readfunc']
@@ -110,6 +111,15 @@ test_builder = Builder( action = run_tests )
 env1.Append(BUILDERS = {'RunTests' : test_builder} )
 
 test_script = env1.RunTests(target='tests.log', source = cpp_test)
+
+# Add explicit dependancy of test_script on all the python files, since
+# scons has no way of realizing it.
+py_dir = os.path.join("#","galsim")
+real_py_dir = GetBuildPath(py_dir)
+py_files = glob.glob( os.path.join(real_py_dir,"*.py") )
+py_files += glob.glob( os.path.join(real_py_dir,"*.so") )
+Depends(test_script , py_files)
+
 AlwaysBuild(test_script)
 
 env1.Alias(target='tests', source=test_script)
