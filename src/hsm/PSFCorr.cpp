@@ -260,7 +260,8 @@ namespace hsm {
 
     /* Carry out PSF correction directly using Images, repackaging for general_shear_estimator.*/
     template <typename T>
-    HSMShapeData EstimateShearHSM(Image<T> const &gal_image, Image<T> const &PSF_image, const char *shear_est = "REGAUSS", unsigned long flags = 0xe) {
+    HSMShapeData EstimateShearHSM(Image<T> const &gal_image, Image<T> const &PSF_image, 
+                                  const char *shear_est = "REGAUSS", unsigned long flags = 0xe) {
         // define variables, create output HSMShapeData struct, etc.
         HSMShapeData results;
 
@@ -268,7 +269,8 @@ namespace hsm {
 
         // allocate ObjectData for setting defaults etc. and passing to general_shear_estimator
 
-        // call general_shear_estimator [generally, go through MeasMoments.cpp to make sure that I've done everything needed]
+        // call general_shear_estimator [generally, go through MeasMoments.cpp to make sure that
+        // I've done everything needed]
 
         // repackage outputs from the ObjectData to an HSMShapeData struct
         return results;
@@ -279,12 +281,23 @@ namespace hsm {
     HSMShapeData FindAdaptiveMom(Image<T> const &object_image, double precision = 1.0e-6) {
         // define variables, create output HSMShapeData struct, etc.
         HSMShapeData results;
+        RectImage object_rect_image;
+        double amp, m_xx, m_xy, m_yy;
 
         // repackage input Image --> RectImage
 
         // call find_ellipmom_2
+        find_ellipmom_2(&object_rect_image, &amp, &(results.moments_centroid.x),
+                        &(results.moments_centroid.y), &m_xx, &m_xy, &m_yy, &(results.moments_rho4),
+                        precision, &(results.moments_n_iter));
 
         // repackage outputs from find_ellipmom_2 to the output HSMShapeData struct
+        results.moments_amp = 2.0*amp;
+        results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
+        results.image_bounds = object_image.getBounds();
+        results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_xy));
+        // results.moments_status
+
         return results;
     }
 
