@@ -291,11 +291,10 @@ namespace hsm {
         object_rect_image.ymin = object_image.getYMin();
         object_rect_image.ymax = object_image.getYMax();
 
-        for (x=object_rect_image.xmin; x<=object_rect_image.xmax; x++) {
+        for (x=object_rect_image.xmin; x<=object_rect_image.xmax; x++) 
             for (y=object_rect_image.ymin; y<=object_rect_image.ymax; y++)
                 object_rect_image.image[x][y] = object_image.at(x, y);
-        }
-
+        
         // call find_ellipmom_2
         try {
             find_ellipmom_2(&object_rect_image, &amp, &(results.moments_centroid.x),
