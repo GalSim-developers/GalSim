@@ -1,4 +1,5 @@
 #include "Image.h"
+#include "ImageArith.h"
 #include <sstream>
 
 namespace galsim {
@@ -205,48 +206,6 @@ ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds) const
     return ImageView<T>(newdata,this->_owner,this->_stride,bounds);
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Arithmetic functions
-///////////////////////////////////////////////////////////////////////
-
-// TODO: These are currently inefficient.
-// Need to change them to return composite objects that can then assignTo the 
-// final image location.  i.e.
-// im1 + im2 return SumOfImages(im1,im2) that doesn't do anything yet.
-// Then im3 = im1 + im2 turns into SumOfImages(im1,im2).assignTo(im3)
-// where the actual calculation is done once it knows where to write to.
-template <typename T>
-Image<T> BaseImage<T>::operator+(const BaseImage<T>& rhs) const 
-{
-    Image<T> result = *this;
-    result += rhs;
-    return result;
-}
-
-template <typename T>
-Image<T> BaseImage<T>::operator-(const BaseImage<T>& rhs) const 
-{
-    Image<T> result = *this;
-    result -= rhs;
-    return result;
-}
-
-template <typename T>
-Image<T> BaseImage<T>::operator*(const BaseImage<T>& rhs) const 
-{
-    Image<T> result = *this;
-    result *= rhs;
-    return result;
-}
-
-template <typename T>
-Image<T> BaseImage<T>::operator/(const BaseImage<T>& rhs) const 
-{
-    Image<T> result = *this;
-    result /= rhs;
-    return result;
-}
-
 namespace {
 
 template <typename T>
@@ -275,75 +234,11 @@ void ImageView<T>::fill(T x) const
 }
 
 template <typename T>
-const ImageView<T>& ImageView<T>::operator+=(T x) const 
-{
-    transform_pixel(*this, bind2nd(std::plus<T>(),x));
-    return *this;
-}
-
-template <typename T>
-const ImageView<T>& ImageView<T>::operator-=(T x) const 
-{
-    transform_pixel(*this, bind2nd(std::minus<T>(),x));
-    return *this;
-}
-
-template <typename T>
-const ImageView<T>& ImageView<T>::operator*=(T x) const 
-{
-    transform_pixel(*this, bind2nd(std::multiplies<T>(),x));
-    return *this;
-}
-
-template <typename T>
-const ImageView<T>& ImageView<T>::operator/=(T x) const 
-{
-    transform_pixel(*this, bind2nd(std::divides<T>(),x));
-    return *this;
-}
-
-template <typename T>
 void ImageView<T>::copyFrom(const BaseImage<T>& rhs) const
 {
     if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
         throw ImageError("Attempt im1 = im2, but bounds not the same shape");
     transform_pixel(*this, rhs, ReturnSecond<T>());
-}
-
-template <typename T>
-const ImageView<T>& ImageView<T>::operator+=(const BaseImage<T>& rhs) const 
-{
-    if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
-        throw ImageError("Attempt im1 += im2, but bounds not the same shape");
-    transform_pixel(*this, rhs, std::plus<T>());
-    return *this;
-}
-
-template <typename T>
-const ImageView<T>& ImageView<T>::operator-=(const BaseImage<T>& rhs) const 
-{
-    if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
-        throw ImageError("Attempt im1 -= im2, but bounds not the same shape");
-    transform_pixel(*this, rhs, std::minus<T>());
-    return *this;    
-}
-
-template <typename T>
-const ImageView<T>& ImageView<T>::operator*=(const BaseImage<T>& rhs) const 
-{
-    if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
-        throw ImageError("Attempt im1 *= im2, but bounds not the same shape");
-    transform_pixel(*this, rhs, std::multiplies<T>());
-    return *this;    
-}
-
-template <typename T>
-const ImageView<T>& ImageView<T>::operator/=(const BaseImage<T>& rhs) const 
-{
-    if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
-        throw ImageError("Attempt im1 /= im2, but bounds not the same shape");
-    transform_pixel(*this, rhs, std::divides<T>());
-    return *this;    
 }
 
 // instantiate for expected types
