@@ -352,7 +352,7 @@ def test_Image_inplace_subtract():
             image2 = image2_init_func((2 * ref_array).astype(types[j]))
             image2 -= image1
             np.testing.assert_array_equal(ref_array.astype(types[i]), image1.array,
-                    err_msg="Inplace add in Image class does not match reference for dtypes = "
+                    err_msg="Inplace subtract in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
 
 def test_Image_inplace_multiply():
@@ -380,7 +380,7 @@ def test_Image_inplace_multiply():
             image2 = image2_init_func((2 * ref_array).astype(types[j]))
             image2 *= image1
             np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image2.array,
-                    err_msg="Inplace add in Image class does not match reference for dtypes = "
+                    err_msg="Inplace multiply in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
 
 def test_Image_inplace_divide():
@@ -408,7 +408,7 @@ def test_Image_inplace_divide():
             image2 = image2_init_func((2 * (ref_array+1)**2).astype(types[j]))
             image2 /= image1
             np.testing.assert_array_equal((2 * (ref_array+1)).astype(types[i]), image2.array,
-                    err_msg="Inplace add in Image class does not match reference for dtypes = "
+                    err_msg="Inplace divide in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
 
 
