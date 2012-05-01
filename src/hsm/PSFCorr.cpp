@@ -283,20 +283,36 @@ namespace hsm {
         HSMShapeData results;
         RectImage object_rect_image;
         double amp, m_xx, m_xy, m_yy;
+        int x, y;
 
-        // repackage input Image --> RectImage
+        // Repackage input Image into RectImage
+        object_rect_image.xmin = object_image.getXMin();
+        object_rect_image.xmax = object_image.getXMax();
+        object_rect_image.ymin = object_image.getYMin();
+        object_rect_image.ymax = object_image.getYMax();
+
+        for (x=object_rect_image.xmin; x<=object_rect_image.xmax; x++) {
+            for (y=object_rect_image.ymin; y<=object_rect_image.ymax; y++)
+                object_rect_image.image[x][y] = object_image.at(x, y);
+        }
 
         // call find_ellipmom_2
-        find_ellipmom_2(&object_rect_image, &amp, &(results.moments_centroid.x),
-                        &(results.moments_centroid.y), &m_xx, &m_xy, &m_yy, &(results.moments_rho4),
-                        precision, &(results.moments_n_iter));
+        try {
+            find_ellipmom_2(&object_rect_image, &amp, &(results.moments_centroid.x),
+                            &(results.moments_centroid.y), &m_xx, &m_xy, &m_yy, &(results.moments_rho4),
+                            precision, &(results.moments_n_iter));
+        }
+        catch (char err_msg) {
+            std::cout << err_msg;
+        }
 
         // repackage outputs from find_ellipmom_2 to the output HSMShapeData struct
         results.moments_amp = 2.0*amp;
         results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
         results.image_bounds = object_image.getBounds();
         results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_xy));
-        // results.moments_status
+        results.moments_status = 0; // need a way to change this depending on results of the above
+                                    // exception handling
 
         return results;
     }
