@@ -62,20 +62,18 @@ def test_FITS_IO():
         testfile = os.path.join(datadir, "test"+tchar[i]+".fits")
         test_array = pyfits.getdata(testfile)
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_array,
-                                      err_msg="PyFITS failing to read reference image.")
+                err_msg="PyFITS failing to read reference image.")
         # Then use the Image methods... Note this also relies on the array look working too
         image_init_func = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
         # First give ImageSIFD.read() a PyFITS PrimaryHDU
         hdu = pyfits.open(testfile)
         test_image = image_init_func.read(hdu)
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
-                                      err_msg="Image"+tchar[i]+".read() failed reading from PyFITS"
-                                              +"PrimaryHDU input.")
+                err_msg="Image"+tchar[i]+".read() failed reading from PyFITS PrimaryHDU input.")
         # Then try an ImageSIFD.read() with the filename itself as input
         test_image = image_init_func.read(testfile)
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
-                                      err_msg="Image"+tchar[i]+".read() failed reading from string"
-                                              +"filename input.")
+                err_msg="Image"+tchar[i]+".read() failed reading from string filename input.")
         # TODO: test reading from an HDU list (e.g. for multi-extension FITS).
 
 def test_Image_array_view():
@@ -85,14 +83,14 @@ def test_Image_array_view():
         # First try using the dictionary-type Image init
         image = galsim.ImageView[types[i]](ref_array.astype(types[i]))
         np.testing.assert_array_equal(ref_array.astype(types[i]), image.array,
-                                      err_msg="Array look into Image class (dictionary call) does"
-                                              +" not match input for dtype = "+str(types[i]))
+                err_msg="Array look into Image class (dictionary call) does"
+                +" not match input for dtype = "+str(types[i]))
         #Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image = image_init_func(ref_array.astype(types[i]))
         np.testing.assert_array_equal(ref_array.astype(types[i]), image.array,
-                                      err_msg="Array look into ImageView class does not match input"
-                                              +" for dtype = "+str(types[i]))
+                err_msg="Array look into ImageView class does not match input"
+                +" for dtype = "+str(types[i]))
 
 def test_Image_binary_add():
     """Test that all four types of supported Images add correctly.
@@ -103,16 +101,26 @@ def test_Image_binary_add():
         image2 = galsim.ImageView[types[i]]((2 * ref_array).astype(types[i]))
         image3 = image1 + image2
         np.testing.assert_array_equal((3 * ref_array).astype(types[i]), image3.array,
-                                      err_msg="Binary add in Image class (dictionary call) does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Binary add in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func(ref_array.astype(types[i]))
         image2 = image_init_func((2 * ref_array).astype(types[i]))
         image3 = image1 + image2
         np.testing.assert_array_equal((3 * ref_array).astype(types[i]), image3.array,
-                                      err_msg="Binary add in Image class does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Binary add in Image class does not match reference for dtype = "
+                +str(types[i]))
+
+        for j in xrange(ntypes):
+            image2_init_func = eval("galsim.ImageView"+tchar[j])
+            image1 = image_init_func(ref_array.astype(types[i]))
+            image2 = image2_init_func((2 * ref_array).astype(types[j]))
+            image3 = image1 + image2
+            type3 = image3.array.dtype.type
+            np.testing.assert_array_equal((3 * ref_array).astype(type3), image3.array,
+                    err_msg="Inplace add in Image class does not match reference for dtypes = "
+                    +str(types[i])+" and "+str(types[j]))
 
 def test_Image_binary_subtract():
     """Test that all four types of supported Images subtract correctly.
@@ -123,16 +131,25 @@ def test_Image_binary_subtract():
         image2 = galsim.ImageView[types[i]]((2 * ref_array).astype(types[i]))
         image3 = image2 - image1
         np.testing.assert_array_equal(ref_array.astype(types[i]), image3.array,
-                                    err_msg="Binary subtract in Image class (dictionary call) does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Binary subtract in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func(ref_array.astype(types[i]))
         image2 = image_init_func((2 * ref_array).astype(types[i]))
         image3 = image2 - image1
         np.testing.assert_array_equal(ref_array.astype(types[i]), image3.array,
-                                      err_msg="Binary subtract in Image class does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Binary subtract in Image class does not match reference for dtype = "
+                +str(types[i]))
+        for j in xrange(ntypes):
+            image2_init_func = eval("galsim.ImageView"+tchar[j])
+            image1 = image_init_func(ref_array.astype(types[i]))
+            image2 = image2_init_func((2 * ref_array).astype(types[j]))
+            image3 = image2 - image1
+            type3 = image3.array.dtype.type
+            np.testing.assert_array_equal(ref_array.astype(type3), image3.array,
+                    err_msg="Inplace add in Image class does not match reference for dtypes = "
+                    +str(types[i])+" and "+str(types[j]))
 
 def test_Image_binary_multiply():
     """Test that all four types of supported Images multiply correctly.
@@ -143,16 +160,25 @@ def test_Image_binary_multiply():
         image2 = galsim.ImageView[types[i]]((2 * ref_array).astype(types[i]))
         image3 = image1 * image2
         np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image3.array,
-                                    err_msg="Binary multiply in Image class (dictionary call) does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Binary multiply in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func(ref_array.astype(types[i]))
         image2 = image_init_func((2 * ref_array).astype(types[i]))
         image3 = image1 * image2
         np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image3.array,
-                                      err_msg="Binary multiply in Image class does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Binary multiply in Image class does not match reference for dtype = "
+                +str(types[i]))
+        for j in xrange(ntypes):
+            image2_init_func = eval("galsim.ImageView"+tchar[j])
+            image1 = image_init_func(ref_array.astype(types[i]))
+            image2 = image2_init_func((2 * ref_array).astype(types[j]))
+            image3 = image2 * image1
+            type3 = image3.array.dtype.type
+            np.testing.assert_array_equal((2*ref_array**2).astype(type3), image3.array,
+                    err_msg="Inplace add in Image class does not match reference for dtypes = "
+                    +str(types[i])+" and "+str(types[j]))
 
 def test_Image_binary_divide():
     """Test that all four types of supported Images divide correctly.
@@ -164,27 +190,25 @@ def test_Image_binary_divide():
         image2 = galsim.ImageView[types[i]]((3 * (ref_array + 1)**2).astype(types[i]))
         image3 = image2 / image1
         np.testing.assert_array_equal((3 * (ref_array + 1)).astype(types[i]), image3.array,
-                                    err_msg="Binary divide in Image class (dictionary call) does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Binary divide in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func((ref_array + 1).astype(types[i]))
         image2 = image_init_func((3 * (ref_array + 1)**2).astype(types[i]))
         image3 = image2 / image1
         np.testing.assert_array_equal((3 * (ref_array + 1)).astype(types[i]), image3.array,
-                                      err_msg="Binary divide in Image class does"
-                                             +" not match reference for dtype = "+str(types[i]))
-
-        # Test that the ZeroDivisionError is correctly thrown if some pixel = 0.
-        image1.setValue(1,3,0)
-        def div_helper(image1, image2, image3):
+                err_msg="Binary divide in Image class does not match reference for dtype = "
+                +str(types[i]))
+        for j in xrange(ntypes):
+            image2_init_func = eval("galsim.ImageView"+tchar[j])
+            image1 = image_init_func((ref_array + 1).astype(types[i]))
+            image2 = image2_init_func((3 * (ref_array+1)**2).astype(types[j]))
             image3 = image2 / image1
-        # MJ: It turns out that numpy division doesn't throw a ZeroDivisionError.
-        #     Instead it just silently calculates Inf or Nan for floats.
-        #     For integers x / 0 -> 0.  Weird, but there you go.
-        #     So if we do want an exception thrown, it looks like we'll have to 
-        #     implement it ourselves.
-        #np.testing.assert_raises(ZeroDivisionError, div_helper, image1, image2, image3)
+            type3 = image3.array.dtype.type
+            np.testing.assert_array_equal((3*(ref_array+1)).astype(type3), image3.array,
+                    err_msg="Inplace add in Image class does not match reference for dtypes = "
+                    +str(types[i])+" and "+str(types[j]))
 
 def test_Image_binary_scalar_add():
     """Test that all four types of supported Images add scalars correctly.
@@ -205,12 +229,12 @@ def test_Image_binary_scalar_add():
         image1 = image_init_func(ref_array.astype(types[i]))
         image2 = image1 + 3
         np.testing.assert_array_equal((ref_array + 3).astype(types[i]), image2.array,
-                err_msg="Binary add scalar in Image class does"
-                +" not match reference for dtype = "+str(types[i]))
+                err_msg="Binary add scalar in Image class does not match reference for dtype = "
+                +str(types[i]))
         image2 = 3 + image1
         np.testing.assert_array_equal((ref_array + 3).astype(types[i]), image2.array,
-                err_msg="Binary radd scalar in Image class does"
-                +" not match reference for dtype = "+str(types[i]))
+                err_msg="Binary radd scalar in Image class does not match reference for dtype = "
+                +str(types[i]))
 
 def test_Image_binary_scalar_subtract():
     """Test that all four types of supported Images binary scalar subtract correctly.
@@ -227,8 +251,8 @@ def test_Image_binary_scalar_subtract():
         image1 = image_init_func(ref_array.astype(types[i]))
         image2 = image1 - 3
         np.testing.assert_array_equal((ref_array - 3).astype(types[i]), image2.array,
-                err_msg="Binary add scalar in Image class does"
-                +" not match reference for dtype = "+str(types[i]))
+                err_msg="Binary add scalar in Image class does not match reference for dtype = "
+                +str(types[i]))
 
 def test_Image_binary_scalar_multiply():
     """Test that all four types of supported Images binary scalar multiply correctly.
@@ -274,10 +298,6 @@ def test_Image_binary_scalar_divide():
                 err_msg="Binary divide scalar in Image class does"
                 +" not match reference for dtype = "+str(types[i]))
         
-        def div_helper(image1, image2, val):
-            image2 = image1 / val
-        #np.testing.assert_raises(ZeroDivisionError, div_helper, image1, image2, 0)
-
 
 def test_Image_inplace_add():
     """Test that all four types of supported Images inplace add correctly.
@@ -288,16 +308,24 @@ def test_Image_inplace_add():
         image2 = galsim.ImageView[types[i]]((2 * ref_array).astype(types[i]))
         image1 += image2
         np.testing.assert_array_equal((3 * ref_array).astype(types[i]), image1.array,
-                                      err_msg="Inplace add in Image class (dictionary call) does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Inplace add in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func(ref_array.astype(types[i]))
         image2 = image_init_func((2 * ref_array).astype(types[i]))
         image1 += image2
         np.testing.assert_array_equal((3 * ref_array).astype(types[i]), image1.array,
-                                      err_msg="Inplace add in Image class does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Inplace add in Image class does not match reference for dtype = "
+                +str(types[i]))
+        for j in xrange(ntypes):
+            image2_init_func = eval("galsim.ImageView"+tchar[j])
+            image1 = image_init_func(ref_array.astype(types[i]))
+            image2 = image2_init_func((2 * ref_array).astype(types[j]))
+            image1 += image2
+            np.testing.assert_array_equal((3 * ref_array).astype(types[i]), image1.array,
+                    err_msg="Inplace add in Image class does not match reference for dtypes = "
+                    +str(types[i])+" and "+str(types[j]))
 
 def test_Image_inplace_subtract():
     """Test that all four types of supported Images inplace subtract correctly.
@@ -308,16 +336,24 @@ def test_Image_inplace_subtract():
         image2 = galsim.ImageView[types[i]]((2 * ref_array).astype(types[i]))
         image2 -= image1
         np.testing.assert_array_equal(ref_array.astype(types[i]), image2.array,
-                                    err_msg="Inplace subtract in Image class (dictionary call) does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Inplace subtract in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func(ref_array.astype(types[i]))
         image2 = image_init_func((2 * ref_array).astype(types[i]))
         image2 -= image1
         np.testing.assert_array_equal(ref_array.astype(types[i]), image2.array,
-                                      err_msg="Inplace subtract in Image class does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Inplace subtract in Image class does"
+                +" not match reference for dtype = "+str(types[i]))
+        for j in xrange(ntypes):
+            image2_init_func = eval("galsim.ImageView"+tchar[j])
+            image1 = image_init_func(ref_array.astype(types[i]))
+            image2 = image2_init_func((2 * ref_array).astype(types[j]))
+            image2 -= image1
+            np.testing.assert_array_equal(ref_array.astype(types[i]), image1.array,
+                    err_msg="Inplace add in Image class does not match reference for dtypes = "
+                    +str(types[i])+" and "+str(types[j]))
 
 def test_Image_inplace_multiply():
     """Test that all four types of supported Images inplace multiply correctly.
@@ -328,16 +364,24 @@ def test_Image_inplace_multiply():
         image2 = galsim.ImageView[types[i]]((2 * ref_array).astype(types[i]))
         image2 *= image1
         np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image2.array,
-                                    err_msg="Inplace multiply in Image class (dictionary call) does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Inplace multiply in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func(ref_array.astype(types[i]))
         image2 = image_init_func((2 * ref_array).astype(types[i]))
         image2 *= image1
         np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image2.array,
-                                      err_msg="Inplace multiply in Image class does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Inplace multiply in Image class does not match reference for dtype = "
+                +str(types[i]))
+        for j in xrange(ntypes):
+            image2_init_func = eval("galsim.ImageView"+tchar[j])
+            image1 = image_init_func(ref_array.astype(types[i]))
+            image2 = image2_init_func((2 * ref_array).astype(types[j]))
+            image2 *= image1
+            np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image2.array,
+                    err_msg="Inplace add in Image class does not match reference for dtypes = "
+                    +str(types[i])+" and "+str(types[j]))
 
 def test_Image_inplace_divide():
     """Test that all four types of supported Images inplace divide correctly.
@@ -348,21 +392,24 @@ def test_Image_inplace_divide():
         image2 = galsim.ImageView[types[i]]((2 * (ref_array + 1)**2).astype(types[i]))
         image2 /= image1
         np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image2.array,
-                                    err_msg="Inplace divide in Image class (dictionary call) does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Inplace divide in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func((ref_array + 1).astype(types[i]))
         image2 = image_init_func((2 * (ref_array + 1)**2).astype(types[i]))
         image2 /= image1
         np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image2.array,
-                                      err_msg="Inplace divide in Image class does"
-                                             +" not match reference for dtype = "+str(types[i]))
-
-        image1.setValue(1,3,0)
-        def idiv_helper(image1, image2):
+                err_msg="Inplace divide in Image class does not match reference for dtype = "
+                +str(types[i]))
+        for j in xrange(ntypes):
+            image2_init_func = eval("galsim.ImageView"+tchar[j])
+            image1 = image_init_func((ref_array+1).astype(types[i]))
+            image2 = image2_init_func((2 * (ref_array+1)**2).astype(types[j]))
             image2 /= image1
-        #np.testing.assert_raises(ZeroDivisionError, idiv_helper, image1, image2)
+            np.testing.assert_array_equal((2 * (ref_array+1)).astype(types[i]), image2.array,
+                    err_msg="Inplace add in Image class does not match reference for dtypes = "
+                    +str(types[i])+" and "+str(types[j]))
 
 
 def test_Image_inplace_scalar_add():
@@ -373,16 +420,15 @@ def test_Image_inplace_scalar_add():
         image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
         image1 += 1
         np.testing.assert_array_equal((ref_array + 1).astype(types[i]), image1.array,
-                                      err_msg="Inplace scalar add in Image class (dictionary "
-                                             +"call) does not match reference for dtype = "
-                                             +str(types[i]))
+                err_msg="Inplace scalar add in Image class (dictionary "
+                +"call) does not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func(ref_array.astype(types[i]))
         image1 += 1
         np.testing.assert_array_equal((ref_array + 1).astype(types[i]), image1.array,
-                                      err_msg="Inplace scalar add in Image class does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Inplace scalar add in Image class does not match reference for dtype = "
+                +str(types[i]))
 
 def test_Image_inplace_scalar_subtract():
     """Test that all four types of supported Images inplace scalar subtract correctly.
@@ -392,16 +438,15 @@ def test_Image_inplace_scalar_subtract():
         image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
         image1 -= 1
         np.testing.assert_array_equal((ref_array - 1).astype(types[i]), image1.array,
-                                      err_msg="Inplace scalar subtract in Image class (dictionary "
-                                             +"call) does not match reference for dtype = "
-                                             +str(types[i]))
+                err_msg="Inplace scalar subtract in Image class (dictionary "
+                +"call) does not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func(ref_array.astype(types[i]))
         image1 -= 1
         np.testing.assert_array_equal((ref_array - 1).astype(types[i]), image1.array,
-                                      err_msg="Inplace scalar subtract in Image class does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Inplace scalar subtract in Image class does"
+                +" not match reference for dtype = "+str(types[i]))
 
 def test_Image_inplace_scalar_multiply():
     """Test that all four types of supported Images inplace scalar multiply correctly.
@@ -412,17 +457,16 @@ def test_Image_inplace_scalar_multiply():
         image2 = galsim.ImageView[types[i]]((2 * ref_array).astype(types[i]))
         image1 *= 2
         np.testing.assert_array_equal(image1.array, image2.array,
-                                      err_msg="Inplace scalar multiply in Image class (dictionary "
-                                             +"call) does not match reference for dtype = "
-                                             +str(types[i]))
+                err_msg="Inplace scalar multiply in Image class (dictionary "
+                +"call) does not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func(ref_array.astype(types[i]))
         image2 = image_init_func((2 * ref_array).astype(types[i]))
         image1 *= 2
         np.testing.assert_array_equal(image1.array, image2.array,
-                                      err_msg="Inplace scalar multiply in Image class does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Inplace scalar multiply in Image class does"
+                +" not match reference for dtype = "+str(types[i]))
 
 def test_Image_inplace_scalar_divide():
     """Test that all four types of supported Images inplace scalar divide correctly.
@@ -433,22 +477,17 @@ def test_Image_inplace_scalar_divide():
         image2 = galsim.ImageView[types[i]]((2 * ref_array).astype(types[i]))
         image2 /= 2
         np.testing.assert_array_equal(image1.array, image2.array,
-                                      err_msg="Inplace scalar divide in Image class (dictionary "
-                                             +"call) does not match reference for dtype = "
-                                             +str(types[i]))
+                err_msg="Inplace scalar divide in Image class (dictionary "
+                +"call) does not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func(ref_array.astype(types[i]))
         image2 = image_init_func((2 * ref_array).astype(types[i]))
         image2 /= 2
         np.testing.assert_array_equal(image1.array, image2.array,
-                                      err_msg="Inplace scalar divide in Image class does"
-                                             +" not match reference for dtype = "+str(types[i]))
+                err_msg="Inplace scalar divide in Image class does"
+                +" not match reference for dtype = "+str(types[i]))
         
-        def idiv_helper(image1, val):
-            image2 /= val
-        #np.testing.assert_raises(ZeroDivisionError, idivhelper, image2, 0)
-
 def test_Image_subImage():
     """Test that subImages are accessed and written correctly.
     """
