@@ -12,6 +12,7 @@
 
 #include "Std.h"
 #include "Bounds.h"
+#include "ImageArith.h"
 
 namespace galsim {
 
@@ -441,6 +442,15 @@ namespace galsim {
          *  values initially).
          */
         ImageView(const ImageView<T>& rhs) : BaseImage<T>(rhs) {}
+
+        /**
+         *  @brief Shallow copy constructor from Image.
+         *
+         *  The original image and its copy will share pixel values, but their bounding
+         *  boxes and scales will not be shared (even though they will be set to the same
+         *  values initially).
+         */
+        ImageView(Image<T>& rhs) : BaseImage<T>(rhs) {}
 
         /**
          *  @brief Deep assignment operator.

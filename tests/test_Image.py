@@ -8,13 +8,14 @@ import numpy as np
 These tests use four externally generated (IDL + astrolib FITS writing tools) reference images for
 the Image unit tests.  These are in tests/data/.
 
-Each image is 4x4 pixels^2 and if each pixel is labelled (x, y) then each pixel value is 10*x + y.
+Each image is 5x7 pixels^2 and if each pixel is labelled (x, y) then each pixel value is 10*x + y.
 The array thus has values:
 
-03 13 23 33
-02 12 22 32  ^
-01 11 21 31  |
-00 10 20 30  y 
+15 25 35 45 55
+14 24 34 44 54
+13 23 33 43 53  ^
+12 22 32 42 52  |
+11 21 31 41 51  y 
 
 x ->
 
@@ -32,47 +33,128 @@ except ImportError:
     import galsim
 
 # Setup info for tests, not likely to change
-testshape = (4, 4)  # shape of image arrays for all tests
 ntypes = 4
 types = [np.int16, np.int32, np.float32, np.float64]
 tchar = ['S', 'I', 'F', 'D']
 
-ref_array = np.array([[00, 10, 20, 30], [01, 11, 21, 31], [02, 12, 22, 32],
-                      [03, 13, 23, 33]]).astype(types[0])
+ncol = 7
+nrow = 5
+test_shape = (ncol, nrow)  # shape of image arrays for all tests
+ref_array = np.array([
+    [11, 21, 31, 41, 51, 61, 71], 
+    [12, 22, 32, 42, 52, 62, 72], 
+    [13, 23, 33, 43, 53, 63, 73], 
+    [14, 24, 34, 44, 54, 64, 74], 
+    [15, 25, 35, 45, 55, 65, 75] ]).astype(np.int16)
 
 datadir = os.path.join(".", "Image_comparison_images")
 
-def test_Image_XYmin_XYMax():
-    """Test that all four types of supported arrays correctly set bounds based on an input array.
+def test_Image_basic():
+    """Test that all supported types perform basic Image operations correctly
     """
-    for array_type in types:
-        test_array = np.zeros(testshape, dtype=array_type)
-        image = galsim.ImageView[array_type](test_array)
-        assert image.getXMin() == 1
-        assert image.getYMin() == 1
-        assert image.getXMax() == testshape[0]
-        assert image.getYMax() == testshape[1]
+    for i in xrange(ntypes):
 
-def test_FITS_IO():
+        # Check basic constructor from ncol, nrow
+        array_type = types[i]
+        im1 = galsim.Image[array_type](ncol,nrow)
+        bounds = galsim.BoundsI(1,ncol,1,nrow)
+
+        assert im1.getXMin() == 1
+        assert im1.getXMax() == ncol
+        assert im1.getYMin() == 1
+        assert im1.getYMax() == nrow
+        assert im1.getBounds() == bounds
+        assert im1.bounds == bounds
+
+        # Check basic constructor from ncol, nrow
+        # Also test alternate name of image type: ImageD, ImageF, etc.
+        image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
+        im2 = image_type(bounds)
+        im2_view = im2.view()
+
+        assert im2_view.getXMin() == 1
+        assert im2_view.getXMax() == ncol
+        assert im2_view.getYMin() == 1
+        assert im2_view.getYMax() == nrow
+        assert im2_view.bounds == bounds
+
+        # Check various ways to set and get values
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                im1.setValue(x,y, 100 + 10*x + y)
+                im2_view.setValue(x,y, 100 + 10*x + y)
+
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                assert im1.at(x,y) == 100+10*x+y
+                assert im1.view().at(x,y) == 100+10*x+y
+                assert im2.at(x,y) == 100+10*x+y
+                assert im2_view.at(x,y) == 100+10*x+y
+                im1.setValue(x,y, 10*x + y)
+                im2_view.setValue(x,y, 10*x + y)
+                assert im1(x,y) == 10*x+y
+                assert im1.view()(x,y) == 10*x+y
+                assert im2(x,y) == 10*x+y
+                assert im2_view(x,y) == 10*x+y
+
+        # Check view of given data
+        im3_view = galsim.ImageView[array_type](ref_array.astype(array_type))
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                assert im3_view(x,y) == 10*x+y
+
+        # Check shift ops
+        im1_view = im1.view() # View with old bounds
+        dx = 31
+        dy = 16
+        im1.shift(dx,dy)
+        im2_view.setOrigin( 1+dx , 1+dy )
+        im3_view.setCenter( (ncol+1)/2+dx , (nrow+1)/2+dy )
+        shifted_bounds = galsim.BoundsI(1+dx, ncol+dx, 1+dy, nrow+dy)
+
+        assert im1.bounds == shifted_bounds
+        assert im2_view.bounds == shifted_bounds
+        assert im3_view.bounds == shifted_bounds
+        # Others shouldn't have changed
+        assert im1_view.bounds == bounds
+        assert im2.bounds == bounds
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                assert im1(x+dx,y+dy) == 10*x+y
+                assert im1_view(x,y) == 10*x+y
+                assert im2(x,y) == 10*x+y
+                assert im2_view(x+dx,y+dy) == 10*x+y
+                assert im3_view(x+dx,y+dy) == 10*x+y
+
+
+def test_Image_FITS_IO():
     """Test that all four FITS reference images are correctly read in by both PyFITS and our Image 
     wrappers.
     """
+    # The test fits file was made with the following array.  I didn't remake the file 
+    # when I changed the ref_array to have ncol != nrow.
+    fits_ref_array = np.array([
+        [00, 10, 20, 30],
+        [01, 11, 21, 31],
+        [02, 12, 22, 32],
+        [03, 13, 23, 33]]).astype(np.int16)
     for i in xrange(ntypes):
         # First try PyFITS for sanity
         testfile = os.path.join(datadir, "test"+tchar[i]+".fits")
         test_array = pyfits.getdata(testfile)
-        np.testing.assert_array_equal(ref_array.astype(types[i]), test_array,
+        np.testing.assert_array_equal(fits_ref_array.astype(types[i]), test_array,
                 err_msg="PyFITS failing to read reference image.")
         # Then use the Image methods... Note this also relies on the array look working too
         image_init_func = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
         # First give ImageSIFD.read() a PyFITS PrimaryHDU
         hdu = pyfits.open(testfile)
+        # NB: The returned test_image is not necessarily of type image_init_func!
         test_image = image_init_func.read(hdu)
-        np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
+        np.testing.assert_array_equal(fits_ref_array.astype(types[i]), test_image.array, 
                 err_msg="Image"+tchar[i]+".read() failed reading from PyFITS PrimaryHDU input.")
         # Then try an ImageSIFD.read() with the filename itself as input
         test_image = image_init_func.read(testfile)
-        np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
+        np.testing.assert_array_equal(fits_ref_array.astype(types[i]), test_image.array, 
                 err_msg="Image"+tchar[i]+".read() failed reading from string filename input.")
         # TODO: test reading from an HDU list (e.g. for multi-extension FITS).
 
@@ -493,8 +575,8 @@ def test_Image_subImage():
     """
     for i in xrange(ntypes):
         image = galsim.ImageView[types[i]](ref_array.astype(types[i]))
-        bounds = galsim.BoundsI(2,3,2,3)
-        sub_array = np.array([[11, 21], [12, 22]]).astype(types[i])
+        bounds = galsim.BoundsI(3,4,2,3)
+        sub_array = np.array([[32, 42], [33, 43]]).astype(types[i])
         np.testing.assert_array_equal(image.subImage(bounds).array, sub_array,
             err_msg="image.subImage(bounds) does not match reference for dtype = "+str(types[i]))
         np.testing.assert_array_equal(image[bounds].array, sub_array,
@@ -502,14 +584,15 @@ def test_Image_subImage():
         image[bounds] = galsim.ImageView[types[i]](sub_array+100)
         np.testing.assert_array_equal(image[bounds].array, (sub_array+100),
             err_msg="image[bounds] = im2 does not set correctly for dtype = "+str(types[i]))
-        for xpos in range(1,4):
-            for ypos in range(1,4):
-                if (xpos >= 2 and xpos <= 3 and ypos >= 2 and ypos <= 3):
+        for xpos in range(1,test_shape[0]):
+            for ypos in range(1,test_shape[1]):
+                if (xpos >= bounds.getXMin() and xpos <= bounds.getXMax() and 
+                    ypos >= bounds.getYMin() and ypos <= bounds.getYMax()):
                     value = ref_array[ypos-1,xpos-1] + 100
                 else:
                     value = ref_array[ypos-1,xpos-1]
-                np.testing.assert_equal(image(xpos,ypos),value,
-                    err_msg="image[bounds] = im2 set wrong locations for dtype = "+str(types[i]))
+                assert image(xpos,ypos) == value,  \
+                    "image[bounds] = im2 set wrong locations for dtype = "+str(types[i])
 
         image = galsim.ImageView[types[i]](ref_array.astype(types[i]))
         image[bounds] += 100
@@ -579,8 +662,8 @@ def test_Image_subImage():
 
 
 if __name__ == "__main__":
-    test_Image_XYmin_XYMax()
-    test_FITS_IO()
+    test_Image_basic()
+    test_Image_FITS_IO()
     test_Image_array_view()
     test_Image_binary_add()
     test_Image_binary_subtract()

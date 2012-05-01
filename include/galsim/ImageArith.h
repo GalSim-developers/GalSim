@@ -2,10 +2,13 @@
 #ifndef ImageArith_H
 #define ImageArith_H
 
-#include "Image.h"
-
 namespace galsim {
 
+    class ImageError;
+    template <typename T> class AssignableToImage;
+    template <typename T> class BaseImage;
+    template <typename T> class Image;
+    template <typename T> class ImageView;
 
     //
     // Templates for stepping through image pixels
