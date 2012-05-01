@@ -301,22 +301,26 @@ namespace hsm {
         m_xy = 0.0;
 
         // call find_ellipmom_2
+        results.image_bounds = object_image.getBounds();
         try {
             find_ellipmom_2(&object_rect_image, &amp, &(results.moments_centroid.x),
                             &(results.moments_centroid.y), &m_xx, &m_xy, &m_yy, &(results.moments_rho4),
                             precision, &(results.moments_n_iter));
-        }
-        catch (char err_msg) {
-            std::cout << err_msg;
-        }
 
-        // repackage outputs from find_ellipmom_2 to the output HSMShapeData struct
-        results.moments_amp = 2.0*amp;
-        results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
-        results.image_bounds = object_image.getBounds();
-        results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_xy));
-        results.moments_status = 0; // need a way to change this depending on results of the above
-                                    // exception handling
+            // repackage outputs from find_ellipmom_2 to the output HSMShapeData struct
+            results.moments_amp = 2.0*amp;
+            results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
+            results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_xy));
+            results.moments_status = 0;
+        }
+        catch (char *err_msg) {
+            std::cout << err_msg;
+            results.moments_status = 1;
+            results.moments_centroid.x = 0.0;
+            results.moments_centroid.y = 0.0;
+            results.moments_rho4 = -1.0;
+            results.moments_n_iter = 0;
+        }
 
         return results;
     }
@@ -907,9 +911,12 @@ namespace hsm {
             }
 
             if (++ *num_iter > MAX_MOM2_ITER) {
-                fprintf(stderr,"Warning: too many iterations in find_mom_2.\n");
-                convergence_factor = 0.;
-                *num_iter = NUM_ITER_DEFAULT;
+                throw "Error: too many iterations in adaptive moments\n";
+            }
+
+            if (std::isnan(convergence_factor) || std::isnan(*Mxx) || std::isnan(*Myy) || std::isnan(*Mxy)
+                || std::isnan(*x0) || std::isnan(*y0)) {
+                throw "Error: NaN in calculation of adaptive moments\n";
             }
         }
 
