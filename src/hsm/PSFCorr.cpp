@@ -61,7 +61,7 @@ namespace hsm {
         printf("Numerical Recipes run-time error...\n");
         printf("%s\n",error_text);
         printf("...now exiting to system...\n");
-        exit(1);
+        std::exit(1);
     }
 
     /* dmatrix
@@ -495,11 +495,11 @@ namespace hsm {
 #ifdef N_CHECKVAL
         if (nx<=0) {
             fprintf(stderr,"Error: nx<=0 in qho1d_wf_1\n");
-            exit(1);
+            std::exit(1);
         }
         if (Nmax<0) {
             fprintf(stderr,"Error: Nmax<0 in qho1d_wf_1\n");
-            exit(1);
+            std::exit(1);
         }
 #endif
 
@@ -637,7 +637,7 @@ namespace hsm {
 #ifdef N_CHECKVAL
         if (epsilon <= 0) {
             fprintf(stderr,"Error: epsilon out of range in find_mom_2.\n");
-            exit(1);
+            std::exit(1);
         }
 #endif
 
@@ -736,7 +736,7 @@ namespace hsm {
         detM = Mxx * Myy - Mxy * Mxy;
         if (detM<=0 || Mxx<=0 || Myy<=0) {
             fprintf(stderr, "Error: non positive definite adaptive moments!\n");
-            exit(1);
+            std::exit(1);
         }
         Minv_xx    =  Myy/detM;
         TwoMinv_xy = -Mxy/detM * 2.0;
@@ -825,7 +825,7 @@ namespace hsm {
 #ifdef N_CHECKVAL
         if (epsilon <= 0) {
             fprintf(stderr,"Error: epsilon out of range in find_mom_2.\n");
-            exit(1);
+            std::exit(1);
         }
 #endif
 
@@ -843,7 +843,7 @@ namespace hsm {
 
             if (semi_b2 <= 0) {
                 fprintf(stderr,"Error: non positive-definite weight in find_ellipmom_2.\n");
-                exit(1);
+                std::exit(1);
             }
 
             shiftscale = std::sqrt(semi_b2);
@@ -890,7 +890,7 @@ namespace hsm {
             if (std::abs(*Mxx)>MAX_AMOMENT || std::abs(*Mxy)>MAX_AMOMENT || std::abs(*Myy)>MAX_AMOMENT
                 || std::abs(*x0-x00)>MAX_ASHIFT || std::abs(*y0-y00)>MAX_ASHIFT) {
 	      fprintf(stderr, "Error: adaptive moment failed: %lf %lf %lf %lf %lf %d\n",std::abs(*Mxx),std::abs(*Mxy),std::abs(*Myy),std::abs(*x0-x00),std::abs(*y0-y00),*num_iter);
-                exit(1);
+                std::exit(1);
             }
 
             if (++ *num_iter > MAX_MOM2_ITER) {

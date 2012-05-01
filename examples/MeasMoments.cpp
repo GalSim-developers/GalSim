@@ -58,11 +58,11 @@ static int read_image(char FileName[], galsim::hsm::RectImage *MyImage)
     fpixel[0]=fpixel[1]=1;
 
     fits_open_file(&fptr,FileName,READONLY,&status);
-    if(status) {printf("Error %d\n",status); exit(1);}
+    if(status) {printf("Error %d\n",status); std::exit(1);}
 
     fits_get_img_param(fptr,2,&bitpix,&naxis,naxes,&status);
-    if(status) {printf("Error %d\n",status); exit(1);}
-    if (naxis!=2) {printf("Error: this program is designed to work with two axes.\n"); exit(1);}
+    if(status) {printf("Error %d\n",status); std::exit(1);}
+    if (naxis!=2) {printf("Error: this program is designed to work with two axes.\n"); std::exit(1);}
 
     nelem=naxes[0]*naxes[1];
 
@@ -91,9 +91,9 @@ static int read_image(char FileName[], galsim::hsm::RectImage *MyImage)
            break;
       default:
            printf("Error: I don't recognize the data type.\n");
-           exit(1);
+           std::exit(1);
     }
-    if(status) {printf("Error %d\n",status); exit(1);}
+    if(status) {printf("Error %d\n",status); std::exit(1);}
 
     for(i=0;i<naxes[1];i++) {
         for(j=0;j<naxes[0];j++) {
@@ -115,7 +115,7 @@ static int read_image(char FileName[], galsim::hsm::RectImage *MyImage)
                    break;
               default:
                    printf("Error: I don't recognize the data type.\n");
-                   exit(1);
+                   std::exit(1);
             }
         }
     }
@@ -138,7 +138,7 @@ static int read_image(char FileName[], galsim::hsm::RectImage *MyImage)
            break;
       default:
            printf("Error: I don't recognize the data type.\n");
-           exit(1);
+           std::exit(1);
     }
 
     fits_close_file(fptr,&status);
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
     /* Check the number of arguments */
     if (argc!=2 && argc!=6) {
         fprintf(stderr,"Usage:\n\t%s image_file [guesssig sky_level x_centroid y_centroid]\n",argv[0]);
-        exit(1);
+        std::exit(1);
     }
 
     /* Get guesses for various values */
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
     status = read_image(argv[1], &AtlasImage);
     if (status) {
         fprintf(stderr,"Error %d in reading atlas image from file %s.\n", status,argv[1]);
-        exit(status);
+        std::exit(status);
     }
 
     for(i=AtlasImage.xmin;i<=AtlasImage.xmax;i++) {
