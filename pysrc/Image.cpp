@@ -115,10 +115,11 @@ struct PyImage {
             oss<<"actualType = "<<actualType<<"\n";
             oss<<"requiredType = "<<requiredType<<"\n";
             oss<<"For reference: \n";
-            oss<<"  NPY_SHORT  = "<<NPY_SHORT<<"\n";
-            oss<<"  NPY_INT    = "<<NPY_INT<<"\n";
-            oss<<"  NPY_FLOAT  = "<<NPY_FLOAT<<"\n";
-            oss<<"  NPY_DOUBLE = "<<NPY_DOUBLE<<"\n";
+            oss<<"  NPY_SHORT     = "<<NPY_SHORT<<"\n";
+            oss<<"  NPY_INT       = "<<NPY_INT<<"\n";
+            oss<<"  NPY_FLOAT     = "<<NPY_FLOAT<<"\n";
+            oss<<"  NPY_DOUBLE    = "<<NPY_DOUBLE<<"\n";
+            oss<<"  PyArray_INT32 = "<<PyArray_INT32<<"\n";
             PyErr_SetString(PyExc_ValueError, oss.str().c_str());
             //PyErr_SetString(PyExc_ValueError, "numpy.ndarray argument has incorrect data type");
             bp::throw_error_already_set();
