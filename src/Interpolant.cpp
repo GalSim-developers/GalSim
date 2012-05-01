@@ -3,6 +3,48 @@
 
 namespace galsim {
 
+    double InterpolantXY::getPositiveFlux() const {
+        return i1d.getPositiveFlux()*i1d.getPositiveFlux()
+            + i1d.getNegativeFlux()*i1d.getNegativeFlux();
+    }
+    double InterpolantXY::getNegativeFlux() const {
+        return 2.*i1d.getPositiveFlux()*i1d.getNegativeFlux();
+    }
+    PhotonArray InterpolantXY::shoot(int N, UniformDeviate& ud) const {
+        // Going to assume here that there is not a need to randomize any Interpolant
+        PhotonArray result = i1d.shoot(N, ud);   // get X coordinates
+        result.takeYFrom(i1d.shoot(N, ud));
+        return result;
+    }
+
+    PhotonArray Delta::shoot(int N, UniformDeviate& ud) const {
+        PhotonArray result(N);
+        double fluxPerPhoton = 1./N;
+        for (int i=0; i<N; i++)  {
+            result.setPhoton(i, 0., 0., fluxPerPhoton);
+        }
+        return result;
+    }
+
+    PhotonArray Nearest::shoot(int N, UniformDeviate& ud) const {
+        PhotonArray result(N);
+        double fluxPerPhoton = 1./N;
+        for (int i=0; i<N; i++)  {
+            result.setPhoton(i, ud()-0.5, 0., fluxPerPhoton);
+        }
+        return result;
+    }
+
+    PhotonArray Linear::shoot(int N, UniformDeviate& ud) const {
+        PhotonArray result(N);
+        double fluxPerPhoton = 1./N;
+        for (int i=0; i<N; i++) {
+            // *** Guessing here that 2 random draws is faster than a sqrt:
+            result.setPhoton(i, ud() + ud() - 1., 0., fluxPerPhoton);
+        }
+        return result;
+    }
+
     double Interpolant::xvalWrapped(double x, int N) const 
     {
         // sum over all arguments x+jN that are within range.

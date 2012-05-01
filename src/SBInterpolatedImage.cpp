@@ -462,6 +462,11 @@ namespace galsim {
                              upper->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }
 
+        // Last step is to convolve with the interpolation kernel.  Can skip if using a 2d delta function
+        const InterpolantXY* xyPtr = dynamic_cast<const InterpolantXY*> (xInterp);
+        if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d())))
+             result.convolve(xInterp->shoot(N, ud));
+
         return result;
     }
 

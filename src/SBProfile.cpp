@@ -1413,6 +1413,15 @@ namespace galsim {
         }
     }
 
+    void PhotonArray::takeYFrom(const PhotonArray& rhs) {
+        int N = size();
+        assert(rhs.size()==N);
+        for (int i=0; i<N; i++) {
+            _y[i] = rhs._x[i];
+            _flux[i] *= rhs._flux[i]*N;
+        }
+    }
+
 #ifdef USE_IMAGES
     void PhotonArray::addTo(Image<float>& target) {
         double dx = target.getScale();
