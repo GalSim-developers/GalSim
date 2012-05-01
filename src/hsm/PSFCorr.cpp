@@ -286,15 +286,20 @@ namespace hsm {
         int x, y;
 
         // Repackage input Image into RectImage
-        object_rect_image.xmin = object_image.getXMin();
-        object_rect_image.xmax = object_image.getXMax();
-        object_rect_image.ymin = object_image.getYMin();
-        object_rect_image.ymax = object_image.getYMax();
+        allocate_rect_image(&object_rect_image,object_image.getXMin(),object_image.getXMax(),
+                            object_image.getYMin(),object_image.getYMax());
 
         for (x=object_rect_image.xmin; x<=object_rect_image.xmax; x++) 
             for (y=object_rect_image.ymin; y<=object_rect_image.ymax; y++)
                 object_rect_image.image[x][y] = object_image.at(x, y);
         
+        // set some values for initial guesses
+        results.moments_centroid.x = 0.5*(object_rect_image.xmin + object_rect_image.xmax);
+        results.moments_centroid.y = 0.5*(object_rect_image.ymin + object_rect_image.ymax);
+        m_xx = 1.0;
+        m_yy = 1.0;
+        m_xy = 0.0;
+
         // call find_ellipmom_2
         try {
             find_ellipmom_2(&object_rect_image, &amp, &(results.moments_centroid.x),
@@ -841,7 +846,7 @@ namespace hsm {
 
         /* Iterate until we converge */
         while(convergence_factor > epsilon) {
-	  
+
             /* Get moments */
             find_ellipmom_1(data, *x0, *y0, *Mxx, *Mxy, *Myy, &Amp, &Bx, &By,
                             &Cxx, &Cxy, &Cyy, rho4);
