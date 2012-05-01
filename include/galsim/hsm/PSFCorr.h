@@ -94,20 +94,16 @@ namespace hsm {
      */
     struct HSMShapeData
     {
-        /// @brief galsim::Shear object representing the observed shape
-        Shear observed_shape;
-        
-        /// @brief galsim::Shear object representing the PSF-corrected shape
-        Shear corrected_shape;
-
         /// @brief galsim::Bounds object describing the image of the object
         Bounds<int> image_bounds;
 
-        /// @brief String indicating PSF-correction method; "None" if PSF correction was not done
-        std::string correction_method;
+        // Now put information about moments measurement
 
         /// @brief Status after measuring adaptive moments; -1 indicates no attempt to measure them
         int moments_status;
+
+        /// @brief galsim::Shear object representing the observed shape
+        Shear observed_shape;
 
         /// @brief Size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
         /// not measured
@@ -126,18 +122,30 @@ namespace hsm {
         /// @brief Number of iterations needed to get adaptive moments; 0 if not measured
         int moments_n_iter;
 
+        // Then put information about PSF correction
+
         /// @brief Status after carrying out PSF correction; -1 indicates no attempt to do so
         int correction_status;
+
+        /// @brief galsim::Shear object representing the PSF-corrected shape
+        Shear corrected_shape;
+
+        /// @brief Shape measurement uncertainty sigma_gamma (not sigma_e) per component
+        float corrected_shape_err;
+
+        /// @brief String indicating PSF-correction method; "None" if PSF correction was not done
+        std::string correction_method;
 
         /// @brief Resolution factor R_2; 0 indicates object is consistent with a PSF, 1 indicates
         /// perfect resolution; default -1
         float resolution_factor;
 
         /// @brief Constructor, setting defaults
-        HSMShapeData() : observed_shape(galsim::Shear()), corrected_shape(galsim::Shear()),
-            image_bounds(galsim::Bounds<int>()), correction_method("None"), moments_status(-1),
-            moments_sigma(-1.), moments_amp(-1.), moments_centroid(galsim::Position<double>(0.,0.)),
-            moments_rho4(-1.), moments_n_iter(0), correction_status(-1), resolution_factor(-1.)
+    HSMShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
+            observed_shape(galsim::Shear()), moments_sigma(-1.), moments_amp(-1.),
+            moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
+            correction_status(-1), corrected_shape(galsim::Shear()), corrected_shape_err(-1.),
+            correction_method("None"), resolution_factor(-1.)
         {}
     };
 
@@ -155,6 +163,8 @@ namespace hsm {
      *
      * @param[in] gal_image The Image for the galaxy being measured
      * @param[in] PSF_image The Image for the PSF
+     * @param[in] sky_var The variance of the sky level, used for estimating uncertainty on the
+     *            measured shape; default 0.
      * @param[in] *shear_est A string indicating the desired method of PSF correction: REGAUSS,
      *            LINEAR, BJ, or KSB; default REGAUSS.
      * @param[in] flags A flag determining various aspects of the shape measurement process (only
@@ -162,7 +172,9 @@ namespace hsm {
      * @return A HSMShapeData object containing the results of shape measurement. 
      */
     template <typename T>
-        HSMShapeData EstimateShearHSM(Image<T> const &gal_image, Image<T> const &PSF_image, const char *shear_est = "REGAUSS", unsigned long flags = 0xe);
+        HSMShapeData EstimateShearHSM(Image<T> const &gal_image, Image<T> const &PSF_image,
+                                      float sky_var = 0.0, char *shear_est = "REGAUSS",
+                                      unsigned long flags = 0xe);
 
     /**
      * @brief Measure the adaptive moments of an object directly using Images.
@@ -213,7 +225,7 @@ namespace hsm {
      * @param[in] *PSF_data The ObjectData object for the PSF
      * @param[in] *shear_est A string indicating the desired method of PSF correction: REGAUSS,
      *            LINEAR, BJ, or KSB
-     * @param[in] flags A parameter for REGAUSS, which is hardcoded in meas_shape.cpp to 0xe. 
+     * @param[in] flags A parameter for REGAUSS (typical usage is 0xe).
      * @return A status flag that should be zero if the measurement was successful.
      */
     unsigned int general_shear_estimator(
