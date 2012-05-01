@@ -261,18 +261,71 @@ namespace hsm {
     /* Carry out PSF correction directly using Images, repackaging for general_shear_estimator.*/
     template <typename T>
     HSMShapeData EstimateShearHSM(Image<T> const &gal_image, Image<T> const &PSF_image, 
-                                  const char *shear_est = "REGAUSS", unsigned long flags = 0xe) {
+                                  float sky_var = 0.0, char *shear_est = "REGAUSS",
+                                  unsigned long flags = 0xe) {
         // define variables, create output HSMShapeData struct, etc.
         HSMShapeData results;
+        RectImage gal_rect_image, PSF_rect_image;
+        ObjectData gal_data, PSF_data;
+        int x, y;
 
-        // repackage Images --> RectImage
+        // repackage galaxy Image --> RectImage
+        allocate_rect_image(&gal_rect_image, gal_image.getXMin(), gal_image.getXMax(),
+                            gal_image.getYMin(), gal_image.getYMax());
+
+        for (x=gal_rect_image.xmin; x<=gal_rect_image.xmax; x++)
+            for (y=gal_rect_image.ymin; y<=gal_rect_image.ymax;y++)
+                gal_rect_image.image[x][y] = gal_image.at(x, y);
+
+        // repackage PSF Image --> RectImage
+        allocate_rect_image(&PSF_rect_image, PSF_image.getXMin(), PSF_image.getXMax(),
+                            PSF_image.getYMin(), PSF_image.getYMax());
+
+        for (x=PSF_rect_image.xmin; x<=PSF_rect_image.xmax; x++)
+            for (y=PSF_rect_image.ymin; y<=PSF_rect_image.ymax;y++)
+                PSF_rect_image.image[x][y] = PSF_image.at(x, y);
 
         // allocate ObjectData for setting defaults etc. and passing to general_shear_estimator
+        gal_data.x0 = 0.5*(gal_rect_image.xmin + gal_rect_image.xmax);
+        gal_data.y0 = 0.5*(gal_rect_image.ymin + gal_rect_image.ymax);
+        gal_data.sigma = 3.0;
 
-        // call general_shear_estimator [generally, go through MeasMoments.cpp to make sure that
-        // I've done everything needed]
+        PSF_data.x0 = 0.5*(PSF_rect_image.xmin + PSF_rect_image.xmax);
+        PSF_data.y0 = 0.5*(PSF_rect_image.ymin + PSF_rect_image.ymax);
+        PSF_data.sigma = 1.0;
 
-        // repackage outputs from the ObjectData to an HSMShapeData struct
+        // call general_shear_estimator
+        results.image_bounds = gal_image.getBounds();
+        results.correction_method = shear_est;
+        try {
+            results.correction_status = general_shear_estimator(&gal_rect_image, &PSF_rect_image,
+                                                                &gal_data, &PSF_data, shear_est, flags);
+
+            // repackage outputs from find_ellipmom_2 to the output HSMShapeData struct
+            if (gal_data.meas_type == 'e') {
+                results.corrected_shape.setE1E2(gal_data.e1, gal_data.e2);
+            } else if (gal_data.meas_type == 'g') {
+                results.corrected_shape.setG1G2(gal_data.e1, gal_data.e2);
+            } else {
+                throw "Unknown shape measurement type!\n";
+            }
+
+            if (results.correction_status != 0) {
+                throw "PSF correction status indicates failure!\n";
+            }
+
+            results.corrected_shape_err = std::sqrt(4. * M_PI * sky_var) * gal_data.sigma /
+                                          (gal_data.resolution * gal_data.flux);
+            results.moments_sigma = gal_data.sigma;
+            results.moments_amp = gal_data.flux;
+            results.moments_centroid.x = gal_data.x0;
+            results.moments_centroid.y = gal_data.y0;
+            results.resolution_factor = gal_data.resolution;
+        }
+        catch (char *err_msg) {
+            std::cout << err_msg;
+        }
+
         return results;
     }
 
@@ -286,8 +339,8 @@ namespace hsm {
         int x, y;
 
         // Repackage input Image into RectImage
-        allocate_rect_image(&object_rect_image,object_image.getXMin(),object_image.getXMax(),
-                            object_image.getYMin(),object_image.getYMax());
+        allocate_rect_image(&object_rect_image, object_image.getXMin(), object_image.getXMax(),
+                            object_image.getYMin(), object_image.getYMax());
 
         for (x=object_rect_image.xmin; x<=object_rect_image.xmax; x++) 
             for (y=object_rect_image.ymin; y<=object_rect_image.ymax; y++)
@@ -296,8 +349,8 @@ namespace hsm {
         // set some values for initial guesses
         results.moments_centroid.x = 0.5*(object_rect_image.xmin + object_rect_image.xmax);
         results.moments_centroid.y = 0.5*(object_rect_image.ymin + object_rect_image.ymax);
-        m_xx = 1.0;
-        m_yy = 1.0;
+        m_xx = 5.0;
+        m_yy = 5.0;
         m_xy = 0.0;
 
         // call find_ellipmom_2
@@ -1812,12 +1865,12 @@ namespace hsm {
     }
 
     // instantiate template classes for expected types
-    template HSMShapeData EstimateShearHSM(Image<float> const &gal_image, Image<float> const &PSF_Image, const char *shear_est, unsigned long flags);
-    template HSMShapeData EstimateShearHSM(Image<double> const &gal_image, Image<double> const &PSF_Image, const char *shear_est, unsigned long flags);
-    template HSMShapeData EstimateShearHSM(Image<int> const &gal_image, Image<int> const &PSF_Image, const char *shear_est, unsigned long flags);
-    template HSMShapeData EstimateShearHSM(Image<const float> const &gal_image, Image<const float> const &PSF_Image, const char *shear_est, unsigned long flags);
-    template HSMShapeData EstimateShearHSM(Image<const double> const &gal_image, Image<const double> const &PSF_Image, const char *shear_est, unsigned long flags);
-    template HSMShapeData EstimateShearHSM(Image<const int> const &gal_image, Image<const int> const &PSF_Image, const char *shear_est, unsigned long flags);
+    template HSMShapeData EstimateShearHSM(Image<float> const &gal_image, Image<float> const &PSF_Image, float sky_var, char *shear_est, unsigned long flags);
+    template HSMShapeData EstimateShearHSM(Image<double> const &gal_image, Image<double> const &PSF_Image, float sky_var, char *shear_est, unsigned long flags);
+    template HSMShapeData EstimateShearHSM(Image<int> const &gal_image, Image<int> const &PSF_Image, float sky_var, char *shear_est, unsigned long flags);
+    template HSMShapeData EstimateShearHSM(Image<const float> const &gal_image, Image<const float> const &PSF_Image, float sky_var, char *shear_est, unsigned long flags);
+    template HSMShapeData EstimateShearHSM(Image<const double> const &gal_image, Image<const double> const &PSF_Image, float sky_var, char *shear_est, unsigned long flags);
+    template HSMShapeData EstimateShearHSM(Image<const int> const &gal_image, Image<const int> const &PSF_Image, float sky_var, char *shear_est, unsigned long flags);
 
     template HSMShapeData FindAdaptiveMom(Image<float> const &object_image, double precision);
     template HSMShapeData FindAdaptiveMom(Image<double> const &object_image, double precision);
