@@ -109,10 +109,12 @@ namespace hsm {
         /// @brief Status after measuring adaptive moments; -1 indicates no attempt to measure them
         int moments_status;
 
-        /// @brief Size sigma = (det M)^(1/4) from the adaptive moments; -1 if not measured
+        /// @brief Size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
+        /// not measured
         float moments_sigma;
 
-        /// @brief Total image intensity for best-fit elliptical Gaussian from adaptive moments
+        /// @brief Total image intensity for best-fit elliptical Gaussian from adaptive moments;
+        /// note that this is not flux, since flux = (total image intensity)*(pixel scale)^2
         float moments_amp;
 
         /// @brief Centroid of best-fit elliptical Gaussian
@@ -130,14 +132,6 @@ namespace hsm {
         /// @brief Resolution factor R_2; 0 indicates object is consistent with a PSF, 1 indicates
         /// perfect resolution; default -1
         float resolution_factor;
-
-        /// @brief Method to return an SBProfile style centroid based on the best-fit elliptical
-        /// Gaussian centroid, including taking into account the bounds and differences in pixel
-        /// indexing conventions.
-        Position<double> centroid() const
-        {Position<double> p(moments_centroid.x - image_bounds.getXMin(), moments_centroid.y - image_bounds.getYMin()); return p;}
-        // TODO for Rachel: make sure we're not suffering from differences in pixel indexing
-        // conventions, which could make us off by 1/2 or 1 pixel in each dimension!
 
         /// @brief Constructor, setting defaults
         HSMShapeData() : observed_shape(galsim::Shear()), corrected_shape(galsim::Shear()),
