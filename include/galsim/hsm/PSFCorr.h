@@ -100,26 +100,29 @@ namespace hsm {
         /// @brief galsim::Shear object representing the PSF-corrected shape
         Shear corrected_shape;
 
+        /// @brief galsim::Bounds object describing the image of the object
+        Bounds<int> image_bounds;
+
         /// @brief String indicating PSF-correction method; "None" if PSF correction was not done
         std::string correction_method;
 
         /// @brief Status after measuring adaptive moments; -1 indicates no attempt to measure them
-        int moment_status;
+        int moments_status;
 
         /// @brief Size sigma = (det M)^(1/4) from the adaptive moments; -1 if not measured
-        float moment_sigma;
+        float moments_sigma;
 
         /// @brief Total image intensity for best-fit elliptical Gaussian from adaptive moments
-        float moment_amp;
+        float moments_amp;
 
         /// @brief Centroid of best-fit elliptical Gaussian
-        Position<double> moment_centroid;
+        Position<double> moments_centroid;
 
         /// @brief The weighted radial fourth moment of the image
-        float moment_rho4;
+        double moments_rho4;
 
         /// @brief Number of iterations needed to get adaptive moments; 0 if not measured
-        int moment_n_iter;
+        int moments_n_iter;
 
         /// @brief Status after carrying out PSF correction; -1 indicates no attempt to do so
         int correction_status;
@@ -128,11 +131,19 @@ namespace hsm {
         /// perfect resolution; default -1
         float resolution_factor;
 
+        /// @brief Method to return an SBProfile style centroid based on the best-fit elliptical
+        /// Gaussian centroid, including taking into account the bounds and differences in pixel
+        /// indexing conventions.
+        Position<double> centroid() const
+        {Position<double> p(moments_centroid.x - image_bounds.getXMin(), moments_centroid.y - image_bounds.getYMin()); return p;}
+        // TODO for Rachel: make sure we're not suffering from differences in pixel indexing
+        // conventions, which could make us off by 1/2 or 1 pixel in each dimension!
+
         /// @brief Constructor, setting defaults
-    HSMShapeData() : observed_shape(galsim::Shear()), corrected_shape(galsim::Shear()),
-            correction_method("None"), moment_status(-1), moment_sigma(-1.), moment_amp(-1.),
-            moment_centroid(galsim::Position<double>(0.,0.)), moment_rho4(-1.), moment_n_iter(0),
-            correction_status(-1), resolution_factor(-1.)
+        HSMShapeData() : observed_shape(galsim::Shear()), corrected_shape(galsim::Shear()),
+            image_bounds(galsim::Bounds<int>()), correction_method("None"), moments_status(-1),
+            moments_sigma(-1.), moments_amp(-1.), moments_centroid(galsim::Position<double>(0.,0.)),
+            moments_rho4(-1.), moments_n_iter(0), correction_status(-1), resolution_factor(-1.)
         {}
     };
 
