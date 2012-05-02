@@ -471,9 +471,9 @@ namespace galsim {
          * @param[in,out] data  The Image.
          */
         template <typename T>
-        void applyTo(Image<T>& data) {
+        void applyTo(ImageView<T>& data) {
             // Typedef for image row iterable
-            typedef typename Image<T>::Iter ImIter;
+            typedef typename ImageView<T>::Iter ImIter;
 
             for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                 ImIter ee = data.rowEnd(y);

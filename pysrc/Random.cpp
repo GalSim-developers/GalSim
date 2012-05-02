@@ -393,7 +393,7 @@ struct PyWeibullDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (WeibullDeviate::*) (Image<U> &) )&WeibullDeviate::applyTo,
+            .def("applyTo", (void (WeibullDeviate::*) (ImageView<U> &) )&WeibullDeviate::applyTo,
                  "Add Weibull-distributed deviates to every element in a supplied Image.\n"
                  "\n"
                  "Calling\n"
