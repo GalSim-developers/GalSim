@@ -17,16 +17,25 @@ namespace bp = boost::python;
 namespace galsim {
 namespace {
 
+int Normalize(int code) 
+{
+    // Normally the return of PyArray_TYPE is a code that indicates what 
+    // type the data is.  However, this gets confusing for integer types, since
+    // different integer types may be equivalent.  In particular int and long
+    // might be the same thing (typically on 32 bit machines, they can both
+    // be 4 bytes).  For some reason in this case, PyArray_TYPE sometimes returns
+    // NPY_INT and sometimes NPY_LONG.  So this function normalizes these answers
+    // to make sure that if they are equivalent, we convert NPY_INT to the
+    // equivalent other type.
+    if (sizeof(int) == sizeof(long) && code == NPY_INT) return NPY_LONG;
+    if (sizeof(int) == sizeof(short) && code == NPY_INT) return NPY_SHORT;
+    return code;
+}
+
 template <typename T> struct NumPyTraits;
 template <> struct NumPyTraits<npy_short> { static int getCode() { return NPY_SHORT; } };
-template <> struct NumPyTraits<npy_int> {
-    static int getCode() {
-        if (sizeof(int) == sizeof(long) && sizeof(int) == 4) {
-            return PyArray_INT32;
-        }
-        return NPY_INT;
-    }
-};
+template <> struct NumPyTraits<npy_int> { static int getCode() { return NPY_INT; } };
+template <> struct NumPyTraits<npy_long> { static int getCode() { return NPY_LONG; } };
 template <> struct NumPyTraits<npy_float> { static int getCode() { return NPY_FLOAT; } };
 template <> struct NumPyTraits<npy_double> { static int getCode() { return NPY_DOUBLE; } };
 
@@ -103,31 +112,12 @@ struct PyImage {
         bp::object const & array, int xMin, int yMin, bool isConst,
         T * & data, boost::shared_ptr<T> & owner, int & stride, Bounds<int> & bounds
     ) {
-        static bool first = true;
         if (!PyArray_Check(array.ptr())) {
             PyErr_SetString(PyExc_TypeError, "numpy.ndarray argument required");
             bp::throw_error_already_set();
         }
-        int actualType = PyArray_TYPE(array.ptr());
-        int requiredType = NumPyTraits<T>::getCode();
-        if (first && (actualType == 5 || actualType == 7) ) {
-            std::cout<<"First time through buildConstructorArgs with actualType == 5 or 7\n";
-            std::cout<<"T = "<<typeid(T).name()<<"\n";
-            std::cout<<"actualType = "<<actualType<<"\n";
-            std::cout<<"requiredType = "<<requiredType<<"\n";
-            std::cout<<"For reference: \n";
-            std::cout<<"  NPY_SHORT     = "<<NPY_SHORT<<"\n";
-            std::cout<<"  NPY_INT       = "<<NPY_INT<<"\n";
-            std::cout<<"  NPY_FLOAT     = "<<NPY_FLOAT<<"\n";
-            std::cout<<"  NPY_DOUBLE    = "<<NPY_DOUBLE<<"\n";
-            std::cout<<"  PyArray_INT32 = "<<PyArray_INT32<<"\n";
-            std::cout<<"  sizeof(short) = "<<sizeof(short)<<"\n";
-            std::cout<<"  sizeof(int) = "<<sizeof(int)<<"\n";
-            std::cout<<"  sizeof(long) = "<<sizeof(long)<<"\n";
-            std::cout<<"  sizeof(npy_short) = "<<sizeof(npy_short)<<"\n";
-            std::cout<<"  sizeof(npy_int) = "<<sizeof(npy_int)<<"\n";
-            first = false;
-        }
+        int actualType = Normalize(PyArray_TYPE(array.ptr()));
+        int requiredType = Normalize(NumPyTraits<T>::getCode());
         if (actualType != requiredType) {
             std::ostringstream oss;
             oss<<"numpy.ndarray argument has incorrect data type\n";
@@ -135,18 +125,19 @@ struct PyImage {
             oss<<"actualType = "<<actualType<<"\n";
             oss<<"requiredType = "<<requiredType<<"\n";
             oss<<"For reference: \n";
-            oss<<"  NPY_SHORT     = "<<NPY_SHORT<<"\n";
-            oss<<"  NPY_INT       = "<<NPY_INT<<"\n";
-            oss<<"  NPY_FLOAT     = "<<NPY_FLOAT<<"\n";
-            oss<<"  NPY_DOUBLE    = "<<NPY_DOUBLE<<"\n";
-            oss<<"  PyArray_INT32 = "<<PyArray_INT32<<"\n";
+            oss<<"  NPY_SHORT   = "<<NPY_SHORT<<"\n";
+            oss<<"  NPY_INT     = "<<NPY_INT<<"\n";
+            oss<<"  NPY_INT32   = "<<NPY_INT32<<"\n";
+            oss<<"  NPY_LONG    = "<<NPY_LONG<<"\n";
+            oss<<"  NPY_FLOAT   = "<<NPY_FLOAT<<"\n";
+            oss<<"  NPY_DOUBLE  = "<<NPY_DOUBLE<<"\n";
             oss<<"  sizeof(short) = "<<sizeof(short)<<"\n";
             oss<<"  sizeof(int) = "<<sizeof(int)<<"\n";
             oss<<"  sizeof(long) = "<<sizeof(long)<<"\n";
             oss<<"  sizeof(npy_short) = "<<sizeof(npy_short)<<"\n";
             oss<<"  sizeof(npy_int) = "<<sizeof(npy_int)<<"\n";
+            oss<<"  sizeof(npy_long) = "<<sizeof(npy_long)<<"\n";
             PyErr_SetString(PyExc_ValueError, oss.str().c_str());
-            //PyErr_SetString(PyExc_ValueError, "numpy.ndarray argument has incorrect data type");
             bp::throw_error_already_set();
         }
         if (PyArray_NDIM(array.ptr()) != 2) {
@@ -165,7 +156,7 @@ struct PyImage {
         data = reinterpret_cast<T*>(PyArray_DATA(array.ptr()));
         PyObject * pyOwner = PyArray_BASE(array.ptr());
         if (pyOwner) {
-            if (PyArray_Check(pyOwner) && PyArray_TYPE(pyOwner) == requiredType) {
+            if (PyArray_Check(pyOwner) && Normalize(PyArray_TYPE(pyOwner)) == requiredType) {
                 // Not really important, but we try to use the full array for 
                 // the owner pointer if this is a subarray, just to be consistent
                 // with how it works for subimages.
