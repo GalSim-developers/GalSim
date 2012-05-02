@@ -173,7 +173,7 @@ namespace hsm {
      */
     template <typename T>
         HSMShapeData EstimateShearHSM(Image<T> const &gal_image, Image<T> const &PSF_image,
-                                      float sky_var = 0.0, char *shear_est = "REGAUSS",
+                                      float sky_var = 0.0, const char *shear_est = "REGAUSS",
                                       unsigned long flags = 0xe);
 
     /**
@@ -230,7 +230,7 @@ namespace hsm {
      */
     unsigned int general_shear_estimator(
         RectImage *gal_image, RectImage *PSF, ObjectData *gal_data, ObjectData *PSF_data, 
-        char *shear_est, unsigned long flags);  
+        char *shear_est, unsigned long flags);
 
     /**
      * @brief Measure the adaptive moments of an object.
