@@ -23,8 +23,25 @@ namespace {
 template <typename T> struct NumPyTraits;
 template <> struct NumPyTraits<int16_t> { static int getCode() { return NPY_INT16; } };
 template <> struct NumPyTraits<int32_t> { static int getCode() { return NPY_INT32; } };
+template <> struct NumPyTraits<int64_t> { static int getCode() { return NPY_INT64; } };
 template <> struct NumPyTraits<float> { static int getCode() { return NPY_FLOAT32; } };
 template <> struct NumPyTraits<double> { static int getCode() { return NPY_FLOAT64; } };
+
+int Normalize(int code) 
+{
+    // Normally the return of PyArray_TYPE is a code that indicates what 
+    // type the data is.  However, this gets confusing for integer types, since
+    // different integer types may be equivalent.  In particular int and long
+    // might be the same thing (typically on 32 bit machines, they can both
+    // be 4 bytes).  For some reason in this case, PyArray_TYPE sometimes returns
+    // NPY_INT and sometimes NPY_LONG.  So this function normalizes these answers
+    // to make sure that if they are equivalent, we convert NPY_INT to the
+    // equivalent other type.
+    if (sizeof(int) == sizeof(int16_t) && code == NPY_INT) return NPY_INT16;
+    if (sizeof(int) == sizeof(int32_t) && code == NPY_INT) return NPY_INT32;
+    if (sizeof(int) == sizeof(int64_t) && code == NPY_INT) return NPY_INT64;
+    return code;
+}
 
 // return the NumPy type for a C++ class (e.g. float -> numpy.float32)
 template <typename T>
@@ -103,7 +120,7 @@ struct PyImage {
             PyErr_SetString(PyExc_TypeError, "numpy.ndarray argument required");
             bp::throw_error_already_set();
         }
-        int actualType = PyArray_TYPE(array.ptr());
+        int actualType = Normalize(PyArray_TYPE(array.ptr()));
         int requiredType = NumPyTraits<T>::getCode();
         if (actualType != requiredType) {
             std::ostringstream oss;
