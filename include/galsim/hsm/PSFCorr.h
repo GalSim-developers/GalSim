@@ -174,7 +174,7 @@ namespace hsm {
     template <typename T>
         HSMShapeData EstimateShearHSM(Image<T> const &gal_image, Image<T> const &PSF_image,
                                       float sky_var = 0.0, const char *shear_est = "REGAUSS",
-                                      unsigned long flags = 0xe);
+                                      unsigned long flags = 0xe, double precision = 1.0e-6);
 
     /**
      * @brief Measure the adaptive moments of an object directly using Images.
