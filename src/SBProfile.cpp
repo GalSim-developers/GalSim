@@ -442,18 +442,15 @@ namespace galsim {
         int oversamp =1; // oversampling factor
         Bounds<int> imgBounds; // Bounds for output image
         if (wmult<1) throw SBError("Requested wmult<1 in fourierDrawK()");
-        bool canReduceDk=true;
         // First choose desired dx
         if (dk<=0.) {
             // Choose for ourselves:
             dk = stepK();
-            canReduceDk = true;
         } else {
             // We have a value we must produce.  Do we need to oversample in k
             // to avoid folding from real space?
             // Note a little room for numerical slop before triggering oversampling:
             oversamp = static_cast<int> ( std::ceil(dk/stepK() - 0.0001));
-            canReduceDk = false; // Force output image to input dx.
         }
 
         // Now decide how big the FT must be to avoid folding
@@ -468,9 +465,6 @@ namespace galsim {
         if (xSize * oversamp > Nnofold) Nnofold = xSize*oversamp;
         if (ySize * oversamp > Nnofold) Nnofold = ySize*oversamp;
         kRange = Nnofold * dk / oversamp;
-        // If the input image *size* was specified but not the input *dk*, then
-        // we will hold dk at the Nyquist scale:
-        canReduceDk = false;
 
         // Round up to a power of 2 to get required FFT size
         int NFT = MINIMUM_FFT_SIZE;
