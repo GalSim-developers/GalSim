@@ -127,7 +127,7 @@ struct PyGaussianDeviate {
             ">>> g = GaussianDeviate(uniform, mean=0., sigma=1.) \n"
             "\n"
             "Initializes g to be a GaussianDeviate instance, and repeated calls to g() will\n"
-            "return successive, psuedo-random Gaussian deviates with specified mean and sigma.\n"
+            "return successive, pseudo-random Gaussian deviates with specified mean and sigma.\n"
             "\n"
             "Parameters:\n"
             "\n"
@@ -200,8 +200,8 @@ struct PyBinomialDeviate {
             "--------------\n"
             ">>> b = BinomialDeviate(uniform, N=1., p=0.5) \n"
             "\n"
-            "Initializes b to be a GaussianDeviate instance, and repeated calls to b() will\n"
-            "return successive, psuedo-random Binomial deviates with specified N and p.\n"
+            "Initializes b to be a BinomialDeviate instance, and repeated calls to b() will\n"
+            "return successive, pseudo-random Binomial deviates with specified N and p.\n"
             "\n"
             "Parameters:\n"
             "\n"
@@ -275,7 +275,7 @@ struct PyPoissonDeviate {
             ">>> p = PoissonDeviate(uniform, mean=1.)\n"
             "\n"
             "Initializes p to be a PoissonDeviate instance, and repeated calls to p() will\n"
-            "return successive, psuedo-random Poisson deviates with specified mean.\n"
+            "return successive, pseudo-random Poisson deviates with specified mean.\n"
             "\n"
             "Parameters:\n"
             "\n"
@@ -388,6 +388,87 @@ struct PyCCDNoise{
 
 };
 
+struct PyWeibullDeviate {
+
+    template <typename U, typename W>
+    static void wrapTemplates(W & wrapper) {
+        wrapper
+            .def("applyTo", (void (WeibullDeviate::*) (Image<U> &) )&WeibullDeviate::applyTo,
+                 "Add Weibull-distributed deviates to every element in a supplied Image.\n"
+                 "\n"
+                 "Calling\n"
+                 "-------\n"
+                 ">>> WeibullDeviate.applyTo(image) \n"
+                 "\n"
+                 "On output each element of the input Image will have a pseudo-random\n"
+                 "WeibullDeviate return value added to it, with current values of a and b.\n",
+                 (bp::arg("image")))
+            ;
+    }
+
+    static void wrap() {
+        static char const * doc = 
+            "\n"
+            "Pseudo-random Weibull-distributed deviate for shape parameter a & scale parameter b\n"
+            "\n"
+            "WeibulllDeviate is constructed with reference to a UniformDeviate that will actually\n"
+            "generate the randoms, which are then transformed to Weibull distribution with shape\n"
+            "parameter a and scale parameter b.\n"
+            "\n"
+            "The Weibull distribution is related to a number of other probability distributions;\n"
+            "in particular, it interpolates between the exponential distribution (a=1) and the \n"
+            "Rayleigh distribution (a=2). See http://en.wikipedia.org/wiki/Weibull_distribution\n"
+            "(a=k and b=lambda in the notation adopted in the Wikipedia article).  The Weibull\n"
+            "distribution is real valued and produces deviates >= 0.\n"
+            "\n"
+            "As for UniformDeviate, the copy constructor and assignment operator are kept private\n"
+            "since you probably do not want two random number generators producing the same\n"
+            "sequence of numbers in your code!\n"
+            "\n"
+            "Wraps the Boost.Random weibull_distribution at the C++ layer so that the parent\n"
+            "UniformDeviate is given once at construction, and copy/assignment are hidden.\n"
+            "\n"
+            "Initialization\n"
+            "--------------\n"
+            ">>> b = WeibullDeviate(uniform, a=1., b=1.) \n"
+            "\n"
+            "Initializes b to be a WeibullDeviate instance, and repeated calls to b() will\n"
+            "return successive, pseudo-random Weibull-distributed deviates with shape and scale\n"
+            "parameters a and b.\n"
+            "\n"
+            "Parameters:\n"
+            "\n"
+            "uniform  a UniformDeviate instance (seed set there).\n"
+            "a        shape parameter of the distribution (default a = 1).\n"
+            "b        scale parameter of the distribution (default b = 1).\n"
+            "\n"
+            ;
+        bp::class_<WeibullDeviate,boost::noncopyable>pyWeibullDeviate(
+            "WeibullDeviate", doc, bp::init< UniformDeviate&, double, double >(
+                (bp::arg("uniform"), bp::arg("a")=1., bp::arg("b")=1.)
+            )[
+                bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as BinomialDeviate lives
+            ]
+	);
+        pyWeibullDeviate
+            .def("__call__", &WeibullDeviate::operator(),
+                 "Draw a new random number from the distribution.\n"
+                 "\n"
+                 "Returns a Weibull-distributed deviate with current a and b.\n")
+            .def("getA", &WeibullDeviate::getA, "Get current distribution shape parameter a.")
+            .def("setA", &WeibullDeviate::setA, "Set current distribution shape parameter a.")
+            .def("getB", &WeibullDeviate::getB, "Get current distribution scale parameter b.")
+            .def("setB", &WeibullDeviate::setB, "Set current distribution scale parameter b.")
+            ;
+        wrapTemplates<int>(pyWeibullDeviate);
+        wrapTemplates<short>(pyWeibullDeviate);
+        wrapTemplates<float>(pyWeibullDeviate);
+        wrapTemplates<double>(pyWeibullDeviate);
+    }
+
+};
+
+
 
 } // anonymous
 
@@ -397,6 +478,7 @@ void pyExportRandom() {
     PyBinomialDeviate::wrap();
     PyPoissonDeviate::wrap();
     PyCCDNoise::wrap();
+    PyWeibullDeviate::wrap();
 }
 
 
