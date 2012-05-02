@@ -663,7 +663,7 @@ def CheckNumPy(context):
     numpy_source_file = """
 #include "Python.h"
 #include "numpy/arrayobject.h"
-void doImport() {
+static void doImport() {
   import_array();
 }
 int main()
