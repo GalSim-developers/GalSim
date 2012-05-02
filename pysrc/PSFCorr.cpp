@@ -9,6 +9,18 @@ namespace {
 
 struct PyHSMShapeData {
 
+    template <typename U>
+    static void wrapTemplates() {
+        // While an explicit cast would work to resolve the overload.  e.g.:
+        // (HSMShapeData (*)(Image<U> const&, double))(&FindAdaptiveMom)
+        // I find the typedef syntax to be clearer:
+        typedef HSMShapeData (* FAM_func)(Image<U> const&, double);
+        bp::def("FindAdaptiveMom",
+                FAM_func(&FindAdaptiveMom),
+                bp::arg("object_image"), bp::arg("precision")=1.0e-6,
+                "Find adaptive moments of an image, with some optional convergence criterion.");
+    };
+
     static void wrap() {
         static char const * doc = 
             "HSMShapeData object represents information from the HSM moments and PSF-correction\n"
@@ -29,6 +41,10 @@ struct PyHSMShapeData {
             .def_readwrite("correction_method", &HSMShapeData::correction_method)
             .def_readwrite("resolution_factor", &HSMShapeData::resolution_factor)
             ;
+
+        wrapTemplates<float>();
+        wrapTemplates<double>();
+
     }
 };
 
