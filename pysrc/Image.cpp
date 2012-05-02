@@ -21,10 +21,10 @@ namespace galsim {
 namespace {
 
 template <typename T> struct NumPyTraits;
-template <> struct NumPyTraits<npy_int16> { static int getCode() { return NPY_INT16; } };
-template <> struct NumPyTraits<npy_int32> { static int getCode() { return NPY_INT32; } };
-template <> struct NumPyTraits<npy_float32> { static int getCode() { return NPY_FLOAT32; } };
-template <> struct NumPyTraits<npy_float64> { static int getCode() { return NPY_FLOAT64; } };
+template <> struct NumPyTraits<int16_t> { static int getCode() { return NPY_INT16; } };
+template <> struct NumPyTraits<int32_t> { static int getCode() { return NPY_INT32; } };
+template <> struct NumPyTraits<float> { static int getCode() { return NPY_FLOAT32; } };
+template <> struct NumPyTraits<double> { static int getCode() { return NPY_FLOAT64; } };
 
 // return the NumPy type for a C++ class (e.g. float -> numpy.float32)
 template <typename T>
