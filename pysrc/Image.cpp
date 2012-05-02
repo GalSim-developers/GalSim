@@ -42,7 +42,7 @@ template <> struct NumPyTraits<npy_double> { static int getCode() { return NPY_D
 // return the NumPy type for a C++ class (e.g. float -> numpy.float32)
 template <typename T>
 bp::object getNumPyType() {
-    bp::handle<> h(reinterpret_cast<PyObject*>(PyArray_DescrFromType(NumPyTraits<T>::getCode())));
+    bp::handle<> h(reinterpret_cast<PyObject*>(PyArray_DescrFromType(Normalize(NumPyTraits<T>::getCode()))));
     return bp::object(h).attr("type");
 }
 
