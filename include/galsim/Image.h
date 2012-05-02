@@ -8,6 +8,12 @@
 #include <stdexcept>
 #include <string>
 
+// Need this for instantiated types, since we will use int16_t and int32_t
+// rather than short and int to explicitly match the python levels numpy.int16 and numpy.int32.
+// Note: <cstdint> only really became standard for gcc >= 4.4, so can't use that.
+// Hopefully all our compilers will conform to the C99 standard which includes stdint.h.
+#include <stdint.h>
+
 #include <boost/shared_ptr.hpp>
 
 #include "Std.h"
@@ -578,7 +584,8 @@ namespace galsim {
      *  pixel values or the ancillary information (like bounds) for a const Image,
      *  while you can change things about a non-const Image.
      *
-     *  Image templates for short, int, float, and double are explicitly instantiated in Image.cpp.
+     *  Image templates for int16_t, int32_t, float, and double are explicitly instantiated 
+     *  in Image.cpp.
      */
     template <typename T>
     class Image : public BaseImage<T> 

@@ -1,3 +1,6 @@
+
+#include <stdint.h>
+
 #include "boost/python.hpp"
 #include "Image.h"
 
@@ -17,32 +20,16 @@ namespace bp = boost::python;
 namespace galsim {
 namespace {
 
-int Normalize(int code) 
-{
-    // Normally the return of PyArray_TYPE is a code that indicates what 
-    // type the data is.  However, this gets confusing for integer types, since
-    // different integer types may be equivalent.  In particular int and long
-    // might be the same thing (typically on 32 bit machines, they can both
-    // be 4 bytes).  For some reason in this case, PyArray_TYPE sometimes returns
-    // NPY_INT and sometimes NPY_LONG.  So this function normalizes these answers
-    // to make sure that if they are equivalent, we convert NPY_INT to the
-    // equivalent other type.
-    if (sizeof(int) == sizeof(long) && code == NPY_INT) return NPY_LONG;
-    if (sizeof(int) == sizeof(short) && code == NPY_INT) return NPY_SHORT;
-    return code;
-}
-
 template <typename T> struct NumPyTraits;
-template <> struct NumPyTraits<npy_short> { static int getCode() { return NPY_SHORT; } };
-template <> struct NumPyTraits<npy_int> { static int getCode() { return NPY_INT; } };
-template <> struct NumPyTraits<npy_long> { static int getCode() { return NPY_LONG; } };
-template <> struct NumPyTraits<npy_float> { static int getCode() { return NPY_FLOAT; } };
-template <> struct NumPyTraits<npy_double> { static int getCode() { return NPY_DOUBLE; } };
+template <> struct NumPyTraits<npy_int16> { static int getCode() { return NPY_INT16; } };
+template <> struct NumPyTraits<npy_int32> { static int getCode() { return NPY_INT32; } };
+template <> struct NumPyTraits<npy_float32> { static int getCode() { return NPY_FLOAT32; } };
+template <> struct NumPyTraits<npy_float64> { static int getCode() { return NPY_FLOAT64; } };
 
 // return the NumPy type for a C++ class (e.g. float -> numpy.float32)
 template <typename T>
 bp::object getNumPyType() {
-    bp::handle<> h(reinterpret_cast<PyObject*>(PyArray_DescrFromType(Normalize(NumPyTraits<T>::getCode()))));
+    bp::handle<> h(reinterpret_cast<PyObject*>(PyArray_DescrFromType(NumPyTraits<T>::getCode())));
     return bp::object(h).attr("type");
 }
 
@@ -116,8 +103,8 @@ struct PyImage {
             PyErr_SetString(PyExc_TypeError, "numpy.ndarray argument required");
             bp::throw_error_already_set();
         }
-        int actualType = Normalize(PyArray_TYPE(array.ptr()));
-        int requiredType = Normalize(NumPyTraits<T>::getCode());
+        int actualType = PyArray_TYPE(array.ptr());
+        int requiredType = NumPyTraits<T>::getCode();
         if (actualType != requiredType) {
             std::ostringstream oss;
             oss<<"numpy.ndarray argument has incorrect data type\n";
@@ -131,11 +118,11 @@ struct PyImage {
             oss<<"  NPY_LONG    = "<<NPY_LONG<<"\n";
             oss<<"  NPY_FLOAT   = "<<NPY_FLOAT<<"\n";
             oss<<"  NPY_DOUBLE  = "<<NPY_DOUBLE<<"\n";
-            oss<<"  sizeof(short) = "<<sizeof(short)<<"\n";
+            oss<<"  sizeof(int16_t) = "<<sizeof(int16_t)<<"\n";
             oss<<"  sizeof(int) = "<<sizeof(int)<<"\n";
             oss<<"  sizeof(long) = "<<sizeof(long)<<"\n";
-            oss<<"  sizeof(npy_short) = "<<sizeof(npy_short)<<"\n";
-            oss<<"  sizeof(npy_int) = "<<sizeof(npy_int)<<"\n";
+            oss<<"  sizeof(npy_int16) = "<<sizeof(npy_int16)<<"\n";
+            oss<<"  sizeof(npy_int32) = "<<sizeof(npy_int32)<<"\n";
             oss<<"  sizeof(npy_long) = "<<sizeof(npy_long)<<"\n";
             PyErr_SetString(PyExc_ValueError, oss.str().c_str());
             bp::throw_error_already_set();
@@ -156,7 +143,7 @@ struct PyImage {
         data = reinterpret_cast<T*>(PyArray_DATA(array.ptr()));
         PyObject * pyOwner = PyArray_BASE(array.ptr());
         if (pyOwner) {
-            if (PyArray_Check(pyOwner) && Normalize(PyArray_TYPE(pyOwner)) == requiredType) {
+            if (PyArray_Check(pyOwner) && PyArray_TYPE(pyOwner) == requiredType) {
                 // Not really important, but we try to use the full array for 
                 // the owner pointer if this is a subarray, just to be consistent
                 // with how it works for subimages.
@@ -210,7 +197,7 @@ struct PyImage {
             "There is a separate Python class for each C++ template instantiation,\n"
             "and these can be accessed using NumPy types as keys in the Image dict:\n"
             "  ImageS == Image[numpy.int16]\n"
-            "  ImageI == Image[numpy.int32] # may be numpy.int64 on some platforms \n"
+            "  ImageI == Image[numpy.int32]\n"
             "  ImageF == Image[numpy.float32]\n"
             "  ImageD == Image[numpy.float64]\n"
             "\n"
@@ -305,7 +292,7 @@ struct PyImage {
             "There is a separate Python class for each C++ template instantiation,\n"
             "and these can be accessed using NumPy types as keys in the ImageView dict:\n"
             "  ImageViewS == ImageView[numpy.int16]\n"
-            "  ImageViewI == ImageView[numpy.int32] # may be numpy.int64 on some platforms \n"
+            "  ImageViewI == ImageView[numpy.int32]\n"
             "  ImageViewF == ImageView[numpy.float32]\n"
             "  ImageViewD == ImageView[numpy.float64]\n"
             "From python, the only way to explicitly construct an ImageView is\n"
@@ -367,7 +354,7 @@ struct PyImage {
             "There is a separate Python class for each C++ template instantiation,\n"
             "and these can be accessed using NumPy types as keys in the ConstImageView dict:\n"
             "  ConstImageViewS == ConstImageView[numpy.int16]\n"
-            "  ConstImageViewI == ConstImageView[numpy.int32] # may be numpy.int64 on some platforms \n"
+            "  ConstImageViewI == ConstImageView[numpy.int32]\n"
             "  ConstImageViewF == ConstImageView[numpy.float32]\n"
             "  ConstImageViewD == ConstImageView[numpy.float64]\n"
             "From python, the only way to explicitly construct an ConstImageView is\n"
@@ -408,22 +395,22 @@ struct PyImage {
 void pyExportImage() {
     bp::dict pyImageDict;  // dict that lets us say "Image[numpy.float32]", etc.
 
-    pyImageDict[getNumPyType<short>()] = PyImage<short>::wrapImage("S");
-    pyImageDict[getNumPyType<int>()] = PyImage<int>::wrapImage("I");
+    pyImageDict[getNumPyType<int16_t>()] = PyImage<int16_t>::wrapImage("S");
+    pyImageDict[getNumPyType<int32_t>()] = PyImage<int32_t>::wrapImage("I");
     pyImageDict[getNumPyType<float>()] = PyImage<float>::wrapImage("F");
     pyImageDict[getNumPyType<double>()] = PyImage<double>::wrapImage("D");
 
     bp::dict pyConstImageViewDict; 
 
-    pyConstImageViewDict[getNumPyType<short>()] = PyImage<short>::wrapConstImageView("S");
-    pyConstImageViewDict[getNumPyType<int>()] = PyImage<int>::wrapConstImageView("I");
+    pyConstImageViewDict[getNumPyType<int16_t>()] = PyImage<int16_t>::wrapConstImageView("S");
+    pyConstImageViewDict[getNumPyType<int32_t>()] = PyImage<int32_t>::wrapConstImageView("I");
     pyConstImageViewDict[getNumPyType<float>()] = PyImage<float>::wrapConstImageView("F");
     pyConstImageViewDict[getNumPyType<double>()] = PyImage<double>::wrapConstImageView("D");
 
     bp::dict pyImageViewDict;
 
-    pyImageViewDict[getNumPyType<short>()] = PyImage<short>::wrapImageView("S");
-    pyImageViewDict[getNumPyType<int>()] = PyImage<int>::wrapImageView("I");
+    pyImageViewDict[getNumPyType<int16_t>()] = PyImage<int16_t>::wrapImageView("S");
+    pyImageViewDict[getNumPyType<int32_t>()] = PyImage<int32_t>::wrapImageView("I");
     pyImageViewDict[getNumPyType<float>()] = PyImage<float>::wrapImageView("F");
     pyImageViewDict[getNumPyType<double>()] = PyImage<double>::wrapImageView("D");
 
