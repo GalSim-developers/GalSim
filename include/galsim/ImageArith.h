@@ -267,23 +267,23 @@ namespace galsim {
 
     // Default uses T1 as the result type
     template <typename T1, typename T2>
-    struct ResultType { typedef T1 result_type; };
+    struct ResultType { typedef T1 type; };
 
     // Specialize relevant cases where T2 should be the result type
     template <>
-    struct ResultType<float,double> { typedef double result_type; };
+    struct ResultType<float,double> { typedef double type; };
     template <>
-    struct ResultType<int,double> { typedef double result_type; };
+    struct ResultType<int,double> { typedef double type; };
     template <>
-    struct ResultType<short,double> { typedef double result_type; };
+    struct ResultType<short,double> { typedef double type; };
 
     template <>
-    struct ResultType<int,float> { typedef float result_type; };
+    struct ResultType<int,float> { typedef float type; };
     template <>
-    struct ResultType<short,float> { typedef float result_type; };
+    struct ResultType<short,float> { typedef float type; };
 
     template <>
-    struct ResultType<short,int> { typedef int result_type; };
+    struct ResultType<short,int> { typedef int type; };
 
     //
     // Image + Scalar
@@ -335,7 +335,7 @@ namespace galsim {
 
     template <typename T> 
     inline const ImageView<T>& operator-=(const ImageView<T>& im, T x) 
-    { im += (-x); return im; }
+    { im += T(-x); return im; }
 
     template <typename T>
     inline Image<T>& operator-=(Image<T>& im, const T& x) 
@@ -417,7 +417,7 @@ namespace galsim {
     {
     public:
         typedef typename ResultType<T1,T2>::type result_type;
-        SumII(const BaseImage<T1>& im1, const BaseImage<T2> im2) :
+        SumII(const BaseImage<T1>& im1, const BaseImage<T2>& im2) :
             AssignableToImage<result_type>(im1.getBounds()), _im1(im1), _im2(im2) 
         {
             if (!im1.getBounds().isSameShapeAs(im2.getBounds()))
@@ -456,7 +456,7 @@ namespace galsim {
     {
     public:
         typedef typename ResultType<T1,T2>::type result_type;
-        DiffII(const BaseImage<T1>& im1, const BaseImage<T2> im2) :
+        DiffII(const BaseImage<T1>& im1, const BaseImage<T2>& im2) :
             AssignableToImage<result_type>(im1.getBounds()), _im1(im1), _im2(im2) 
         {
             if (!im1.getBounds().isSameShapeAs(im2.getBounds()))
@@ -495,7 +495,7 @@ namespace galsim {
     {
     public:
         typedef typename ResultType<T1,T2>::type result_type;
-        ProdII(const BaseImage<T1>& im1, const BaseImage<T2> im2) :
+        ProdII(const BaseImage<T1>& im1, const BaseImage<T2>& im2) :
             AssignableToImage<result_type>(im1.getBounds()), _im1(im1), _im2(im2) 
         {
             if (!im1.getBounds().isSameShapeAs(im2.getBounds()))
@@ -534,7 +534,7 @@ namespace galsim {
     {
     public:
         typedef typename ResultType<T1,T2>::type result_type;
-        QuotII(const BaseImage<T1>& im1, const BaseImage<T2> im2) :
+        QuotII(const BaseImage<T1>& im1, const BaseImage<T2>& im2) :
             AssignableToImage<result_type>(im1.getBounds()), _im1(im1), _im2(im2) 
         {
             if (!im1.getBounds().isSameShapeAs(im2.getBounds()))
