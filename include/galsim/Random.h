@@ -393,6 +393,106 @@ namespace galsim {
         void operator=(const PoissonDeviate& rhs);
     };
 
+    /**
+     * @brief A Weibull distributed deviate with shape parameter a and scale parameter b.
+     *
+     * The Weibull distribution is related to a number of other probability distributions; in 
+     * particular, it interpolates between the exponential distribution (a=1) and the Rayleigh 
+     * distribution (a=2). See http://en.wikipedia.org/wiki/Weibull_distribution (a=k and b=lambda
+     * in the notation adopted in the Wikipedia article).  The Weibull distribution is a real valued
+     * distribution prodicing deviates >= 0.
+     *
+     * WeibullDeviate is constructed with reference to a UniformDeviate that will actually generate
+     * the randoms, which are then transformed to Weibull distribution.  Copy constructor and
+     * assignment operator are kept private since you probably do not want two "random" number
+     * generators producing the same sequence of numbers in your code!  
+     *
+     */
+    class WeibullDeviate 
+    {
+    public:
+        /**
+         * @brief Construct a new Weibull-distributed RNG.
+         *
+         * Constructor requires reference to a UniformDeviate that generates the randoms, which are
+         * then transformed to Weibull distribution. 
+         * @param[in] u_   UniformDeviate that will be called to generate all randoms
+         * @param[in] a    Shape parameter of the output distribution, must be > 0.
+         * @param[in] b    Scale parameter of the distribution, must be > 0.
+         */
+        WeibullDeviate(UniformDeviate& u_, double a=1., double b=1.) : 
+            u(u_), weibull(a, b) {}
+
+        /**
+         * @brief Draw a new random number from the distribution.
+         *
+         * @return A Weibull deviate with current shape k and scale lam.
+         */
+        double operator() () { return weibull(u.urng); }
+
+        /**
+         * @brief Get current distribution shape parameter a.
+         *
+         * @return Shape parameter a of distribution.
+         */
+        double getA() {return weibull.a();}
+
+        /**
+         * @brief Get current distribution scale parameter b.
+         *
+         * @return Scale parameter b of distribution.
+         */
+        double getB() {return weibull.b();}
+
+        /**
+         * @brief Set current distribution shape parameter a.
+         *
+         * @param[in] a  New shape parameter for distribution. Behaviour for non-positive value
+         * is undefined.
+         */
+        void setA(double a) {
+            weibull.param(boost::random::normal_distribution<>::param_type(a, weibull.b()));
+        }
+
+        /**
+         * @brief Set current distribution scale parameter b.
+         *
+         * @param[in] b  New scale parameter for distribution.  Behavior for non-positive
+         * value is undefined. 
+         */
+        void setB(double b) {
+            weibull.param(boost::random::weibull_distribution<>::param_type(weibull.a(), b));
+        }
+
+        /**
+         * @brief Add Weibull pseudo-random deviates to every element in a supplied Image.
+         *
+         * @param[in,out] data  The Image.
+         */
+        template <typename T>
+        void applyTo(Image<T>& data) {
+            // Typedef for image row iterable
+            typedef typename Image<T>::Iter ImIter;
+
+            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
+                ImIter ee = data.rowEnd(y);
+                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
+            }
+        }
+
+    private:
+
+        UniformDeviate& u;
+        boost::random::weibull_distribution<> weibull;
+
+        /**
+         * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+         */
+        WeibullDeviate(const WeibullDeviate& rhs);
+        /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+        void operator=(const WeibullDeviate& rhs);
+    };
+
 }  // namespace galsim
 
 #endif
