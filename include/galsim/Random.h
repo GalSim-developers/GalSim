@@ -7,7 +7,8 @@
  * @brief Random-number-generator classes
  *
  * Pseudo-random-number generators with various parent distributions: uniform, Gaussian, binomial,
- * and Poisson, all living within the galsim namespace. 
+ * Poisson, Weibull (generalization of Rayleigh and Exponential), and Gamma, all living within the 
+ * galsim namespace. 
  * 
  * Wraps Boost.Random classes in a way that lets us swap Boost RNG's without affecting client code.
  */
@@ -26,12 +27,16 @@
 #include "galsim/boost1_48_0.random/binomial_distribution.hpp"
 #include "galsim/boost1_48_0.random/poisson_distribution.hpp"
 #include "galsim/boost1_48_0.random/uniform_real_distribution.hpp"
+#include "galsim/boost1_48_0.random/weibull_distribution.hpp"
+#include "galsim/boost1_48_0.random/gamma_distribution.hpp"
 #else
 #include "boost/random/mersenne_twister.hpp"
 #include "boost/random/normal_distribution.hpp"
 #include "boost/random/binomial_distribution.hpp"
 #include "boost/random/poisson_distribution.hpp"
 #include "boost/random/uniform_real_distribution.hpp"
+#include "boost/random/weibull_distribution.hpp"
+#include "boost/random/gamma_distribution.hpp"
 #endif
 namespace galsim {
 
