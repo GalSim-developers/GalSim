@@ -25,8 +25,8 @@ outDir = os.path.join('output','testImage.')
 bulge2Total = [0.0, 1.0/3, 2.0/3, 1.0]
 bulgeEllip = [0.2]
 diskEllip = [0.2, 0.45, 0.7]
-invSN = [0.0, 0.005, 0.02]
-nRealization = [1, 10, 10]
+invSN = [0.0]#, 0.005, 0.02]
+nRealization = [1]#, 10, 10]
 if len(invSN) is not len(nRealization):
     raise RuntimeError("Grids in inverse S/N and number of noise realizations do not have same size!")
 diskRe = [0.5, 1.0]
@@ -93,7 +93,7 @@ for bt in bulge2Total:
                 else:
                     dg1 = 0.0
                     dg2 = 0.0
-                bulge.applyShear(dg1, dg2)
+                disk.applyShear(dg1, dg2)
   
                 # Rescale fluxes and add: use the overloaded multiplication and addition operators
                 galaxy = bt*bulge + (1.0-bt)*disk
