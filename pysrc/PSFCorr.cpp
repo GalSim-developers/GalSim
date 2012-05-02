@@ -17,7 +17,7 @@ struct PyHSMShapeData {
         typedef HSMShapeData (* FAM_func)(Image<U> const&, double);
         bp::def("FindAdaptiveMom",
                 FAM_func(&FindAdaptiveMom),
-                bp::arg("object_image"), bp::arg("precision")=1.0e-6,
+                (bp::arg("object_image"), bp::arg("precision")=1.0e-6),
                 "Find adaptive moments of an image, with some optional convergence criterion.");
     };
 
