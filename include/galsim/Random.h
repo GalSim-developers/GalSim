@@ -134,6 +134,7 @@ namespace galsim {
         friend class GaussianDeviate;
         friend class PoissonDeviate;
         friend class BinomialDeviate;
+        friend class WeibullDeviate;
 
     };
 
@@ -451,7 +452,7 @@ namespace galsim {
          * is undefined.
          */
         void setA(double a) {
-            weibull.param(boost::random::normal_distribution<>::param_type(a, weibull.b()));
+            weibull.param(boost::random::weibull_distribution<>::param_type(a, weibull.b()));
         }
 
         /**
