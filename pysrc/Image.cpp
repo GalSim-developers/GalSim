@@ -103,15 +103,35 @@ struct PyImage {
         bp::object const & array, int xMin, int yMin, bool isConst,
         T * & data, boost::shared_ptr<T> & owner, int & stride, Bounds<int> & bounds
     ) {
+        static bool first = true;
         if (!PyArray_Check(array.ptr())) {
             PyErr_SetString(PyExc_TypeError, "numpy.ndarray argument required");
             bp::throw_error_already_set();
         }
         int actualType = PyArray_TYPE(array.ptr());
         int requiredType = NumPyTraits<T>::getCode();
+        if (first && (actualType == 5 || actualType == 7) ) {
+            std::cout<<"First time through buildConstructorArgs with actualType == 5 or 7\n";
+            std::cout<<"T = "<<typeid(T).name()<<"\n";
+            std::cout<<"actualType = "<<actualType<<"\n";
+            std::cout<<"requiredType = "<<requiredType<<"\n";
+            std::cout<<"For reference: \n";
+            std::cout<<"  NPY_SHORT     = "<<NPY_SHORT<<"\n";
+            std::cout<<"  NPY_INT       = "<<NPY_INT<<"\n";
+            std::cout<<"  NPY_FLOAT     = "<<NPY_FLOAT<<"\n";
+            std::cout<<"  NPY_DOUBLE    = "<<NPY_DOUBLE<<"\n";
+            std::cout<<"  PyArray_INT32 = "<<PyArray_INT32<<"\n";
+            std::cout<<"  sizeof(short) = "<<sizeof(short)<<"\n";
+            std::cout<<"  sizeof(int) = "<<sizeof(int)<<"\n";
+            std::cout<<"  sizeof(long) = "<<sizeof(long)<<"\n";
+            std::cout<<"  sizeof(npy_short) = "<<sizeof(npy_short)<<"\n";
+            std::cout<<"  sizeof(npy_int) = "<<sizeof(npy_int)<<"\n";
+            first = false;
+        }
         if (actualType != requiredType) {
             std::ostringstream oss;
             oss<<"numpy.ndarray argument has incorrect data type\n";
+            oss<<"T = "<<typeid(T).name()<<"\n";
             oss<<"actualType = "<<actualType<<"\n";
             oss<<"requiredType = "<<requiredType<<"\n";
             oss<<"For reference: \n";
@@ -120,6 +140,11 @@ struct PyImage {
             oss<<"  NPY_FLOAT     = "<<NPY_FLOAT<<"\n";
             oss<<"  NPY_DOUBLE    = "<<NPY_DOUBLE<<"\n";
             oss<<"  PyArray_INT32 = "<<PyArray_INT32<<"\n";
+            oss<<"  sizeof(short) = "<<sizeof(short)<<"\n";
+            oss<<"  sizeof(int) = "<<sizeof(int)<<"\n";
+            oss<<"  sizeof(long) = "<<sizeof(long)<<"\n";
+            oss<<"  sizeof(npy_short) = "<<sizeof(npy_short)<<"\n";
+            oss<<"  sizeof(npy_int) = "<<sizeof(npy_int)<<"\n";
             PyErr_SetString(PyExc_ValueError, oss.str().c_str());
             //PyErr_SetString(PyExc_ValueError, "numpy.ndarray argument has incorrect data type");
             bp::throw_error_already_set();
