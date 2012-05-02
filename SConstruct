@@ -18,7 +18,7 @@ EnsureSConsVersion(1, 1)
 
 # Subdirectories containing SConscript files.  We always process these, but
 # there are some other optional ones
-subdirs=['src','pysrc','galsim', 'devutils']
+subdirs=['src','pysrc','galsim']
 
 # Configurations will be saved here so command line options don't
 # have to be sent more than once
