@@ -258,12 +258,12 @@ namespace hsm {
 
     /* BEGIN OUR CODE HERE */
 
-    /* Carry out PSF correction directly using Images, repackaging for general_shear_estimator.*/
+    /* Carry out PSF correction directly using BaseImages, repackaging for general_shear_estimator.*/
     template <typename T>
-    HSMShapeData EstimateShearHSM(Image<T> const &gal_image, Image<T> const &PSF_image, 
-                                  float sky_var = 0.0, const char *shear_est = "REGAUSS",
-                                  unsigned long flags = 0xe, double guess_sig_gal = 5.0,
-                                  double guess_sig_PSF = 3.0, double precision = 1.0e-6) {
+    HSMShapeData EstimateShearHSMView(const BaseImage<T> &gal_image, const BaseImage<T> &PSF_image,
+                                      float sky_var = 0.0, const char *shear_est = "REGAUSS",
+                                      unsigned long flags = 0xe, double guess_sig_gal = 5.0,
+                                      double guess_sig_PSF = 3.0, double precision = 1.0e-6) {
         // define variables, create output HSMShapeData struct, etc.
         HSMShapeData results;
         RectImage gal_rect_image, PSF_rect_image;
@@ -342,10 +342,10 @@ namespace hsm {
         return results;
     }
 
-    /** Measure the adaptive moments of an object directly using Images, repackaging for find_ellipmom_2.*/
+    /** Measure the adaptive moments of an object directly using BaseImages, repackaging for find_ellipmom_2.*/
     template <typename T>
-    HSMShapeData FindAdaptiveMom(Image<T> const &object_image, double guess_sig = 5.0, 
-                                 double precision = 1.0e-6) {
+    HSMShapeData FindAdaptiveMomView(const BaseImage<T> &object_image, double guess_sig = 5.0,
+                                     double precision = 1.0e-6) {
         // define variables, create output HSMShapeData struct, etc.
         HSMShapeData results;
         RectImage object_rect_image;
@@ -1879,19 +1879,13 @@ namespace hsm {
     }
 
     // instantiate template classes for expected types
-    template HSMShapeData EstimateShearHSM(Image<float> const &gal_image, Image<float> const &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
-    template HSMShapeData EstimateShearHSM(Image<double> const &gal_image, Image<double> const &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
-    template HSMShapeData EstimateShearHSM(Image<int> const &gal_image, Image<int> const &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
-    template HSMShapeData EstimateShearHSM(Image<const float> const &gal_image, Image<const float> const &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
-    template HSMShapeData EstimateShearHSM(Image<const double> const &gal_image, Image<const double> const &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
-    template HSMShapeData EstimateShearHSM(Image<const int> const &gal_image, Image<const int> const &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
+    template HSMShapeData EstimateShearHSMView(const BaseImage<float> &gal_image, const BaseImage<float> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
+    template HSMShapeData EstimateShearHSMView(const BaseImage<double> &gal_image, const BaseImage<double> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
+    template HSMShapeData EstimateShearHSMView(const BaseImage<int> &gal_image, const BaseImage<int> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
 
-    template HSMShapeData FindAdaptiveMom(Image<float> const &object_image, double guess_sig, double precision);
-    template HSMShapeData FindAdaptiveMom(Image<double> const &object_image, double guess_sig, double precision);
-    template HSMShapeData FindAdaptiveMom(Image<int> const &object_image, double guess_sig, double precision);
-    template HSMShapeData FindAdaptiveMom(Image<const float> const &object_image, double guess_sig, double precision);
-    template HSMShapeData FindAdaptiveMom(Image<const double> const &object_image, double guess_sig, double precision);
-    template HSMShapeData FindAdaptiveMom(Image<const int> const &object_image, double guess_sig, double precision);
+    template HSMShapeData FindAdaptiveMomView(const BaseImage<float> &object_image, double guess_sig, double precision);
+    template HSMShapeData FindAdaptiveMomView(const BaseImage<double> &object_image, double guess_sig, double precision);
+    template HSMShapeData FindAdaptiveMomView(const BaseImage<int> &object_image, double guess_sig, double precision);
 
 }
 }
