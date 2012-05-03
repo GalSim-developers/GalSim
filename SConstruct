@@ -1037,6 +1037,13 @@ if unknown:
     print "Unknown variables:", unknown.keys()
     ErrorExit()
 
+print 'Using the following (non-default) scons options:'
+for opt in opts.options:
+    if (opt.default != env[opt.key]):
+        print '   %s = %s'%(opt.key,env[opt.key])
+print 'These can be edited directly in the file %s.'%config_file
+print 'Type scons -h for a full list of available options.'
+
 opts.Save(config_file,env)
 Help(opts.GenerateHelpText(env))
 
