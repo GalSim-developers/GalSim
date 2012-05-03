@@ -365,7 +365,9 @@ namespace galsim {
         int order_, bool isK, double sigma) 
     {
         const int N=order_;
+#ifndef NDEBUG
         const int ndof=PQIndex::size(N);
+#endif
         const int npts = x.size();
         assert (y.size()==npts);
         assert (mr->nrows()==npts && mr->ncols()==ndof);

@@ -121,11 +121,11 @@ def ErrorExit():
     # libraries, compiler, etc., we don't want to cache the result.
     # So before exiting, we call this function to clear out the cache files
     # that SCons creates.
-    if os.path.exists(".sconsign.dblite"):
-        os.remove(".sconsign.dblite")
-    import shutil
-    if os.path.exists(".sconf_temp"):
-        shutil.rmtree(".sconf_temp")
+    #if os.path.exists(".sconsign.dblite"):
+    #    os.remove(".sconsign.dblite")
+    #import shutil
+    #if os.path.exists(".sconf_temp"):
+    #    shutil.rmtree(".sconf_temp")
 
     print
     print 'Please fix the above error(s) and rerun scons'
@@ -215,6 +215,12 @@ def BasicCCFlags(env):
 
     extra_flags = env['EXTRA_FLAGS'].split(' ')
     env.AppendUnique(CCFLAGS=extra_flags)
+    if '-m64' in extra_flags:
+        # Then this also needs to be in LINKFLAGS
+        env.AppendUnique(LINKFLAGS='-m64')
+    if '-m32' in extra_flags:
+        # Likewise
+        env.AppendUnique(LINKFLAGS='-m32')
 
 
 def AddOpenMPFlag(env):
@@ -657,7 +663,7 @@ def CheckNumPy(context):
     numpy_source_file = """
 #include "Python.h"
 #include "numpy/arrayobject.h"
-void doImport() {
+static void doImport() {
   import_array();
 }
 int main()
@@ -682,7 +688,7 @@ int main()
         import numpy
     except ImportError:
         context.Result(0)
-        print 'Failed to import numpy.'
+        print 'Failed to import NumPy.'
         print 'Things to try:'
         print '1) Check that the python with which you installed numpy,'
         print '   probably the command line python:'
@@ -1030,6 +1036,13 @@ unknown = opts.UnknownVariables()
 if unknown:
     print "Unknown variables:", unknown.keys()
     ErrorExit()
+
+print 'Using the following (non-default) scons options:'
+for opt in opts.options:
+    if (opt.default != env[opt.key]):
+        print '   %s = %s'%(opt.key,env[opt.key])
+print 'These can be edited directly in the file %s.'%config_file
+print 'Type scons -h for a full list of available options.'
 
 opts.Save(config_file,env)
 Help(opts.GenerateHelpText(env))

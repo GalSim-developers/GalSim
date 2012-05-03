@@ -502,13 +502,13 @@ def test_sbprofile_sbinterpolatedimage():
     l3 = galsim.Lanczos(3, True, 1.0E-4)
     l32d = galsim.InterpolantXY(l3)
     for array_type in ftypes:
-        image_in = galsim.Image[array_type](ref_array.astype(array_type))
+        image_in = galsim.ImageView[array_type](ref_array.astype(array_type))
         np.testing.assert_array_equal(
             ref_array.astype(array_type),image_in.array,
             err_msg="Array from input Image differs from reference array for type %s"%array_type)
         sbinterp = galsim.SBInterpolatedImage(image_in, l32d, dx=1.0)
         test_array = np.zeros(testshape, dtype=array_type)
-        image_out = galsim.Image[array_type](test_array)
+        image_out = galsim.ImageView[array_type](test_array)
         sbinterp.draw(image_out, dx=1.0)
         np.testing.assert_array_equal(
             ref_array.astype(array_type),image_out.array,

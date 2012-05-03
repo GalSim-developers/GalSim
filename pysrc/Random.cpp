@@ -17,7 +17,7 @@ struct PyUniformDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (UniformDeviate::*) (Image<U> &) )&UniformDeviate::applyTo,
+            .def("applyTo", (void (UniformDeviate::*) (ImageView<U>) )&UniformDeviate::applyTo,
                  "Add Uniform deviates to every element in a supplied Image.\n"
                  "\n"
                  "Calling\n"
@@ -92,7 +92,7 @@ struct PyGaussianDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (GaussianDeviate::*) (Image<U> &) )&GaussianDeviate::applyTo,
+            .def("applyTo", (void (GaussianDeviate::*) (ImageView<U>) )&GaussianDeviate::applyTo,
                  "Add Gaussian deviates to every element in a supplied Image.\n"
                  "\n"
                  "Calling\n"
@@ -142,7 +142,7 @@ struct PyGaussianDeviate {
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as GaussianDeviate lives
             ]
-	);
+        );
         pyGaussianDeviate
             .def("__call__", &GaussianDeviate::operator(),
                  "Draw a new random number from the distribution.\n"
@@ -166,7 +166,7 @@ struct PyBinomialDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (BinomialDeviate::*) (Image<U> &) )&BinomialDeviate::applyTo,
+            .def("applyTo", (void (BinomialDeviate::*) (ImageView<U>) )&BinomialDeviate::applyTo,
                  "Add Binomial deviates to every element in a supplied Image.\n"
                  "\n"
                  "Calling\n"
@@ -216,7 +216,7 @@ struct PyBinomialDeviate {
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as BinomialDeviate lives
             ]
-	);
+        );
         pyBinomialDeviate
             .def("__call__", &BinomialDeviate::operator(),
                  "Draw a new random number from the distribution.\n"
@@ -240,7 +240,7 @@ struct PyPoissonDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (PoissonDeviate::*) (Image<U> &) )&PoissonDeviate::applyTo,
+            .def("applyTo", (void (PoissonDeviate::*) (ImageView<U>) )&PoissonDeviate::applyTo,
                  "Add Poisson deviates to every element in a supplied Image.\n"
                  "\n"
                  "Calling\n"
@@ -289,7 +289,7 @@ struct PyPoissonDeviate {
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as PoissonDeviate lives
             ]
-	);
+        );
         pyPoissonDeviate
             .def("__call__", &PoissonDeviate::operator(),
                  "Draw a new random number from the distribution.\n"
@@ -311,7 +311,7 @@ struct PyCCDNoise{
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (CCDNoise::*) (Image<U> &) )&CCDNoise::applyTo,
+            .def("applyTo", (void (CCDNoise::*) (ImageView<U>) )&CCDNoise::applyTo,
                  "Add noise to an input Image.\n"
                  "\n"
                  "Calling\n"
@@ -371,7 +371,7 @@ struct PyCCDNoise{
             )[
                 bp::with_custodian_and_ward<1,2>() // keep uniform (2) as long as CCDNoise lives
             ]
-	);
+        );
         pyCCDNoise
             .def("getGain", &CCDNoise::getGain, "Get gain in current noise model.")
             .def("setGain", &CCDNoise::setGain, "Set gain in current noise model.")

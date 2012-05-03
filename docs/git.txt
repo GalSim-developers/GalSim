@@ -162,4 +162,38 @@ that you have a detached HEAD.  This is okay; it means that git doesn't know wha
 a commit (i.e., you're not on any branch).  But, by definition, we should not be changing tagged
 versions; we should be working on specific branches, so this warning is not a problem.
 
+--- Deleting branches on the origin ---
 
+PLEASE NOTE: We have not decided any policy about cleaning up old branches on the origin yet, so
+please do not use this for deleting branches that have been successfully merged into the master
+branch.  Use it only for cleanup jobs, as in Issue #122.
+
+The rather obtuse syntax for deleting a branch on the origin uses a push command as follows:
+
+git push origin :"branchname"
+
+or for a direct example:
+
+git push origin :"#36_Image_unit_tests"
+
+using the case in Issue #122 of wishing to remove a branch named #36_Image_unit_tests from the 
+origin.  
+
+Note in that in Issue #122 this usage led to the removal of the branch name for the commits
+associated with the work done in #36_Image_unit_tests, highlighting why Barney made a mistake in
+creating a new branch for an old Issue that already had one.
+
+--- What happens if you make a huge mess while working locally? ---
+
+If you have made a mess with some local commits (for example, committed something to the wrong
+branch), then there are ways to fix it.  For example:
+
+git reset --hard <commit> allows you to set a branch to any commit, and <commit> can be a lot of
+different things. For instance, if you want to set your version of master to whatever the remote one
+is, do git reset --hard origin/master while on your master. If you want to totally remove the last
+two commits, you can do git reset --hard HEAD~2.
+
+git commit --amend is another neat trick that lets you modify the last commit, and you can edit
+history even further back with git rebase -i.
+
+Again, this should only be done if you haven't pushed the changes.

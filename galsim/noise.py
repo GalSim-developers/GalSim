@@ -15,9 +15,14 @@ def addNoise(image, noise):
     If the supplied noise model object does not have an applyTo() method, then this will raise an
     AttributeError exception.
     """
-    noise.applyTo(image)
+    im_view = image.view()
+    noise.applyTo(im_view)
 
 # inject addNoise as a method of Image classes
 for Class in _galsim.Image.itervalues():
     Class.addNoise = addNoise
+
+for Class in _galsim.ImageView.itervalues():
+    Class.addNoise = addNoise
+
 del Class # cleanup public namespace

@@ -15,7 +15,7 @@ struct PySBInterpolatedImage {
         // Image<U> inherits from Image<const U>, so the former can be implicitly
         // converted to the latter by Boost.Python.
         wrapper
-            .def(bp::init<const Image<const U> &, const InterpolantXY &, double, double>(
+            .def(bp::init<const ImageView<U> &, const InterpolantXY &, double, double>(
                      (bp::args("image", "i"), bp::arg("dx")=0., bp::arg("padFactor")=0.)
                  ))
             ;
