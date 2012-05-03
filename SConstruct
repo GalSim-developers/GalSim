@@ -688,7 +688,7 @@ int main()
         import numpy
     except ImportError:
         context.Result(0)
-        print 'Failed to import numpy.'
+        print 'Failed to import NumPy.'
         print 'Things to try:'
         print '1) Check that the python with which you installed numpy,'
         print '   probably the command line python:'

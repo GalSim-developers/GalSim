@@ -1,6 +1,8 @@
+
+#include <sstream>
+
 #include "Image.h"
 #include "ImageArith.h"
-#include <sstream>
 
 namespace galsim {
 
@@ -245,20 +247,20 @@ void ImageView<T>::copyFrom(const BaseImage<T>& rhs) const
 
 template class BaseImage<double>;
 template class BaseImage<float>;
-template class BaseImage<int>;
-template class BaseImage<short>;
+template class BaseImage<int32_t>;
+template class BaseImage<int16_t>;
 template class Image<double>;
 template class Image<float>;
-template class Image<int>;
-template class Image<short>;
+template class Image<int32_t>;
+template class Image<int16_t>;
 template class ImageView<double>;
 template class ImageView<float>;
-template class ImageView<int>;
-template class ImageView<short>;
-template class ConstImageView<short>;
+template class ImageView<int32_t>;
+template class ImageView<int16_t>;
 template class ConstImageView<double>;
 template class ConstImageView<float>;
-template class ConstImageView<int>;
+template class ConstImageView<int32_t>;
+template class ConstImageView<int16_t>;
 
 } // namespace galsim
 
