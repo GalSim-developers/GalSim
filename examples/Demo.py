@@ -213,7 +213,7 @@ def Script2():
     # Add a constant sky level to the image.
     # Create an image with the same bounds as image, with a constant
     # sky level.
-    sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
+    sky_image = galsim.ImageF(bounds=image.getBounds(), init_value=sky_level)
     image += sky_image
 
     # This time use a particular seed, so it the image is deterministic.
@@ -365,7 +365,7 @@ def Script3():
     logger.info('Made image of the profile')
 
     # Add a constant sky level to the image.
-    sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
+    sky_image = galsim.ImageF(bounds=image.getBounds(), init_value=sky_level)
     image += sky_image
 
     # Add Poisson noise and Gaussian read noise to the image using the CCDNoise class.
