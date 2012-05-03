@@ -689,8 +689,6 @@ int main()
     except ImportError:
         context.Result(0)
         print 'Failed to import NumPy.'
-        print "NumPy version is %s; include path is %s" % (numpy.version.version, 
-                                                           numpy.get_include())
         print 'Things to try:'
         print '1) Check that the python with which you installed numpy,'
         print '   probably the command line python:'
