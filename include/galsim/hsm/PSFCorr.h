@@ -152,17 +152,17 @@ namespace hsm {
     /* functions that the user will want to call from outside */
 
     /**
-     * @brief Carry out PSF correction directly using BaseImages.
+     * @brief Carry out PSF correction directly using ImageViews.
      *
      * A template function to carry out one of the multiple possible methods of PSF correction using
-     * the HSM package, directly accessing the input BaseImages.  The input arguments get repackaged
+     * the HSM package, directly accessing the input ImageViews.  The input arguments get repackaged
      * into RectImage and ObjectData structs before calling general_shear_estimator.  Results for
      * the shape measurement are returned as HSMShapeData.  There are two arguments that have
      * default values, namely shear_est (the type of shear estimator) and flags (for the REGAUSS
      * method only).
      *
-     * @param[in] gal_image The BaseImage for the galaxy being measured
-     * @param[in] PSF_image The BaseImage for the PSF
+     * @param[in] gal_image The ImageView for the galaxy being measured
+     * @param[in] PSF_image The ImageView for the PSF
      * @param[in] sky_var The variance of the sky level, used for estimating uncertainty on the
      *            measured shape; default 0.
      * @param[in] *shear_est A string indicating the desired method of PSF correction: REGAUSS,
@@ -177,29 +177,29 @@ namespace hsm {
      * @return A HSMShapeData object containing the results of shape measurement. 
      */
     template <typename T>
-        HSMShapeData EstimateShearHSMView(BaseImage<T> &gal_image, BaseImage<T> &PSF_image,
+        HSMShapeData EstimateShearHSMView(const ImageView<T> &gal_image, const ImageView<T> &PSF_image,
                                           float sky_var = 0.0, const char *shear_est = "REGAUSS",
                                           unsigned long flags = 0xe, double guess_sig_gal = 5.0,
                                           double guess_sig_PSF = 3.0, double precision = 1.0e-6);
 
     /**
-     * @brief Measure the adaptive moments of an object directly using BaseImages.
+     * @brief Measure the adaptive moments of an object directly using ImageViews.
      *
-     * This function repackages the input BaseImage in a format that find_ellipmom_2 accepts, in order
+     * This function repackages the input ImageView in a format that find_ellipmom_2 accepts, in order
      * to iteratively compute the adaptive moments of an object.  The key result is the best-fit
      * elliptical Gaussian to the object, which is computed by initially guessing a circular
      * Gaussian that is used as a weight function, computing the weighted moments, recomputing the
      * moments using the result of the previous step as the weight function, and so on until the
      * moments that are measured are the same as those used for the weight function.  
      *
-     * @param[in] object_image The BaseImage for the object being measured.
+     * @param[in] object_image The ImageView for the object being measured.
      * @param[in] guess_sig Optional argument with an initial guess for the Gaussian sigma of
      *            the object, default 5.0 (pixels).
      * @param[in] precision The convergence criterion for the moments; default 1e-6.
      * @return A HSMShapeData object containing the results of moment measurement.
      */
     template <typename T>
-        HSMShapeData FindAdaptiveMomView(BaseImage<T> &object_image, double guess_sig = 5.0,
+        HSMShapeData FindAdaptiveMomView(const ImageView<T> &object_image, double guess_sig = 5.0,
                                          double precision = 1.0e-6);
 
     /**

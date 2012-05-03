@@ -11,16 +11,16 @@ struct PyHSMShapeData {
 
     template <typename U>
     static void wrapTemplates() {
-        typedef HSMShapeData (* FAM_func)(Image<U> const&, double, double);
-        bp::def("FindAdaptiveMom",
-                FAM_func(&FindAdaptiveMom),
+        typedef HSMShapeData (* FAM_func)(const ImageView<U> &, double, double);
+        bp::def("_FindAdaptiveMomView",
+                FAM_func(&FindAdaptiveMomView),
                 (bp::arg("object_image"), bp::arg("guess_sig")=5.0, bp::arg("precision")=1.0e-6),
                 "Find adaptive moments of an image (with some optional args, see C++ docs).");
 
-        typedef HSMShapeData (* ESH_func)(Image<U> const&, Image<U> const&, float, const char *,
+        typedef HSMShapeData (* ESH_func)(const ImageView<U> &, const ImageView<U> &, float, const char *,
                                           unsigned long, double, double, double);
-        bp::def("EstimateShearHSM",
-                ESH_func(&EstimateShearHSM),
+        bp::def("_EstimateShearHSMView",
+                ESH_func(&EstimateShearHSMView),
                 (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("sky_var")=0.0,
                  bp::arg("shear_est")="REGAUSS", bp::arg("flags")=0xe, bp::arg("guess_sig_gal")=5.0,
                  bp::arg("guess_sig_PSF")=3.0, bp::arg("precision")=1.0e-6),
