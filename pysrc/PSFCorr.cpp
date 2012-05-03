@@ -14,15 +14,15 @@ struct PyHSMShapeData {
         typedef HSMShapeData (* FAM_func)(Image<U> const&, double);
         bp::def("FindAdaptiveMom",
                 FAM_func(&FindAdaptiveMom),
-                (bp::arg("object_image"), bp::arg("precision")=1.0e-6),
-                "Find adaptive moments of an image, with some optional convergence criterion.");
+                (bp::arg("object_image"), bp::arg("guess_sig")=5.0, bp::arg("precision")=1.0e-6),
+                "Find adaptive moments of an image, with some optional convergence criterion and initial size guess.");
 
         typedef HSMShapeData (* ESH_func)(Image<U> const&, Image<U> const&, float, const char *, unsigned long, double);
         bp::def("EstimateShearHSM",
                 ESH_func(&EstimateShearHSM),
                 (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("sky_var")=0.0, bp::arg("shear_est")="REGAUSS", 
-                 bp::arg("flags")=0xe, bp::arg("precision")=1.0e-6),
-                "Estimate PSF-corrected shear for a galaxy, given a PSF (and some optional args).");
+                 bp::arg("flags")=0xe, bp::arg("guess_sig_gal")=5.0, bp::arg("guess_sig_PSF")=3.0, bp::arg("precision")=1.0e-6),
+                "Estimate PSF-corrected shear for a galaxy, given a PSF (and some optional args, see C++ docs).");
     };
 
     static void wrap() {

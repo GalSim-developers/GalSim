@@ -169,12 +169,18 @@ namespace hsm {
      *            LINEAR, BJ, or KSB; default REGAUSS.
      * @param[in] flags A flag determining various aspects of the shape measurement process (only
      *            necessary for REGAUSS); default 0xe.
+     * @param[in] guess_sig_gal Optional argument with an initial guess for the Gaussian sigma of
+     *            the galaxy, default 5.0 (pixels).
+     * @param[in] guess_sig_PSF Optional argument with an initial guess for the Gaussian sigma of
+     *            the PSF, default 3.0 (pixels).
+     * @param[in] precision The convergence criterion for the moments; default 1e-6.
      * @return A HSMShapeData object containing the results of shape measurement. 
      */
     template <typename T>
         HSMShapeData EstimateShearHSM(Image<T> const &gal_image, Image<T> const &PSF_image,
                                       float sky_var = 0.0, const char *shear_est = "REGAUSS",
-                                      unsigned long flags = 0xe, double precision = 1.0e-6);
+                                      unsigned long flags = 0xe, double guess_sig_gal = 5.0,
+                                      double guess_sig_PSF = 3.0, double precision = 1.0e-6);
 
     /**
      * @brief Measure the adaptive moments of an object directly using Images.
@@ -187,11 +193,14 @@ namespace hsm {
      * moments that are measured are the same as those used for the weight function.  
      *
      * @param[in] object_image The Image for the object being measured.
+     * @param[in] guess_sig Optional argument with an initial guess for the Gaussian sigma of
+     *            the object, default 5.0 (pixels).
      * @param[in] precision The convergence criterion for the moments; default 1e-6.
      * @return A HSMShapeData object containing the results of moment measurement.
      */
     template <typename T>
-        HSMShapeData FindAdaptiveMom(Image<T> const &object_image, double precision = 1.0e-6);
+        HSMShapeData FindAdaptiveMom(Image<T> const &object_image, double guess_sig = 5.0,
+                                     double precision = 1.0e-6);
 
     /**
      * @brief Allocate memory for a RectImage representing the image of some object
