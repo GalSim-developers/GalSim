@@ -135,6 +135,7 @@ namespace galsim {
         friend class PoissonDeviate;
         friend class BinomialDeviate;
         friend class WeibullDeviate;
+        friend class GammaDeviate;
 
     };
 
@@ -395,13 +396,13 @@ namespace galsim {
     };
 
     /**
-     * @brief A Weibull distributed deviate with shape parameter a and scale parameter b.
+     * @brief A Weibull-distributed deviate with shape parameter a and scale parameter b.
      *
      * The Weibull distribution is related to a number of other probability distributions; in 
      * particular, it interpolates between the exponential distribution (a=1) and the Rayleigh 
      * distribution (a=2). See http://en.wikipedia.org/wiki/Weibull_distribution (a=k and b=lambda
      * in the notation adopted in the Wikipedia article).  The Weibull distribution is a real valued
-     * distribution prodicing deviates >= 0.
+     * distribution producing deviates >= 0.
      *
      * WeibullDeviate is constructed with reference to a UniformDeviate that will actually generate
      * the randoms, which are then transformed to Weibull distribution.  Copy constructor and
@@ -492,6 +493,104 @@ namespace galsim {
         WeibullDeviate(const WeibullDeviate& rhs);
         /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
         void operator=(const WeibullDeviate& rhs);
+    };
+
+    /**
+     * @brief A Gamma-distributed deviate with shape parameter alpha and scale parameter beta.
+     *
+     * See http://en.wikipedia.org/wiki/Gamma_distribution (although note that in the Boost random
+     * routine this class calls the notation is such that alpha=k and beta=theta).  The Gamma 
+     * distribution is a real valued distribution producing deviates >= 0.
+     *
+     * GammaDeviate is constructed with reference to a UniformDeviate that will actually generate
+     * the randoms, which are then transformed to Gamma distribution.  Copy constructor and
+     * assignment operator are kept private since you probably do not want two "random" number
+     * generators producing the same sequence of numbers in your code!  
+     *
+     */
+    class GammaDeviate 
+    {
+    public:
+        /**
+         * @brief Construct a new Gamma-distributed RNG.
+         *
+         * Constructor requires reference to a UniformDeviate that generates the randoms, which are
+         * then transformed to Gamma distribution. 
+         * @param[in] u_     UniformDeviate that will be called to generate all randoms
+         * @param[in] alpha  Shape parameter of the output distribution, must be > 0.
+         * @param[in] beta   Scale parameter of the distribution, must be > 0.
+         */
+        GammaDeviate(UniformDeviate& u_, double alpha=1., double beta=1.) : 
+            u(u_), gamma(alpha, beta) {}
+
+        /**
+         * @brief Draw a new random number from the distribution.
+         *
+         * @return A Gamma deviate with current shape alpha and scale beta.
+         */
+        double operator() () { return gamma(u.urng); }
+
+        /**
+         * @brief Get current distribution shape parameter alpha.
+         *
+         * @return Shape parameter alpha of distribution.
+         */
+        double getAlpha() {return gamma.alpha();}
+
+        /**
+         * @brief Get current distribution scale parameter beta.
+         *
+         * @return Scale parameter beta of distribution.
+         */
+        double getBeta() {return gamma.beta();}
+
+        /**
+         * @brief Set current distribution shape parameter alpha.
+         *
+         * @param[in] alpha  New shape parameter for distribution. Behaviour for non-positive value
+         *                   is undefined.
+         */
+        void setA(double alpha) {
+            gamma.param(boost::random::gamma_distribution<>::param_type(alpha, gamma.beta()));
+        }
+
+        /**
+         * @brief Set current distribution scale parameter beta.
+         *
+         * @param[in] beta  New scale parameter for distribution.  Behavior for non-positive
+         *                  value is undefined. 
+         */
+        void setBeta(double beta) {
+            gamma.param(boost::random::gamma_distribution<>::param_type(gamma.alpha(), beta));
+        }
+
+        /**
+         * @brief Add Gamma pseudo-random deviates to every element in a supplied Image.
+         *
+         * @param[in,out] data  The Image.
+         */
+        template <typename T>
+        void applyTo(ImageView<T>& data) {
+            // Typedef for image row iterable
+            typedef typename ImageView<T>::iterator ImIter;
+
+            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
+                ImIter ee = data.rowEnd(y);
+                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
+            }
+        }
+
+    private:
+
+        UniformDeviate& u;
+        boost::random::gamma_distribution<> gamma;
+
+        /**
+         * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+         */
+        GammaDeviate(const GammaDeviate& rhs);
+        /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+        void operator=(const GammaDeviate& rhs);
     };
 
 }  // namespace galsim
