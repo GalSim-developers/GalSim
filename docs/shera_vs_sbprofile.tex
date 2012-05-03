@@ -86,10 +86,10 @@ of the impact of interpolation errors and padding on the accuracy of
 shearing and resampling via DFTs.
 \item \sbp\ will zero-pad
   images to square linear dimensions $2^n$ or $3\times 2^n$ for efficient FFTs.
-Due to the aforementioned rules about ratios of output to input
-  pixel scale, and method of dealing with target PSFs, \shera\ has rather
+\shera\ has rather
   more arcane rules that require the galaxy image and the target PSF
-  to be related by a factor of output vs. input pixel scale.
+  to be related by a factor of output vs. input pixel scale (to avoid
+  having to interpolate the target PSF at all).
 \item \shera\ suffers from some annoying centroiding issues
   due to the use of IDL convolution routines.
 \item \shera\ and \sbp\ have different flux normalization conventions
@@ -232,7 +232,9 @@ PSFs.  For GREAT3, we are likely to circumvent (2) by carrying out a PCA modelin
 the ACS images, but we will almost certainly not do anything about (1). 
 
 The critical issue for GalSim is not so much that the galaxies look
-exactly like the real galaxies on the sky. Rather, GalSim must draw
+exactly like the real galaxies on the sky (as long as they do not look
+so different that size- and profile-dependent biases are significantly
+affected). Rather, GalSim must draw
 sheared galaxies that are very precisely equivalent to sheared
 versions of the un-sheared galaxies that it draws.  In this respect
 our goal is that the shear inferred from GalSim images be accurate to
@@ -272,7 +274,7 @@ accurate interpolations such as quintic for this stage (though we already know t
 interpolants give differences of order a few \%, which seems dicey).
 
 For shearing, where we would like our shears to be accurate at the $10^{-4}$ level, it seems that we
-might require 9th order Lanczos.  There might be a little room to change the order (should be $>5$),
+might require 9th order Lanczos in \sbp.  There might be a little room to change the order (should be $>5$),
 but certainly cubic/quintic interpolation kernels are inadequate.
 
 For resampling, is further testing required?  The conclusions are likely the same as for the
