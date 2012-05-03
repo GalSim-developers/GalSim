@@ -10,7 +10,7 @@
 
 #ifndef SHEAR_H
 #define SHEAR_H
-#include <math.h>
+#include <cmath>
 #include "TMV.h"
 
 #include "Std.h"

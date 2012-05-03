@@ -88,7 +88,7 @@ def test_uniform_image():
     and reproduce sequence.
     """
     u = galsim.UniformDeviate(testseed)
-    testimage = galsim.ImageD(np.zeros((3, 1)))
+    testimage = galsim.ImageViewD(np.zeros((3, 1)))
     testimage.addNoise(u)
     np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(uResult),
                                err_msg="UniformDeviate generator applied to Images does not "
@@ -109,7 +109,7 @@ def test_gaussian_image():
     """
     u = galsim.UniformDeviate(testseed)
     g = galsim.GaussianDeviate(u, mean=gMean, sigma=gSigma)
-    testimage = galsim.ImageD(np.zeros((3, 1)))
+    testimage = galsim.ImageViewD(np.zeros((3, 1)))
     testimage.addNoise(g)
     np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(gResult), precision,
                                err_msg="GaussianDeviate generator applied to Images does not "
@@ -130,7 +130,7 @@ def test_binomial_image():
     """
     u = galsim.UniformDeviate(testseed)
     b = galsim.BinomialDeviate(u, N=bN, p=bp)
-    testimage = galsim.ImageD(np.zeros((3, 1)))
+    testimage = galsim.ImageViewD(np.zeros((3, 1)))
     testimage.addNoise(b)
     np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(bResult), precision,
                                err_msg="BinomialDeviate generator applied to Images does not "
@@ -151,7 +151,7 @@ def test_poisson_image():
     """
     u = galsim.UniformDeviate(testseed)
     p = galsim.PoissonDeviate(u, mean=pMean)
-    testimage = galsim.ImageI(np.zeros((3, 1), dtype=np.int32))
+    testimage = galsim.ImageViewI(np.zeros((3, 1), dtype=np.int32))
     testimage.addNoise(p)
     np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(pResult),
                                err_msg="PoissonDeviate generator applied to Images does not "
@@ -163,7 +163,7 @@ def test_ccdnoise_rand():
     for i in xrange(4):
         u = galsim.UniformDeviate(testseed)
         ccdnoise = galsim.CCDNoise(u, gain=cGain, read_noise=cReadNoise)
-        testImage = galsim.Image[types[i]]((np.zeros((2, 2)) + sky).astype(types[i]))
+        testImage = galsim.ImageView[types[i]]((np.zeros((2, 2)) + sky).astype(types[i]))
         ccdnoise.applyTo(testImage)
         np.testing.assert_array_almost_equal(testImage.array, eval("cResult"+typestrings[i]),
                                              eval("precision"+typestrings[i]),
@@ -177,7 +177,7 @@ def test_ccdnoise_image():
     for i in xrange(4):
         u = galsim.UniformDeviate(testseed)
         ccdnoise = galsim.CCDNoise(u, gain=cGain, read_noise=cReadNoise)
-        testImage = galsim.Image[types[i]]((np.zeros((2, 2)) + sky).astype(types[i]))
+        testImage = galsim.ImageView[types[i]]((np.zeros((2, 2)) + sky).astype(types[i]))
         testImage.addNoise(ccdnoise)
         np.testing.assert_array_almost_equal(testImage.array, eval("cResult"+typestrings[i]),
                                              eval("precision"+typestrings[i]),

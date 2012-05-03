@@ -16,10 +16,7 @@ class GSObject:
 
     # op+= converts this into the equivalent of an Add object
     def __iadd__(self, other):
-        print 'self = ',self
-        print 'other = ',other
         GSObject.__init__(self, galsim.SBAdd(self.SBProfile, other.SBProfile))
-        print 'self => ',self
         return self
 
     # Make op* and op*= work to adjust the flux of an object
@@ -133,14 +130,18 @@ class GSObject:
     #def createShifted(self, dx, dy):
     #    return GSObject(self.SBProfile.shift(dx, dy))
             
-    def draw(self, dx=0., wmult=1):
+    def draw(self, image=None, dx=0., wmult=1):
     # Raise an exception here since C++ is picky about the input types
         if type(wmult) != int:
             raise TypeError("Input wmult should be an int")
         if type(dx) != float:
             raise Warning("Input dx not a float, converting...")
             dx = float(dx)
-        return self.SBProfile.draw(dx=dx, wmult=wmult)
+        if image is None:
+            return self.SBProfile.draw(dx=dx, wmult=wmult)
+        else :
+            self.SBProfile.draw(image, dx=dx, wmult=wmult)
+            return image
 
     # Did not define all the other draw operations that operate on images inplace, would need to
     # work out slightly different return syntax for that in Python
