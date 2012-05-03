@@ -20,23 +20,23 @@ except ImportError:
 
 class HSM_Moments:
     """
-    A class that runs the meas_moments program on an image
+    A class that runs the MeasMoments program on an image
     and stores the results.
     This is temporary.  This functionality should be python wrapped.
     """
     
     def __init__(self, file_name):
-        proc = subprocess.Popen('../bin/meas_moments %s'%file_name,
+        proc = subprocess.Popen('../bin/MeasMoments %s'%file_name,
             stdout=subprocess.PIPE, shell=True)
         buf = os.read(proc.stdout.fileno(),1000)
         while proc.poll() == None:
             pass
         if proc.returncode != 0:
-            raise RuntimeError("meas_moments exited with an error code")
+            raise RuntimeError("MeasMoments exited with an error code")
 
         results = buf.split()
         if results[0] is not '0':
-            raise RuntimeError("meas_moments returned an error status")
+            raise RuntimeError("MeasMoments returned an error status")
         self.mxx = float(results[1])
         self.myy = float(results[2])
         self.mxy = float(results[3])
@@ -56,23 +56,23 @@ class HSM_Moments:
 
 class HSM_Regauss:
     """
-    A class that runs the meas_shape program (with re-Gaussianization PSF correction on an image
+    A class that runs the MeasShape program (with re-Gaussianization PSF correction on an image
     and stores the results. This is temporary.  This functionality should be python wrapped.
     """
     
     def __init__(self, file_name, file_name_epsf, array_shape):
-        proc = subprocess.Popen('../bin/meas_shape %s %s %f %f 0.0 REGAUSS 0.0'%(file_name,
+        proc = subprocess.Popen('../bin/MeasShape %s %s %f %f 0.0 REGAUSS 0.0'%(file_name,
                                 file_name_epsf, 0.5*array_shape[0], 0.5*array_shape[1]), 
                                 stdout=subprocess.PIPE, shell=True)
         buf = os.read(proc.stdout.fileno(),1000)
         while proc.poll() == None:
             pass
         if proc.returncode != 0:
-            raise RuntimeError('meas_shape exited with an error code, %d'%proc.returncode)
+            raise RuntimeError('MeasShape exited with an error code, %d'%proc.returncode)
 
         results = buf.split()
         if results[0] is not '0':
-            raise RuntimeError("meas_shape returned an error status")
+            raise RuntimeError("MeasShape returned an error status")
         self.e1 = float(results[1])
         self.e2 = float(results[2])
         self.r2 = float(results[5])
@@ -102,7 +102,7 @@ def Script1():
     gal_sigma = 2.     # pixels
     psf_sigma = 1.     # pixels
     pixel_scale = 0.2  # arcsec / pixel
-    noise = 0.03       # ADU / pixel
+    noise = 300.       # ADU / pixel
 
     logger.info('Starting script 1 using:')
     logger.info('    - circular Gaussian galaxy (flux = %.1e, sigma = %.1f),',gal_flux,gal_sigma)
@@ -138,7 +138,7 @@ def Script1():
     # Defaut seed is set from the current time.
     rng = galsim.UniformDeviate()
     # Use this to add Gaussian noise with specified sigma
-    galsim.noise.addGaussian(image, rng, sigma=noise)
+    image.addNoise(galsim.GaussianDeviate(rng, sigma=noise))
     logger.info('Added Gaussian noise')
 
     # Write the image to a file
@@ -213,13 +213,13 @@ def Script2():
     # Add a constant sky level to the image.
     # Create an image with the same bounds as image, with a constant
     # sky level.
-    sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
+    sky_image = galsim.ImageF(bounds=image.getBounds(), init_value=sky_level)
     image += sky_image
 
     # This time use a particular seed, so it the image is deterministic.
     rng = galsim.UniformDeviate(1534225)
-    # Use this to add Poisson noise.
-    galsim.noise.addPoisson(image, rng, gain=gain)
+    # Use this to add Poisson noise using the CCDNoise class.
+    image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=0.))
 
     # Subtract off the sky.
     image -= sky_image
@@ -278,7 +278,7 @@ def Script3():
     opt_a2=0.12        # wavelengths
     opt_c1=0.64        # wavelengths
     opt_c2=-0.33       # wavelengths
-    opt_padFactor=6    # multiples of Airy padding required to avoid folding for aberrated PSFs
+    opt_padfactor=2    # multiples of Airy padding required to avoid folding for aberrated PSFs
     lam = 800          # nm    NB: don't use lambda - that's a reserved word.
     tel_diam = 4.      # meters 
     pixel_scale = 0.23 # arcsec / pixel
@@ -314,11 +314,15 @@ def Script3():
     logger.info('Made galaxy profile')
 
     # Define the atmospheric part of the PSF.
-    atmos_a = galsim.Gaussian(flux=atmos_fa, sigma=atmos_a_sigma)
+    atmos_a = galsim.Gaussian(sigma=atmos_a_sigma)
     atmos_a.applyShear(atmos_a_g1 , atmos_a_g2)
-    atmos_b = galsim.Gaussian(flux=1-atmos_fa, sigma=atmos_b_sigma)
+    atmos_b = galsim.Gaussian(sigma=atmos_b_sigma)
     atmos_b.applyShear(atmos_b_g1 , atmos_b_g2)
-    atmos = galsim.Add([atmos_a, atmos_b])
+    atmos = atmos_fa * atmos_a + (1-atmos_fa) * atmos_b
+    # Could also have written either of the following, which do the same thing:
+    # atmos = galsim.Add(atmos_a, atmos_b)
+    # atmos = galsim.Add([atmos_a, atmos_b])
+    # For more than two summands, you can either string together +'s or use the list version.
     logger.info('Made atmospheric PSF profile')
 
     # Define the optical part of the PSF.
@@ -326,14 +330,14 @@ def Script3():
     # which needs to be in pixel units, so do the calculation:
     lam_over_D = lam * 1.e-9 / tel_diam # radians
     lam_over_D *= 206265 # arcsec
-    lam_over_D *= pixel_scale # pixels
+    lam_over_D /= pixel_scale # pixels
     logger.info('Calculated lambda over D = %f pixels', lam_over_D)
     # The rest of the values here should be given in units of the 
-    # wavelength of the incident light. padFactor is used to here to reduce 'folding' for these
+    # wavelength of the incident light. pad_factor is used to here to reduce 'folding' for these
     # quite strong aberration values
     optics = galsim.OpticalPSF(lam_over_D, 
                                defocus=opt_defocus, coma1=opt_c1, coma2=opt_c2, astig1=opt_a1,
-                               astig2=opt_a2, padFactor=opt_padFactor)
+                               astig2=opt_a2, pad_factor=opt_padfactor)
     logger.info('Made optical PSF profile')
 
     # Start with square pixels
@@ -361,15 +365,12 @@ def Script3():
     logger.info('Made image of the profile')
 
     # Add a constant sky level to the image.
-    sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
+    sky_image = galsim.ImageF(bounds=image.getBounds(), init_value=sky_level)
     image += sky_image
 
-    # Add Poisson noise to the image.
+    # Add Poisson noise and Gaussian read noise to the image using the CCDNoise class.
     rng = galsim.UniformDeviate(1314662)
-    galsim.noise.addPoisson(image, rng, gain=gain)
-
-    # Also add (Gaussian) read noise.
-    galsim.noise.addGaussian(image, rng, sigma=read_noise)
+    image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
 
     # Subtract off the sky.
     image -= sky_image
