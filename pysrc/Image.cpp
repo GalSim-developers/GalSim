@@ -131,16 +131,21 @@ struct PyImage {
             oss<<"For reference: \n";
             oss<<"  NPY_SHORT   = "<<NPY_SHORT<<"\n";
             oss<<"  NPY_INT     = "<<NPY_INT<<"\n";
-            oss<<"  NPY_INT32   = "<<NPY_INT32<<"\n";
             oss<<"  NPY_LONG    = "<<NPY_LONG<<"\n";
+            oss<<"  NPY_INT16   = "<<NPY_INT16<<"\n";
+            oss<<"  NPY_INT32   = "<<NPY_INT32<<"\n";
+            oss<<"  NPY_INT64   = "<<NPY_INT64<<"\n";
             oss<<"  NPY_FLOAT   = "<<NPY_FLOAT<<"\n";
             oss<<"  NPY_DOUBLE  = "<<NPY_DOUBLE<<"\n";
             oss<<"  sizeof(int16_t) = "<<sizeof(int16_t)<<"\n";
+            oss<<"  sizeof(int32_t) = "<<sizeof(int32_t)<<"\n";
+            oss<<"  sizeof(int64_t) = "<<sizeof(int64_t)<<"\n";
+            oss<<"  sizeof(short) = "<<sizeof(short)<<"\n";
             oss<<"  sizeof(int) = "<<sizeof(int)<<"\n";
             oss<<"  sizeof(long) = "<<sizeof(long)<<"\n";
             oss<<"  sizeof(npy_int16) = "<<sizeof(npy_int16)<<"\n";
             oss<<"  sizeof(npy_int32) = "<<sizeof(npy_int32)<<"\n";
-            oss<<"  sizeof(npy_long) = "<<sizeof(npy_long)<<"\n";
+            oss<<"  sizeof(npy_int64) = "<<sizeof(npy_int64)<<"\n";
             PyErr_SetString(PyExc_ValueError, oss.str().c_str());
             bp::throw_error_already_set();
         }
@@ -412,24 +417,24 @@ struct PyImage {
 void pyExportImage() {
     bp::dict pyImageDict;  // dict that lets us say "Image[numpy.float32]", etc.
 
-    pyImageDict[getNumPyType<npy_int16>()] = PyImage<int16_t>::wrapImage("S");
-    pyImageDict[getNumPyType<npy_int32>()] = PyImage<int32_t>::wrapImage("I");
-    pyImageDict[getNumPyType<npy_float32>()] = PyImage<float>::wrapImage("F");
-    pyImageDict[getNumPyType<npy_float64>()] = PyImage<double>::wrapImage("D");
+    pyImageDict[getNumPyType<int16_t>()] = PyImage<int16_t>::wrapImage("S");
+    pyImageDict[getNumPyType<int32_t>()] = PyImage<int32_t>::wrapImage("I");
+    pyImageDict[getNumPyType<float>()] = PyImage<float>::wrapImage("F");
+    pyImageDict[getNumPyType<double>()] = PyImage<double>::wrapImage("D");
 
     bp::dict pyConstImageViewDict; 
 
-    pyConstImageViewDict[getNumPyType<npy_int16>()] = PyImage<int16_t>::wrapConstImageView("S");
-    pyConstImageViewDict[getNumPyType<npy_int32>()] = PyImage<int32_t>::wrapConstImageView("I");
-    pyConstImageViewDict[getNumPyType<npy_float32>()] = PyImage<float>::wrapConstImageView("F");
-    pyConstImageViewDict[getNumPyType<npy_float64>()] = PyImage<double>::wrapConstImageView("D");
+    pyConstImageViewDict[getNumPyType<int16_t>()] = PyImage<int16_t>::wrapConstImageView("S");
+    pyConstImageViewDict[getNumPyType<int32_t>()] = PyImage<int32_t>::wrapConstImageView("I");
+    pyConstImageViewDict[getNumPyType<float>()] = PyImage<float>::wrapConstImageView("F");
+    pyConstImageViewDict[getNumPyType<double>()] = PyImage<double>::wrapConstImageView("D");
 
     bp::dict pyImageViewDict;
 
-    pyImageViewDict[getNumPyType<npy_int16>()] = PyImage<int16_t>::wrapImageView("S");
-    pyImageViewDict[getNumPyType<npy_int32>()] = PyImage<int32_t>::wrapImageView("I");
-    pyImageViewDict[getNumPyType<npy_float32>()] = PyImage<float>::wrapImageView("F");
-    pyImageViewDict[getNumPyType<npy_float64>()] = PyImage<double>::wrapImageView("D");
+    pyImageViewDict[getNumPyType<int16_t>()] = PyImage<int16_t>::wrapImageView("S");
+    pyImageViewDict[getNumPyType<int32_t>()] = PyImage<int32_t>::wrapImageView("I");
+    pyImageViewDict[getNumPyType<float>()] = PyImage<float>::wrapImageView("F");
+    pyImageViewDict[getNumPyType<double>()] = PyImage<double>::wrapImageView("D");
 
     bp::scope scope;  // a default constructed scope represents the module we're creating
     scope.attr("Image") = pyImageDict;
