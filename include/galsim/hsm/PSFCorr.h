@@ -140,12 +140,16 @@ namespace hsm {
         /// perfect resolution; default -1
         float resolution_factor;
 
+        /// @brief A string containing any error messages from the attempted measurements, to
+        /// facilitate proper error handling in both C++ and python
+        std::string error_message;
+
         /// @brief Constructor, setting defaults
     HSMShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
             observed_shape(galsim::Shear()), moments_sigma(-1.), moments_amp(-1.),
             moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
             correction_status(-1), corrected_shape(galsim::Shear()), corrected_shape_err(-1.),
-            correction_method("None"), resolution_factor(-1.)
+            correction_method("None"), resolution_factor(-1.), error_message("")
         {}
 
         /// @brief get observed Mxx from e1, e2, sigma

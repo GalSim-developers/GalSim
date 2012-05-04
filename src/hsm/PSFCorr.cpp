@@ -337,6 +337,7 @@ namespace hsm {
         }
         catch (char *err_msg) {
             std::cout << err_msg;
+            results.error_message = err_msg;
         }
 
         return results;
@@ -382,6 +383,7 @@ namespace hsm {
         }
         catch (char *err_msg) {
             std::cout << err_msg;
+            results.error_message = err_msg;
             results.moments_status = 1;
             results.moments_centroid.x = 0.0;
             results.moments_centroid.y = 0.0;

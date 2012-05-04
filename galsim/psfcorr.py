@@ -25,8 +25,11 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     """
     gal_image_view = gal_image.view()
     PSF_image_view = PSF_image.view()
-    return _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, sky_var, shear_est, flags,
-                                        guess_sig_gal, guess_sig_PSF, precision)
+    result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, sky_var, shear_est, flags,
+                                           guess_sig_gal, guess_sig_PSF, precision)
+    if len(result.error_message) > 0:
+        raise RunTimeError(result.error_message)
+    return result
 
 def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6):
     """@brief Measure adaptive moments of an object.
@@ -43,4 +46,7 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6):
     @return A HSMShapeData object containing the results of moment measurement.
     """
     object_image_view = object_image.view()
-    return _galsim._FindAdaptiveMomView(object_image_view, guess_sig, precision)
+    result = _galsim._FindAdaptiveMomView(object_image_view, guess_sig, precision)
+    if len(result.error_message) > 0:
+        raise RunTimeError(result.error_message)
+    return result

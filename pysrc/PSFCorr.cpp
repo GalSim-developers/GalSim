@@ -46,6 +46,7 @@ struct PyHSMShapeData {
             .def_readwrite("corrected_shape_err", &HSMShapeData::corrected_shape_err)
             .def_readwrite("correction_method", &HSMShapeData::correction_method)
             .def_readwrite("resolution_factor", &HSMShapeData::resolution_factor)
+            .def_readwrite("error_message", &HSMShapeData::error_message)
             .def("getMxx", &HSMShapeData::getMxx)
             .def("getMyy", &HSMShapeData::getMyy)
             .def("getMxy", &HSMShapeData::getMxy)
