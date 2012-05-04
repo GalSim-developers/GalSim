@@ -71,7 +71,6 @@ opts.Add(BoolVariable('INCLUDE_PREFIX_PATHS',
 opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
 opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
 opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
-#opts.Add('CCFITS_DIR','Explicitly give the ccfits prefix','')
 
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
 opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
