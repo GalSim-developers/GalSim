@@ -5,7 +5,7 @@ import logging
 # --- PSF_type ---
 #
 # Specify the PSF type(s) for the simulated galaxy images; placing a None object as the first entry
-# tells GalSim to expect this information to come from the input catalogue.
+# tells GalSim to expect this type information to come from the input catalogue.
 #
 # Currently available PSF_types are:
 #
@@ -23,10 +23,15 @@ import logging
 #
 # More than one PSF can be specified via adding multiple entries to the list below; the resulting
 # PSF in the output image will be the convolution of all entries in the list.
+
 config.PSF_type = ["Moffat"]
 
+
+# --- galaxy_type ---
+#
 # Specify the galaxy type(s) for the simulated galaxy images; placing a None object as the first
-# entry tells GalSim to expect this information to come from the input catalogue.
+# entry tells GalSim to expect this type information to come from the input catalogue.
+#
 config.galaxy_type = ["DeVaucouleurs", "Exponential"]
 
 # Logging level at which to echo the commands we run
