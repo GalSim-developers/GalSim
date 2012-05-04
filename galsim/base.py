@@ -202,6 +202,14 @@ class Exponential(GSObject):
     # Ditto!
 
 
+class DeVaucouleurs(GSObject):
+    """GalSim De-Vaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
+    """
+    def __init__(self, flux=1., re=1.):
+        GSObject.__init__(self, galsim.SBDeVaucouleurs(flux=flux, re=re)
+    # Ditto!
+
+
 class Airy(GSObject):
     """GalSim Airy, which has an SBAiry in the SBProfile attribute.
     """
