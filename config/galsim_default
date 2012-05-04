@@ -1,116 +1,36 @@
 # -*- python -*-
 
-import os
-import sys
 import logging
 
-# Root URL for git; expect to be able to clone {git.url.root}/{package} and get a repo names {package}
-git.url.root = os.environ["LSST_DMS"]
-
-# Override git URLs for specific packages.  {root} and {pkg} are substituted with git.url.root and the
-# package name, respectively.
-git.url.overrides = {"sconsUtils": "{root}/devenv/{pkg}"}
-
-# Redirect git output to these buffers
-git.stderr = sys.stderr
-git.stdout = open(os.path.join(path, "git.log"), "w")
-
-# Logging level at which to echo the git the commands we run.
-git.echo = logging.INFO
-
-# Instead of cloning from the server, use the git-new-workdir command to create repos from an
-# existing bot stack that share everything (via symlinks) but the checked-out branch.
-# This parameter should be the path to the master repo, either relative to the cloned stack
-# or absolute.  If None, repos will be cloned from the remote repository.
-# If this parameter is not None and a repo cannot be found in the base stack, it will also
-# be cloned from the remote repository.
-git.link.base = None
-
-# Path to the git-new-workdir command (this is included with git in a contrib directory, but
-# it is usually not installed into $PATH, and sometimes isn't marked as executable).
-# The default is where it can be found on Ubuntu.
-git.link.cmd = "/usr/share/doc/git-core/contrib/workdir/git-new-workdir"
-
-# Packages to ignore entirely when we find them in the dependency tree.
-# We won't try to check these out or include them as dependencies of the metapackage.
-packages.ignore = ["toolchain", "implicitProducts"]
-
-# Packages where we just want to use a version already declared to EUPS, with versions
-# determined by the regular EUPS VRO when the metapackage is setup.
-# This will be included as regular (nonexact and recursive) dependencies of the metapackage.
-packages.external = ["boost", "scons", "doxygen", "python", "numpy", "mysqlpython", "activemqcpp",
-                     "eigen", "cfitsio", "wcslib", "xpa", "swig", "mysqlclient", "matplotlib", "mkl",
-                     "minuit2", "gsl", "fftw", "pyfits", "cuda_toolkit", "pysqlite", "astrometry_net",
-                     "afwdata", "astrometry_net_data", "suprime_data", "testdata_subaru", "pbasf2"]
-
-# Git refs (branches, tags, SHAs, etc.) to use for packages without an explicit override.
-# These will be tried in order; if we can't checkout the first, we fall back to the second, etc.
-# Note that for this to work well, you'll need a new-enough git that 'git checkout' is capable
-# of automatically creating a tracking branch.
-packages.refs.default = ["master"]
-
-# Dict of {package: ref} overrides specifying git refs for specific packages.
-# If ref is None, the source directory for that package will not be assumed to be a git working copiy,
-# but it will be included in the EUPS metapackage present when 'sync' is run.
-# The packages listed here as defaults are HSC packages in mercurial; their presence
-# here shouldn't mess up LSST people, and it may help HSC people.
-packages.refs.overrides = {
-    "hscAstrom": None, "distEst": None, "hscPipe": None, "hscMosaic": None, "solvetansip": None
-    }
-
+# --- PSF_type ---
 #
-# A path to another bot stack whose packages we can build on top of.
+# Specify the PSF type(s) for the simulated galaxy images; placing a None object as the first entry
+# tells GalSim to expect this information to come from the input catalogue.
 #
-# When a package's git ref is one of those in packages.inherit.refs, it is present in the base
-# stack at that ref, and this is also true for all its dependencies, we will use the version
-# from the base metapackage.  These inherited packages will never be redeclared, and most batch
-# operations like 'build' will skip them unless the '--inherited' option is used.
-# Inherited packages will be included in the packages file, with their refs in square brackets.
+# Currently available PSF_types are:
 #
-# Because bot generally needs to clone a repo to figure out what ref to use for a package,
-# we'll end up doing the clone and then deleting it unless the ref is in
-# packages.refs.overrides.  However, if git.link.base is set, the discarded clone is generally
-# very cheap, so it usually makes sense to set git.link.base and packages.inherit.base to the same
-# value.
+# "Gaussian"         A Gaussian light distribution.
+# "DoubleGaussian"   A sum of two Gaussians found to provide a reasonable empirical fit to ground-
+#                    based PSFs.
+# "Moffat"           A Moffat (1969) parametric PSF model.
+# "Airy"             An Airy function describing ideal diffraction limited optics.
+# "OpticalPSF"       A PSF describing telescope optics with coma, astigmatism, defocus and spherical#                    aberration.
+# "Pixel"            A square boxcar convolution that describes pixelation / pixel flux integration.
 #
-# The path should either be absolute or relative to the stack root.
-packages.inherit.base = None
+# Each of these PSF types has it's own set of input parameters, which must be set for each output
+# object via input catalogue values, or given a specified distribution via config file.  See the
+# GalSim object docstrings / GalSim documentation for details.
+#
+# More than one PSF can be specified via adding multiple entries to the list below; the resulting
+# PSF in the output image will be the convolution of all entries in the list.
+config.PSF_type = ["Moffat"]
 
-# A list of git refs that indicate we should use the base stack instead (see packages.inherit.base).
-# This is ignored if packages.inherit.base is None, so it's safe to put 'master' here, since that's
-# what we'll usually want to delegate to a base stack.  Including 'None' in the list allows us
-# to inherit source directories that aren't git repos.
-packages.inherit.refs = set(['master', None])
+# Specify the galaxy type(s) for the simulated galaxy images; placing a None object as the first
+# entry tells GalSim to expect this information to come from the input catalogue.
+config.galaxy_type = ["DeVaucouleurs", "Exponential"]
 
-# Top level package whose dependencies we'll manage; usually overridden in stack directories.
-packages.top = ["afw"]
-
-# Extra EUPS tags to apply to in-place setups; these must already be enabled (in startup.py or elsewhere).
-eups.tags = []
-
-# Name of repo set for various EUPS things (usually expanded into version 'numbers').
-eups.name = "bot"  # almost always overridden in stack directories
-
-# Passed to Eups constructor to turn off warnings (EUPS doesn't always obey).
-eups.quiet = True
-
-# Callable used to set the EUPS version number for in-place package declarations.
-# It will be passed two arguments: 'ref' is the git ref used to checkout the package, and
-# 'eups' is the eups config category.
-eups.version = lambda ref, eups: eups.name
-
-# EUPS metapackage name.  {eups} will be expanded to the eups config category, but
-# substituting eups.name into the metapackage name is discouraged because it allows
-# multiple metapackages to be setup at once, and that usually isn't a good idea (but
-# see packages.base.path for another way for metapackages to share things).
-eups.meta = "meta"
-
-# Redirect scons output to these buffers.
-scons.stderr = open(os.path.join(path, "scons.log"), "w")
-scons.stdout = scons.stderr
-
-# Logging level at which to echo the scons commands we run
-scons.echo = logging.INFO
-
+# Logging level at which to echo the commands we run
+config.logging_level = logging.INFO
 # Setup the basic logger.
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=config.logging_level)
+
