@@ -31,15 +31,13 @@ major , minor , junk = SCons.__version__.split('.',2)
 if major < 2 or (major == 2 and minor == 0):
     env1.Append( LINKFLAGS = ["$__RPATH"] )
 
-sbdraw = env1.Program(os.path.join('#bin','sbdraw'), 'SBDraw.cpp')
-
 int_example = env1.Program(os.path.join('#bin','int_example'), 'IntExample.cpp')
 
 test_random = env1.Program(os.path.join('#bin','test_random'), 'testRandom.cpp')
 
 sizeof_SIFD = env1.Program(os.path.join('#bin', 'sizeof_SIFD'), 'sizeof_SIFD.cpp')
 
-example_targets = [ sbdraw, int_example, test_random, sizeof_SIFD ]
+example_targets = [ int_example, test_random, sizeof_SIFD ]
 
 env.Alias(target='examples',source=example_targets)
 
