@@ -195,8 +195,8 @@ namespace hsm {
      * @param[in] precision The convergence criterion for the moments; default 1e-6.
      * @return A HSMShapeData object containing the results of shape measurement. 
      */
-    template <typename T>
-        HSMShapeData EstimateShearHSMView(const ImageView<T> &gal_image, const ImageView<T> &PSF_image,
+    template <typename T, typename U>
+        HSMShapeData EstimateShearHSMView(const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
                                           float sky_var = 0.0, const char *shear_est = "REGAUSS",
                                           unsigned long flags = 0xe, double guess_sig_gal = 5.0,
                                           double guess_sig_PSF = 3.0, double precision = 1.0e-6);

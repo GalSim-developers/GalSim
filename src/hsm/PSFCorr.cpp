@@ -259,8 +259,8 @@ namespace hsm {
     /* BEGIN OUR CODE HERE */
 
     /* Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.*/
-    template <typename T>
-    HSMShapeData EstimateShearHSMView(const ImageView<T> &gal_image, const ImageView<T> &PSF_image,
+    template <typename T, typename U>
+    HSMShapeData EstimateShearHSMView(const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
                                       float sky_var = 0.0, const char *shear_est = "REGAUSS",
                                       unsigned long flags = 0xe, double guess_sig_gal = 5.0,
                                       double guess_sig_PSF = 3.0, double precision = 1.0e-6) {
@@ -1881,6 +1881,8 @@ namespace hsm {
     // instantiate template classes for expected types
     template HSMShapeData EstimateShearHSMView(const ImageView<float> &gal_image, const ImageView<float> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
     template HSMShapeData EstimateShearHSMView(const ImageView<double> &gal_image, const ImageView<double> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
+    template HSMShapeData EstimateShearHSMView(const ImageView<float> &gal_image, const ImageView<double> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
+    template HSMShapeData EstimateShearHSMView(const ImageView<double> &gal_image, const ImageView<float> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
     template HSMShapeData EstimateShearHSMView(const ImageView<int> &gal_image, const ImageView<int> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision);
 
     template HSMShapeData FindAdaptiveMomView(const ImageView<float> &object_image, double guess_sig, double precision);

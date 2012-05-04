@@ -9,7 +9,7 @@ namespace {
 
 struct PyHSMShapeData {
 
-    template <typename U>
+    template <typename U, typename V>
     static void wrapTemplates() {
         typedef HSMShapeData (* FAM_func)(const ImageView<U> &, double, double);
         bp::def("_FindAdaptiveMomView",
@@ -17,7 +17,7 @@ struct PyHSMShapeData {
                 (bp::arg("object_image"), bp::arg("guess_sig")=5.0, bp::arg("precision")=1.0e-6),
                 "Find adaptive moments of an image (with some optional args, see C++ docs).");
 
-        typedef HSMShapeData (* ESH_func)(const ImageView<U> &, const ImageView<U> &, float, const char *,
+        typedef HSMShapeData (* ESH_func)(const ImageView<U> &, const ImageView<V> &, float, const char *,
                                           unsigned long, double, double, double);
         bp::def("_EstimateShearHSMView",
                 ESH_func(&EstimateShearHSMView),
@@ -51,9 +51,11 @@ struct PyHSMShapeData {
             .def("getMxy", &HSMShapeData::getMxy)
             ;
 
-        wrapTemplates<float>();
-        wrapTemplates<double>();
-        wrapTemplates<int>();
+        wrapTemplates<float, float>();
+        wrapTemplates<double, double>();
+        wrapTemplates<double, float>();
+        wrapTemplates<float, double>();
+        wrapTemplates<int, int>();
     }
 };
 
