@@ -310,7 +310,7 @@ namespace hsm {
             // repackage outputs to the output HSMShapeData struct
             results.moments_amp = 2.0*amp;
             results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
-            results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_xy));
+            results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_yy));
             results.moments_status = 0;
 
             // and if that worked, try doing PSF correction
