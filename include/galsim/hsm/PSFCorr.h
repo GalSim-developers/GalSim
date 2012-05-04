@@ -147,6 +147,25 @@ namespace hsm {
             correction_status(-1), corrected_shape(galsim::Shear()), corrected_shape_err(-1.),
             correction_method("None"), resolution_factor(-1.)
         {}
+
+        /// @brief get observed Mxx from e1, e2, sigma
+        double getMxx() {
+            double A = (1.0 + observed_shape.getE1()) / (1.0 - observed_shape.getE1());
+            return (A*moments_sigma*moments_sigma) / 
+                std::sqrt(A - 0.25*(A+1)*(A+1)*observed_shape.getE2()*observed_shape.getE2());
+        }
+
+        /// @brief get observed Myy from e1, e2, sigma
+        double getMyy() {
+            double A = (1.0 + observed_shape.getE1()) / (1.0 - observed_shape.getE1());
+            return (moments_sigma*moments_sigma) / 
+                std::sqrt(A - 0.25*(A+1)*(A+1)*observed_shape.getE2()*observed_shape.getE2());
+        }
+
+        /// @brief get observed Mxy from e1, e2, sigma
+        double getMxy() {
+            return 0.5*observed_shape.getE2()*(getMxx() + getMyy());
+        }
     };
 
     /* functions that the user will want to call from outside */
