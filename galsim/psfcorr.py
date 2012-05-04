@@ -28,7 +28,7 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, sky_var, shear_est, flags,
                                            guess_sig_gal, guess_sig_PSF, precision)
     if len(result.error_message) > 0:
-        raise RunTimeError(result.error_message)
+        raise RuntimeError(result.error_message)
     return result
 
 def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6):
@@ -48,5 +48,5 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6):
     object_image_view = object_image.view()
     result = _galsim._FindAdaptiveMomView(object_image_view, guess_sig, precision)
     if len(result.error_message) > 0:
-        raise RunTimeError(result.error_message)
+        raise RuntimeError(result.error_message)
     return result
