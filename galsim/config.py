@@ -14,7 +14,10 @@ class AttributeDict(object):
     HOWEVER this means I have redefined the __dict__ attribute to be a collections.defaultdict()
     so that Jim's previous default attrbiute behaviour is also replicated.
 
-    I prefer this, as a newbie who uses ipython for development, but does it break something?
+    I prefer this, as a newbie who uses ipython and the tab completion function to aid development,
+    but does it potentially break something down the line or add undesirable behaviour? (I guessed
+    not, since collections.defaultdict objects have all the usual dict() methods, but I cannot be
+    sure.)
     """
     def __init__(self):
         object.__setattr__(self, "__dict__", collections.defaultdict(AttributeDict))
@@ -46,6 +49,24 @@ class AttributeDict(object):
     __str__ = __repr__
 
 
+def load(config_file=None):
+    """@brief Function for loading in configuration settings from the specified config file, and
+    using this to augment/update values in GalSim/config/galsim_default.
+    """
+    config = AttributeDict()
+    if (config_file != None) and (not os.path.exists(default_config_file)):
+        raise IOError("User input config file "+str(config_file)+" not found")
+    config.user_config_file = config_file
+    thisdir, modfile = os.path.split(__file__)
+    default_config_file = os.path.join(thisdir, "..", "config", "galsim_default")
+    if not os.path.exists(default_config_file):
+        raise IOError("Default config file galsim_default not found.")
+    files = [default_config_file]
+    if config_file != None:
+        file.append(config_file)
+    for f in reversed(files):
+        execfile(f)
+    return config
 
 
 
