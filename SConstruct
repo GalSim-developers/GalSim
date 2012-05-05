@@ -966,7 +966,8 @@ def DoConfig(env):
         print "Using specified number of jobs =",env.GetOption('num_jobs')
     else:
         env.SetOption('num_jobs', GetNCPU())
-        print "Determined that a good number of jobs =",env.GetOption('num_jobs')
+        if env.GetOption('num_jobs') != 1:
+            print "Determined that a good number of jobs =",env.GetOption('num_jobs')
 
     # The basic flags for this compiler if not explicitly specified
     BasicCCFlags(env)
