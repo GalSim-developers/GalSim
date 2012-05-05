@@ -67,21 +67,29 @@ resolution.
   rules about the ratio of output to input pixel scale (requiring that
   $5\times$ (output pixel scale)$/$(input pixel scale) be an integer),
   but this requirement allows the code to avoid explicitly
-  interpolating the target PSF.  Instead, it is implicitly
+  interpolating the target PSF in real space.  Instead, it is implicitly
   interpolated, via padding in Fourier space, which is equivalent to
   the ideal sinc interpolation in real space.  Clearly, we require the
   more general \sbp\ treatment for GalSim, and it will be interesting
   to compare these different approaches to the 
   interpolation of the PSFs.
+\item \sbp\ allows (and requires) a choice of interpolation kernel in real
+  space.  All Fourier operations in \sbp\ account for the fact that
+  the real-space image will be interpolated and should {\em not} be wrapped.
 \item For the interpolation that is used for the Fourier-space
   shearing step, \shera\ uses a specific interpolation kernel, cubic interpolation (a windowed
 appoximation to a sinc based on cubic polynomials, using 16 points for
-a 2d image). \sbp\ allows the choice of varying interpolation kernels for this step.
-\item Due to the aforementioned rules about ratios of output to input
-  pixel scale, and method of dealing with target PSFs, \sbp\ requires
-  images with linear dimension $2^n$ or $3\times 2^n$ for FFTs, but \shera\ has rather
+a 2d image). \sbp\ defaults to a quintic polynomial $6\times6$ pixel
+interpolant, but allows the choice of other interpolation kernels.
+See the document by Bernstein \& Gruen (2012) for detailed discussion
+of the impact of interpolation errors and padding on the accuracy of
+shearing and resampling via DFTs.
+\item \sbp\ will zero-pad
+  images to square linear dimensions $2^n$ or $3\times 2^n$ for efficient FFTs.
+\shera\ has rather
   more arcane rules that require the galaxy image and the target PSF
-  to be related by a factor of output vs. input pixel scale.
+  to be related by a factor of output vs. input pixel scale (to avoid
+  having to interpolate the target PSF at all).
 \item \shera\ suffers from some annoying centroiding issues
   due to the use of IDL convolution routines.
 \item \shera\ and \sbp\ have different flux normalization conventions
@@ -95,11 +103,6 @@ a 2d image). \sbp\ allows the choice of varying interpolation kernels for this s
 \item The final resampling (via interpolation or subsampling) takes
   place in Fourier domain for \sbp, in real space for \shera.
 \end{itemize}
-
-Note that the standard interpolation method that is used \shera\ is the aforementioned 
-cubic interpolation, whereas for \sbp, it is quintic interpolation.  But the place where the
-interpolations are applied differs, which could
-be important.  
 
 \subsection{Issues}
 
@@ -186,7 +189,8 @@ checked our simulated ground-based images (sheared and convolved with target PSF
 expectations for what the moment matrix should look like.
 
 For the unsheared case, \sbp\ gives a final simulated images with moments \mxx\ and \myy\ that agree
-with the ideal case at the $-0.06$\% and $-0.03$\% level for Lanczos 5th and 9th order interpolation
+with the ideal case at the $-0.06$\% and $-0.03$\% level for Lanczos
+5th and 9th order real-space interpolation
 kernels, respectively (used when interpolating the target PSF).  The agreement was worse when using
 the cubic interpolation kernel, as seen in tests in previous sections.  \shera\ gives moments \mxx\
 and \myy\ that agree with the ideal case to better than the $10^{-6}$ level, due to the fact that
@@ -198,7 +202,7 @@ error, but it turns out that this came from the relatively small postage stamp s
 (which is different from an actual use case for \shera, since the COSMOS postage stamps that are
 provided have large amounts of padding).  When the postage stamp sizes were increased to provide a
 level of padding comparable to the real training data, the errors in
-the final ellipticity were $\sim 0.02$\%.
+the final ellipticity were $\sim2$ parts in $10^4$.
 
 \subsection{Relative accuracy}
 
@@ -225,9 +229,20 @@ limitations include (1) the fact that we use MultiDrizzle outputs, which include
 work by Fruchter 2011, or Rowe, Hirata, \& Rhodes 2011 on this topic; it arises because the undersampled individual exposures must be
 interpolated), and (2) the use of Tiny Tim PSFs, which do not perfectly represent the real ACS
 PSFs.  For GREAT3, we are likely to circumvent (2) by carrying out a PCA modeling of real stars in
-the ACS images, but we will almost certainly not do anything about (1).  Thus, very low-level
-systematic uncertainties in what the galaxies look like are tolerable, though of course we want to
-make sure that our shears that we apply are applied accurately.
+the ACS images, but we will almost certainly not do anything about (1). 
+
+The critical issue for GalSim is not so much that the galaxies look
+exactly like the real galaxies on the sky (as long as they do not look
+so different that size- and profile-dependent biases are significantly
+affected). Rather, GalSim must draw
+sheared galaxies that are very precisely equivalent to sheared
+versions of the un-sheared galaxies that it draws.  In this respect
+our goal is that the shear inferred from GalSim images be accurate to
+well below 1 part in $10^3$.  Since the choice of real-space
+interpolant only affects the former, not the latter issue, any
+consistent choice should be sufficient.  Tests so far indicate that
+\sbp\ and \shera\ agree and are both correct on shear at the required
+level, as long as sufficient zero-padding is done before the FFTs.
 
 A point that Gary raised to consider for the future: are our images
 giving surface brightness (the assumption of \sbp) or flux per pixel
@@ -259,7 +274,7 @@ accurate interpolations such as quintic for this stage (though we already know t
 interpolants give differences of order a few \%, which seems dicey).
 
 For shearing, where we would like our shears to be accurate at the $10^{-4}$ level, it seems that we
-might require 9th order Lanczos.  There might be a little room to change the order (should be $>5$),
+might require 9th order Lanczos in \sbp.  There might be a little room to change the order (should be $>5$),
 but certainly cubic/quintic interpolation kernels are inadequate.
 
 For resampling, is further testing required?  The conclusions are likely the same as for the
