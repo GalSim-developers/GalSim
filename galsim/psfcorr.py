@@ -1,5 +1,8 @@
 from . import _galsim
 
+"""\file psfcorr.py Routines for adaptive moment estimation and PSF correction
+"""
+
 def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS", flags = 0xe,
                      guess_sig_gal = 5.0, guess_sig_PSF = 3.0, precision = 1.0e-6, strict = True):
     """@brief PSF correction method from HSM.
@@ -8,16 +11,25 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     Example usage:
 
     galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
+
     galaxy.applyShear(0.05, 0.0)
+
     psf = galsim.atmosphere.DoubleGaussian(flux1 = 0.7, sigma1 = 0.7, flux2 = 0.3, sigma2 = 1.5)
+
     pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
+
     final = galsim.Convolve([galaxy, psf, pixel])
+
     final_epsf = galsim.Convolve([psf, pixel])
+
     final_image = final.draw(dx = 0.2)
+
     final_epsf_image = final_epsf.draw(dx = 0.2)
+
     result = galsim.EstimateShearHSM(final_image, final_epsf_image)
 
     result.observed_shape is (0.0595676,1.96446e-17)
+
     result.corrected_shape is (0.0981158,-6.16237e-17), compared with the expected (0.09975, 0) for
     a perfect PSF correction method.
 
@@ -60,7 +72,9 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, strict = 
     ImageView class.  Example usage:
 
     my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
+
     my_gaussian_image = my_gaussian.draw(dx = 0.2)
+
     my_moments = galsim.FindAdaptiveMom(my_gaussian_image)
 
     OR
@@ -82,8 +96,11 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, strict = 
         raise RuntimeError(result.error_message)
     return result
 
-# make FindAdaptiveMom a method of Image classes
+# make FindAdaptiveMom a method of Image and ImageView classes
 for Class in _galsim.ImageView.itervalues():
+    Class.FindAdaptiveMom = FindAdaptiveMom
+
+for Class in _galsim.Image.itervalues():
     Class.FindAdaptiveMom = FindAdaptiveMom
 
 del Class # cleanup public namespace
