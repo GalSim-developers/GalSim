@@ -138,7 +138,7 @@ namespace galsim {
         friend class BinomialDeviate;
         friend class WeibullDeviate;
         friend class GammaDeviate;
-      friend class Chi2Deviate;
+        friend class Chi2Deviate;
 
     };
 
