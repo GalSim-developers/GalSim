@@ -499,7 +499,7 @@ namespace galsim {
      * @brief A Gamma-distributed deviate with shape parameter alpha and scale parameter beta.
      *
      * See http://en.wikipedia.org/wiki/Gamma_distribution (although note that in the Boost random
-     * routine this class calls the notation is such that alpha=k and beta=theta).  The Gamma 
+     * routine this class calls the notation adopted interprets alpha=k and beta=theta).  The Gamma 
      * distribution is a real valued distribution producing deviates >= 0.
      *
      * GammaDeviate is constructed with reference to a UniformDeviate that will actually generate
@@ -550,7 +550,7 @@ namespace galsim {
          * @param[in] alpha  New shape parameter for distribution. Behaviour for non-positive value
          *                   is undefined.
          */
-        void setA(double alpha) {
+        void setAlpha(double alpha) {
             gamma.param(boost::random::gamma_distribution<>::param_type(alpha, gamma.beta()));
         }
 
