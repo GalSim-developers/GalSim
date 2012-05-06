@@ -56,3 +56,9 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, strict = 
     if (strict == True and len(result.error_message) > 0):
         raise RuntimeError(result.error_message)
     return result
+
+# make FindAdaptiveMom a method of Image classes
+for Class in _galsim.ImageView.itervalues():
+    Class.FindAdaptiveMom = FindAdaptiveMom
+
+del Class # cleanup public namespace
