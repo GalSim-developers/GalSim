@@ -79,7 +79,7 @@ def Script1():
     image.write(file_name, clobber=True)
     logger.info('Wrote image to %r' % file_name)  # using %r adds quotes around filename for us
 
-    results = galsim.FindAdaptiveMom(image)
+    results = image.FindAdaptiveMom()
 
     logger.info('HSM reports that the image has measured moments:')
     logger.info('    Mxx = %.3f, Myy = %.3f, Mxy = %.3f', results.getMxx(), results.getMyy(), results.getMxy())
