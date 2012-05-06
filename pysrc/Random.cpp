@@ -436,9 +436,9 @@ struct PyWeibullDeviate {
             "\n"
             "Initialization\n"
             "--------------\n"
-            ">>> b = WeibullDeviate(uniform, a=1., b=1.) \n"
+            ">>> w = WeibullDeviate(uniform, a=1., b=1.) \n"
             "\n"
-            "Initializes b to be a WeibullDeviate instance, and repeated calls to b() will\n"
+            "Initializes w to be a WeibullDeviate instance, and repeated calls to w() will\n"
             "return successive, pseudo-random Weibull-distributed deviates with shape and scale\n"
             "parameters a and b.\n"
             "\n"
@@ -502,55 +502,58 @@ struct PyGammaDeviate {
             "generate the randoms, which are then transformed to Gamma distribution with shape\n"
             "parameter alpha and scale parameter beta.\n"
             "\n"
-            "The Weibull distribution is related to a number of other probability distributions;\n"
-            "in particular, it interpolates between the exponential distribution (a=1) and the \n"
-            "Rayleigh distribution (a=2). See http://en.wikipedia.org/wiki/Weibull_distribution\n"
-            "(a=k and b=lambda in the notation adopted in the Wikipedia article).  The Weibull\n"
-            "distribution is real valued and produces deviates >= 0.\n"
+            "See http://en.wikipedia.org/wiki/Gamma_distribution (although note that in the Boost\n"
+            "random routine this class calls the notation adopted interprets alpha=k and \n"
+            "beta=theta).  The Gamma distribution is a real valued distribution producing \n"
+            "deviates >= 0.\n"
             "\n"
             "As for UniformDeviate, the copy constructor and assignment operator are kept private\n"
             "since you probably do not want two random number generators producing the same\n"
             "sequence of numbers in your code!\n"
             "\n"
-            "Wraps the Boost.Random weibull_distribution at the C++ layer so that the parent\n"
+            "Wraps the Boost.Random gamma_distribution at the C++ layer so that the parent\n"
             "UniformDeviate is given once at construction, and copy/assignment are hidden.\n"
             "\n"
             "Initialization\n"
             "--------------\n"
-            ">>> b = WeibullDeviate(uniform, a=1., b=1.) \n"
+            ">>> gam = GammaDeviate(uniform, alpha=1., beta=1.) \n"
             "\n"
-            "Initializes b to be a WeibullDeviate instance, and repeated calls to b() will\n"
-            "return successive, pseudo-random Weibull-distributed deviates with shape and scale\n"
-            "parameters a and b.\n"
+            "Initializes gam to be a GammaDeviate instance, and repeated calls to gam() will\n"
+            "return successive, pseudo-random Gamma-distributed deviates with shape and scale\n"
+            "parameters alpha and beta.\n"
             "\n"
             "Parameters:\n"
             "\n"
             "uniform  a UniformDeviate instance (seed set there).\n"
-            "a        shape parameter of the distribution (default a = 1).\n"
-            "b        scale parameter of the distribution (default b = 1).\n"
+            "alpha    shape parameter of the distribution (default alpha = 1).\n"
+            "beta     scale parameter of the distribution (default beta = 1).\n"
             "\n"
             ;
-        bp::class_<WeibullDeviate,boost::noncopyable>pyWeibullDeviate(
-            "WeibullDeviate", doc, bp::init< UniformDeviate&, double, double >(
-                (bp::arg("uniform"), bp::arg("a")=1., bp::arg("b")=1.)
+        bp::class_<GammaDeviate,boost::noncopyable>pyGammaDeviate(
+            "GammaDeviate", doc, bp::init< UniformDeviate&, double, double >(
+                (bp::arg("uniform"), bp::arg("alpha")=1., bp::arg("beta")=1.)
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as BinomialDeviate lives
             ]
 	);
-        pyWeibullDeviate
-            .def("__call__", &WeibullDeviate::operator(),
+        pyGammaDeviate
+            .def("__call__", &GammaDeviate::operator(),
                  "Draw a new random number from the distribution.\n"
                  "\n"
-                 "Returns a Weibull-distributed deviate with current a and b.\n")
-            .def("getA", &WeibullDeviate::getA, "Get current distribution shape parameter a.")
-            .def("setA", &WeibullDeviate::setA, "Set current distribution shape parameter a.")
-            .def("getB", &WeibullDeviate::getB, "Get current distribution scale parameter b.")
-            .def("setB", &WeibullDeviate::setB, "Set current distribution scale parameter b.")
+                 "Returns a Gamma-distributed deviate with current alpha and beta.\n")
+            .def("getAlpha", &GammaDeviate::getAlpha, 
+                 "Get current distribution shape parameter alpha.")
+            .def("setAlpha", &GammaDeviate::setAlpha, 
+                 "Set current distribution shape parameter alpha.")
+            .def("getBeta", &GammaDeviate::getBeta, 
+                 "Get current distribution scale parameter beta.")
+            .def("setBeta", &GammaDeviate::setBeta, 
+                 "Set current distribution scale parameter beta.")
             ;
-        wrapTemplates<int>(pyWeibullDeviate);
-        wrapTemplates<short>(pyWeibullDeviate);
-        wrapTemplates<float>(pyWeibullDeviate);
-        wrapTemplates<double>(pyWeibullDeviate);
+        wrapTemplates<int>(pyGammaDeviate);
+        wrapTemplates<short>(pyGammaDeviate);
+        wrapTemplates<float>(pyGammaDeviate);
+        wrapTemplates<double>(pyGammaDeviate);
     }
 
 };
@@ -564,7 +567,7 @@ void pyExportRandom() {
     PyPoissonDeviate::wrap();
     PyCCDNoise::wrap();
     PyWeibullDeviate::wrap();
+    PyGammaDeviate::wrap();
 }
-
 
 } // namespace galsim
