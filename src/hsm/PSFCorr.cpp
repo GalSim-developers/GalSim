@@ -647,7 +647,7 @@ namespace hsm {
      */
 
     void find_mom_1(
-		    RectImage *data, double **moments, int max_order, double x0, double y0, double sigma) 
+            RectImage *data, double **moments, int max_order, double x0, double y0, double sigma)
     {
 
         int m,n;

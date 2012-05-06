@@ -100,7 +100,7 @@ namespace galsim {
                 double sigma = _gd.getSigma();  // Save this
                 
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-		            ImIter ee = data.rowEnd(y);
+                    ImIter ee = data.rowEnd(y);
                     for (ImIter it = data.rowBegin(y); it != ee; ++it) {
                         double electrons=*it * _gain;
                         if (electrons <= 0.) continue;
@@ -120,8 +120,8 @@ namespace galsim {
             // Next add the Gaussian noise:
             if (_readNoise > 0.) {
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-		            ImIter ee = data.rowEnd(y);
-		            for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += _gd(); }
+                    ImIter ee = data.rowEnd(y);
+                    for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += _gd(); }
                 } 
             }
         }
