@@ -5,11 +5,26 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     """@brief PSF correction method from HSM.
 
     Carry out PSF correction using one of the methods of the HSM package to estimate shears.
+    Example usage:
+
+    galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
+    galaxy.applyShear(0.05, 0.0)
+    psf = galsim.atmosphere.DoubleGaussian(flux1 = 0.7, sigma1 = 0.7, flux2 = 0.3, sigma2 = 1.5)
+    pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
+    final = galsim.Convolve([galaxy, psf, pixel])
+    final_epsf = galsim.Convolve([psf, pixel])
+    final_image = final.draw(dx = 0.2)
+    final_epsf_image = final_epsf.draw(dx = 0.2)
+    result = galsim.EstimateShearHSM(final_image, final_epsf_image)
+
+    result.observed_shape is (0.0595676,1.96446e-17)
+    result.corrected_shape is (0.0981158,-6.16237e-17), compared with the expected (0.09975, 0) for
+    a perfect PSF correction method.
 
     Parameters
     ----------
-    @param[in] gal_image  The Image of the galaxy being measured.
-    @param[in] PSF_image The ImageView for the PSF
+    @param[in] gal_image The Image or ImageView of the galaxy being measured.
+    @param[in] PSF_image The Image or ImageView for the PSF
     @param[in] sky_var The variance of the sky level, used for estimating uncertainty on the
                measured shape; default 0.
     @param[in] *shear_est A string indicating the desired method of PSF correction: REGAUSS,
@@ -21,10 +36,10 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     @param[in] guess_sig_PSF Optional argument with an initial guess for the Gaussian sigma of
                the PSF, default 3.0 (pixels).
     @param[in] precision The convergence criterion for the moments; default 1e-6.
-    @param[in] strict If True (default), then there will be a run-time exception when moment
-               measurement fails.  If set to False, then information about failures will be silently
+    @param[in] strict If True (default), then there will be a run-time exception if shear
+               estimation fails.  If set to False, then information about failures will be silently
                stored in the output HSMShapeData object.
-    @return A HSMShapeData object containing the results of shape measurement. 
+    @return A HSMShapeData object containing the results of shape measurement.
     """
     gal_image_view = gal_image.view()
     PSF_image_view = PSF_image.view()
@@ -37,12 +52,22 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
 def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, strict = True):
     """@brief Measure adaptive moments of an object.
 
-    The key result is the best-fit elliptical Gaussian to the object, which is computed by initially
-    guessing a circular Gaussian that is used as a weight function, computing the weighted moments,
-    recomputing the moments using the result of the previous step as the weight function, and so on
-    until the moments that are measured are the same as those used for the weight function.
+    The key result is the best-fit elliptical Gaussian to the object, which is computed iteratively
+    by initially guessing a circular Gaussian that is used as a weight function, computing the
+    weighted moments, recomputing the moments using the result of the previous step as the weight
+    function, and so on until the moments that are measured are the same as those used for the
+    weight function.  FindAdaptiveMom can be used either as a free function, or as a method of the
+    ImageView class.  Example usage:
+
+    my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
+    my_gaussian_image = my_gaussian.draw(dx = 0.2)
+    my_moments = galsim.FindAdaptiveMom(my_gaussian_image)
+
+    OR
     
-    @param[in] object_image The image for the object being measured.
+    my_moments = my_gaussian_image.FindAdaptiveMom()
+
+    @param[in] object_image The Image or ImageView for the object being measured.
     @param[in] guess_sig Optional argument with an initial guess for the Gaussian sigma of
                the object, default 5.0 (pixels).
     @param[in] precision The convergence criterion for the moments; default 1e-6.
