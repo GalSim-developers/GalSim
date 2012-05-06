@@ -29,6 +29,7 @@
 #include "galsim/boost1_48_0.random/uniform_real_distribution.hpp"
 #include "galsim/boost1_48_0.random/weibull_distribution.hpp"
 #include "galsim/boost1_48_0.random/gamma_distribution.hpp"
+#include "galsim/boost1_48_0.random/chi_squared_distribution.hpp"
 #else
 #include "boost/random/mersenne_twister.hpp"
 #include "boost/random/normal_distribution.hpp"
@@ -37,6 +38,7 @@
 #include "boost/random/uniform_real_distribution.hpp"
 #include "boost/random/weibull_distribution.hpp"
 #include "boost/random/gamma_distribution.hpp"
+#include "boost/random/chi_squared_distribution.hpp"
 #endif
 namespace galsim {
 
@@ -136,6 +138,7 @@ namespace galsim {
         friend class BinomialDeviate;
         friend class WeibullDeviate;
         friend class GammaDeviate;
+      friend class Chi2Deviate;
 
     };
 
@@ -178,14 +181,14 @@ namespace galsim {
          *
          * @return Mean of distribution
          */
-        double getMean() {return normal.mean();}
+        double getMean() { return normal.mean(); }
 
         /**
          * @brief Get current distribution standard deviation
          *
          * @return Standard deviation of distribution
          */
-        double getSigma() {return normal.sigma();}
+        double getSigma() { return normal.sigma(); }
 
         /**
          * @brief Set current distribution mean
@@ -273,14 +276,14 @@ namespace galsim {
          *
          * @return Current value of N
          */
-        int getN() {return bd.t();}
+        int getN() { return bd.t(); }
 
         /**
          * @brief Report current value of p
          *
          * @return Current value of p
          */
-        double getP() {return bd.p();}
+        double getP() { return bd.p(); }
 
         /**
          * @brief Reset value of N
@@ -359,7 +362,7 @@ namespace galsim {
          * 
          * @return Current mean value
          */
-        double getMean() {return pd.mean();}
+        double getMean() { return pd.mean(); }
 
         /**
          * @brief Reset distribution mean
@@ -437,14 +440,14 @@ namespace galsim {
          *
          * @return Shape parameter a of distribution.
          */
-        double getA() {return weibull.a();}
+        double getA() { return weibull.a(); }
 
         /**
          * @brief Get current distribution scale parameter b.
          *
          * @return Scale parameter b of distribution.
          */
-        double getB() {return weibull.b();}
+        double getB() { return weibull.b(); }
 
         /**
          * @brief Set current distribution shape parameter a.
@@ -499,8 +502,8 @@ namespace galsim {
      * @brief A Gamma-distributed deviate with shape parameter alpha and scale parameter beta.
      *
      * See http://en.wikipedia.org/wiki/Gamma_distribution (although note that in the Boost random
-     * routine this class calls the notation adopted interprets alpha=k and beta=theta).  The Gamma 
-     * distribution is a real valued distribution producing deviates >= 0.
+     * routine this class calls the notation is alpha=k and beta=theta).  The Gamma distribution is
+     * a real valued distribution producing deviates >= 0.
      *
      * GammaDeviate is constructed with reference to a UniformDeviate that will actually generate
      * the randoms, which are then transformed to Gamma distribution.  Copy constructor and
@@ -535,14 +538,14 @@ namespace galsim {
          *
          * @return Shape parameter alpha of distribution.
          */
-        double getAlpha() {return gamma.alpha();}
+        double getAlpha() { return gamma.alpha(); }
 
         /**
          * @brief Get current distribution scale parameter beta.
          *
          * @return Scale parameter beta of distribution.
          */
-        double getBeta() {return gamma.beta();}
+        double getBeta() { return gamma.beta(); }
 
         /**
          * @brief Set current distribution shape parameter alpha.
@@ -591,6 +594,87 @@ namespace galsim {
         GammaDeviate(const GammaDeviate& rhs);
         /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
         void operator=(const GammaDeviate& rhs);
+    };
+
+    /**
+     * @brief A Chi^2-distributed deviate with degrees-of-freedom parameter n.
+     *
+     * See http://en.wikipedia.org/wiki/Chi-squared_distribution (although note that in the Boost 
+     * random routine this class calls the notation is k=n for the number of degrees of freedom).
+     * The Chi^2 distribution is a real valued distribution producing deviates >= 0.
+     *
+     * Chi2Deviate is constructed with reference to a UniformDeviate that will actually generate
+     * the randoms, which are then transformed to a Chi^2 distribution.  Copy constructor and
+     * assignment operator are kept private since you probably do not want two "random" number
+     * generators producing the same sequence of numbers in your code!  
+     *
+     */
+    class Chi2Deviate 
+    {
+    public:
+        /**
+         * @brief Construct a new Chi^2-distributed RNG.
+         *
+         * Constructor requires reference to a UniformDeviate that generates the randoms, which are
+         * then transformed to Gamma distribution. 
+         * @param[in] u_     UniformDeviate that will be called to generate all randoms.
+         * @param[in] n      Number of degrees of freedom for the output distribution, must be > 0.
+         *
+         */
+        Chi2Deviate(UniformDeviate& u_, double n=1.) : 
+            u(u_), chi_squared(n) {}
+
+        /**
+         * @brief Draw a new random number from the distribution.
+         *
+         * @return A Chi^2 deviate with current degrees-of-freedom parameter n.
+         */
+        double operator() () { return chi_squared(u.urng); }
+
+        /**
+         * @brief Get current distribution degrees-of-freedom parameter n.
+         *
+         * @return Degrees-of-freedom parameter n of distribution.
+         */
+        double getN() { return chi_squared.n(); }
+
+        /**
+         * @brief Set current distribution degrees-of-freedom parameter n.
+         *
+         * @param[in] n  New degrees-of-freedom parameter n for distribution. Behaviour for 
+         *               non-positive value is undefined.
+         */
+        void setN(double n) {
+	  chi_squared.param(boost::random::chi_squared_distribution<>::param_type(n));
+        }
+
+        /**
+         * @brief Add Chi^2 pseudo-random deviates to every element in a supplied Image.
+         *
+         * @param[in,out] data  The Image.
+         */
+        template <typename T>
+        void applyTo(ImageView<T>& data) {
+            // Typedef for image row iterable
+            typedef typename ImageView<T>::iterator ImIter;
+
+            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
+                ImIter ee = data.rowEnd(y);
+                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
+            }
+        }
+
+    private:
+
+        UniformDeviate& u;
+        boost::random::chi_squared_distribution<> chi_squared;
+
+        /**
+         * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+         */
+        Chi2Deviate(const Chi2Deviate& rhs);
+        /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+        void operator=(const Chi2Deviate& rhs);
     };
 
 }  // namespace galsim
