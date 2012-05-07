@@ -145,7 +145,7 @@ namespace hsm {
         std::string error_message;
 
         /// @brief Constructor, setting defaults
-    HSMShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
+        HSMShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
             observed_shape(galsim::Shear()), moments_sigma(-1.), moments_amp(-1.),
             moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
             correction_status(-1), corrected_shape(galsim::Shear()), corrected_shape_err(-1.),
