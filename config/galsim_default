@@ -96,6 +96,23 @@ config.noise.gain = 1.
 config.noise.read_noise = 1.
 
 
+# --- pixel separation scale ---
+#
+# Image sampling rate / separation between pixels, sets the physical units for all lengths in the
+# output images.  It probably makes sense for config.dx to be equal to config.PSF.Pixel.xw.value and
+# config.PSF.Pixel.yw.value if these are being set (defaults = 1.).
+config.dx = 1.
+
+
+# --- shear ---
+#
+# Shear to be applied to images.  Can follow a distribution (e.g. according to a power spectrum) or
+# be set to constant value.
+config.shear.g1.distribution = "Constant"
+config.shear.g1.value = 0.
+config.shear.g2.distribution = "Constant"
+config.shear.g2.value = 0.
+
 
 # Logging level at which to echo the commands we run
 config.logging_level = logging.INFO
