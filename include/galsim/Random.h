@@ -110,7 +110,7 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
+        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
 
 
     private:
@@ -220,7 +220,7 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
+        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
 
 
     private:
@@ -307,7 +307,7 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
          template <typename T>
-         void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
+         void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
 
 
     private:
@@ -370,7 +370,7 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
+        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
 
 
     private:
@@ -459,7 +459,7 @@ namespace galsim {
          * @param[in,out] data  The Image.
          */
         template <typename T>
-        void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
+        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
 
 
     private:
@@ -550,7 +550,7 @@ namespace galsim {
          * @param[in,out] data  The Image.
          */
         template <typename T>
-        void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
+        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
 
 
     private:
@@ -624,7 +624,7 @@ namespace galsim {
          * @param[in,out] data  The Image.
          */
         template <typename T>
-        void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
+        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
 
 
     private:

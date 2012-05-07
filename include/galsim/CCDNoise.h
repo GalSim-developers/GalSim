@@ -89,7 +89,7 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T>& data) {
+        void applyTo(ImageView<T> data) {
             // Above this many e's, assume Poisson distribution =Gaussian 
             static const double MAX_POISSON=1.e5;
             // Typedef for image row iterable
