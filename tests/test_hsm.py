@@ -20,7 +20,7 @@ except ImportError:
     import galsim
 
 # define a range of input parameters for the Gaussians that we are testing
-gaussian_sig_values = [1.0, 2.0, 3.0]
+gaussian_sig_values = [0.5, 1.0, 2.0]
 shear_values = [0.01, 0.03, 0.05]
 pixel_scale = 0.2
 decimal = 2 # decimal place at which to require equality in sizes
@@ -50,6 +50,26 @@ def test_moments_basic():
 
 def test_shearest_basic():
     """Test that we can recover shears for Gaussian galaxies and PSFs."""
+    for sig in gaussian_sig_values:
+        for g1 in shear_values:
+            distortion_1 = np.tanh(2.0*math.atanh(g1))
+            for g2 in shear_values:
+                print sig, g1, g2
+                distortion_2 = np.tanh(2.0*math.atanh(g2))
+                gal = galsim.Gaussian(flux = 1.0, sigma = sig)
+                psf = galsim.Gaussian(flux = 1.0, sigma = sig)
+                gal.applyShear(g1, g2)
+                final = galsim.Convolve([gal, psf])
+                final_image = final.draw(dx = pixel_scale)
+                epsf_image = psf.draw(dx = pixel_scale)
+                result = galsim.EstimateShearHSM(final_image, epsf_image)
+                # make sure we find the right e after PSF correction
+                np.testing.assert_almost_equal(result.corrected_shape.getE1(),
+                                               distortion_1, err_msg = "- incorrect e1",
+                                               decimal = decimal_shape)
+                np.testing.assert_almost_equal(result.corrected_shape.getE2(),
+                                               distortion_2, err_msg = "- incorrect e2",
+                                               decimal = decimal_shape)
 
 def test_shearest_precomputed():
     """Test that we can recover shears the same as before the code was put into GalSim."""
