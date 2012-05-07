@@ -43,13 +43,13 @@ config.PSF.type = ["Moffat", "Pixel"]
 # config.PSF.Moffat.beta.value = 3.
 #
 # Any parameters not set either in configuration files or input catalogues will adopt their
-# keyword default values.
+# keyword default values, and GalSim will raise a Warning.
 config.PSF.Moffat.flux.distribution = "Constant"
 config.PSF.Moffat.flux.value = 1.
 config.PSF.Pixel.xw.distribution = "Constant"
-config.PSF.Pixel.xw.value = 1.
+config.PSF.Pixel.xw.value = config.dx
 config.PSF.Pixel.yw.distribution = "Constant"
-config.PSF.Pixel.yw.value = 1.
+config.PSF.Pixel.yw.value = config.dx
 
 
 # --- galaxy type ---
@@ -83,7 +83,7 @@ config.galaxy.type = ["DeVaucouleurs", "Exponential"]
 # config.galaxy.Exponential.re.beta = 1.3
 #
 # Any parameters not set either in configuration files or input catalogues will adopt their
-# keyword default values.
+# keyword default values, and GalSim will raise a Warning.
 
 
 # --- shear ---
@@ -121,6 +121,50 @@ config.noise.distribution = ["CCDNoise"]
 config.noise.gain = 1.
 config.noise.read_noise = 1.
 
+
+# --- input cat ---
+#
+# Specify the type, name and expected contents of input catalogs to be used to set object-by-object
+# parameters not specified by parameter distributions defined above.
+#
+# The currently supported input catalogue formats are:
+#
+# "ASCII"  Standard ASCII text format: note that the column field names must also be specified in
+#          the order they will be presented in the catalogue via the config.input_cat.ascii_fields
+#          parameter.
+# "FITS"   FITS binary table format: the column field names will be expected to match a standard
+#          format of <Object_name>.<parameter_name>, "Sersic.re" (see the table of object/parameter
+#          pair field names in **TODO WRITE THIS TABLE!**).  This default behaviour can be modified
+#          by supplying a dictionary of alternative field names where these differ in the FITS table
+#          as a parameter config.input_cat.fits_field_dict.  If GalSim is unable to find all the 
+#          fields it is expecting, it will raise a Warning and use default values for the object in
+#          question.
+#
+config.input_cat.type = "ASCII"
+#
+# If using ASCII catalogs, give the column names in order in the list below, using names from 
+# Table (TODO/XXXX)
+#
+# To ignore columns in the input cat, place a None object for that list entry.
+config.input_cat.ascii_fields = ["x", "y", "nx", "ny", "Exponential.re", "Exponential.e1", 
+                                 "Exponential.e2", "DeVaucouleurs.re", "DeVaucouleurs.e1", 
+                                 "DeVaucouleurs.e2", "Moffat.FWHM", "Moffat.truncationFWHM",
+                                 "Moffat.e1", "Moffat.e2"]
+# *** Do not comment out the two lines below, it's a useful check! ***
+if config.input_cat.type == "ASCII" and not hasattr(config.input_cat, "ascii_fields"):
+    raise IOError("config.input_cat.ascii_fields must be set if using ASCII catalogues")
+
+
+# --- output ---
+#
+# Specify the type of output.  The currently supported output types WILL BE (TODO: DO THIS!)
+#
+# "PSTAMPS"  An individual postage stamp for each output object image.
+# "IMAGE"    A large 2D image containing multiple objects.
+# "CUBE"     A 3D array containing multiple object images, with the leading dimension = Number of
+#            objects.
+#
+config.output.type = "IMAGE"
 
 
 # Logging level at which to echo the commands we run
