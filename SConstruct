@@ -1,7 +1,6 @@
 # vim: set filetype=python et ts=4 sw=4:
 
 import os
-import subprocess
 import sys
 import SCons
 import platform
@@ -83,6 +82,7 @@ opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
 opts.Add(BoolVariable('MEM_TEST','Test for memory leaks', False))
 opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', True))
 opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
+opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
 
 #opts.Add(BoolVariable('WITH_UPS',
             #'Create ups/galsim.table.  Install the ups directory under PREFIX/ups',
@@ -90,6 +90,9 @@ opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV
 opts.Add(BoolVariable('WITH_PROF',
             'Use the compiler flag -pg to include profiling info for gprof',
             False))
+
+opts.Add(BoolVariable('USE_UNKNOWN_VARS',
+            'Allow other parameters besides the ones listed here.',False))
 
 # This helps us determine of openmp is available
 openmp_mingcc_vers = 4.1
@@ -116,19 +119,67 @@ def RunUninstall(env, targets, subdir):
     for f in files:
         env.Alias('uninstall', env.Command(f, None, deltarget))
 
-def ErrorExit():
-    # Whenever we get an error in the initial setup checking for the various
-    # libraries, compiler, etc., we don't want to cache the result.
-    # So before exiting, we call this function to clear out the cache files
-    # that SCons creates.
-    #if os.path.exists(".sconsign.dblite"):
-    #    os.remove(".sconsign.dblite")
-    #import shutil
-    #if os.path.exists(".sconf_temp"):
-    #    shutil.rmtree(".sconf_temp")
+def ClearCache():
+    """ 
+    Clear the SCons cache files
+    """
+    if os.path.exists(".sconsign.dblite"):
+        os.remove(".sconsign.dblite")
+    import shutil
+    if os.path.exists(".sconf_temp"):
+        shutil.rmtree(".sconf_temp")
+
+def ErrorExit(*args, **kwargs):
+    """
+    Whenever we get an error in the initial setup checking for the various
+    libraries, compiler, etc., we don't want to cache the result.
+    On the other hand, if we delete the .scon* files now, then the aren't 
+    available to diagnose any problems.
+    So we write a file called gs_error that
+    a) includes some relevant information to diagnose the problem.
+    b) indicates that we should clear the cache the next time we run scons.
+    """
+    
+    import shutil
+
+    out = open("gs.error","wb")
+
+    # Start with the error message to output both to the screen and to the end of gs.error:
+    for s in args:
+        print s
+        out.write(s + '\n')
+    out.write('\n')
+
+    # Next put the full config.log in there.
+    out.write('The full config.log file is:\n\n')
+    shutil.copyfileobj(open("config.log","rb"),out)
+    out.write('\n')
+
+    # If n > 0, then that means it could be helpful to see what the last n
+    # executables output.  SCons just uses >, not >&, so we'll repeat those
+    # runs here and get both.
+    if 'n' in kwargs.keys():
+        n = kwargs['n']
+        # This relies on the sort by time option of ls.  Not sure how universal this is...
+        try:
+            conftest_list = os.popen(
+                "ls -t .sconf_temp/conftest* | grep -v '\.out' | grep -v '\.cpp' \
+                    | grep -v '\.o'").readlines()
+            for i in range(n):
+                if len(conftest_list) > i:
+                    last_conftest = conftest_list[i].strip()
+                    conftest_out = os.popen(last_conftest).readlines()
+                    out.write('Output of the executable %s is:\n'%last_conftest)
+                    out.write(''.join(conftest_out) + '\n')
+                else:
+                    out.write('Expected at least %s conftest executables, but only found %s.\n'\
+                        % (n,len(conftest_list)))
+        except Exception as err:
+            out.write("Error trying to get output of last conftest executable:")
+            our.write(str(err))
 
     print
-    print 'Please fix the above error(s) and rerun scons'
+    print 'Please fix the above error(s) and re-run scons'
     print
     Exit(1)
 
@@ -324,8 +375,7 @@ def GetCompilerVersion(env):
     """
     compiler = which(env['CXX'])
     if compiler is None:
-        print 'Specified compiler not found in path: %s' % env['CXX']
-        ErrorExit()
+        ErrorExit('Specified compiler not found in path: %s' % env['CXX'])
 
     print 'Using compiler:',compiler
 
@@ -581,27 +631,29 @@ int main()
 
     if context.TryCompile(tmv_source_file,'.cpp'):
 
+        # If we eventually use SymMatrix stuff, we'll need to switch to this...
         #result = (
             #CheckLibs(context,['tmv_symband','tmv'],tmv_source_file) or
             #CheckLibs(context,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
+
         result = (
             CheckLibs(context,['tmv'],tmv_source_file) or
             CheckLibs(context,['tmv','irc','imf'],tmv_source_file) )
         
         if not result:
             context.Result(0)
-            print 'Error: TMV file failed to link correctly'
-            print 'Check that the correct location is specified for TMV_DIR'
-            ErrorExit()
+            ErrorExit(
+                'Error: TMV file failed to link correctly',
+                'Check that the correct location is specified for TMV_DIR') 
 
         context.Result(1)
         return 1
 
     else:
         context.Result(0)
-        print 'Error: TMV file failed to compile.'
-        print 'Check that the correct location is specified for TMV_DIR'
-        ErrorExit()
+        ErrorExit(
+            'Error: TMV file failed to compile.',
+            'Check that the correct location is specified for TMV_DIR')
 
 def CheckPython(context):
     python_source_file = """
@@ -619,8 +671,7 @@ int main()
         import distutils.sysconfig
     except ImportError:
         context.Result(0)
-        print 'Failed to import distutils.sysconfig.'
-        ErrorExit()
+        ErrorExit('Failed to import distutils.sysconfig.')
     context.env.AppendUnique(CPPPATH=distutils.sysconfig.get_python_inc())
     libDir = distutils.sysconfig.get_config_var("LIBDIR")
     context.env.AppendUnique(LIBPATH=libDir)
@@ -643,18 +694,16 @@ int main()
             if d2 == "Python.framework":
                 if not "Python" in os.listdir(os.path.join(frameworkDir, d2)):
                     context.Result(0)
-                    print (
+                    ErrorExit(
                         "Expected to find Python in framework directory %s, but it isn't there"
                         % frameworkDir)
-                    ErrorExit()
                 break
         context.env.AppendUnique(LDFLAGS="-F%s"%frameworkDir)
         result, output = context.TryRun(python_source_file,'.cpp')
 
     if not result:
         context.Result(0)
-        print "Cannot run program built with Python."
-        ErrorExit()
+        ErrorExit("Cannot run program built with Python.")
 
     context.Result(1)
     return 1
@@ -687,33 +736,30 @@ int main()
     try:
         import numpy
     except ImportError:
+        whichpy = which('python')
         context.Result(0)
-        print 'Failed to import NumPy.'
-        print 'Things to try:'
-        print '1) Check that the python with which you installed numpy,'
-        print '   probably the command line python:'
-        print '   ',
-        sys.stdout.flush()
-        subprocess.call('which python',shell=True)
-        print '   is the same as the one used by SCons:'
-        print '  ',sys.executable
-        print '   If not, then you probably need to reinstall numpy with %s.' % sys.executable
-        print '   And remember to use that when running python for use with GalSim.'
-        print '   Alternatively, you can reinstall SCons with your preferred python.'
-        print '2) Check that if you open a python session from the command line,'
-        print '   import numpy is successful there.'
-        ErrorExit()
+        ErrorExit(
+            'Failed to import numpy.',
+            'Things to try:',
+            '1) Check that the python with which you installed numpy,',
+            '   probably the command line python:',
+            '   %s' % whichpy,
+            '   is the same as the one used by SCons:',
+            '   %s' % sys.executable,
+            '   If not, then you probably need to reinstall numpy with %s.' % sys.executable,
+            '   And remember to use that when running python for use with GalSim.',
+            '   Alternatively, you can reinstall SCons with your preferred python.',
+            '2) Check that if you open a python session from the command line,',
+            '   import numpy is successful there.')
     context.env.Append(CPPPATH=numpy.get_include())
     result = CheckLibs(context,[''],numpy_source_file)
     if not result:
         context.Result(0)
-        print "Cannot build against NumPy."
-        ErrorExit()
+        ErrorExit('Cannot build against NumPy.')
     result, output = context.TryRun(numpy_source_file,'.cpp')
     if not result:
         context.Result(0)
-        print "Cannot run program built with NumPy."
-        ErrorExit()
+        ErrorExit('Cannot run program built with NumPy.')
     context.Result(1)
     return 1
 
@@ -724,22 +770,21 @@ def CheckPyFITS(context):
     try:
         import pyfits
     except ImportError:
+        whichpy = which('python')
         context.Result(0)
-        print 'Failed to import PyFITS.'
-        print 'Things to try:'
-        print '1) Check that the python with which you installed PyFITS,'
-        print '   probably the command line python:'
-        print '   ',
-        sys.stdout.flush()
-        subprocess.call('which python',shell=True)
-        print '   is the same as the one used by SCons:'
-        print '  ',sys.executable
-        print '   If not, then you probably need to reinstall PyFITS with %s.' % sys.executable
-        print '   And remember to use that when running python for use with GalSim.'
-        print '   Alternatively, you can reinstall SCons with your preferred python.'
-        print '2) Check that if you open a python session from the command line,'
-        print '   import pyfits is successful there.'
-        ErrorExit()
+        ErrorExit(
+            'Failed to import PyFITS.',
+            'Things to try:',
+            '1) Check that the python with which you installed PyFITS,',
+            '   probably the command line python:',
+            '   %s' % whichpy,
+            '   is the same as the one used by SCons:',
+            '   %s' % sys.executable,
+            '   If not, then you probably need to reinstall PyFITS with %s.' % sys.executable,
+            '   And remember to use that when running python for use with GalSim.',
+            '   Alternatively, you can reinstall SCons with your preferred python.',
+            '2) Check that if you open a python session from the command line,',
+            '   import pyfits is successful there.')
     context.Result(1)
     return 1
 
@@ -767,15 +812,13 @@ int main()
 
     if not result:
         context.Result(0)
-        print "Cannot build against Boost.Python."
-        ErrorExit()
+        ErrorExit('Cannot build against Boost.Python.')
 
     result, output = context.TryRun(bp_source_file,'.cpp')
 
     if not result:
         context.Result(0)
-        print "Cannot run program built with Boost.Python."
-        ErrorExit()
+        ErrorExit('Cannot run program built with Boost.Python.')
     context.Result(1)
     return 1
 
@@ -807,8 +850,7 @@ def FindTmvLinkFile(config):
         if os.path.exists(tmv_link):
             return tmv_link
         else:
-            print 'Specified TMV_LINK does not exist: %s' % tmv_link
-            ErrorExit()
+            ErrorExit('Specified TMV_LINK does not exist: %s' % tmv_link)
 
     # Next check in TMV_DIR/share
     tmv_dir = FindPathInEnv(config.env, 'TMV_DIR')
@@ -854,8 +896,7 @@ def FindTmvLinkFile(config):
         if os.path.exists(tmv_link):
             return tmv_link
 
-    print 'No tmv-link file could be found'
-    ErrorExit()
+    ErrorExit('No tmv-link file could be found')
 
 
 def DoLibraryAndHeaderChecks(config):
@@ -868,29 +909,30 @@ def DoLibraryAndHeaderChecks(config):
         # Sometimes cfitsio uses include/cfitsio as the location for fitsio.h, so try that.
         config.env.AppendUnique(CPPPATH=os.path.join(config.env['CFITSIO_DIR'],'include','cfitsio'))
         if not config.CheckLibWithHeader('cfitsio','fitsio.h',language='C++'):
-            print 'cfitsio not found'
-            print 'You should specify the location of cfitsio CFITSIO_DIR=...'
-            ErrorExit()
+            ErrorExit(
+                'cfitsio not found',
+                'You should specify the location of cfitsio CFITSIO_DIR=...',
+                n=1)
 
     # Check for fftw3
     if not config.CheckLibWithHeader('fftw3','fftw3.h',language='C++'):
-        print 'fftw3 not found'
-        print 'You should specify the location of fftw3 as FFTW_DIR=...'
-        ErrorExit()
+        ErrorExit(
+            'fftw3 not found',
+            'You should specify the location of fftw3 as FFTW_DIR=...')
 
     # Check for boost
     if not config.CheckHeader('boost/shared_ptr.hpp',language='C++'):
-        print 'Boost not found'
-        print 'You should specify the location of Boost as BOOST_DIR=...'
-        ErrorExit()
+        ErrorExit(
+            'Boost not found',
+            'You should specify the location of Boost as BOOST_DIR=...')
 
     # Check for tmv
     # First do a simple check that the library and header are in the path.
     # We check the linking with the BLAS library below.
     if not config.CheckHeader('TMV.h',language='C++'):
-        print 'TMV not found'
-        print 'You should specify the location of TMV as TMV_DIR=...'
-        ErrorExit()
+        ErrorExit(
+            'TMV not found',
+            'You should specify the location of TMV as TMV_DIR=...')
 
     compiler = config.env['CXXTYPE']
     version = config.env['CXXVERSION_NUMERICAL']
@@ -904,8 +946,7 @@ def DoLibraryAndHeaderChecks(config):
     try:
         tmv_link = open(tmv_link_file).read().strip()
     except:
-        print 'Could not open TMV link file: ',tmv_link_file
-        ErrorExit()
+        ErrorExit('Could not open TMV link file: ',tmv_link_file)
     print '    ',tmv_link
 
     # ParseFlags doesn't know about -fopenmp being a LINKFLAG, so it
@@ -954,7 +995,6 @@ def DoConfig(env):
     Configure the system
     """
 
-
     # Add some extra paths 
     AddExtraPaths(env)
 
@@ -966,7 +1006,8 @@ def DoConfig(env):
         print "Using specified number of jobs =",env.GetOption('num_jobs')
     else:
         env.SetOption('num_jobs', GetNCPU())
-        print "Determined that a good number of jobs =",env.GetOption('num_jobs')
+        if env.GetOption('num_jobs') != 1:
+            print "Determined that a good number of jobs =",env.GetOption('num_jobs')
 
     # The basic flags for this compiler if not explicitly specified
     BasicCCFlags(env)
@@ -1033,8 +1074,11 @@ if env['IMPORT_ENV']:
 
 # Check for unknown variables in case something is misspelled
 unknown = opts.UnknownVariables()
-if unknown:
-    print "Unknown variables:", unknown.keys()
+if unknown and not env['USE_UNKNOWN_VARS']:
+    print 'Unknown variables:', unknown.keys()
+    print 'If you are sure these are right (e.g. you want to set some SCons parameters'
+    print 'that are not in the list of GalSim parameters given by scons -h)'
+    print 'then you can override this check with USE_UNKNOWN_VARS=true'
     ErrorExit()
 
 print 'Using the following (non-default) scons options:'
@@ -1048,6 +1092,14 @@ opts.Save(config_file,env)
 Help(opts.GenerateHelpText(env))
 
 if not GetOption('help'):
+
+    # If there is a gs.error file, then this means the last run ended
+    # in an error, so we don't want to cache any of the configuration
+    # tests from that run in case things in the environment changed.
+    # (SCons isn't usually very good at detecting these kinds of changes.)
+    if os.path.exists("gs.error"):
+        os.remove("gs.error")
+        ClearCache()
 
     # Set up the configuration
     DoConfig(env)
