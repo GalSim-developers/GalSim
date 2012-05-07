@@ -206,7 +206,7 @@ class DeVaucouleurs(GSObject):
     """GalSim De-Vaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
     """
     def __init__(self, flux=1., re=1.):
-        GSObject.__init__(self, galsim.SBDeVaucouleurs(flux=flux, re=re)
+        GSObject.__init__(self, galsim.SBDeVaucouleurs(flux=flux, re=re))
     # Ditto!
 
 
