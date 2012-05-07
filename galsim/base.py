@@ -3,14 +3,25 @@ import galsim
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
+def createDistorted(gsobject, ellipse):
+    new = gsobject.copy()
+    new.applyDistortion(ellipse)
+    return new
+
 def createSheared(gsobject, g1, g2):
-    return gsobject.copy().applyShear(g1, g2)
+    new = gsobject.copy()
+    new.applyShear(g1, g2)
+    return new
 
 def createRotated(gsobject, theta):
-    return gsobject.copy().applyRotation(theta)
+    new = gsobject.copy()
+    new.applyRotation(theta)
+    return new
 
 def createShifted(gsobject, dx, dy):
-    return gsobject.copy().applyShift(dx, dy)
+    new = gsobject.copy()
+    new.applyShift(dx, dy)
+    return new
 
 
 class GSObject:
@@ -123,23 +134,12 @@ class GSObject:
         """
         GSObject.__init__(self, self.SBProfile.shift(dx, dy))
 
-    # Barney: not sure about the below, kind of wanted not to have to let the user deal with
-    # GSObject instances... Might need to reconsider this scheme.
-    #
-    # Keeping them here as commented placeholders.
-    #
-    #def createDistorted(self, ellipse):
-    #    return GSObject(self.SBProfile.distort(ellipse))
-        
-    #def createSheared(self, e1, e2):
-    #    return GSObject(self.SBProfile.distort(galsim.Ellipse(e1, e2)))
+    # Include the createETC functions as member methods too
+    createDistorted = createDistorted
+    createSheared = createSheared
+    createRotated = createRotated
+    createShifted = createShifted
 
-    #def createRotated(self, theta):
-    #    return GSObject(self.SBProfile.rotate(theta))
-        
-    #def createShifted(self, dx, dy):
-    #    return GSObject(self.SBProfile.shift(dx, dy))
-            
     def draw(self, image=None, dx=0., wmult=1):
     # Raise an exception here since C++ is picky about the input types
         if type(wmult) != int:
