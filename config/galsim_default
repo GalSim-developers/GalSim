@@ -7,7 +7,7 @@ import logging
 # Specify the PSF type(s) for the simulated galaxy images; placing a None object as the first entry
 # tells GalSim to expect this type information to come from the input catalogue.
 #
-# Currently available PSF_types are:
+# The currently available PSF_types are:
 #
 # "Gaussian"         A Gaussian light distribution.
 # "DoubleGaussian"   A sum of two Gaussians found to provide a reasonable empirical fit to ground-
@@ -22,8 +22,8 @@ import logging
 # GalSim object docstrings / GalSim documentation for details.
 #
 # More than one PSF can be specified via adding multiple entries to the list below; the resulting
-# PSF in the output image will be the convolution of all entries in the list.
-
+# PSF in the output image will be the *convolution* of all entries in the list.
+#
 config.PSF_type = ["Moffat"]
 
 
@@ -32,7 +32,22 @@ config.PSF_type = ["Moffat"]
 # Specify the galaxy type(s) for the simulated galaxy images; placing a None object as the first
 # entry tells GalSim to expect this type information to come from the input catalogue.
 #
+# The currently available galaxy types are:
+#
+# "Gaussian"
+# "Sersic"
+# "Exponential"
+# "DeVaucouleurs"
+#
+# Each of these galaxy types has it's own set of input parameters, which must be set for each output
+# object via input catalogue values, or given a specified distribution via config file.  See the
+# GalSim object docstrings / GalSim documentation for details.
+#
+# More than one galaxy can be specified via adding multiple entries to the list below; the resulting
+# galaxy in the output image will be the *sum* of all entries in the list.
+#
 config.galaxy_type = ["DeVaucouleurs", "Exponential"]
+
 
 # Logging level at which to echo the commands we run
 config.logging_level = logging.INFO
