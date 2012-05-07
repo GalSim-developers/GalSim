@@ -51,8 +51,12 @@ if sky_level_psf != 0.:
     PSF_image -= sky_level_psf
 
 # measure shape, output results
-result = galsim.EstimateShearHSM(gal_image, PSF_image, sky_var = sky_var, shear_est = shear_estimator)
+result = galsim.EstimateShearHSM(gal_image, PSF_image, sky_var = sky_var,
+                                 shear_est = shear_estimator)
 meas_type = 'e'
 if (shear_estimator == "KSB"):
     meas_type = 'g'
-print '%d   %12.6f   %12.6f   %c  %12.6f   %12.6f   %12.6f   %12.6f   %12.6f' % (result.correction_status, result.corrected_shape.getE1(), result.corrected_shape.getE2(), meas_type, 1.0, result.resolution_factor, result.corrected_shape_err, result.moments_sigma, result.moments_amp)
+print '%d   %12.6f   %12.6f   %c  %12.6f   %12.6f   %12.6f   %12.6f   %12.6f' % \
+    (result.correction_status, result.corrected_shape.getE1(), result.corrected_shape.getE2(),
+     meas_type, 1.0, result.resolution_factor, result.corrected_shape_err, result.moments_sigma,
+     result.moments_amp)

@@ -38,4 +38,8 @@ image = galsim.fits.read(image_file)
 if sky_level > 0.:
     image -= sky_level
 result = galsim.FindAdaptiveMom(image, guess_sig = guess_sigma)
-print '%d   %12.6f   %12.6f   %12.6f   %12.6f   %12.6f   %03d    %12.6f   %12.6f %12.6f' % (result.moments_status, result.getMxx(), result.getMyy(), result.getMxy(), result.observed_shape.getE1(), result.observed_shape.getE2(), result.moments_n_iter, result.moments_amp, result.moments_centroid.x-result.image_bounds.getXMin(), result.moments_centroid.y-result.image_bounds.getYMin()) 
+print '%d   %12.6f   %12.6f   %12.6f   %12.6f   %12.6f   %03d    %12.6f   %12.6f %12.6f' % \
+        (result.moments_status, result.getMxx(), result.getMyy(), result.getMxy(),
+         result.observed_shape.getE1(), result.observed_shape.getE2(), result.moments_n_iter,
+         result.moments_amp, result.moments_centroid.x-result.image_bounds.getXMin(),
+         result.moments_centroid.y-result.image_bounds.getYMin())
