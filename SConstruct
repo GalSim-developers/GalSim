@@ -1,7 +1,6 @@
 # vim: set filetype=python et ts=4 sw=4:
 
 import os
-import subprocess
 import sys
 import SCons
 import platform
@@ -93,7 +92,7 @@ opts.Add(BoolVariable('WITH_PROF',
             False))
 
 opts.Add(BoolVariable('USE_UNKNOWN_VARS',
-            'Allow other parameters besides the ones listed here.',False)
+            'Allow other parameters besides the ones listed here.',False))
 
 # This helps us determine of openmp is available
 openmp_mingcc_vers = 4.1
@@ -121,43 +120,63 @@ def RunUninstall(env, targets, subdir):
         env.Alias('uninstall', env.Command(f, None, deltarget))
 
 def ClearCache():
-""" 
-Clear the SCons cache files
-"""
+    """ 
+    Clear the SCons cache files
+    """
     if os.path.exists(".sconsign.dblite"):
         os.remove(".sconsign.dblite")
     import shutil
     if os.path.exists(".sconf_temp"):
         shutil.rmtree(".sconf_temp")
 
-def ErrorExit(*args, files=[])
-"""
-Whenever we get an error in the initial setup checking for the various
-libraries, compiler, etc., we don't want to cache the result.
-On the other hand, if we delete the .scon* files now, then the aren't 
-available to diagnose any problems.
-So we write a file called gs_error that
-a) includes some relevant information to diagnose the problem.
-b) indicates that we should clear the cache the next time we run scons.
-"""
+def ErrorExit(*args, **kwargs):
+    """
+    Whenever we get an error in the initial setup checking for the various
+    libraries, compiler, etc., we don't want to cache the result.
+    On the other hand, if we delete the .scon* files now, then the aren't 
+    available to diagnose any problems.
+    So we write a file called gs_error that
+    a) includes some relevant information to diagnose the problem.
+    b) indicates that we should clear the cache the next time we run scons.
+    """
     
     import shutil
 
     out = open("gs.error","wb")
-    # Start by putting the full config.log in there.
-    shutil.copyfileobj(open("config.log","rb"),out)
 
-    # If there are any extra_files, then these are appended to gs.error.
-    for f in files:
-        out.write('The contents of the file %s are:\n' % f)
-        shutil.copyfileobj(open(f,"rb"),out)
-
-    # And finally the args are taken to be a message to output both to
-    # the screen and to the end of gs.error.
+    # Start with the error message to output both to the screen and to the end of gs.error:
     for s in args:
         print s
         out.write(s + '\n')
-    out.close()
+    out.write('\n')
+
+    # Next put the full config.log in there.
+    out.write('The full config.log file is:\n\n')
+    shutil.copyfileobj(open("config.log","rb"),out)
+    out.write('\n')
+
+    # If n > 0, then that means it could be helpful to see what the last n
+    # executables output.  SCons just uses >, not >&, so we'll repeat those
+    # runs here and get both.
+    if 'n' in kwargs.keys():
+        n = kwargs['n']
+        # This relies on the sort by time option of ls.  Not sure how universal this is...
+        try:
+            conftest_list = os.popen(
+                "ls -t .sconf_temp/conftest* | grep -v '\.out' | grep -v '\.cpp' \
+                    | grep -v '\.o'").readlines()
+            for i in range(n):
+                if len(conftest_list) > i:
+                    last_conftest = conftest_list[i].strip()
+                    conftest_out = os.popen(last_conftest).readlines()
+                    out.write('Output of the executable %s is:\n'%last_conftest)
+                    out.write(''.join(conftest_out) + '\n')
+                else:
+                    out.write('Expected at least %s conftest executables, but only found %s.\n'\
+                        % (n,len(conftest_list)))
+        except Exception as err:
+            out.write("Error trying to get output of last conftest executable:")
+            our.write(str(err))
 
     print
     print 'Please fix the above error(s) and re-run scons'
@@ -612,9 +631,11 @@ int main()
 
     if context.TryCompile(tmv_source_file,'.cpp'):
 
+        # If we eventually use SymMatrix stuff, we'll need to switch to this...
         #result = (
             #CheckLibs(context,['tmv_symband','tmv'],tmv_source_file) or
             #CheckLibs(context,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
+
         result = (
             CheckLibs(context,['tmv'],tmv_source_file) or
             CheckLibs(context,['tmv','irc','imf'],tmv_source_file) )
@@ -890,7 +911,8 @@ def DoLibraryAndHeaderChecks(config):
         if not config.CheckLibWithHeader('cfitsio','fitsio.h',language='C++'):
             ErrorExit(
                 'cfitsio not found',
-                'You should specify the location of cfitsio CFITSIO_DIR=...')
+                'You should specify the location of cfitsio CFITSIO_DIR=...',
+                n=1)
 
     # Check for fftw3
     if not config.CheckLibWithHeader('fftw3','fftw3.h',language='C++'):
@@ -973,7 +995,6 @@ def DoConfig(env):
     Configure the system
     """
 
-
     # Add some extra paths 
     AddExtraPaths(env)
 
@@ -1053,10 +1074,10 @@ if env['IMPORT_ENV']:
 
 # Check for unknown variables in case something is misspelled
 unknown = opts.UnknownVariables()
-if unknown and not env['USE_UNKNOWN_VARS']
+if unknown and not env['USE_UNKNOWN_VARS']:
     print 'Unknown variables:', unknown.keys()
     print 'If you are sure these are right (e.g. you want to set some SCons parameters'
-    print 'that are not in the list of GalSim parameters given by scons -h'
+    print 'that are not in the list of GalSim parameters given by scons -h)'
     print 'then you can override this check with USE_UNKNOWN_VARS=true'
     ErrorExit()
 
