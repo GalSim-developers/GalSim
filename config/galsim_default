@@ -2,7 +2,7 @@
 
 import logging
 
-# --- PSF_type ---
+# --- PSF type ---
 #
 # Specify the PSF type(s) for the simulated galaxy images; placing a None object as the first entry
 # tells GalSim to expect this type information to come from the input catalogue.
@@ -24,20 +24,29 @@ import logging
 # More than one PSF can be specified via adding multiple entries to the list below; the resulting
 # PSF in the output image will be the *convolution* of all entries in the list.
 #
-config.PSF_type = ["Moffat"]
+config.PSF.type = ["Moffat"]
+#
+# Constant values / distributions for PSF parameters may be set below (will be overwritten by
+# any values for these parameters found in the input catalogues).
+#
+# e.g.:
+#
+# config.PSF.Moffat.beta.distribution = "Constant"
+# config.PSF.Moffat.beta.value = 3.
+#
 
 
-# --- galaxy_type ---
+# --- galaxy type ---
 #
 # Specify the galaxy type(s) for the simulated galaxy images; placing a None object as the first
 # entry tells GalSim to expect this type information to come from the input catalogue.
 #
 # The currently available galaxy types are:
 #
-# "Gaussian"
-# "Sersic"
-# "Exponential"
-# "DeVaucouleurs"
+# "Gaussian"        A Gaussian light distribution.
+# "Sersic"          A Sersic profile.
+# "Exponential"     Special case of a Sersic profile with index n = 1.
+# "DeVaucouleurs"   Special case of a Sersic profile with index n = 4.
 #
 # Each of these galaxy types has it's own set of input parameters, which must be set for each output
 # object via input catalogue values, or given a specified distribution via config file.  See the
@@ -46,7 +55,36 @@ config.PSF_type = ["Moffat"]
 # More than one galaxy can be specified via adding multiple entries to the list below; the resulting
 # galaxy in the output image will be the *sum* of all entries in the list.
 #
-config.galaxy_type = ["DeVaucouleurs", "Exponential"]
+config.galaxy.type = ["DeVaucouleurs", "Exponential"]
+#
+# Distributions for galaxy parameters (including constant values) may be set below.  These will be 
+# overwritten by any values for these parameters found in the input catalogues.
+#
+# e.g.:
+#
+# config.galaxy.Exponential.re.distribution = "GammaDeviate"
+# config.galaxy.Exponential.re.alpha = 3.5
+# config.galaxy.Exponential.re.beta = 1.3
+#
+
+
+# --- noise distribution ---
+#
+# Specify what type of noise to add to images (parameter values for the noise can either be set
+# via config file such as this or via input catalogue values).
+#
+# The currently available noise models include:
+#
+# "GaussianDeviate"  Random noise with a Gaussian distribution of specified mean and sigma.
+# "PoissonDeviate"   Random noise with a Poisson distribution of specified mean.
+# "CCDNoise"         A simple model of Poisson + Gaussian random noise for a detector system with
+#                    specified gain and read_noise.
+#
+# However, any of the random distributions implemented by GalSim may be applied, if desired.
+config.noise.distribution = ["CCDNoise"] 
+config.noise.gain = 1.
+config.noise.read_noise = 1.
+
 
 
 # Logging level at which to echo the commands we run
