@@ -4,7 +4,8 @@ from . import _galsim
 """
 
 def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS", flags = 0xe,
-                     guess_sig_gal = 5.0, guess_sig_PSF = 3.0, precision = 1.0e-6, strict = True):
+                     guess_sig_gal = 5.0, guess_sig_PSF = 3.0, precision = 1.0e-6,
+                     guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True):
     """@brief PSF correction method from HSM.
 
     Carry out PSF correction using one of the methods of the HSM package to estimate shears.
@@ -48,6 +49,10 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     @param[in] guess_sig_PSF Optional argument with an initial guess for the Gaussian sigma of
                the PSF, default 3.0 (pixels).
     @param[in] precision The convergence criterion for the moments; default 1e-6.
+    @param[in] guess_x_centroid An initial guess for the x component of the object centroid (useful
+               in case it is not located at the center, which is the default assumption).
+    @param[in] guess_y_centroid An initial guess for the y component of the object centroid (useful
+               in case it is not located at the center, which is the default assumption).
     @param[in] strict If True (default), then there will be a run-time exception if shear
                estimation fails.  If set to False, then information about failures will be silently
                stored in the output HSMShapeData object.
@@ -55,13 +60,18 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     """
     gal_image_view = gal_image.view()
     PSF_image_view = PSF_image.view()
-    result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, sky_var, shear_est, flags,
-                                           guess_sig_gal, guess_sig_PSF, precision)
+    result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, sky_var = sky_var,
+                                           shear_est = shear_est, flags = flags,
+                                           guess_sig_gal = guess_sig_gal,
+                                           guess_sig_PSF = guess_sig_PSF,
+                                           precision = precision, guess_x_centroid =
+                                           guess_x_centroid, guess_y_centroid = guess_y_centroid)
     if (strict == True and len(result.error_message) > 0):
         raise RuntimeError(result.error_message)
     return result
 
-def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, strict = True):
+def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
+                    guess_y_centroid = -1000.0, strict = True):
     """@brief Measure adaptive moments of an object.
 
     The key result is the best-fit elliptical Gaussian to the object, which is computed iteratively
@@ -85,13 +95,19 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, strict = 
     @param[in] guess_sig Optional argument with an initial guess for the Gaussian sigma of
                the object, default 5.0 (pixels).
     @param[in] precision The convergence criterion for the moments; default 1e-6.
+    @param[in] guess_x_centroid An initial guess for the x component of the object centroid (useful
+               in case it is not located at the center, which is the default assumption).
+    @param[in] guess_y_centroid An initial guess for the y component of the object centroid (useful
+               in case it is not located at the center, which is the default assumption).
     @param[in] strict If True (default), then there will be a run-time exception when moment
                measurement fails.  If set to False, then information about failures will be silently
                stored in the output HSMShapeData object.
     @return A HSMShapeData object containing the results of moment measurement.
     """
     object_image_view = object_image.view()
-    result = _galsim._FindAdaptiveMomView(object_image_view, guess_sig, precision)
+    result = _galsim._FindAdaptiveMomView(object_image_view, guess_sig = guess_sig, precision =
+                                          precision, guess_x_centroid = guess_x_centroid,
+                                          guess_y_centroid = guess_y_centroid)
     if (strict == True and len(result.error_message) > 0):
         raise RuntimeError(result.error_message)
     return result
