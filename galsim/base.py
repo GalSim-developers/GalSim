@@ -3,6 +3,16 @@ import galsim
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
+def createSheared(gsobject, g1, g2):
+    return gsobject.copy().applyShear(g1, g2)
+
+def createRotated(gsobject, theta):
+    return gsobject.copy().applyRotation(theta)
+
+def createShifted(gsobject, dx, dy):
+    return gsobject.copy().applyShift(dx, dy)
+
+
 class GSObject:
     """Base class for defining the interface with which all GalSim Objects access their shared 
     methods and attributes, particularly those from the C++ SBProfile classes.
