@@ -17,7 +17,7 @@ struct PyUniformDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (UniformDeviate::*) (ImageView<U>) )&UniformDeviate::applyTo,
+            .def("applyTo", (void (UniformDeviate::*) (ImageView<U> &) )&UniformDeviate::applyTo,
                  "\n"
                  "Add Uniform deviates to every element in a supplied Image.\n"
                  "\n"
@@ -93,7 +93,7 @@ struct PyGaussianDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (GaussianDeviate::*) (ImageView<U>) )&GaussianDeviate::applyTo,
+            .def("applyTo", (void (GaussianDeviate::*) (ImageView<U> &) )&GaussianDeviate::applyTo,
                  "\n"
                  "Add Gaussian deviates to every element in a supplied Image.\n"
                  "\n"
@@ -168,7 +168,7 @@ struct PyBinomialDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (BinomialDeviate::*) (ImageView<U>) )&BinomialDeviate::applyTo,
+            .def("applyTo", (void (BinomialDeviate::*) (ImageView<U> &) )&BinomialDeviate::applyTo,
                  "\n"
                  "Add Binomial deviates to every element in a supplied Image.\n"
                  "\n"
@@ -244,7 +244,7 @@ struct PyPoissonDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (PoissonDeviate::*) (ImageView<U>) )&PoissonDeviate::applyTo,
+            .def("applyTo", (void (PoissonDeviate::*) (ImageView<U> &) )&PoissonDeviate::applyTo,
                  "\n"
                  "Add Poisson deviates to every element in a supplied Image.\n"
                  "\n"
@@ -317,7 +317,7 @@ struct PyCCDNoise{
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (CCDNoise::*) (ImageView<U>) )&CCDNoise::applyTo,
+            .def("applyTo", (void (CCDNoise::*) (ImageView<U> &) )&CCDNoise::applyTo,
                  "\n"
                  "Add noise to an input Image.\n"
                  "\n"
