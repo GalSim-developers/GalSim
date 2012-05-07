@@ -4,24 +4,39 @@ import galsim
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
 def createDistorted(gsobject, ellipse):
-    new = gsobject.copy()
-    new.applyDistortion(ellipse)
-    return new
+    """Create a new GSObject by applying a galsim.Ellipse distortion.
+    """
+    return GSObject(gsobject.SBProfile.distort(ellipse))
+
 
 def createSheared(gsobject, g1, g2):
-    new = gsobject.copy()
-    new.applyShear(g1, g2)
-    return new
+    """Create a new GSObject by applying a (g1, g2) shear.
+    """
+    # SBProfile expects an e1,e2 distortion, rather than a shear,
+    # so we need to convert:
+    # e = (a^2-b^2) / (a^2+b^2)
+    # g = (a-b) / (a+b)
+    # b/a = (1-g)/(1+g)
+    # e = (1-(b/a)^2) / (1+(b/a)^2)
+    import math
+    gsq = g1*g1 + g2*g2
+    if gsq > 0.:
+        g = math.sqrt(gsq)
+        boa = (1-g) / (1+g)
+        e = (1 - boa*boa) / (1 + boa*boa)
+        e1 = g1 * (e/g)
+        e2 = g2 * (e/g)
+        return GSObject(gsobject.SBProfile.distort(galsim.Ellipse(e1,e2)))
 
 def createRotated(gsobject, theta):
-    new = gsobject.copy()
-    new.applyRotation(theta)
-    return new
-
+    """Create a new GSObject by applying an angular rotation theta [radians, +ve anticlockwise].
+    """
+    return GSObject(gsobject.SBProfile.rotate(theta))
+        
 def createShifted(gsobject, dx, dy):
-    new = gsobject.copy()
-    new.applyShift(dx, dy)
-    return new
+    """Create a new GSObject by applying a (dx, dy) shift.
+    """
+    return GSObject(gsobject.SBProfile.shift(dx, dy))
 
 
 class GSObject:
