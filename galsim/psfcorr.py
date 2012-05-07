@@ -29,9 +29,9 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
 
     result = galsim.EstimateShearHSM(final_image, final_epsf_image)
 
-    result.observed_shape is (0.0595676,1.96446e-17)
+    result.observed_shape is (0.0595676, 0)
 
-    result.corrected_shape is (0.0981158,-6.16237e-17), compared with the expected (0.09975, 0) for
+    result.corrected_shape is (0.0981158, 0), compared with the expected (0.09975, 0) for
     a perfect PSF correction method.
 
     Parameters
