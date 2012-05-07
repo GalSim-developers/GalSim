@@ -24,16 +24,24 @@ import logging
 # More than one PSF can be specified via adding multiple entries to the list below; the resulting
 # PSF in the output image will be the *convolution* of all entries in the list.
 #
-config.PSF.type = ["Moffat"]
+config.PSF.type = ["Moffat", "Pixel"]
 #
-# Constant values / distributions for PSF parameters may be set below (will be overwritten by
-# any values for these parameters found in the input catalogues).
+# Distributions for PSF parameters (including constant values) may be set below.  These will be 
+# overwritten by any values for these parameters found in the input catalogues.
 #
 # e.g.:
 #
 # config.PSF.Moffat.beta.distribution = "Constant"
 # config.PSF.Moffat.beta.value = 3.
 #
+# Any parameters not set either in configuration files or input catalogues will adopt their
+# keyword default values.
+config.PSF.Moffat.flux.distribution = "Constant"
+config.PSF.Moffat.flux.value = 1.
+config.PSF.Pixel.xw.distribution = "Constant"
+config.PSF.Pixel.xw.value = 1.
+config.PSF.Pixel.yw.distribution = "Constant"
+config.PSF.Pixel.yw.value = 1.
 
 
 # --- galaxy type ---
@@ -66,6 +74,8 @@ config.galaxy.type = ["DeVaucouleurs", "Exponential"]
 # config.galaxy.Exponential.re.alpha = 3.5
 # config.galaxy.Exponential.re.beta = 1.3
 #
+# Any parameters not set either in configuration files or input catalogues will adopt their
+# keyword default values.
 
 
 # --- noise distribution ---
