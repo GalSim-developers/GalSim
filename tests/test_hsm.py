@@ -26,6 +26,43 @@ pixel_scale = 0.2
 decimal = 2 # decimal place at which to require equality in sizes
 decimal_shape = 3 # decimal place at which to require equality in shapes
 
+# define inputs and expected results for tests that use real SDSS galaxies
+img_dir = os.path.join(".","HSM_precomputed")
+gal_file_prefix = "image."
+psf_file_prefix = "psf."
+img_suff = ".fits"
+file_indices = [0, 2, 4, 6, 8]
+x_centroid = [35.888, 19.44, 8.74, 20.193, 57.94]
+y_centroid = [19.845, 25.047, 11.92, 38.93, 27.73]
+sky_var = [35.01188, 35.93418, 35.15456, 35.11146, 35.16454]
+correction_methods = ["KSB", "BJ", "LINEAR", "REGAUSS"]
+# Note: expected results give shear for KSB and distortion for others, but the results below have
+# converted KSB expected results to distortion for the sake of consistency
+e1_expected = np.array([
+        [0.467603106752, 0.381211727, 0.398856937, 0.401755571],
+        [0.28618443944, 0.199222784, 0.233883543, 0.234257525],
+        [0.271533794146, 0.158049396, 0.183517068, 0.184893412],
+        [-0.293754156071, -0.457024541, 0.123946584, -0.609233462],
+        [0.557720893779, 0.374143023, 0.714147448, 0.435404409] ])
+e2_expected = np.array([
+        [-0.867225166489, -0.734855778, -0.777027588, -0.774684891],
+        [-0.469354341577, -0.395520479, -0.502540961, -0.464466257],
+        [-0.519775291311, -0.471589061, -0.574750641, -0.529664935],
+        [0.345688365839, -0.342047099, 0.120603755, -0.446743913],
+        [0.525728304099, 0.370691830, 0.702724807, 0.433999442] ])
+resolution_expected = np.array([
+        [0.796144249, 0.835624917, 0.835624917, 0.827796187],
+        [0.685023735, 0.699602704, 0.699602704, 0.659457638],
+        [0.634736458, 0.651040481, 0.651040481, 0.614663396],
+        [0.477027015, 0.477210752, 0.477210752, 0.423157447],
+        [0.595205998, 0.611824797, 0.611824797, 0.563582092] ])
+sigma_e_expected = np.array([
+        [0.016924826, 0.014637648, 0.014637648, 0.014465546],
+        [0.075769504, 0.073602324, 0.073602324, 0.064414520],
+        [0.110253112, 0.106222900, 0.106222900, 0.099357106],
+        [0.185276702, 0.184300955, 0.184300955, 0.173478300],
+        [0.073020065, 0.070270966, 0.070270966, 0.061856263] ])
+
 def test_moments_basic():
     """Test that we can properly recover adaptive moments for Gaussians."""
     for sig in gaussian_sig_values:
@@ -73,6 +110,39 @@ def test_shearest_basic():
 
 def test_shearest_precomputed():
     """Test that we can recover shears the same as before the code was put into GalSim."""
+    # loop over real galaxies
+    for index in range(len(file_indices)):
+        # define input filenames
+        img_file = os.path.join(img_dir, gal_file_prefix + str(file_indices[index]) + img_suff)
+        psf_file = os.path.join(img_dir, psf_file_prefix + str(file_indices[index]) + img_suff)
+
+        # read in information for objects and expected results
+        img = galsim.fits.read(img_file)
+        img -= 1000
+        psf = galsim.fits.read(psf_file)
+        psf -= 1000
+
+        # loop over methods
+        for method_index in range(len(correction_methods)):
+            # call PSF correction
+            result = galsim.EstimateShearHSM(img, psf, sky_var = sky_var[index], shear_est =
+                                             correction_methods[method_index],
+                                             guess_x_centroid = x_centroid[index], guess_y_centroid
+                                             = y_centroid[index])
+
+            # compare results with precomputed
+            np.testing.assert_almost_equal(result.corrected_shape.getE1(),
+                                           e1_expected[index][method_index], decimal =
+                                           decimal_shape)
+            np.testing.assert_almost_equal(result.corrected_shape.getE2(),
+                                           e2_expected[index][method_index], decimal =
+                                           decimal_shape)
+            np.testing.assert_almost_equal(result.resolution_factor,
+                                           resolution_expected[index][method_index], decimal =
+                                           decimal_shape)
+            np.testing.assert_almost_equal(result.corrected_shape_err,
+                                           sigma_e_expected[index][method_index], decimal =
+                                           decimal_shape)
 
 if __name__ == "__main__":
     test_moments_basic()
