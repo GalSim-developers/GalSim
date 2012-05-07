@@ -42,6 +42,19 @@
 #endif
 namespace galsim {
 
+    // Function for applying deviates to an image... Used as a method for all Deviates below.
+    template <typename D, typename T>
+    static void ApplyDeviateToImage(D& dev, ImageView<T>& data) 
+    {
+        // Typedef for image row iterable
+        typedef typename ImageView<T>::iterator ImIter;
+
+        for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
+            ImIter ee = data.rowEnd(y);
+            for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += dev(); }
+        }
+    }
+
     /**
      * @brief Pseudo-random number generator with uniform distribution in interval [0.,1.).
      * 
@@ -97,16 +110,8 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) {
-            // typedef for image row iterable
-            typedef typename ImageView<T>::iterator ImIter;
+        void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
 
-            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                ImIter ee = data.rowEnd(y);
-                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
-            }
-        }
-            
 
     private:
         boost::mt19937 urng;
@@ -215,15 +220,8 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) {
-            // Typedef for image row iterable
-            typedef typename ImageView<T>::iterator ImIter;
+        void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
 
-            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                ImIter ee = data.rowEnd(y);
-                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
-            }
-        }
 
     private:
 
@@ -308,16 +306,9 @@ namespace galsim {
          *
          * @param[in,out] data The Image to be noise-ified.
          */
-        template <typename T>
-        void applyTo(ImageView<T> data) {
-            // Typedef for image row iterable
-            typedef typename ImageView<T>::iterator ImIter;
+         template <typename T>
+         void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
 
-            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                ImIter ee = data.rowEnd(y);
-                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
-            }
-        }
 
     private:
         UniformDeviate& u;
@@ -379,15 +370,8 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) {
-            // Typedef for image row iterable
-            typedef typename ImageView<T>::iterator ImIter;
+        void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
 
-            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                ImIter ee = data.rowEnd(y);
-                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
-            }
-        }
 
     private:
         UniformDeviate& u;
@@ -475,15 +459,8 @@ namespace galsim {
          * @param[in,out] data  The Image.
          */
         template <typename T>
-        void applyTo(ImageView<T>& data) {
-            // Typedef for image row iterable
-            typedef typename ImageView<T>::iterator ImIter;
+        void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
 
-            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                ImIter ee = data.rowEnd(y);
-                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
-            }
-        }
 
     private:
 
@@ -573,15 +550,8 @@ namespace galsim {
          * @param[in,out] data  The Image.
          */
         template <typename T>
-        void applyTo(ImageView<T>& data) {
-            // Typedef for image row iterable
-            typedef typename ImageView<T>::iterator ImIter;
+        void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
 
-            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                ImIter ee = data.rowEnd(y);
-                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
-            }
-        }
 
     private:
 
@@ -654,15 +624,8 @@ namespace galsim {
          * @param[in,out] data  The Image.
          */
         template <typename T>
-        void applyTo(ImageView<T>& data) {
-            // Typedef for image row iterable
-            typedef typename ImageView<T>::iterator ImIter;
+        void applyTo(ImageView<T>& data) { ApplyDeviateToImage(*this, data); }
 
-            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                ImIter ee = data.rowEnd(y);
-                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
-            }
-        }
 
     private:
 
