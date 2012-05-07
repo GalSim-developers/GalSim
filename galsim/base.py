@@ -149,6 +149,38 @@ class GSObject:
     def shoot(self):
         raise NotImplementedError("Sorry, photon shooting coming soon!")
 
+# MJ: These next few show an alternate way of making new GSObjects.
+# Rather than having a derived class like Convolve, we can just have a function
+# that returns the appropriate GSObject.  
+def Rotate(gsobj, theta):
+    """
+    Make a rotated version of the input GSObject
+    """
+    return GSObject(gsobj.SBProfile.rotate(theta))
+
+def Shift(gsobj, dx, dy):
+    """
+    Make a shifted version of the input GSObject
+    """
+    return GSObject(gsobj.SBProfile.shift(dx,dy))
+
+def Shear(gsobj, g1, g2):
+    """
+    Make a sheared version of the input GSObject
+    """
+    import math
+    gsq = g1*g1 + g2*g2
+    if gsq > 0.:
+        g = math.sqrt(gsq)
+        boa = (1-g) / (1+g)
+        e = (1 - boa*boa) / (1 + boa*boa)
+        e1 = g1 * (e/g)
+        e2 = g2 * (e/g)
+    else:
+        e1 = 0.
+        e2 = 0.
+    return GSObject(gsobj.SBProfile.distort(galsim.Ellipse(e1,e2)))
+
 
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
 # SBPs...
