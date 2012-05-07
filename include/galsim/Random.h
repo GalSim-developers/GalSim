@@ -645,7 +645,7 @@ namespace galsim {
          *               non-positive value is undefined.
          */
         void setN(double n) {
-	  chi_squared.param(boost::random::chi_squared_distribution<>::param_type(n));
+	        chi_squared.param(boost::random::chi_squared_distribution<>::param_type(n));
         }
 
         /**
