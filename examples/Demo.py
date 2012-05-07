@@ -85,7 +85,8 @@ def Script1():
     logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.getE1(),
                 results.observed_shape.getE2(), results.moments_sigma)
     logger.info('Expected values in the limit that pixel response and noise are negligible:')
-    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f', 0.0, 0.0, gal_sigma/pixel_scale)
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f', 0.0, 0.0, 
+                math.sqrt(gal_sigma**2 + psf_sigma**2)/pixel_scale) 
     print
 
 # Script 2: Sheared, exponential galaxy, Moffat PSF, Poisson noise
