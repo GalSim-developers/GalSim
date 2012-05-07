@@ -23,13 +23,13 @@ except ImportError:
 # to this python script.
 
 numArg = len(sys.argv)-1 # first entry in sys.argv is the name of the script
-if (numArg < 1 or numArg > 5):
-    raise RuntimeError("Wrong number of command-line arguments: should be in the range 1...5!")
+if (numArg < 1 or numArg > 3):
+    raise RuntimeError("Wrong number of command-line arguments: should be in the range 1...3!")
 
 image_file = sys.argv[1]
 guess_sigma = 5.0
 sky_level = 0.0
-if (numArg == 2):
+if (numArg >= 2):
     guess_sigma = float(sys.argv[2])
 if (numArg == 3):
     sky_level = float(sys.argv[3])
