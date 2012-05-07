@@ -21,7 +21,7 @@ except ImportError:
 
 # define a range of input parameters for the Gaussians that we are testing
 gaussian_sig_values = [0.5, 1.0, 2.0]
-shear_values = [0.01, 0.03, 0.05]
+shear_values = [0.01, 0.03, 0.10, 0.30]
 pixel_scale = 0.2
 decimal = 2 # decimal place at which to require equality in sizes
 decimal_shape = 3 # decimal place at which to require equality in shapes
@@ -67,9 +67,11 @@ def test_moments_basic():
     """Test that we can properly recover adaptive moments for Gaussians."""
     for sig in gaussian_sig_values:
         for g1 in shear_values:
-            distortion_1 = np.tanh(2.0*math.atanh(g1))
             for g2 in shear_values:
-                distortion_2 = np.tanh(2.0*math.atanh(g2))
+                total_shear = np.sqrt(g1**2 + g2**2)
+                conversion_factor = np.tanh(2.0*math.atanh(total_shear))/total_shear
+                distortion_1 = g1*conversion_factor
+                distortion_2 = g2*conversion_factor
                 gal = galsim.Gaussian(flux = 1.0, sigma = sig)
                 gal.applyShear(g1, g2)
                 gal_image = gal.draw(dx = pixel_scale)
@@ -89,10 +91,11 @@ def test_shearest_basic():
     """Test that we can recover shears for Gaussian galaxies and PSFs."""
     for sig in gaussian_sig_values:
         for g1 in shear_values:
-            distortion_1 = np.tanh(2.0*math.atanh(g1))
             for g2 in shear_values:
-                print sig, g1, g2
-                distortion_2 = np.tanh(2.0*math.atanh(g2))
+                total_shear = np.sqrt(g1**2 + g2**2)
+                conversion_factor = np.tanh(2.0*math.atanh(total_shear))/total_shear
+                distortion_1 = g1*conversion_factor
+                distortion_2 = g2*conversion_factor
                 gal = galsim.Gaussian(flux = 1.0, sigma = sig)
                 psf = galsim.Gaussian(flux = 1.0, sigma = sig)
                 gal.applyShear(g1, g2)
