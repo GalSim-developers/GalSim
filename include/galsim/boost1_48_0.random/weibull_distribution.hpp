@@ -18,8 +18,8 @@
 #include <istream>
 #include <boost/config.hpp>
 #include <boost/limits.hpp>
-#include <boost/random/detail/operators.hpp>
-#include <boost/random/uniform_01.hpp>
+#include "galsim/boost1_48_0.random/detail/operators.hpp"
+#include "galsim/boost1_48_0.random/uniform_01.hpp"
 
 namespace boost {
 namespace random {

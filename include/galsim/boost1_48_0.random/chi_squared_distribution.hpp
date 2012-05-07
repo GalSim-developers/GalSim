@@ -16,8 +16,8 @@
 #include <iosfwd>
 #include <boost/limits.hpp>
 
-#include <boost/random/detail/config.hpp>
-#include <boost/random/gamma_distribution.hpp>
+#include "galsim/boost1_48_0.random/detail/config.hpp"
+#include "galsim/boost1_48_0.random/gamma_distribution.hpp"
 
 namespace boost {
 namespace random {

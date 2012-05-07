@@ -21,8 +21,8 @@
 #include <boost/assert.hpp>
 #include <boost/limits.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/random/detail/config.hpp>
-#include <boost/random/exponential_distribution.hpp>
+#include "galsim/boost1_48_0.random/detail/config.hpp"
+#include "galsim/boost1_48_0.random/exponential_distribution.hpp"
 
 namespace boost {
 namespace random {
