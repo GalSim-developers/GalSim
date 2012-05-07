@@ -49,9 +49,6 @@ struct PyHSMShapeData {
             .def_readwrite("correction_method", &HSMShapeData::correction_method)
             .def_readwrite("resolution_factor", &HSMShapeData::resolution_factor)
             .def_readwrite("error_message", &HSMShapeData::error_message)
-            .def("getMxx", &HSMShapeData::getMxx)
-            .def("getMyy", &HSMShapeData::getMyy)
-            .def("getMxy", &HSMShapeData::getMxy)
             ;
 
         wrapTemplates<float, float>();
