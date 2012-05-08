@@ -17,11 +17,12 @@
 
 // Noise stuff
 #include "galsim/Random.h"
+#include "galsim/CCDNoise.h"
 
 // An integration package by Mike Jarvis
 #include "galsim/integ/Int.h"
 
 // Adaptive moments code by Hirata, Seljak, and Mandelbaum
-#include "galsim/hsm/psfcorr.h"
+#include "galsim/hsm/PSFCorr.h"
 
 #endif

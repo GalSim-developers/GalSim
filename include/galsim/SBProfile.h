@@ -215,7 +215,7 @@ namespace galsim {
          *
          * A square image will be
          * drawn which is big enough to avoid "folding."  If drawing is done using FFT,
-         * it will be scaled up to a power of 2, or 3x2^n, whicher fits.
+         * it will be scaled up to a power of 2, or 3x2^n, whichever fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image  may be calculated internally on a larger grid to avoid folding.
          * The default draw() routines decide internally whether image can be drawn directly
@@ -230,16 +230,19 @@ namespace galsim {
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
          *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
-         * @returns image
+         * @returns image (as ImageViewF; if another type is preferred, then use the draw 
+         *                  method that takes an image as argument)
          */
-        virtual Image<float> draw(double dx=0., int wmult=1) const;
+        ImageView<float> draw(double dx=0., int wmult=1) const;
 
+        //@{
         /** 
          * @brief Draw the SBProfile in real space returning the summed flux.
          *
-         * If on input image `img` is not specified or has null dimension, a square image will be
-         * drawn which is big enough to avoid "folding."  If drawing is done using FFT,
-         * it will be scaled up to a power of 2, or 3x2^n, whicher fits.
+         * If the input image `img` is an Image (not ImageView) and has null dimension,
+         * a square image will be drawn which is big enough to avoid "folding." 
+         * If drawing is done using FFT, it will be scaled up to a power of 2, or 3x2^n, 
+         * whichever fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding.
          * The default draw() routines decide internally whether image can be drawn directly
@@ -247,7 +250,7 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   image
+         * @param[in,out]   image (any of ImageF, ImageD, ImageS, ImageI)
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
@@ -257,20 +260,25 @@ namespace galsim {
          *                  and have less folding.
          * @returns summed flux.
          */
-        virtual double draw(Image<float> & image, double dx=0., int wmult=1) const; 
+        template <typename T>
+        double draw(Image<T>& image, double dx=0., int wmult=1) const; 
+        template <typename T>
+        double draw(ImageView<T>& image, double dx=0., int wmult=1) const; 
+        //@}
 
+        //@{
         /** 
          * @brief Draw an image of the SBProfile in real space forcing the use of real methods 
          * where we have a formula for x values.
          *
-         * If on input image `img` is not specified or has null dimension, a square image will be
+         * If the input image is an Image and has null dimension, a square image will be
          * drawn which is big enough to avoid "folding." 
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding.
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   image
+         * @param[in,out]   image (any of ImageF, ImageD, ImageS, ImageI or views)
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
@@ -280,13 +288,18 @@ namespace galsim {
          *                  and have less folding.
          * @returns summed flux.
          */
-        virtual double plainDraw(Image<float> & image, double dx=0., int wmult=1) const; 
+        template <typename T>
+        double plainDraw(ImageView<T>& image, double dx=0., int wmult=1) const; 
+        template <typename T>
+        double plainDraw(Image<T>& image, double dx=0., int wmult=1) const; 
+        //@}
 
+        //@{
         /** 
          * @brief Draw an image of the SBProfile in real space forcing the use of Fourier transform
          * from k space.
          *
-         * If on input image `img` is not specified or has null dimension, a square image will be
+         * If the input image is an Image and has null dimension, a square image will be
          * drawn which is big enough to avoid "folding."  Drawing is done using FFT,
          * and the image will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
@@ -294,7 +307,7 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   image
+         * @param[in,out]   image (any of ImageF, ImageD, ImageS, ImageI or views)
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
@@ -304,14 +317,19 @@ namespace galsim {
          *                  and have less folding.
          * @returns summed flux.
          */
-        virtual double fourierDraw(Image<float> & image, double dx=0., int wmult=1) const; 
+        template <typename T>
+        double fourierDraw(ImageView<T>& image, double dx=0., int wmult=1) const; 
+        template <typename T>
+        double fourierDraw(Image<T>& image, double dx=0., int wmult=1) const; 
+        //@}
 
+        //@{
         /** 
          * @brief Draw an image of the SBProfile in k space.
          *
          * For drawing in k space: routines are analagous to real space, except 2 images are 
          * needed since the SBProfile is complex.
-         * If on input either image `Re` or `Im` is not specified or has null dimension, square 
+         * If the input images are Image's and have null dimension, square 
          * images will be drawn which are big enough to avoid "folding."  If drawing is done using 
          * FFT, they will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
@@ -319,46 +337,58 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   re image of real argument of SBProfile in k space.
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space.
+         * @param[in,out]   re image of real argument of SBProfile in k space (any of ImageF,
+         *                  ImageD, ImageS, ImageI or views). 
+         * @param[in,out]   im image of imaginary argument of SBProfile in k space (any of ImageF,
+         *                  ImageD, ImageS, ImageI or views).
          * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
          *                  routine will choose `dk` necessary to avoid folding of image in real 
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
          *                  you will receive an image with folding artifacts included.
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
          */
-        virtual void drawK(Image<float> & re, Image<float> & im, double dk=0., int wmult=1) const; 
+        template <typename T>
+        void drawK(ImageView<T>& re, ImageView<T>& im, double dk=0., int wmult=1) const; 
+        template <typename T>
+        void drawK(Image<T>& re, Image<T>& im, double dk=0., int wmult=1) const; 
+        //@}
 
+        //@{
         /** 
          * @brief Draw an image of the SBProfile in k space forcing the use of k space methods 
          * where we have a formula for k values.
          *
          * For drawing in k space: routines are analagous to real space, except 2 images are 
-         * needed since the SBProfile is complex.  If on input either image `Re` or `Im` is not 
-         * specified or has null dimension, square images will be drawn which are big enough to 
+         * needed since the SBProfile is complex.  If the input images are Image's and have
+         * null dimension, square images will be drawn which are big enough to 
          * avoid "folding."
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   re image of real argument of SBProfile in k space.
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space.
+         * @param[in,out]   re image of real argument of SBProfile in k space (any of ImageF,
+         *                  ImageD, ImageS, ImageI or views).
+         * @param[in,out]   im image of imaginary argument of SBProfile in k space (any of ImageF,
+         *                  ImageD, ImageS, ImageI or views).
          * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
          *                  routine will choose `dk` necessary to avoid folding of image in real 
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
          *                  you will receive an image with folding artifacts included.
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
          */
-        virtual void plainDrawK(
-            Image<float> & re, Image<float> & im, 
-            double dk=0., int wmult=1) const; 
+        template <typename T>
+        void plainDrawK(ImageView<T>& re, ImageView<T>& im, double dk=0., int wmult=1) const; 
+        template <typename T>
+        void plainDrawK(Image<T>& re, Image<T>& im, double dk=0., int wmult=1) const; 
+        //@}
 
+        //@{
         /**
          * @brief Draw an image of the SBProfile in k space forcing the use of Fourier transform 
          * from real space.
          *
          * For drawing in k space: routines are analagous to real space, except 2 images are 
          * needed since the SBProfile is complex.
-         * If on input either image `Re` or `Im` is not specified or has null dimension, square 
+         * If the input images are Image's and have null dimension, square 
          * images will be drawn which are big enough to avoid "folding."  Drawing is done using FFT,
          * and the images will be scaled up to a power of 2, or 3x2^n, whicher fits.
          * If input image has finite dimensions then these will be used, although in an FFT the 
@@ -366,26 +396,35 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   re image of real argument of SBProfile in k space.
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space.
+         * @param[in,out]   re image of real argument of SBProfile in k space (any of ImageF,
+         *                  ImageD, ImageS, ImageI or views).
+         * @param[in,out]   im image of imaginary argument of SBProfile in k space (any of ImageF,
+         *                  ImageD, ImageS, ImageI or views).
          * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
          *                  routine will choose `dk` necessary to avoid folding of image in real 
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
          *                  you will receive an image with folding artifacts included.
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
          */
-        virtual void fourierDrawK(
-            Image<float> & re, Image<float> & im,
-            double dk=0., int wmult=1) const; 
+        template <typename T>
+        void fourierDrawK(ImageView<T>& re, ImageView<T>& im, double dk=0., int wmult=1) const; 
+        template <typename T>
+        void fourierDrawK(Image<T>& re, Image<T>& im, double dk=0., int wmult=1) const; 
+        //@}
 
         /** 
          * @brief Utility for drawing into Image data structures.
          *
-         * @param[out] image    image to fill
+         * @param[out] image    image to fill (any of ImageF, ImageD, ImageS, ImageI).
          * @param[in]  dx       grid pitch on which SBProfile image is drawn
+         *
+         * Note: Ideally, this wouldn't be public, but we want to use this from within
+         * SBAdd which has a list<SBProfile*>, and it wants to call fillXImage for each item.
+         * Unfortunately, that requires that fillXImage be public rather than protected.
          */
-        virtual double fillXImage(Image<float> & image, double dx) const;  // return flux integral
-
+        template <typename T>
+        double fillXImage(ImageView<T>& image, double dx) const  // return flux integral
+        { return doFillXImage(image, dx); }
 #endif
 
         /**
@@ -400,6 +439,23 @@ namespace galsim {
          */
         virtual void fillXGrid(XTable& xt) const;
 
+#ifdef USE_IMAGES
+        // Virtual functions cannot be templates, so to make fillXImage work like a virtual
+        // function, we have it call these, which need to include all the types of Image
+        // that we want to use.
+        //
+        // Then in the derived class, these functions should call a template version of 
+        // fillXImage in that derived class that implements the functionality you want.
+        virtual double doFillXImage(ImageView<float>& image, double dx) const
+        { return doFillXImage2(image,dx); }
+        virtual double doFillXImage(ImageView<double>& image, double dx) const
+        { return doFillXImage2(image,dx); }
+
+        // Here in the base class, we need yet another name for the version that actually
+        // implements this as a template:
+        template <typename T>
+        double doFillXImage2(ImageView<T>& image, double dx) const;
+#endif
     };
 
     /** 
@@ -1251,10 +1307,21 @@ namespace galsim {
         // Override to put in fractional edge values:
         void fillXGrid(XTable& xt) const;
 
+        template <typename T>
+        double fillXImage(ImageView<T>& I, double dx) const;
+
     protected:
 #ifdef USE_IMAGES
-        double fillXImage(Image<float>& I, double dx) const;
+        virtual double doFillXImage(ImageView<float>& I, double dx) const
+        { return fillXImage(I,dx); }
+        virtual double doFillXImage(ImageView<double>& I, double dx) const
+        { return fillXImage(I,dx); }
+        virtual double doFillXImage(ImageView<short>& I, double dx) const
+        { return fillXImage(I,dx); }
+        virtual double doFillXImage(ImageView<int>& I, double dx) const
+        { return fillXImage(I,dx); }
 #endif
+
     };
 
 #ifdef USE_LAGUERRE

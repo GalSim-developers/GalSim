@@ -36,8 +36,9 @@ namespace galsim {
     }
 
 #ifdef USE_IMAGES
+    template <typename T>
     SBInterpolatedImage::SBInterpolatedImage(
-        Image<float> const & img, const Interpolant2d& i, double dx_, double padFactor) : 
+        const BaseImage<T>& img, const Interpolant2d& i, double dx_, double padFactor) : 
 
         dx(dx_), Nimages(1),
         xInterp(&i), kInterp(&defaultKInterpolant2d),
@@ -260,7 +261,8 @@ namespace galsim {
 #ifdef USE_IMAGES
     // One more time: for images now
     // Returns total flux
-    double SBInterpolatedImage::fillXImage(Image<float> & I, double dx) const 
+    template <typename T>
+    double SBInterpolatedImage::fillXImage(ImageView<T>& I, double dx) const 
     {
 #ifdef DANIELS_TRACING
         cout << "SBInterpolatedImage::fillXImage called" << endl;
@@ -270,7 +272,7 @@ namespace galsim {
             for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
                 for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {
                     Position<double> x(ix*dx,iy*dx);
-                    double val = xValue(x);
+                    T val = xValue(x);
                     sum += val;
                     I(ix,iy) = val;
                 }
@@ -278,7 +280,9 @@ namespace galsim {
             return sum;
         } else {
             // Otherwise just use the normal routine to fill the grid:
-            return SBProfile::fillXImage(I,dx);
+            // Note that we need to call doFillXImage, not fillXImage here,
+            // to avoid the virtual function resolution.
+            return SBProfile::doFillXImage(I,dx);
         }
     }
 #endif
@@ -396,5 +400,16 @@ namespace galsim {
 
 #endif
 
+    // instantiate template functions for expected image types
+#ifdef USE_IMAGES
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<float>& img, const Interpolant2d& i, double dx_, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<double>& img, const Interpolant2d& i, double dx_, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<short>& img, const Interpolant2d& i, double dx_, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<int>& img, const Interpolant2d& i, double dx_, double padFactor);
+#endif
 }
 

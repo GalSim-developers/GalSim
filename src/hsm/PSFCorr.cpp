@@ -21,10 +21,11 @@
   along with meas_shape.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cmath>
+#include <cstring>
+#include "hsm/PSFCorr.h"
 
 namespace galsim {
 namespace hsm {
@@ -34,6 +35,16 @@ namespace hsm {
 
 #define NSIG_RG   3.0
 #define NSIG_RG2  3.6
+#define REGAUSS_TOO_SMALL
+    // REGAUSS_TOO_SMALL: this prevents the re-Gaussianization PSF correction from completely
+    // failing at the beginning, before trying to do PSF correction, due to the crudest possible PSF
+    // correction (Gaussian approximation) suggesting that the galaxy is very small.  This could
+    // happen for some usable galaxies particularly when they have very non-Gaussian surface
+    // brightness profiles -- for example, if there's a prominent bulge that the adaptive moments
+    // attempt to fit, ignoring the more extended disk.  Setting REGAUSS_TOO_SMALL is useful for
+    // keeping galaxies that would have failed for that reason.  If they later turn out to be too
+    // small to really use, this will be reflected in the final estimate of the resolution factor,
+    // and they can be rejected after the fact.
 
     /* NUMERICAL RECIPES ROUTINES SECTION */
     /* Note: all NR routines included here are from nrutil.c, which is in
@@ -50,7 +61,7 @@ namespace hsm {
         printf("Numerical Recipes run-time error...\n");
         printf("%s\n",error_text);
         printf("...now exiting to system...\n");
-        exit(1);
+        std::exit(1);
     }
 
     /* dmatrix
@@ -247,52 +258,183 @@ namespace hsm {
 
     /* BEGIN OUR CODE HERE */
 
-    /* object data type */
+    /* Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.*/
+    template <typename T, typename U>
+    HSMShapeData EstimateShearHSMView(const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
+                                      float sky_var = 0.0, const char *shear_est = "REGAUSS",
+                                      unsigned long flags = 0xe, double guess_sig_gal = 5.0,
+                                      double guess_sig_PSF = 3.0, double precision = 1.0e-6,
+                                      double guess_x_centroid = -1000.0,
+                                      double guess_y_centroid = -1000.0) {
+        // define variables, create output HSMShapeData struct, etc.
+        HSMShapeData results;
+        RectImage gal_rect_image, PSF_rect_image;
+        ObjectData gal_data, PSF_data;
+        double amp, m_xx, m_xy, m_yy;
+        int x, y;
 
-    struct OBJECT_DATA 
-    {
-        double x0;           /* x centroid */
-        double y0;           /* y centroid */
-        double sigma;        /* width */
-        double flux;         /* total flux */
-        double e1;           /* + ellipticity */
-        double e2;           /* x ellipticity */
-        double responsivity; /* responsivity of ellipticity estimator */
-        char meas_type;      /* type of ellipticity measurement:
-                              *   'e' = Bernstein & Jarvis (2002) ellipticity
-                              *   'g' = shear estimator = shear * responsivity
-                              */
-        double resolution;   /* resolution factor (0=unresolved, 1=resolved) */
-    };
+        // repackage galaxy Image --> RectImage
+        allocate_rect_image(&gal_rect_image, gal_image.getXMin(), gal_image.getXMax(),
+                            gal_image.getYMin(), gal_image.getYMax());
 
-    /* rectangular image type */
+        for (x=gal_rect_image.xmin; x<=gal_rect_image.xmax; x++)
+            for (y=gal_rect_image.ymin; y<=gal_rect_image.ymax;y++)
+                gal_rect_image.image[x][y] = gal_image.at(x, y);
 
-    struct RECT_IMAGE 
-    {
-        long xmin; /* bounding box */
-        long xmax; /* " */
-        long ymin; /* " */
-        long ymax; /* " */
-        double **image; /* the actual map */
-        int **mask; /* mask = 0 (masked) or 1 (unmasked) */
-    };
+        // repackage PSF Image --> RectImage
+        allocate_rect_image(&PSF_rect_image, PSF_image.getXMin(), PSF_image.getXMax(),
+                            PSF_image.getYMin(), PSF_image.getYMax());
+
+        for (x=PSF_rect_image.xmin; x<=PSF_rect_image.xmax; x++)
+            for (y=PSF_rect_image.ymin; y<=PSF_rect_image.ymax;y++)
+                PSF_rect_image.image[x][y] = PSF_image.at(x, y);
+
+        // allocate ObjectData for setting defaults etc. and passing to general_shear_estimator
+        if (guess_x_centroid != -1000.0) {
+            gal_data.x0 = guess_x_centroid;
+        } else {
+            gal_data.x0 = 0.5*(gal_rect_image.xmin + gal_rect_image.xmax);
+        }
+        if (guess_y_centroid != -1000.0) {
+            gal_data.y0 = guess_y_centroid;
+        } else {
+            gal_data.y0 = 0.5*(gal_rect_image.ymin + gal_rect_image.ymax);
+        }
+        gal_data.sigma = guess_sig_gal;
+
+        PSF_data.x0 = 0.5*(PSF_rect_image.xmin + PSF_rect_image.xmax);
+        PSF_data.y0 = 0.5*(PSF_rect_image.ymin + PSF_rect_image.ymax);
+        PSF_data.sigma = guess_sig_PSF;
+
+        m_xx = guess_sig_gal*guess_sig_gal;
+        m_yy = m_xx;
+        m_xy = 0.0;
+
+        // call general_shear_estimator
+        results.image_bounds = gal_image.getBounds();
+        results.correction_method = std::string(shear_est);
+        try {
+            find_ellipmom_2(&gal_rect_image, &amp, &(gal_data.x0),
+                            &(gal_data.y0), &m_xx, &m_xy, &m_yy, &(results.moments_rho4),
+                            precision, &(results.moments_n_iter));
+            // repackage outputs to the output HSMShapeData struct
+            results.moments_amp = 2.0*amp;
+            results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
+            results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_yy));
+            results.moments_status = 0;
+
+            // and if that worked, try doing PSF correction
+            gal_data.sigma = results.moments_sigma;
+            results.correction_status = general_shear_estimator(&gal_rect_image, &PSF_rect_image,
+                                                                &gal_data, &PSF_data, (char *)shear_est, flags);
+
+            if (gal_data.meas_type == 'e') {
+                results.corrected_shape.setE1E2(gal_data.e1, gal_data.e2);
+            } else if (gal_data.meas_type == 'g') {
+                results.corrected_shape.setG1G2(gal_data.e1, gal_data.e2);
+            } else {
+                throw "Unknown shape measurement type!\n";
+            }
+
+            if (results.correction_status != 0) {
+                throw "PSF correction status indicates failure!\n";
+            }
+
+            results.corrected_shape_err = std::sqrt(4. * M_PI * sky_var) * gal_data.sigma /
+                                          (gal_data.resolution * gal_data.flux);
+            results.moments_sigma = gal_data.sigma;
+            results.moments_amp = gal_data.flux;
+            results.resolution_factor = gal_data.resolution;
+
+            if (results.resolution_factor <= 0.) {
+                throw "Unphysical situation: galaxy convolved with PSF is smaller than PSF!\n";
+            }
+        }
+        catch (char *err_msg) {
+            results.error_message = err_msg;
+            throw HSMError(err_msg);
+        }
+
+        return results;
+    }
+
+    /** Measure the adaptive moments of an object directly using ImageViews, repackaging for find_ellipmom_2.*/
+    template <typename T>
+    HSMShapeData FindAdaptiveMomView(const ImageView<T> &object_image, double guess_sig = 5.0,
+                                     double precision = 1.0e-6, double guess_x_centroid = -1000.0,
+                                     double guess_y_centroid = -1000.0) {
+        // define variables, create output HSMShapeData struct, etc.
+        HSMShapeData results;
+        RectImage object_rect_image;
+        double amp, m_xx, m_xy, m_yy;
+        int x, y;
+
+        // Repackage input Image into RectImage
+        allocate_rect_image(&object_rect_image, object_image.getXMin(), object_image.getXMax(),
+                            object_image.getYMin(), object_image.getYMax());
+
+        for (x=object_rect_image.xmin; x<=object_rect_image.xmax; x++) 
+            for (y=object_rect_image.ymin; y<=object_rect_image.ymax; y++)
+                object_rect_image.image[x][y] = object_image.at(x, y);
+        
+        // set some values for initial guesses
+        if (guess_x_centroid != -1000.0) {
+            results.moments_centroid.x = guess_x_centroid;
+        } else {
+            results.moments_centroid.x = 0.5*(object_rect_image.xmin + object_rect_image.xmax);
+        }
+        if (guess_y_centroid != -1000.0) {
+            results.moments_centroid.y = guess_y_centroid;
+        } else {
+            results.moments_centroid.y = 0.5*(object_rect_image.ymin + object_rect_image.ymax);
+        }
+        m_xx = guess_sig*guess_sig;
+        m_yy = m_xx;
+        m_xy = 0.0;
+
+        // call find_ellipmom_2
+        results.image_bounds = object_image.getBounds();
+        try {
+            find_ellipmom_2(&object_rect_image, &amp, &(results.moments_centroid.x),
+                            &(results.moments_centroid.y), &m_xx, &m_xy, &m_yy, &(results.moments_rho4),
+                            precision, &(results.moments_n_iter));
+
+            // repackage outputs from find_ellipmom_2 to the output HSMShapeData struct
+            results.moments_amp = 2.0*amp;
+            results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
+            results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_yy));
+            results.moments_status = 0;
+        }
+        catch (char *err_msg) {
+            results.error_message = err_msg;
+            results.moments_status = 1;
+            results.moments_centroid.x = 0.0;
+            results.moments_centroid.y = 0.0;
+            results.moments_rho4 = -1.0;
+            results.moments_n_iter = 0;
+            throw HSMError(err_msg);
+        }
+
+        return results;
+    }
+
 
     /* allocate_rect_image
-     * *** ALLOCATES A RECT_IMAGE STRUCTURE ***
+     * *** ALLOCATES A RectImage STRUCTURE ***
      *
-     * Allocates and initializes a RECT_IMAGE.  Note that the
+     * Allocates and initializes a RectImage.  Note that the
      * map is initialized to zero and the mask is initialized
      * to the unmasked state.
      *
      * Arguments:
-     * > A: RECT_IMAGE to be allocated
+     * > A: RectImage to be allocated
      *   xmin: bounding box xmin
      *   xmax: bounding box xmax
      *   ymin: bounding box ymin
      *   ymax: bounding box ymax
      */
 
-    void allocate_rect_image(RECT_IMAGE *A, long xmin, long xmax, long ymin, long ymax) 
+    void allocate_rect_image(RectImage *A, long xmin, long xmax, long ymin, long ymax) 
     {
 
         long x,y;
@@ -315,13 +457,13 @@ namespace hsm {
     }
 
     /* deallocate_rect_image
-     * *** DEALLOCATES A RECT_IMAGE STRUCTURE ***
+     * *** DEALLOCATES A RectImage STRUCTURE ***
      *
      * Arguemnts:
-     * > A: RECT_IMAGE to be deallocated
+     * > A: RectImage to be deallocated
      */
 
-    void deallocate_rect_image(RECT_IMAGE *A) 
+    void deallocate_rect_image(RectImage *A) 
     {
 
         free_dmatrix(A->image,A->xmin,A->xmax,A->ymin,A->ymax);
@@ -399,8 +541,8 @@ namespace hsm {
              * functions, the sine and 1-cos. (Use 1-cos for stability.)
              */
             theta = TwoPi/lcurrent * isign;
-            sintheta = sin(theta);
-            oneminuscostheta = sin(0.5*theta);
+            sintheta = std::sin(theta);
+            oneminuscostheta = std::sin(0.5*theta);
             oneminuscostheta = 2.0*oneminuscostheta*oneminuscostheta;
 
             /* FFT the individual length-lcurrent segments */
@@ -469,12 +611,10 @@ namespace hsm {
 
 #ifdef N_CHECKVAL
         if (nx<=0) {
-            fprintf(stderr,"Error: nx<=0 in qho1d_wf_1\n");
-            exit(1);
+            throw "Error: nx<=0 in qho1d_wf_1\n";
         }
         if (Nmax<0) {
-            fprintf(stderr,"Error: Nmax<0 in qho1d_wf_1\n");
-            exit(1);
+            throw "Error: Nmax<0 in qho1d_wf_1\n";
         }
 #endif
 
@@ -483,11 +623,11 @@ namespace hsm {
         beta2__2 = 0.5*beta*beta;
 
         /* Get ground state */
-        norm0 = 0.75112554446494248285870300477623 * sqrt(beta);
+        norm0 = 0.75112554446494248285870300477623 * std::sqrt(beta);
         x=xmin;
         for(j=0;j<nx;j++) {
-            psi[0][j] = norm0 * exp( -beta2__2 * x*x );
-            if (Nmax>=1) psi[1][j] = sqrt(2.) * psi[0][j] * beta * x;
+            psi[0][j] = norm0 * std::exp( -beta2__2 * x*x );
+            if (Nmax>=1) psi[1][j] = std::sqrt(2.) * psi[0][j] * beta * x;
             x += xstep;
         }
 
@@ -500,8 +640,8 @@ namespace hsm {
         for(n=1;n<Nmax;n++) {
 
             /* Recursion relation coefficients */
-            coef1 = beta * sqrt( 2. / (n+1.) );
-            coef2 = -sqrt( (double)n / (n+1.) );
+            coef1 = beta * std::sqrt( 2. / (n+1.) );
+            coef2 = -std::sqrt( (double)n / (n+1.) );
 
             x=xmin;
             for(j=0;j<nx;j++) {
@@ -522,7 +662,7 @@ namespace hsm {
      * int f(x,y) psi_m(x) psi_n(y) for the relevant weight
      *
      * Arguments:
-     *   data: RECT_IMAGE structure containing the image to be measured
+     *   data: RectImage structure containing the image to be measured
      * > moments: moments[m][n] is the m:n coefficient
      *   max_order: maximum order of moments to compute
      *   x0: center around which to compute moments (x-coordinate)
@@ -531,7 +671,7 @@ namespace hsm {
      */
 
     void find_mom_1(
-		    RECT_IMAGE *data, double **moments, int max_order, double x0, double y0, double sigma) 
+            RectImage *data, double **moments, int max_order, double x0, double y0, double sigma)
     {
 
         int m,n;
@@ -580,7 +720,7 @@ namespace hsm {
      * must be given for x0, y0, and sigma.
      *
      * Arguments:
-     *   data: RECT_IMAGE structure containing the image to be measured
+     *   data: RectImage structure containing the image to be measured
      * > moments: moments[m][n] is the m:n coefficient
      *   max_order: maximum order of moments to compute
      * > x0: Gaussian-weighted centroid (x-coordinate)
@@ -593,7 +733,7 @@ namespace hsm {
      */
 
     void find_mom_2(
-        RECT_IMAGE *data, double **moments, int max_order,
+        RectImage *data, double **moments, int max_order,
         double *x0, double *y0, double *sigma, double epsilon, int *num_iter) 
     {
 
@@ -611,8 +751,7 @@ namespace hsm {
 
 #ifdef N_CHECKVAL
         if (epsilon <= 0) {
-            fprintf(stderr,"Error: epsilon out of range in find_mom_2.\n");
-            exit(1);
+            throw "Error: epsilon out of range in find_mom_2.\n";
         }
 #endif
 
@@ -637,8 +776,8 @@ namespace hsm {
             if (dsigma < -BOUND_CORRECT_WEIGHT) dsigma = -BOUND_CORRECT_WEIGHT;
 
             /* Convergence */
-            convergence_factor = fabs(dx)>fabs(dy)? fabs(dx): fabs(dy);
-            if (fabs(dsigma)>convergence_factor) convergence_factor = fabs(dsigma);
+            convergence_factor = std::abs(dx)>std::abs(dy)? std::abs(dx): std::abs(dy);
+            if (std::abs(dsigma)>convergence_factor) convergence_factor = std::abs(dsigma);
             if (*sigma<sigma0) convergence_factor *= sigma0/(*sigma);
 
             /* Update numbers */
@@ -673,7 +812,7 @@ namespace hsm {
      * M = adaptive covariance matrix.
      *
      * Arguments:
-     *   data: the input image (RECT_IMAGE format)
+     *   data: the input image (RectImage format)
      *   x0: weight centroid (x coordinate)
      *   y0: weight centroid (y coordinate)
      *   Mxx: xx element of adaptive covariance
@@ -689,7 +828,7 @@ namespace hsm {
      */
 
     void find_ellipmom_1(
-        RECT_IMAGE *data, double x0, double y0, double Mxx,
+        RectImage *data, double x0, double y0, double Mxx,
         double Mxy, double Myy, double *A, double *Bx, double *By, double *Cxx,
         double *Cxy, double *Cyy, double *rho4w) 
     {
@@ -710,8 +849,7 @@ namespace hsm {
         /* Compute M^{-1} for use in computing weights */
         detM = Mxx * Myy - Mxy * Mxy;
         if (detM<=0 || Mxx<=0 || Myy<=0) {
-            fprintf(stderr, "Error: non positive definite adaptive moments!\n");
-            exit(1);
+            throw "Error: non positive definite adaptive moments!\n";
         }
         Minv_xx    =  Myy/detM;
         TwoMinv_xy = -Mxy/detM * 2.0;
@@ -741,7 +879,7 @@ namespace hsm {
                      */
                     y_y0 += 1.;
                     rho2 = Minv_xx__x_x0__x_x0 + TwoMinv_xy__x_x0*y_y0 + *(myyptr++);
-                    intensity = exp(-0.5 * rho2) * *(imageptr++);
+                    intensity = std::exp(-0.5 * rho2) * *(imageptr++);
 
                     /* Now do the addition */
                     *A    += intensity;
@@ -770,7 +908,7 @@ namespace hsm {
      * Note that the total image intensity for the Gaussian is 2A.
      *
      * Arguments:
-     *   data: RECT_IMAGE structure containing the image
+     *   data: RectImage structure containing the image
      * > A: adaptive amplitude
      * > x0: adaptive centroid (x)
      * > y0: adaptive centroid (y)
@@ -783,7 +921,7 @@ namespace hsm {
      */
 
     void find_ellipmom_2(
-        RECT_IMAGE *data, double *A, double *x0, double *y0,
+        RectImage *data, double *A, double *x0, double *y0,
         double *Mxx, double *Mxy, double *Myy, double *rho4, double epsilon, int *num_iter) 
     {
 
@@ -799,29 +937,27 @@ namespace hsm {
 
 #ifdef N_CHECKVAL
         if (epsilon <= 0) {
-            fprintf(stderr,"Error: epsilon out of range in find_mom_2.\n");
-            exit(1);
+            throw "Error: epsilon out of range in find_mom_2.\n";
         }
 #endif
 
         /* Iterate until we converge */
         while(convergence_factor > epsilon) {
-	  
+
             /* Get moments */
             find_ellipmom_1(data, *x0, *y0, *Mxx, *Mxy, *Myy, &Amp, &Bx, &By,
                             &Cxx, &Cxy, &Cyy, rho4);
 
             /* Compute configuration of the weight function */
-            two_psi = atan2( 2* *Mxy, *Mxx- *Myy );
-            semi_a2 = 0.5 * ((*Mxx+*Myy) + (*Mxx-*Myy)*cos(two_psi)) + *Mxy*sin(two_psi);
+            two_psi = std::atan2( 2* *Mxy, *Mxx- *Myy );
+            semi_a2 = 0.5 * ((*Mxx+*Myy) + (*Mxx-*Myy)*std::cos(two_psi)) + *Mxy*std::sin(two_psi);
             semi_b2 = *Mxx + *Myy - semi_a2;
 
             if (semi_b2 <= 0) {
-                fprintf(stderr,"Error: non positive-definite weight in find_ellipmom_2.\n");
-                exit(1);
+                throw "Error: non positive-definite weight in find_ellipmom_2.\n";
             }
 
-            shiftscale = sqrt(semi_b2);
+            shiftscale = std::sqrt(semi_b2);
             if (*num_iter == 0) shiftscale0 = shiftscale;
 
             /* Now compute changes to x0, etc. */
@@ -843,12 +979,12 @@ namespace hsm {
             if (dyy    < -BOUND_CORRECT_WEIGHT) dyy    = -BOUND_CORRECT_WEIGHT;
 
             /* Convergence tests */
-            convergence_factor = fabs(dx)>fabs(dy)? fabs(dx): fabs(dy);
+            convergence_factor = std::abs(dx)>std::abs(dy)? std::abs(dx): std::abs(dy);
             convergence_factor *= convergence_factor;
-            if (fabs(dxx)>convergence_factor) convergence_factor = fabs(dxx);
-            if (fabs(dxy)>convergence_factor) convergence_factor = fabs(dxy);
-            if (fabs(dyy)>convergence_factor) convergence_factor = fabs(dyy);
-            convergence_factor = sqrt(convergence_factor);
+            if (std::abs(dxx)>convergence_factor) convergence_factor = std::abs(dxx);
+            if (std::abs(dxy)>convergence_factor) convergence_factor = std::abs(dxy);
+            if (std::abs(dyy)>convergence_factor) convergence_factor = std::abs(dyy);
+            convergence_factor = std::sqrt(convergence_factor);
             if (shiftscale<shiftscale0) convergence_factor *= shiftscale0/shiftscale;
 
             /* Now update moments */
@@ -862,16 +998,18 @@ namespace hsm {
              * report a failure */
 #define MAX_AMOMENT 8000.0
 #define MAX_ASHIFT 15.0
-            if (fabs(*Mxx)>MAX_AMOMENT || fabs(*Mxy)>MAX_AMOMENT || fabs(*Myy)>MAX_AMOMENT
-                || fabs(*x0-x00)>MAX_ASHIFT || fabs(*y0-y00)>MAX_ASHIFT) {
-	      fprintf(stderr, "Error: adaptive moment failed: %lf %lf %lf %lf %lf %d\n",fabs(*Mxx),fabs(*Mxy),fabs(*Myy),fabs(*x0-x00),fabs(*y0-y00),*num_iter);
-                exit(1);
+            if (std::abs(*Mxx)>MAX_AMOMENT || std::abs(*Mxy)>MAX_AMOMENT || std::abs(*Myy)>MAX_AMOMENT
+                || std::abs(*x0-x00)>MAX_ASHIFT || std::abs(*y0-y00)>MAX_ASHIFT) {
+                throw "Error: adaptive moment failed\n";
             }
 
             if (++ *num_iter > MAX_MOM2_ITER) {
-                fprintf(stderr,"Warning: too many iterations in find_mom_2.\n");
-                convergence_factor = 0.;
-                *num_iter = NUM_ITER_DEFAULT;
+                throw "Error: too many iterations in adaptive moments\n";
+            }
+
+            if (std::isnan(convergence_factor) || std::isnan(*Mxx) || std::isnan(*Myy) || std::isnan(*Mxy)
+                || std::isnan(*x0) || std::isnan(*y0)) {
+                throw "Error: NaN in calculation of adaptive moments\n";
             }
         }
 
@@ -889,13 +1027,13 @@ namespace hsm {
      * that this routine ADDS the convolution to the pre-existing image.
      *
      * Arguments:
-     *   image1: 1st image to be convolved, RECT_IMAGE format
-     *   image2: 2nd image to be convolved, RECT_IMAGE format
-     * > image_out: output (convolved) image, RECT_IMAGE format
+     *   image1: 1st image to be convolved, RectImage format
+     *   image2: 2nd image to be convolved, RectImage format
+     * > image_out: output (convolved) image, RectImage format
      */
 
     void fast_convolve_image_1(
-        RECT_IMAGE *image1, RECT_IMAGE *image2, RECT_IMAGE *image_out) 
+        RectImage *image1, RectImage *image2, RectImage *image_out) 
     {
 
         long dim1x, dim1y, dim1o, dim1, dim2, dim3, dim4;
@@ -1030,7 +1168,7 @@ namespace hsm {
         double dotp, factor;
 
         dotp = e1a*e1b + e2a*e2b;
-        factor = (1.-sqrt(1-e1b*e1b-e2b*e2b)) / (e1b*e1b + e2b*e2b);
+        factor = (1.-std::sqrt(1-e1b*e1b-e2b*e2b)) / (e1b*e1b + e2b*e2b);
         *e1out = (e1a + e1b + e2b*factor*(e2a*e1b - e1a*e2b))/(1+dotp);
         *e2out = (e2a + e2b + e1b*factor*(e1a*e2b - e2a*e1b))/(1+dotp);
     }
@@ -1064,14 +1202,14 @@ namespace hsm {
         double R;
 
         /* Take us to sig2ratio = sigma2(P)/sigma2(O) since this is shear-invariant */
-        coshetap = 1./sqrt(1-e1p*e1p-e2p*e2p);
-        coshetao = 1./sqrt(1-e1o*e1o-e2o*e2o);
+        coshetap = 1./std::sqrt(1-e1p*e1p-e2p*e2p);
+        coshetao = 1./std::sqrt(1-e1o*e1o-e2o*e2o);
         sig2ratio = Tratio * coshetao/coshetap; /* since sigma2 = T / cosh eta */
 
         shearmult(e1o,e2o,-e1p,-e2p,&e1red,&e2red);
 
         /* compute resolution factor and un-dilute */
-        coshetao = 1./sqrt(1-e1red*e1red-e2red*e2red);
+        coshetao = 1./std::sqrt(1-e1red*e1red-e2red*e2red);
         R = 1. - sig2ratio * (1-a4p)/(1+a4p) * (1+a4o)/(1-a4o) / coshetao;
 
         e1red /= R;
@@ -1116,17 +1254,17 @@ namespace hsm {
         double EI;
 
         /* Take us to sig2ratio = sigma2(P)/sigma2(O) since this is shear-invariant */
-        coshetap = 1./sqrt(1-e1p*e1p-e2p*e2p);
-        coshetao = 1./sqrt(1-e1o*e1o-e2o*e2o);
+        coshetap = 1./std::sqrt(1-e1p*e1p-e2p*e2p);
+        coshetao = 1./std::sqrt(1-e1o*e1o-e2o*e2o);
         sig2ratio = Tratio * coshetao/coshetap; /* since sigma2 = T / cosh eta */
 
         shearmult(e1o,e2o,-e1p,-e2p,&e1red,&e2red);
 
         /* compute resolution factor and un-dilute */
-        e = sqrt(e1red*e1red+e2red*e2red);
+        e = std::sqrt(e1red*e1red+e2red*e2red);
         eta = atanh(e);
-        a2 = exp(-eta)*sig2ratio; /* fraction of major axis variance from PSF */
-        b2 = exp(eta)*sig2ratio; /* fraction of minor axis variance from PSF */
+        a2 = std::exp(-eta)*sig2ratio; /* fraction of major axis variance from PSF */
+        b2 = std::exp(eta)*sig2ratio; /* fraction of minor axis variance from PSF */
         A = 1-a2; B = 1-b2; /* fractions from intrinsic image */
         ca4p = 0.375*(a2*a2+b2*b2)+0.25*a2*b2;
         ca4i = 0.375*(A*A+B*B)+0.25*A*B;
@@ -1136,11 +1274,11 @@ namespace hsm {
         deltaeta = Ti * a4i + Tp * a4p;
 
         /* 4th moment correction for R: must find etai */
-        EI = sqrt(e1red*e1red + e2red*e2red);
+        EI = std::sqrt(e1red*e1red + e2red*e2red);
         // TODO: etai was set, but not used.
         // Is this a bug?  Or just a legacy of an old calculation?
         //etai = 0.5 * log( (1./a2-1) / (1./b2-1) ); 
-        coshetao = 1./sqrt(1-e1red*e1red-e2red*e2red);
+        coshetao = 1./std::sqrt(1-e1red*e1red-e2red*e2red);
         deltamu = (-1.5*A*A - A*B - 1.5*B*B +2*(A+B)) * a4i
             + (-1.5*a2*a2 - a2*b2 - 1.5*b2*b2 + 2*(a2+b2))*a4p;
         deltamu *= 0.5;
@@ -1162,8 +1300,8 @@ namespace hsm {
      * to include the anisotropic PSF correction of Luppino and Kaiser (1997).
      *
      * Arguments:
-     *   gal_image: image of measured galaxy (RECT_IMAGE format)
-     *   PSF: PSF map (RECT_IMAGE format)
+     *   gal_image: image of measured galaxy (RectImage format)
+     *   PSF: PSF map (RectImage format)
      * > e1: + shear estimator, PSF-corrected
      * > e2: x shear estimator, PSF-corrected
      * > responsivity: shear responsivity of estimator
@@ -1179,7 +1317,7 @@ namespace hsm {
      */
 
     unsigned int psf_corr_ksb_1(
-        RECT_IMAGE *gal_image, RECT_IMAGE *PSF, double *e1, double *e2,
+        RectImage *gal_image, RectImage *PSF, double *e1, double *e2,
         double *responsivity, double *R, unsigned long flags, double *x0_gal, double *y0_gal,
         double *sig_gal, double *flux_gal, double *x0_psf, double *y0_psf, double *sig_psf) 
     {
@@ -1395,7 +1533,7 @@ namespace hsm {
      */
 
     unsigned int psf_corr_regauss(
-        RECT_IMAGE *gal_image, RECT_IMAGE *PSF, double *e1,
+        RectImage *gal_image, RectImage *PSF, double *e1,
         double *e2, double *R, unsigned long flags, double *x0_gal,
         double *y0_gal, double *sig_gal, double *x0_psf, double *y0_psf,
         double *sig_psf, double *flux_gal) 
@@ -1419,7 +1557,7 @@ namespace hsm {
         double x0_old=0., y0_old=0., Mfxx, Mfxy, Mfyy, detMf, Minvf_xx, Minvf_xy, Minvf_yy;
         double Tpsf, e1psf, e2psf;
         double Tgal, e1gal, e2gal;
-        RECT_IMAGE PSF_resid, fgauss, Iprime;
+        RectImage PSF_resid, fgauss, Iprime;
         long fgauss_xmin, fgauss_xmax, fgauss_ymin, fgauss_ymax;
         double fgauss_xctr, fgauss_yctr, fgauss_xsig, fgauss_ysig;
         long pxmin, pxmax, pymin, pymax;
@@ -1485,8 +1623,8 @@ namespace hsm {
 #ifdef REGAUSS_TOO_SMALL
 
         /* Compute the semimajor and semiminor axes of Mf and the position angle */
-        two_phi = atan2(2*Mfxy, Mfxx-Mfyy);
-        a2 = 0.5 * ( Mfxx+Mfyy + (Mfxx-Mfyy)*cos(two_phi) ) + Mfxy*sin(two_phi);
+        two_phi = std::atan2(2*Mfxy, Mfxx-Mfyy);
+        a2 = 0.5 * ( Mfxx+Mfyy + (Mfxx-Mfyy)*std::cos(two_phi) ) + Mfxy*std::sin(two_phi);
         b2 = Mfxx + Mfyy - a2;
 
         /* Now impose restrictions to ensure this doesn't blow up */
@@ -1494,9 +1632,9 @@ namespace hsm {
         if (b2<=0.25) b2=0.25;
 
         /* Convert back to Mf matrix */
-        Mfxx = 0.5 * ( a2+b2 + (a2-b2)*cos(two_phi) );
-        Mfyy = 0.5 * ( a2+b2 - (a2-b2)*cos(two_phi) );
-        Mfxy = 0.5 * (a2-b2) * sin(two_phi);
+        Mfxx = 0.5 * ( a2+b2 + (a2-b2)*std::cos(two_phi) );
+        Mfyy = 0.5 * ( a2+b2 - (a2-b2)*std::cos(two_phi) );
+        Mfxy = 0.5 * (a2-b2) * std::sin(two_phi);
         detMf = Mfxx*Mfyy - Mfxy*Mfxy;
 
 #endif
@@ -1513,19 +1651,19 @@ namespace hsm {
         fgauss_ymax = gal_image->ymax - PSF->ymin;
         fgauss_xctr = *x0_gal - *x0_psf;
         fgauss_yctr = *y0_gal - *y0_psf;
-        fgauss_xsig = sqrt(Mfxx>1? Mfxx: 1);
-        fgauss_ysig = sqrt(Mfyy>1? Mfyy: 1);
+        fgauss_xsig = std::sqrt(Mfxx>1? Mfxx: 1);
+        fgauss_ysig = std::sqrt(Mfyy>1? Mfyy: 1);
 
         /* Shrink if the box extends beyond NSIG_RG sigma range */
         if (flags & 0x00000004) {
             if (fgauss_xmin < fgauss_xctr - NSIG_RG*fgauss_xsig)
-                fgauss_xmin = (long) floor(fgauss_xctr - NSIG_RG*fgauss_xsig);
+                fgauss_xmin = (long) std::floor(fgauss_xctr - NSIG_RG*fgauss_xsig);
             if (fgauss_xmax > fgauss_xctr + NSIG_RG*fgauss_xsig)
-                fgauss_xmax = (long) ceil (fgauss_xctr + NSIG_RG*fgauss_xsig);
+                fgauss_xmax = (long) std::ceil (fgauss_xctr + NSIG_RG*fgauss_xsig);
             if (fgauss_ymin < fgauss_yctr - NSIG_RG*fgauss_ysig)
-                fgauss_ymin = (long) floor(fgauss_yctr - NSIG_RG*fgauss_ysig);
+                fgauss_ymin = (long) std::floor(fgauss_yctr - NSIG_RG*fgauss_ysig);
             if (fgauss_ymax > fgauss_yctr + NSIG_RG*fgauss_ysig)
-                fgauss_ymax = (long) ceil (fgauss_yctr + NSIG_RG*fgauss_ysig);
+                fgauss_ymax = (long) std::ceil (fgauss_yctr + NSIG_RG*fgauss_ysig);
         }
 
         allocate_rect_image(&fgauss, fgauss_xmin, fgauss_xmax, fgauss_ymin, fgauss_ymax);
@@ -1558,10 +1696,10 @@ namespace hsm {
         pymin = PSF->ymin;
         pymax = PSF->ymax;
         if (flags & 0x00000008) {
-            pxmin = (long) floor(*x0_psf - NSIG_RG2*sqrt(Mxxgal) - NSIG_RG*fgauss_xsig );
-            pxmax = (long) ceil (*x0_psf + NSIG_RG2*sqrt(Mxxgal) + NSIG_RG*fgauss_xsig );
-            pymin = (long) floor(*y0_psf - NSIG_RG2*sqrt(Myygal) - NSIG_RG*fgauss_ysig );
-            pymax = (long) ceil (*y0_psf + NSIG_RG2*sqrt(Myygal) + NSIG_RG*fgauss_ysig );
+            pxmin = (long) std::floor(*x0_psf - NSIG_RG2*std::sqrt(Mxxgal) - NSIG_RG*fgauss_xsig );
+            pxmax = (long) std::ceil (*x0_psf + NSIG_RG2*std::sqrt(Mxxgal) + NSIG_RG*fgauss_xsig );
+            pymin = (long) std::floor(*y0_psf - NSIG_RG2*std::sqrt(Myygal) - NSIG_RG*fgauss_ysig );
+            pymax = (long) std::ceil (*y0_psf + NSIG_RG2*std::sqrt(Myygal) + NSIG_RG*fgauss_ysig );
             if (PSF->xmin >= pxmin) pxmin = PSF->xmin;
             if (PSF->xmax <= pxmax) pxmax = PSF->xmax;
             if (PSF->ymin >= pymin) pymin = PSF->ymin;
@@ -1576,7 +1714,7 @@ namespace hsm {
         Minvpsf_xx =  Myypsf/detM;
         Minvpsf_xy = -Mxypsf/detM;
         Minvpsf_yy =  Mxxpsf/detM;
-        center_amp_psf = flux_psf / (TwoPi * sqrt(detM));
+        center_amp_psf = flux_psf / (TwoPi * std::sqrt(detM));
         for(x=PSF_resid.xmin;x<=PSF_resid.xmax;x++)
             for(y=PSF_resid.ymin;y<=PSF_resid.ymax;y++) {
                 dx = x - *x0_psf;
@@ -1612,7 +1750,7 @@ namespace hsm {
         if (Mxxgal<=0 || Myygal<=0 || Mxxgal*Myygal<=Mxygal*Mxygal ) {
             fprintf(stderr, "Error: non positive definite adaptive moments.\n");
         }
-        *sig_gal = pow( Mxxgal*Myygal - Mxygal*Mxygal, 0.25);
+        *sig_gal = std::pow( Mxxgal*Myygal - Mxygal*Mxygal, 0.25);
 
         /* And do the PSF correction */
         Tgal  = Mxxgal + Myygal;
@@ -1653,8 +1791,8 @@ namespace hsm {
      */
 
     unsigned int general_shear_estimator(
-        RECT_IMAGE *gal_image, RECT_IMAGE *PSF,
-        OBJECT_DATA *gal_data, OBJECT_DATA *PSF_data, char *shear_est, unsigned long flags) 
+        RectImage *gal_image, RectImage *PSF,
+        ObjectData *gal_data, ObjectData *PSF_data, char *shear_est, unsigned long flags) 
     {
 
         //int max_order_psf, max_order_gal, num_args;
@@ -1701,7 +1839,7 @@ namespace hsm {
                } else {
                    PSF_data->x0 = x0;
                    PSF_data->y0 = y0;
-                   PSF_data->sigma = pow( Mxx_psf * Myy_psf - Mxy_psf * Mxy_psf, 0.25);
+                   PSF_data->sigma = std::pow( Mxx_psf * Myy_psf - Mxy_psf * Mxy_psf, 0.25);
                }
 
                /* Measure the galaxy */
@@ -1715,7 +1853,7 @@ namespace hsm {
                } else {
                    gal_data->x0 = x0;
                    gal_data->y0 = y0;
-                   gal_data->sigma = pow( Mxx_gal * Myy_gal - Mxy_gal * Mxy_gal, 0.25);
+                   gal_data->sigma = std::pow( Mxx_gal * Myy_gal - Mxy_gal * Mxy_gal, 0.25);
                    gal_data->flux = 2.0 * A_gal;
                }
 
@@ -1765,6 +1903,17 @@ namespace hsm {
         gal_data->resolution = R;
         return status;
     }
+
+    // instantiate template classes for expected types
+    template HSMShapeData EstimateShearHSMView(const ImageView<float> &gal_image, const ImageView<float> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
+    template HSMShapeData EstimateShearHSMView(const ImageView<double> &gal_image, const ImageView<double> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
+    template HSMShapeData EstimateShearHSMView(const ImageView<float> &gal_image, const ImageView<double> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
+    template HSMShapeData EstimateShearHSMView(const ImageView<double> &gal_image, const ImageView<float> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
+    template HSMShapeData EstimateShearHSMView(const ImageView<int> &gal_image, const ImageView<int> &PSF_Image, float sky_var, const char *shear_est, unsigned long flags, double guess_sig_gal, double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
+
+    template HSMShapeData FindAdaptiveMomView(const ImageView<float> &object_image, double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid);
+    template HSMShapeData FindAdaptiveMomView(const ImageView<double> &object_image, double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid);
+    template HSMShapeData FindAdaptiveMomView(const ImageView<int> &object_image, double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid);
 
 }
 }

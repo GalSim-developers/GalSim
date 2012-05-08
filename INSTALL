@@ -67,7 +67,7 @@ These Fast Fourier Transform libraries must be installed; see Section 4 for some
 installing this on your platform.
 
 
-iv) TMV (http://code.google.com/p/tmv-cpp/)
+iv) TMV (http://code.google.com/p/tmv-cpp/)  (version >= 0.71 required)
 
 GalSim uses the TMV library for its linear algebra routines.  You should download it from the 
 above site and follow the instructions in its INSTALL file for how to install it.   Usually it 
@@ -112,8 +112,13 @@ installing these two seems like the best bet for now.
 Once you have installed Boost, you can check that it links to the version of python that will be 
 used for GalSim and on which you have installed Numpy and Pyfits by typing
 
-ldd <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.so  (on Linux)
-otool -L <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFFIX>.dylib  (on OSX)
+ldd <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFIX>.so  (on Linux)
+otool -L <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFIX>.dylib  (on OSX)
+
+(If the ldd command on Linux does not show the Python version, the command
+ls -l <YOUR_BOOST_LIB_LOCATION>/libboost_python*
+will possibly show the libboost_python.so linked to, e.g., libboost_python_py26.so.1.40.0,
+in which you can tell both the Python and Boost version--in this case, 2.6 and 1.40.0, respectively.)
 
 If the Python library listed is the one you will be using, all is well.  If not, Boost can be forced
 to use a different version by specifying the following options to the ./bootstrap.sh installation 
@@ -125,13 +130,6 @@ script (defaults in [] brackets):
                             force it to use a specific one because it detected the wrong one] 
 
 #TODO: Add Windows checks??
-
-
-vi) CFITSIO
-
-Install CFITSIO.
-
-#TODO: Remove this once we handle all FITS i/o in python.  But for now, we do need it. 
 
 
 2. Installing the galsim Python package
@@ -260,7 +258,6 @@ fink install scons
 fink install fftw3
 fink install tmv0
 fink install boost1.46.1.cmake
-fink install cfitsio
 (Python 2.6 should already be in /usr/bin/python.)
 
 However, there is a slight caveat regarding the use of fink-installed Boost C++ and the 
@@ -343,8 +340,6 @@ Flags that specify where to look for external libraries:
            TMV_DIR/share, but if not, you can specify the correct location here.
   FFTW_DIR='' specifies the root location of FFTW.  The header files should be in
            FFTW_DIR/include and the library files in FFTW_DIR/lib.
-  CFITSIO_DIR='' specifies the root location of CFITSIO  The header files should be in
-           CFITSIO_DIR/include and the library files in CFITSIO_DIR/lib.
   BOOST_DIR='' specifies the root location of BOOST  The header files should be in
            BOOST_DIR/include/boost and the library files in BOOST_DIR/lib.
   EXTRA_INCLUDE_PATH='' specifies extra directories in which to search for 
