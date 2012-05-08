@@ -77,7 +77,7 @@ namespace galsim {
      *
      *  Angles are a value with an AngleUnit.
      *
-     *  You typically create an Angle by multiplying a number by an Angle Unit.
+     *  You typically create an Angle by multiplying a number by an AngleUnit.
      *  e.g.
      *  @code
      *    Angle pixel = 0.27 * arcsec;
