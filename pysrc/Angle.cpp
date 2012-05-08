@@ -9,7 +9,8 @@ namespace {
 struct PyAngleUnit {
 
     static void wrap() {
-        bp::class_< AngleUnit >("AngleUnit", bp::no_init)
+        bp::class_< AngleUnit > pyAngleUnit("AngleUnit", bp::no_init);
+        pyAngleUnit
             .def(bp::init<double>(bp::arg("val")))
             .def(bp::self == bp::self)
             .def(bp::other<double>() * bp::self)
@@ -21,7 +22,8 @@ struct PyAngleUnit {
 struct PyAngle {
 
     static void wrap() {
-        bp::class_< Angle >("Angle", bp::init<>())
+        bp::class_< Angle > pyAngle("Angle", bp::init<>());
+        pyAngle
             .def(bp::init<double, AngleUnit>(bp::args("val","unit")))
             .def(bp::init<const Angle&>(bp::args("rhs")))
             .def(bp::self / bp::other<AngleUnit>())
@@ -48,9 +50,18 @@ struct PyAngle {
 
 } // anonymous
 
-void pyExportAngle() {
+void pyExportAngle() 
+{
     PyAngleUnit::wrap();
     PyAngle::wrap();
+
+    // Also export the global variables:
+    bp::scope galsim;
+    galsim.attr("radians") = radians;
+    galsim.attr("degrees") = degrees;
+    galsim.attr("hours") = hours;
+    galsim.attr("arcmin") = arcmin;
+    galsim.attr("arcsec") = arcsec;
 }
 
 } // namespace galsim
