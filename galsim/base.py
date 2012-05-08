@@ -156,8 +156,10 @@ def _g1g2_to_e1e2(g1, g2):
         e1 = g1 * (e/g)
         e2 = g2 * (e/g)
         return e1, e2
+    elif gsq = 0.:
+        return 0., 0.
     else:
-        raise ValueError("Input g1 and g2 components must be real.")
+        raise ValueError("Input |g|^2 < 0, cannot convert.")
 
 
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
