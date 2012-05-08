@@ -83,7 +83,7 @@ class GSObject:
         GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
 
     def applyRotation(self, theta):
-        """Apply an a rotation theta (Angle object, +ve anticlockwise) to this object.
+        """Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
@@ -110,6 +110,8 @@ class GSObject:
     def createRotated(self, theta):
         """Create a new GSObject by applying a rotation theta (Angle object, +ve anticlockwise).
         """
+        if not isinstance(theta, galsim.Angle):
+            raise TypeError("Input theta should be an Angle")
         return GSObject(self.SBProfile.rotate(theta))
         
     def createShifted(self, dx, dy):
