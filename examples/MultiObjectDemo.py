@@ -190,7 +190,7 @@ def Script1():
                 first_in_pair = True
 
             this_gal = gal.createSheared(ellip,0)
-            this_gal.applyRotation(theta)
+            this_gal.applyRotation(theta * galsim.radians)
 
             # Apply the gravitational shear
             this_gal.applyShear(gal_g1,gal_g2)
