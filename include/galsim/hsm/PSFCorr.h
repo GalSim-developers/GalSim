@@ -42,6 +42,16 @@ namespace galsim {
 namespace hsm {
 
     /**
+     * @brief Exception class thrown by the adaptive moment and shape measurement routines in the
+     * hsm namespace
+     */
+    class HSMError : public std::runtime_error {
+    public:
+        HSMError(const std::string& m="") :
+            std::runtime_error("HSM Error: " + m) {}
+    };
+
+    /**
      * @brief Characterizes the shape and other parameters of objects.
      *
      * Describe the hsm shape-related parameters of some object (usually galaxy) before and after
