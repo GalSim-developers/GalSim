@@ -27,9 +27,12 @@ namespace galsim {
     SBProfile* SBProfile::distort(const Ellipse e) const 
     { return new SBDistort(*this,e); }
 
-    SBProfile* SBProfile::rotate(const double theta) const 
-    { return new SBDistort(*this,std::cos(theta),-std::sin(theta),
-			   std::sin(theta),std::cos(theta)); }
+    SBProfile* SBProfile::rotate(Angle theta) const 
+    {
+        return new SBDistort(*this,
+                             std::cos(theta.rad()),-std::sin(theta.rad()),
+                             std::sin(theta.rad()),std::cos(theta.rad())); 
+    }
 
     SBProfile* SBProfile::shift(double dx, double dy) const 
     { return new SBDistort(*this,1.,0.,0.,1., Position<double>(dx,dy)); }

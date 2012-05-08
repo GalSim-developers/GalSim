@@ -106,6 +106,8 @@ class GSObject:
     def applyRotation(self, theta):
         """Apply an angular rotation theta [radians, +ve anticlockwise] to this object.
         """
+        if not isinstance(theta, galsim.Angle):
+            raise TypeError("Input theta should be an Angle")
         GSObject.__init__(self, self.SBProfile.rotate(theta))
         
     def applyShift(self, dx, dy):
@@ -339,4 +341,11 @@ class Convolve(GSObject):
 
     def add(self, obj):
         self.SBProfile.add(obj.SBProfile)
+
+#import math
+#radians = galsim._galsim.AngleUnit(1.0)
+#degrees = galsim._galsim.AngleUnit(math.pi/180.)
+#hours = galsim._galsim.AngleUnit(math.pi*15./180.)
+#arcmin = galsim._galsim.AngleUnit(math.pi/60./180.)
+#arcsec = galsim._galsim.AngleUnit(math.pi/3600./180.)
 

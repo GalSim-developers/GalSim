@@ -26,7 +26,8 @@
 
 #include <limits>
 #include <iostream>
-#include <cmath>
+
+#include "Std.h"
 
 namespace galsim {
 
@@ -64,13 +65,11 @@ namespace galsim {
         double _val;
     };
 
-    const double PI = 4.*std::atan(1.);  ///< Duh. It's pi.
-    const double TWOPI = 2.*PI;  ///< 2*pi for convenience
     const AngleUnit radians(1.0); ///< constant with units of radians
-    const AngleUnit degrees(PI/180.0); ///< constant with units of degrees
-    const AngleUnit hours(PI*15.0/180.0); ///< constant with units of hours
-    const AngleUnit arcmin(PI/60/180.0); ///< constant with units of arcminutes
-    const AngleUnit arcsec(PI/180.0/3600.0); ///< constant with units of arcseconds
+    const AngleUnit degrees(M_PI/180.); ///< constant with units of degrees
+    const AngleUnit hours(M_PI*15./180.); ///< constant with units of hours
+    const AngleUnit arcmin(M_PI/60./180.); ///< constant with units of arcminutes
+    const AngleUnit arcsec(M_PI/3600./180.); ///< constant with units of arcseconds
 
     /**************************************************************************************/
     /*
@@ -91,6 +90,17 @@ namespace galsim {
      *  @code
      *    Angle theta(90, degrees);
      *  @endcode
+     *
+     *  Since extracting the value in radians is extremely common, we have an accessor
+     *  to do this quickly:
+     *  @code
+     *    x = theta.rad();
+     *  @endcode
+     *  It is equivalent to the more verbose:
+     *  @code
+     *    x = theta / radians;
+     *  @endcode
+     *  but without actually requiring the FLOP of dividing by 1.
      *
      *  Arithmetic with Angles include the following:
      *  (In the list below, x is a double, unit is an AngleUnit, and theta is an Angle.)
@@ -123,6 +133,7 @@ namespace galsim {
         //@{
         /// Define conversion to a pure value
         double operator/(AngleUnit unit) const { return _val / unit._val; }
+        double rad() const { return _val; }
         //@}
 
         //@{
@@ -159,6 +170,7 @@ namespace galsim {
     private:
         /// Wraps this angle to the range [0, 2 pi)
         void wrap() {
+            const double TWOPI = 2.*M_PI;
             _val = std::fmod(_val, TWOPI); // now in range (-TWOPI, TWOPI)
             if (_val < 0.0) _val += TWOPI;
             // if _val was -epsilon, adding 360.0 gives 360.0-epsilon = 360.0 which is actually 0.0
@@ -170,7 +182,7 @@ namespace galsim {
     };
 
     /// Define conversion from value to an Angle
-    Angle operator*(double val, AngleUnit unit) { return Angle(val,unit); }
+    inline Angle operator*(double val, AngleUnit unit) { return Angle(val,unit); }
     // I don't define unit * value, since that just seems weird.
     // Also, I'd rather have this in the Angle class, but I couldn't figure out
     // how to wrap it.
