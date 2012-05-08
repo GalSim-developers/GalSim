@@ -5,3 +5,4 @@ Image.cpp
 SBProfile.cpp
 SBInterpolatedImage.cpp
 Random.cpp
+PSFCorr.cpp

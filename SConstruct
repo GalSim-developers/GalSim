@@ -68,10 +68,8 @@ opts.Add(BoolVariable('INCLUDE_PREFIX_PATHS',
             True))
 
 opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
-opts.Add('CFITSIO_DIR','Explicitly give the cfitsio prefix','')
 opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
 opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
-#opts.Add('CCFITS_DIR','Explicitly give the ccfits prefix','')
 
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
 opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
@@ -498,7 +496,7 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
 
     """
 
-    types = ['TMV','CFITSIO','FFTW','BOOST']
+    types = ['TMV','FFTW','BOOST']
 
     for t in types:
         dirtag = t+'_DIR'
@@ -903,16 +901,6 @@ def DoLibraryAndHeaderChecks(config):
     """
     Check for some headers.  
     """
-
-    # Check for cfitsio
-    if not config.CheckLibWithHeader('cfitsio','fitsio.h',language='C++'):
-        # Sometimes cfitsio uses include/cfitsio as the location for fitsio.h, so try that.
-        config.env.AppendUnique(CPPPATH=os.path.join(config.env['CFITSIO_DIR'],'include','cfitsio'))
-        if not config.CheckLibWithHeader('cfitsio','fitsio.h',language='C++'):
-            ErrorExit(
-                'cfitsio not found',
-                'You should specify the location of cfitsio CFITSIO_DIR=...',
-                n=1)
 
     # Check for fftw3
     if not config.CheckLibWithHeader('fftw3','fftw3.h',language='C++'):

@@ -132,13 +132,6 @@ script (defaults in [] brackets):
 #TODO: Add Windows checks??
 
 
-vi) CFITSIO
-
-Install CFITSIO.
-
-#TODO: Remove this once we handle all FITS i/o in python.  But for now, we do need it. 
-
-
 2. Installing the galsim Python package
 
 From the GalSim base directory (in which this INSTALL file is found) type
@@ -265,7 +258,6 @@ fink install scons
 fink install fftw3
 fink install tmv0
 fink install boost1.46.1.cmake
-fink install cfitsio
 (Python 2.6 should already be in /usr/bin/python.)
 
 However, there is a slight caveat regarding the use of fink-installed Boost C++ and the 
@@ -348,8 +340,6 @@ Flags that specify where to look for external libraries:
            TMV_DIR/share, but if not, you can specify the correct location here.
   FFTW_DIR='' specifies the root location of FFTW.  The header files should be in
            FFTW_DIR/include and the library files in FFTW_DIR/lib.
-  CFITSIO_DIR='' specifies the root location of CFITSIO  The header files should be in
-           CFITSIO_DIR/include and the library files in CFITSIO_DIR/lib.
   BOOST_DIR='' specifies the root location of BOOST  The header files should be in
            BOOST_DIR/include/boost and the library files in BOOST_DIR/lib.
   EXTRA_INCLUDE_PATH='' specifies extra directories in which to search for 

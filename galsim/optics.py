@@ -82,7 +82,7 @@ def wavefront(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0.
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
     (kx, ky) = (0, 0) is the [0, 0] array element.
-	
+
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the definitions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
@@ -152,7 +152,7 @@ def wavefront_image(array_shape=(256, 256), dx=1., defocus=0., astig1=0., astig2
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
     (kx, ky) = (0, 0) is the [0, 0] array element.
-	
+
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the definitions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
