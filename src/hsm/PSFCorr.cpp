@@ -345,6 +345,10 @@ namespace hsm {
             results.moments_sigma = gal_data.sigma;
             results.moments_amp = gal_data.flux;
             results.resolution_factor = gal_data.resolution;
+
+            if (results.resolution_factor <= 0.) {
+                throw "Unphysical situation: galaxy convolved with PSF is smaller than PSF!\n";
+            }
         }
         catch (char *err_msg) {
             results.error_message = err_msg;
