@@ -42,6 +42,16 @@ namespace galsim {
 namespace hsm {
 
     /**
+     * @brief Exception class thrown by the adaptive moment and shape measurement routines in the
+     * hsm namespace
+     */
+    class HSMError : public std::runtime_error {
+    public:
+        HSMError(const std::string& m="") :
+            std::runtime_error("HSM Error: " + m) {}
+    };
+
+    /**
      * @brief Characterizes the shape and other parameters of objects.
      *
      * Describe the hsm shape-related parameters of some object (usually galaxy) before and after
@@ -145,31 +155,12 @@ namespace hsm {
         std::string error_message;
 
         /// @brief Constructor, setting defaults
-    HSMShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
+        HSMShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
             observed_shape(galsim::Shear()), moments_sigma(-1.), moments_amp(-1.),
             moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
             correction_status(-1), corrected_shape(galsim::Shear()), corrected_shape_err(-1.),
             correction_method("None"), resolution_factor(-1.), error_message("")
         {}
-
-        /// @brief get observed Mxx from e1, e2, sigma
-        double getMxx() {
-            double A = (1.0 + observed_shape.getE1()) / (1.0 - observed_shape.getE1());
-            return (A*moments_sigma*moments_sigma) / 
-                std::sqrt(A - 0.25*(A+1)*(A+1)*observed_shape.getE2()*observed_shape.getE2());
-        }
-
-        /// @brief get observed Myy from e1, e2, sigma
-        double getMyy() {
-            double A = (1.0 + observed_shape.getE1()) / (1.0 - observed_shape.getE1());
-            return (moments_sigma*moments_sigma) / 
-                std::sqrt(A - 0.25*(A+1)*(A+1)*observed_shape.getE2()*observed_shape.getE2());
-        }
-
-        /// @brief get observed Mxy from e1, e2, sigma
-        double getMxy() {
-            return 0.5*observed_shape.getE2()*(getMxx() + getMyy());
-        }
     };
 
     /* functions that the user will want to call from outside */
@@ -197,13 +188,19 @@ namespace hsm {
      * @param[in] guess_sig_PSF Optional argument with an initial guess for the Gaussian sigma of
      *            the PSF, default 3.0 (pixels).
      * @param[in] precision The convergence criterion for the moments; default 1e-6.
+     * @param[in] guess_x_centroid Optional argument with an initial guess for the x centroid of the
+     *            galaxy; if not set, then the code will try the center of the image.
+     * @param[in] guess_y_centroid Optional argument with an initial guess for the y centroid of the
+     *            galaxy; if not set, then the code will try the center of the image.
      * @return A HSMShapeData object containing the results of shape measurement. 
      */
     template <typename T, typename U>
         HSMShapeData EstimateShearHSMView(const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
                                           float sky_var = 0.0, const char *shear_est = "REGAUSS",
                                           unsigned long flags = 0xe, double guess_sig_gal = 5.0,
-                                          double guess_sig_PSF = 3.0, double precision = 1.0e-6);
+                                          double guess_sig_PSF = 3.0, double precision = 1.0e-6,
+                                          double guess_x_centroid = -1000.0,
+                                          double guess_y_centroid = -1000.0);
 
     /**
      * @brief Measure the adaptive moments of an object directly using ImageViews.
@@ -219,11 +216,16 @@ namespace hsm {
      * @param[in] guess_sig Optional argument with an initial guess for the Gaussian sigma of
      *            the object, default 5.0 (pixels).
      * @param[in] precision The convergence criterion for the moments; default 1e-6.
+     * @param[in] guess_x_centroid Optional argument with an initial guess for the x centroid of the
+     *            galaxy; if not set, then the code will try the center of the image.
+     * @param[in] guess_y_centroid Optional argument with an initial guess for the y centroid of the
+     *            galaxy; if not set, then the code will try the center of the image.
      * @return A HSMShapeData object containing the results of moment measurement.
      */
     template <typename T>
         HSMShapeData FindAdaptiveMomView(const ImageView<T> &object_image, double guess_sig = 5.0,
-                                         double precision = 1.0e-6);
+                                         double precision = 1.0e-6, double guess_x_centroid = -1000.0,
+                                         double guess_y_centroid = -1000.0);
 
     /**
      * @brief Allocate memory for a RectImage representing the image of some object

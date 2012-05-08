@@ -81,11 +81,12 @@ def Script1():
 
     results = image.FindAdaptiveMom()
 
-    logger.info('HSM reports that the image has measured moments:')
-    logger.info('    Mxx = %.3f, Myy = %.3f, Mxy = %.3f', results.getMxx(), results.getMyy(), results.getMxy())
+    logger.info('HSM reports that the image has observed shape and size:')
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.getE1(),
+                results.observed_shape.getE2(), results.moments_sigma)
     logger.info('Expected values in the limit that pixel response and noise are negligible:')
-    mxx_exp = (gal_sigma**2+psf_sigma**2)/(pixel_scale**2) # == expected myy
-    logger.info('    Mxx = %.3f, Myy = %.3f, Mxy = %.3f', mxx_exp, mxx_exp,0)
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f', 0.0, 0.0, 
+                math.sqrt(gal_sigma**2 + psf_sigma**2)/pixel_scale) 
     print
 
 # Script 2: Sheared, exponential galaxy, Moffat PSF, Poisson noise
@@ -168,8 +169,9 @@ def Script2():
 
     results = galsim.EstimateShearHSM(image, image_epsf)
 
-    logger.info('HSM reports that the image has measured moments:')
-    logger.info('    Mxx = %.3f, Myy = %.3f, Mxy = %.3f', results.getMxx(), results.getMyy(), results.getMxy())
+    logger.info('HSM reports that the image has observed shape and size:')
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.getE1(),
+                results.observed_shape.getE2(), results.moments_sigma)
     logger.info('When carrying out Regaussianization PSF correction, HSM reports')
     e_temp = results.corrected_shape.getE()
     if e_temp > 0.:
@@ -328,8 +330,9 @@ def Script3():
 
     results = galsim.EstimateShearHSM(image, image_epsf)
 
-    logger.info('HSM reports that the image has measured moments:')
-    logger.info('    Mxx = %.3f, Myy = %.3f, Mxy = %.3f', results.getMxx(), results.getMyy(), results.getMxy())
+    logger.info('HSM reports that the image has observed shape and size:')
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.getE1(),
+                results.observed_shape.getE2(), results.moments_sigma)
     logger.info('When carrying out Regaussianization PSF correction, HSM reports')
     e_temp = results.corrected_shape.getE()
     if e_temp > 0.:
