@@ -48,6 +48,7 @@ config.PSF.type = ["Moffat", "Pixel"]
 # Any parameters not set either in configuration files or input catalogues will adopt their
 # keyword default values, and GalSim will raise a Warning.
 config.PSF.Moffat.flux = 1.
+config.PSF.Pixel.flux = 1.
 config.PSF.Pixel.xw = config.dx
 config.PSF.Pixel.yw = config.dx
 
