@@ -2,14 +2,19 @@ import os
 import galsim
 
 def load(config_file=None, include_default=True):
-    """Function for loading in configuration settings from the specified config file, and
+    """@brief Function for loading in configuration settings from the specified config file, and
     using this to augment/update values in GalSim/config/galsim_default.
+
+    @param config_file     Filename for user input configuration file; if None given, and
+                           include_default=True, just read in the galsim_default configuration file.
+    @param include_default Switch for whether or not to read in the galsim_default configuration
+                           file; setting false with None or a non-existent filename for config_file
+                           raises an IOError.
     """
     config = galsim.AttributeDict()
     if (config_file != None) and (not os.path.exists(config_file)):
         raise IOError("User input config file "+str(config_file)+" not found")
     config.user_config_file = config_file
-    
     if include_default:
         thisdir, modfile = os.path.split(__file__)
         default_config_file = os.path.join(thisdir, "..", "config", "galsim_default")
