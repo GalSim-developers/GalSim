@@ -7,7 +7,8 @@
  * @brief Random-number-generator classes
  *
  * Pseudo-random-number generators with various parent distributions: uniform, Gaussian, binomial,
- * and Poisson, all living within the galsim namespace. 
+ * Poisson, Weibull (generalization of Rayleigh and Exponential), and Gamma, all living within the 
+ * galsim namespace. 
  * 
  * Wraps Boost.Random classes in a way that lets us swap Boost RNG's without affecting client code.
  */
@@ -26,14 +27,33 @@
 #include "galsim/boost1_48_0.random/binomial_distribution.hpp"
 #include "galsim/boost1_48_0.random/poisson_distribution.hpp"
 #include "galsim/boost1_48_0.random/uniform_real_distribution.hpp"
+#include "galsim/boost1_48_0.random/weibull_distribution.hpp"
+#include "galsim/boost1_48_0.random/gamma_distribution.hpp"
+#include "galsim/boost1_48_0.random/chi_squared_distribution.hpp"
 #else
 #include "boost/random/mersenne_twister.hpp"
 #include "boost/random/normal_distribution.hpp"
 #include "boost/random/binomial_distribution.hpp"
 #include "boost/random/poisson_distribution.hpp"
 #include "boost/random/uniform_real_distribution.hpp"
+#include "boost/random/weibull_distribution.hpp"
+#include "boost/random/gamma_distribution.hpp"
+#include "boost/random/chi_squared_distribution.hpp"
 #endif
 namespace galsim {
+
+    // Function for applying deviates to an image... Used as a method for all Deviates below.
+    template <typename D, typename T>
+    static void ApplyDeviateToImage(D& dev, ImageView<T>& data) 
+    {
+        // Typedef for image row iterable
+        typedef typename ImageView<T>::iterator ImIter;
+
+        for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
+            ImIter ee = data.rowEnd(y);
+            for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += dev(); }
+        }
+    }
 
     /**
      * @brief Pseudo-random number generator with uniform distribution in interval [0.,1.).
@@ -90,16 +110,8 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) {
-            // typedef for image row iterable
-            typedef typename ImageView<T>::iterator ImIter;
+        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
 
-            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                ImIter ee = data.rowEnd(y);
-                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
-            }
-        }
-            
 
     private:
         boost::mt19937 urng;
@@ -129,6 +141,9 @@ namespace galsim {
         friend class GaussianDeviate;
         friend class PoissonDeviate;
         friend class BinomialDeviate;
+        friend class WeibullDeviate;
+        friend class GammaDeviate;
+        friend class Chi2Deviate;
 
     };
 
@@ -171,14 +186,14 @@ namespace galsim {
          *
          * @return Mean of distribution
          */
-        double getMean() {return normal.mean();}
+        double getMean() { return normal.mean(); }
 
         /**
          * @brief Get current distribution standard deviation
          *
          * @return Standard deviation of distribution
          */
-        double getSigma() {return normal.sigma();}
+        double getSigma() { return normal.sigma(); }
 
         /**
          * @brief Set current distribution mean
@@ -205,15 +220,8 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) {
-            // Typedef for image row iterable
-            typedef typename ImageView<T>::iterator ImIter;
+        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
 
-            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                ImIter ee = data.rowEnd(y);
-                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
-            }
-        }
 
     private:
 
@@ -266,14 +274,14 @@ namespace galsim {
          *
          * @return Current value of N
          */
-        int getN() {return bd.t();}
+        int getN() { return bd.t(); }
 
         /**
          * @brief Report current value of p
          *
          * @return Current value of p
          */
-        double getP() {return bd.p();}
+        double getP() { return bd.p(); }
 
         /**
          * @brief Reset value of N
@@ -298,16 +306,9 @@ namespace galsim {
          *
          * @param[in,out] data The Image to be noise-ified.
          */
-        template <typename T>
-        void applyTo(ImageView<T> data) {
-            // Typedef for image row iterable
-            typedef typename ImageView<T>::iterator ImIter;
+         template <typename T>
+         void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
 
-            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                ImIter ee = data.rowEnd(y);
-                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
-            }
-        }
 
     private:
         UniformDeviate& u;
@@ -352,7 +353,7 @@ namespace galsim {
          * 
          * @return Current mean value
          */
-        double getMean() {return pd.mean();}
+        double getMean() { return pd.mean(); }
 
         /**
          * @brief Reset distribution mean
@@ -369,15 +370,8 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) {
-            // Typedef for image row iterable
-            typedef typename ImageView<T>::iterator ImIter;
+        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
 
-            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                ImIter ee = data.rowEnd(y);
-                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += (*this)(); }
-            }
-        }
 
     private:
         UniformDeviate& u;
@@ -386,6 +380,264 @@ namespace galsim {
         PoissonDeviate(const PoissonDeviate& rhs);
         /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
         void operator=(const PoissonDeviate& rhs);
+    };
+
+    /**
+     * @brief A Weibull-distributed deviate with shape parameter a and scale parameter b.
+     *
+     * The Weibull distribution is related to a number of other probability distributions; in 
+     * particular, it interpolates between the exponential distribution (a=1) and the Rayleigh 
+     * distribution (a=2). See http://en.wikipedia.org/wiki/Weibull_distribution (a=k and b=lambda
+     * in the notation adopted in the Wikipedia article).  The Weibull distribution is a real valued
+     * distribution producing deviates >= 0.
+     *
+     * WeibullDeviate is constructed with reference to a UniformDeviate that will actually generate
+     * the randoms, which are then transformed to Weibull distribution.  Copy constructor and
+     * assignment operator are kept private since you probably do not want two "random" number
+     * generators producing the same sequence of numbers in your code!  
+     *
+     */
+    class WeibullDeviate 
+    {
+    public:
+        /**
+         * @brief Construct a new Weibull-distributed RNG.
+         *
+         * Constructor requires reference to a UniformDeviate that generates the randoms, which are
+         * then transformed to Weibull distribution. 
+         * @param[in] u_   UniformDeviate that will be called to generate all randoms
+         * @param[in] a    Shape parameter of the output distribution, must be > 0.
+         * @param[in] b    Scale parameter of the distribution, must be > 0.
+         */
+        WeibullDeviate(UniformDeviate& u_, double a=1., double b=1.) : 
+            u(u_), weibull(a, b) {}
+
+        /**
+         * @brief Draw a new random number from the distribution.
+         *
+         * @return A Weibull deviate with current shape k and scale lam.
+         */
+        double operator() () { return weibull(u.urng); }
+
+        /**
+         * @brief Get current distribution shape parameter a.
+         *
+         * @return Shape parameter a of distribution.
+         */
+        double getA() { return weibull.a(); }
+
+        /**
+         * @brief Get current distribution scale parameter b.
+         *
+         * @return Scale parameter b of distribution.
+         */
+        double getB() { return weibull.b(); }
+
+        /**
+         * @brief Set current distribution shape parameter a.
+         *
+         * @param[in] a  New shape parameter for distribution. Behaviour for non-positive value
+         * is undefined.
+         */
+        void setA(double a) {
+            weibull.param(boost::random::weibull_distribution<>::param_type(a, weibull.b()));
+        }
+
+        /**
+         * @brief Set current distribution scale parameter b.
+         *
+         * @param[in] b  New scale parameter for distribution.  Behavior for non-positive
+         * value is undefined. 
+         */
+        void setB(double b) {
+            weibull.param(boost::random::weibull_distribution<>::param_type(weibull.a(), b));
+        }
+
+        /**
+         * @brief Add Weibull pseudo-random deviates to every element in a supplied Image.
+         *
+         * @param[in,out] data  The Image.
+         */
+        template <typename T>
+        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+
+
+    private:
+
+        UniformDeviate& u;
+        boost::random::weibull_distribution<> weibull;
+
+        /**
+         * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+         */
+        WeibullDeviate(const WeibullDeviate& rhs);
+        /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+        void operator=(const WeibullDeviate& rhs);
+    };
+
+    /**
+     * @brief A Gamma-distributed deviate with shape parameter alpha and scale parameter beta.
+     *
+     * See http://en.wikipedia.org/wiki/Gamma_distribution (although note that in the Boost random
+     * routine this class calls the notation is alpha=k and beta=theta).  The Gamma distribution is
+     * a real valued distribution producing deviates >= 0.
+     *
+     * GammaDeviate is constructed with reference to a UniformDeviate that will actually generate
+     * the randoms, which are then transformed to Gamma distribution.  Copy constructor and
+     * assignment operator are kept private since you probably do not want two "random" number
+     * generators producing the same sequence of numbers in your code!  
+     *
+     */
+    class GammaDeviate 
+    {
+    public:
+        /**
+         * @brief Construct a new Gamma-distributed RNG.
+         *
+         * Constructor requires reference to a UniformDeviate that generates the randoms, which are
+         * then transformed to Gamma distribution. 
+         * @param[in] u_     UniformDeviate that will be called to generate all randoms
+         * @param[in] alpha  Shape parameter of the output distribution, must be > 0.
+         * @param[in] beta   Scale parameter of the distribution, must be > 0.
+         */
+        GammaDeviate(UniformDeviate& u_, double alpha=1., double beta=1.) : 
+            u(u_), gamma(alpha, beta) {}
+
+        /**
+         * @brief Draw a new random number from the distribution.
+         *
+         * @return A Gamma deviate with current shape alpha and scale beta.
+         */
+        double operator() () { return gamma(u.urng); }
+
+        /**
+         * @brief Get current distribution shape parameter alpha.
+         *
+         * @return Shape parameter alpha of distribution.
+         */
+        double getAlpha() { return gamma.alpha(); }
+
+        /**
+         * @brief Get current distribution scale parameter beta.
+         *
+         * @return Scale parameter beta of distribution.
+         */
+        double getBeta() { return gamma.beta(); }
+
+        /**
+         * @brief Set current distribution shape parameter alpha.
+         *
+         * @param[in] alpha  New shape parameter for distribution. Behaviour for non-positive value
+         *                   is undefined.
+         */
+        void setAlpha(double alpha) {
+            gamma.param(boost::random::gamma_distribution<>::param_type(alpha, gamma.beta()));
+        }
+
+        /**
+         * @brief Set current distribution scale parameter beta.
+         *
+         * @param[in] beta  New scale parameter for distribution.  Behavior for non-positive
+         *                  value is undefined. 
+         */
+        void setBeta(double beta) {
+            gamma.param(boost::random::gamma_distribution<>::param_type(gamma.alpha(), beta));
+        }
+
+        /**
+         * @brief Add Gamma pseudo-random deviates to every element in a supplied Image.
+         *
+         * @param[in,out] data  The Image.
+         */
+        template <typename T>
+        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+
+
+    private:
+
+        UniformDeviate& u;
+        boost::random::gamma_distribution<> gamma;
+
+        /**
+         * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+         */
+        GammaDeviate(const GammaDeviate& rhs);
+        /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+        void operator=(const GammaDeviate& rhs);
+    };
+
+    /**
+     * @brief A Chi^2-distributed deviate with degrees-of-freedom parameter n.
+     *
+     * See http://en.wikipedia.org/wiki/Chi-squared_distribution (although note that in the Boost 
+     * random routine this class calls the notation is k=n for the number of degrees of freedom).
+     * The Chi^2 distribution is a real valued distribution producing deviates >= 0.
+     *
+     * Chi2Deviate is constructed with reference to a UniformDeviate that will actually generate
+     * the randoms, which are then transformed to a Chi^2 distribution.  Copy constructor and
+     * assignment operator are kept private since you probably do not want two "random" number
+     * generators producing the same sequence of numbers in your code!  
+     *
+     */
+    class Chi2Deviate 
+    {
+    public:
+        /**
+         * @brief Construct a new Chi^2-distributed RNG.
+         *
+         * Constructor requires reference to a UniformDeviate that generates the randoms, which are
+         * then transformed to Gamma distribution. 
+         * @param[in] u_     UniformDeviate that will be called to generate all randoms.
+         * @param[in] n      Number of degrees of freedom for the output distribution, must be > 0.
+         *
+         */
+        Chi2Deviate(UniformDeviate& u_, double n=1.) : 
+            u(u_), chi_squared(n) {}
+
+        /**
+         * @brief Draw a new random number from the distribution.
+         *
+         * @return A Chi^2 deviate with current degrees-of-freedom parameter n.
+         */
+        double operator() () { return chi_squared(u.urng); }
+
+        /**
+         * @brief Get current distribution degrees-of-freedom parameter n.
+         *
+         * @return Degrees-of-freedom parameter n of distribution.
+         */
+        double getN() { return chi_squared.n(); }
+
+        /**
+         * @brief Set current distribution degrees-of-freedom parameter n.
+         *
+         * @param[in] n  New degrees-of-freedom parameter n for distribution. Behaviour for 
+         *               non-positive value is undefined.
+         */
+        void setN(double n) {
+	        chi_squared.param(boost::random::chi_squared_distribution<>::param_type(n));
+        }
+
+        /**
+         * @brief Add Chi^2 pseudo-random deviates to every element in a supplied Image.
+         *
+         * @param[in,out] data  The Image.
+         */
+        template <typename T>
+        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+
+
+    private:
+
+        UniformDeviate& u;
+        boost::random::chi_squared_distribution<> chi_squared;
+
+        /**
+         * @brief Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+         */
+        Chi2Deviate(const Chi2Deviate& rhs);
+        /// Hide copy and assignment so users do not create duplicate (correlated!) RNG's:
+        void operator=(const Chi2Deviate& rhs);
     };
 
 }  // namespace galsim

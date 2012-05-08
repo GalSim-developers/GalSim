@@ -63,6 +63,23 @@ cResultF = np.array([[55.894428, 47.926445], [44.766380, 54.509399]], dtype=np.f
 cResultD = np.array([[55.894425874146336, 47.926443828684981],
                      [44.766381648303245, 54.509402357022211]], dtype=np.float64)
 
+# a & b to use for Weibull tests
+wA = 4.
+wB = 9.
+# Tabulated results for Weibull
+wResult = (9.13234684792985, 6.233146513996428, 5.320941931556709)
+
+# alpha & beta to use for Gamma tests
+gammaAlpha = 1.5
+gammaBeta = 4.5
+# Tabulated results for Weibull
+gammaResult = (7.044528184548506, 1.2478440729556932, 7.261520614904038)
+
+# n to use for Chi2 tests
+chi2N = 30
+# Tabulated results for Chi2
+chi2Result = (32.070036783568476, 26.303957298429747, 23.438338438325008)
+
 def test_uniform_rand():
     """Test uniform random number generator for expected result given the above seed.
     """
@@ -184,11 +201,88 @@ def test_ccdnoise_image():
                                              err_msg="Wrong CCD noise random sequence generated "+
                                                      "for Image"+typestrings[i]+" images.")
 
+def test_weibull_rand():
+    """Test Weibull random number generator for expected result given the above seed.
+    """
+    u = galsim.UniformDeviate(testseed)
+    w = galsim.WeibullDeviate(u, a=wA, b=wB)
+    testResult = (w(), w(), w())
+    np.testing.assert_array_almost_equal(np.array(testResult), np.array(wResult), precision, 
+                                         err_msg='Wrong Weibull random number sequence generated')
+
+def test_weibull_image():
+    """Testing ability to apply Weibull random numbers to images using their addNoise method, 
+    and reproduce sequence.
+    """
+    u = galsim.UniformDeviate(testseed)
+    w = galsim.WeibullDeviate(u, a=wA, b=wB)
+    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage.addNoise(w)
+    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(wResult), precision, 
+                                         err_msg='Wrong Weibull random number sequence generated '
+                                                +'using image method.')
+
+def test_gamma_rand():
+    """Test Gamma random number generator for expected result given the above seed.
+    """
+    u = galsim.UniformDeviate(testseed)
+    gam = galsim.GammaDeviate(u, alpha=gammaAlpha, beta=gammaBeta)
+    testResult = (gam(), gam(), gam())
+    np.testing.assert_array_almost_equal(np.array(testResult), np.array(gammaResult), precision, 
+                                         err_msg='Wrong Gamma random number sequence generated')
+
+def test_gamma_image():
+    """Testing ability to apply Gamma random numbers to images using their addNoise method, 
+    and reproduce sequence.
+    """
+    u = galsim.UniformDeviate(testseed)
+    gam = galsim.GammaDeviate(u, alpha=gammaAlpha, beta=gammaBeta)
+    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage.addNoise(gam)
+    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(gammaResult),
+                                         precision,
+                                         err_msg='Wrong Gamma random number sequence generated '
+                                                +'using image method.')
+
+def test_chi2_rand():
+    """Test Chi^2 random number generator for expected result given the above seed.
+    """
+    u = galsim.UniformDeviate(testseed)
+    chi2 = galsim.Chi2Deviate(u, n=chi2N)
+    testResult = (chi2(), chi2(), chi2())
+    np.testing.assert_array_almost_equal(np.array(testResult), np.array(chi2Result), precision, 
+                                         err_msg='Wrong Chi^2 random number sequence generated')
+
+def test_chi2_image():
+    """Testing ability to apply Chi^2 random numbers to images using their addNoise method, 
+    and reproduce sequence.
+    """
+    u = galsim.UniformDeviate(testseed)
+    chi2 = galsim.Chi2Deviate(u, n =chi2N)
+    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage.addNoise(chi2)
+    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(chi2Result),
+                                         precision,
+                                         err_msg='Wrong Chi^2 random number sequence generated '
+                                                +'using image method.')
+
+
 if __name__ == "__main__":
     test_uniform_rand()
     test_uniform_rand_reset()
+    test_uniform_image()
     test_gaussian_rand()
+    test_gaussian_image()
     test_binomial_rand()
+    test_binomial_image()
     test_poisson_rand()
+    test_poinsson_image()
     test_ccdnoise_rand()
     test_ccdnoise_image()
+    test_weibull_rand()
+    test_weibull_image()
+    test_gamma_rand()
+    test_gamma_image()
+    test_chi2_rand()
+    test_chi2_image()
+
