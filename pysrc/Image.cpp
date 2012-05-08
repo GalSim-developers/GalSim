@@ -1,12 +1,21 @@
 
+#ifdef __INTEL_COMPILER
+#pragma warning (disable : 47)
+#endif
+
 #include <stdint.h>
 
+#ifdef __INTEL_COMPILER
+#pragma warning (default : 47)
+#endif
+
 #include "boost/python.hpp"
-#include "Image.h"
 
 #define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
 #define NO_IMPORT_ARRAY
 #include "numpy/arrayobject.h"
+
+#include "Image.h"
 
 namespace bp = boost::python;
 
@@ -23,7 +32,7 @@ namespace {
 template <typename T> struct NumPyTraits;
 template <> struct NumPyTraits<int16_t> { static int getCode() { return NPY_INT16; } };
 template <> struct NumPyTraits<int32_t> { static int getCode() { return NPY_INT32; } };
-template <> struct NumPyTraits<int64_t> { static int getCode() { return NPY_INT64; } };
+//template <> struct NumPyTraits<int64_t> { static int getCode() { return NPY_INT64; } };
 template <> struct NumPyTraits<float> { static int getCode() { return NPY_FLOAT32; } };
 template <> struct NumPyTraits<double> { static int getCode() { return NPY_FLOAT64; } };
 

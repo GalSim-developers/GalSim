@@ -390,26 +390,26 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) * 9);
+                BOOST_CHECK(std::fabs(im3(x,y) - ref_im(x,y) * 9) < 0.0001);
             }
         }
         im3.fill(0);
         im3.view() = im1 / T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) * 9);
+                BOOST_CHECK(std::fabs(im3(x,y) - ref_im(x,y) * 9) < 0.0001);
             }
         }
         im3 /= T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) * 3);
+                BOOST_CHECK(std::fabs(im3(x,y) - ref_im(x,y) * 3) < 0.0001);
             }
         }
         im3.view() /= T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y));
+                BOOST_CHECK(std::fabs(im3(x,y) - ref_im(x,y)) < 0.0001);
             }
         }
         im1 = ref_im;
