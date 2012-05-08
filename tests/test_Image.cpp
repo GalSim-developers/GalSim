@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     // Of course, when viewed as an image, the rows are generally drawn from bottom to top.
 
     // Check basic constructor from nrow,ncol
-	galsim::Image<T> im1(ncol,nrow);
+    galsim::Image<T> im1(ncol,nrow);
     galsim::Bounds<int> bounds(1,ncol,1,nrow);
 
     BOOST_CHECK(im1.getXMin()==1);
@@ -45,11 +45,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     BOOST_CHECK(im1.getYMax()==nrow);
     BOOST_CHECK(im1.getBounds()==bounds);
 
-	BOOST_CHECK(im1.getData() != NULL);
-	BOOST_CHECK(im1.getStride() == ncol);
+    BOOST_CHECK(im1.getData() != NULL);
+    BOOST_CHECK(im1.getStride() == ncol);
 
     // Check alternate constructor from bounds
-	galsim::Image<T> im2(bounds);
+    galsim::Image<T> im2(bounds);
     galsim::ImageView<T> im2_view = im2;
     galsim::ConstImageView<T> im2_cview = im2;
 
@@ -65,12 +65,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     BOOST_CHECK(im2_cview.getYMax()==nrow);
     BOOST_CHECK(im2_cview.getBounds()==bounds);
 
-	BOOST_CHECK(im2.getData() != NULL);
-	BOOST_CHECK(im2_view.getData() == im2.getData());
-	BOOST_CHECK(im2_cview.getData() == im2.getData());
-	BOOST_CHECK(im2.getStride() == ncol);
-	BOOST_CHECK(im2_view.getStride() == ncol);
-	BOOST_CHECK(im2_cview.getStride() == ncol);
+    BOOST_CHECK(im2.getData() != NULL);
+    BOOST_CHECK(im2_view.getData() == im2.getData());
+    BOOST_CHECK(im2_cview.getData() == im2.getData());
+    BOOST_CHECK(im2.getStride() == ncol);
+    BOOST_CHECK(im2_view.getStride() == ncol);
+    BOOST_CHECK(im2_cview.getStride() == ncol);
 
     // Check various ways to set and get values 
     for (int y=1; y<=nrow; ++y) {
@@ -390,26 +390,26 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) * 9);
+                BOOST_CHECK(std::fabs(im3(x,y) - ref_im(x,y) * 9) < 0.0001);
             }
         }
         im3.fill(0);
         im3.view() = im1 / T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) * 9);
+                BOOST_CHECK(std::fabs(im3(x,y) - ref_im(x,y) * 9) < 0.0001);
             }
         }
         im3 /= T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) * 3);
+                BOOST_CHECK(std::fabs(im3(x,y) - ref_im(x,y) * 3) < 0.0001);
             }
         }
         im3.view() /= T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y));
+                BOOST_CHECK(std::fabs(im3(x,y) - ref_im(x,y)) < 0.0001);
             }
         }
         im1 = ref_im;
