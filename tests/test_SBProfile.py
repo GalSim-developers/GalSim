@@ -103,7 +103,7 @@ def test_sbprofile_exponential():
                                          err_msg="Exponential profile disagrees with expected"
                                          +" result") 
     # Repeat with the GSObject version of this:
-    expon = galsim.Exponential(flux=1, r0=r0)
+    expon = galsim.Exponential(flux=1., scale_radius=r0)
     myImg = expon.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -119,7 +119,7 @@ def test_sbprofile_sersic():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
                                          err_msg="Sersic profile disagrees with expected result")   
     # Repeat with the GSObject version of this:
-    sersic = galsim.Sersic(n=3, flux=1, re=1)
+    sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     myImg = sersic.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -169,7 +169,7 @@ def test_sbprofile_moffat():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
                                          err_msg="Moffat profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
-    moffat = galsim.Moffat(beta=2, truncationFWHM=5, flux=1, re=1)
+    moffat = galsim.Moffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
     myImg = moffat.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -225,7 +225,7 @@ def test_sbprofile_smallshear():
 def test_sbprofile_largeshear():
     """Test the application of a large shear to a Sersic SBProfile against a known result.
     """
-    mySBP = galsim.SBSersic(n=4, flux=1, re=1)
+    mySBP = galsim.SBSersic(n=4, flux=1, half_light_radius=1)
     e1 = 0.0
     e2 = 0.5
     mySBP_shear = mySBP.shear(e1,e2)
@@ -235,13 +235,13 @@ def test_sbprofile_largeshear():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Large-shear Sersic profile disagrees with expected result")  
     # Repeat with the GSObject version of this:
-    sersic = galsim.Sersic(n=4, flux=1, re=1)
+    sersic = galsim.Sersic(n=4, flux=1, half_light_radius=1)
     sersic.applyDistortion(galsim.Ellipse(e1,e2))
     myImg = sersic.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyDistortion disagrees with expected result")
-    sersic = galsim.Sersic(n=4, flux=1, re=1)
+    sersic = galsim.Sersic(n=4, flux=1, half_light_radius=1)
     g1,g2 = convertToShear(e1,e2)
     sersic.applyShear(g1,g2)
     myImg = sersic.draw(dx=0.2)
@@ -252,7 +252,7 @@ def test_sbprofile_largeshear():
 def test_sbprofile_convolve():
     """Test the convolution of a Moffat and a Box SBProfile against a known result.
     """
-    mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, re=1)
+    mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve(mySBP)
     myConv.add(mySBP2)
@@ -262,7 +262,7 @@ def test_sbprofile_convolve():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Moffat convolved with Box SBProfile disagrees with expected result")  
     # Repeat with the GSObject version of this:
-    psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, re=1)
+    psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel])
     myImg = conv.draw(dx=0.2)
@@ -348,7 +348,7 @@ def test_sbprofile_rotate():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="45-degree rotated elliptical Gaussian disagrees with expected result")  
     # Repeat with the GSObject version of this:
-    gal = galsim.Sersic(n=2.5, flux=1, re=1)
+    gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1)
     gal.applyDistortion(galsim.Ellipse(0.2,0.0));
     gal.applyRotation(45.0)
     myImg = gal.draw(dx=0.2)
@@ -370,7 +370,7 @@ def test_sbprofile_mag():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Magnification (x1.5) of exponential SBProfile disagrees with expected result")   
     # Repeat with the GSObject version of this:
-    gal = galsim.Exponential(flux=1, r0=r0)
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal.applyDistortion(myEll)
     myImg = gal.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
@@ -470,19 +470,19 @@ def test_sbprofile_rescale():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Flux-rescale sersic profile disagrees with expected result")   
     # Repeat with the GSObject version of this:
-    sersic = galsim.Sersic(n=3, flux=1, re=1)
+    sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic.setFlux(2)
     myImg = sersic.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject setFlux disagrees with expected result")
-    sersic = galsim.Sersic(n=3, flux=1, re=1)
+    sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic *= 2
     myImg = sersic.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject *= 2 disagrees with expected result")
-    sersic = galsim.Sersic(n=3, flux=1, re=1)
+    sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic2 = sersic * 2
     myImg = sersic2.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
