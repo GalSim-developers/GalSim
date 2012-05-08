@@ -2,11 +2,12 @@
 
 import logging
 
+
 # --- pixel scale ---
 #
 # Image sampling rate / separation between pixels. Sets the physical units for all lengths in the
 # output images.  If including pixel integration, it probably makes sense for 
-# config.PSF.Pixel.xw.value and config.PSF.Pixel.yw.value (defaults = 1.) to be set to config.dx.
+# config.PSF.Pixel.xw and config.PSF.Pixel.yw (defaults = 1.) to be set to config.dx.
 config.dx = 1.
 
 
@@ -39,17 +40,16 @@ config.PSF.type = ["Moffat", "Pixel"]
 #
 # e.g.:
 #
-# config.PSF.Moffat.beta.distribution = "Constant"
-# config.PSF.Moffat.beta.value = 3.
+# config.PSF.Moffat.beta = 3.   # Note that single scalar values are interpreted as constants
+# config.PSF.Moffat.e1.distribution = "GaussianDeviate"
+# config.PSF.Moffat.e1.mean = 0.
+# config.PSF.Moffat.e1.sigma = 0.03
 #
 # Any parameters not set either in configuration files or input catalogues will adopt their
 # keyword default values, and GalSim will raise a Warning.
-config.PSF.Moffat.flux.distribution = "Constant"
-config.PSF.Moffat.flux.value = 1.
-config.PSF.Pixel.xw.distribution = "Constant"
-config.PSF.Pixel.xw.value = config.dx
-config.PSF.Pixel.yw.distribution = "Constant"
-config.PSF.Pixel.yw.value = config.dx
+config.PSF.Moffat.flux = 1.
+config.PSF.Pixel.xw = config.dx
+config.PSF.Pixel.yw = config.dx
 
 
 # --- galaxy type ---
@@ -94,10 +94,8 @@ config.galaxy.type = ["DeVaucouleurs", "Exponential"]
 # Distributions for parameters (including constant values) are set below.  These will be 
 # overwritten by any values for these parameters found in the input catalogues.
 #
-config.shear.g1.distribution = "Constant"
-config.shear.g1.value = 0.
-config.shear.g2.distribution = "Constant"
-config.shear.g2.value = 0.
+config.shear.g1 = 0.
+config.shear.g2 = 0.
 
 
 # --- noise ---
@@ -149,12 +147,11 @@ config.input_cat.type = "ASCII"
 config.input_cat.ascii_fields = ["Bounds.xMin", "Bounds.yMin", "Bounds.xMax", "Bounds.yMax",
                                  "Exponential.re", "Exponential.e1", "Exponential.e2",
                                  "DeVaucouleurs.re", "DeVaucouleurs.e1", "DeVaucouleurs.e2",
-                                 "Moffat.FWHM", "Moffat.truncationFWHM", "Moffat.e1", "Moffat.e2"]
+                                 "Moffat.beta", "Moffat.FWHM", "Moffat.e1", "Moffat.e2",
+                                 "Moffat.truncationFWHM"]
 # *** Do not comment out the two lines below, it's a useful check! ***
 if config.input_cat.type == "ASCII" and not hasattr(config.input_cat, "ascii_fields"):
     raise IOError("config.input_cat.ascii_fields must be set if using ASCII catalogues")
-
-
 
 
 # --- output ---
@@ -173,4 +170,3 @@ config.output.type = "IMAGE"
 config.logging_level = logging.INFO
 # Setup the basic logger.
 logging.basicConfig(level=config.logging_level)
-
