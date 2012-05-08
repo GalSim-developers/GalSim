@@ -146,13 +146,15 @@ config.input_cat.type = "ASCII"
 # Table (TODO/XXXX)
 #
 # To ignore columns in the input cat, place a None object for that list entry.
-config.input_cat.ascii_fields = ["x", "y", "nx", "ny", "Exponential.re", "Exponential.e1", 
-                                 "Exponential.e2", "DeVaucouleurs.re", "DeVaucouleurs.e1", 
-                                 "DeVaucouleurs.e2", "Moffat.FWHM", "Moffat.truncationFWHM",
-                                 "Moffat.e1", "Moffat.e2"]
+config.input_cat.ascii_fields = ["Bounds.xMin", "Bounds.yMin", "Bounds.xMax", "Bounds.yMax",
+                                 "Exponential.re", "Exponential.e1", "Exponential.e2",
+                                 "DeVaucouleurs.re", "DeVaucouleurs.e1", "DeVaucouleurs.e2",
+                                 "Moffat.FWHM", "Moffat.truncationFWHM", "Moffat.e1", "Moffat.e2"]
 # *** Do not comment out the two lines below, it's a useful check! ***
 if config.input_cat.type == "ASCII" and not hasattr(config.input_cat, "ascii_fields"):
     raise IOError("config.input_cat.ascii_fields must be set if using ASCII catalogues")
+
+
 
 
 # --- output ---
