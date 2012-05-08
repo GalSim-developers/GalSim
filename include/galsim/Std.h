@@ -5,6 +5,9 @@
 #define StdH
 
 #include <cmath>
+#define _USE_MATH_DEFINES  // To make sure M_PI is defined.
+// It should be in math.h, but not necessarily in cmath.
+#include <math.h>
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
@@ -16,7 +19,7 @@
 #include "mmgr.h"
 #endif
 
-// Not all cmath libraries define this:
+// Just in case the aboth bit for M_PI didn't work...
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
