@@ -145,19 +145,23 @@ config.input_cat.type = "ASCII"
 # Table (TODO/XXXX)
 #
 # To ignore columns in the input cat, place a None object for that list entry.
-config.input_cat.ascii_fields = ["Bounds.xMin", "Bounds.yMin", "Bounds.xMax", "Bounds.yMax",
+config.input_cat.ascii_fields = ["Moffat.beta", "Moffat.FWHM", "Moffat.e1", "Moffat.e2",
+                                 "Moffat.truncationFWHM",
                                  "Exponential.re", "Exponential.e1", "Exponential.e2",
-                                 "DeVaucouleurs.re", "DeVaucouleurs.e1", "DeVaucouleurs.e2",
-                                 "Moffat.beta", "Moffat.FWHM", "Moffat.e1", "Moffat.e2",
-                                 "Moffat.truncationFWHM"]
+                                 "DeVaucouleurs.re", "DeVaucouleurs.e1", "DeVaucouleurs.e2"]
 # *** Do not comment out the two lines below, it's a useful check! ***
 if config.input_cat.type == "ASCII" and not hasattr(config.input_cat, "ascii_fields"):
     raise IOError("config.input_cat.ascii_fields must be set if using ASCII catalogues")
+#
+# Give the filename for the input catalog:
+#
+config.input_cat.filename = "examples/input/galsim_default_input.asc"
 
 
 # --- output ---
 #
-# Specify the type of output.  The currently supported output types WILL BE (TODO: DO THIS!)
+# Specify the type and filename of the output.  The currently supported output types WILL BE
+# (TODO: ACTUALLY DO THIS!)
 #
 # "PSTAMPS"  An individual postage stamp for each output object image.
 # "IMAGE"    A large 2D image containing multiple objects.
@@ -165,7 +169,7 @@ if config.input_cat.type == "ASCII" and not hasattr(config.input_cat, "ascii_fie
 #            objects.
 #
 config.output.type = "IMAGE"
-
+config.output.filename = "galsim_default_output.fits"
 
 # Logging level at which to echo the commands we run
 config.logging_level = logging.INFO
