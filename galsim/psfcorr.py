@@ -60,14 +60,20 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     """
     gal_image_view = gal_image.view()
     PSF_image_view = PSF_image.view()
-    result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, sky_var = sky_var,
-                                           shear_est = shear_est, flags = flags,
-                                           guess_sig_gal = guess_sig_gal,
-                                           guess_sig_PSF = guess_sig_PSF,
-                                           precision = precision, guess_x_centroid =
-                                           guess_x_centroid, guess_y_centroid = guess_y_centroid)
-    if (strict == True and len(result.error_message) > 0):
-        raise RuntimeError(result.error_message)
+    try:
+        result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, sky_var = sky_var,
+                                               shear_est = shear_est, flags = flags,
+                                               guess_sig_gal = guess_sig_gal,
+                                               guess_sig_PSF = guess_sig_PSF,
+                                               precision = precision, guess_x_centroid =
+                                               guess_x_centroid, guess_y_centroid =
+                                               guess_y_centroid)
+    except RuntimeError as err:
+        if (strict == True):
+            raise err
+        else:
+            result = _galsim.HSMShapeData()
+            result.error_message = err.message
     return result
 
 def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
@@ -105,11 +111,16 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
     @return A HSMShapeData object containing the results of moment measurement.
     """
     object_image_view = object_image.view()
-    result = _galsim._FindAdaptiveMomView(object_image_view, guess_sig = guess_sig, precision =
-                                          precision, guess_x_centroid = guess_x_centroid,
-                                          guess_y_centroid = guess_y_centroid)
-    if (strict == True and len(result.error_message) > 0):
-        raise RuntimeError(result.error_message)
+    try:
+        result = _galsim._FindAdaptiveMomView(object_image_view, guess_sig = guess_sig, precision =
+                                              precision, guess_x_centroid = guess_x_centroid,
+                                              guess_y_centroid = guess_y_centroid)
+    except RuntimeError as err:
+        if (strict == True):
+            raise err
+        else:
+            result = _galsim.HSMShapeData()
+            result.error_message = err.message
     return result
 
 # make FindAdaptiveMom a method of Image and ImageView classes
