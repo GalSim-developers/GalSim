@@ -347,8 +347,8 @@ namespace hsm {
             results.resolution_factor = gal_data.resolution;
         }
         catch (char *err_msg) {
-            std::cout << err_msg;
             results.error_message = err_msg;
+            throw HSMError(err_msg);
         }
 
         return results;
@@ -402,13 +402,13 @@ namespace hsm {
             results.moments_status = 0;
         }
         catch (char *err_msg) {
-            std::cout << err_msg;
             results.error_message = err_msg;
             results.moments_status = 1;
             results.moments_centroid.x = 0.0;
             results.moments_centroid.y = 0.0;
             results.moments_rho4 = -1.0;
             results.moments_n_iter = 0;
+            throw HSMError(err_msg);
         }
 
         return results;
