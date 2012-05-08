@@ -65,16 +65,43 @@ if sys.platform == 'darwin':
     env1.Replace(SHLIBSUFFIX = '.%s.dylib'%version[0])
 
 elif sys.platform == 'linux2':
-    # If any of the linked libraries are static, then including them in the SharedLibrary
-    # build will fail on some linux systems.  On the other hand, the link step doesn't 
-    # seem to require the other libraries like it does on OSX.  So I think it's safe to 
-    # just clear out LIBS here.
-    env1.Replace(LIBS=[])
+    # On linux, we don't need to include the other libraries here.  They need to be 
+    # linked for compiling any executable, but not for building the library.
+    # However, if any of the other libraries are static, it causes an error on some 
+    # systems to include them here with the usual -llib_name.  But we do need to
+    # include the static libraries here, since python won't be able to load them
+    # dynamically at run time and we need the resolve the symbols from them that 
+    # we use.  Otherwise we get undefined symbol errors when importing galsim.
+    # To do this, we need the full path name to the library file.  So we loop 
+    # through the library search path looking for each library.  If there is a 
+    # shared library, we're fine, but if not and we find a static library, then 
+    # we need to include it explicitly in the linking step for libgalsim.so. 
+    # This may fail if the static libraries were not compiled if -fPIC, but I 
+    # don't currently know a way to check for this.  
+
+    libs = env1['LIBS']
+    lib_path = ['/usr/local/lib']
+    lib_path += env1['LIBPATH']
+    static_libs = []
+    for lib in libs:
+	for dir in lib_path:
+	    fpath = os.path.join(dir,'lib' + lib + '.so')
+            if os.path.isfile(fpath) and os.access(fpath, os.R_OK):
+	    	break
+	    fpath = os.path.join(dir,'lib' + lib + '.a')
+            if os.path.isfile(fpath) and os.access(fpath, os.R_OK):
+	    	print 'Found static library: ',fpath
+		static_libs += [ File(fpath) ]
+	    	break
+
+    # Removes all -l lib flags, and add the explicit static library files.
+    env1.Replace(LIBS=static_libs)
+
     lib_final_name = os.path.join(lib_final_dir,'libgalsim.so.%s'%version[0])
     #lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s.%s'%version)
     lib_short_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s'%version[0])
     link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so')
-    env1.AppendUnique( SHLINKFLAGS=['-Wl,-soname,%s'%lib_final_name ])
+    env1.AppendUnique(SHLINKFLAGS=['-Wl,-soname,%s'%lib_final_name ])
     env1.Replace(SHLIBSUFFIX = '.so.%s'%version[0])
 
 elif sys.platform == 'win32':

@@ -14,3 +14,4 @@ docs/doxygen_example_output/*
 tests/nosetests.xml
 examples/output/*
 devutils/sizeof_SIFD
+gs.error
