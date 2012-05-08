@@ -118,14 +118,14 @@ def Script2():
     logger.info('    - Poisson noise (sky level = %.1e, gain = %.1f).', sky_level, gain)
 
     # Define the galaxy profile.
-    gal = galsim.Exponential(flux=gal_flux, scale=gal_r0)
+    gal = galsim.Exponential(flux=gal_flux, scale_radius=gal_r0)
 
     # Shear the galaxy by some value.
     gal.applyShear(g1, g2)
     logger.info('Made galaxy profile')
 
     # Define the PSF profile.
-    psf = galsim.Moffat(beta=psf_beta, flux=1., re=psf_re)
+    psf = galsim.Moffat(beta=psf_beta, flux=1., half_light_radius=psf_re)
     logger.info('Made PSF profile')
 
     # Define the pixel size
