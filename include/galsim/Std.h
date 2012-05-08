@@ -19,7 +19,7 @@
 #include "mmgr.h"
 #endif
 
-// Just in case the aboth bit for M_PI didn't work...
+// Just in case the above bit for M_PI didn't work...
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
