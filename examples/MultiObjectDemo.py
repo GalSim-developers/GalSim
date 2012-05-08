@@ -117,7 +117,7 @@ def Script1():
                 dy = (2*rng()-1) * psf_centroid_shift
                 rsq = dx**2 + dy**2
 
-            this_psf = galsim.Shift(final_psf,dx,dy)
+            this_psf = final_psf.createShifted(dx,dy)
 
             # No noise on PSF images.  Just draw it as is.
             this_psf.draw(sub_image, dx=pixel_scale)
@@ -189,7 +189,7 @@ def Script1():
                 theta += math.pi/2
                 first_in_pair = True
 
-            this_gal = galsim.Shear(gal,ellip,0)
+            this_gal = gal.createSheared(ellip,0)
             this_gal.applyRotation(theta)
 
             # Apply the gravitational shear
