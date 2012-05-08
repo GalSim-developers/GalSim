@@ -29,6 +29,7 @@
 #include "Shear.h"
 #include "FFT.h"
 #include "Table.h"
+#include "Angle.h"
 
 #ifdef USE_IMAGES
 #include "Image.h"
@@ -193,7 +194,7 @@ namespace galsim {
          * SBDistort, but that is an implementation choice, and should not be assumed.
          * @param[in] theta rotation, in radians, anticlockwise.
          */
-        virtual SBProfile* rotate(const double theta) const;
+        virtual SBProfile* rotate(Angle theta) const;
 
         /**
          * @brief Translation transformation.
@@ -1463,8 +1464,10 @@ namespace galsim {
          * @param[in] s     SBProfile being rotated.
          * @param[in] theta Rotation angle in radians anticlockwise.
          */
-        SBRotate(const SBProfile& s, const double theta) :
-            SBDistort(s, std::cos(theta), -std::sin(theta), std::sin(theta), std::cos(theta)) {}
+        SBRotate(const SBProfile& s, Angle theta) :
+            SBDistort(s, 
+                      std::cos(theta.rad()), -std::sin(theta.rad()),
+                      std::sin(theta.rad()), std::cos(theta.rad())) {}
     };
 
     /**

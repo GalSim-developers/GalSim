@@ -339,9 +339,7 @@ def test_sbprofile_rotate():
     """
     mySBP = galsim.SBSersic(n=2.5, flux=1, re=1)
     mySBP_shear = mySBP.shear(0.2, 0.0)
-    # TODO: I think this is rotating by 45 radians, so need to think about if this is the 
-    #       syntax we want for rotate.  Clearly not what the creator of this test expected.
-    mySBP_shear_rotate = mySBP_shear.rotate(45.0)
+    mySBP_shear_rotate = mySBP_shear.rotate(45.0 * galsim.degrees)
     myImg = mySBP_shear_rotate.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_ellip_rotated.fits"))
     printval(myImg, savedImg)
@@ -350,7 +348,7 @@ def test_sbprofile_rotate():
     # Repeat with the GSObject version of this:
     gal = galsim.Sersic(n=2.5, flux=1, re=1)
     gal.applyDistortion(galsim.Ellipse(0.2,0.0));
-    gal.applyRotation(45.0)
+    gal.applyRotation(45.0 * galsim.degrees)
     myImg = gal.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
