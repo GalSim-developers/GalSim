@@ -17,7 +17,8 @@ struct PyUniformDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (UniformDeviate::*) (Image<U> &) )&UniformDeviate::applyTo,
+            .def("applyTo", (void (UniformDeviate::*) (ImageView<U>) )&UniformDeviate::applyTo,
+                 "\n"
                  "Add Uniform deviates to every element in a supplied Image.\n"
                  "\n"
                  "Calling\n"
@@ -92,7 +93,8 @@ struct PyGaussianDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (GaussianDeviate::*) (Image<U> &) )&GaussianDeviate::applyTo,
+            .def("applyTo", (void (GaussianDeviate::*) (ImageView<U>) )&GaussianDeviate::applyTo,
+                 "\n"
                  "Add Gaussian deviates to every element in a supplied Image.\n"
                  "\n"
                  "Calling\n"
@@ -127,7 +129,7 @@ struct PyGaussianDeviate {
             ">>> g = GaussianDeviate(uniform, mean=0., sigma=1.) \n"
             "\n"
             "Initializes g to be a GaussianDeviate instance, and repeated calls to g() will\n"
-            "return successive, psuedo-random Gaussian deviates with specified mean and sigma.\n"
+            "return successive, pseudo-random Gaussian deviates with specified mean and sigma.\n"
             "\n"
             "Parameters:\n"
             "\n"
@@ -142,7 +144,7 @@ struct PyGaussianDeviate {
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as GaussianDeviate lives
             ]
-	);
+        );
         pyGaussianDeviate
             .def("__call__", &GaussianDeviate::operator(),
                  "Draw a new random number from the distribution.\n"
@@ -166,7 +168,8 @@ struct PyBinomialDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (BinomialDeviate::*) (Image<U> &) )&BinomialDeviate::applyTo,
+            .def("applyTo", (void (BinomialDeviate::*) (ImageView<U>) )&BinomialDeviate::applyTo,
+                 "\n"
                  "Add Binomial deviates to every element in a supplied Image.\n"
                  "\n"
                  "Calling\n"
@@ -200,8 +203,9 @@ struct PyBinomialDeviate {
             "--------------\n"
             ">>> b = BinomialDeviate(uniform, N=1., p=0.5) \n"
             "\n"
-            "Initializes b to be a GaussianDeviate instance, and repeated calls to b() will\n"
-            "return successive, psuedo-random Binomial deviates with specified N and p.\n"
+            "Initializes b to be a BinomialDeviate instance, and repeated calls to b() will\n"
+            "return successive, pseudo-random Binomial deviates with specified N and p, which\n"
+            "must both be > 0.\n"
             "\n"
             "Parameters:\n"
             "\n"
@@ -216,7 +220,7 @@ struct PyBinomialDeviate {
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as BinomialDeviate lives
             ]
-	);
+        );
         pyBinomialDeviate
             .def("__call__", &BinomialDeviate::operator(),
                  "Draw a new random number from the distribution.\n"
@@ -240,7 +244,8 @@ struct PyPoissonDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (PoissonDeviate::*) (Image<U> &) )&PoissonDeviate::applyTo,
+            .def("applyTo", (void (PoissonDeviate::*) (ImageView<U>) )&PoissonDeviate::applyTo,
+                 "\n"
                  "Add Poisson deviates to every element in a supplied Image.\n"
                  "\n"
                  "Calling\n"
@@ -275,7 +280,8 @@ struct PyPoissonDeviate {
             ">>> p = PoissonDeviate(uniform, mean=1.)\n"
             "\n"
             "Initializes p to be a PoissonDeviate instance, and repeated calls to p() will\n"
-            "return successive, psuedo-random Poisson deviates with specified mean.\n"
+            "return successive, pseudo-random Poisson deviates with specified mean, which must be\n"
+            "> 0.\n"
             "\n"
             "Parameters:\n"
             "\n"
@@ -289,7 +295,7 @@ struct PyPoissonDeviate {
             )[
                 bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as PoissonDeviate lives
             ]
-	);
+        );
         pyPoissonDeviate
             .def("__call__", &PoissonDeviate::operator(),
                  "Draw a new random number from the distribution.\n"
@@ -311,7 +317,8 @@ struct PyCCDNoise{
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (CCDNoise::*) (Image<U> &) )&CCDNoise::applyTo,
+            .def("applyTo", (void (CCDNoise::*) (ImageView<U>) )&CCDNoise::applyTo,
+                 "\n"
                  "Add noise to an input Image.\n"
                  "\n"
                  "Calling\n"
@@ -371,7 +378,7 @@ struct PyCCDNoise{
             )[
                 bp::with_custodian_and_ward<1,2>() // keep uniform (2) as long as CCDNoise lives
             ]
-	);
+        );
         pyCCDNoise
             .def("getGain", &CCDNoise::getGain, "Get gain in current noise model.")
             .def("setGain", &CCDNoise::setGain, "Set gain in current noise model.")
@@ -388,6 +395,248 @@ struct PyCCDNoise{
 
 };
 
+struct PyWeibullDeviate {
+
+    template <typename U, typename W>
+    static void wrapTemplates(W & wrapper) {
+        wrapper
+            .def("applyTo", (void (WeibullDeviate::*) (ImageView<U>) )&WeibullDeviate::applyTo,
+                 "\n"
+                 "Add Weibull-distributed deviates to every element in a supplied Image.\n"
+                 "\n"
+                 "Calling\n"
+                 "-------\n"
+                 ">>> WeibullDeviate.applyTo(image) \n"
+                 "\n"
+                 "On output each element of the input Image will have a pseudo-random\n"
+                 "WeibullDeviate return value added to it, with current values of a and b.\n",
+                 (bp::arg("image")))
+            ;
+    }
+
+    static void wrap() {
+        static char const * doc = 
+            "\n"
+            "Pseudo-random Weibull-distributed deviate for shape parameter a & scale parameter b\n"
+            "\n"
+            "WeibulllDeviate is constructed with reference to a UniformDeviate that will actually\n"
+            "generate the randoms, which are then transformed to Weibull distribution with shape\n"
+            "parameter a and scale parameter b.\n"
+            "\n"
+            "The Weibull distribution is related to a number of other probability distributions;\n"
+            "in particular, it interpolates between the exponential distribution (a=1) and the \n"
+            "Rayleigh distribution (a=2). See http://en.wikipedia.org/wiki/Weibull_distribution\n"
+            "(a=k and b=lambda in the notation adopted in the Wikipedia article).  The Weibull\n"
+            "distribution is real valued and produces deviates >= 0.\n"
+            "\n"
+            "As for UniformDeviate, the copy constructor and assignment operator are kept private\n"
+            "since you probably do not want two random number generators producing the same\n"
+            "sequence of numbers in your code!\n"
+            "\n"
+            "Wraps the Boost.Random weibull_distribution at the C++ layer so that the parent\n"
+            "UniformDeviate is given once at construction, and copy/assignment are hidden.\n"
+            "\n"
+            "Initialization\n"
+            "--------------\n"
+            ">>> w = WeibullDeviate(uniform, a=1., b=1.) \n"
+            "\n"
+            "Initializes w to be a WeibullDeviate instance, and repeated calls to w() will\n"
+            "return successive, pseudo-random Weibull-distributed deviates with shape and scale\n"
+            "parameters a and b, which must both be > 0.\n"
+            "\n"
+            "Parameters:\n"
+            "\n"
+            "uniform  a UniformDeviate instance (seed set there).\n"
+            "a        shape parameter of the distribution (default a = 1).\n"
+            "b        scale parameter of the distribution (default b = 1).\n"
+            "\n"
+            ;
+        bp::class_<WeibullDeviate,boost::noncopyable>pyWeibullDeviate(
+            "WeibullDeviate", doc, bp::init< UniformDeviate&, double, double >(
+                (bp::arg("uniform"), bp::arg("a")=1., bp::arg("b")=1.)
+            )[
+                bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as BinomialDeviate lives
+            ]
+	);
+        pyWeibullDeviate
+            .def("__call__", &WeibullDeviate::operator(),
+                 "Draw a new random number from the distribution.\n"
+                 "\n"
+                 "Returns a Weibull-distributed deviate with current a and b.\n")
+            .def("getA", &WeibullDeviate::getA, "Get current distribution shape parameter a.")
+            .def("setA", &WeibullDeviate::setA, "Set current distribution shape parameter a.")
+            .def("getB", &WeibullDeviate::getB, "Get current distribution scale parameter b.")
+            .def("setB", &WeibullDeviate::setB, "Set current distribution scale parameter b.")
+            ;
+        wrapTemplates<int>(pyWeibullDeviate);
+        wrapTemplates<short>(pyWeibullDeviate);
+        wrapTemplates<float>(pyWeibullDeviate);
+        wrapTemplates<double>(pyWeibullDeviate);
+    }
+
+};
+
+struct PyGammaDeviate {
+
+    template <typename U, typename W>
+    static void wrapTemplates(W & wrapper) {
+        wrapper
+            .def("applyTo", (void (GammaDeviate::*) (ImageView<U>) )&GammaDeviate::applyTo,
+                 "\n"
+                 "Add Gamma-distributed deviates to every element in a supplied Image.\n"
+                 "\n"
+                 "Calling\n"
+                 "-------\n"
+                 ">>> GammaDeviate.applyTo(image) \n"
+                 "\n"
+                 "On output each element of the input Image will have a pseudo-random\n"
+                 "GammaDeviate return value added to it, with current values of alpha and beta.\n",
+                 (bp::arg("image")))
+            ;
+    }
+
+    static void wrap() {
+        static char const * doc = 
+            "\n"
+            "Pseudo-random Gamma-distributed deviate for parameters alpha & beta.\n"
+            "\n"
+            "GammaDeviate is constructed with reference to a UniformDeviate that will actually\n"
+            "generate the randoms, which are then transformed to Gamma distribution with shape\n"
+            "parameter alpha and scale parameter beta.\n"
+            "\n"
+            "See http://en.wikipedia.org/wiki/Gamma_distribution (although note that in the Boost\n"
+            "random routine this class calls the notation is alpha=k and beta=theta).  The Gamma\n"
+            "distribution is a real valued distribution producing deviates >= 0.\n"
+            "\n"
+            "As for UniformDeviate, the copy constructor and assignment operator are kept private\n"
+            "since you probably do not want two random number generators producing the same\n"
+            "sequence of numbers in your code!\n"
+            "\n"
+            "Wraps the Boost.Random gamma_distribution at the C++ layer so that the parent\n"
+            "UniformDeviate is given once at construction, and copy/assignment are hidden.\n"
+            "\n"
+            "Initialization\n"
+            "--------------\n"
+            ">>> gam = GammaDeviate(uniform, alpha=1., beta=1.) \n"
+            "\n"
+            "Initializes gam to be a GammaDeviate instance, and repeated calls to gam() will\n"
+            "return successive, pseudo-random Gamma-distributed deviates with shape and scale\n"
+            "parameters alpha and beta, which must both be > 0.\n"
+            "\n"
+            "Parameters:\n"
+            "\n"
+            "uniform  a UniformDeviate instance (seed set there).\n"
+            "alpha    shape parameter of the distribution (default alpha = 1).\n"
+            "beta     scale parameter of the distribution (default beta = 1).\n"
+            "\n"
+            ;
+        bp::class_<GammaDeviate,boost::noncopyable>pyGammaDeviate(
+            "GammaDeviate", doc, bp::init< UniformDeviate&, double, double >(
+                (bp::arg("uniform"), bp::arg("alpha")=1., bp::arg("beta")=1.)
+            )[
+                bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as BinomialDeviate lives
+            ]
+	);
+        pyGammaDeviate
+            .def("__call__", &GammaDeviate::operator(),
+                 "Draw a new random number from the distribution.\n"
+                 "\n"
+                 "Returns a Gamma-distributed deviate with current alpha and beta.\n")
+            .def("getAlpha", &GammaDeviate::getAlpha, 
+                 "Get current distribution shape parameter alpha.")
+            .def("setAlpha", &GammaDeviate::setAlpha, 
+                 "Set current distribution shape parameter alpha.")
+            .def("getBeta", &GammaDeviate::getBeta, 
+                 "Get current distribution scale parameter beta.")
+            .def("setBeta", &GammaDeviate::setBeta, 
+                 "Set current distribution scale parameter beta.")
+            ;
+        wrapTemplates<int>(pyGammaDeviate);
+        wrapTemplates<short>(pyGammaDeviate);
+        wrapTemplates<float>(pyGammaDeviate);
+        wrapTemplates<double>(pyGammaDeviate);
+    }
+
+};
+
+struct PyChi2Deviate {
+
+    template <typename U, typename W>
+    static void wrapTemplates(W & wrapper) {
+        wrapper
+            .def("applyTo", (void (Chi2Deviate::*) (ImageView<U>) )&Chi2Deviate::applyTo,
+                 "\n"
+                 "Add Chi^2-distributed deviates to every element in a supplied Image.\n"
+                 "\n"
+                 "Calling\n"
+                 "-------\n"
+                 ">>> Chi2Deviate.applyTo(image) \n"
+                 "\n"
+                 "On output each element of the input Image will have a pseudo-random\n"
+                 "Chi2Deviate return value added to it, with current degrees-of-freedom.\n"
+                 "parameter n.\n",
+                 (bp::arg("image")))
+            ;
+    }
+
+    static void wrap() {
+        static char const * doc = 
+            "\n"
+            "Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter n.\n"
+            "\n"
+            "Chi2Deviate is constructed with reference to a UniformDeviate that will actually\n"
+            "generate the randoms, which are then transformed to Chi^2 distribution with dof\n"
+            "parameter n.\n"
+            "\n"
+            "See http://en.wikipedia.org/wiki/Chi-squared_distribution (although note that in the\n"
+            "Boost random routine this class calls the notation adopted interprets k=n).\n"
+            "The Chi^2 distribution is a real valued distribution producing deviates >= 0.\n"
+            "\n"
+            "As for UniformDeviate, the copy constructor and assignment operator are kept private\n"
+            "since you probably do not want two random number generators producing the same\n"
+            "sequence of numbers in your code!\n"
+            "\n"
+            "Wraps the Boost.Random chi_squared_distribution at the C++ layer so that the parent\n"
+            "UniformDeviate is given once at construction, and copy/assignment are hidden.\n"
+            "\n"
+            "Initialization\n"
+            "--------------\n"
+            ">>> chis = Chi2Deviate(uniform, n=1.) \n"
+            "\n"
+            "Initializes chis to be a Chi2Deviate instance, and repeated calls to chis() will\n"
+            "return successive, pseudo-random Chi^2-distributed deviates with degrees-of-freedom\n"
+            "parameter n, which must be > 0.\n"
+            "\n"
+            "Parameters:\n"
+            "\n"
+            "uniform  a UniformDeviate instance (seed set there).\n"
+            "n        number of degrees of freedom for the output distribution (default n = 1).\n"
+            "\n"
+            ;
+        bp::class_<Chi2Deviate,boost::noncopyable>pyChi2Deviate(
+            "Chi2Deviate", doc, bp::init< UniformDeviate&, double >(
+                (bp::arg("uniform"), bp::arg("n")=1.)
+            )[
+                bp::with_custodian_and_ward<1,2>() // keep u_ (2) as long as BinomialDeviate lives
+            ]
+	);
+        pyChi2Deviate
+            .def("__call__", &Chi2Deviate::operator(),
+                 "Draw a new random number from the distribution.\n"
+                 "\n"
+                 "Returns a Chi2-distributed deviate with current n degrees of freedom.\n")
+            .def("getN", &Chi2Deviate::getN, 
+                 "Get current distribution n degrees of freedom.")
+            .def("setN", &Chi2Deviate::setN, 
+                 "Set current distribution n degrees of freedom.")
+            ;
+        wrapTemplates<int>(pyChi2Deviate);
+        wrapTemplates<short>(pyChi2Deviate);
+        wrapTemplates<float>(pyChi2Deviate);
+        wrapTemplates<double>(pyChi2Deviate);
+    }
+
+};
 
 } // anonymous
 
@@ -397,7 +646,9 @@ void pyExportRandom() {
     PyBinomialDeviate::wrap();
     PyPoissonDeviate::wrap();
     PyCCDNoise::wrap();
+    PyWeibullDeviate::wrap();
+    PyGammaDeviate::wrap();
+    PyChi2Deviate::wrap();
 }
-
 
 } // namespace galsim

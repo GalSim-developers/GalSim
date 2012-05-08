@@ -13,3 +13,5 @@ docs/doxygen_example_output/*
 .DS_Store
 tests/nosetests.xml
 examples/output/*
+devutils/sizeof_SIFD
+gs.error
