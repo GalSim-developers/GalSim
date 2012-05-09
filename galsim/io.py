@@ -1,3 +1,4 @@
+import galsim
 
 def read_input_cat(filename=None, filetype="ASCII", ascii_fields=None, comments="#"):
     """@brief Read in an input catalog for object-by-object parameter specification.
@@ -65,15 +66,16 @@ def read_ascii_input_cat(filename=None, ascii_fields=None, comments="#"):
     input_cat.ascii_fields = ascii_fields
     # Always store the number of objects as input_cat.nobjects for easy access by other routines
     input_cat.nobjects = data.shape[0]
-    
+    print input_cat
     # Run through the fields in ascii_fields and add the column entries to the output
     for i in range(nfields):
         # Test for None elements (this means ingore that column in the input cat)
         if ascii_fields[i] == None:
             pass
         else:
-            # Otherwise use the magic of eval() to add a field to the input_cat as required
-            eval("input_cat."+ascii_fields[i]+" = data[:, i]")
+            # Give the input_cat a new attribute containing these data vectors
+            input_cat.__setattr__(ascii_fields[i], data[:, i])
+    print input_cat
     # Return catalog to the user
     return input_cat
 
