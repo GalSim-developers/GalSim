@@ -30,6 +30,7 @@ test_fwhm = 1.0
 test_sigma = 1.0
 test_scale = 1.0
 test_dx = 0.2
+test_sersic_n = [1.5, 2.5]
 target_precision = 0.004 # convergence criterion governing choice of pixel scale
 init_ratio = 1000.0 # a junk value to start with
 convergence_value = init_ratio # a junk value to start with, should be >> target_precision
@@ -241,6 +242,24 @@ def test_sbprofile_sersic():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Sersic disagrees with expected result")
+
+def test_sersic_radii():
+    """Test initialization of Sersic with different types of radius specification.
+    """
+    # test half-light-radius
+    for sersicn in test_sersic_n:
+        my_test_dx = test_dx
+        my_prev_ratio = init_ratio
+        my_convergence_value = convergence_value
+        while (my_convergence_value > target_precision):
+            test_gal = galsim.Sersic(sersicn, flux = 1., half_light_radius = test_hlr)
+            test_gal_image = test_gal.draw(dx = my_test_dx)
+            my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx)/np.sum(test_gal_image.array)
+            my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
+            my_prev_ratio = my_ratio
+            my_test_dx /= 2.0
+        np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
+                                       err_msg="Error in Sersic constructor with half-light radius")
 
 def test_sbprofile_airy():
     """Test the generation of a specific Airy profile using SBProfile against a known result.
@@ -638,6 +657,7 @@ if __name__ == "__main__":
     test_sbprofile_exponential()
     test_exponential_radii()
     test_sbprofile_sersic()
+    test_sersic_radii()
     test_sbprofile_airy()
     test_sbprofile_box()
     test_sbprofile_moffat()
