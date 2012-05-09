@@ -26,7 +26,7 @@ def load(config_file=None, include_default=True):
     else:
         files =[]
     if config_file != None:
-        file.append(config_file)
+        files.append(config_file)
     for f in reversed(files):
         execfile(f)
     return config
