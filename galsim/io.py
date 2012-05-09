@@ -3,8 +3,6 @@ import galsim
 def ReadInputCat(config=None, cat_file_name=None, filetype="ASCII", comments="#"):
     """@brief Read in an input catalog for object-by-object parameter specification.
 
-    @param config         Configuration AttributeDict(), telling this routine what parameters to
-                          read from which columns/fields in the input file.
     @param cat_file_name  Filename of the input catalog.
     @param filetype       Either 'ASCII' (currently the only, default, option) or (soon) 'FITS'.
     @param comments       The character used to indicate the start of a comment in an ASCII catalog
@@ -27,15 +25,13 @@ def ReadInputCat(config=None, cat_file_name=None, filetype="ASCII", comments="#"
 
     # Then read in from the ASCII-type catalogs
     if filetype == "ASCII":
-        input_cat = read_ascii_input_cat(cat_file_name=cat_file_name, comments=comments)
+        input_cat = ReadAsciiInputCat(cat_file_name=cat_file_name, comments=comments)
     # Return catalog to the user
     return input_cat
 
 def ReadAsciiInputCat(cat_file_name=None, ascii_fields=None, comments="#"):
     """@brief Read in an input catalog from an ASCII file.
 
-    @param config         Configuration AttributeDict(), telling this routine what parameters to
-                          read from which columns/fields in the input file.
     @param cat_file_name  Filename of the input catalog.
     @param comments      The character used to indicate the start of a comment in an ASCII catalog
                          (default='#').
@@ -49,11 +45,11 @@ def ReadAsciiInputCat(cat_file_name=None, ascii_fields=None, comments="#"):
     # Initialize the AttributeDict() ready for storing the field values
     input_cat = galsim.AttributeDict()
     # Store basic meta data
-    input_cat.cat_file_name = filename
-    # Always store the number of objects as input_cat.nobjects for easy access by other routines
-    input_cat.nobjects = data.shape[0]
+    input_cat.cat_file_name = cat_file_name
     # Read in the data using the numpy convenience function
     input_cat.data = loadtxt(cat_file_name, comments=comments)
+    # Also store the number of objects as input_cat.nobjects for easy access by other routines
+    input_cat.nobjects = input_cat.data.shape[0]
     # Return catalog to the user
     return input_cat
 
