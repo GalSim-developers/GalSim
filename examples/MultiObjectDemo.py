@@ -152,10 +152,20 @@ def Script1():
     # So the total noise is sqrt(sky * pi (fwhm/2)^2)
     gal_noise = math.sqrt(sky_level * math.pi) * gal_fwhm/2.
     gal_flux = gal_signal_to_noise * gal_noise
+    ## Note from Rachel: we could use GREAT08 S/N definition by uncommenting all the lines starting
+    ## with ### below (note, I don't know a general way to do this, has to be done empirically as
+    ## I've done it here); and comment out the line that currently creates the Sersic galaxy
 
     # Make the galaxy profile starting with flux = 1.
     #gal = galsim.Sersic(gal_n, flux=gal_flux, fwhm=gal_fwhm)
     gal = galsim.Sersic(gal_n, flux=gal_flux, re=gal_fwhm/2)
+    ### gal = galsim.Sersic(gal_n, flux=1., fwhm=gal_fwhm)
+    ### tmp_gal_image = gal.draw(dx = pixel_scale)
+    ### sqrt_tot_i2 = np.sqrt(np.sum(tmp_gal_image.array**2))
+    ## note, we want sqrt_tot_i2 to equal SNR * sqrt(background); so, rescale the image flux by the
+    ## ratio of desired sqrt_tot_i2 to real one
+    ### rescale_fac = gal_signal_to_noise * math.sqrt(sky_level) / sqrt_tot_i2
+    ### gal.setFlux(rescale_fac)
     logger.info('Made galaxy profile')
 
     # This profile is placed with different orientations and noise realizations 
