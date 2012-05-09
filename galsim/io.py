@@ -14,7 +14,6 @@ def ReadInputCat(config=None, cat_file_name=None, filetype="ASCII", comments="#"
     Does some checking for sensible inputs, unlike the functions it calls (read_ascii_input_cat()
     and read_fits_input_cat()).
     """
-
     # First check for sensible inputs
     if cat_file_name == None:
         raise IOError("No filename given!")
