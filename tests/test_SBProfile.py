@@ -120,7 +120,7 @@ def test_sbprofile_gaussian():
 def test_sbprofile_gaussian_properties():
     """Test some basic properties of the SBGaussian profile.
     """
-    psf = galsim.SBGaussian()
+    psf = galsim.SBGaussian(flux=1, sigma=1)
     # Check that we are centered on (0, 0)
     cen = galsim._galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid(), cen)
@@ -314,7 +314,7 @@ def test_sbprofile_moffat():
 def test_sbprofile_moffat_properties():
     """Test some basic properties of the SBMoffat profile.
     """
-    psf = galsim.SBMoffat(2.0)
+    psf = galsim.SBMoffat(beta=2.0, truncationFWHM=2, flux=1, half_light_radius=1)
     # Check that we are centered on (0, 0)
     cen = galsim._galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid(), cen)
@@ -324,7 +324,7 @@ def test_sbprofile_moffat_properties():
     np.testing.assert_equal(psf.kValue(cen), 1+0j)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
-        psfFlux = galsim.SBMoffat(2.0, flux=inFlux)
+        psfFlux = galsim.SBMoffat(2.0, truncationFWHM=2, flux=inFlux, half_light_radius=1)
         outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.28141470275895519)
