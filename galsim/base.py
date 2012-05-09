@@ -1,3 +1,4 @@
+import collections
 import numpy as np
 import galsim
 
@@ -194,7 +195,7 @@ class Gaussian(GSObject):
 class Moffat(GSObject):
     """GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
-    def __init__(self, beta, truncationFWHM=2., flux=1., re=1.):
+    def __init__(self, beta=3., truncationFWHM=2., flux=1., re=1.):
         GSObject.__init__(self, galsim.SBMoffat(beta, truncationFWHM=truncationFWHM, flux=flux,
                           re=re))
     # As for the Gaussian currently only the base layer SBProfile methods are wrapped
@@ -206,7 +207,7 @@ class Moffat(GSObject):
 class Sersic(GSObject):
     """GalSim Sersic, which has an SBSersic in the SBProfile attribute.
     """
-    def __init__(self, n, flux=1., re=1.):
+    def __init__(self, n=1., flux=1., re=1.):
         GSObject.__init__(self, galsim.SBSersic(n, flux=flux, re=re))
     # Ditto!
 
@@ -216,6 +217,14 @@ class Exponential(GSObject):
     """
     def __init__(self, flux=1., r0=1.):
         GSObject.__init__(self, galsim.SBExponential(flux=flux, r0=r0))
+    # Ditto!
+
+
+class DeVaucouleurs(GSObject):
+    """GalSim De-Vaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
+    """
+    def __init__(self, flux=1., re=1.):
+        GSObject.__init__(self, galsim.SBDeVaucouleurs(flux=flux, re=re))
     # Ditto!
 
 
@@ -272,8 +281,9 @@ class OpticalPSF(GSObject):
                            that padFactor may need to be increased for stronger aberrations, i.e.
                            those larger than order unity. 
     """
-    def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=2., pad_factor=2):
+    def __init__(self, lam_over_D=1., defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
+                 spher=0., circular_pupil=True, obs=None, interpolantxy=None, oversampling=2.,
+                 pad_factor=2):
         # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
         import galsim.optics
         # Use the same prescription as SBAiry to set dx, maxK, Airy stepK and thus image size
@@ -356,4 +366,52 @@ class Convolve(GSObject):
 
     def add(self, obj):
         self.SBProfile.add(obj.SBProfile)
+
+
+class AttributeDict(object):
+    """Dictionary class that allows for easy initialization and refs to key values via attributes.
+
+    NOTE: Modified a little from Jim's bot.git AttributeDict class  (Jim, please review!) so that...
+
+    ...Tab completion now works in ipython (it didn't with the bot.git version on my build) since
+    attributes are actually added to __dict__.
+    
+    HOWEVER this means I have redefined the __dict__ attribute to be a collections.defaultdict()
+    so that Jim's previous default attrbiute behaviour is also replicated.
+
+    I prefer this, as a newbie who uses ipython and the tab completion function to aid development,
+    but does it potentially break something down the line or add undesirable behaviour? (I guessed
+    not, since collections.defaultdict objects have all the usual dict() methods, but I cannot be
+    sure.)
+    """
+    def __init__(self):
+        object.__setattr__(self, "__dict__", collections.defaultdict(AttributeDict))
+
+    def __getattr__(self, name):
+        return self.__dict__[name]
+
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+
+    def merge(self, other):
+        self.__dict__.update(other.__dict__)
+
+    def _write(self, output, prefix=""):
+        for k, v in self.__dict__.iteritems():
+            if isinstance(v, AttributeDict):
+                v._write(output, prefix="{0}{1}.".format(prefix, k))
+            else:
+                output.append("{0}{1} = {2}".format(prefix, k, repr(v)))
+
+    def __nonzero__(self):
+        return not not self.__dict__
+
+    def __repr__(self):
+        output = []
+        self._write(output, "")
+        return "\n".join(output)
+
+    __str__ = __repr__
+
+
 
