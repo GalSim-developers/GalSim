@@ -143,29 +143,23 @@ def Script1():
     # Rg^2 = Rgp^2 - Rp^2 = Rp^2 * (resolution^2 - 1)
     gal_fwhm = psf_fwhm * math.sqrt( gal_resolution**2 - 1)
 
-    # Next, determine what flux we need.
-    # TODO: Need a better mechanism for determining flux given S/N
-    # We make the approximation here that the noise is essentially the noise in the 
-    # pixels within a radius of fwhm/2.  
-    # The variance per pixel is given by the sky value.
-    # The relevant number of pixels is pi (fwhm/2)^2
-    # So the total noise is sqrt(sky * pi (fwhm/2)^2)
-    gal_noise = math.sqrt(sky_level * math.pi) * gal_fwhm/2.
-    gal_flux = gal_signal_to_noise * gal_noise
-    ## Note from Rachel: we could use GREAT08 S/N definition by uncommenting all the lines starting
-    ## with ### below (note, I don't know a general way to do this, has to be done empirically as
-    ## I've done it here); and comment out the line that currently creates the Sersic galaxy
-
     # Make the galaxy profile starting with flux = 1.
-    #gal = galsim.Sersic(gal_n, flux=gal_flux, fwhm=gal_fwhm)
-    gal = galsim.Sersic(gal_n, flux=gal_flux, re=gal_fwhm/2)
-    ### gal = galsim.Sersic(gal_n, flux=1., fwhm=gal_fwhm)
-    ### tmp_gal_image = gal.draw(dx = pixel_scale)
-    ### sqrt_tot_i2 = np.sqrt(np.sum(tmp_gal_image.array**2))
-    ## note, we want sqrt_tot_i2 to equal SNR * sqrt(background); so, rescale the image flux by the
-    ## ratio of desired sqrt_tot_i2 to real one
-    ### rescale_fac = gal_signal_to_noise * math.sqrt(sky_level) / sqrt_tot_i2
-    ### gal.setFlux(rescale_fac)
+    # gal = galsim.Sersic(gal_n, flux=1., fwhm=gal_fwhm)
+    gal = galsim.Sersic(gal_n, flux=1., re=gal_fwhm/2)
+
+    # Now determine what flux we need to get our desired S/N
+    # There are lots of definitions of S/N, but here is the one used by Great08
+    # We use a weighted integral of the flux:
+    # S = sum W(x,y) I(x,y) / sum W(x,y)
+    # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+    # Now we assume that Var(I(x,y)) is dominated by the sky noise, so 
+    # Var(I(x,y)) = sky_level
+    # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
+    # Then, S/N = sqrt( sum I(x,y)^2 ) / sqrt(sky_level)
+    tmp_gal_image = gal.draw(dx = pixel_scale)
+    sn_meas = np.sqrt(np.sum(tmp_gal_image.array**2)) / math.sqrt(sky_level)
+    # Now we rescale the flux to get our desired S/N
+    gal *= gal_signal_to_noise / sn_meas
     logger.info('Made galaxy profile')
 
     # This profile is placed with different orientations and noise realizations 
