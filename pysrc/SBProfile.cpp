@@ -263,8 +263,7 @@ struct PySBGaussian {
             "SBGaussian",
             "SBGaussian(flux=1., half_light_radius=None, sigma=None, fwhm=None)\n\n"
             "Construct an exponential profile with the given flux and half-light radius,\n"
-            "sigma, or FWHM.  At most one radius may be provided, and if no radius is\n"
-            "provided, the profile will have a sigma of one.\n",
+            "sigma, or FWHM.  Exactly one radius must be provided.\n",
             bp::no_init
         )
             .def(
@@ -279,12 +278,25 @@ struct PySBGaussian {
 
 struct PySBSersic {
 
+    static SBSersic * construct(
+        double n, double flux,
+        const bp::object & half_light_radius
+    ) {
+        if (half_light_radius.ptr() == Py_None) {
+            PyErr_SetString(PyExc_TypeError, "No radius parameter given");
+            bp::throw_error_already_set();
+        }
+        return new SBSersic(n, flux, bp::extract<double>(half_light_radius));
+    }
     static void wrap() {
-        bp::class_<SBSersic,bp::bases<SBProfile>,boost::noncopyable>(
-            "SBSersic",
-            bp::init<double,double,double>((bp::arg("n"), bp::arg("flux")=1., 
-                                            bp::arg("half_light_radius")=1.))
-        );
+        bp::class_<SBSersic,bp::bases<SBProfile>,boost::noncopyable>("SBSersic", bp::no_init)
+            .def("__init__",
+                 bp::make_constructor(
+                     &construct, bp::default_call_policies(),
+                     (bp::arg("n"), bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object())
+                                      )
+                 )
+            ;
     }
 };
 
@@ -312,8 +324,7 @@ struct PySBExponential {
             "SBExponential",
             "SBExponential(flux=1., half_light_radius=None, scale=None)\n\n"
             "Construct an exponential profile with the given flux and either half-light radius\n"
-            "or scale length.  At most one radius may be provided, and if no radius is provided\n"
-            "the profile will have a scale length of one.\n",
+            "or scale length.  Exactly one radius must be provided.\n",
             bp::no_init
         )
             .def(
