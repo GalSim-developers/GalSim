@@ -1461,9 +1461,6 @@ namespace galsim {
         // Get flux and half-light radius in units of rD:
         MoffatFlux mf(beta);
         double fluxFactor = mf(maxRrD);
-        Solve<MoffatFlux> s(mf, 0.1, 2.);
-        mf.setTarget(0.5*fluxFactor);
-        double rerD = s.root();
 
         // Set size of this instance according to type of size given in constructor:
         switch (rType)
@@ -1471,8 +1468,12 @@ namespace galsim {
         case FWHM:
             rD = size / FWHMrD;
             break;
-        case HALF_LIGHT_RADIUS:
+        case HALF_LIGHT_RADIUS: {
+            Solve<MoffatFlux> s(mf, 0.1, 2.);
+            mf.setTarget(0.5*fluxFactor);
+            double rerD = s.root();
             rD = size / rerD;
+        }
             break;
         case SCALE_RADIUS:
             rD = size;
