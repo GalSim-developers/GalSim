@@ -179,12 +179,12 @@ config.input_cat.filename = "examples/input/galsim_default_input.asc"
 # Specify the type and filename of the output.  The currently supported output types WILL BE
 # (TODO: ACTUALLY DO THIS!)
 #
-# "PSTAMPS"  An individual postage stamp for each output object image.
-# "IMAGE"    A large 2D image containing multiple objects.
-# "CUBE"     A 3D array containing multiple object images, with the leading dimension = Number of
+# "PStamps"  An individual postage stamp for each output object image.
+# "Image"    A large 2D image containing multiple objects.
+# "Cube"     A 3D array containing multiple object images, with the leading dimension = Number of
 #            objects.
 #
-config.output.type = "IMAGE"
+config.output.type = "Image"
 config.output.filename = "galsim_default_output_gal.fits"
 #
 # Then the size of the output needs to be specified.
