@@ -239,7 +239,9 @@ class Airy(GSObject):
 class Pixel(GSObject):
     """GalSim Pixel, which has an SBBox in the SBProfile attribute.
     """
-    def __init__(self, xw=1., yw=xw, flux=1.):
+    def __init__(self, xw=1., yw=None, flux=1.):
+        if yw is None:
+            yw = xw
         GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
     # Ditto!
 
