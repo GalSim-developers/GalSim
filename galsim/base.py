@@ -195,7 +195,7 @@ class Gaussian(GSObject):
 class Moffat(GSObject):
     """GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
-    def __init__(self, beta, truncationFWHM=2., flux=1., re=1.):
+    def __init__(self, beta=3., truncationFWHM=2., flux=1., re=1.):
         GSObject.__init__(self, galsim.SBMoffat(beta, truncationFWHM=truncationFWHM, flux=flux,
                           re=re))
     # As for the Gaussian currently only the base layer SBProfile methods are wrapped
@@ -207,7 +207,7 @@ class Moffat(GSObject):
 class Sersic(GSObject):
     """GalSim Sersic, which has an SBSersic in the SBProfile attribute.
     """
-    def __init__(self, n, flux=1., re=1.):
+    def __init__(self, n=1., flux=1., re=1.):
         GSObject.__init__(self, galsim.SBSersic(n, flux=flux, re=re))
     # Ditto!
 
@@ -281,8 +281,9 @@ class OpticalPSF(GSObject):
                            that padFactor may need to be increased for stronger aberrations, i.e.
                            those larger than order unity. 
     """
-    def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=2., pad_factor=2):
+    def __init__(self, lam_over_D=1., defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
+                 spher=0., circular_pupil=True, obs=None, interpolantxy=None, oversampling=2.,
+                 pad_factor=2):
         # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
         import galsim.optics
         # Use the same prescription as SBAiry to set dx, maxK, Airy stepK and thus image size
