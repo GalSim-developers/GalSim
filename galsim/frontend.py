@@ -72,12 +72,13 @@ def build_galaxy_image(config=None, input_cat=None, logger=None):
 
             exec "config_params = config.galaxy."+galtype+".__dict__"
             # Set via the config first, then overwrite using the
-            for param, entry in config_params:
-                print param
+            for param in config_params:
+                print galtype+"."+param
 
             exec "input_cat_params = input_cat."+galtype+".__dict__"
-            for param, entry in input_cat_params:
-                print param
+            for param in input_cat_params:
+                print galtype+"."+param
+            
     return
 
 def build_psf_image(config, input_cat, logger):

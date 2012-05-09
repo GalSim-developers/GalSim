@@ -75,7 +75,7 @@ def read_ascii_input_cat(filename=None, ascii_fields=None, comments="#"):
             pass
         else:
             # Give the input_cat a new attribute containing these data vectors
-            input_cat.__setattr__(ascii_fields[i], data[:, i])
+            exec "input_cat."+ascii_fields[i]+" = data[:, i]"
     # Return catalog to the user
     return input_cat
 
