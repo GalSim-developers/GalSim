@@ -329,7 +329,7 @@ def Script2():
     # Or should we switch the style specification for python to use lower_case?  
     # We don't have many free functions in python yet, so we can easily switch if
     # people prefer that.
-    input_cat = galsim.io.read_input_cat(cat_file_name, config)
+    input_cat = galsim.io.ReadInputCat(cat_file_name, config)
 
     # Build the images
     all_images = []
