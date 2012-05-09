@@ -185,7 +185,22 @@ config.input_cat.filename = "examples/input/galsim_default_input.asc"
 config.output.type = "IMAGE"
 config.output.filename = "galsim_default_output_gal.fits"
 #
-# Do you want a separate PSF output file?  If so specify below and give filename
+# Then the size of the output needs to be specified.
+#
+# For an "IMAGE" output, this will be the dimensions of the large image within which postage
+# stamps will be placed.
+#
+# For "PSTAMPS" output this will specify the dimensions of the individual images, taking precedence
+# over any BoundsI image size specifications from elsewhere in the input.
+#
+# For "CUBES" output this will specify the two trailing dimensions, again taking precedence over any
+# BoundsI image size specifications from elsewhere in the input.
+#
+config.output.nx = 480
+config.output.ny = 480
+#
+# Do you want a separate PSF output file?  If so specify below and give filename.  Currently this
+# must be the same output type and dimensions as the galaxy output defined above
 #
 config.output.PSFs.generate = True
 config.output.PSFs.filename = "galsim_default_output_psf.fits"
