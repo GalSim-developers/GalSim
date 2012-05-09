@@ -1,5 +1,5 @@
 
-def read_input_cat(filename=None, filetype="ASCII", ascii_fields=None, commments="#"):
+def read_input_cat(filename=None, filetype="ASCII", ascii_fields=None, comments="#"):
     """@brief Read in an input catalog for object-by-object parameter specification.
 
     @param filename      Filename of the input catalog.
@@ -34,7 +34,7 @@ def read_input_cat(filename=None, filetype="ASCII", ascii_fields=None, commments
             input_cat = read_ascii_input_cat(filename=filename, ascii_fields=ascii_fields,
                                               comments=comments)
 
-def read_ascii_input_cat(filename=None, ascii_fields=None, comments=comments):
+def read_ascii_input_cat(filename=None, ascii_fields=None, comments="#"):
     """@brief Read in an input catalog from an ASCII file.
 
     @param filename      Filename of the input catalog.
@@ -73,7 +73,7 @@ def read_ascii_input_cat(filename=None, ascii_fields=None, comments=comments):
             pass
         else:
             # Otherwise use the magic of eval() to add a field to the input_cat as required
-            eval("input_cat."+ascii_fields[i]) = data[:, i]
+            eval("input_cat."+ascii_fields[i]+" = data[:, i]")
     # Return catalog to the user
     return input_cat
 
