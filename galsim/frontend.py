@@ -1,5 +1,8 @@
 import galsim
 
+# USERS NOTE - THIS IS CURRENTLY IN DEVELOPMENT AND UNFINISHED!
+#
+
 
 def build_image_output(config=None, input_cat=None, logger=None):
     """Build output galaxy and/or PSF image using an config and input_cat AttributeDict().
