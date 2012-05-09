@@ -78,8 +78,9 @@ def Script1():
     logger.info('    - Sersic galaxies (n = %.1f)',gal_n)
     logger.info('    - Resolution (fwhm_obs / fwhm_psf) = %.2f',gal_resolution)
     logger.info('    - Ellipticities have rms = %.1f, max = %.1f',
-            gal_ellip_rms, gal_ellip_max)
+            gal_ellip_rms, gal_ellip_max
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
+    logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
 
 
     # Initialize the random number generator we will be using.
@@ -221,6 +222,140 @@ def Script1():
     # Now write the image to disk.
     gal_image.write(gal_file_name, clobber=True)
     logger.info('Wrote image to %r',gal_file_name)  # using %r adds quotes around filename for us
+
+    print
+
+# Script 2: Read many of the relevant parameters from an input catalog
+def Script2():
+    """
+    Make a fits image cube using parameters from an input catalog
+      - The number of images in the cube matches the number of rows in the catalog.
+      - Each image size is computed automatically by GalSim based on the Nyquist size.
+      - Only galaxies.  No stars.
+      - PSF is Moffat
+      - Each galaxy is bulge plus disk: deVaucouleurs + Exponential.
+      - Parameters taken from the input catalog:
+        - PSF beta
+        - PSF FWHM
+        - PSF g1
+        - PSF g2
+        - PSF trunc
+        - Bulge half-light-radius
+        - Bulge g1
+        - Bulge g2
+        - Bulge flux
+        - Disc half-light-radius
+        - Disc g1
+        - Disc g2
+        - Disc flux
+        - Galaxy dx (two components have same center)
+        - Galaxy dy
+      - Applied shear is the same for each file
+      - Noise is poisson using a nominal sky value of 1.e6
+    """
+    logger = logging.getLogger("Script2") 
+
+    # Define some parameters we'll use below.
+
+    cat_file_name = os.path.join('input','galsim_default_input.asc')
+    out_file_name = os.path.join('output','cube.fits')
+
+    random_seed = 8241573
+    sky_level = 1.e6                # ADU
+    pixel_scale = 0.2               # arcsec
+    gal_flux = 2000                 #
+    gal_g1 = -0.009                 #
+    gal_g2 = 0.011                  #
+
+    logger.info('Starting multi-object script 2 using:')
+    logger.info('    - parameters taken from catalog ',cat_file_name)
+    logger.info('    - Moffat PSF (parameters from catalog)')
+    logger.info('    - pixel scale = ',pixel_scale)
+    logger.info('    - Bulge + Disc galaxies (parameters from catalog)')
+    logger.info('    - Galaxy S/N = ',gal_signal_to_noise)
+    logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
+    logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
+
+    # Initialize the random number generator we will be using.
+    rng = galsim.UniformDeviate(random_seed)
+
+    # Setup the config object
+
+    # MJ: Could we maybe call this just Config(), rather than AttributeDict()?
+    config = AttributeDict()
+
+    config.psf.type = 'Moffat'
+    config.psf.beta.type = 'InputCatalog'
+    config.psf.beta.col = 5
+    config.psf.fwhm.type = 'InputCatalog'
+    config.psf.fwhm.col = 6
+    config.psf.g1.type = 'InputCatalog'
+    config.psf.g1.col = 7
+    config.psf.g2.type = 'InputCatalog'
+    config.psf.g2.col = 8
+    config.psf.trunc.type = 'InputCatalog'
+    config.psf.trunc.col = 9
+    config.gal.type = 'Sum'
+    config.gal.nitems = 2
+    config.gal.item[0].type = 'Exponential'
+    config.gal.item[0].half_light_radius.type = 'InputCatalog'
+    config.gal.item[0].half_light_radius.col = 10
+    config.gal.item[0].g1.type = 'InputCatalog'
+    config.gal.item[0].g1.col = 11
+    config.gal.item[0].g2.type = 'InputCatalog'
+    config.gal.item[0].g2.col = 12
+    config.gal.item[0].flux = 0.6
+    config.gal.item[0].type = 'DeVaucouleurs'
+    config.gal.item[1].half_light_radius.type = 'InputCatalog'
+    config.gal.item[1].half_light_radius.col = 13
+    config.gal.item[1].g1.type = 'InputCatalog'
+    config.gal.item[1].g1.col = 14
+    config.gal.item[1].g2.type = 'InputCatalog'
+    config.gal.item[1].g2.col = 15
+    config.gal.item[1].flux = 0.4
+    config.gal.shift.type = 'DXDY'
+    # TODO: These aren't currently in the catalog
+    config.gal.shift.dx.type = 'InputCatalog'
+    config.gal.shift.dx.col = 16
+    config.gal.shift.dy.type = 'InputCatalog'
+    config.gal.shift.dy.col = 17
+
+    # Read the catalog
+    # TODO: switch these function names to CamelCase?  
+    # Or should we switch the style specification for python to use lower_case?  
+    # We don't have many free functions in python yet, so we can easily switch if
+    # people prefer that.
+    input_cat = galsim.io.read_input_cat(cat_file_name, config)
+
+    # Build the images
+    all_images = []
+    for i in range(input_cat.nobjects):
+        psf = galsim.build_psf_image(config, input_cat, logger)
+        logger.info('Made PSF profile')
+
+        pix = galsim.Pixel(pixel_scale)
+        logger.info('Made pixel profile')
+
+        gal = galsim.build_gal_image(config, input_cat, logger, flux=gal_flux)
+        logger.info('Made galaxy profile')
+
+        im = gal.draw()
+
+        # Add Poisson noise
+        im += sky_level
+        im.addNoise(galsim.CCDNoise(rng))
+        im -= sky_level
+        logger.info('Drew image')
+
+        # Store that into the list of all images
+        all_images[i] = im
+
+    logger.info('Done making images of galaxies')
+
+    # Now write the image to disk.
+    # TODO: This function doesn't exist yet.
+    galsim.fits.writeCube(out_file_name, all_images, clobber=True)
+    logger.info('Wrote image to %r',out_file_name)  # using %r adds quotes around filename for us
 
     print
 
