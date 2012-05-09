@@ -28,6 +28,7 @@ ref_array = np.array([[00, 10, 20, 30], [01, 11, 21, 31], [02, 12, 22, 32],
 test_hlr = 1.0
 test_fwhm = 1.0
 test_sigma = 1.0
+test_scale = 1.0
 test_dx = 0.2
 target_precision = 0.004 # convergence criterion governing choice of pixel scale
 init_ratio = 1000.0 # a junk value to start with
@@ -194,6 +195,36 @@ def test_sbprofile_exponential():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Exponential disagrees with expected result")
+
+def test_exponential_radii():
+    """Test initialization of Exponential with different types of radius specification.
+    """
+    # first test half-light-radius
+    my_test_dx = test_dx
+    my_prev_ratio = init_ratio
+    my_convergence_value = convergence_value
+    while (my_convergence_value > target_precision):
+        test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
+        test_gal_image = test_gal.draw(dx = my_test_dx)
+        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx)/np.sum(test_gal_image.array)
+        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
+        my_prev_ratio = my_ratio
+        my_test_dx /= 2.0
+    np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
+                                   err_msg="Error in Exponential constructor with half-light radius")
+    # then test scale
+    my_test_dx = test_dx
+    my_prev_ratio = init_ratio
+    my_convergence_value = convergence_value
+    while (my_convergence_value > target_precision):
+        test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale)
+        test_gal_image = test_gal.draw(dx = my_test_dx)
+        my_ratio = getIntensityAtRadius(test_gal_image, test_scale/my_test_dx)/np.max(test_gal_image.array)
+        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
+        my_prev_ratio = my_ratio
+        my_test_dx /= 2.0
+    np.testing.assert_almost_equal(my_ratio, np.exp(-1.0), decimal = 2,
+                                   err_msg="Error in Exponential constructor with scale radius")
 
 def test_sbprofile_sersic():
     """Test the generation of a specific Sersic profile using SBProfile against a known result.
@@ -603,8 +634,9 @@ def test_sbprofile_sbinterpolatedimage():
 if __name__ == "__main__":
     test_sbprofile_gaussian()
     test_sbprofile_gaussian_properties()
-    test_sbprofile_gaussian_radii()
+    test_gaussian_radii()
     test_sbprofile_exponential()
+    test_exponential_radii()
     test_sbprofile_sersic()
     test_sbprofile_airy()
     test_sbprofile_box()
