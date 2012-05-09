@@ -26,7 +26,7 @@ def read_input_cat(filename=None, filetype="ASCII", ascii_fields=None, comments=
         raise NotImplementedError("FITS catalog inputs not yet implemented, sorry!")
     
     # Then read in from the ASCII-type catalogs
-    if filetype == "ASCII":
+    elif filetype == "ASCII":
         # Raise an error if ASCII is given as the type and there is no ascii_fields kwarg
         if ascii_fields == None:
             raise ValueError("Must currently supply an ascii_fields list keyword if reading ASCII"
@@ -34,8 +34,11 @@ def read_input_cat(filename=None, filetype="ASCII", ascii_fields=None, comments=
         else:
             input_cat = read_ascii_input_cat(filename=filename, ascii_fields=ascii_fields,
                                               comments=comments)
-    # Return catalog to the user
-    return input_cat
+        # Return catalog to the user
+        return input_cat
+
+    else:
+        raise ValueError("filetype must be either 'ASCII' or 'FITS'")
 
 def read_ascii_input_cat(filename=None, ascii_fields=None, comments="#"):
     """@brief Read in an input catalog from an ASCII file.
