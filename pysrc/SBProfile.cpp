@@ -288,7 +288,7 @@ struct PySBDeVaucouleurs {
     static void wrap() {
         bp::class_<SBDeVaucouleurs,bp::bases<SBProfile>,boost::noncopyable>(
             "SBDeVaucouleurs",
-            bp::init<double,double>((bp::arg("flux")=1., bp::arg("r0")=1.))
+            bp::init<double,double>((bp::arg("flux")=1., bp::arg("re")=1.))
         );
     }
 };
