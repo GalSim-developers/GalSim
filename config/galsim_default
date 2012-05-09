@@ -145,10 +145,11 @@ config.input_cat.type = "ASCII"
 # Table (TODO/XXXX)
 #
 # To ignore columns in the input cat, place a None object for that list entry.
-config.input_cat.ascii_fields = ["Moffat.beta", "Moffat.FWHM", "Moffat.e1", "Moffat.e2",
+config.input_cat.ascii_fields = ["BoundsI.xMin", "BoundsI.yMin", "BoundsI.xMax", "BoundsI.yMax",
+                                 "Moffat.beta", "Moffat.FWHM", "Moffat.g1", "Moffat.g2",
                                  "Moffat.truncationFWHM",
-                                 "Exponential.re", "Exponential.e1", "Exponential.e2",
-                                 "DeVaucouleurs.re", "DeVaucouleurs.e1", "DeVaucouleurs.e2"]
+                                 "Exponential.re", "Exponential.g1", "Exponential.g2",
+                                 "DeVaucouleurs.re", "DeVaucouleurs.g1", "DeVaucouleurs.g2"]
 # *** Do not comment out the two lines below, it's a useful check! ***
 if config.input_cat.type == "ASCII" and not hasattr(config.input_cat, "ascii_fields"):
     raise IOError("config.input_cat.ascii_fields must be set if using ASCII catalogues")
@@ -169,7 +170,13 @@ config.input_cat.filename = "examples/input/galsim_default_input.asc"
 #            objects.
 #
 config.output.type = "IMAGE"
-config.output.filename = "galsim_default_output.fits"
+config.output.filename = "galsim_default_output_gal.fits"
+#
+# Do you want a separate PSF output file?  If so specify below and give filename
+#
+config.output.PSFs.generate = True
+config.output.PSFs.filename = "galsim_default_output_psf.fits"
+
 
 # Logging level at which to echo the commands we run
 config.logging_level = logging.INFO
