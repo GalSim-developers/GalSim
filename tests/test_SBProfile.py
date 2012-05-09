@@ -23,7 +23,48 @@ ftchar = ['F', 'D']
 ref_array = np.array([[00, 10, 20, 30], [01, 11, 21, 31], [02, 12, 22, 32],
                       [03, 13, 23, 33]]).astype(types[0])
 
-# define a series of tests
+# for radius tests - specify half-light-radius, FHWM, sigma to be compared with high-res image (with
+# pixel scale chosen iteratively until convergence is achieved, beginning with test_dx)
+test_hlr = 1.0
+test_fwhm = 1.0
+test_sigma = 1.0
+test_dx = 0.2
+target_precision = 0.004 # convergence criterion governing choice of pixel scale
+init_ratio = 1000.0 # a junk value to start with
+convergence_value = init_ratio # a junk value to start with, should be >> target_precision
+
+# define some functions to carry out computations that are carried out by several of the tests
+
+def getRGrid(image1):
+    # function to get the value of radius from the image center at the position of each pixel
+    xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0]) + image1.getXMin(),
+                               np.arange(np.shape(image1.array)[1]) + image1.getYMin())
+    xcent = np.mean(xgrid * image1.array) / np.mean(image1.array)
+    ycent = np.mean(ygrid * image1.array) / np.mean(image1.array)
+    rgrid = np.sqrt((xgrid-xcent)**2 + (ygrid-ycent)**2)
+    return rgrid
+
+def getIntegratedFlux(image1, radius):
+    # integrate to compute the flux in an image within some chosen radius [units: pixels], in a
+    # clunky but transparent way -- will only be reasonably accurate for high-resolution images.
+    return np.sum(image1.array[np.where(getRGrid(image1) < radius)])
+
+def getIntensityAtRadius(image1, radius):
+    # get the intensity in an image at some chosen radius [units: pixels] from the center, in a
+    # clunky yet transparent way -- will only be reasonably accurate for high-resolution images, not
+    # right at the center.
+    rgrid = getRGrid(image1)
+    rvec = np.arange(1., np.max(rgrid), 1.)
+    Ivec = 0 * rvec
+    rgrid_nearest = (np.round(rgrid)).astype(np.integer)
+    ind_below = np.max(np.where(rvec < radius))
+    ind_above = np.min(np.where(rvec >= radius))
+    newvec = image1.array[np.where(rgrid_nearest == ind_below)]
+    Ibelow = np.sum(newvec)/len(newvec)
+    newvec = image1.array[np.where(rgrid_nearest == ind_above)]
+    Iabove = np.sum(newvec)/len(newvec)
+    delta = (radius - rvec[ind_below])/(rvec[ind_above]-rvec[ind_below])
+    return (delta*Iabove + (1.0-delta)*Ibelow)
 
 def printval(image1, image2):
     print "New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array)
@@ -54,6 +95,8 @@ def convertToShear(e1,e2):
     g1 = e1 * (g/e)
     g2 = e2 * (g/e)
     return (g1,g2)
+
+# define a series of tests
 
 def test_sbprofile_gaussian():
     """Test the generation of a specific Gaussian profile using SBProfile against a known result.
@@ -89,6 +132,49 @@ def test_sbprofile_gaussian_properties():
         outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.15915494309189535)
+
+def test_gaussian_radii():
+    """Test initialization of Gaussian with different types of radius specification.
+    """
+    # first test half-light-radius
+    my_test_dx = test_dx
+    my_prev_ratio = init_ratio
+    my_convergence_value = convergence_value
+    while (my_convergence_value > target_precision):
+        test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
+        test_gal_image = test_gal.draw(dx = my_test_dx)
+        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx)/np.sum(test_gal_image.array)
+        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
+        my_prev_ratio = my_ratio
+        my_test_dx /= 2.0
+    np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
+                                   err_msg="Error in Gaussian constructor with half-light radius")
+    # then test sigma
+    my_test_dx = test_dx
+    my_prev_ratio = init_ratio
+    my_convergence_value = convergence_value
+    while (my_convergence_value > target_precision):
+        test_gal = galsim.Gaussian(flux = 1., sigma = test_sigma)
+        test_gal_image = test_gal.draw(dx = my_test_dx)
+        my_ratio = getIntensityAtRadius(test_gal_image, test_sigma/my_test_dx)/np.max(test_gal_image.array)
+        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
+        my_prev_ratio = my_ratio
+        my_test_dx /= 2.0
+    np.testing.assert_almost_equal(my_ratio, np.exp(-0.5), decimal = 2,
+                                   err_msg="Error in Gaussian constructor with sigma")
+    # then test FWHM
+    my_test_dx = test_dx
+    my_prev_ratio = init_ratio
+    my_convergence_value = convergence_value
+    while (my_convergence_value > target_precision):
+        test_gal = galsim.Gaussian(flux = 1., fwhm = test_fwhm)
+        test_gal_image = test_gal.draw(dx = my_test_dx)
+        my_ratio = getIntensityAtRadius(test_gal_image, 0.5*test_fwhm/my_test_dx)/np.max(test_gal_image.array)
+        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
+        my_prev_ratio = my_ratio
+        my_test_dx /= 2.0
+    np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
+                                   err_msg="Error in Gaussian constructor with FWHM")
 
 def test_sbprofile_exponential():
     """Test the generation of a specific exp profile using SBProfile against a known result. 
@@ -517,6 +603,7 @@ def test_sbprofile_sbinterpolatedimage():
 if __name__ == "__main__":
     test_sbprofile_gaussian()
     test_sbprofile_gaussian_properties()
+    test_sbprofile_gaussian_radii()
     test_sbprofile_exponential()
     test_sbprofile_sersic()
     test_sbprofile_airy()
