@@ -130,12 +130,15 @@ import math
 dVc_noise = math.sqrt(config.sky.value * math.pi) * config.galaxy.DeVaucouleurs.half_light_radius 
 config.galaxy.DeVaucouleurs.flux = bulge_disc_flux_ratio * desired_SNR * dVc_noise
 
+config.galaxy.Exponential.dx = config.DeVaucouleurs.dx # } Make the two galaxy components co-centric
+config.galaxy.Exponential.dy = config.DeVaucouleurs.dy # }
+config.galaxy.Exponential.half_light_radius = 0.82     # GREAT08 single component value
+
+# Then set the flux as done above for de Vaucouleurs galaxies
 exp_noise = math.sqrt(config.sky.value * math.pi) * config.galaxy.Exponential.half_light_radius 
 config.galaxy.Exponential.flux = bulge_disc_flux_ratio * desired_SNR * exp_noise
 
-config.Exponential.dx = config.DeVaucouleurs.dx # } Make the two galaxy components co-centric
-config.Exponential.dy = config.DeVaucouleurs.dy # }
-config.Exponential.half_light_radius = 0.82     # GREAT08 single component value
+
 
 
 # --- shear ---
