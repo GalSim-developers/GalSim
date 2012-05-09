@@ -79,13 +79,14 @@ config.galaxy.type = ["DeVaucouleurs", "Exponential"]
 #
 # e.g.:
 #
-# config.galaxy.Exponential.re.distribution = "GammaDeviate"
-# config.galaxy.Exponential.re.alpha = 3.5
-# config.galaxy.Exponential.re.beta = 1.3
+# config.galaxy.Exponential.half_light_radius.distribution = "GammaDeviate"
+# config.galaxy.Exponential.half_light_radius.alpha = 3.5
+# config.galaxy.Exponential.half_light_radius.beta = 1.3
 #
 # Any parameters not set either in configuration files or input catalogues will adopt their
 # keyword default values, and GalSim will raise a Warning.
-
+config.galaxy.DeVaucouleurs.flux = 1000.
+config.galaxy.Exponential.flux = 1000.
 
 # --- shear ---
 #
@@ -119,6 +120,18 @@ config.shear.g2 = 0.
 config.noise.distribution = ["CCDNoise"] 
 config.noise.gain = 1.
 config.noise.read_noise = 1.
+
+
+# --- background ---
+#
+# A background level to be added to each postage stamp image before noise addition,
+# to mimic a sky background.
+#
+config.sky.value = 1.e4
+#
+# Set the following parameter = True to subtract the background after noise addition.
+#
+config.sky.postsubtract = False
 
 
 # --- input cat ---
