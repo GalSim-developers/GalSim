@@ -7,6 +7,7 @@ import sys
 import os
 import subprocess
 import math
+import numpy
 import logging
 
 # This machinery lets us run Python examples even though they aren't positioned
@@ -52,16 +53,17 @@ def Script1():
     psf_file_name = os.path.join('output','g08_psf.fits')
     psf_beta = 3                    #
     psf_fwhm = 2.85                 # arcsec (=pixels)
-    psf_trunc = 20.                 # FWHM (so beyond the edge of the postage stamp. 
-                                    #       i.e. no truncation.)
+    psf_trunc = 2.                  # FWHM 
     psf_g1 = -0.019                 #
     psf_g2 = -0.007                 #
     psf_centroid_shift = 1.0        # arcsec (=pixels)
 
     gal_file_name = os.path.join('output','g08_gal.fits')
-    gal_signal_to_noise = 200       # Great08 "Low-noise" run
-    gal_n = 2.5                     #
-    gal_resolution = 1.4            # fwhm_gal_obs / fwhm_psf
+    gal_signal_to_noise = 200       # Great08 "LowNoise" run
+    gal_n = 1                       # Use n=1 for "disk" type
+    # Great08 mixed pure bulge and pure disk for its LowNoise run.  
+    # We're just doing disks to make things simpler.
+    gal_resolution = 1.4            # fwhm_obs / fwhm_psf
     gal_centroid_shift = 1.0        # arcsec (=pixels)
     gal_ellip_rms = 0.2             # using "shear" definition of ellipticity.
     gal_ellip_max = 0.6             #
@@ -78,7 +80,7 @@ def Script1():
     logger.info('    - Sersic galaxies (n = %.1f)',gal_n)
     logger.info('    - Resolution (fwhm_obs / fwhm_psf) = %.2f',gal_resolution)
     logger.info('    - Ellipticities have rms = %.1f, max = %.1f',
-            gal_ellip_rms, gal_ellip_max
+            gal_ellip_rms, gal_ellip_max)
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
 
@@ -106,9 +108,10 @@ def Script1():
     logger.info('i,j,x,y')
     for ix in range(nx_stamps):
         for iy in range(ny_stamps):
-            # The -1's in the next line are to provide a 
-            b = galsim.BoundsI(ix*nx_pixels , (ix+1)*nx_pixels -1,
-                               iy*ny_pixels , (iy+1)*ny_pixels -1)
+            # The -2's in the next line rather than -1 are to provide a border of 
+            # 1 pixel between postage stamps
+            b = galsim.BoundsI(ix*nx_pixels , (ix+1)*nx_pixels -2,
+                               iy*ny_pixels , (iy+1)*ny_pixels -2)
             sub_image = psf_image[b]
 
             # apply a random centroid shift:
@@ -155,9 +158,10 @@ def Script1():
     # Now we assume that Var(I(x,y)) is dominated by the sky noise, so 
     # Var(I(x,y)) = sky_level
     # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
-    # Then, S/N = sqrt( sum I(x,y)^2 ) / sqrt(sky_level)
+    # Then a few things cancel and we find that
+    # S/N = sqrt( sum I(x,y)^2 / sky_level )
     tmp_gal_image = gal.draw(dx = pixel_scale)
-    sn_meas = np.sqrt(np.sum(tmp_gal_image.array**2)) / math.sqrt(sky_level)
+    sn_meas = math.sqrt( numpy.sum(tmp_gal_image.array**2) / sky_level )
     # Now we rescale the flux to get our desired S/N
     gal *= gal_signal_to_noise / sn_meas
     logger.info('Made galaxy profile')
@@ -167,14 +171,15 @@ def Script1():
     gal_image = galsim.ImageF(nx_pixels * nx_stamps , ny_pixels * ny_stamps)
     gal_image.setOrigin(0,0) # For my convenience -- switch to C indexing convention.
     gal_centroid_shift_sq = gal_centroid_shift**2
-    first_in_pair = True
+    first_in_pair = True  # Make pairs that are rotated by 45 degrees
     gd = galsim.GaussianDeviate(rng, sigma=gal_ellip_rms)
     logger.info('i,j,x,y,ellip,theta')
     for ix in range(nx_stamps):
         for iy in range(ny_stamps):
-            # The -1's in the next line are to provide a 
-            b = galsim.BoundsI(ix*nx_pixels , (ix+1)*nx_pixels -1,
-                               iy*ny_pixels , (iy+1)*ny_pixels -1) 
+            # The -2's in the next line rather than -1 are to provide a border of 
+            # 1 pixel between postage stamps
+            b = galsim.BoundsI(ix*nx_pixels , (ix+1)*nx_pixels -2,
+                               iy*ny_pixels , (iy+1)*ny_pixels -2) 
             sub_image = gal_image[b]
 
             # Great08 randomized the locations of the two galaxies in each pair,
@@ -209,8 +214,11 @@ def Script1():
 
             this_gal.applyShift(dx,dy)
 
+            # Make the final image, convolving with psf and pixel
+            final_gal = galsim.Convolve(this_gal,psf,pix)
+
             # Draw the image
-            this_gal.draw(sub_image, dx=pixel_scale)
+            final_gal.draw(sub_image, dx=pixel_scale)
 
             # Add Poisson noise
             sub_image += sky_level
@@ -272,11 +280,10 @@ def Script2():
     gal_g2 = 0.011                  #
 
     logger.info('Starting multi-object script 2 using:')
-    logger.info('    - parameters taken from catalog ',cat_file_name)
+    logger.info('    - parameters taken from catalog %r',cat_file_name)
     logger.info('    - Moffat PSF (parameters from catalog)')
-    logger.info('    - pixel scale = ',pixel_scale)
+    logger.info('    - pixel scale = %.2f',pixel_scale)
     logger.info('    - Bulge + Disc galaxies (parameters from catalog)')
-    logger.info('    - Galaxy S/N = ',gal_signal_to_noise)
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
 
@@ -286,7 +293,7 @@ def Script2():
     # Setup the config object
 
     # MJ: Could we maybe call this just Config(), rather than AttributeDict()?
-    config = AttributeDict()
+    config = galsim.AttributeDict()
 
     config.psf.type = 'Moffat'
     config.psf.beta.type = 'InputCatalog'
@@ -301,6 +308,7 @@ def Script2():
     config.psf.trunc.col = 9
     config.gal.type = 'Sum'
     config.gal.nitems = 2
+    config.gal.item = [galsim.AttributeDict()]*2
     config.gal.item[0].type = 'Exponential'
     config.gal.item[0].half_light_radius.type = 'InputCatalog'
     config.gal.item[0].half_light_radius.col = 10
@@ -396,6 +404,10 @@ def main(argv):
     # Script 1: Great08-like image
     if scriptNum == 0 or scriptNum == 1:
         Script1()
+
+    # Script 2: Read parameters from catalog
+    if scriptNum == 0 or scriptNum == 2:
+        Script2()
 
 
 if __name__ == "__main__":
