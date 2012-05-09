@@ -13,7 +13,7 @@ typedef bp::return_value_policy<bp::manage_new_object> ManageNew;
 
 // Used by multiple profile classes to ensure at most one radius is given.
 void checkRadii(const bp::object & r1, const bp::object & r2, const bp::object & r3) {
-    int nRad = !r1.is_none() + !r2.is_none() + !r3.is_none();
+    int nRad = (r1.ptr() != Py_None) + (r2.ptr() != Py_None) + (r3.ptr() != Py_None);
     if (nRad > 1) {
         PyErr_SetString(PyExc_TypeError, "Multiple radius parameters given");
         bp::throw_error_already_set();
@@ -246,13 +246,13 @@ struct PySBGaussian {
     ) {
         double s = 1.0;
         checkRadii(half_light_radius, sigma, fwhm);
-        if (!half_light_radius.is_none()) {
+        if (half_light_radius.ptr() != Py_None) {
             s = bp::extract<double>(half_light_radius) * 0.84932180028801907; // (2\ln2)^(-1/2)
         }
-        if (!sigma.is_none()) {
+        if (sigma.ptr() != Py_None) {
             s = bp::extract<double>(sigma);
         }
-        if (!fwhm.is_none()) {
+        if (fwhm.ptr() != Py_None) {
             s = bp::extract<double>(fwhm) * 0.42466090014400953; // 1 / (2(2\ln2)^(1/2))
         }
         return new SBGaussian(flux, s);
@@ -298,10 +298,10 @@ struct PySBExponential {
     ) {
         double s = 1.0;
         checkRadii(half_light_radius, scale_radius, bp::object());
-        if (!half_light_radius.is_none()) {
+        if (half_light_radius.ptr() != Py_None) {
             s = bp::extract<double>(half_light_radius) / 1.6783469900166605; // not analytic
         }
-        if (!scale_radius.is_none()) {
+        if (scale_radius.ptr() != Py_None) {
             s = bp::extract<double>(scale_radius);
         }
         return new SBExponential(flux, s);
@@ -359,14 +359,14 @@ struct PySBMoffat {
         double s = 1.0;
         checkRadii(half_light_radius, scale_radius, fwhm);
         SBMoffat::RadiusType rType = SBMoffat::HALF_LIGHT_RADIUS;
-        if (!half_light_radius.is_none()) {
+        if (half_light_radius.ptr() != Py_None) {
             s = bp::extract<double>(half_light_radius);
         }
-        if (!scale_radius.is_none()) {
+        if (scale_radius.ptr() != Py_None) {
             s = bp::extract<double>(scale_radius);
             rType = SBMoffat::SCALE_RADIUS;
         }
-        if (!fwhm.is_none()) {
+        if (fwhm.ptr() != Py_None) {
             s = bp::extract<double>(fwhm);
             rType = SBMoffat::FWHM;
         }
