@@ -208,7 +208,7 @@ if config.input_cat.type == "ASCII" and not hasattr(config.input_cat, "ascii_fie
 #
 # Give the filename for the input catalog:
 #
-config.input_cat.filename = "examples/input/galsim_default_input.asc"
+config.input_cat.filename = "examples/input/MultiObject1_input.asc"
 
 
 # --- output ---
@@ -222,12 +222,17 @@ config.input_cat.filename = "examples/input/galsim_default_input.asc"
 #            objects.
 #
 config.output.type = "IMAGE"
-config.output.filename = "galsim_default_output_gal.fits"
+config.output.filename = "galsim_MultiObjectDemo1_gal.fits"
+#
+
+# Note that here we adopt the same output size specifications as in config/galsim_default, and so
+# need not set any additional values.
+
 #
 # Do you want a separate PSF output file?  If so specify below and give filename
 #
 config.output.PSFs.generate = True
-config.output.PSFs.filename = "galsim_default_output_psf.fits"
+config.output.PSFs.filename = "galsim_MultiObjectDemo1_psf.fits"
 
 
 # Logging level at which to echo the commands we run
