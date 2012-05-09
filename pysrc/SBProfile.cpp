@@ -13,8 +13,13 @@ typedef bp::return_value_policy<bp::manage_new_object> ManageNew;
 
 // Used by multiple profile classes to ensure at most one radius is given.
 void checkRadii(const bp::object & r1, const bp::object & r2, const bp::object & r3) {
-    if (!r1.is_none() + !r2.is_none() + !r3.is_none() > 1) {
+    int nRad = !r1.is_none() + !r2.is_none() + !r3.is_none();
+    if (nRad > 1) {
         PyErr_SetString(PyExc_TypeError, "Multiple radius parameters given");
+        bp::throw_error_already_set();
+    }
+    if (nRad == 0) {
+        PyErr_SetString(PyExc_TypeError, "No radius parameter given");
         bp::throw_error_already_set();
     }
 }
