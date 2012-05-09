@@ -329,6 +329,26 @@ def test_sbprofile_moffat_properties():
         np.testing.assert_almost_equal(outFlux, inFlux)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.28141470275895519)
     
+def test_moffat_radii():
+    """Test initialization of Moffat with different types of radius specification.
+    """
+    test_beta = 2.
+    # first test half-light-radius
+    my_test_dx = test_dx
+    my_prev_ratio = init_ratio
+    my_convergence_value = convergence_value
+    while (my_convergence_value > target_precision):
+        test_gal = galsim.Moffat(beta=test_beta, truncationFWHM=5, flux = 1., half_light_radius = test_hlr)
+        test_gal_image = test_gal.draw(dx = my_test_dx)
+        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx)/np.sum(test_gal_image.array)
+        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
+        my_prev_ratio = my_ratio
+        my_test_dx /= 2.0
+    np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
+                                   err_msg="Error in Moffat constructor with half-light radius")
+    # then test scale -- later!  this method takes too long
+    # then test FWHM -- later!  this method takes too long
+
 def test_sbprofile_smallshear():
     """Test the application of a small shear to a Gaussian SBProfile against a known result.
     """
@@ -662,6 +682,7 @@ if __name__ == "__main__":
     test_sbprofile_box()
     test_sbprofile_moffat()
     test_sbprofile_moffat_properties()
+    test_moffat_radii()
     test_sbprofile_smallshear()
     test_sbprofile_largeshear()
     test_sbprofile_convolve()
