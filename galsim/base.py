@@ -214,7 +214,7 @@ class Sersic(GSObject):
 
 class Exponential(GSObject):
     """GalSim Exponential, which has an SBExponential in the SBProfile attribute.
-    """
+    """    
     def __init__(self, flux=1., r0=1.):
         GSObject.__init__(self, galsim.SBExponential(flux=flux, r0=r0))
     # Ditto!
