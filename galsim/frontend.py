@@ -86,3 +86,78 @@ def build_galaxy_image(config=None, input_cat=None, logger=None):
 
 def build_psf_image(config, input_cat, logger):
     return
+
+def BuildGSObject(config, input_cat=None, logger=None):
+    """Build a GSObject using a config (AttributeDict) and possibly an input_cat (AttributeDict).
+
+    @param config     A configuration AttributDict() read in using galsim.config.load().
+    @param input_cat  An input catalog AttributeDict() read in using galsim.io.read_input_cat().
+    @param logger     Output logging object.
+    """
+    try:
+        type = config.type
+    except AttributeError:
+        if logger != None:
+            logger.info("Error: type attribute required")
+            raise
+    return eval('galsim.Build' + type + '(config, input_cat, logger)')
+
+def BuildSimple(config, req=[], size_opt=[], opt=[], input_cat=None, logger=None):
+    """Most of the functionality of the Build function is the same for the simple
+       objects that are just a profile.  So encapsulate all that here.
+       
+       @param req       A list of required attributes that config must have
+       @param size_opt  A list of size attributes, of which 1 (and only 1) is required
+       @param opt       A list of optional attributes
+       In addition to what is listed, the flux is always optional.
+    """
+    kwargs = {}
+    try:
+        for key in req:
+            value = Generate(eval("config." + key),input_cat,logger)
+            kwargs += { key : value }
+    except AttributeError:
+        if logger != None:
+            logger.info("Error: %s requires the following attributes: %s",config.type,req)
+            raise
+    for key in opt:
+        try:
+            value = Generate(eval("config." + key),input_cat,logger)
+            kwargs += { key : value }
+        except AttributeError:
+            pass
+    found = False
+    for key in size_opt:
+        try:
+            value = Generate(eval("config." + key),input_cat,logger)
+            if (found):
+                logger.info("Error: %s requires exactly one of the following attributes: %s",
+                    config.type,size_opt)
+                raise AttributeError("Too many sizes for %s"%config.type)
+            kwargs += { key : value }
+            found = True
+        except AttributeError:
+            pass
+    if not found:
+        logger.info("Error: %s requires one of the following attributes: %s",config.type,size_opt)
+
+    return eval("galsim."+config.type+"(**kwargs)")
+
+def BuildGaussian(config, input_cat=None, logger=None):
+    return galsim.BuildSimple(config, [], ['sigma'], [], input_cat, logger)
+
+def BuildMoffat(config, input_cat=None, logger=None):
+    return galsim.BuildSimple(config, ['beta'], ['re'], ['trunc'], input_cat, logger)
+
+def BuildSersic(config, input_cat=None, logger=None):
+    return galsim.BuildSimple(config, ['n'], ['re'], [], input_cat, logger)
+
+def BuildExponential(config, input_cat=None, logger=None):
+    return galsim.BuildSimple(config, [], ['r0'], [], input_cat, logger)
+
+def BuildDeVaucouleurs(config, input_cat=None, logger=None):
+    return galsim.BuildSimple(config, [], ['re'], [], input_cat, logger)
+
+def BuildAiry(config, input_cat=None, logger=None):
+    return galsim.BuildSimple(config, [], ['D'], ['obs'], input_cat, logger)
+

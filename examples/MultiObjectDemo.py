@@ -306,6 +306,8 @@ def Script2():
     config.psf.g2.col = 8
     config.psf.trunc.type = 'InputCatalog'
     config.psf.trunc.col = 9
+    config.pix.type = 'SquarePixel'
+    config.pix.size = pixel_scale
     config.gal.type = 'Sum'
     config.gal.nitems = 2
     config.gal.item = [galsim.AttributeDict()]*2
@@ -337,21 +339,22 @@ def Script2():
     # Or should we switch the style specification for python to use lower_case?  
     # We don't have many free functions in python yet, so we can easily switch if
     # people prefer that.
-    input_cat = galsim.io.read_input_cat(cat_file_name, config)
+    input_cat = galsim.io.read_input_cat(cat_file_name, "ASCII")
 
     # Build the images
     all_images = []
     for i in range(input_cat.nobjects):
-        psf = galsim.build_psf_image(config, input_cat, logger)
+        psf = BuildGSObject(config.psf, input_cat, logger)
         logger.info('Made PSF profile')
 
-        pix = galsim.Pixel(pixel_scale)
+        pix = BuildGSObject(config.pix, input_cat, logger)
         logger.info('Made pixel profile')
 
-        gal = galsim.build_gal_image(config, input_cat, logger, flux=gal_flux)
+        gal = BuildGSObject(config.gal, input_cat, logger)
         logger.info('Made galaxy profile')
 
-        im = gal.draw()
+        final = galsim.Convolve(psf,pix,gal)
+        im = final.draw()
 
         # Add Poisson noise
         im += sky_level
