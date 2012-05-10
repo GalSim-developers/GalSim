@@ -21,14 +21,15 @@ def BuildGSObject(config, input_cat=None, logger=None):
         gsobject = _BuildSingle(config, input_cat)
     elif config.type in ("Sum", "Convolution"): # Compound object
         gsobjects = []
-        # MJ: Bug here. Should check if items is in config.__dict__.  
-        # Else will automatically create one and give a confusing error.
-        for i in range(len(config.items)):
-            gsobjects.append(_BuildSingle(config.items[i], input_cat))
-        if config.type == "Sum":
-            gsobject = galsim.Add(gsobjects)
-        elif config.type == "Convolve":
-            gsobject = galsim.Convolve(gsobjects)
+        if "items" in config.__dict__:
+            for i in range(len(config.items)):
+                gsobjects.append(_BuildSingle(config.items[i], input_cat))
+            if config.type == "Sum":
+                gsobject = galsim.Add(gsobjects)
+            elif config.type == "Convolve":
+                gsobject = galsim.Convolve(gsobjects)
+        else:
+            raise AttributeError("items attribute required in for config."+type+" entry.")
     # MJ: Should pull out Pixel separately as well, since for that the sizes work differently
     # I think we want both to be required, although maybe ok if only one.  But at least
     # having both xw and yw must be allowed.  I raise a warning when both are present
@@ -40,6 +41,7 @@ def BuildGSObject(config, input_cat=None, logger=None):
         init_kwargs = {"xw": config.size, "yw": config.size}
         if "flux" in config.__dict__:
             init_kwargs["flux"] = config.flux
+        print config.type, init_kwargs
         gsobject = galsim.Pixel(**init_kwargs)
     else:
         raise NotImplementedError("Unrecognised config.type = "+str(config.type))
@@ -58,13 +60,13 @@ def _BuildSingle(config, input_cat=None):
     # Finally, after pulling together all the params, try making the GSObject.
     # Check for TypeErrors (sign of multiple radius definitions being passed, among other problems).
     init_func = eval("galsim."+config.type)
+    print config.type, init_kwargs
     try:
         gsobject = init_func(**init_kwargs)
     except Error, err_msg:
         raise RuntimeError("Problem sending init_kwargs to galsim."+config.type+" object. "+
                          "Original error message: "+err_msg)
     return gsobject
-
 
 def _GetRequiredKwargs(config, input_cat=None):
     """@brief Get the required kwargs.
@@ -129,7 +131,8 @@ def _GetParamValue(config, param_name, input_cat=None):
             try:
                 # MJ: You want col-1 here.  I adpoted convention that first column is 1
                 # in the config definition.  But numpy wants 0-based.
-                param_value = input_cat.data[input_cat.current, col]
+                # BR: Thanks Mike!
+                param_value = input_cat.data[input_cat.current, col - 1]
             except IndexError:
                 raise IndexError(param_name+".col attribute or input_cat.current out of bounds "+
                                  " for accessing input_cat.data [col, object_id] = "+
