@@ -248,6 +248,24 @@ class Pixel(GSObject):
     # Ditto!
 
 
+# Now we define a dictionary containing all the GSobject subclasses as the keys, and their parameter
+# names as values stored in a tuple.  This is useful for I/O.
+#
+# NOTE TO DEVELOPERS: This dict should be kept updated to reflect changes in parameter names.
+#
+_object_param_dict = {"Gaussian":      ("flux", "half_light_radius", "sigma", "fwhm"),
+                      "Moffat":        ("beta", "truncationFWHM", "flux", "half_light_radius",
+                                        "scale_radius", "fwhm"),
+                      "Sersic":        ("n", "flux", "half_light_radius"),
+                      "Exponential":   ("flux", "half_light_radius", "scale_radius"),
+                      "DeVaucouleurs": ("flux", "half_light_radius"),
+                      "Airy":          ("D", "obs", "flux"),
+                      "Pixel":         ("xw", "yw", "flux"),
+                      "OpticalPSF":    ("lam_over_D", "defocus", "astig1", "astig2", "coma1", 
+                                        "coma2", "spher", "circular_pupil", "interpolantxy", "dx"
+                                        "oversampling", "pad_factor")}
+
+
 class OpticalPSF(GSObject):
     """@brief Class describing aberrated PSFs due to telescope optics.
 
@@ -257,7 +275,7 @@ class OpticalPSF(GSObject):
 
     Initialization
     --------------
-    >>> optical_psf = galsim.OpticalPSF(lod=1., defocus=0., astig1=0., astig2=0., coma1=0., 
+    >>> optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., 
                                         coma2=0., spher=0., circular_pupil=True, interpolantxy=None,
                                         dx=1., oversampling=2., pad_factor=2)
 
