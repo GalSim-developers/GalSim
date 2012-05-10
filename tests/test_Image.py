@@ -142,9 +142,10 @@ def test_Image_FITS_IO():
         array_type = types[i]
 
         #
-        # Test I/O a single image
+        # Test input from a single external FITS image
         #
-        # Write the reference image to a fits file
+        
+        # Read the reference image to from an externally-generated fits file
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits")
         # Check pyfits read for sanity
         test_array = pyfits.getdata(test_file)
@@ -163,9 +164,36 @@ def test_Image_FITS_IO():
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
                 err_msg="Image"+tchar[i]+".read() failed reading from string filename input.")
 
-        # 
-        # Test I/O for a multi-extension fits file 
         #
+        # Test full I/O on a single internally-generated FITS image
+        #
+
+        # Write the reference image to a fits file
+        ref_image = galsim.ImageView[array_type](ref_array.astype(array_type))
+        test_file = os.path.join(datadir, "test"+tchar[i]+"_internal.fits")
+        ref_image.write(test_file)
+
+        # Check pyfits read for sanity
+        test_array = pyfits.getdata(test_file)
+        np.testing.assert_array_equal(ref_array.astype(types[i]), test_array,
+                err_msg="PyFITS failing to read reference image.")
+
+        # Then use galsim fits.read function
+        # First version: use pyfits HDUList
+        hdu = pyfits.open(test_file)
+        test_image = galsim.fits.read(hdu)
+        np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
+                err_msg="Failed reading from PyFITS PrimaryHDU input.")
+
+        # Second version: use file name
+        test_image = galsim.fits.read(test_file)
+        np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
+                err_msg="Image"+tchar[i]+".read() failed reading from string filename input.")
+
+        # 
+        # Test input from an external multi-extension fits file 
+        #
+        
         test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits")
         # Check pyfits read for sanity
         test_array = pyfits.getdata(test_multi_file)
@@ -189,9 +217,73 @@ def test_Image_FITS_IO():
                     err_msg="Image"+tchar[i]+".read() failed reading from string filename input.")
 
         # 
-        # Test I/O for a fits data cube
+        # Test full I/O for an internally-generated multi-extension fits file 
+        #
+
+        # Build a list of images with different values
+        image_list = []
+        for k in range(nimages):
+            image_list.append(ref_image + k)
+
+        # Write the list to a multi-extension fits file
+        test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+"_internal.fits")
+        galsim.fits.writeMulti(image_list,test_multi_file)
+
+        # Check pyfits read for sanity
+        test_array = pyfits.getdata(test_multi_file)
+        np.testing.assert_array_equal(ref_array.astype(types[i]), test_array,
+                err_msg="PyFITS failing to read multi file.")
+
+        # Then use galsim fits.readMulti function
+        # First version: use pyfits HDUList
+        hdu = pyfits.open(test_multi_file)
+        test_image_list = galsim.fits.readMulti(hdu)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array, 
+                    err_msg="Failed reading from PyFITS PrimaryHDU input.")
+
+        # Second version: use file name
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+".read() failed reading from string filename input.")
+
+        # 
+        # Test input from an external fits data cube
         #
         test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits")
+        # Check pyfits read for sanity
+        test_array = pyfits.getdata(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), test_array[k,:,:],
+                    err_msg="PyFITS failing to read cube file.")
+
+        # Then use galsim fits.readCube function
+        # First version: use pyfits HDUList
+        hdu = pyfits.open(test_cube_file)
+        test_image_list = galsim.fits.readCube(hdu)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array, 
+                    err_msg="Failed reading from PyFITS PrimaryHDU input.")
+
+        # Second version: use file name
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+".read() failed reading from string filename input.")
+
+        # 
+        # Test full I/O for an internally-generated fits data cube
+        #
+
+        # Write the list to a fits data cube
+        test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+"_internal.fits")
+        galsim.fits.writeCube(image_list,test_cube_file)
+
         # Check pyfits read for sanity
         test_array = pyfits.getdata(test_cube_file)
         for k in range(nimages):
