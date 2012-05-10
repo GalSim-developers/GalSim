@@ -248,10 +248,11 @@ class Pixel(GSObject):
     # Ditto!
 
 
-# Now we define a dictionary containing all the GSobject subclasses as the keys, and their parameter
-# names as values stored in a tuple.  This is useful for I/O.
+# Now we define a dictionary containing all the GSobject subclasse names as keys, and their
+# parameter names as values (stored in a tuple).  This is useful for I/O, and as a reference.
 #
-# NOTE TO DEVELOPERS: This dict should be kept updated to reflect changes in parameter names.
+# NOTE TO DEVELOPERS: This dict should be kept updated to reflect changes in parameter names or new
+#                     objects.
 #
 _object_param_dict = {"Gaussian":      ("flux", "half_light_radius", "sigma", "fwhm"),
                       "Moffat":        ("beta", "truncationFWHM", "flux", "half_light_radius",
