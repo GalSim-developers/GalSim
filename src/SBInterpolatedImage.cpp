@@ -455,9 +455,9 @@ namespace galsim {
         for (int i=0; i<N; i++) {
             Pixel p;
             p.cumulativeFlux = ud()*totalAbsFlux;
-            // Need a positive pixel:
             citer upper = allPixels.lower_bound(p);
-            if (upper == allPixels.end()) --upper;  // use last pixel if we're past the end
+	    // use last pixel if we're past the end
+            if (upper == allPixels.end()) --upper; 
             result.setPhoton(i, upper->x, upper->y, 
                              upper->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }

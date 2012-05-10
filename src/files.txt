@@ -3,6 +3,7 @@ FFT.cpp
 Image.cpp
 Interpolant.cpp
 Laguerre.cpp
+OneDimensionalDeviate.cpp
 Pset.cpp
 SBParse.cpp
 SBInterpolatedImage.cpp

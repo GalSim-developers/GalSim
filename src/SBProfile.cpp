@@ -1546,8 +1546,35 @@ namespace galsim {
 
     PhotonArray SBExponential::shoot(int N, UniformDeviate& u) const
     {
-        throw SBError("SBExponential::shoot() not implemented");
-        return PhotonArray(N);
+        // Accuracy to which to solve for (log of) cumulative flux distribution:
+        const double Y_TOLERANCE=1e-4;
+
+        double fluxPerPhoton = getFlux() / N;
+        PhotonArray result(N);
+        // The cumulative distribution of flux is 1-(1+r)exp(-r).
+        // Here is a way to solve for r by an initial guess followed
+        // by Newton-Raphson iterations.  Probably not
+        // the most efficient thing since there are logs in the iteration.
+        for (int i=0; i<N; i++) {
+            double y = u();
+            if (y==0.) {
+                // Runt case of infinite radius - just set to origin:
+                result.setPhoton(i,0.,0.,fluxPerPhoton);
+                continue;
+            }
+            // Initial guess
+            y = -log(u());
+            double r = y>2 ? y : sqrt(2*y);
+            double dy = y - r + log(1+r);
+            while ( std::abs(dy) > Y_TOLERANCE) {
+                r = r + (1+r)*dy/r;
+                dy = y - r + log(1+r);
+            }
+            // Draw another random for azimuthal angle:
+            double theta = 2*M_PI*u();
+            result.setPhoton(i,r0*r*cos(theta), r0*r*sin(theta), fluxPerPhoton);
+        }
+        return result;
     }
 
     PhotonArray SBAiry::shoot(int N, UniformDeviate& u) const
