@@ -136,7 +136,7 @@ def _GetParamValue(config, param_name, input_cat=None):
             elif input_cat.type == "FITS":
                 raise NotImplementedError("Sorry, FITS input not implemented.")
             else:
-                raise TypeError("input_cat.type must be either FITS or ASCII please.")
+                raise ValueError("input_cat.type must be either 'FITS' or 'ASCII' please.")
         else: # If config.type != "InputCatalog"
             raise NotImplementedError("Sorry, only InputCatalog config types are currently "+
                                       "implemented.")
