@@ -27,20 +27,20 @@ def BuildSimple(config, input_cat, req=[], size_opt=[], opt=[]):
     kwargs = {}
     for key in req:
         if not key in config.__dict__:
-            raise AttributeError()
-        value = Generate(eval("config." + key),input_cat)
+            raise AttributeError("Required item %s not found for %s."%(key,config.type))
+        value = Generate(eval("config." + key),key,input_cat)
         kwargs[key] = value
 
     for key in opt:
         if key in config.__dict__:
-            value = Generate(eval("config." + key),input_cat)
+            value = Generate(eval("config." + key),key,input_cat)
             kwargs[key] = value
 
     # Make sure one and only one size is present
     found = False
     for key in size_opt:
         if key in config.__dict__:
-            value = Generate(eval("config." + key),input_cat)
+            value = Generate(eval("config." + key),key,input_cat)
             if (found):
                 raise AttributeError("Too many sizes for %s"%config.type)
             kwargs[key] = value
@@ -79,10 +79,10 @@ def BuildPixel(config, input_cat):
 
     for key in ['xw','yw']:
         if not key in config.__dict__:
-            raise AttributeError('Pixel requires attribute %s'%key)
+            raise AttributeError("Pixel requires attribute %s."%key)
     kwargs = {}
-    kwargs['xw'] = Generate(config.xw,input_cat)
-    kwargs['yw'] = Generate(config.yw,input_cat)
+    kwargs['xw'] = Generate(config.xw,'xw',input_cat)
+    kwargs['yw'] = Generate(config.yw,'xw',input_cat)
 
     if (xw != yw):
         raise Warning("xw != yw found (%f != %f) "%(xw,yw) +
@@ -90,24 +90,24 @@ def BuildPixel(config, input_cat):
             "There might be weirdness....")
 
     if 'flux' in config.__dict__:
-        kwargs['flux'] = Generate(config.flux,input_cat)
+        kwargs['flux'] = Generate(config.flux,'flux',input_cat)
 
     return galsim.Pixel(**kwargs)
 
 def BuildSquarePixel(config, input_cat):
 
     if not 'size' in config.__dict__:
-        raise AttributeError('SquarePixel requires attribute size')
+        raise AttributeError("SquarePixel requires attribute size.")
     kwargs = {}
-    kwargs['xw'] = Generate(config.size,input_cat)
+    kwargs['xw'] = Generate(config.size,'size',input_cat)
     if 'flux' in config.__dict__:
-        kwargs['flux'] = Generate(config.flux,input_cat)
+        kwargs['flux'] = Generate(config.flux,'size',input_cat)
     return galsim.Pixel(**kwargs)
 
 def BuildSum(config, input_cat):
 
     if not 'items' in config.__dict__:
-        raise AttributeError('Sum requires attribute items')
+        raise AttributeError("Sum requires attribute items.")
     list = []
     for item in config.items:
         list.append(BuildGSObject(item, input_cat))
@@ -116,40 +116,44 @@ def BuildSum(config, input_cat):
 def BuildConvolve(config, input_cat):
 
     if not 'items' in config.__dict__:
-        raise AttributeError('Convolve requires attribute items')
+        raise AttributeError("Convolve requires attribute items.")
     list = []
     for item in config.items:
         list.append(BuildGSObject(item, input_cat))
     return galsim.Convolve(list)
 
-def Generate(config, input_cat):
+def Generate(config, name, input_cat):
     if not hasattr(config,'__dict__'):
         # Then config is really a value
         return config
     elif 'type' in config.__dict__:
-        return eval('galsim.GenerateFrom' + config.type + '(config, input_cat)')
+        return eval('galsim.GenerateFrom' + config.type + '(config, name, input_cat)')
     else:
-        raise AttributeError('Non-value item requires a type attribute')
+        raise AttributeError("Non-value item %s requires a type attribute."%name)
 
-def GenerateFromInputCatalog(config, input_cat):
+def GenerateFromInputCatalog(config, name, input_cat):
     if input_cat is None:
-        raise ValueError("Use of InputCatalog requested, but no input_cat given")
+        raise ValueError("Use of InputCatalog requested for %s, but no input_cat given."%name)
 
     if not 'col' in config.__dict__:
-        raise AttributeError("No col specified for value from InputCatalog")
+        raise AttributeError("Use of InputCatalog requested for %s, but no col specified."%name)
     col = config.col
 
     # input_cat stores the current row to use.
-    current = input_cat.current
+    object_id = input_cat.current
+
+    if object_id > input_cat.nobjects:
+        raise IndexError("Trying to access past the end of input catalog for %s."%name +
+            " col = %s, object_id = %d"%(col,object_id))
 
     if input_cat.type is 'ASCII':
-
         try:
             # config values are 1-based, but we access is 0-based, so use col-1
-            value = input_cat.data[current,col-1]
+            value = input_cat.data[object_id,col-1]
         except IndexError:
-            raise IndexError("col attribute or input_cat.current out of bounds "+
-                    " for accessing input_cat.data [col, object_id] = [%s,%s]"%(col,current))
+            raise IndexError("col attribute out of bounds for %s."%name +
+                " col = %s, object_id = %d"%(col,object_id))
+                    " for accessing input_cat.data [col, object_id] = [%s,%s]"%(col,object_id))
 
     elif input_cat.type is 'FITS':
         raise NotImplementedError("FITS catalog inputs not yet implemented, sorry!")
