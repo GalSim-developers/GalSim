@@ -332,22 +332,20 @@ def Script2():
     config.gal.shift.dy.col = 17
 
     # Read the catalog
-    # TODO: switch these function names to CamelCase?  
-    # Or should we switch the style specification for python to use lower_case?  
-    # We don't have many free functions in python yet, so we can easily switch if
-    # people prefer that.
-    input_cat = galsim.io.ReadInputCat(cat_file_name, config)
+    input_cat = galsim.io.ReadInputCat(cat_file_name)
 
     # Build the images
     all_images = []
     for i in range(input_cat.nobjects):
-        psf = galsim.build_psf_image(config, input_cat, logger)
+
+        psf = galsim.BuildGSObject(config.psf, input_cat, logger)
         logger.info('Made PSF profile')
 
-        pix = galsim.Pixel(pixel_scale)
+        pix = galsim.BuildGSObject(config.pix, input_cat, logger)
         logger.info('Made pixel profile')
 
-        gal = galsim.build_gal_image(config, input_cat, logger, flux=gal_flux)
+        gal = galsim.BuildGSObject(config.gal, input_cat, logger)
+
         logger.info('Made galaxy profile')
 
         im = gal.draw()
