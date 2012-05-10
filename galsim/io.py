@@ -1,8 +1,10 @@
 import galsim
 
-def ReadInputCat(cat_file_name=None, filetype="ASCII", comments="#"):
+def ReadInputCat(config, cat_file_name=None, filetype="ASCII", comments="#"):
     """@brief Read in an input catalog for object-by-object parameter specification.
 
+    @param config         A configuration AttributeDict containing all the required information for
+                          running GalSim in Multi-Object mode.
     @param cat_file_name  Filename of the input catalog.
     @param filetype       Either 'ASCII' (currently the only, default, option) or (soon) 'FITS'.
     @param comments       The character used to indicate the start of a comment in an ASCII catalog
