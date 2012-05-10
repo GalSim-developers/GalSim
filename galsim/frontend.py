@@ -21,8 +21,8 @@ def BuildGSObject(config, input_cat=None, logger=None):
         gsobject = _BuildSingle(config, input_cat)
     elif config.type in ("Sum", "Convolution"): # Compound object
         gsobjects = []
-        for i in range(len(config.item)):
-            gsobjects.append(_BuildSingle(config.item[i], input_cat))
+        for i in range(len(config.items)):
+            gsobjects.append(_BuildSingle(config.items[i], input_cat))
         if config.type == "Sum":
             gsobject = galsim.Add(gsobjects)
         elif config.type == "Convolve":
