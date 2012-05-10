@@ -11,6 +11,19 @@ namespace {
 
 typedef bp::return_value_policy<bp::manage_new_object> ManageNew;
 
+// Used by multiple profile classes to ensure at most one radius is given.
+void checkRadii(const bp::object & r1, const bp::object & r2, const bp::object & r3) {
+    int nRad = (r1.ptr() != Py_None) + (r2.ptr() != Py_None) + (r3.ptr() != Py_None);
+    if (nRad > 1) {
+        PyErr_SetString(PyExc_TypeError, "Multiple radius parameters given");
+        bp::throw_error_already_set();
+    }
+    if (nRad == 0) {
+        PyErr_SetString(PyExc_TypeError, "No radius parameter given");
+        bp::throw_error_already_set();
+    }
+}
+
 struct PySBProfile {
 
     template <typename U, typename W>
@@ -224,29 +237,103 @@ struct PySBDeconvolve {
 };
 
 struct PySBGaussian {
+
+    static SBGaussian * construct(
+        double flux,
+        const bp::object & half_light_radius,
+        const bp::object & sigma,
+        const bp::object & fwhm
+    ) {
+        double s = 1.0;
+        checkRadii(half_light_radius, sigma, fwhm);
+        if (half_light_radius.ptr() != Py_None) {
+            s = bp::extract<double>(half_light_radius) * 0.84932180028801907; // (2\ln2)^(-1/2)
+        }
+        if (sigma.ptr() != Py_None) {
+            s = bp::extract<double>(sigma);
+        }
+        if (fwhm.ptr() != Py_None) {
+            s = bp::extract<double>(fwhm) * 0.42466090014400953; // 1 / (2(2\ln2)^(1/2))
+        }
+        return new SBGaussian(flux, s);
+    }
+
     static void wrap() {
         bp::class_<SBGaussian,bp::bases<SBProfile>,boost::noncopyable>(
             "SBGaussian",
-            bp::init<double,double>((bp::arg("flux")=1., bp::arg("sigma")=1.))
-        );
+            "SBGaussian(flux=1., half_light_radius=None, sigma=None, fwhm=None)\n\n"
+            "Construct an exponential profile with the given flux and half-light radius,\n"
+            "sigma, or FWHM.  Exactly one radius must be provided.\n",
+            bp::no_init
+        )
+            .def(
+                "__init__", bp::make_constructor(
+                    &construct, bp::default_call_policies(),
+                    (bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(), 
+                     bp::arg("sigma")=bp::object(), bp::arg("fwhm")=bp::object())
+                )
+            );
     }
 };
 
 struct PySBSersic {
+
+    static SBSersic * construct(
+        double n, double flux,
+        const bp::object & half_light_radius
+    ) {
+        if (half_light_radius.ptr() == Py_None) {
+            PyErr_SetString(PyExc_TypeError, "No radius parameter given");
+            bp::throw_error_already_set();
+        }
+        return new SBSersic(n, flux, bp::extract<double>(half_light_radius));
+    }
     static void wrap() {
-        bp::class_<SBSersic,bp::bases<SBProfile>,boost::noncopyable>(
-            "SBSersic",
-            bp::init<double,double,double>((bp::arg("n"), bp::arg("flux")=1., bp::arg("re")=1.))
-        );
+        bp::class_<SBSersic,bp::bases<SBProfile>,boost::noncopyable>("SBSersic", bp::no_init)
+            .def("__init__",
+                 bp::make_constructor(
+                     &construct, bp::default_call_policies(),
+                     (bp::arg("n"), bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object())
+                                      )
+                 )
+            ;
     }
 };
 
 struct PySBExponential {
+
+
+    static SBExponential * construct(
+        double flux,
+        const bp::object & half_light_radius,
+        const bp::object & scale_radius
+    ) {
+        double s = 1.0;
+        checkRadii(half_light_radius, scale_radius, bp::object());
+        if (half_light_radius.ptr() != Py_None) {
+            s = bp::extract<double>(half_light_radius) / 1.6783469900166605; // not analytic
+        }
+        if (scale_radius.ptr() != Py_None) {
+            s = bp::extract<double>(scale_radius);
+        }
+        return new SBExponential(flux, s);
+    }
+
     static void wrap() {
         bp::class_<SBExponential,bp::bases<SBProfile>,boost::noncopyable>(
             "SBExponential",
-            bp::init<double,double>((bp::arg("flux")=1., bp::arg("r0")=1.))
-        );
+            "SBExponential(flux=1., half_light_radius=None, scale=None)\n\n"
+            "Construct an exponential profile with the given flux and either half-light radius\n"
+            "or scale length.  Exactly one radius must be provided.\n",
+            bp::no_init
+        )
+            .def(
+                "__init__", bp::make_constructor(
+                    &construct, bp::default_call_policies(),
+                    (bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(), 
+                     bp::arg("scale_radius")=bp::object())
+                )
+            );
     }
 };
 
@@ -262,34 +349,90 @@ struct PySBAiry {
 };
 
 struct PySBBox {
+
+    static SBBox * construct(
+                             const bp::object & xw,
+                             const bp::object & yw,
+                             double flux
+    ) {
+        if (xw.ptr() == Py_None || yw.ptr() == Py_None) {
+            PyErr_SetString(PyExc_TypeError, "SBBox requires x and y width parameters");
+            bp::throw_error_already_set();
+        }
+        return new SBBox(bp::extract<double>(xw), bp::extract<double>(yw), flux);
+    }
+
     static void wrap() {
-        bp::class_<SBBox,bp::bases<SBProfile>,boost::noncopyable>(
-            "SBBox",
-            bp::init<double,double,double>(
-                (bp::arg("xw")=1., bp::arg("yw")=0., bp::arg("flux")=1.)
-            )
-        );
+        bp::class_<SBBox,bp::bases<SBProfile>,boost::noncopyable>("SBBox", bp::no_init)
+            .def("__init__",
+                 bp::make_constructor(
+                                      &construct, bp::default_call_policies(),
+                                      (bp::arg("xw")=bp::object(), bp::arg("yw")=bp::object(), bp::arg("flux")=1.)
+                                      )
+                 );
     }
 };
 
 struct PySBMoffat {
+
+    static SBMoffat * construct(
+        double beta, double truncationFWHM, double flux,
+        const bp::object & half_light_radius,
+        const bp::object & scale_radius,
+        const bp::object & fwhm
+    ) {
+        double s = 1.0;
+        checkRadii(half_light_radius, scale_radius, fwhm);
+        SBMoffat::RadiusType rType = SBMoffat::HALF_LIGHT_RADIUS;
+        if (half_light_radius.ptr() != Py_None) {
+            s = bp::extract<double>(half_light_radius);
+        }
+        if (scale_radius.ptr() != Py_None) {
+            s = bp::extract<double>(scale_radius);
+            rType = SBMoffat::SCALE_RADIUS;
+        }
+        if (fwhm.ptr() != Py_None) {
+            s = bp::extract<double>(fwhm);
+            rType = SBMoffat::FWHM;
+        }
+        return new SBMoffat(beta, truncationFWHM, flux, s, rType);
+    }
+
     static void wrap() {
-        bp::class_<SBMoffat,bp::bases<SBProfile>,boost::noncopyable>(
-            "SBMoffat",
-            bp::init<double,double,double,double>(
-                (bp::arg("beta"), bp::arg("truncationFWHM")=2.,
-                 bp::arg("flux")=1., bp::arg("re")=1.)
+        bp::class_<SBMoffat,bp::bases<SBProfile>,boost::noncopyable>("SBMoffat", bp::no_init)
+            .def("__init__", 
+                 bp::make_constructor(
+                     &construct, bp::default_call_policies(),
+                     (bp::arg("beta"), bp::arg("truncationFWHM")=2.,
+                      bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(),
+                      bp::arg("scale_radius")=bp::object(), bp::arg("fwhm")=bp::object())
+                 )
             )
-        );
+            ;
     }
 };
 
 struct PySBDeVaucouleurs {
+    static SBDeVaucouleurs * construct(
+                                       double flux, const bp::object & half_light_radius
+                                       ) {
+        if (half_light_radius.ptr() == Py_None) {
+            PyErr_SetString(PyExc_TypeError, "No radius parameter given");
+            bp::throw_error_already_set();
+        }
+        return new SBDeVaucouleurs(flux, bp::extract<double>(half_light_radius));
+    }
+
     static void wrap() {
         bp::class_<SBDeVaucouleurs,bp::bases<SBProfile>,boost::noncopyable>(
-            "SBDeVaucouleurs",
-            bp::init<double,double>((bp::arg("flux")=1., bp::arg("r0")=1.))
-        );
+                                                                            "SBDeVaucouleurs",bp::no_init)
+            .def("__init__",
+                 bp::make_constructor(
+                                      &construct, bp::default_call_policies(),
+                                      (bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object())
+                                      )
+                 )
+            ;
     }
 };
 
