@@ -248,23 +248,43 @@ class Pixel(GSObject):
     # Ditto!
 
 
-# Now we define a dictionary containing all the GSobject subclasse names as keys, and their
-# parameter names as values (stored in a tuple).  This is useful for I/O, and as a reference.
+# Now we define a dictionary containing all the GSobject subclass names as keys, referencing a
+# nested dictionary containing the names of their required parameters (not including size), size
+# specification parameters (one of which only must be set), and optional parameters, stored as a
+# tuple of string names in each case.
+#
+# This is useful for I/O, and as a reference.
 #
 # NOTE TO DEVELOPERS: This dict should be kept updated to reflect changes in parameter names or new
 #                     objects.
 #
-object_param_dict = {"Gaussian":      ("flux", "half_light_radius", "sigma", "fwhm"),
-                     "Moffat":        ("beta", "truncationFWHM", "flux", "half_light_radius",
-                                       "scale_radius", "fwhm"),
-                     "Sersic":        ("n", "flux", "half_light_radius"),
-                     "Exponential":   ("flux", "half_light_radius", "scale_radius"),
-                     "DeVaucouleurs": ("flux", "half_light_radius"),
-                     "Airy":          ("D", "obs", "flux"),
-                     "Pixel":         ("xw", "yw", "flux"),
-                     "OpticalPSF":    ("lam_over_D", "defocus", "astig1", "astig2", "coma1", 
-                                       "coma2", "spher", "circular_pupil", "interpolantxy", "dx"
-                                       "oversampling", "pad_factor")}
+object_param_dict = {"Gaussian":      { "required" : (),
+                                        "size" :     ("half_light_radius", "sigma", "fwhm",),
+                                        "optional" : ("flux",) },
+                     "Moffat":        { "required" : ("beta",),
+                                        "size" :     ("half_light_radius", "scale_radius", "fwhm",),
+                                        "optional" : ("truncationFWHM", "flux",) },
+                     "Sersic":        { "required" : ("n",) ,
+                                        "size"     : ("half_light_radius",),
+                                        "optional" : ("flux",)},
+                     "Exponential":   { "required" : (),
+                                        "size"     : ("half_light_radius", "scale_radius"),
+                                        "optional" : ("flux",)},
+                     "DeVaucouleurs": { "required" : (),
+                                        "size"     : ("half_light_radius",),
+                                        "optional" : ("flux",) },
+                     "Airy":          { "required" : () ,
+                                        "size"     : ("D",) ,
+                                        "optional" : ("obs", "flux",)},
+                     "Pixel":         { "required" : (),
+                                        "size"     : ("xw", "yw",),
+                                        "optional" : ("flux",)},
+                     "OpticalPSF":    { "required" : (),
+                                        "size"     : ("lam_over_D",),
+                                        "optional" : ("defocus", "astig1", "astig2", "coma1",
+                                                      "coma2", "spher", "circular_pupil",
+                                                      "interpolantxy", "dx", "oversampling",
+                                                      "pad_factor")} }
 
 
 class OpticalPSF(GSObject):
