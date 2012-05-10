@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import galsim
-import pyfits
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
@@ -332,6 +331,7 @@ class RealGalaxy(GSObject):
     def __init__(self, real_galaxy_catalog, index = None, ID = None, random = False,
                  interpolantxy = None):
 
+        import pyfits
         # Code block below will be for galaxy selection;
         # implement exactly one for now, then gradually others.  All of them need to return an index
         # within the real_galaxy_catalog.

@@ -1,5 +1,4 @@
 from . import _galsim
-import pyfits
 
 """file @real.py @brief Necessary functions for dealing with real galaxies and their catalogs.
 
@@ -14,6 +13,7 @@ class RealGalaxyCatalog:
     """Class containing a catalog with information about real galaxy training data
     """
     def __init__(self, filename, imagedir):
+        import pyfits
         cat = pyfits.getdata(filename)
         self.filename = filename # store the filename from which the catalog was read
         self.imagedir = imagedir # store the directory containing all image files (gal, PSF)
