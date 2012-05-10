@@ -88,7 +88,8 @@ def _GetSizeKwarg(config, input_cat=None):
             if counter == 1:
                 size_kwarg[size_name] = _GetParamValue(config, size_name, input_cat=input_cat)
             elif counter > 1:
-                raise ValueError("More than one size parameter specified for")
+                raise ValueError("More than one size parameter specified in "+config.type+
+                                 " object config.")
     # MJ: Check for counter == 0 here?  BR: If counter == 0 that's fine sometimes, c.f. Pixel.
     return size_kwarg
 
