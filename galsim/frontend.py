@@ -109,36 +109,36 @@ def BuildSimple(config, req=[], size_opt=[], opt=[], input_cat=None, logger=None
        @param opt       A list of optional attributes
        In addition to what is listed, the flux is always optional.
     """
-    print 'Start BuildSimple for ',config.type
+    #print 'Start BuildSimple for ',config.type
     # All simple builders have an optional flux attribute so add that to opt
     opt += ['flux']
 
     # Make the argument list for the constructor
     kwargs = {}
     for key in req:
-        print 'req key = ',key
+        #print 'req key = ',key
         if not config.hasattr(key):
             if logger != None:
                 logger.info("Error: %s requires the following attributes: %s",config.type,req)
             raise AttributeError()
         value = Generate(eval("config." + key),input_cat,logger)
-        print 'value = ',value
+        #print 'value = ',value
         kwargs[key] = value
 
     for key in opt:
         if config.hasattr(key):
-            print 'opt key = ',key
+            #print 'opt key = ',key
             value = Generate(eval("config." + key),input_cat,logger)
-            print 'value = ',value
+            #print 'value = ',value
             kwargs[key] = value
 
     # Make sure one and only one size is present
     found = False
     for key in size_opt:
-        print 'size key = ',key
+        #print 'size key = ',key
         if config.hasattr(key):
             value = Generate(eval("config." + key),input_cat,logger)
-            print 'value = ',value
+            #print 'value = ',value
             if (found):
                 if logger != None:
                     logger.info("Error: %s requires exactly one of the following attributes: %s",
@@ -177,7 +177,7 @@ def BuildAiry(config, input_cat=None, logger=None):
     return galsim.BuildSimple(config, [], ['D'], ['obs'], input_cat, logger)
 
 def BuildPixel(config, input_cat=None, logger=None):
-    print 'Start BuildPixel'
+    #print 'Start BuildPixel'
 
     for key in ['xw','yw']:
         if not config.hasattr(key):
@@ -200,7 +200,7 @@ def BuildPixel(config, input_cat=None, logger=None):
     return galsim.Pixel(**kwargs)
 
 def BuildSquarePixel(config, input_cat=None, logger=None):
-    print 'Start BuildSquarePixel'
+    #print 'Start BuildSquarePixel'
 
     if not config.hasattr('size'):
         if logger != None:
@@ -213,7 +213,7 @@ def BuildSquarePixel(config, input_cat=None, logger=None):
     return galsim.Pixel(**kwargs)
 
 def BuildSum(config, input_cat=None, logger=None):
-    print 'Start BuildSum'
+    #print 'Start BuildSum'
 
     if not config.hasattr('items'):
         if logger != None:
@@ -225,7 +225,7 @@ def BuildSum(config, input_cat=None, logger=None):
     return galsim.Add(list)
 
 def BuildConvolve(config, input_cat=None, logger=None):
-    print 'Start BuildConvolve'
+    #print 'Start BuildConvolve'
 
     if not config.hasattr('items'):
         if logger != None:
@@ -240,7 +240,7 @@ def BuildConvolve(config, input_cat=None, logger=None):
 
 
 def Generate(config, input_cat=None, logger=None):
-    print 'Start Generate with config = ',config
+    #print 'Start Generate with config = ',config
     try:
         if config.hasattr('type'):
             return eval('galsim.GenerateFrom' + config.type + '(config, input_cat, logger)')
@@ -250,7 +250,7 @@ def Generate(config, input_cat=None, logger=None):
     return config
 
 def GenerateFromInputCatalog(config, input_cat, logger=None):
-    print 'Start GenerateFromInputCatalog'
+    #print 'Start GenerateFromInputCatalog'
     if input_cat is None:
         raise ValueError("Use of InputCatalog requested, but no input_cat given")
 
@@ -259,11 +259,11 @@ def GenerateFromInputCatalog(config, input_cat, logger=None):
             logger.info("Error: InputCatalog requires col attribute",config.type)
         raise AttributeError("No col specified for InputCatalog")
     col = config.col
-    print 'col = ',col
+    #print 'col = ',col
 
     # input_cat stores the current row to use.
     current = input_cat.current
-    print 'current = ',current
+    #print 'current = ',current
 
     if current >= input_cat.nobjects:
         raise ValueError("Trying to access past the end of the catalog data.")
@@ -272,8 +272,9 @@ def GenerateFromInputCatalog(config, input_cat, logger=None):
     if input_cat.type is 'ASCII':
 
         try:
-            value = input_cat.data[current,col]
-            print 'value = ',value
+            # config values are 1-based, but we access is 0-based, so use col-1
+            value = input_cat.data[current,col-1]
+            #print 'value = ',value
         except TypeError:
             if logger != None:
                 logger.info("Error: col should be an integer, but is %s",col)

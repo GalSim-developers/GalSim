@@ -274,10 +274,12 @@ def Script2():
 
     random_seed = 8241573
     sky_level = 1.e6                # ADU
-    pixel_scale = 0.2               # arcsec
+    pixel_scale = 0.3               # arcsec
     gal_flux = 2000                 #
     gal_g1 = -0.009                 #
     gal_g2 = 0.011                  #
+    image_xmax = 64                 # pixels
+    image_ymax = 64                 # pixels
 
     logger.info('Starting multi-object script 2 using:')
     logger.info('    - parameters taken from catalog %r',cat_file_name)
@@ -336,39 +338,48 @@ def Script2():
 
     # Read the catalog
     input_cat = galsim.io.ReadInputCat(config,cat_file_name)
+    logger.info('Read %d objects from catalog',input_cat.nobjects)
 
     # Build the images
     all_images = []
     for i in range(input_cat.nobjects):
+        if i is not input_cat.current:
+            raise ValueError('i is out of sync with current.')
+
+        logger.info('Start work on image %d',input_cat.current)
+
         psf = galsim.BuildGSObject(config.psf, input_cat, logger)
-        logger.info('Made PSF profile')
+        logger.info('   Made PSF profile')
 
         pix = galsim.BuildGSObject(config.pix, input_cat, logger)
-        logger.info('Made pixel profile')
+        logger.info('   Made pixel profile')
 
         gal = galsim.BuildGSObject(config.gal, input_cat, logger)
-        logger.info('Made galaxy profile')
-
-        # increment the row of the catalog that we should use
-        input_cat.current += 1
+        logger.info('   Made galaxy profile')
 
         final = galsim.Convolve(psf,pix,gal)
-        im = final.draw()
+        #im = final.draw(dx=pixel_scale)  # It makes these as 768 x 768 images.  A bit big.
+        im = galsim.ImageF(image_xmax, image_ymax)
+        final.draw(im, dx=pixel_scale)
+        logger.info('   Drew image: size = %d x %d',im.xMax-im.xMin+1, im.yMax-im.yMin+1)
 
         # Add Poisson noise
         im += sky_level
         im.addNoise(galsim.CCDNoise(rng))
         im -= sky_level
-        logger.info('Drew image')
+        logger.info('   Added noise')
 
         # Store that into the list of all images
         all_images += [im]
+
+        # increment the row of the catalog that we should use for the next iteration
+        input_cat.current += 1
 
     logger.info('Done making images of galaxies')
 
     # Now write the image to disk.
     # TODO: This function doesn't exist yet.
-    galsim.fits.writeCube(out_file_name, all_images, clobber=True)
+    #galsim.fits.writeCube(out_file_name, all_images, clobber=True)
     logger.info('Wrote image to %r',out_file_name)  # using %r adds quotes around filename for us
 
     print
