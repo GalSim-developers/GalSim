@@ -343,7 +343,7 @@ def Script2():
 
     # Build the images
     all_images = []
-    for i in range(input_cat.nobjects - 90):
+    for i in range(input_cat.nobjects):
         if i is not input_cat.current:
             raise ValueError('i is out of sync with current.')
 
