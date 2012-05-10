@@ -4,87 +4,132 @@ op_dict = galsim.object_param_dict
 # USERS NOTE - THIS IS CURRENTLY IN DEVELOPMENT AND UNFINISHED!
 #
 
-def BuildGSOBject(config, input_cat=None, object_id=None, logger=None):
-    """Build GSObjects from input args given in config and input_cat structures.
+def BuildGSObject(config, input_cat=None, logger=None):
+    """Build a GSObject using a config (AttributeDict) and possibly an input_cat (AttributeDict).
+
+    @param config     A configuration AttributDict() read in using galsim.config.load().
+    @param input_cat  An input catalog AttributeDict() read in using galsim.io.read_input_cat().
+    @param logger     Output logging object (NOT USED IN THIS IMPLEMENTATION: RAISED ERRORS
+                      AUTOMATICALLY PASSED TO LOGGER)
     """
+
     # Check that the input config has a type to even begin with!
-    try:
-        type = config.type
-    except AttributeError:
-        if logger != None:
-            logger.info("Error: type attribute required in config.")
-        raise
-    if config.type in op_dict:
-        gsobject = BuildSingle(config, input_cat, object_id, logger)
-    elif config.type in ("Sum", "Convolution"):
+    if not "type" in config.__dict__:
+        raise AttributeError("type attribute required in config.")
+    # Then build object depending on type
+    if config.type in op_dict:  # Single object from primary keys in galsim.object_param_dict
+        gsobject = _BuildSingle(config, input_cat)
+    elif config.type in ("Sum", "Convolution"): # Compound object
         gsobjects = []
-        for i in config.nitems:
-            gsobjects.append(BuildSingle(config.item[i], input_cat, object_id, logger))
+        for i in range(len(config.item)):
+            gsobjects.append(_BuildSingle(config.item[i], input_cat))
         if config.type == "Sum":
             gsobject = galsim.Add(gsobjects)
-        else config.type == "Convolution":
+        elif config.type == "Convolve":
             gsobject = galsim.Convolve(gsobjects)
+    elif config.type == "SquarePixel":  # Mike is treating Pixels separately
+        if not "size" in config.__dict__:
+            raise AttributeError("size attribute required in config for initializing SquarePixel "+
+                                 "objects.")
+        init_kwargs = {"xw": config.size, "yw": config.size}
+        if "flux" in config.__dict__:
+            init_kwargs["flux"] = config.flux
+        gsobject = galsim.Pixel(**init_kwargs)
     else:
         raise NotImplementedError("Unrecognised config.type = "+str(config.type))
     return gsobject
 
-def BuildSingle(config, input_cat=None, object_id=None, logger=None):
-    """@brief Construct simple GSObjects, not Sums, Convolutions or other compunds.
-
-    Does basic error handling.
+def _BuildSingle(config, input_cat=None):
+    """@brief Construct simple GSObjects (i.e. not Sums, Convolutions or other compounds).
     """
     # First do a no-brainer checks
-    if not hasattr(config, "type"):
+    if not "type" in config.__dict__:
         raise AttributeError("No type attribute in config!")
-    
-    init_params = []
-    for param_name in _op_dict[config.type]:
-
-        # First of all try and get the correctly named attribute
-        try:
-            param = config.__getattr__(param_name)
-        except AttributeError:
-            if logger != None:
-                logger.info("Error: "+param_name+" attribute required in config for "
-                            "initializing "+type+" objects.")
-            raise
-            
-        # Now we have it, see if this param has a type (if not interpret as fixed scalar constant)
-        if hasattr(param, "type"):
-            # If it's an InputCatalog, look it up from the catalog data
-            if param.type == "InputCatalog":
-                # Then check for correct input kwargs and give a useful message
-                if input_cat == None or object_id == None:
-                    raise ValueError("Either input_cat or object_id not given on input, and "+
-                                     "the config requires an InputCatalog entry for "+type+"."+
-                                     param_name)
-                # Then set the param_value from the requisite [object_id, col] entry in the data
-                # ...if this fails, try to work out why and give info.
-                try:
-                    col = param.col
-                    param_value = input_cat.data[object_id, col]
-                except AttributeError:
-                    if logger != None:
-                        logger.info("Error: "+param_name+".col attribute required in config "
-                                    "for initializing with "+param_name+".type = InputCatalog.")
-                    raise
-                except IndexError:
-                    if logger != None:
-                        logger.info("Error: "+param_name+".col attribute or object_id out of "+
-                                    "bounds for accessing input_cat.data [col, object_id] = "+
-                                    "["+str(param.col)+", "+str(object_id)+"]")
-                    raise
-            else:
-                raise NotImplementedError("Sorry, only InputCatalog config types are "+
-                                          "currently implemented.")
-        else: # Do a straight assignment from the param itself
-            param_value = param
-            
-        # Then append this param value to the list for passing to the GSObject __init__
-        init_params.append(param_value)
-
+    init_kwargs = {}
+    init_kwargs.update(_GetRequiredKwargs(config, input_cat))
+    init_kwargs.update(_GetSizeKwarg(config, input_cat))
+    init_kwargs.update(_GetOptionalKwargs(config, input_cat))
+    # Finally, after pulling together all the params, try making the GSObject.
+    # Check for TypeErrors (sign of multiple radius definitions being passed, among other problems).
     init_func = eval("galsim."+config.type)
-    return init_func(*init_params)
+    try:
+        gsobject = init_func(**init_kwargs)
+    except Error, err_msg:
+        raise RuntimeError("Problem sending init_kwargs to galsim."+config.type+" object. "+
+                         "Original error message: "+err_msg)
+    return gsobject
+
+
+def _GetRequiredKwargs(config, input_cat=None):
+    """@brief Get the required kwargs.
+    """
+    req_kwargs = {}
+    for req_name in op_dict[config.type]["required"]:
+        # Sanity check here, as far upstream as possible
+        if not req_name in config.__dict__:
+            raise AttributeError("No required attribute "+req_name+" within input config.")
+        else:
+            req_kwargs[req_name] = _GetParamValue(config, req_name, input_cat=input_cat)
+    return req_kwargs
+
+def _GetSizeKwarg(config, input_cat=None):
+    """@brief Get the one, and one only, required size kwarg.
+    """
+    size_kwarg = {}
+    counter = 0
+    for size_name in op_dict[config.type]["size"]:
+        if size_name in config.__dict__:
+            counter += 1
+            if counter == 1:
+                size_kwarg[size_name] = _GetParamValue(config, size_name, input_cat=input_cat)
+            elif counter > 1:
+                raise ValueError("More than one size parameter specified for")
+    return size_kwarg
+
+def _GetOptionalKwargs(config, input_cat=None):
+    """@brief Get the optional kwargs, if any present in the config.
+    """
+    optional_kwargs = {}
+    for entry_name in config.__dict__:
+        if entry_name in op_dict[config.type]["optional"]:
+            optional_kwargs[entry_name] = _GetParamValue(config, entry_name, input_cat=input_cat)
+    return optional_kwargs
+
+def _GetParamValue(config, param_name, input_cat=None):
+    """@brief Function to read parameter values from config AttributeDicts.
+    """
+   # Assume that basic sanity checking done upstream for maximum efficiency 
+    param = config.__getattr__(param_name)
+    # First see if we can assign by direct value
+    if not hasattr(param, "__dict__"):  # This already exists for AttributeDicts, not for values
+        param_value = param
+    elif "type" in param.__dict__:  # Explore type to decide next steps..
+        # First check if it's an InputCatalog, & look it up from the catalog data.
+        if param.type == "InputCatalog":
+            # Then check for correct input kwargs and give a useful message
+            if input_cat == None:
+                    raise ValueError("Keyword input_cat not given to GetParamValue:  the config "+
+                                     "requires an InputCatalog entry for "+param_name)
+            # If OK, set the param_value from the requisite [input_cat.current, col] entry in the
+            # input_cat.data
+            # ...if this fails, try to work out why and give info.
+            if "col" in param.__dict__:
+                col = param.col
+            else:
+                raise AttributeError(param_name+".col attribute required in config for "+
+                                     "initializing with "+param_name+".type = InputCatalog.")
+            try:
+                param_value = input_cat.data[input_cat.current, col]
+            except IndexError:
+                raise IndexError(param_name+".col attribute or input_cat.current out of bounds "+
+                                 " for accessing input_cat.data [col, object_id] = "+
+                                 "["+str(param.col)+", "+str(object_id)+"]")
+        else: # If config.type != "InputCatalog"
+            raise NotImplementedError("Sorry, only InputCatalog config types are currently "+
+                                      "implemented.")
+    else:
+        raise AttributeError("No type attribute in non-constant config entry!")
+    return param_value
 
 
 #def build_image_output(config=None, input_cat=None, logger=None):
