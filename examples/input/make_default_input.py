@@ -27,8 +27,9 @@ MOFFAT_G1 = -0.019            # }
 MOFFAT_G2 = -0.007            # }
 MOFFAT_TRUNCATIONFWHM = 2.    # }
 
-EXPONENTIAL_RE = 0.82         # } Again, things are slightly more complex than this for actual
-DEVAUCOULEURS_RE = 1.59       # } GREAT08 images, but this is a enough reasonable example to adopt.
+EXPONENTIAL_HLR = 0.82 * MOFFAT_FWHM    # } Again, things are slightly more complex than this for
+DEVAUCOULEURS_HLR = 1.59 * MOFFAT_FWHM  # } actual GREAT08 images, but this is a starting example
+                                        # } to adopt.
 
 EXPONENTIAL_DEVAUCOULEURS_SIGMA_G = 0.3  # } Approximate the ellipticity distribition as a Gaussian
                                          # } with this sigma.
@@ -57,9 +58,9 @@ def make_default_input():
     moffat_g2 = np.zeros(NOBJECTS) + MOFFAT_G2
     moffat_truncationfwhm = np.zeros(NOBJECTS) + MOFFAT_TRUNCATIONFWHM
     # Then set the exponential disc catalogue fixed values
-    exponential_re = np.zeros(NOBJECTS) + EXPONENTIAL_RE
+    exponential_hlr = np.zeros(NOBJECTS) + EXPONENTIAL_RE
     # Then set the dVc bulge catalogue fixed values
-    devaucouleurs_re = np.zeros(NOBJECTS) + DEVAUCOULEURS_RE
+    devaucouleurs_hlr = np.zeros(NOBJECTS) + DEVAUCOULEURS_RE
     # Then set up the Gaussian RNG for making the ellipticity values
     urng = galsim.UniformDeviate(RNG_SEED)
     gdist = galsim.GaussianDeviate(urng, sigma=EXPONENTIAL_DEVAUCOULEURS_SIGMA_G)
@@ -108,8 +109,8 @@ def make_default_input():
                    "%6.2f  %14.7f  %14.7f  %14.7f  %14.7f\n") % \
             (bounds_xmin[i], bounds_ymin[i], bounds_xmax[i], bounds_ymax[i],
              moffat_beta[i], moffat_fwhm[i], moffat_g1[i], moffat_g2[i], moffat_truncationfwhm[i],
-             exponential_re[i], exponential_g1[i], exponential_g2[i],
-             devaucouleurs_re[i], devaucouleurs_g1[i], devaucouleurs_g2[i], dx[i], dy[i])
+             exponential_hlr[i], exponential_g1[i], exponential_g2[i],
+             devaucouleurs_hlr[i], devaucouleurs_g1[i], devaucouleurs_g2[i], dx[i], dy[i])
         output.write(outline)
     output.close()
     
