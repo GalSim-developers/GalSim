@@ -254,17 +254,17 @@ class Pixel(GSObject):
 # NOTE TO DEVELOPERS: This dict should be kept updated to reflect changes in parameter names or new
 #                     objects.
 #
-_object_param_dict = {"Gaussian":      ("flux", "half_light_radius", "sigma", "fwhm"),
-                      "Moffat":        ("beta", "truncationFWHM", "flux", "half_light_radius",
-                                        "scale_radius", "fwhm"),
-                      "Sersic":        ("n", "flux", "half_light_radius"),
-                      "Exponential":   ("flux", "half_light_radius", "scale_radius"),
-                      "DeVaucouleurs": ("flux", "half_light_radius"),
-                      "Airy":          ("D", "obs", "flux"),
-                      "Pixel":         ("xw", "yw", "flux"),
-                      "OpticalPSF":    ("lam_over_D", "defocus", "astig1", "astig2", "coma1", 
-                                        "coma2", "spher", "circular_pupil", "interpolantxy", "dx"
-                                        "oversampling", "pad_factor")}
+object_param_dict = {"Gaussian":      ("flux", "half_light_radius", "sigma", "fwhm"),
+                     "Moffat":        ("beta", "truncationFWHM", "flux", "half_light_radius",
+                                       "scale_radius", "fwhm"),
+                     "Sersic":        ("n", "flux", "half_light_radius"),
+                     "Exponential":   ("flux", "half_light_radius", "scale_radius"),
+                     "DeVaucouleurs": ("flux", "half_light_radius"),
+                     "Airy":          ("D", "obs", "flux"),
+                     "Pixel":         ("xw", "yw", "flux"),
+                     "OpticalPSF":    ("lam_over_D", "defocus", "astig1", "astig2", "coma1", 
+                                       "coma2", "spher", "circular_pupil", "interpolantxy", "dx"
+                                       "oversampling", "pad_factor")}
 
 
 class OpticalPSF(GSObject):
