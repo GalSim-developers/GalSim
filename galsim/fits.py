@@ -21,9 +21,9 @@ def write(image, fits, add_wcs=True, clobber=True):
     If add_wcs evaluates to True, a 'LINEAR' WCS will be added using the Image's
     bounding box.  This is not necessary to ensure an Image can be round-tripped
     through FITS, as the bounding box (and scale) are always saved in custom header
-    keys.  If add_true is a string, this will be used as the WCS name.
+    keys.  If add_wcs is a string, this will be used as the WCS name.
 
-    This function called be called directly as "galsim.fits.write(image, ...)",
+    This function can be called directly as "galsim.fits.write(image, ...)",
     with the image as the first argument, or as an image method: "image.write(...)".
 
     Setting clobber=True when 'fits' is a string will silently overwrite existing files.
@@ -57,6 +57,36 @@ def write(image, fits, add_wcs=True, clobber=True):
         hdu.header.update("CRPIX1" + wcsname, 1, "coordinate system reference pixel")
         hdu.header.update("CRPIX2" + wcsname, 1, "coordinate system reference pixel")
     
+    if isinstance(fits, basestring):
+        if clobber and os.path.isfile(fits):
+            os.remove(fits)
+        hdus.writeto(fits)
+
+def writeCube(image_list, fits, add_wcs=True, clobber=True):
+    """
+    Write the image to a FITS file as a data cube:
+    - If 'fits' is a pyfits.HDUList, the images will be appended as new HDUs.
+      The user is responsible for calling fits.writeto(...) afterwards.
+    - If 'fits' is a string, it will be interpreted as a filename for a new
+      FITS file.
+   
+    If add_wcs evaluates to True, a 'LINEAR' WCS will be added using each Image's
+    bounding box.  This is not necessary to ensure an Image can be round-tripped
+    through FITS, as the bounding box (and scale) are always saved in custom header
+    keys.  If add_wcs is a string, this will be used as the WCS name.
+
+    Setting clobber=True when 'fits' is a string will silently overwrite existing files.
+    """
+    import pyfits    # put this at function scope to keep pyfits optional
+
+    if isinstance(fits, pyfits.HDUList):
+        hdus = fits
+    else:
+        hdus = pyfits.HDUList()
+
+    for image in image_list:
+        galsim.fits.write(image, hdus, add_wcs=add_wcs, clobber=clobber)
+
     if isinstance(fits, basestring):
         if clobber and os.path.isfile(fits):
             os.remove(fits)
@@ -119,6 +149,35 @@ def read(fits):
     image = Class(array=fits.data, xMin=xMin, yMin=yMin)
     image.scale = scale
     return image
+
+def readCube(fits):
+    """
+    Construct an array of ImageViews from a FITS data cube.
+     - If 'fits' is a pyfits.HDUList, it will read images from these
+     - If 'fits' is a string, it will be interpreted as a filename to open and read
+
+    If the FITS header has GS_* keywords, these will be used to initialize the
+    bounding box and scale.  If not, the bounding box will have (xMin,yMin) at
+    (1,1) and the scale will be set to 1.0.
+
+    Not all FITS pixel types are supported (only those with C++ Image template
+    instantiations are: short, int, float, and double).
+    """
+
+    import pyfits     # put this at function scope to keep pyfits optional
+    
+    if isinstance(fits, basestring):
+        hdu_list = pyfits.open(fits)
+    elif isinstance(fits, pyfits.HDUList):
+        hdu_list = fits
+    else
+        raise TypeError("In readCube, fits is not a string or HDUList")
+
+    images = []
+    for hdu in hdu_list:
+        images.append(galsim.fits.read(hdu))
+    return images
+
 
 # inject read/write as methods of Image classes
 for Class in _galsim.Image.itervalues():
