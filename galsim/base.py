@@ -244,6 +244,8 @@ class Pixel(GSObject):
     """GalSim Pixel, which has an SBBox in the SBProfile attribute.
     """
     def __init__(self, xw=None, yw=None, flux=1.):
+        if yw is None:
+            yw = xw
         GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
     # Ditto!
 
@@ -395,6 +397,9 @@ class AttributeDict(object):
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
+
+    def hasattr(self, name):
+        return name in self.__dict__
 
     def merge(self, other):
         self.__dict__.update(other.__dict__)

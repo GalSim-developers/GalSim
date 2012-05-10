@@ -49,6 +49,10 @@ def ReadAsciiInputCat(cat_file_name=None, ascii_fields=None, comments="#"):
     input_cat.data = loadtxt(cat_file_name, comments=comments)
     # Also store the number of objects as input_cat.nobjects for easy access by other routines
     input_cat.nobjects = input_cat.data.shape[0]
+    # Store that this is an ASCII catalog
+    input_cat.type = 'ASCII'
+    # Keep track of which row we should read from.  Start at 0.
+    input_cat.current = 0
     # Return catalog to the user
     return input_cat
 

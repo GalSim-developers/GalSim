@@ -94,13 +94,11 @@ def BuildGSObject(config, input_cat=None, logger=None):
     @param input_cat  An input catalog AttributeDict() read in using galsim.io.read_input_cat().
     @param logger     Output logging object.
     """
-    try:
-        type = config.type
-    except AttributeError:
+    if not config.hasattr('type'):
         if logger != None:
             logger.info("Error: type attribute required")
-            raise
-    return eval('galsim.Build' + type + '(config, input_cat, logger)')
+        raise AttributeError("type attribute required")
+    return eval('galsim.Build' + config.type + '(config, input_cat, logger)')
 
 def BuildSimple(config, req=[], size_opt=[], opt=[], input_cat=None, logger=None):
     """Most of the functionality of the Build function is the same for the simple
@@ -111,53 +109,180 @@ def BuildSimple(config, req=[], size_opt=[], opt=[], input_cat=None, logger=None
        @param opt       A list of optional attributes
        In addition to what is listed, the flux is always optional.
     """
+    print 'Start BuildSimple for ',config.type
+    # All simple builders have an optional flux attribute so add that to opt
+    opt += ['flux']
+
+    # Make the argument list for the constructor
     kwargs = {}
-    try:
-        for key in req:
-            value = Generate(eval("config." + key),input_cat,logger)
-            kwargs += { key : value }
-    except AttributeError:
-        if logger != None:
-            logger.info("Error: %s requires the following attributes: %s",config.type,req)
-            raise
+    for key in req:
+        print 'req key = ',key
+        if not config.hasattr(key):
+            if logger != None:
+                logger.info("Error: %s requires the following attributes: %s",config.type,req)
+            raise AttributeError()
+        value = Generate(eval("config." + key),input_cat,logger)
+        print 'value = ',value
+        kwargs[key] = value
+
     for key in opt:
-        try:
+        if config.hasattr(key):
+            print 'opt key = ',key
             value = Generate(eval("config." + key),input_cat,logger)
-            kwargs += { key : value }
-        except AttributeError:
-            pass
+            print 'value = ',value
+            kwargs[key] = value
+
+    # Make sure one and only one size is present
     found = False
     for key in size_opt:
-        try:
+        print 'size key = ',key
+        if config.hasattr(key):
             value = Generate(eval("config." + key),input_cat,logger)
+            print 'value = ',value
             if (found):
-                logger.info("Error: %s requires exactly one of the following attributes: %s",
-                    config.type,size_opt)
+                if logger != None:
+                    logger.info("Error: %s requires exactly one of the following attributes: %s",
+                        config.type,size_opt)
                 raise AttributeError("Too many sizes for %s"%config.type)
-            kwargs += { key : value }
+            kwargs[key] = value
             found = True
-        except AttributeError:
-            pass
     if not found:
-        logger.info("Error: %s requires one of the following attributes: %s",config.type,size_opt)
+        if logger != None:
+            logger.info("Error: %s requires one of the following attributes: %s",
+                config.type,size_opt)
+        raise AttributeError("No size specified for %s"%config.type)
 
+    # Now ready to call the constructor
     return eval("galsim."+config.type+"(**kwargs)")
 
 def BuildGaussian(config, input_cat=None, logger=None):
-    return galsim.BuildSimple(config, [], ['sigma'], [], input_cat, logger)
+    return galsim.BuildSimple(config, [], ['sigma','fwhm','half_light_radius'], 
+        [], input_cat, logger)
 
 def BuildMoffat(config, input_cat=None, logger=None):
-    return galsim.BuildSimple(config, ['beta'], ['re'], ['trunc'], input_cat, logger)
+    return galsim.BuildSimple(config, ['beta'], ['fwhm','scale_radius','half_light_radius'],
+        ['trunc'], input_cat, logger)
 
 def BuildSersic(config, input_cat=None, logger=None):
-    return galsim.BuildSimple(config, ['n'], ['re'], [], input_cat, logger)
+    return galsim.BuildSimple(config, ['n'], ['half_light_radius'], [], input_cat, logger)
 
 def BuildExponential(config, input_cat=None, logger=None):
-    return galsim.BuildSimple(config, [], ['r0'], [], input_cat, logger)
+    return galsim.BuildSimple(config, [], ['half_light_radius','scale_radius'], [],
+        input_cat, logger)
 
 def BuildDeVaucouleurs(config, input_cat=None, logger=None):
-    return galsim.BuildSimple(config, [], ['re'], [], input_cat, logger)
+    return galsim.BuildSimple(config, [], ['half_light_radius'], [], input_cat, logger)
 
 def BuildAiry(config, input_cat=None, logger=None):
     return galsim.BuildSimple(config, [], ['D'], ['obs'], input_cat, logger)
 
+def BuildPixel(config, input_cat=None, logger=None):
+    print 'Start BuildPixel'
+
+    for key in ['xw','yw']:
+        if not config.hasattr(key):
+            if logger != None:
+                logger.info('Error: Pixel requires the following attributes: %s',[xw, yw])
+            raise AttributeError('Pixel requires attribute %s'%key)
+    kwargs = {}
+    kwargs['xw'] = Generate(config.xw,input_cat,logger)
+    kwargs['yw'] = Generate(config.yw,input_cat,logger)
+
+    if (xw != yw):
+        raise Warning("xw != yw found (%f != %f) "%(xw,yw) +
+            "This is supported for the pixel, but not the draw routines. " +
+            "There might be weirdness....")
+    return galsim.Pixel(xw=xw,yw=yw)
+
+    if config.hasattr('flux'):
+        kwargs['flux'] = Generate(config.flux,input_cat,logger)
+
+    return galsim.Pixel(**kwargs)
+
+def BuildSquarePixel(config, input_cat=None, logger=None):
+    print 'Start BuildSquarePixel'
+
+    if not config.hasattr('size'):
+        if logger != None:
+            logger.info('Error: SquarePixel requires attribute size')
+        raise AttributeError('SquarePixel requires attribute size')
+    kwargs = {}
+    kwargs['xw'] = Generate(config.size,input_cat,logger)
+    if config.hasattr('flux'):
+        kwargs['flux'] = Generate(config.flux,input_cat,logger)
+    return galsim.Pixel(**kwargs)
+
+def BuildSum(config, input_cat=None, logger=None):
+    print 'Start BuildSum'
+
+    if not config.hasattr('items'):
+        if logger != None:
+            logger.info('Error: Sum requires attribute items')
+        raise AttributeError('Sum requires attribute items')
+    list = []
+    for item in config.items:
+        list += [ BuildGSObject(item, input_cat, logger=None) ]
+    return galsim.Add(list)
+
+def BuildConvolve(config, input_cat=None, logger=None):
+    print 'Start BuildConvolve'
+
+    if not config.hasattr('items'):
+        if logger != None:
+            logger.info('Error: Convolve requires attribute items')
+        raise AttributeError('Convolve requires attribute items')
+    list = []
+    for item in config.items:
+        list += [ BuildGSObject(item, input_cat, logger=None) ]
+    return galsim.Convolve(list)
+
+
+
+
+def Generate(config, input_cat=None, logger=None):
+    print 'Start Generate with config = ',config
+    try:
+        if config.hasattr('type'):
+            return eval('galsim.GenerateFrom' + config.type + '(config, input_cat, logger)')
+    except AttributeError:
+        pass
+    # else assume config is really a value.
+    return config
+
+def GenerateFromInputCatalog(config, input_cat, logger=None):
+    print 'Start GenerateFromInputCatalog'
+    if input_cat is None:
+        raise ValueError("Use of InputCatalog requested, but no input_cat given")
+
+    if not config.hasattr('col'):
+        if logger != None:
+            logger.info("Error: InputCatalog requires col attribute",config.type)
+        raise AttributeError("No col specified for InputCatalog")
+    col = config.col
+    print 'col = ',col
+
+    # input_cat stores the current row to use.
+    current = input_cat.current
+    print 'current = ',current
+
+    if current >= input_cat.nobjects:
+        raise ValueError("Trying to access past the end of the catalog data.")
+    #TODO: Add a similar check on the column?
+
+    if input_cat.type is 'ASCII':
+
+        try:
+            value = input_cat.data[current,col]
+            print 'value = ',value
+        except TypeError:
+            if logger != None:
+                logger.info("Error: col should be an integer, but is %s",col)
+            raise
+
+    elif input_cat.type is 'FITS':
+        raise NotImplementedError("FITS catalog inputs not yet implemented, sorry!")
+
+    else:
+        raise NotImplementedError("Unknown catalog type %s"%input_cat.type)
+
+    return value

@@ -304,29 +304,30 @@ def Script2():
     config.psf.g1.col = 7
     config.psf.g2.type = 'InputCatalog'
     config.psf.g2.col = 8
-    config.psf.trunc.type = 'InputCatalog'
-    config.psf.trunc.col = 9
+    # TODO rename truncationFWHM to something saner, like trunc
+    # And probably make it in units of arcsec rather than FWHM.
+    config.psf.truncationFWHM.type = 'InputCatalog'
+    config.psf.truncationFWHM.col = 9
     config.pix.type = 'SquarePixel'
     config.pix.size = pixel_scale
     config.gal.type = 'Sum'
-    config.gal.nitems = 2
-    config.gal.item = [galsim.AttributeDict()]*2
-    config.gal.item[0].type = 'Exponential'
-    config.gal.item[0].half_light_radius.type = 'InputCatalog'
-    config.gal.item[0].half_light_radius.col = 10
-    config.gal.item[0].g1.type = 'InputCatalog'
-    config.gal.item[0].g1.col = 11
-    config.gal.item[0].g2.type = 'InputCatalog'
-    config.gal.item[0].g2.col = 12
-    config.gal.item[0].flux = 0.6
-    config.gal.item[0].type = 'DeVaucouleurs'
-    config.gal.item[1].half_light_radius.type = 'InputCatalog'
-    config.gal.item[1].half_light_radius.col = 13
-    config.gal.item[1].g1.type = 'InputCatalog'
-    config.gal.item[1].g1.col = 14
-    config.gal.item[1].g2.type = 'InputCatalog'
-    config.gal.item[1].g2.col = 15
-    config.gal.item[1].flux = 0.4
+    config.gal.items = [galsim.AttributeDict()]*2
+    config.gal.items[0].type = 'Exponential'
+    config.gal.items[0].half_light_radius.type = 'InputCatalog'
+    config.gal.items[0].half_light_radius.col = 10
+    config.gal.items[0].g1.type = 'InputCatalog'
+    config.gal.items[0].g1.col = 11
+    config.gal.items[0].g2.type = 'InputCatalog'
+    config.gal.items[0].g2.col = 12
+    config.gal.items[0].flux = 0.6
+    config.gal.items[0].type = 'DeVaucouleurs'
+    config.gal.items[1].half_light_radius.type = 'InputCatalog'
+    config.gal.items[1].half_light_radius.col = 13
+    config.gal.items[1].g1.type = 'InputCatalog'
+    config.gal.items[1].g1.col = 14
+    config.gal.items[1].g2.type = 'InputCatalog'
+    config.gal.items[1].g2.col = 15
+    config.gal.items[1].flux = 0.4
     config.gal.shift.type = 'DXDY'
     # TODO: These aren't currently in the catalog
     config.gal.shift.dx.type = 'InputCatalog'
@@ -349,6 +350,9 @@ def Script2():
         gal = galsim.BuildGSObject(config.gal, input_cat, logger)
         logger.info('Made galaxy profile')
 
+        # increment the row of the catalog that we should use
+        input_cat.current += 1
+
         final = galsim.Convolve(psf,pix,gal)
         im = final.draw()
 
@@ -359,7 +363,7 @@ def Script2():
         logger.info('Drew image')
 
         # Store that into the list of all images
-        all_images[i] = im
+        all_images += [im]
 
     logger.info('Done making images of galaxies')
 
