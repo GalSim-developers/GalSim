@@ -228,7 +228,7 @@ class DeVaucouleurs(GSObject):
     """
     def __init__(self, flux=1., half_light_radius=None):
         GSObject.__init__(self, galsim.SBDeVaucouleurs(flux=flux, 
-                                                       half_light_radius=half_light_radius)
+                                                       half_light_radius=half_light_radius))
     # Ditto!
 
 
