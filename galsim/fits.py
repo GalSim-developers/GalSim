@@ -170,7 +170,7 @@ def readCube(fits):
         hdu_list = pyfits.open(fits)
     elif isinstance(fits, pyfits.HDUList):
         hdu_list = fits
-    else
+    else:
         raise TypeError("In readCube, fits is not a string or HDUList")
 
     images = []
