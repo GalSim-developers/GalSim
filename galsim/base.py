@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import galsim
 
@@ -347,7 +348,8 @@ class RealGalaxy(GSObject):
             raise RuntimeError('No method specified for selecting a galaxy!')
 
         # read in the galaxy, PSF images
-        hdu_list = pyfits.open(real_galaxy_catalog.gal_filename[use_index])
+        hdu_list = pyfits.open(os.path.join(real_galaxy_catalog.imagedir,
+                                            real_galaxy_catalog.gal_filename[use_index]))
         n_hdu = len(hdu_list)
         ## note, we assume that the file containing the image has n_hdu HDUs containing
         ## images in it
@@ -358,7 +360,8 @@ class RealGalaxy(GSObject):
         gal_image = galsim.fits.read(use_hdu_list)
 
         if (real_galaxy_catalog.gal_filename[use_index] !=real_galaxy_catalog.PSF_filename[use_index]):
-            hdu_list = pyfits.open(real_galaxy_catalog.PSF_filename[use_index])
+            hdu_list = pyfits.open(os.path.join(real_galaxy_catalog.imagedir,
+                                                real_galaxy_catalog.PSF_filename[use_index]))
             n_hdu = len(hdu_list)
         if real_galaxy_catalog.PSF_hdu[use_index] > n_hdu:
             raise RuntimeError('No HDU corresponding to the one that should contain this PSF!')

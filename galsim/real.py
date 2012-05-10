@@ -13,9 +13,10 @@ shear and target PSF, a la SHERA - tentative name SimReal, to be fleshed out lat
 class RealGalaxyCatalog:
     """Class containing a catalog with information about real galaxy training data
     """
-    def __init__(self, filename):
+    def __init__(self, filename, imagedir):
         cat = pyfits.open(filename)
-        self.filename = filename
+        self.filename = filename # store the filename from which the catalog was read
+        self.imagedir = imagedir # store the directory containing all image files (gal, PSF)
         self.n = len(cat) # number of objects in the catalog
         self.gal_filename = cat.field('gal_filename') # file containing the galaxy image
         self.PSF_filename = cat.field('PSF_filename') # file containing the PSF image
