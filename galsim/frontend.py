@@ -154,7 +154,6 @@ def GenerateFromInputCatalog(config, name, input_cat):
         except IndexError:
             raise IndexError("col attribute out of bounds for %s."%name +
                 " col = %s, object_id = %d"%(col,object_id))
-                    " for accessing input_cat.data [col, object_id] = [%s,%s]"%(col,object_id))
 
     elif input_cat.type is 'FITS':
         raise NotImplementedError("FITS catalog inputs not yet implemented, sorry!")

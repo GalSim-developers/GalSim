@@ -270,12 +270,13 @@ def Script2():
     # Define some parameters we'll use below.
 
     cat_file_name = os.path.join('input','galsim_default_input.asc')
-    out_file_name = os.path.join('output','cube.fits')
+    multi_file_name = os.path.join('output','multi.fits')
+    cube_file_name = os.path.join('output','cube.fits')
 
     random_seed = 8241573
     sky_level = 1.e6                # ADU
-    pixel_scale = 0.3               # arcsec
-    gal_flux = 2000                 #
+    pixel_scale = 1.0               # arcsec  (size units in input catalog are pixels)
+    gal_flux = 1.e6                 # arbitrary choise, makes nice (not too) noisy images
     gal_g1 = -0.009                 #
     gal_g2 = 0.011                  #
     image_xmax = 64                 # pixels
@@ -313,7 +314,9 @@ def Script2():
     config.pix.type = 'SquarePixel'
     config.pix.size = pixel_scale
     config.gal.type = 'Sum'
-    config.gal.items = [galsim.AttributeDict()]*2
+    # TODO: [galsim.AttributeDict()]*2 doesn't work, since shallow copies.
+    # I guess we need a nicer way to initialize this.
+    config.gal.items = [galsim.AttributeDict(), galsim.AttributeDict()]
     config.gal.items[0].type = 'Exponential'
     config.gal.items[0].half_light_radius.type = 'InputCatalog'
     config.gal.items[0].half_light_radius.col = 10
@@ -321,15 +324,15 @@ def Script2():
     config.gal.items[0].g1.col = 11
     config.gal.items[0].g2.type = 'InputCatalog'
     config.gal.items[0].g2.col = 12
-    config.gal.items[0].flux = 0.6
-    config.gal.items[0].type = 'DeVaucouleurs'
+    config.gal.items[0].flux = 0.6*gal_flux
+    config.gal.items[1].type = 'DeVaucouleurs'
     config.gal.items[1].half_light_radius.type = 'InputCatalog'
     config.gal.items[1].half_light_radius.col = 13
     config.gal.items[1].g1.type = 'InputCatalog'
     config.gal.items[1].g1.col = 14
     config.gal.items[1].g2.type = 'InputCatalog'
     config.gal.items[1].g2.col = 15
-    config.gal.items[1].flux = 0.4
+    config.gal.items[1].flux = 0.4*gal_flux
     config.gal.shift.type = 'DXDY'
     config.gal.shift.dx.type = 'InputCatalog'
     config.gal.shift.dx.col = 16
@@ -378,9 +381,11 @@ def Script2():
     logger.info('Done making images of galaxies')
 
     # Now write the image to disk.
-    # TODO: This function doesn't exist yet.
-    #galsim.fits.writeCube(out_file_name, all_images, clobber=True)
-    logger.info('Wrote image to %r',out_file_name)  # using %r adds quotes around filename for us
+    galsim.fits.writeMulti(all_images, multi_file_name, clobber=True)
+    logger.info('Wrote images to multi-extension fits file %r',multi_file_name)  
+
+    galsim.fits.writeCube(all_images, cube_file_name, clobber=True)
+    logger.info('Wrote image to fits data cube %r',cube_file_name) 
 
     print
 
