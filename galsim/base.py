@@ -180,8 +180,9 @@ def _g1g2_to_e1e2(g1, g2):
 class Gaussian(GSObject):
     """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
     """
-    def __init__(self, flux=1., sigma=1.):
-        GSObject.__init__(self, galsim.SBGaussian(flux=flux, sigma=sigma))
+    def __init__(self, flux=1., half_light_radius=None, sigma=None, fwhm=None):
+        GSObject.__init__(self, galsim.SBGaussian(flux=flux, half_light_radius=half_light_radius, 
+                                                  sigma=sigma, fwhm=fwhm))
 
     # Hmmm, these Gaussian-specific methods do not appear to be wrapped yet (will add issue to 
     # myself for this)... when they are, uncomment below:
@@ -195,9 +196,10 @@ class Gaussian(GSObject):
 class Moffat(GSObject):
     """GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
-    def __init__(self, beta=3., truncationFWHM=2., flux=1., re=1.):
+    def __init__(self, beta, truncationFWHM=2., flux=1.,
+                 half_light_radius=None, scale_radius=None, fwhm=None):
         GSObject.__init__(self, galsim.SBMoffat(beta, truncationFWHM=truncationFWHM, flux=flux,
-                          re=re))
+                          half_light_radius=half_light_radius, scale_radius=scale_radius, fwhm=fwhm))
     # As for the Gaussian currently only the base layer SBProfile methods are wrapped
     # def getBeta(self):
     #     return self.SBProfile.getBeta()
@@ -207,24 +209,27 @@ class Moffat(GSObject):
 class Sersic(GSObject):
     """GalSim Sersic, which has an SBSersic in the SBProfile attribute.
     """
-    def __init__(self, n=1., flux=1., re=1.):
-        GSObject.__init__(self, galsim.SBSersic(n, flux=flux, re=re))
+    def __init__(self, n, flux=1., half_light_radius=None):
+        GSObject.__init__(self, galsim.SBSersic(n, flux=flux, half_light_radius=half_light_radius))
     # Ditto!
 
 
 class Exponential(GSObject):
     """GalSim Exponential, which has an SBExponential in the SBProfile attribute.
-    """    
-    def __init__(self, flux=1., r0=1.):
-        GSObject.__init__(self, galsim.SBExponential(flux=flux, r0=r0))
+    """
+    def __init__(self, flux=1., half_light_radius=None, scale_radius=None):
+        GSObject.__init__(self, galsim.SBExponential(flux=flux, half_light_radius=half_light_radius,
+                                                     scale_radius=scale_radius))
     # Ditto!
 
 
 class DeVaucouleurs(GSObject):
     """GalSim De-Vaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
     """
-    def __init__(self, flux=1., re=1.):
-        GSObject.__init__(self, galsim.SBDeVaucouleurs(flux=flux, re=re))
+    def __init__(self, flux=1., half_light_radius=None, scale_radius=None):
+        GSObject.__init__(self, galsim.SBDeVaucouleurs(flux=flux, 
+                                                       half_light_radius=half_light_radius,
+                                                       scale_radius=scale_radius))
     # Ditto!
 
 
@@ -239,9 +244,7 @@ class Airy(GSObject):
 class Pixel(GSObject):
     """GalSim Pixel, which has an SBBox in the SBProfile attribute.
     """
-    def __init__(self, xw=1., yw=None, flux=1.):
-        if yw is None:
-            yw = xw
+    def __init__(self, xw=None, yw=None, flux=1.):
         GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
     # Ditto!
 
@@ -283,9 +286,8 @@ class OpticalPSF(GSObject):
                            that padFactor may need to be increased for stronger aberrations, i.e.
                            those larger than order unity. 
     """
-    def __init__(self, lam_over_D=1., defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
-                 spher=0., circular_pupil=True, obs=None, interpolantxy=None, oversampling=2.,
-                 pad_factor=2):
+    def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=2., pad_factor=2):
         # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
         import galsim.optics
         # Use the same prescription as SBAiry to set dx, maxK, Airy stepK and thus image size
