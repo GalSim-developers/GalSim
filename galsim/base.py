@@ -337,6 +337,8 @@ class RealGalaxy(GSObject):
         # within the real_galaxy_catalog.
         use_index = -1
         if index != None:
+            if (ID != None or random == True):
+                raise RuntimeError('Too many methods for selecting a galaxy!')
             use_index = index
         elif ID != None:
             raise NotImplementedError('Selecting galaxy based on its ID not implemented')
