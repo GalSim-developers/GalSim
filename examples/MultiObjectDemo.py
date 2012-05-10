@@ -332,7 +332,7 @@ def Script2():
     config.gal.shift.dy.col = 17
 
     # Read the catalog
-    input_cat = galsim.io.ReadInputCat(cat_file_name)
+    input_cat = galsim.io.ReadInputCat(config, cat_file_name)
 
     # Build the images
     all_images = []
