@@ -398,9 +398,6 @@ class AttributeDict(object):
     def __setattr__(self, name, value):
         self.__dict__[name] = value
 
-    def hasattr(self, name):
-        return name in self.__dict__
-
     def merge(self, other):
         self.__dict__.update(other.__dict__)
 

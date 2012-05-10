@@ -11,7 +11,7 @@ def BuildGSObject(config, input_cat=None, logger=None):
     @param logger     Output logging object. Not used.  Rely on logger picking up 
                         any raised exceptions.
     """
-    if not config.hasattr('type'):
+    if not 'type' in config.__dict__:
         raise AttributeError("type attribute required")
     return eval('galsim.Build' + config.type + '(config, input_cat)')
 
@@ -30,20 +30,20 @@ def BuildSimple(config, input_cat, req=[], size_opt=[], opt=[]):
     # Make the argument list for the constructor
     kwargs = {}
     for key in req:
-        if not config.hasattr(key):
+        if not key in config.__dict__:
             raise AttributeError()
         value = Generate(eval("config." + key),input_cat)
         kwargs[key] = value
 
     for key in opt:
-        if config.hasattr(key):
+        if key in config.__dict__:
             value = Generate(eval("config." + key),input_cat)
             kwargs[key] = value
 
     # Make sure one and only one size is present
     found = False
     for key in size_opt:
-        if config.hasattr(key):
+        if key in config.__dict__:
             value = Generate(eval("config." + key),input_cat)
             if (found):
                 raise AttributeError("Too many sizes for %s"%config.type)
@@ -74,10 +74,15 @@ def BuildDeVaucouleurs(config, input_cat):
 def BuildAiry(config, input_cat):
     return galsim.BuildSimple(config, input_cat, [], ['D'], ['obs'])
 
+def BuildOpticalPSF(config, input_cat):
+    return galsim.BuildSimple(config, input_cat, [], ['lam_over_D'],
+        ['defocus','astig1','astig2','coma1','coma2','spher','circular_pupil','obs',
+         'oversampling','pad_factor'])
+
 def BuildPixel(config, input_cat):
 
     for key in ['xw','yw']:
-        if not config.hasattr(key):
+        if not key in config.__dict__:
             raise AttributeError('Pixel requires attribute %s'%key)
     kwargs = {}
     kwargs['xw'] = Generate(config.xw,input_cat)
@@ -89,24 +94,24 @@ def BuildPixel(config, input_cat):
             "There might be weirdness....")
     return galsim.Pixel(xw=xw,yw=yw)
 
-    if config.hasattr('flux'):
+    if 'flux' in config.__dict__:
         kwargs['flux'] = Generate(config.flux,input_cat)
 
     return galsim.Pixel(**kwargs)
 
 def BuildSquarePixel(config, input_cat):
 
-    if not config.hasattr('size'):
+    if not 'size' in config.__dict__:
         raise AttributeError('SquarePixel requires attribute size')
     kwargs = {}
     kwargs['xw'] = Generate(config.size,input_cat)
-    if config.hasattr('flux'):
+    if 'flux' in config.__dict__:
         kwargs['flux'] = Generate(config.flux,input_cat)
     return galsim.Pixel(**kwargs)
 
 def BuildSum(config, input_cat):
 
-    if not config.hasattr('items'):
+    if not 'items' in config.__dict__:
         raise AttributeError('Sum requires attribute items')
     list = []
     for item in config.items:
@@ -115,7 +120,7 @@ def BuildSum(config, input_cat):
 
 def BuildConvolve(config, input_cat):
 
-    if not config.hasattr('items'):
+    if not 'items' in config.__dict__:
         raise AttributeError('Convolve requires attribute items')
     list = []
     for item in config.items:
@@ -123,19 +128,19 @@ def BuildConvolve(config, input_cat):
     return galsim.Convolve(list)
 
 def Generate(config, input_cat):
-    try:
-        if config.hasattr('type'):
-            return eval('galsim.GenerateFrom' + config.type + '(config, input_cat)')
-    except AttributeError:
-        pass
-    # else assume config is really a value.
-    return config
+    if not hasattr(config,'__dict__'):
+        # Then config is really a value
+        return config
+    elif 'type' in config.__dict__:
+        return eval('galsim.GenerateFrom' + config.type + '(config, input_cat)')
+    else:
+        raise AttributeError('Non value item requires a type attribute')
 
 def GenerateFromInputCatalog(config, input_cat):
     if input_cat is None:
         raise ValueError("Use of InputCatalog requested, but no input_cat given")
 
-    if not config.hasattr('col'):
+    if not 'col' in config.__dict__:
         raise AttributeError("No col specified for InputCatalog")
     col = config.col
 
