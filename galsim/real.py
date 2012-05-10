@@ -23,11 +23,14 @@ class RealGalaxyCatalog:
         self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
         self.PSF_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
         self.pixel_scale = cat.field('pixel_scale') # pixel scale for the image (could be different
-        # if we have training data from other datasets... let's be general here and make it a vector)
+        # if we have training data from other datasets... let's be general here and make it a vector
+        # in case of mixed training set)
         self.mag = cat.field('mag') # apparent magnitude
         self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., "F814W"
         self.weight = cat.field('weight') # weight factor to account for size-dependent probability
         # of galaxy inclusion in training sample
+
+        ## eventually I think we'll want information about the training dataset, i.e. (dataset, ID within dataset)
 
         # note: am assuming that pyfits takes care of error handling, e.g., if the file does not
         # exist, there's no field with that name, etc.
