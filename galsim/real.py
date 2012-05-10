@@ -14,7 +14,7 @@ class RealGalaxyCatalog:
     """Class containing a catalog with information about real galaxy training data
     """
     def __init__(self, filename, imagedir):
-        cat = pyfits.open(filename)
+        cat = pyfits.getdata(filename)
         self.filename = filename # store the filename from which the catalog was read
         self.imagedir = imagedir # store the directory containing all image files (gal, PSF)
         self.n = len(cat) # number of objects in the catalog
