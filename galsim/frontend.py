@@ -22,11 +22,7 @@ def BuildSimple(config, input_cat, req=[], size_opt=[], opt=[]):
        @param req       A list of required attributes that config must have
        @param size_opt  A list of size attributes, of which 1 (and only 1) is required
        @param opt       A list of optional attributes
-       In addition to what is listed, the flux is always optional.
     """
-    # All simple builders have an optional flux attribute so add that to opt
-    opt += ['flux']
-
     # Make the argument list for the constructor
     kwargs = {}
     for key in req:
@@ -56,23 +52,23 @@ def BuildSimple(config, input_cat, req=[], size_opt=[], opt=[]):
     return eval("galsim."+config.type+"(**kwargs)")
 
 def BuildGaussian(config, input_cat):
-    return galsim.BuildSimple(config, input_cat, [], ['sigma','fwhm','half_light_radius'], [])
+    return galsim.BuildSimple(config, input_cat, [], ['sigma','fwhm','half_light_radius'], ['flux'])
 
 def BuildMoffat(config, input_cat):
     return galsim.BuildSimple(config, input_cat, 
-        ['beta'], ['fwhm','scale_radius','half_light_radius'], ['trunc'])
+        ['beta'], ['fwhm','scale_radius','half_light_radius'], ['flux','trunc'])
 
 def BuildSersic(config, input_cat):
-    return galsim.BuildSimple(config, input_cat, ['n'], ['half_light_radius'], [])
+    return galsim.BuildSimple(config, input_cat, ['n'], ['half_light_radius'], ['flux'])
 
 def BuildExponential(config, input_cat):
-    return galsim.BuildSimple(config, input_cat, [], ['half_light_radius','scale_radius'], [])
+    return galsim.BuildSimple(config, input_cat, [], ['half_light_radius','scale_radius'], ['flux'])
 
 def BuildDeVaucouleurs(config, input_cat):
-    return galsim.BuildSimple(config, input_cat, [], ['half_light_radius'], [])
+    return galsim.BuildSimple(config, input_cat, [], ['half_light_radius'], ['flux'])
 
 def BuildAiry(config, input_cat):
-    return galsim.BuildSimple(config, input_cat, [], ['D'], ['obs'])
+    return galsim.BuildSimple(config, input_cat, [], ['D'], ['flux','obs'])
 
 def BuildOpticalPSF(config, input_cat):
     return galsim.BuildSimple(config, input_cat, [], ['lam_over_D'],
@@ -92,7 +88,6 @@ def BuildPixel(config, input_cat):
         raise Warning("xw != yw found (%f != %f) "%(xw,yw) +
             "This is supported for the pixel, but not the draw routines. " +
             "There might be weirdness....")
-    return galsim.Pixel(xw=xw,yw=yw)
 
     if 'flux' in config.__dict__:
         kwargs['flux'] = Generate(config.flux,input_cat)
@@ -115,7 +110,7 @@ def BuildSum(config, input_cat):
         raise AttributeError('Sum requires attribute items')
     list = []
     for item in config.items:
-        list += [ BuildGSObject(item, input_cat) ]
+        list.append(BuildGSObject(item, input_cat))
     return galsim.Add(list)
 
 def BuildConvolve(config, input_cat):
@@ -124,7 +119,7 @@ def BuildConvolve(config, input_cat):
         raise AttributeError('Convolve requires attribute items')
     list = []
     for item in config.items:
-        list += [ BuildGSObject(item, input_cat) ]
+        list.append(BuildGSObject(item, input_cat))
     return galsim.Convolve(list)
 
 def Generate(config, input_cat):
@@ -134,14 +129,14 @@ def Generate(config, input_cat):
     elif 'type' in config.__dict__:
         return eval('galsim.GenerateFrom' + config.type + '(config, input_cat)')
     else:
-        raise AttributeError('Non value item requires a type attribute')
+        raise AttributeError('Non-value item requires a type attribute')
 
 def GenerateFromInputCatalog(config, input_cat):
     if input_cat is None:
         raise ValueError("Use of InputCatalog requested, but no input_cat given")
 
     if not 'col' in config.__dict__:
-        raise AttributeError("No col specified for InputCatalog")
+        raise AttributeError("No col specified for value from InputCatalog")
     col = config.col
 
     # input_cat stores the current row to use.
