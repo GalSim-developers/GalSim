@@ -274,10 +274,12 @@ def Script2():
 
     random_seed = 8241573
     sky_level = 1.e6                # ADU
-    pixel_scale = 0.2               # arcsec
+    pixel_scale = 0.3               # arcsec
     gal_flux = 2000                 #
     gal_g1 = -0.009                 #
     gal_g2 = 0.011                  #
+    image_xmax = 64                 # pixels
+    image_ymax = 64                 # pixels
 
     logger.info('Starting multi-object script 2 using:')
     logger.info('    - parameters taken from catalog %r',cat_file_name)
@@ -306,8 +308,9 @@ def Script2():
     config.psf.g2.col = 8
     config.psf.trunc.type = 'InputCatalog'
     config.psf.trunc.col = 9
+    config.pix.type = 'SquarePixel'
+    config.pix.size = pixel_scale
     config.gal.type = 'Sum'
-    config.gal.nitems = 2
     config.gal.item = [galsim.AttributeDict()]*2
     config.gal.item[0].type = 'Exponential'
     config.gal.item[0].half_light_radius.type = 'InputCatalog'
