@@ -1,11 +1,10 @@
 from . import _galsim
 
-"""file @real.py @brief Necessary functions for dealing with real galaxies and their catalogs.
+"""@file real.py @brief Necessary functions for dealing with real galaxies and their catalogs.
 """
 
 class RealGalaxyCatalog:
-    """
-    Class containing a catalog with information about real galaxy training data.
+    """@brief Class containing a catalog with information about real galaxy training data.
 
     The RealGalaxyCatalog class reads in and stores information about a specific training sample of
     realistic galaxies. We assume that all files containing the images (galaxies and PSFs) live in
@@ -15,7 +14,7 @@ class RealGalaxyCatalog:
     example, if the catalog is called 'catalog.fits' and is in the working directory, and the images
     are in a subdirectory called 'images', then the RealGalaxyCatalog can be read in as follows:
 
-    >>>> my_rgc = galsim.RealGalaxyCatalog('./catalog.fits','images')
+    my_rgc = galsim.RealGalaxyCatalog('./catalog.fits','images')
 
     To explore for the future: scaling with number of galaxies, adding more information as needed,
     and other i/o related issues.

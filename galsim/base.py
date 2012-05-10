@@ -311,12 +311,12 @@ class RealGalaxy(GSObject):
 
     Initialization
     --------------
-    >>> real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string =
-                                        None, random = False, interpolantxy = None)
+    real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string =
+                                    None, random = False, interpolantxy = None)
 
-    Initializes real_galaxy with two SBInterpolatedImage objects (one for the galaxy and one for the
-    PSF). Note that there are multiple keywords for choosing a galaxy; exactly one must be set.  In
-    future we may add more such options, e.g., to choose at random but accounting for the
+    This initializes real_galaxy with two SBInterpolatedImage objects (one for the galaxy and one
+    for the PSF). Note that there are multiple keywords for choosing a galaxy; exactly one must be
+    set.  In future we may add more such options, e.g., to choose at random but accounting for the
     non-constant weight factors (probabilities for objects to make it into the training sample).
 
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
