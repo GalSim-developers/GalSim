@@ -371,11 +371,9 @@ class RealGalaxy(GSObject):
         # read in data about galaxy from FITS binary table; store as members of RealGalaxy
 
         # save any other relevant information
-        # self.catalog = ?? (need some way to know which catalog it is from??)
+        self.catalog_file = real_galaxy_catalog.filename
         self.index = use_index
         self.pixel_scale = real_galaxy_catalog.pixel_scale[use_index]
-        self.i_mag = real_galaxy_catalog.i_mag[use_index]
-        self.weight = real_galaxy_catalog.weight[use_index]
         # note: will be adding more parameters here about noise properties etc., but let's be basic
         # for now
 
