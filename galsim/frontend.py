@@ -56,14 +56,13 @@ def _BuildSingle(config, input_cat=None):
     init_kwargs.update(_GetSizeKwarg(config, input_cat))
     init_kwargs.update(_GetOptionalKwargs(config, input_cat))
     # Finally, after pulling together all the params, try making the GSObject.
-    # Check for TypeErrors (sign of multiple radius definitions being passed, among other problems).
     init_func = eval("galsim."+config.type)
     print config.type, init_kwargs
     try:
         gsobject = init_func(**init_kwargs)
     except Error, err_msg:
         raise RuntimeError("Problem sending init_kwargs to galsim."+config.type+" object. "+
-                         "Original error message: "+err_msg)
+                           "Original error message: "+err_msg)
     return gsobject
 
 def _GetRequiredKwargs(config, input_cat=None):
