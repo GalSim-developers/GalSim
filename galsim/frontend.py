@@ -21,12 +21,18 @@ def BuildGSObject(config, input_cat=None, logger=None):
         gsobject = _BuildSingle(config, input_cat)
     elif config.type in ("Sum", "Convolution"): # Compound object
         gsobjects = []
+        # MJ: Bug here. Should check if items is in config.__dict__.  
+        # Else will automatically create one and give a confusing error.
         for i in range(len(config.items)):
             gsobjects.append(_BuildSingle(config.items[i], input_cat))
         if config.type == "Sum":
             gsobject = galsim.Add(gsobjects)
         elif config.type == "Convolve":
             gsobject = galsim.Convolve(gsobjects)
+    # MJ: Should pull out Pixel separately as well, since for that the sizes work differently
+    # I think we want both to be required, although maybe ok if only one.  But at least
+    # having both xw and yw must be allowed.  I raise a warning when both are present
+    # but unequal, since I don't think this is fully supported by GalSim yet.
     elif config.type == "SquarePixel":  # Mike is treating Pixels separately
         if not "size" in config.__dict__:
             raise AttributeError("size attribute required in config for initializing SquarePixel "+
@@ -84,6 +90,7 @@ def _GetSizeKwarg(config, input_cat=None):
                 size_kwarg[size_name] = _GetParamValue(config, size_name, input_cat=input_cat)
             elif counter > 1:
                 raise ValueError("More than one size parameter specified for")
+    # MJ: Check for counter == 0 here?
     return size_kwarg
 
 def _GetOptionalKwargs(config, input_cat=None):
@@ -118,7 +125,10 @@ def _GetParamValue(config, param_name, input_cat=None):
             else:
                 raise AttributeError(param_name+".col attribute required in config for "+
                                      "initializing with "+param_name+".type = InputCatalog.")
+            # MJ: Should query input_cat.type == 'ASCII' here.  FITS will be different.
             try:
+                # MJ: You want col-1 here.  I adpoted convention that first column is 1
+                # in the config definition.  But numpy wants 0-based.
                 param_value = input_cat.data[input_cat.current, col]
             except IndexError:
                 raise IndexError(param_name+".col attribute or input_cat.current out of bounds "+
