@@ -1449,7 +1449,7 @@ namespace galsim {
     };
 
 
-    SBMoffat::SBMoffat(double beta_, double truncationFWHM, double flux_, double re) : 
+    SBMoffat::SBMoffat(double beta_, double truncationFWHM, double flux_, double size, RadiusType rType) : 
         beta(beta_), flux(flux_), norm(1.), rD(1.),
         ft(Table<double,double>::spline)
     {
@@ -1461,16 +1461,33 @@ namespace galsim {
         // And be sure to get at least 16 pts across FWHM when drawing:
         maxKrD = 16*M_PI / FWHMrD;
 
-        // Get flux and half-light radius
+        // Get flux and half-light radius in units of rD:
         MoffatFlux mf(beta);
         double fluxFactor = mf(maxRrD);
-        Solve<MoffatFlux> s(mf, 0.1, 2.);
-        mf.setTarget(0.5*fluxFactor);
-        double rerD = s.root();
-        rD = re / rerD;
+
+        // Set size of this instance according to type of size given in constructor:
+        switch (rType)
+        {
+        case FWHM:
+            rD = size / FWHMrD;
+            break;
+        case HALF_LIGHT_RADIUS: {
+            Solve<MoffatFlux> s(mf, 0.1, 2.);
+            mf.setTarget(0.5*fluxFactor);
+            double rerD = s.root();
+            rD = size / rerD;
+        }
+            break;
+        case SCALE_RADIUS:
+            rD = size;
+            break;
+        default:
+            throw SBError("Unknown SBMoffat::RadiusType");
+        }
         norm = 1./fluxFactor;
+
 #if 0
-        std::cerr << "Moffat re " << re << " rD " << rD
+        std::cerr << "Moffat rD " << rD
             << " norm " << norm << " maxRrD " << maxRrD << std::endl;
 #endif
 

@@ -335,11 +335,7 @@ def Script2():
     config.gal.shift.dy.col = 17
 
     # Read the catalog
-    # TODO: switch these function names to CamelCase?  
-    # Or should we switch the style specification for python to use lower_case?  
-    # We don't have many free functions in python yet, so we can easily switch if
-    # people prefer that.
-    input_cat = galsim.io.read_input_cat(cat_file_name, "ASCII")
+    input_cat = galsim.io.ReadInputCat(cat_file_name, config)
 
     # Build the images
     all_images = []
