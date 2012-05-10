@@ -370,7 +370,7 @@ class RealGalaxy(GSObject):
         # save any other relevant information
         self.catalog_file = real_galaxy_catalog.filename
         self.index = use_index
-        self.pixel_scale = real_galaxy_catalog.pixel_scale[use_index]
+        self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
         # note: will be adding more parameters here about noise properties etc., but let's be basic
         # for now
 
