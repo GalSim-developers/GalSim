@@ -329,7 +329,6 @@ def Script2():
     config.gal.items[1].g2.col = 15
     config.gal.items[1].flux = 0.4
     config.gal.shift.type = 'DXDY'
-    # TODO: These aren't currently in the catalog
     config.gal.shift.dx.type = 'InputCatalog'
     config.gal.shift.dx.col = 16
     config.gal.shift.dy.type = 'InputCatalog'
