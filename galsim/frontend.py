@@ -13,6 +13,7 @@ def BuildGSObject(config, input_cat=None, logger=None):
     """
     if not 'type' in config.__dict__:
         raise AttributeError("type attribute required")
+    # BR: Guess that input_cat should be a non-optional arg if doing line below?
     return eval('galsim.Build' + config.type + '(config, input_cat)')
 
 def BuildSimple(config, input_cat, req=[], size_opt=[], opt=[]):
