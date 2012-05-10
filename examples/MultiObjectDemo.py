@@ -335,18 +335,18 @@ def Script2():
     config.gal.shift.dy.col = 17
 
     # Read the catalog
-    input_cat = galsim.io.ReadInputCat(cat_file_name, config)
+    input_cat = galsim.io.ReadInputCat(cat_file_name)
 
     # Build the images
     all_images = []
     for i in range(input_cat.nobjects):
-        psf = BuildGSObject(config.psf, input_cat, logger)
+        psf = galsim.BuildGSObject(config.psf, input_cat, logger)
         logger.info('Made PSF profile')
 
-        pix = BuildGSObject(config.pix, input_cat, logger)
+        pix = galsim.BuildGSObject(config.pix, input_cat, logger)
         logger.info('Made pixel profile')
 
-        gal = BuildGSObject(config.gal, input_cat, logger)
+        gal = galsim.BuildGSObject(config.gal, input_cat, logger)
         logger.info('Made galaxy profile')
 
         final = galsim.Convolve(psf,pix,gal)
