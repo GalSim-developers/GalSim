@@ -12,9 +12,6 @@
  */
 
 // Details on each below
-
-#ifndef SHEAR_H
-#define SHEAR_H
 #include <cmath>
 #include "TMV.h"
 #include "Std.h"
@@ -68,19 +65,22 @@ namespace galsim {
         }
 
         /// @brief Set (e1, e2) using second moment definition.
-        Shear& setE1E2(double =0., double =0.);
+        Shear& setE1E2(double e1in=0., double e2in=0.);
 
-        /// @brief Set (|e|, beta) polar ellipticity representation using second moment definition.
-        Shear& setEBeta(double etain=0., Angle betain=0.);
+        /** 
+         * @brief Set (|e|, beta) polar ellipticity representation using second moment definition.
+         * beta must be an Angle.
+         */
+        Shear& setEBeta(double etain=0., Angle betain=Angle());
 
         /// @brief Set (eta1, eta2) using conformal shear definition.
-        Shear& setEta1Eta2(double =0., double =0.);
+        Shear& setEta1Eta2(double eta1in=0., double eta2in=0.);
 
-        /// @brief Set (|eta|, beta) using conformal shear definition.
-        Shear& setEtaBeta(double =0., Angle betain =0.);
+        /// @brief Set (|eta|, beta) using conformal shear definition. beta must be an Angle.
+        Shear& setEtaBeta(double =0., Angle betain=Angle());
 
         /// @brief set (g1, g2) using reduced shear |g| = (a-b)/(a+b) definition.
-        Shear& setG1G2(double =0., double =0.);
+        Shear& setG1G2(double g1in=0., double g2in=0.);
 
         /// @brief Get e1 using second moment definition.
         double getE1() const { return e1; }
@@ -94,8 +94,8 @@ namespace galsim {
         /// @brief Get |e|^2 using second moment definition.
         double getESq() const { return e1*e1+e2*e2; }
 
-        /// @brief Get polar angle beta.
-        double getBeta() const { return std::atan2(e2,e1)*0.5; }
+        /// @brief Get polar angle beta (returns an Angle class object).
+        Angle getBeta() const { return std::atan2(e2,e1)*0.5 * radians; }
 
         /// @brief Get |eta| using conformal shear definition.
         double getEta() const { return atanh(std::sqrt(e1*e1+e2*e2)); } //error checking?
