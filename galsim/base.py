@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import galsim
+import pyfits
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
@@ -347,27 +348,17 @@ class RealGalaxy(GSObject):
         else:
             raise RuntimeError('No method specified for selecting a galaxy!')
 
-        # read in the galaxy, PSF images
-        hdu_list = pyfits.open(os.path.join(real_galaxy_catalog.imagedir,
-                                            real_galaxy_catalog.gal_filename[use_index]))
-        n_hdu = len(hdu_list)
-        ## note, we assume that the file containing the image has n_hdu HDUs containing
-        ## images in it
-        if real_galaxy_catalog.gal_hdu[use_index] > n_hdu:
-            raise RuntimeError('No HDU corresponding to the one that should contain this galaxy!')
-        use_hdu_list = pyfits.HDUList()
-        use_hdu_list.append(hdu_list[real_galaxy_catalog.gal_hdu[use_index]])
-        gal_image = galsim.fits.read(use_hdu_list)
-
-        if (real_galaxy_catalog.gal_filename[use_index] !=real_galaxy_catalog.PSF_filename[use_index]):
-            hdu_list = pyfits.open(os.path.join(real_galaxy_catalog.imagedir,
-                                                real_galaxy_catalog.PSF_filename[use_index]))
-            n_hdu = len(hdu_list)
-        if real_galaxy_catalog.PSF_hdu[use_index] > n_hdu:
-            raise RuntimeError('No HDU corresponding to the one that should contain this PSF!')
-        use_hdu_list = pyfits.HDUList()
-        use_hdu_list.append(hdu_list[real_galaxy_catalog.PSF_hdu[use_index]])
-        PSF_image = galsim.fits.read(use_hdu_list)
+        # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
+        # consider exporting this code into fits.py in some function that takes a filename and HDU,
+        # and returns an ImageView
+        gal_image_numpy = pyfits.getdata(os.path.join(real_galaxy_catalog.imagedir,
+                                                      real_galaxy_catalog.gal_filename[use_index]),
+                                         real_galaxy_catalog.gal_hdu[use_index])
+        gal_image = galsim.ImageViewD(np.ascontiguousarray(gal_image_numpy.astype(np.float64)))
+        PSF_image_numpy = pyfits.getdata(os.path.join(real_galaxy_catalog.imagedir,
+                                                      real_galaxy_catalog.PSF_filename[use_index]),
+                                         real_galaxy_catalog.PSF_hdu[use_index])
+        PSF_image = galsim.ImageViewD(np.ascontiguousarray(PSF_image_numpy.astype(np.float64)))
 
         # choose proper interpolant
         if interpolantxy == None:
