@@ -1,6 +1,6 @@
 import galsim
 
-def ReadInputCat(config=None, cat_file_name=None, filetype="ASCII", comments="#"):
+def ReadInputCat(cat_file_name=None, filetype="ASCII", comments="#"):
     """@brief Read in an input catalog for object-by-object parameter specification.
 
     @param cat_file_name  Filename of the input catalog.
