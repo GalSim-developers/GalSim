@@ -1,17 +1,9 @@
 #!/usr/bin/env python
 
-"""Example script for generating the examples/input/galsim_default_input.asc default input catalog
-file, which by default generates a 10 x 10 grid of galaxy postage stamps, each of size 48 pixels.
+"""@brief Example script for generating the examples/input/galsim_default_input.asc default input
+catalog file.
 
-The galsim_default configuration file is expecting the following columns in this ascii catalogue:
-
-config.input_cat.ascii_fields = ["BoundsI.xMin", "BoundsI.yMin", "BoundsI.xMax", "BoundsI.yMax",
-                                 "Moffat.beta", "Moffat.FWHM", "Moffat.e1", "Moffat.e2",
-                                 "Moffat.truncationFWHM",
-                                 "Exponential.re", "Exponential.e1", "Exponential.e2",
-                                 "DeVaucouleurs.re", "DeVaucouleurs.e1", "DeVaucouleurs.e2"]
-
-...and so these will be the columns of examples/input/galsim_default_input.asc
+Generates a 10 x 10 grid of galaxy postage stamps, each of size 48 pixels.
 """
 import os
 import numpy as np
@@ -33,13 +25,17 @@ MOFFAT_BETA = 3.5             # } Adopt GREAT08 PSF values for historicity!
 MOFFAT_FWHM = 2.85            # }
 MOFFAT_G1 = -0.019            # }
 MOFFAT_G2 = -0.007            # }
-MOFFAT_TRUNCATIONFWHM = 100.  # } ... well, almost.  This mixes conventions, so just make it large.
+MOFFAT_TRUNCATIONFWHM = 2.    # }
 
 EXPONENTIAL_RE = 0.82         # } Again, things are slightly more complex than this for actual
 DEVAUCOULEURS_RE = 1.59       # } GREAT08 images, but this is a enough reasonable example to adopt.
 
 EXPONENTIAL_DEVAUCOULEURS_SIGMA_G = 0.3  # } Approximate the ellipticity distribition as a Gaussian
                                          # } with this sigma.
+
+GAL_CENTROID_SHIFT_RADIUS = 1.0  # Set the radius of centroid shifts (uniform within unit circle).
+GAL_CENTROID_SHIFT_RADIUS_SQUARED = GAL_CENTROID_SHIFT_RADIUS**2
+
 RNG_SEED = 1848
 
 NOBJECTS = GRIDSIZE * GRIDSIZE
@@ -65,8 +61,8 @@ def make_default_input():
     # Then set the dVc bulge catalogue fixed values
     devaucouleurs_re = np.zeros(NOBJECTS) + DEVAUCOULEURS_RE
     # Then set up the Gaussian RNG for making the ellipticity values
-    gdist = galsim.GaussianDeviate(galsim.UniformDeviate(RNG_SEED),
-                                   sigma=EXPONENTIAL_DEVAUCOULEURS_SIGMA_G)
+    urng = galsim.UniformDeviate(RNG_SEED)
+    gdist = galsim.GaussianDeviate(urng, sigma=EXPONENTIAL_DEVAUCOULEURS_SIGMA_G)
     # Slightly hokey way of making vectors of Gaussian deviates, using images... No direct NumPy
     # array-filling with galsim RNGs at the moment.
     #
@@ -82,12 +78,26 @@ def make_default_input():
     devaucouleurs_g1 = exponential_g1
     devaucouleurs_g2 = exponential_g2
 
+    # Add a centroid shift in drawn uniform randomly from the unit circle around (0., 0.)
+    dx = np.empty(NOBJECTS)
+    dy = np.empty(NOBJECTS)
+    for i in xrange(NOBJECTS):
+        # Apply a random centroid shift:
+        rsq = 2 * GAL_CENTROID_SHIFT_RADIUS_SQUARED
+        while (rsq > GAL_CENTROID_SHIFT_RADIUS_SQUARED):
+            dx[i] = (2. * urng() - 1.) * GAL_CENTROID_SHIFT_RADIUS
+            dy[i] = (2. * urng() - 1.) * GAL_CENTROID_SHIFT_RADIUS
+            rsq = dx[i]**2 + dy[i]**2
+
     # Then write this to file
     path, modfile = os.path.split(__file__)
     outfile = os.path.join(path, "galsim_default_input.asc")
-    # Make a nice header with the default ascii_fields described
-    config = galsim.config.load()
-    header = "#  "+("  ".join(config.input_cat.ascii_fields))+"\n"
+    # Make a nice header with the default fields described
+    header = ("#  boundsi.xmin  boundsi.ymin  boundsi.xmax  boundsi.ymax"+
+              "  psf.beta  psf.fwhm  psf.g1  psf.g2  psf.truncationFWHM"+
+              "  gal.Exponential.half_light_radius  gal.Exponential.g1  gal.Exponential.g2"+
+              "  gal.DeVaucouleurs.half_light_radius  gal.DeVaucouleurs.g1  gal.DeVaucouleurs.g2"+
+              "  gal.shift.dx  gal.shift.dy \n")
     # Open the file and output the columns in the correct order, row-by-row
     output = open(outfile, "w")
     output.write("#  galsim_default_input.asc : illustrative default input catalog for GalSim\n")
@@ -95,11 +105,11 @@ def make_default_input():
     output.write(header)
     for i in xrange(NOBJECTS):
         outline = ("%4d  %4d  %4d  %4d  %6.2f  %6.2f  %7.3f  %7.3f  %6.2f  %6.2f  %14.7f  %14.7f "+
-                   "%6.2f  %14.7f  %14.7f\n") % \
+                   "%6.2f  %14.7f  %14.7f  %14.7f  %14.7f\n") % \
             (bounds_xmin[i], bounds_ymin[i], bounds_xmax[i], bounds_ymax[i],
              moffat_beta[i], moffat_fwhm[i], moffat_g1[i], moffat_g2[i], moffat_truncationfwhm[i],
              exponential_re[i], exponential_g1[i], exponential_g2[i],
-             devaucouleurs_re[i], devaucouleurs_g1[i], devaucouleurs_g2[i])
+             devaucouleurs_re[i], devaucouleurs_g1[i], devaucouleurs_g2[i], dx[i], dy[i])
         output.write(outline)
     output.close()
     
