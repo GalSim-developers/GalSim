@@ -85,7 +85,7 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
         hdus = pyfits.HDUList()
 
     for image in image_list:
-        galsim.fits.write(image, hdus, add_wcs=add_wcs, clobber=clobber)
+        write(image, hdus, add_wcs=add_wcs, clobber=clobber)
 
     if isinstance(fits, basestring):
         if clobber and os.path.isfile(fits):
@@ -175,7 +175,7 @@ def readCube(fits):
 
     images = []
     for hdu in hdu_list:
-        images.append(galsim.fits.read(hdu))
+        images.append(read(hdu))
     return images
 
 
