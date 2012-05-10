@@ -274,8 +274,8 @@ def Script2():
 
     random_seed = 8241573
     sky_level = 1.e6                # ADU
-    pixel_scale = 0.3               # arcsec
-    gal_flux = 5.e6                 #
+    pixel_scale = 1.                # increased from 0.3 as size units in input cat are pixels
+    gal_flux = 1.e6                 # arbitrary choice, makes nice (not too) noisy images
     gal_g1 = -0.009                 #
     gal_g2 = 0.011                  #
     image_xmax = 64                 # pixels
@@ -343,7 +343,8 @@ def Script2():
 
     # Build the images
     all_images = []
-    for i in range(input_cat.nobjects):
+    all_arrays = []
+    for i in range(input_cat.nobject):
         if i is not input_cat.current:
             raise ValueError('i is out of sync with current.')
 
@@ -360,10 +361,11 @@ def Script2():
         gal = galsim.BuildGSObject(config.gal, input_cat, logger)
 
         # BARNEY HORRIBLE KLUDGE, MUST FIX TO PROPERLY ALLOW 2-COMPONENT SHEARS
-        gal.applyShear(.5 * (input_cat.data[i, config.gal.items[0].g1.col - 1] +
-                             input_cat.data[i, config.gal.items[1].g1.col - 1]),
-                       .5 * (input_cat.data[i, config.gal.items[0].g2.col - 1] +
-                             input_cat.data[i, config.gal.items[1].g2.col - 1]))
+        gav = (.5 * (input_cat.data[i, config.gal.items[0].g1.col - 1] +
+                     input_cat.data[i, config.gal.items[1].g1.col - 1]),
+               .5 * (input_cat.data[i, config.gal.items[0].g2.col - 1] +
+                     input_cat.data[i, config.gal.items[1].g2.col - 1]))
+        gal.applyShear(gav[0], gav[1])
         logger.info('   Made galaxy profile')
 
         final = galsim.Convolve(psf,pix,gal)
@@ -378,8 +380,9 @@ def Script2():
         im -= sky_level
         logger.info('   Added noise')
 
-        # Store that into the list of all images
-        all_images += [im.array]
+        # Store that into the list of all images and all arrays
+        all_images += [im]
+        all_arrays += [im.array]
 
         # increment the row of the catalog that we should use for the next iteration
         input_cat.current += 1
@@ -389,9 +392,9 @@ def Script2():
     # Now write the image to disk.
     # TODO: This function doesn't exist yet.
     #galsim.fits.writeCube(out_file_name, all_images, clobber=True)
+    # BR STOPGAP FOR DEBUGGING:
     import pyfits
-
-    cube = numpy.asarray(all_images)
+    cube = numpy.asarray(all_arrays)
     print cube.shape
     pyfits.writeto(out_file_name, cube, clobber=True)
     logger.info('Wrote image to %r',out_file_name)  # using %r adds quotes around filename for us
