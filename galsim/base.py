@@ -324,14 +324,13 @@ class RealGalaxy(GSObject):
                                 find the data, etc.
     @param index                Index of the desired galaxy in the catalog.
     @param ID                   Object ID for the desired galaxy in the catalog.
-    @param ID_string            ID string for the desired galaxy in the catalog.
     @param random               If true, then just select a completely random galaxy from the
                                 catalog.
     @param interpolantxy        optional keyword for specifying the interpolation scheme [default = 
                                 galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
     """
-    def __init__(self, real_galaxy_catalog, index = None, ID = None, ID_string = None, random =
-                                False, interpolantxy = None):
+    def __init__(self, real_galaxy_catalog, index = None, ID = None, random = False,
+                 interpolantxy = None):
 
         # Code block below will be for galaxy selection;
         # implement exactly one for now, then gradually others.  All of them need to return an index
@@ -341,10 +340,10 @@ class RealGalaxy(GSObject):
             use_index = index
         elif ID != None:
             raise NotImplementedError('Selecting galaxy based on its ID not implemented')
-        elif ID_string != None:
-            raise NotImplementedError('Selecting galaxy based on its ID string not implemented')
         elif random == True:
-            raise NotImplementedError('Selecting a random galaxy not implemented')
+            u = galsim.UniformDeviate()
+            use_index = int(real_galaxy_catalog.n * u()) # this will round down, to get index in
+                                                         # range [0, n-1]
         else:
             raise RuntimeError('No method specified for selecting a galaxy!')
 
