@@ -454,5 +454,8 @@ class AttributeDict(object):
 
     __str__ = __repr__
 
+    def __len__(self):
+        return len(self.__dict__)
+
 
 
