@@ -19,6 +19,7 @@
 #include "TMV.h"
 #include "Std.h"
 #include "Bounds.h"
+#include "Angle.h"
 
 namespace galsim {
 
@@ -70,13 +71,13 @@ namespace galsim {
         Shear& setE1E2(double =0., double =0.);
 
         /// @brief Set (|e|, beta) polar ellipticity representation using second moment definition.
-        Shear& setEBeta(double etain=0., double betain=0.);
+        Shear& setEBeta(double etain=0., Angle betain=0.);
 
         /// @brief Set (eta1, eta2) using conformal shear definition.
         Shear& setEta1Eta2(double =0., double =0.);
 
         /// @brief Set (|eta|, beta) using conformal shear definition.
-        Shear& setEtaBeta(double =0., double =0.);
+        Shear& setEtaBeta(double =0., Angle betain =0.);
 
         /// @brief set (g1, g2) using reduced shear |g| = (a-b)/(a+b) definition.
         Shear& setG1G2(double =0., double =0.);
@@ -178,7 +179,7 @@ namespace galsim {
         Shear& operator-=(const Shear& );
 
         // Give the rotation angle for this+rhs:
-        double rotationWith(const Shear& rhs) const;
+        Angle rotationWith(const Shear& rhs) const;
         // Detail on the above: s1 + s2 operation on points in
         // the plane induces a rotation as well as a shear.
         // Above method tells you what the rotation was for LHS+RHS
@@ -303,7 +304,7 @@ namespace galsim {
         // resulting from source-plane circle:
         double getMajor() const { return std::exp(mu+s.getEta()/2); }
         double getMinor() const { return std::exp(mu-s.getEta()/2); }
-        double getBeta() const { return s.getBeta(); }
+        Angle getBeta() const { return s.getBeta(); }
 
         // Return a rectangle that circumscribes this ellipse (times nSigma)
         Bounds<double> range(double nSigma=1.) const;
@@ -316,11 +317,11 @@ namespace galsim {
         // matrix.  One version returns the rotation that must precede the
         // Ellipse in the transform, if matrix is asymmetric.
         static Ellipse fromMatrix(
-            const tmv::Matrix<double>& m, double& rotation, bool& parity);
+            const tmv::Matrix<double>& m, Angle& rotation, bool& parity);
 
         static Ellipse fromMatrix(const tmv::Matrix<double>& m) 
         {
-            double junk; 
+            Angle junk; 
             bool p;
             return fromMatrix(m, junk, p);
         }
