@@ -306,28 +306,30 @@ def Script2():
     config.psf.g1.col = 7
     config.psf.g2.type = 'InputCatalog'
     config.psf.g2.col = 8
-    config.psf.trunc.type = 'InputCatalog'
-    config.psf.trunc.col = 9
+    # TODO rename truncationFWHM to something saner, like trunc
+    # And probably make it in units of arcsec rather than FWHM.
+    config.psf.truncationFWHM.type = 'InputCatalog'
+    config.psf.truncationFWHM.col = 9
     config.pix.type = 'SquarePixel'
     config.pix.size = pixel_scale
     config.gal.type = 'Sum'
-    config.gal.item = [galsim.AttributeDict()]*2
-    config.gal.item[0].type = 'Exponential'
-    config.gal.item[0].half_light_radius.type = 'InputCatalog'
-    config.gal.item[0].half_light_radius.col = 10
-    config.gal.item[0].g1.type = 'InputCatalog'
-    config.gal.item[0].g1.col = 11
-    config.gal.item[0].g2.type = 'InputCatalog'
-    config.gal.item[0].g2.col = 12
-    config.gal.item[0].flux = 0.6
-    config.gal.item[0].type = 'DeVaucouleurs'
-    config.gal.item[1].half_light_radius.type = 'InputCatalog'
-    config.gal.item[1].half_light_radius.col = 13
-    config.gal.item[1].g1.type = 'InputCatalog'
-    config.gal.item[1].g1.col = 14
-    config.gal.item[1].g2.type = 'InputCatalog'
-    config.gal.item[1].g2.col = 15
-    config.gal.item[1].flux = 0.4
+    config.gal.items = [galsim.AttributeDict()]*2
+    config.gal.items[0].type = 'Exponential'
+    config.gal.items[0].half_light_radius.type = 'InputCatalog'
+    config.gal.items[0].half_light_radius.col = 10
+    config.gal.items[0].g1.type = 'InputCatalog'
+    config.gal.items[0].g1.col = 11
+    config.gal.items[0].g2.type = 'InputCatalog'
+    config.gal.items[0].g2.col = 12
+    config.gal.items[0].flux = 0.6
+    config.gal.items[0].type = 'DeVaucouleurs'
+    config.gal.items[1].half_light_radius.type = 'InputCatalog'
+    config.gal.items[1].half_light_radius.col = 13
+    config.gal.items[1].g1.type = 'InputCatalog'
+    config.gal.items[1].g1.col = 14
+    config.gal.items[1].g2.type = 'InputCatalog'
+    config.gal.items[1].g2.col = 15
+    config.gal.items[1].flux = 0.4
     config.gal.shift.type = 'DXDY'
     config.gal.shift.dx.type = 'InputCatalog'
     config.gal.shift.dx.col = 16
@@ -335,27 +337,27 @@ def Script2():
     config.gal.shift.dy.col = 17
 
     # Read the catalog
-    input_cat = galsim.io.ReadInputCat(config, cat_file_name)
+    input_cat = galsim.io.ReadInputCat(config,cat_file_name)
     logger.info('Read %d objects from catalog',input_cat.nobjects)
 
     # Build the images
     all_images = []
     for i in range(input_cat.nobjects):
         if i is not input_cat.current:
-            raise ValueError("i = "+str(i)+" is out of sync with input_cat.current.")
+            raise ValueError('i is out of sync with current.')
 
-        logger.info('    Start work on image %d', input_cat.current)
-        
+        logger.info('Start work on image %d',input_cat.current)
+
         psf = galsim.BuildGSObject(config.psf, input_cat, logger)
-        logger.info('    Made PSF profile')
+        logger.info('   Made PSF profile')
 
         pix = galsim.BuildGSObject(config.pix, input_cat, logger)
-        logger.info('    Made pixel profile')
+        logger.info('   Made pixel profile')
 
         gal = galsim.BuildGSObject(config.gal, input_cat, logger)
-        logger.info('    Made galaxy profile')
+        logger.info('   Made galaxy profile')
 
-        final = galsim.Convolve(psf, pix,gal)
+        final = galsim.Convolve(psf,pix,gal)
         #im = final.draw(dx=pixel_scale)  # It makes these as 768 x 768 images.  A bit big.
         im = galsim.ImageF(image_xmax, image_ymax)
         final.draw(im, dx=pixel_scale)
@@ -378,7 +380,7 @@ def Script2():
     # Now write the image to disk.
     # TODO: This function doesn't exist yet.
     #galsim.fits.writeCube(out_file_name, all_images, clobber=True)
-    logger.info('Wrote image to %r', out_file_name)  # using %r adds quotes around filename for us
+    logger.info('Wrote image to %r',out_file_name)  # using %r adds quotes around filename for us
 
     print
 
