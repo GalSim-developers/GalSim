@@ -126,16 +126,17 @@ def _GetParamValue(config, param_name, input_cat=None):
             else:
                 raise AttributeError(param_name+".col attribute required in config for "+
                                      "initializing with "+param_name+".type = InputCatalog.")
-            # MJ: Should query input_cat.type == 'ASCII' here.  FITS will be different.
-            try:
-                # MJ: You want col-1 here.  I adpoted convention that first column is 1
-                # in the config definition.  But numpy wants 0-based.
-                # BR: Thanks Mike!
-                param_value = input_cat.data[input_cat.current, col - 1]
-            except IndexError:
-                raise IndexError(param_name+".col attribute or input_cat.current out of bounds "+
-                                 " for accessing input_cat.data [col, object_id] = "+
-                                 "["+str(param.col)+", "+str(object_id)+"]")
+            if input_cat.type == "ASCII":
+                try:
+                    param_value = input_cat.data[input_cat.current, col - 1]
+                except IndexError:
+                    raise IndexError(param_name+".col attribute or input_cat.current out of "+
+                                     "bounds for accessing input_cat.data [col, object_id] = "+
+                                     "["+str(param.col)+", "+str(object_id)+"]")
+            elif input_cat.type == "FITS":
+                raise NotImplementedError("Sorry, FITS input not implemented.")
+            else:
+                raise TypeError("input_cat.type must be either FITS or ASCII please.")
         else: # If config.type != "InputCatalog"
             raise NotImplementedError("Sorry, only InputCatalog config types are currently "+
                                       "implemented.")
