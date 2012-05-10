@@ -1,16 +1,29 @@
 from . import _galsim
 
 """file @real.py @brief Necessary functions for dealing with real galaxies and their catalogs.
-
-The RealGalaxyCatalog class can be used to represent a catalog containing information about real
-galaxies. 
-
-There is also a function called SimReal that can manipulate a RealGalaxy to simulate some data with
-a given shear, target PSF, and pixel scale (similar in purpose to SHERA).
 """
 
 class RealGalaxyCatalog:
-    """Class containing a catalog with information about real galaxy training data
+    """
+    Class containing a catalog with information about real galaxy training data.
+
+    The RealGalaxyCatalog class reads in and stores information about a specific training sample of
+    realistic galaxies. We assume that all files containing the images (galaxies and PSFs) live in
+    one directory; they could be individual files, or multiple HDUs of the same file.  Currently
+    there is no functionality that lets this be a FITS data cube, because we assume that the object
+    postage stamps will in general need to be different sizes depending on the galaxy size.  For
+    example, if the catalog is called 'catalog.fits' and is in the working directory, and the images
+    are in a subdirectory called 'images', then the RealGalaxyCatalog can be read in as follows:
+
+    >>>> my_rgc = galsim.RealGalaxyCatalog('./catalog.fits','images')
+
+    To explore for the future: scaling with number of galaxies, adding more information as needed,
+    and other i/o related issues.
+
+    Parameters
+    ----------
+    @param filename   The file containing the catalog (including full path).
+    @param imagedir   The directory containing the images.
     """
     def __init__(self, filename, imagedir):
         import pyfits
