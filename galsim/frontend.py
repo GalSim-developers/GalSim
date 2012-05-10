@@ -30,10 +30,9 @@ def BuildGSObject(config, input_cat=None, logger=None):
         else:
             raise AttributeError("items attribute required in for config."+type+" entry.")
     # MJ: Should pull out Pixel separately as well, since for that the sizes work differently
-    # I think we want both to be required, although maybe ok if only one.  But at least
-    # having both xw and yw must be allowed.  I raise a warning when both are present
-    # but unequal, since I don't think this is fully supported by GalSim yet.
-    elif config.type == "SquarePixel":  # Mike is treating Pixels separately
+    # BR: This is covered by moving xw, and yw into my "required" list: the sizes work differently
+    #     enough that I think they can deserve to no longer be called a size param.
+    elif config.type == "SquarePixel":  # Mike is treating Pixels separately, I'll wrap SquarePixel
         if not "size" in config.__dict__:
             raise AttributeError("size attribute required in config for initializing SquarePixel "+
                                  "objects.")
@@ -91,7 +90,7 @@ def _GetSizeKwarg(config, input_cat=None):
                 size_kwarg[size_name] = _GetParamValue(config, size_name, input_cat=input_cat)
             elif counter > 1:
                 raise ValueError("More than one size parameter specified for")
-    # MJ: Check for counter == 0 here?
+    # MJ: Check for counter == 0 here?  BR: If counter == 0 that's fine sometimes, c.f. Pixel.
     return size_kwarg
 
 def _GetOptionalKwargs(config, input_cat=None):
