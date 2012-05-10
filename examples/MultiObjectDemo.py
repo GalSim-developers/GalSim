@@ -275,7 +275,7 @@ def Script2():
     random_seed = 8241573
     sky_level = 1.e6                # ADU
     pixel_scale = 0.3               # arcsec
-    gal_flux = 2000                 #
+    gal_flux = 5.e6                 #
     gal_g1 = -0.009                 #
     gal_g2 = 0.011                  #
     image_xmax = 64                 # pixels
@@ -313,7 +313,8 @@ def Script2():
     config.pix.type = 'SquarePixel'
     config.pix.size = pixel_scale
     config.gal.type = 'Sum'
-    config.gal.items = [galsim.AttributeDict()]*2
+    config.gal.items = [galsim.AttributeDict(), galsim.AttributeDict()] # The Python data model
+                                                                        # means that [ad()]*2 fails!
     config.gal.items[0].type = 'Exponential'
     config.gal.items[0].half_light_radius.type = 'InputCatalog'
     config.gal.items[0].half_light_radius.col = 10
@@ -321,15 +322,15 @@ def Script2():
     config.gal.items[0].g1.col = 11
     config.gal.items[0].g2.type = 'InputCatalog'
     config.gal.items[0].g2.col = 12
-    config.gal.items[0].flux = 0.6
-    config.gal.items[0].type = 'DeVaucouleurs'
+    config.gal.items[0].flux = 0.6 * gal_flux
+    config.gal.items[1].type = 'DeVaucouleurs'
     config.gal.items[1].half_light_radius.type = 'InputCatalog'
     config.gal.items[1].half_light_radius.col = 13
     config.gal.items[1].g1.type = 'InputCatalog'
     config.gal.items[1].g1.col = 14
     config.gal.items[1].g2.type = 'InputCatalog'
     config.gal.items[1].g2.col = 15
-    config.gal.items[1].flux = 0.4
+    config.gal.items[1].flux = 0.4 * gal_flux
     config.gal.shift.type = 'DXDY'
     config.gal.shift.dx.type = 'InputCatalog'
     config.gal.shift.dx.col = 16
@@ -342,19 +343,27 @@ def Script2():
 
     # Build the images
     all_images = []
-    for i in range(input_cat.nobjects):
+    for i in range(input_cat.nobjects - 90):
         if i is not input_cat.current:
             raise ValueError('i is out of sync with current.')
 
         logger.info('Start work on image %d',input_cat.current)
 
         psf = galsim.BuildGSObject(config.psf, input_cat, logger)
+        psf.applyShear(input_cat.data[i, config.psf.g1.col - 1],
+                       input_cat.data[i, config.psf.g2.col - 1])
         logger.info('   Made PSF profile')
 
         pix = galsim.BuildGSObject(config.pix, input_cat, logger)
         logger.info('   Made pixel profile')
 
         gal = galsim.BuildGSObject(config.gal, input_cat, logger)
+
+        # BARNEY HORRIBLE KLUDGE, MUST FIX TO PROPERLY ALLOW 2-COMPONENT SHEARS
+        gal.applyShear(.5 * (input_cat.data[i, config.gal.items[0].g1.col - 1] +
+                             input_cat.data[i, config.gal.items[1].g1.col - 1]),
+                       .5 * (input_cat.data[i, config.gal.items[0].g2.col - 1] +
+                             input_cat.data[i, config.gal.items[1].g2.col - 1]))
         logger.info('   Made galaxy profile')
 
         final = galsim.Convolve(psf,pix,gal)
@@ -370,7 +379,7 @@ def Script2():
         logger.info('   Added noise')
 
         # Store that into the list of all images
-        all_images += [im]
+        all_images += [im.array]
 
         # increment the row of the catalog that we should use for the next iteration
         input_cat.current += 1
@@ -380,6 +389,11 @@ def Script2():
     # Now write the image to disk.
     # TODO: This function doesn't exist yet.
     #galsim.fits.writeCube(out_file_name, all_images, clobber=True)
+    import pyfits
+
+    cube = numpy.asarray(all_images)
+    print cube.shape
+    pyfits.writeto(out_file_name, cube, clobber=True)
     logger.info('Wrote image to %r',out_file_name)  # using %r adds quotes around filename for us
 
     print
