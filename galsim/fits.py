@@ -108,18 +108,8 @@ def read(fits):
     Not all FITS pixel types are supported (only those with C++ Image template
     instantiations are: short, int, float, and double).
 
-    This function can be called directly as "galsim.fits.read(...)", or as a static
-    method of an image class: "ImageD.read(...)".  Note, however, that in the
-    latter case the image type returned is determined by the type of the FITS file,
-    not the image class (in other words, "ImageD.read(...)" might return an ImageF).
+    This function is called as "im = galsim.fits.read(...)"
     """
-    # MJ: I find this last syntax: ImageD.read(...) a bit confusing, since as you 
-    # point out the return value isn't necessarily the class you call it from.
-    # Also, the return value is now an ImageView, not an Image, but that should
-    # be transparent to the user.
-    # So I'd recommend removing the ImageD.read(...) syntax and just having
-    # the galsim.fits.read(...) syntax.
-
     import pyfits     # put this at function scope to keep pyfits optional
     
     if isinstance(fits, basestring):
@@ -179,14 +169,12 @@ def readCube(fits):
     return images
 
 
-# inject read/write as methods of Image classes
+# inject write as methods of Image classes
 for Class in _galsim.Image.itervalues():
     Class.write = write
-    Class.read = staticmethod(read)
 
 for Class in _galsim.ImageView.itervalues():
     Class.write = write
-    Class.read = staticmethod(read)
 
 for Class in _galsim.ConstImageView.itervalues():
     Class.write = write
