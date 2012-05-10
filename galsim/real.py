@@ -48,11 +48,31 @@ class RealGalaxyCatalog:
         # exist, there's no field with that name, etc.
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
-def SimReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rand_rotate = True,
-            target_flux = 1.0):
-    # put some documentation here and above for RealGalaxyCatalog
+def SimReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rotation_angle = None, 
+            rand_rotate = True, target_flux = 1.0):
+    """@brief Function to simulate images (no added noise) from real galaxy training data.
+
+    This function takes a RealGalaxy from some training set, and manipulates it as needed to
+    simulate a (no-noise-added) image from some lower-resolution telescope.  It thus requires a
+    target PSF (which could be an image, or one of our base classes) and a target pixel scale.
+    Optionally, the user can specify a rotation angle and a shear.  Or, the user can request
+    rotation by a randomly-selected angle.  Finally, they can specify a flux normalization for the
+    final image.
+
+    Parameters
+    ----------
+    @param real_galaxy         The RealGalaxy object to use.
+    @param target_PSF          The target PSF, either one of our base classes or an ImageView/Image.
+    @param target_pixel_scale  The pixel scale for the final image, in arcsec.
+    @param g1                  First component of shear to impose (components defined with respect
+                                                                   to pixel coordinates), default 0.
+    @param g2                  Second component of shear to impose, default 0.
+    @param rotation_angle      Angle by which to rotate the galaxy (must be an Angle instance).
+    @param rand_rotate         If true (default) then impose a random rotation on the training
+                               galaxy.
+    @param target_flux         The target flux in the output galaxy image, default 1.
+    """
     # do some checking of arguments and so on
-    # check SHERA code for some more keywords that might be useful
 
     # rotate
     # deconvolve
