@@ -338,7 +338,7 @@ def Script2():
     config.gal.items[1].ellip.e2.type = 'InputCatalog'
     config.gal.items[1].ellip.e2.col = 15
     config.gal.items[1].flux = 0.4 * gal_flux
-    config.gal.flux = gal_flux
+    #config.gal.flux = gal_flux
     config.gal.shift.type = 'DXDY'
     config.gal.shift.dx.type = 'InputCatalog'
     config.gal.shift.dx.col = 16

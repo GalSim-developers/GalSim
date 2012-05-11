@@ -134,7 +134,7 @@ class GSObject:
             new = self.createSheared(e1, e2)
         else:
             raise NotImplementedError("Only 'E' or 'G' conventions supported.")
-        return 
+        return new 
 
     def createRotated(self, theta):
         """Create a new GSObject by applying a rotation theta (Angle object, +ve anticlockwise).
