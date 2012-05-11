@@ -270,12 +270,13 @@ def Script2():
     # Define some parameters we'll use below.
 
     cat_file_name = os.path.join('input','galsim_default_input.asc')
-    out_file_name = os.path.join('output','cube.fits')
+    multi_file_name = os.path.join('output','multi.fits')
+    cube_file_name = os.path.join('output','cube.fits')
 
     random_seed = 8241573
     sky_level = 1.e6                # ADU
-    pixel_scale = 1.                # increased from 0.3 as size units in input cat are pixels
-    gal_flux = 1.e6                 # arbitrary choice, makes nice (not too) noisy images
+    pixel_scale = 1.0               # arcsec  (size units in input catalog are pixels)
+    gal_flux = 1.e6                 # arbitrary choise, makes nice (not too) noisy images
     gal_g1 = -0.009                 #
     gal_g2 = 0.011                  #
     image_xmax = 64                 # pixels
@@ -313,8 +314,9 @@ def Script2():
     config.pix.type = 'SquarePixel'
     config.pix.size = pixel_scale
     config.gal.type = 'Sum'
-    config.gal.items = [galsim.AttributeDict(), galsim.AttributeDict()] # The Python data model
-                                                                        # means that [ad()]*2 fails!
+    # TODO: [galsim.AttributeDict()]*2 doesn't work, since shallow copies.
+    # I guess we need a nicer way to initialize this.
+    config.gal.items = [galsim.AttributeDict(), galsim.AttributeDict()]
     config.gal.items[0].type = 'Exponential'
     config.gal.items[0].half_light_radius.type = 'InputCatalog'
     config.gal.items[0].half_light_radius.col = 10
@@ -322,7 +324,7 @@ def Script2():
     config.gal.items[0].g1.col = 11
     config.gal.items[0].g2.type = 'InputCatalog'
     config.gal.items[0].g2.col = 12
-    config.gal.items[0].flux = 0.6 * gal_flux
+    config.gal.items[0].flux = 0.6*gal_flux
     config.gal.items[1].type = 'DeVaucouleurs'
     config.gal.items[1].half_light_radius.type = 'InputCatalog'
     config.gal.items[1].half_light_radius.col = 13
@@ -330,7 +332,7 @@ def Script2():
     config.gal.items[1].g1.col = 14
     config.gal.items[1].g2.type = 'InputCatalog'
     config.gal.items[1].g2.col = 15
-    config.gal.items[1].flux = 0.4 * gal_flux
+    config.gal.items[1].flux = 0.4*gal_flux
     config.gal.shift.type = 'DXDY'
     config.gal.shift.dx.type = 'InputCatalog'
     config.gal.shift.dx.col = 16
@@ -343,29 +345,19 @@ def Script2():
 
     # Build the images
     all_images = []
-    all_arrays = []
-    for i in range(input_cat.nobject):
+    for i in range(input_cat.nobjects):
         if i is not input_cat.current:
             raise ValueError('i is out of sync with current.')
 
         logger.info('Start work on image %d',input_cat.current)
 
         psf = galsim.BuildGSObject(config.psf, input_cat, logger)
-        psf.applyShear(input_cat.data[i, config.psf.g1.col - 1],
-                       input_cat.data[i, config.psf.g2.col - 1])
         logger.info('   Made PSF profile')
 
         pix = galsim.BuildGSObject(config.pix, input_cat, logger)
         logger.info('   Made pixel profile')
 
         gal = galsim.BuildGSObject(config.gal, input_cat, logger)
-
-        # BARNEY HORRIBLE KLUDGE, MUST FIX TO PROPERLY ALLOW 2-COMPONENT SHEARS
-        gav = (.5 * (input_cat.data[i, config.gal.items[0].g1.col - 1] +
-                     input_cat.data[i, config.gal.items[1].g1.col - 1]),
-               .5 * (input_cat.data[i, config.gal.items[0].g2.col - 1] +
-                     input_cat.data[i, config.gal.items[1].g2.col - 1]))
-        gal.applyShear(gav[0], gav[1])
         logger.info('   Made galaxy profile')
 
         final = galsim.Convolve(psf,pix,gal)
@@ -380,9 +372,8 @@ def Script2():
         im -= sky_level
         logger.info('   Added noise')
 
-        # Store that into the list of all images and all arrays
+        # Store that into the list of all images
         all_images += [im]
-        all_arrays += [im.array]
 
         # increment the row of the catalog that we should use for the next iteration
         input_cat.current += 1
@@ -390,14 +381,11 @@ def Script2():
     logger.info('Done making images of galaxies')
 
     # Now write the image to disk.
-    # TODO: This function doesn't exist yet.
-    #galsim.fits.writeCube(out_file_name, all_images, clobber=True)
-    # BR STOPGAP FOR DEBUGGING:
-    import pyfits
-    cube = numpy.asarray(all_arrays)
-    print cube.shape
-    pyfits.writeto(out_file_name, cube, clobber=True)
-    logger.info('Wrote image to %r',out_file_name)  # using %r adds quotes around filename for us
+    galsim.fits.writeMulti(all_images, multi_file_name, clobber=True)
+    logger.info('Wrote images to multi-extension fits file %r',multi_file_name)  
+
+    galsim.fits.writeCube(all_images, cube_file_name, clobber=True)
+    logger.info('Wrote image to fits data cube %r',cube_file_name) 
 
     print
 
