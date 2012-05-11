@@ -27,18 +27,26 @@ def BuildGSObject(config, input_cat=None, logger=None):
                 gsobject = galsim.Add(gsobjects)
             elif config.type == "Convolve":
                 gsobject = galsim.Convolve(gsobjects)
+            # Allow the setting of the overall flux of the object. Individual component fluxes
+            # retain the ratio of their own specified flux parameter settings.
             if "flux" in config.__dict__:
-                raise NotImplementedError("Not yet setting compound object fluxes.")
-            gsobject = _BuildEllipRotateShiftShearObject(gsobject, config, input_cat)
+                gsobject.setFlux(_GetParamValue(config, "flux", input_cat))
+            gsobject = _BuildEllipRotateShearShiftObject(gsobject, config, input_cat)
         else:
             raise AttributeError("items attribute required in for config."+type+" entry.")
+
     elif config.type == "Pixel": # BR: under duress ;)
         gsobject = _BuildPixel(config, input_cat)
+        # Note we do not shear, shift, rotate etc. Pixels, such params in the config are ignored.
+
     elif config.type == "SquarePixel":
         gsobject = _BuildSquarePixel(config, input_cat)
-    elif config.type in op_dict:  # Object from primary GSObject keys in galsim.object_param_dict
+        # Note we do not shear, shift, rotate etc. Pixels, such params in the config are ignored.
+
+    # Else Build object from primary GSObject keys in galsim.object_param_dict
+    elif config.type in op_dict: 
         gsobject = _BuildSimple(config, input_cat)
-        gsobject = _BuildEllipRotateShiftShearObject(gsobject, config, input_cat)
+        gsobject = _BuildEllipRotateShearShiftObject(gsobject, config, input_cat)
     else:
         raise NotImplementedError("Unrecognised config.type = "+str(config.type))
     return gsobject
@@ -96,26 +104,26 @@ def _BuildSimple(config, input_cat=None):
 
 # --- Now we define a function for "ellipsing", rotating, shifting, shearing, in that order.
 #
-def _BuildEllipRotateShiftShearObject(gsobject, config, input_cat=None):
+def _BuildEllipRotateShearShiftObject(gsobject, config, input_cat=None):
     if "ellip" in config.__dict__:
-        gsobject = _BuildEllipObject(gsobject, config, input_cat)
+        gsobject = _BuildEllipObject(gsobject, config.ellip, input_cat)
     if "rotate" in config.__dict__:
-        gsobject = _BuildRotateObject(gsobject, config, input_cat)
-    if "shift" in config.__dict__:
-        gsobject = _BuildShiftObject(gsobject, config, input_cat)
+        gsobject = _BuildRotateObject(gsobject, config.rotate, input_cat)
     if "shear" in config.__dict__:
-        gsobject = _BuildShearObject(gsobject, config, input_cat)
+        gsobject = _BuildEllipObject(gsobject, config.shear, input_cat)
+    if "shift" in config.__dict__:
+        gsobject = _BuildShiftObject(gsobject, config.shift, input_cat)
     return gsobject
 
 def _BuildEllipObject(gsobject, config, input_cat=None):
-    if config.ellip.type == "E1E2":
-        e1 = _GetParamValue(config.ellip, "e1", input_cat)
-        e2 = _GetParamValue(config.ellip, "e2", input_cat)
-        gsobject = gsobject.createEllipsed(e1, e2)
-    elif config.ellip.type == "G1G2":
-        g1 = _GetParamValue(config.ellip, "g1", input_cat)
-        g2 = _GetParamValue(config.ellip, "g2", input_cat)
-        gsobject = gsobject.createSheared(g1, g2)
+    if config.type == "E1E2":
+        e1 = _GetParamValue(config, "e1", input_cat)
+        e2 = _GetParamValue(config, "e2", input_cat)
+        gsobject.applyDistortion(galsim.Ellipse(e1, e2))
+    elif config.type == "G1G2":
+        g1 = _GetParamValue(config, "g1", input_cat)
+        g2 = _GetParamValue(config, "g2", input_cat)
+        gsobject.applyShear(g1, g2)
     else:
         raise NotImplementedError("Sorry only ellip.type = 'E1E2', 'G1G2' currently supported.")
     return gsobject
@@ -124,25 +132,12 @@ def _BuildRotateObject(gsobject, config, input_cat=None):
     raise NotImplementedError("Sorry, rotation (with new angle class) not currently supported.")
 
 def _BuildShiftObject(gsobject, config, input_cat=None):
-    if config.shift.type == "DXDY":
-        dx = _GetParamValue(config.shift, "dx", input_cat)
-        dy = _GetParamValue(config.shift, "dy", input_cat)
-        gsobject = gsobject.createShifted(dx, dy)
+    if config.type == "DXDY":
+        dx = _GetParamValue(config, "dx", input_cat)
+        dy = _GetParamValue(config, "dy", input_cat)
+        gsobject.applyShift(dx, dy)
     else:
         raise NotImplementedError("Sorry only shift.type = 'DXDY' currently supported.")
-    return gsobject
-
-def _BuildShearObject(gsobject, config, input_cat=None):
-    if config.shear.type == "E1E2":
-        e1 = _GetParamValue(config.shear, "e1", input_cat)
-        e2 = _GetParamValue(config.shear, "e2", input_cat)
-        gsobject = gsobject.createEllipsed(e1, e2)
-    elif config.shear.type == "G1G2":
-        g1 = _GetParamValue(config.shear, "g1", input_cat)
-        g2 = _GetParamValue(config.shear, "g2", input_cat)
-        gsobject = gsobject.createSheared(g1, g2)
-    else:
-        raise NotImplementedError("Sorry only shear.type = 'E1E2', 'G1G2' currently supported.")
     return gsobject
 
 
