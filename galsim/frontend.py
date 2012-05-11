@@ -259,3 +259,121 @@ def _GetInputCatParamValue(config, param_name, input_cat=None):
         raise ValueError("input_cat.type must be either 'FITS' or 'ASCII' please.")
     return param_value
 
+def _MatchDelim(str,start,end):
+    nest_count = 0
+    for i in range(len(str)):
+        print 'str[%d] = %s.  nest_count = %d'%(i,str[i],nest_count)
+        if str[i] == start:
+            nest_count += 1
+        if str[i] == end:
+            nest_count -= 1
+        if nest_count == 0:
+            break
+    print 'nested string with delims = ',str[0:i]
+    print 'nested string without delims = ',str[1:i-1]
+    return ( str[1:i-1] , str[i+1,:] )
+ 
+
+def _Parse(config):
+    """@brief config=_Parse(config) does initial parsing of strings if necessary.
+    
+       If a parameter or its type is a string, this means that it should be parsed to 
+       build the appropriate attributes.
+       e.g. parsing gal.type = 'Exponential scale_radius=3 flux=100'
+       would result in the equivalent of:
+           gal.type = 'Exponential'
+           gal.scale_radius = 3
+           gal.flux = 100
+
+       Furthermore, if the first (non-whitespace) character after an = is '<',
+       then the contents of the <> are recursively parsed for that value.
+       e.g. psf = 'Moffat beta=<InputCatalog col=3> fwhm=<InputCatalog col=4>'
+       would result in the equivalent of:
+           psf.type = 'Moffat'
+           psf.beta.type = 'InputCatalog'
+           psf.beta.col = 3
+           psf.fwhm.type = 'InputCatalog'
+           psf.fwhm.col = 4
+
+       If the first (non-whitespace) character after an = is '[', 
+       then the contents are taken to be an array of configuration strings.
+       e.g. gal = 'Sum items = [ <Sersic n=1.2>, <Sersic n=3.5> ]'
+
+       The string can be at either the base level (e.g. psf above) or as the type
+       attribute (e.g. gal.type above).  The difference is that if the user
+       specifies the string as a type, then other attributes can also be set separately.
+       e.g.
+           gal.type = 'Sersic n=1.5 half_light_radius=4 flux=1000'
+           gal.shear = 'G1G2 g1=0.3 g2=0'
+    """
+    print 'Starting Parse: config = ',config
+    if isinstance(config, basestring):
+        orig = config
+        tokens = config.split(None,1)
+        print 'tokens = ',tokens
+        if len(tokens) < 2:
+            # Special case string only has one word.  So this isn't a string to
+            # be parsed.  It's just a string value. 
+            # e.g. config.catalog.file_name = 'in.cat'
+            return config
+        config = galsim.AttributeDict()
+        config.type = tokens[0]
+        str = tokens[1]
+    elif __dict__ in config:
+        if 'type' in config.__dict:
+            if isinstance(config.type, basestring):
+                orig = config.type
+                tokens = config.type.split(None,1)
+                print 'tokens = ',tokens
+                config.type = tokens[0]
+                str = tokens[1]
+            else:
+                raise AttributeError('Provided type is not a string: %s',config.type)
+        else:
+            raise AttributeError("type attribute required in config.")
+    else:
+        # This is just a value
+        return config
+
+    # Now config.type is set correctly and str holds the rest of the string to be parsed.
+    print 'After initial setup:'
+    print 'config = ',config
+    print 'str = ',str
+    while str:
+        tokens = str.split('=',1)
+        print 'tokens = ',tokens
+        if (len(tokens) < 2):
+            raise ValueError("Error parsing configuration string " + orig)
+        attrib = tokens[0]
+        str = tokens[1]
+        print 'attrib = ',attrib
+        print 'str = ',str
+        if str.startswith('<'):
+            print 'value is a nested string.'
+            value, str = _MatchDelim(str,'<','>')
+        elif str.startswith('['):
+            print 'value is an array'
+            value, str = _MatchDelim(str,'[',']')
+            # TODO: If there are nested arrays, this next line does the wrong thing!
+            value = value.split(',')
+        elif str.startswith('('):
+            print 'value is a tuple'
+            value, str = _MatchDelim(str,'(',')')
+            value = eval(value)
+        else:
+            print 'regular value'
+            tokens = str.split(None,1)
+            print 'tokens = ',tokens
+            if (len(tokens) == 0):
+                raise ValueError("Error parsing configuration string " + orig)
+            value = eval(tokens[0])
+            if (len(tokens) == 1):
+                str = ""
+            else:
+                str = tokens[1]
+        config.__dict__[attrib] = value
+        print 'config.%s = '%attrib,eval('config.'+attrib)
+        print 'str = ',str
+    print 'Done. config = ',config
+    return config
+ 
