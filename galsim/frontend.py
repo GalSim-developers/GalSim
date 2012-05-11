@@ -140,17 +140,15 @@ def _GetParamValue(config, param_name, input_cat=None):
     # First see if we can assign by param by a direct constant value
     if not hasattr(param, "__dict__"):  # This already exists for AttributeDicts, not for values
         param_value = param
-    else:
-        # We use the type parameter get the parameter value 
-        if not "type" in param.__dict__: 
-            raise AttributeError(param_name+".type attribute required in config for non-constant "+
-                                 "parameter "+param_name+".")
+    elif not "type" in param.__dict__: 
+        raise AttributeError(param_name+".type attribute required in config for non-constant "+
+                             "parameter "+param_name+".")
+    else: # Use type to set param value. Currently catalog input supported only.
+        if param.type == "InputCatalog":
+            param_value = _GetInputCatParamValue(config, param_name, input_cat)
         else:
-            if param.type == "InputCatalog":
-                param_value = _GetInputCatParamValue(config, param_name, input_cat)
-            else:
-                raise NotImplementedError("Sorry, only InputCatalog config types are currently "+
-                                          "implemented.")
+            raise NotImplementedError("Sorry, only InputCatalog config types are currently "+
+                                      "implemented.")
     return param_value
 
 
