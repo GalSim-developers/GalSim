@@ -72,11 +72,41 @@ def SimReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
                                galaxy.
     @param target_flux         The target flux in the output galaxy image, default 1.
     """
-    # do some checking of arguments and so on
+    # do some checking of arguments
+    if not isinstance(real_galaxy, galsim.RealGalaxy):
+        raise RuntimeError("Error: SimReal requires a RealGalaxy!")
+    if isinstance(target_PSF, galsim.Image) or isinstance(target_PSF, galsim.ImageView):
+        l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
+        interp2d = galsim.InterpolantXY(l5)
+        new_target_PSF = galsim.SBInterpolatedImage(target_PSF.view(), interp2d, dx = target_pixel_scale)
+        target_PSF = new_target_PSF
+    if not isinstance(target_PSF, galsim.SBProfile):
+        raise RuntimeError("Error: target PSF is not an Image, ImageView, or SBProfile!")
+    if not isinstance(rotation_angle, galsim.Angle):
+        raise RuntimeError("Error: rotation angle is not an Angle instance!")
+    if ((rotation_angle != None and rand_rotate == True):
+        raise RuntimeError("Error: both a random rotation and a specific rotation angle were requested!")
 
     # rotate
+    if rotation_angle != None:
+        real_galaxy.SBProfile.applyRotation(rotation_angle)
+        real_galaxy.PSF.applyRotation(rotation_angle)
+    elif rand_rotate == True:
+        u = galsim.UniformDeviate()
+        rand_angle = galsim.Angle(np.pi*u(), galsim.radians)
+        real_galaxy.SBProfile.applyRotation(rand_angle)
+        real_galaxy.PSF.applyRotation(rand_angle)
+
+    # set fluxes
+    real_galaxy.PSF.setFlux(1.0)
+    real_galaxy.SBProfile.setFlux(target_flux)
+
     # deconvolve
+    psf_inv = galsim.SBDeconvolve(psf)
+    deconv = galsim.SBConvolve([gal, psf_inv])
+    sheared = deconv.applyShear(
     # shear
     # convolve, resample
     # return simulated image
 
+    # make it a method of the RealGalaxy class
