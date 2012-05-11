@@ -473,7 +473,8 @@ class AttributeDict(object):
 
 
 class Config(AttributeDict):
-    """Config class that is basically a renamed AttributeDict.
+    """Config class that is basically a renamed AttributeDict, and allows for easy initialization
+    and refs to key values via attributes.
     """
     def __init__(self):
         AttributeDict.__init__(self)
