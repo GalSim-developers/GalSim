@@ -48,7 +48,7 @@ class RealGalaxyCatalog:
         # exist, there's no field with that name, etc.
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
-def SimReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rotation_angle = None, 
+def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rotation_angle = None, 
             rand_rotate = True, target_flux = 1.0):
     """@brief Function to simulate images (no added noise) from real galaxy training data.
 
@@ -74,7 +74,7 @@ def SimReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     """
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
-        raise RuntimeError("Error: SimReal requires a RealGalaxy!")
+        raise RuntimeError("Error: simReal requires a RealGalaxy!")
     if isinstance(target_PSF, galsim.Image) or isinstance(target_PSF, galsim.ImageView):
         l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
         interp2d = galsim.InterpolantXY(l5)
@@ -84,8 +84,10 @@ def SimReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
         raise RuntimeError("Error: target PSF is not an Image, ImageView, or SBProfile!")
     if not isinstance(rotation_angle, galsim.Angle):
         raise RuntimeError("Error: rotation angle is not an Angle instance!")
-    if ((rotation_angle != None and rand_rotate == True):
+    if (rotation_angle != None and rand_rotate == True):
         raise RuntimeError("Error: both a random rotation and a specific rotation angle were requested!")
+    if (target_pixel_scale < real_galaxy.pixel_scale):
+        raise Warning("Warning: requested pixel scale is higher resolution than original!")
 
     # rotate
     if rotation_angle != None:
@@ -102,11 +104,19 @@ def SimReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     real_galaxy.SBProfile.setFlux(target_flux)
 
     # deconvolve
-    psf_inv = galsim.SBDeconvolve(psf)
-    deconv = galsim.SBConvolve([gal, psf_inv])
-    sheared = deconv.applyShear(
-    # shear
-    # convolve, resample
-    # return simulated image
+    psf_inv = galsim.Deconvolve(psf)
+    deconv = galsim.Convolve([gal, psf_inv])
 
-    # make it a method of the RealGalaxy class
+    # shear
+    if (g1 != 0.0 or g2 != 0.0):
+        sheared = deconv.createSheared(g1, g2)
+
+    # convolve, resample
+    out_gal = galsim.Convolve([sheared, target_PSF])
+    out_gal_image = out_gal.draw(dx = target_pixel_scale)
+
+    # return simulated image
+    return out_gal_image
+
+# make it a method of the RealGalaxy class
+galsim.RealGalaxy.simReal = simReal
