@@ -105,6 +105,11 @@ def _BuildSimple(config, input_cat=None):
 # --- Now we define a function for "ellipsing", rotating, shifting, shearing, in that order.
 #
 def _BuildEllipRotateShearShiftObject(gsobject, config, input_cat=None):
+    """@brief Applies ellipticity, rotation, gravitational shearing and centroid shifting to a
+    supplied GSObject, in that order, based on input config and input_cat.
+
+    @returns transformed GSObject.
+    """
     if "ellip" in config.__dict__:
         gsobject = _BuildEllipObject(gsobject, config.ellip, input_cat)
     if "rotate" in config.__dict__:
@@ -115,7 +120,16 @@ def _BuildEllipRotateShearShiftObject(gsobject, config, input_cat=None):
         gsobject = _BuildShiftObject(gsobject, config.shift, input_cat)
     return gsobject
 
+
 def _BuildEllipObject(gsobject, config, input_cat=None):
+    """@brief Applies ellipticity to a supplied GSObject based on input config and input_cat, also
+    used for gravitational shearing.
+
+    @returns transformed GSObject.
+    """
+    @returns transformed GSObject.
+    if not "type" in config.__dict__:
+        raise AttributeError("No type attribute in config!")
     if config.type == "E1E2":
         e1 = _GetParamValue(config, "e1", input_cat)
         e2 = _GetParamValue(config, "e2", input_cat)
@@ -128,10 +142,24 @@ def _BuildEllipObject(gsobject, config, input_cat=None):
         raise NotImplementedError("Sorry only ellip.type = 'E1E2', 'G1G2' currently supported.")
     return gsobject
 
+
 def _BuildRotateObject(gsobject, config, input_cat=None):
+    """@brief Applies rotation to a supplied GSObject based on input config and input_cat.
+
+    @returns transformed GSObject.
+
+    CURRENTLY NOT IMPLEMENTED WILL RAISE AN EXCEPTION IF CALLED.
+    """
     raise NotImplementedError("Sorry, rotation (with new angle class) not currently supported.")
 
+
 def _BuildShiftObject(gsobject, config, input_cat=None):
+    """@brief Applies centroid shift to a supplied GSObject based on input config and input_cat.
+
+    @returns transformed GSObject.
+    """
+    if not "type" in config.__dict__:
+        raise AttributeError("No type attribute in config!")
     if config.type == "DXDY":
         dx = _GetParamValue(config, "dx", input_cat)
         dy = _GetParamValue(config, "dy", input_cat)
