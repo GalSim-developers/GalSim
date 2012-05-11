@@ -5,10 +5,10 @@ op_dict = galsim.object_param_dict
 #
 
 def BuildGSObject(config, input_cat=None, logger=None):
-    """Build a GSObject using a config (AttributeDict) and possibly an input_cat (AttributeDict).
+    """Build a GSObject using a config (Config instance) and possibly an input_cat.
 
-    @param config     A configuration AttributDict() read in using galsim.config.load().
-    @param input_cat  An input catalog AttributeDict() read in using galsim.io.read_input_cat().
+    @param config     A configuration galsim.Config instance read in using galsim.config.load().
+    @param input_cat  An input catalog read in using galsim.io.ReadInputCat().
     @param logger     Output logging object (NOT USED IN THIS IMPLEMENTATION: RAISED ERRORS
                       AUTOMATICALLY PASSED TO LOGGER)
     """
@@ -210,13 +210,13 @@ def _GetOptionalKwargs(config, input_cat=None):
     return optional_kwargs
 
 def _GetParamValue(config, param_name, input_cat=None):
-    """@brief Function to read parameter values from config AttributeDicts.
+    """@brief Function to read parameter values from config.
     """
     # Assume that basic sanity checking done upstream for maximum efficiency 
     param = config.__getattr__(param_name)
     
     # First see if we can assign by param by a direct constant value
-    if not hasattr(param, "__dict__"):  # This already exists for AttributeDicts, not for values
+    if not hasattr(param, "__dict__"):  # This already exists for Config instances, not for values
         param_value = param
     elif not "type" in param.__dict__: 
         raise AttributeError(param_name+".type attribute required in config for non-constant "+

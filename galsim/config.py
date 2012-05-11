@@ -11,7 +11,7 @@ def load(config_file=None, include_default=True):
                            file; setting false with None or a non-existent filename for config_file
                            raises an IOError.
     """
-    config = galsim.AttributeDict()
+    config = galsim.Config()
     if (config_file != None) and (not os.path.exists(config_file)):
         raise IOError("User input config file "+str(config_file)+" not found")
     config.user_config_file = config_file

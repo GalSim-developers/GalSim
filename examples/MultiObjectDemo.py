@@ -296,8 +296,7 @@ def Script2():
 
     # Setup the config object
 
-    # MJ: Could we maybe call this just Config(), rather than AttributeDict()?
-    config = galsim.AttributeDict()
+    config = galsim.Config()
 
     config.psf.type = 'Moffat'
     config.psf.beta.type = 'InputCatalog'
@@ -318,9 +317,9 @@ def Script2():
     config.pix.size = pixel_scale
 
     config.gal.type = 'Sum'
-    # TODO: [galsim.AttributeDict()]*2 doesn't work, since shallow copies.
+    # TODO: [galsim.Config()]*2 doesn't work, since shallow copies.
     # I guess we need a nicer way to initialize this.
-    config.gal.items = [galsim.AttributeDict(), galsim.AttributeDict()]
+    config.gal.items = [galsim.Config(), galsim.Config()]
     config.gal.items[0].type = 'Exponential'
     config.gal.items[0].half_light_radius.type = 'InputCatalog'
     config.gal.items[0].half_light_radius.col = 10
