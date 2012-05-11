@@ -355,7 +355,7 @@ class Add(GSObject):
 
 
 class Convolve(GSObject):
-    """Base class for defining the python interface to the SBConvolve C++ class.
+    """@brief Base class for defining the python interface to the SBConvolve C++ class.
     """
     def __init__(self, *args):
         # This is a workaround for the fact that Python doesn't allow multiple constructors.
@@ -470,6 +470,14 @@ class AttributeDict(object):
 
     def __len__(self):
         return len(self.__dict__)
+
+
+class Config(AttributeDict):
+    """Config class that is basically a renamed AttributeDict, and allows for easy initialization
+    and refs to key values via attributes.
+    """
+    def __init__(self):
+        AttributeDict.__init__(self)
 
 
 

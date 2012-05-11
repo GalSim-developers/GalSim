@@ -3,18 +3,18 @@ import galsim
 def ReadInputCat(config, cat_file_name=None, filetype="ASCII", comments="#"):
     """@brief Read in an input catalog for object-by-object parameter specification.
 
-    @param config         A configuration AttributeDict containing all the required information for
-                          running GalSim in Multi-Object mode.
+    @param config         A configuration galsim.Config instance containing all the required
+                          information for running GalSim in Multi-Object mode.
     @param cat_file_name  Filename of the input catalog.
     @param filetype       Either 'ASCII' (currently the only, default, option) or (soon) 'FITS'.
     @param comments       The character used to indicate the start of a comment in an ASCII catalog
                           (default='#').
 
-    @returns An AttributeDict instance, each attribute of which is a vector of parameter values of
+    @returns A galsim.Config instance, each attribute of which is a vector of parameter values of
              length equal to the number of valid rows in the input catalog.
 
-    Does some checking for sensible inputs, unlike the functions it calls (read_ascii_input_cat()
-    and read_fits_input_cat()).
+    Does some checking for sensible inputs, unlike the functions it calls (ReadAsciiInputCat()
+    and ReadFitsInputCat()).
     """
     # First check for sensible inputs
     if cat_file_name == None:
@@ -34,17 +34,17 @@ def ReadAsciiInputCat(cat_file_name=None, ascii_fields=None, comments="#"):
     """@brief Read in an input catalog from an ASCII file.
 
     @param cat_file_name  Filename of the input catalog.
-    @param comments      The character used to indicate the start of a comment in an ASCII catalog
-                         (default='#').
+    @param comments       The character used to indicate the start of a comment in an ASCII catalog
+                          (default='#').
 
-    @returns An AttributeDict instance, each attribute of which is a vector of parameter values of
-             length equal to the number of valid rows in the input catalog.
+    @returns A galsim.Config instance, containing useful metadata and the ASCII table itself stored
+             as a NumPy array in the .data attribute.
 
-    Does not check for sensible inputs, leaving this up to the wrapper function read_input_cat().
+    Does not check for sensible inputs, leaving this up to the wrapper function ReadInputCat().
     """
     from numpy import loadtxt
-    # Initialize the AttributeDict() ready for storing the field values
-    input_cat = galsim.AttributeDict()
+    # Initialize the Config() ready for storing the field values
+    input_cat = galsim.Config()
     # Store basic meta data
     input_cat.cat_file_name = cat_file_name
     # Read in the data using the numpy convenience function
