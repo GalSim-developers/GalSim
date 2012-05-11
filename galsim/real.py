@@ -117,6 +117,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     # shear
     if (g1 != 0.0 or g2 != 0.0):
         sheared = deconv.createSheared(g1, g2)
+    else:
+        sheared = deconv
 
     # convolve, resample
     out_gal = galsim.Convolve([sheared, target_PSF])
