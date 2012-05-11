@@ -298,56 +298,74 @@ def Script2():
 
     config = galsim.Config()
 
-    config.psf.type = 'Moffat'
-    config.psf.beta.type = 'InputCatalog'
-    config.psf.beta.col = 5
-    config.psf.fwhm.type = 'InputCatalog'
-    config.psf.fwhm.col = 6
-    config.psf.ellip.type = 'E1E2'
-    config.psf.ellip.e1.type = 'InputCatalog'
-    config.psf.ellip.e1.col = 7
-    config.psf.ellip.e2.type = 'InputCatalog'
-    config.psf.ellip.e2.col = 8
-    # TODO rename truncationFWHM to something saner, like trunc
-    # And probably make it in units of arcsec rather than FWHM.
-    config.psf.truncationFWHM.type = 'InputCatalog'
-    config.psf.truncationFWHM.col = 9
+    if True:
+        config.psf.type = 'Moffat'
+        config.psf.beta.type = 'InputCatalog'
+        config.psf.beta.col = 5
+        config.psf.fwhm.type = 'InputCatalog'
+        config.psf.fwhm.col = 6
+        config.psf.ellip.type = 'E1E2'
+        config.psf.ellip.e1.type = 'InputCatalog'
+        config.psf.ellip.e1.col = 7
+        config.psf.ellip.e2.type = 'InputCatalog'
+        config.psf.ellip.e2.col = 8
+        # TODO rename truncationFWHM to something saner, like trunc
+        # And probably make it in units of arcsec rather than FWHM.
+        config.psf.truncationFWHM.type = 'InputCatalog'
+        config.psf.truncationFWHM.col = 9
+    
+        config.pix.type = 'SquarePixel'
+        config.pix.size = pixel_scale
+    
+        config.gal.type = 'Sum'
+        # TODO: [galsim.Config()]*2 doesn't work, since shallow copies.
+        # I guess we need a nicer way to initialize this.
+        config.gal.items = [galsim.Config(), galsim.Config()]
+        config.gal.items[0].type = 'Exponential'
+        config.gal.items[0].half_light_radius.type = 'InputCatalog'
+        config.gal.items[0].half_light_radius.col = 10
+        config.gal.items[0].ellip.type = 'E1E2'
+        config.gal.items[0].ellip.e1.type = 'InputCatalog'
+        config.gal.items[0].ellip.e1.col = 11
+        config.gal.items[0].ellip.e2.type = 'InputCatalog'
+        config.gal.items[0].ellip.e2.col = 12
+        config.gal.items[0].flux = 0.6
+        config.gal.items[1].type = 'DeVaucouleurs'
+        config.gal.items[1].half_light_radius.type = 'InputCatalog'
+        config.gal.items[1].half_light_radius.col = 13
+        config.gal.items[1].ellip.type = 'E1E2'
+        config.gal.items[1].ellip.e1.type = 'InputCatalog'
+        config.gal.items[1].ellip.e1.col = 14
+        config.gal.items[1].ellip.e2.type = 'InputCatalog'
+        config.gal.items[1].ellip.e2.col = 15
+        config.gal.items[1].flux = 0.4
+        config.gal.flux = gal_flux
+        config.gal.shift.type = 'DXDY'
+        config.gal.shift.dx.type = 'InputCatalog'
+        config.gal.shift.dx.col = 16
+        config.gal.shift.dy.type = 'InputCatalog'
+        config.gal.shift.dy.col = 17
+        config.gal.shear.type = 'G1G2'
+        config.gal.shear.g1 = gal_g1
+        config.gal.shear.g2 = gal_g2
+    else:
+        config.psf.type = 'Moffat beta=<InputCatalog col=5> fwhm=<InputCatalog col=6> ' +\
+                'truncationFWHM=<InputCatalog col=9>'
+        config.psf.ellip = 'E1E2 e1=<InputCatalog col=7> e2 = <InputCatalog col = 8>'
 
-    config.pix.type = 'SquarePixel'
-    config.pix.size = pixel_scale
+        config.pix = 'SquarePixel size=%f'%pixel_scale
 
-    config.gal.type = 'Sum'
-    # TODO: [galsim.Config()]*2 doesn't work, since shallow copies.
-    # I guess we need a nicer way to initialize this.
-    config.gal.items = [galsim.Config(), galsim.Config()]
-    config.gal.items[0].type = 'Exponential'
-    config.gal.items[0].half_light_radius.type = 'InputCatalog'
-    config.gal.items[0].half_light_radius.col = 10
-    config.gal.items[0].ellip.type = 'E1E2'
-    config.gal.items[0].ellip.e1.type = 'InputCatalog'
-    config.gal.items[0].ellip.e1.col = 11
-    config.gal.items[0].ellip.e2.type = 'InputCatalog'
-    config.gal.items[0].ellip.e2.col = 12
-    config.gal.items[0].flux = 0.6
-    config.gal.items[1].type = 'DeVaucouleurs'
-    config.gal.items[1].half_light_radius.type = 'InputCatalog'
-    config.gal.items[1].half_light_radius.col = 13
-    config.gal.items[1].ellip.type = 'E1E2'
-    config.gal.items[1].ellip.e1.type = 'InputCatalog'
-    config.gal.items[1].ellip.e1.col = 14
-    config.gal.items[1].ellip.e2.type = 'InputCatalog'
-    config.gal.items[1].ellip.e2.col = 15
-    config.gal.items[1].flux = 0.4
-    config.gal.flux = gal_flux
-    config.gal.shift.type = 'DXDY'
-    config.gal.shift.dx.type = 'InputCatalog'
-    config.gal.shift.dx.col = 16
-    config.gal.shift.dy.type = 'InputCatalog'
-    config.gal.shift.dy.col = 17
-    config.gal.shear.type = 'G1G2'
-    config.gal.shear.g1 = gal_g1
-    config.gal.shear.g2 = gal_g2
-
+        config.gal.type = 'Sum items=[ ' +\
+                'Exponential half_light_radius=<InputCatalog col=10> ' +\
+                    'ellip=<E1E2 e1=<InputCatalog col=11> e2=<InputCatalog col=12> > ' +\
+                    'flux = 0.6 ,' +\
+                'DeVaucouleurs  half_light_radius=<InputCatalog col=13> ' +\
+                    'ellip=<E1E2 e1=<InputCatalog col=14> e2=<InputCatalog col=15> > ,' +\
+                    'flux = 0.4 ]'
+        config.gal.flux = gal_flux
+        config.gal.shift = 'DXDY dx=<InputCatalog 16> dy=<InputCatalog 17>'
+        config.gal.shear = 'G1G2 g1=%f g2=%f'%(gal_g1,gal_g2)
+        
     # Read the catalog
     input_cat = galsim.io.ReadInputCat(config,cat_file_name)
     logger.info('Read %d objects from catalog',input_cat.nobjects)
