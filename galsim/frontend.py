@@ -127,7 +127,6 @@ def _BuildEllipObject(gsobject, config, input_cat=None):
 
     @returns transformed GSObject.
     """
-    @returns transformed GSObject.
     if not "type" in config.__dict__:
         raise AttributeError("No type attribute in config!")
     if config.type == "E1E2":
