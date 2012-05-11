@@ -117,6 +117,3 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
 
     # return simulated image
     return out_gal_image
-
-# make it a method of the RealGalaxy class
-galsim.RealGalaxy.simReal = simReal
