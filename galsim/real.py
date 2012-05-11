@@ -1,4 +1,4 @@
-from . import _galsim
+import galsim
 
 """@file real.py @brief Necessary functions for dealing with real galaxies and their catalogs.
 """
@@ -75,15 +75,22 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
         raise RuntimeError("Error: simReal requires a RealGalaxy!")
-    if isinstance(target_PSF, galsim.Image) or isinstance(target_PSF, galsim.ImageView):
-        l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
-        interp2d = galsim.InterpolantXY(l5)
-        new_target_PSF = galsim.SBInterpolatedImage(target_PSF.view(), interp2d, dx = target_pixel_scale)
-        target_PSF = new_target_PSF
-    if not isinstance(target_PSF, galsim.SBProfile):
-        raise RuntimeError("Error: target PSF is not an Image, ImageView, or SBProfile!")
-    if not isinstance(rotation_angle, galsim.Angle):
-        raise RuntimeError("Error: rotation angle is not an Angle instance!")
+    for Class in galsim.Image.itervalues():
+        if isinstance(target_PSF, Class):
+            l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
+            interp2d = galsim.InterpolantXY(l5)
+            new_target_PSF = galsim.SBInterpolatedImage(target_PSF.view(), interp2d, dx = target_pixel_scale)
+            target_PSF = new_target_PSF
+    for Class in galsim.ImageView.itervalues():
+        if isinstance(target_PSF, Class):
+            l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
+            interp2d = galsim.InterpolantXY(l5)
+            new_target_PSF = galsim.SBInterpolatedImage(target_PSF, interp2d, dx = target_pixel_scale)
+            target_PSF = new_target_PSF
+    if not isinstance(target_PSF, galsim.SBProfile) and not isinstance(target_PSF, galsim.GSObject):
+        raise RuntimeError("Error: target PSF is not an Image, ImageView, SBProfile, or GSObject!")
+    if rotation_angle != None and not isinstance(rotation_angle, galsim.Angle):
+        raise RuntimeError("Error: specified rotation angle is not an Angle instance!")
     if (rotation_angle != None and rand_rotate == True):
         raise RuntimeError("Error: both a random rotation and a specific rotation angle were requested!")
     if (target_pixel_scale < real_galaxy.pixel_scale):
@@ -104,8 +111,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     real_galaxy.SBProfile.setFlux(target_flux)
 
     # deconvolve
-    psf_inv = galsim.Deconvolve(psf)
-    deconv = galsim.Convolve([gal, psf_inv])
+    psf_inv = galsim.Deconvolve(real_galaxy.PSF)
+    deconv = galsim.Convolve([real_galaxy, psf_inv])
 
     # shear
     if (g1 != 0.0 or g2 != 0.0):
