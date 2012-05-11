@@ -1,5 +1,9 @@
 PRO make_test_ims
 
+; IDL script used to generate external test images for GalSim.
+; Used by tests/test_Image.py, see Issue #144.
+;
+
 ; Single images
 test_array = [[11, 21, 31, 41, 51, 61, 71], $
               [12, 22, 32, 42, 52, 62, 72], $
