@@ -34,7 +34,7 @@ def BuildGSObject(config, input_cat=None, logger=None):
     elif config.type == "SquarePixel":
         gsobject = _BuildSquarePixel(config, input_cat)
     elif config.type in op_dict:  # Object from primary GSObject keys in galsim.object_param_dict
-        gsobject = _BuildSingle(config, input_cat)
+        gsobject = _BuildSimple(config, input_cat)
     else:
         raise NotImplementedError("Unrecognised config.type = "+str(config.type))
     return gsobject
@@ -70,7 +70,7 @@ def _BuildSquarePixel(config, input_cat=None):
     return galsim.Pixel(**init_kwargs)
 
     
-def _BuildSingle(config, input_cat=None):
+def _BuildSimple(config, input_cat=None):
     """@brief Build a simple GSObject (i.e. not Sums, Convolutions, Pixels or SquarePixel) from
     user input.
     """
