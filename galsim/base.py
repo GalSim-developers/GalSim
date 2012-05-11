@@ -443,6 +443,8 @@ class Deconvolve(GSObject):
     """Base class for defining the python interface to the SBDeconvolve C++ class.
     """
     def __init__(self, *args):
-        # here, the arg could be a Deconvolve, or a GSObject; in either case, the following should work:
-        GSObject.__init__(self, galsim.SBDeconvolve(args[0].SBProfile))
+        if isinstance(args[0], galsim.SBInterpolatedImage):
+            GSObject.__init__(self, galsim.SBDeconvolve(args[0]))
+        else:
+            GSObject.__init__(self, galsim.SBDeconvolve(args[0].SBProfile))
 
