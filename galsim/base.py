@@ -74,6 +74,12 @@ class GSObject:
 
     def applyDistortion(self, ellipse):
         """Apply a galsim.Ellipse distortion to this object.
+
+        galsim.Ellipse instances can be generated via
+
+        >>> ellipse = galsim.Ellipse(e1, e2)
+
+        where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
         """
         GSObject.__init__(self, self.SBProfile.distort(ellipse))
         
@@ -82,20 +88,6 @@ class GSObject:
         """
         e1, e2 = _g1g2_to_e1e2(g1, g2)
         GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
-
-    def applyEllip(self, e1, e2, convention="E"):
-        """Apply a (e1, e2) ellipticity stretch to this object.
-
-        The convention |e| = (a^2-b^2)/(a^2+b^2) is adopted by default but optionally can
-        also use the shear-like |g| = (a-b)/(a+b) by setting convention = "G".
-        """
-        if convention == "E":
-            GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
-        elif convention == "G":
-            self.applyShear(e1, e2)
-        else:
-            raise NotImplementedError("Only 'E' or 'G' conventions supported.")
-        return 
 
     def applyRotation(self, theta):
         """Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
@@ -113,6 +105,12 @@ class GSObject:
     #
     def createDistorted(self, ellipse):
         """Create a new GSObject by applying a galsim.Ellipse distortion.
+
+        galsim.Ellipse instances can be generated via
+
+        >>> ellipse = galsim.Ellipse(e1, e2)
+
+        where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
         """
         return GSObject(self.SBProfile.distort(ellipse))
 
@@ -121,20 +119,6 @@ class GSObject:
         """
         e1, e2 = _g1g2_to_e1e2(g1, g2)
         return GSObject(self.SBProfile.distort(galsim.Ellipse(e1,e2)))
-
-    def createEllipsed(self, e1, e2, convention="E"):
-        """Create a new GSObject by applying an (e1, e2) ellipticity stretch.
-
-        The convention |e| = (a^2-b^2)/(a^2+b^2) is adopted by default but optionally can
-        also use the shear-like |g| = (a-b)/(a+b) by setting convention = "G".
-        """
-        if convention == "E":
-            new = GSObject(self.SBProfile.distort(galsim.Ellipse(e1, e2)))
-        elif convention == "G":
-            new = self.createSheared(e1, e2)
-        else:
-            raise NotImplementedError("Only 'E' or 'G' conventions supported.")
-        return new 
 
     def createRotated(self, theta):
         """Create a new GSObject by applying a rotation theta (Angle object, +ve anticlockwise).
