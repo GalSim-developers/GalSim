@@ -63,7 +63,7 @@ def Script1():
     gal_n = 1                       # Use n=1 for "disk" type
     # Great08 mixed pure bulge and pure disk for its LowNoise run.  
     # We're just doing disks to make things simpler.
-    gal_resolution = 1.4            # fwhm_obs / fwhm_psf
+    gal_resolution = 1.4            # r_obs / r_psf (use r = half_light_radius)
     gal_centroid_shift = 1.0        # arcsec (=pixels)
     gal_ellip_rms = 0.2             # using "shear" definition of ellipticity.
     gal_ellip_max = 0.6             #
@@ -78,7 +78,7 @@ def Script1():
     logger.info('    - PSF ellipticity = (%.3f,%.3f)',psf_g1,psf_g2)
     logger.info('    - PSF centroid shifts up to = %.2f pixels',psf_centroid_shift)
     logger.info('    - Sersic galaxies (n = %.1f)',gal_n)
-    logger.info('    - Resolution (fwhm_obs / fwhm_psf) = %.2f',gal_resolution)
+    logger.info('    - Resolution (r_obs / r_psf) = %.2f',gal_resolution)
     logger.info('    - Ellipticities have rms = %.1f, max = %.1f',
             gal_ellip_rms, gal_ellip_max)
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
@@ -89,8 +89,7 @@ def Script1():
     rng = galsim.UniformDeviate(random_seed)
 
     # Define the PSF profile
-    #psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm)
-    psf = galsim.Moffat(beta=psf_beta, flux=1., re=psf_fwhm/2, truncationFWHM=psf_trunc)
+    psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm, truncationFWHM=psf_trunc)
     psf.applyShear(psf_g1,psf_g2)
     logger.info('Made PSF profile')
 
@@ -138,17 +137,19 @@ def Script1():
             
     # Define the galaxy profile
 
+    # TODO: This is a hack. We should have a getHalfLightRadius() method.
+    psf_re = psf_fwhm / 2
+
     # First figure out the size we need from the resolution
     # great08 resolution was defined as Rgp / Rp where Rp is the FWHM of the PSF
     # and Rgp is the FWHM of the convolved galaxy.
     # We make the approximation here that the FWHM adds in quadrature during the 
     # convolution, so we can get the unconvolved size as:
     # Rg^2 = Rgp^2 - Rp^2 = Rp^2 * (resolution^2 - 1)
-    gal_fwhm = psf_fwhm * math.sqrt( gal_resolution**2 - 1)
+    gal_re = psf_re * math.sqrt( gal_resolution**2 - 1)
 
     # Make the galaxy profile starting with flux = 1.
-    # gal = galsim.Sersic(gal_n, flux=1., fwhm=gal_fwhm)
-    gal = galsim.Sersic(gal_n, flux=1., re=gal_fwhm/2)
+    gal = galsim.Sersic(gal_n, flux=1., half_light_radius=gal_re)
 
     # Now determine what flux we need to get our desired S/N
     # There are lots of definitions of S/N, but here is the one used by Great08
