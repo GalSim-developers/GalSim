@@ -106,7 +106,7 @@ def _BuildSimple(config, input_cat=None):
 #
 def _BuildEllipRotateShearShiftObject(gsobject, config, input_cat=None):
     """@brief Applies ellipticity, rotation, gravitational shearing and centroid shifting to a
-    supplied GSObject, in that order, based on input config and input_cat.
+    supplied GSObject, in that order, from user input.
 
     @returns transformed GSObject.
     """
@@ -122,8 +122,8 @@ def _BuildEllipRotateShearShiftObject(gsobject, config, input_cat=None):
 
 
 def _BuildEllipObject(gsobject, config, input_cat=None):
-    """@brief Applies ellipticity to a supplied GSObject based on input config and input_cat, also
-    used for gravitational shearing.
+    """@brief Applies ellipticity to a supplied GSObject from user input, also used for
+    gravitational shearing.
 
     @returns transformed GSObject.
     """
@@ -144,7 +144,7 @@ def _BuildEllipObject(gsobject, config, input_cat=None):
 
 
 def _BuildRotateObject(gsobject, config, input_cat=None):
-    """@brief Applies rotation to a supplied GSObject based on input config and input_cat.
+    """@brief Applies rotation to a supplied GSObject based on user input.
 
     @returns transformed GSObject.
 
@@ -154,7 +154,7 @@ def _BuildRotateObject(gsobject, config, input_cat=None):
 
 
 def _BuildShiftObject(gsobject, config, input_cat=None):
-    """@brief Applies centroid shift to a supplied GSObject based on input config and input_cat.
+    """@brief Applies centroid shift to a supplied GSObject based on user input.
 
     @returns transformed GSObject.
     """
