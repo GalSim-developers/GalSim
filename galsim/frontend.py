@@ -63,7 +63,7 @@ def _BuildSquarePixel(config, input_cat=None):
     if not "size" in config.__dict__:
         raise AttributeError("size attribute required in config for initializing SquarePixel "+
                              "objects.")
-    init_kwargs = {"xw": _Get_ParamValue(config, "size", input_cat)}
+    init_kwargs = {"xw": _GetParamValue(config, "size", input_cat)}
     init_kwargs["yw"] = init_kwargs["xw"]
     if "flux" in config.__dict__:
         init_kwargs["flux"] = _GetParamValue(config, "flux", input_cat)
@@ -83,7 +83,6 @@ def _BuildSingle(config, input_cat=None):
     init_kwargs.update(_GetOptionalKwargs(config, input_cat))
     # Finally, after pulling together all the params, try making the GSObject.
     init_func = eval("galsim."+config.type)
-    print config.type, init_kwargs
     try:
         gsobject = init_func(**init_kwargs)
     except Error, err_msg:
@@ -155,6 +154,7 @@ def _GetParamValue(config, param_name, input_cat=None):
 def _GetInputCatParamValue(config, param_name, input_cat=None):
     """@brief Specialized function for getting param values from an input cat.
     """
+    param = config.__getattr__(param_name)
     # Assuming param_name.type == InputCatalog checking/setting done upstream to avoid excess tests.
     if input_cat == None:
         raise ValueError("Keyword input_cat not given to _GetInputCatParamValue: the config "+
