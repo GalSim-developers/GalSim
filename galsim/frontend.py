@@ -90,7 +90,59 @@ def _BuildSimple(config, input_cat=None):
                            "Original error message: "+err_msg)
     return gsobject
 
+# --- Now we define a function for "ellipsing", rotating, shifting, shearing, in that order.
+#
+def _BuildEllipedRotatedShiftedSheared(gsobject, config, input_cat=None):
+    if "ellip" in config.__dict__:
+        gsobject = BuildEllipedObject(gsobject, config, input_cat)
+    if "rotate" in config.__dict__:
+        gsobject = BuildRotatedObject(gsobject, config, input_cat)
+    if "shift" in config.__dict__:
+        gsobject = BuildShiftedObject(gsobject, config, input_cat)
+    if "shear" in config.__dict__:
+        gsobject = BuildShearedObject(gsobject, config, input_cat)
+    return gsobject
 
+def _BuildEllipObject(gsobject, config, input_cat=None):
+    if config.ellip.type == "E1E2":
+        e1 = _GetParamValue(config.ellip, "e1", input_cat)
+        e2 = _GetParamValue(config.ellip, "e2", input_cat)
+        gsobject = gsobject.createEllipsed(e1, e2)
+    elif config.ellip.type == "G1G2":
+        g1 = _GetParamValue(config.ellip, "g1", input_cat)
+        g2 = _GetParamValue(config.ellip, "g2", input_cat)
+        gsobject = gsobject.createSheared(g1, g2)
+    else:
+        raise NotImplementedError("Sorry only ellip.type = 'E1E2', 'G1G2' currently supported.")
+    return gsobject
+
+def _BuildRotateObject(gsobject, config, input_cat=None):
+    raise NotImplementedError("Sorry, rotation (with new angle class) not currently supported.")
+
+def _BuildShiftObject(gsobject, config, input_cat=None):
+    if config.shift.type == "DXDY":
+        dx = _GetParamValue(config.shift, "dx", input_cat)
+        dy = _GetParamValue(config.shift, "dy", input_cat)
+        gsobject = gsobject.createShifted(dx, dy)
+    else:
+        raise NotImplementedError("Sorry only shift.type = 'DXDY' currently supported.")
+
+def _BuildShearObject(gsobject, conifg, input_cat=None):
+    if config.ellip.type == "E1E2":
+        e1 = _GetParamValue(config.shear, "e1", input_cat)
+        e2 = _GetParamValue(config.shear, "e2", input_cat)
+        gsobject = gsobject.createEllipsed(e1, e2)
+    elif config.ellip.type == "G1G2":
+        g1 = _GetParamValue(config.ellip, "g1", input_cat)
+        g2 = _GetParamValue(config.ellip, "g2", input_cat)
+        gsobject = gsobject.createSheared(g1, g2)
+    else:
+        raise NotImplementedError("Sorry only shear.type = 'E1E2', 'G1G2' currently supported.")
+    return gsobject
+
+
+# --- Below this point are the functions for getting the required parameters from the user input ---
+#
 def _GetRequiredKwargs(config, input_cat=None):
     """@brief Get the required kwargs.
     """

@@ -78,10 +78,24 @@ class GSObject:
         GSObject.__init__(self, self.SBProfile.distort(ellipse))
         
     def applyShear(self, g1, g2):
-        """Apply a (g1,g2) shear to this object.
+        """Apply a (g1, g2) shear to this object, where |g| = (a-b)/(a+b).
         """
         e1, e2 = _g1g2_to_e1e2(g1, g2)
         GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
+
+    def applyEllip(self, e1, e2, convention="E"):
+        """Apply a (e1, e2) ellipticity stretch to this object.
+
+        The convention |e| = (a^2-b^2)/(a^2+b^2) is adopted by default but optionally can
+        also use the shear-like |g| = (a-b)/(a+b) by setting convention = "G".
+        """
+        if convention == "E":
+            GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
+        elif convention == "G":
+            self.applyShear(e1, e2)
+        else:
+            raise NotImplementedError("Only 'E' or 'G' conventions supported.")
+        return 
 
     def applyRotation(self, theta):
         """Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
@@ -103,10 +117,24 @@ class GSObject:
         return GSObject(self.SBProfile.distort(ellipse))
 
     def createSheared(self, g1, g2):
-        """Create a new GSObject by applying a (g1, g2) shear.
+        """Create a new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
         """
         e1, e2 = _g1g2_to_e1e2(g1, g2)
         return GSObject(self.SBProfile.distort(galsim.Ellipse(e1,e2)))
+
+    def createEllipsed(self, e1, e2, convention="E"):
+        """Create a new GSObject by applying an (e1, e2) ellipticity stretch.
+
+        The convention |e| = (a^2-b^2)/(a^2+b^2) is adopted by default but optionally can
+        also use the shear-like |g| = (a-b)/(a+b) by setting convention = "G".
+        """
+        if convention == "E":
+            new = GSObject(self.SBProfile.distort(galsim.Ellipse(e1, e2)))
+        elif convention == "G":
+            new = self.createSheared(e1, e2)
+        else:
+            raise NotImplementedError("Only 'E' or 'G' conventions supported.")
+        return 
 
     def createRotated(self, theta):
         """Create a new GSObject by applying a rotation theta (Angle object, +ve anticlockwise).
