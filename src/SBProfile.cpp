@@ -1456,8 +1456,9 @@ namespace galsim {
         //First, relation between FWHM and rD:
         FWHMrD = 2.* std::sqrt(std::pow(2., 1./beta)-1.);
         maxRrD = FWHMrD * truncationFWHM;
-        // Make FFT's periodic at 4x truncation radius or 8x half-light radius:
-        stepKrD = M_PI / (2*std::max(maxRrD, 16.));
+        // Make FFT's periodic at 4x truncation radius or 1.5x diam at ALIAS_THRESHOLD,
+        // whichever is smaller
+        stepKrD = 2*PI / MIN(4*maxRrD, 3.*sqrt(pow(ALIAS_THRESHOLD, -1./beta)-1));
         // And be sure to get at least 16 pts across FWHM when drawing:
         maxKrD = 16*M_PI / FWHMrD;
 
