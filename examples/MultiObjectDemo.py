@@ -298,6 +298,7 @@ def Script2():
 
     config = galsim.Config()
 
+    # Either version below is equivalent.
     if True:
         config.psf.type = 'Moffat'
         config.psf.beta.type = 'InputCatalog'
@@ -360,10 +361,10 @@ def Script2():
                     'ellip=<E1E2 e1=<InputCatalog col=11> e2=<InputCatalog col=12> > ' +\
                     'flux = 0.6 ,' +\
                 'DeVaucouleurs  half_light_radius=<InputCatalog col=13> ' +\
-                    'ellip=<E1E2 e1=<InputCatalog col=14> e2=<InputCatalog col=15> > ,' +\
+                    'ellip=<E1E2 e1=<InputCatalog col=14> e2=<InputCatalog col=15> > ' +\
                     'flux = 0.4 ]'
         config.gal.flux = gal_flux
-        config.gal.shift = 'DXDY dx=<InputCatalog 16> dy=<InputCatalog 17>'
+        config.gal.shift = 'DXDY dx=<InputCatalog col=16> dy=<InputCatalog col=17>'
         config.gal.shear = 'G1G2 g1=%f g2=%f'%(gal_g1,gal_g2)
         
     # Read the catalog
