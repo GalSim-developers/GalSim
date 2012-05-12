@@ -1,8 +1,6 @@
 import galsim
 op_dict = galsim.object_param_dict
 
-# USERS NOTE - THIS IS CURRENTLY IN DEVELOPMENT AND UNFINISHED!
-#
 
 def BuildGSObject(config, input_cat=None, logger=None):
     """Build a GSObject using a config (Config instance) and possibly an input_cat.
