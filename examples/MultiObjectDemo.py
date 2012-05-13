@@ -23,14 +23,14 @@ except ImportError:
 def Script1():
     """
     Make images similar to that done for the Great08 challenge:
-      - Each fits file is 100 x 100 postage stamps
-      - Each postage stamp is 40 x 40 pixels
-      - One set of files is all stars
-      - Another set of files is all galaxies
-      - Applied shear is the same for each file
+      - Each fits file is 100 x 100 postage stamps.
+      - Each postage stamp is 40 x 40 pixels.
+      - One image is all stars.
+      - A second image is all galaxies.
+      - Applied shear is the same for each galaxy.
       - Galaxies are oriented randomly, but in pairs to cancel shape noise.
-      - Noise is poisson using a nominal sky value of 1.e6
-      - Galaxies are sersic profiles
+      - Noise is poisson using a nominal sky value of 1.e6.
+      - Galaxies are sersic profiles.
     """
     logger = logging.getLogger("Script1") 
 
