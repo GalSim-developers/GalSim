@@ -23,7 +23,9 @@ except ImportError:
 def Script1():
     """
     Make images similar to that done for the Great08 challenge:
-      - Each fits file is 100 x 100 postage stamps.
+      - Each fits file is 10 x 10 postage stamps.
+        (The real Great08 images are 100x100, but in the interest of making the Demo
+         script a bit quicker, we only build 100 stars and 100 galaxies.)
       - Each postage stamp is 40 x 40 pixels.
       - One image is all stars.
       - A second image is all galaxies.
@@ -37,9 +39,6 @@ def Script1():
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    # Not using 100 x 100 because very slow currently.
-    #nx_stamps = 100                 #
-    #ny_stamps = 100                 #
     nx_stamps = 10                  #
     ny_stamps = 10                  #
     nx_pixels = 40                  #
