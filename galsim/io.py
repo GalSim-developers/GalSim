@@ -30,7 +30,7 @@ def ReadInputCat(config, cat_file_name=None, filetype="ASCII", comments="#"):
     # Return catalog to the user
     return input_cat
 
-def ReadAsciiInputCat(cat_file_name=None, ascii_fields=None, comments="#"):
+def ReadAsciiInputCat(cat_file_name=None, comments="#"):
     """@brief Read in an input catalog from an ASCII file.
 
     @param cat_file_name  Filename of the input catalog.
