@@ -1170,7 +1170,7 @@ namespace galsim {
             else xfac = norm;
 
             for (int j = I.getYMin(); j <= I.getYMax(); j++) {
-                if (xfac==0. || std::abs(j)>yedge) I(i,j)=0.;
+                if (xfac==0. || std::abs(j)>yedge) I(i,j)=T(0);
                 else if (std::abs(j)==yedge) I(i,j)=xfac*yfrac;
                 else I(i,j)=xfac;
                 totalflux += I(i,j);
