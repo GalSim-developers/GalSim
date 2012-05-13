@@ -75,7 +75,7 @@ def Script1():
     logger.info('    - postage stamps of size %d x %d pixels',nx_pixels,ny_pixels)
     logger.info('    - Moffat PSF (beta = %.1f, FWHM = %.2f, trunc = %.2f),', 
             psf_beta,psf_fwhm,psf_trunc)
-    logger.info('    - PSF ellipticity = (%.3f,%.3f)',psf_g1,psf_g2)
+    logger.info('    - PSF shear = (%.3f,%.3f)',psf_g1,psf_g2)
     logger.info('    - PSF centroid shifts up to = %.2f pixels',psf_centroid_shift)
     logger.info('    - Sersic galaxies (n = %.1f)',gal_n)
     logger.info('    - Resolution (r_obs / r_psf) = %.2f',gal_resolution)
@@ -124,6 +124,14 @@ def Script1():
 
             # No noise on PSF images.  Just draw it as is.
             this_psf.draw(sub_image, dx=pixel_scale)
+            if ix==0 and iy==0:
+                # for first instance, measure moments
+                psf_shape = sub_image.FindAdaptiveMom()
+                g_to_e = psf_shape.observed_shape.getG() / psf_shape.observed_shape.getE()
+                logger.info('Measured best-fit elliptical Gaussian for first PSF image: ')
+                logger.info('  g1, g2, sigma = %7.4f, %7.4f, %7.4f (pixels)',
+                            g_to_e*psf_shape.observed_shape.getE1(),
+                            g_to_e*psf_shape.observed_shape.getE2(), psf_shape.moments_sigma)
 
             x = b.center().x
             y = b.center().y
