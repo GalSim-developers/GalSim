@@ -87,7 +87,10 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
             interp2d = galsim.InterpolantXY(l5)
             new_target_PSF = galsim.SBInterpolatedImage(target_PSF, interp2d, dx = target_pixel_scale)
             target_PSF = new_target_PSF
-    if not isinstance(target_PSF, galsim.SBProfile) and not isinstance(target_PSF, galsim.GSObject):
+    if isinstance(target_PSF, galsim.GSObject):
+        new_target_PSF = target_PSF.SBProfile
+        target_PSF = new_target_PSF
+    if not isinstance(target_PSF, galsim.SBProfile):
         raise RuntimeError("Error: target PSF is not an Image, ImageView, SBProfile, or GSObject!")
     if rotation_angle != None and not isinstance(rotation_angle, galsim.Angle):
         raise RuntimeError("Error: specified rotation angle is not an Angle instance!")
@@ -99,30 +102,48 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     # rotate
     if rotation_angle != None:
         real_galaxy.SBProfile.applyRotation(rotation_angle)
-        real_galaxy.PSF.applyRotation(rotation_angle)
     elif rand_rotate == True:
         u = galsim.UniformDeviate()
         rand_angle = galsim.Angle(np.pi*u(), galsim.radians)
         real_galaxy.SBProfile.applyRotation(rand_angle)
-        real_galaxy.PSF.applyRotation(rand_angle)
 
     # set fluxes
-    real_galaxy.PSF.setFlux(1.0)
     real_galaxy.SBProfile.setFlux(target_flux)
-
-    # deconvolve
-    psf_inv = galsim.Deconvolve(real_galaxy.PSF)
-    deconv = galsim.Convolve([real_galaxy, psf_inv])
 
     # shear
     if (g1 != 0.0 or g2 != 0.0):
-        sheared = deconv.createSheared(g1, g2)
+        e1, e2 = _g1g2_to_e1e2(g1, g2)
+        sheared = real_galaxy.SBProfile.shear(e1, e2)
     else:
-        sheared = deconv
+        sheared = real_galaxy.SBProfile
 
     # convolve, resample
-    out_gal = galsim.Convolve([sheared, target_PSF])
+    out_gal = galsim.SBConvolve([sheared, target_PSF])
     out_gal_image = out_gal.draw(dx = target_pixel_scale)
 
     # return simulated image
     return out_gal_image
+
+# Define "hidden" convenience function for going from (g1, g2) -> (e1, e2):
+def _g1g2_to_e1e2(g1, g2):
+    """Convenience function for going from (g1, g2) -> (e1, e2).
+    """
+    # SBProfile expects an e1,e2 distortion, rather than a shear,
+    # so we need to convert:
+    # e = (a^2-b^2) / (a^2+b^2)
+    # g = (a-b) / (a+b)
+    # b/a = (1-g)/(1+g)
+    # e = (1-(b/a)^2) / (1+(b/a)^2)
+    import math
+    gsq = g1*g1 + g2*g2
+    if gsq > 0.:
+        g = math.sqrt(gsq)
+        boa = (1-g) / (1+g)
+        e = (1 - boa*boa) / (1 + boa*boa)
+        e1 = g1 * (e/g)
+        e2 = g2 * (e/g)
+        return e1, e2
+    elif gsq == 0.:
+        return 0., 0.
+    else:
+        raise ValueError("Input |g|^2 < 0, cannot convert.")
