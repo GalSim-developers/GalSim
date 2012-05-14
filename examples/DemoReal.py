@@ -37,8 +37,8 @@ print 'Made real galaxy from catalog index ',real_galaxy.index
 good_psf = galsim.Moffat(psf_beta, fwhm = good_psf_fwhm)
 bad_psf = galsim.Moffat(psf_beta, fwhm = bad_psf_fwhm)
 pixel = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)
-good_epsf = galsim.Convolve([good_psf, pixel])
-bad_epsf = galsim.Convolve([bad_psf, pixel])
+good_epsf = galsim.Convolve(good_psf, pixel)
+bad_epsf = galsim.Convolve(bad_psf, pixel)
 
 # simulate some nice ground-based data, e.g., Subaru/CFHT with good seeing; with and without shear
 print "Simulating unsheared galaxy in good seeing..."
@@ -54,10 +54,10 @@ sim_image_bad_shear = galsim.simReal(real_galaxy, bad_epsf, pixel_scale, g1 = g1
 
 # write to files: original galaxy, original PSF, 2 target PSFs, 4 simulated images
 # note: will differ each time it is run, because we chose a random image
-orig_gal_img = real_galaxy.draw(dx = real_galaxy.pixel_scale)
+orig_gal_img = real_galaxy.original_image.draw(dx = real_galaxy.pixel_scale)
 orig_gal_img.write(os.path.join(image_dir, 'demoreal.orig_gal.fits'), clobber = True)
 
-orig_psf_img = real_galaxy.PSF.draw(dx = real_galaxy.pixel_scale)
+orig_psf_img = real_galaxy.original_PSF.draw(dx = real_galaxy.pixel_scale)
 orig_psf_img.write(os.path.join(image_dir, 'demoreal.orig_PSF.fits'), clobber = True)
 
 good_epsf_img = good_epsf.draw(dx = pixel_scale)
