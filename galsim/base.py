@@ -314,10 +314,11 @@ class RealGalaxy(GSObject):
     real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string =
                                     None, random = False, interpolantxy = None)
 
-    This initializes real_galaxy with two SBInterpolatedImage objects (one for the galaxy and one
-    for the PSF). Note that there are multiple keywords for choosing a galaxy; exactly one must be
-    set.  In future we may add more such options, e.g., to choose at random but accounting for the
-    non-constant weight factors (probabilities for objects to make it into the training sample).
+    This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
+    galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
+    keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
+    options, e.g., to choose at random but accounting for the non-constant weight factors
+    (probabilities for objects to make it into the training sample).
 
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
                                 find the data, etc.
@@ -332,9 +333,9 @@ class RealGalaxy(GSObject):
                  interpolantxy = None):
 
         import pyfits
-        # Code block below will be for galaxy selection;
-        # implement exactly one for now, then gradually others.  All of them need to return an index
-        # within the real_galaxy_catalog.
+
+        # Code block below will be for galaxy selection; not all are currently implemented.  Each
+        # option must return an index within the real_galaxy_catalog.
         use_index = -1
         if index != None:
             if (ID != None or random == True):
@@ -375,9 +376,14 @@ class RealGalaxy(GSObject):
         # note: will be adding more parameters here about noise properties etc., but let's be basic
         # for now
 
-        self.PSF = galsim.SBInterpolatedImage(PSF_image, self.Interpolant2D, dx=self.pixel_scale)
-        GSObject.__init__(self, galsim.SBInterpolatedImage(gal_image, self.Interpolant2D,
-                                                           dx=self.pixel_scale))
+        self.original_image = galsim.SBInterpolatedImage(gal_image, self.Interpolant2D, dx =
+                                                         self.pixel_scale)
+        self.original_PSF = galsim.SBInterpolatedImage(PSF_image, self.Interpolant2D,
+                                                         dx=self.pixel_scale)
+        self.original_PSF.setFlux(1.0)
+        psf_inv = galsim.SBDeconvolve(self.original_PSF)
+
+        GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
 
 class Add(GSObject):
     """Base class for defining the python interface to the SBAdd C++ class.
