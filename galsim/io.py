@@ -21,14 +21,14 @@ def ReadInputCat(config, cat_file_name=None, filetype="ASCII", comments="#"):
         raise IOError("No filename given!")
 
     # Raise an apologetic exception for FITS input-wanting users
-    if filetype in ("FITS", "fits", "Fits"):
+    if filetype.upper() == "FITS":
         raise NotImplementedError("FITS catalog inputs not yet implemented, sorry!")
     # Then read in from the ASCII-type catalogs
-    elif filetype in ("ASCII", "ascii", "Ascii"):
+    elif filetype.upper() ==  "ASCII":
         input_cat = ReadAsciiInputCat(cat_file_name=cat_file_name, comments=comments)
     else:
         raise AttributeError("User must specify input catalog file type as either 'ASCII' "+
-                             "('ascii'/'Ascii' accepted) or 'FITS' ('fits'/'Fits' accepted).")
+                             "or 'FITS' (case-insensitive).")
     # Return catalog to the user
     return input_cat
 
