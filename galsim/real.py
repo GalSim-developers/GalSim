@@ -101,6 +101,9 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
         message = "Warning: requested pixel scale is higher resolution than original!"
         warnings.warn(message)
 
+    # make sure target PSF is normalized
+    target_PSF.setFlux(1.0)
+
     import math # needed for pi and other stuff below
 
     # rotate
