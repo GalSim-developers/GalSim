@@ -21,7 +21,6 @@ except ImportError:
 # define some variables etc.
 real_catalog_filename = 'data/real_galaxy_catalog_example.fits'
 image_dir = 'data'
-psf_beta = 4
 good_psf_fwhm = 0.6 # arcsec
 bad_psf_fwhm = 1.5
 pixel_scale = 0.2 # arcsec
@@ -34,8 +33,8 @@ real_galaxy = galsim.RealGalaxy(rgc, random = True)
 print 'Made real galaxy from catalog index ',real_galaxy.index
 
 # make a target PSF object
-good_psf = galsim.Moffat(psf_beta, fwhm = good_psf_fwhm)
-bad_psf = galsim.Moffat(psf_beta, fwhm = bad_psf_fwhm)
+good_psf = galsim.Gaussian(fwhm = good_psf_fwhm)
+bad_psf = galsim.Gaussian(fwhm = bad_psf_fwhm)
 pixel = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)
 good_epsf = galsim.Convolve(good_psf, pixel)
 bad_epsf = galsim.Convolve(bad_psf, pixel)
