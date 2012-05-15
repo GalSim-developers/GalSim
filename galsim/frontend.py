@@ -37,12 +37,20 @@ def BuildGSObject(config, input_cat=None, logger=None):
             raise AttributeError("items attribute required in for config."+type+" entry.")
 
     elif config.type == "Pixel": # BR: under duress ;)
+        # Note we do not shear, shift, rotate etc. Pixels, such params raise an Exception.
+        for transform in ("ellip", "rotate", "shear", "shift"):
+            if transform in config.__dict__:
+                raise AttributeError(transform+" operation specified in config not supported for "+
+                                     "Pixel objects.")
         gsobject = _BuildPixel(config, input_cat)
-        # Note we do not shear, shift, rotate etc. Pixels, such params in the config are ignored.
 
     elif config.type == "SquarePixel":
+        # Note we do not shear, shift, rotate etc. SquarePixels, such params raise an Exception.
+        for transform in ("ellip", "rotate", "shear", "shift"):
+            if transform in config.__dict__:
+                raise AttributeError(transform+" operation specified in config not supported for "+
+                                     "SquarePixel objects.")
         gsobject = _BuildSquarePixel(config, input_cat)
-        # Note we do not shear, shift, rotate etc. Pixels, such params in the config are ignored.
 
     # Else Build object from primary GSObject keys in galsim.object_param_dict
     elif config.type in op_dict: 

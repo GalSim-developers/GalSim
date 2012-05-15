@@ -23,23 +23,22 @@ except ImportError:
 def Script1():
     """
     Make images similar to that done for the Great08 challenge:
-      - Each fits file is 100 x 100 postage stamps
-      - Each postage stamp is 40 x 40 pixels
-      - One set of files is all stars
-      - Another set of files is all galaxies
-      - Applied shear is the same for each file
+      - Each fits file is 10 x 10 postage stamps.
+        (The real Great08 images are 100x100, but in the interest of making the Demo
+         script a bit quicker, we only build 100 stars and 100 galaxies.)
+      - Each postage stamp is 40 x 40 pixels.
+      - One image is all stars.
+      - A second image is all galaxies.
+      - Applied shear is the same for each galaxy.
       - Galaxies are oriented randomly, but in pairs to cancel shape noise.
-      - Noise is poisson using a nominal sky value of 1.e6
-      - Galaxies are sersic profiles
+      - Noise is poisson using a nominal sky value of 1.e6.
+      - Galaxies are sersic profiles.
     """
     logger = logging.getLogger("Script1") 
 
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    # Not using 100 x 100 because very slow currently.
-    #nx_stamps = 100                 #
-    #ny_stamps = 100                 #
     nx_stamps = 10                  #
     ny_stamps = 10                  #
     nx_pixels = 40                  #
@@ -75,7 +74,7 @@ def Script1():
     logger.info('    - postage stamps of size %d x %d pixels',nx_pixels,ny_pixels)
     logger.info('    - Moffat PSF (beta = %.1f, FWHM = %.2f, trunc = %.2f),', 
             psf_beta,psf_fwhm,psf_trunc)
-    logger.info('    - PSF ellipticity = (%.3f,%.3f)',psf_g1,psf_g2)
+    logger.info('    - PSF shear = (%.3f,%.3f)',psf_g1,psf_g2)
     logger.info('    - PSF centroid shifts up to = %.2f pixels',psf_centroid_shift)
     logger.info('    - Sersic galaxies (n = %.1f)',gal_n)
     logger.info('    - Resolution (r_obs / r_psf) = %.2f',gal_resolution)
@@ -124,6 +123,14 @@ def Script1():
 
             # No noise on PSF images.  Just draw it as is.
             this_psf.draw(sub_image, dx=pixel_scale)
+            if ix==0 and iy==0:
+                # for first instance, measure moments
+                psf_shape = sub_image.FindAdaptiveMom()
+                g_to_e = psf_shape.observed_shape.getG() / psf_shape.observed_shape.getE()
+                logger.info('Measured best-fit elliptical Gaussian for first PSF image: ')
+                logger.info('  g1, g2, sigma = %7.4f, %7.4f, %7.4f (pixels)',
+                            g_to_e*psf_shape.observed_shape.getE1(),
+                            g_to_e*psf_shape.observed_shape.getE2(), psf_shape.moments_sigma)
 
             x = b.center().x
             y = b.center().y

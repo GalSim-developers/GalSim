@@ -144,7 +144,7 @@ namespace galsim {
         KTable* wrap(int Nout) const;
 
         // Info about the table:  
-        double getN() const { return N; }
+        int getN() const { return N; }
         double getDk() const { return dk; }
 
         // Translate to move origin at (x0,y0)
@@ -241,7 +241,7 @@ namespace galsim {
         XTable* wrap(int Nout) const;
 
         ////// Info on the table:
-        double getN() const { return N; }
+        int getN() const { return N; }
         double getDx() const { return dx; }
 
         ///// Other operations:

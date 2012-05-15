@@ -25,10 +25,11 @@ config.dx = 1.
 #                    based PSFs.
 # "Moffat"           A Moffat (1969) parametric PSF model.
 # "Airy"             An Airy function describing ideal diffraction limited optics.
-# "OpticalPSF"       A PSF describing telescope optics with coma, astigmatism, defocus and spherical#                    aberration.
+# "OpticalPSF"       A PSF describing telescope optics with coma, astigmatism, defocus and spherical
+#                    aberration.
 # "Pixel"            A square boxcar convolution that describes pixelation / pixel flux integration.
 #
-# Each of these PSF types has it's own set of input parameters, which must be set for each output
+# Each of these PSF types has its own set of input parameters, which must be set for each output
 # object via input catalogue values, or given a specified distribution via config file.  See the
 # GalSim object docstrings / GalSim documentation for details.
 #
@@ -67,7 +68,7 @@ config.PSF.Pixel.yw = config.dx
 # "Exponential"     Special case of a Sersic profile with index n = 1.
 # "DeVaucouleurs"   Special case of a Sersic profile with index n = 4.
 #
-# Each of these galaxy types has it's own set of input parameters, which must be set for each output
+# Each of these galaxy types has its own set of input parameters, which must be set for each output
 # object via input catalogue values, or given a specified distribution via config file.  See the
 # GalSim object docstrings / GalSim documentation for details.
 #
@@ -201,7 +202,7 @@ config.output.filename = "galsim_default_output_gal.fits"
 config.output.nx = 480
 config.output.ny = 480
 #
-# Do you want a separate PSF output file?  If so specify below and give filename.  Currently this
+# Do you want a separate PSF output file?  If so, specify below and give filename.  Currently this
 # must be the same output type and dimensions as the galaxy output defined above.
 #
 config.output.PSFs.generate = True
