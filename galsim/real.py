@@ -25,6 +25,9 @@ class RealGalaxyCatalog:
     @param imagedir   The directory containing the images.
     """
     def __init__(self, filename, imagedir):
+        import os
+        if not os.path.isdir(imagedir):
+            raise RuntimeError(imagedir+' directory does not exist!')
         import pyfits
         cat = pyfits.getdata(filename)
         self.filename = filename # store the filename from which the catalog was read
