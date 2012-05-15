@@ -85,6 +85,11 @@ namespace galsim {
         // Require output FTs to be period on scale > original image extent + kernel footprint:
         double stepK() const { return 2.*M_PI / ( (Ninitial+2*xInterp->xrange())*dx); }
 
+        double minX() const { return -(Ninitial+2*xInterp->xrange())*dx; }
+        double maxX() const { return (Ninitial+2*xInterp->xrange())*dx; }
+        double minY() const { return -(Ninitial+2*xInterp->xrange())*dx; }
+        double maxY() const { return (Ninitial+2*xInterp->xrange())*dx; }
+
         bool isAxisymmetric() const { return false; }
 
         // This class will be set up so that both x and k domain values

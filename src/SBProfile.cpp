@@ -5,6 +5,7 @@
 #include "integ/Int.h"
 #include "TMV.h"
 #include "Solve.h"
+#include "integ/Int.h"
 
 namespace galsim {
 
@@ -644,6 +645,8 @@ namespace galsim {
     {
         sumflux = sumfx = sumfy = 0.;
         maxMaxK = minStepK = 0.;
+        minMinX = maxMaxX = 0.;
+        minMinY = maxMaxY = 0.;
         allAxisymmetric = allAnalyticX = allAnalyticK = true;
     }
 
@@ -688,6 +691,10 @@ namespace galsim {
             sumfy += (*newptr)->getFlux() * (*newptr)->centroid().x;
             if ( (*newptr)->maxK() > maxMaxK) maxMaxK = (*newptr)->maxK();
             if ( minStepK<=0. || ((*newptr)->stepK() < minStepK)) minStepK = (*newptr)->stepK();
+            if ( (*newptr)->minX() > minMinX) minMinX = (*newptr)->minX();
+            if ( (*newptr)->maxX() > maxMaxX) maxMaxX = (*newptr)->maxX();
+            if ( (*newptr)->minY() > minMinY) minMinY = (*newptr)->minY();
+            if ( (*newptr)->maxY() > maxMaxY) maxMaxY = (*newptr)->maxY();
             allAxisymmetric = allAxisymmetric && (*newptr)->isAxisymmetric();
             allAnalyticX = allAnalyticX && (*newptr)->isAnalyticX();
             allAnalyticK = allAnalyticK && (*newptr)->isAnalyticK();
@@ -879,13 +886,21 @@ namespace galsim {
     //
     void SBConvolve::add(const SBProfile& rhs) 
     {
-        if (!rhs.isAnalyticK()) throw SBError("SBConvolve requires members to be analytic in k");
+        if (!rhs.isAnalyticK() && !useReal) 
+            throw SBError("SBConvolve requires members to be analytic in k");
+        if (!rhs.isAnalyticX() && useReal)
+            throw SBError("SBConvolve with real=true requires members to be analytic in x");
+
         // If this is the first thing being added to the list, initialize some accumulators
         if (plist.empty()) {
             x0 = y0 = 0.;
             fluxProduct = 1.;
             minMaxK = 0.;
             minStepK = 0.;
+            sumMinX = 0.;
+            sumMaxX = 0.;
+            sumMinY = 0.;
+            sumMaxY = 0.;
             isStillAxisymmetric = true;
         }
 
@@ -922,6 +937,10 @@ namespace galsim {
             y0 += (*newptr)->centroid().y;
             if ( minMaxK<=0. || (*newptr)->maxK() < minMaxK) minMaxK = (*newptr)->maxK();
             if ( minStepK<=0. || ((*newptr)->stepK() < minStepK)) minStepK = (*newptr)->stepK();
+            sumMinX += (*newptr)->minX();
+            sumMaxX += (*newptr)->maxX();
+            sumMinY += (*newptr)->minY();
+            sumMaxY += (*newptr)->maxY();
             isStillAxisymmetric = isStillAxisymmetric && (*newptr)->isAxisymmetric();
             newptr++;
         }
@@ -941,6 +960,62 @@ namespace galsim {
         for ( ; pptr!= plist.end(); ++pptr) {
             (*pptr)->fillKGrid(k2);
             kt*=k2;
+        }
+    }
+
+    class RealSpaceConvolve : 
+        public std::binary_function<double,double,double>
+    {
+    public:
+        RealSpaceConvolve(const SBProfile* p1, const SBProfile* p2, double x0, double y0) :
+            _p1(p1), _p2(p2), _x0(x0), _y0(y0) {}
+
+        double operator()(double x, double y) const 
+        {
+            return 
+                _p1->xValue(Position<double>(x,y)) *
+                _p2->xValue(Position<double>(_x0-x,_y0-y));
+        }
+    private:
+        const SBProfile* _p1;
+        const SBProfile* _p2;
+        double _x0, _y0;
+    };
+
+    double SBConvolve::xValue(Position<double> _p) const
+    {
+        const double relerr = 1.e-6;
+        const double abserr = 1.e-15;
+
+        // Perform a direct calculation of the convolution at a particular point by
+        // doing the real-space integral.
+        // Note: This can only really be done one pair at a time, so it is 
+        // probably rare that this will be more efficient if N > 2.
+        // For now, we don't bother implementing this for N > 2.
+        if (plist.empty()) return 0.;
+        else if (plist.size() == 1) return plist.front()->xValue(_p);
+        else if (plist.size() > 2) 
+            throw SBError("Real-space integration of more than 2 profiles is not implemented.");
+        else {
+            double x = _p.x;
+            double y = _p.y;
+            if (x < sumMinX) return 0.;
+            if (x > sumMaxX) return 0.;
+            if (y < sumMinX) return 0.;
+            if (y > sumMaxY) return 0.;
+
+            const SBProfile* p1 = plist.front();
+            const SBProfile* p2 = plist.back();
+            RealSpaceConvolve conv(p1,p2,x,y);
+
+            integ::IntRegion<double> xreg(p1->minX(),p1->maxX());
+            integ::IntRegion<double> yreg(p1->minY(),p1->maxY());
+
+            // Default is relative error <= 1.e-6, absolute error <= 1.e-15
+            // These are probably sufficient.  Probably even too stringent really.
+            // Could speed up code by increasing these values.
+            double result = integ::int2d(conv, xreg, yreg, relerr, abserr);
+            return result;
         }
     }
 
@@ -1456,10 +1531,15 @@ namespace galsim {
         //First, relation between FWHM and rD:
         FWHMrD = 2.* std::sqrt(std::pow(2., 1./beta)-1.);
         maxRrD = FWHMrD * truncationFWHM;
+#if 1
         // Make FFT's periodic at 4x truncation radius or 1.5x diam at ALIAS_THRESHOLD,
         // whichever is smaller
         stepKrD = 2*M_PI / std::min(4*maxRrD, 
                                     3.*std::sqrt(pow(ALIAS_THRESHOLD, -1./beta)-1));
+#else
+        // Make FFT's periodic at 4x truncation radius or 8x half-light radius:
+        stepKrD = M_PI / (2*std::max(maxRrD, 16.));
+#endif
         // And be sure to get at least 16 pts across FWHM when drawing:
         maxKrD = 16*M_PI / FWHMrD;
 

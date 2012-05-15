@@ -126,7 +126,7 @@ class GSObject:
         if type(dx) != float:
             raise Warning("Input dx not a float, converting...")
             dx = float(dx)
-        if image is None:
+        if image == None:
             return self.SBProfile.draw(dx=dx, wmult=wmult)
         else :
             self.SBProfile.draw(image, dx=dx, wmult=wmult)
@@ -334,28 +334,40 @@ class Add(GSObject):
 class Convolve(GSObject):
     """Base class for defining the python interface to the SBConvolve C++ class.
     """
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
+        # Check kwargs first
+        # The only kwarg we're looking for is real_space, which can be True or False
+        # (default if omitted is False), which specifies whether to do the convolution
+        # as an integral in real space rather than as a product in fourier space.
+        real = kwargs.pop("real_space",False)
+        if kwargs:
+            # This exception seems inappropriate, but I don't know which one is better.
+            # I really want something like a ParameterError or ArgumentError, but that
+            # doesn't seem to exist in the standard hierarchy.  Maybe RuntimeError?
+            raise NameError("Unknown names argument(s) to Convolve constructor: %s"%kwargs.keys())
+
         # This is a workaround for the fact that Python doesn't allow multiple constructors.
         # So check the number and type of the arguments here in the single __init__ method.
         if len(args) == 0:
             # No arguments.  Start with none and add objects later with add(obj)
-            GSObject.__init__(self, galsim.SBConvolve())
+            GSObject.__init__(self, galsim.SBConvolve(real=real))
         elif len(args) == 1:
             # 1 argment.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], GSObject):
                 # If single argument is a GSObject, then use the SBConvolve for a single SBProfile.
-                GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile))
+                GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile,real=real))
             else:
                 # Otherwise, should be a list of GSObjects
                 SBList = [obj.SBProfile for obj in args[0]]
-                GSObject.__init__(self, galsim.SBConvolve(SBList))
+                GSObject.__init__(self, galsim.SBConvolve(SBList,real=real))
         elif len(args) == 2:
             # 2 arguments.  Should both be GSObjects.
-            GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile,args[1].SBProfile))
+            GSObject.__init__(self, galsim.SBConvolve(
+                    args[0].SBProfile,args[1].SBProfile,real=real))
         else:
             # > 2 arguments.  Convert to a list of SBProfiles
             SBList = [obj.SBProfile for obj in args]
-            GSObject.__init__(self, galsim.SBConvolve(SBList))
+            GSObject.__init__(self, galsim.SBConvolve(SBList,real=real))
 
     def add(self, obj):
         self.SBProfile.add(obj.SBProfile)

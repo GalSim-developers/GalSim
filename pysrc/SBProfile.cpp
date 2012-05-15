@@ -195,28 +195,29 @@ struct PySBDistort {
 struct PySBConvolve {
 
     // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
-    static SBConvolve * construct(bp::object const & iterable, double f) {
+    static SBConvolve * construct(bp::object const & iterable, bool real, double f) {
         bp::stl_input_iterator<SBProfile*> begin(iterable), end;
         std::list<SBProfile*> plist(begin, end);
-        return new SBConvolve(plist, f);
+        return new SBConvolve(plist, real, f);
     }
 
     static void wrap() {
-        bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::init<>())
+        bp::class_< SBConvolve, bp::bases<SBProfile> >(
+            "SBConvolve", bp::init<bool>(bp::arg("real")=false))
             // bp tries the overloads in reverse order, so we wrap the most general one first
             // to ensure we try it last
             .def("__init__", 
                  bp::make_constructor(&construct, bp::default_call_policies(), 
-                                      (bp::arg("slist"), bp::arg("f")=1.)
+                                      (bp::arg("slist"), bp::arg("real")=false, bp::arg("f")=1.)
                  ))
-            .def(bp::init<const SBProfile &, double>(
-                     (bp::args("s1"), bp::arg("f")=1.)
+            .def(bp::init<const SBProfile &, bool, double>(
+                     (bp::args("s1"), bp::arg("real")=false, bp::arg("f")=1.)
                  ))
-            .def(bp::init<const SBProfile &, const SBProfile &, double>(
-                     (bp::args("s1", "s2"), bp::arg("f")=1.)
+            .def(bp::init<const SBProfile &, const SBProfile &, bool, double>(
+                     (bp::args("s1", "s2"), bp::arg("real")=false, bp::arg("f")=1.)
                  ))
-            .def(bp::init<const SBProfile &, const SBProfile &, const SBProfile &, double>(
-                     (bp::args("s1", "s2", "s3"), bp::arg("f")=1.)
+            .def(bp::init<const SBProfile &, const SBProfile &, const SBProfile &, bool, double>(
+                     (bp::args("s1", "s2", "s3"), bp::arg("real")=false, bp::arg("f")=1.)
                  ))
             .def(bp::init<const SBConvolve &>())
             .def("add", &SBConvolve::add)

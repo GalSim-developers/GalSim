@@ -276,7 +276,7 @@ if __name__ == "__main__":
     test_binomial_rand()
     test_binomial_image()
     test_poisson_rand()
-    test_poinsson_image()
+    test_poisson_image()
     test_ccdnoise_rand()
     test_ccdnoise_image()
     test_weibull_rand()

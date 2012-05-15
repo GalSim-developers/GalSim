@@ -30,6 +30,7 @@
 #include "FFT.h"
 #include "Table.h"
 #include "Angle.h"
+#include "integ/Int.h"
 
 #ifdef USE_IMAGES
 #include "Image.h"
@@ -106,6 +107,20 @@ namespace galsim {
          * @param[in] _p 2D position in real space.
          */
         virtual double xValue(Position<double> _p) const =0;
+
+        //@{
+        /**
+         *  @brief Define the range over which the profile is not trivially zero.
+         *
+         *  These values are used when a real-space convolution is requested to define
+         *  the appropriate range of integration.
+         *  The implementation here is +- infinity for both x and y.  
+         *  Derived classes may override this if they a have different range.
+         */
+        virtual double minX() const { return -integ::MOCK_INF; }
+        virtual double maxX() const { return integ::MOCK_INF; }
+        virtual double minY() const { return -integ::MOCK_INF; }
+        virtual double maxY() const { return integ::MOCK_INF; }
 
         /**
          * @brief Return value of SBProfile at a chosen 2D position in k space.
@@ -476,6 +491,10 @@ namespace galsim {
         double sumfy; ///< Keeps track of the cumulated `fy` of all summands.
         double maxMaxK; ///< Keeps track of the cumulated `maxK()` of all summands.
         double minStepK; ///< Keeps track of the cumulated `minStepK()` of all summands.
+        double minMinX; ///< Keeps track of the cumulated `minX()` of all summands.
+        double maxMaxX; ///< Keeps track of the cumulated `maxX()` of all summands.
+        double minMinY; ///< Keeps track of the cumulated `minY()` of all summands.
+        double maxMaxY; ///< Keeps track of the cumulated `maxY()` of all summands.
 
         /// @brief Keeps track of the cumulated `isAxisymmetric()` properties of all summands.
         bool allAxisymmetric;
@@ -527,6 +546,8 @@ namespace galsim {
         SBAdd(const SBAdd& rhs) : 
             plist(), sumflux(rhs.sumflux), sumfx(rhs.sumfx),
             sumfy(rhs.sumfy), maxMaxK(rhs.maxMaxK), minStepK(rhs.minStepK), 
+            minMinX(rhs.minMinX), maxMaxX(rhs.maxMaxX),
+            minMinY(rhs.minMinY), maxMaxY(rhs.maxMaxY),
             allAxisymmetric(rhs.allAxisymmetric),
             allAnalyticX(rhs.allAnalyticX), allAnalyticK(rhs.allAnalyticK)  
         {
@@ -560,6 +581,10 @@ namespace galsim {
             sumfx = rhs.sumfx;
             sumfy = rhs.sumfy;
             maxMaxK = rhs.maxMaxK;
+            minMinX = rhs.minMinX;
+            maxMaxX = rhs.maxMaxX;
+            minMinY = rhs.minMinY;
+            maxMaxY = rhs.maxMaxY;
             minStepK = rhs.minStepK;
             allAxisymmetric = rhs.allAxisymmetric;
             allAnalyticX = rhs.allAnalyticX;
@@ -592,6 +617,11 @@ namespace galsim {
 
         double maxK() const { return maxMaxK; }
         double stepK() const { return minStepK; }
+
+        double minX() const { return minMinX; }
+        double maxX() const { return maxMaxX; }
+        double minY() const { return minMinY; }
+        double maxY() const { return maxMaxY; }
 
         bool isAxisymmetric() const { return allAxisymmetric; }
         bool isAnalyticX() const { return allAnalyticX; }
@@ -754,6 +784,11 @@ namespace galsim {
         double maxK() const { return adaptee->maxK() / minor; }
         double stepK() const { return adaptee->stepK() / major; }
 
+        double minX() const { return adaptee->minX() * major; }
+        double maxX() const { return adaptee->maxX() * major; }
+        double minY() const { return adaptee->minY() * major; }
+        double maxY() const { return adaptee->maxY() * major; }
+
         Position<double> centroid() const { return x0+fwd(adaptee->centroid()); }
 
         double getFlux() const { return adaptee->getFlux()*absdet; }
@@ -780,11 +815,16 @@ namespace galsim {
         bool isStillAxisymmetric; ///< Is output SBProfile shape still circular?
         double minMaxK; ///< Minimum maxK() of the convolved SBProfiles.
         double minStepK; ///< Minimum stepK() of the convolved SBProfiles.
+        double sumMinX; ///< sum of minX() of the convolved SBProfiles.
+        double sumMaxX; ///< sum of maxX() of the convolved SBProfiles.
+        double sumMinY; ///< sum of minY() of the convolved SBProfiles.
+        double sumMaxY; ///< sum of maxY() of the convolved SBProfiles.
         double fluxProduct; ///< Flux of the product.
+        bool useReal; ///< Whether to do convolution as an integral in real space.
 
     public:
         /// @brief Constructor, empty.
-        SBConvolve() : plist(), fluxScale(1.) {} 
+        explicit SBConvolve(bool real=false) : plist(), fluxScale(1.), useReal(real) {}
 
         /**
          * @brief Constructor, 1 input.
@@ -792,7 +832,8 @@ namespace galsim {
          * @param[in] s1 SBProfile.
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
-        SBConvolve(const SBProfile& s1, double f=1.) : plist(), fluxScale(f) 
+        SBConvolve(const SBProfile& s1, bool real=false, double f=1.) :
+            plist(), fluxScale(f), useReal(real)
         { add(s1); }
 
         /**
@@ -802,8 +843,8 @@ namespace galsim {
          * @param[in] s2 second SBProfile.
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
-        SBConvolve(const SBProfile& s1, const SBProfile& s2, double f=1.) : 
-            plist(), fluxScale(f) 
+        SBConvolve(const SBProfile& s1, const SBProfile& s2, bool real=false, double f=1.) : 
+            plist(), fluxScale(f), useReal(real)
         { add(s1);  add(s2); }
 
         /**
@@ -815,8 +856,9 @@ namespace galsim {
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
         SBConvolve(
-            const SBProfile& s1, const SBProfile& s2, const SBProfile& s3, double f=1.) :
-            plist(), fluxScale(f) 
+            const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
+            bool real=false, double f=1.) :
+            plist(), fluxScale(f), useReal(real)
         { add(s1);  add(s2);  add(s3); }
 
         /**
@@ -825,8 +867,8 @@ namespace galsim {
          * @param[in] slist Input: list of SBProfiles.
          * @param[in] f Input: optional scaling factor for final flux (default `f = 1.`).
          */
-        SBConvolve(const std::list<SBProfile*> slist, double f=1.) :
-            plist(), fluxScale(f) 
+        SBConvolve(const std::list<SBProfile*> slist, bool real=false, double f=1.) :
+            plist(), fluxScale(f), useReal(real)
         { 
             std::list<SBProfile*>::const_iterator sptr;
             for (sptr = slist.begin(); sptr!=slist.end(); ++sptr) add(**sptr); 
@@ -841,7 +883,9 @@ namespace galsim {
             x0(rhs.x0), y0(rhs.y0),
             isStillAxisymmetric(rhs.isStillAxisymmetric),
             minMaxK(rhs.minMaxK), minStepK(rhs.minStepK),
-            fluxProduct(rhs.fluxProduct) 
+            sumMinX(rhs.sumMinX), sumMaxX(rhs.sumMaxX), 
+            sumMinY(rhs.sumMinY), sumMaxY(rhs.sumMaxY), 
+            fluxProduct(rhs.fluxProduct), useReal(rhs.useReal)
         {
             std::list<SBProfile*>::const_iterator rhsptr;
             for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
@@ -875,7 +919,12 @@ namespace galsim {
             isStillAxisymmetric = rhs.isStillAxisymmetric;
             minMaxK = rhs.minMaxK;
             minStepK = rhs.minStepK;
+            sumMinX = rhs.sumMinX;
+            sumMaxX = rhs.sumMaxX;
+            sumMinY = rhs.sumMinY;
+            sumMaxY = rhs.sumMaxY;
             fluxProduct = rhs.fluxProduct;
+            useReal = rhs.useReal;
             return *this;
         }
 
@@ -898,8 +947,8 @@ namespace galsim {
         // implementation dependent methods:
         SBProfile* duplicate() const { return new SBConvolve(*this); } 
 
-        double xValue(Position<double> _p) const 
-        { throw SBError("SBConvolve::xValue() not allowed"); } 
+        // Do the real-space conovlution to calculate this.
+        double xValue(Position<double> _p) const;
 
         std::complex<double> kValue(Position<double> k) const 
         {
@@ -911,10 +960,15 @@ namespace galsim {
         }
 
         bool isAxisymmetric() const { return isStillAxisymmetric; }
-        bool isAnalyticX() const { return false; }
-        bool isAnalyticK() const { return true; }    // convolvees must all meet this
+        bool isAnalyticX() const { return useReal; }
+        bool isAnalyticK() const { return !useReal; }    // convolvees must all meet this
         double maxK() const { return minMaxK; }
         double stepK() const { return minStepK; }
+
+        double minX() const { return sumMinX; }
+        double maxX() const { return sumMaxX; }
+        double minY() const { return sumMinY; }
+        double maxY() const { return sumMaxY; }
 
         Position<double> centroid() const 
         { Position<double> p(x0, y0); return p; }
@@ -1297,6 +1351,11 @@ namespace galsim {
         double maxK() const { return 2. / ALIAS_THRESHOLD / std::max(xw,yw); }  
         double stepK() const { return M_PI/std::max(xw,yw)/2; } 
 
+        double minX() const { return -0.5 * xw; }
+        double maxX() const { return 0.5 * xw; }
+        double minY() const { return -0.5 * yw; }
+        double maxY() const { return 0.5 * yw; }
+
         Position<double> centroid() const 
         { Position<double> p(0., 0.); return p; }
 
@@ -1436,6 +1495,11 @@ namespace galsim {
 
         double maxK() const { return maxKrD / rD; }   
         double stepK() const { return stepKrD / rD; } 
+
+        double minX() const { return -maxRrD * rD; }   
+        double maxX() const { return maxRrD * rD; }   
+        double minY() const { return -maxRrD * rD; }   
+        double maxY() const { return maxRrD * rD; }   
 
         Position<double> centroid() const 
         { Position<double> p(0., 0.); return p; }
