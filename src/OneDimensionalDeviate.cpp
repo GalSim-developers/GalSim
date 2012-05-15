@@ -10,12 +10,99 @@ namespace galsim {
     // absolute error allowed (assumes the total flux is O(1)
     const double ABSOLUTE_ERROR = 1e-8;
     // Range will be split into this many parts to bracket extrema
-    const int RANGE_FRACTION_FOR_EXTREMA = 32;
+    const int RANGE_DIVISION_FOR_EXTREMA = 32;
     // Intervals with less than this fraction of probability are
     // ok to use dominant-sampling method.
     const double SMALL_FRACTION_OF_FLUX = 1e-4;
     // Max range of allowed (abs value of) photon fluxes
     const double ALLOWED_FLUX_VARIATION = 0.81;
+
+    // Function to isolate an extremum of function in an interval.
+    template <class F>
+    double findExtremum( const F& function,
+                         double xmin,
+                         double xmax,
+                         int divisionSteps,
+                         double xFractionalTolerance = 1e-4) {
+        if (xmax < xmin) std::swap(xmax,xmin);
+        const double xTolerance = xFractionalTolerance*(xmax-xmin);
+        // First bracket extremum by division into fixed number of steps
+        double xStep = (xmax - xmin) / divisionSteps;
+        double x1 = xmin;
+        double x2 = xmin + xStep;
+        double f1 = function(x1);
+        double f2 = function(x2);
+        double df1 = f2 - f1;
+        double x3 = 2*xStep;
+        double f3 = function(x3);
+        double df2 = f3 - f2;
+        
+        while (df1 * df2 >= 0.) {
+            if (f3 >= xmax) 
+                throw std::runtime_error("Did not bracket extremum in findExtremum");
+            x1 = x2;
+            f1 = f2;
+            x2 = x3;
+            f2 = f3;
+            df1 = df2;
+            x3 += xStep;
+            f3 = function(x3);
+            df2 = f3 - f2;
+        }
+            
+        // First guess is that minimum is in half of bracket with lowest gradient
+        bool fatLeft = std::abs(df1) < std::abs(df2);
+
+        // Then use golden sections to localize - could use Brent's method for speed.
+        const double GOLDEN = 2./(1+sqrt(5.));
+        while (std::abs(x3-x1) > xTolerance) {
+            if (fatLeft) {
+                // Split left-hand interval
+                double xTrial = x1 + GOLDEN*(x2-x1);
+                double fTrial = function(xTrial);
+                double dfTrial = f2 - fTrial;
+                if (df1 * dfTrial <= 0.) {
+                    // Now bracketed in 1 / trial / 2
+                    x3 = x2;
+                    f3 = f2;
+                    x2 = xTrial;
+                    f2 = fTrial;
+                    df1 = f2 - f1;
+                    df2 = dfTrial;
+                    fatLeft = true;
+                } else {
+                    // Extremum is in trial / 2 / 3
+                    x1 = xTrial;
+                    f1 = fTrial;
+                    df1 = dfTrial;
+                    fatLeft = false;
+                }
+            } else {
+                // Split right-hand interval (2 / trial / 3)
+                double xTrial = x2 - GOLDEN*(x3-x2);
+                double fTrial = function(xTrial);
+                double dfTrial = fTrial - f2;
+                if (dfTrial * df2 <= 0.) {
+                    // Now bracketed in 2 / trial / 3
+                    x1 = x2;
+                    f1 = f2;
+                    x2 = xTrial;
+                    f2 = fTrial;
+                    df1 = dfTrial;
+                    df2 = f3 - f2;
+                    fatLeft = false;
+                } else {
+                    // Extremum is in 1 / 2 / trial
+                    x3 = xTrial;
+                    f3 = fTrial;
+                    df2 = dfTrial;
+                    fatLeft = true;
+                }
+            }
+        }
+        return x2;
+    }
+
 
     template <class F>
     void Interval<F>::drawWithin(double absFlux, double& x, double& flux,
@@ -109,7 +196,10 @@ namespace galsim {
                 // First a coarse search to bracket min/max
                 // Then localize to desired accuracy
                 // !!!!!
-                double extremum=999.;
+                double extremum = findExtremum(_fluxDensity, 
+                                               range[iRange],
+                                               range[iRange+1],
+                                               RANGE_DIVISION_FOR_EXTREMA);
                 rangeA.setRange(range[iRange], extremum);
                 rangeB.setRange(extremum, range[iRange+1]);
             }
