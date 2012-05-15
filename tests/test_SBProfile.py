@@ -104,14 +104,15 @@ def test_sbprofile_gaussian():
     """Test the generation of a specific Gaussian profile using SBProfile against a known result.
     """
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    myImg = mySBP.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
                                          err_msg="Gaussian profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
-    myImg = gauss.draw(dx=0.2)
+    gauss.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian disagrees with expected result")
@@ -184,15 +185,16 @@ def test_sbprofile_exponential():
     re = 1.0
     r0 = re/1.67839
     mySBP = galsim.SBExponential(flux=1., scale_radius=r0)
-    myImg = mySBP.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
                                          err_msg="Exponential profile disagrees with expected"
                                          +" result") 
     # Repeat with the GSObject version of this:
     expon = galsim.Exponential(flux=1., scale_radius=r0)
-    myImg = expon.draw(dx=0.2)
+    expon.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Exponential disagrees with expected result")
@@ -231,14 +233,15 @@ def test_sbprofile_sersic():
     """Test the generation of a specific Sersic profile using SBProfile against a known result.
     """
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
-    myImg = mySBP.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
                                          err_msg="Sersic profile disagrees with expected result")   
     # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
-    myImg = sersic.draw(dx=0.2)
+    sersic.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Sersic disagrees with expected result")
@@ -265,14 +268,15 @@ def test_sbprofile_airy():
     """Test the generation of a specific Airy profile using SBProfile against a known result.
     """
     mySBP = galsim.SBAiry(D=0.8, obs=0.1, flux=1)
-    myImg = mySBP.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
                                          err_msg="Airy profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     airy = galsim.Airy(D=0.8, obs=0.1, flux=1)
-    myImg = airy.draw(dx=0.2)
+    airy.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy disagrees with expected result")
@@ -283,14 +287,15 @@ def test_sbprofile_box():
     # MJ: Could use yw=0, which means use yw=xw, but this is not as intuitive as just
     #     making xw and yw both = 1 (or both = pixel_scale normally).
     mySBP = galsim.SBBox(xw=1, yw=1, flux=1)
-    myImg = mySBP.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
                                          err_msg="Box profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     pixel = galsim.Pixel(xw=1, yw=1, flux=1)
-    myImg = pixel.draw(dx=0.2)
+    pixel.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel disagrees with expected result")
@@ -299,14 +304,15 @@ def test_sbprofile_moffat():
     """Test the generation of a specific Moffat profile using SBProfile against a known result.
     """
     mySBP = galsim.SBMoffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
-    myImg = mySBP.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
                                          err_msg="Moffat profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     moffat = galsim.Moffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
-    myImg = moffat.draw(dx=0.2)
+    moffat.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat disagrees with expected result")
@@ -320,7 +326,8 @@ def test_sbprofile_moffat_properties():
     np.testing.assert_equal(psf.centroid(), cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(psf.maxK(), 34.226259129031952)
-    np.testing.assert_almost_equal(psf.stepK(), 0.08604618622618046)
+    #np.testing.assert_almost_equal(psf.stepK(), 0.08604618622618046)
+    np.testing.assert_almost_equal(psf.stepK(), 0.53478529889112425)
     np.testing.assert_equal(psf.kValue(cen), 1+0j)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
@@ -356,15 +363,16 @@ def test_sbprofile_smallshear():
     e1 = 0.02
     e2 = 0.02
     mySBP_shear = mySBP.shear(e1,e2)
-    myImg = mySBP_shear.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP_shear.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Small-shear Gaussian profile disagrees with expected result")  
     # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
     gauss.applyDistortion(galsim.Ellipse(e1,e2))
-    myImg = gauss.draw(dx=0.2)
+    gauss.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyDistortion disagrees with expected result")
@@ -373,7 +381,7 @@ def test_sbprofile_smallshear():
     g1,g2 = convertToShear(e1,e2)
     gauss = galsim.Gaussian(flux=1, sigma=1)
     gauss.applyShear(g1,g2)
-    myImg = gauss.draw(dx=0.2)
+    gauss.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyShear disagrees with expected result")
@@ -385,22 +393,23 @@ def test_sbprofile_largeshear():
     e1 = 0.0
     e2 = 0.5
     mySBP_shear = mySBP.shear(e1,e2)
-    myImg = mySBP_shear.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP_shear.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Large-shear Sersic profile disagrees with expected result")  
     # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=4, flux=1, half_light_radius=1)
     sersic.applyDistortion(galsim.Ellipse(e1,e2))
-    myImg = sersic.draw(dx=0.2)
+    sersic.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyDistortion disagrees with expected result")
     sersic = galsim.Sersic(n=4, flux=1, half_light_radius=1)
     g1,g2 = convertToShear(e1,e2)
     sersic.applyShear(g1,g2)
-    myImg = sersic.draw(dx=0.2)
+    sersic.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyShear disagrees with expected result")
@@ -412,8 +421,9 @@ def test_sbprofile_convolve():
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve(mySBP)
     myConv.add(mySBP2)
-    myImg = myConv.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_convolve_box.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    myConv.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Moffat convolved with Box SBProfile disagrees with expected result")  
@@ -421,26 +431,26 @@ def test_sbprofile_convolve():
     psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel])
-    myImg = conv.draw(dx=0.2)
+    conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel)
-    myImg = conv.draw(dx=0.2)
+    conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
     conv = galsim.Convolve(psf)
     conv.add(pixel)
-    myImg = conv.draw(dx=0.2)
+    conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve(psf) with add(pixel) disagrees with expected result")
     conv = galsim.Convolve()
     conv.add(psf)
     conv.add(pixel)
-    myImg = conv.draw(dx=0.2)
+    conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve() with add both disagrees with expected result")
@@ -455,8 +465,9 @@ def test_sbprofile_shearconvolve():
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve(mySBP_shear)
     myConv.add(mySBP2)
-    myImg = myConv.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    myConv.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")  
@@ -466,26 +477,26 @@ def test_sbprofile_shearconvolve():
     psf.applyShear(g1,g2)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel])
-    myImg = conv.draw(dx=0.2)
+    conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel)
-    myImg = conv.draw(dx=0.2)
+    conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
     conv = galsim.Convolve(psf)
     conv.add(pixel)
-    myImg = conv.draw(dx=0.2)
+    conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve(psf) with add(pixel) disagrees with expected result")
     conv = galsim.Convolve()
     conv.add(pixel)
     conv.add(psf)
-    myImg = conv.draw(dx=0.2)
+    conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve() with add both disagrees with expected result")
@@ -496,8 +507,9 @@ def test_sbprofile_rotate():
     mySBP = galsim.SBSersic(n=2.5, flux=1, half_light_radius=1)
     mySBP_shear = mySBP.shear(0.2, 0.0)
     mySBP_shear_rotate = mySBP_shear.rotate(45.0 * galsim.degrees)
-    myImg = mySBP_shear_rotate.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_ellip_rotated.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP_shear_rotate.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="45-degree rotated elliptical Gaussian disagrees with expected result")  
@@ -505,7 +517,7 @@ def test_sbprofile_rotate():
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1)
     gal.applyDistortion(galsim.Ellipse(0.2,0.0));
     gal.applyRotation(45.0 * galsim.degrees)
-    myImg = gal.draw(dx=0.2)
+    gal.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyRotation disagrees with expected result")
@@ -518,15 +530,16 @@ def test_sbprofile_mag():
     mySBP = galsim.SBExponential(flux=1, scale_radius=r0)
     myEll = galsim.Ellipse(0., 0., np.log(1.5))
     mySBP_mag = mySBP.distort(myEll)
-    myImg = mySBP_mag.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_mag.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP_mag.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Magnification (x1.5) of exponential SBProfile disagrees with expected result")   
     # Repeat with the GSObject version of this:
     gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal.applyDistortion(myEll)
-    myImg = gal.draw(dx=0.2)
+    gal.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyDistortion disagrees with expected result")
@@ -537,8 +550,9 @@ def test_sbprofile_add():
     mySBP = galsim.SBGaussian(flux=0.75, sigma=1)
     mySBP2 = galsim.SBGaussian(flux=0.25, sigma=3)
     myAdd = galsim.SBAdd(mySBP, mySBP2)
-    myImg = myAdd.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    myAdd.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Addition of two rescaled Gaussian profiles disagrees with expected result")   
@@ -546,50 +560,50 @@ def test_sbprofile_add():
     gauss1 = galsim.Gaussian(flux=0.75, sigma=1)
     gauss2 = galsim.Gaussian(flux=0.25, sigma=3)
     sum = galsim.Add(gauss1,gauss2)
-    myImg = sum.draw(dx=0.2)
+    sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")   
     # Other ways to do the sum:
     sum = gauss1 + gauss2
-    myImg = sum.draw(dx=0.2)
+    sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")   
     sum = gauss1.copy()
     sum += gauss2
-    myImg = sum.draw(dx=0.2)
+    sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject sum = gauss1; sum += gauss2 disagrees with expected result")   
     sum = galsim.Add([gauss1,gauss2])
-    myImg = sum.draw(dx=0.2)
+    sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject Add([gauss1,gauss2]) disagrees with expected result")   
     sum = galsim.Add(gauss1)
     sum.add(gauss2)
-    myImg = sum.draw(dx=0.2)
+    sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject Add(gauss1) with add(gauss2) disagrees with expected result")   
     sum = galsim.Add()
     sum.add(gauss1)
     sum.add(gauss2)
-    myImg = sum.draw(dx=0.2)
+    sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject Add() with add both disagrees with expected result")   
     gauss1 = galsim.Gaussian(flux=1, sigma=1)
     gauss2 = galsim.Gaussian(flux=1, sigma=3)
     sum = 0.75 * gauss1 + 0.25 * gauss2
-    myImg = sum.draw(dx=0.2)
+    sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject 0.75 * gauss1 + 0.25 * gauss2 disagrees with expected result")   
     sum = 0.75 * gauss1
     sum += 0.25 * gauss2
-    myImg = sum.draw(dx=0.2)
+    sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")   
@@ -600,15 +614,16 @@ def test_sbprofile_shift():
     """
     mySBP = galsim.SBBox(xw=0.2, yw=0.2, flux=1)
     mySBP_shift = mySBP.shift(0.2, -0.2)
-    myImg = mySBP_shift.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_shift.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP_shift.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Shifted box profile disagrees with expected result")   
     # Repeat with the GSObject version of this:
     pixel = galsim.Pixel(xw=0.2, yw=0.2)
     pixel.applyShift(0.2, -0.2)
-    myImg = pixel.draw(dx=0.2)
+    pixel.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyShiift disagrees with expected result")
@@ -618,32 +633,33 @@ def test_sbprofile_rescale():
     """
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     mySBP.setFlux(2)
-    myImg = mySBP.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_doubleflux.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Flux-rescale sersic profile disagrees with expected result")   
     # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic.setFlux(2)
-    myImg = sersic.draw(dx=0.2)
+    sersic.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject setFlux disagrees with expected result")
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic *= 2
-    myImg = sersic.draw(dx=0.2)
+    sersic.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject *= 2 disagrees with expected result")
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic2 = sersic * 2
-    myImg = sersic2.draw(dx=0.2)
+    sersic2.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject obj * 2 disagrees with expected result")
     sersic2 = 2 * sersic
-    myImg = sersic2.draw(dx=0.2)
+    sersic2.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject 2 * obj disagrees with expected result")
