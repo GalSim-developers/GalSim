@@ -49,7 +49,7 @@ class RealGalaxyCatalog:
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rotation_angle = None, 
-            rand_rotate = True, target_flux = 1.0):
+            rand_rotate = True, target_flux = 1000.0):
     """@brief Function to simulate images (no added noise) from real galaxy training data.
 
     This function takes a RealGalaxy from some training set, and manipulates it as needed to
@@ -57,7 +57,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     target PSF (which could be an image, or one of our base classes) and a target pixel scale.
     Optionally, the user can specify a rotation angle and a shear.  Or, the user can request
     rotation by a randomly-selected angle.  Finally, they can specify a flux normalization for the
-    final image.
+    final image, default 1000.
 
     Parameters
     ----------
@@ -70,7 +70,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     @param rotation_angle      Angle by which to rotate the galaxy (must be an Angle instance).
     @param rand_rotate         If true (default) then impose a random rotation on the training
                                galaxy.
-    @param target_flux         The target flux in the output galaxy image, default 1.
+    @param target_flux         The target flux in the output galaxy image, default 1000.
     """
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
@@ -99,16 +99,18 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     if (target_pixel_scale < real_galaxy.pixel_scale):
         raise Warning("Warning: requested pixel scale is higher resolution than original!")
 
+    import math # needed for pi and other stuff below
+
     # rotate
     if rotation_angle != None:
-        real_galaxy.SBProfile.applyRotation(rotation_angle)
+        real_galaxy.applyRotation(rotation_angle)
     elif rand_rotate == True:
         u = galsim.UniformDeviate()
-        rand_angle = galsim.Angle(np.pi*u(), galsim.radians)
-        real_galaxy.SBProfile.applyRotation(rand_angle)
+        rand_angle = galsim.Angle(math.pi*u(), galsim.radians)
+        real_galaxy.applyRotation(rand_angle)
 
     # set fluxes
-    real_galaxy.SBProfile.setFlux(target_flux)
+    real_galaxy.setFlux(target_flux)
 
     # shear
     if (g1 != 0.0 or g2 != 0.0):
