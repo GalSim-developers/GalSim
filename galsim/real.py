@@ -54,10 +54,12 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
 
     This function takes a RealGalaxy from some training set, and manipulates it as needed to
     simulate a (no-noise-added) image from some lower-resolution telescope.  It thus requires a
-    target PSF (which could be an image, or one of our base classes) and a target pixel scale.
-    Optionally, the user can specify a rotation angle and a shear.  Or, the user can request
-    rotation by a randomly-selected angle.  Finally, they can specify a flux normalization for the
-    final image, default 1000.
+    target PSF (which could be an image, or one of our base classes) and a target pixel scale.  The
+    default rotation option is to impose a random rotation to make irrelevant any real shears in the
+    galaxy training data.  This default can be turned off by setting rand_rotate = False or by
+    requesting a specific rotation angle using the rotation_angle keyword, in which case rand_rotate
+    is ignored.  Optionally, the user can specify a shear (default 0).  Finally, they can specify a
+    flux normalization for the final image, default 1000.
 
     Parameters
     ----------
@@ -69,7 +71,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     @param g2                  Second component of shear to impose, default 0.
     @param rotation_angle      Angle by which to rotate the galaxy (must be an Angle instance).
     @param rand_rotate         If true (default) then impose a random rotation on the training
-                               galaxy.
+                               galaxy; this is ignored if rotation_angle is set.
     @param target_flux         The target flux in the output galaxy image, default 1000.
     """
     # do some checking of arguments
@@ -95,16 +97,17 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     if rotation_angle != None and not isinstance(rotation_angle, galsim.Angle):
         raise RuntimeError("Error: specified rotation angle is not an Angle instance!")
     if (rotation_angle != None and rand_rotate == True):
-        raise RuntimeError("Error: both a random rotation and a specific rotation angle were requested!")
+        print "Warning: Both a random rotation and a specific rotation angle were requested."
+        print "   No random rotation will be imposed!"
     if (target_pixel_scale < real_galaxy.pixel_scale):
-        raise Warning("Warning: requested pixel scale is higher resolution than original!")
+        print "Warning: requested pixel scale is higher resolution than original!"
 
     import math # needed for pi and other stuff below
 
     # rotate
     if rotation_angle != None:
         real_galaxy.applyRotation(rotation_angle)
-    elif rand_rotate == True:
+    elif rotation_angle == None and rand_rotate == True:
         u = galsim.UniformDeviate()
         rand_angle = galsim.Angle(math.pi*u(), galsim.radians)
         real_galaxy.applyRotation(rand_angle)
