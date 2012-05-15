@@ -312,7 +312,7 @@ class RealGalaxy(GSObject):
     Initialization
     --------------
     real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string =
-                                    None, random = False, interpolantxy = None)
+                                    None, random = False, interpolant = None)
 
     This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -364,11 +364,13 @@ class RealGalaxy(GSObject):
         PSF_image = galsim.ImageViewD(np.ascontiguousarray(PSF_image_numpy.astype(np.float64)))
 
         # choose proper interpolant
-        if interpolant == None:
-            l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
-            self.Interpolant2D = galsim.InterpolantXY(l5)
         if interpolant != None and isinstance(interpolant, galsim.InterpolantXY) == False:
             raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+        elif interpolant == None:
+            l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
+            self.Interpolant2D = galsim.InterpolantXY(l5)
+        else:
+            self.Interpolant2D = interpolant
 
         # read in data about galaxy from FITS binary table; store as members of RealGalaxy
 
