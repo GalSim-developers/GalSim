@@ -30,8 +30,8 @@ def Script1():
     logger = logging.getLogger("Script1") 
 
     gal_flux = 1.e5    # ADU
-    gal_sigma = 2.     # pixels
-    psf_sigma = 1.     # pixels
+    gal_sigma = 2.     # arcsec
+    psf_sigma = 1.     # arcsec
     pixel_scale = 0.2  # arcsec / pixel
     noise = 300.       # ADU / pixel
 
@@ -101,11 +101,11 @@ def Script2():
     logger = logging.getLogger("Script2") 
 
     gal_flux = 1.e5    # ADU
-    gal_r0 = 2.7       # pixels
+    gal_r0 = 2.7       # arcsec
     g1 = 0.1           #
     g2 = 0.2           #
     psf_beta = 5       #
-    psf_re = 1.0       # pixels
+    psf_re = 1.0       # arcsec
     pixel_scale = 0.2  # arcsec / pixel
     sky_level = 1.e3   # ADU / pixel
     gain = 1.0         # ADU / e-
@@ -201,7 +201,7 @@ def Script3():
     logger = logging.getLogger("Script3") 
     gal_flux = 1.e5    # ADU
     gal_n = 3.5        #
-    gal_re = 3.7       # pixels
+    gal_re = 3.7       # arcsec
     g1 = -0.23         #
     g2 = 0.15          #
     atmos_a_sigma=2.1  # pixels
