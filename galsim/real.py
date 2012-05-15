@@ -57,12 +57,13 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
 
     This function takes a RealGalaxy from some training set, and manipulates it as needed to
     simulate a (no-noise-added) image from some lower-resolution telescope.  It thus requires a
-    target PSF (which could be an image, or one of our base classes) and a target pixel scale.  The
-    default rotation option is to impose a random rotation to make irrelevant any real shears in the
-    galaxy training data.  This default can be turned off by setting rand_rotate = False or by
-    requesting a specific rotation angle using the rotation_angle keyword, in which case rand_rotate
-    is ignored.  Optionally, the user can specify a shear (default 0).  Finally, they can specify a
-    flux normalization for the final image, default 1000.
+    target ePSF (which could be an image, or one of our base classes) that represents all PSF
+    components including the pixel response, and a target pixel scale.  The default rotation option
+    is to impose a random rotation to make irrelevant any real shears in the galaxy training data.
+    This default can be turned off by setting rand_rotate = False or by requesting a specific
+    rotation angle using the rotation_angle keyword, in which case rand_rotate is ignored.
+    Optionally, the user can specify a shear (default 0).  Finally, they can specify a flux
+    normalization for the final image, default 1000.
 
     Parameters
     ----------
