@@ -326,11 +326,12 @@ class RealGalaxy(GSObject):
     @param ID                   Object ID for the desired galaxy in the catalog.
     @param random               If true, then just select a completely random galaxy from the
                                 catalog.
-    @param interpolantxy        optional keyword for specifying the interpolation scheme [default = 
-                                galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
+    @param interpolant          optional keyword for specifying the
+                                real-space interpolation scheme
+                                [default = galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
     """
     def __init__(self, real_galaxy_catalog, index = None, ID = None, random = False,
-                 interpolantxy = None):
+                 interpolant = None):
 
         import pyfits
 
@@ -363,9 +364,11 @@ class RealGalaxy(GSObject):
         PSF_image = galsim.ImageViewD(np.ascontiguousarray(PSF_image_numpy.astype(np.float64)))
 
         # choose proper interpolant
-        if interpolantxy == None:
+        if interpolant == None:
             l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
             self.Interpolant2D = galsim.InterpolantXY(l5)
+        if interpolant != None and isinstance(interpolant, galsim.InterpolantXY) == False:
+            raise RuntimeError('Specified interpolant is not an InterpolantXY!')
 
         # read in data about galaxy from FITS binary table; store as members of RealGalaxy
 
