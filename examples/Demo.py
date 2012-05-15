@@ -265,11 +265,10 @@ def Script3():
 
     # Define the optical part of the PSF.
     # The first argument of OpticalPSF below is lambda/D,
-    # which needs to be in pixel units, so do the calculation:
+    # which needs to be in arcsec, so do the calculation:
     lam_over_D = lam * 1.e-9 / tel_diam # radians
     lam_over_D *= 206265 # arcsec
-    lam_over_D /= pixel_scale # pixels
-    logger.info('Calculated lambda over D = %f pixels', lam_over_D)
+    logger.info('Calculated lambda over D = %f arcsec', lam_over_D)
     # The rest of the values here should be given in units of the 
     # wavelength of the incident light. pad_factor is used to here to reduce 'folding' for these
     # quite strong aberration values
