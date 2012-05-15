@@ -96,11 +96,10 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
         raise RuntimeError("Error: target PSF is not an Image, ImageView, SBProfile, or GSObject!")
     if rotation_angle != None and not isinstance(rotation_angle, galsim.Angle):
         raise RuntimeError("Error: specified rotation angle is not an Angle instance!")
-    if (rotation_angle != None and rand_rotate == True):
-        print "Warning: Both a random rotation and a specific rotation angle were requested."
-        print "   No random rotation will be imposed!"
     if (target_pixel_scale < real_galaxy.pixel_scale):
-        print "Warning: requested pixel scale is higher resolution than original!"
+        import warnings
+        message = "Warning: requested pixel scale is higher resolution than original!"
+        warnings.warn(message)
 
     import math # needed for pi and other stuff below
 
