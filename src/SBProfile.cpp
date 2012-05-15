@@ -11,7 +11,10 @@
 
 #ifdef DEBUGLOGGING
 //std::ostream* dbgout = new std::ofstream("debug.out");
-//std::ostream* dbgout = &std::cerr;
+std::ostream* dbgout = &std::cerr;
+//std::ostream* dbgout = 0;
+int verbose_level = 1;
+#else
 std::ostream* dbgout = 0;
 int verbose_level = 0;
 #endif
@@ -54,7 +57,7 @@ namespace galsim {
 #ifdef USE_IMAGES
     ImageView<float> SBProfile::draw(double dx, int wmult) const 
     {
-        dbg<<"Start draw that returns ImageView"<<std::endl;
+        xdbg<<"Start draw that returns ImageView"<<std::endl;
         Image<float> img;
         draw(img, dx, wmult);
         return img.view();
@@ -63,7 +66,7 @@ namespace galsim {
     template <typename T>
     double SBProfile::draw(ImageView<T>& img, double dx, int wmult) const 
     {
-        dbg<<"Start draw ImageView"<<std::endl;
+        xdbg<<"Start draw ImageView"<<std::endl;
         if (isAnalyticX())
             return plainDraw(img, dx, wmult);
         else
@@ -73,7 +76,7 @@ namespace galsim {
     template <typename T>
     double SBProfile::draw(Image<T>& img, double dx, int wmult) const 
     {
-        dbg<<"Start draw Image"<<std::endl;
+        xdbg<<"Start draw Image"<<std::endl;
         if (isAnalyticX())
             return plainDraw(img, dx, wmult);
         else
@@ -84,7 +87,7 @@ namespace galsim {
     template <typename T>
     double SBProfile::plainDraw(ImageView<T>& I, double dx, int wmult) const 
     {
-        dbg<<"Start plainDraw ImageView"<<std::endl;
+        xdbg<<"Start plainDraw ImageView"<<std::endl;
         // Determine desired dx:
         if (dx<=0.) dx = M_PI / maxK();
         // recenter an existing image, to be consistent with fourierDraw:
@@ -97,7 +100,7 @@ namespace galsim {
     template <typename T>
     double SBProfile::plainDraw(Image<T>& I, double dx, int wmult) const 
     {
-        dbg<<"Start plainDraw Image"<<std::endl;
+        xdbg<<"Start plainDraw Image"<<std::endl;
         // Determine desired dx:
         if (dx<=0.) dx = M_PI / maxK();
         if (!I.getBounds().isDefined()) {
@@ -128,7 +131,7 @@ namespace galsim {
     template <typename T>
     double SBProfile::doFillXImage2(ImageView<T>& I, double dx) const 
     {
-        dbg<<"Start doFillXImage2"<<std::endl;
+        xdbg<<"Start doFillXImage2"<<std::endl;
         double totalflux=0;
         for (int y = I.getYMin(); y <= I.getYMax(); y++) {
             int x = I.getXMin(); 
@@ -978,11 +981,11 @@ namespace galsim {
         }
     }
 
-    class RealSpaceConvolve : 
+    class ConvolveFunc : 
         public std::binary_function<double,double,double>
     {
     public:
-        RealSpaceConvolve(const SBProfile* p1, const SBProfile* p2, double x0, double y0) :
+        ConvolveFunc(const SBProfile* p1, const SBProfile* p2, double x0, double y0) :
             _p1(p1), _p2(p2), _x0(x0), _y0(y0) {}
 
         double operator()(double x, double y) const 
@@ -1028,10 +1031,13 @@ namespace galsim {
             }
             // Then take the overlap relevant for the calculation:
             //     _p1->xValue(x,y) * _p2->xValue(_x0-x,_y0-y)
+            dbg<<"p1's y range = "<<ymin1<<" ... "<<ymax1<<std::endl;
+            dbg<<"p2's y range = "<<ymin2<<" ... "<<ymax2<<std::endl;
             double ymin = std::max(ymin1, _pos.y-ymax2);
             double ymax = std::min(ymax1, _pos.y-ymin2);
             dbg<<"Y region for x = "<<x<<" = "<<ymin<<" ... "<<ymax<<std::endl;
-            return integ::IntRegion<double>(ymin,ymax);
+            if (ymax < ymin) ymax = ymin;
+            return integ::IntRegion<double>(ymin,ymax,dbgout);
         }
     private:
         const SBProfile* _p1;
@@ -1039,48 +1045,89 @@ namespace galsim {
         const Position<double>& _pos;
     };
 
-    double SBConvolve::xValue(Position<double> pos) const
+    static double RealSpaceConvolve(
+        const SBProfile* p1, const SBProfile* p2, const Position<double>& pos)
     {
-        dbg<<"Start SBConvolve xValue for pos = "<<pos<<std::endl;
+        // Coming in, if only one of them is axisymmetric, it should be p1.
+        // This cuts down on some of the logic below.
+        // Furthermore, the calculation of xmin, xmax isn't optimal if both are
+        // axisymmetric.  But that involves a bit of geometry to get the right cuts,
+        // so I didn't bother, since I don't think we'll be doing that too often.
+        // So p2 is always taken to be a rectangle rather than possibly a circle.
+        assert(p1->isAxisymmetric() || !p2->isAxisymmetric());
+        
         // I think these values for the relative and absolute error are sufficient for
         // making images.  Not sure how they implicitly compare to Gary's choices in
         // the Fourier version.
         const double relerr = 1.e-3;
         const double abserr = 1.e-6;
 
+        dbg<<"Start RealSpaceConvolve for pos = "<<pos<<std::endl;
+        double x = pos.x;
+        double y = pos.y;
+        double xmin = std::max(p1->minX() , x-p2->maxX());
+        double xmax = std::min(p1->maxX() , x-p2->minX());
+        if (p1->isAxisymmetric()) {
+            // Update the above values based on the possibility of the circle 
+            // crossing through the rectangle.
+            double ybottom = y-p2->maxY();
+            if (ybottom > 0) {
+                // Then check where circle passes through bottom edge:
+                double rmax1 = p1->maxY();
+                double xx = sqrt(rmax1*rmax1 - ybottom*ybottom);
+                if (xx < xmax) xmax = xx;
+                if (-xx > xmin) xmin = -xx;
+            }
+            double ytop = y-p2->minY();
+            if (ytop < 0) {
+                // Then check where circle passes through top edge:
+                double rmax1 = p1->maxY();
+                double xx = sqrt(rmax1*rmax1 - ytop*ytop);
+                if (xx < xmax) xmax = xx;
+                if (-xx > xmin) xmin = -xx;
+            }
+        }
+
+        if (xmin >= xmax) { dbg<<"int is trivially 0\n"; return 0.; }
+
+        ConvolveFunc conv(p1,p2,x,y);
+
+        integ::IntRegion<double> xreg(xmin,xmax,dbgout);
+        dbg<<"xreg = "<<xmin<<" ... "<<xmax<<std::endl;
+
+        YRegion yreg(p1,p2,pos);
+
+        double result = integ::int2d(conv, xreg, yreg, relerr, abserr);
+        dbg<<"Found result = "<<result<<std::endl;
+        return result;
+    }
+
+    double SBConvolve::xValue(Position<double> pos) const
+    {
         // Perform a direct calculation of the convolution at a particular point by
         // doing the real-space integral.
         // Note: This can only really be done one pair at a time, so it is 
         // probably rare that this will be more efficient if N > 2.
         // For now, we don't bother implementing this for N > 2.
+        
         if (plist.empty()) return 0.;
         else if (plist.size() == 1) return plist.front()->xValue(pos);
         else if (plist.size() > 2) 
             throw SBError("Real-space integration of more than 2 profiles is not implemented.");
         else {
-            double x = pos.x;
-            double y = pos.y;
-            if (x < sumMinX) { dbg<<"trivial 0\n"; return 0.; }
-            if (x > sumMaxX) { dbg<<"trivial 0\n"; return 0.; }
-            if (y < sumMinX) { dbg<<"trivial 0\n"; return 0.; }
-            if (y > sumMaxY) { dbg<<"trivial 0\n"; return 0.; }
-
+            if (pos.x < sumMinX) return 0.;
+            if (pos.x > sumMaxX) return 0.;
+            if (pos.y < sumMinX) return 0.;
+            if (pos.y > sumMaxY) return 0.;
             const SBProfile* p1 = plist.front();
             const SBProfile* p2 = plist.back();
-            RealSpaceConvolve conv(p1,p2,x,y);
-
-            double xmin = std::max(p1->minX() , x-p2->maxX());
-            double xmax = std::min(p1->maxX() , x-p2->minX());
-            integ::IntRegion<double> xreg(xmin,xmax);
-            dbg<<"xreg = "<<xmin<<" ... "<<xmax<<std::endl;
-
-            YRegion yreg(p1,p2,pos);
-
-            double result = integ::int2d(conv, xreg, yreg, relerr, abserr);
-            dbg<<"Found result = "<<result<<std::endl;
-            return result;
+            if (p2->isAxisymmetric())
+                return RealSpaceConvolve(p2,p1,pos);
+            else 
+                return RealSpaceConvolve(p1,p2,pos);
         }
     }
+
 
     //
     // "SBGaussian" Class 

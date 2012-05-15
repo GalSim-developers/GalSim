@@ -140,7 +140,8 @@
 
 
 #include "MoreFunctional.h"
-#include "IntGKPData10.h"
+//#include "IntGKPData10.h"
+#include "IntGKPData1.h"
 namespace galsim {
 namespace integ {
 
@@ -474,9 +475,18 @@ namespace integ {
         assert(abserr >= 0.);
         assert(relerr > 0.);
 
+        // Check for early exit:
+        if (reg.left() == reg.right()) {
+            integ_dbg2<<"left == right, so integral is trivially 0.\n";
+            reg.setArea(0.,0.);
+        }
+
         // Perform the first integration 
         bool done = intGKPNA(func, reg, relerr, abserr, fxmap);
-        if (done) return;
+        if (done) {
+            integ_dbg2<<"GKPNA suceeded, so we're done.\n";
+            return;
+        }
 
         integ_dbg2<<"In adaptive GKP, failed first pass... subdividing\n";
         integ_dbg2<<"Intial range = "<<reg.left()<<".."<<reg.right()<<std::endl;
@@ -629,7 +639,7 @@ namespace integ {
     };
 
     template <class UF> 
-    AuxFunc1<UF> inline Aux1(UF uf) 
+    AuxFunc1<UF> inline Aux1(const UF& uf) 
     { return AuxFunc1<UF>(uf); }
 
     template <class UF> 
@@ -647,7 +657,7 @@ namespace integ {
     };
 
     template <class UF> AuxFunc2<UF> 
-    inline Aux2(UF uf) 
+    inline Aux2(const UF& uf) 
     { return AuxFunc2<UF>(uf); }
 
     /// Perform a 1-dimensional integral using an IntRegion
