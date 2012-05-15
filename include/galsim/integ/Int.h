@@ -629,7 +629,7 @@ namespace integ {
     };
 
     template <class UF> 
-    AuxFunc1<UF> inline Aux1(UF uf) 
+    AuxFunc1<UF> inline Aux1(const UF& uf) 
     { return AuxFunc1<UF>(uf); }
 
     template <class UF> 
@@ -647,7 +647,7 @@ namespace integ {
     };
 
     template <class UF> AuxFunc2<UF> 
-    inline Aux2(UF uf) 
+    inline Aux2(const UF& uf) 
     { return AuxFunc2<UF>(uf); }
 
     /// Perform a 1-dimensional integral using an IntRegion

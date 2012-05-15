@@ -8,6 +8,7 @@
 #include "Table.h"
 #include "Random.h"
 #include "PhotonArray.h"
+#include "OneDimensionalDeviate.h"
 
 namespace galsim {
 
@@ -371,6 +372,15 @@ namespace galsim {
     // Cubic interpolator exact to 3rd order Taylor expansion
     // From R. G. Keys , IEEE Trans. Acoustics, Speech, & Signal Proc 29, p 1153, 1981
 
+    class InterpolantFunction: public FluxDensity {
+    public:
+        InterpolantFunction(const Interpolant& interp): _interp(interp) {}
+        double operator()(double x) const {return _interp.xval(x);}
+        ~InterpolantFunction() {}
+    private:
+        const Interpolant& _interp;
+    };
+
     class Cubic : public Interpolant 
     {
     public:
@@ -396,7 +406,7 @@ namespace galsim {
 
 	double getPositiveFlux() const {return 13./12.;}
 	double getNegativeFlux() const {return 1./12.;}
-	// ???? PhotonArray shoot(int N, UniformDeviate& ud) const;
+//**        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
     private:
         double range; // Reduce range slightly from n so we're not using zero-valued endpoints.

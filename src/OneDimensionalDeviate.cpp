@@ -18,12 +18,12 @@ namespace galsim {
     const double ALLOWED_FLUX_VARIATION = 0.81;
 
     // Function to isolate an extremum of function in an interval.
-    template <class F>
-    double findExtremum( const F& function,
-                         double xmin,
-                         double xmax,
-                         int divisionSteps,
-                         double xFractionalTolerance = 1e-4) {
+    bool findExtremum( const FluxDensity& function,
+                       double xmin,
+                       double xmax,
+		       double& extremum, 
+                       int divisionSteps,
+                       double xFractionalTolerance = 1e-4) {
         if (xmax < xmin) std::swap(xmax,xmin);
         const double xTolerance = xFractionalTolerance*(xmax-xmin);
         // First bracket extremum by division into fixed number of steps
@@ -33,13 +33,13 @@ namespace galsim {
         double f1 = function(x1);
         double f2 = function(x2);
         double df1 = f2 - f1;
-        double x3 = 2*xStep;
+        double x3 = xmin + 2*xStep;
         double f3 = function(x3);
         double df2 = f3 - f2;
         
         while (df1 * df2 >= 0.) {
-            if (f3 >= xmax) 
-                throw std::runtime_error("Did not bracket extremum in findExtremum");
+            if (x3 >= xmax) 
+                return false;  // no extremum bracketed.
             x1 = x2;
             f1 = f2;
             x2 = x3;
@@ -100,12 +100,12 @@ namespace galsim {
                 }
             }
         }
-        return x2;
+        extremum = x2;
+        return true;
     }
 
 
-    template <class F>
-    void Interval<F>::drawWithin(double absFlux, double& x, double& flux,
+    void Interval::drawWithin(double absFlux, double& x, double& flux,
                                  UniformDeviate& ud) const {
         double fractionOfInterval = (_cumulativeFlux -  absFlux) 
             / std::abs(_differentialFlux);
@@ -121,27 +121,28 @@ namespace galsim {
         }
     }
 
-    template <class F>
-    std::list<Interval<F> > Interval<F>::split(double smallFlux) {
+    std::list<Interval> Interval::split(double smallFlux) {
         // Get the flux in this interval 
         _differentialFlux = integ::int1d(*_fluxDensityPtr, 
                                          _xLower, _xUpper,
                                          RELATIVE_ERROR,
 					 ABSOLUTE_ERROR);
-        _meanAbsDensity = _differentialFlux / (_xUpper - _xLower);
+        _meanAbsDensity = std::abs(_differentialFlux / (_xUpper - _xLower));
         double densityLower = (*_fluxDensityPtr)(_xLower);
         double densityUpper = (*_fluxDensityPtr)(_xUpper);
         _maxAbsDensity = std::max(std::abs(densityLower),
                                   std::abs(densityUpper));
 
-        std::list<Interval<F> > result;
-        double densityVariation = densityLower / densityUpper;
+        std::list<Interval> result;
+        double densityVariation = 0.;
+	if (std::abs(densityLower) > 0. && std::abs(densityUpper) > 0.)
+	     densityVariation = densityLower / densityUpper;
         if (densityVariation > 1.) densityVariation = 1. / densityVariation;
         if (densityVariation > ALLOWED_FLUX_VARIATION) {
             // Don't split if flux range is small
             _useRejectionMethod = false;
             result.push_back(*this);
-        } else if (_differentialFlux < smallFlux) {
+        } else if (std::abs(_differentialFlux) < smallFlux) {
             // Don't split further, as it will be rare to be in this interval
             // and rejection is ok.
             _useRejectionMethod = true;
@@ -149,11 +150,9 @@ namespace galsim {
         } else {
             // Split the interval.  Call (recursively) split() for left & right
             double midpoint = 0.5*(_xLower + _xUpper);
-            Interval<F> left(*_fluxDensityPtr);
-            left.setRange(_xLower, midpoint);
-            Interval<F> right(*_fluxDensityPtr);
-            right.setRange(midpoint, _xUpper);
-            std::list<Interval<F> > add = left.split(smallFlux);
+            Interval left(*_fluxDensityPtr,_xLower, midpoint);
+            Interval right(*_fluxDensityPtr, midpoint, _xUpper);
+            std::list<Interval> add = left.split(smallFlux);
             result.splice(result.end(), add);
             add = right.split(smallFlux);
             result.splice(result.end(), add);
@@ -161,8 +160,7 @@ namespace galsim {
         return result;
     }
 
-    template <class F>
-    OneDimensionalDeviate<F>::OneDimensionalDeviate(const F& fluxDensity, 
+    OneDimensionalDeviate::OneDimensionalDeviate(const FluxDensity& fluxDensity, 
                                                  std::vector<double>& range):
         _fluxDensity(fluxDensity),
         _positiveFlux(0.),
@@ -183,39 +181,46 @@ namespace galsim {
         double totalAbsoluteFlux = _positiveFlux + _negativeFlux;
 
         // Collect Intervals as an un-ordered list initially
-        std::list<Interval<F> > intervalList;
+        std::list<Interval> intervalList;
 
         // Now break each range into Intervals
-        for (Index iRange = 1; iRange < range.size()-1; iRange++) {
-            Interval<F> rangeA(_fluxDensity);
-            Interval<F> rangeB(_fluxDensity);
-            if (iRange==0) {
-                rangeA.setRange(range[iRange], range[iRange+1]);
+        for (Index iRange = 0; iRange < range.size()-1; iRange++) {
+	     /**/ std::cerr << "iRange " << iRange << std::endl;
+            // See if there is an extremum to split this range:
+            double extremum;
+            if (findExtremum(_fluxDensity, 
+                             range[iRange],
+                             range[iRange+1],
+                             extremum,
+                             RANGE_DIVISION_FOR_EXTREMA)) {
+		/**/std::cerr << "Found extremum at " << extremum << std::endl;
+                // Do 2 ranges
+                {
+                    Interval splitit(_fluxDensity, range[iRange], extremum);
+                    std::list<Interval> leftList = splitit.split(SMALL_FRACTION_OF_FLUX
+                                                                *totalAbsoluteFlux);
+                    /**/std::cerr << "Left side " << leftList.size() << " intervals" << std::endl;
+                    intervalList.splice(intervalList.end(), leftList);
+                }
+                {
+                    Interval splitit(_fluxDensity, extremum, range[iRange+1]);
+                    std::list<Interval> rightList = splitit.split(SMALL_FRACTION_OF_FLUX
+                                                                *totalAbsoluteFlux);
+                    /**/std::cerr << "Right side " << rightList.size() << " intervals" << std::endl;
+                    intervalList.splice(intervalList.end(), rightList);
+                }
             } else {
-                // Split interval at maximum or minimum
-                // First a coarse search to bracket min/max
-                // Then localize to desired accuracy
-                // !!!!!
-                double extremum = findExtremum(_fluxDensity, 
-                                               range[iRange],
-                                               range[iRange+1],
-                                               RANGE_DIVISION_FOR_EXTREMA);
-                rangeA.setRange(range[iRange], extremum);
-                rangeB.setRange(extremum, range[iRange+1]);
-            }
-            // Divide as needed.  Splitting process integrates flux per interval.
-            std::list<Interval<F> > leftList = rangeA.split(SMALL_FRACTION_OF_FLUX
-                                                            *totalAbsoluteFlux);
-            intervalList.splice(intervalList.end(), leftList);
-            if (iRange != 0) {
-                std::list<Interval<F> > rightList = rangeB.split(SMALL_FRACTION_OF_FLUX
-                                                                 *totalAbsoluteFlux);
-                intervalList.splice(intervalList.end(), rightList);
+                // Just single Interval in this range, no extremum:
+                Interval splitit(_fluxDensity, range[iRange], range[iRange+1]);
+                std::list<Interval> leftList = splitit.split(SMALL_FRACTION_OF_FLUX
+                                                           *totalAbsoluteFlux);
+                /**/std::cerr << "Split to " << leftList.size() << " intervals" << std::endl;
+                intervalList.splice(intervalList.end(), leftList);
             }
         }
         // Accumulate fluxes and put into set structure
         double cumulativeFlux = 0.;
-        for (typename std::list<Interval<F> >::iterator i=intervalList.begin();
+        for (typename std::list<Interval>::iterator i=intervalList.begin();
              i != intervalList.end();
              ++i) {
             cumulativeFlux += std::abs(i->getDifferentialFlux());
@@ -224,8 +229,7 @@ namespace galsim {
         }
     }
 
-    template <class F>
-    PhotonArray OneDimensionalDeviate<F>::shoot(int N, UniformDeviate& ud) const {
+    PhotonArray OneDimensionalDeviate::shoot(int N, UniformDeviate& ud) const {
         assert(N>=0);
         PhotonArray result(N);
         if (N==0) return result;
@@ -234,9 +238,9 @@ namespace galsim {
         for (int i=0; i<N; i++) {
             // Create dummy Interval with randomly drawn cumulative flux
             // to use for sorting
-            Interval<F> drawn(_fluxDensity);
+            Interval drawn(_fluxDensity, 0., 0.);
             drawn.setCumulativeFlux(ud()*totalAbsoluteFlux);
-            typename std::set<Interval<F> >::const_iterator upper =
+            typename std::set<Interval>::const_iterator upper =
                 _intervalSet.lower_bound(drawn);
             // use last pixel if we're past the end
             if (upper == _intervalSet.end()) --upper; 
@@ -247,8 +251,5 @@ namespace galsim {
         }
         return result;
     }
-
-    // Instantiate:
-    template class  OneDimensionalDeviate<InterpolantFunction>;
 
 } // namespace galsim

@@ -8,15 +8,23 @@
 #include <functional>
 #include "Random.h"
 #include "PhotonArray.h"
-#include "Interpolant.h"
 
 namespace galsim {
 
-     
-    template <class F>
+    // A base class for functions giving differential flux vs x or r
+    class FluxDensity: public std::unary_function<double,double> {
+    public:
+        virtual ~FluxDensity() {}
+        virtual double operator()(double x) const=0;
+    };
+
     class Interval {
     public:
-        Interval(const F& fluxDensity): _fluxDensityPtr(&fluxDensity) {}
+        Interval(const FluxDensity& fluxDensity,
+                 double xLower,
+                 double xUpper): _fluxDensityPtr(&fluxDensity),
+                                 _xLower(xLower),
+                                 _xUpper(xUpper) {}
         // given a cumulative absolute flux within this Interval,
         // choose an x value for photon and a flux (nominally +-1)
         void drawWithin(double absFlux, double& x, double& flux,
@@ -32,10 +40,6 @@ namespace galsim {
             xLower = _xLower;
             xUpper = _xUpper;
         }
-        void setRange(double xLower, double xUpper) {
-            _xLower = xLower;
-            _xUpper = xUpper;
-        }
 
         // Return list of intervals that divide this one into acceptably small ones
         // (will be used recursively)
@@ -45,7 +49,7 @@ namespace galsim {
             return _cumulativeFlux<rhs._cumulativeFlux;
         }
     private:
-        const F* _fluxDensityPtr;
+        const FluxDensity* _fluxDensityPtr;
         double _xLower;
         double _xUpper;
         double _differentialFlux;
@@ -58,27 +62,18 @@ namespace galsim {
         double _meanAbsDensity;
     };
 
-    template <class F>
     class OneDimensionalDeviate {
     public:
-        OneDimensionalDeviate(const F& fluxDensity, std::vector<double>& range);
+        OneDimensionalDeviate(const FluxDensity& fluxDensity, std::vector<double>& range);
         double getPositiveFlux() const {return _positiveFlux;}
         double getNegativeFlux() const {return _negativeFlux;}
         PhotonArray shoot(int N, UniformDeviate& ud) const;
     private:
-        const F& _fluxDensity;
-        std::set<Interval<F> > _intervalSet;
+        const FluxDensity& _fluxDensity;
+        std::set<Interval> _intervalSet;
         double _positiveFlux;
         double _negativeFlux;
 
-    };
-
-    class InterpolantFunction: public std::unary_function<double,double> {
-    public:
-        InterpolantFunction(const Interpolant& f): _f(f) {}
-        double operator()(double x) const {return _f.xval(x);}
-    private:
-        const Interpolant& _f;
     };
 
 } // namespace galsim
