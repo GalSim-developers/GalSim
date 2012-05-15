@@ -112,7 +112,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
 
     # shear
     if (g1 != 0.0 or g2 != 0.0):
-        e1, e2 = _g1g2_to_e1e2(g1, g2)
+        e1, e2 = galsim.g1g2_to_e1e2(g1, g2)
         sheared = real_galaxy.SBProfile.shear(e1, e2)
     else:
         sheared = real_galaxy.SBProfile
@@ -123,27 +123,3 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
 
     # return simulated image
     return out_gal_image
-
-# Define "hidden" convenience function for going from (g1, g2) -> (e1, e2):
-def _g1g2_to_e1e2(g1, g2):
-    """Convenience function for going from (g1, g2) -> (e1, e2).
-    """
-    # SBProfile expects an e1,e2 distortion, rather than a shear,
-    # so we need to convert:
-    # e = (a^2-b^2) / (a^2+b^2)
-    # g = (a-b) / (a+b)
-    # b/a = (1-g)/(1+g)
-    # e = (1-(b/a)^2) / (1+(b/a)^2)
-    import math
-    gsq = g1*g1 + g2*g2
-    if gsq > 0.:
-        g = math.sqrt(gsq)
-        boa = (1-g) / (1+g)
-        e = (1 - boa*boa) / (1 + boa*boa)
-        e1 = g1 * (e/g)
-        e2 = g2 * (e/g)
-        return e1, e2
-    elif gsq == 0.:
-        return 0., 0.
-    else:
-        raise ValueError("Input |g|^2 < 0, cannot convert.")

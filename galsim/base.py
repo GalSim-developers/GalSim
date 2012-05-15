@@ -80,7 +80,7 @@ class GSObject:
     def applyShear(self, g1, g2):
         """Apply a (g1,g2) shear to this object.
         """
-        e1, e2 = _g1g2_to_e1e2(g1, g2)
+        e1, e2 = g1g2_to_e1e2(g1, g2)
         GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
 
     def applyRotation(self, theta):
@@ -105,7 +105,7 @@ class GSObject:
     def createSheared(self, g1, g2):
         """Create a new GSObject by applying a (g1, g2) shear.
         """
-        e1, e2 = _g1g2_to_e1e2(g1, g2)
+        e1, e2 = g1g2_to_e1e2(g1, g2)
         return GSObject(self.SBProfile.distort(galsim.Ellipse(e1,e2)))
 
     def createRotated(self, theta):
@@ -140,9 +140,9 @@ class GSObject:
         raise NotImplementedError("Sorry, photon shooting coming soon!")
 
 
-# Define "hidden" convenience function for going from (g1, g2) -> (e1, e2), used by two methods
-# in the GSObject class:
-def _g1g2_to_e1e2(g1, g2):
+# Define "convenience function for going from (g1, g2) -> (e1, e2), used by two methods
+# in the GSObject class and by one function in real.py:
+def g1g2_to_e1e2(g1, g2):
     """Convenience function for going from (g1, g2) -> (e1, e2), used by two methods in the 
     GSObject class.
     """
