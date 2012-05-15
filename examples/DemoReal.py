@@ -21,8 +21,10 @@ except ImportError:
 # define some variables etc.
 real_catalog_filename = 'data/real_galaxy_catalog_example.fits'
 image_dir = 'data'
-good_psf_fwhm = 0.6 # arcsec
-bad_psf_fwhm = 1.5
+good_psf_central_fwhm = 0.6 # arcsec; FWHM of smaller Gaussian in the double Gaussian for good seeing
+bad_psf_central_fwhm = 1.3 # arcsec; FWHM of smaller Gaussian in the double Gaussian for bad seeing
+central_psf_amp = 0.8 # relative contribution of inner Gaussian in the double Gaussian PSF
+outer_fwhm_mult = 2.0 # ratio of (outer)/(inner) Gaussian FWHM for double Gaussian PSF
 pixel_scale = 0.2 # arcsec
 g1 = 0.05
 g2 = 0.00
@@ -33,8 +35,12 @@ real_galaxy = galsim.RealGalaxy(rgc, random = True)
 print 'Made real galaxy from catalog index ',real_galaxy.index
 
 # make a target PSF object
-good_psf = galsim.Gaussian(fwhm = good_psf_fwhm)
-bad_psf = galsim.Gaussian(fwhm = bad_psf_fwhm)
+good_psf = galsim.atmosphere.DoubleGaussian(central_psf_amp, 1.0-central_psf_amp, fwhm1 =
+                                            good_psf_central_fwhm, fwhm2 =
+                                            outer_fwhm_mult*good_psf_central_fwhm)
+bad_psf = galsim.atmosphere.DoubleGaussian(central_psf_amp, 1.0-central_psf_amp, fwhm1 =
+                                            bad_psf_central_fwhm, fwhm2 =
+                                            outer_fwhm_mult*bad_psf_central_fwhm)
 pixel = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)
 good_epsf = galsim.Convolve(good_psf, pixel)
 bad_epsf = galsim.Convolve(bad_psf, pixel)
