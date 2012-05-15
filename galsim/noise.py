@@ -9,7 +9,8 @@ def addNoise(image, noise):
 
     Parameters
     ----------
-    @param[in,out]  noise  instantiated noise model (currently CCDNoise, UniformDeviate,
+    @param[in,out]  image  The image on which to add the noise.
+    @param[in,out]  noise  Instantiated noise model (currently CCDNoise, UniformDeviate,
                            BinomialDeviate, GaussianDeviate and PoissonDeviate are supported).
 
     If the supplied noise model object does not have an applyTo() method, then this will raise an
