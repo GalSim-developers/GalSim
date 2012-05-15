@@ -30,8 +30,8 @@ def Script1():
     logger = logging.getLogger("Script1") 
 
     gal_flux = 1.e5    # ADU
-    gal_sigma = 2.     # pixels
-    psf_sigma = 1.     # pixels
+    gal_sigma = 2.     # arcsec
+    psf_sigma = 1.     # arcsec
     pixel_scale = 0.2  # arcsec / pixel
     noise = 300.       # ADU / pixel
 
@@ -101,11 +101,11 @@ def Script2():
     logger = logging.getLogger("Script2") 
 
     gal_flux = 1.e5    # ADU
-    gal_r0 = 2.7       # pixels
+    gal_r0 = 2.7       # arcsec
     g1 = 0.1           #
     g2 = 0.2           #
     psf_beta = 5       #
-    psf_re = 1.0       # pixels
+    psf_re = 1.0       # arcsec
     pixel_scale = 0.2  # arcsec / pixel
     sky_level = 1.e3   # ADU / pixel
     gain = 1.0         # ADU / e-
@@ -201,14 +201,14 @@ def Script3():
     logger = logging.getLogger("Script3") 
     gal_flux = 1.e5    # ADU
     gal_n = 3.5        #
-    gal_re = 3.7       # pixels
+    gal_re = 3.7       # arcsec
     g1 = -0.23         #
     g2 = 0.15          #
-    atmos_a_sigma=2.1  # pixels
+    atmos_a_sigma=2.1  # arcsec
     atmos_a_g1 = -0.13 # (shear for "a")
     atmos_a_g2 = -0.09 #
     atmos_fa=0.2       # (fraction of flux in "a")
-    atmos_b_sigma=0.9  # pixels
+    atmos_b_sigma=0.9  # arcsec
     atmos_b_g1 = 0.02  # (shear for "b")
     atmos_b_g2 = -0.04 #
     opt_defocus=0.53   # wavelengths
@@ -265,11 +265,10 @@ def Script3():
 
     # Define the optical part of the PSF.
     # The first argument of OpticalPSF below is lambda/D,
-    # which needs to be in pixel units, so do the calculation:
+    # which needs to be in arcsec, so do the calculation:
     lam_over_D = lam * 1.e-9 / tel_diam # radians
     lam_over_D *= 206265 # arcsec
-    lam_over_D /= pixel_scale # pixels
-    logger.info('Calculated lambda over D = %f pixels', lam_over_D)
+    logger.info('Calculated lambda over D = %f arcsec', lam_over_D)
     # The rest of the values here should be given in units of the 
     # wavelength of the incident light. pad_factor is used to here to reduce 'folding' for these
     # quite strong aberration values
