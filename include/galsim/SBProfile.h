@@ -820,11 +820,11 @@ namespace galsim {
         double sumMinY; ///< sum of minY() of the convolved SBProfiles.
         double sumMaxY; ///< sum of maxY() of the convolved SBProfiles.
         double fluxProduct; ///< Flux of the product.
-        bool useReal; ///< Whether to do convolution as an integral in real space.
+        bool _real_space; ///< Whether to do convolution as an integral in real space.
 
     public:
         /// @brief Constructor, empty.
-        explicit SBConvolve(bool real=false) : plist(), fluxScale(1.), useReal(real) {}
+        explicit SBConvolve(bool real_space=false) : plist(), fluxScale(1.), _real_space(real_space) {}
 
         /**
          * @brief Constructor, 1 input.
@@ -832,8 +832,8 @@ namespace galsim {
          * @param[in] s1 SBProfile.
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
-        SBConvolve(const SBProfile& s1, bool real=false, double f=1.) :
-            plist(), fluxScale(f), useReal(real)
+        SBConvolve(const SBProfile& s1, bool real_space=false, double f=1.) :
+            plist(), fluxScale(f), _real_space(real_space)
         { add(s1); }
 
         /**
@@ -843,8 +843,8 @@ namespace galsim {
          * @param[in] s2 second SBProfile.
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
-        SBConvolve(const SBProfile& s1, const SBProfile& s2, bool real=false, double f=1.) : 
-            plist(), fluxScale(f), useReal(real)
+        SBConvolve(const SBProfile& s1, const SBProfile& s2, bool real_space=false, double f=1.) : 
+            plist(), fluxScale(f), _real_space(real_space)
         { add(s1);  add(s2); }
 
         /**
@@ -857,8 +857,8 @@ namespace galsim {
          */
         SBConvolve(
             const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
-            bool real=false, double f=1.) :
-            plist(), fluxScale(f), useReal(real)
+            bool real_space=false, double f=1.) :
+            plist(), fluxScale(f), _real_space(real_space)
         { add(s1);  add(s2);  add(s3); }
 
         /**
@@ -867,8 +867,8 @@ namespace galsim {
          * @param[in] slist Input: list of SBProfiles.
          * @param[in] f Input: optional scaling factor for final flux (default `f = 1.`).
          */
-        SBConvolve(const std::list<SBProfile*> slist, bool real=false, double f=1.) :
-            plist(), fluxScale(f), useReal(real)
+        SBConvolve(const std::list<SBProfile*> slist, bool real_space=false, double f=1.) :
+            plist(), fluxScale(f), _real_space(real_space)
         { 
             std::list<SBProfile*>::const_iterator sptr;
             for (sptr = slist.begin(); sptr!=slist.end(); ++sptr) add(**sptr); 
@@ -885,7 +885,7 @@ namespace galsim {
             minMaxK(rhs.minMaxK), minStepK(rhs.minStepK),
             sumMinX(rhs.sumMinX), sumMaxX(rhs.sumMaxX), 
             sumMinY(rhs.sumMinY), sumMaxY(rhs.sumMaxY), 
-            fluxProduct(rhs.fluxProduct), useReal(rhs.useReal)
+            fluxProduct(rhs.fluxProduct), _real_space(rhs._real_space)
         {
             std::list<SBProfile*>::const_iterator rhsptr;
             for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
@@ -924,7 +924,7 @@ namespace galsim {
             sumMinY = rhs.sumMinY;
             sumMaxY = rhs.sumMaxY;
             fluxProduct = rhs.fluxProduct;
-            useReal = rhs.useReal;
+            _real_space = rhs._real_space;
             return *this;
         }
 
@@ -960,8 +960,8 @@ namespace galsim {
         }
 
         bool isAxisymmetric() const { return isStillAxisymmetric; }
-        bool isAnalyticX() const { return useReal; }
-        bool isAnalyticK() const { return !useReal; }    // convolvees must all meet this
+        bool isAnalyticX() const { return _real_space; }
+        bool isAnalyticK() const { return !_real_space; }    // convolvees must all meet this
         double maxK() const { return minMaxK; }
         double stepK() const { return minStepK; }
 

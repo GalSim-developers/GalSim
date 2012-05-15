@@ -36,7 +36,7 @@
 // Then each thread other than the main thread will actually write to a file 
 // name_threadnum and not clobber each other.  (The main thread will write to name.)
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 #ifdef DEBUGLOGGING
 extern std::ostream* dbgout;
 extern int verbose_level;

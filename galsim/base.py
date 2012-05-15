@@ -339,7 +339,7 @@ class Convolve(GSObject):
         # The only kwarg we're looking for is real_space, which can be True or False
         # (default if omitted is False), which specifies whether to do the convolution
         # as an integral in real space rather than as a product in fourier space.
-        real = kwargs.pop("real_space",False)
+        real_space = kwargs.pop("real_space",False)
         if kwargs:
             # This exception seems inappropriate, but I don't know which one is better.
             # I really want something like a ParameterError or ArgumentError, but that
@@ -350,24 +350,24 @@ class Convolve(GSObject):
         # So check the number and type of the arguments here in the single __init__ method.
         if len(args) == 0:
             # No arguments.  Start with none and add objects later with add(obj)
-            GSObject.__init__(self, galsim.SBConvolve(real=real))
+            GSObject.__init__(self, galsim.SBConvolve(real_space=real_space))
         elif len(args) == 1:
             # 1 argment.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], GSObject):
                 # If single argument is a GSObject, then use the SBConvolve for a single SBProfile.
-                GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile,real=real))
+                GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile,real_space=real_space))
             else:
                 # Otherwise, should be a list of GSObjects
                 SBList = [obj.SBProfile for obj in args[0]]
-                GSObject.__init__(self, galsim.SBConvolve(SBList,real=real))
+                GSObject.__init__(self, galsim.SBConvolve(SBList,real_space=real_space))
         elif len(args) == 2:
             # 2 arguments.  Should both be GSObjects.
             GSObject.__init__(self, galsim.SBConvolve(
-                    args[0].SBProfile,args[1].SBProfile,real=real))
+                    args[0].SBProfile,args[1].SBProfile,real_space=real_space))
         else:
             # > 2 arguments.  Convert to a list of SBProfiles
             SBList = [obj.SBProfile for obj in args]
-            GSObject.__init__(self, galsim.SBConvolve(SBList,real=real))
+            GSObject.__init__(self, galsim.SBConvolve(SBList,real_space=real_space))
 
     def add(self, obj):
         self.SBProfile.add(obj.SBProfile)
