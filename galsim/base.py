@@ -1,3 +1,4 @@
+import collections
 import numpy as np
 import galsim
 
@@ -73,11 +74,17 @@ class GSObject:
 
     def applyDistortion(self, ellipse):
         """Apply a galsim.Ellipse distortion to this object.
+
+        galsim.Ellipse instances can be generated via
+
+        >>> ellipse = galsim.Ellipse(e1, e2)
+
+        where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
         """
         GSObject.__init__(self, self.SBProfile.distort(ellipse))
         
     def applyShear(self, g1, g2):
-        """Apply a (g1,g2) shear to this object.
+        """Apply a (g1, g2) shear to this object, where |g| = (a-b)/(a+b).
         """
         e1, e2 = _g1g2_to_e1e2(g1, g2)
         GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
@@ -98,11 +105,17 @@ class GSObject:
     #
     def createDistorted(self, ellipse):
         """Create a new GSObject by applying a galsim.Ellipse distortion.
+
+        galsim.Ellipse instances can be generated via
+
+        >>> ellipse = galsim.Ellipse(e1, e2)
+
+        where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
         """
         return GSObject(self.SBProfile.distort(ellipse))
 
     def createSheared(self, g1, g2):
-        """Create a new GSObject by applying a (g1, g2) shear.
+        """Create a new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
         """
         e1, e2 = _g1g2_to_e1e2(g1, g2)
         return GSObject(self.SBProfile.distort(galsim.Ellipse(e1,e2)))
@@ -222,6 +235,15 @@ class Exponential(GSObject):
     # Ditto!
 
 
+class DeVaucouleurs(GSObject):
+    """GalSim De-Vaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
+    """
+    def __init__(self, flux=1., half_light_radius=None):
+        GSObject.__init__(self, galsim.SBDeVaucouleurs(flux=flux, 
+                                                       half_light_radius=half_light_radius))
+    # Ditto!
+
+
 class Airy(GSObject):
     """GalSim Airy, which has an SBAiry in the SBProfile attribute.
     """
@@ -234,9 +256,10 @@ class Pixel(GSObject):
     """GalSim Pixel, which has an SBBox in the SBProfile attribute.
     """
     def __init__(self, xw=None, yw=None, flux=1.):
+        if yw is None:
+            yw = xw
         GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
     # Ditto!
-
 
 class OpticalPSF(GSObject):
     """@brief Class describing aberrated PSFs due to telescope optics.
@@ -247,7 +270,7 @@ class OpticalPSF(GSObject):
 
     Initialization
     --------------
-    >>> optical_psf = galsim.OpticalPSF(lod=1., defocus=0., astig1=0., astig2=0., coma1=0., 
+    >>> optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., 
                                         coma2=0., spher=0., circular_pupil=True, interpolantxy=None,
                                         dx=1., oversampling=2., pad_factor=2)
 
@@ -332,7 +355,7 @@ class Add(GSObject):
 
 
 class Convolve(GSObject):
-    """Base class for defining the python interface to the SBConvolve C++ class.
+    """@brief Base class for defining the python interface to the SBConvolve C++ class.
     """
     def __init__(self, *args, **kwargs):
         # Check kwargs first
@@ -371,4 +394,102 @@ class Convolve(GSObject):
 
     def add(self, obj):
         self.SBProfile.add(obj.SBProfile)
+
+
+# Now we define a dictionary containing all the GSobject subclass names as keys, referencing a
+# nested dictionary containing the names of their required parameters (not including size), size
+# specification parameters (one of which only must be set), and optional parameters, stored as a
+# tuple of string names in each case.
+#
+# This is useful for I/O, and as a reference.
+#
+# NOTE TO DEVELOPERS: This dict should be kept updated to reflect changes in parameter names or new
+#                     objects.
+#
+object_param_dict = {"Gaussian":      { "required" : (),
+                                        "size" :     ("half_light_radius", "sigma", "fwhm",),
+                                        "optional" : ("flux",) },
+                     "Moffat":        { "required" : ("beta",),
+                                        "size" :     ("half_light_radius", "scale_radius", "fwhm",),
+                                        "optional" : ("truncationFWHM", "flux",) },
+                     "Sersic":        { "required" : ("n",) ,
+                                        "size"     : ("half_light_radius",),
+                                        "optional" : ("flux",)},
+                     "Exponential":   { "required" : (),
+                                        "size"     : ("half_light_radius", "scale_radius"),
+                                        "optional" : ("flux",)},
+                     "DeVaucouleurs": { "required" : (),
+                                        "size"     : ("half_light_radius",),
+                                        "optional" : ("flux",) },
+                     "Airy":          { "required" : () ,
+                                        "size"     : ("D",) ,
+                                        "optional" : ("obs", "flux",)},
+                     "Pixel":         { "required" : ("xw", "yw",),
+                                        "size"     : (),
+                                        "optional" : ("flux",)},
+                     "OpticalPSF":    { "required" : (),
+                                        "size"     : ("lam_over_D",),
+                                        "optional" : ("defocus", "astig1", "astig2", "coma1",
+                                                      "coma2", "spher", "circular_pupil",
+                                                      "interpolantxy", "dx", "oversampling",
+                                                      "pad_factor")} }
+
+
+class AttributeDict(object):
+    """Dictionary class that allows for easy initialization and refs to key values via attributes.
+
+    NOTE: Modified a little from Jim's bot.git AttributeDict class  (Jim, please review!) so that...
+
+    ...Tab completion now works in ipython (it didn't with the bot.git version on my build) since
+    attributes are actually added to __dict__.
+    
+    HOWEVER this means I have redefined the __dict__ attribute to be a collections.defaultdict()
+    so that Jim's previous default attrbiute behaviour is also replicated.
+
+    I prefer this, as a newbie who uses ipython and the tab completion function to aid development,
+    but does it potentially break something down the line or add undesirable behaviour? (I guessed
+    not, since collections.defaultdict objects have all the usual dict() methods, but I cannot be
+    sure.)
+    """
+    def __init__(self):
+        object.__setattr__(self, "__dict__", collections.defaultdict(AttributeDict))
+
+    def __getattr__(self, name):
+        return self.__dict__[name]
+
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+
+    def merge(self, other):
+        self.__dict__.update(other.__dict__)
+
+    def _write(self, output, prefix=""):
+        for k, v in self.__dict__.iteritems():
+            if isinstance(v, AttributeDict):
+                v._write(output, prefix="{0}{1}.".format(prefix, k))
+            else:
+                output.append("{0}{1} = {2}".format(prefix, k, repr(v)))
+
+    def __nonzero__(self):
+        return not not self.__dict__
+
+    def __repr__(self):
+        output = []
+        self._write(output, "")
+        return "\n".join(output)
+
+    __str__ = __repr__
+
+    def __len__(self):
+        return len(self.__dict__)
+
+
+class Config(AttributeDict):
+    """Config class that is basically a renamed AttributeDict, and allows for easy initialization
+    and refs to key values via attributes.
+    """
+    def __init__(self):
+        AttributeDict.__init__(self)
+
+
 

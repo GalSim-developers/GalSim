@@ -19,7 +19,8 @@ Before you start, you'll probably want to put the following in ~/.gitconfig:
 The "push" section changes the default behavior of "git push" to operate on the current branch only,
 which makes it symmetric with "git pull", and will help you avoid confusing (but ultimately
 harmless) error messages about failing to push refs due to non-fast-forward merges on branches other
-than the current one.
+than the current one.  Even more important, it means that "git push" won't push some changes
+you've made on a different branch that aren't ready to go public yet.
 
 --- Basic workflow ---
 
