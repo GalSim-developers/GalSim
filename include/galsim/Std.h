@@ -36,65 +36,17 @@
 // Then each thread other than the main thread will actually write to a file 
 // name_threadnum and not clobber each other.  (The main thread will write to name.)
 
+#define DEBUGLOGGING
 #ifdef DEBUGLOGGING
-#if defined(__GNUC__) && defined _OPENMP
-extern __thread std::ostream* dbgout;
-extern __thread int verbose_level;
-#else
 extern std::ostream* dbgout;
 extern int verbose_level;
-#endif
-#ifdef _OPENMP
-#pragma omp threadprivate( dbgout , XDEBUG )
-#endif
-
 #define dbg if(dbgout && verbose_level >= 1) (*dbgout)
 #define xdbg if(dbgout && verbose_level >= 2) (*dbgout)
 #define xxdbg if(dbgout && verbose_level >= 3) (*dbgout)
-
-inline void SetupThreadDebug(std::string debugFile)
-{
-    dbgout = new std::ofstream(debugFile.c_str());
-    dbgout->setf(std::ios_base::unitbuf);
-
-#ifndef __PGI
-    // This gives errors with pgCC, so just skip it.
-#ifdef _OPENMP
-    // For openmp runs, we use a cool feature known as threadprivate 
-    // variables.  
-    // In dbg.h, dbgout and XDEBUG are both set to be threadprivate.
-    // This means that openmp sets up a separate value for each that
-    // persists between threads.  
-    // So here, we open a parallel block and initialize each thread's
-    // copy of dbgout to be a different file.
-
-    // To use this feature, dynamic threads must be off.  (Otherwise,
-    // openmp doesn't know how many copies of each variable to make.)
-    omp_set_dynamic(0);
-
-#pragma omp parallel copyin(dbgout, XDEBUG)
-    {
-        int threadNum = omp_get_thread_num();
-        std::stringstream ss;
-        ss << threadNum;
-        std::string debugFile2 = debugFile + "_" + ss.str();
-        if (threadNum > 0) {
-            // This is a memory leak, but a tiny one.
-            dbgout = new std::ofstream(debugFile2.c_str());
-            dbgout->setf(std::ios_base::unitbuf);
-        }
-    }
-#endif
-#endif
-}
-
 #else
-
-inline void SetupThreadDebug(std::string ) {}
 #define dbg if(false) (std::cerr)
 #define xdbg if(false) (std::cerr)
 #define xxdbg if(false) (std::cerr)
-
 #endif
 
 // A nice way to throw exceptions that take a string argument and have that string
