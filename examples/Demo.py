@@ -204,11 +204,11 @@ def Script3():
     gal_re = 3.7       # arcsec
     g1 = -0.23         #
     g2 = 0.15          #
-    atmos_a_sigma=2.1  # pixels
+    atmos_a_sigma=2.1  # arcsec
     atmos_a_g1 = -0.13 # (shear for "a")
     atmos_a_g2 = -0.09 #
     atmos_fa=0.2       # (fraction of flux in "a")
-    atmos_b_sigma=0.9  # pixels
+    atmos_b_sigma=0.9  # arcsec
     atmos_b_g1 = 0.02  # (shear for "b")
     atmos_b_g2 = -0.04 #
     opt_defocus=0.53   # wavelengths
