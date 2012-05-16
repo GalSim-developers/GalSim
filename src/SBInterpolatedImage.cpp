@@ -114,8 +114,7 @@ namespace galsim {
     {
         checkReady();
         double wtsfluxes = wts * fluxes;
-        Position<double> p((wts * xFluxes) / wtsfluxes, (wts * yFluxes) / wtsfluxes);
-        return p;
+        return Position<double>((wts * xFluxes) / wtsfluxes, (wts * yFluxes) / wtsfluxes);
     }
 
     void SBInterpolatedImage::setPixel(double value, int ix, int iy, int iz) 
@@ -288,7 +287,7 @@ namespace galsim {
 #endif
 
 #ifndef OLD_WAY
-    double SBInterpolatedImage::xValue(Position<double> p) const 
+    double SBInterpolatedImage::xValue(const Position<double>& p) const 
     {
 #ifdef DANIELS_TRACING
         cout << "getting xValue at " << p << endl;
@@ -297,7 +296,7 @@ namespace galsim {
         return xsum->interpolate(p.x, p.y, *xInterp);
     }
 
-    std::complex<double> SBInterpolatedImage::kValue(Position<double> p) const 
+    std::complex<double> SBInterpolatedImage::kValue(const Position<double>& p) const 
     {
         // Don't bother if the desired k value is cut off by the x interpolant:
         double ux = p.x*dx/TWOPI;
@@ -311,7 +310,7 @@ namespace galsim {
     }
 
 #else
-    double SBInterpolatedImage::xValue(Position<double> p) const 
+    double SBInterpolatedImage::xValue(const Position<double>& p) const 
     {
         // Interpolate WITHOUT wrapping the image.
         int ixMin = static_cast<int> ( std::ceil(p.x/dx - xInterp->xrange()));
@@ -341,7 +340,7 @@ namespace galsim {
         return wts * data * kernel;
     }
 
-    std::complex<double> SBInterpolatedImage::kValue(Position<double> p) const 
+    std::complex<double> SBInterpolatedImage::kValue(const Position<double>& p) const 
     {
         checkReady();
         // Interpolate in k space, first apply kInterp kernel to wrapped

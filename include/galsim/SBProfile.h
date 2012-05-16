@@ -106,7 +106,7 @@ namespace galsim {
          *
          * @param[in] _p 2D position in real space.
          */
-        virtual double xValue(Position<double> _p) const =0;
+        virtual double xValue(const Position<double>& _p) const =0;
 
         //@{
         /**
@@ -127,7 +127,7 @@ namespace galsim {
          *
          * @param[in] _p 2D position in k space.
          */
-        virtual std::complex<double> kValue(Position<double> _p) const =0; 
+        virtual std::complex<double> kValue(const Position<double>& _p) const =0; 
 
         virtual double maxK() const =0; ///< Value of k beyond which aliasing can be neglected.
 
@@ -611,9 +611,9 @@ namespace galsim {
 
         SBProfile* duplicate() const { return new SBAdd(*this); } 
 
-        double xValue(Position<double> _p) const;
+        double xValue(const Position<double>& _p) const;
 
-        std::complex<double> kValue(Position<double> _p) const;
+        std::complex<double> kValue(const Position<double>& _p) const;
 
         double maxK() const { return maxMaxK; }
         double stepK() const { return minStepK; }
@@ -628,7 +628,7 @@ namespace galsim {
         bool isAnalyticK() const { return allAnalyticK; }
 
         virtual Position<double> centroid() const 
-        {Position<double> p(sumfx / sumflux, sumfy / sumflux); return p; }
+        { return Position<double>(sumfx / sumflux, sumfy / sumflux); }
 
         virtual double getFlux() const { return sumflux; }
         virtual void setFlux(double flux_=1.);
@@ -674,29 +674,22 @@ namespace galsim {
          * @param[in] p input position.
          * @returns transformed position.
          */
-        Position<double> fwd(Position<double> p) const 
-        {
-            Position<double> out(matrixA*p.x+matrixB*p.y,matrixC*p.x+matrixD*p.y);
-            return out; 
-        }
+        Position<double> fwd(const Position<double>& p) const 
+        { return Position<double>(matrixA*p.x+matrixB*p.y,matrixC*p.x+matrixD*p.y); }
 
         /// @brief Forward coordinate transform with transpose of `M` matrix.
-        Position<double> fwdT(Position<double> p) const 
-        {
-            Position<double> out(matrixA*p.x+matrixC*p.y,matrixB*p.x+matrixD*p.y);
-            return out; 
-        }
+        Position<double> fwdT(const Position<double>& p) const 
+        { return Position<double>(matrixA*p.x+matrixC*p.y , matrixB*p.x+matrixD*p.y); }
 
         /// @brief Inverse coordinate transform with `M` matrix.
-        Position<double> inv(Position<double> p) const 
+        Position<double> inv(const Position<double>& p) const 
         {
-            Position<double> out(invdet*(matrixD*p.x-matrixB*p.y),
-                                 invdet*(-matrixC*p.x+matrixA*p.y));
-            return out; 
+            return Position<double>(invdet*(matrixD*p.x-matrixB*p.y),
+                                    invdet*(-matrixC*p.x+matrixA*p.y) );
         }
 
         /// @brief Returns the the k value (no phase).
-        std::complex<double> kValNoPhase(Position<double> k) const 
+        std::complex<double> kValNoPhase(const Position<double>& k) const 
         { return absdet*adaptee->kValue(fwdT(k)); }
 
 
@@ -713,7 +706,7 @@ namespace galsim {
          */
         SBDistort(
             const SBProfile& sbin, double mA, double mB, double mC, double mD,
-            Position<double> x0_=Position<double>(0.,0.));
+            const Position<double>& x0_=Position<double>(0.,0.));
 
         /** 
          * @brief Construct from an input Ellipse class object
@@ -767,10 +760,10 @@ namespace galsim {
         SBProfile* duplicate() const 
         { return new SBDistort(*this); } 
 
-        double xValue(Position<double> p) const 
+        double xValue(const Position<double>& p) const 
         { return adaptee->xValue(inv(p-x0)); }
 
-        std::complex<double> kValue(Position<double> k) const 
+        std::complex<double> kValue(const Position<double>& k) const 
         {
             std::complex<double> phaseexp(0,-k.x*x0.x-k.y*x0.y); // phase exponent
             std::complex<double> kv(absdet*adaptee->kValue(fwdT(k))*std::exp(phaseexp));
@@ -948,9 +941,9 @@ namespace galsim {
         SBProfile* duplicate() const { return new SBConvolve(*this); } 
 
         // Do the real-space conovlution to calculate this.
-        double xValue(Position<double> _p) const;
+        double xValue(const Position<double>& _p) const;
 
-        std::complex<double> kValue(Position<double> k) const 
+        std::complex<double> kValue(const Position<double>& k) const 
         {
             std::list<SBProfile*>::const_iterator pptr;
             std::complex<double> product(fluxScale,0);
@@ -971,7 +964,7 @@ namespace galsim {
         double maxY() const { return sumMaxY; }
 
         Position<double> centroid() const 
-        { Position<double> p(x0, y0); return p; }
+        { return Position<double>(x0, y0); }
 
         double getFlux() const { return fluxScale * fluxProduct; }
         void setFlux(double flux_=1.) { fluxScale = flux_/fluxProduct; }
@@ -1012,8 +1005,8 @@ namespace galsim {
         /// @brief Destructor.
         ~SBGaussian() {}                        
 
-        double xValue(Position<double> _p) const;
-        std::complex<double> kValue(Position<double> _p) const;
+        double xValue(const Position<double>& _p) const;
+        std::complex<double> kValue(const Position<double>& _p) const;
 
         bool isAxisymmetric() const { return true; } 
         bool isAnalyticX() const { return true; }
@@ -1024,7 +1017,7 @@ namespace galsim {
         double stepK() const 
         { return M_PI/std::max(4., std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
         Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        { return Position<double>(0., 0.); }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1127,6 +1120,7 @@ namespace galsim {
         double flux; ///< Flux.
         double re;   ///< Half-light radius.
         const SersicInfo* info; ///< Points to info structure for this n.
+        double _re_sq; ///< Calculated value: re*re
 
     public:
         /**
@@ -1137,7 +1131,7 @@ namespace galsim {
          * @param[in] re_   half-light radius (default `re_ = 1.`).
          */
         SBSersic(double n_, double flux_=1., double re_=1.) :
-            n(n_), flux(flux_), re(re_), info(nmap.get(n)) {}
+            n(n_), flux(flux_), re(re_), info(nmap.get(n)), _re_sq(re*re) {}
 
         // Default copy constructor should be fine.
 
@@ -1146,17 +1140,11 @@ namespace galsim {
 
         // Barney note: methods below already doxyfied via SBProfile, except for getN
 
-        double xValue(Position<double> p) const 
-        {
-            p /= re;
-            return flux*info->xValue(p.x*p.x+p.y*p.y) / (re*re);
-        }
+        double xValue(const Position<double>& p) const 
+        { return flux*info->xValue((p.x*p.x+p.y*p.y)/_re_sq) / _re_sq; }
 
-        std::complex<double> kValue(Position<double> k) const 
-        {
-            k *= re;
-            return std::complex<double>( flux*info->kValue(k.x*k.x+k.y*k.y), 0.);
-        }
+        std::complex<double> kValue(const Position<double>& k) const 
+        { return std::complex<double>( flux*info->kValue((k.x*k.x+k.y*k.y)*_re_sq), 0.); }
 
         bool isAxisymmetric() const { return true; }
         bool isAnalyticX() const { return true; }
@@ -1166,7 +1154,7 @@ namespace galsim {
         double stepK() const { return info->stepK / re; }
 
         Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        { return Position<double>(0., 0.); }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1206,8 +1194,8 @@ namespace galsim {
         ~SBExponential() {}
 
         // Methods
-        double xValue(Position<double> _p) const;
-        std::complex<double> kValue(Position<double> _p) const;
+        double xValue(const Position<double>& _p) const;
+        std::complex<double> kValue(const Position<double>& _p) const;
 
         bool isAxisymmetric() const { return true; } 
         bool isAnalyticX() const { return true; }
@@ -1218,7 +1206,7 @@ namespace galsim {
         double stepK() const;
 
         Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        { return Position<double>(0., 0.); }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1265,8 +1253,8 @@ namespace galsim {
 
         // Methods (Barney: mostly described by SBProfile Doxys, with maxK() and stepK() 
         // prescription described in class description).
-        double xValue(Position<double> _p) const;
-        std::complex<double> kValue(Position<double> _p) const;
+        double xValue(const Position<double>& _p) const;
+        std::complex<double> kValue(const Position<double>& _p) const;
 
         bool isAxisymmetric() const { return true; } 
         bool isAnalyticX() const { return true; }
@@ -1285,7 +1273,7 @@ namespace galsim {
         }
 
         Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        { return Position<double>(0., 0.); }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1348,8 +1336,8 @@ namespace galsim {
         ~SBBox() {}
 
         // Methods (Barney: public methods Doxified via SBProfile).
-        double xValue(Position<double> _p) const;
-        std::complex<double> kValue(Position<double> _p) const;
+        double xValue(const Position<double>& _p) const;
+        std::complex<double> kValue(const Position<double>& _p) const;
 
         bool isAxisymmetric() const { return false; } 
         bool isAnalyticX() const { return true; }
@@ -1364,7 +1352,7 @@ namespace galsim {
         double maxY() const { return 0.5 * yw; }
 
         Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        { return Position<double>(0., 0.); }
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
@@ -1418,8 +1406,8 @@ namespace galsim {
         // implementation dependent methods
         SBProfile* duplicate() const { return new SBLaguerre(*this); }
 
-        double xValue(Position<double> _p) const;
-        std::complex<double> kValue(Position<double> _p) const;
+        double xValue(const Position<double>& _p) const;
+        std::complex<double> kValue(const Position<double>& _p) const;
 
         double maxK() const;
         double stepK() const;
@@ -1488,7 +1476,7 @@ namespace galsim {
         /// @brief Destructor.
         ~SBMoffat() {}
 
-        double xValue(Position<double> p) const 
+        double xValue(const Position<double>& p) const 
         {
             double rsq = p.x*p.x+p.y*p.y;
             rsq /= _rD_sq;
@@ -1496,7 +1484,7 @@ namespace galsim {
             else return norm*std::pow(1.+rsq, -beta) / (_rD_sq);
         }
 
-        std::complex<double> kValue(Position<double> k) const; 
+        std::complex<double> kValue(const Position<double>& k) const; 
 
         bool isAxisymmetric() const { return true; } 
         bool isAnalyticX() const { return true; }
@@ -1511,7 +1499,7 @@ namespace galsim {
         double maxY() const { return maxRrD * rD; }   
 
         Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        { return Position<double>(0., 0.); }
 
 
         double getFlux() const { return flux; }
@@ -1574,7 +1562,7 @@ namespace galsim {
         SBProfile* duplicate() const { return new SBDeVaucouleurs(*this); }
 
         Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        { return Position<double>(0., 0.); }
 
 
     };

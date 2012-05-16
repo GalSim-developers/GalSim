@@ -51,10 +51,10 @@ namespace galsim {
         // These are all the base class members that must be implemented:
 
         /// @brief xValue() not implemented for SBDeconvolve.
-        double xValue(Position<double> p) const 
+        double xValue(const Position<double>& p) const 
         { throw SBError("SBDeconvolve::xValue() not implemented"); }
 
-        std::complex<double> kValue(Position<double> p) const 
+        std::complex<double> kValue(const Position<double>& p) const 
         {
             return (p.x*p.x+p.y*p.y) <= maxksq ?
                 1./adaptee->kValue(p) :
@@ -71,10 +71,6 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
 
         Position<double> centroid() const { return -adaptee->centroid(); }
-
-        /// @brief setCentroid() not implemented for SBDeconvolve.
-        void setCentroid(Position<double> _p) 
-        { throw SBError("setCentroid not allowed for SBDeconvolve"); }
 
         double getFlux() const { return 1./adaptee->getFlux(); }
         void setFlux(double flux=1.) { adaptee->setFlux(1./flux); }

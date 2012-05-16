@@ -721,7 +721,7 @@ namespace galsim {
         return; 
     }
 
-    double SBAdd::xValue(Position<double> _p) const 
+    double SBAdd::xValue(const Position<double>& _p) const 
     {
         double xv = 0.;  
         std::list<SBProfile*>::const_iterator pptr;
@@ -732,7 +732,7 @@ namespace galsim {
         return xv;
     } 
 
-    std::complex<double> SBAdd::kValue(Position<double> _p) const 
+    std::complex<double> SBAdd::kValue(const Position<double>& _p) const 
     {
         std::complex<double> kv = 0.;  
         std::list<SBProfile*>::const_iterator pptr;
@@ -793,7 +793,7 @@ namespace galsim {
     //
     SBDistort::SBDistort(
         const SBProfile& sbin, double mA, double mB, double mC, double mD,
-        Position<double> x0_) :
+        const Position<double>& x0_) :
         matrixA(mA), matrixB(mB), matrixC(mC), matrixD(mD), x0(x0_)
     {
         SBProfile* p=sbin.duplicate();
@@ -1102,7 +1102,7 @@ namespace galsim {
         return result;
     }
 
-    double SBConvolve::xValue(Position<double> pos) const
+    double SBConvolve::xValue(const Position<double>& pos) const
     {
         // Perform a direct calculation of the convolution at a particular point by
         // doing the real-space integral.
@@ -1132,7 +1132,7 @@ namespace galsim {
     //
     // "SBGaussian" Class 
     //
-    double SBGaussian::xValue(Position<double> p) const
+    double SBGaussian::xValue(const Position<double>& p) const
     {
         double r2 = p.x*p.x + p.y*p.y;
         double xval = flux * std::exp( -r2/(2.*_sigma_sq) );
@@ -1140,7 +1140,7 @@ namespace galsim {
         return xval;
     }
 
-    std::complex<double> SBGaussian::kValue(Position<double> p) const
+    std::complex<double> SBGaussian::kValue(const Position<double>& p) const
     {
         double r2 = p.x*p.x + p.y*p.y;
         std::complex<double> kval(flux * std::exp(-(r2)*_sigma_sq/2.),0.);
@@ -1163,7 +1163,7 @@ namespace galsim {
         return M_PI / (R*r0);
     }
 
-    double SBExponential::xValue(Position<double> p) const
+    double SBExponential::xValue(const Position<double>& p) const
     {
         double r = std::sqrt(p.x*p.x + p.y*p.y);
         double xval = flux * std::exp(-r/r0);
@@ -1171,7 +1171,7 @@ namespace galsim {
         return xval;
     }
 
-    std::complex<double> SBExponential::kValue(Position<double> p) const 
+    std::complex<double> SBExponential::kValue(const Position<double>& p) const 
     {
         double kk = p.x*p.x+p.y*p.y;
         double temp = 1. + kk*_r0_sq;         // [1+k^2*r0^2]
@@ -1186,7 +1186,7 @@ namespace galsim {
     // Note x & y are in units of lambda/D here.  Integral over area
     // will give unity in this normalization.
 
-    double SBAiry::xValue(Position<double> p) const 
+    double SBAiry::xValue(const Position<double>& p) const 
     {
         double radius = std::sqrt(p.x*p.x+p.y*p.y);
         double nu = radius*M_PI*D;
@@ -1263,7 +1263,7 @@ namespace galsim {
         return annuli_intersect(1.,obscuration,k_scaled)/norm;
     }
 
-    std::complex<double> SBAiry::kValue(Position<double> p) const
+    std::complex<double> SBAiry::kValue(const Position<double>& p) const
     {
         double radius = std::sqrt(p.x*p.x+p.y*p.y);
         // calculate circular FT(PSF) on p'=(x',y')
@@ -1277,7 +1277,7 @@ namespace galsim {
     // SBBox Class
     //
 
-    double SBBox::xValue(Position<double> p) const 
+    double SBBox::xValue(const Position<double>& p) const 
     {
         if (fabs(p.x) < 0.5*xw && fabs(p.y) < 0.5*yw) return _norm;
         else return 0.;  // do not use this function for fillXGrid()!
@@ -1291,7 +1291,7 @@ namespace galsim {
             return std::sin(u)/u;
     }
 
-    std::complex<double> SBBox::kValue(Position<double> p) const
+    std::complex<double> SBBox::kValue(const Position<double>& p) const
     {
         std::complex<double> kval( sinc(0.5*p.x*xw)*sinc(0.5*p.y*yw), 0.);
         return kval*flux;
@@ -1389,7 +1389,7 @@ namespace galsim {
         return m;
     }
 
-    double SBLaguerre::xValue(Position<double> p) const 
+    double SBLaguerre::xValue(const Position<double>& p) const 
     {
         LVector psi(bvec.getOrder());
         psi.fillBasis(p.x/sigma, p.y/sigma, sigma);
@@ -1397,7 +1397,7 @@ namespace galsim {
         return xval;
     }
 
-    std::complex<double> SBLaguerre::kValue(Position<double> k) const 
+    std::complex<double> SBLaguerre::kValue(const Position<double>& k) const 
     {
         int N=bvec.getOrder();
         LVector psi(N);
@@ -1704,9 +1704,12 @@ namespace galsim {
         delete kt;
     }
 
-    std::complex<double> SBMoffat::kValue(Position<double> k) const 
+    std::complex<double> SBMoffat::kValue(const Position<double>& k) const 
     {
-        double kk = hypot(k.x, k.y)*rD;
+        // MJ: Are we ever worried about overflow or underflow here?  Probably not.
+        //     So use direct sqrt rather than hypot, which is much slower.
+        //double kk = hypot(k.x, k.y)*rD;
+        double kk = sqrt(k.x*k.x + k.y*k.y)*rD;
         if (kk > ft.argMax()) return 0.;
         else return flux*ft(kk);
     }

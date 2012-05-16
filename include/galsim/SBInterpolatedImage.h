@@ -74,9 +74,9 @@ namespace galsim {
         SBProfile* duplicate() const { return new SBInterpolatedImage(*this); }
 
         // These are all the base class members that must be implemented:
-        double xValue(Position<double> p) const;
+        double xValue(const Position<double>& p) const;
 
-        std::complex<double> kValue(Position<double> p) const;
+        std::complex<double> kValue(const Position<double>& p) const;
 
         // Notice that interpolant other than sinc may make max frequency higher than
         // the Nyquist frequency of the initial image
