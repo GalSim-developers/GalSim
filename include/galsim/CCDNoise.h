@@ -89,18 +89,18 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(Image<T>& data) {
+        void applyTo(ImageView<T> data) {
             // Above this many e's, assume Poisson distribution =Gaussian 
             static const double MAX_POISSON=1.e5;
             // Typedef for image row iterable
-            typedef typename Image<T>::Iter ImIter;
+            typedef typename ImageView<T>::iterator ImIter;
 
             // Add the Poisson noise first:
             if (_gain > 0.) {
                 double sigma = _gd.getSigma();  // Save this
                 
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-		            ImIter ee = data.rowEnd(y);
+                    ImIter ee = data.rowEnd(y);
                     for (ImIter it = data.rowBegin(y); it != ee; ++it) {
                         double electrons=*it * _gain;
                         if (electrons <= 0.) continue;
@@ -120,8 +120,8 @@ namespace galsim {
             // Next add the Gaussian noise:
             if (_readNoise > 0.) {
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-		            ImIter ee = data.rowEnd(y);
-		            for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += _gd(); }
+                    ImIter ee = data.rowEnd(y);
+                    for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += _gd(); }
                 } 
             }
         }
@@ -136,9 +136,9 @@ namespace galsim {
          * if it does not match dimensions of data.
          */
         template <class T>
-        void applyToVar(Image<T>& data, Image<T>& variance) {
+        void applyToVar(ImageView<T> data, ImageView<T> variance) {
             // Typedef for image row iterable
-            typedef typename Image<T>::Iter ImIter;
+            typedef typename ImageView<T>::iterator ImIter;
             // Resize the variance image to match data image
             variance.resize(data.getBounds());
             // Fill with the (constant) Gaussian contribution to variance

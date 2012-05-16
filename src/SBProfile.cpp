@@ -27,9 +27,12 @@ namespace galsim {
     SBProfile* SBProfile::distort(const Ellipse e) const 
     { return new SBDistort(*this,e); }
 
-    SBProfile* SBProfile::rotate(const double theta) const 
-    { return new SBDistort(*this,std::cos(theta),-std::sin(theta),
-			   std::sin(theta),std::cos(theta)); }
+    SBProfile* SBProfile::rotate(Angle theta) const 
+    {
+        return new SBDistort(*this,
+                             std::cos(theta.rad()),-std::sin(theta.rad()),
+                             std::sin(theta.rad()),std::cos(theta.rad())); 
+    }
 
     SBProfile* SBProfile::shift(double dx, double dy) const 
     { return new SBDistort(*this,1.,0.,0.,1., Position<double>(dx,dy)); }
@@ -39,15 +42,24 @@ namespace galsim {
     //
 
 #ifdef USE_IMAGES
-    Image<float> SBProfile::draw(double dx, int wmult) const 
+    ImageView<float> SBProfile::draw(double dx, int wmult) const 
     {
         Image<float> img;
         draw(img, dx, wmult);
-        return img;
+        return img.view();
     }
 
     template <typename T>
-    double SBProfile::draw(Image<T> & img, double dx, int wmult) const 
+    double SBProfile::draw(ImageView<T>& img, double dx, int wmult) const 
+    {
+        if (isAnalyticX())
+            return plainDraw(img, dx, wmult);
+        else
+            return fourierDraw(img, dx, wmult);
+    }
+
+    template <typename T>
+    double SBProfile::draw(Image<T>& img, double dx, int wmult) const 
     {
         if (isAnalyticX())
             return plainDraw(img, dx, wmult);
@@ -57,7 +69,19 @@ namespace galsim {
 
     // First is a simple case wherein we have a formula for x values:
     template <typename T>
-    double SBProfile::plainDraw(Image<T> & I, double dx, int wmult) const 
+    double SBProfile::plainDraw(ImageView<T>& I, double dx, int wmult) const 
+    {
+        // Determine desired dx:
+        if (dx<=0.) dx = M_PI / maxK();
+        // recenter an existing image, to be consistent with fourierDraw:
+        int xSize = I.getXMax()-I.getXMin()+1, ySize = I.getYMax()-I.getYMin()+1;
+        I.setOrigin(-xSize/2, -ySize/2);
+
+        return fillXImage(I, dx);
+    }
+
+    template <typename T>
+    double SBProfile::plainDraw(Image<T>& I, double dx, int wmult) const 
     {
         // Determine desired dx:
         if (dx<=0.) dx = M_PI / maxK();
@@ -74,20 +98,26 @@ namespace galsim {
         } else {
             // recenter an existing image, to be consistent with fourierDraw:
             int xSize = I.getXMax()-I.getXMin()+1, ySize = I.getYMax()-I.getYMin()+1;
-            I.move(-xSize/2, -ySize/2);
+            I.setOrigin(-xSize/2, -ySize/2);
         }
 
-        return fillXImage(I, dx);
+        // TODO: If we decide not to keep the scale, then can switch to simply:
+        // return fillXImage(I.view(), dx);
+        // (And switch fillXImage to take a const ImageView<T>& argument.)
+        ImageView<T> Iv = I.view();
+        double ret = fillXImage(Iv, dx);
+        I.setScale(Iv.getScale());
+        return ret;
     }
  
     template <typename T>
-    double SBProfile::doFillXImage2(Image<T> & I, double dx) const 
+    double SBProfile::doFillXImage2(ImageView<T>& I, double dx) const 
     {
         double totalflux=0;
         for (int y = I.getYMin(); y <= I.getYMax(); y++) {
             int x = I.getXMin(); 
-            typename Image<T>::Iter ee=I.rowEnd(y);
-            for (typename Image<T>::Iter it=I.rowBegin(y);
+            typename Image<T>::iterator ee=I.rowEnd(y);
+            for (typename Image<T>::iterator it=I.rowBegin(y);
                  it!=ee;
                  ++it, ++x) {
                 Position<double> p(x*dx,y*dx); // since x,y are pixel indices
@@ -109,7 +139,100 @@ namespace galsim {
     // And enforce no image folding
     //**/ #define DEBUG
     template <typename T>
-    double SBProfile::fourierDraw(Image<T> & I, double dx, int wmult) const 
+    double SBProfile::fourierDraw(ImageView<T>& I, double dx, int wmult) const 
+    {
+        Bounds<int> imgBounds; // Bounds for output image
+        if (wmult<1) throw SBError("Requested wmult<1 in fourierDraw()");
+        // First choose desired dx if we were not given one:
+        if (dx<=0.) {
+            // Choose for ourselves:
+            dx = M_PI / maxK();
+        }
+
+#ifdef DEBUG
+        std::cerr << " maxK() " << maxK() << " dx " << dx << std::endl;
+#endif
+
+        // Now decide how big the FT must be to avoid folding:
+        double xRange = 2*M_PI*wmult / stepK();
+        int Nnofold = static_cast<int> (std::ceil(xRange / dx -0.0001));
+#ifdef DEBUG
+        std::cerr << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
+#endif
+
+        // W must make something big enough to cover the target image size:
+        int xSize, ySize;
+        xSize = I.getXMax()-I.getXMin()+1;
+        ySize = I.getYMax()-I.getYMin()+1;
+        if (xSize  > Nnofold) Nnofold = xSize;
+        if (ySize  > Nnofold) Nnofold = ySize;
+        xRange = Nnofold * dx;
+
+        // Round up to a good size for making FFTs:
+        int NFT = goodFFTSize(Nnofold);
+        NFT = std::max(NFT,MINIMUM_FFT_SIZE);
+#ifdef DEBUG
+        std::cerr << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
+#endif
+        if (NFT > MAXIMUM_FFT_SIZE)
+            FormatAndThrow<SBError>() << "fourierDraw() requires an FFT that is too large, " << NFT;
+
+        // Move the output image to be centered near zero
+        I.setOrigin(-xSize/2, -ySize/2);
+        double dk = 2.*M_PI/(NFT*dx);
+#ifdef DEBUG
+        std::cerr << 
+            " After adjustments: dx " << dx << " dk " << dk << 
+            " maxK " << dk*NFT/2 << std::endl;
+#endif
+        assert(dk <= stepK());
+        XTable* xtmp=0;
+        if (NFT*dk/2 > maxK()) {
+            // No aliasing: build KTable and transform
+            KTable kt(NFT,dk);
+            fillKGrid(kt); 
+            xtmp = kt.transform();
+        } else {
+            // There will be aliasing.  Construct a KTable out to maxK() and
+            // then wrap it
+            int Nk = static_cast<int> (std::ceil(maxK()/dk)) * 2;
+            KTable kt(Nk, dk);
+            fillKGrid(kt);
+            KTable* kt2 = kt.wrap(NFT);
+            xtmp = kt2->transform();
+            delete kt2;
+        }
+        int Nxt = xtmp->getN();
+        Bounds<int> xb(-Nxt/2, Nxt/2-1, -Nxt/2, Nxt/2-1);
+        if (I.getYMin() < xb.getYMin()
+            || I.getYMax() > xb.getYMax()
+            || I.getXMin() < xb.getXMin()
+            || I.getXMax() > xb.getXMax()) {
+            std::cerr << "Bounds error!! target image bounds " << I.getBounds()
+                << " and FFT range " << xb
+                << std::endl;
+            throw SBError("fourierDraw() FT bounds do not cover target image");
+        }
+        double sum=0.;
+        for (int y = I.getYMin(); y <= I.getYMax(); y++)
+            for (int x = I.getXMin(); x <= I.getXMax(); x++) {
+                I(x,y) = xtmp->xval(x,y);
+                sum += I(x,y);
+            }
+
+        I.setScale(dx);
+
+        delete xtmp;  // no memory leak!
+        return sum*dx*dx;;
+    }
+
+    // TODO: I'd like to try to separate out the resize operation.  
+    // Then this function can just take an ImageView<T>& argument, not also an Image<T>.
+    // Similar to what plainDraw does by passing the bulk of the work to fillXImage.
+    // In fact, if we could have a single resizer, than that could be called from draw()
+    // and both plainDraw and fourierDraw could drop to only having the ImageView argument.
+    template <typename T>
+    double SBProfile::fourierDraw(Image<T>& I, double dx, int wmult) const 
     {
         Bounds<int> imgBounds; // Bounds for output image
         bool sizeIsFree = !I.getBounds().isDefined();
@@ -163,7 +286,7 @@ namespace galsim {
             int xSize, ySize;
             xSize = I.getXMax()-I.getXMin()+1;
             ySize = I.getYMax()-I.getYMin()+1;
-            I.move(-xSize/2, -ySize/2);
+            I.setOrigin(-xSize/2, -ySize/2);
         }
         double dk = 2.*M_PI/(NFT*dx);
 #ifdef DEBUG
@@ -213,7 +336,7 @@ namespace galsim {
     }
 
     template <typename T>
-    void SBProfile::drawK(Image<T> & Re, Image<T> & Im, double dk, int wmult) const 
+    void SBProfile::drawK(ImageView<T>& Re, ImageView<T>& Im, double dk, int wmult) const 
     {
         if (isAnalyticK()) 
             plainDrawK(Re, Im, dk, wmult);   // calculate in k space
@@ -223,7 +346,49 @@ namespace galsim {
     }
 
     template <typename T>
-    void SBProfile::plainDrawK(Image<T> & Re, Image<T> & Im, double dk, int wmult) const 
+    void SBProfile::drawK(Image<T>& Re, Image<T>& Im, double dk, int wmult) const 
+    {
+        if (isAnalyticK()) 
+            plainDrawK(Re, Im, dk, wmult);   // calculate in k space
+        else               
+            fourierDrawK(Re, Im, dk, wmult); // calculate via FT from real space
+        return;
+    }
+
+    template <typename T>
+    void SBProfile::plainDrawK(ImageView<T>& Re, ImageView<T>& Im, double dk, int wmult) const 
+    {
+        // Make sure input images match or are both null
+        assert(Re.getBounds() == Im.getBounds());
+        if (dk<=0.) dk = stepK();
+
+        // recenter an existing image, to be consistent with fourierDrawK:
+        int xSize = Re.getXMax()-Re.getXMin()+1, ySize = Re.getYMax()-Re.getYMin()+1;
+        Re.setOrigin(-xSize/2, -ySize/2);
+        Im.setOrigin(-xSize/2, -ySize/2);
+
+        // ??? Make this into a virtual function to allow pipelining?
+        for (int y = Re.getYMin(); y <= Re.getYMax(); y++) {
+            int x = Re.getXMin(); 
+            typename ImageView<T>::iterator ee=Re.rowEnd(y);
+            typename ImageView<T>::iterator it;
+            typename ImageView<T>::iterator it2;
+            for (it=Re.rowBegin(y), it2=Im.rowBegin(y); it!=ee; ++it, ++it2, ++x) {
+                Position<double> p(x*dk,y*dk); // since x,y are pixel indicies
+                std::complex<double> c = this->kValue(p);  
+                *it = c.real(); 
+                *it2 = c.imag(); 
+            } 
+        }
+
+        Re.setScale(dk);
+        Im.setScale(dk);
+
+        return;
+    }
+
+    template <typename T>
+    void SBProfile::plainDrawK(Image<T>& Re, Image<T>& Im, double dk, int wmult) const 
     {
         // Make sure input images match or are both null
         assert(!(Re.getBounds().isDefined() || Im.getBounds().isDefined()) 
@@ -243,19 +408,17 @@ namespace galsim {
         } else {
             // recenter an existing image, to be consistent with fourierDrawK:
             int xSize = Re.getXMax()-Re.getXMin()+1, ySize = Re.getYMax()-Re.getYMin()+1;
-            Re.move(-xSize/2, -ySize/2);
-            Im.move(-xSize/2, -ySize/2);
+            Re.setOrigin(-xSize/2, -ySize/2);
+            Im.setOrigin(-xSize/2, -ySize/2);
         }
 
         // ??? Make this into a virtual function to allow pipelining?
         for (int y = Re.getYMin(); y <= Re.getYMax(); y++) {
             int x = Re.getXMin(); 
-            typename Image<T>::Iter ee=Re.rowEnd(y);
-            typename Image<T>::Iter it;
-            typename Image<T>::Iter it2;
-            for (it=Re.rowBegin(y), it2=Im.rowBegin(y);
-                 it!=ee;
-                 ++it, ++it2, ++x) {
+            typename ImageView<T>::iterator ee=Re.rowEnd(y);
+            typename ImageView<T>::iterator it;
+            typename ImageView<T>::iterator it2;
+            for (it=Re.rowBegin(y), it2=Im.rowBegin(y); it!=ee; ++it, ++it2, ++x) {
                 Position<double> p(x*dk,y*dk); // since x,y are pixel indicies
                 std::complex<double> c = this->kValue(p);  
                 *it = c.real(); 
@@ -275,7 +438,79 @@ namespace galsim {
     // power of 2 for transform
 
     template <typename T>
-    void SBProfile::fourierDrawK(Image<T> & Re, Image<T> & Im, double dk, int wmult) const 
+    void SBProfile::fourierDrawK(ImageView<T>& Re, ImageView<T>& Im, double dk, int wmult) const 
+    {
+        assert(Re.getBounds() == Im.getBounds());
+
+        int oversamp =1; // oversampling factor
+        Bounds<int> imgBounds; // Bounds for output image
+        if (wmult<1) throw SBError("Requested wmult<1 in fourierDrawK()");
+        // First choose desired dx
+        if (dk<=0.) {
+            // Choose for ourselves:
+            dk = stepK();
+        } else {
+            // We have a value we must produce.  Do we need to oversample in k
+            // to avoid folding from real space?
+            // Note a little room for numerical slop before triggering oversampling:
+            oversamp = static_cast<int> ( std::ceil(dk/stepK() - 0.0001));
+        }
+
+        // Now decide how big the FT must be to avoid folding
+        double kRange = 2*maxK()*wmult;
+        int Nnofold = static_cast<int> (std::ceil(oversamp*kRange / dk -0.0001));
+
+        // And if there is a target image size, we must make something big enough to cover
+        // the target image size:
+        int xSize, ySize;
+        xSize = Re.getXMax()-Re.getXMin()+1;
+        ySize = Re.getYMax()-Re.getYMin()+1;
+        if (xSize * oversamp > Nnofold) Nnofold = xSize*oversamp;
+        if (ySize * oversamp > Nnofold) Nnofold = ySize*oversamp;
+        kRange = Nnofold * dk / oversamp;
+
+        // Round up to a power of 2 to get required FFT size
+        int NFT = MINIMUM_FFT_SIZE;
+        while (NFT < Nnofold && NFT<= MAXIMUM_FFT_SIZE) NFT *= 2;
+        if (NFT > MAXIMUM_FFT_SIZE)
+            throw SBError("fourierDrawK() requires an FFT that is too large");
+
+        // Move the output image to be centered near zero
+        Re.setOrigin(-xSize/2, -ySize/2);
+        Im.setOrigin(-xSize/2, -ySize/2);
+
+        double dx = 2.*M_PI*oversamp/(NFT*dk);
+        XTable xt(NFT,dx);
+        this->fillXGrid(xt);
+        KTable *ktmp = xt.transform();
+
+        int Nkt = ktmp->getN();
+        Bounds<int> kb(-Nkt/2, Nkt/2-1, -Nkt/2, Nkt/2-1);
+        if (Re.getYMin() < kb.getYMin()
+            || Re.getYMax()*oversamp > kb.getYMax()
+            || Re.getXMin()*oversamp < kb.getXMin()
+            || Re.getXMax()*oversamp > kb.getXMax()) {
+            std::cerr << "Bounds error!! oversamp is " << oversamp
+                << " target image bounds " << Re.getBounds()
+                << " and FFT range " << kb
+                << std::endl;
+            throw SBError("fourierDrawK() FT bounds do not cover target image");
+        }
+
+        for (int y = Re.getYMin(); y <= Re.getYMax(); y++)
+            for (int x = Re.getXMin(); x <= Re.getXMax(); x++) {
+                Re(x,y) = ktmp->kval(x*oversamp,y*oversamp).real();
+                Im(x,y) = ktmp->kval(x*oversamp,y*oversamp).imag();
+            }
+
+        Re.setScale(dk);
+        Im.setScale(dk);
+
+        delete ktmp;  // no memory leak!
+    }
+
+    template <typename T>
+    void SBProfile::fourierDrawK(Image<T>& Re, Image<T>& Im, double dk, int wmult) const 
     {
         assert(!(Re.getBounds().isDefined() || Im.getBounds().isDefined()) 
                || (Re.getBounds() == Im.getBounds()));
@@ -339,8 +574,8 @@ namespace galsim {
             int xSize, ySize;
             xSize = Re.getXMax()-Re.getXMin()+1;
             ySize = Re.getYMax()-Re.getYMin()+1;
-            Re.move(-xSize/2, -ySize/2);
-            Im.move(-xSize/2, -ySize/2);
+            Re.setOrigin(-xSize/2, -ySize/2);
+            Im.setOrigin(-xSize/2, -ySize/2);
         }
 
         double dx = 2.*M_PI*oversamp/(NFT*dk);
@@ -912,7 +1147,7 @@ namespace galsim {
 #ifdef USE_IMAGES
     // Override x-domain writing so we can partially fill pixels at edge of box.
     template <typename T>
-    double SBBox::fillXImage(Image<T>& I, double dx) const 
+    double SBBox::fillXImage(ImageView<T>& I, double dx) const 
     {
         double norm = flux/xw/yw;
 
@@ -1214,7 +1449,7 @@ namespace galsim {
     };
 
 
-    SBMoffat::SBMoffat(double beta_, double truncationFWHM, double flux_, double re) : 
+    SBMoffat::SBMoffat(double beta_, double truncationFWHM, double flux_, double size, RadiusType rType) : 
         beta(beta_), flux(flux_), norm(1.), rD(1.),
         ft(Table<double,double>::spline)
     {
@@ -1226,16 +1461,33 @@ namespace galsim {
         // And be sure to get at least 16 pts across FWHM when drawing:
         maxKrD = 16*M_PI / FWHMrD;
 
-        // Get flux and half-light radius
+        // Get flux and half-light radius in units of rD:
         MoffatFlux mf(beta);
         double fluxFactor = mf(maxRrD);
-        Solve<MoffatFlux> s(mf, 0.1, 2.);
-        mf.setTarget(0.5*fluxFactor);
-        double rerD = s.root();
-        rD = re / rerD;
+
+        // Set size of this instance according to type of size given in constructor:
+        switch (rType)
+        {
+        case FWHM:
+            rD = size / FWHMrD;
+            break;
+        case HALF_LIGHT_RADIUS: {
+            Solve<MoffatFlux> s(mf, 0.1, 2.);
+            mf.setTarget(0.5*fluxFactor);
+            double rerD = s.root();
+            rD = size / rerD;
+        }
+            break;
+        case SCALE_RADIUS:
+            rD = size;
+            break;
+        default:
+            throw SBError("Unknown SBMoffat::RadiusType");
+        }
         norm = 1./fluxFactor;
+
 #if 0
-        std::cerr << "Moffat re " << re << " rD " << rD
+        std::cerr << "Moffat rD " << rD
             << " norm " << norm << " maxRrD " << maxRrD << std::endl;
 #endif
 
@@ -1269,26 +1521,50 @@ namespace galsim {
 
     // instantiate template functions for expected image types
 #ifdef USE_IMAGES
-    template double SBProfile::doFillXImage2(Image<float> & img, double dx) const;
-    template double SBProfile::doFillXImage2(Image<double> & img, double dx) const;
+    template double SBProfile::doFillXImage2(ImageView<float>& img, double dx) const;
+    template double SBProfile::doFillXImage2(ImageView<double>& img, double dx) const;
 
-    template double SBProfile::draw(Image<float> & img, double dx, int wmult) const;
-    template double SBProfile::draw(Image<double> & img, double dx, int wmult) const;
+    template double SBProfile::draw(Image<float>& img, double dx, int wmult) const;
+    template double SBProfile::draw(Image<double>& img, double dx, int wmult) const;
+    template double SBProfile::draw(ImageView<float>& img, double dx, int wmult) const;
+    template double SBProfile::draw(ImageView<double>& img, double dx, int wmult) const;
 
-    template double SBProfile::plainDraw(Image<float> & I, double dx, int wmult) const;
-    template double SBProfile::plainDraw(Image<double> & I, double dx, int wmult) const;
+    template double SBProfile::plainDraw(Image<float>& I, double dx, int wmult) const;
+    template double SBProfile::plainDraw(Image<double>& I, double dx, int wmult) const;
+    template double SBProfile::plainDraw(ImageView<float>& I, double dx, int wmult) const;
+    template double SBProfile::plainDraw(ImageView<double>& I, double dx, int wmult) const;
 
-    template double SBProfile::fourierDraw(Image<float> & I, double dx, int wmult) const;
-    template double SBProfile::fourierDraw(Image<double> & I, double dx, int wmult) const;
+    template double SBProfile::fourierDraw(Image<float>& I, double dx, int wmult) const;
+    template double SBProfile::fourierDraw(Image<double>& I, double dx, int wmult) const;
+    template double SBProfile::fourierDraw(ImageView<float>& I, double dx, int wmult) const;
+    template double SBProfile::fourierDraw(ImageView<double>& I, double dx, int wmult) const;
 
-    template void SBProfile::drawK(Image<float> & Re, Image<float> & Im, double dk, int wmult) const;
-    template void SBProfile::drawK(Image<double> & Re, Image<double> & Im, double dk, int wmult) const;
+    template void SBProfile::drawK(
+        Image<float>& Re, Image<float>& Im, double dk, int wmult) const;
+    template void SBProfile::drawK(
+        Image<double>& Re, Image<double>& Im, double dk, int wmult) const;
+    template void SBProfile::drawK(
+        ImageView<float>& Re, ImageView<float>& Im, double dk, int wmult) const;
+    template void SBProfile::drawK(
+        ImageView<double>& Re, ImageView<double>& Im, double dk, int wmult) const;
 
-    template void SBProfile::plainDrawK(Image<float> & Re, Image<float> & Im, double dk, int wmult) const;
-    template void SBProfile::plainDrawK(Image<double> & Re, Image<double> & Im, double dk, int wmult) const;
+    template void SBProfile::plainDrawK(
+        Image<float>& Re, Image<float>& Im, double dk, int wmult) const;
+    template void SBProfile::plainDrawK(
+        Image<double>& Re, Image<double>& Im, double dk, int wmult) const;
+    template void SBProfile::plainDrawK(
+        ImageView<float>& Re, ImageView<float>& Im, double dk, int wmult) const;
+    template void SBProfile::plainDrawK(
+        ImageView<double>& Re, ImageView<double>& Im, double dk, int wmult) const;
 
-    template void SBProfile::fourierDrawK(Image<float> & Re, Image<float> & Im, double dk, int wmult) const;
-    template void SBProfile::fourierDrawK(Image<double> & Re, Image<double> & Im, double dk, int wmult) const;
+    template void SBProfile::fourierDrawK(
+        Image<float>& Re, Image<float>& Im, double dk, int wmult) const;
+    template void SBProfile::fourierDrawK(
+        Image<double>& Re, Image<double>& Im, double dk, int wmult) const;
+    template void SBProfile::fourierDrawK(
+        ImageView<float>& Re, ImageView<float>& Im, double dk, int wmult) const;
+    template void SBProfile::fourierDrawK(
+        ImageView<double>& Re, ImageView<double>& Im, double dk, int wmult) const;
 #endif
 
 }

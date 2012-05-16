@@ -5,21 +5,26 @@
 
 namespace galsim {
 
+void pyExportAngle();
 void pyExportBounds();
 void pyExportShear();
 void pyExportImage();
 void pyExportSBProfile();
 void pyExportSBInterpolatedImage();
 void pyExportRandom();
-
+namespace hsm{
+void pyExportPSFCorr();
+} // namespace hsm
 } // namespace galsim
 
 BOOST_PYTHON_MODULE(_galsim) {
     import_array(); // for numpy
+    galsim::pyExportAngle();
     galsim::pyExportBounds();
     galsim::pyExportShear();
     galsim::pyExportImage();
     galsim::pyExportSBProfile();
     galsim::pyExportSBInterpolatedImage();
     galsim::pyExportRandom();
+    galsim::hsm::pyExportPSFCorr();
 }

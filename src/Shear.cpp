@@ -19,11 +19,11 @@ namespace galsim {
         return *this;
     }
 
-    Shear& Shear::setEBeta(double ein, double betain) 
+    Shear& Shear::setEBeta(double ein, Angle betain) 
     {
         hasMatrix = false;
-        e1 = ein*std::cos(2.*betain);
-        e2 = ein*std::sin(2.*betain);
+        e1 = ein*std::cos(2.*betain.rad());
+        e2 = ein*std::sin(2.*betain.rad());
         return *this;
     }
 
@@ -40,13 +40,13 @@ namespace galsim {
         return *this;
     }
 
-    Shear& Shear::setEtaBeta(double etain, double betain) 
+    Shear& Shear::setEtaBeta(double etain, Angle betain) 
     {
         double e;
         hasMatrix = false;
         e = std::tanh(etain);
-        e1 = e * std::cos(2.*betain);
-        e2 = e * std::sin(2.*betain);
+        e1 = e * std::cos(2.*betain.rad());
+        e2 = e * std::sin(2.*betain.rad());
         return *this;
     }
 
@@ -125,7 +125,7 @@ namespace galsim {
         return out;
     }
 
-    double Shear::rotationWith(const Shear& rhs) const 
+    Angle Shear::rotationWith(const Shear& rhs) const 
     {
         double a, b, c;
         double ra, rb, rc;
@@ -138,7 +138,7 @@ namespace galsim {
         sum.getMatrix(ra, rb, rc);
         double cc = ra * tot11 + rc * tot21;
         double ss = rc * tot11 + rb * tot21;
-        return std::atan2(ss, cc);
+        return std::atan2(ss, cc) * radians;
     }
 
     Shear& Shear::operator*=(const double d) 
@@ -228,7 +228,7 @@ namespace galsim {
         return m;
     }
 
-    Ellipse Ellipse::fromMatrix(const tmv::Matrix<double>& m, double& rotation, bool& parityFlip) 
+    Ellipse Ellipse::fromMatrix(const tmv::Matrix<double>& m, Angle& rotation, bool& parityFlip) 
     {
         assert(m.nrows()==2 && m.ncols()==2);
         double det = m(0,0)*m(1,1) - m(0,1)*m(1,0);
@@ -253,13 +253,13 @@ namespace galsim {
         double c = m(1,1)*m(0,1) + m(1,0)*m(0,0);
 
         double eta = acosh(std::max(1.,0.5*(a+b)/scale));
-        double beta = 0.5*std::atan2(2.*c, a-b);
+        Angle beta = 0.5*std::atan2(2.*c, a-b) * radians;
         Shear s;
         s.setEtaBeta(eta,beta);
         s.getMatrix(a,b,c);
 
         // Now look for the rotation
-        rotation = std::atan2(-c*m(0,0)+a*m(1,0), b*m(0,0)-c*m(1,0));
+        rotation = std::atan2(-c*m(0,0)+a*m(1,0), b*m(0,0)-c*m(1,0)) * radians;
         return Ellipse(s,mu, Position<double>(0.,0.));
     }
 

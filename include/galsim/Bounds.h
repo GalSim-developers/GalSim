@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <iostream>
+#include <limits>
 
 #include "Std.h"
 
@@ -172,8 +173,33 @@ namespace galsim {
             return !defined || !rhs.defined || (xmin!=rhs.xmin) ||
                 (ymin!=rhs.ymin) || (xmax!=rhs.xmax) || (ymax!=rhs.ymax);
         }
+        /**
+         *  @brief Check if two bounds have same shape, but maybe different origin.
+         */
+        bool isSameShapeAs(const Bounds<T>& rhs) const
+        {
+            return defined && rhs.defined && 
+                (xmax - xmin == rhs.xmax - rhs.xmin) &&
+                (ymax - ymin == rhs.ymax - rhs.ymin);
+        }
 
-        T area() const { return defined ? (xmax-xmin)*(ymax-ymin) : 0.; }
+        /**
+         *  @brief Return the area of the enclosed region
+         *
+         *  The area is a bit different for integer-type Bounds and float-type bounds.
+         *  For floating point types, it is simply (xmax-xmin)*(ymax-ymin).
+         *  However, for integer type, we need to add 1 to each size to correctly count the
+         *  number of pixels being described by the bounding box.
+         */
+        T area() const 
+        {
+            return defined ?
+                ( std::numeric_limits<T>::is_integer ?
+                  (xmax-xmin+1)*(ymax-ymin+1) :
+                  (xmax-xmin)*(ymax-ymin) ) :
+                T(0); 
+        }
+
         typename std::vector<Bounds<T> > divide(int nx, int ny) const;
         void write(std::ostream& fout) const
         { 
