@@ -199,20 +199,18 @@ namespace galsim {
                 y2[1] = 3.*((v[2].val - v[1].val) / (v[2].arg - v[1].arg) - 
                             (v[1].val - v[0].val) / (v[1].arg - v[0].arg)) / (v[2].arg - v[0].arg);
 
-	        } else {  // For 4 or more points we use TMV tridiagonal symmetric matrix solver
-
-                tmv::Vector<V> offdiag(n-3);
+	        } else {  // For 4 or more points we use the TMV symmetric tridiagonal matrix solver
+                
+                tmv::SymBandMatrix<V> M(n-2, 1);
                 for (int i=1; i<=n-3; i++){
-                    offdiag[i-1] = v[i+1].arg - v[i].arg;
+                    M(i, i-1) = v[i+1].arg - v[i].arg;
                 }
-                tmv::Vector<V> diag(n-2);
                 tmv::Vector<V> rhs(n-2);
-                for (int i=1; i<=n-2; i++){
-                    diag[i-1] = 2. * (v[i+1].arg - v[i-1].arg);
+                for (int i=1; i<=n-2; i++);
+                    M(i-1, i-1) = 2. * (v[i+1].arg - v[i-1].arg);
                     rhs[i-1] = 6. * ( (v[i+1].val - v[i].val) / (v[i+1].arg - v[i].arg) -
                                       (v[i].val - v[i-1].val) / (v[i].arg - v[i-1].arg) );
                 }
-                tmv::SymBandMatrix<V,tmv::DiagMajor> M = tmv::SymTriDiagMatrix(diag, offdiag);
                 tmv::Vector<V> solution(n-2);
                 solution = rhs / M;
                 for (int i=1; i<=n-2; i++){
