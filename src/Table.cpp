@@ -202,7 +202,6 @@ namespace galsim {
 	        } else {  // For 4 or more points we use the TMV symmetric tridiagonal matrix solver
                 
                 tmv::SymBandMatrix<V> M(n-2, 1);
-                int i;
                 for (int i=1; i<=n-3; i++){
                     M(i, i-1) = v[i+1].arg - v[i].arg;
                 }
