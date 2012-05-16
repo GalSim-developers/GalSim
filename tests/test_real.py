@@ -123,9 +123,19 @@ def test_real_galaxy_saved():
                                targ_applied_shear1, g2 = targ_applied_shear2, rand_rotate =
                                False, target_flux = shera_target_flux)
 
-    # require results to agree at fairly high significance
-    numpy.testing.assert_array_almost_equal(sim_image, shera_image, decimal = 4,
-        err_msg = "Error in comparison of SHERA result with SBProfile RealGalaxy result")
+    # there are centroid issues when comparing Shera vs. SBProfile outputs, so compare 2nd moments
+    # instead of images
+    sbp_res = sim_image.FindAdaptiveMom()
+    shera_res = shera_image.FindAdaptiveMom()
+
+    numpy.testing.assert_almost_equal(sbp_res.observed_shape.getE1(),
+                                      shera_res.observed_shape.getE1(), 4,
+                                      err_msg = "Error in comparison with SHERA result: e1")
+    numpy.testing.assert_almost_equal(sbp_res.observed_shape.getE2(),
+                                      shera_res.observed_shape.getE2(), 4,
+                                      err_msg = "Error in comparison with SHERA result: e2")
+    numpy.testing.assert_almost_equal(sbp_res.moments_sigma, shera_res.moments_sigma, 4,
+                                      err_msg = "Error in comparison with SHERA result: sigma")
 
 if __name__ == "__main__":
     test_real_galaxy_ideal()
