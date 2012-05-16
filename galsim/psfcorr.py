@@ -14,7 +14,7 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
 
     @code
     galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
-    galaxy.applyShear(0.05, 0.0)
+    galaxy.applyShear(0.05, 0.0)  # shear it by (0.05, 0) using the g=(a-b)/(a+b) definition
     psf = galsim.atmosphere.DoubleGaussian(flux1 = 0.7, sigma1 = 0.7, flux2 = 0.3, sigma2 = 1.5)
     pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
     final = galsim.Convolve([galaxy, psf, pixel])
@@ -24,11 +24,11 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     result = galsim.EstimateShearHSM(final_image, final_epsf_image)
     @endcode
 
-    After running the above code, result.observed_shape is (0.0595676, 0), and
-    result.corrected_shape is (0.0981158, 0), compared with the expected (0.09975, 0) for a perfect
-    PSF correction method.  Note that the method will fail if the PSF or galaxy are too point-like
-    to easily fit an elliptical Gaussian; when running on batches of many galaxies, it may be
-    preferable to set strict=False and catch errors explicitly, i.e.
+    After running the above code, result.observed_shape ["shape" = distortion, (a-b)^2/(a+b)^2] is
+    (0.0595676, 0), and result.corrected_shape is (0.0981158, 0), compared with the expected
+    (0.09975, 0) for a perfect PSF correction method.  Note that the method will fail if the PSF or
+    galaxy are too point-like to easily fit an elliptical Gaussian; when running on batches of many
+    galaxies, it may be preferable to set strict=False and catch errors explicitly, i.e.
 
     @code
     n_image = 100
@@ -96,8 +96,8 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
     ImageView class.  Example usage:
 
     @code
-    my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)\n
-    my_gaussian_image = my_gaussian.draw(dx = 0.2)\n
+    my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
+    my_gaussian_image = my_gaussian.draw(dx = 0.2)
     my_moments = galsim.FindAdaptiveMom(my_gaussian_image)
     @endcode
 
@@ -106,6 +106,12 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
     @code
     my_moments = my_gaussian_image.FindAdaptiveMom()
     @endcode
+
+    Assuming a successful measurement, the most relevant pieces of information are
+    my_moments.moments_sigma, which is |det(M)|^(1/4) [=sigma for a circular Gaussian] and
+    my_moments.observed_shape, which is a Shear.  Methods of the Shear class can be used to
+    get the distortion (e1, e2) = (a^2-b^2)/(a^2+b^2), i.e. my_moments.observed_shape.getE1() -- or,
+    to get the shear g, the conformal shear eta, and so on.
 
     Note that the method will fail if the object is too point-like to easily fit an elliptical
     Gaussian; when running on batches of many galaxies, it may be preferable to set strict=False and
