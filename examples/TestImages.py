@@ -61,7 +61,7 @@ for bt in bulge2Total:
 
                 # Make the bulge: use a Sersic rather than a DeVauc specifically, because we want to
                 # allow more general bulges with other values of n
-                bulge = galsim.Sersic(nBulge, flux=totFlux, re=bulgeRe[dreind])
+                bulge = galsim.Sersic(nBulge, flux=totFlux, half_light_radius=bulgeRe[dreind])
                 
                 # make it non-circular; choose a random position angle for this galaxy, and shear
                 posAngle = np.pi*rng()
@@ -79,7 +79,7 @@ for bt in bulge2Total:
                 bulge.applyShear(bg1, bg2)
 
                 # Make the disk
-                disk = galsim.Sersic(nDisk, flux=totFlux, re=diskRe[dreind])
+                disk = galsim.Sersic(nDisk, flux=totFlux, half_light_radius=diskRe[dreind])
 
                 # make it non-circular, using the same position angle as for the bulge
                 de1 = dell*np.cos(2.0*posAngle)
