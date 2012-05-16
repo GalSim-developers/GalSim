@@ -44,11 +44,11 @@ shera_target_flux = 1000.0
 
 # some helper functions
 def ellip_to_moments(e1, e2, sigma):
-    a_val = (1.0 + e1_val) / (1.0 - e1_val)
-    b_val = np.sqrt(a_val - (0.5*(1.0+a_val)*e2_val)**2)
-    mxx = a_val * (result.moments_sigma**2) / b_val
-    myy = (result.moments_sigma**2) / b_val
-    mxy = 0.5 * e2_val * (mxx + myy)
+    a_val = (1.0 + e1) / (1.0 - e1)
+    b_val = np.sqrt(a_val - (0.5*(1.0+a_val)*e2)**2)
+    mxx = a_val * (sigma**2) / b_val
+    myy = (sigma**2) / b_val
+    mxy = 0.5 * e2 * (mxx + myy)
     return mxx, myy, mxy
 
 def moments_to_ellip(mxx, myy, mxy):
@@ -103,9 +103,9 @@ def test_real_galaxy_ideal():
                     # compare with images that are expected
                     expected_gaussian = galsim.SBGaussian(flux = fake_gal_flux, sigma = tot_sigma)
                     expected_gaussian.distort(galsim.Ellipse(tot_e1, tot_e2))
-                    expected_image = galsim.ImageD(sim_image.array.shape)
+                    expected_image = galsim.ImageD(sim_image.array.shape[0], sim_image.array.shape[1])
                     expected_gaussian.draw(expected_image, dx = tps)
-                    numpy.testing.assert_array_almost_equal(sim_image, expected_image, decimal = 5,
+                    np.testing.assert_array_almost_equal(sim_image.array, expected_image.array, decimal = 5,
                         err_msg = "Error in comparison of ideal Gaussian RealGalaxy calculations")
 
 def test_real_galaxy_saved():
@@ -119,23 +119,23 @@ def test_real_galaxy_saved():
     shera_target_PSF_image = galsim.fits.read(shera_target_PSF_file)
 
     # simulate the same galaxy with GalSim
-    sim_image = galsim.simReal(rg, shera_target_PSF_image, shera_target_pixel_scale, g1 =
-                               targ_applied_shear1, g2 = targ_applied_shear2, rand_rotate =
-                               False, target_flux = shera_target_flux)
+    sim_image = galsim.simReal(rg, shera_target_PSF_image, shera_target_pixel_scale,
+                               g1 = targ_applied_shear1, g2 = targ_applied_shear2,
+                               rand_rotate = False, target_flux = shera_target_flux)
 
     # there are centroid issues when comparing Shera vs. SBProfile outputs, so compare 2nd moments
     # instead of images
     sbp_res = sim_image.FindAdaptiveMom()
     shera_res = shera_image.FindAdaptiveMom()
 
-    numpy.testing.assert_almost_equal(sbp_res.observed_shape.getE1(),
-                                      shera_res.observed_shape.getE1(), 4,
-                                      err_msg = "Error in comparison with SHERA result: e1")
-    numpy.testing.assert_almost_equal(sbp_res.observed_shape.getE2(),
-                                      shera_res.observed_shape.getE2(), 4,
-                                      err_msg = "Error in comparison with SHERA result: e2")
-    numpy.testing.assert_almost_equal(sbp_res.moments_sigma, shera_res.moments_sigma, 4,
-                                      err_msg = "Error in comparison with SHERA result: sigma")
+    np.testing.assert_almost_equal(sbp_res.observed_shape.getE1(),
+                                   shera_res.observed_shape.getE1(), 2,
+                                   err_msg = "Error in comparison with SHERA result: e1")
+    np.testing.assert_almost_equal(sbp_res.observed_shape.getE2(),
+                                   shera_res.observed_shape.getE2(), 2,
+                                   err_msg = "Error in comparison with SHERA result: e2")
+    np.testing.assert_almost_equal(sbp_res.moments_sigma, shera_res.moments_sigma, 2,
+                                   err_msg = "Error in comparison with SHERA result: sigma")
 
 if __name__ == "__main__":
     test_real_galaxy_ideal()
