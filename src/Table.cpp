@@ -1,6 +1,4 @@
 #include "TMV.h"
-#include "TMV_Band.h"
-#include "TMV_Sym.h"
 #include "TMV_SymBand.h"
 #include "Table.h"
 #include <cmath>
