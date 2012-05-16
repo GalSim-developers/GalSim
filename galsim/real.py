@@ -33,6 +33,7 @@ class RealGalaxyCatalog:
         self.filename = filename # store the filename from which the catalog was read
         self.imagedir = imagedir # store the directory containing all image files (gal, PSF)
         self.n = len(cat) # number of objects in the catalog
+        self.ident = cat.field('ident') # ID for object in the training sample
         self.gal_filename = cat.field('gal_filename') # file containing the galaxy image
         self.PSF_filename = cat.field('PSF_filename') # file containing the PSF image
         self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
