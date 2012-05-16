@@ -18,75 +18,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-class HSM_Moments:
-    """
-    A class that runs the MeasMoments program on an image
-    and stores the results.
-    This is temporary.  This functionality should be python wrapped.
-    """
-    
-    def __init__(self, file_name):
-        proc = subprocess.Popen('../bin/MeasMoments %s'%file_name,
-            stdout=subprocess.PIPE, shell=True)
-        buf = os.read(proc.stdout.fileno(),1000)
-        while proc.poll() == None:
-            pass
-        if proc.returncode != 0:
-            raise RuntimeError("MeasMoments exited with an error code")
-
-        results = buf.split()
-        if results[0] is not '0':
-            raise RuntimeError("MeasMoments returned an error status")
-        self.mxx = float(results[1])
-        self.myy = float(results[2])
-        self.mxy = float(results[3])
-        self.e1 = float(results[4])
-        self.e2 = float(results[5])
-        # These are distortions e1,e2
-        # Find the corresponding shear:
-        esq = self.e1*self.e1 + self.e2*self.e2
-        if esq > 0.:
-            e = math.sqrt(esq)
-            g = math.tanh(0.5 * math.atanh(e))
-            self.g1 = self.e1 * (g/e)
-            self.g2 = self.e2 * (g/e)
-        else:
-            self.g1 = 0.
-            self.g2 = 0.
-
-class HSM_Regauss:
-    """
-    A class that runs the MeasShape program (with re-Gaussianization PSF correction on an image
-    and stores the results. This is temporary.  This functionality should be python wrapped.
-    """
-    
-    def __init__(self, file_name, file_name_epsf, array_shape):
-        proc = subprocess.Popen('../bin/MeasShape %s %s %f %f 0.0 REGAUSS 0.0'%(file_name,
-                                file_name_epsf, 0.5*array_shape[0], 0.5*array_shape[1]), 
-                                stdout=subprocess.PIPE, shell=True)
-        buf = os.read(proc.stdout.fileno(),1000)
-        while proc.poll() == None:
-            pass
-        if proc.returncode != 0:
-            raise RuntimeError('MeasShape exited with an error code, %d'%proc.returncode)
-
-        results = buf.split()
-        if results[0] is not '0':
-            raise RuntimeError("MeasShape returned an error status")
-        self.e1 = float(results[1])
-        self.e2 = float(results[2])
-        self.r2 = float(results[5])
-        # These are distortions e1,e2
-        # Find the corresponding shear:
-        esq = self.e1*self.e1 + self.e2*self.e2
-        e = math.sqrt(esq)
-        g = math.tanh(0.5 * math.atanh(e))
-        self.g1 = self.e1 * (g/e)
-        self.g2 = self.e2 * (g/e)
-
-
-
-
 # Script 1: Simple Gaussian for both galaxy and psf, with Gaussian noise
 def Script1():
     """
@@ -102,7 +33,7 @@ def Script1():
     gal_sigma = 2.     # pixels
     psf_sigma = 1.     # pixels
     pixel_scale = 0.2  # arcsec / pixel
-    noise = 0.03       # ADU / pixel
+    noise = 300.       # ADU / pixel
 
     logger.info('Starting script 1 using:')
     logger.info('    - circular Gaussian galaxy (flux = %.1e, sigma = %.1f),',gal_flux,gal_sigma)
@@ -138,7 +69,7 @@ def Script1():
     # Defaut seed is set from the current time.
     rng = galsim.UniformDeviate()
     # Use this to add Gaussian noise with specified sigma
-    galsim.noise.addGaussian(image, rng, sigma=noise)
+    image.addNoise(galsim.GaussianDeviate(rng, sigma=noise))
     logger.info('Added Gaussian noise')
 
     # Write the image to a file
@@ -148,13 +79,14 @@ def Script1():
     image.write(file_name, clobber=True)
     logger.info('Wrote image to %r' % file_name)  # using %r adds quotes around filename for us
 
-    moments = HSM_Moments(file_name)
+    results = image.FindAdaptiveMom()
 
-    logger.info('HSM reports that the image has measured moments:')
-    logger.info('    Mxx = %.3f, Myy = %.3f, Mxy = %.3f', moments.mxx, moments.myy, moments.mxy)
+    logger.info('HSM reports that the image has observed shape and size:')
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.getE1(),
+                results.observed_shape.getE2(), results.moments_sigma)
     logger.info('Expected values in the limit that pixel response and noise are negligible:')
-    mxx_exp = (gal_sigma**2+psf_sigma**2)/(pixel_scale**2) # == expected myy
-    logger.info('    Mxx = %.3f, Myy = %.3f, Mxy = %.3f', mxx_exp, mxx_exp,0)
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f', 0.0, 0.0, 
+                math.sqrt(gal_sigma**2 + psf_sigma**2)/pixel_scale) 
     print
 
 # Script 2: Sheared, exponential galaxy, Moffat PSF, Poisson noise
@@ -179,21 +111,21 @@ def Script2():
     gain = 1.0         # ADU / e-
 
     logger.info('Starting script 2 using:')
-    logger.info('    - sheared (%.2f,%.2f) exponential galaxy (flux = %.1e, r0 = %.2f),',
+    logger.info('    - sheared (%.2f,%.2f) exponential galaxy (flux = %.1e, scale radius = %.2f),',
             g1, g2, gal_flux, gal_r0)
     logger.info('    - circular Moffat PSF (beta = %.1f, re = %.2f),', psf_beta,psf_re)
     logger.info('    - pixel scale = %.2f,', pixel_scale)
     logger.info('    - Poisson noise (sky level = %.1e, gain = %.1f).', sky_level, gain)
 
     # Define the galaxy profile.
-    gal = galsim.Exponential(flux=gal_flux, r0=gal_r0)
+    gal = galsim.Exponential(flux=gal_flux, scale_radius=gal_r0)
 
     # Shear the galaxy by some value.
     gal.applyShear(g1, g2)
     logger.info('Made galaxy profile')
 
     # Define the PSF profile.
-    psf = galsim.Moffat(beta=psf_beta, flux=1., re=psf_re)
+    psf = galsim.Moffat(beta=psf_beta, flux=1., half_light_radius=psf_re)
     logger.info('Made PSF profile')
 
     # Define the pixel size
@@ -213,13 +145,13 @@ def Script2():
     # Add a constant sky level to the image.
     # Create an image with the same bounds as image, with a constant
     # sky level.
-    sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
+    sky_image = galsim.ImageF(bounds=image.getBounds(), init_value=sky_level)
     image += sky_image
 
     # This time use a particular seed, so it the image is deterministic.
     rng = galsim.UniformDeviate(1534225)
-    # Use this to add Poisson noise.
-    galsim.noise.addPoisson(image, rng, gain=gain)
+    # Use this to add Poisson noise using the CCDNoise class.
+    image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=0.))
 
     # Subtract off the sky.
     image -= sky_image
@@ -235,14 +167,20 @@ def Script2():
     logger.info('Wrote image to %r',file_name)
     logger.info('Wrote effective PSF image to %r',file_name_epsf)
 
-    moments = HSM_Moments(file_name)
-    moments_corr = HSM_Regauss(file_name, file_name_epsf, image.array.shape)
-    logger.info('HSM reports that the image has measured moments:')
-    logger.info('    Mxx = %.3f, Myy = %.3f, Mxy = %.3f', moments.mxx, moments.myy, moments.mxy)
+    results = galsim.EstimateShearHSM(image, image_epsf)
+
+    logger.info('HSM reports that the image has observed shape and size:')
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.getE1(),
+                results.observed_shape.getE2(), results.moments_sigma)
     logger.info('When carrying out Regaussianization PSF correction, HSM reports')
-    logger.info('    g1,g2 = %.3f,%.3f', moments_corr.g1, moments_corr.g2)
+    e_temp = results.corrected_shape.getE()
+    if e_temp > 0.:
+        gfac = results.corrected_shape.getG()/e_temp
+    else:
+        gfac = 0.
+    logger.info('    g1, g2 = %.3f, %.3f', gfac*results.corrected_shape.getE1(), gfac*results.corrected_shape.getE2())
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
-    logger.info('    g1,g2 = %.3f,%.3f', g1,g2)
+    logger.info('    g1, g2 = %.3f, %.3f', g1,g2)
     print
 
 
@@ -278,7 +216,7 @@ def Script3():
     opt_a2=0.12        # wavelengths
     opt_c1=0.64        # wavelengths
     opt_c2=-0.33       # wavelengths
-    opt_padFactor=2    # multiples of Airy padding required to avoid folding for aberrated PSFs
+    opt_padfactor=2    # multiples of Airy padding required to avoid folding for aberrated PSFs
     lam = 800          # nm    NB: don't use lambda - that's a reserved word.
     tel_diam = 4.      # meters 
     pixel_scale = 0.23 # arcsec / pixel
@@ -307,7 +245,7 @@ def Script3():
 
  
     # Define the galaxy profile.
-    gal = galsim.Sersic(gal_n, flux=gal_flux, re=gal_re)
+    gal = galsim.Sersic(gal_n, flux=gal_flux, half_light_radius=gal_re)
 
     # Shear the galaxy by some value.
     gal.applyShear(g1, g2)
@@ -333,11 +271,11 @@ def Script3():
     lam_over_D /= pixel_scale # pixels
     logger.info('Calculated lambda over D = %f pixels', lam_over_D)
     # The rest of the values here should be given in units of the 
-    # wavelength of the incident light. padFactor is used to here to reduce 'folding' for these
+    # wavelength of the incident light. pad_factor is used to here to reduce 'folding' for these
     # quite strong aberration values
     optics = galsim.OpticalPSF(lam_over_D, 
                                defocus=opt_defocus, coma1=opt_c1, coma2=opt_c2, astig1=opt_a1,
-                               astig2=opt_a2, padFactor=opt_padFactor)
+                               astig2=opt_a2, pad_factor=opt_padfactor)
     logger.info('Made optical PSF profile')
 
     # Start with square pixels
@@ -365,15 +303,12 @@ def Script3():
     logger.info('Made image of the profile')
 
     # Add a constant sky level to the image.
-    sky_image = galsim.ImageF(bounds=image.getBounds(), initValue=sky_level)
+    sky_image = galsim.ImageF(bounds=image.getBounds(), init_value=sky_level)
     image += sky_image
 
-    # Add Poisson noise to the image.
+    # Add Poisson noise and Gaussian read noise to the image using the CCDNoise class.
     rng = galsim.UniformDeviate(1314662)
-    galsim.noise.addPoisson(image, rng, gain=gain)
-
-    # Also add (Gaussian) read noise.
-    galsim.noise.addGaussian(image, rng, sigma=read_noise)
+    image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
 
     # Subtract off the sky.
     image -= sky_image
@@ -393,15 +328,20 @@ def Script3():
     logger.info('Wrote optics-only PSF image (Nyquist sampled) to %r', file_name_opticalpsf)
     logger.info('Wrote effective PSF image to %r', file_name_epsf)
 
-    moments = HSM_Moments(file_name)
-    moments_corr = HSM_Regauss(file_name, file_name_epsf, image.array.shape)
+    results = galsim.EstimateShearHSM(image, image_epsf)
 
-    logger.info('HSM reports that the image has measured moments:')
-    logger.info('    Mxx = %.3f, Myy = %.3f, Mxy = %.3f', moments.mxx, moments.myy, moments.mxy)
+    logger.info('HSM reports that the image has observed shape and size:')
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.getE1(),
+                results.observed_shape.getE2(), results.moments_sigma)
     logger.info('When carrying out Regaussianization PSF correction, HSM reports')
-    logger.info('    g1,g2 = %f,%f', moments_corr.g1, moments_corr.g2)
+    e_temp = results.corrected_shape.getE()
+    if e_temp > 0.:
+        gfac = results.corrected_shape.getG()/e_temp
+    else:
+        gfac = 0.
+    logger.info('    g1, g2 = %.3f, %.3f', gfac*results.corrected_shape.getE1(), gfac*results.corrected_shape.getE2())
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
-    logger.info('    g1,g2 = %f,%f', g1+wcs_g1,g2+wcs_g2)
+    logger.info('    g1, g2 = %.3f, %.3f', g1+wcs_g1, g2+wcs_g2)
     print
 
 def main(argv):

@@ -58,7 +58,7 @@ namespace galsim {
          *                      `padFactor`).
          */
         template <typename T> 
-        SBInterpolatedImage(const Image<T>& img, const Interpolant2d& i,
+        SBInterpolatedImage(const BaseImage<T>& img, const Interpolant2d& i,
                             double dx_=0., double padFactor=0.);
 #endif
 
@@ -193,7 +193,7 @@ namespace galsim {
 
 #ifdef USE_IMAGES
         template <typename T>
-        double fillXImage(Image<T>& I, double dx) const;
+        double fillXImage(ImageView<T>& I, double dx) const;
 #endif
 
     protected:
@@ -214,9 +214,9 @@ namespace galsim {
         //    SBProfile.  Then these functions immediately call the template version
         //    of fillXImage defined above.
         //
-        virtual double doFillXImage(Image<float>& I, double dx) const
+        virtual double doFillXImage(ImageView<float>& I, double dx) const
         { return fillXImage(I,dx); }
-        virtual double doFillXImage(Image<double>& I, double dx) const
+        virtual double doFillXImage(ImageView<double>& I, double dx) const
         { return fillXImage(I,dx); }
 #endif
 

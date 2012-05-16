@@ -174,7 +174,7 @@ namespace galsim {
          *
          * @param[in] target the Image to which the photons' flux will be added.
          */
-        void addTo(Image<float>& target);
+        void addTo(ImageView<float>& target);
 #endif
     private:
         std::vector<double> _x;      // Vector holding x coords of photons

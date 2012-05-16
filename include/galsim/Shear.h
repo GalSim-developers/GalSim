@@ -10,11 +10,12 @@
 
 #ifndef SHEAR_H
 #define SHEAR_H
-#include <math.h>
+#include <cmath>
 #include "TMV.h"
 
 #include "Std.h"
 #include "Bounds.h"
+#include "Angle.h"
 
 // Shear is represented internally by e1 and e2, which are the second-moment
 // definitions: ellipse with axes a & b has e=(a^2-b^2)/(a^2+b^2).
@@ -49,17 +50,17 @@ namespace galsim {
             return *this;
         }
 
-        Shear& setE1E2(double =0., double =0.);
-        Shear& setEBeta(double etain=0., double betain=0.);
-        Shear& setEta1Eta2(double =0., double =0.);
-        Shear& setEtaBeta(double =0., double =0.);
-        Shear& setG1G2(double =0., double =0.);
+        Shear& setE1E2(double e1in=0., double e2in=0.);
+        Shear& setEBeta(double etain=0., Angle betain=Angle());
+        Shear& setEta1Eta2(double eta1in=0., double eta2in=0.);
+        Shear& setEtaBeta(double etain=0., Angle betain=Angle());
+        Shear& setG1G2(double g1in=0., double g2in=0.);
 
         double getE1() const { return e1; }
         double getE2() const { return e2; }
         double getE() const { return std::sqrt(e1*e1+e2*e2); }
         double getESq() const { return e1*e1+e2*e2; }
-        double getBeta() const { return std::atan2(e2,e1)*0.5; }
+        Angle getBeta() const { return std::atan2(e2,e1)*0.5 * radians; }
         double getEta() const { return atanh(std::sqrt(e1*e1+e2*e2)); } //error checking?
 
         // g = gamma / (1-kappa)
@@ -89,7 +90,7 @@ namespace galsim {
         Shear& operator-=(const Shear& );
 
         // Give the rotation angle for this+rhs:
-        double rotationWith(const Shear& rhs) const;
+        Angle rotationWith(const Shear& rhs) const;
         // Detail on the above: s1 + s2 operation on points in
         // the plane induces a rotation as well as a shear.
         // Above method tells you what the rotation was for LHS+RHS
@@ -214,7 +215,7 @@ namespace galsim {
         // resulting from source-plane circle:
         double getMajor() const { return std::exp(mu+s.getEta()/2); }
         double getMinor() const { return std::exp(mu-s.getEta()/2); }
-        double getBeta() const { return s.getBeta(); }
+        Angle getBeta() const { return s.getBeta(); }
 
         // Return a rectangle that circumscribes this ellipse (times nSigma)
         Bounds<double> range(double nSigma=1.) const;
@@ -227,11 +228,11 @@ namespace galsim {
         // matrix.  One version returns the rotation that must precede the
         // Ellipse in the transform, if matrix is asymmetric.
         static Ellipse fromMatrix(
-            const tmv::Matrix<double>& m, double& rotation, bool& parity);
+            const tmv::Matrix<double>& m, Angle& rotation, bool& parity);
 
         static Ellipse fromMatrix(const tmv::Matrix<double>& m) 
         {
-            double junk; 
+            Angle junk; 
             bool p;
             return fromMatrix(m, junk, p);
         }

@@ -325,12 +325,14 @@ namespace galsim {
 #endif
                     return out;
                 } else if (RotateOp::test(i)) {
+                    // TODO: Not sure how much we're planning on using SBParse,
+                    // but if we are, it would be nice to have theta specified with units.
                     delete i;
                     double theta;
                     if (args.size()!=1
                         || !isNumber((*ia)->print(),theta))
                         throw SBError("SBParse: bad arguments for rotation: " + args.print());
-                    SBProfile* out = base->rotate(theta);
+                    SBProfile* out = base->rotate(theta * radians);
                     delete base;
 #ifdef PARSER_DUMP
                     std::cerr << "** Leaving SBParse after rotating by " << theta << std::endl;

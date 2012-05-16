@@ -177,7 +177,7 @@ namespace galsim {
         dx = (v.back().arg - v.front().arg) / (v.size()-1);
         equalSpaced = true;
         for (int i=1; i<int(v.size()); i++) {
-	     if ( std::abs( ((v[i].arg-v[0].arg)/dx - i)) > tolerance) {
+            if ( std::abs( ((v[i].arg-v[0].arg)/dx - i)) > tolerance) {
                 equalSpaced = false;
                 break;
             }

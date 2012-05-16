@@ -82,7 +82,7 @@ def wavefront(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0.
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
     (kx, ky) = (0, 0) is the [0, 0] array element.
-	
+
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the definitions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
@@ -136,7 +136,7 @@ def wavefront(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0.
 
 def wavefront_image(array_shape=(256, 256), dx=1., defocus=0., astig1=0., astig2=0., coma1=0.,
                     coma2=0., spher=0., kmax=np.pi, circular_pupil=True):
-    """@brief Return wavefront as a (real, imag) tuple of ImageD objects rather than complex numpy
+    """@brief Return wavefront as a (real, imag) tuple of ImageViewD objects rather than complex numpy
     array.
 
     Outputs a circular pupil wavefront that will produce a PSF with bandlimit kmax.  We adopt the
@@ -152,7 +152,7 @@ def wavefront_image(array_shape=(256, 256), dx=1., defocus=0., astig1=0., astig2
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
     (kx, ky) = (0, 0) is the [0, 0] array element.
-	
+
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the definitions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
@@ -176,8 +176,8 @@ def wavefront_image(array_shape=(256, 256), dx=1., defocus=0., astig1=0., astig2
     array = wavefront(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2,
                       coma1=coma1, coma2=coma2, spher=spher, kmax=kmax*dx,
                       circular_pupil=circular_pupil)
-    return (galsim.ImageD(np.ascontiguousarray(array.real.astype(np.float64) / dx**2)),
-            galsim.ImageD(np.ascontiguousarray(array.imag.astype(np.float64) / dx**2)))
+    return (galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64) / dx**2)),
+            galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64) / dx**2)))
 
 def psf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, obs=None):
@@ -218,7 +218,7 @@ def psf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
 
 def psf_image(array_shape=(256, 256), dx=1., defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
               spher=0., kmax=np.pi, circular_pupil=True, obs=None):
-    """@brief Return circular (default) or square pupil PSF with low-order aberrations as an ImageD.
+    """@brief Return circular (default) or square pupil PSF with low-order aberrations as an ImageViewD.
 
     The PSF has unit total flux, and is centred on the array[array_shape[0] / 2, array_shape[1] / 2]
     pixel, by default.  Function is bandlimited at kmax (default = pi; Nyquist frequency).
@@ -242,7 +242,7 @@ def psf_image(array_shape=(256, 256), dx=1., defocus=0., astig1=0., astig2=0., c
     """
     array = psf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
                 coma2=coma2, spher=spher, kmax=kmax*dx, circular_pupil=circular_pupil, obs=obs)
-    return galsim.ImageD(array.astype(np.float64) / dx**2)
+    return galsim.ImageViewD(array.astype(np.float64) / dx**2)
 
 def otf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, obs=None):
@@ -284,7 +284,7 @@ def otf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
 def otf_image(array_shape=(256, 256), dx=1., defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
               spher=0., kmax=np.pi, circular_pupil=True, obs=None):
     """@brief Return the complex OTF of a circular (default) or square pupil with low-order
-    aberrations as a (real, imag) tuple of ImageD objects rather than a complex numpy array.
+    aberrations as a (real, imag) tuple of ImageViewD objects rather than a complex numpy array.
 
     OTF has otf[0, 0] = 1+0j by default, and array element ordering follows the DFT standard of
     kxky(array_shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
@@ -308,8 +308,8 @@ def otf_image(array_shape=(256, 256), dx=1., defocus=0., astig1=0., astig2=0., c
     """
     array = otf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
                 coma2=coma2, spher=spher, kmax=kmax*dx, circular_pupil=circular_pupil, obs=obs)
-    return (galsim.ImageD(np.ascontiguousarray(array.real.astype(np.float64) / dx**2)),
-            galsim.ImageD(np.ascontiguousarray(array.imag.astype(np.float64) / dx**2)))
+    return (galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64) / dx**2)),
+            galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64) / dx**2)))
 
 def mtf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, obs=None):
@@ -344,7 +344,7 @@ def mtf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
 def mtf_image(array_shape=(256, 256), dx=1., defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
               spher=0., kmax=np.pi, circular_pupil=True, obs=None):
     """@brief Return the MTF of a circular (default) or square pupil with low-order aberrations as
-    an ImageD.
+    an ImageViewD.
 
     MTF array has mtf[0, 0] = 1 by default, and array element ordering follows the DFT standard of
     kxky(array_shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
@@ -368,7 +368,7 @@ def mtf_image(array_shape=(256, 256), dx=1., defocus=0., astig1=0., astig2=0., c
     """
     array = mtf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
                 coma2=coma2, spher=spher, kmax=kmax*dx, circular_pupil=circular_pupil, obs=obs)
-    return galsim.ImageD(array.astype(np.float64) / dx**2)
+    return galsim.ImageViewD(array.astype(np.float64) / dx**2)
 
 def ptf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
         kmax=np.pi, circular_pupil=True, obs=None):
@@ -409,7 +409,7 @@ def ptf(array_shape=(256, 256), defocus=0., astig1=0., astig2=0., coma1=0., coma
 def ptf_image(array_shape=(256, 256), dx=1., defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
               spher=0., kmax=np.pi, circular_pupil=True, obs=None):
     """@brief Return the PTF [radians] of a circular (default) or square pupil with low-order
-    aberrations as an ImageD.
+    aberrations as an ImageViewD.
 
     PTF array has ptf[0, 0] = 0 by default, and array element ordering follows the DFT standard of
     kxky(array_shape).  Function is bandlimited at kmax (default = pi; Nyquist frequency).
@@ -433,5 +433,5 @@ def ptf_image(array_shape=(256, 256), dx=1., defocus=0., astig1=0., astig2=0., c
     """
     array = ptf(array_shape=array_shape, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1,
                 coma2=coma2, spher=spher, kmax=kmax*dx, circular_pupil=circular_pupil, obs=obs)
-    return galsim.ImageD(array.astype(np.float64) / dx**2)
+    return galsim.ImageViewD(array.astype(np.float64) / dx**2)
 
