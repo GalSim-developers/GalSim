@@ -295,8 +295,8 @@ namespace galsim {
         /**
          *  @brief Constructor is protected since a BaseImage is a virtual base class.
          */
-        BaseImage(T* data, boost::shared_ptr<T> owner, int stride, const Bounds<int>& b) :
-            AssignableToImage<T>(b), _owner(owner), _data(data), _stride(stride) {}
+        BaseImage(T* data, boost::shared_ptr<T> owner, int stride, const Bounds<int>& b, double scale=1.) :
+            AssignableToImage<T>(b), _owner(owner), _data(data), _stride(stride), _scale(scale) {}
 
         /**
          *  @brief Copy constructor also protected
@@ -306,7 +306,7 @@ namespace galsim {
          */
         BaseImage(const BaseImage<T>& rhs) :
             AssignableToImage<T>(rhs),
-            _owner(rhs._owner), _data(rhs._data), _stride(rhs._stride) {}
+            _owner(rhs._owner), _data(rhs._data), _stride(rhs._stride), _scale(rhs._scale) {}
 
         /**
          *  @brief Also have a constructor that just takes a bounds.  
@@ -352,8 +352,8 @@ namespace galsim {
          *  @brief Direct constructor given all the necessary information
          */
         ConstImageView(T* data, const boost::shared_ptr<T>& owner, int stride,
-                       const Bounds<int>& b) :
-            BaseImage<T>(data,owner,stride,b) {}
+                       const Bounds<int>& b, double scale=1.) :
+            BaseImage<T>(data,owner,stride,b,scale) {}
 
         /**
          *  @brief Copy Constructor from a BaseImage makes a new view of the same data
@@ -414,8 +414,8 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ImageView(T* data, const boost::shared_ptr<T>& owner, int stride, const Bounds<int>& b) :
-            BaseImage<T>(data, owner, stride, b) {}
+        ImageView(T* data, const boost::shared_ptr<T>& owner, int stride, const Bounds<int>& b, double scale=1.) :
+            BaseImage<T>(data, owner, stride, b, scale) {}
 
         /**
          *  @brief Shallow copy constructor.
@@ -644,7 +644,7 @@ namespace galsim {
          *  @brief Make a view of this image
          */
         ImageView<T> view() 
-        { return ImageView<T>(this->_data, this->_owner, this->_stride, this->_bounds); }
+            { return ImageView<T>(this->_data, this->_owner, this->_stride, this->_bounds, this->_scale); }
         ConstImageView<T> view() const { return ConstImageView<T>(*this); }
         //@}
 
