@@ -996,6 +996,7 @@ namespace galsim {
 
         /// @brief Characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`.
         double sigma;
+        double _sigma_sq; ///< Calculated value: sigma*sigma
 
     public:
         /** 
@@ -1005,7 +1006,8 @@ namespace galsim {
          * @param[in] sigma_ characteristic size, surface brightness scales as 
          *                   `exp[-r^2 / (2. * sigma^2)] (default `sigma_ = 1.`).
          */
-        SBGaussian(double flux_=1., double sigma_=1.) : flux(flux_), sigma(sigma_) {}
+        SBGaussian(double flux_=1., double sigma_=1.) :
+            flux(flux_), sigma(sigma_), _sigma_sq(sigma*sigma) {}
 
         /// @brief Destructor.
         ~SBGaussian() {}                        
@@ -1188,6 +1190,7 @@ namespace galsim {
     private:
         double r0;   ///< Characteristic size of profile `exp[-(r / r0)]`.
         double flux; ///< Flux.
+        double _r0_sq; ///< Calculated value: r0*r0
     public:
         /** 
          * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in 
@@ -1197,7 +1200,7 @@ namespace galsim {
          * @param[in] r0_   scale length for the profile that scales as `exp[-(r / r0)]`, NOT the 
          *                  half-light radius `re` as in SBSersic (default `r0_ = 1.`).
          */
-        SBExponential(double flux_=1., double r0_=1.) : r0(r0_), flux(flux_) {}
+        SBExponential(double flux_=1., double r0_=1.) : r0(r0_), flux(flux_), _r0_sq(r0*r0) {}
 
         /// @brief Destructor.
         ~SBExponential() {}
@@ -1277,7 +1280,7 @@ namespace galsim {
         double stepK() const 
         { 
             return std::min( 
-                ALIAS_THRESHOLD * 0.5 * D * pow(M_PI,3.) * (1-obscuration) ,
+                ALIAS_THRESHOLD * 0.5 * D * pow(M_PI,3.) * (1.-obscuration) ,
                 M_PI * D / 5.);
         }
 
@@ -1319,6 +1322,7 @@ namespace galsim {
         double xw;   ///< Boxcar function is `xw` x `yw` across.
         double yw;   ///< Boxcar function is `xw` x `yw` across.
         double flux; ///< Flux.
+        double _norm; ///< Calculated value: flux / (xw*yw)
         /** 
          * @brief Sinc function used to describe Boxcar in k space. 
          * @param[in] u Normalized wavenumber.
@@ -1334,8 +1338,11 @@ namespace galsim {
          * @param[in] flux_ flux (default `flux_ = 1.`).
          */
         SBBox(double xw_=1., double yw_=0., double flux_=1.) :
-            xw(xw_), yw(yw_), flux(flux_) 
-        { if (yw==0.) yw=xw; }
+            xw(xw_), yw(yw_), flux(flux_)
+        {
+            if (yw==0.) yw=xw; 
+            _norm = flux / (xw * yw);
+        }
 
         /// @brief Destructor.
         ~SBBox() {}
@@ -1349,7 +1356,7 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
 
         double maxK() const { return 2. / ALIAS_THRESHOLD / std::max(xw,yw); }  
-        double stepK() const { return M_PI/std::max(xw,yw)/2; } 
+        double stepK() const { return M_PI/std::max(xw,yw)/2.; } 
 
         double minX() const { return -0.5 * xw; }
         double maxX() const { return 0.5 * xw; }
@@ -1442,7 +1449,7 @@ namespace galsim {
     private:
         double beta; ///< Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
         double flux; ///< Flux.
-        double norm; ///< Normalization.
+        double norm; ///< Normalization. (Including the flux)
         double rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
         // In units of rD:
         double maxRrD; ///< Maximum `r` in units of `rD`.
@@ -1450,6 +1457,8 @@ namespace galsim {
         double stepKrD; ///< Stepsize lookup table `k` in units of `rD`.
         double FWHMrD;  ///< Full Width at Half Maximum in units of `rD`.
         double rerD;    ///< Half-light radius in units of `rD`.
+        double _rD_sq; ///< Calculated value: rD*rD;
+        double _maxRrD_sq; ///< Calculated value: maxRrD * maxRrD
 
         Table<double,double> ft;  ///< Lookup table for Fourier transform of Moffat.
 
@@ -1481,10 +1490,10 @@ namespace galsim {
 
         double xValue(Position<double> p) const 
         {
-            p /= rD;
             double rsq = p.x*p.x+p.y*p.y;
-            if (rsq >= maxRrD*maxRrD) return 0.;
-            else return flux*norm*pow(1+rsq, -beta) / (rD*rD);
+            rsq /= _rD_sq;
+            if (rsq >= _maxRrD_sq) return 0.;
+            else return norm*std::pow(1.+rsq, -beta) / (_rD_sq);
         }
 
         std::complex<double> kValue(Position<double> k) const; 
