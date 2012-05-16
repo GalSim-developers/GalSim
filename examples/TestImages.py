@@ -25,8 +25,8 @@ outDir = os.path.join('output','testImage.')
 bulge2Total = [0.0, 1.0/3, 2.0/3, 1.0]
 bulgeEllip = [0.2]
 diskEllip = [0.2, 0.45, 0.7]
-invSN = [0.0]#, 0.005, 0.02]
-nRealization = [1]#, 10, 10]
+invSN = [0.02]
+nRealization = [10]
 if len(invSN) is not len(nRealization):
     raise RuntimeError("Grids in inverse S/N and number of noise realizations do not have same size!")
 diskRe = [0.5, 1.0]
@@ -111,7 +111,7 @@ for bt in bulge2Total:
 
                         # Add noise the appropriate number of times, and write each one to file
                         for iRealization in range(nRealization[invsnind]):
-                            tmpImg = galsim.ImageF.duplicate(convGalaxyImg)
+                            tmpImg = convGalaxyImg.copy()
                             tmpImg.addNoise(galsim.GaussianDeviate(rng, mean=0.0, sigma=gaussSig))
                             outFile = outDir + ('BT%5.3f.' % bt)
                             outFile += 'bulgeellip%5.3f.' % bell
