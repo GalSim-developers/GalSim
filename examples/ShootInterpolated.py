@@ -18,6 +18,7 @@ def main(argv):
 
     # translation from C++ by Jim; comments after this one are in Gary's voice
 
+    #linear = galsim.Lanczos(5);
     linear = galsim.Linear();
     bilinear = galsim.InterpolantXY(linear)
 

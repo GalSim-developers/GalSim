@@ -3,6 +3,8 @@
 
 namespace galsim {
 
+    double InterpolantFunction::operator()(double x) const  {return _interp.xval(x);}
+
     double InterpolantXY::getPositiveFlux() const {
         return i1d.getPositiveFlux()*i1d.getPositiveFlux()
             + i1d.getNegativeFlux()*i1d.getNegativeFlux();

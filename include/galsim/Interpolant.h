@@ -12,6 +12,17 @@
 
 namespace galsim {
 
+    class Interpolant;
+
+    class InterpolantFunction: public FluxDensity {
+    public:
+        InterpolantFunction(const Interpolant& interp): _interp(interp) {}
+        double operator()(double x) const;
+        ~InterpolantFunction() {}
+    private:
+        const Interpolant& _interp;
+    };
+
     /** 
      * @brief One-dimensional interpolant base function
      *
@@ -25,9 +36,9 @@ namespace galsim {
     {
     public:
         /// @brief Constructor
-        Interpolant() {}
+        Interpolant(): _interp(*this), sampler(0) {}
         /// @brief Destructor (virtual for base class)
-        virtual ~Interpolant() {}
+        virtual ~Interpolant() {if (sampler) delete sampler;}
 
         // Extent of interpolant in real space and in frequency space.
         // Note that x units are pixels and u units are cycles per pixel.
@@ -87,7 +98,10 @@ namespace galsim {
          *
          * @returns Integral of positive portions of kernel
          */
-        virtual double getPositiveFlux() const {return 1.;}
+        virtual double getPositiveFlux() const {
+            checkSampler();
+            return sampler->getPositiveFlux();
+        }
         /**
          * @brief Return the (absolute value of) integral of the negative portions of the kernel
          *
@@ -95,7 +109,10 @@ namespace galsim {
          *
          * @returns Integral of abs value of negative portions of kernel
          */
-        virtual double getNegativeFlux() const {return 0.;}
+        virtual double getNegativeFlux() const {
+            checkSampler();
+            return sampler->getNegativeFlux();
+        }
         /**
          * @brief Return array of displacements drawn from this kernel.  
          *
@@ -109,8 +126,22 @@ namespace galsim {
          * @returns a PhotonArray containing the vector of displacements for interpolation kernel.
          */
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const {
-            throw std::runtime_error("Interpolant::shoot() not implemented for this kernel");
-            return PhotonArray(0);
+            checkSampler();
+            return sampler->shoot(N, ud);
+        }
+    protected:
+        InterpolantFunction _interp;
+        mutable OneDimensionalDeviate* sampler;
+        virtual void checkSampler() const {
+            if (sampler) return;
+            int nKnots = static_cast<int> (ceil(xrange()));
+            std::vector<double> ranges(2*nKnots);
+            for (int i=1; i<=nKnots; i++) {
+                double knot = std::min(1.*i, xrange());
+                ranges[nKnots-i] = -knot;
+                ranges[nKnots+i-1] = knot;
+            }
+            sampler = new OneDimensionalDeviate(_interp, ranges);
         }
     };
 
@@ -240,6 +271,9 @@ namespace galsim {
         }
         double uval(double u) const { return 1.; }
 
+        // Override the default numerical photon-shooting method
+        double getPositiveFlux() const {return 1.;}
+        double getNegativeFlux() const {return 0.;}
         PhotonArray shoot(int N, UniformDeviate& ud) const;
     private:
         double _width;
@@ -264,6 +298,9 @@ namespace galsim {
         }
         double uval(double u) const { return sinc(u); }
 
+        // Override the default numerical photon-shooting method
+        double getPositiveFlux() const {return 1.;}
+        double getNegativeFlux() const {return 0.;}
         PhotonArray shoot(int N, UniformDeviate& ud) const;
     private:
         double tolerance;
@@ -318,6 +355,9 @@ namespace galsim {
             else return 1.-x;
         }
         double uval(double u) const { return std::pow(sinc(u),2.); }
+        // Override the default numerical photon-shooting method
+        double getPositiveFlux() const {return 1.;}
+        double getNegativeFlux() const {return 0.;}
         PhotonArray shoot(int N, UniformDeviate& ud) const;
     private:
         double tolerance;
@@ -371,15 +411,6 @@ namespace galsim {
 
     // Cubic interpolator exact to 3rd order Taylor expansion
     // From R. G. Keys , IEEE Trans. Acoustics, Speech, & Signal Proc 29, p 1153, 1981
-
-    class InterpolantFunction: public FluxDensity {
-    public:
-        InterpolantFunction(const Interpolant& interp): _interp(interp) {}
-        double operator()(double x) const {return _interp.xval(x);}
-        ~InterpolantFunction() {}
-    private:
-        const Interpolant& _interp;
-    };
 
     class Cubic : public Interpolant 
     {
@@ -442,6 +473,20 @@ namespace galsim {
             return u>uMax ? 0. : tab(u);
         }
         double uCalc(double u) const;
+    protected:
+        // Override default checkSampler because Quintic filter has sign change in outer interval
+        virtual void checkSampler() const {
+            if (sampler) return;
+            std::vector<double> ranges(8);
+            ranges[0] = -3.;
+            ranges[1] = -(25.+sqrt(31.))/11.;
+            ranges[2] = -2.;
+            ranges[3] = -1.;
+            for (int i=0; i<4; i++)
+                ranges[7-i] = -ranges[i];
+            sampler = new OneDimensionalDeviate(_interp, ranges);
+        }
+
     private:
         double range; // Reduce range slightly from n so we're not using zero-valued endpoints.
         double tolerance;    
