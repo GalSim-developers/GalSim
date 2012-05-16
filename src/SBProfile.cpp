@@ -1675,7 +1675,8 @@ namespace galsim {
     }
 
 #ifdef USE_IMAGES
-    void PhotonArray::addTo(ImageView<float>& target) {
+    template <class T>
+    void PhotonArray::addTo(ImageView<T>& target) const {
         double dx = target.getScale();
         Bounds<int> b = target.getBounds();
 
@@ -1691,7 +1692,8 @@ namespace galsim {
         }
     }
 
-    void SBProfile::drawShoot(ImageView<float> img, int N, UniformDeviate& u) const 
+    template <class T>
+    void SBProfile::drawShoot(ImageView<T> img, int N, UniformDeviate& u) const 
     {
         img.fill(0.);
         PhotonArray pa = shoot(N, u);
@@ -1855,6 +1857,13 @@ namespace galsim {
 #ifdef USE_IMAGES
     template double SBProfile::doFillXImage2(ImageView<float>& img, double dx) const;
     template double SBProfile::doFillXImage2(ImageView<double>& img, double dx) const;
+
+    template void PhotonArray::addTo(ImageView<float>& image) const;
+    template void PhotonArray::addTo(ImageView<double>& image) const;
+    template void SBProfile::drawShoot(ImageView<float> image, int N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(ImageView<double> image, int N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(Image<float>& image, int N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(Image<double>& image, int N, UniformDeviate& ud) const;
 
     template double SBProfile::draw(Image<float>& img, double dx, int wmult) const;
     template double SBProfile::draw(Image<double>& img, double dx, int wmult) const;

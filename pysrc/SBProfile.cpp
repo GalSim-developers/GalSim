@@ -64,7 +64,14 @@ struct PyPhotonArray {
             .def("setTotalFlux", &PhotonArray::setTotalFlux)
             .def("append", &PhotonArray::append)
             .def("convolve", &PhotonArray::convolve)
-            .def("addTo", &PhotonArray::addTo)
+            .def("addTo", 
+                 (void(PhotonArray::*)(ImageView<float> &) const)&PhotonArray::addTo,
+                 bp::arg("image"),
+                 "Add photons' fluxes into image")
+            .def("addTo", 
+                 (void(PhotonArray::*)(ImageView<double> &) const)&PhotonArray::addTo,
+                 bp::arg("image"),
+                 "Add photons' fluxes into image")
             ;
     }
 
@@ -96,6 +103,14 @@ struct PySBProfile {
                  (double (SBProfile::*)(ImageView<U> &, double) const)&SBProfile::fillXImage, 
                  bp::args("image", "dx"),
                  "Utility for drawing into Image data structures")
+            .def("drawShoot", 
+                 (void (SBProfile::*)(Image<U> &, int, UniformDeviate& ) const)&SBProfile::drawShoot,
+                 (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
+                 "Draw object into existing image using photon shooting.")
+            .def("drawShoot", 
+                 (void (SBProfile::*)(ImageView<U>, int, UniformDeviate& ) const)&SBProfile::drawShoot,
+                 (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
+                 "Draw object into existing image using photon shooting.")
             .def("draw", 
                  (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::draw,
                  (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
@@ -190,7 +205,6 @@ struct PySBProfile {
             .def("rotate", &SBProfile::rotate, bp::args("theta"), ManageNew())
             .def("shift", &SBProfile::shift, bp::args("dx", "dy"), ManageNew())
             .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
-            .def("drawShoot", &SBProfile::drawShoot, bp::args("img","n", "u"))
             .def("draw", (ImageView<float> (SBProfile::*)(double, int) const)&SBProfile::draw,
                  (bp::arg("dx")=0., bp::arg("wmult")=1), "default draw routine")
             ;

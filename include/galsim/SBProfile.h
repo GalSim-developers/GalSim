@@ -270,8 +270,10 @@ namespace galsim {
          * @param[in] N Total umber of photons to produce.
          * @param[in] u UniformDeviate that will be used to draw photons from distribution.
          */
-        virtual void drawShoot(ImageView<float> img, int N, UniformDeviate& u) const;
-        void drawShoot(Image<float>& img, int N, UniformDeviate& u) const {
+        template <class T>
+        void drawShoot(ImageView<T> img, int N, UniformDeviate& u) const;
+        template <class T>
+        void drawShoot(Image<T>& img, int N, UniformDeviate& u) const {
             drawShoot(img.view(), N, u);
         }
 
