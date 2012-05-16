@@ -101,11 +101,11 @@ def test_real_galaxy_ideal():
                                                                  mxy_gal+mxy_PSF)
 
                     # compare with images that are expected
-                    expected_gaussian = galsim.SBGaussian(flux = fake_gal_flux, sigma = tot_sigma)
-                    expected_gaussian.distort(galsim.Ellipse(tot_e1, tot_e2))
+                    expected_gaussian = galsim.SBGaussian(flux = fake_gal_flux, sigma = tps*tot_sigma)
+                    sheared = expected_gaussian.shear(tot_e1, tot_e2) # SBProfile.shear takes a distortion
                     expected_image = galsim.ImageD(sim_image.array.shape[0], sim_image.array.shape[1])
-                    expected_gaussian.draw(expected_image, dx = tps)
-                    np.testing.assert_array_almost_equal(sim_image.array, expected_image.array, decimal = 5,
+                    sheared.draw(expected_image, dx = tps)
+                    np.testing.assert_array_almost_equal(sim_image.array, expected_image.array, decimal = 3,
                         err_msg = "Error in comparison of ideal Gaussian RealGalaxy calculations")
 
 def test_real_galaxy_saved():
