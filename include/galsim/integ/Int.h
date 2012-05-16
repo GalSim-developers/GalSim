@@ -288,8 +288,8 @@ namespace integ {
         const T& int_absdiff ///< An estimate of int |f-mean| dx
     )
     {
-        const int eps = std::numeric_limits<T>::epsilon();
-        const int minrep = std::numeric_limits<T>::min();
+        const T eps = std::numeric_limits<T>::epsilon();
+        const T minrep = std::numeric_limits<T>::min();
 
         if (int_absdiff != 0. && err != 0.) {
             const T scale = (200. * err / int_absdiff);
@@ -467,7 +467,7 @@ namespace integ {
         typename UF::result_type>* fxmap=0)
     {
         typedef typename UF::result_type T;
-        const int eps = std::numeric_limits<T>::epsilon();
+        const T eps = std::numeric_limits<T>::epsilon();
 
         integ_dbg2<<"Start intGKP\n";
 
