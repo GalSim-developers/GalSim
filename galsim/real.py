@@ -53,18 +53,18 @@ class RealGalaxyCatalog:
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rotation_angle = None, 
-            rand_rotate = True, target_flux = 1000.0):
+            rand_rotate = True, uniform_deviate = None, target_flux = 1000.0):
     """@brief Function to simulate images (no added noise) from real galaxy training data.
 
     This function takes a RealGalaxy from some training set, and manipulates it as needed to
     simulate a (no-noise-added) image from some lower-resolution telescope.  It thus requires a
     target ePSF (which could be an image, or one of our base classes) that represents all PSF
     components including the pixel response, and a target pixel scale.  The default rotation option
-    is to impose a random rotation to make irrelevant any real shears in the galaxy training data.
-    This default can be turned off by setting rand_rotate = False or by requesting a specific
-    rotation angle using the rotation_angle keyword, in which case rand_rotate is ignored.
-    Optionally, the user can specify a shear (default 0).  Finally, they can specify a flux
-    normalization for the final image, default 1000.
+    is to impose a random rotation to make irrelevant any real shears in the galaxy training data
+    (optionally, the RNG can be supplied).  This default can be turned off by setting rand_rotate =
+    False or by requesting a specific rotation angle using the rotation_angle keyword, in which case
+    rand_rotate is ignored.  Optionally, the user can specify a shear (default 0).  Finally, they
+    can specify a flux normalization for the final image, default 1000.
 
     Parameters
     ----------
@@ -77,6 +77,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     @param rotation_angle      Angle by which to rotate the galaxy (must be an Angle instance).
     @param rand_rotate         If true (default) then impose a random rotation on the training
                                galaxy; this is ignored if rotation_angle is set.
+    @param uniform_deviate     Uniform RNG to use for selection of the random rotation angle
+                               (optional).
     @param target_flux         The target flux in the output galaxy image, default 1000.
     """
     # do some checking of arguments
@@ -112,13 +114,13 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     # make sure target PSF is normalized
     target_PSF.setFlux(1.0)
 
-
     # rotate
     if rotation_angle != None:
         real_galaxy.applyRotation(rotation_angle)
     elif rotation_angle == None and rand_rotate == True:
-        u = galsim.UniformDeviate()
-        rand_angle = galsim.Angle(math.pi*u(), galsim.radians)
+        if uniform_deviate == None:
+            uniform_deviate = galsim.UniformDeviate()
+        rand_angle = galsim.Angle(math.pi*uniform_deviate(), galsim.radians)
         real_galaxy.applyRotation(rand_angle)
 
     # set fluxes
