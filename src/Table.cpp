@@ -206,13 +206,13 @@ namespace galsim {
                     M(i, i-1) = v[i+1].arg - v[i].arg;
                 }
                 tmv::Vector<V> rhs(n-2);
-                for (int i=1; i<=n-2; i++);{
+                for (int i=1; i<=n-2; i++){
                     M(i-1, i-1) = 2. * (v[i+1].arg - v[i-1].arg);
                     rhs(i-1) = 6. * ( (v[i+1].val - v[i].val) / (v[i+1].arg - v[i].arg) -
                                       (v[i].val - v[i-1].val) / (v[i].arg - v[i-1].arg) );
                 }
                 tmv::Vector<V> solution(n-2);
-                solution = rhs / M;
+                solution = rhs / M;   // solve the tridiagonal system of equations
                 for (int i=1; i<=n-2; i++){
                     y2[i] = solution[i-1];
                 }
