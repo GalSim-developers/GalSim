@@ -296,8 +296,8 @@ class OpticalPSF(GSObject):
                                            kmax=self.maxk, dx=dx)
         # If interpolant not specified on input, use a high-ish lanczos
         if interpolantxy == None:
-            l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
-            self.Interpolant2D = galsim.InterpolantXY(l5)
+            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
+            self.Interpolant2D = galsim.InterpolantXY(lan5)
         GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D, dx=dx))
 
 
@@ -367,8 +367,8 @@ class RealGalaxy(GSObject):
         if interpolant != None and isinstance(interpolant, galsim.InterpolantXY) == False:
             raise RuntimeError('Specified interpolant is not an InterpolantXY!')
         elif interpolant == None:
-            l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
-            self.Interpolant2D = galsim.InterpolantXY(l5)
+            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
+            self.Interpolant2D = galsim.InterpolantXY(lan5)
         else:
             self.Interpolant2D = interpolant
 
