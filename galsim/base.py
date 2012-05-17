@@ -335,7 +335,7 @@ class RealGalaxy(GSObject):
     Initialization
     --------------
     real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string =
-                                    None, random = False, interpolant = None)
+                                    None, random = False, uniform_deviate = None, interpolant = None)
 
     This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -349,12 +349,13 @@ class RealGalaxy(GSObject):
     @param ID                   Object ID for the desired galaxy in the catalog.
     @param random               If true, then just select a completely random galaxy from the
                                 catalog.
+    @param uniform_deviate      A uniform deviate to use for selecting a random galaxy (optional)
     @param interpolant          optional keyword for specifying the
                                 real-space interpolation scheme
                                 [default = galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
     """
     def __init__(self, real_galaxy_catalog, index = None, ID = None, random = False,
-                 interpolant = None):
+                 uniform_deviate = None, interpolant = None):
 
         import pyfits
 
@@ -368,11 +369,16 @@ class RealGalaxy(GSObject):
         elif ID != None:
             raise NotImplementedError('Selecting galaxy based on its ID not implemented')
         elif random == True:
-            u = galsim.UniformDeviate()
-            use_index = int(real_galaxy_catalog.n * u()) # this will round down, to get index in
-                                                         # range [0, n-1]
+            if uniform_deviate == None:
+                uniform_deviate = galsim.UniformDeviate()
+            use_index = int(real_galaxy_catalog.n * uniform_deviate()) # this will round down, to get index in
+                                                                           # range [0, n-1]
         else:
             raise RuntimeError('No method specified for selecting a galaxy!')
+        if random == False and uniform_deviate != None:
+            import warnings
+            message = "Warning: uniform_deviate supplied, but random selection method was not chosen!"
+            warnings.warn(message)
 
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
         # consider exporting this code into fits.py in some function that takes a filename and HDU,
