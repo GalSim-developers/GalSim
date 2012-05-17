@@ -1133,7 +1133,7 @@ namespace galsim {
             dbg<<"Y region for x = "<<x<<" = "<<ymin<<" ... "<<ymax<<std::endl;
             if (ymax < ymin) ymax = ymin;
             integ::IntRegion<double> reg(ymin,ymax,dbgout);
-            reg.useFXMap();
+            //reg.useFXMap();
             return reg;
         }
     private:
@@ -1218,7 +1218,7 @@ namespace galsim {
         ConvolveFunc conv(p1,p2,pos);
 
         integ::IntRegion<double> xreg(xmin,xmax,dbgout);
-        xreg.useFXMap();
+        //xreg.useFXMap();
         dbg<<"xreg = "<<xmin<<" ... "<<xmax<<std::endl;
 
         YRegion yreg(p1,p2,pos);
