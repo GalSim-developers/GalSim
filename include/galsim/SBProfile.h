@@ -1534,7 +1534,7 @@ namespace galsim {
         {
             double rsq = p.x*p.x+p.y*p.y;
             if (rsq >= _maxR_sq) return 0.;
-            else return norm*std::pow(1.+rsq/_rD_sq, -beta) / (_rD_sq);
+            else return norm / pow_beta(1.+rsq/_rD_sq, beta);
         }
 
         std::complex<double> kValue(const Position<double>& k) const; 
@@ -1580,6 +1580,16 @@ namespace galsim {
          * @param rD_ Input: new `rD`.
          */
         void setRd(double rD_) { rD = rD_; }
+
+    private:
+        double (*pow_beta)(double x, double beta);
+
+        static double pow_1(double x, double ) { return x; }
+        static double pow_2(double x, double ) { return x*x; }
+        static double pow_3(double x, double ) { return x*x*x; }
+        static double pow_4(double x, double ) { return x*x*x*x; }
+        static double pow_int(double x, double beta) { return std::pow(x,int(beta)); }
+        static double pow_gen(double x, double beta) { return std::pow(x,beta); }
     };
 
 

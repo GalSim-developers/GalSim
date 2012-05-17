@@ -1794,11 +1794,11 @@ namespace galsim {
         default:
             throw SBError("Unknown SBMoffat::RadiusType");
         }
-        norm = flux/fluxFactor;
         _maxR = maxRrD * rD;
         _maxR_sq = _maxR * _maxR;
         _maxRrD_sq = maxRrD * maxRrD;
         _rD_sq = rD * rD;
+        norm = flux / (fluxFactor * _rD_sq);
 
 #if 0
         std::cerr << "Moffat rD " << rD
@@ -1824,6 +1824,13 @@ namespace galsim {
             ft.addEntry( i*dk, kt->kval(0,-i).real() / nn);
         }
         delete kt;
+
+        if (beta == 1) pow_beta = &SBMoffat::pow_1;
+        else if (beta == 2) pow_beta = &SBMoffat::pow_2;
+        else if (beta == 3) pow_beta = &SBMoffat::pow_3;
+        else if (beta == 4) pow_beta = &SBMoffat::pow_4;
+        else if (beta == int(beta)) pow_beta = &SBMoffat::pow_int;
+        else pow_beta = &SBMoffat::pow_gen;
     }
 
     std::complex<double> SBMoffat::kValue(const Position<double>& k) const 
