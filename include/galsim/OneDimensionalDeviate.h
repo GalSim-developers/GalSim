@@ -22,16 +22,18 @@ namespace galsim {
     public:
         Interval(const FluxDensity& fluxDensity,
                  double xLower,
-                 double xUpper): _fluxDensityPtr(&fluxDensity),
-                                 _xLower(xLower),
-                                 _xUpper(xUpper) {}
+                 double xUpper,
+                 bool isRadial=false): _fluxDensityPtr(&fluxDensity),
+                                       _xLower(xLower),
+                                       _xUpper(xUpper),
+                                       _isRadial(isRadial),
+                                       _fluxIsReady(false) {}
         // given a cumulative absolute flux within this Interval,
         // choose an x value for photon and a flux (nominally +-1)
         void drawWithin(double absFlux, double& x, double& flux,
                         UniformDeviate& ud) const;
         // Differential flux is (signed) flux in this interval
-        double getDifferentialFlux() const {return _differentialFlux;}
-        void setDifferentialFlux(double f) {_differentialFlux = f;}
+        double getDifferentialFlux() const {checkFlux(); return _differentialFlux;}
         // Cumulative absolute flux out to upper radius of this interval
         double getCumulativeFlux() const {return _cumulativeFlux;}
         void setCumulativeFlux(double f)  {_cumulativeFlux = f;}
@@ -52,8 +54,12 @@ namespace galsim {
         const FluxDensity* _fluxDensityPtr;
         double _xLower;
         double _xUpper;
-        double _differentialFlux;
+        bool _isRadial;
+        mutable bool _fluxIsReady;
+        void checkFlux() const;
+        mutable double _differentialFlux;
         double _cumulativeFlux;
+        double interpolateFlux(double fraction) const;
         // Set this variable true if returning equal fluxes with rejection method.
         // False if will just return non-unity weighted flux for selected point
         bool _useRejectionMethod;
@@ -64,7 +70,8 @@ namespace galsim {
 
     class OneDimensionalDeviate {
     public:
-        OneDimensionalDeviate(const FluxDensity& fluxDensity, std::vector<double>& range);
+        OneDimensionalDeviate(const FluxDensity& fluxDensity, std::vector<double>& range,
+                              bool isRadial=false);
         double getPositiveFlux() const {return _positiveFlux;}
         double getNegativeFlux() const {return _negativeFlux;}
         PhotonArray shoot(int N, UniformDeviate& ud) const;
@@ -73,7 +80,7 @@ namespace galsim {
         std::set<Interval> _intervalSet;
         double _positiveFlux;
         double _negativeFlux;
-
+        const bool _isRadial;
     };
 
 } // namespace galsim

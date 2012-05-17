@@ -17,6 +17,15 @@ namespace galsim {
     // Max range of allowed (abs value of) photon fluxes
     const double ALLOWED_FLUX_VARIATION = 0.81;
 
+    template <class F>
+    class RTimesF: public std::unary_function<double,double> {
+    public:
+        RTimesF(const F& function): _function(function) {}
+        double operator()(double r) const {return r*_function(r);}
+    private:
+        const F& _function;
+    };
+
     // Function to isolate an extremum of function in an interval.
     bool findExtremum( const FluxDensity& function,
                        double xmin,
@@ -105,15 +114,28 @@ namespace galsim {
     }
 
 
+    double Interval::interpolateFlux(double fraction) const {
+        // Find the x (or radius) value that encloses fraction
+        // of the flux in this Interval if the function is constant
+        // over the interval.
+        if (_isRadial) {
+            double rsq = _xLower*_xLower*(1.-fraction) + _xUpper*_xUpper*fraction;
+            return sqrt(rsq);
+        } else {
+            return _xLower + (_xUpper - _xLower)*fraction;
+        }
+        return 0.;      // Will never get here.
+    }
+
     void Interval::drawWithin(double absFlux, double& x, double& flux,
                                  UniformDeviate& ud) const {
         double fractionOfInterval = (_cumulativeFlux -  absFlux) 
             / std::abs(_differentialFlux);
-        x = _xLower + (_xUpper - _xLower)*fractionOfInterval;
+        x = interpolateFlux(fractionOfInterval);
         flux = 1.;
         if (_useRejectionMethod) {
             while ( ud() > std::abs((*_fluxDensityPtr)(x)) / _maxAbsDensity) {
-                x = _xLower + (_xUpper - _xLower)*ud();
+                x = interpolateFlux(ud());
             }
             if (_differentialFlux < 0) flux = -1.;
         } else {
@@ -121,12 +143,28 @@ namespace galsim {
         }
     }
 
+    void Interval::checkFlux() const {
+        if (_fluxIsReady) return;
+        if (_isRadial) {
+            // Integrate r*F
+            RTimesF<FluxDensity> integrand(*_fluxDensityPtr);
+            _differentialFlux = integ::int1d(integrand, 
+                                             _xLower, _xUpper,
+                                             RELATIVE_ERROR,
+                                             ABSOLUTE_ERROR);
+        } else {
+            // Integrate the input function
+            _differentialFlux = integ::int1d(*_fluxDensityPtr, 
+                                             _xLower, _xUpper,
+                                             RELATIVE_ERROR,
+                                             ABSOLUTE_ERROR);
+        }
+        _fluxIsReady = true;
+    }
+
     std::list<Interval> Interval::split(double smallFlux) {
         // Get the flux in this interval 
-        _differentialFlux = integ::int1d(*_fluxDensityPtr, 
-                                         _xLower, _xUpper,
-                                         RELATIVE_ERROR,
-					 ABSOLUTE_ERROR);
+        checkFlux();
         _meanAbsDensity = std::abs(_differentialFlux / (_xUpper - _xLower));
         double densityLower = (*_fluxDensityPtr)(_xLower);
         double densityUpper = (*_fluxDensityPtr)(_xUpper);
@@ -150,8 +188,8 @@ namespace galsim {
         } else {
             // Split the interval.  Call (recursively) split() for left & right
             double midpoint = 0.5*(_xLower + _xUpper);
-            Interval left(*_fluxDensityPtr,_xLower, midpoint);
-            Interval right(*_fluxDensityPtr, midpoint, _xUpper);
+            Interval left(*_fluxDensityPtr,_xLower, midpoint, _isRadial);
+            Interval right(*_fluxDensityPtr, midpoint, _xUpper, _isRadial);
             std::list<Interval> add = left.split(smallFlux);
             result.splice(result.end(), add);
             add = right.split(smallFlux);
@@ -161,20 +199,22 @@ namespace galsim {
     }
 
     OneDimensionalDeviate::OneDimensionalDeviate(const FluxDensity& fluxDensity, 
-                                                 std::vector<double>& range):
+                                                 std::vector<double>& range,
+                                                 bool isRadial):
         _fluxDensity(fluxDensity),
         _positiveFlux(0.),
-        _negativeFlux(0.)
+        _negativeFlux(0.),
+        _isRadial(isRadial)
     {
 
         typedef std::vector<double>::size_type Index;
         for (Index iRange = 0; iRange < range.size()-1; iRange++) {
             // Integrate total flux (and sign) in each range
-            double rangeFlux = integ::int1d(fluxDensity, 
-                                            range[iRange],
-                                            range[iRange+1],
-                                            RELATIVE_ERROR,
-                                            ABSOLUTE_ERROR);
+            Interval segment(fluxDensity,   
+                             range[iRange],
+                             range[iRange+1],
+                             _isRadial);
+            double rangeFlux = segment.getDifferentialFlux();
             if (rangeFlux >= 0.) _positiveFlux += rangeFlux;
             else _negativeFlux += std::abs(rangeFlux);
         }

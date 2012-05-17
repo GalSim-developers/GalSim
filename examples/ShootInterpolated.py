@@ -19,8 +19,8 @@ def main(argv):
     # translation from C++ by Jim; comments after this one are in Gary's voice
 
     #linear = galsim.Lanczos(5);
-    linear = galsim.Linear();
-    bilinear = galsim.InterpolantXY(linear)
+    interp1d = galsim.Quintic();
+    interp2d = galsim.InterpolantXY(interp1d)
 
     inname = argv[1]
     outname = argv[2]
@@ -31,7 +31,7 @@ def main(argv):
     e2 = float(argv[7]) if len(argv) > 7 else 0.
 
     galaxyImg = galsim.fits.read(inname)
-    galaxy = galsim.SBInterpolatedImage(galaxyImg, bilinear, 1., 1.0)
+    galaxy = galsim.SBInterpolatedImage(galaxyImg, interp2d, 1., 1.0)
     shearedGalaxy = galaxy.shear(e1,e2)
 
     rng = galsim.UniformDeviate(1534225)
