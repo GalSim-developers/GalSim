@@ -1047,6 +1047,36 @@ namespace galsim {
         virtual void fillKGrid(KTable& kt) const;
     };
 
+    /////////////////////////////////////////////////////////////////////////////////////
+    // Below here are the concrete "atomic" SBProfile types
+    /////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef RADIAL
+    /**
+     * @brief A class to adapt SBProfile to the interface for `OneDimensionalDeviate`
+     * sampler.  Only used internally.
+     */
+    class RadialFunction: public FluxDensity {
+    public:
+        /** 
+         * @brief Constructor
+         * @param[in] sbp Radially symmetric SBProfile to be sampled from
+         */
+        RadialFunction(const SBProfile& sbp): _sbp(sbp) {}
+        /** 
+         * @brief Implement function class syntax for radial function
+         * @param[in] r Radius
+         * @returns value at radius
+         */
+        double operator()(double r) const {return _sbp.xval(r);}
+        /**
+         * @brief Destructor
+         */
+        ~InterpolantFunction() {}
+    private:
+        const Interpolant& _interp;
+    };
+#endif
     /**
      * @brief Gaussian Surface Brightness Profile
      *
@@ -1130,7 +1160,8 @@ namespace galsim {
             double kValue(double ksq) const;
 
         private:
-            SersicInfo(const SersicInfo& rhs) {} ///< Hides the copy constructor.
+            SersicInfo(const SersicInfo& rhs); ///< Hides the copy constructor.
+            void operator=(const SersicInfo& rhs); ///<Hide assignment operator.
 
             /** 
              * @brief Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`, calculated from Sersic 
@@ -1526,6 +1557,7 @@ namespace galsim {
         double stepKrD; ///< Stepsize lookup table `k` in units of `rD`.
         double FWHMrD;  ///< Full Width at Half Maximum in units of `rD`.
         double rerD;    ///< Half-light radius in units of `rD`.
+        double fluxFactor; ///< Integral of unnormalized flux
 
         Table<double,double> ft;  ///< Lookup table for Fourier transform of Moffat.
 

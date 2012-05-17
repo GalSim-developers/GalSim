@@ -1510,22 +1510,21 @@ namespace galsim {
         // And be sure to get at least 16 pts across FWHM when drawing:
         maxKrD = 16*M_PI / FWHMrD;
 
-        // Get flux and half-light radius in units of rD:
-        MoffatFlux mf(beta);
-        double fluxFactor = mf(maxRrD);
+	// Analytic integration of total flux:
+	fluxFactor = 1. - pow( 1+maxRrD*maxRrD, (1.-beta));
+	norm = (beta - 1.) / (M_PI * fluxFactor);
 
+        // Get half-light radius in units of rD:
+	rerD = sqrt( pow(1.-0.5*fluxFactor , 1./(1.-beta)) - 1.);
+	
         // Set size of this instance according to type of size given in constructor:
         switch (rType)
         {
         case FWHM:
             rD = size / FWHMrD;
             break;
-        case HALF_LIGHT_RADIUS: {
-            Solve<MoffatFlux> s(mf, 0.1, 2.);
-            mf.setTarget(0.5*fluxFactor);
-            double rerD = s.root();
+        case HALF_LIGHT_RADIUS: 
             rD = size / rerD;
-        }
             break;
         case SCALE_RADIUS:
             rD = size;
@@ -1533,10 +1532,9 @@ namespace galsim {
         default:
             throw SBError("Unknown SBMoffat::RadiusType");
         }
-        norm = 1./fluxFactor;
 
 #if 0
-        std::cerr << "Moffat rD " << rD
+        std::cerr << "Moffat rD " << rD << " fluxFactor " << fluxFactor
             << " norm " << norm << " maxRrD " << maxRrD << std::endl;
 #endif
 
@@ -1847,11 +1845,25 @@ namespace galsim {
 
     PhotonArray SBMoffat::shoot(int N, UniformDeviate& u) const
     {
-        throw SBError("SBMoffat::shoot() not implemented");
-        return PhotonArray(N);
+        // Moffat has analytic inverse-cumulative-flux function.
+        PhotonArray result(N);
+        double fluxPerPhoton = flux/N;
+        for (int i=0; i<N; i++) {
+            // First get a point uniformly distributed on unit circle
+            double xu, yu, rsq;
+            do {
+                xu = 2.*u()-1.;
+                yu = 2.*u()-1.;
+                rsq = xu*xu+yu*yu;
+            } while (rsq>=1. || rsq==0.);
+            
+            // Then map it to the Moffat flux distribution
+            double newRsq = pow( 1.-rsq*fluxFactor , 1./(1.-beta)) - 1.;
+            double rFactor = rD*sqrt(newRsq / rsq);
+            result.setPhoton(i,rFactor*xu, rFactor*yu, fluxPerPhoton);
+        }
+        return result;
     }
-
-
 
     // instantiate template functions for expected image types
 #ifdef USE_IMAGES
