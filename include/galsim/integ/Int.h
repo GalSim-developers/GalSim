@@ -437,13 +437,20 @@ namespace integ {
 #ifdef COUNTFEVAL
         nfeval++;
 #endif
+        const int nmax = 2*gkp_x<T>(NGKPLEVELS-1).size()-1;
+        static std::vector<T> fv1(nmax), fv2(nmax);
+
+        fv1.clear();
+        fv2.clear();
+        assert(fv1.size() == 0);
+        assert(fv2.size() == 0);
+        assert(int(fv1.capacity()) == nmax);
+        assert(int(fv2.capacity()) == nmax);
 
         assert(gkp_wb<T>(0).size() == gkp_x<T>(0).size()+1);
         T area1 = gkp_wb<T>(0).back() * f_center;
-        std::vector<T> fv1, fv2;
-        fv1.reserve(2*gkp_x<T>(0).size()+1);
-        fv2.reserve(2*gkp_x<T>(0).size()+1);
-        for (size_t k=0; k<gkp_x<T>(0).size(); k++) {
+        int n0 = gkp_x<T>(0).size();
+        for (int k=0; k<n0; k++) {
             const T abscissa = half_length * gkp_x<T>(0)[k];
             const T fval1 = func(center - abscissa);
             const T fval2 = func(center + abscissa);
@@ -477,7 +484,8 @@ namespace integ {
                     int_abs += gkp_wa<T>(level)[k] *
                         (std::abs(fv1[k]) + std::abs(fv2[k]));
             }
-            for (size_t k=0; k<gkp_x<T>(level).size(); k++) {
+            int nl = gkp_x<T>(level).size();
+            for (int k=0; k<nl; k++) {
                 const T abscissa = half_length * gkp_x<T>(level)[k];
                 const T fval1 = func(center - abscissa);
                 const T fval2 = func(center + abscissa);
@@ -525,6 +533,8 @@ namespace integ {
             }
             area1 = area2;
         }
+        assert(int(fv1.size()) == nmax);
+        assert(int(fv2.size()) == nmax);
 
         // Failed to converge.  Return with current estimate of area and error
         reg.setArea(area1,err);
@@ -583,7 +593,7 @@ namespace integ {
 
         int roundoff_type1 = 0, error_type = 0;
         T roundoff_type2 = 0.;
-        size_t iteration = 1;
+        int iteration = 1;
 
         // Keep track of all subdivision in a priority_queue.  
         // The top() is always the largest value, and pop() removes it.
