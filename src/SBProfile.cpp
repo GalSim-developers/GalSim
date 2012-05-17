@@ -140,10 +140,8 @@ namespace galsim {
             for (ImIter it=I.rowBegin(y); it!=ee; ++it, ++x) {
                 Position<double> p(x*dx,y*dx); // since x,y are pixel indices
                 *it = xValue(p);
-#ifdef DANIELS_TRACING
-                cout << "x=" << x << ", y=" << y << ": " << *it << std::endl;
-                cout << "--------------------------" << std::endl;
-#endif
+                xdbg << "x=" << x << ", y=" << y << ": " << *it << std::endl;
+                xdbg << "--------------------------" << std::endl;
                 totalflux += *it;
             } 
         }
@@ -155,7 +153,6 @@ namespace galsim {
     // Will enforce image size is power of 2 or 3x2^n.
     // Aliasing will be handled by folding the k values before transforming
     // And enforce no image folding
-    //**/ #define DEBUG
     template <typename T>
     double SBProfile::fourierDraw(ImageView<T>& I, double dx, int wmult) const 
     {
@@ -167,16 +164,12 @@ namespace galsim {
             dx = M_PI / maxK();
         }
 
-#ifdef DEBUG
-        std::cerr << " maxK() " << maxK() << " dx " << dx << std::endl;
-#endif
+        xdbg << " maxK() " << maxK() << " dx " << dx << std::endl;
 
         // Now decide how big the FT must be to avoid folding:
         double xRange = 2*M_PI*wmult / stepK();
         int Nnofold = static_cast<int> (std::ceil(xRange / dx -0.0001));
-#ifdef DEBUG
-        std::cerr << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
-#endif
+        xdbg << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
 
         // W must make something big enough to cover the target image size:
         int xSize, ySize;
@@ -189,20 +182,16 @@ namespace galsim {
         // Round up to a good size for making FFTs:
         int NFT = goodFFTSize(Nnofold);
         NFT = std::max(NFT,MINIMUM_FFT_SIZE);
-#ifdef DEBUG
-        std::cerr << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
-#endif
+        xdbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
         if (NFT > MAXIMUM_FFT_SIZE)
             FormatAndThrow<SBError>() << "fourierDraw() requires an FFT that is too large, " << NFT;
 
         // Move the output image to be centered near zero
         I.setOrigin(-xSize/2, -ySize/2);
         double dk = 2.*M_PI/(NFT*dx);
-#ifdef DEBUG
-        std::cerr << 
+        xdbg << 
             " After adjustments: dx " << dx << " dk " << dk << 
             " maxK " << dk*NFT/2 << std::endl;
-#endif
         assert(dk <= stepK());
         XTable* xtmp=0;
         if (NFT*dk/2 > maxK()) {
@@ -261,16 +250,12 @@ namespace galsim {
             dx = M_PI / maxK();
         }
 
-#ifdef DEBUG
-        std::cerr << " maxK() " << maxK() << " dx " << dx << std::endl;
-#endif
+        xdbg << " maxK() " << maxK() << " dx " << dx << std::endl;
 
         // Now decide how big the FT must be to avoid folding:
         double xRange = 2*M_PI*wmult / stepK();
         int Nnofold = static_cast<int> (std::ceil(xRange / dx -0.0001));
-#ifdef DEBUG
-        std::cerr << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
-#endif
+        xdbg << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
 
         // And if there is a target image size, we must make something big enough to cover
         // the target image size:
@@ -286,9 +271,7 @@ namespace galsim {
         // Round up to a good size for making FFTs:
         int NFT = goodFFTSize(Nnofold);
         NFT = std::max(NFT,MINIMUM_FFT_SIZE);
-#ifdef DEBUG
-        std::cerr << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
-#endif
+        xdbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
         if (NFT > MAXIMUM_FFT_SIZE)
             FormatAndThrow<SBError>() << "fourierDraw() requires an FFT that is too large, " << NFT;
 
@@ -307,11 +290,9 @@ namespace galsim {
             I.setOrigin(-xSize/2, -ySize/2);
         }
         double dk = 2.*M_PI/(NFT*dx);
-#ifdef DEBUG
-        std::cerr << 
+        xdbg << 
             " After adjustments: dx " << dx << " dk " << dk << 
             " maxK " << dk*NFT/2 << std::endl;
-#endif
         assert(dk <= stepK());
         XTable* xtmp=0;
         if (NFT*dk/2 > maxK()) {
@@ -1653,10 +1634,8 @@ namespace galsim {
         // And a quartic term:
         kderiv4 = tgamma(6.*n) / (64.*b2n*b2n*tgamma(2.*n));
 
-#if 0
-        std::cerr << "Building for n=" << n << " b= " << b << " norm= " << norm << std::endl;
-        std::cerr << "Deriv terms: " << kderiv2 << " " << kderiv4 << std::endl;
-#endif
+        xdbg << "Building for n=" << n << " b= " << b << " norm= " << norm << std::endl;
+        xdbg << "Deriv terms: " << kderiv2 << " " << kderiv4 << std::endl;
 
         // When is it safe to use low-k approximation?  See when
         // quartic term is at threshold
