@@ -62,7 +62,7 @@ void pyExportSBInterpolatedImage() {
     );
     bp::class_<Lanczos,bp::bases<Interpolant>,boost::noncopyable>(
         "Lanczos", bp::init<int,bool,double>(
-            (bp::arg("n"), bp::arg("fluxConserve")=false, bp::arg("tol")=1E-3)
+            (bp::arg("n"), bp::arg("conserve_flux")=false, bp::arg("tol")=1E-3)
         )
     );
     bp::class_<Cubic,bp::bases<Interpolant>,boost::noncopyable>(
