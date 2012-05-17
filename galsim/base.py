@@ -274,7 +274,7 @@ class OpticalPSF(GSObject):
                                         coma2=0., spher=0., circular_pupil=True, interpolantxy=None,
                                         dx=1., oversampling=2., pad_factor=2)
 
-    Initializes optical_psf as a galsim.Optics() instance.
+    Initializes optical_psf as a galsim.OpticalPSF() instance.
 
     @param lod             lambda / D in the physical units adopted (user responsible for 
                            consistency).
