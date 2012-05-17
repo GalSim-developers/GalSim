@@ -86,17 +86,16 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
         if isinstance(target_PSF, Class):
             lan5 = galsim.Lanczos(5, conserve_flux = True, tol = 1.e-4)
             interp2d = galsim.InterpolantXY(lan5)
-            new_target_PSF = galsim.SBInterpolatedImage(target_PSF.view(), interp2d, dx = target_pixel_scale)
-            target_PSF = new_target_PSF
+            target_PSF = galsim.SBInterpolatedImage(target_PSF.view(), interp2d, dx = target_pixel_scale)
+            break
     for Class in galsim.ImageView.itervalues():
         if isinstance(target_PSF, Class):
             lan5 = galsim.Lanczos(5, conserve_flux = True, tol = 1.e-4)
             interp2d = galsim.InterpolantXY(lan5)
-            new_target_PSF = galsim.SBInterpolatedImage(target_PSF, interp2d, dx = target_pixel_scale)
-            target_PSF = new_target_PSF
+            target_PSF = galsim.SBInterpolatedImage(target_PSF, interp2d, dx = target_pixel_scale)
+            break
     if isinstance(target_PSF, galsim.GSObject):
-        new_target_PSF = target_PSF.SBProfile
-        target_PSF = new_target_PSF
+        target_PSF = target_PSF.SBProfile
     if not isinstance(target_PSF, galsim.SBProfile):
         raise RuntimeError("Error: target PSF is not an Image, ImageView, SBProfile, or GSObject!")
     if rotation_angle != None and not isinstance(rotation_angle, galsim.Angle):
