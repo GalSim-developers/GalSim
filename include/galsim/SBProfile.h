@@ -117,10 +117,15 @@ namespace galsim {
          *  The implementation here is +- infinity for both x and y.  
          *  Derived classes may override this if they a have different range.
          */
-        virtual double minX() const { return -integ::MOCK_INF; }
-        virtual double maxX() const { return integ::MOCK_INF; }
-        virtual double minY() const { return -integ::MOCK_INF; }
-        virtual double maxY() const { return integ::MOCK_INF; }
+        virtual void getXRange(double& xmin, double& xmax) const 
+        { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
+
+        virtual void getYRange(double& ymin, double& ymax) const 
+        { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+
+        virtual void getYRange(double /*x*/, double& ymin, double& ymax) const 
+        { getYRange(ymin,ymax); }
+        //@}
 
         /**
          * @brief Return value of SBProfile at a chosen 2D position in k space.
@@ -485,6 +490,9 @@ namespace galsim {
     protected:
         /// @brief The plist content is a pointer to a fresh copy of the summands.
         std::list<SBProfile*> plist; 
+        typedef std::list<SBProfile*>::iterator Iter;
+        typedef std::list<SBProfile*>::const_iterator ConstIter;
+
     private:
         double sumflux; ///< Keeps track of the cumulated flux of all summands.
         double sumfx; ///< Keeps track of the cumulated `fx` of all summands.
@@ -534,8 +542,7 @@ namespace galsim {
         SBAdd(const std::list<SBProfile*> slist) : plist() 
         {
             initialize();
-            std::list<SBProfile*>::const_iterator sptr;
-            for (sptr = slist.begin(); sptr!=slist.end(); ++sptr)
+            for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
                 add(**sptr); 
         }
 
@@ -551,8 +558,7 @@ namespace galsim {
             allAxisymmetric(rhs.allAxisymmetric),
             allAnalyticX(rhs.allAnalyticX), allAnalyticK(rhs.allAnalyticK)  
         {
-            std::list<SBProfile*>::const_iterator sbptr;
-            for (sbptr = rhs.plist.begin(); sbptr!=rhs.plist.end(); ++sbptr)
+            for (ConstIter sbptr = rhs.plist.begin(); sbptr!=rhs.plist.end(); ++sbptr)
                 plist.push_back((*sbptr)->duplicate());
         }
 
@@ -567,14 +573,11 @@ namespace galsim {
             if (&rhs == this) return *this;
             // Clean up previous stuff
 
-            for (std::list<SBProfile*>::iterator pptr = plist.begin(); 
-                 pptr!=plist.end(); 
-                 ++pptr)  
-                delete *pptr; 
+            for (Iter pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; 
+
             // New copies of all convolve-ees:
             plist.clear();
-            std::list<SBProfile*>::const_iterator rhsptr;
-            for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
+            for (ConstIter rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
                 plist.push_back((*rhsptr)->duplicate()); 
             // And copy other configurations:
             sumflux = rhs.sumflux;
@@ -594,10 +597,7 @@ namespace galsim {
 
         /// @brief Destructor.
         ~SBAdd() 
-        { 
-            std::list<SBProfile*>::iterator pptr;
-            for (pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; 
-        }
+        { for (Iter pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; }
 
         /** 
          * @brief SBAdd specific method for adding additional SBProfiles
@@ -618,10 +618,38 @@ namespace galsim {
         double maxK() const { return maxMaxK; }
         double stepK() const { return minStepK; }
 
-        double minX() const { return minMinX; }
-        double maxX() const { return maxMaxX; }
-        double minY() const { return minMinY; }
-        double maxY() const { return maxMaxY; }
+        void getXRange(double& xmin, double& xmax) const 
+        { 
+            xmin = integ::MOCK_INF; xmax = -integ::MOCK_INF; 
+            for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+                double xmin_1, xmax_1;
+                (*pptr)->getXRange(xmin_1,xmax_1);
+                if (xmin_1 < xmin) xmin = xmin_1;
+                if (xmax_1 > xmax) xmax = xmax_1;
+            }
+        }
+
+        void getYRange(double& ymin, double& ymax) const 
+        {
+            ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
+            for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+                double ymin_1, ymax_1;
+                (*pptr)->getYRange(ymin_1,ymax_1);
+                if (ymin_1 < ymin) ymin = ymin_1;
+                if (ymax_1 > ymax) ymax = ymax_1;
+            }
+        }
+
+        void getYRange(double x, double& ymin, double& ymax) const 
+        {
+            ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
+            for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+                double ymin_1, ymax_1;
+                (*pptr)->getYRange(x,ymin_1,ymax_1);
+                if (ymin_1 < ymin) ymin = ymin_1;
+                if (ymax_1 > ymax) ymax = ymax_1;
+            }
+        }
 
         bool isAxisymmetric() const { return allAxisymmetric; }
         bool isAnalyticX() const { return allAnalyticX; }
@@ -663,6 +691,8 @@ namespace galsim {
         double major; ///< Major axis of ellipse produced from unit circle.
         double minor; ///< Minor axis of ellipse produced from unit circle.
         bool stillIsAxisymmetric; ///< Is output SBProfile shape still circular?
+        double _xmin, _xmax, _ymin, _ymax; ///< Ranges propagated from adaptee
+        double _coeff_b, _coeff_c, _coeff_c2; ///< Values used in getYRange(x,ymin,ymax);
 
     private:
         /// @brief Initialize the SBDistort.
@@ -777,10 +807,13 @@ namespace galsim {
         double maxK() const { return adaptee->maxK() / minor; }
         double stepK() const { return adaptee->stepK() / major; }
 
-        double minX() const { return adaptee->minX() * major; }
-        double maxX() const { return adaptee->maxX() * major; }
-        double minY() const { return adaptee->minY() * major; }
-        double maxY() const { return adaptee->maxY() * major; }
+        void getXRange(double& xmin, double& xmax) const 
+        { xmin = _xmin; xmax = _xmax; }
+
+        void getYRange(double& ymin, double& ymax) const 
+        { ymin = _ymin; ymax = _ymax; }
+
+        void getYRange(double x, double& ymin, double& ymax) const;
 
         Position<double> centroid() const { return x0+fwd(adaptee->centroid()); }
 
@@ -801,6 +834,8 @@ namespace galsim {
     private:
         /// @brief The plist content is a copy_ptr (cf. smart ptrs) listing SBProfiles.
         std::list<SBProfile*> plist;
+        typedef std::list<SBProfile*>::iterator Iter;
+        typedef std::list<SBProfile*>::const_iterator ConstIter;
 
         double fluxScale; ///< Flux scaling.
         double x0; ///< Centroid position in x.
@@ -862,10 +897,7 @@ namespace galsim {
          */
         SBConvolve(const std::list<SBProfile*> slist, bool real_space=false, double f=1.) :
             plist(), fluxScale(f), _real_space(real_space)
-        { 
-            std::list<SBProfile*>::const_iterator sptr;
-            for (sptr = slist.begin(); sptr!=slist.end(); ++sptr) add(**sptr); 
-        }
+        { for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr) add(**sptr); }
 
         /** @brief Copy constructor.
          *
@@ -880,8 +912,7 @@ namespace galsim {
             sumMinY(rhs.sumMinY), sumMaxY(rhs.sumMaxY), 
             fluxProduct(rhs.fluxProduct), _real_space(rhs._real_space)
         {
-            std::list<SBProfile*>::const_iterator rhsptr;
-            for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
+            for (ConstIter rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
                 plist.push_back((*rhsptr)->duplicate()); 
         }
 
@@ -896,14 +927,10 @@ namespace galsim {
             if (&rhs == this) return *this;
             // Clean up previous stuff
 
-            for (std::list<SBProfile*>::iterator pptr = plist.begin(); 
-                 pptr!=plist.end(); 
-                 ++pptr)  
-                delete *pptr; 
+            for (Iter pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; 
             // New copies of all convolve-ees:
             plist.clear();
-            std::list<SBProfile*>::const_iterator rhsptr;
-            for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
+            for (ConstIter rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
                 plist.push_back((*rhsptr)->duplicate()); 
             // And copy other configurations:
             fluxScale = rhs.fluxScale;
@@ -923,10 +950,7 @@ namespace galsim {
 
         /// @brief Destructor.
         ~SBConvolve() 
-        { 
-            std::list<SBProfile*>::iterator pptr;
-            for (pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; 
-        }
+        { for (Iter pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; }
 
         /** 
          * @brief SBConvolve specific method for adding new members.
@@ -945,9 +969,8 @@ namespace galsim {
 
         std::complex<double> kValue(const Position<double>& k) const 
         {
-            std::list<SBProfile*>::const_iterator pptr;
             std::complex<double> product(fluxScale,0);
-            for (pptr=plist.begin(); pptr!=plist.end(); ++pptr)
+            for (ConstIter pptr=plist.begin(); pptr!=plist.end(); ++pptr)
                 product *= (*pptr)->kValue(k);
             return product; 
         }
@@ -958,10 +981,38 @@ namespace galsim {
         double maxK() const { return minMaxK; }
         double stepK() const { return minStepK; }
 
-        double minX() const { return sumMinX; }
-        double maxX() const { return sumMaxX; }
-        double minY() const { return sumMinY; }
-        double maxY() const { return sumMaxY; }
+        void getXRange(double& xmin, double& xmax) const 
+        { 
+            xmin = 0.; xmax = 0.;
+            for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+                double xmin_1, xmax_1;
+                (*pptr)->getXRange(xmin_1,xmax_1);
+                xmin += xmin_1;
+                xmax += xmax_1;
+            }
+        }
+
+        void getYRange(double& ymin, double& ymax) const 
+        {
+            ymin = 0.; ymax = 0.;
+            for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+                double ymin_1, ymax_1;
+                (*pptr)->getYRange(ymin_1,ymax_1);
+                ymin += ymin_1;
+                ymax += ymax_1;
+            }
+        }
+
+        void getYRange(double x, double& ymin, double& ymax) const 
+        {
+            ymin = 0.; ymax = 0.;
+            for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+                double ymin_1, ymax_1;
+                (*pptr)->getYRange(x,ymin_1,ymax_1);
+                ymin += ymin_1;
+                ymax += ymax_1;
+            }
+        }
 
         Position<double> centroid() const 
         { return Position<double>(x0, y0); }
@@ -1346,10 +1397,11 @@ namespace galsim {
         double maxK() const { return 2. / ALIAS_THRESHOLD / std::max(xw,yw); }  
         double stepK() const { return M_PI/std::max(xw,yw)/2.; } 
 
-        double minX() const { return -0.5 * xw; }
-        double maxX() const { return 0.5 * xw; }
-        double minY() const { return -0.5 * yw; }
-        double maxY() const { return 0.5 * yw; }
+        void getXRange(double& xmin, double& xmax) const 
+        { xmin = -0.5*xw;  xmax = 0.5*xw; }
+
+        void getYRange(double& ymin, double& ymax) const 
+        { ymin = -0.5*yw;  ymax = 0.5*yw; }
 
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
@@ -1447,6 +1499,8 @@ namespace galsim {
         double rerD;    ///< Half-light radius in units of `rD`.
         double _rD_sq; ///< Calculated value: rD*rD;
         double _maxRrD_sq; ///< Calculated value: maxRrD * maxRrD
+        double _maxR; ///< Calculated value: maxRrD * rD
+        double _maxR_sq; ///< Calculated value: maxR * maxR
 
         Table<double,double> ft;  ///< Lookup table for Fourier transform of Moffat.
 
@@ -1479,9 +1533,8 @@ namespace galsim {
         double xValue(const Position<double>& p) const 
         {
             double rsq = p.x*p.x+p.y*p.y;
-            rsq /= _rD_sq;
-            if (rsq >= _maxRrD_sq) return 0.;
-            else return norm*std::pow(1.+rsq, -beta) / (_rD_sq);
+            if (rsq >= _maxR_sq) return 0.;
+            else return norm*std::pow(1.+rsq/_rD_sq, -beta) / (_rD_sq);
         }
 
         std::complex<double> kValue(const Position<double>& k) const; 
@@ -1493,10 +1546,17 @@ namespace galsim {
         double maxK() const { return maxKrD / rD; }   
         double stepK() const { return stepKrD / rD; } 
 
-        double minX() const { return -maxRrD * rD; }   
-        double maxX() const { return maxRrD * rD; }   
-        double minY() const { return -maxRrD * rD; }   
-        double maxY() const { return maxRrD * rD; }   
+        void getXRange(double& xmin, double& xmax) const 
+        { xmin = -_maxR; xmax = _maxR; }
+
+        void getYRange(double& ymin, double& ymax) const 
+        { ymin = -_maxR; ymax = _maxR; }
+
+        void getYRange(double x, double& ymin, double& ymax) const 
+        {
+            ymax = sqrt(_maxR_sq - x*x);
+            ymin = -ymax;
+        }
 
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }

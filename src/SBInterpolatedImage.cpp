@@ -21,7 +21,7 @@ namespace galsim {
         wts(Nimages, 1.), fluxes(Nimages, 1.), 
         xFluxes(Nimages, 0.), yFluxes(Nimages,0.),
         xsum(0), ksum(0), xsumValid(false), ksumValid(false),
-        ready(false) 
+        ready(false)
     {
         assert(Ninitial%2==0);
         assert(Ninitial>=2);
@@ -33,6 +33,7 @@ namespace galsim {
         // allocate xTables
         for (int i=0; i<Nimages; i++) 
             vx.push_back(new XTable(Nk, dx));
+        _max_size = (Ninitial+2*xInterp->xrange())*dx;
     }
 
 #ifdef USE_IMAGES
@@ -45,7 +46,7 @@ namespace galsim {
         wts(Nimages, 1.), fluxes(Nimages, 1.), 
         xFluxes(Nimages, 0.), yFluxes(Nimages,0.),
         xsum(0), ksum(0), xsumValid(false), ksumValid(false),
-        ready(false) 
+        ready(false)
     {
         Ninitial = std::max( img.getYMax()-img.getYMin()+1, img.getXMax()-img.getXMin()+1);
         Ninitial = Ninitial + Ninitial%2;
@@ -71,6 +72,7 @@ namespace galsim {
             for (int ix = img.getXMin(); ix<= img.getXMax(); ix++, xTab++) 
                 vx.front()->xSet(xTab, yTab, img(ix,iy));
         }
+        _max_size = (Ninitial+2*xInterp->xrange())*dx;
     }
 #endif
 
@@ -78,7 +80,8 @@ namespace galsim {
         Ninitial(rhs.Ninitial), dx(rhs.dx), Nk(rhs.Nk), Nimages(rhs.Nimages),
         xInterp(rhs.xInterp), kInterp(rhs.kInterp),
         wts(rhs.wts), fluxes(rhs.fluxes), xFluxes(rhs.xFluxes), yFluxes(rhs.yFluxes),
-        xsum(0), ksum(0), xsumValid(false), ksumValid(false), ready(rhs.ready) 
+        xsum(0), ksum(0), xsumValid(false), ksumValid(false), 
+        ready(rhs.ready), _max_size(rhs._max_size)
     {
         // copy tables
         for (int i=0; i<Nimages; i++) {

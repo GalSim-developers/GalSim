@@ -85,10 +85,11 @@ namespace galsim {
         // Require output FTs to be period on scale > original image extent + kernel footprint:
         double stepK() const { return 2.*M_PI / ( (Ninitial+2*xInterp->xrange())*dx); }
 
-        double minX() const { return -(Ninitial+2*xInterp->xrange())*dx; }
-        double maxX() const { return (Ninitial+2*xInterp->xrange())*dx; }
-        double minY() const { return -(Ninitial+2*xInterp->xrange())*dx; }
-        double maxY() const { return (Ninitial+2*xInterp->xrange())*dx; }
+        void getXRange(double& xmin, double& xmax) const 
+        { xmin = -_max_size; xmax = _max_size; }
+
+        void getYRange(double& ymin, double& ymax) const 
+        { ymin = -_max_size; ymax = _max_size; }
 
         bool isAxisymmetric() const { return false; }
 
@@ -250,6 +251,8 @@ namespace galsim {
         mutable std::vector<KTable*> vk;
         void checkXsum() const;  ///< Used to build xsum if it's not current.
         void checkKsum() const;  ///< Used to build ksum if it's not current.
+
+        double _max_size; ///< Calculated value: Ninitial+2*xInterp->xrange())*dx
     };
 
 }

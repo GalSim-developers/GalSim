@@ -10,8 +10,8 @@
 #include <fstream>
 
 #ifdef DEBUGLOGGING
-//std::ostream* dbgout = new std::ofstream("debug.out");
-std::ostream* dbgout = &std::cerr;
+std::ostream* dbgout = new std::ofstream("debug.out");
+//std::ostream* dbgout = &std::cerr;
 //std::ostream* dbgout = 0;
 int verbose_level = 1;
 #else
@@ -135,10 +135,9 @@ namespace galsim {
         double totalflux=0;
         for (int y = I.getYMin(); y <= I.getYMax(); y++) {
             int x = I.getXMin(); 
-            typename Image<T>::iterator ee=I.rowEnd(y);
-            for (typename Image<T>::iterator it=I.rowBegin(y);
-                 it!=ee;
-                 ++it, ++x) {
+            typedef typename Image<T>::iterator ImIter;
+            ImIter ee=I.rowEnd(y);
+            for (ImIter it=I.rowBegin(y); it!=ee; ++it, ++x) {
                 Position<double> p(x*dx,y*dx); // since x,y are pixel indices
                 *it = xValue(p);
 #ifdef DANIELS_TRACING
@@ -389,10 +388,9 @@ namespace galsim {
         // ??? Make this into a virtual function to allow pipelining?
         for (int y = Re.getYMin(); y <= Re.getYMax(); y++) {
             int x = Re.getXMin(); 
-            typename ImageView<T>::iterator ee=Re.rowEnd(y);
-            typename ImageView<T>::iterator it;
-            typename ImageView<T>::iterator it2;
-            for (it=Re.rowBegin(y), it2=Im.rowBegin(y); it!=ee; ++it, ++it2, ++x) {
+            typedef typename ImageView<T>::iterator ImIter;
+            ImIter ee=Re.rowEnd(y);
+            for (ImIter it=Re.rowBegin(y), it2=Im.rowBegin(y); it!=ee; ++it, ++it2, ++x) {
                 Position<double> p(x*dk,y*dk); // since x,y are pixel indicies
                 std::complex<double> c = this->kValue(p);  
                 *it = c.real(); 
@@ -434,10 +432,9 @@ namespace galsim {
         // ??? Make this into a virtual function to allow pipelining?
         for (int y = Re.getYMin(); y <= Re.getYMax(); y++) {
             int x = Re.getXMin(); 
-            typename ImageView<T>::iterator ee=Re.rowEnd(y);
-            typename ImageView<T>::iterator it;
-            typename ImageView<T>::iterator it2;
-            for (it=Re.rowBegin(y), it2=Im.rowBegin(y); it!=ee; ++it, ++it2, ++x) {
+            typedef typename ImageView<T>::iterator ImIter;
+            ImIter ee=Re.rowEnd(y);
+            for (ImIter it=Re.rowBegin(y), it2=Im.rowBegin(y); it!=ee; ++it, ++it2, ++x) {
                 Position<double> p(x*dk,y*dk); // since x,y are pixel indicies
                 std::complex<double> c = this->kValue(p);  
                 *it = c.real(); 
@@ -663,8 +660,6 @@ namespace galsim {
     {
         sumflux = sumfx = sumfy = 0.;
         maxMaxK = minStepK = 0.;
-        minMinX = maxMaxX = 0.;
-        minMinY = maxMaxY = 0.;
         allAxisymmetric = allAnalyticX = allAnalyticK = true;
     }
 
@@ -675,14 +670,13 @@ namespace galsim {
 
 
         // Keep track of where first new summand is on list:
-        std::list<SBProfile*>::iterator newptr = plist.end();
+        Iter newptr = plist.end();
 
         // Add new summand(s) to the plist:
         SBAdd *sba = dynamic_cast<SBAdd*> (p);
         if (sba) {  
             // If rhs is an SBAdd, copy its full list here
-            std::list<SBProfile*>::const_iterator pptr;
-            for (pptr = sba->plist.begin(); pptr!=sba->plist.end(); ++pptr) {
+            for (ConstIter pptr = sba->plist.begin(); pptr!=sba->plist.end(); ++pptr) {
                 if (newptr==plist.end()) {
                     plist.push_back((*pptr)->duplicate()); 
                     // Rescale flux for duplicate copy if desired:
@@ -709,10 +703,6 @@ namespace galsim {
             sumfy += (*newptr)->getFlux() * (*newptr)->centroid().x;
             if ( (*newptr)->maxK() > maxMaxK) maxMaxK = (*newptr)->maxK();
             if ( minStepK<=0. || ((*newptr)->stepK() < minStepK)) minStepK = (*newptr)->stepK();
-            if ( (*newptr)->minX() > minMinX) minMinX = (*newptr)->minX();
-            if ( (*newptr)->maxX() > maxMaxX) maxMaxX = (*newptr)->maxX();
-            if ( (*newptr)->minY() > minMinY) minMinY = (*newptr)->minY();
-            if ( (*newptr)->maxY() > maxMaxY) maxMaxY = (*newptr)->maxY();
             allAxisymmetric = allAxisymmetric && (*newptr)->isAxisymmetric();
             allAnalyticX = allAnalyticX && (*newptr)->isAnalyticX();
             allAnalyticK = allAnalyticK && (*newptr)->isAnalyticK();
@@ -724,19 +714,15 @@ namespace galsim {
     double SBAdd::xValue(const Position<double>& _p) const 
     {
         double xv = 0.;  
-        std::list<SBProfile*>::const_iterator pptr;
-        for (pptr = plist.begin(); pptr != plist.end(); ++pptr)
-        {
+        for (ConstIter pptr = plist.begin(); pptr != plist.end(); ++pptr)
             xv += (*pptr)->xValue(_p);
-        }
         return xv;
     } 
 
     std::complex<double> SBAdd::kValue(const Position<double>& _p) const 
     {
         std::complex<double> kv = 0.;  
-        std::list<SBProfile*>::const_iterator pptr;
-        for (pptr = plist.begin(); pptr != plist.end(); ++pptr)
+        for (ConstIter pptr = plist.begin(); pptr != plist.end(); ++pptr)
             kv += (*pptr)->kValue(_p);
         return kv;
     } 
@@ -744,7 +730,7 @@ namespace galsim {
     void SBAdd::fillKGrid(KTable& kt) const 
     {
         if (plist.empty()) kt.clear();
-        std::list<SBProfile*>::const_iterator pptr = plist.begin();
+        ConstIter pptr = plist.begin();
         (*pptr)->fillKGrid(kt);
         ++pptr;
         if (pptr==plist.end()) return;
@@ -760,7 +746,7 @@ namespace galsim {
     void SBAdd::fillXGrid(XTable& xt) const 
     {
         if (plist.empty()) xt.clear();
-        std::list<SBProfile*>::const_iterator pptr = plist.begin();
+        ConstIter pptr = plist.begin();
         (*pptr)->fillXGrid(xt);
         ++pptr;
         if (pptr==plist.end()) return;
@@ -777,8 +763,7 @@ namespace galsim {
     {
         if (sumflux==0.) throw SBError("SBAdd::setFlux not possible when flux=0 to start");
         double m = f/getFlux();  // Factor by which to change flux
-        std::list<SBProfile*>::iterator pptr; 
-        for (pptr = plist.begin(); pptr != plist.end(); ++pptr) {
+        for (Iter pptr = plist.begin(); pptr != plist.end(); ++pptr) {
             double pf = (*pptr)->getFlux();  
             (*pptr)->setFlux(pf*m);
         }
@@ -863,6 +848,158 @@ namespace galsim {
             && (matrixB==-matrixC) 
             && (matrixA==matrixD)
             && (x0.x==0.) && (x0.y==0.); // Need pure rotation
+
+        dbg<<"Distortion init\n";
+        dbg<<"matrix = "<<matrixA<<','<<matrixB<<','<<matrixC<<','<<matrixD<<std::endl;
+        dbg<<"x0 = "<<x0<<std::endl;
+
+        // Calculate the values for getXRange and getYRange:
+        if (adaptee->isAxisymmetric()) {
+            // The original is a circle, so first get its radius.
+            adaptee->getXRange(_xmin,_xmax);
+            if (_xmax == integ::MOCK_INF) {
+                // Then these are correct, and use +- inf for y range too.
+                _ymin = -integ::MOCK_INF;
+                _ymax = integ::MOCK_INF;
+            } else {
+                double R = _xmax;
+                // The distortion takes each point on the circle to the following new coordinates:
+                // (x,y) -> (A*x + B*y + x0 , C*x + D*y + y0)
+                // Using x = R cos(t) and y = R sin(t), we can find the minimum wrt t as:
+                // xmax = R sqrt(A^2 + B^2) + x0
+                // xmin = -R sqrt(A^2 + B^2) + x0
+                // ymax = R sqrt(C^2 + D^2) + y0
+                // ymin = -R sqrt(C^2 + D^2) + y0
+                double AApBB = matrixA*matrixA + matrixB*matrixB;
+                double temp = sqrt(AApBB) * R;
+                _xmin = -temp + x0.x;
+                _xmax = temp + x0.x;
+                double CCpDD = matrixC*matrixC + matrixD*matrixD;
+                temp = sqrt(CCpDD) * R;
+                _ymin = -temp + x0.y;
+                _ymax = temp + x0.y;
+                // Now a couple of calculations that get reused in getYRange(x,yminymax):
+                _coeff_b = (matrixA*matrixC + matrixB*matrixD) / AApBB;
+                _coeff_c = CCpDD / AApBB;
+                _coeff_c2 = absdet*absdet / AApBB;
+                dbg<<"adaptee is axisymmetric.\n";
+                dbg<<"adaptees maxR = "<<R<<std::endl;
+                dbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<std::endl;
+                dbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<std::endl;
+            }
+        } else {
+            // Apply the distortion to each of the four corners of the original
+            // and find the minimum and maximum.
+            double xmin_1, xmax_1;
+            adaptee->getXRange(xmin_1,xmax_1);
+            double ymin_1, ymax_1;
+            adaptee->getYRange(ymin_1,ymax_1);
+            // Note: This doesn't explicitly check for MOCK_INF values.
+            // It shouldn't be a problem, since the integrator will still treat
+            // large values near MOCK_INF as infinity, but it just means that 
+            // the following calculations might be wasted flops.
+            Position<double> bl = fwd(Position<double>(xmin_1,ymin_1));
+            Position<double> br = fwd(Position<double>(xmax_1,ymin_1));
+            Position<double> tl = fwd(Position<double>(xmin_1,ymax_1));
+            Position<double> tr = fwd(Position<double>(xmax_1,ymax_1));
+            _xmin = std::min(std::min(std::min(bl.x,br.x),tl.x),tr.x) + x0.x;
+            _xmax = std::max(std::max(std::max(bl.x,br.x),tl.x),tr.x) + x0.x;
+            _ymin = std::min(std::min(std::min(bl.y,br.y),tl.y),tr.y) + x0.y;
+            _ymax = std::max(std::max(std::max(bl.y,br.y),tl.y),tr.y) + x0.y;
+            dbg<<"adaptee is not axisymmetric.\n";
+            dbg<<"adaptees x range = "<<xmin_1<<" ... "<<xmax_1<<std::endl;
+            dbg<<"adaptees y range = "<<ymin_1<<" ... "<<ymax_1<<std::endl;
+            dbg<<"Corners are: bl = "<<bl<<std::endl;
+            dbg<<"             br = "<<br<<std::endl;
+            dbg<<"             tl = "<<tl<<std::endl;
+            dbg<<"             tr = "<<tr<<std::endl;
+            dbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<std::endl;
+            dbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<std::endl;
+        }
+    }
+
+    void SBDistort::getYRange(double x, double& ymin, double& ymax) const
+    {
+        dbg<<"Distortion getYRange for x = "<<x<<std::endl;
+        if (adaptee->isAxisymmetric()) {
+            adaptee->getYRange(ymin,ymax);
+            if (ymax == integ::MOCK_INF) return;
+            double R = ymax;
+            // The circlue with radius R is mapped onto an ellipse with (x,y) given by:
+            // x = A R cos(t) + B R sin(t) + x0
+            // y = C R cos(t) + D R sin(t) + y0
+            //
+            // Or equivalently:
+            // (A^2+B^2) (y-y0)^2 - 2(AC+BD) (x-x0)(y-y0) + (C^2+D^2) (x-x0)^2 = R^2 (AD-BC)^2
+            //
+            // Given a particular value for x, we solve the latter equation for the 
+            // corresponding range for y.
+            // y^2 - 2 b y = c
+            // -> y^2 - 2b y = c
+            //    (y - b)^2 = c + b^2
+            //    y = b +- sqrt(c + b^2)
+            double b = _coeff_b * (x-x0.x);
+            double c = _coeff_c2 * R*R - _coeff_c * (x-x0.x) * (x-x0.x);
+            double d = sqrt(c + b*b);
+            ymax = b + d + x0.y;
+            ymin = b - d + x0.y;
+            dbg<<"Axisymmetric adaptee with R = "<<R<<std::endl;
+            dbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<std::endl;
+            dbg<<"Check: xValue("<<x<<","<<ymin-0.01<<") = "<<xValue(Position<double>(x,ymin-0.01))<<std::endl;
+            dbg<<"       xValue("<<x<<","<<ymin+0.01<<") = "<<xValue(Position<double>(x,ymin+0.01))<<std::endl;
+            dbg<<"       xValue("<<x<<","<<ymax-0.01<<") = "<<xValue(Position<double>(x,ymax-0.01))<<std::endl;
+            dbg<<"       xValue("<<x<<","<<ymax+0.01<<") = "<<xValue(Position<double>(x,ymax+0.01))<<std::endl;
+            Position<double> pp1 = inv(Position<double>(x,ymin)-x0);
+            Position<double> pp2 = inv(Position<double>(x,ymax)-x0);
+            dbg<<"For (x,ymin): inv(p-x0) = "<<pp1<<", R = "<<sqrt(pp1.x*pp1.x+pp1.y*pp1.y)<<std::endl;
+            dbg<<"For (x,ymax): inv(p-x0) = "<<pp2<<", R = "<<sqrt(pp2.x*pp2.x+pp2.y*pp2.y)<<std::endl;
+        } else {
+            // There are 4 lines to check for where they intersect the given x.
+            // Start with the adaptee's given ymin.
+            // This line is distorted onto the line:
+            // (x',ymin) -> ( A x' + B ymin + x0 , C x' + D ymin + y0 )
+            // x' = (x - x0 - B ymin) / A
+            // y = C x' + D ymin + y0 
+            //   = C (x - x0 - B ymin) / A + D ymin + y0
+            // The top line is analagous for ymax instead of ymin.
+            // 
+            // The left line is distorted as:
+            // (xmin,y) -> ( A xmin + B y' + x0 , C xmin + D y' + y0 )
+            // y' = (x - x0 - A xmin) / B
+            // y = C xmin + D (x - x0 - A xmin) / B + y0
+            // And again, the right line is analgous.
+            //
+            // We also need to check for A or B = 0, since then only one pair of lines is
+            // relevant.
+            if (matrixA == 0.) {
+                double xmin_1, xmax_1;
+                adaptee->getXRange(xmin_1,xmax_1);
+                ymin = matrixC * xmin_1 + matrixD * (x - x0.x - matrixA*xmin_1) / matrixB + x0.y;
+                ymax = matrixC * xmax_1 + matrixD * (x - x0.x - matrixA*xmax_1) / matrixB + x0.y;
+                if (ymax < ymin) std::swap(ymin,ymax);
+            } else if (matrixB == 0.) {
+                double ymin_1, ymax_1;
+                adaptee->getYRange(ymin_1,ymax_1);
+                ymin = matrixC * (x - x0.x - matrixB*ymin) / matrixA + matrixD*ymin + x0.y;
+                ymax = matrixC * (x - x0.x - matrixB*ymax) / matrixA + matrixD*ymax + x0.y;
+                if (ymax < ymin) std::swap(ymin,ymax);
+            } else {
+                double ymin_1, ymax_1;
+                adaptee->getYRange(ymin_1,ymax_1);
+                ymin = matrixC * (x - x0.x - matrixB*ymin) / matrixA + matrixD*ymin + x0.y;
+                ymax = matrixC * (x - x0.x - matrixB*ymax) / matrixA + matrixD*ymax + x0.y;
+                if (ymax < ymin) std::swap(ymin,ymax);
+                double xmin_1, xmax_1;
+                adaptee->getXRange(xmin_1,xmax_1);
+                ymin_1 = matrixC * xmin_1 + matrixD * (x - x0.x - matrixA*xmin_1) / matrixB + x0.y;
+                ymax_1 = matrixC * xmax_1 + matrixD * (x - x0.x - matrixA*xmax_1) / matrixB + x0.y;
+                if (ymax_1 < ymin_1) std::swap(ymin_1,ymax_1);
+                if (ymin_1 > ymin) ymin = ymin_1;
+                if (ymax_1 < ymax) ymax = ymax_1;
+            }
+            dbg<<"Non-axisymmetric adaptee\n";
+            dbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<std::endl;
+        }
     }
 
     // Specialization of fillKGrid is desired since the phase terms from shift 
@@ -915,10 +1052,6 @@ namespace galsim {
             fluxProduct = 1.;
             minMaxK = 0.;
             minStepK = 0.;
-            sumMinX = 0.;
-            sumMaxX = 0.;
-            sumMinY = 0.;
-            sumMaxY = 0.;
             isStillAxisymmetric = true;
         }
 
@@ -926,15 +1059,14 @@ namespace galsim {
         SBProfile* p=rhs.duplicate();
 
         // Keep track of where first new term is on list:
-        std::list<SBProfile*>::iterator newptr = plist.end();
+        Iter newptr = plist.end();
 
         // Add new terms(s) to the plist:
         SBConvolve *sbc = dynamic_cast<SBConvolve*> (p);
         if (sbc) {  
             // If rhs is an SBConvolve, copy its list here
             fluxScale *= sbc->fluxScale;
-            std::list<SBProfile*>::iterator pptr;
-            for (pptr = sbc->plist.begin(); pptr!=sbc->plist.end(); ++pptr) {
+            for (Iter pptr = sbc->plist.begin(); pptr!=sbc->plist.end(); ++pptr) {
                 if (newptr==plist.end()) {
                     plist.push_back((*pptr)->duplicate()); 
                     newptr = --plist.end();  // That was first new term
@@ -955,10 +1087,6 @@ namespace galsim {
             y0 += (*newptr)->centroid().y;
             if ( minMaxK<=0. || (*newptr)->maxK() < minMaxK) minMaxK = (*newptr)->maxK();
             if ( minStepK<=0. || ((*newptr)->stepK() < minStepK)) minStepK = (*newptr)->stepK();
-            sumMinX += (*newptr)->minX();
-            sumMaxX += (*newptr)->maxX();
-            sumMinY += (*newptr)->minY();
-            sumMaxY += (*newptr)->maxY();
             isStillAxisymmetric = isStillAxisymmetric && (*newptr)->isAxisymmetric();
             newptr++;
         }
@@ -967,7 +1095,7 @@ namespace galsim {
     void SBConvolve::fillKGrid(KTable& kt) const 
     {
         if (plist.empty()) kt.clear();
-        std::list<SBProfile*>::const_iterator pptr = plist.begin();
+        ConstIter pptr = plist.begin();
         (*pptr)->fillKGrid(kt);
         kt *= fluxScale;
         ++pptr;
@@ -985,19 +1113,19 @@ namespace galsim {
         public std::binary_function<double,double,double>
     {
     public:
-        ConvolveFunc(const SBProfile* p1, const SBProfile* p2, double x0, double y0) :
-            _p1(p1), _p2(p2), _x0(x0), _y0(y0) {}
+        ConvolveFunc(const SBProfile* p1, const SBProfile* p2, const Position<double>& pos) :
+            _p1(p1), _p2(p2), _pos(pos) {}
 
         double operator()(double x, double y) const 
         {
             return 
                 _p1->xValue(Position<double>(x,y)) *
-                _p2->xValue(Position<double>(_x0-x,_y0-y));
+                _p2->xValue(Position<double>(_pos.x-x,_pos.y-y));
         }
     private:
         const SBProfile* _p1;
         const SBProfile* _p2;
-        double _x0, _y0;
+        const Position<double>& _pos;
     };
 
     class YRegion :
@@ -1010,25 +1138,11 @@ namespace galsim {
         integ::IntRegion<double> operator()(double x) const
         {
             // First figure out each profiles y region separately.
-            // Note: if profile is axisymmetric, then maxY = maxR.
             double ymin1,ymax1;
-            if (_p1->isAxisymmetric()) {
-                double r = _p1->maxY();
-                ymax1 = sqrt(r*r-x*x);
-                ymin1 = -ymax1;
-            } else {
-                ymin1 = _p1->minY();
-                ymax1 = _p1->maxY();
-            }
+            _p1->getYRange(x,ymin1,ymax1);
             double ymin2,ymax2;
-            if (_p2->isAxisymmetric()) {
-                double r = _p2->maxY();
-                ymax2 = sqrt(r*r-x*x);
-                ymin2 = -ymax2;
-            } else {
-                ymin2 = _p2->minY();
-                ymax2 = _p2->maxY();
-            }
+            _p2->getYRange(_pos.x-x,ymin2,ymax2);
+
             // Then take the overlap relevant for the calculation:
             //     _p1->xValue(x,y) * _p2->xValue(_x0-x,_y0-y)
             dbg<<"p1's y range = "<<ymin1<<" ... "<<ymax1<<std::endl;
@@ -1037,7 +1151,9 @@ namespace galsim {
             double ymax = std::min(ymax1, _pos.y-ymin2);
             dbg<<"Y region for x = "<<x<<" = "<<ymin<<" ... "<<ymax<<std::endl;
             if (ymax < ymin) ymax = ymin;
-            return integ::IntRegion<double>(ymin,ymax,dbgout);
+            integ::IntRegion<double> reg(ymin,ymax,dbgout);
+            reg.useFXMap();
+            return reg;
         }
     private:
         const SBProfile* _p1;
@@ -1063,36 +1179,65 @@ namespace galsim {
         const double abserr = 1.e-6;
 
         dbg<<"Start RealSpaceConvolve for pos = "<<pos<<std::endl;
-        double x = pos.x;
-        double y = pos.y;
-        double xmin = std::max(p1->minX() , x-p2->maxX());
-        double xmax = std::min(p1->maxX() , x-p2->minX());
+        double xmin1, xmax1, xmin2, xmax2;
+        p1->getXRange(xmin1,xmax1);
+        p2->getXRange(xmin2,xmax2);
+        dbg<<"p1 range = "<<xmin1<<"  "<<xmax1<<std::endl;
+        dbg<<"p2 range = "<<xmin2<<"  "<<xmax2<<std::endl;
+
+        // Check for early exit
+        if (pos.x < xmin1 + xmin2 || pos.x > xmax1 + xmax2) {
+            dbg<<"x is outside range, so trivially 0\n";
+            return 0;
+        }
+
+        double ymin1, ymax1, ymin2, ymax2;
+        p1->getYRange(ymin1,ymax1);
+        p2->getYRange(ymin2,ymax2);
+        dbg<<"p1 range = "<<ymin1<<"  "<<ymax1<<std::endl;
+        dbg<<"p2 range = "<<ymin2<<"  "<<ymax2<<std::endl;
+        // Second check for early exit
+        if (pos.y < ymin1 + ymin2 || pos.y > ymax1 + ymax2) {
+            dbg<<"y is outside range, so trivially 0\n";
+            return 0;
+        }
+
+        double xmin = std::max(xmin1, pos.x - xmax2);
+        double xmax = std::min(xmax1, pos.x - xmin2);
+        dbg<<"xmin..xmax = "<<xmin<<" ... "<<xmax<<std::endl;
+
         if (p1->isAxisymmetric()) {
             // Update the above values based on the possibility of the circle 
             // crossing through the rectangle.
-            double ybottom = y-p2->maxY();
+            double ybottom = pos.y-ymax2;
             if (ybottom > 0) {
                 // Then check where circle passes through bottom edge:
-                double rmax1 = p1->maxY();
-                double xx = sqrt(rmax1*rmax1 - ybottom*ybottom);
+                // (xmax1 is used here as the radius, rmax1)
+                double xx = sqrt(xmax1*xmax1 - ybottom*ybottom);
                 if (xx < xmax) xmax = xx;
                 if (-xx > xmin) xmin = -xx;
             }
-            double ytop = y-p2->minY();
+            double ytop = pos.y-ymin2;
             if (ytop < 0) {
                 // Then check where circle passes through top edge:
-                double rmax1 = p1->maxY();
-                double xx = sqrt(rmax1*rmax1 - ytop*ytop);
+                // (xmax1 is used here as the radius, rmax1)
+                double xx = sqrt(xmax1*xmax1 - ytop*ytop);
                 if (xx < xmax) xmax = xx;
                 if (-xx > xmin) xmin = -xx;
             }
+            dbg<<"Updated to "<<xmin<<" ... "<<xmax<<std::endl;
         }
 
-        if (xmin >= xmax) { dbg<<"int is trivially 0\n"; return 0.; }
+        // Third check for early exit
+        if (xmin >= xmax) { 
+            dbg<<"p1 and p2 are disjoint, so trivially 0\n";
+            return 0.; 
+        }
 
-        ConvolveFunc conv(p1,p2,x,y);
+        ConvolveFunc conv(p1,p2,pos);
 
         integ::IntRegion<double> xreg(xmin,xmax,dbgout);
+        xreg.useFXMap();
         dbg<<"xreg = "<<xmin<<" ... "<<xmax<<std::endl;
 
         YRegion yreg(p1,p2,pos);
@@ -1115,10 +1260,6 @@ namespace galsim {
         else if (plist.size() > 2) 
             throw SBError("Real-space integration of more than 2 profiles is not implemented.");
         else {
-            if (pos.x < sumMinX) return 0.;
-            if (pos.x > sumMaxX) return 0.;
-            if (pos.y < sumMinX) return 0.;
-            if (pos.y > sumMaxY) return 0.;
             const SBProfile* p1 = plist.front();
             const SBProfile* p2 = plist.back();
             if (p2->isAxisymmetric())
@@ -1675,6 +1816,8 @@ namespace galsim {
             throw SBError("Unknown SBMoffat::RadiusType");
         }
         norm = flux/fluxFactor;
+        _maxR = maxRrD * rD;
+        _maxR_sq = _maxR * _maxR;
         _maxRrD_sq = maxRrD * maxRrD;
         _rD_sq = rD * rD;
 
