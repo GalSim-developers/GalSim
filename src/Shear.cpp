@@ -81,21 +81,22 @@ namespace galsim {
 
     Shear& Shear::operator+=(const Shear& s2) 
     {
-        double s1sq, s2sq, e1new;
-        s1sq = e1*e1+e2*e2;
+        double s1sq = e1*e1+e2*e2;
         if (s1sq==0.) { (*this)=s2; return *this;}
 
         hasMatrix = false;
 
-        s2sq = s2.e1*s2.e1+s2.e2*s2.e2;
+#ifndef NDEBUG
+        double s2sq = s2.e1*s2.e1+s2.e2*s2.e2;
+#endif
         assert(s1sq<=1. && s2sq<=1.); //addition requires a realizable shear.
 
         double denom=1.+e1*s2.e1 + e2*s2.e2;
         if (denom==0.) {e1=e2=0.; return *this;}
 
         double temp = 1.-std::sqrt(1.-s1sq);
-        e1new = e1 + s2.e1 + temp*(e1 * s2.e2 - e2 * s2.e1)*e2/s1sq;
-        e2    = e2 + s2.e2 + temp*(e2 * s2.e1 - e1 * s2.e2)*e1/s1sq;
+        double e1new = e1 + s2.e1 + temp*(e1 * s2.e2 - e2 * s2.e1)*e2/s1sq;
+        e2 = e2 + s2.e2 + temp*(e2 * s2.e1 - e1 * s2.e2)*e1/s1sq;
         e1 = e1new/denom;
         e2 /= denom;
 
