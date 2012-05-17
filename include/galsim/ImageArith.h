@@ -4,7 +4,30 @@
 
 namespace galsim {
 
-    class ImageError;
+    /**
+     *  @brief Exception class usually thrown by images.
+     */
+    class ImageError : public std::runtime_error {
+    public: 
+        ImageError(const std::string& m="") : 
+            std::runtime_error("Image Error: " + m) {}
+
+    };
+
+    /**
+     *  @brief Exception class thrown when out-of-bounds pixels are accessed on an image.
+     */
+    class ImageBoundsError : public ImageError {
+    public: 
+        ImageBoundsError(const std::string& m="") : 
+            ImageError("Access to out-of-bounds pixel " + m) {}
+
+        ImageBoundsError(const std::string& m, int min, int max, int tried);
+
+        ImageBoundsError(int x, int y, const Bounds<int> b);
+    };
+
+
     template <typename T> class AssignableToImage;
     template <typename T> class BaseImage;
     template <typename T> class Image;
