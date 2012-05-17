@@ -21,6 +21,7 @@ except ImportError:
 # define some variables etc.
 real_catalog_filename = 'data/real_galaxy_catalog_example.fits'
 image_dir = 'data'
+output_dir = 'output'
 good_psf_central_fwhm = 0.6 # arcsec; FWHM of smaller Gaussian in the double Gaussian for good seeing
 bad_psf_central_fwhm = 1.3 # arcsec; FWHM of smaller Gaussian in the double Gaussian for bad seeing
 central_psf_amp = 0.8 # relative contribution of inner Gaussian in the double Gaussian PSF
@@ -60,18 +61,18 @@ sim_image_bad_shear = galsim.simReal(real_galaxy, bad_epsf, pixel_scale, g1 = g1
 # write to files: original galaxy, original PSF, 2 target PSFs, 4 simulated images
 # note: will differ each time it is run, because we chose a random image
 orig_gal_img = real_galaxy.original_image.draw(dx = real_galaxy.pixel_scale)
-orig_gal_img.write(os.path.join(image_dir, 'demoreal.orig_gal.fits'), clobber = True)
+orig_gal_img.write(os.path.join(output_dir, 'demoreal.orig_gal.fits'), clobber = True)
 
 orig_psf_img = real_galaxy.original_PSF.draw(dx = real_galaxy.pixel_scale)
-orig_psf_img.write(os.path.join(image_dir, 'demoreal.orig_PSF.fits'), clobber = True)
+orig_psf_img.write(os.path.join(output_dir, 'demoreal.orig_PSF.fits'), clobber = True)
 
 good_epsf_img = good_epsf.draw(dx = pixel_scale)
-good_epsf_img.write(os.path.join(image_dir, 'demoreal.good_target_PSF.fits'), clobber = True)
+good_epsf_img.write(os.path.join(output_dir, 'demoreal.good_target_PSF.fits'), clobber = True)
 
 bad_epsf_img = bad_epsf.draw(dx = pixel_scale)
-bad_epsf_img.write(os.path.join(image_dir, 'demoreal.bad_target_PSF.fits'), clobber = True)
+bad_epsf_img.write(os.path.join(output_dir, 'demoreal.bad_target_PSF.fits'), clobber = True)
 
-sim_image_good_noshear.write(os.path.join(image_dir, 'demoreal.good_simulated_image.noshear.fits'), clobber = True)
-sim_image_good_shear.write(os.path.join(image_dir, 'demoreal.good_simulated_image.shear.fits'), clobber = True)
-sim_image_bad_noshear.write(os.path.join(image_dir, 'demoreal.bad_simulated_image.noshear.fits'), clobber = True)
-sim_image_bad_shear.write(os.path.join(image_dir, 'demoreal.bad_simulated_image.shear.fits'), clobber = True)
+sim_image_good_noshear.write(os.path.join(output_dir, 'demoreal.good_simulated_image.noshear.fits'), clobber = True)
+sim_image_good_shear.write(os.path.join(output_dir, 'demoreal.good_simulated_image.shear.fits'), clobber = True)
+sim_image_bad_noshear.write(os.path.join(output_dir, 'demoreal.bad_simulated_image.noshear.fits'), clobber = True)
+sim_image_bad_shear.write(os.path.join(output_dir, 'demoreal.bad_simulated_image.shear.fits'), clobber = True)
