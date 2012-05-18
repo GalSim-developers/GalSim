@@ -191,8 +191,8 @@ namespace galsim {
             if (n<2) throw TableError("Spline Table with only 1 entry");
             y2.resize(n);
             // End points 2nd-derivatives zero for natural cubic spline 
-            y2[0] = static_cast<V>(0);
-            y2[n-1] = static_cast<V>(0);
+            y2[0] = V(0);
+            y2[n-1] = V(0);
             // For 3 points second derivative at i=1 is simple
             if (n == 3){
 
