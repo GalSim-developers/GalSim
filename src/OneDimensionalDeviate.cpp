@@ -5,18 +5,24 @@
 
 namespace galsim {
 
+    ///////////   Magic Numbers ///////////
+
     // fractional error allowed on any flux integral:
     const double RELATIVE_ERROR = 1e-6;
-    // absolute error allowed (assumes the total flux is O(1)
+    // absolute error allowed [assumes the total flux is O(1)]
     const double ABSOLUTE_ERROR = 1e-8;
+
     // Range will be split into this many parts to bracket extrema
     const int RANGE_DIVISION_FOR_EXTREMA = 32;
+
     // Intervals with less than this fraction of probability are
     // ok to use dominant-sampling method.
     const double SMALL_FRACTION_OF_FLUX = 1e-4;
-    // Max range of allowed (abs value of) photon fluxes
+
+    // Max range of allowed (abs value of) photon fluxes within an Interval before rejection sampling is invoked
     const double ALLOWED_FLUX_VARIATION = 0.81;
 
+    // Wrapper class for doing integrals over annuli
     template <class F>
     class RTimesF: public std::unary_function<double,double> {
     public:
@@ -116,7 +122,7 @@ namespace galsim {
 
     double Interval::interpolateFlux(double fraction) const {
         // Find the x (or radius) value that encloses fraction
-        // of the flux in this Interval if the function is constant
+        // of the flux in this Interval if the function were constant
         // over the interval.
         if (_isRadial) {
             double rsq = _xLower*_xLower*(1.-fraction) + _xUpper*_xUpper*fraction;
@@ -127,6 +133,10 @@ namespace galsim {
         return 0.;      // Will never get here.
     }
 
+
+    // Select a photon from within the interval.  absFlux serves
+    // as an initial randomization, it should be uniformly
+    // distributed within _differentialFlux of the _cumulativeFlux at end of interval.
     void Interval::drawWithin(double absFlux, double& x, double& flux,
                                  UniformDeviate& ud) const {
         double fractionOfInterval = (_cumulativeFlux -  absFlux) 
@@ -162,6 +172,11 @@ namespace galsim {
         _fluxIsReady = true;
     }
 
+    // Divide an interval into ones that are sufficiently small.  It's small enough if either
+    // (a) The max/min FluxDensity ratio in the interval is small enough, i.e. close to constant, or
+    // (b) The total flux in the interval is below smallFlux.
+    // In the former case, photons will be selected by drawing from a uniform distribution and then
+    // adjusting weights by flux.  In latter case, rejection sampling will be used to select within interval.
     std::list<Interval> Interval::split(double smallFlux) {
         // Get the flux in this interval 
         checkFlux();
@@ -212,7 +227,10 @@ namespace galsim {
         _isRadial(isRadial)
     {
 
+        // Typedef for indices of standard containers, which don't like int values
         typedef std::vector<double>::size_type Index;
+
+        // First calculate total flux so we know when an interval is a small amt of flux
         for (Index iRange = 0; iRange < range.size()-1; iRange++) {
             // Integrate total flux (and sign) in each range
             Interval segment(fluxDensity,   
@@ -237,14 +255,12 @@ namespace galsim {
                              range[iRange+1],
                              extremum,
                              RANGE_DIVISION_FOR_EXTREMA)) {
-		/**/std::cerr << "Found extremum at " << extremum << std::endl;
                 // Do 2 ranges
                 {
                     Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial);
                     std::list<Interval> leftList = splitit.split(SMALL_FRACTION_OF_FLUX
                                                                 *totalAbsoluteFlux);
                     {
-                        /**/std::cerr << "Left side " << leftList.size() << " intervals" << std::endl;
                         double sum=0.;
                         for (std::list<Interval>::iterator i=leftList.begin(); i!=leftList.end(); ++i)
                             sum += i->getDifferentialFlux();
@@ -258,7 +274,6 @@ namespace galsim {
                     std::list<Interval> rightList = splitit.split(SMALL_FRACTION_OF_FLUX
                                                                 *totalAbsoluteFlux);
                     {
-                        /**/std::cerr << "Right side " << rightList.size() << " intervals" << std::endl;
                         double sum=0.;
                         for (std::list<Interval>::iterator i=rightList.begin(); i!=rightList.end(); ++i)
                             sum += i->getDifferentialFlux();
@@ -273,7 +288,6 @@ namespace galsim {
                 std::list<Interval> leftList = splitit.split(SMALL_FRACTION_OF_FLUX
                                                            *totalAbsoluteFlux);
                 {
-                    /**/std::cerr << "Split to " << leftList.size() << " intervals" << std::endl;
                     double sum=0.;
                     for (std::list<Interval>::iterator i=leftList.begin(); i!=leftList.end(); ++i)
                         sum += i->getDifferentialFlux();
@@ -283,7 +297,7 @@ namespace galsim {
                 intervalList.splice(intervalList.end(), leftList);
             }
         }
-        // Accumulate fluxes and put into set structure
+        // Accumulate fluxes and put into set structure.  std::set takes care of sorting & binary searching.
         double cumulativeFlux = 0.;
         for (typename std::list<Interval>::iterator i=intervalList.begin();
              i != intervalList.end();
@@ -299,8 +313,9 @@ namespace galsim {
         PhotonArray result(N);
         if (N==0) return result;
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
-        /**/std::cerr << "pos/neg flux: " << getPositiveFlux() << " " << getNegativeFlux() << std::endl;
         double fluxPerPhoton = totalAbsoluteFlux / N;
+
+        // For each photon, first decide which Interval it's in, the drawWithin the interval.
         for (int i=0; i<N; i++) {
             if (_isRadial) {
 #ifdef USE_COS_SIN

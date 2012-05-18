@@ -407,7 +407,7 @@ namespace galsim {
     void SBInterpolatedImage::checkReadyToShoot() const {
         if (readyToShoot) return;
 
-        // Build the sets holding cumulative fluxes
+        // Build the sets holding cumulative fluxes of all Pixels
         checkXsum();
         positiveFlux = 0.;
         negativeFlux = 0.;

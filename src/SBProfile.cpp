@@ -1719,7 +1719,8 @@ namespace galsim {
     template <class T>
     void SBProfile::drawShoot(ImageView<T> img, int N, UniformDeviate& u) const 
     {
-        img.fill(0.);
+        // Clear image before adding photons, for consistency with draw() methods.
+        img.fill(0.);  
         PhotonArray pa = shoot(N, u);
         pa.addTo(img);
     }
@@ -1787,6 +1788,8 @@ namespace galsim {
 
     PhotonArray SBDistort::shoot(int N, UniformDeviate& u) const 
     {
+        // Simple job here: just remap coords of each photon, then change flux
+        // If there is overall magnification in the transform
         PhotonArray result = adaptee->shoot(N,u);
         for (int i=0; i<result.size(); i++) {
             Position<double> xy = fwd(Position<double>(result.getX(i),
@@ -1809,7 +1812,7 @@ namespace galsim {
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
             
-            // Then map it to desired Gaussian
+            // Then map it to desired Gaussian with analytic transformation
             double factor = sigma*sqrt( -2.*log(rsq)/rsq);
             result.setPhoton(i,factor*xu, factor*yu, fluxPerPhoton);
         }
@@ -1818,6 +1821,7 @@ namespace galsim {
 
     PhotonArray SBSersic::shoot(int N, UniformDeviate& ud) const
     {
+        // Get photons from the SersicInfo structure, rescale flux and size for this instance
         PhotonArray result = info->shoot(N,ud);
         result.scaleFlux(flux);
         result.scaleXY(re);
@@ -1850,7 +1854,7 @@ namespace galsim {
                 r = r + (1+r)*dy/r;
                 dy = y - r + log(1+r);
             }
-            // Draw another random for azimuthal angle:
+            // Draw another random for azimuthal angle (could use the unit-circle trick here...)
             double theta = 2*M_PI*u();
             result.setPhoton(i,r0*r*cos(theta), r0*r*sin(theta), fluxPerPhoton);
         }
@@ -1859,8 +1863,10 @@ namespace galsim {
 
     PhotonArray SBAiry::shoot(int N, UniformDeviate& u) const
     {
+        // Use the OneDimensionalDeviate to sample from scale-free distribution
         checkSampler();
         PhotonArray pa=_sampler->shoot(N, u);
+        // Then rescale for this flux & size
         pa.scaleFlux(flux);
         pa.scaleXY(1./D);
         return pa;

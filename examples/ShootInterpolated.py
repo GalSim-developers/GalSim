@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 """
 Simple test of shooting photons to sample from an existing pixelized image.
+Usage: ShootInterpolate.py <input FITS> <output FITS> <dx> <dim> <nPhotons> [e1] [e2]
+<input FITS> is name of the input FITS image, whose pixel scale will be treated as 1 unit.
+<output FITS> is name of FITS file image to be produced by sampling input
+dx is pixel scale for output image
+dim is number of pixels per side for output image
+nPhotons is number of photons to shoot through the image
+e1 and e2 are optional shear to be applied while shooting
 """
 
 # This machinery lets us run Python examples even though they aren't positioned
@@ -16,19 +23,24 @@ except ImportError:
 
 def main(argv):
 
-    # translation from C++ by Jim; comments after this one are in Gary's voice
 
-    #linear = galsim.Lanczos(5);
+    # Try different interpolants!
+    #interp1d = galsim.Linear;
+    #interp1d = galsim.Lanczos(5,true);
     interp1d = galsim.Quintic();
     interp2d = galsim.InterpolantXY(interp1d)
 
-    inname = argv[1]
-    outname = argv[2]
-    dxOut = float(argv[3])
-    dim = int(argv[4])
-    nPhotons = int(argv[5])
-    e1 = float(argv[6]) if len(argv) > 6 else 0.
-    e2 = float(argv[7]) if len(argv) > 7 else 0.
+    try:
+        inname = argv[1]
+        outname = argv[2]
+        dxOut = float(argv[3])
+        dim = int(argv[4])
+        nPhotons = int(argv[5])
+        e1 = float(argv[6]) if len(argv) > 6 else 0.
+        e2 = float(argv[7]) if len(argv) > 7 else 0.
+    except Exception as err:
+        print __doc__
+        raise err
 
     galaxyImg = galsim.fits.read(inname)
     galaxy = galsim.SBInterpolatedImage(galaxyImg, interp2d, 1., 1.0)

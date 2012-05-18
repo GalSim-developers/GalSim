@@ -14,13 +14,21 @@ namespace galsim {
 
     class Interpolant;
 
+    /**
+     * @brief Class to interface an interpolant to the `OneDimensionalDeviate` class for photon-shooting
+     */
     class InterpolantFunction: public FluxDensity {
     public:
+        /**
+         * @brief Constructor
+         * @param[in] interp Interpolant (one-d) that we'll want to sample
+         */
         InterpolantFunction(const Interpolant& interp): _interp(interp) {}
+        /// @brief operator() will return the xval() of the `Interpolant`
         double operator()(double x) const;
         ~InterpolantFunction() {}
     private:
-        const Interpolant& _interp;
+        const Interpolant& _interp;  ///< Interpolant being wrapped
     };
 
     /** 
@@ -37,12 +45,13 @@ namespace galsim {
     public:
         /// @brief Constructor
         Interpolant(): _interp(*this), _sampler(0) {}
-        /// @brief Destructor (virtual for base class)
+
+        /// @brief Copy constructor: does not copy photon sampler, will need to rebuild.
+        Interpolant(const Interpolant& rhs): _interp(*this), _sampler(0) {}
+
+        /// @brief Destructor (virtual for base class).  Deletes photon sampler if it has been built.
         virtual ~Interpolant() {if (_sampler) delete _sampler;}
 
-        // Extent of interpolant in real space and in frequency space.
-        // Note that x units are pixels and u units are cycles per pixel.
-        // Ranges are assumed to be same in x as in y.
         /**
          * @brief Maximum extent of interpolant from origin in x space (pixels)
          * @returns Range of non-zero values of interpolant.
@@ -50,12 +59,12 @@ namespace galsim {
         virtual double xrange() const =0;
         /**
          * @brief Maximum extent of interpolant from origin in u space (cycles per pixel)
-         * @returns Range of non-zero values of interpolant in u space.
+         * @returns Range of non-zero values of interpolant in u space
          */
         virtual double urange() const =0;
         /**
          * @brief Value of interpolant in real space
-         * @params[in] x Distance from sample (pixels)
+         * @param[in] x Distance from sample (pixels)
          * @returns Value of interpolant
          */
         virtual double xval(double x) const =0;
@@ -63,14 +72,14 @@ namespace galsim {
          * @brief Value of interpolant, wrapped at period N.
          *
          * This returns sum_{j=-inf}^{inf} xval(x + jN):
-         * @params[in] x Distance from sample (pixels)
-         * @params[in] N Wrapping period (pixels)
+         * @param[in] x Distance from sample (pixels)
+         * @param[in] N Wrapping period (pixels)
          * @returns Value of interpolant after wrapping
          */
         virtual double xvalWrapped(double x, int N) const;
         /**
          * @brief Value of interpolant in frequency space
-         * @params[in] u Frequency for evaluation (cycles per pixel)
+         * @param[in] u Frequency for evaluation (cycles per pixel)
          * @returns Value of interpolant, normalized so uval(0) = 1 for flux-conserving interpolation.
          */
         virtual double uval(double u) const =0;
@@ -90,11 +99,12 @@ namespace galsim {
          */
         virtual bool isExactAtNodes() const { return true; }
 
-        // Photon-shooting routines:
+        ////////// Photon-shooting routines:
         /**
          * @brief Return the integral of the positive portions of the kernel
          *
-         * Should return the default value 1 unless the kernel has negative portions.
+         * Should return 1 unless the kernel has negative portions.  Default is to ask
+         * the numerical sampler for its stored value.
          *
          * @returns Integral of positive portions of kernel
          */
@@ -105,7 +115,8 @@ namespace galsim {
         /**
          * @brief Return the (absolute value of) integral of the negative portions of the kernel
          *
-         * Should return the default value 0 unless the kernel has negative portions.
+         * Should return 0 unless the kernel has negative portions.   Default is to ask
+         * the numerical sampler for its stored value.
          *
          * @returns Integral of abs value of negative portions of kernel
          */
@@ -116,13 +127,14 @@ namespace galsim {
         /**
          * @brief Return array of displacements drawn from this kernel.  
          *
-         * Since Interpolant is 1d, will use only x direction of PhotonArray.  It will be assumed
+         * Since Interpolant is 1d, will use only x array of PhotonArray.  It will be assumed
          * that photons returned are randomly ordered (no need to shuffle them).  Also assumed
-         * that all photons will have nearly equal absolute value of flux.  Apart from possible shot
-         * noise in number of positive and negative photons, the total flux returned will be unity.
+         * that all photons will have nearly equal absolute value of flux.  Total flux returned
+         * may not equal 1 due to shot noise in negative/positive photons, and small fluctuations
+         * in photon weights.
          *
-         * @params[in] N number of photons to shoot
-         * @params[in] ud UniformDeviate used to generate random values
+         * @param[in] N number of photons to shoot
+         * @param[in] ud UniformDeviate used to generate random values
          * @returns a PhotonArray containing the vector of displacements for interpolation kernel.
          */
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const {
@@ -130,10 +142,13 @@ namespace galsim {
             return _sampler->shoot(N, ud);
         }
     protected:
-        InterpolantFunction _interp;
-        mutable OneDimensionalDeviate* _sampler;
+        InterpolantFunction _interp; ///< The function to interface the Interpolant to sampler
+        mutable OneDimensionalDeviate* _sampler;  ///< Class that draws photons from this Interpolant
+        /// @brief Allocate photon sampler and do all of its pre-calculations
         virtual void checkSampler() const {
             if (_sampler) return;
+            // Will assume by default that the Interpolant kernel changes sign at non-zero
+            // integers, with one extremum in each integer range.
             int nKnots = static_cast<int> (ceil(xrange()));
             std::vector<double> ranges(2*nKnots);
             for (int i=1; i<=nKnots; i++) {
@@ -145,7 +160,7 @@ namespace galsim {
         }
     };
 
-    // Two-dimensional version
+    ///< @brief Two-dimensional version of the `Interpolant` interface.  Methods have same meaning as in 1d
     class Interpolant2d 
     {
     public:
@@ -162,24 +177,37 @@ namespace galsim {
         virtual bool isExactAtNodes() const { return true; }
 
         // Photon-shooting routines:
-        // Return the integral of the positive portions of the kernel (default=1.)
+        /// @brief Return the integral of the positive portions of the kernel (default=1.)
         virtual double getPositiveFlux() const {return 1.;}
-        // Return the (abs value of) integral of the negative portions of the kernel (default=0.)
+        /// @brief Return the (abs value of) integral of the negative portions of the kernel (default=0.)
         virtual double getNegativeFlux() const {return 0.;}
-        // Return array of displacements drawn from this kernel.
+        /// @brief Return array of displacements drawn from this kernel.  Default is to throw an runtime_error
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const {
             throw std::runtime_error("Interpolant2d::shoot() not implemented for this kernel");
             return PhotonArray(0);
         }
     };
 
-    // Instance of 2d that is product of 1d in x and y
-    // Note that it only refers to the 1d function, does NOT own it
+    /**
+     * @brief An interpolant that is product of same 1d `Interpolant` in x and y
+     *
+     * Note that it only refers to the 1d function, does *not* own it, so the 1d must
+     * be kept in existence.  Typically will create a given `Interpolant` once and use
+     * for the whole program.
+     */
     class InterpolantXY : public Interpolant2d 
     {
     public:
+        /**
+         * @brief Constructor
+         *
+         * Note that the referenced `Interpolant` is not copied, it must stay in existence.
+         * @param[in] i1d_ One-dimensional `Interpolant` to be applied to x and y coordinates.
+         */
         InterpolantXY(const Interpolant& i1d_) : i1d(i1d_) {}
+        /// @brief Destructor
         ~InterpolantXY() {}
+        // All of the calls below implement base class methods.
         double xrange() const { return i1d.xrange(); }
         double urange() const { return i1d.urange(); }
         double xval(double x, double y) const { return i1d.xval(x)*i1d.xval(y); }
@@ -194,26 +222,55 @@ namespace galsim {
         double getNegativeFlux() const;
         PhotonArray shoot(int N, UniformDeviate& ud) const;
 
-        // Give access to 1d functions for more efficient 2d interps:
+        /**
+         * @brief Access the 1d interpolant functions for more efficient 2d interps:
+         * @param[in] x 1d argument
+         * @returns 1d result
+         */
         double xval1d(double x) const { return i1d.xval(x); }
+        /**
+         * @brief Access the 1d interpolant functions for more efficient 2d interps:
+         * @param[in] x 1d argument
+         * @param[in] N wrapping period
+         * @returns 1d result, wrapped at period N
+         */
         double xvalWrapped1d(double x, int N) const { return i1d.xvalWrapped(x,N); }
+        /**
+         * @brief Access the 1d interpolant functions for more efficient 2d interps:
+         * @param[in] u 1d argument
+         * @returns 1d result
+         */
         double uval1d(double u) const { return i1d.uval(u); }
+        /**
+         * @brief Access the 1d interpolant 
+         * @returns Pointer to the 1d `Interpolant` that this class uses.
+         */
         const Interpolant* get1d() const {return &i1d;}
 
     private:
-        const Interpolant& i1d;
+        const Interpolant& i1d;  ///< The 1d function used in both axes here.
     };
 
     // Some functions we will want: 
-    // Note that sinc is defined here as sin(Pi*x) / (Pi*x).
+    /**
+     * @brief sinc function, defined here as sin(Pi*x) / (Pi*x).
+     * @param[in] x sinc argument
+     * @returns sinc function
+     */
     inline double sinc(double x) 
     {
         if (std::abs(x)<0.001) return 1.- M_PI*M_PI*x*x/6.;
         else return std::sin(M_PI*x)/(M_PI*x);
     }
 
-    // Clever things from Daniel: integral of sin(t)/t from 0 to x
-    // Note the official definition does not have pi multiplying t.
+    /**
+     * @brief Function returning integral of sinc function.
+     *
+     * Clever things from Daniel: integral of sin(t)/t from 0 to x.
+     * Note the official definition does not have pi multiplying t.
+     * @param[in] x Upper limit of integral
+     * @returns Integral of sin(t)/t from 0 to x (no pi factors)
+     */
     inline double Si(double x) 
     {
         double x2=x*x;
@@ -260,6 +317,10 @@ namespace galsim {
     class Delta : public Interpolant 
     {
     public:
+        /**
+         * @brief Constructor
+         * @param[in] width Width of tiny boxcar used to approximate delta function in real space.
+         */
         Delta(double width=1e-3) : _width(width) {}
         ~Delta() {}
         double xrange() const { return 0.; }
@@ -279,12 +340,19 @@ namespace galsim {
         double _width;
     };
 
-    // ****** Nearest neighbor interpolation: boxcar *****
-    // Tolerance determines how far onto sinc wiggles the uval will go.
-    // Very far, by default!
+    /**
+     * @brief Nearest-neighbor interpolation: boxcar 
+     *
+     * Tolerance determines how far onto sinc wiggles the uval will go.
+     * Very far, by default!
+     */
     class Nearest : public Interpolant 
     {
     public:
+        /**
+         * @brief Constructor
+         * @param[in] tol Tolerance determines how far onto sinc wiggles the uval will go. Very far, by default!
+         */
         Nearest(double tol=1e-3) : tolerance(tol) {}
         ~Nearest() {}
         double getTolerance() const { return tolerance; }
@@ -301,17 +369,22 @@ namespace galsim {
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const {return 1.;}
         double getNegativeFlux() const {return 0.;}
+        /// @brief Nearest-neighbor interpolant photon shooting is a simple UniformDeviate call.
         PhotonArray shoot(int N, UniformDeviate& ud) const;
     private:
         double tolerance;
     };
 
-    // ****** Sinc interpolation: inverse of Nearest
-    // Tolerance determines how far onto sinc wiggles the xval will go.
-    // Very far, by default!
+    /** 
+     *@brief Sinc interpolation: inverse of Nearest-neighbor
+     */
     class SincInterpolant : public Interpolant 
     {
     public:
+        /**
+         * @brief Constructor
+         * @param[in] tol Tolerance determines how far onto sinc wiggles the xval will go. Very far, by default!
+         */
         SincInterpolant(double tol=1e-3) : tolerance(tol) {}
         ~SincInterpolant() {}
         double getTolerance() const { return tolerance; }
@@ -336,13 +409,26 @@ namespace galsim {
                 return std::sin(x) / (N*std::sin(x/N));
             }
         }
+        /// @brief Photon-shooting will be disabled for sinc function since wiggles will make it crazy
+        PhotonArray shoot(int N, UniformDeviate& ud) const {
+            throw std::runtime_error("Photon shooting is not practical with sinc Interpolant");
+            return PhotonArray(N);
+        }
     private:
         double tolerance;
     };
 
+    /**
+     * @brief Linear interpolant
+     *
+     */
     class Linear : public Interpolant 
     {
     public:
+        /**
+         * @brief Constructor
+         * @param[in] tol Tolerance determines how far onto sinc^2 wiggles the kval will go. Very far, by default!
+         */
         Linear(double tol=1e-3) : tolerance(tol) {}
         ~Linear() {}
         double getTolerance() const { return tolerance; }
@@ -358,24 +444,34 @@ namespace galsim {
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const {return 1.;}
         double getNegativeFlux() const {return 0.;}
+        /// @brief Linear interpolant has fast photon-shooting by adding two uniform deviates per axis.
         PhotonArray shoot(int N, UniformDeviate& ud) const;
     private:
         double tolerance;
     };
 
-    // The Lanczos interpolation filter.
-    // Need to choose its range n on input, and whether you want to have
-    // it conserve flux (so that it's not quite Lanczos anymore).
+    /**
+     * @brief The Lanczos interpolation filter, nominally sinc(x)*sinc(x/n), truncated at +-n.
+     */
     class Lanczos : public Interpolant 
     {
     public:
+        /**
+         * @brief Constructor
+         *
+         * Note that pure Lanczos, when interpolating a set of constant-valued samples, does
+         * not return this constant.  Setting fluxConserve tweaks the function so that it
+         * conserves value of constant (DC) input data.
+         * @param[in] n_ Filter order; must be given on input and cannot be changed.  
+         * @param[in] fluxConserve_ Set true to adjust filter to be exact for constant inputs.
+         * @param[in] tol Sets accuracy and extent of Fourier transform.
+         */
         Lanczos(int n_, bool fluxConserve_=false, double tol=1e-3) :  
             n(n_), fluxConserve(fluxConserve_), tolerance(tol), tab(Table<double,double>::spline) 
         { setup(); }
 
         ~Lanczos() {}
 
-        // tol is error level desired for the Fourier transform
         double getTolerance() const { return tolerance; }
         double xrange() const { return range; }
         double urange() const { return uMax; }
@@ -399,25 +495,32 @@ namespace galsim {
         }
         double uCalc(double u) const;
     private:
-        double n; // Note saving as double since it's used mostly this way.
-        double range; // Reduce range slightly from n so we're not using zero-valued endpoints.
-        bool fluxConserve;   
-        double tolerance;    
-        double uMax;
-        double u1; // coefficient for flux correction
-        Table<double,double> tab;
+        double n; ///< Actually storing 2n, since it's used mostly this way.
+        double range; ///< Reduce range slightly from n so we're not using zero-valued endpoints.
+        bool fluxConserve; ///< Set to insure conservation of constant (sky) flux
+        double tolerance;  ///< k-space accuracy parameter
+        double uMax;  ///< truncation point for Fourier transform
+        double u1; ///< coefficient for flux correction
+        Table<double,double> tab; ///< Table for Fourier transform
         void setup();
     };
 
-    // Cubic interpolator exact to 3rd order Taylor expansion
-    // From R. G. Keys , IEEE Trans. Acoustics, Speech, & Signal Proc 29, p 1153, 1981
-
+    /**
+     * @brief  Cubic interpolator exact to 3rd order Taylor expansion
+     *
+     * From R. G. Keys , IEEE Trans. Acoustics, Speech, & Signal Proc 29, p 1153, 1981
+     */
     class Cubic : public Interpolant 
     {
     public:
+        /**
+         * @brief Constructor
+         *
+         * @param[in] tol Sets accuracy and extent of Fourier transform.
+         */
         Cubic(double tol=1e-4) : tolerance(tol), tab(Table<double,double>::spline) { setup(); }
         ~Cubic() {}
-        // tol is error level desired for the Fourier transform
+
         double getTolerance() const { return tolerance; }
         double xrange() const { return range; }
         double urange() const { return uMax; }
@@ -435,24 +538,32 @@ namespace galsim {
         }
         double uCalc(double u) const;
 
+        /// @brief Override numerical calculation with known analytic integral
 	double getPositiveFlux() const {return 13./12.;}
+        /// @brief Override numerical calculation with known analytic integral
 	double getNegativeFlux() const {return 1./12.;}
-//**        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
     private:
-        double range; // Reduce range slightly from n so we're not using zero-valued endpoints.
+        double range; ///< x range, reduced slightly from n=2 so we're not using zero-valued endpoints.
         double tolerance;    
-        double uMax;
-        Table<double,double> tab;
+        double uMax;  ///< Truncation point for Fourier transform
+        Table<double,double> tab; ///< Tabulated Fourier transform
         void setup();
     };
 
-    // Cubic interpolator exact to 3rd order Taylor expansion
-    // From R. G. Keys , IEEE Trans. Acoustics, Speech, & Signal Proc 29, p 1153, 1981
+    /**
+     * @brief Piecewise-quintic polynomial interpolant, ideal for k-space interpolation
+     *
+     * See Bernstein & Gruen (2012) for details
+     */
 
     class Quintic : public Interpolant 
     {
     public:
+        /**
+         * @brief Constructor
+         * @param[in] tol Sets accuracy and extent of Fourier transform.
+         */
         Quintic(double tol=1e-4) : tolerance(tol), tab(Table<double,double>::spline) { setup(); }
         ~Quintic() {}
         // tol is error level desired for the Fourier transform
@@ -474,12 +585,12 @@ namespace galsim {
         }
         double uCalc(double u) const;
     protected:
-        // Override default checkSampler because Quintic filter has sign change in outer interval
+        /// @brief Override default sampler configuration because Quintic filter has sign change in outer interval
         virtual void checkSampler() const {
             if (_sampler) return;
             std::vector<double> ranges(8);
             ranges[0] = -3.;
-            ranges[1] = -(25.+sqrt(31.))/11.;
+            ranges[1] = -(25.+sqrt(31.))/11.;  // This is the extra zero-crossing
             ranges[2] = -2.;
             ranges[3] = -1.;
             for (int i=0; i<4; i++)
