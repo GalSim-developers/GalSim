@@ -5,8 +5,8 @@ import galsim
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
 class GSObject:
-    """Base class for defining the interface with which all GalSim Objects access their shared 
-    methods and attributes, particularly those from the C++ SBProfile classes.
+    """@brief Base class for defining the interface with which all GalSim Objects access their
+    shared methods and attributes, particularly those from the C++ SBProfile classes.
     """
     def __init__(self, SBProfile):
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
@@ -37,25 +37,36 @@ class GSObject:
 
     # Make a copy of an object
     def copy(self):
+        """@returns A copy of an object as the SBProfile attribute of a new GSObject instance.
+        """
         return GSObject(self.SBProfile.duplicate())
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
     #
-    # TODO: add method-specific docstrings later if we go for this overall layout
     def maxK(self):
-        maxk = self.SBProfile.maxK()
-        return maxk
+        """@returns Value of k beyond which aliasing can be neglected.
+        """
+        return self.SBProfile.maxK()
 
     def nyquistDx(self):
+        """@returns Image pixel spacing that does not alias maxK.
+        """
         return self.SBProfile.nyquistDx()
 
     def stepK(self):
+        """@returns Sampling in k space necessary to avoid folding of image in x space.
+        """
         return self.SBProfile.stepK()
 
     def isAxisymmetric(self):
+        """@returns True if axially symmetric: affects efficiency of evaluation.
+        """
         return self.SBProfile.isAxisymmetric()
 
     def isAnalyticX(self):
+        """@returns True if real-space values can be determined immediately at any position without
+        requiring a Discrete Fourier Transform.
+        """
         return self.SBProfile.isAnalyticX()
 
     # This method does not seem to be wrapped from C++
@@ -63,17 +74,23 @@ class GSObject:
     # return self.SBProfile.isAnalyticK()
 
     def centroid(self):
+        """@returns The (x, y) centroid of an object as a Position.
+        """
         return self.SBProfile.centroid()
 
     def setFlux(self, flux=1.):
+        """@brief Set the flux of the object.
+        """
         self.SBProfile.setFlux(flux)
         return
 
     def getFlux(self):
+        """@returns The flux of the object.
+        """
         return self.SBProfile.getFlux()
 
     def applyDistortion(self, ellipse):
-        """Apply a galsim.Ellipse distortion to this object.
+        """@brief Apply a galsim.Ellipse distortion to this object.
 
         galsim.Ellipse instances can be generated via
 
@@ -84,27 +101,27 @@ class GSObject:
         GSObject.__init__(self, self.SBProfile.distort(ellipse))
         
     def applyShear(self, g1, g2):
-        """Apply a (g1, g2) shear to this object, where |g| = (a-b)/(a+b).
+        """@brief Apply a (g1, g2) shear to this object, where |g| = (a-b)/(a+b).
         """
         e1, e2 = _g1g2_to_e1e2(g1, g2)
         GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
 
     def applyRotation(self, theta):
-        """Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
+        """@brief Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         GSObject.__init__(self, self.SBProfile.rotate(theta))
         
     def applyShift(self, dx, dy):
-        """Apply a (dx, dy) shift to this object.
+        """@brief Apply a (dx, dy) shift to this object.
         """
         GSObject.__init__(self, self.SBProfile.shift(dx, dy))
 
     # Also add methods which create a new GSObject with the transformations applied...
     #
     def createDistorted(self, ellipse):
-        """Create a new GSObject by applying a galsim.Ellipse distortion.
+        """@returns A new GSObject by applying a galsim.Ellipse distortion.
 
         galsim.Ellipse instances can be generated via
 
@@ -115,24 +132,28 @@ class GSObject:
         return GSObject(self.SBProfile.distort(ellipse))
 
     def createSheared(self, g1, g2):
-        """Create a new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
+        """@returns A new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
         """
         e1, e2 = _g1g2_to_e1e2(g1, g2)
         return GSObject(self.SBProfile.distort(galsim.Ellipse(e1,e2)))
 
     def createRotated(self, theta):
-        """Create a new GSObject by applying a rotation theta (Angle object, +ve anticlockwise).
+        """@returns A new GSObject by applying a rotation theta (Angle object, +ve anticlockwise).
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         return GSObject(self.SBProfile.rotate(theta))
         
     def createShifted(self, dx, dy):
-        """Create a new GSObject by applying a (dx, dy) shift.
+        """@returns A new GSObject by applying a (dx, dy) shift.
         """
         return GSObject(self.SBProfile.shift(dx, dy))
 
     def draw(self, image=None, dx=0., wmult=1):
+        """@returns A drawn Image of the object, with bounds optionally set by an input Image.
+
+        TODO: describe dx, wmult.
+        """
     # Raise an exception here since C++ is picky about the input types
         if type(wmult) != int:
             raise TypeError("Input wmult should be an int")
@@ -155,7 +176,7 @@ class GSObject:
 # Define "hidden" convenience function for going from (g1, g2) -> (e1, e2), used by two methods
 # in the GSObject class:
 def _g1g2_to_e1e2(g1, g2):
-    """Convenience function for going from (g1, g2) -> (e1, e2), used by two methods in the 
+    """@brief Convenience function for going from (g1, g2) -> (e1, e2), used by two methods in the 
     GSObject class.
     """
     # SBProfile expects an e1,e2 distortion, rather than a shear,
@@ -190,7 +211,7 @@ def _g1g2_to_e1e2(g1, g2):
 # "SBProfile", which can be queried for type as desired.
 #
 class Gaussian(GSObject):
-    """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
+    """@brief GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
     """
     def __init__(self, flux=1., half_light_radius=None, sigma=None, fwhm=None):
         GSObject.__init__(self, galsim.SBGaussian(flux=flux, half_light_radius=half_light_radius, 
@@ -206,7 +227,7 @@ class Gaussian(GSObject):
 
 
 class Moffat(GSObject):
-    """GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
+    """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
     def __init__(self, beta, truncationFWHM=2., flux=1.,
                  half_light_radius=None, scale_radius=None, fwhm=None):
@@ -219,7 +240,7 @@ class Moffat(GSObject):
 
 
 class Sersic(GSObject):
-    """GalSim Sersic, which has an SBSersic in the SBProfile attribute.
+    """@brief GalSim Sersic, which has an SBSersic in the SBProfile attribute.
     """
     def __init__(self, n, flux=1., half_light_radius=None):
         GSObject.__init__(self, galsim.SBSersic(n, flux=flux, half_light_radius=half_light_radius))
@@ -227,7 +248,7 @@ class Sersic(GSObject):
 
 
 class Exponential(GSObject):
-    """GalSim Exponential, which has an SBExponential in the SBProfile attribute.
+    """@brief GalSim Exponential, which has an SBExponential in the SBProfile attribute.
     """
     def __init__(self, flux=1., half_light_radius=None, scale_radius=None):
         GSObject.__init__(self, galsim.SBExponential(flux=flux, half_light_radius=half_light_radius,
@@ -236,7 +257,7 @@ class Exponential(GSObject):
 
 
 class DeVaucouleurs(GSObject):
-    """GalSim De-Vaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
+    """@brief GalSim De-Vaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
     """
     def __init__(self, flux=1., half_light_radius=None):
         GSObject.__init__(self, galsim.SBDeVaucouleurs(flux=flux, 
@@ -245,7 +266,7 @@ class DeVaucouleurs(GSObject):
 
 
 class Airy(GSObject):
-    """GalSim Airy, which has an SBAiry in the SBProfile attribute.
+    """@brief GalSim Airy, which has an SBAiry in the SBProfile attribute.
     """
     def __init__(self, D=1., obs=0., flux=1.):
         GSObject.__init__(self, galsim.SBAiry(D=D, obs=obs, flux=flux))
@@ -253,7 +274,7 @@ class Airy(GSObject):
 
 
 class Pixel(GSObject):
-    """GalSim Pixel, which has an SBBox in the SBProfile attribute.
+    """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
     """
     def __init__(self, xw=None, yw=None, flux=1.):
         if yw is None:
@@ -324,7 +345,7 @@ class OpticalPSF(GSObject):
 
 
 class Add(GSObject):
-    """Base class for defining the python interface to the SBAdd C++ class.
+    """@brief Base class for defining the python interface to the SBAdd C++ class.
     """
     def __init__(self, *args):
         # This is a workaround for the fact that Python doesn't allow multiple constructors.
@@ -424,7 +445,8 @@ object_param_dict = {"Gaussian":      { "required" : (),
 
 
 class AttributeDict(object):
-    """Dictionary class that allows for easy initialization and refs to key values via attributes.
+    """@brief Dictionary class that allows for easy initialization and refs to key values via
+    attributes.
 
     NOTE: Modified a little from Jim's bot.git AttributeDict class  (Jim, please review!) so that...
 
@@ -473,8 +495,8 @@ class AttributeDict(object):
 
 
 class Config(AttributeDict):
-    """Config class that is basically a renamed AttributeDict, and allows for easy initialization
-    and refs to key values via attributes.
+    """@brief Config class that is basically a renamed AttributeDict, and allows for easy
+    initialization and refs to key values via attributes.
     """
     def __init__(self):
         AttributeDict.__init__(self)
