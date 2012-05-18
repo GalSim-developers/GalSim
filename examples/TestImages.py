@@ -25,7 +25,7 @@ outDir = os.path.join('output','testImage.')
 bulge2Total = [0.0, 1.0/3, 2.0/3, 1.0]
 bulgeEllip = [0.2]
 diskEllip = [0.2, 0.45, 0.7]
-invSN = [0.02]
+invSN = [0.01]
 nRealization = [10]
 if len(invSN) is not len(nRealization):
     raise RuntimeError("Grids in inverse S/N and number of noise realizations do not have same size!")
