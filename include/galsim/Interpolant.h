@@ -199,7 +199,7 @@ namespace galsim {
     {
     public:
         Lanczos(int n_, bool fluxConserve_=false, double tol=1e-3) :  
-            n(n_), fluxConserve(fluxConserve_), tolerance(tol), tab(Table<double,double>::spline) 
+            n(n_), fluxConserve(fluxConserve_), tolerance(tol), tab(Table<double,double>::nrspline) 
         { setup(); }
 
         ~Lanczos() {}
@@ -244,7 +244,7 @@ namespace galsim {
     class Cubic : public Interpolant 
     {
     public:
-        Cubic(double tol=1e-4) : tolerance(tol), tab(Table<double,double>::spline) { setup(); }
+        Cubic(double tol=1e-4) : tolerance(tol), tab(Table<double,double>::nrspline) { setup(); }
         ~Cubic() {}
         // tol is error level desired for the Fourier transform
         double getTolerance() const { return tolerance; }
@@ -277,7 +277,7 @@ namespace galsim {
     class Quintic : public Interpolant 
     {
     public:
-        Quintic(double tol=1e-4) : tolerance(tol), tab(Table<double,double>::spline) { setup(); }
+        Quintic(double tol=1e-4) : tolerance(tol), tab(Table<double,double>::nrspline) { setup(); }
         ~Quintic() {}
         // tol is error level desired for the Fourier transform
         double getTolerance() const { return tolerance; }
