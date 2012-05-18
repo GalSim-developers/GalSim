@@ -186,6 +186,19 @@ namespace galsim {
         }
 
         if (iType==spline) {
+            /**
+             * Calculate the 2nd derivatives of the natural cubic spline.
+             *
+             * Here we follow the broad procedure outlined in this technical note by Jim
+             * Armstrong, freely available online:
+             * http://www.algorithmist.net/spline.html
+             * 
+             * The system we solve is equation [7].  In our adopted notation u_i are the diagonals
+             * of the matrix M, and h_i the off-diagonals.  y'' is z_i and the rhs = v_i.
+             *
+             * For table sizes larger than the fully trivial (2 or 3 elements), we use the
+             * symmetric tridiagonal matrix solution capabilities of MJ's TMV library.
+             */
             // Set up the 2nd-derivative table for splines
             int n = v.size();
             y2.resize(n);
