@@ -91,7 +91,7 @@ class GSObject:
         return self.SBProfile.getFlux()
 
     def xValue(self, position):
-        """@returns The value of the object at a chosen 2D position in real space.
+        """@brief Returns the value of the object at a chosen 2D position in real space.
         
         As in SBProfile, this function assumes all are real-valued.  xValue() may not be
         implemented for derived classes (e.g. SBConvolve) that require an Discrete Fourier
@@ -103,7 +103,7 @@ class GSObject:
         return self.SBProfile.xValue(position)
 
     def kValue(self, position):
-        """@returns The value of the object at a chosen 2D position in k space.
+        """@brief Returns the value of the object at a chosen 2D position in k space.
 
         @param position  A 2D galsim.PositionD/I instance giving the position in k space.
         """
@@ -112,9 +112,9 @@ class GSObject:
     def applyDistortion(self, ellipse):
         """@brief Apply a galsim.Ellipse distortion to this object.
 
-        galsim.Ellipse instances can be generated via
+        For calling, galsim.Ellipse instances can be generated via:
 
-        >>> ellipse = galsim.Ellipse(e1, e2)
+        ellipse = galsim.Ellipse(e1, e2)
 
         where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
         """
@@ -141,11 +141,11 @@ class GSObject:
     # Also add methods which create a new GSObject with the transformations applied...
     #
     def createDistorted(self, ellipse):
-        """@returns A new GSObject by applying a galsim.Ellipse distortion.
+        """@brief Returns a new GSObject by applying a galsim.Ellipse distortion.
 
-        galsim.Ellipse instances can be generated via
+        For calling, galsim.Ellipse instances can be generated via:
 
-        >>> ellipse = galsim.Ellipse(e1, e2)
+        ellipse = galsim.Ellipse(e1, e2)
 
         where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
         """
@@ -311,9 +311,11 @@ class OpticalPSF(GSObject):
 
     Initialization
     --------------
-    >>> optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., 
+    @code
+    optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0.,
                                         coma2=0., spher=0., circular_pupil=True, interpolantxy=None,
                                         dx=1., oversampling=2., pad_factor=2)
+    @endcode
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
 
@@ -376,8 +378,10 @@ class RealGalaxy(GSObject):
 
     Initialization
     --------------
-    real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string =
-                                    None, random = False, uniform_deviate = None, interpolant = None)
+    @code
+    real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string = None,
+                                    random = False, uniform_deviate = None, interpolant = None)
+    @endcode
 
     This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
