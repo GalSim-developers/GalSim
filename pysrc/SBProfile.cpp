@@ -500,13 +500,13 @@ struct PySBDeVaucouleurs {
 
     static void wrap() {
         bp::class_<SBDeVaucouleurs,bp::bases<SBProfile>,boost::noncopyable>(
-                                                                            "SBDeVaucouleurs",bp::no_init)
+            "SBDeVaucouleurs",bp::no_init)
             .def("__init__",
                  bp::make_constructor(
-                                      &construct, bp::default_call_policies(),
-                                      (bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object())
-                                      )
+                     &construct, bp::default_call_policies(),
+                     (bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object())
                  )
+            )
             ;
     }
 };
@@ -526,6 +526,7 @@ void pyExportSBProfile() {
     PySBBox::wrap();
     PySBMoffat::wrap();
     PySBDeVaucouleurs::wrap();
+    PyPhotonArray::wrap();
 
     bp::def("SBParse", &galsim::SBParse, galsim::ManageNew());
 }
