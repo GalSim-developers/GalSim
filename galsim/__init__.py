@@ -1,4 +1,5 @@
 from ._galsim import *
+from . import position
 from . import fits
 from base import *
 from . import noise
