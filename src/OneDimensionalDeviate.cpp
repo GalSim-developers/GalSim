@@ -299,7 +299,7 @@ namespace galsim {
         }
         // Accumulate fluxes and put into set structure.  std::set takes care of sorting & binary searching.
         double cumulativeFlux = 0.;
-        for (typename std::list<Interval>::iterator i=intervalList.begin();
+        for (std::list<Interval>::iterator i=intervalList.begin();
              i != intervalList.end();
              ++i) {
             cumulativeFlux += std::abs(i->getDifferentialFlux());
@@ -323,7 +323,7 @@ namespace galsim {
                 // to use for sorting
                 Interval drawn(_fluxDensity, 0., 0.);
                 drawn.setCumulativeFlux(ud()*totalAbsoluteFlux);
-                typename std::set<Interval>::const_iterator upper =
+                std::set<Interval>::const_iterator upper =
                     _intervalSet.lower_bound(drawn);
                 // use last pixel if we're past the end
                 if (upper == _intervalSet.end()) --upper; 
@@ -347,7 +347,7 @@ namespace galsim {
                 // to use for sorting
                 Interval drawn(_fluxDensity, 0., 0.);
                 drawn.setCumulativeFlux(rsq*totalAbsoluteFlux);
-                typename std::set<Interval>::const_iterator upper =
+                std::set<Interval>::const_iterator upper =
                     _intervalSet.lower_bound(drawn);
                 // use last pixel if we're past the end
                 if (upper == _intervalSet.end()) --upper; 
@@ -364,7 +364,7 @@ namespace galsim {
                 // to use for sorting
                 Interval drawn(_fluxDensity, 0., 0.);
                 drawn.setCumulativeFlux(ud()*totalAbsoluteFlux);
-                typename std::set<Interval>::const_iterator upper =
+                std::set<Interval>::const_iterator upper =
                     _intervalSet.lower_bound(drawn);
                 // use last pixel if we're past the end
                 if (upper == _intervalSet.end()) --upper; 
