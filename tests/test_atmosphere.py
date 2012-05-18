@@ -22,16 +22,25 @@ def test_doublegaussian_vs_sbadd():
         for sigma1 in np.linspace(0.2, 3, 3):
             for flux2 in np.linspace(0.2, 3, 3):
                 for sigma2 in np.linspace(0.2, 3, 3):
-                    dbl1 = galsim.atmosphere.DoubleGaussian(flux1, sigma1, flux2, sigma2)
+                    dbl1 = galsim.atmosphere.DoubleGaussian(flux1, flux2, sigma1=sigma1, sigma2=sigma2)
                     g1 = galsim.SBGaussian(flux1, sigma=sigma1)
                     g2 = galsim.SBGaussian(flux2, sigma=sigma2)
+                    dbl2 = galsim.SBAdd(g1, g2)
+                    np.testing.assert_almost_equal(dbl1.draw().array, dbl2.draw().array)
+    for flux1 in np.linspace(0.2, 3, 3):
+        for fwhm1 in np.linspace(0.2, 3, 3):
+            for flux2 in np.linspace(0.2, 3, 3):
+                for fwhm2 in np.linspace(0.2, 3, 3):
+                    dbl1 = galsim.atmosphere.DoubleGaussian(flux1, flux2, fwhm1=fwhm1, fwhm2=fwhm2)
+                    g1 = galsim.SBGaussian(flux1, fwhm=fwhm1)
+                    g2 = galsim.SBGaussian(flux2, fwhm=fwhm2)
                     dbl2 = galsim.SBAdd(g1, g2)
                     np.testing.assert_almost_equal(dbl1.draw().array, dbl2.draw().array)
 
 def test_doublegaussian_vs_refimg():
     """Test a specific double Gaussian from galsim.atmosphere.DoubleGaussian against a saved result.
     """
-    dblg = galsim.atmosphere.DoubleGaussian(0.75, 1, 0.25, 3)
+    dblg = galsim.atmosphere.DoubleGaussian(0.75, 0.25, sigma1=1., sigma2=3.)
     myImg = dblg.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
