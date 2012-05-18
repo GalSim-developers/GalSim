@@ -188,7 +188,6 @@ namespace galsim {
         if (iType==spline) {
             // Set up the 2nd-derivative table for splines
             int n = v.size();
-            if (n<2) throw TableError("Spline Table with only 1 entry");
             y2.resize(n);
             // End points 2nd-derivatives zero for natural cubic spline 
             y2[0] = V(0);
