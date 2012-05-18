@@ -199,7 +199,7 @@ namespace galsim {
                 y2[1] = 3.*((v[2].val - v[1].val) / (v[2].arg - v[1].arg) - 
                             (v[1].val - v[0].val) / (v[1].arg - v[0].arg)) / (v[2].arg - v[0].arg);
 
-	        } else {  // For 4 or more points we use the TMV symmetric tridiagonal matrix solver
+            } else {  // For 4 or more points we use the TMV symmetric tridiagonal matrix solver
                 
                 tmv::SymBandMatrix<V> M(n-2, 1);
                 for (int i=1; i<=n-3; i++){
