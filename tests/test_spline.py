@@ -100,3 +100,9 @@ def test_Lanczos7_spline():
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Lanczos-7 interpolant.")
 
+if __name__ == "__main__":
+    test_Cubic_spline()
+    test_Quintic_spline()
+    test_Lanczos5_spline()
+    test_Lanczos7_spline()
+
