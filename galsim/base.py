@@ -38,35 +38,35 @@ class GSObject:
 
     # Make a copy of an object
     def copy(self):
-        """@returns A copy of an object as the SBProfile attribute of a new GSObject instance.
+        """@brief Returns a copy of an object as the SBProfile attribute of a new GSObject instance.
         """
         return GSObject(self.SBProfile.duplicate())
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
     #
     def maxK(self):
-        """@returns Value of k beyond which aliasing can be neglected.
+        """@brief Returns value of k beyond which aliasing can be neglected.
         """
         return self.SBProfile.maxK()
 
     def nyquistDx(self):
-        """@returns Image pixel spacing that does not alias maxK.
+        """@brief Returns Image pixel spacing that does not alias maxK.
         """
         return self.SBProfile.nyquistDx()
 
     def stepK(self):
-        """@returns Sampling in k space necessary to avoid folding of image in x space.
+        """@brief Returns sampling in k space necessary to avoid folding of image in x space.
         """
         return self.SBProfile.stepK()
 
     def isAxisymmetric(self):
-        """@returns True if axially symmetric: affects efficiency of evaluation.
+        """@brief Returns True if axially symmetric: affects efficiency of evaluation.
         """
         return self.SBProfile.isAxisymmetric()
 
     def isAnalyticX(self):
-        """@returns True if real-space values can be determined immediately at any position without
-        requiring a Discrete Fourier Transform.
+        """@brief Returns True if real-space values can be determined immediately at any position
+        without requiring a Discrete Fourier Transform.
         """
         return self.SBProfile.isAnalyticX()
 
@@ -75,7 +75,7 @@ class GSObject:
     # return self.SBProfile.isAnalyticK()
 
     def centroid(self):
-        """@returns The (x, y) centroid of an object as a Position.
+        """@brief Returns the (x, y) centroid of an object as a Position.
         """
         return self.SBProfile.centroid()
 
@@ -86,7 +86,7 @@ class GSObject:
         return
 
     def getFlux(self):
-        """@returns The flux of the object.
+        """@brief Returns the flux of the object.
         """
         return self.SBProfile.getFlux()
 
@@ -152,25 +152,26 @@ class GSObject:
         return GSObject(self.SBProfile.distort(ellipse))
 
     def createSheared(self, g1, g2):
-        """@returns A new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
+        """@brief Returns A new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
         """
         e1, e2 = g1g2_to_e1e2(g1, g2)
         return GSObject(self.SBProfile.distort(galsim.Ellipse(e1,e2)))
 
     def createRotated(self, theta):
-        """@returns A new GSObject by applying a rotation theta (Angle object, +ve anticlockwise).
+        """@brief Returns a new GSObject by applying a rotation theta (Angle object, +ve
+        anticlockwise).
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         return GSObject(self.SBProfile.rotate(theta))
         
     def createShifted(self, dx, dy):
-        """@returns A new GSObject by applying a (dx, dy) shift.
+        """@brief Returns a new GSObject by applying a (dx, dy) shift.
         """
         return GSObject(self.SBProfile.shift(dx, dy))
 
     def draw(self, image=None, dx=0., wmult=1):
-        """@returns A drawn Image of the object, with bounds optionally set by an input Image.
+        """@brief Returns an Image of the object, with bounds optionally set by an input Image.
 
         TODO: describe dx, wmult.
         """
