@@ -98,14 +98,14 @@ class GSObject:
         Transform to determine real space values.  In this case, an SBError will be thrown at the
         C++ layer (raises a RuntimeError in Python).
         
-        @param position  A 2D galsim.Position instance giving the position in real space.
+        @param position  A 2D galsim.PositionD/I instance giving the position in real space.
         """
         return self.SBProfile.xValue(position)
 
     def kValue(self, position):
         """@returns The value of the object at a chosen 2D position in k space.
 
-        @param position  A 2D galsim.Position instance giving the position in k space.
+        @param position  A 2D galsim.PositionD/I instance giving the position in k space.
         """
         return self.SBProfile.kValue(position)
 
@@ -361,6 +361,8 @@ class OpticalPSF(GSObject):
         if interpolantxy == None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
             self.Interpolant2D = galsim.InterpolantXY(lan5)
+        else:
+            self.Interpolant2D = interpolantxy
         GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D, dx=dx))
 
 
