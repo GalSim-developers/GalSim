@@ -114,7 +114,7 @@ namespace galsim {
             if (p1->arg==p0->arg) return p0->val;
             double frac=(a - p0->arg) / (p1->arg - p0->arg);
             return frac*p1->val + (1-frac) * p0->val;
-        } else if (iType==spline) {
+        } else if (iType==spline || iType==nrspline) {
             if (p1==v.begin())  return p1->val;
             citer p0 = p1-1;
             A h = p1->arg-p0->arg;
