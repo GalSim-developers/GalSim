@@ -69,7 +69,7 @@ namespace galsim {
 #endif
     {
     public:
-        enum interpolant { linear, spline, floor, ceil, nrspline };
+        enum interpolant { linear, spline, floor, ceil };
 
         //Construct empty table
         Table(interpolant i=linear) : v(), iType(i), isReady(false), y2() {} 

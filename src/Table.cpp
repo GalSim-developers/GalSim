@@ -114,7 +114,7 @@ namespace galsim {
             if (p1->arg==p0->arg) return p0->val;
             double frac=(a - p0->arg) / (p1->arg - p0->arg);
             return frac*p1->val + (1-frac) * p0->val;
-        } else if (iType==spline || iType==nrspline) {
+        } else if (iType==spline) {
             if (p1==v.begin())  return p1->val;
             citer p0 = p1-1;
             A h = p1->arg-p0->arg;
@@ -217,36 +217,6 @@ namespace galsim {
                     y2[i] = solution[i-1];
                 }
             }
-            isReady = true;
-            return;
-        } else if (iType==nrspline) {
-            // Set up the 2nd-derivative table for splines
-            // Derive this from Numerical Recipes spline.c
-            int n = v.size();
-            if (n<2) throw TableError("Spline Table with only 1 entry");
-
-            V  p,qn,sig,un;
-
-            std::vector<V> u(n-1);
-            y2.resize(n);
-            y2[0]=u[0]= static_cast<V>(0);
-
-            for (int i=1;i<=n-2;i++) {
-                sig=(v[i].arg-v[i-1].arg)/(v[i+1].arg-v[i-1].arg);
-                p=sig*y2[i-1]+2.0;
-                y2[i]=(sig-1.0)/p;
-                u[i]=(v[i+1].val-v[i].val)/(v[i+1].arg-v[i].arg) 
-                    - (v[i].val-v[i-1].val)/(v[i].arg-v[i-1].arg);
-                u[i]=(6.0*u[i]/(v[i+1].arg-v[i-1].arg)-sig*u[i-1])/p;
-
-            }
-
-            qn=un=0.0;
-
-            y2[n-1]=(un-qn*u[n-2])/(qn*y2[n-2]+1.0);
-            for (int k=n-2;k>=0;k--)
-                y2[k]=y2[k]*y2[k+1]+u[k];
-
             isReady = true;
             return;
         } else {
