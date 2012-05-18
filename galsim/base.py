@@ -1,3 +1,4 @@
+import os
 import collections
 import numpy as np
 import galsim
@@ -86,7 +87,7 @@ class GSObject:
     def applyShear(self, g1, g2):
         """Apply a (g1, g2) shear to this object, where |g| = (a-b)/(a+b).
         """
-        e1, e2 = _g1g2_to_e1e2(g1, g2)
+        e1, e2 = g1g2_to_e1e2(g1, g2)
         GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
 
     def applyRotation(self, theta):
@@ -117,7 +118,7 @@ class GSObject:
     def createSheared(self, g1, g2):
         """Create a new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
         """
-        e1, e2 = _g1g2_to_e1e2(g1, g2)
+        e1, e2 = g1g2_to_e1e2(g1, g2)
         return GSObject(self.SBProfile.distort(galsim.Ellipse(e1,e2)))
 
     def createRotated(self, theta):
@@ -152,9 +153,9 @@ class GSObject:
         raise NotImplementedError("Sorry, photon shooting coming soon!")
 
 
-# Define "hidden" convenience function for going from (g1, g2) -> (e1, e2), used by two methods
-# in the GSObject class:
-def _g1g2_to_e1e2(g1, g2):
+# Define "convenience function for going from (g1, g2) -> (e1, e2), used by two methods
+# in the GSObject class and by one function in real.py:
+def g1g2_to_e1e2(g1, g2):
     """Convenience function for going from (g1, g2) -> (e1, e2), used by two methods in the 
     GSObject class.
     """
@@ -274,7 +275,7 @@ class OpticalPSF(GSObject):
                                         coma2=0., spher=0., circular_pupil=True, interpolantxy=None,
                                         dx=1., oversampling=2., pad_factor=2)
 
-    Initializes optical_psf as a galsim.Optics() instance.
+    Initializes optical_psf as a galsim.OpticalPSF() instance.
 
     @param lod             lambda / D in the physical units adopted (user responsible for 
                            consistency).
@@ -288,7 +289,7 @@ class OpticalPSF(GSObject):
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
     @param obs             add a central obstruction due to secondary mirror?
-    @param interpolantxy   optional keyword for specifiying the interpolation scheme [default = 
+    @param interpolantxy   optional keyword for specifying the interpolation scheme [default =
                            galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
                            [default = 2.], setting oversampling < 1 will produce aliasing in the 
@@ -318,10 +319,105 @@ class OpticalPSF(GSObject):
                                            kmax=self.maxk, dx=dx)
         # If interpolant not specified on input, use a high-ish lanczos
         if interpolantxy == None:
-            l5 = galsim.Lanczos(5, True, 1.e-4) # Conserve flux=True and 1.e-4 copied from Shera.py!
-            self.Interpolant2D = galsim.InterpolantXY(l5)
+            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
+            self.Interpolant2D = galsim.InterpolantXY(lan5)
         GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D, dx=dx))
 
+
+class RealGalaxy(GSObject):
+    """@brief Class describing real galaxies from some training dataset.
+
+    This class uses a catalog describing galaxies in some training data to read in data about
+    realistic galaxies that can be used for simulations based on those galaxies.  Also included in
+    the class is additional information that might be needed to make or interpret the simulations,
+    e.g., the noise properties of the training data.
+
+    Initialization
+    --------------
+    real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string =
+                                    None, random = False, uniform_deviate = None, interpolant = None)
+
+    This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
+    galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
+    keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
+    options, e.g., to choose at random but accounting for the non-constant weight factors
+    (probabilities for objects to make it into the training sample).
+
+    @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
+                                find the data, etc.
+    @param index                Index of the desired galaxy in the catalog.
+    @param ID                   Object ID for the desired galaxy in the catalog.
+    @param random               If true, then just select a completely random galaxy from the
+                                catalog.
+    @param uniform_deviate      A uniform deviate to use for selecting a random galaxy (optional)
+    @param interpolant          optional keyword for specifying the
+                                real-space interpolation scheme
+                                [default = galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
+    """
+    def __init__(self, real_galaxy_catalog, index = None, ID = None, random = False,
+                 uniform_deviate = None, interpolant = None):
+
+        import pyfits
+
+        # Code block below will be for galaxy selection; not all are currently implemented.  Each
+        # option must return an index within the real_galaxy_catalog.
+        use_index = -1
+        if index != None:
+            if (ID != None or random == True):
+                raise RuntimeError('Too many methods for selecting a galaxy!')
+            use_index = index
+        elif ID != None:
+            raise NotImplementedError('Selecting galaxy based on its ID not implemented')
+        elif random == True:
+            if uniform_deviate == None:
+                uniform_deviate = galsim.UniformDeviate()
+            use_index = int(real_galaxy_catalog.n * uniform_deviate()) # this will round down, to get index in
+                                                                           # range [0, n-1]
+        else:
+            raise RuntimeError('No method specified for selecting a galaxy!')
+        if random == False and uniform_deviate != None:
+            import warnings
+            message = "Warning: uniform_deviate supplied, but random selection method was not chosen!"
+            warnings.warn(message)
+
+        # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
+        # consider exporting this code into fits.py in some function that takes a filename and HDU,
+        # and returns an ImageView
+        gal_image_numpy = pyfits.getdata(os.path.join(real_galaxy_catalog.imagedir,
+                                                      real_galaxy_catalog.gal_filename[use_index]),
+                                         real_galaxy_catalog.gal_hdu[use_index])
+        gal_image = galsim.ImageViewD(np.ascontiguousarray(gal_image_numpy.astype(np.float64)))
+        PSF_image_numpy = pyfits.getdata(os.path.join(real_galaxy_catalog.imagedir,
+                                                      real_galaxy_catalog.PSF_filename[use_index]),
+                                         real_galaxy_catalog.PSF_hdu[use_index])
+        PSF_image = galsim.ImageViewD(np.ascontiguousarray(PSF_image_numpy.astype(np.float64)))
+
+        # choose proper interpolant
+        if interpolant != None and isinstance(interpolant, galsim.InterpolantXY) == False:
+            raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+        elif interpolant == None:
+            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
+            self.Interpolant2D = galsim.InterpolantXY(lan5)
+        else:
+            self.Interpolant2D = interpolant
+
+        # read in data about galaxy from FITS binary table; store as members of RealGalaxy
+
+        # save any other relevant information
+        self.catalog_file = real_galaxy_catalog.filename
+        self.index = use_index
+        self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
+        # note: will be adding more parameters here about noise properties etc., but let's be basic
+        # for now
+
+        self.original_image = galsim.SBInterpolatedImage(gal_image, self.Interpolant2D, dx =
+                                                         self.pixel_scale)
+        self.original_PSF = galsim.SBInterpolatedImage(PSF_image, self.Interpolant2D,
+                                                         dx=self.pixel_scale)
+        self.original_PSF.setFlux(1.0)
+        psf_inv = galsim.SBDeconvolve(self.original_PSF)
+
+        GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
 
 class Add(GSObject):
     """Base class for defining the python interface to the SBAdd C++ class.
@@ -382,6 +478,13 @@ class Convolve(GSObject):
 
     def add(self, obj):
         self.SBProfile.add(obj.SBProfile)
+
+class Deconvolve(GSObject):
+    """Base class for defining the python interface to the SBDeconvolve C++ class.
+    """
+    def __init__(self, farg):
+        # the single argument should be one of our base classes
+        GSObject.__init__(self, galsim.SBDeconvolve(farg.SBProfile))
 
 
 # Now we define a dictionary containing all the GSobject subclass names as keys, referencing a
