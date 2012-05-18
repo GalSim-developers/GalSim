@@ -33,7 +33,7 @@ KXVALS = np.array((1.3, 0.71, -4.3)) * np.pi / 2.
 KYVALS = np.array((.8, -2., -.31,)) * np.pi / 2.
 
 def test_Cubic_spline():
-    """@brief Test the spline tabulation of the k space Cubic interpolant.
+    """Test the spline tabulation of the k space Cubic interpolant.
     """
     interp = galsim.InterpolantXY(galsim.Cubic(tol=1.e-4))
     testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
@@ -50,7 +50,7 @@ def test_Cubic_spline():
                                                  "data for k space Cubic interpolant.")
 
 def test_Quintic_spline():
-    """@brief Test the spline tabulation of the k space Quintic interpolant.
+    """Test the spline tabulation of the k space Quintic interpolant.
     """
     interp = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))
     testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
@@ -67,7 +67,7 @@ def test_Quintic_spline():
                                                  "data for k space Quintic interpolant.")
 
 def test_Lanczos5_spline():
-    """@brief Test the spline tabulation of the k space Lanczos-5 interpolant.
+    """Test the spline tabulation of the k space Lanczos-5 interpolant.
     """
     interp = galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))
     testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
@@ -84,7 +84,7 @@ def test_Lanczos5_spline():
                                                  "data for k space Lanczos-5 interpolant.")
     
 def test_Lanczos7_spline():
-    """@brief Test the spline tabulation of the k space Lanczos-5 interpolant.
+    """Test the spline tabulation of the k space Lanczos-5 interpolant.
     """
     interp = galsim.InterpolantXY(galsim.Lanczos(7, conserve_flux=True, tol=1.e-4))
     testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
