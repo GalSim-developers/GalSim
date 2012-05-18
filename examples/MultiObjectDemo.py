@@ -424,6 +424,105 @@ def Script2():
 
     print
 
+# Script 3: Simulations with real galaxies from a catalog
+def Script3():
+    """
+    Make a fits image cube using real COSMOS galaxies from a catalog describing the training
+    sample.
+
+      - The number of images in the cube matches the number of rows in the catalog.
+      - Each image size is computed automatically by GalSim based on the Nyquist size.
+      - Both galaxies and stars.
+      - PSF is a double Gaussian (eventually Kolmogorov), the same for each galaxy.
+      - Galaxies are randomly rotated to remove the imprint of any lensing shears in the COSMOS
+        data.
+      - The same shear is applied to each galaxy.
+      - Noise is poisson using a nominal sky value of 1.e6
+        the noise in the original COSMOS data.
+    """
+    logger = logging.getLogger("Script3")
+
+    # Define some parameters we'll use below.
+
+    cat_file_name = os.path.join('data','real_galaxy_catalog_example.fits')
+    image_dir = os.path.join('data')
+    multi_file_name = os.path.join('output','multi_real.fits')
+    cube_file_name = os.path.join('output','cube_real.fits')
+    psf_file_name = os.path.join('output','psf_script3.fits')
+
+    random_seed = 1512413
+    sky_level = 1.e6                # ADU
+    pixel_scale = 0.15              # arcsec
+    gal_flux = 1.e6                 # arbitrary choice, makes nice (not too) noisy images
+    gal_g1 = -0.027                 #
+    gal_g2 = 0.031                  #
+    psf_inner_fwhm = 0.6            # FWHM of inner Gaussian of the double Gaussian PSF, arcsec
+    psf_outer_fwhm = 2*psf_inner_fwhm
+    psf_inner_fraction = 0.8        # fraction of total PSF flux in the inner Gaussian
+
+    logger.info('Starting multi-object script 3 using:')
+    logger.info('    - real galaxies from catalog %r',cat_file_name)
+    logger.info('    - double Gaussian PSF')
+    logger.info('    - pixel scale = %.2f',pixel_scale)
+    logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
+    logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
+
+    # Initialize the random number generator we will be using.
+    rng = galsim.UniformDeviate(random_seed)
+
+    # Read in galaxy catalog
+    real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, image_dir)
+    n_gal = real_galaxy_catalog.n
+    logger.info('Read in %d real galaxies from catalog', n_gal)
+
+    ## Make the ePSF
+    # first make the double Gaussian PSF
+    psf = galsim.atmosphere.DoubleGaussian(psf_inner_fraction, 1.0-psf_inner_fraction, fwhm1 =
+                                           psf_inner_fwhm, fwhm2 = psf_outer_fwhm)
+    # make the pixel response
+    pix = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)
+    # convolve PSF and pixel response function to get the effective PSF (ePSF)
+    epsf = galsim.Convolve(psf, pix)
+    epsf_image = epsf.draw(dx = pixel_scale)
+    # write to file
+    epsf_image.write(psf_file_name, clobber = True)
+    logger.info('Created ePSF and wrote to file %r',psf_file_name)
+
+    # Build the images
+    all_images = []
+    for i in range(n_gal):
+        logger.info('Start work on image %d',i)
+
+        gal = galsim.RealGalaxy(real_galaxy_catalog, index = i)
+        logger.info('   Read in training sample galaxy and PSF from file')
+
+        sim_image = galsim.simReal(gal, epsf, pixel_scale, g1 = gal_g1, g2 = gal_g2,
+                                   uniform_deviate = rng, target_flux = gal_flux)
+        logger.info('   Made image of galaxy after deconvolution, rotation, shearing, ')
+        logger.info('      convolving with target PSF, and resampling')
+        xsize, ysize = sim_image.array.shape
+        logger.info('   Final image size: (%d, %d)',xsize, ysize)
+
+        # Add Poisson noise
+        sim_image += sky_level
+        sim_image.addNoise(galsim.CCDNoise(rng))
+        sim_image -= sky_level
+        logger.info('   Added Poisson noise')
+
+        # Store that into the list of all images
+        all_images += [sim_image]
+
+    logger.info('Done making images of galaxies')
+
+    # Now write the image to disk.
+    galsim.fits.writeMulti(all_images, multi_file_name, clobber=True)
+    logger.info('Wrote images to multi-extension fits file %r',multi_file_name)
+
+    galsim.fits.writeCube(all_images, cube_file_name, clobber=True)
+    logger.info('Wrote image to fits data cube %r',cube_file_name)
+
+    print
+
 
 def main(argv):
     try:
@@ -447,12 +546,6 @@ def main(argv):
         level=logging.DEBUG,
         stream=sys.stdout
     )
-    # We do some fancier logging for Script3, just to demonstrate that we can:
-    # - we log to both stdout and to a log file
-    # - the log file has a lot more (mostly redundant) information
-    logFile = logging.FileHandler(os.path.join("output", "script3.log"))
-    logFile.setFormatter(logging.Formatter("%(name)s[%(levelname)s] %(asctime)s: %(message)s"))
-    logging.getLogger("Script3").addHandler(logFile)
 
     # Script 1: Great08-like image
     if scriptNum == 0 or scriptNum == 1:
@@ -462,6 +555,8 @@ def main(argv):
     if scriptNum == 0 or scriptNum == 2:
         Script2()
 
+    if scriptNum == 0 or scriptNum == 3:
+        Script3()
 
 if __name__ == "__main__":
     main(sys.argv)
