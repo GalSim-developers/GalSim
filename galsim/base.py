@@ -196,7 +196,7 @@ class GSObject:
 # Define "convenience function for going from (g1, g2) -> (e1, e2), used by two methods
 # in the GSObject class and by one function in real.py:
 def g1g2_to_e1e2(g1, g2):
-    """Convenience function for going from (g1, g2) -> (e1, e2), used by two methods in the 
+    """@brief Convenience function for going from (g1, g2) -> (e1, e2), used by two methods in the 
     GSObject class.
     """
     # SBProfile expects an e1,e2 distortion, rather than a shear,
@@ -520,7 +520,7 @@ class Convolve(GSObject):
         self.SBProfile.add(obj.SBProfile)
 
 class Deconvolve(GSObject):
-    """Base class for defining the python interface to the SBDeconvolve C++ class.
+    """@brief Base class for defining the python interface to the SBDeconvolve C++ class.
     """
     def __init__(self, farg):
         # the single argument should be one of our base classes
