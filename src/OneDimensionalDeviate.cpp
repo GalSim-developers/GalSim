@@ -21,7 +21,7 @@ namespace galsim {
     class RTimesF: public std::unary_function<double,double> {
     public:
         RTimesF(const F& function): _function(function) {}
-        double operator()(double r) const {return r*_function(r);}
+        double operator()(double r) const {return 2.*M_PI*r*_function(r);}
     private:
         const F& _function;
     };
@@ -165,7 +165,12 @@ namespace galsim {
     std::list<Interval> Interval::split(double smallFlux) {
         // Get the flux in this interval 
         checkFlux();
-        _meanAbsDensity = std::abs(_differentialFlux / (_xUpper - _xLower));
+        if (_isRadial) {
+            _meanAbsDensity = std::abs(_differentialFlux / 
+                                       ( M_PI*(_xUpper*_xUpper - _xLower*_xLower)));
+        } else {
+            _meanAbsDensity = std::abs(_differentialFlux / (_xUpper - _xLower));
+        }
         double densityLower = (*_fluxDensityPtr)(_xLower);
         double densityUpper = (*_fluxDensityPtr)(_xUpper);
         _maxAbsDensity = std::max(std::abs(densityLower),
@@ -225,7 +230,6 @@ namespace galsim {
 
         // Now break each range into Intervals
         for (Index iRange = 0; iRange < range.size()-1; iRange++) {
-	     /**/ std::cerr << "iRange " << iRange << std::endl;
             // See if there is an extremum to split this range:
             double extremum;
             if (findExtremum(_fluxDensity, 
@@ -236,25 +240,46 @@ namespace galsim {
 		/**/std::cerr << "Found extremum at " << extremum << std::endl;
                 // Do 2 ranges
                 {
-                    Interval splitit(_fluxDensity, range[iRange], extremum);
+                    Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial);
                     std::list<Interval> leftList = splitit.split(SMALL_FRACTION_OF_FLUX
                                                                 *totalAbsoluteFlux);
-                    /**/std::cerr << "Left side " << leftList.size() << " intervals" << std::endl;
+                    {
+                        /**/std::cerr << "Left side " << leftList.size() << " intervals" << std::endl;
+                        double sum=0.;
+                        for (std::list<Interval>::iterator i=leftList.begin(); i!=leftList.end(); ++i)
+                            sum += i->getDifferentialFlux();
+                        double xl, xh;
+                        splitit.getRange(xl,xh);
+                    }
                     intervalList.splice(intervalList.end(), leftList);
                 }
                 {
-                    Interval splitit(_fluxDensity, extremum, range[iRange+1]);
+                    Interval splitit(_fluxDensity, extremum, range[iRange+1], _isRadial);
                     std::list<Interval> rightList = splitit.split(SMALL_FRACTION_OF_FLUX
                                                                 *totalAbsoluteFlux);
-                    /**/std::cerr << "Right side " << rightList.size() << " intervals" << std::endl;
+                    {
+                        /**/std::cerr << "Right side " << rightList.size() << " intervals" << std::endl;
+                        double sum=0.;
+                        for (std::list<Interval>::iterator i=rightList.begin(); i!=rightList.end(); ++i)
+                            sum += i->getDifferentialFlux();
+                        double xl, xh;
+                        splitit.getRange(xl,xh);
+                    }
                     intervalList.splice(intervalList.end(), rightList);
                 }
             } else {
                 // Just single Interval in this range, no extremum:
-                Interval splitit(_fluxDensity, range[iRange], range[iRange+1]);
+                Interval splitit(_fluxDensity, range[iRange], range[iRange+1], _isRadial);
                 std::list<Interval> leftList = splitit.split(SMALL_FRACTION_OF_FLUX
                                                            *totalAbsoluteFlux);
-                /**/std::cerr << "Split to " << leftList.size() << " intervals" << std::endl;
+                {
+                    /**/std::cerr << "Split to " << leftList.size() << " intervals" << std::endl;
+                    double sum=0.;
+                    for (std::list<Interval>::iterator i=leftList.begin(); i!=leftList.end(); ++i)
+                        sum += i->getDifferentialFlux();
+                    double xl, xh;
+                    splitit.getRange(xl,xh);
+                }
                 intervalList.splice(intervalList.end(), leftList);
             }
         }
@@ -274,20 +299,65 @@ namespace galsim {
         PhotonArray result(N);
         if (N==0) return result;
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
+        /**/std::cerr << "pos/neg flux: " << getPositiveFlux() << " " << getNegativeFlux() << std::endl;
         double fluxPerPhoton = totalAbsoluteFlux / N;
         for (int i=0; i<N; i++) {
-            // Create dummy Interval with randomly drawn cumulative flux
-            // to use for sorting
-            Interval drawn(_fluxDensity, 0., 0.);
-            drawn.setCumulativeFlux(ud()*totalAbsoluteFlux);
-            typename std::set<Interval>::const_iterator upper =
-                _intervalSet.lower_bound(drawn);
-            // use last pixel if we're past the end
-            if (upper == _intervalSet.end()) --upper; 
-            // Now draw a position from within selected interval
-            double x, flux;
-            upper->drawWithin(drawn.getCumulativeFlux(), x, flux, ud);
-            result.setPhoton(i, x, 0., flux*fluxPerPhoton);
+            if (_isRadial) {
+#ifdef USE_COS_SIN
+                // Create dummy Interval with randomly drawn cumulative flux
+                // to use for sorting
+                Interval drawn(_fluxDensity, 0., 0.);
+                drawn.setCumulativeFlux(ud()*totalAbsoluteFlux);
+                typename std::set<Interval>::const_iterator upper =
+                    _intervalSet.lower_bound(drawn);
+                // use last pixel if we're past the end
+                if (upper == _intervalSet.end()) --upper; 
+                // Now draw a radius from within selected interval
+                double radius, flux;
+                upper->drawWithin(drawn.getCumulativeFlux(), radius, flux, ud);
+                // Draw second ud to get azimuth 
+                double theta = 2.*M_PI*ud();
+                result.setPhoton(i, radius*std::cos(theta), radius*std::sin(theta), flux*fluxPerPhoton);
+#else
+                // Alternate method: doesn't need sin & cos but needs sqrt
+                // First get a point uniformly distributed in unit circle
+                double xu, yu, rsq;
+                do {
+                    xu = 2.*ud()-1.;
+                    yu = 2.*ud()-1.;
+                    rsq = xu*xu+yu*yu;
+                } while (rsq>=1. || rsq==0.);
+                // Now rsq is unit deviate from 0 to 1
+                // Create dummy Interval with randomly drawn cumulative flux
+                // to use for sorting
+                Interval drawn(_fluxDensity, 0., 0.);
+                drawn.setCumulativeFlux(rsq*totalAbsoluteFlux);
+                typename std::set<Interval>::const_iterator upper =
+                    _intervalSet.lower_bound(drawn);
+                // use last pixel if we're past the end
+                if (upper == _intervalSet.end()) --upper; 
+                // Now draw a position from within selected interval
+                double radius, flux;
+                upper->drawWithin(drawn.getCumulativeFlux(), radius, flux, ud);
+                // Rescale x & y:
+                double rScale = radius / std::sqrt(rsq);
+                result.setPhoton(i,xu*rScale, yu*rScale, flux*fluxPerPhoton);
+#endif            
+            } else {
+                // Simple 1d interpolation
+                // Create dummy Interval with randomly drawn cumulative flux
+                // to use for sorting
+                Interval drawn(_fluxDensity, 0., 0.);
+                drawn.setCumulativeFlux(ud()*totalAbsoluteFlux);
+                typename std::set<Interval>::const_iterator upper =
+                    _intervalSet.lower_bound(drawn);
+                // use last pixel if we're past the end
+                if (upper == _intervalSet.end()) --upper; 
+                // Now draw a position from within selected interval
+                double x, flux;
+                upper->drawWithin(drawn.getCumulativeFlux(), x, flux, ud);
+                result.setPhoton(i, x, 0., flux*fluxPerPhoton);
+            }
         }
         return result;
     }

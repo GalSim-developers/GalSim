@@ -1051,32 +1051,6 @@ namespace galsim {
     // Below here are the concrete "atomic" SBProfile types
     /////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef RADIAL
-    /**
-     * @brief A class to adapt SBProfile to the interface for `OneDimensionalDeviate`
-     * sampler.  Only used internally.
-     */
-    class RadialFunction: public FluxDensity {
-    public:
-        /** 
-         * @brief Constructor
-         * @param[in] sbp Radially symmetric SBProfile to be sampled from
-         */
-        RadialFunction(const SBProfile& sbp): _sbp(sbp) {}
-        /** 
-         * @brief Implement function class syntax for radial function
-         * @param[in] r Radius
-         * @returns value at radius
-         */
-        double operator()(double r) const {return _sbp.xval(r);}
-        /**
-         * @brief Destructor
-         */
-        ~InterpolantFunction() {}
-    private:
-        const Interpolant& _interp;
-    };
-#endif
     /**
      * @brief Gaussian Surface Brightness Profile
      *
@@ -1359,10 +1333,22 @@ namespace galsim {
          * @param[in] flux_ flux (default `flux_ = 1.`).
          */
         SBAiry(double D_=1., double obs_=0., double flux_=1.) :
-            D(D_), obscuration(obs_), flux(flux_) {}
+            D(D_), obscuration(obs_), flux(flux_), _sampler(0), _radial(obscuration) {}
 
+        SBAiry(const SBAiry& rhs): D(rhs.D), obscuration(rhs.obscuration), flux(rhs.flux),
+                                   _sampler(0), _radial(obscuration) {}
+
+        const SBAiry& operator=(const SBAiry& rhs) {
+            D = rhs.D;
+            obscuration = rhs.obscuration;
+            flux = rhs.flux;
+            _radial.setObscuration(obscuration);
+            flushSampler();
+            return *this;
+        }
+            
         /// @brief Destructor.
-        ~SBAiry() {}
+        ~SBAiry() {flushSampler();}
 
         // Methods (Barney: mostly described by SBProfile Doxys, with maxK() and stepK() 
         // prescription described in class description).
@@ -1389,13 +1375,28 @@ namespace galsim {
         { Position<double> p(0., 0.); return p; }
 
         double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; }
+        void setFlux(double flux_=1.) {flux=flux_; } 
+
+        // This is a scale-free version of the Airy radial function.
+        // Input radius is in units of lambda/D.  Output normalized
+        // to integrate to unity over input units.
+        class AiryRadialFunction: public FluxDensity {
+        public:
+            AiryRadialFunction(double obscuration): _obscuration(obscuration) {}
+            double operator()(double radius) const;
+            void setObscuration(double obscuration) {_obscuration=obscuration;}
+        private:
+            double _obscuration;
+        };
 
         virtual PhotonArray shoot(int N, UniformDeviate& u) const;
 
         SBProfile* duplicate() const { return new SBAiry(*this); }
 
     private: 
+        mutable OneDimensionalDeviate* _sampler; ///< Class that can sample radial distribution
+        AiryRadialFunction _radial;  ///< Class that embodies the radial Airy function.
+
         double chord(const double r, const double h) const; ///< Circle chord length at `h < r`.
 
         /// @brief Area inside intersection of 2 circles radii `r` & `s`, seperated by `t`.
@@ -1410,6 +1411,11 @@ namespace galsim {
          * of two annuli.  Normalized to unity at `k=0` for now.
          */
         double annuli_autocorrelation(const double k) const; 
+
+        // Manage the numerical photon shooter:
+        void checkSampler() const;
+        void flushSampler() const;
+
     };
 
     /** 

@@ -127,6 +127,13 @@ namespace galsim {
         void scaleFlux(double scale);
 
         /**
+         * @brief Rescale all photon positions by the given factor
+         *
+         * @param[in] scale Scaling factor for all positions
+         */
+        void scaleXY(double scale);
+
+        /**
          * @brief Extend this array with the contents of another.
          *
          * @param[in] rhs PhotonArray whose contents to append to this one.

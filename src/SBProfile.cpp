@@ -1047,25 +1047,29 @@ namespace galsim {
     // SBAiry Class
     //
 
-    // Note x & y are in units of lambda/D here.  Integral over area
-    // will give unity in this normalization.
-
-    double SBAiry::xValue(Position<double> p) const 
-    {
-        double radius = std::sqrt(p.x*p.x+p.y*p.y);
-        double nu = radius*M_PI*D;
+    // This is a scale-free version of the Airy radial function.
+    // Input radius is in units of lambda/D.  Output normalized
+    // to integrate to unity over input units.
+    double SBAiry::AiryRadialFunction::operator()(double radius) const {
+        double nu = radius*M_PI;
         double xval;
         if (nu<0.01)
             // lim j1(u)/u = 1/2
-            xval =  D * (1-obscuration*obscuration);
+            xval =  (1-_obscuration*_obscuration);
         else {
-            xval = 2*D*( j1(nu) - obscuration*j1(obscuration*nu)) /
+            xval = 2*( j1(nu) - _obscuration*j1(_obscuration*nu)) /
                 nu ; //See Schroeder eq (10.1.10)
         }
         xval*=xval;
         // Normalize to give unit flux integrated over area.
-        xval /= (1-obscuration*obscuration)*4./M_PI;
-        return xval*flux;
+        xval /= (1-_obscuration*_obscuration)*4./M_PI;
+        return xval;
+    }
+
+    double SBAiry::xValue(Position<double> p) const 
+    {
+        double radius = std::sqrt(p.x*p.x+p.y*p.y) * D;
+        return flux*D*D * _radial(radius);
     }
 
     double SBAiry::chord(const double r, const double h) const 
@@ -1597,6 +1601,16 @@ namespace galsim {
         }
     }
 
+    void PhotonArray::scaleXY(double scale)
+    {
+        for (std::vector<double>::size_type i=0; i<_x.size(); i++) {
+            _x[i] *= scale;
+        }
+        for (std::vector<double>::size_type i=0; i<_y.size(); i++) {
+            _y[i] *= scale;
+        }
+    }
+
     void PhotonArray::append(const PhotonArray& rhs) 
     {
         if (rhs.size()==0) return;      // Nothing needed for empty RHS.
@@ -1831,8 +1845,34 @@ namespace galsim {
 
     PhotonArray SBAiry::shoot(int N, UniformDeviate& u) const
     {
-        throw SBError("SBAiry::shoot() not implemented");
-        return PhotonArray(N);
+        checkSampler();
+        PhotonArray pa=_sampler->shoot(N, u);
+        pa.scaleFlux(flux);
+        pa.scaleXY(1./D);
+        return pa;
+    }
+
+    void SBAiry::flushSampler() const {
+        if (_sampler) {
+            delete _sampler;
+            _sampler = 0;
+        }
+    }
+
+    void SBAiry::checkSampler() const {
+        if (_sampler) return;
+        std::vector<double> ranges(1,0.);
+        // Break Airy function into ranges that will not have >1 extremum:
+        double xmin = (1.1 - 0.5*obscuration);
+        // Use Schroeder (10.1.18) limit of EE at large radius.
+        // to stop sampler at radius with EE>(1-ALIAS_THRESHOLD).
+        double maximumRadius = 2./(ALIAS_THRESHOLD * M_PI*M_PI * (1-obscuration));
+        while (xmin < maximumRadius) {
+            ranges.push_back(xmin);
+            xmin += 0.5;
+        }
+        ranges.push_back(xmin);
+        _sampler = new OneDimensionalDeviate(_radial, ranges, true);
     }
 
     PhotonArray SBBox::shoot(int N, UniformDeviate& u) const

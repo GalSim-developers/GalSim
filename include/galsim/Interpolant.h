@@ -36,9 +36,9 @@ namespace galsim {
     {
     public:
         /// @brief Constructor
-        Interpolant(): _interp(*this), sampler(0) {}
+        Interpolant(): _interp(*this), _sampler(0) {}
         /// @brief Destructor (virtual for base class)
-        virtual ~Interpolant() {if (sampler) delete sampler;}
+        virtual ~Interpolant() {if (_sampler) delete _sampler;}
 
         // Extent of interpolant in real space and in frequency space.
         // Note that x units are pixels and u units are cycles per pixel.
@@ -100,7 +100,7 @@ namespace galsim {
          */
         virtual double getPositiveFlux() const {
             checkSampler();
-            return sampler->getPositiveFlux();
+            return _sampler->getPositiveFlux();
         }
         /**
          * @brief Return the (absolute value of) integral of the negative portions of the kernel
@@ -111,7 +111,7 @@ namespace galsim {
          */
         virtual double getNegativeFlux() const {
             checkSampler();
-            return sampler->getNegativeFlux();
+            return _sampler->getNegativeFlux();
         }
         /**
          * @brief Return array of displacements drawn from this kernel.  
@@ -127,13 +127,13 @@ namespace galsim {
          */
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const {
             checkSampler();
-            return sampler->shoot(N, ud);
+            return _sampler->shoot(N, ud);
         }
     protected:
         InterpolantFunction _interp;
-        mutable OneDimensionalDeviate* sampler;
+        mutable OneDimensionalDeviate* _sampler;
         virtual void checkSampler() const {
-            if (sampler) return;
+            if (_sampler) return;
             int nKnots = static_cast<int> (ceil(xrange()));
             std::vector<double> ranges(2*nKnots);
             for (int i=1; i<=nKnots; i++) {
@@ -141,7 +141,7 @@ namespace galsim {
                 ranges[nKnots-i] = -knot;
                 ranges[nKnots+i-1] = knot;
             }
-            sampler = new OneDimensionalDeviate(_interp, ranges);
+            _sampler = new OneDimensionalDeviate(_interp, ranges);
         }
     };
 
@@ -476,7 +476,7 @@ namespace galsim {
     protected:
         // Override default checkSampler because Quintic filter has sign change in outer interval
         virtual void checkSampler() const {
-            if (sampler) return;
+            if (_sampler) return;
             std::vector<double> ranges(8);
             ranges[0] = -3.;
             ranges[1] = -(25.+sqrt(31.))/11.;
@@ -484,7 +484,7 @@ namespace galsim {
             ranges[3] = -1.;
             for (int i=0; i<4; i++)
                 ranges[7-i] = -ranges[i];
-            sampler = new OneDimensionalDeviate(_interp, ranges);
+            _sampler = new OneDimensionalDeviate(_interp, ranges);
         }
 
     private:
