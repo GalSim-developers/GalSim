@@ -1476,6 +1476,18 @@ namespace galsim {
             lk += logkStep;
         }
         maxK = std::min(MAXMAXK, maxK); // largest acceptable
+
+        // Next, set up the classes for photon shooting
+        _radialPtr = new SersicRadialFunction(n, b);
+        std::vector<double> range(2,0.);
+        range[1] = integrateMax;
+        _sampler = new OneDimensionalDeviate( *_radialPtr, range, true);
+    }
+
+    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate& ud) const {
+        PhotonArray result = _sampler->shoot(N,ud);
+        result.scaleFlux(norm);
+        return result;
     }
 
     // Integrand class for the flux integrals of Moffat
@@ -1804,10 +1816,12 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBSersic::shoot(int N, UniformDeviate& u) const
+    PhotonArray SBSersic::shoot(int N, UniformDeviate& ud) const
     {
-        throw SBError("SBSersic::shoot() not implemented");
-        return PhotonArray(N);
+        PhotonArray result = info->shoot(N,ud);
+        result.scaleFlux(flux);
+        result.scaleXY(re);
+        return result;
     }
 
     PhotonArray SBExponential::shoot(int N, UniformDeviate& u) const

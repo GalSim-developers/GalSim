@@ -1110,6 +1110,15 @@ namespace galsim {
      */
     class SBSersic : public SBProfile 
     {
+    public:
+        class SersicRadialFunction: public FluxDensity {
+        public:
+            SersicRadialFunction(double n, double b): _invn(1./n), _b(b) {}
+            double operator()(double r) const {return std::exp(-_b*std::pow(r,_invn)); } 
+        private:
+            double _invn;
+            double _b;
+        };
     private:
         /// @brief A private class that caches the needed parameters for each Sersic index `n`.
         class SersicInfo 
@@ -1120,6 +1129,10 @@ namespace galsim {
              * Sersic index `n`.
              */
             SersicInfo(double n); 
+            ~SersicInfo() {
+                if (_radialPtr) delete _radialPtr;
+                if (_sampler) delete _sampler;
+            }
             double inv2n;   ///< `1 / (2 * n)`
             double maxK;    ///< Value of k beyond which aliasing can be neglected.
             double stepK;   ///< Sampling in k space necessary to avoid folding of image in x space.
@@ -1132,6 +1145,9 @@ namespace galsim {
 
             /// @brief Looks up the k value for the SBProfile from a lookup table.
             double kValue(double ksq) const;
+
+            /// @brief Shoot photons through unit-size, unnormalized profile
+            PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         private:
             SersicInfo(const SersicInfo& rhs); ///< Hides the copy constructor.
@@ -1150,6 +1166,9 @@ namespace galsim {
             double logkMax; ///< Maximum log(k) in lookup table.
             double logkStep; ///< Stepsize in log(k) in lookup table.
             std::vector<double> lookup; ///< Lookup table.
+
+            SersicRadialFunction* _radialPtr;  ///< Function class used for photon shooting
+            OneDimensionalDeviate* _sampler;   ///< Class that does numerical photon shooting
         };
 
         /** 
