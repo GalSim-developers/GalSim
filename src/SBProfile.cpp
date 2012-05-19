@@ -43,7 +43,6 @@ namespace galsim {
     // Common methods of Base Class "SBProfile"
     //
 
-#ifdef USE_IMAGES
     ImageView<float> SBProfile::draw(double dx, int wmult) const 
     {
         Image<float> img;
@@ -124,10 +123,6 @@ namespace galsim {
                  ++it, ++x) {
                 Position<double> p(x*dx,y*dx); // since x,y are pixel indices
                 *it = xValue(p);
-#ifdef DANIELS_TRACING
-                cout << "x=" << x << ", y=" << y << ": " << *it << std::endl;
-                cout << "--------------------------" << std::endl;
-#endif
                 totalflux += *it;
             } 
         }
@@ -609,8 +604,6 @@ namespace galsim {
 
         delete ktmp;  // no memory leak!
     }
-
-#endif
 
     void SBProfile::fillXGrid(XTable& xt) const 
     {
@@ -1197,7 +1190,6 @@ namespace galsim {
         }
     }
 
-#ifdef USE_IMAGES
     // Override x-domain writing so we can partially fill pixels at edge of box.
     template <typename T>
     double SBBox::fillXImage(ImageView<T>& I, double dx) const 
@@ -1233,8 +1225,6 @@ namespace galsim {
 
         return totalflux * (dx*dx);
     }
-#endif
-
 
 #ifdef USE_LAGUERRE
     //
@@ -1698,7 +1688,6 @@ namespace galsim {
         }
     }
 
-#ifdef USE_IMAGES
     template <class T>
     void PhotonArray::addTo(ImageView<T>& target) const {
         double dx = target.getScale();
@@ -1724,7 +1713,6 @@ namespace galsim {
         PhotonArray pa = shoot(N, u);
         pa.addTo(img);
     }
-#endif
     
     PhotonArray SBAdd::shoot(int N, UniformDeviate& u) const 
     {
@@ -1926,7 +1914,6 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-#ifdef USE_IMAGES
     template double SBProfile::doFillXImage2(ImageView<float>& img, double dx) const;
     template double SBProfile::doFillXImage2(ImageView<double>& img, double dx) const;
 
@@ -1978,6 +1965,5 @@ namespace galsim {
         ImageView<float>& Re, ImageView<float>& Im, double dk, int wmult) const;
     template void SBProfile::fourierDrawK(
         ImageView<double>& Re, ImageView<double>& Im, double dk, int wmult) const;
-#endif
 
 }

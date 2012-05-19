@@ -8,8 +8,6 @@
  *
  * The SBProfiles include common star, galaxy, and PSF shapes.
  * If you have not defined USE_LAGUERRE, the SBLaguerre class will be skipped.
- * If you have not defined USE_IMAGES, all of the drawing routines are disabled but you will no 
- * longer be dependent on the Image and FITS classes.
  */
 
 #include <cmath>
@@ -17,11 +15,6 @@
 #include <map>
 #include <vector>
 #include <algorithm>
-
-/**
- * Remove this to disable the drawing routines. Also removes dependencies on Image and FITS classes.
- */
-#define USE_IMAGES 
 
 #define USE_LAGUERRE ///< Remove this to skip the SBLaguerre classes.
 
@@ -31,10 +24,7 @@
 #include "Table.h"
 #include "Random.h"
 #include "Angle.h"
-
-#ifdef USE_IMAGES
 #include "Image.h"
-#endif
 
 #ifdef USE_LAGUERRE
 #include "Laguerre.h"
@@ -286,7 +276,6 @@ namespace galsim {
          */
         virtual double getNegativeFlux() const {return getFlux()>0. ? 0. : -getFlux();}
 
-#ifdef USE_IMAGES
         // **** Drawing routines ****
         //@{
         /**
@@ -529,7 +518,6 @@ namespace galsim {
         template <typename T>
         double fillXImage(ImageView<T>& image, double dx) const  // return flux integral
         { return doFillXImage(image, dx); }
-#endif
 
         /**
          * @brief Utility for drawing a k grid into FFT data structures - not intended for public 
@@ -543,7 +531,6 @@ namespace galsim {
          */
         virtual void fillXGrid(XTable& xt) const;
 
-#ifdef USE_IMAGES
         // Virtual functions cannot be templates, so to make fillXImage work like a virtual
         // function, we have it call these, which need to include all the types of Image
         // that we want to use.
@@ -559,7 +546,6 @@ namespace galsim {
         // implements this as a template:
         template <typename T>
         double doFillXImage2(ImageView<T>& image, double dx) const;
-#endif
     };
 
     /** 
@@ -1601,7 +1587,6 @@ namespace galsim {
         double fillXImage(ImageView<T>& I, double dx) const;
 
     protected:
-#ifdef USE_IMAGES
         virtual double doFillXImage(ImageView<float>& I, double dx) const
         { return fillXImage(I,dx); }
         virtual double doFillXImage(ImageView<double>& I, double dx) const
@@ -1610,7 +1595,6 @@ namespace galsim {
         { return fillXImage(I,dx); }
         virtual double doFillXImage(ImageView<int>& I, double dx) const
         { return fillXImage(I,dx); }
-#endif
 
     };
 

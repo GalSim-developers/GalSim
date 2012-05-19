@@ -4,26 +4,15 @@
 
 /** 
  * @file PhotonArray.h @brief Contains a class definition for lists of photons from "shooting."
- *
- * If you have not defined USE_IMAGES, all of the drawing routines are disabled but you will no 
- * longer be dependent on the Image and FITS classes.
  */
 
 #include <cmath>
 #include <vector>
 #include <algorithm>
 
-/**
- * Remove this to disable the drawing routines. Also removes dependencies on Image and FITS classes.
- */
-#define USE_IMAGES 
-
 #include "Std.h"
 #include "Random.h"
-
-#ifdef USE_IMAGES
 #include "Image.h"
-#endif
 
 namespace galsim {
 
@@ -170,7 +159,6 @@ namespace galsim {
          */
         void takeYFrom(const PhotonArray& rhs);
 
-#ifdef USE_IMAGES
         /**
          * @brief Add flux of photons to an image by binning into pixels.
          *
@@ -183,7 +171,6 @@ namespace galsim {
          */
         template <class T>
         void addTo(ImageView<T>& target) const;
-#endif
     private:
         std::vector<double> _x;      // Vector holding x coords of photons
         std::vector<double> _y;      // Vector holding y coords of photons

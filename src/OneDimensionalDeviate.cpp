@@ -3,6 +3,10 @@
 #include "OneDimensionalDeviate.h"
 #include "integ/Int.h"
 
+// Define this variable to find azimuth of 2d photons by drawing a uniform deviate for theta,
+// instead of drawing 2 deviates for a point on the unit circle.
+//#define USE_COS_SIN
+
 namespace galsim {
 
     ///////////   Magic Numbers ///////////

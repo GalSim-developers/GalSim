@@ -35,7 +35,6 @@ namespace galsim {
             vx.push_back(new XTable(Nk, dx));
     }
 
-#ifdef USE_IMAGES
     template <typename T>
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& img, const Interpolant2d& i, double dx_, double padFactor) : 
@@ -72,7 +71,6 @@ namespace galsim {
                 vx.front()->xSet(xTab, yTab, img(ix,iy));
         }
     }
-#endif
 
     SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs):
         Ninitial(rhs.Ninitial), dx(rhs.dx), Nk(rhs.Nk), Nimages(rhs.Nimages),
@@ -262,15 +260,11 @@ namespace galsim {
         }
     }
 
-#ifdef USE_IMAGES
     // One more time: for images now
     // Returns total flux
     template <typename T>
     double SBInterpolatedImage::fillXImage(ImageView<T>& I, double dx) const 
     {
-#ifdef DANIELS_TRACING
-        cout << "SBInterpolatedImage::fillXImage called" << endl;
-#endif
         if ( dynamic_cast<const InterpolantXY*> (xInterp)) {
             double sum=0.;
             for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
@@ -289,14 +283,10 @@ namespace galsim {
             return SBProfile::doFillXImage(I,dx);
         }
     }
-#endif
 
 #ifndef OLD_WAY
     double SBInterpolatedImage::xValue(Position<double> p) const 
     {
-#ifdef DANIELS_TRACING
-        cout << "getting xValue at " << p << endl;
-#endif
         checkXsum();
         return xsum->interpolate(p.x, p.y, *xInterp);
     }
@@ -471,7 +461,6 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-#ifdef USE_IMAGES
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<float>& img, const Interpolant2d& i, double dx_, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImage(
@@ -480,6 +469,5 @@ namespace galsim {
         const BaseImage<short>& img, const Interpolant2d& i, double dx_, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<int>& img, const Interpolant2d& i, double dx_, double padFactor);
-#endif
 }
 

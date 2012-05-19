@@ -41,7 +41,6 @@ namespace galsim {
          */
         SBInterpolatedImage(int Npix, double dx_, const Interpolant2d& i, int Nimages_=1);
 
-#ifdef USE_IMAGES
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
          * image.
@@ -60,7 +59,6 @@ namespace galsim {
         template <typename T> 
         SBInterpolatedImage(const BaseImage<T>& img, const Interpolant2d& i,
                             double dx_=0., double padFactor=0.);
-#endif
 
         /** 
          * @brief Copy Constructor.
@@ -196,13 +194,10 @@ namespace galsim {
         virtual void fillKGrid(KTable& kt) const;
         virtual void fillXGrid(XTable& xt) const;
 
-#ifdef USE_IMAGES
         template <typename T>
         double fillXImage(ImageView<T>& I, double dx) const;
-#endif
 
     protected:
-#ifdef USE_IMAGES
         // These are the virtual functions, but we don't want to have to duplicate the
         // code implement these.  So each one just calls the template version.  The
         // C++ overloading rules mean that it will call the local fillXImage template 
@@ -223,7 +218,6 @@ namespace galsim {
         { return fillXImage(I,dx); }
         virtual double doFillXImage(ImageView<double>& I, double dx) const
         { return fillXImage(I,dx); }
-#endif
 
     private:
         void checkReady() const; ///< Make sure all internal quantities are ok.
