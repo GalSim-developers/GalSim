@@ -4,7 +4,7 @@
 from .import _galsim
 
 def Position_repr(self):
-    return self.__class__.__name__+"("+str(self.x)+", "+str(self.y)+")"
+    return self.__class__.__name__+"(x="+str(self.x)+", y="+str(self.y)+")"
 
 def Position_str(self):
     return "("+str(self.x)+", "+str(self.y)+")"

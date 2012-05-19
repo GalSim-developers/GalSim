@@ -9,7 +9,7 @@ def Shear_repr(self):
     return (self.__class__.__name__+"(e1="+str(self.getE1())+", e2="+str(self.getE2())+")")
 
 def Shear_str(self):
-    return ("(e1="+str(self.getE1())+", e2="+str(self.getE2())+")")
+    return ("("+str(self.getE1())+", "+str(self.getE2())+")")
 
 _galsim.Shear.__repr__ = Shear_repr
 _galsim.Shear.__str__ = Shear_str
