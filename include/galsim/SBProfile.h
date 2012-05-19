@@ -70,9 +70,9 @@ namespace galsim {
         /**
          * @brief A rough indicator of how good the FFTs need to be for setting `maxK()` and 
          * `stepK()` values.  
-	 *
-	 *  Generic indicator of what level of error one is willing to tolerate from numerical approximations,
-	 * such as aliasing, or necessary truncation / folding of functions that extend to infinity. 
+         *
+         *  Generic indicator of what level of error one is willing to tolerate from numerical approximations,
+         * such as aliasing, or necessary truncation / folding of functions that extend to infinity. 
          */
         static const double ALIAS_THRESHOLD;
 
@@ -250,11 +250,11 @@ namespace galsim {
          * is called for this object.  Default implementation is to return getFlux(), if it is
          * positive, or 0 otherwise, which will be
          * the case when the SBProfile is constructed entirely from elements of the same sign.
-	 *
-	 * It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the
-	 * same thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
-	 * cases involving lookup tables, etc.
-	 *
+         *
+         * It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the
+         * same thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
+         * cases involving lookup tables, etc.
+         *
          * @returns Expected positive-photon flux.
          */
         virtual double getPositiveFlux() const {return getFlux()>0. ? getFlux() : 0.;}
@@ -267,11 +267,11 @@ namespace galsim {
          * is negative, 0 otherwise,
          * which will be the case when the SBProfile is constructed entirely from elements that
          * have the same sign.
-	 *
-	 * It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the
-	 * same thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
-	 * cases involving lookup tables, etc.
-	 *
+         *
+         * It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the
+         * same thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
+         * cases involving lookup tables, etc.
+         *
          * @returns Expected absolute value of negative-photon flux.
          */
         virtual double getNegativeFlux() const {return getFlux()>0. ? 0. : -getFlux();}
@@ -284,13 +284,13 @@ namespace galsim {
          * The input image must have defined boundaries and pixel scale.  The photons generated
          * by shoot() method will be binned into the target Image.  See caveats in `shoot()` docstring.
          * Input `Image` will be cleared before drawing in the photons.  Scale and location of the `Image` pixels 
-	 * will not be altered.  Photons falling outside the `Image` range will be ignored.
-	 *
-	 * It is important to remember that the `Image` produced by `drawShoot` represents the `SBProfile`
-	 * _as convolved with the square Image pixel._  So do not expect an exact match, even in the limit of
-	 * large photon number, between the outputs of `draw()` and `drawShoot`.  You should convolve the `SBProfile` 
-	 * with an `SBBox(dx)` in order to match what will be produced by `drawShoot` onto an image with pixel scale `dx`.
-	 *
+         * will not be altered.  Photons falling outside the `Image` range will be ignored.
+         *
+         * It is important to remember that the `Image` produced by `drawShoot` represents the `SBProfile`
+         * _as convolved with the square Image pixel._  So do not expect an exact match, even in the limit of
+         * large photon number, between the outputs of `draw()` and `drawShoot`.  You should convolve the `SBProfile` 
+         * with an `SBBox(dx)` in order to match what will be produced by `drawShoot` onto an image with pixel scale `dx`.
+         *
          * @param[in] img Image to draw on.
          * @param[in] N Total number of photons to produce.
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.

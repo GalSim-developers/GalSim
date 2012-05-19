@@ -103,11 +103,11 @@ namespace galsim {
          * be generated.  Noisy images or ring-y kernels will generate a lot of shot noise in
          * the shoot() output.  Not all kernels have photon-shooting implemented.  It may be best to
          * stick to nearest-neighbor and linear interpolation kernels if you wish to avoid these issues.
-	 *
-	 * Use the `Delta` Interpolant if you do not want to waste time moving the photons from their pixel 
-	 * centers.  But you will regret any attempt to draw images analytically with that one.
-	 *
-	 * Photon shooting with the Sinc kernel is a bad idea and is currently forbidden.
+         *
+         * Use the `Delta` Interpolant if you do not want to waste time moving the photons from their pixel 
+         * centers.  But you will regret any attempt to draw images analytically with that one.
+         *
+         * Photon shooting with the Sinc kernel is a bad idea and is currently forbidden.
          *
          * @param[in] N Total umber of photons to produce.
          * @param[in] u UniformDeviate that will be used to draw photons from distribution.

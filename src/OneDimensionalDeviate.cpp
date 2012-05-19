@@ -40,7 +40,7 @@ namespace galsim {
     bool findExtremum( const FluxDensity& function,
                        double xmin,
                        double xmax,
-		       double& extremum, 
+                       double& extremum, 
                        int divisionSteps,
                        double xFractionalTolerance = 1e-4) {
         if (xmax < xmin) std::swap(xmax,xmin);
@@ -197,8 +197,8 @@ namespace galsim {
 
         std::list<Interval> result;
         double densityVariation = 0.;
-	if (std::abs(densityLower) > 0. && std::abs(densityUpper) > 0.)
-	     densityVariation = densityLower / densityUpper;
+        if (std::abs(densityLower) > 0. && std::abs(densityUpper) > 0.)
+            densityVariation = densityLower / densityUpper;
         if (densityVariation > 1.) densityVariation = 1. / densityVariation;
         if (densityVariation > ALLOWED_FLUX_VARIATION) {
             // Don't split if flux range is small

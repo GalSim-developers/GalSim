@@ -4,6 +4,7 @@ Image.cpp
 Interpolant.cpp
 Laguerre.cpp
 OneDimensionalDeviate.cpp
+PhotonArray.cpp
 Pset.cpp
 SBParse.cpp
 SBInterpolatedImage.cpp

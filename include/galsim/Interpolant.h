@@ -539,9 +539,9 @@ namespace galsim {
         double uCalc(double u) const;
 
         /// @brief Override numerical calculation with known analytic integral
-	double getPositiveFlux() const {return 13./12.;}
+        double getPositiveFlux() const {return 13./12.;}
         /// @brief Override numerical calculation with known analytic integral
-	double getNegativeFlux() const {return 1./12.;}
+        double getNegativeFlux() const {return 1./12.;}
 
     private:
         double range; ///< x range, reduced slightly from n=2 so we're not using zero-valued endpoints.
