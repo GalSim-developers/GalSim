@@ -32,7 +32,7 @@ def main(argv):
         raise err
     rng = galsim.UniformDeviate(1534225)
     sbp = galsim.SBParse(sbs)
-    bounds = galsim.BoundsI(-dim/2, dim/2+1, -dim/2, dim/2+1)
+    bounds = galsim.BoundsI(-dim/2, dim/2-1, -dim/2, dim/2-1)
     img = galsim.ImageF(bounds)
     img.setScale(dx)
     sbp.drawShoot(img, nPhotons, rng)

@@ -77,7 +77,7 @@ namespace galsim {
         xInterp(rhs.xInterp), kInterp(rhs.kInterp),
         wts(rhs.wts), fluxes(rhs.fluxes), xFluxes(rhs.xFluxes), yFluxes(rhs.yFluxes),
         xsum(0), ksum(0), xsumValid(false), ksumValid(false), ready(rhs.ready),
-	readyToShoot(false) 
+        readyToShoot(false) 
     {
         // copy tables
         for (int i=0; i<Nimages; i++) {
@@ -107,7 +107,7 @@ namespace galsim {
         wts *= factor;
         if (xsumValid) *xsum *= factor;
         if (ksumValid) *ksum *= factor;
-	readyToShoot = false;	// Need to rescale all the cumulative fluxes
+        readyToShoot = false;   // Need to rescale all the cumulative fluxes
     }
 
     Position<double> SBInterpolatedImage::centroid() const 
@@ -131,7 +131,7 @@ namespace galsim {
                 "SBInterpolatedImage::setPixel x coordinate " << iy << " out of bounds";
 
         ready = false;
-	readyToShoot = false;
+        readyToShoot = false;
         vx[iz]->xSet(ix, iy, value);
     }
 
@@ -150,7 +150,7 @@ namespace galsim {
         wts = wts_;
         xsumValid = false;
         ksumValid = false;
-	readyToShoot = false;
+        readyToShoot = false;
     }
 
     void SBInterpolatedImage::checkReady() const 
@@ -401,8 +401,7 @@ namespace galsim {
         checkXsum();
         positiveFlux = 0.;
         negativeFlux = 0.;
-        allPixels.clear();
-        double cumulativeFlux = 0.;
+        pt.clear();
         for (int iy=-Ninitial/2; iy<Ninitial/2; iy++) {
             double y = iy*dx;
             for (int ix=-Ninitial/2; ix<Ninitial/2; ix++) {
@@ -411,16 +410,13 @@ namespace galsim {
                 double x=ix*dx;
                 if (flux > 0.) {
                     positiveFlux += flux;
-                    cumulativeFlux += flux;
-                    allPixels.insert(Pixel(x,y,cumulativeFlux,true));
                 } else {
-                    flux = -flux;
-                    negativeFlux += flux;
-                    cumulativeFlux += flux;
-                    allPixels.insert(Pixel(x,y,cumulativeFlux, false));
+                    negativeFlux += -flux;
                 }
+                pt.push_back(Pixel(x,y,flux));
             }
         }
+        pt.buildTree();
         readyToShoot = true;
     }
 
@@ -438,18 +434,14 @@ namespace galsim {
         assert(N>=0);
 
         PhotonArray result(N);
-        if (N<=0 || allPixels.empty()) return result;
+        if (N<=0 || pt.empty()) return result;
         double totalAbsFlux = positiveFlux + negativeFlux;
         double fluxPerPhoton = totalAbsFlux / N;
-        typedef std::set<Pixel>::const_iterator citer;
         for (int i=0; i<N; i++) {
-            Pixel p;
-            p.cumulativeFlux = ud()*totalAbsFlux;
-            citer upper = allPixels.lower_bound(p);
-	    // use last pixel if we're past the end
-            if (upper == allPixels.end()) --upper; 
-            result.setPhoton(i, upper->x, upper->y, 
-                             upper->isPositive ? fluxPerPhoton : -fluxPerPhoton);
+            double unitRandom = ud();
+            Pixel* p = pt.find(unitRandom);
+            result.setPhoton(i, p->x, p->y, 
+                             p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }
 
         // Last step is to convolve with the interpolation kernel.  Can skip if using a 2d delta function

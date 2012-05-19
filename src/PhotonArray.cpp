@@ -88,7 +88,7 @@ namespace galsim {
         double ySave=0.;
         double fluxSave=0.;
 
-        for (int iOut = N-1; iOut<=0; iOut--) {
+        for (int iOut = N-1; iOut>=0; iOut--) {
             // Randomly select an input photon to use at this output
             int iIn = static_cast<int> (floor( (iOut+1)*ud()));
             if (iIn > iOut) iIn=iOut;  // should not happen, but be safe
@@ -126,7 +126,7 @@ namespace galsim {
 
         if (dx==0. || !b.isDefined()) 
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
-				     " zero pixel scale or undefined Bounds");
+                                     " zero pixel scale or undefined Bounds");
 
         double fluxScale = 1./(dx*dx);  // Factor to turn flux into surface brightness in an Image pixel
 

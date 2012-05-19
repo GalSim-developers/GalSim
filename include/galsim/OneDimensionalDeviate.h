@@ -2,12 +2,12 @@
 #ifndef ONE_DIMENSIONAL_DEVIATE_H
 #define ONE_DIMENSIONAL_DEVIATE_H
 
-#include <set>
 #include <list>
 #include <vector>
 #include <functional>
 #include "Random.h"
 #include "PhotonArray.h"
+#include "ProbabilityTree.h"
 
 namespace galsim {
 
@@ -81,30 +81,18 @@ namespace galsim {
                                        _fluxIsReady(false) {}
         /**
          * @brief Draw one photon position and flux from within this interval
-         * @param[in] absFlux The cumulative absolute flux at which the photon should be selected.
+         * @param[in] unitRandom An initial uniform deviate to select photon
          * @param[out] x x (or radial) coordinate of the selected photon.
          * @param[out] flux flux of the selected photon, nominally +-1, but can differ if not using rejection.
          * @param[out] ud UniformDeviate used for rejection sampling, if needed.
          */
-        void drawWithin(double absFlux, double& x, double& flux,
+        void drawWithin(double unitRandom, double& x, double& flux,
                         UniformDeviate& ud) const;
         /**
          * @brief Get integrated flux over this interval or annulus.  Performs integral if not already cached.
          * @returns Integrated flux in interval.
          */
-        double getDifferentialFlux() const {checkFlux(); return _differentialFlux;}
-        /**
-         * @brief Return cumulative integral of absolute value of flux out to upper limit of this interval.
-         *
-         * Note this cannot be set internally: requires an outside agent to set this with knownledge of other intervals.
-         * @returns cumulative flux to end of this interval.
-         */
-        double getCumulativeFlux() const {return _cumulativeFlux;}
-        /**
-         * @brief Set cumulative flux to end of this interval
-         * @param[in] f Cumulative flux.
-         */
-        void setCumulativeFlux(double f)  {_cumulativeFlux = f;}
+        double getFlux() const {checkFlux(); return _flux;}
         /**
          * @brief Report interval bounds
          * @param[out] xLower Interval lower bound
@@ -125,10 +113,7 @@ namespace galsim {
          * @returns List contiguous Intervals whose union is this one.
          */
         std::list<Interval> split(double smallFlux);
-        /// @brief An ordering operation to use in sorting Intervals by cumulative flux.
-        bool operator<(const Interval& rhs) const {
-            return _cumulativeFlux<rhs._cumulativeFlux;
-        }
+
     private:
         const FluxDensity* _fluxDensityPtr;  ///< Pointer to the parent FluxDensity function.
         double _xLower; ///< Interval lower bound
@@ -136,8 +121,7 @@ namespace galsim {
         bool _isRadial; ///< True if domain is an annulus, otherwise domain is a linear interval.
         mutable bool _fluxIsReady; ///< True if flux has been integrated
         void checkFlux() const; ///< Calculate flux if it has not already been done.
-        mutable double _differentialFlux; ///< Integrated flux in this interval (can be negative)
-        double _cumulativeFlux; ///< Cumulative absolute-value flux including this interval
+        mutable double _flux; ///< Integrated flux in this interval (can be negative)
         /// @brief Finds the x or radius coord that would enclose fraction of this intervals flux if flux were constant.
         double interpolateFlux(double fraction) const; 
         /**
@@ -200,7 +184,7 @@ namespace galsim {
         PhotonArray shoot(int N, UniformDeviate& ud) const;
     private:
         const FluxDensity& _fluxDensity; ///< Function being sampled
-        std::set<Interval> _intervalSet; ///< Container for Intervals generated at construction
+        ProbabilityTree<Interval> _pt; ///< Binary tree of intervals for photon shooting
         double _positiveFlux; ///< Stored total positive flux
         double _negativeFlux; ///< Stored total negative flux
         const bool _isRadial; ///< True for 2d axisymmetric function, false for 1d function

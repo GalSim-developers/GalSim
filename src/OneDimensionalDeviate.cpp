@@ -138,20 +138,19 @@ namespace galsim {
     }
 
 
-    // Select a photon from within the interval.  absFlux serves
-    // as an initial randomization, it should be uniformly
-    // distributed within _differentialFlux of the _cumulativeFlux at end of interval.
-    void Interval::drawWithin(double absFlux, double& x, double& flux,
+    // Select a photon from within the interval.  unitRandom
+    // as an initial random value, more from ud if needed for rejections.
+    void Interval::drawWithin(double unitRandom, double& x, double& flux,
                                  UniformDeviate& ud) const {
-        double fractionOfInterval = (_cumulativeFlux -  absFlux) 
-            / std::abs(_differentialFlux);
+        double fractionOfInterval = std::min(unitRandom, 1.);
+        fractionOfInterval = std::max(0., fractionOfInterval);
         x = interpolateFlux(fractionOfInterval);
         flux = 1.;
         if (_useRejectionMethod) {
             while ( ud() > std::abs((*_fluxDensityPtr)(x)) / _maxAbsDensity) {
                 x = interpolateFlux(ud());
             }
-            if (_differentialFlux < 0) flux = -1.;
+            if (_flux < 0) flux = -1.;
         } else {
             flux = (*_fluxDensityPtr)(x) / _meanAbsDensity;
         }
@@ -162,16 +161,16 @@ namespace galsim {
         if (_isRadial) {
             // Integrate r*F
             RTimesF<FluxDensity> integrand(*_fluxDensityPtr);
-            _differentialFlux = integ::int1d(integrand, 
-                                             _xLower, _xUpper,
-                                             RELATIVE_ERROR,
-                                             ABSOLUTE_ERROR);
+            _flux = integ::int1d(integrand, 
+                                 _xLower, _xUpper,
+                                 RELATIVE_ERROR,
+                                 ABSOLUTE_ERROR);
         } else {
             // Integrate the input function
-            _differentialFlux = integ::int1d(*_fluxDensityPtr, 
-                                             _xLower, _xUpper,
-                                             RELATIVE_ERROR,
-                                             ABSOLUTE_ERROR);
+            _flux = integ::int1d(*_fluxDensityPtr, 
+                                 _xLower, _xUpper,
+                                 RELATIVE_ERROR,
+                                 ABSOLUTE_ERROR);
         }
         _fluxIsReady = true;
     }
@@ -185,10 +184,10 @@ namespace galsim {
         // Get the flux in this interval 
         checkFlux();
         if (_isRadial) {
-            _meanAbsDensity = std::abs(_differentialFlux / 
+            _meanAbsDensity = std::abs(_flux / 
                                        ( M_PI*(_xUpper*_xUpper - _xLower*_xLower)));
         } else {
-            _meanAbsDensity = std::abs(_differentialFlux / (_xUpper - _xLower));
+            _meanAbsDensity = std::abs(_flux / (_xUpper - _xLower));
         }
         double densityLower = (*_fluxDensityPtr)(_xLower);
         double densityUpper = (*_fluxDensityPtr)(_xUpper);
@@ -204,7 +203,7 @@ namespace galsim {
             // Don't split if flux range is small
             _useRejectionMethod = false;
             result.push_back(*this);
-        } else if (std::abs(_differentialFlux) < smallFlux) {
+        } else if (std::abs(_flux) < smallFlux) {
             // Don't split further, as it will be rare to be in this interval
             // and rejection is ok.
             _useRejectionMethod = true;
@@ -241,14 +240,11 @@ namespace galsim {
                              range[iRange],
                              range[iRange+1],
                              _isRadial);
-            double rangeFlux = segment.getDifferentialFlux();
+            double rangeFlux = segment.getFlux();
             if (rangeFlux >= 0.) _positiveFlux += rangeFlux;
             else _negativeFlux += std::abs(rangeFlux);
         }
         double totalAbsoluteFlux = _positiveFlux + _negativeFlux;
-
-        // Collect Intervals as an un-ordered list initially
-        std::list<Interval> intervalList;
 
         // Now break each range into Intervals
         for (Index iRange = 0; iRange < range.size()-1; iRange++) {
@@ -264,52 +260,24 @@ namespace galsim {
                     Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial);
                     std::list<Interval> leftList = splitit.split(SMALL_FRACTION_OF_FLUX
                                                                 *totalAbsoluteFlux);
-                    {
-                        double sum=0.;
-                        for (std::list<Interval>::iterator i=leftList.begin(); i!=leftList.end(); ++i)
-                            sum += i->getDifferentialFlux();
-                        double xl, xh;
-                        splitit.getRange(xl,xh);
-                    }
-                    intervalList.splice(intervalList.end(), leftList);
+                    _pt.splice(_pt.end(), leftList);
                 }
                 {
                     Interval splitit(_fluxDensity, extremum, range[iRange+1], _isRadial);
                     std::list<Interval> rightList = splitit.split(SMALL_FRACTION_OF_FLUX
                                                                 *totalAbsoluteFlux);
-                    {
-                        double sum=0.;
-                        for (std::list<Interval>::iterator i=rightList.begin(); i!=rightList.end(); ++i)
-                            sum += i->getDifferentialFlux();
-                        double xl, xh;
-                        splitit.getRange(xl,xh);
-                    }
-                    intervalList.splice(intervalList.end(), rightList);
+                    _pt.splice(_pt.end(), rightList);
                 }
             } else {
                 // Just single Interval in this range, no extremum:
                 Interval splitit(_fluxDensity, range[iRange], range[iRange+1], _isRadial);
                 std::list<Interval> leftList = splitit.split(SMALL_FRACTION_OF_FLUX
                                                            *totalAbsoluteFlux);
-                {
-                    double sum=0.;
-                    for (std::list<Interval>::iterator i=leftList.begin(); i!=leftList.end(); ++i)
-                        sum += i->getDifferentialFlux();
-                    double xl, xh;
-                    splitit.getRange(xl,xh);
-                }
-                intervalList.splice(intervalList.end(), leftList);
+                _pt.splice(_pt.end(), leftList);
             }
         }
-        // Accumulate fluxes and put into set structure.  std::set takes care of sorting & binary searching.
-        double cumulativeFlux = 0.;
-        for (std::list<Interval>::iterator i=intervalList.begin();
-             i != intervalList.end();
-             ++i) {
-            cumulativeFlux += std::abs(i->getDifferentialFlux());
-            i->setCumulativeFlux(cumulativeFlux);
-            _intervalSet.insert(*i);
-        }
+        // Build the ProbabilityTree
+        _pt.buildTree();
     }
 
     PhotonArray OneDimensionalDeviate::shoot(int N, UniformDeviate& ud) const {
@@ -323,17 +291,11 @@ namespace galsim {
         for (int i=0; i<N; i++) {
             if (_isRadial) {
 #ifdef USE_COS_SIN
-                // Create dummy Interval with randomly drawn cumulative flux
-                // to use for sorting
-                Interval drawn(_fluxDensity, 0., 0.);
-                drawn.setCumulativeFlux(ud()*totalAbsoluteFlux);
-                std::set<Interval>::const_iterator upper =
-                    _intervalSet.lower_bound(drawn);
-                // use last pixel if we're past the end
-                if (upper == _intervalSet.end()) --upper; 
+                double unitRandom = ud();
+                Interval* chosen = _pt.find(unitRandom);
                 // Now draw a radius from within selected interval
                 double radius, flux;
-                upper->drawWithin(drawn.getCumulativeFlux(), radius, flux, ud);
+                chosen->drawWithin(unitRandom, radius, flux, ud);
                 // Draw second ud to get azimuth 
                 double theta = 2.*M_PI*ud();
                 result.setPhoton(i, radius*std::cos(theta), radius*std::sin(theta), flux*fluxPerPhoton);
@@ -347,34 +309,22 @@ namespace galsim {
                     rsq = xu*xu+yu*yu;
                 } while (rsq>=1. || rsq==0.);
                 // Now rsq is unit deviate from 0 to 1
-                // Create dummy Interval with randomly drawn cumulative flux
-                // to use for sorting
-                Interval drawn(_fluxDensity, 0., 0.);
-                drawn.setCumulativeFlux(rsq*totalAbsoluteFlux);
-                std::set<Interval>::const_iterator upper =
-                    _intervalSet.lower_bound(drawn);
-                // use last pixel if we're past the end
-                if (upper == _intervalSet.end()) --upper; 
-                // Now draw a position from within selected interval
+                double unitRandom = rsq;
+                Interval* chosen = _pt.find(unitRandom);
+                // Now draw a radius from within selected interval
                 double radius, flux;
-                upper->drawWithin(drawn.getCumulativeFlux(), radius, flux, ud);
+                chosen->drawWithin(unitRandom, radius, flux, ud);
                 // Rescale x & y:
                 double rScale = radius / std::sqrt(rsq);
                 result.setPhoton(i,xu*rScale, yu*rScale, flux*fluxPerPhoton);
 #endif            
             } else {
                 // Simple 1d interpolation
-                // Create dummy Interval with randomly drawn cumulative flux
-                // to use for sorting
-                Interval drawn(_fluxDensity, 0., 0.);
-                drawn.setCumulativeFlux(ud()*totalAbsoluteFlux);
-                std::set<Interval>::const_iterator upper =
-                    _intervalSet.lower_bound(drawn);
-                // use last pixel if we're past the end
-                if (upper == _intervalSet.end()) --upper; 
-                // Now draw a position from within selected interval
+                double unitRandom = ud();
+                Interval* chosen = _pt.find(unitRandom);
+                // Now draw an x from within selected interval
                 double x, flux;
-                upper->drawWithin(drawn.getCumulativeFlux(), x, flux, ud);
+                chosen->drawWithin(unitRandom, x, flux, ud);
                 result.setPhoton(i, x, 0., flux*fluxPerPhoton);
             }
         }

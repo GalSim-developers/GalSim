@@ -331,6 +331,7 @@ namespace galsim {
             else return 1./_width;
         }
         double uval(double u) const { return 1.; }
+        double getTolerance() const {return _width;}
 
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const {return 1.;}

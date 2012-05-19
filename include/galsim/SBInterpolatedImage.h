@@ -9,7 +9,7 @@
 #include "Std.h"
 #include "SBProfile.h"
 #include "Interpolant.h"
-#include <set>
+#include "ProbabilityTree.h"
 
 namespace galsim {
 
@@ -265,17 +265,18 @@ namespace galsim {
          * @brief Simple structure used to index all pixels for photon shooting
          */
         struct Pixel {
-            Pixel(double x_=0., double y_=0., double flux_=0., bool pos=true): 
-                x(x_), y(y_), cumulativeFlux(flux_), isPositive(pos) {}
+            Pixel(double x_=0., double y_=0., double flux=0.): 
+                x(x_), y(y_), _flux(flux) {isPositive = _flux>=0;}
             double x;
             double y;
-            double cumulativeFlux;
+            double getFlux() const {return _flux;}
             bool isPositive;
-            bool operator<(const Pixel& rhs) const {return cumulativeFlux < rhs.cumulativeFlux;}
+        private:
+            double _flux;
         };
         mutable double positiveFlux;    ///< Sum of all positive pixels' flux
         mutable double negativeFlux;    ///< Sum of all negative pixels' flux
-        mutable std::set<Pixel> allPixels; ///< Set of all pixels with cumulative absolute flux, for shooting
+        mutable ProbabilityTree<Pixel> pt; ///< Binary tree of pixels, for photon-shooting
 
         /// @brief The default k-space interpolant
         static InterpolantXY defaultKInterpolant2d;
