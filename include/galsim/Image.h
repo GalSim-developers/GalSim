@@ -295,7 +295,8 @@ namespace galsim {
         /**
          *  @brief Constructor is protected since a BaseImage is a virtual base class.
          */
-        BaseImage(T* data, boost::shared_ptr<T> owner, int stride, const Bounds<int>& b, double scale=1.) :
+        BaseImage(T* data, boost::shared_ptr<T> owner, int stride, const Bounds<int>& b, 
+                  double scale=1.) :
             AssignableToImage<T>(b), _owner(owner), _data(data), _stride(stride), _scale(scale) {}
 
         /**
@@ -414,7 +415,8 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ImageView(T* data, const boost::shared_ptr<T>& owner, int stride, const Bounds<int>& b, double scale=1.) :
+        ImageView(T* data, const boost::shared_ptr<T>& owner, int stride, const Bounds<int>& b,
+                  double scale=1.) :
             BaseImage<T>(data, owner, stride, b, scale) {}
 
         /**
@@ -588,13 +590,20 @@ namespace galsim {
         /**
          *  @brief Deep copy constructor.
          */
-        Image(const Image<T>& rhs) : BaseImage<T>(rhs._bounds) { copyFrom(rhs); }
+        Image(const Image<T>& rhs) : BaseImage<T>(rhs._bounds) 
+        { this->_scale = rhs._scale; copyFrom(rhs); }
 
         /**
          *  @brief Can construct from any AssignableToImage
          */
         Image(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds()) 
         { rhs.assignTo(view()); }
+
+        /**
+         *  @brief If rhs is a BaseImage, then also get the scale
+         */
+        Image(const BaseImage<T>& rhs) : BaseImage<T>(rhs.getBounds()) 
+        { this->_scale = rhs.getScale(); copyFrom(rhs); }
 
         /**
          *  @brief Deep assignment operator.
