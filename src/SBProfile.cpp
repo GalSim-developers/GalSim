@@ -1690,7 +1690,7 @@ namespace galsim {
     PhotonArray SBExponential::shoot(int N, UniformDeviate& u) const
     {
         // Accuracy to which to solve for (log of) cumulative flux distribution:
-        const double Y_TOLERANCE=1e-4;
+        const double Y_TOLERANCE=1e-6;
 
         double fluxPerPhoton = getFlux() / N;
         PhotonArray result(N);
@@ -1706,16 +1706,16 @@ namespace galsim {
                 continue;
             }
             // Initial guess
-            y = -log(u());
-            double r = y>2 ? y : sqrt(2*y);
-            double dy = y - r + log(1+r);
+            y = -std::log(y);
+            double r = y>2 ? y : std::sqrt(2*y);
+            double dy = y - r + std::log(1+r);
             while ( std::abs(dy) > Y_TOLERANCE) {
                 r = r + (1+r)*dy/r;
-                dy = y - r + log(1+r);
+                dy = y - r + std::log(1+r);
             }
             // Draw another random for azimuthal angle (could use the unit-circle trick here...)
             double theta = 2*M_PI*u();
-            result.setPhoton(i,r0*r*cos(theta), r0*r*sin(theta), fluxPerPhoton);
+            result.setPhoton(i,r0*r*std::cos(theta), r0*r*std::sin(theta), fluxPerPhoton);
         }
         return result;
     }
