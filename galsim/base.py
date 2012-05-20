@@ -36,6 +36,23 @@ class GSObject:
         ret *= other
         return ret
 
+    # Likewise for op/ and op/=
+    def __idiv__(self, other):
+        self.setFlux(self.getFlux() / other)
+        return self
+
+    def __div__(self, other):
+        ret = self.copy()
+        ret /= other
+        return ret
+
+    def __itruediv__(self, other):
+        return __idiv__(self, other)
+
+    def __truediv__(self, other):
+        return __div__(self, other)
+
+
     # Make a copy of an object
     def copy(self):
         return GSObject(self.SBProfile.duplicate())
