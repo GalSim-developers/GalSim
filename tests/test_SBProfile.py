@@ -319,7 +319,7 @@ def test_sbprofile_moffat_properties():
     cen = galsim._galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid(), cen)
     # Check Fourier properties
-    np.testing.assert_almost_equal(psf.maxK(), 34.226259129031952)
+    np.testing.assert_almost_equal(psf.maxK(), 34.226260866076707)
     np.testing.assert_almost_equal(psf.stepK(), 0.08604618622618046)
     np.testing.assert_equal(psf.kValue(cen), 1+0j)
     # Check input flux vs output flux
