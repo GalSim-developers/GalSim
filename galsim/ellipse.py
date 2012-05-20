@@ -1,7 +1,7 @@
-"""@brief A few adjustments to the Ellipse class at the Python layer.
+"""@file ellipse.py @brief A few adjustments to the Ellipse class at the Python layer.
 """
 
-from .import _galsim
+from . import _galsim
 
 def Ellipse_repr(self):
     shear = self.getS()  # extract the e1 and e2 from the Shear instance

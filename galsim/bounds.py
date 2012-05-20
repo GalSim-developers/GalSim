@@ -1,7 +1,7 @@
-"""@brief A few adjustments to the Bounds class at the Python layer.
+"""@file bounds.py @brief A few adjustments to the Bounds class at the Python layer.
 """
 
-from .import _galsim
+from . import _galsim
 
 def Bounds_repr(self):
     return (self.__class__.__name__+"(xmin="+str(self.xMin)+", xmax="+str(self.xMax)+
