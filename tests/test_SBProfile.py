@@ -121,7 +121,7 @@ def do_shoot(prof, img, dx, name):
     print 'flux_max = ',flux_max
     flux_tot = img.array.sum()
     print 'flux_tot = ',flux_tot
-    if True:
+    if flux_max > 1.:
         # Since the number of photons required for a given accuracy level (in terms of 
         # number of decimal places), we rescale the comparison by the flux of the 
         # brightest pixel.
@@ -297,7 +297,9 @@ def test_sbprofile_sersic():
             err_msg="Using GSObject Sersic disagrees with expected result")
 
     # Test photon shooting.
-    do_shoot(sersic,myImg,0.2,"Sersic")
+    # Convolve with a small gaussian to smooth out the central peak.
+    sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
+    do_shoot(sersic2,myImg,0.2,"Sersic")
 
 
 def test_sersic_radii():
@@ -479,7 +481,9 @@ def test_sbprofile_largeshear():
             err_msg="Using GSObject applyShear disagrees with expected result")
     
     # Test photon shooting.
-    do_shoot(devauc,myImg,0.2,"sheared DeVauc")
+    # Convolve with a small gaussian to smooth out the central peak.
+    devauc2 = galsim.Convolve(devauc, galsim.Gaussian(sigma=0.3))
+    do_shoot(devauc2,myImg,0.2,"sheared DeVauc")
 
  
 def test_sbprofile_convolve():
@@ -596,7 +600,9 @@ def test_sbprofile_rotate():
             err_msg="Using GSObject applyRotation disagrees with expected result")
  
     # Test photon shooting.
-    do_shoot(gal,myImg,0.2,"rotated sheared Sersic")
+    # Convolve with a small gaussian to smooth out the central peak.
+    gal2 = galsim.Convolve(gal, galsim.Gaussian(sigma=0.3))
+    do_shoot(gal2,myImg,0.2,"rotated sheared Sersic")
 
 
 def test_sbprofile_mag():
@@ -752,7 +758,9 @@ def test_sbprofile_rescale():
             err_msg="Using GSObject 2 * obj disagrees with expected result")
  
     # Test photon shooting.
-    do_shoot(sersic2,myImg,0.2,"scaled Sersic")
+    # Convolve with a small gaussian to smooth out the central peak.
+    sersic3 = galsim.Convolve(sersic2, galsim.Gaussian(sigma=0.3))
+    do_shoot(sersic3,myImg,0.2,"scaled Sersic")
 
 
 def test_sbprofile_sbinterpolatedimage():
