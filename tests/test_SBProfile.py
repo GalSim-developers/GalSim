@@ -23,6 +23,17 @@ ftchar = ['F', 'D']
 ref_array = np.array([[00, 10, 20, 30], [01, 11, 21, 31], [02, 12, 22, 32],
                       [03, 13, 23, 33]]).astype(types[0])
 
+# For photon shooting, we calculate the number of photons to use based on the target
+# accuracy we are shooting for.  (Pun intended.)  
+# For each pixel,
+# uncertainty = sqrt(N_pix) * flux_photon = sqrt(N_tot * flux_pix / flux_tot) * flux_tot / N_tot
+#             = sqrt(flux_pix) * sqrt(flux_tot) / sqrt(N_tot)
+# This is largest for the brightest pixel.  So we use:
+# N = flux_max * flux_tot / photon_shoot_accuracy^2
+photon_shoot_accuracy = 2.e-3
+# The number of decimal places at which to test the photon shooting
+photon_decimal_test = 2
+
 # for radius tests - specify half-light-radius, FHWM, sigma to be compared with high-res image (with
 # pixel scale chosen iteratively until convergence is achieved, beginning with test_dx)
 test_hlr = 1.0
@@ -115,6 +126,20 @@ def test_sbprofile_gaussian():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian disagrees with expected result")
+
+    flux_max = savedImg.array.max()
+    print 'flux_max = ',flux_max
+    flux_tot = gauss.getFlux()
+    print 'flux_tot = ',flux_tot
+    #nphot = flux_max * flux_tot / photon_shoot_accuracy**2
+    nphot = 1. / photon_shoot_accuracy**2
+    print 'nphot = ',nphot
+    ud = galsim.UniformDeviate()
+    gauss.drawShoot(myImg,nphot,ud)
+    myImg.write("gauss_1_shoot.fits")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, photon_decimal_test,
+            err_msg="Photon shooting for Gaussian disagrees with expected result")
 
 
 def test_sbprofile_gaussian_properties():

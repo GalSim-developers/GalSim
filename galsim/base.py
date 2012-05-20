@@ -146,12 +146,14 @@ class GSObject:
             self.SBProfile.draw(image, dx=dx, wmult=wmult)
             return image
 
-    # Did not define all the other draw operations that operate on images inplace, would need to
-    # work out slightly different return syntax for that in Python
-
-    def shoot(self):
-        raise NotImplementedError("Sorry, photon shooting coming soon!")
-
+    def drawShoot(self, image, N, ud=None):
+        if type(N) != int:
+            # if given a float, just convert it to an integer
+            N = int(N)
+        if ud == None:
+            ud = galsim.UniformDeviate()
+        self.SBProfile.drawShoot(image, N, ud)
+         
 
 # Define "convenience function for going from (g1, g2) -> (e1, e2), used by two methods
 # in the GSObject class and by one function in real.py:
