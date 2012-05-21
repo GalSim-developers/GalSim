@@ -1368,7 +1368,7 @@ namespace galsim {
         return xval;
     }
 
-    double SBAiry::xValue(Position<double> p) const 
+    double SBAiry::xValue(const Position<double>& p) const 
     {
         double radius = std::sqrt(p.x*p.x+p.y*p.y) * D;
         return norm * _radial(radius);
@@ -1784,30 +1784,6 @@ namespace galsim {
         return result;
     }
 
-    // Integrand class for the flux integrals of Moffat
-    class MoffatFluxInt : public std::unary_function<double,double>
-    {
-    public:
-        MoffatFluxInt(double beta_): beta(beta_) {}
-        double operator()(double r) const 
-        { return r*std::pow(1.+r*r,-beta); }
-    private:
-        double beta;
-    };
-
-    class MoffatFlux 
-    {
-    public:
-        MoffatFlux(double beta): mfi(beta), target(0.) {}
-        void setTarget(double target_) {target=target_;}
-        double operator()(double r) const 
-        { return 2.*M_PI*integ::int1d(mfi, 0., r) - target; }
-    private:
-        MoffatFluxInt mfi;
-        double target;
-    };
-
-
     SBMoffat::SBMoffat(double beta_, double truncationFWHM, double flux_,
                        double size, RadiusType rType) : 
         beta(beta_), flux(flux_), norm(1.), rD(1.),
@@ -1830,10 +1806,8 @@ namespace galsim {
 
         // Analytic integration of total flux:
         fluxFactor = 1. - pow( 1+maxRrD*maxRrD, (1.-beta));
-        norm = (beta - 1.) / (M_PI * fluxFactor);
 
         // Get half-light radius in units of rD:
-        rerD = sqrt( pow(1.-0.5*fluxFactor , 1./(1.-beta)) - 1.);
 
         // Set size of this instance according to type of size given in constructor:
         switch (rType) {
@@ -1841,7 +1815,10 @@ namespace galsim {
                rD = size / FWHMrD;
                break;
           case HALF_LIGHT_RADIUS: 
-               rD = size / rerD;
+               {
+                   double rerD = sqrt( pow(1.-0.5*fluxFactor , 1./(1.-beta)) - 1.);
+                   rD = size / rerD;
+               }
                break;
           case SCALE_RADIUS:
                rD = size;
@@ -1853,7 +1830,7 @@ namespace galsim {
         _maxR_sq = _maxR * _maxR;
         _maxRrD_sq = maxRrD * maxRrD;
         _rD_sq = rD * rD;
-        norm = flux / (fluxFactor * _rD_sq);
+        norm = flux * (beta - 1.) / (M_PI * fluxFactor) / _rD_sq;
 
         xdbg << "Moffat rD " << rD << " fluxFactor " << fluxFactor
             << " norm " << norm << " maxRrD " << maxRrD << std::endl;

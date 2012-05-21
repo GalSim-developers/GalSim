@@ -278,7 +278,7 @@ namespace galsim {
          *
          * @returns Expected positive-photon flux.
          */
-        virtual double getPositiveFlux() const {return getFlux()>0. ? getFlux() : 0.;}
+        virtual double getPositiveFlux() const { return getFlux()>0. ? getFlux() : 0.; }
 
         /**
          * @brief Return expectation value of absolute value of flux in negative photons from shoot()
@@ -295,7 +295,7 @@ namespace galsim {
          *
          * @returns Expected absolute value of negative-photon flux.
          */
-        virtual double getNegativeFlux() const {return getFlux()>0. ? 0. : -getFlux();}
+        virtual double getNegativeFlux() const { return getFlux()>0. ? 0. : -getFlux(); }
 
         // **** Drawing routines ****
         //@{
@@ -891,7 +891,7 @@ namespace galsim {
         {
             // Self-assignment is nothing:
             if (&rhs == this) return *this;
-            if (adaptee) {delete adaptee; adaptee=0; }
+            if (adaptee) { delete adaptee; adaptee=0; }
             adaptee = rhs.adaptee->duplicate();
             matrixA = (rhs.matrixA); 
             matrixB = (rhs.matrixB); 
@@ -939,8 +939,8 @@ namespace galsim {
         double getFlux() const { return adaptee->getFlux()*absdet; }
         void setFlux(double flux_=1.) { adaptee->setFlux(flux_/absdet); }
 
-        double getPositiveFlux() const {return adaptee->getPositiveFlux()*absdet;}
-        double getNegativeFlux() const {return adaptee->getNegativeFlux()*absdet;}
+        double getPositiveFlux() const { return adaptee->getPositiveFlux()*absdet; }
+        double getNegativeFlux() const { return adaptee->getNegativeFlux()*absdet; }
 
         /**
          * @brief Shoot photons through this SBDistort.
@@ -1265,7 +1265,7 @@ namespace galsim {
              * @param[in] r radius, in units of half-light radius.
              * @returns Sersic function, normalized to unity at origin
              */
-            double operator()(double r) const {return std::exp(-_b*std::pow(r,_invn)); } 
+            double operator()(double r) const { return std::exp(-_b*std::pow(r,_invn)); } 
         private:
             double _invn; ///> 1/n
             double _b;  /// radial normalization constant
@@ -1502,6 +1502,7 @@ namespace galsim {
 
         double obscuration; ///< Radius ratio of central obscuration.
         double flux; ///< Flux.
+        double norm; ///< Calculated value: flux*D*D
 
     public:
         /**
@@ -1514,24 +1515,27 @@ namespace galsim {
          * @param[in] flux_ flux (default `flux_ = 1.`).
          */
         SBAiry(double D_=1., double obs_=0., double flux_=1.) :
-            D(D_), obscuration(obs_), flux(flux_), _sampler(0), _radial(obscuration) {}
+            D(D_), obscuration(obs_), flux(flux_), norm(flux*D*D),
+            _sampler(0), _radial(obscuration) {}
 
         /// @brief Copy constructor: photon-shooting structures are not copied, will be re-computed in copy
-        SBAiry(const SBAiry& rhs): D(rhs.D), obscuration(rhs.obscuration), flux(rhs.flux),
-                                   _sampler(0), _radial(obscuration) {}
+        SBAiry(const SBAiry& rhs): 
+            D(rhs.D), obscuration(rhs.obscuration), flux(rhs.flux), norm(rhs.norm),
+            _sampler(0), _radial(obscuration) {}
 
         /// @brief Assignment operator: photon-shooting structures are discarded, will be re-computed in copy
         const SBAiry& operator=(const SBAiry& rhs) {
             D = rhs.D;
             obscuration = rhs.obscuration;
             flux = rhs.flux;
+            norm = rhs.norm;
             _radial.setObscuration(obscuration);
             flushSampler();
             return *this;
         }
             
         /// @brief Destructor.
-        ~SBAiry() {flushSampler();}
+        ~SBAiry() { flushSampler(); }
 
         // Methods (Barney: mostly described by SBProfile Doxys, with maxK() and stepK() 
         // prescription described in class description).
@@ -1558,7 +1562,7 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) {flux=flux_; } 
+        void setFlux(double flux_=1.) { flux=flux_; } 
 
         /**
          * @brief Subclass is a scale-free version of the Airy radial function.
@@ -1581,7 +1585,7 @@ namespace galsim {
              * @returns Airy function, normalized to integrate to unity.
              */
             double operator()(double radius) const;
-            void setObscuration(double obscuration) {_obscuration=obscuration;}
+            void setObscuration(double obscuration) { _obscuration=obscuration; }
         private:
             double _obscuration; ///> Central obstruction size
         };
@@ -1775,7 +1779,7 @@ namespace galsim {
         double maxKrD; ///< Maximum lookup table `k` in units of `rD`.
         double stepKrD; ///< Stepsize lookup table `k` in units of `rD`.
         double FWHMrD;  ///< Full Width at Half Maximum in units of `rD`.
-        double rerD;    ///< Half-light radius in units of `rD`.
+        double fluxFactor; ///< Integral of total flux in terms of 'rD' units.
         double _rD_sq; ///< Calculated value: rD*rD;
         double _maxRrD_sq; ///< Calculated value: maxRrD * maxRrD
         double _maxR; ///< Calculated value: maxRrD * rD
