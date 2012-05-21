@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 Simple test of shooting photons to sample from an existing pixelized image.
-Usage: ShootInterpolate.py <input FITS> <output FITS> <dx> <dim> <nPhotons> [e1] [e2]
+Usage: ShootInterpolated.py <input FITS> <output FITS> <dx> <dim> <nPhotons> [e1] [e2]
 <input FITS> is name of the input FITS image, whose pixel scale will be treated as 1 unit.
 <output FITS> is name of FITS file image to be produced by sampling input
 dx is pixel scale for output image
 dim is number of pixels per side for output image
 nPhotons is number of photons to shoot through the image
-e1 and e2 are optional shear to be applied while shooting
+e1 and e2 are optional shear to be applied while shooting (specified as e1/e2-type distortions)
 """
 
 # This machinery lets us run Python examples even though they aren't positioned

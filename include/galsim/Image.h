@@ -440,7 +440,7 @@ namespace galsim {
         /**
          *  @brief Deep assignment operator.
          *
-         *  The bounds must be commesurate (i.e. the same shape).
+         *  The bounds must be commensurate (i.e. the same shape).
          *  If not, an exception will be thrown.
          */
         const ImageView<T>& operator=(const AssignableToImage<T>& rhs) const 
@@ -541,7 +541,7 @@ namespace galsim {
         /**
          *  @brief Deep-copy pixel values from rhs to this.
          *
-         *  The bounds must be commesurate (i.e. the same shape).
+         *  The bounds must be commensurate (i.e. the same shape).
          *  If not, an exception will be thrown.
          */
         void copyFrom(const BaseImage<T>& rhs) const;
@@ -608,7 +608,7 @@ namespace galsim {
         /**
          *  @brief Deep assignment operator.
          *
-         *  The bounds must be commesurate (i.e. the same shape).
+         *  The bounds must be commensurate (i.e. the same shape).
          *  If not, an exception will be thrown.
          */
         Image<T>& operator=(const AssignableToImage<T>& rhs)
@@ -759,7 +759,7 @@ namespace galsim {
         /**
          *  @brief Deep-copy pixel values from rhs to this.
          *
-         *  The bounds must be commesurate (i.e. the same shape).
+         *  The bounds must be commensurate (i.e. the same shape).
          *  If not, an exception will be thrown.
          */
         void copyFrom(const BaseImage<T>& rhs) { view().copyFrom(rhs); }
