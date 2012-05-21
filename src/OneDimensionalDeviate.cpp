@@ -23,7 +23,8 @@ namespace galsim {
     // ok to use dominant-sampling method.
     const double SMALL_FRACTION_OF_FLUX = 1e-4;
 
-    // Max range of allowed (abs value of) photon fluxes within an Interval before rejection sampling is invoked
+    // Max range of allowed (abs value of) photon fluxes within an Interval before rejection
+    // sampling is invoked
     const double ALLOWED_FLUX_VARIATION = 0.81;
 
     // Wrapper class for doing integrals over annuli
