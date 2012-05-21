@@ -14,13 +14,26 @@ Before you start, you'll probably want to put the following in ~/.gitconfig:
       name = Your Name
       email = user@domain
 [push]
-      default = upstream
+      default = tracking
 
 The "push" section changes the default behavior of "git push" to operate on the current branch only,
 which makes it symmetric with "git pull", and will help you avoid confusing (but ultimately
 harmless) error messages about failing to push refs due to non-fast-forward merges on branches other
 than the current one.  Even more important, it means that "git push" won't push some changes
 you've made on a different branch that aren't ready to go public yet.
+
+Some other lines you might want to add:
+
+[color]
+    ui = auto                   # Make git status and such more colorful
+[alias]
+    st = status                 # Make aliases for anything you want to be shorter
+    br = branch -a --no-merged  # MJ - I find this one convenient
+    ci = commit                 # For those used to cvs...
+    co = checkout
+[core]
+    editor = vim                # or emacs
+
 
 --- Basic workflow ---
 
@@ -49,6 +62,9 @@ git push
 
 --- Initial configuration ---
 
+(If you explicitly made your ~/.gitconfig file as described above, you can skip
+ this section.)
+
 # Configure your name; this will appear in commits
 git config --global user.name "Firstname Lastname"
 
@@ -65,11 +81,11 @@ git config --global push.default tracking
 --- Add a new file ---
 
 echo '# New build system!' > CMakeList.txt
-git status            # See the status of files in the working directory
-git status -s         # The same in format familiar to SVN users
+git status                  # See the status of files in the working directory
+git status -s               # The same in format familiar to SVN users
 git add CMakeList.txt       # Add a new file to be tracked by git
 git status
-git commit				 # Commit the changes (the file addition)
+git commit                  # Commit the changes (the file addition)
 git log
 
 --- Editing a file ---
@@ -77,7 +93,7 @@ git log
 echo '#more stuff' >> CMakeList.txt   # Change the file
 git status                            # See that the file is now "dirty"
 git diff                              # See the changes
-git commit -a               # Commit all changes (don't forget the -a!)
+git commit -a                         # Commit all changes (don't forget the -a!)
 
 # You can also use "git add" and "git commit" separately, to only commit some of the files you've
 # made changes to.  This is called the "staging area", and it makes it easier to make your commits
@@ -85,14 +101,15 @@ git commit -a               # Commit all changes (don't forget the -a!)
 
 --- Branches ---
 
-git branch        # Show the branch we're on
-git branch -a     # List all the branches
+git branch                 # Show the branch we're on
+git branch -a              # List all the branches
+git branch -a --no-merged  # List all branches that aren't merged into master yet.
 
 git checkout -b mybranch   # make a new branch and check it out
 git checkout mybranch      # checkout an existing branch
 
 # checking out a branch that wasn't created locally
-git fetch         # sync with remote repositories (pull does this too)
+git fetch                           # sync with remote repositories (pull does this too)
 git checkout -t origin/otherbranch  # make a "tracking branch" and check it out
 
 # With recent versions of git, you can also just say "git checkout otherbranch" as an equivalent of
@@ -117,7 +134,7 @@ remote branch into the tracking branch).
 
 --- About the impact of how we chose branch names ---
 
-We chose our branch names such that they will start with #.  This has an impact if we have local
+We chose our branch names such that they start with #.  This has an impact if we have local
 tracking branches that we want to delete.  Say, for example, that we want to make a tracking branch
 for #12.  As above, this can be done using
 
@@ -133,7 +150,11 @@ say
 
 git branch -d "#12"
 
-to get the tracking branch to go away.
+to get the tracking branch to go away.  The quotes are necessary whenever the # appears
+at the beginning of a word:
+
+git checkout '#12'
+git merge '#12'
 
 --- Tags ---
 
