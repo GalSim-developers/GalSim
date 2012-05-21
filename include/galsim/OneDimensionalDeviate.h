@@ -40,22 +40,24 @@ namespace galsim {
      * This class could be made a subclass of `OneDimensionalDeviate` as it should only be used by
      * methods of that class.
      *
-     * The `Interval` represents flux (or unnormalized probability) density in a continguous interval on 
-     * on the line, or, for `_isRadial=true`, represents axisymmetric density in an annulus on the plane.
+     * The `Interval` represents flux (or unnormalized probability) density in a continguous
+     * interval on on the line, or, for `_isRadial=true`, represents axisymmetric density in an
+     * annulus on the plane.
      *
-     * The object keeps track of the integrated flux (or unnormalized probability) in its interval/annulus,
-     * and the cumulative flux of all intervals up to and including this one.
+     * The object keeps track of the integrated flux (or unnormalized probability) in its
+     * interval/annulus, and the cumulative flux of all intervals up to and including this one.
      *
-     * The `drawWithin()` method will select one photon (and flux) drawn from within this interval or annulus,
-     * such that the expected flux distribution matches the FluxDensity function.  This can be done one of two ways: 
-     * If `_useRejectionMethod=true`, then an x (or r) position is chosen that would match the chosen cumulative flux
-     * were the FluxDensity uniform over the interval.  Then the FluxDensity is evaluated, compared to the maximum
-     * within the interval (which is always an endpoint), and a UniformDeviate is drawn to decide whether to keep or
+     * The `drawWithin()` method will select one photon (and flux) drawn from within this interval
+     * or annulus, such that the expected flux distribution matches the FluxDensity function.  This
+     * can be done one of two ways: If `_useRejectionMethod=true`, then an x (or r) position is
+     * chosen that would match the chosen cumulative flux were the FluxDensity uniform over the
+     * interval.  Then the FluxDensity is evaluated, compared to the maximum within the interval
+     * (which is always an endpoint), and a UniformDeviate is drawn to decide whether to keep or
      * reject this x photon.  This repeats until a position is kept.
      *
-     * If `_useRejectionMethod=false`, then no rejection is done.  The photon is kept, but is given a flux value
-     * equal to the FluxDensity at x relative to the mean over the interval.  This is faster but makes the statistics
-     * of the photons harder to interpret.
+     * If `_useRejectionMethod=false`, then no rejection is done.  The photon is kept, but is given
+     * a flux value equal to the FluxDensity at x relative to the mean over the interval.  This is
+     * faster but makes the statistics of the photons harder to interpret.
      *
      * See the `OneDimensionalDeviate` docstrings for more information.
      */
@@ -134,29 +136,34 @@ namespace galsim {
     };
 
     /**
-     * @brief Class which implements random sampling of an arbitrary one-dimensional distribution, for photon shooting.
+     * @brief Class which implements random sampling of an arbitrary one-dimensional distribution,
+     * for photon shooting.
      *
-     * The point of this class is to take any function that is derived from `FluxDensity` and be able to sample
-     * it with photons such that the expectation value of the flux density matches the input function exactly.  This
-     * class is for functions which do not have convenient analytic means of inverting their cumulative flux distribution.
+     * The point of this class is to take any function that is derived from `FluxDensity` and be
+     * able to sample it with photons such that the expectation value of the flux density matches
+     * the input function exactly.  This class is for functions which do not have convenient
+     * analytic means of inverting their cumulative flux distribution.
      *
-     * As explained in SBProfile::shoot(), both positive and negative-flux photons can exist, but we aim that the absolute
-     * value of flux be nearly constant so that statistical errors are predictable.  This code does this by first
-     * dividing the domain of the function into `Interval` objects, with known integrated (absolute) flux in each.  To
-     * shoot a photon, a UniformDeviate is selected and scaled to represent the cumulative flux that should exist within
-     * the position of the photon.  The class first uses the binary-search feature built into the Standard Library `set`
-     * container to locate the `Interval` that will contain the photon.  Then it asks the `Interval` to decide where
-     * within the `Interval` to place the photon.  As noted in the `Interval` docstring, this can be done either by
-     * rejection sampling, or - if the range of FluxDensity values within an interval is small - by simply adjusting
-     * the flux to account for deviations from uniform flux density within the interval.
+     * As explained in SBProfile::shoot(), both positive and negative-flux photons can exist, but we
+     * aim that the absolute value of flux be nearly constant so that statistical errors are
+     * predictable.  This code does this by first dividing the domain of the function into
+     * `Interval` objects, with known integrated (absolute) flux in each.  To shoot a photon, a
+     * UniformDeviate is selected and scaled to represent the cumulative flux that should exist
+     * within the position of the photon.  The class first uses the binary-search feature built into
+     * the Standard Library `set` container to locate the `Interval` that will contain the photon.
+     * Then it asks the `Interval` to decide where within the `Interval` to place the photon.  As
+     * noted in the `Interval` docstring, this can be done either by rejection sampling, or - if the
+     * range of FluxDensity values within an interval is small - by simply adjusting the flux to
+     * account for deviations from uniform flux density within the interval.
      *
-     * On construction, the class must be provided with some information about the nature of the function being
-     * sampled.  The length scale and flux scale of the function should be of order unity.  The elements of the 
-     * `range` array should be ordered, span the desired domain of the function, and split the domain into intervals
-     * such that:
+     * On construction, the class must be provided with some information about the nature of the
+     * function being sampled.  The length scale and flux scale of the function should be of order
+     * unity.  The elements of the `range` array should be ordered, span the desired domain of the
+     * function, and split the domain into intervals such that:
      * * There are no sign changes within an interval
      * * There is at most one extremum within the interval
-     * * Any extremum can be localized by sampling the interval at `RANGE_DIVISION_FOR_EXTREMA` equidistant points.
+     * * Any extremum can be localized by sampling the interval at `RANGE_DIVISION_FOR_EXTREMA`
+         equidistant points.
      * * The function is smooth enough to be integrated over the interval with standard basic methods.
      */
     class OneDimensionalDeviate {
