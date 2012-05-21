@@ -717,9 +717,13 @@ def test_sbprofile_shift():
     print 'After applyShift test'
  
     # Test photon shooting.
-    # This is failing and using an inordinate amount of memory, but mostly because of the DFT.
-    # So maybe revisit this when we can do a real-space convolution here.
-    #do_shoot(pixel,myImg,0.2,"shifted Pixel")
+    # Since photon shooting compares to a DFT convolution with a box, we can't 
+    # do the shift test for a box here.  (Box * Box is very inaccurate with DFT)
+    # So instead we give it a shifted Gaussian to compare with.
+    gauss = galsim.Gaussian(flux=1, sigma=1)
+    gauss.applyShift(0.4,-0.3)
+    myImg = gauss.draw(dx=0.2)
+    do_shoot(gauss,myImg,0.2,"shifted Gaussian")
 
 
 def test_sbprofile_rescale():

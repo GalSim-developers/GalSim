@@ -296,9 +296,9 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          */
         template <class T>
-        void drawShoot(ImageView<T> img, int N, UniformDeviate& ud) const;
+        void drawShoot(ImageView<T> img, double N, UniformDeviate& ud) const;
         template <class T>
-        void drawShoot(Image<T>& img, int N, UniformDeviate& ud) const {
+        void drawShoot(Image<T>& img, double N, UniformDeviate& ud) const {
             drawShoot(img.view(), N, ud);
         }
         //@}

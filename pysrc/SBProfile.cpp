@@ -104,11 +104,11 @@ struct PySBProfile {
                  bp::args("image", "dx"),
                  "Utility for drawing into Image data structures")
             .def("drawShoot", 
-                 (void (SBProfile::*)(Image<U> &, int, UniformDeviate& ) const)&SBProfile::drawShoot,
+                 (void (SBProfile::*)(Image<U> &, double, UniformDeviate& ) const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
                  "Draw object into existing image using photon shooting.")
             .def("drawShoot", 
-                 (void (SBProfile::*)(ImageView<U>, int, UniformDeviate& ) const)&SBProfile::drawShoot,
+                 (void (SBProfile::*)(ImageView<U>, double, UniformDeviate& ) const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
                  "Draw object into existing image using photon shooting.")
             .def("draw", 

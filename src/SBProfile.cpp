@@ -1577,11 +1577,24 @@ namespace galsim {
      *************************************************************/
 
     template <class T>
-    void SBProfile::drawShoot(ImageView<T> img, int N, UniformDeviate& u) const 
+    void SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate& u) const 
     {
+        const int maxN = 100000;
+
         // Clear image before adding photons, for consistency with draw() methods.
         img.fill(0.);  
-        PhotonArray pa = shoot(N, u);
+        double origN = N;
+        xdbg<<"origN = "<<origN<<std::endl;
+        while (N > maxN) {
+            xdbg<<"shoot "<<maxN<<std::endl;
+            PhotonArray pa = shoot(maxN, u);
+            pa.scaleFlux(maxN / origN);
+            pa.addTo(img);
+            N -= maxN;
+        }
+        xdbg<<"shoot "<<N<<std::endl;
+        PhotonArray pa = shoot(int(N), u);
+        pa.scaleFlux(N / origN);
         pa.addTo(img);
     }
     
@@ -1788,10 +1801,10 @@ namespace galsim {
     template double SBProfile::doFillXImage2(ImageView<float>& img, double dx) const;
     template double SBProfile::doFillXImage2(ImageView<double>& img, double dx) const;
 
-    template void SBProfile::drawShoot(ImageView<float> image, int N, UniformDeviate& ud) const;
-    template void SBProfile::drawShoot(ImageView<double> image, int N, UniformDeviate& ud) const;
-    template void SBProfile::drawShoot(Image<float>& image, int N, UniformDeviate& ud) const;
-    template void SBProfile::drawShoot(Image<double>& image, int N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(ImageView<float> image, double N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(ImageView<double> image, double N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(Image<float>& image, double N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(Image<double>& image, double N, UniformDeviate& ud) const;
 
     template double SBProfile::draw(Image<float>& img, double dx, int wmult) const;
     template double SBProfile::draw(Image<double>& img, double dx, int wmult) const;

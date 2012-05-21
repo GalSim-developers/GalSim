@@ -164,9 +164,9 @@ class GSObject:
             return image
 
     def drawShoot(self, image, N, ud=None):
-        if type(N) != int:
-            # if given a float, just convert it to an integer
-            N = int(N)
+        if type(N) != float:
+            # if given an int, just convert it to a float
+            N = float(N)
         if ud == None:
             ud = galsim.UniformDeviate()
         self.SBProfile.drawShoot(image, N, ud)
