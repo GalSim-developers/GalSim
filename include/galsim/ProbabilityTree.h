@@ -28,8 +28,15 @@ namespace galsim {
      * The `find()` method will now return random draws with near-optimal speed.
      */
     template <class T>
-    class ProbabilityTree: public std::list<T> {
+    class ProbabilityTree: private std::list<T> {
     public:
+        using std::list<T>::begin;
+        using std::list<T>::end;
+        using std::list<T>::push_back;
+        using std::list<T>::splice;
+        using std::list<T>::empty;
+        using std::list<T>::clear;
+
         /// @brief Constructor - nothing to do.
         ProbabilityTree(): root(0) {};
         /// @brief Destructor - kill the `Element`s that have been stored away
