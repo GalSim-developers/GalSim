@@ -72,6 +72,7 @@ namespace galsim {
             _y[i]=y;
             _flux[i]=flux;
         }
+
         /**
          * @brief Access x coordinate of a photon
          *
@@ -79,6 +80,7 @@ namespace galsim {
          * @returns x coordinate of photon
          */
         double getX(int i) const {return _x[i];}
+
         /**
          * @brief Access y coordinate of a photon
          *
@@ -86,6 +88,7 @@ namespace galsim {
          * @returns y coordinate of photon
          */
         double getY(int i) const {return _y[i];}
+
         /**
          * @brief Access flux of a photon
          *
@@ -93,12 +96,14 @@ namespace galsim {
          * @returns flux of photon
          */
         double getFlux(int i) const {return _flux[i];}
+
         /**
          * @brief Return sum of all photons' fluxes
          *
          * @returns flux of photon
          */
         double getTotalFlux() const;
+
         /**
          * @brief Rescale all photon fluxes so that total flux matches argument
          *
@@ -128,6 +133,7 @@ namespace galsim {
          * @param[in] rhs PhotonArray whose contents to append to this one.
          */
         void append(const PhotonArray& rhs);
+
         /**
          * @brief Convolve this array with another.
          *
