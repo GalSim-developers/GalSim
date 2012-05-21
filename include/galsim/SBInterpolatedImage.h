@@ -9,6 +9,7 @@
 #include "Std.h"
 #include "SBProfile.h"
 #include "Interpolant.h"
+#include "ProbabilityTree.h"
 
 namespace galsim {
 
@@ -40,7 +41,6 @@ namespace galsim {
          */
         SBInterpolatedImage(int Npix, double dx_, const Interpolant2d& i, int Nimages_=1);
 
-#ifdef USE_IMAGES
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
          * image.
@@ -59,7 +59,6 @@ namespace galsim {
         template <typename T> 
         SBInterpolatedImage(const BaseImage<T>& img, const Interpolant2d& i,
                             double dx_=0., double padFactor=0.);
-#endif
 
         /** 
          * @brief Copy Constructor.
@@ -100,8 +99,33 @@ namespace galsim {
 
         Position<double> centroid() const;
 
+        /**
+         * @brief Shoot photons through this object
+         *
+         * SBInterpolatedImage will assign photons to its input pixels with probability
+         * proportional to their flux.  Each photon will then be displaced from its pixel center
+         * by an (x,y) amount drawn from the interpolation kernel.  Note that if either the input
+         * image or the interpolation kernel have negative regions, then negative-flux photons can
+         * be generated.  Noisy images or ring-y kernels will generate a lot of shot noise in
+         * the shoot() output.  Not all kernels have photon-shooting implemented.  It may be best to
+         * stick to nearest-neighbor and linear interpolation kernels if you wish to avoid these issues.
+         *
+         * Use the `Delta` Interpolant if you do not want to waste time moving the photons from their pixel 
+         * centers.  But you will regret any attempt to draw images analytically with that one.
+         *
+         * Photon shooting with the Sinc kernel is a bad idea and is currently forbidden.
+         *
+         * @param[in] N Total umber of photons to produce.
+         * @param[in] u UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
+
         double getFlux() const;
         void setFlux(double flux=1.);  // This will scale the weights vector
+
+        double getPositiveFlux() const {checkReadyToShoot(); return positiveFlux;}
+        double getNegativeFlux() const {checkReadyToShoot(); return negativeFlux;}
 
         /////////////////////
         // Methods peculiar to SBInterpolatedImage
@@ -176,13 +200,10 @@ namespace galsim {
         virtual void fillKGrid(KTable& kt) const;
         virtual void fillXGrid(XTable& xt) const;
 
-#ifdef USE_IMAGES
         template <typename T>
         double fillXImage(ImageView<T>& I, double dx) const;
-#endif
 
     protected:
-#ifdef USE_IMAGES
         // These are the virtual functions, but we don't want to have to duplicate the
         // code implement these.  So each one just calls the template version.  The
         // C++ overloading rules mean that it will call the local fillXImage template 
@@ -203,7 +224,6 @@ namespace galsim {
         { return fillXImage(I,dx); }
         virtual double doFillXImage(ImageView<double>& I, double dx) const
         { return fillXImage(I,dx); }
-#endif
 
     private:
         void checkReady() const; ///< Make sure all internal quantities are ok.
@@ -240,6 +260,29 @@ namespace galsim {
          * values.
          */
         mutable bool ready; 
+
+        /// @brief Set true if the data structures for photon-shooting are valid
+        mutable bool readyToShoot;
+        /// @brief Set up photon-shooting quantities, if not ready
+        void checkReadyToShoot() const;
+
+        // Structures used for photon shooting
+        /**
+         * @brief Simple structure used to index all pixels for photon shooting
+         */
+        struct Pixel {
+            Pixel(double x_=0., double y_=0., double flux=0.): 
+                x(x_), y(y_), _flux(flux) {isPositive = _flux>=0;}
+            double x;
+            double y;
+            double getFlux() const {return _flux;}
+            bool isPositive;
+        private:
+            double _flux;
+        };
+        mutable double positiveFlux;    ///< Sum of all positive pixels' flux
+        mutable double negativeFlux;    ///< Sum of all negative pixels' flux
+        mutable ProbabilityTree<Pixel> pt; ///< Binary tree of pixels, for photon-shooting
 
         /// @brief The default k-space interpolant
         static InterpolantXY defaultKInterpolant2d;

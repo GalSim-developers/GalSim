@@ -674,11 +674,11 @@ namespace integ {
             tolerance = std::max(abserr, relerr * std::abs(finalarea));
             if (finalerr > tolerance) {
                 if (roundoff_type1 >= 200) {
-                    error_type = 1;	// round off error 
+                    error_type = 1;    // round off error 
                     integ_dbg2<<"GKP: Round off error 1\n";
                 }
                 if (roundoff_type2 >= 200.) {
-                    error_type = 2;	// round off error 
+                    error_type = 2;    // round off error 
                     integ_dbg2<<"GKP: Round off error 2\n";
                 }
                 const double parent_size = parent.right()-parent.left();

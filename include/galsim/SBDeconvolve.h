@@ -75,6 +75,11 @@ namespace galsim {
         double getFlux() const { return 1./adaptee->getFlux(); }
         void setFlux(double flux=1.) { adaptee->setFlux(1./flux); }
 
+        PhotonArray shoot(int N, UniformDeviate& u) const {
+            throw SBError("SBDeconvolve::shoot() not implemented");
+            return PhotonArray(N);
+        }
+
         // Override for better efficiency if adaptee has it:
         virtual void fillKGrid(KTable& kt) const 
         {
