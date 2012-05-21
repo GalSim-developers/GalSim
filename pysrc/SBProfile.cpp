@@ -196,7 +196,8 @@ struct PySBProfile {
                  "Sampling in k space necessary to avoid folding of image in x space")
             .def("isAxisymmetric", &SBProfile::isAxisymmetric)
             .def("isAnalyticX", &SBProfile::isAnalyticX,
-                 "True if real-space values can be determined immediately at any position with FT")
+                 "True if real-space values can be determined immediately at any position without\n"
+                 " DFT.")
             .def("centroid", &SBProfile::centroid)
             .def("getFlux", &SBProfile::getFlux)
             .def("setFlux", &SBProfile::setFlux)

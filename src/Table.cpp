@@ -1,3 +1,5 @@
+#include "TMV.h"
+#include "TMV_SymBand.h"
 #include "Table.h"
 #include <cmath>
 #include <vector>
@@ -184,32 +186,49 @@ namespace galsim {
         }
 
         if (iType==spline) {
+            /**
+             * Calculate the 2nd derivatives of the natural cubic spline.
+             *
+             * Here we follow the broad procedure outlined in this technical note by Jim
+             * Armstrong, freely available online:
+             * http://www.algorithmist.net/spline.html
+             * 
+             * The system we solve is equation [7].  In our adopted notation u_i are the diagonals
+             * of the matrix M, and h_i the off-diagonals.  y'' is z_i and the rhs = v_i.
+             *
+             * For table sizes larger than the fully trivial (2 or 3 elements), we use the
+             * symmetric tridiagonal matrix solution capabilities of MJ's TMV library.
+             */
             // Set up the 2nd-derivative table for splines
-            // Derive this from Numerical Recipes spline.c
             int n = v.size();
-            if (n<2) throw TableError("Spline Table with only 1 entry");
-
-            V  p,qn,sig,un;
-
-            std::vector<V> u(n-1);
             y2.resize(n);
-            y2[0]=u[0]= static_cast<V>(0);
+            // End points 2nd-derivatives zero for natural cubic spline 
+            y2[0] = V(0);
+            y2[n-1] = V(0);
+            // For 3 points second derivative at i=1 is simple
+            if (n == 3){
 
-            for (int i=1;i<=n-2;i++) {
-                sig=(v[i].arg-v[i-1].arg)/(v[i+1].arg-v[i-1].arg);
-                p=sig*y2[i-1]+2.0;
-                y2[i]=(sig-1.0)/p;
-                u[i]=(v[i+1].val-v[i].val)/(v[i+1].arg-v[i].arg) 
-                    - (v[i].val-v[i-1].val)/(v[i].arg-v[i-1].arg);
-                u[i]=(6.0*u[i]/(v[i+1].arg-v[i-1].arg)-sig*u[i-1])/p;
+                y2[1] = 3.*((v[2].val - v[1].val) / (v[2].arg - v[1].arg) - 
+                            (v[1].val - v[0].val) / (v[1].arg - v[0].arg)) / (v[2].arg - v[0].arg);
+
+            } else {  // For 4 or more points we use the TMV symmetric tridiagonal matrix solver
+                
+                tmv::SymBandMatrix<V> M(n-2, 1);
+                for (int i=1; i<=n-3; i++){
+                    M(i, i-1) = v[i+1].arg - v[i].arg;
+                }
+                tmv::Vector<V> rhs(n-2);
+                for (int i=1; i<=n-2; i++){
+                    M(i-1, i-1) = 2. * (v[i+1].arg - v[i-1].arg);
+                    rhs(i-1) = 6. * ( (v[i+1].val - v[i].val) / (v[i+1].arg - v[i].arg) -
+                                      (v[i].val - v[i-1].val) / (v[i].arg - v[i-1].arg) );
+                }
+                tmv::Vector<V> solution(n-2);
+                solution = rhs / M;   // solve the tridiagonal system of equations
+                for (int i=1; i<=n-2; i++){
+                    y2[i] = solution[i-1];
+                }
             }
-
-            qn=un=0.0;
-
-            y2[n-1]=(un-qn*u[n-2])/(qn*y2[n-2]+1.0);
-            for (int k=n-2;k>=0;k--)
-                y2[k]=y2[k]*y2[k+1]+u[k];
-
             isReady = true;
             return;
         } else {

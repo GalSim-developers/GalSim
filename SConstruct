@@ -616,8 +616,8 @@ def CheckTMV(context):
 #include "TMV_Sym.h"
 int main()
 {
-  //tmv::SymMatrix<double> S(10,4.);
-  tmv::Matrix<double> S(10,10,4.);
+  tmv::SymMatrix<double> S(10,4.);
+  //tmv::Matrix<double> S(10,10,4.);
   tmv::Matrix<double> m(10,3,2.);
   tmv::Matrix<double> m2 = m / S;
   return 0;
@@ -629,14 +629,9 @@ int main()
 
     if context.TryCompile(tmv_source_file,'.cpp'):
 
-        # If we eventually use SymMatrix stuff, we'll need to switch to this...
-        #result = (
-            #CheckLibs(context,['tmv_symband','tmv'],tmv_source_file) or
-            #CheckLibs(context,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
-
         result = (
-            CheckLibs(context,['tmv'],tmv_source_file) or
-            CheckLibs(context,['tmv','irc','imf'],tmv_source_file) )
+            CheckLibs(context,['tmv_symband','tmv'],tmv_source_file) or
+            CheckLibs(context,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
         
         if not result:
             context.Result(0)
