@@ -136,9 +136,9 @@ def do_shoot(prof, img, dx, name):
         nphot = flux_max * flux_tot / photon_shoot_accuracy**2
     print 'nphot = ',nphot
     img2 = img.copy()
-    img.write("junk1.fits")
+    #img.write("junk1.fits")
     prof.drawShoot(img2,nphot)
-    img2.write("junk2.fits")
+    #img2.write("junk2.fits")
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
