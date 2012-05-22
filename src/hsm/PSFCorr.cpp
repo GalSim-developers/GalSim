@@ -261,11 +261,10 @@ namespace hsm {
     /* Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.*/
     template <typename T, typename U>
     HSMShapeData EstimateShearHSMView(const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
-                                      float sky_var = 0.0, const char *shear_est = "REGAUSS",
-                                      unsigned long flags = 0xe, double guess_sig_gal = 5.0,
-                                      double guess_sig_PSF = 3.0, double precision = 1.0e-6,
-                                      double guess_x_centroid = -1000.0,
-                                      double guess_y_centroid = -1000.0) {
+                                      float sky_var, const char *shear_est,
+                                      unsigned long flags, double guess_sig_gal,
+                                      double guess_sig_PSF, double precision,
+                                      double guess_x_centroid, double guess_y_centroid) {
         // define variables, create output HSMShapeData struct, etc.
         HSMShapeData results;
         RectImage gal_rect_image, PSF_rect_image;
@@ -360,9 +359,9 @@ namespace hsm {
 
     /** Measure the adaptive moments of an object directly using ImageViews, repackaging for find_ellipmom_2.*/
     template <typename T>
-    HSMShapeData FindAdaptiveMomView(const ImageView<T> &object_image, double guess_sig = 5.0,
-                                     double precision = 1.0e-6, double guess_x_centroid = -1000.0,
-                                     double guess_y_centroid = -1000.0) {
+    HSMShapeData FindAdaptiveMomView(const ImageView<T> &object_image, double guess_sig,
+                                     double precision, double guess_x_centroid,
+                                     double guess_y_centroid) {
         // define variables, create output HSMShapeData struct, etc.
         HSMShapeData results;
         RectImage object_rect_image;

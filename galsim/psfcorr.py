@@ -6,33 +6,40 @@ from . import _galsim
 def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS", flags = 0xe,
                      guess_sig_gal = 5.0, guess_sig_PSF = 3.0, precision = 1.0e-6,
                      guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True):
-    """@brief PSF correction method from HSM.
+    """
+    @brief PSF correction method from HSM.
 
     Carry out PSF correction using one of the methods of the HSM package to estimate shears.
     Example usage:
 
+    @code
     galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
-
-    galaxy.applyShear(0.05, 0.0)
-
+    galaxy.applyShear(0.05, 0.0)  # shear it by (0.05, 0) using the g=(a-b)/(a+b) definition
     psf = galsim.atmosphere.DoubleGaussian(flux1 = 0.7, sigma1 = 0.7, flux2 = 0.3, sigma2 = 1.5)
-
     pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
-
     final = galsim.Convolve([galaxy, psf, pixel])
-
     final_epsf = galsim.Convolve([psf, pixel])
-
     final_image = final.draw(dx = 0.2)
-
     final_epsf_image = final_epsf.draw(dx = 0.2)
-
     result = galsim.EstimateShearHSM(final_image, final_epsf_image)
+    @endcode
 
-    result.observed_shape is (0.0595676, 0)
+    After running the above code, result.observed_shape ["shape" = distortion, (a-b)^2/(a+b)^2] is
+    (0.0595676, 0), and result.corrected_shape is (0.0981158, 0), compared with the expected
+    (0.09975, 0) for a perfect PSF correction method.  Note that the method will fail if the PSF or
+    galaxy are too point-like to easily fit an elliptical Gaussian; when running on batches of many
+    galaxies, it may be preferable to set strict=False and catch errors explicitly, i.e.
 
-    result.corrected_shape is (0.0981158, 0), compared with the expected (0.09975, 0) for
-    a perfect PSF correction method.
+    @code
+    n_image = 100
+    n_fail = 0
+    for i=0, range(n_image):
+        ...some code defining this_image, this_final_epsf_image...
+        result = galsim.EstimateShearHSM(this_image, this_final_epsf_image, strict = False)
+        if result.error_message != "":
+            n_fail += 1
+    print "Number of failures: ", n_fail
+    @endcode
 
     Parameters
     ----------
@@ -78,7 +85,8 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
 
 def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
                     guess_y_centroid = -1000.0, strict = True):
-    """@brief Measure adaptive moments of an object.
+    """
+    @brief Measure adaptive moments of an object.
 
     The key result is the best-fit elliptical Gaussian to the object, which is computed iteratively
     by initially guessing a circular Gaussian that is used as a weight function, computing the
@@ -87,15 +95,38 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
     weight function.  FindAdaptiveMom can be used either as a free function, or as a method of the
     ImageView class.  Example usage:
 
+    @code
     my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
-
     my_gaussian_image = my_gaussian.draw(dx = 0.2)
-
     my_moments = galsim.FindAdaptiveMom(my_gaussian_image)
+    @endcode
 
     OR
     
+    @code
     my_moments = my_gaussian_image.FindAdaptiveMom()
+    @endcode
+
+    Assuming a successful measurement, the most relevant pieces of information are
+    my_moments.moments_sigma, which is |det(M)|^(1/4) [=sigma for a circular Gaussian] and
+    my_moments.observed_shape, which is a Shear.  Methods of the Shear class can be used to
+    get the distortion (e1, e2) = (a^2-b^2)/(a^2+b^2), i.e. my_moments.observed_shape.getE1() -- or,
+    to get the shear g, the conformal shear eta, and so on.
+
+    Note that the method will fail if the object is too point-like to easily fit an elliptical
+    Gaussian; when running on batches of many galaxies, it may be preferable to set strict=False and
+    catch errors explicitly, i.e.
+
+    @code
+    n_image = 100
+    n_fail = 0
+    for i=0, range(n_image):
+        ...some code defining this_image for index i...
+        result = this_image.FindAdaptiveMom(strict = False)
+        if result.error_message != "":
+            n_fail += 1
+    print "Number of failures: ", n_fail
+    @endcode
 
     @param[in] object_image The Image or ImageView for the object being measured.
     @param[in] guess_sig Optional argument with an initial guess for the Gaussian sigma of
