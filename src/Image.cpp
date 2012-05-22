@@ -61,8 +61,8 @@ public:
 } // anonymous
 
 template <typename T>
-BaseImage<T>::BaseImage(const Bounds<int>& b) :
-    AssignableToImage<T>(b), _owner(), _data(0), _stride(0)
+BaseImage<T>::BaseImage(const Bounds<int>& b, double scale) :
+    AssignableToImage<T>(b), _owner(), _data(0), _stride(0), _scale(scale)
 {
     if (this->_bounds.isDefined()) allocateMem();
     // Else _data is left as 0, stride = 0.
