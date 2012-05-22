@@ -1826,10 +1826,18 @@ namespace galsim {
         _maxR_sq = _maxR * _maxR;
         _maxRrD_sq = maxRrD * maxRrD;
         _rD_sq = rD * rD;
-        norm = flux * (beta - 1.) / (M_PI * fluxFactor) / _rD_sq;
+        norm = flux * (beta - 1.) / (M_PI * fluxFactor * _rD_sq);
 
-        xdbg << "Moffat rD " << rD << " fluxFactor " << fluxFactor
+        dbg << "Moffat rD " << rD << " fluxFactor " << fluxFactor
             << " norm " << norm << " maxRrD " << maxRrD << std::endl;
+
+        if (beta == 1) pow_beta = &SBMoffat::pow_1;
+        else if (beta == 2) pow_beta = &SBMoffat::pow_2;
+        else if (beta == 3) pow_beta = &SBMoffat::pow_3;
+        else if (beta == 4) pow_beta = &SBMoffat::pow_4;
+        else if (beta == int(beta)) pow_beta = &SBMoffat::pow_int;
+        else pow_beta = &SBMoffat::pow_gen;
+
 
         // Get FFT by doing 2k transform over 2x the truncation radius
         // ??? need to do better here
@@ -1838,25 +1846,20 @@ namespace galsim {
         double dx = std::max(4.*maxRrD, 64.) / N;
         XTable xt(N, dx);
         dx = xt.getDx();
-        for (int iy=-N/2; iy<N/2; iy++)
+        for (int iy=-N/2; iy<N/2; iy++) {
             for (int ix=-N/2; ix<N/2; ix++) {
                 double rsq = dx*dx*(ix*ix+iy*iy);
-                xt.xSet(ix, iy, rsq<=_maxRrD_sq ? std::pow(1+rsq,-beta) : 0.);
+                xt.xSet(ix, iy, rsq<=_maxRrD_sq ? 1./pow_beta(1.+rsq,beta) : 0.);
             }
+        }
         KTable* kt = xt.transform();
         double dk = kt->getDk();
-        double nn = kt->kval(0,0).real();
+        double nn = flux / kt->kval(0,0).real();
         for (int i=0; i<=N/2; i++) {
-            ft.addEntry( i*dk, kt->kval(0,-i).real() / nn);
+            ft.addEntry( i*dk, kt->kval(0,-i).real() * nn);
         }
         delete kt;
 
-        if (beta == 1) pow_beta = &SBMoffat::pow_1;
-        else if (beta == 2) pow_beta = &SBMoffat::pow_2;
-        else if (beta == 3) pow_beta = &SBMoffat::pow_3;
-        else if (beta == 4) pow_beta = &SBMoffat::pow_4;
-        else if (beta == int(beta)) pow_beta = &SBMoffat::pow_int;
-        else pow_beta = &SBMoffat::pow_gen;
     }
 
     std::complex<double> SBMoffat::kValue(const Position<double>& k) const 
@@ -1866,7 +1869,7 @@ namespace galsim {
         //double kk = hypot(k.x, k.y)*rD;
         double kk = sqrt(k.x*k.x + k.y*k.y)*rD;
         if (kk > ft.argMax()) return 0.;
-        else return flux*ft(kk);
+        else return ft(kk);
     }
 
     /*************************************************************
