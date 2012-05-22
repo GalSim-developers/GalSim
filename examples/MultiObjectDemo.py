@@ -450,7 +450,7 @@ def Script3():
     random_seed = 1512413
     sky_level = 1.e6                # ADU
     pixel_scale = 0.15              # arcsec
-    gal_flux = 1.e6                 # arbitrary choice, makes nice (not too) noisy images
+    gal_flux = 1.e5                 # arbitrary choice, makes nice (not too) noisy images
     gal_g1 = -0.027                 #
     gal_g2 = 0.031                  #
     psf_inner_fwhm = 0.6            # FWHM of inner Gaussian of the double Gaussian PSF, arcsec
