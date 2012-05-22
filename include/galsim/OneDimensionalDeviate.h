@@ -15,20 +15,20 @@ namespace galsim {
 
         ///////////   Magic Numbers ///////////
         
-        // fractional error allowed on any flux integral:
+        /** Fractional error allowed on any flux integral **/
         const double RELATIVE_ERROR = 1e-6;
-        // absolute error allowed [assumes the total flux is O(1)]
+        /** Absolute error allowed [assumes the total flux is O(1)] **/
         const double ABSOLUTE_ERROR = 1e-8;
 
-        // Max range of allowed (abs value of) photon fluxes within an Interval before rejection
-        // sampling is invoked
+        /** Max range of allowed (abs value of) photon fluxes within an Interval before rejection
+            sampling is invoked **/
         const double ALLOWED_FLUX_VARIATION = 0.81;
 
-        // Range will be split into this many parts to bracket extrema
+        /** Range will be split into this many parts to bracket extrema **/
         const int RANGE_DIVISION_FOR_EXTREMA = 32;
 
-        // Intervals with less than this fraction of probability are
-        // ok to use dominant-sampling method.
+        /** Intervals with less than this fraction of probability are ok to use dominant-sampling
+            method. **/
         const double SMALL_FRACTION_OF_FLUX = 1e-4;
 
     }
