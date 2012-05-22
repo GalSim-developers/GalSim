@@ -24,7 +24,7 @@ ref_array = np.array([[00, 10, 20, 30], [01, 11, 21, 31], [02, 12, 22, 32],
                       [03, 13, 23, 33]]).astype(types[0])
 
 # For photon shooting, we calculate the number of photons to use based on the target
-# accuracy we are shooting for.  (Pun intended.)  
+# accuracy we are shooting for.  (Pun intended.)
 # For each pixel,
 # uncertainty = sqrt(N_pix) * flux_photon = sqrt(N_tot * flux_pix / flux_tot) * flux_tot / N_tot
 #             = sqrt(flux_pix) * sqrt(flux_tot) / sqrt(N_tot)
@@ -195,12 +195,13 @@ def test_gaussian_radii():
     while (my_convergence_value > target_precision):
         test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
         test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx)/np.sum(test_gal_image.array)
+        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx) / \
+                np.sum(test_gal_image.array)
         my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
         my_prev_ratio = my_ratio
         my_test_dx /= 2.0
     np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
-                                   err_msg="Error in Gaussian constructor with half-light radius")
+            err_msg="Error in Gaussian constructor with half-light radius")
     # then test sigma
     my_test_dx = test_dx
     my_prev_ratio = init_ratio
@@ -208,12 +209,13 @@ def test_gaussian_radii():
     while (my_convergence_value > target_precision):
         test_gal = galsim.Gaussian(flux = 1., sigma = test_sigma)
         test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntensityAtRadius(test_gal_image, test_sigma/my_test_dx)/np.max(test_gal_image.array)
+        my_ratio = getIntensityAtRadius(test_gal_image, test_sigma/my_test_dx) / \
+                np.max(test_gal_image.array)
         my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
         my_prev_ratio = my_ratio
         my_test_dx /= 2.0
     np.testing.assert_almost_equal(my_ratio, np.exp(-0.5), decimal = 2,
-                                   err_msg="Error in Gaussian constructor with sigma")
+            err_msg="Error in Gaussian constructor with sigma")
     # then test FWHM
     my_test_dx = test_dx
     my_prev_ratio = init_ratio
@@ -221,12 +223,13 @@ def test_gaussian_radii():
     while (my_convergence_value > target_precision):
         test_gal = galsim.Gaussian(flux = 1., fwhm = test_fwhm)
         test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntensityAtRadius(test_gal_image, 0.5*test_fwhm/my_test_dx)/np.max(test_gal_image.array)
+        my_ratio = getIntensityAtRadius(test_gal_image, 0.5*test_fwhm/my_test_dx) / \
+                np.max(test_gal_image.array)
         my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
         my_prev_ratio = my_ratio
         my_test_dx /= 2.0
     np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
-                                   err_msg="Error in Gaussian constructor with FWHM")
+            err_msg="Error in Gaussian constructor with FWHM")
 
 def test_sbprofile_exponential():
     """Test the generation of a specific exp profile using SBProfile against a known result. 
@@ -239,8 +242,7 @@ def test_sbprofile_exponential():
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-                                         err_msg="Exponential profile disagrees with expected"
-                                         +" result") 
+            err_msg="Exponential profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     expon = galsim.Exponential(flux=1., scale_radius=r0)
     expon.draw(myImg,dx=0.2)
@@ -262,12 +264,13 @@ def test_exponential_radii():
     while (my_convergence_value > target_precision):
         test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
         test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx)/np.sum(test_gal_image.array)
+        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx) / \
+                np.sum(test_gal_image.array)
         my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
         my_prev_ratio = my_ratio
         my_test_dx /= 2.0
     np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
-                                   err_msg="Error in Exponential constructor with half-light radius")
+            err_msg="Error in Exponential constructor with half-light radius")
     # then test scale
     my_test_dx = test_dx
     my_prev_ratio = init_ratio
@@ -275,12 +278,13 @@ def test_exponential_radii():
     while (my_convergence_value > target_precision):
         test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale)
         test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntensityAtRadius(test_gal_image, test_scale/my_test_dx)/np.max(test_gal_image.array)
+        my_ratio = getIntensityAtRadius(test_gal_image, test_scale/my_test_dx) / \
+                np.max(test_gal_image.array)
         my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
         my_prev_ratio = my_ratio
         my_test_dx /= 2.0
     np.testing.assert_almost_equal(my_ratio, np.exp(-1.0), decimal = 2,
-                                   err_msg="Error in Exponential constructor with scale radius")
+            err_msg="Error in Exponential constructor with scale radius")
 
 def test_sbprofile_sersic():
     """Test the generation of a specific Sersic profile using SBProfile against a known result.
@@ -291,7 +295,7 @@ def test_sbprofile_sersic():
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-                                         err_msg="Sersic profile disagrees with expected result")   
+            err_msg="Sersic profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic.draw(myImg,dx=0.2)
@@ -316,12 +320,13 @@ def test_sersic_radii():
         while (my_convergence_value > target_precision):
             test_gal = galsim.Sersic(sersicn, flux = 1., half_light_radius = test_hlr)
             test_gal_image = test_gal.draw(dx = my_test_dx)
-            my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx)/np.sum(test_gal_image.array)
+            my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx) / \
+                    np.sum(test_gal_image.array)
             my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
             my_prev_ratio = my_ratio
             my_test_dx /= 2.0
         np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
-                                       err_msg="Error in Sersic constructor with half-light radius")
+                err_msg="Error in Sersic constructor with half-light radius")
 
 def test_sbprofile_airy():
     """Test the generation of a specific Airy profile using SBProfile against a known result.
@@ -332,7 +337,7 @@ def test_sbprofile_airy():
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-                                         err_msg="Airy profile disagrees with expected result") 
+            err_msg="Airy profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     airy = galsim.Airy(D=0.8, obs=0.1, flux=1)
     airy.draw(myImg,dx=0.2)
@@ -355,7 +360,7 @@ def test_sbprofile_box():
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-                                         err_msg="Box profile disagrees with expected result") 
+            err_msg="Box profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     pixel = galsim.Pixel(xw=1, yw=1, flux=1)
     pixel.draw(myImg,dx=0.2)
@@ -376,7 +381,7 @@ def test_sbprofile_moffat():
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-                                         err_msg="Moffat profile disagrees with expected result") 
+            err_msg="Moffat profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     moffat = galsim.Moffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
     moffat.draw(myImg,dx=0.2)
@@ -391,21 +396,21 @@ def test_sbprofile_moffat():
 def test_sbprofile_moffat_properties():
     """Test some basic properties of the SBMoffat profile.
     """
-    psf = galsim.SBMoffat(beta=2.0, truncationFWHM=2, flux=1, half_light_radius=1)
+    psf = galsim.SBMoffat(beta=2.0, truncationFWHM=2, flux=1.8, half_light_radius=1)
     # Check that we are centered on (0, 0)
     cen = galsim._galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid(), cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(psf.maxK(), 34.226260866076707)
     np.testing.assert_almost_equal(psf.stepK(), 0.53478529889112425)
-    np.testing.assert_equal(psf.kValue(cen), 1+0j)
+    np.testing.assert_almost_equal(psf.kValue(cen), 1.8+0j)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         psfFlux = galsim.SBMoffat(2.0, truncationFWHM=2, flux=inFlux, half_light_radius=1)
         outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
-    np.testing.assert_almost_equal(psf.xValue(cen), 0.28141470275895519)
-    
+    np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
+
 def test_moffat_radii():
     """Test initialization of Moffat with different types of radius specification.
     """
@@ -415,14 +420,16 @@ def test_moffat_radii():
     my_prev_ratio = init_ratio
     my_convergence_value = convergence_value
     while (my_convergence_value > target_precision):
-        test_gal = galsim.Moffat(beta=test_beta, truncationFWHM=5, flux = 1., half_light_radius = test_hlr)
+        test_gal = galsim.Moffat(beta=test_beta, truncationFWHM=5, flux = 1.,
+                half_light_radius = test_hlr)
         test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx)/np.sum(test_gal_image.array)
+        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx) / \
+                np.sum(test_gal_image.array)
         my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
         my_prev_ratio = my_ratio
         my_test_dx /= 2.0
     np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
-                                   err_msg="Error in Moffat constructor with half-light radius")
+            err_msg="Error in Moffat constructor with half-light radius")
     # then test scale -- later!  this method takes too long
     # then test FWHM -- later!  this method takes too long
 
@@ -438,7 +445,7 @@ def test_sbprofile_smallshear():
     mySBP_shear.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Small-shear Gaussian profile disagrees with expected result")  
+        err_msg="Small-shear Gaussian profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
     gauss.applyDistortion(galsim.Ellipse(e1,e2))
@@ -455,7 +462,7 @@ def test_sbprofile_smallshear():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyShear disagrees with expected result")
-    
+ 
     # Test photon shooting.
     do_shoot(gauss,myImg,0.2,"sheared Gaussian")
 
@@ -472,7 +479,7 @@ def test_sbprofile_largeshear():
     mySBP_shear.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Large-shear DeVauc profile disagrees with expected result")  
+        err_msg="Large-shear DeVauc profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
     devauc.applyDistortion(galsim.Ellipse(e1,e2))
@@ -487,7 +494,7 @@ def test_sbprofile_largeshear():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyShear disagrees with expected result")
-    
+ 
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     devauc2 = galsim.Convolve(devauc, galsim.Gaussian(sigma=0.3))
@@ -506,7 +513,7 @@ def test_sbprofile_convolve():
     myConv.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Moffat convolved with Box SBProfile disagrees with expected result")  
+        err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
@@ -554,7 +561,7 @@ def test_sbprofile_shearconvolve():
     myConv.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")  
+        err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
     psf = galsim.Gaussian(flux=1, sigma=1)
     g1,g2 = convertToShear(e1,e2)
@@ -601,7 +608,7 @@ def test_sbprofile_realspace_convolve():
     myConv.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Moffat convolved with Box SBProfile disagrees with expected result")  
+        err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
     print '1'
     # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
@@ -660,7 +667,7 @@ def test_sbprofile_realspace_shearconvolve():
     myConv.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")  
+        err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
     psf = galsim.Gaussian(flux=1, sigma=1)
     g1,g2 = convertToShear(e1,e2)
@@ -709,7 +716,7 @@ def test_sbprofile_rotate():
     mySBP_shear_rotate.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="45-degree rotated elliptical Gaussian disagrees with expected result")  
+        err_msg="45-degree rotated elliptical Gaussian disagrees with expected result")
     # Repeat with the GSObject version of this:
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1)
     gal.applyDistortion(galsim.Ellipse(0.2,0.0));
@@ -738,7 +745,7 @@ def test_sbprofile_mag():
     mySBP_mag.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Magnification (x1.5) of exponential SBProfile disagrees with expected result")   
+        err_msg="Magnification (x1.5) of exponential SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
     gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal.applyDistortion(myEll)
@@ -762,7 +769,7 @@ def test_sbprofile_add():
     myAdd.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Addition of two rescaled Gaussian profiles disagrees with expected result")   
+        err_msg="Addition of two rescaled Gaussian profiles disagrees with expected result")
     # Repeat with the GSObject version of this:
     gauss1 = galsim.Gaussian(flux=0.75, sigma=1)
     gauss2 = galsim.Gaussian(flux=0.25, sigma=3)
@@ -770,50 +777,50 @@ def test_sbprofile_add():
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")   
+        err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")
     # Other ways to do the sum:
     sum = gauss1 + gauss2
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")   
+        err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")
     sum = gauss1.copy()
     sum += gauss2
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject sum = gauss1; sum += gauss2 disagrees with expected result")   
+        err_msg="Using GSObject sum = gauss1; sum += gauss2 disagrees with expected result")
     sum = galsim.Add([gauss1,gauss2])
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject Add([gauss1,gauss2]) disagrees with expected result")   
+        err_msg="Using GSObject Add([gauss1,gauss2]) disagrees with expected result")
     sum = galsim.Add(gauss1)
     sum.add(gauss2)
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject Add(gauss1) with add(gauss2) disagrees with expected result")   
+        err_msg="Using GSObject Add(gauss1) with add(gauss2) disagrees with expected result")
     sum = galsim.Add()
     sum.add(gauss1)
     sum.add(gauss2)
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject Add() with add both disagrees with expected result")   
+        err_msg="Using GSObject Add() with add both disagrees with expected result")
     gauss1 = galsim.Gaussian(flux=1, sigma=1)
     gauss2 = galsim.Gaussian(flux=1, sigma=3)
     sum = 0.75 * gauss1 + 0.25 * gauss2
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject 0.75 * gauss1 + 0.25 * gauss2 disagrees with expected result")   
+        err_msg="Using GSObject 0.75 * gauss1 + 0.25 * gauss2 disagrees with expected result")
     sum = 0.75 * gauss1
     sum += 0.25 * gauss2
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")   
+        err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")
  
     # Test photon shooting.
     do_shoot(sum,myImg,0.2,"sum of 2 Gaussians")
@@ -829,7 +836,7 @@ def test_sbprofile_shift():
     mySBP_shift.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Shifted box profile disagrees with expected result")   
+        err_msg="Shifted box profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     pixel = galsim.Pixel(xw=0.2, yw=0.2)
     pixel.applyShift(0.2, -0.2)
@@ -859,7 +866,7 @@ def test_sbprofile_rescale():
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Flux-rescale sersic profile disagrees with expected result")   
+        err_msg="Flux-rescale sersic profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic.setFlux(2)
