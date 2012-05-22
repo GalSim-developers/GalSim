@@ -596,7 +596,7 @@ def test_sbprofile_realspace_convolve():
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve(mySBP,real_space=True)
     myConv.add(mySBP2)
-    savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_convolve_box_realspace.fits"))
+    savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     myConv.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
