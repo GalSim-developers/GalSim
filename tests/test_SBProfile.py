@@ -609,7 +609,6 @@ def test_sbprofile_realspace_convolve():
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
-    print '1'
     # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
@@ -618,21 +617,18 @@ def test_sbprofile_realspace_convolve():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
-    print '2'
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel,real_space=True)
     conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
-    print '3'
     conv = galsim.Convolve(psf,real_space=True)
     conv.add(pixel)
     conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve(psf) with add(pixel) disagrees with expected result")
-    print '4'
     conv = galsim.Convolve(real_space=True)
     conv.add(psf)
     conv.add(pixel)
@@ -640,7 +636,6 @@ def test_sbprofile_realspace_convolve():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve() with add both disagrees with expected result")
-    print '5'
     # The real-space convolution algorithm is not (trivially) independent of the order of
     # the two things being convolved.  So check the opposite order.
     conv = galsim.Convolve([pixel,psf],real_space=True)
@@ -648,7 +643,6 @@ def test_sbprofile_realspace_convolve():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
-    print '6'
  
 def test_sbprofile_realspace_shearconvolve():
     """Test the real-space convolution of a sheared Gaussian and a Box SBProfile against a 
@@ -962,7 +956,7 @@ if __name__ == "__main__":
     #test_sbprofile_convolve()
     #test_sbprofile_shearconvolve()
     test_sbprofile_realspace_convolve()
-    #test_sbprofile_realspace_shearconvolve()
+    test_sbprofile_realspace_shearconvolve()
     #test_sbprofile_rotate()
     #test_sbprofile_mag()
     #test_sbprofile_add()

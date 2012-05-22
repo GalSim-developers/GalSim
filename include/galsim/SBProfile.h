@@ -50,8 +50,8 @@ namespace galsim {
          * accuracy target to calculate the maxK and stepK values, rather than 
          * the heuristics it uses currently.
          */
-        const double realspace_conv_relerr = 1.e-4;
-        const double realspace_conv_abserr = 1.e-8;
+        const double realspace_conv_relerr = 1.e-3;
+        const double realspace_conv_abserr = 1.e-6;
         //@}
 
     }
