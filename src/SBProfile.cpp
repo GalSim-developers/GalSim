@@ -1166,12 +1166,6 @@ namespace galsim {
         // So p2 is always taken to be a rectangle rather than possibly a circle.
         assert(p1->isAxisymmetric() || !p2->isAxisymmetric());
         
-        // I think these values for the relative and absolute error are sufficient for
-        // making images.  Not sure how they implicitly compare to Gary's choices in
-        // the Fourier version.
-        const double relerr = 1.e-3;
-        const double abserr = 1.e-6;
-
         dbg<<"Start RealSpaceConvolve for pos = "<<pos<<std::endl;
         double xmin1, xmax1, xmin2, xmax2;
         p1->getXRange(xmin1,xmax1);
@@ -1236,7 +1230,9 @@ namespace galsim {
 
         YRegion yreg(p1,p2,pos);
 
-        double result = integ::int2d(conv, xreg, yreg, relerr, abserr);
+        double result = integ::int2d(conv, xreg, yreg, 
+                                     sbp::realspace_conv_relerr,
+                                     sbp::realspace_conv_abserr);
         dbg<<"Found result = "<<result<<std::endl;
         return result;
     }

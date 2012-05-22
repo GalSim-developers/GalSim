@@ -37,6 +37,25 @@
 // ??? Ask for super-Nyquist sampling factor in draw??
 namespace galsim {
 
+    namespace sbp {
+
+        // Magic numbers:
+
+        //@{
+        /** 
+         * @brief The target accuracy for realspace convolution.
+         *
+         * I think these are more than accurate enough for making the images.
+         * TODO: Should have the fourier convolution use a similar kind of 
+         * accuracy target to calculate the maxK and stepK values, rather than 
+         * the heuristics it uses currently.
+         */
+        const double realspace_conv_relerr = 1.e-4;
+        const double realspace_conv_abserr = 1.e-8;
+        //@}
+
+    }
+
     /// @brief Exception class thrown by SBProfiles.
     class SBError : public std::runtime_error 
     {
