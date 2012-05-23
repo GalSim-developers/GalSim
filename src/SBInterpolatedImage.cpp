@@ -21,7 +21,7 @@ namespace galsim {
         wts(Nimages, 1.), fluxes(Nimages, 1.), 
         xFluxes(Nimages, 0.), yFluxes(Nimages,0.),
         xsum(0), ksum(0), xsumValid(false), ksumValid(false),
-        ready(false) 
+        ready(false), readyToShoot(false) 
     {
         assert(Ninitial%2==0);
         assert(Ninitial>=2);
@@ -35,7 +35,6 @@ namespace galsim {
             vx.push_back(new XTable(Nk, dx));
     }
 
-#ifdef USE_IMAGES
     template <typename T>
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& img, const Interpolant2d& i, double dx_, double padFactor) : 
@@ -45,7 +44,7 @@ namespace galsim {
         wts(Nimages, 1.), fluxes(Nimages, 1.), 
         xFluxes(Nimages, 0.), yFluxes(Nimages,0.),
         xsum(0), ksum(0), xsumValid(false), ksumValid(false),
-        ready(false) 
+        ready(false), readyToShoot(false) 
     {
         Ninitial = std::max( img.getYMax()-img.getYMin()+1, img.getXMax()-img.getXMin()+1);
         Ninitial = Ninitial + Ninitial%2;
@@ -72,13 +71,13 @@ namespace galsim {
                 vx.front()->xSet(xTab, yTab, img(ix,iy));
         }
     }
-#endif
 
     SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs):
         Ninitial(rhs.Ninitial), dx(rhs.dx), Nk(rhs.Nk), Nimages(rhs.Nimages),
         xInterp(rhs.xInterp), kInterp(rhs.kInterp),
         wts(rhs.wts), fluxes(rhs.fluxes), xFluxes(rhs.xFluxes), yFluxes(rhs.yFluxes),
-        xsum(0), ksum(0), xsumValid(false), ksumValid(false), ready(rhs.ready) 
+        xsum(0), ksum(0), xsumValid(false), ksumValid(false), ready(rhs.ready),
+        readyToShoot(false) 
     {
         // copy tables
         for (int i=0; i<Nimages; i++) {
@@ -108,6 +107,7 @@ namespace galsim {
         wts *= factor;
         if (xsumValid) *xsum *= factor;
         if (ksumValid) *ksum *= factor;
+        readyToShoot = false;   // Need to rescale all the cumulative fluxes
     }
 
     Position<double> SBInterpolatedImage::centroid() const 
@@ -131,6 +131,7 @@ namespace galsim {
                 "SBInterpolatedImage::setPixel x coordinate " << iy << " out of bounds";
 
         ready = false;
+        readyToShoot = false;
         vx[iz]->xSet(ix, iy, value);
     }
 
@@ -149,6 +150,7 @@ namespace galsim {
         wts = wts_;
         xsumValid = false;
         ksumValid = false;
+        readyToShoot = false;
     }
 
     void SBInterpolatedImage::checkReady() const 
@@ -258,15 +260,11 @@ namespace galsim {
         }
     }
 
-#ifdef USE_IMAGES
     // One more time: for images now
     // Returns total flux
     template <typename T>
     double SBInterpolatedImage::fillXImage(ImageView<T>& I, double dx) const 
     {
-#ifdef DANIELS_TRACING
-        cout << "SBInterpolatedImage::fillXImage called" << endl;
-#endif
         if ( dynamic_cast<const InterpolantXY*> (xInterp)) {
             double sum=0.;
             for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
@@ -285,14 +283,10 @@ namespace galsim {
             return SBProfile::doFillXImage(I,dx);
         }
     }
-#endif
 
 #ifndef OLD_WAY
     double SBInterpolatedImage::xValue(Position<double> p) const 
     {
-#ifdef DANIELS_TRACING
-        cout << "getting xValue at " << p << endl;
-#endif
         checkXsum();
         return xsum->interpolate(p.x, p.y, *xInterp);
     }
@@ -400,8 +394,65 @@ namespace galsim {
 
 #endif
 
+    void SBInterpolatedImage::checkReadyToShoot() const {
+        if (readyToShoot) return;
+
+        // Build the sets holding cumulative fluxes of all Pixels
+        checkXsum();
+        positiveFlux = 0.;
+        negativeFlux = 0.;
+        pt.clear();
+        for (int iy=-Ninitial/2; iy<Ninitial/2; iy++) {
+            double y = iy*dx;
+            for (int ix=-Ninitial/2; ix<Ninitial/2; ix++) {
+                double flux = xsum->xval(ix,iy) * dx*dx;
+                if (flux==0.) continue;
+                double x=ix*dx;
+                if (flux > 0.) {
+                    positiveFlux += flux;
+                } else {
+                    negativeFlux += -flux;
+                }
+                pt.push_back(Pixel(x,y,flux));
+            }
+        }
+        pt.buildTree();
+        readyToShoot = true;
+    }
+
+    // Photon-shooting 
+    PhotonArray SBInterpolatedImage::shoot(int N, UniformDeviate& ud) const
+    {
+        assert(N>=0);
+        checkReadyToShoot();
+        /* The pixel coordinates are stored by cumulative absolute flux in 
+         * a C++ standard-libary set, so the inversion is done with a binary
+         * search tree.  There are no doubt speed gains available from sorting the 
+         * pixels by flux, and somehow weighting the tree search to the elements holding
+         * the most flux.  But I'm doing it the simplest way right now.
+         */
+        assert(N>=0);
+
+        PhotonArray result(N);
+        if (N<=0 || pt.empty()) return result;
+        double totalAbsFlux = positiveFlux + negativeFlux;
+        double fluxPerPhoton = totalAbsFlux / N;
+        for (int i=0; i<N; i++) {
+            double unitRandom = ud();
+            Pixel* p = pt.find(unitRandom);
+            result.setPhoton(i, p->x, p->y, 
+                             p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
+        }
+
+        // Last step is to convolve with the interpolation kernel.  Can skip if using a 2d delta function
+        const InterpolantXY* xyPtr = dynamic_cast<const InterpolantXY*> (xInterp);
+        if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d())))
+             result.convolve(xInterp->shoot(N, ud));
+
+        return result;
+    }
+
     // instantiate template functions for expected image types
-#ifdef USE_IMAGES
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<float>& img, const Interpolant2d& i, double dx_, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImage(
@@ -410,6 +461,5 @@ namespace galsim {
         const BaseImage<short>& img, const Interpolant2d& i, double dx_, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<int>& img, const Interpolant2d& i, double dx_, double padFactor);
-#endif
 }
 
