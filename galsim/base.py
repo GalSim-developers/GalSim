@@ -36,6 +36,23 @@ class GSObject:
         ret *= other
         return ret
 
+    # Likewise for op/ and op/=
+    def __idiv__(self, other):
+        self.setFlux(self.getFlux() / other)
+        return self
+
+    def __div__(self, other):
+        ret = self.copy()
+        ret /= other
+        return ret
+
+    def __itruediv__(self, other):
+        return __idiv__(self, other)
+
+    def __truediv__(self, other):
+        return __div__(self, other)
+
+
     # Make a copy of an object
     def copy(self):
         """@brief Returns a copy of an object as the SBProfile attribute of a new GSObject instance.
@@ -187,12 +204,14 @@ class GSObject:
             self.SBProfile.draw(image, dx=dx, wmult=wmult)
             return image
 
-    # Did not define all the other draw operations that operate on images inplace, would need to
-    # work out slightly different return syntax for that in Python
-
-    def shoot(self):
-        raise NotImplementedError("Sorry, photon shooting coming soon!")
-
+    def drawShoot(self, image, N, ud=None):
+        if type(N) != float:
+            # if given an int, just convert it to a float
+            N = float(N)
+        if ud == None:
+            ud = galsim.UniformDeviate()
+        self.SBProfile.drawShoot(image, N, ud)
+         
 
 # Define "convenience function for going from (g1, g2) -> (e1, e2), used by two methods
 # in the GSObject class and by one function in real.py:
