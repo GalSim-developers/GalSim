@@ -288,33 +288,52 @@ def _Parse(config):
     """@brief config=_Parse(config) does initial parsing of strings if necessary.
     
        If a parameter or its type is a string, this means that it should be parsed to 
-       build the appropriate attributes.
-       e.g. parsing gal.type = 'Exponential scale_radius=3 flux=100'
+       build the appropriate attributes.  For example,
+
+       @code
+       parsing gal.type = 'Exponential scale_radius=3 flux=100'
+       @endcode
+
        would result in the equivalent of:
-           gal.type = 'Exponential'
-           gal.scale_radius = 3
-           gal.flux = 100
+
+       @code
+       gal.type = 'Exponential'
+       gal.scale_radius = 3
+       gal.flux = 100
+       @endcode
 
        Furthermore, if the first (non-whitespace) character after an = is '<',
        then the contents of the <> are recursively parsed for that value.
-       e.g. psf = 'Moffat beta=<InputCatalog col=3> fwhm=<InputCatalog col=4>'
+       e.g.
+       @code
+       psf = 'Moffat beta=<InputCatalog col=3> fwhm=<InputCatalog col=4>'
+       @endcode
        would result in the equivalent of:
-           psf.type = 'Moffat'
-           psf.beta.type = 'InputCatalog'
-           psf.beta.col = 3
-           psf.fwhm.type = 'InputCatalog'
-           psf.fwhm.col = 4
+       @code
+       psf.type = 'Moffat'
+       psf.beta.type = 'InputCatalog'
+       psf.beta.col = 3
+       psf.fwhm.type = 'InputCatalog'
+       psf.fwhm.col = 4
+       @endcode
 
        If the first (non-whitespace) character after an = is '[', 
        then the contents are taken to be an array of configuration strings.
-       e.g. gal = 'Sum items = [ <Sersic n=1.2>, <Sersic n=3.5> ]'
+       e.g. 
+
+       @code
+       gal = 'Sum items = [ <Sersic n=1.2>, <Sersic n=3.5> ]'
+       @endcode
 
        The string can be at either the base level (e.g. psf above) or as the type
        attribute (e.g. gal.type above).  The difference is that if the user
        specifies the string as a type, then other attributes can also be set separately.
        e.g.
-           gal.type = 'Sersic n=1.5 half_light_radius=4 flux=1000'
-           gal.shear = 'G1G2 g1=0.3 g2=0'
+
+       @code
+       gal.type = 'Sersic n=1.5 half_light_radius=4 flux=1000'
+       gal.shear = 'G1G2 g1=0.3 g2=0'
+       @endcode
     """
     if isinstance(config, basestring):
         orig = config
