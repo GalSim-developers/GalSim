@@ -51,6 +51,9 @@ void pyExportSBInterpolatedImage() {
             bp::with_custodian_and_ward<1,2>() // keep i1d arg alive as long as self is alive
         ]
     );
+    bp::class_<Delta,bp::bases<Interpolant>,boost::noncopyable>(
+        "Delta", bp::init<double>(bp::arg("tol")=1E-3)
+    );
     bp::class_<Nearest,bp::bases<Interpolant>,boost::noncopyable>(
         "Nearest", bp::init<double>(bp::arg("tol")=1E-3)
     );
@@ -62,7 +65,7 @@ void pyExportSBInterpolatedImage() {
     );
     bp::class_<Lanczos,bp::bases<Interpolant>,boost::noncopyable>(
         "Lanczos", bp::init<int,bool,double>(
-            (bp::arg("n"), bp::arg("fluxConserve")=false, bp::arg("tol")=1E-3)
+            (bp::arg("n"), bp::arg("conserve_flux")=false, bp::arg("tol")=1E-3)
         )
     );
     bp::class_<Cubic,bp::bases<Interpolant>,boost::noncopyable>(

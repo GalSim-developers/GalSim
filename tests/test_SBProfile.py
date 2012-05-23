@@ -23,6 +23,17 @@ ftchar = ['F', 'D']
 ref_array = np.array([[00, 10, 20, 30], [01, 11, 21, 31], [02, 12, 22, 32],
                       [03, 13, 23, 33]]).astype(types[0])
 
+# For photon shooting, we calculate the number of photons to use based on the target
+# accuracy we are shooting for.  (Pun intended.)  
+# For each pixel,
+# uncertainty = sqrt(N_pix) * flux_photon = sqrt(N_tot * flux_pix / flux_tot) * flux_tot / N_tot
+#             = sqrt(flux_pix) * sqrt(flux_tot) / sqrt(N_tot)
+# This is largest for the brightest pixel.  So we use:
+# N = flux_max * flux_tot / photon_shoot_accuracy^2
+photon_shoot_accuracy = 2.e-3
+# The number of decimal places at which to test the photon shooting
+photon_decimal_test = 2
+
 # for radius tests - specify half-light-radius, FHWM, sigma to be compared with high-res image (with
 # pixel scale chosen iteratively until convergence is achieved, beginning with test_dx)
 test_hlr = 1.0
@@ -98,6 +109,41 @@ def convertToShear(e1,e2):
     g2 = e2 * (g/e)
     return (g1,g2)
 
+def do_shoot(prof, img, dx, name):
+    print 'Start do_shoot'
+    # Test photon shooting for a particular profile (given as prof). 
+    # Since shooting implicitly convolves with the pixel, we need to compare it to 
+    # the given profile convolved with a pixel.
+    pix = galsim.Pixel(xw=dx)
+    compar = galsim.Convolve(prof,pix)
+    compar.draw(img,dx=dx)
+    flux_max = img.array.max()
+    print 'flux_max = ',flux_max
+    flux_tot = img.array.sum()
+    print 'flux_tot = ',flux_tot
+    if flux_max > 1.:
+        # Since the number of photons required for a given accuracy level (in terms of 
+        # number of decimal places), we rescale the comparison by the flux of the 
+        # brightest pixel.
+        compar /= flux_max
+        img /= flux_max
+        prof /= flux_max
+        # The formula for number of photons needed is:
+        # nphot = flux_max * flux_tot / photon_shoot_accuracy**2
+        # But since we rescaled the image by 1/flux_max, it becomes
+        nphot = flux_tot / flux_max / photon_shoot_accuracy**2
+    else:
+        nphot = flux_max * flux_tot / photon_shoot_accuracy**2
+    print 'nphot = ',nphot
+    img2 = img.copy()
+    #img.write("junk1.fits")
+    prof.drawShoot(img2,nphot)
+    #img2.write("junk2.fits")
+    np.testing.assert_array_almost_equal(
+            img2.array, img.array, photon_decimal_test,
+            err_msg="Photon shooting for %s disagrees with expected result"%name)
+
+
 # define a series of tests
 
 def test_sbprofile_gaussian():
@@ -108,13 +154,16 @@ def test_sbprofile_gaussian():
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-                                         err_msg="Gaussian profile disagrees with expected result")
+            err_msg="Gaussian profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
     myImg = gauss.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian disagrees with expected result")
+
+    # Test photon shooting.
+    do_shoot(gauss,myImg,0.2,"Gaussian")
 
 
 def test_sbprofile_gaussian_properties():
@@ -197,6 +246,10 @@ def test_sbprofile_exponential():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Exponential disagrees with expected result")
 
+    # Test photon shooting.
+    do_shoot(expon,myImg,0.2,"Exponential")
+
+
 def test_exponential_radii():
     """Test initialization of Exponential with different types of radius specification.
     """
@@ -243,6 +296,12 @@ def test_sbprofile_sersic():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Sersic disagrees with expected result")
 
+    # Test photon shooting.
+    # Convolve with a small gaussian to smooth out the central peak.
+    sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
+    do_shoot(sersic2,myImg,0.2,"Sersic")
+
+
 def test_sersic_radii():
     """Test initialization of Sersic with different types of radius specification.
     """
@@ -277,6 +336,10 @@ def test_sbprofile_airy():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy disagrees with expected result")
 
+    # Test photon shooting.
+    do_shoot(airy,myImg,0.2,"Airy")
+
+
 def test_sbprofile_box():
     """Test the generation of a specific box profile using SBProfile against a known result.
     """
@@ -295,6 +358,10 @@ def test_sbprofile_box():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel disagrees with expected result")
 
+    # Test photon shooting.
+    do_shoot(pixel,myImg,0.2,"Pixel")
+
+
 def test_sbprofile_moffat():
     """Test the generation of a specific Moffat profile using SBProfile against a known result.
     """
@@ -311,6 +378,10 @@ def test_sbprofile_moffat():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat disagrees with expected result")
 
+    # Test photon shooting.
+    do_shoot(moffat,myImg,0.2,"Moffat")
+
+
 def test_sbprofile_moffat_properties():
     """Test some basic properties of the SBMoffat profile.
     """
@@ -319,7 +390,7 @@ def test_sbprofile_moffat_properties():
     cen = galsim._galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid(), cen)
     # Check Fourier properties
-    np.testing.assert_almost_equal(psf.maxK(), 34.226259129031952)
+    np.testing.assert_almost_equal(psf.maxK(), 34.226260866076707)
     np.testing.assert_almost_equal(psf.stepK(), 0.08604618622618046)
     np.testing.assert_equal(psf.kValue(cen), 1+0j)
     # Check input flux vs output flux
@@ -378,10 +449,14 @@ def test_sbprofile_smallshear():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyShear disagrees with expected result")
     
+    # Test photon shooting.
+    do_shoot(gauss,myImg,0.2,"sheared Gaussian")
+
+
 def test_sbprofile_largeshear():
     """Test the application of a large shear to a Sersic SBProfile against a known result.
     """
-    mySBP = galsim.SBSersic(n=4, flux=1, half_light_radius=1)
+    mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
     e1 = 0.0
     e2 = 0.5
     mySBP_shear = mySBP.shear(e1,e2)
@@ -389,22 +464,28 @@ def test_sbprofile_largeshear():
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Large-shear Sersic profile disagrees with expected result")  
+        err_msg="Large-shear DeVauc profile disagrees with expected result")  
     # Repeat with the GSObject version of this:
-    sersic = galsim.Sersic(n=4, flux=1, half_light_radius=1)
-    sersic.applyDistortion(galsim.Ellipse(e1,e2))
-    myImg = sersic.draw(dx=0.2)
+    devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
+    devauc.applyDistortion(galsim.Ellipse(e1,e2))
+    myImg = devauc.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyDistortion disagrees with expected result")
-    sersic = galsim.Sersic(n=4, flux=1, half_light_radius=1)
+    devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
     g1,g2 = convertToShear(e1,e2)
-    sersic.applyShear(g1,g2)
-    myImg = sersic.draw(dx=0.2)
+    devauc.applyShear(g1,g2)
+    myImg = devauc.draw(dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyShear disagrees with expected result")
     
+    # Test photon shooting.
+    # Convolve with a small gaussian to smooth out the central peak.
+    devauc2 = galsim.Convolve(devauc, galsim.Gaussian(sigma=0.3))
+    do_shoot(devauc2,myImg,0.2,"sheared DeVauc")
+
+ 
 def test_sbprofile_convolve():
     """Test the convolution of a Moffat and a Box SBProfile against a known result.
     """
@@ -444,6 +525,10 @@ def test_sbprofile_convolve():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve() with add both disagrees with expected result")
+ 
+    # Test photon shooting.
+    do_shoot(conv,myImg,0.2,"Moffat * Pixel")
+
 
 def test_sbprofile_shearconvolve():
     """Test the convolution of a sheared Gaussian and a Box SBProfile against a known result.
@@ -489,6 +574,10 @@ def test_sbprofile_shearconvolve():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve() with add both disagrees with expected result")
+ 
+    # Test photon shooting.
+    do_shoot(conv,myImg,0.2,"sheared Gaussian * Pixel")
+
 
 def test_sbprofile_rotate():
     """Test the 45 degree rotation of a sheared Sersic profile against a known result.
@@ -509,6 +598,12 @@ def test_sbprofile_rotate():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyRotation disagrees with expected result")
+ 
+    # Test photon shooting.
+    # Convolve with a small gaussian to smooth out the central peak.
+    gal2 = galsim.Convolve(gal, galsim.Gaussian(sigma=0.3))
+    do_shoot(gal2,myImg,0.2,"rotated sheared Sersic")
+
 
 def test_sbprofile_mag():
     """Test the magnification (size x 1.5) of an exponential profile against a known result.
@@ -530,6 +625,10 @@ def test_sbprofile_mag():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyDistortion disagrees with expected result")
+ 
+    # Test photon shooting.
+    do_shoot(gal,myImg,0.2,"dilated Exponential")
+
 
 def test_sbprofile_add():
     """Test the addition of two rescaled Gaussian profiles against a known double Gaussian result.
@@ -593,6 +692,9 @@ def test_sbprofile_add():
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")   
+ 
+    # Test photon shooting.
+    do_shoot(sum,myImg,0.2,"sum of 2 Gaussians")
 
 
 def test_sbprofile_shift():
@@ -612,6 +714,17 @@ def test_sbprofile_shift():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyShiift disagrees with expected result")
+    print 'After applyShift test'
+ 
+    # Test photon shooting.
+    # Since photon shooting compares to a DFT convolution with a box, we can't 
+    # do the shift test for a box here.  (Box * Box is very inaccurate with DFT)
+    # So instead we give it a shifted Gaussian to compare with.
+    gauss = galsim.Gaussian(flux=1, sigma=1)
+    gauss.applyShift(0.4,-0.3)
+    myImg = gauss.draw(dx=0.2)
+    do_shoot(gauss,myImg,0.2,"shifted Gaussian")
+
 
 def test_sbprofile_rescale():
     """Test the flux rescaling of a Sersic profile against a known result.
@@ -647,6 +760,12 @@ def test_sbprofile_rescale():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject 2 * obj disagrees with expected result")
+ 
+    # Test photon shooting.
+    # Convolve with a small gaussian to smooth out the central peak.
+    sersic3 = galsim.Convolve(sersic2, galsim.Gaussian(sigma=0.3))
+    do_shoot(sersic3,myImg,0.2,"scaled Sersic")
+
 
 def test_sbprofile_sbinterpolatedimage():
     """Test that we can make SBInterpolatedImages from Images of various types, and convert back.
@@ -667,6 +786,32 @@ def test_sbprofile_sbinterpolatedimage():
         np.testing.assert_array_equal(
             ref_array.astype(array_type),image_out.array,
             err_msg="Array from output Image differs from reference array for type %s"%array_type)
+ 
+        # Since SBInterp is an SBProfile, rather than a GSObject, we can't just
+        # use the do_shoot function we've been using for the others, since a few things
+        # need to be a little different.
+        flux_max = image_out.array.max()
+        print 'flux_max = ',flux_max
+        flux_tot = image_out.array.sum()
+        print 'flux_tot = ',flux_tot
+
+        sbinterp.setFlux(sbinterp.getFlux() / flux_max)
+        nphot = flux_tot / flux_max / photon_shoot_accuracy**2
+        print 'nphot = ',nphot
+        ud = galsim.UniformDeviate()
+        sbinterp.drawShoot(image_out,int(nphot),ud)
+
+        # Compare this to a convolution of the sbinter with a pixel
+        pix = galsim.SBBox(xw=1.0, yw=1.0, flux=1.)
+        conv = galsim.SBConvolve(sbinterp)
+        conv.add(pix)
+        image_comp = image_out.copy()
+        conv.draw(image_comp, dx=1.0)
+        np.testing.assert_array_almost_equal(
+                image_comp.array, image_out.array, photon_decimal_test,
+                err_msg="Photon shooting for interpolated image disagrees with expected result")
+
+
 
 if __name__ == "__main__":
     test_sbprofile_gaussian()
