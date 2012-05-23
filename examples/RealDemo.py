@@ -2,8 +2,8 @@
 """
 A basic script demonstrating usage of the RealGalaxy functionality.
 """
-# NOTE: if catalog and image files for real galaxies are not in examples/data/, this cannot be run
-# (and, even if they are there, it must be run while sitting in examples/)!!!
+# NOTE: if catalog and image files for real galaxies are not in examples/data/, this cannot be run -
+# and, even if they are there, it must be run while sitting in examples/ !!!
 
 import sys
 import os
@@ -60,6 +60,7 @@ sim_image_bad_shear = galsim.simReal(real_galaxy, bad_epsf, pixel_scale, g1 = g1
 
 # write to files: original galaxy, original PSF, 2 target PSFs, 4 simulated images
 # note: will differ each time it is run, because we chose a random image
+print "Writing results to files!"
 orig_gal_img = real_galaxy.original_image.draw(dx = real_galaxy.pixel_scale)
 orig_gal_img.write(os.path.join(output_dir, 'demoreal.orig_gal.fits'), clobber = True)
 
