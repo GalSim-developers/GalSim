@@ -49,7 +49,7 @@ struct PyBounds {
     static void wrap(std::string const & suffix) {
         bp::class_< Bounds<T> > pyBounds(("Bounds" + suffix).c_str(), bp::init<>());
         pyBounds
-            .def(bp::init<T,T,T,T>(bp::args("x1","x2","y1","y2")))
+            .def(bp::init<T,T,T,T>(bp::args("xmin","xmax","ymin","ymax")))
             .def(bp::init< const Position<T> &>(bp::args("pos")))
             .def(bp::init< const Position<T> &, const Position<T> & >(bp::args("pos1", "pos2")))
             .def("isDefined", &Bounds<T>::isDefined)
