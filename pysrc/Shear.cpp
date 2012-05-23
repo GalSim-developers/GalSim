@@ -119,7 +119,8 @@ struct PyEllipse {
         bp::class_<Ellipse>("Ellipse", doc, bp::init<const Ellipse &>())
             .def(
                 bp::init<double,double,double,double,double>(
-                    (bp::arg("e1")=0.,bp::arg("e2")=0.,bp::arg("m")=0.,bp::arg("x")=0.,bp::arg("y")=0.)
+                    (bp::arg("e1")=0.,bp::arg("e2")=0.,bp::arg("mu")=0.,bp::arg("x")=0.,
+                     bp::arg("y")=0.)
                 )
             )
             .def(bp::init<const Shear &, double, const Position<double> &>(bp::args("s", "mu", "p")))
