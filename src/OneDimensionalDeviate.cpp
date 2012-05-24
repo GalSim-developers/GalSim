@@ -9,23 +9,6 @@
 
 namespace galsim {
 
-    ///////////   Magic Numbers ///////////
-
-    // fractional error allowed on any flux integral:
-    const double RELATIVE_ERROR = 1e-6;
-    // absolute error allowed [assumes the total flux is O(1)]
-    const double ABSOLUTE_ERROR = 1e-8;
-
-    // Range will be split into this many parts to bracket extrema
-    const int RANGE_DIVISION_FOR_EXTREMA = 32;
-
-    // Intervals with less than this fraction of probability are
-    // ok to use dominant-sampling method.
-    const double SMALL_FRACTION_OF_FLUX = 1e-4;
-
-    // Max range of allowed (abs value of) photon fluxes within an Interval before rejection sampling is invoked
-    const double ALLOWED_FLUX_VARIATION = 0.81;
-
     // Wrapper class for doing integrals over annuli
     template <class F>
     class RTimesF: public std::unary_function<double,double> {
@@ -141,7 +124,7 @@ namespace galsim {
     // Select a photon from within the interval.  unitRandom
     // as an initial random value, more from ud if needed for rejections.
     void Interval::drawWithin(double unitRandom, double& x, double& flux,
-                                 UniformDeviate& ud) const {
+                              UniformDeviate& ud) const {
         double fractionOfInterval = std::min(unitRandom, 1.);
         fractionOfInterval = std::max(0., fractionOfInterval);
         x = interpolateFlux(fractionOfInterval);
@@ -163,14 +146,14 @@ namespace galsim {
             RTimesF<FluxDensity> integrand(*_fluxDensityPtr);
             _flux = integ::int1d(integrand, 
                                  _xLower, _xUpper,
-                                 RELATIVE_ERROR,
-                                 ABSOLUTE_ERROR);
+                                 odd::RELATIVE_ERROR,
+                                 odd::ABSOLUTE_ERROR);
         } else {
             // Integrate the input function
             _flux = integ::int1d(*_fluxDensityPtr, 
                                  _xLower, _xUpper,
-                                 RELATIVE_ERROR,
-                                 ABSOLUTE_ERROR);
+                                 odd::RELATIVE_ERROR,
+                                 odd::ABSOLUTE_ERROR);
         }
         _fluxIsReady = true;
     }
@@ -199,7 +182,7 @@ namespace galsim {
         if (std::abs(densityLower) > 0. && std::abs(densityUpper) > 0.)
             densityVariation = densityLower / densityUpper;
         if (densityVariation > 1.) densityVariation = 1. / densityVariation;
-        if (densityVariation > ALLOWED_FLUX_VARIATION) {
+        if (densityVariation > odd::ALLOWED_FLUX_VARIATION) {
             // Don't split if flux range is small
             _useRejectionMethod = false;
             result.push_back(*this);
@@ -254,25 +237,25 @@ namespace galsim {
                              range[iRange],
                              range[iRange+1],
                              extremum,
-                             RANGE_DIVISION_FOR_EXTREMA)) {
+                             odd::RANGE_DIVISION_FOR_EXTREMA)) {
                 // Do 2 ranges
                 {
                     Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial);
-                    std::list<Interval> leftList = splitit.split(SMALL_FRACTION_OF_FLUX
-                                                                *totalAbsoluteFlux);
+                    std::list<Interval> leftList = splitit.split(
+                        odd::SMALL_FRACTION_OF_FLUX * totalAbsoluteFlux);
                     _pt.splice(_pt.end(), leftList);
                 }
                 {
                     Interval splitit(_fluxDensity, extremum, range[iRange+1], _isRadial);
-                    std::list<Interval> rightList = splitit.split(SMALL_FRACTION_OF_FLUX
-                                                                *totalAbsoluteFlux);
+                    std::list<Interval> rightList = splitit.split(
+                        odd::SMALL_FRACTION_OF_FLUX * totalAbsoluteFlux);
                     _pt.splice(_pt.end(), rightList);
                 }
             } else {
                 // Just single Interval in this range, no extremum:
                 Interval splitit(_fluxDensity, range[iRange], range[iRange+1], _isRadial);
-                std::list<Interval> leftList = splitit.split(SMALL_FRACTION_OF_FLUX
-                                                           *totalAbsoluteFlux);
+                std::list<Interval> leftList = splitit.split(
+                    odd::SMALL_FRACTION_OF_FLUX * totalAbsoluteFlux);
                 _pt.splice(_pt.end(), leftList);
             }
         }

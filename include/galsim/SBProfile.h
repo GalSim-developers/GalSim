@@ -246,35 +246,38 @@ namespace galsim {
          * @brief Shoot photons through this SBProfile.
          *
          * Returns an array of photon coordinates and fluxes that are drawn from the light
-         * distribution of this SBProfile.  Absolute value of each photons' flux should be 
-         * approximately equal, but some photons can be negative as needed to represent negative regions.
-         * Note that the ray-shooting method is not intended to produce a randomized value of the total
-         * object flux, so do not assume that there will be sqrt(N) error on the flux.  In fact 
-         * most implementations will return a PhotonArray with exactly correct flux, with only
-         * the *distribution* of flux on the sky that will definitely have sampling noise. 
+         * distribution of this SBProfile.  Absolute value of each photons' flux should be
+         * approximately equal, but some photons can be negative as needed to represent negative
+         * regions.  Note that the ray-shooting method is not intended to produce a randomized value
+         * of the total object flux, so do not assume that there will be sqrt(N) error on the flux.
+         * In fact most implementations will return a PhotonArray with exactly correct flux, with
+         * only the *distribution* of flux on the sky that will definitely have sampling noise.
          *
-         * The one definitive gaurantee is that, in the limit of large number of photons, the surface 
-         * brightness distribution of the photons will converge on the SB pattern defined by the object.
+         * The one definitive gaurantee is that, in the limit of large number of photons, the
+         * surface brightness distribution of the photons will converge on the SB pattern defined by
+         * the object.
          *
-         * Objects with regions of negative flux will result in creation of photons with negative flux. 
-         * Absolute value of negative photons' flux should be nearly equal to the standard flux
-         * of positive photons.  Shot-noise fluctuations between the number of positive and negative photons
-         * will produce noise in the total net flux carried by the output [PhotonArray](@ref PhotonArray).
+         * Objects with regions of negative flux will result in creation of photons with negative
+         * flux.  Absolute value of negative photons' flux should be nearly equal to the standard
+         * flux of positive photons.  Shot-noise fluctuations between the number of positive and
+         * negative photons will produce noise in the total net flux carried by the output
+         * [PhotonArray](@ref PhotonArray).
          *
-         * The typical implementation will be to take the integral of the absolute value of flux, and
-         * divide it nearly equally into N photons.  The photons are then drawn from the distribution of 
-         * the *absolute value* of flux.  If a photon is drawn from a region of negative flux, then that
-         * photon's flux is negated.  Because of cancellation, this means that each photon will carry 
-         * more than `getFlux()/N` flux if there are negative-flux regions in the object.  It also means
-         * that during convolution, addition, or interpolation, postive- and negative-flux photons can
-         * be contributing to the same region of the image.  Their cancellation means that the shot
-         * noise may be substantially higher than you would expect if you had only postive-flux photons.
+         * The typical implementation will be to take the integral of the absolute value of flux,
+         * and divide it nearly equally into N photons.  The photons are then drawn from the
+         * distribution of the *absolute value* of flux.  If a photon is drawn from a region of
+         * negative flux, then that photon's flux is negated.  Because of cancellation, this means
+         * that each photon will carry more than `getFlux()/N` flux if there are negative-flux
+         * regions in the object.  It also means that during convolution, addition, or
+         * interpolation, positive- and negative-flux photons can be contributing to the same region
+         * of the image.  Their cancellation means that the shot noise may be substantially higher
+         * than you would expect if you had only positive-flux photons.
          *
-         * The photon flux may also vary slightly as a means of speeding up photon-shooting, as an alternative
-         * to rejection sampling.  See `OneDimensionalDeviate` documentation.
+         * The photon flux may also vary slightly as a means of speeding up photon-shooting, as an
+         * alternative to rejection sampling.  See `OneDimensionalDeviate` documentation.
          *
-         * It should be rare to use this method or any `PhotonArray` in user code - the method `drawShoot()`
-         * will more typically put the results directly into an image.
+         * It should be rare to use this method or any `PhotonArray` in user code - the method
+         * `drawShoot()` will more typically put the results directly into an image.
          *
          * @param[in] N Total number of photons to produce.
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
@@ -291,8 +294,8 @@ namespace galsim {
          * positive, or 0 otherwise, which will be
          * the case when the SBProfile is constructed entirely from elements of the same sign.
          *
-         * It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the
-         * same thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
+         * It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the same
+         * thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
          * cases involving lookup tables, etc.
          *
          * @returns Expected positive-photon flux.
@@ -321,15 +324,17 @@ namespace galsim {
         /**
          * @brief Draw this SBProfile into Image by shooting photons.
          *
-         * The input image must have defined boundaries and pixel scale.  The photons generated
-         * by shoot() method will be binned into the target Image.  See caveats in `shoot()` docstring.
-         * Input `Image` will be cleared before drawing in the photons.  Scale and location of the `Image` pixels 
-         * will not be altered.  Photons falling outside the `Image` range will be ignored.
+         * The input image must have defined boundaries and pixel scale.  The photons generated by
+         * the shoot() method will be binned into the target Image.  See caveats in `shoot()`
+         * docstring.  Input `Image` will be cleared before drawing in the photons.  Scale and
+         * location of the `Image` pixels will not be altered.  Photons falling outside the `Image`
+         * range will be ignored.
          *
-         * It is important to remember that the `Image` produced by `drawShoot` represents the `SBProfile`
-         * _as convolved with the square Image pixel._  So do not expect an exact match, even in the limit of
-         * large photon number, between the outputs of `draw()` and `drawShoot`.  You should convolve the `SBProfile` 
-         * with an `SBBox(dx)` in order to match what will be produced by `drawShoot` onto an image with pixel scale `dx`.
+         * It is important to remember that the `Image` produced by `drawShoot` represents the
+         * `SBProfile` _as convolved with the square Image pixel._ So do not expect an exact match,
+         * even in the limit of large photon number, between the outputs of `draw` and `drawShoot`.
+         * You should convolve the `SBProfile` with an `SBBox(dx)` in order to match what will be
+         * produced by `drawShoot` onto an image with pixel scale `dx`.
          *
          * @param[in] img Image to draw on.
          * @param[in] N Total number of photons to produce.
@@ -773,9 +778,9 @@ namespace galsim {
         /**
          * @brief Shoot photons through this SBAdd.
          *
-         * SBAdd will divide the N photons among its summands with probabilities proportional
-         * to their integrated (absolute) fluxes.  Note that the order of photons in output array will not be
-         * random as different summands' outputs are simply concatenated.
+         * SBAdd will divide the N photons among its summands with probabilities proportional to
+         * their integrated (absolute) fluxes.  Note that the order of photons in output array will
+         * not be random as different summands' outputs are simply concatenated.
          * @param[in] N Total number of photons to produce.
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
@@ -785,16 +790,18 @@ namespace galsim {
          * @brief Give total positive flux of all summands
          *
          * Note that `getPositiveFlux()` return from SBAdd may not equal the integral of positive
-         * regions of the image, because summands could have positive and negative regions cancelling
-         * each other.  Rather it will be the sum of the `getPositiveFlux()` of all the images.
+         * regions of the image, because summands could have positive and negative regions
+         * cancelling each other.  Rather it will be the sum of the `getPositiveFlux()` of all the
+         * images.
          * @returns Total positive flux of all summands
          */
         virtual double getPositiveFlux() const;
         /** @brief Give absolute value of total negative flux of all summands
          *
          * Note that `getNegativeFlux()` return from SBAdd may not equal the integral of negative
-         * regions of the image, because summands could have positive and negative regions cancelling
-         * each other. Rather it will be the sum of the `getNegativeFlux()` of all the images.
+         * regions of the image, because summands could have positive and negative regions
+         * cancelling each other. Rather it will be the sum of the `getNegativeFlux()` of all the
+         * images.
          * @returns Absolute value of total negative flux of all summands
          */
         virtual double getNegativeFlux() const;
@@ -965,7 +972,8 @@ namespace galsim {
          * @brief Shoot photons through this SBDistort.
          *
          * SBDistort will simply apply the affine distortion to coordinates of photons
-         * generated by its adaptee, and rescale the flux by the determinant of the distortion matrix.
+         * generated by its adaptee, and rescale the flux by the determinant of the distortion
+         * matrix.
          * @param[in] N Total number of photons to produce.
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
@@ -1177,8 +1185,8 @@ namespace galsim {
         /**
          * @brief Shoot photons through this SBConvolve.
          *
-         * SBConvolve will add the displacements of photons generated by each convolved component.  Their
-         * fluxes are multiplied (modulo factor of N).
+         * SBConvolve will add the displacements of photons generated by each convolved component.
+         * Their fluxes are multiplied (modulo factor of N).
          * @param[in] N Total number of photons to produce.
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
@@ -1245,7 +1253,8 @@ namespace galsim {
          * @brief Shoot photons through this SBGaussian.
          *
          * SBGaussian shoots photons by analytic transformation of the unit disk.  Slightly more
-         * than 2 uniform deviates are drawn per photon, with some analytic function calls (sqrt, etc)
+         * than 2 uniform deviates are drawn per photon, with some analytic function calls (sqrt,
+         * etc.)
          *
          * @param[in] N Total number of photons to produce.
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
@@ -1322,7 +1331,8 @@ namespace galsim {
 
             /**
              * @brief Shoot photons through unit-size, unnormalized profile
-             * Sersic profiles are sampled with a numerical method, using class `OneDimensionalDeviate`.
+             * Sersic profiles are sampled with a numerical method, using class
+             * `OneDimensionalDeviate`.
              *
              * @param[in] N Total number of photons to produce.
              * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
@@ -1494,7 +1504,8 @@ namespace galsim {
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
 
-        /// @brief Exponential photon-shooting done with rapid iterative solution of inverse cumulative distribution
+        /// @brief Exponential photon-shooting done with rapid iterative solution of inverse
+        /// cumulative distribution
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBExponential(*this); }
@@ -1542,7 +1553,8 @@ namespace galsim {
             D(rhs.D), obscuration(rhs.obscuration), flux(rhs.flux), norm(rhs.norm),
             _sampler(0), _radial(obscuration) {}
 
-        /// @brief Assignment operator: photon-shooting structures are discarded, will be re-computed in copy
+        /// @brief Assignment operator: photon-shooting structures are discarded, will be
+        /// re-computed in copy
         const SBAiry& operator=(const SBAiry& rhs) {
             D = rhs.D;
             obscuration = rhs.obscuration;

@@ -320,7 +320,7 @@ namespace galsim {
          *  Most often, this is used for default-constructing an Image which is then
          *  resized later.
          */
-        BaseImage(const Bounds<int>& b);
+        BaseImage(const Bounds<int>& b, double scale=1.);
 
         /**
          *  @brief Allocate new memory for the image
@@ -590,8 +590,8 @@ namespace galsim {
         /**
          *  @brief Deep copy constructor.
          */
-        Image(const Image<T>& rhs) : BaseImage<T>(rhs._bounds) 
-        { this->_scale = rhs._scale; copyFrom(rhs); }
+        Image(const Image<T>& rhs) : BaseImage<T>(rhs._bounds, rhs._scale) 
+        { copyFrom(rhs); }
 
         /**
          *  @brief Can construct from any AssignableToImage
@@ -602,8 +602,8 @@ namespace galsim {
         /**
          *  @brief If rhs is a BaseImage, then also get the scale
          */
-        Image(const BaseImage<T>& rhs) : BaseImage<T>(rhs.getBounds()) 
-        { this->_scale = rhs.getScale(); copyFrom(rhs); }
+        Image(const BaseImage<T>& rhs) : BaseImage<T>(rhs.getBounds(), rhs.getScale())
+        { copyFrom(rhs); }
 
         /**
          *  @brief Deep assignment operator.

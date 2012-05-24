@@ -26,8 +26,8 @@ def main(argv):
 
     # Try different interpolants!
     #interp1d = galsim.Linear();
-    interp1d = galsim.Delta();
-    #interp1d = galsim.Lanczos(5,true);
+    #interp1d = galsim.Delta();
+    interp1d = galsim.Lanczos(5,conserve_flux=True);
     #interp1d = galsim.Quintic();
     interp2d = galsim.InterpolantXY(interp1d)
 
