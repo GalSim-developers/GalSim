@@ -275,6 +275,7 @@ namespace galsim {
                     I(ix,iy) = val;
                 }
             }
+            I.setScale(dx);
             return sum;
         } else {
             // Otherwise just use the normal routine to fill the grid:
