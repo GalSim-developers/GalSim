@@ -48,7 +48,7 @@ further demo scripts will be added to examples/ to illustrate and showcase what 
 --- Additional scripts ---
 
 While scripts (a)-(c) can be run from the command-line while sitting in examples/ without any
-arguments, the remaining scripts are auxilliary utilities that take various command-line arguments,
+arguments, the remaining scripts are auxiliary utilities that take various command-line arguments,
 which are always explained in comments at the top of the file.
 
 * SBDraw.py can be used to generate individual images of single galaxies from parametric models
