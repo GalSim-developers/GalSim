@@ -6,6 +6,8 @@
 #include "TMV.h"
 #include "Solve.h"
 
+#include <numeric>
+
 namespace galsim {
 
     // ????? Change treatement of aliased images to simply add in the aliased
@@ -41,7 +43,6 @@ namespace galsim {
     // Common methods of Base Class "SBProfile"
     //
 
-#ifdef USE_IMAGES
     ImageView<float> SBProfile::draw(double dx, int wmult) const 
     {
         Image<float> img;
@@ -122,10 +123,6 @@ namespace galsim {
                  ++it, ++x) {
                 Position<double> p(x*dx,y*dx); // since x,y are pixel indices
                 *it = xValue(p);
-#ifdef DANIELS_TRACING
-                cout << "x=" << x << ", y=" << y << ": " << *it << std::endl;
-                cout << "--------------------------" << std::endl;
-#endif
                 totalflux += *it;
             } 
         }
@@ -608,8 +605,6 @@ namespace galsim {
         delete ktmp;  // no memory leak!
     }
 
-#endif
-
     void SBProfile::fillXGrid(XTable& xt) const 
     {
         int N = xt.getN();
@@ -762,6 +757,22 @@ namespace galsim {
         sumfy *= m;
         return;
     }
+
+    double SBAdd::getPositiveFlux() const {
+        double result = 0.;
+        for (std::list<SBProfile*>::const_iterator pptr = plist.begin(); pptr != plist.end(); ++pptr) {
+            result += (*pptr)->getPositiveFlux();  
+        }
+        return result;
+    }
+    double SBAdd::getNegativeFlux() const {
+        double result = 0.;
+        for (std::list<SBProfile*>::const_iterator pptr = plist.begin(); pptr != plist.end(); ++pptr) {
+            result += (*pptr)->getNegativeFlux();  
+        }
+        return result;
+    }
+        
 
     //
     // "SBDistort" Class 
@@ -944,6 +955,37 @@ namespace galsim {
         }
     }
 
+    double SBConvolve::getPositiveFlux() const {
+        if (plist.empty()) return 0.;
+        std::list<SBProfile*>::const_iterator pptr = plist.begin();
+        double pResult = (*pptr)->getPositiveFlux() * fluxScale;
+        double nResult = (*pptr)->getNegativeFlux() * fluxScale;
+        for (++pptr; pptr!=plist.end(); ++pptr) {
+            double p = (*pptr)->getPositiveFlux();
+            double n = (*pptr)->getNegativeFlux();
+            double pNew = p*pResult + n*nResult;
+            nResult = p*nResult + n*pResult;
+            pResult = pNew;
+        }
+        return pResult;
+    }
+
+    // Note duplicated code here, could be caching results for tiny efficiency gain
+    double SBConvolve::getNegativeFlux() const {
+        if (plist.empty()) return 0.;
+        std::list<SBProfile*>::const_iterator pptr = plist.begin();
+        double pResult = (*pptr)->getPositiveFlux() * fluxScale;
+        double nResult = (*pptr)->getNegativeFlux() * fluxScale;
+        for (++pptr; pptr!=plist.end(); ++pptr) {
+            double p = (*pptr)->getPositiveFlux();
+            double n = (*pptr)->getNegativeFlux();
+            double pNew = p*pResult + n*nResult;
+            nResult = p*nResult + n*pResult;
+            pResult = pNew;
+        }
+        return nResult;
+    }
+
     //
     // "SBGaussian" Class 
     //
@@ -998,25 +1040,29 @@ namespace galsim {
     // SBAiry Class
     //
 
-    // Note x & y are in units of lambda/D here.  Integral over area
-    // will give unity in this normalization.
-
-    double SBAiry::xValue(Position<double> p) const 
-    {
-        double radius = std::sqrt(p.x*p.x+p.y*p.y);
-        double nu = radius*M_PI*D;
+    // This is a scale-free version of the Airy radial function.
+    // Input radius is in units of lambda/D.  Output normalized
+    // to integrate to unity over input units.
+    double SBAiry::AiryRadialFunction::operator()(double radius) const {
+        double nu = radius*M_PI;
         double xval;
         if (nu<0.01)
             // lim j1(u)/u = 1/2
-            xval =  D * (1-obscuration*obscuration);
+            xval =  (1-_obscuration*_obscuration);
         else {
-            xval = 2*D*( j1(nu) - obscuration*j1(obscuration*nu)) /
+            xval = 2*( j1(nu) - _obscuration*j1(_obscuration*nu)) /
                 nu ; //See Schroeder eq (10.1.10)
         }
         xval*=xval;
         // Normalize to give unit flux integrated over area.
-        xval /= (1-obscuration*obscuration)*4./M_PI;
-        return xval*flux;
+        xval /= (1-_obscuration*_obscuration)*4./M_PI;
+        return xval;
+    }
+
+    double SBAiry::xValue(Position<double> p) const 
+    {
+        double radius = std::sqrt(p.x*p.x+p.y*p.y) * D;
+        return flux*D*D * _radial(radius);
     }
 
     double SBAiry::chord(const double r, const double h) const 
@@ -1144,7 +1190,6 @@ namespace galsim {
         }
     }
 
-#ifdef USE_IMAGES
     // Override x-domain writing so we can partially fill pixels at edge of box.
     template <typename T>
     double SBBox::fillXImage(ImageView<T>& I, double dx) const 
@@ -1170,7 +1215,7 @@ namespace galsim {
             else xfac = norm;
 
             for (int j = I.getYMin(); j <= I.getYMax(); j++) {
-                if (xfac==0. || std::abs(j)>yedge) I(i,j)=0.;
+                if (xfac==0. || std::abs(j)>yedge) I(i,j)=T(0);
                 else if (std::abs(j)==yedge) I(i,j)=xfac*yfrac;
                 else I(i,j)=xfac;
                 totalflux += I(i,j);
@@ -1180,8 +1225,6 @@ namespace galsim {
 
         return totalflux * (dx*dx);
     }
-#endif
-
 
 #ifdef USE_LAGUERRE
     //
@@ -1423,6 +1466,18 @@ namespace galsim {
             lk += logkStep;
         }
         maxK = std::min(MAXMAXK, maxK); // largest acceptable
+
+        // Next, set up the classes for photon shooting
+        _radialPtr = new SersicRadialFunction(n, b);
+        std::vector<double> range(2,0.);
+        range[1] = integrateMax;
+        _sampler = new OneDimensionalDeviate( *_radialPtr, range, true);
+    }
+
+    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate& ud) const {
+        PhotonArray result = _sampler->shoot(N,ud);
+        result.scaleFlux(norm);
+        return result;
     }
 
     // Integrand class for the flux integrals of Moffat
@@ -1461,9 +1516,12 @@ namespace galsim {
         // And be sure to get at least 16 pts across FWHM when drawing:
         maxKrD = 16*M_PI / FWHMrD;
 
-        // Get flux and half-light radius in units of rD:
-        MoffatFlux mf(beta);
-        double fluxFactor = mf(maxRrD);
+        // Analytic integration of total flux:
+        fluxFactor = 1. - pow( 1+maxRrD*maxRrD, (1.-beta));
+        norm = (beta - 1.) / (M_PI * fluxFactor);
+
+        // Get half-light radius in units of rD:
+        rerD = sqrt( pow(1.-0.5*fluxFactor , 1./(1.-beta)) - 1.);
 
         // Set size of this instance according to type of size given in constructor:
         switch (rType)
@@ -1471,12 +1529,8 @@ namespace galsim {
         case FWHM:
             rD = size / FWHMrD;
             break;
-        case HALF_LIGHT_RADIUS: {
-            Solve<MoffatFlux> s(mf, 0.1, 2.);
-            mf.setTarget(0.5*fluxFactor);
-            double rerD = s.root();
+        case HALF_LIGHT_RADIUS: 
             rD = size / rerD;
-        }
             break;
         case SCALE_RADIUS:
             rD = size;
@@ -1484,10 +1538,9 @@ namespace galsim {
         default:
             throw SBError("Unknown SBMoffat::RadiusType");
         }
-        norm = 1./fluxFactor;
 
 #if 0
-        std::cerr << "Moffat rD " << rD
+        std::cerr << "Moffat rD " << rD << " fluxFactor " << fluxFactor
             << " norm " << norm << " maxRrD " << maxRrD << std::endl;
 #endif
 
@@ -1519,10 +1572,239 @@ namespace galsim {
         else return flux*ft(kk);
     }
 
+    /*************************************************************
+     * Photon-shooting routines
+     *************************************************************/
+
+    template <class T>
+    void SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate& u) const 
+    {
+        const int maxN = 100000;
+
+        // Clear image before adding photons, for consistency with draw() methods.
+        img.fill(0.);  
+        double origN = N;
+        xdbg<<"origN = "<<origN<<std::endl;
+        while (N > maxN) {
+            xdbg<<"shoot "<<maxN<<std::endl;
+            PhotonArray pa = shoot(maxN, u);
+            pa.scaleFlux(maxN / origN);
+            pa.addTo(img);
+            N -= maxN;
+        }
+        xdbg<<"shoot "<<N<<std::endl;
+        PhotonArray pa = shoot(int(N), u);
+        pa.scaleFlux(N / origN);
+        pa.addTo(img);
+    }
+    
+    PhotonArray SBAdd::shoot(int N, UniformDeviate& u) const 
+    {
+        double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
+        double fluxPerPhoton = totalAbsoluteFlux / N;
+
+        // Initialize the output array
+        PhotonArray result(0);
+        result.reserve(N);
+
+        double remainingAbsoluteFlux = totalAbsoluteFlux;
+        int remainingN = N;
+
+        // Get photons from each summand, using BinomialDeviate to
+        // randomize distribution of photons among summands
+        for (std::list<SBProfile*>::const_iterator pptr = plist.begin(); 
+             pptr!= plist.end();
+             ++pptr) {
+            double thisAbsoluteFlux = (*pptr)->getPositiveFlux() + (*pptr)->getNegativeFlux();
+
+            // How many photons to shoot from this summand?
+            int thisN = remainingN;  // All of what's left, if this is the last summand...
+            std::list<SBProfile*>::const_iterator nextPtr = pptr;
+            ++nextPtr;
+            if (nextPtr!=plist.end()) {
+                // otherwise allocate a randomized fraction of the remaining photons to this summand:
+                BinomialDeviate bd(u, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux);
+                thisN = bd();
+            }
+            if (thisN > 0) {
+                PhotonArray thisPA = (*pptr)->shoot(thisN, u);
+                // Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
+                // whereas the shoot() routine would have made them each nominally thisAbsoluteFlux/thisN
+                thisPA.scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux);
+                result.append(thisPA);
+            }
+            remainingN -= thisN;
+            remainingAbsoluteFlux -= thisAbsoluteFlux;
+            if (remainingN <=0) break;
+            if (remainingAbsoluteFlux <= 0.) break;
+        }
+        
+        return result;
+    }
+
+    PhotonArray SBConvolve::shoot(int N, UniformDeviate& u) const 
+    {
+        std::list<SBProfile*>::const_iterator pptr = plist.begin();
+        if (pptr==plist.end())
+            throw SBError("Cannot shoot() for empty SBConvolve");
+        PhotonArray result = (*pptr)->shoot(N, u);
+        if (fluxScale!=1.) result.scaleFlux(fluxScale);
+        // It is necessary to shuffle when convolving because we do
+        // do not have a gaurantee that the convolvee's photons are
+        // uncorrelated, e.g. they might both have their negative ones
+        // at the end.
+        for (++pptr; pptr != plist.end(); ++pptr)
+            result.convolveShuffle( (*pptr)->shoot(N, u), u);
+        return result;
+    }
+
+    PhotonArray SBDistort::shoot(int N, UniformDeviate& u) const 
+    {
+        // Simple job here: just remap coords of each photon, then change flux
+        // If there is overall magnification in the transform
+        PhotonArray result = adaptee->shoot(N,u);
+        for (int i=0; i<result.size(); i++) {
+            Position<double> xy = fwd(Position<double>(result.getX(i),
+                                                       result.getY(i))+x0);
+            result.setPhoton(i,xy.x, xy.y, result.getFlux(i)*absdet);
+        }
+        return result;
+    }
+
+    PhotonArray SBGaussian::shoot(int N, UniformDeviate& u) const 
+    {
+        PhotonArray result(N);
+        double fluxPerPhoton = flux/N;
+        for (int i=0; i<N; i++) {
+            // First get a point uniformly distributed on unit circle
+            double xu, yu, rsq;
+            do {
+                xu = 2.*u()-1.;
+                yu = 2.*u()-1.;
+                rsq = xu*xu+yu*yu;
+            } while (rsq>=1. || rsq==0.);
+            
+            // Then map it to desired Gaussian with analytic transformation
+            double factor = sigma*sqrt( -2.*log(rsq)/rsq);
+            result.setPhoton(i,factor*xu, factor*yu, fluxPerPhoton);
+        }
+        return result;
+    }
+
+    PhotonArray SBSersic::shoot(int N, UniformDeviate& ud) const
+    {
+        // Get photons from the SersicInfo structure, rescale flux and size for this instance
+        PhotonArray result = info->shoot(N,ud);
+        result.scaleFlux(flux);
+        result.scaleXY(re);
+        return result;
+    }
+
+    PhotonArray SBExponential::shoot(int N, UniformDeviate& u) const
+    {
+        // Accuracy to which to solve for (log of) cumulative flux distribution:
+        const double Y_TOLERANCE=1e-6;
+
+        double fluxPerPhoton = getFlux() / N;
+        PhotonArray result(N);
+        // The cumulative distribution of flux is 1-(1+r)exp(-r).
+        // Here is a way to solve for r by an initial guess followed
+        // by Newton-Raphson iterations.  Probably not
+        // the most efficient thing since there are logs in the iteration.
+        for (int i=0; i<N; i++) {
+            double y = u();
+            if (y==0.) {
+                // Runt case of infinite radius - just set to origin:
+                result.setPhoton(i,0.,0.,fluxPerPhoton);
+                continue;
+            }
+            // Initial guess
+            y = -std::log(y);
+            double r = y>2 ? y : std::sqrt(2*y);
+            double dy = y - r + std::log(1+r);
+            while ( std::abs(dy) > Y_TOLERANCE) {
+                r = r + (1+r)*dy/r;
+                dy = y - r + std::log(1+r);
+            }
+            // Draw another random for azimuthal angle (could use the unit-circle trick here...)
+            double theta = 2*M_PI*u();
+            result.setPhoton(i,r0*r*std::cos(theta), r0*r*std::sin(theta), fluxPerPhoton);
+        }
+        return result;
+    }
+
+    PhotonArray SBAiry::shoot(int N, UniformDeviate& u) const
+    {
+        // Use the OneDimensionalDeviate to sample from scale-free distribution
+        checkSampler();
+        PhotonArray pa=_sampler->shoot(N, u);
+        // Then rescale for this flux & size
+        pa.scaleFlux(flux);
+        pa.scaleXY(1./D);
+        return pa;
+    }
+
+    void SBAiry::flushSampler() const {
+        if (_sampler) {
+            delete _sampler;
+            _sampler = 0;
+        }
+    }
+
+    void SBAiry::checkSampler() const {
+        if (_sampler) return;
+        std::vector<double> ranges(1,0.);
+        // Break Airy function into ranges that will not have >1 extremum:
+        double xmin = (1.1 - 0.5*obscuration);
+        // Use Schroeder (10.1.18) limit of EE at large radius.
+        // to stop sampler at radius with EE>(1-ALIAS_THRESHOLD).
+        double maximumRadius = 2./(ALIAS_THRESHOLD * M_PI*M_PI * (1-obscuration));
+        while (xmin < maximumRadius) {
+            ranges.push_back(xmin);
+            xmin += 0.5;
+        }
+        ranges.push_back(xmin);
+        _sampler = new OneDimensionalDeviate(_radial, ranges, true);
+    }
+
+    PhotonArray SBBox::shoot(int N, UniformDeviate& u) const
+    {
+        PhotonArray result(N);
+        for (int i=0; i<result.size(); i++)
+            result.setPhoton(i, xw*(u()-0.5), yw*(u()-0.5), flux/N);
+        return result;
+    }
+
+    PhotonArray SBMoffat::shoot(int N, UniformDeviate& u) const
+    {
+        // Moffat has analytic inverse-cumulative-flux function.
+        PhotonArray result(N);
+        double fluxPerPhoton = flux/N;
+        for (int i=0; i<N; i++) {
+            // First get a point uniformly distributed on unit circle
+            double xu, yu, rsq;
+            do {
+                xu = 2.*u()-1.;
+                yu = 2.*u()-1.;
+                rsq = xu*xu+yu*yu;
+            } while (rsq>=1. || rsq==0.);
+            
+            // Then map it to the Moffat flux distribution
+            double newRsq = pow( 1.-rsq*fluxFactor , 1./(1.-beta)) - 1.;
+            double rFactor = rD*sqrt(newRsq / rsq);
+            result.setPhoton(i,rFactor*xu, rFactor*yu, fluxPerPhoton);
+        }
+        return result;
+    }
+
     // instantiate template functions for expected image types
-#ifdef USE_IMAGES
     template double SBProfile::doFillXImage2(ImageView<float>& img, double dx) const;
     template double SBProfile::doFillXImage2(ImageView<double>& img, double dx) const;
+
+    template void SBProfile::drawShoot(ImageView<float> image, double N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(ImageView<double> image, double N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(Image<float>& image, double N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(Image<double>& image, double N, UniformDeviate& ud) const;
 
     template double SBProfile::draw(Image<float>& img, double dx, int wmult) const;
     template double SBProfile::draw(Image<double>& img, double dx, int wmult) const;
@@ -1565,6 +1847,5 @@ namespace galsim {
         ImageView<float>& Re, ImageView<float>& Im, double dk, int wmult) const;
     template void SBProfile::fourierDrawK(
         ImageView<double>& Re, ImageView<double>& Im, double dk, int wmult) const;
-#endif
 
 }

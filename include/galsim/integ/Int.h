@@ -288,8 +288,8 @@ namespace integ {
         const T& int_absdiff ///< An estimate of int |f-mean| dx
     )
     {
-        const int eps = std::numeric_limits<T>::epsilon();
-        const int minrep = std::numeric_limits<T>::min();
+        const T eps = std::numeric_limits<T>::epsilon();
+        const T minrep = std::numeric_limits<T>::min();
 
         if (int_absdiff != 0. && err != 0.) {
             const T scale = (200. * err / int_absdiff);
@@ -467,7 +467,7 @@ namespace integ {
         typename UF::result_type>* fxmap=0)
     {
         typedef typename UF::result_type T;
-        const int eps = std::numeric_limits<T>::epsilon();
+        const T eps = std::numeric_limits<T>::epsilon();
 
         integ_dbg2<<"Start intGKP\n";
 
@@ -564,11 +564,11 @@ namespace integ {
             tolerance = std::max(abserr, relerr * std::abs(finalarea));
             if (finalerr > tolerance) {
                 if (roundoff_type1 >= 200) {
-                    error_type = 1;	// round off error 
+                    error_type = 1;    // round off error 
                     integ_dbg2<<"GKP: Round off error 1\n";
                 }
                 if (roundoff_type2 >= 200.) {
-                    error_type = 2;	// round off error 
+                    error_type = 2;    // round off error 
                     integ_dbg2<<"GKP: Round off error 2\n";
                 }
                 const double parent_size = parent.right()-parent.left();
@@ -629,7 +629,7 @@ namespace integ {
     };
 
     template <class UF> 
-    AuxFunc1<UF> inline Aux1(UF uf) 
+    AuxFunc1<UF> inline Aux1(const UF& uf) 
     { return AuxFunc1<UF>(uf); }
 
     template <class UF> 
@@ -647,7 +647,7 @@ namespace integ {
     };
 
     template <class UF> AuxFunc2<UF> 
-    inline Aux2(UF uf) 
+    inline Aux2(const UF& uf) 
     { return AuxFunc2<UF>(uf); }
 
     /// Perform a 1-dimensional integral using an IntRegion
