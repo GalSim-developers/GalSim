@@ -1,69 +1,78 @@
 --- README for the early-stage development versions of  --- 
 --- GalSim: The modular galaxy image simulation toolkit ---
 
-For installation instructions, please see INSTALL.  There are tagged versions of the code
-corresponding to specific project milestones and releases.  During the code development process,
-these tagged versions may be the best ones to try if you want a stable version of the code with
-specific capabilities.  (For more info on tags, see docs/git.txt)
+For installation instructions, please see INSTALL.  There are tagged versions of
+the code corresponding to specific project milestones and releases.  During the
+code development process, these tagged versions may be the best ones to try if
+you want a stable version of the code with specific capabilities.  (For more
+info on tags, see docs/git.txt)
 
 
 --- How to get started ---
 
 1) We assume that all steps in INSTALL are complete.
 
-2) Compile the code by running `scons' while sitting in the main directory of this repository.
-Optionally, install the software using `scons install' (or you may need to run `sudo scons install'
-depending on whether or not you have root privileges); for more details on options that can be used
-with scons, see INSTALL.
+2) Compile the code by running `scons' while sitting in the main directory of
+this repository.  Optionally, install the software using `scons install' (or you
+may need to run `sudo scons install' depending on whether or not you have root
+privileges); for more details on options that can be used with scons, see
+INSTALL.
 
-3) Optional, but recommended whenever you try a new version of the code: run the unit tests to make
-sure that there are no errors.  You can do this by running `scons tests'.
+3) Optional, but recommended whenever you try a new version of the code: run the
+unit tests to make sure that there are no errors.  You can do this by running
+`scons tests'.
 
-4) Optional: run doxygen to generate documentation, using docs/Doxyfile to specify all doxygen
-settings.
+4) Optional: run doxygen to generate documentation, using docs/Doxyfile to
+specify all doxygen settings.
 
 
 --- Demonstration scripts ---
 
-Once these steps are completed, there are a number of scripts in examples/ that demonstrate how the
-code can be used.  These are:
+Once these steps are completed, there are a number of scripts in examples/ that
+demonstrate how the code can be used.  These are:
 
-a) BasicDemo.py contains 3 demo scripts, which can all be run using `python BasicDemo.py', or you
-can run them one at a time using `python BasicDemo.py 1' and so on.  These scripts are heavily
-commented, and demonstrate GalSim commands for simulating single objects of various types and
-checking their properties.
+a) BasicDemo.py contains 3 demo scripts, which can all be run using `python
+BasicDemo.py', or you can run them one at a time using `python BasicDemo.py 1'
+and so on.  These scripts are heavily commented, and demonstrate GalSim commands
+for simulating single objects of various types and checking their properties.
 
-b) MultiObjectDemo.py also contains 3 demo scripts and is heavily commented to serve as an example
-for new users.  It demonstrates functionality for handling multi-object simulations, e.g., galaxy
-grids in the style of GREAT08/GREAT10, and also simulations based on real galaxy training data from
-HST.
+b) MultiObjectDemo.py also contains 3 demo scripts and is heavily commented to
+serve as an example for new users.  It demonstrates functionality for handling
+multi-object simulations, e.g., galaxy grids in the style of GREAT08/GREAT10,
+and also simulations based on real galaxy training data from HST.
 
-c) RealDemo.py is a single script demonstrating single-object simulation of realistic galaxies using
-the DFT approach.
+c) RealDemo.py is a single script demonstrating single-object simulation of
+realistic galaxies using the DFT approach.
 
-As the project develops through further milestones, and adds further capabilities to the software,
-further demo scripts will be added to examples/ to illustrate and showcase what GalSim can do.
+As the project develops through further milestones, and adds further
+capabilities to the software, further demo scripts will be added to examples/ to
+illustrate and showcase what GalSim can do.
 
 
 --- Additional scripts ---
 
-While scripts (a)-(c) can be run from the command-line while sitting in examples/ without any
-arguments, the remaining scripts are auxiliary utilities that take various command-line arguments,
-which are always explained in comments at the top of the file.
+While scripts (a)-(c) can be run from the command-line while sitting in
+examples/ without any arguments, the remaining scripts are auxiliary utilities
+that take various command-line arguments, which are always explained in comments
+at the top of the file.
 
-* SBDraw.py can be used to generate individual images of single galaxies from parametric models
-using the DFT approach.  The key information about the galaxy to be simulated must be encoded in a
-string with a specific format that is documented on pages 8-9 of docs/SBProfile.pdf.
+* SBDraw.py can be used to generate individual images of single galaxies from
+parametric models using the DFT approach.  The key information about the galaxy
+to be simulated must be encoded in a string with a specific format that is
+documented on pages 8-9 of docs/SBProfile.pdf.
 
-* SBDrawShoot.py is parallel to SBDraw.py, but generates the images via photon-shooting rather than
-the DFT approach.
+* SBDrawShoot.py is parallel to SBDraw.py, but generates the images via
+photon-shooting rather than the DFT approach.
 
-* ShootInterpolated.py is a script that takes as input a filename for a FITS image, which it will
-simulate (optionally sheared and/or resampled) via photon-shooting.
+* ShootInterpolated.py is a script that takes as input a filename for a FITS
+image, which it will simulate (optionally sheared and/or resampled) via
+photon-shooting.
 
-* MeasMoments.py can be used to measure the adaptive moments (best-fit elliptical Gaussian) for a
-FITS image.
+* MeasMoments.py can be used to measure the adaptive moments (best-fit
+elliptical Gaussian) for a FITS image.
 
+* MeasShape.py can be used to carry out PSF correction using one of four
+methods, given FITS images of the galaxy and PSF.
 * MeasShape.py can be used to carry out PSF correction using one of four methods, given FITS images
 of the galaxy and PSF.
 
