@@ -339,7 +339,7 @@ class OpticalPSF(GSObject):
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
 
-    @param lod             lambda / D in the physical units adopted (user responsible for 
+    @param lam_over_D      lambda / D in the physical units adopted (user responsible for 
                            consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
@@ -365,27 +365,31 @@ class OpticalPSF(GSObject):
                  circular_pupil=True, obs=None, interpolantxy=None, oversampling=2., pad_factor=2):
         # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
         import galsim.optics
-        # Use the same prescription as SBAiry to set dx, maxK, Airy stepK and thus image size
-        self.maxk = 2. * np.pi / lam_over_D
-        dx = .5 * lam_over_D / oversampling
+        # Choose dx for lookup table using Nyquist for optical aperture and the specified
+        # oversampling factor
+        dx_lookup = .5 * lam_over_D / oversampling
+        print "dx_lookup=",dx_lookup
+        # Use a similar prescription as SBAiry to set Airy stepK and thus unpadded image size
         if obs == None:
             stepk_airy = min(ALIAS_THRESHOLD * .5 * np.pi**3 / lam_over_D,
                              np.pi / 5. / lam_over_D)
         else:
             raise NotImplementedError('Secondary mirror obstruction not yet implemented')
-        # TODO: check that the above still makes sense even for large aberrations, probably not...
-        npix = np.ceil(2. * pad_factor * self.maxk / stepk_airy).astype(int)
-        optimage = galsim.optics.psf_image(array_shape=(npix, npix), defocus=defocus,
-                                           astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
-                                           spher=spher, circular_pupil=circular_pupil, obs=obs,
-                                           kmax=self.maxk, dx=dx)
+        # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs:
+        npix = np.ceil(2. * pad_factor * (2. * np.pi / lam_over_D) / stepk_airy).astype(int)
+        # Make the psf image
+        optimage = galsim.optics.psf_image(lam_over_D=lam_over_D, dx=dx_lookup,
+                                           array_shape=(npix, npix), defocus=defocus, astig1=astig1,
+                                           astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
+                                           circular_pupil=circular_pupil, obs=obs)
         # If interpolant not specified on input, use a high-ish lanczos
         if interpolantxy == None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
             self.Interpolant2D = galsim.InterpolantXY(lan5)
         else:
             self.Interpolant2D = interpolantxy
-        GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D, dx=dx))
+        GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D,
+                                                           dx=dx_lookup))
 
 
 class RealGalaxy(GSObject):
