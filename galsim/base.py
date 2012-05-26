@@ -368,7 +368,6 @@ class OpticalPSF(GSObject):
         # Choose dx for lookup table using Nyquist for optical aperture and the specified
         # oversampling factor
         dx_lookup = .5 * lam_over_D / oversampling
-        print "dx_lookup=",dx_lookup
         # Use a similar prescription as SBAiry to set Airy stepK and thus unpadded image size
         if obs == None:
             stepk_airy = min(ALIAS_THRESHOLD * .5 * np.pi**3 / lam_over_D,
