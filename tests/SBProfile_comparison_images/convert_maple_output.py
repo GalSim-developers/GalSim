@@ -14,8 +14,8 @@ import os
 input_file = "moffat_pixel.dat"
 output_file = "moffat_pixel.fits"
 
-nx = 47
-ny = 47
+nx = 61
+ny = 61
 
 fin = open(input_file,'r')
 vals = map(float,fin.readlines())
