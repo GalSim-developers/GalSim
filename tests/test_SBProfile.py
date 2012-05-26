@@ -506,11 +506,12 @@ def test_sbprofile_convolve():
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve(mySBP)
     myConv.add(mySBP2)
-    savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_convolve_box.fits"))
+    # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
+    savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     myConv.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
+    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 4,
         err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
@@ -518,26 +519,26 @@ def test_sbprofile_convolve():
     conv = galsim.Convolve([psf,pixel])
     conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            myImg.array, savedImg.array, 4,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel)
     conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            myImg.array, savedImg.array, 4,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
     conv = galsim.Convolve(psf)
     conv.add(pixel)
     conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            myImg.array, savedImg.array, 4,
             err_msg="Using GSObject Convolve(psf) with add(pixel) disagrees with expected result")
     conv = galsim.Convolve()
     conv.add(psf)
     conv.add(pixel)
     conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            myImg.array, savedImg.array, 4,
             err_msg="Using GSObject Convolve() with add both disagrees with expected result")
  
     # Test photon shooting.
