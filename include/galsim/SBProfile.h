@@ -1012,7 +1012,8 @@ namespace galsim {
 
     public:
         /// @brief Constructor, empty.
-        explicit SBConvolve(bool real_space=false) : plist(), fluxScale(1.), _real_space(real_space) {}
+        explicit SBConvolve(bool real_space=false) : 
+            plist(), fluxScale(1.), _real_space(real_space) {}
 
         /**
          * @brief Constructor, 1 input.

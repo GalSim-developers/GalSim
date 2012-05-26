@@ -1180,11 +1180,6 @@ namespace galsim {
     //
     void SBConvolve::add(const SBProfile& rhs) 
     {
-        if (!rhs.isAnalyticK() && !_real_space) 
-            throw SBError("SBConvolve requires members to be analytic in k");
-        if (!rhs.isAnalyticX() && _real_space)
-            throw SBError("SBConvolve with real_space=true requires members to be analytic in x");
-
         // If this is the first thing being added to the list, initialize some accumulators
         if (plist.empty()) {
             x0 = y0 = 0.;
@@ -1206,6 +1201,10 @@ namespace galsim {
             // If rhs is an SBConvolve, copy its list here
             fluxScale *= sbc->fluxScale;
             for (Iter pptr = sbc->plist.begin(); pptr!=sbc->plist.end(); ++pptr) {
+                if (!(*pptr)->isAnalyticK() && !_real_space) 
+                    throw SBError("SBConvolve requires members to be analytic in k");
+                if (!(*pptr)->isAnalyticX() && _real_space)
+                    throw SBError("Real_space SBConvolve requires members to be analytic in x");
                 if (newptr==plist.end()) {
                     plist.push_back((*pptr)->duplicate()); 
                     newptr = --plist.end();  // That was first new term
@@ -1215,6 +1214,10 @@ namespace galsim {
             }
             delete sbc; // no memory leak! 
         } else {
+            if (!rhs.isAnalyticK() && !_real_space) 
+                throw SBError("SBConvolve requires members to be analytic in k");
+            if (!rhs.isAnalyticX() && _real_space)
+                throw SBError("Real-space SBConvolve requires members to be analytic in x");
             plist.push_back(p);
             newptr = --plist.end();  // That was first new term
         }
