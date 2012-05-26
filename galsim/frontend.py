@@ -10,6 +10,9 @@ def BuildGSObject(config, input_cat=None, logger=None):
     @param logger     Output logging object (NOT USED IN THIS IMPLEMENTATION: RAISED ERRORS
                       AUTOMATICALLY PASSED TO LOGGER)
     """
+    # Start by parsing the config object in case it is a config string
+    config = _Parse(config)
+
     # Check that the input config has a type to even begin with!
     if not "type" in config.__dict__:
         raise AttributeError("type attribute required in config.")
@@ -103,9 +106,9 @@ def _BuildSimple(config, input_cat=None):
     init_func = eval("galsim."+config.type)
     try:
         gsobject = init_func(**init_kwargs)
-    except Error, err_msg:
+    except Exception, err_msg:
         raise RuntimeError("Problem sending init_kwargs to galsim."+config.type+" object. "+
-                           "Original error message: "+err_msg)
+                           "Original error message: %s"% err_msg)
     return gsobject
 
 # --- Now we define a function for "ellipsing", rotating, shifting, shearing, in that order.
@@ -133,6 +136,7 @@ def _BuildEllipObject(gsobject, config, input_cat=None):
 
     @returns transformed GSObject.
     """
+    config = _Parse(config)
     if not "type" in config.__dict__:
         raise AttributeError("No type attribute in config!")
     if config.type == "E1E2":
@@ -163,6 +167,7 @@ def _BuildShiftObject(gsobject, config, input_cat=None):
 
     @returns transformed GSObject.
     """
+    config = _Parse(config)
     if not "type" in config.__dict__:
         raise AttributeError("No type attribute in config!")
     if config.type == "DXDY":
@@ -220,6 +225,9 @@ def _GetParamValue(config, param_name, input_cat=None):
     """
     # Assume that basic sanity checking done upstream for maximum efficiency 
     param = config.__getattr__(param_name)
+
+    # Parse the param in case it is a configuration string
+    param = _Parse(param)
     
     # First see if we can assign by param by a direct constant value
     if not hasattr(param, "__dict__"):  # This already exists for Config instances, not for values
@@ -229,18 +237,17 @@ def _GetParamValue(config, param_name, input_cat=None):
                              "parameter "+param_name+".")
     else: # Use type to set param value. Currently catalog input supported only.
         if param.type == "InputCatalog":
-            param_value = _GetInputCatParamValue(config, param_name, input_cat)
+            param_value = _GetInputCatParamValue(param, param_name, input_cat)
         else:
             raise NotImplementedError("Sorry, only InputCatalog config types are currently "+
                                       "implemented.")
     return param_value
 
 
-def _GetInputCatParamValue(config, param_name, input_cat=None):
+def _GetInputCatParamValue(param, param_name, input_cat=None):
     """@brief Specialized function for getting param values from an input cat.
     """
-    param = config.__getattr__(param_name)
-    # Assuming param_name.type == InputCatalog checking/setting done upstream to avoid excess tests.
+    # Assuming param.type == InputCatalog checking/setting done upstream to avoid excess tests.
     if input_cat == None:
         raise ValueError("Keyword input_cat not given to _GetInputCatParamValue: the config "+
                          "requires an InputCatalog entry for "+param_name)
@@ -265,3 +272,124 @@ def _GetInputCatParamValue(config, param_name, input_cat=None):
         raise ValueError("input_cat.type must be either 'FITS' or 'ASCII' please.")
     return param_value
 
+def _MatchDelim(str,start,end):
+    nest_count = 0
+    for i in range(len(str)):
+        if str[i] == start:
+            nest_count += 1
+        if str[i] == end:
+            nest_count -= 1
+        if nest_count == 0:
+            break
+    return (str[1:i],str[i+1:])
+ 
+
+def _Parse(config):
+    """@brief config=_Parse(config) does initial parsing of strings if necessary.
+    
+       If a parameter or its type is a string, this means that it should be parsed to 
+       build the appropriate attributes.  For example,
+
+       @code
+       parsing gal.type = 'Exponential scale_radius=3 flux=100'
+       @endcode
+
+       would result in the equivalent of:
+
+       @code
+       gal.type = 'Exponential'
+       gal.scale_radius = 3
+       gal.flux = 100
+       @endcode
+
+       Furthermore, if the first (non-whitespace) character after an = is '<',
+       then the contents of the <> are recursively parsed for that value.
+       e.g.
+       @code
+       psf = 'Moffat beta=<InputCatalog col=3> fwhm=<InputCatalog col=4>'
+       @endcode
+       would result in the equivalent of:
+       @code
+       psf.type = 'Moffat'
+       psf.beta.type = 'InputCatalog'
+       psf.beta.col = 3
+       psf.fwhm.type = 'InputCatalog'
+       psf.fwhm.col = 4
+       @endcode
+
+       If the first (non-whitespace) character after an = is '[', 
+       then the contents are taken to be an array of configuration strings.
+       e.g. 
+
+       @code
+       gal = 'Sum items = [ <Sersic n=1.2>, <Sersic n=3.5> ]'
+       @endcode
+
+       The string can be at either the base level (e.g. psf above) or as the type
+       attribute (e.g. gal.type above).  The difference is that if the user
+       specifies the string as a type, then other attributes can also be set separately.
+       e.g.
+
+       @code
+       gal.type = 'Sersic n=1.5 half_light_radius=4 flux=1000'
+       gal.shear = 'G1G2 g1=0.3 g2=0'
+       @endcode
+    """
+    if isinstance(config, basestring):
+        orig = config
+        tokens = config.split(None,1)
+        if len(tokens) < 2:
+            # Special case string only has one word.  So this isn't a string to
+            # be parsed.  It's just a string value. 
+            # e.g. config.catalog.file_name = 'in.cat'
+            return config
+        config = galsim.Config()
+        config.type = tokens[0]
+        str = tokens[1]
+    elif hasattr(config, "__dict__"):  
+        if hasattr(config, "type"):  
+            if isinstance(config.type, basestring):
+                orig = config.type
+                tokens = config.type.split(None,1)
+                if len(tokens) == 1:
+                    # Then this config is already parsed.
+                    return config
+                elif len(tokens) == 0:
+                    raise AttributeError('Provided type is an empty string: %s',config.type)
+                config.type = tokens[0]
+                str = tokens[1]
+            else:
+                raise AttributeError('Provided type is not a string: %s',config.type)
+        else:
+            raise AttributeError("type attribute required in config.")
+    else:
+        # This is just a value
+        return config
+
+    # Now config.type is set correctly and str holds the rest of the string to be parsed.
+    try :
+        while str:
+            tokens = str.split('=',1)
+            attrib = tokens[0].strip()
+            str = tokens[1].strip()
+            if str.startswith('<'):
+                value, str = _MatchDelim(str,'<','>')
+            elif str.startswith('['):
+                value, str = _MatchDelim(str,'[',']')
+                # TODO: If there are nested arrays, this next line does the wrong thing!
+                value = value.split(',')
+            elif str.startswith('('):
+                value, str = _MatchDelim(str,'(',')')
+                value = eval(value)
+            else:
+                tokens = str.split(None,1)
+                value = eval(tokens[0])
+                if (len(tokens) == 1):
+                    str = ""
+                else:
+                    str = tokens[1]
+            config.__setattr__(attrib,value)
+    except:
+        raise ValueError("Error parsing configuration string " + orig)
+    return config
+ 
