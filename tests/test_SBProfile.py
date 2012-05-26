@@ -136,9 +136,7 @@ def do_shoot(prof, img, dx, name):
         nphot = flux_max * flux_tot / photon_shoot_accuracy**2
     print 'nphot = ',nphot
     img2 = img.copy()
-    #img.write("junk1.fits")
     prof.drawShoot(img2,nphot)
-    #img2.write("junk2.fits")
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
@@ -172,7 +170,7 @@ def test_sbprofile_gaussian_properties():
     """
     psf = galsim.SBGaussian(flux=1, sigma=1)
     # Check that we are centered on (0, 0)
-    cen = galsim._galsim.PositionD(0, 0)
+    cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid(), cen)
     # Check Fourier properties
     np.testing.assert_equal(psf.maxK(), 4.0)
@@ -398,7 +396,7 @@ def test_sbprofile_moffat_properties():
     """
     psf = galsim.SBMoffat(beta=2.0, truncationFWHM=2, flux=1.8, half_light_radius=1)
     # Check that we are centered on (0, 0)
-    cen = galsim._galsim.PositionD(0, 0)
+    cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid(), cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(psf.maxK(), 34.226260866076707)
@@ -599,68 +597,141 @@ def test_sbprofile_shearconvolve():
 def test_sbprofile_realspace_convolve():
     """Test the real-space convolution of a Moffat and a Box SBProfile against a known result.
     """
-    mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
-    mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
-    myConv = galsim.SBConvolve(mySBP,real_space=True)
-    myConv.add(mySBP2)
-    savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myConv.draw(myImg,dx=0.2)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
+    psf = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
+    pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
+    conv = galsim.SBConvolve(psf,real_space=True)
+    conv.add(pixel)
+    # Note: Using an image created from Maple "exact" calculations.
+    saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
+    img = galsim.ImageF(saved_img.bounds)
+    conv.draw(img,dx=0.2)
+    printval(img, saved_img)
+    arg = abs(saved_img.array-img.array).argmax()
+    np.testing.assert_array_almost_equal(img.array, saved_img.array, 5,
         err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel],real_space=True)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel,real_space=True)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
     conv = galsim.Convolve(psf,real_space=True)
     conv.add(pixel)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve(psf) with add(pixel) disagrees with expected result")
     conv = galsim.Convolve(real_space=True)
     conv.add(psf)
     conv.add(pixel)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve() with add both disagrees with expected result")
     # The real-space convolution algorithm is not (trivially) independent of the order of
     # the two things being convolved.  So check the opposite order.
     conv = galsim.Convolve([pixel,psf],real_space=True)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
+ 
+
+def test_sbprofile_realspace_distorted_convolve():
+    """
+    The same as above, but both the Moffat and the Box are sheared, rotated and shifted
+    to stress test the code that deals with this for real-space convolutions that wouldn't
+    be tested otherwise.
+    """
+    psf = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
+    psf_shear = galsim.Shear()
+    psf_shear.setG1G2(0.11,0.17)
+    psf1 = psf.shear(psf_shear.getE1(),psf_shear.getE2())
+    psf2 = psf1.rotate(13 * galsim.degrees)
+    pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
+    pixel_shear = galsim.Shear()
+    pixel_shear.setG1G2(0.2,0.0)
+    pixel1 = pixel.shear(pixel_shear.getE1(),pixel_shear.getE2())
+    pixel2 = pixel1.rotate(80 * galsim.degrees)
+    pixel3 = pixel2.shift(0.13,0.27)
+    conv = galsim.SBConvolve(psf2,real_space=True)
+    conv.add(pixel3)
+
+    # Note: Using an image created from Maple "exact" calculations.
+    # TODO.  Still waiting on Maple to finish this calculation.  It's taking forever.
+    # For now just use the Fourier calculation and reduce the level of required
+    # accuracy to 4 decimal places rather than 5.
+    saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel_distorted.fits"))
+    img = galsim.ImageF(saved_img.bounds)
+    conv.draw(img,dx=0.2)
+    printval(img, saved_img)
+    np.testing.assert_array_almost_equal(img.array, saved_img.array, 4,
+        err_msg="distorted Moffat convolved with distorted Box disagrees with expected result")
+
+    # Repeat with the GSObject version of this:
+    psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
+    psf.applyShear(0.11,0.17)
+    psf.applyRotation(13 * galsim.degrees)
+    pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
+    pixel.applyShear(0.2,0.0)
+    pixel.applyRotation(80 * galsim.degrees)
+    pixel.applyShift(0.13,0.27)
+    conv = galsim.Convolve([psf,pixel],real_space=True)
+    conv.draw(img,dx=0.2)
+    np.testing.assert_array_almost_equal(
+            img.array, saved_img.array, 4,
+            err_msg="Using Convolve([psf,pixel]) (distorted) disagrees with expected result")
+    # Other ways to do the convolution:
+    conv = galsim.Convolve(psf,pixel,real_space=True)
+    conv.draw(img,dx=0.2)
+    np.testing.assert_array_almost_equal(
+            img.array, saved_img.array, 4,
+            err_msg="Using Convolve(psf,pixel) (distorted) disagrees with expected result")
+    conv = galsim.Convolve(psf,real_space=True)
+    conv.add(pixel)
+    conv.draw(img,dx=0.2)
+    np.testing.assert_array_almost_equal(
+            img.array, saved_img.array, 4,
+            err_msg="Using Convolve(psf), add(pixel) (distorted) disagrees with expected result")
+    conv = galsim.Convolve(real_space=True)
+    conv.add(pixel)
+    conv.add(psf)
+    conv.draw(img,dx=0.2)
+    np.testing.assert_array_almost_equal(
+            img.array, saved_img.array, 4,
+            err_msg="Using Convolve(), add both (distorted) disagrees with expected result")
+     # The real-space convolution algorithm is not (trivially) independent of the order of
+    # the two things being convolved.  So check the opposite order.
+    conv = galsim.Convolve([pixel,psf],real_space=True)
+    conv.draw(img,dx=0.2)
+    np.testing.assert_array_almost_equal(
+            img.array, saved_img.array, 4,
+            err_msg="Using Convolve([pixel,psf]) (distorted) disagrees with expected result")
  
 def test_sbprofile_realspace_shearconvolve():
     """Test the real-space convolution of a sheared Gaussian and a Box SBProfile against a 
        known result.
     """
-    print 'Start realspace_shearconvolve'
-    mySBP = galsim.SBGaussian(flux=1, sigma=1)
+    psf = galsim.SBGaussian(flux=1, sigma=1)
     e1 = 0.04
     e2 = 0.0
-    mySBP_shear = mySBP.shear(e1,e2)
-    mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
-    myConv = galsim.SBConvolve(mySBP_shear,real_space=True)
-    myConv.add(mySBP2)
-    savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myConv.draw(myImg,dx=0.2)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
+    psf_shear = psf.shear(e1,e2)
+    pix = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
+    conv = galsim.SBConvolve(psf_shear,real_space=True)
+    conv.add(pix)
+    saved_img = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
+    img = galsim.ImageF(saved_img.bounds)
+    conv.draw(img,dx=0.2)
+    printval(img, saved_img)
+    np.testing.assert_array_almost_equal(img.array, saved_img.array, 5,
         err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
     psf = galsim.Gaussian(flux=1, sigma=1)
@@ -668,35 +739,35 @@ def test_sbprofile_realspace_shearconvolve():
     psf.applyShear(g1,g2)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel],real_space=True)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel,real_space=True)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
     conv = galsim.Convolve(psf,real_space=True)
     conv.add(pixel)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve(psf) with add(pixel) disagrees with expected result")
     conv = galsim.Convolve(real_space=True)
     conv.add(pixel)
     conv.add(psf)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve() with add both disagrees with expected result")
     # The real-space convolution algorithm is not (trivially) independent of the order of
     # the two things being convolved.  So check the opposite order.
     conv = galsim.Convolve([pixel,psf],real_space=True)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
+            img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
 
 def test_sbprofile_rotate():
@@ -939,27 +1010,28 @@ def test_sbprofile_sbinterpolatedimage():
 
 
 if __name__ == "__main__":
-    #test_sbprofile_gaussian()
-    #test_sbprofile_gaussian_properties()
-    #test_gaussian_radii()
-    #test_sbprofile_exponential()
-    #test_exponential_radii()
-    #test_sbprofile_sersic()
-    #test_sersic_radii()
-    #test_sbprofile_airy()
-    #test_sbprofile_box()
-    #test_sbprofile_moffat()
-    #test_sbprofile_moffat_properties()
-    #test_moffat_radii()
-    #test_sbprofile_smallshear()
-    #test_sbprofile_largeshear()
-    #test_sbprofile_convolve()
-    #test_sbprofile_shearconvolve()
+    test_sbprofile_gaussian()
+    test_sbprofile_gaussian_properties()
+    test_gaussian_radii()
+    test_sbprofile_exponential()
+    test_exponential_radii()
+    test_sbprofile_sersic()
+    test_sersic_radii()
+    test_sbprofile_airy()
+    test_sbprofile_box()
+    test_sbprofile_moffat()
+    test_sbprofile_moffat_properties()
+    test_moffat_radii()
+    test_sbprofile_smallshear()
+    test_sbprofile_largeshear()
+    test_sbprofile_convolve()
+    test_sbprofile_shearconvolve()
     test_sbprofile_realspace_convolve()
+    test_sbprofile_realspace_distorted_convolve()
     test_sbprofile_realspace_shearconvolve()
-    #test_sbprofile_rotate()
-    #test_sbprofile_mag()
-    #test_sbprofile_add()
-    #test_sbprofile_shift()
-    #test_sbprofile_rescale()
-    #test_sbprofile_sbinterpolatedimage()
+    test_sbprofile_rotate()
+    test_sbprofile_mag()
+    test_sbprofile_add()
+    test_sbprofile_shift()
+    test_sbprofile_rescale()
+    test_sbprofile_sbinterpolatedimage()
