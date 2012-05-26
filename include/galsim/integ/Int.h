@@ -223,10 +223,7 @@ namespace integ {
         {
             assert(children.size() == 0);
 
-            // Start by looking for zero crossings if possible.
-            findZeroCrossings();
-
-            // If nothing found, use bisection.
+            // If no current split points, then just use bisection.
             if (_split_points.size() == 0) bisect();
 
             if (_split_points.size() > 1) 
@@ -255,13 +252,15 @@ namespace integ {
             if (fxmap) {
                 MapIter start = fxmap->lower_bound(_a);
                 MapIter end = fxmap->upper_bound(_b);
-                assert(start != end);
+                if (start == end) return;
                 MapIter previt = start;
                 MapIter it = start;
+                integ_dbg1<<"f("<<it->first<<") = "<<it->second<<"\n";
                 bool zero_train = false;
                 integ_dbg1<<"Start search for zero crossings\n";
                 integ_dbg1<<"first = "<<it->first<<" , "<<it->second<<std::endl;
                 while (++it != end) {
+                    integ_dbg1<<"f("<<it->first<<") = "<<it->second<<"\n";
                     if ( (it->second > T(0) && previt->second < T(0)) ||
                          (it->second < T(0) && previt->second > T(0)) ) {
                         integ_dbg1<<"Found zero crossing.\n";
@@ -434,6 +433,7 @@ namespace integ {
         const T abs_half_length = std::abs(half_length);
         const T center = 0.5 * (b + a);
         const T f_center = func(center);
+        if (reg.fxmap) (*reg.fxmap)[center] = f_center;
 #ifdef COUNTFEVAL
         nfeval++;
 #endif
@@ -462,6 +462,7 @@ namespace integ {
                 (*reg.fxmap)[center+abscissa] = fval2;
             }
         }
+        area1 *= half_length;
 #ifdef COUNTFEVAL
         nfeval+=gkp_x<T>(0).size()*2;
 #endif
@@ -524,6 +525,8 @@ namespace integ {
 
             integ_dbg2<<"at level "<<level<<" area2 = "<<area2;
             integ_dbg2<<" +- "<<err<<std::endl;
+            integ_dbg2<<"error was "<<std::abs(area2-area1)<<std::endl;
+            integ_dbg2<<"rescaled using int_abs = "<<int_abs<<", int_absdiff = "<<int_absdiff<<std::endl;
 
             //  Test for convergence.
             if (err < abserr || err < relerr * std::abs(area2)) {
@@ -540,6 +543,8 @@ namespace integ {
         reg.setArea(area1,err);
 
         integ_dbg2<<"Failed to reach tolerance with highest-order GKP rule\n";
+
+        if (reg.fxmap) reg.findZeroCrossings();
 
         return false;
     }
@@ -579,6 +584,7 @@ namespace integ {
         if (reg.left() == reg.right()) {
             integ_dbg2<<"left == right, so integral is trivially 0.\n";
             reg.setArea(0.,0.);
+            return;
         }
 
         // Perform the first integration 
