@@ -1,6 +1,9 @@
 //
 // Functions for the Surface Brightness Profile Class
 //
+
+//#define DEBUGLOGGING
+
 #include "SBProfile.h"
 #include "integ/Int.h"
 #include "TMV.h"
@@ -9,11 +12,17 @@
 
 #include <fstream>
 
+// To time the real-space convolution integrals...
+//#define TIMING
+#ifdef TIMING
+#include <sys/time.h>
+#endif
+
 #ifdef DEBUGLOGGING
 std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cerr;
 //std::ostream* dbgout = 0;
-int verbose_level = 1;
+int verbose_level = 2;
 #else
 std::ostream* dbgout = 0;
 int verbose_level = 0;
@@ -843,14 +852,15 @@ namespace galsim {
             && (matrixA==matrixD)
             && (x0.x==0.) && (x0.y==0.); // Need pure rotation
 
-        dbg<<"Distortion init\n";
-        dbg<<"matrix = "<<matrixA<<','<<matrixB<<','<<matrixC<<','<<matrixD<<std::endl;
-        dbg<<"x0 = "<<x0<<std::endl;
+        xdbg<<"Distortion init\n";
+        xdbg<<"matrix = "<<matrixA<<','<<matrixB<<','<<matrixC<<','<<matrixD<<std::endl;
+        xdbg<<"x0 = "<<x0<<std::endl;
+        xdbg<<"invdet = "<<invdet<<std::endl;
 
         // Calculate the values for getXRange and getYRange:
         if (adaptee->isAxisymmetric()) {
             // The original is a circle, so first get its radius.
-            adaptee->getXRange(_xmin,_xmax);
+            adaptee->getXRange(_xmin,_xmax,_xsplits);
             if (_xmax == integ::MOCK_INF) {
                 // Then these are correct, and use +- inf for y range too.
                 _ymin = -integ::MOCK_INF;
@@ -865,29 +875,43 @@ namespace galsim {
                 // ymax = R sqrt(C^2 + D^2) + y0
                 // ymin = -R sqrt(C^2 + D^2) + y0
                 double AApBB = matrixA*matrixA + matrixB*matrixB;
-                double temp = sqrt(AApBB) * R;
+                double sqrtAApBB = sqrt(AApBB);
+                double temp = sqrtAApBB * R;
                 _xmin = -temp + x0.x;
                 _xmax = temp + x0.x;
                 double CCpDD = matrixC*matrixC + matrixD*matrixD;
+                double sqrtCCpDD = sqrt(CCpDD);
                 temp = sqrt(CCpDD) * R;
                 _ymin = -temp + x0.y;
                 _ymax = temp + x0.y;
+                _ysplits.resize(_xsplits.size());
+                for (size_t k=0;k<_xsplits.size();++k) {
+                    // The split points work the same way.  Scale them by the same factor we
+                    // scaled the R value above, then add x0.x or x0.y.
+                    double split = _xsplits[k];
+                    xdbg<<"Adaptee split at "<<split<<std::endl;
+                    _xsplits[k] = sqrtAApBB * split + x0.x;
+                    _ysplits[k] = sqrtCCpDD * split + x0.y;
+                    xdbg<<"-> x,y splits at "<<_xsplits[k]<<"  "<<_ysplits[k]<<std::endl;
+                }
                 // Now a couple of calculations that get reused in getYRange(x,yminymax):
                 _coeff_b = (matrixA*matrixC + matrixB*matrixD) / AApBB;
                 _coeff_c = CCpDD / AApBB;
                 _coeff_c2 = absdet*absdet / AApBB;
-                dbg<<"adaptee is axisymmetric.\n";
-                dbg<<"adaptees maxR = "<<R<<std::endl;
-                dbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<std::endl;
-                dbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<std::endl;
+                xdbg<<"adaptee is axisymmetric.\n";
+                xdbg<<"adaptees maxR = "<<R<<std::endl;
+                xdbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<std::endl;
+                xdbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<std::endl;
             }
         } else {
             // Apply the distortion to each of the four corners of the original
             // and find the minimum and maximum.
             double xmin_1, xmax_1;
-            adaptee->getXRange(xmin_1,xmax_1);
+            std::vector<double> xsplits0;
+            adaptee->getXRange(xmin_1,xmax_1,xsplits0);
             double ymin_1, ymax_1;
-            adaptee->getYRange(ymin_1,ymax_1);
+            std::vector<double> ysplits0;
+            adaptee->getYRange(ymin_1,ymax_1,ysplits0);
             // Note: This doesn't explicitly check for MOCK_INF values.
             // It shouldn't be a problem, since the integrator will still treat
             // large values near MOCK_INF as infinity, but it just means that 
@@ -900,23 +924,112 @@ namespace galsim {
             _xmax = std::max(std::max(std::max(bl.x,br.x),tl.x),tr.x) + x0.x;
             _ymin = std::min(std::min(std::min(bl.y,br.y),tl.y),tr.y) + x0.y;
             _ymax = std::max(std::max(std::max(bl.y,br.y),tl.y),tr.y) + x0.y;
-            dbg<<"adaptee is not axisymmetric.\n";
-            dbg<<"adaptees x range = "<<xmin_1<<" ... "<<xmax_1<<std::endl;
-            dbg<<"adaptees y range = "<<ymin_1<<" ... "<<ymax_1<<std::endl;
-            dbg<<"Corners are: bl = "<<bl<<std::endl;
-            dbg<<"             br = "<<br<<std::endl;
-            dbg<<"             tl = "<<tl<<std::endl;
-            dbg<<"             tr = "<<tr<<std::endl;
-            dbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<std::endl;
-            dbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<std::endl;
+            xdbg<<"adaptee is not axisymmetric.\n";
+            xdbg<<"adaptees x range = "<<xmin_1<<" ... "<<xmax_1<<std::endl;
+            xdbg<<"adaptees y range = "<<ymin_1<<" ... "<<ymax_1<<std::endl;
+            xdbg<<"Corners are: bl = "<<bl<<std::endl;
+            xdbg<<"             br = "<<br<<std::endl;
+            xdbg<<"             tl = "<<tl<<std::endl;
+            xdbg<<"             tr = "<<tr<<std::endl;
+            xdbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<std::endl;
+            xdbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<std::endl;
+            if (bl.x + x0.x > _xmin && bl.x + x0.x < _xmax) {
+                xdbg<<"X Split from bl.x = "<<bl.x+x0.x<<std::endl;
+                _xsplits.push_back(bl.x+x0.x);
+            }
+            if (br.x + x0.x > _xmin && br.x + x0.x < _xmax) {
+                xdbg<<"X Split from br.x = "<<br.x+x0.x<<std::endl;
+                _xsplits.push_back(br.x+x0.x);
+            }
+            if (tl.x + x0.x > _xmin && tl.x + x0.x < _xmax) {
+                xdbg<<"X Split from tl.x = "<<tl.x+x0.x<<std::endl;
+                _xsplits.push_back(tl.x+x0.x);
+            }
+            if (tr.x + x0.x > _xmin && tr.x + x0.x < _xmax) {
+                xdbg<<"X Split from tr.x = "<<tr.x+x0.x<<std::endl;
+                _xsplits.push_back(tr.x+x0.x);
+            }
+            if (bl.y + x0.y > _ymin && bl.y + x0.y < _ymax) {
+                xdbg<<"Y Split from bl.y = "<<bl.y+x0.y<<std::endl;
+                _ysplits.push_back(bl.y+x0.y);
+            }
+            if (br.y + x0.y > _ymin && br.y + x0.y < _ymax) {
+                xdbg<<"Y Split from br.y = "<<br.y+x0.y<<std::endl;
+                _ysplits.push_back(br.y+x0.y);
+            }
+            if (tl.y + x0.y > _ymin && tl.y + x0.y < _ymax) {
+                xdbg<<"Y Split from tl.y = "<<tl.y+x0.y<<std::endl;
+                _ysplits.push_back(tl.y+x0.y);
+            }
+            if (tr.y + x0.y > _ymin && tr.y + x0.y < _ymax) {
+                xdbg<<"Y Split from tr.y = "<<tr.y+x0.y<<std::endl;
+                _ysplits.push_back(tr.y+x0.y);
+            }
+            // If the adaptee has any splits, try to propagate those up
+            for(size_t k=0;k<xsplits0.size();++k) {
+                xdbg<<"Adaptee xsplit at "<<xsplits0[k]<<std::endl;
+                Position<double> bx = fwd(Position<double>(xsplits0[k],ymin_1));
+                Position<double> tx = fwd(Position<double>(xsplits0[k],ymax_1));
+                if (bx.x + x0.x > _xmin && bx.x + x0.x < _xmax) {
+                    xdbg<<"X Split from bx.x = "<<bx.x+x0.x<<std::endl;
+                    _xsplits.push_back(bx.x+x0.x);
+                }
+                if (tx.x + x0.x > _xmin && tx.x + x0.x < _xmax) {
+                    xdbg<<"X Split from tx.x = "<<tx.x+x0.x<<std::endl;
+                    _xsplits.push_back(tx.x+x0.x);
+                }
+                if (bx.y + x0.y > _ymin && bx.y + x0.y < _ymax) {
+                    xdbg<<"Y Split from bx.y = "<<bx.y+x0.y<<std::endl;
+                    _ysplits.push_back(bx.y+x0.y);
+                }
+                if (tx.y + x0.y > _ymin && tx.y + x0.y < _ymax) {
+                    xdbg<<"Y Split from tx.y = "<<tx.y+x0.y<<std::endl;
+                    _ysplits.push_back(tx.y+x0.y);
+                }
+            }
+            for(size_t k=0;k<ysplits0.size();++k) {
+                xdbg<<"Adaptee ysplit at "<<ysplits0[k]<<std::endl;
+                Position<double> yl = fwd(Position<double>(xmin_1,ysplits0[k]));
+                Position<double> yr = fwd(Position<double>(xmax_1,ysplits0[k]));
+                if (yl.x + x0.x > _xmin && yl.x + x0.x < _xmax) {
+                    xdbg<<"X Split from tl.x = "<<tl.x+x0.x<<std::endl;
+                    _xsplits.push_back(yl.x+x0.x);
+                }
+                if (yr.x + x0.x > _xmin && yr.x + x0.x < _xmax) {
+                    xdbg<<"X Split from yr.x = "<<yr.x+x0.x<<std::endl;
+                    _xsplits.push_back(yr.x+x0.x);
+                }
+                if (yl.y + x0.y > _ymin && yl.y + x0.y < _ymax) {
+                    xdbg<<"Y Split from yl.y = "<<yl.y+x0.y<<std::endl;
+                    _ysplits.push_back(yl.y+x0.y);
+                }
+                if (yr.y + x0.y > _ymin && yr.y + x0.y < _ymax) {
+                    xdbg<<"Y Split from yr.y = "<<yr.y+x0.y<<std::endl;
+                    _ysplits.push_back(yr.y+x0.y);
+                }
+            }
         }
     }
 
-    void SBDistort::getYRange(double x, double& ymin, double& ymax) const
+    void SBDistort::getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
     {
-        dbg<<"Distortion getYRange for x = "<<x<<std::endl;
+        xmin = _xmin; xmax = _xmax;
+        splits.insert(splits.end(),_xsplits.begin(),_xsplits.end());
+    }
+
+    void SBDistort::getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
+    {
+        ymin = _ymin; ymax = _ymax;
+        splits.insert(splits.end(),_ysplits.begin(),_ysplits.end());
+    }
+
+    void SBDistort::getYRange(double x, double& ymin, double& ymax,
+                              std::vector<double>& splits) const
+    {
+        xdbg<<"Distortion getYRange for x = "<<x<<std::endl;
         if (adaptee->isAxisymmetric()) {
-            adaptee->getYRange(ymin,ymax);
+            std::vector<double> splits0;
+            adaptee->getYRange(ymin,ymax,splits0);
             if (ymax == integ::MOCK_INF) return;
             double R = ymax;
             // The circlue with radius R is mapped onto an ellipse with (x,y) given by:
@@ -937,16 +1050,15 @@ namespace galsim {
             double d = sqrt(c + b*b);
             ymax = b + d + x0.y;
             ymin = b - d + x0.y;
-            dbg<<"Axisymmetric adaptee with R = "<<R<<std::endl;
-            dbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<std::endl;
-            dbg<<"Check: xValue("<<x<<","<<ymin-0.01<<") = "<<xValue(Position<double>(x,ymin-0.01))<<std::endl;
-            dbg<<"       xValue("<<x<<","<<ymin+0.01<<") = "<<xValue(Position<double>(x,ymin+0.01))<<std::endl;
-            dbg<<"       xValue("<<x<<","<<ymax-0.01<<") = "<<xValue(Position<double>(x,ymax-0.01))<<std::endl;
-            dbg<<"       xValue("<<x<<","<<ymax+0.01<<") = "<<xValue(Position<double>(x,ymax+0.01))<<std::endl;
-            Position<double> pp1 = inv(Position<double>(x,ymin)-x0);
-            Position<double> pp2 = inv(Position<double>(x,ymax)-x0);
-            dbg<<"For (x,ymin): inv(p-x0) = "<<pp1<<", R = "<<sqrt(pp1.x*pp1.x+pp1.y*pp1.y)<<std::endl;
-            dbg<<"For (x,ymax): inv(p-x0) = "<<pp2<<", R = "<<sqrt(pp2.x*pp2.x+pp2.y*pp2.y)<<std::endl;
+            for (size_t k=0;k<splits0.size();++k) if (splits0[k] >= 0.) {
+                double r = splits0[k];
+                double c = _coeff_c2 * r*r - _coeff_c * (x-x0.x) * (x-x0.x);
+                double d = sqrt(c+b*b);
+                splits.push_back(b + d + x0.y);
+                splits.push_back(b - d + x0.y);
+            }
+            xdbg<<"Axisymmetric adaptee with R = "<<R<<std::endl;
+            xdbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<std::endl;
         } else {
             // There are 4 lines to check for where they intersect the given x.
             // Start with the adaptee's given ymin.
@@ -965,34 +1077,67 @@ namespace galsim {
             //
             // We also need to check for A or B = 0, since then only one pair of lines is
             // relevant.
+            xdbg<<"Non-axisymmetric adaptee\n";
             if (matrixA == 0.) {
+                xdbg<<"matrixA == 0:\n";
                 double xmin_1, xmax_1;
-                adaptee->getXRange(xmin_1,xmax_1);
+                std::vector<double> xsplits0;
+                adaptee->getXRange(xmin_1,xmax_1,xsplits0);
+                xdbg<<"xmin_1, xmax_1 = "<<xmin_1<<','<<xmax_1<<std::endl;
                 ymin = matrixC * xmin_1 + matrixD * (x - x0.x - matrixA*xmin_1) / matrixB + x0.y;
                 ymax = matrixC * xmax_1 + matrixD * (x - x0.x - matrixA*xmax_1) / matrixB + x0.y;
                 if (ymax < ymin) std::swap(ymin,ymax);
+                for(size_t k=0;k<xsplits0.size();++k) {
+                    double xx = xsplits0[k];
+                    splits.push_back(
+                        matrixC * xx + matrixD * (x - x0.x - matrixA*xx) / matrixB + x0.y);
+                }
             } else if (matrixB == 0.) {
+                xdbg<<"matrixB == 0:\n";
                 double ymin_1, ymax_1;
-                adaptee->getYRange(ymin_1,ymax_1);
-                ymin = matrixC * (x - x0.x - matrixB*ymin) / matrixA + matrixD*ymin + x0.y;
-                ymax = matrixC * (x - x0.x - matrixB*ymax) / matrixA + matrixD*ymax + x0.y;
+                std::vector<double> ysplits0;
+                adaptee->getYRange(ymin_1,ymax_1,ysplits0);
+                xdbg<<"ymin_1, ymax_1 = "<<ymin_1<<','<<ymax_1<<std::endl;
+                ymin = matrixC * (x - x0.x - matrixB*ymin_1) / matrixA + matrixD*ymin_1 + x0.y;
+                ymax = matrixC * (x - x0.x - matrixB*ymax_1) / matrixA + matrixD*ymax_1 + x0.y;
                 if (ymax < ymin) std::swap(ymin,ymax);
+                for(size_t k=0;k<ysplits0.size();++k) {
+                    double yy = ysplits0[k];
+                    splits.push_back(
+                        matrixC * (x - x0.x - matrixB*yy) / matrixA + matrixD*yy + x0.y);
+                }
             } else {
+                xdbg<<"matrixA,B != 0:\n";
                 double ymin_1, ymax_1;
-                adaptee->getYRange(ymin_1,ymax_1);
-                ymin = matrixC * (x - x0.x - matrixB*ymin) / matrixA + matrixD*ymin + x0.y;
-                ymax = matrixC * (x - x0.x - matrixB*ymax) / matrixA + matrixD*ymax + x0.y;
+                std::vector<double> xsplits0;
+                adaptee->getYRange(ymin_1,ymax_1,xsplits0);
+                xdbg<<"ymin_1, ymax_1 = "<<ymin_1<<','<<ymax_1<<std::endl;
+                ymin = matrixC * (x - x0.x - matrixB*ymin_1) / matrixA + matrixD*ymin_1 + x0.y;
+                ymax = matrixC * (x - x0.x - matrixB*ymax_1) / matrixA + matrixD*ymax_1 + x0.y;
+                xdbg<<"From top and bottom: ymin,ymax = "<<ymin<<','<<ymax<<std::endl;
                 if (ymax < ymin) std::swap(ymin,ymax);
                 double xmin_1, xmax_1;
-                adaptee->getXRange(xmin_1,xmax_1);
+                std::vector<double> ysplits0;
+                adaptee->getXRange(xmin_1,xmax_1,ysplits0);
+                xdbg<<"xmin_1, xmax_1 = "<<xmin_1<<','<<xmax_1<<std::endl;
                 ymin_1 = matrixC * xmin_1 + matrixD * (x - x0.x - matrixA*xmin_1) / matrixB + x0.y;
                 ymax_1 = matrixC * xmax_1 + matrixD * (x - x0.x - matrixA*xmax_1) / matrixB + x0.y;
+                xdbg<<"From left and right: ymin,ymax = "<<ymin_1<<','<<ymax_1<<std::endl;
                 if (ymax_1 < ymin_1) std::swap(ymin_1,ymax_1);
                 if (ymin_1 > ymin) ymin = ymin_1;
                 if (ymax_1 < ymax) ymax = ymax_1;
+                for(size_t k=0;k<ysplits0.size();++k) {
+                    double yy = ysplits0[k];
+                    splits.push_back(
+                        matrixC * (x - x0.x - matrixB*yy) / matrixA + matrixD*yy + x0.y);
+                }
+                for(size_t k=0;k<xsplits0.size();++k) {
+                    double xx = xsplits0[k];
+                    splits.push_back(
+                        matrixC * xx + matrixD * (x - x0.x - matrixA*xx) / matrixB + x0.y);
+                }
             }
-            dbg<<"Non-axisymmetric adaptee\n";
-            dbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<std::endl;
+            xdbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<std::endl;
         }
     }
 
@@ -1112,6 +1257,10 @@ namespace galsim {
 
         double operator()(double x, double y) const 
         {
+            dbg<<"Convolve function for pos = "<<_pos<<" at x,y = "<<x<<','<<y<<std::endl;
+            double v1 = _p1->xValue(Position<double>(x,y));
+            double v2 = _p2->xValue(Position<double>(_pos.x-x,_pos.y-y));
+            dbg<<"Value = "<<v1<<" * "<<v2<<" = "<<v1*v2<<std::endl;
             return 
                 _p1->xValue(Position<double>(x,y)) *
                 _p2->xValue(Position<double>(_pos.x-x,_pos.y-y));
@@ -1131,11 +1280,14 @@ namespace galsim {
 
         integ::IntRegion<double> operator()(double x) const
         {
+            dbg<<"Get IntRegion for pos = "<<_pos<<" at x = "<<x<<std::endl;
             // First figure out each profiles y region separately.
             double ymin1,ymax1;
-            _p1->getYRange(x,ymin1,ymax1);
+            splits1.clear();
+            _p1->getYRange(x,ymin1,ymax1,splits1);
             double ymin2,ymax2;
-            _p2->getYRange(_pos.x-x,ymin2,ymax2);
+            splits2.clear();
+            _p2->getYRange(_pos.x-x,ymin2,ymax2,splits2);
 
             // Then take the overlap relevant for the calculation:
             //     _p1->xValue(x,y) * _p2->xValue(_x0-x,_y0-y)
@@ -1145,18 +1297,175 @@ namespace galsim {
             double ymax = std::min(ymax1, _pos.y-ymin2);
             dbg<<"Y region for x = "<<x<<" = "<<ymin<<" ... "<<ymax<<std::endl;
             if (ymax < ymin) ymax = ymin;
-            integ::IntRegion<double> reg(ymin,ymax,dbgout);
-            //reg.useFXMap();
+            std::ostream* integ_dbgout = verbose_level >= 1 ? dbgout : 0;
+            integ::IntRegion<double> reg(ymin,ymax,integ_dbgout);
+            for(size_t k=0;k<splits1.size();++k) {
+                double s = splits1[k];
+                if (s > ymin && s < ymax) reg.addSplit(s);
+            }
+            for(size_t k=0;k<splits2.size();++k) {
+                double s = _pos.y-splits2[k];
+                if (s > ymin && s < ymax) reg.addSplit(s);
+            }
             return reg;
         }
     private:
         const SBProfile* _p1;
         const SBProfile* _p2;
         const Position<double>& _pos;
+        mutable std::vector<double> splits1, splits2;
     };
 
+    // This class finds the overlap between the ymin/ymax values of two profiles.
+    // For overlaps of one profile's min with the other's max, this informs how to 
+    // adjust the xmin/xmax values to avoid the region where the integral is trivially 0.
+    // This is important, because the abrupt shift from a bunch of 0's to not is 
+    // hard for the integrator.  So it helps to figure this out in advance.
+    // The other use of this it to see where the two ymin's or the two ymax's cross 
+    // each other.  This also leads to an abrupt bend in the function being integrated, so 
+    // it's easier if we put a split point there at the start.
+    // The four cases are distinguished by a "mode" variable.  
+    // mode = 1 and 2 are for finding where the ranges are disjoint.
+    // mode = 3 and 4 are for finding the bends.
+    struct OverlapFinder
+    {
+        OverlapFinder(const SBProfile* p1, const SBProfile* p2, const Position<double>& pos,
+                      int mode) :
+            _p1(p1), _p2(p2), _pos(pos), _mode(mode) 
+        { assert(_mode >= 1 && _mode <= 4); }
+        double operator()(double x) const
+        {
+            double ymin1, ymax1, ymin2, ymax2;
+            splits.clear();
+            _p1->getYRange(x,ymin1,ymax1,splits);
+            _p2->getYRange(_pos.x-x,ymin2,ymax2,splits);
+            // Note: the real ymin,ymax for p2 are _pos.y-ymax2 and _pos.y-ymin2
+            ymin2 = _pos.y - ymin2;
+            ymax2 = _pos.y - ymax2;
+            std::swap(ymin2,ymax2);
+            return 
+                _mode == 1 ? ymax2 - ymin1 :
+                _mode == 2 ? ymax1 - ymin2 :
+                _mode == 3 ? ymax2 - ymax1 :
+                /*_mode == 4*/ ymin2 - ymin1;
+        }
+
+    private:
+        const SBProfile* _p1;
+        const SBProfile* _p2;
+        const Position<double>& _pos;
+        int _mode;
+        mutable std::vector<double> splits;
+    };
+
+    // We pull out this segment, since we do it twice.  Once with which = true, and once
+    // with which = false.
+    static void UpdateXRange(const OverlapFinder& func, double& xmin, double& xmax, 
+                             const std::vector<double>& splits)
+    {
+        dbg<<"Start UpdateXRange given xmin,xmax = "<<xmin<<','<<xmax<<std::endl;
+        // Find the overlap at x = xmin:
+        double yrangea = func(xmin);
+        dbg<<"yrange at x = xmin = "<<yrangea<<std::endl;
+
+        // Find the overlap at x = xmax:
+        double yrangeb = func(xmax);
+        dbg<<"yrange at x = xmax = "<<yrangeb<<std::endl;
+
+        if (yrangea < 0. && yrangeb < 0.) {
+            dbg<<"Both ends are disjoint.  Check the splits.\n";
+            std::vector<double> use_splits = splits;
+            if (use_splits.size() == 0) {
+                dbg<<"No splits provided.  Use the middle instead.\n";
+                use_splits.push_back( (xmin+xmax)/2. );
+            }
+            for (size_t k=0;k<use_splits.size();++k) {
+                double xmid = use_splits[k];
+                double yrangec = func(xmid);
+                dbg<<"yrange at x = "<<xmid<<" = "<<yrangec<<std::endl;
+                if (yrangec > 0.) {
+                    dbg<<"Found a non-disjoint split\n";
+                    dbg<<"Separately adjust both xmin and xmax by finding zero crossings.\n";
+                    Solve<OverlapFinder> solver1(func,xmin,xmid);
+                    solver1.setMethod(Brent);
+                    double root = solver1.root();
+                    dbg<<"Found root at "<<root<<std::endl;
+                    xmin = root;
+                    Solve<OverlapFinder> solver2(func,xmid,xmax);
+                    solver2.setMethod(Brent);
+                    root = solver2.root();
+                    dbg<<"Found root at "<<root<<std::endl;
+                    xmax = root;
+                    return;
+                }
+            }
+            dbg<<"All split locations are also disjoint, so set xmin = xmax.\n";
+            xmin = xmax;
+        } else if (yrangea > 0. && yrangeb > 0.) {
+            dbg<<"Neither end is disjoint.  Integrate the full range\n";
+        } else {
+            dbg<<"One end is disjoint.  Find the zero crossing.\n";
+            Solve<OverlapFinder> solver(func,xmin,xmax);
+            solver.setMethod(Brent);
+            double root = solver.root();
+            dbg<<"Found root at "<<root<<std::endl;
+            if (yrangea < 0.) xmin = root;
+            else xmax = root;
+        }
+    }
+
+    static void AddSplitsAtBends(const OverlapFinder& func, double xmin, double xmax, 
+                                 std::vector<double>& splits)
+    {
+        dbg<<"Start AddSplitsAtBends given xmin,xmax = "<<xmin<<','<<xmax<<std::endl;
+        // Find the overlap at x = xmin:
+        double yrangea = func(xmin);
+        dbg<<"yrange at x = xmin = "<<yrangea<<std::endl;
+
+        // Find the overlap at x = xmax:
+        double yrangeb = func(xmax);
+        dbg<<"yrange at x = xmax = "<<yrangeb<<std::endl;
+
+        if (yrangea * yrangeb > 0.) {
+            dbg<<"Both ends are the same sign.  Check the splits.\n";
+            std::vector<double> use_splits = splits;
+            if (use_splits.size() == 0) {
+                dbg<<"No splits provided.  Use the middle instead.\n";
+                use_splits.push_back( (xmin+xmax)/2. );
+            }
+            for (size_t k=0;k<use_splits.size();++k) {
+                double xmid = use_splits[k];
+                double yrangec = func(xmid);
+                dbg<<"yrange at x = "<<xmid<<" = "<<yrangec<<std::endl;
+                if (yrangea * yrangec < 0.) {
+                    dbg<<"Found split with the opposite sign\n";
+                    dbg<<"Find crossings on both sides:\n";
+                    Solve<OverlapFinder> solver1(func,xmin,xmid);
+                    solver1.setMethod(Brent);
+                    double root = solver1.root();
+                    dbg<<"Found root at "<<root<<std::endl;
+                    splits.push_back(root);
+                    Solve<OverlapFinder> solver2(func,xmid,xmax);
+                    solver2.setMethod(Brent);
+                    root = solver2.root();
+                    dbg<<"Found root at "<<root<<std::endl;
+                    splits.push_back(root);
+                    return;
+                }
+            }
+            dbg<<"All split locations have the same sign, so don't add any new splits\n";
+        } else {
+            dbg<<"Ends have opposite signs.  Look for zero crossings.\n";
+            Solve<OverlapFinder> solver(func,xmin,xmax);
+            solver.setMethod(Brent);
+            double root = solver.root();
+            dbg<<"Found root at "<<root<<std::endl;
+            splits.push_back(root);
+        }
+    }
+
     static double RealSpaceConvolve(
-        const SBProfile* p1, const SBProfile* p2, const Position<double>& pos)
+        const SBProfile* p1, const SBProfile* p2, const Position<double>& pos, double flux)
     {
         // Coming in, if only one of them is axisymmetric, it should be p1.
         // This cuts down on some of the logic below.
@@ -1168,10 +1477,11 @@ namespace galsim {
         
         dbg<<"Start RealSpaceConvolve for pos = "<<pos<<std::endl;
         double xmin1, xmax1, xmin2, xmax2;
-        p1->getXRange(xmin1,xmax1);
-        p2->getXRange(xmin2,xmax2);
-        dbg<<"p1 range = "<<xmin1<<"  "<<xmax1<<std::endl;
-        dbg<<"p2 range = "<<xmin2<<"  "<<xmax2<<std::endl;
+        std::vector<double> xsplits1, xsplits2;
+        p1->getXRange(xmin1,xmax1,xsplits1);
+        p2->getXRange(xmin2,xmax2,xsplits2);
+        dbg<<"p1 X range = "<<xmin1<<"  "<<xmax1<<std::endl;
+        dbg<<"p2 X range = "<<xmin2<<"  "<<xmax2<<std::endl;
 
         // Check for early exit
         if (pos.x < xmin1 + xmin2 || pos.x > xmax1 + xmax2) {
@@ -1180,10 +1490,11 @@ namespace galsim {
         }
 
         double ymin1, ymax1, ymin2, ymax2;
-        p1->getYRange(ymin1,ymax1);
-        p2->getYRange(ymin2,ymax2);
-        dbg<<"p1 range = "<<ymin1<<"  "<<ymax1<<std::endl;
-        dbg<<"p2 range = "<<ymin2<<"  "<<ymax2<<std::endl;
+        std::vector<double> ysplits1, ysplits2;
+        p1->getYRange(ymin1,ymax1,ysplits1);
+        p2->getYRange(ymin2,ymax2,ysplits2);
+        dbg<<"p1 Y range = "<<ymin1<<"  "<<ymax1<<std::endl;
+        dbg<<"p2 Y range = "<<ymin2<<"  "<<ymax2<<std::endl;
         // Second check for early exit
         if (pos.y < ymin1 + ymin2 || pos.y > ymax1 + ymax2) {
             dbg<<"y is outside range, so trivially 0\n";
@@ -1194,45 +1505,81 @@ namespace galsim {
         double xmax = std::min(xmax1, pos.x - xmin2);
         dbg<<"xmin..xmax = "<<xmin<<" ... "<<xmax<<std::endl;
 
-        if (p1->isAxisymmetric()) {
-            // Update the above values based on the possibility of the circle 
-            // crossing through the rectangle.
-            double ybottom = pos.y-ymax2;
-            if (ybottom > 0) {
-                // Then check where circle passes through bottom edge:
-                // (xmax1 is used here as the radius, rmax1)
-                double xx = sqrt(xmax1*xmax1 - ybottom*ybottom);
-                if (xx < xmax) xmax = xx;
-                if (-xx > xmin) xmin = -xx;
-            }
-            double ytop = pos.y-ymin2;
-            if (ytop < 0) {
-                // Then check where circle passes through top edge:
-                // (xmax1 is used here as the radius, rmax1)
-                double xx = sqrt(xmax1*xmax1 - ytop*ytop);
-                if (xx < xmax) xmax = xx;
-                if (-xx > xmin) xmin = -xx;
-            }
-            dbg<<"Updated to "<<xmin<<" ... "<<xmax<<std::endl;
+        // Consolidate the splits from each profile in to a single list to use.
+        std::vector<double> xsplits;
+        for(size_t k=0;k<xsplits1.size();++k) {
+            double s = xsplits1[k];
+            dbg<<"p1 has split at "<<s<<std::endl;
+            if (s > xmin && s < xmax) xsplits.push_back(s);
+        }
+        for(size_t k=0;k<xsplits2.size();++k) {
+            double s = pos.x-xsplits2[k];
+            dbg<<"p2 has split at "<<xsplits2[k]<<", which is really (pox.x-s) "<<s<<std::endl;
+            if (s > xmin && s < xmax) xsplits.push_back(s);
         }
 
-        // Third check for early exit
-        if (xmin >= xmax) { 
-            dbg<<"p1 and p2 are disjoint, so trivially 0\n";
-            return 0.; 
+        // If either profile is infinite, then we don't need to worry about any boundary
+        // overlaps, so can skip this section.
+        if ( (xmin1 == -integ::MOCK_INF || xmax2 == integ::MOCK_INF) &&
+             (xmax1 == integ::MOCK_INF || xmin2 == -integ::MOCK_INF) ) {
+
+            // Update the xmin and xmax values if the top of one profile crosses through
+            // the bootom of the other.  Then part of the nominal range will in fact
+            // be disjoint.  This leads to a bunch of 0's for the inner integral which
+            // makes it harder for the outer integral to converge.
+            OverlapFinder func1(p1,p2,pos,1);
+            UpdateXRange(func1,xmin,xmax,xsplits);
+            OverlapFinder func2(p1,p2,pos,2);
+            UpdateXRange(func2,xmin,xmax,xsplits);
+
+            // Third check for early exit
+            if (xmin >= xmax) { 
+                dbg<<"p1 and p2 are disjoint, so trivially 0\n";
+                return 0.; 
+            }
+
+            // Also check for where the two tops or the two bottoms might cross.
+            // Then we don't have zero's, but the curve being integrated over gets a bend,
+            // which also makes it hard for the outer integral to converge, so we
+            // want to add split points at those bends.
+            OverlapFinder func3(p1,p2,pos,3);
+            AddSplitsAtBends(func3,xmin,xmax,xsplits);
+            OverlapFinder func4(p1,p2,pos,4);
+            AddSplitsAtBends(func4,xmin,xmax,xsplits);
         }
 
         ConvolveFunc conv(p1,p2,pos);
 
-        integ::IntRegion<double> xreg(xmin,xmax,dbgout);
-        //xreg.useFXMap();
+        std::ostream* integ_dbgout = verbose_level >= 1 ? dbgout : 0;
+        integ::IntRegion<double> xreg(xmin,xmax,integ_dbgout);
+        if (dbgout && verbose_level >= 2) xreg.useFXMap();
         dbg<<"xreg = "<<xmin<<" ... "<<xmax<<std::endl;
+
+        // Need to re-check validity of splits, since xmin,xmax may have changed.
+        for(size_t k=0;k<xsplits.size();++k) {
+            double s = xsplits[k];
+            if (s > xmin && s < xmax) xreg.addSplit(s);
+        }
 
         YRegion yreg(p1,p2,pos);
 
+
+#ifdef TIMING
+        timeval tp;
+        gettimeofday(&tp,0);
+        double t1 = tp.tv_sec + tp.tv_usec/1.e6;
+#endif
+
         double result = integ::int2d(conv, xreg, yreg, 
                                      sbp::realspace_conv_relerr,
-                                     sbp::realspace_conv_abserr);
+                                     sbp::realspace_conv_abserr * flux);
+
+#ifdef TIMING
+        gettimeofday(&tp,0);
+        double t2 = tp.tv_sec + tp.tv_usec/1.e6;
+        dbg<<"Time for ("<<pos.x<<','<<pos.y<<") = "<<t2-t1<<std::endl;
+#endif
+
         dbg<<"Found result = "<<result<<std::endl;
         return result;
     }
@@ -1253,9 +1600,9 @@ namespace galsim {
             const SBProfile* p1 = plist.front();
             const SBProfile* p2 = plist.back();
             if (p2->isAxisymmetric())
-                return RealSpaceConvolve(p2,p1,pos);
+                return RealSpaceConvolve(p2,p1,pos,fluxProduct);
             else 
-                return RealSpaceConvolve(p1,p2,pos);
+                return RealSpaceConvolve(p1,p2,pos,fluxProduct);
         }
     }
 

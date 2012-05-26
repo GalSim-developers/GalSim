@@ -132,14 +132,15 @@ namespace galsim {
          *  The implementation here is +- infinity for both x and y.  
          *  Derived classes may override this if they a have different range.
          */
-        virtual void getXRange(double& xmin, double& xmax) const 
+        virtual void getXRange(double& xmin, double& xmax, std::vector<double>& /*splits*/) const 
         { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
 
-        virtual void getYRange(double& ymin, double& ymax) const 
+        virtual void getYRange(double& ymin, double& ymax, std::vector<double>& /*splits*/) const 
         { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
 
-        virtual void getYRange(double /*x*/, double& ymin, double& ymax) const 
-        { getYRange(ymin,ymax); }
+        virtual void getYRange(double /*x*/, double& ymin, double& ymax,
+                               std::vector<double>& splits) const 
+        { getYRange(ymin,ymax,splits); }
         //@}
 
         /**
@@ -732,34 +733,34 @@ namespace galsim {
         double maxK() const { return maxMaxK; }
         double stepK() const { return minStepK; }
 
-        void getXRange(double& xmin, double& xmax) const 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
         { 
             xmin = integ::MOCK_INF; xmax = -integ::MOCK_INF; 
             for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
                 double xmin_1, xmax_1;
-                (*pptr)->getXRange(xmin_1,xmax_1);
+                (*pptr)->getXRange(xmin_1,xmax_1,splits);
                 if (xmin_1 < xmin) xmin = xmin_1;
                 if (xmax_1 > xmax) xmax = xmax_1;
             }
         }
 
-        void getYRange(double& ymin, double& ymax) const 
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
         {
             ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
             for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
                 double ymin_1, ymax_1;
-                (*pptr)->getYRange(ymin_1,ymax_1);
+                (*pptr)->getYRange(ymin_1,ymax_1,splits);
                 if (ymin_1 < ymin) ymin = ymin_1;
                 if (ymax_1 > ymax) ymax = ymax_1;
             }
         }
 
-        void getYRange(double x, double& ymin, double& ymax) const 
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
         {
             ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
             for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
                 double ymin_1, ymax_1;
-                (*pptr)->getYRange(x,ymin_1,ymax_1);
+                (*pptr)->getYRange(x,ymin_1,ymax_1,splits);
                 if (ymin_1 < ymin) ymin = ymin_1;
                 if (ymax_1 > ymax) ymax = ymax_1;
             }
@@ -838,6 +839,7 @@ namespace galsim {
         bool stillIsAxisymmetric; ///< Is output SBProfile shape still circular?
         double _xmin, _xmax, _ymin, _ymax; ///< Ranges propagated from adaptee
         double _coeff_b, _coeff_c, _coeff_c2; ///< Values used in getYRange(x,ymin,ymax);
+        std::vector<double> _xsplits, _ysplits; ///< Good split points for the intetegrals
 
     private:
         /// @brief Initialize the SBDistort.
@@ -952,13 +954,11 @@ namespace galsim {
         double maxK() const { return adaptee->maxK() / minor; }
         double stepK() const { return adaptee->stepK() / major; }
 
-        void getXRange(double& xmin, double& xmax) const 
-        { xmin = _xmin; xmax = _xmax; }
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const;
 
-        void getYRange(double& ymin, double& ymax) const 
-        { ymin = _ymin; ymax = _ymax; }
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const;
 
-        void getYRange(double x, double& ymin, double& ymax) const;
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const;
 
         Position<double> centroid() const { return x0+fwd(adaptee->centroid()); }
 
@@ -1141,34 +1141,46 @@ namespace galsim {
         double maxK() const { return minMaxK; }
         double stepK() const { return minStepK; }
 
-        void getXRange(double& xmin, double& xmax) const 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
         { 
-            xmin = 0.; xmax = 0.;
-            for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+            // Getting the splits correct would require a bit of work.
+            // So if we ever do real-space convolutions where one of the elements 
+            // is (or includes) another convolution, we might want to rework this a 
+            // bit.  But I don't think this is really every going to be used, so
+            // I didn't try to get that right.  (Note: ignoring the splits won't be
+            // wrong -- just not optimal.)
+            std::vector<double> splits0;
+            ConstIter pptr = plist.begin();
+            (*pptr)->getXRange(xmin,xmax,splits0);
+            for (++pptr; pptr!=plist.end(); ++pptr) {
                 double xmin_1, xmax_1;
-                (*pptr)->getXRange(xmin_1,xmax_1);
+                (*pptr)->getXRange(xmin_1,xmax_1,splits0);
                 xmin += xmin_1;
                 xmax += xmax_1;
             }
         }
 
-        void getYRange(double& ymin, double& ymax) const 
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
         {
-            ymin = 0.; ymax = 0.;
-            for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+            std::vector<double> splits0;
+            ConstIter pptr = plist.begin();
+            (*pptr)->getYRange(ymin,ymax,splits0);
+            for (++pptr; pptr!=plist.end(); ++pptr) {
                 double ymin_1, ymax_1;
-                (*pptr)->getYRange(ymin_1,ymax_1);
+                (*pptr)->getYRange(ymin_1,ymax_1,splits0);
                 ymin += ymin_1;
                 ymax += ymax_1;
             }
         }
 
-        void getYRange(double x, double& ymin, double& ymax) const 
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
         {
-            ymin = 0.; ymax = 0.;
-            for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+            std::vector<double> splits0;
+            ConstIter pptr = plist.begin();
+            (*pptr)->getYRange(x,ymin,ymax,splits0);
+            for (++pptr; pptr!=plist.end(); ++pptr) {
                 double ymin_1, ymax_1;
-                (*pptr)->getYRange(x,ymin_1,ymax_1);
+                (*pptr)->getYRange(x,ymin_1,ymax_1,splits0);
                 ymin += ymin_1;
                 ymax += ymax_1;
             }
@@ -1436,6 +1448,18 @@ namespace galsim {
         std::complex<double> kValue(const Position<double>& k) const 
         { return std::complex<double>( flux*info->kValue((k.x*k.x+k.y*k.y)*_re_sq), 0.); }
 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
+        { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; splits.push_back(0.); }
+
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; splits.push_back(0.); }
+
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        {
+            ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; 
+            if (std::abs(x/re) < 1.e-2) splits.push_back(0.); 
+        }
+
         bool isAxisymmetric() const { return true; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
@@ -1489,6 +1513,18 @@ namespace galsim {
         // Methods
         double xValue(const Position<double>& _p) const;
         std::complex<double> kValue(const Position<double>& _p) const;
+
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
+        { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; splits.push_back(0.); }
+
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; splits.push_back(0.); }
+
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        { 
+            ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; 
+            if (std::abs(x/r0) < 1.e-2) splits.push_back(0.); 
+        }
 
         bool isAxisymmetric() const { return true; } 
         bool isAnalyticX() const { return true; }
@@ -1705,10 +1741,10 @@ namespace galsim {
         double maxK() const { return 2. / ALIAS_THRESHOLD / std::max(xw,yw); }  
         double stepK() const { return M_PI/std::max(xw,yw)/2.; } 
 
-        void getXRange(double& xmin, double& xmax) const 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
         { xmin = -0.5*xw;  xmax = 0.5*xw; }
 
-        void getYRange(double& ymin, double& ymax) const 
+        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
         { ymin = -0.5*yw;  ymax = 0.5*yw; }
 
         Position<double> centroid() const 
@@ -1860,13 +1896,13 @@ namespace galsim {
         double maxK() const { return maxKrD / rD; }   
         double stepK() const { return stepKrD / rD; } 
 
-        void getXRange(double& xmin, double& xmax) const 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
         { xmin = -_maxR; xmax = _maxR; }
 
-        void getYRange(double& ymin, double& ymax) const 
+        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
         { ymin = -_maxR; ymax = _maxR; }
 
-        void getYRange(double x, double& ymin, double& ymax) const 
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& ) const 
         {
             ymax = sqrt(_maxR_sq - x*x);
             ymin = -ymax;
