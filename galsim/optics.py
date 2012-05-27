@@ -238,7 +238,8 @@ def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     """@brief Return the complex OTF of a circular (default) or square pupil with low-order
     aberrations as a numpy array.
 
-    OTF array element ordering follows the DFT standard of kxky(array_shape).
+    OTF array element ordering follows the DFT standard of kxky(array_shape), and has
+    otf[0, 0] = 1+0j by default.
 
     To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
 
@@ -277,7 +278,8 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     """@brief Return the complex OTF of a circular (default) or square pupil with low-order
     aberrations as a (real, imag) tuple of ImageViewD objects rather than a complex numpy array.
 
-    OTF array element ordering follows the DFT standard of kxky(array_shape).
+    OTF array element ordering follows the DFT standard of kxky(array_shape), and has
+    otf[0, 0] = 1+0j by default.
 
     To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
     
@@ -309,7 +311,8 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     """@brief Return numpy array containing the MTF of a circular (default) or square pupil with
     low-order aberrations.
 
-    MTF array element ordering follows the DFT standard of kxky(array_shape).
+    MTF array element ordering follows the DFT standard of kxky(array_shape), and has
+    mtf[0, 0] = 1 by default.
 
     To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
 
@@ -341,7 +344,8 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     """@brief Return the MTF of a circular (default) or square pupil with low-order aberrations as
     an ImageViewD.
 
-    MTF array element ordering follows the DFT standard of kxky(array_shape).
+    MTF array element ordering follows the DFT standard of kxky(array_shape), and has
+    mtf[0, 0] = 1 by default.
 
     To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
 
@@ -372,7 +376,8 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     """@brief Return numpy array containing the PTF [radians] of a circular (default) or square
     pupil with low-order aberrations.
 
-    PTF array element ordering follows the DFT standard of kxky(array_shape).
+    PTF array element ordering follows the DFT standard of kxky(array_shape), and has
+    ptf[0, 0] = 0. by default.
 
     To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
 
@@ -412,7 +417,8 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     """@brief Return the PTF [radians] of a circular (default) or square pupil with low-order
     aberrations as an ImageViewD.
 
-    PTF array element ordering follows the DFT standard of kxky(array_shape).
+    PTF array element ordering follows the DFT standard of kxky(array_shape), and has
+    ptf[0, 0] = 0. by default.
 
     To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
 
