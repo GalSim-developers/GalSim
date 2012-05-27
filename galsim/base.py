@@ -36,37 +36,54 @@ class GSObject:
         ret *= other
         return ret
 
+    # Likewise for op/ and op/=
+    def __idiv__(self, other):
+        self.setFlux(self.getFlux() / other)
+        return self
+
+    def __div__(self, other):
+        ret = self.copy()
+        ret /= other
+        return ret
+
+    def __itruediv__(self, other):
+        return __idiv__(self, other)
+
+    def __truediv__(self, other):
+        return __div__(self, other)
+
+
     # Make a copy of an object
     def copy(self):
-        """@returns A copy of an object as the SBProfile attribute of a new GSObject instance.
+        """@brief Returns a copy of an object as the SBProfile attribute of a new GSObject instance.
         """
         return GSObject(self.SBProfile.duplicate())
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
     #
     def maxK(self):
-        """@returns Value of k beyond which aliasing can be neglected.
+        """@brief Returns value of k beyond which aliasing can be neglected.
         """
         return self.SBProfile.maxK()
 
     def nyquistDx(self):
-        """@returns Image pixel spacing that does not alias maxK.
+        """@brief Returns Image pixel spacing that does not alias maxK.
         """
         return self.SBProfile.nyquistDx()
 
     def stepK(self):
-        """@returns Sampling in k space necessary to avoid folding of image in x space.
+        """@brief Returns sampling in k space necessary to avoid folding of image in x space.
         """
         return self.SBProfile.stepK()
 
     def isAxisymmetric(self):
-        """@returns True if axially symmetric: affects efficiency of evaluation.
+        """@brief Returns True if axially symmetric: affects efficiency of evaluation.
         """
         return self.SBProfile.isAxisymmetric()
 
     def isAnalyticX(self):
-        """@returns True if real-space values can be determined immediately at any position without
-        requiring a Discrete Fourier Transform.
+        """@brief Returns True if real-space values can be determined immediately at any position
+        without requiring a Discrete Fourier Transform.
         """
         return self.SBProfile.isAnalyticX()
 
@@ -75,7 +92,7 @@ class GSObject:
     # return self.SBProfile.isAnalyticK()
 
     def centroid(self):
-        """@returns The (x, y) centroid of an object as a Position.
+        """@brief Returns the (x, y) centroid of an object as a Position.
         """
         return self.SBProfile.centroid()
 
@@ -86,35 +103,35 @@ class GSObject:
         return
 
     def getFlux(self):
-        """@returns The flux of the object.
+        """@brief Returns the flux of the object.
         """
         return self.SBProfile.getFlux()
 
     def xValue(self, position):
-        """@returns The value of the object at a chosen 2D position in real space.
+        """@brief Returns the value of the object at a chosen 2D position in real space.
         
         As in SBProfile, this function assumes all are real-valued.  xValue() may not be
         implemented for derived classes (e.g. SBConvolve) that require an Discrete Fourier
         Transform to determine real space values.  In this case, an SBError will be thrown at the
         C++ layer (raises a RuntimeError in Python).
         
-        @param position  A 2D galsim.Position instance giving the position in real space.
+        @param position  A 2D galsim.PositionD/I instance giving the position in real space.
         """
         return self.SBProfile.xValue(position)
 
     def kValue(self, position):
-        """@returns The value of the object at a chosen 2D position in k space.
+        """@brief Returns the value of the object at a chosen 2D position in k space.
 
-        @param position  A 2D galsim.Position instance giving the position in k space.
+        @param position  A 2D galsim.PositionD/I instance giving the position in k space.
         """
         return self.SBProfile.kValue(position)
 
     def applyDistortion(self, ellipse):
         """@brief Apply a galsim.Ellipse distortion to this object.
 
-        galsim.Ellipse instances can be generated via
+        For calling, galsim.Ellipse instances can be generated via:
 
-        >>> ellipse = galsim.Ellipse(e1, e2)
+        ellipse = galsim.Ellipse(e1, e2)
 
         where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
         """
@@ -141,36 +158,37 @@ class GSObject:
     # Also add methods which create a new GSObject with the transformations applied...
     #
     def createDistorted(self, ellipse):
-        """@returns A new GSObject by applying a galsim.Ellipse distortion.
+        """@brief Returns a new GSObject by applying a galsim.Ellipse distortion.
 
-        galsim.Ellipse instances can be generated via
+        For calling, galsim.Ellipse instances can be generated via:
 
-        >>> ellipse = galsim.Ellipse(e1, e2)
+        ellipse = galsim.Ellipse(e1, e2)
 
         where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
         """
         return GSObject(self.SBProfile.distort(ellipse))
 
     def createSheared(self, g1, g2):
-        """@returns A new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
+        """@brief Returns A new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
         """
         e1, e2 = g1g2_to_e1e2(g1, g2)
         return GSObject(self.SBProfile.distort(galsim.Ellipse(e1,e2)))
 
     def createRotated(self, theta):
-        """@returns A new GSObject by applying a rotation theta (Angle object, +ve anticlockwise).
+        """@brief Returns a new GSObject by applying a rotation theta (Angle object, +ve
+        anticlockwise).
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         return GSObject(self.SBProfile.rotate(theta))
         
     def createShifted(self, dx, dy):
-        """@returns A new GSObject by applying a (dx, dy) shift.
+        """@brief Returns a new GSObject by applying a (dx, dy) shift.
         """
         return GSObject(self.SBProfile.shift(dx, dy))
 
     def draw(self, image=None, dx=0., wmult=1):
-        """@returns A drawn Image of the object, with bounds optionally set by an input Image.
+        """@brief Returns an Image of the object, with bounds optionally set by an input Image.
 
         TODO: describe dx, wmult.
         """
@@ -186,12 +204,14 @@ class GSObject:
             self.SBProfile.draw(image, dx=dx, wmult=wmult)
             return image
 
-    # Did not define all the other draw operations that operate on images inplace, would need to
-    # work out slightly different return syntax for that in Python
-
-    def shoot(self):
-        raise NotImplementedError("Sorry, photon shooting coming soon!")
-
+    def drawShoot(self, image, N, ud=None):
+        if type(N) != float:
+            # if given an int, just convert it to a float
+            N = float(N)
+        if ud == None:
+            ud = galsim.UniformDeviate()
+        self.SBProfile.drawShoot(image, N, ud)
+         
 
 # Define "convenience function for going from (g1, g2) -> (e1, e2), used by two methods
 # in the GSObject class and by one function in real.py:
@@ -311,13 +331,15 @@ class OpticalPSF(GSObject):
 
     Initialization
     --------------
-    >>> optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., 
+    @code
+    optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0.,
                                         coma2=0., spher=0., circular_pupil=True, interpolantxy=None,
-                                        dx=1., oversampling=2., pad_factor=2)
+                                        dx=1., oversampling=1.5, pad_factor=2)
+    @endcode
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
 
-    @param lod             lambda / D in the physical units adopted (user responsible for 
+    @param lam_over_D      lambda / D in the physical units adopted (user responsible for 
                            consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
@@ -330,9 +352,9 @@ class OpticalPSF(GSObject):
     @param circular_pupil  adopt a circular pupil?
     @param obs             add a central obstruction due to secondary mirror?
     @param interpolantxy   optional keyword for specifying the interpolation scheme [default =
-                           galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
+                           galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))].
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
-                           [default = 2.], setting oversampling < 1 will produce aliasing in the 
+                           [default = 1.5], setting oversampling < 1 will produce aliasing in the 
                            PSF (not good).
     @param pad_factor      additional multiple by which to zero-pad the PSF image to avoid folding
                            compared to what would be required for a simple Airy [default = 2]. Note
@@ -340,28 +362,36 @@ class OpticalPSF(GSObject):
                            those larger than order unity. 
     """
     def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=2., pad_factor=2):
+                 circular_pupil=True, obs=None, interpolantxy=None, oversampling=1.5, pad_factor=2):
         # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
         import galsim.optics
-        # Use the same prescription as SBAiry to set dx, maxK, Airy stepK and thus image size
-        self.maxk = 2. * np.pi / lam_over_D
-        dx = .5 * lam_over_D / oversampling
+        # Choose dx for lookup table using Nyquist for optical aperture and the specified
+        # oversampling factor
+        dx_lookup = .5 * lam_over_D / oversampling
+        # Use a similar prescription as SBAiry to set Airy stepK and thus reference unpadded image
+        # size in physical units
         if obs == None:
             stepk_airy = min(ALIAS_THRESHOLD * .5 * np.pi**3 / lam_over_D,
                              np.pi / 5. / lam_over_D)
         else:
             raise NotImplementedError('Secondary mirror obstruction not yet implemented')
-        # TODO: check that the above still makes sense even for large aberrations, probably not...
-        npix = np.ceil(2. * pad_factor * self.maxk / stepk_airy).astype(int)
-        optimage = galsim.optics.psf_image(array_shape=(npix, npix), defocus=defocus,
-                                           astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
-                                           spher=spher, circular_pupil=circular_pupil, obs=obs,
-                                           kmax=self.maxk, dx=dx)
-        # If interpolant not specified on input, use a high-ish lanczos
+        # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
+        # also make npix always *odd* so that opticalPSF lookup table array is correctly centred:
+        npix = 1 + 2 * (0.5 * np.ceil(pad_factor * (2. * np.pi / stepk_airy)
+                                      / dx_lookup)).astype(int)
+        # Make the psf image using this dx and array shape
+        optimage = galsim.optics.psf_image(lam_over_D=lam_over_D, dx=dx_lookup,
+                                           array_shape=(npix, npix), defocus=defocus, astig1=astig1,
+                                           astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
+                                           circular_pupil=circular_pupil, obs=obs)
+        # If interpolant not specified on input, use a high-ish n lanczos
         if interpolantxy == None:
-            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
+            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
             self.Interpolant2D = galsim.InterpolantXY(lan5)
-        GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D, dx=dx))
+        else:
+            self.Interpolant2D = interpolantxy
+        GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D,
+                                                           dx=dx_lookup))
 
 
 class RealGalaxy(GSObject):
@@ -374,8 +404,10 @@ class RealGalaxy(GSObject):
 
     Initialization
     --------------
-    real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string =
-                                    None, random = False, uniform_deviate = None, interpolant = None)
+    @code
+    real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string = None,
+                                    random = False, uniform_deviate = None, interpolant = None)
+    @endcode
 
     This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -537,33 +569,37 @@ class Deconvolve(GSObject):
 # NOTE TO DEVELOPERS: This dict should be kept updated to reflect changes in parameter names or new
 #                     objects.
 #
-object_param_dict = {"Gaussian":      { "required" : (),
-                                        "size" :     ("half_light_radius", "sigma", "fwhm",),
-                                        "optional" : ("flux",) },
-                     "Moffat":        { "required" : ("beta",),
-                                        "size" :     ("half_light_radius", "scale_radius", "fwhm",),
-                                        "optional" : ("truncationFWHM", "flux",) },
-                     "Sersic":        { "required" : ("n",) ,
-                                        "size"     : ("half_light_radius",),
-                                        "optional" : ("flux",)},
-                     "Exponential":   { "required" : (),
-                                        "size"     : ("half_light_radius", "scale_radius"),
-                                        "optional" : ("flux",)},
-                     "DeVaucouleurs": { "required" : (),
-                                        "size"     : ("half_light_radius",),
-                                        "optional" : ("flux",) },
-                     "Airy":          { "required" : () ,
-                                        "size"     : ("D",) ,
-                                        "optional" : ("obs", "flux",)},
-                     "Pixel":         { "required" : ("xw", "yw",),
-                                        "size"     : (),
-                                        "optional" : ("flux",)},
-                     "OpticalPSF":    { "required" : (),
-                                        "size"     : ("lam_over_D",),
-                                        "optional" : ("defocus", "astig1", "astig2", "coma1",
-                                                      "coma2", "spher", "circular_pupil",
-                                                      "interpolantxy", "dx", "oversampling",
-                                                      "pad_factor")} }
+object_param_dict = {"Gaussian":       { "required" : (),
+                                         "size" :     ("half_light_radius", "sigma", "fwhm",),
+                                         "optional" : ("flux",) },
+                     "Moffat":         { "required" : ("beta",),
+                                         "size"     : ("half_light_radius", "scale_radius", 
+                                                       "fwhm",),
+                                         "optional" : ("truncationFWHM", "flux",) },
+                     "Sersic":         { "required" : ("n",) ,
+                                         "size"     : ("half_light_radius",),
+                                         "optional" : ("flux",) },
+                     "Exponential":    { "required" : (),
+                                         "size"     : ("half_light_radius", "scale_radius"),
+                                         "optional" : ("flux",) },
+                     "DeVaucouleurs":  { "required" : (),
+                                         "size"     : ("half_light_radius",),
+                                         "optional" : ("flux",) },
+                     "Airy":           { "required" : () ,
+                                         "size"     : ("D",) ,
+                                         "optional" : ("obs", "flux",)},
+                     "Pixel":          { "required" : ("xw", "yw",),
+                                         "size"     : (),
+                                         "optional" : ("flux",) },
+                     "OpticalPSF":     { "required" : (),
+                                         "size"     : ("lam_over_D",),
+                                         "optional" : ("defocus", "astig1", "astig2", "coma1",
+                                                       "coma2", "spher", "circular_pupil",
+                                                       "interpolantxy", "dx", "oversampling",
+                                                       "pad_factor") },
+                     "DoubleGaussian": { "required" : (), 
+                                         "size"     : ("sigma1, sigma2, fwhm1, fwhm2",), 
+                                         "optional" : () } }
 
 
 class AttributeDict(object):
