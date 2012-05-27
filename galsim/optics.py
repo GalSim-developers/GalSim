@@ -142,6 +142,9 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., as
     Parameters
     ----------
     @param array_shape     the Numpy array shape desired for the output array.
+    @param dx              grid spacing of PSF in real space units
+    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
+                           consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -173,6 +176,9 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     Parameters
     ----------
     @param array_shape     the Numpy array shape desired for the output array.
+    @param dx              grid spacing of PSF in real space units
+    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
+                           consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -207,7 +213,10 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
 
     Parameters
     ----------
-    @param array_shape     the Numpy array shape desired for the array view on the Image.
+    @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
+    @param dx              grid spacing of PSF in real space units
+    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
+                           consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -238,6 +247,9 @@ def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     Parameters
     ----------
     @param array_shape     the Numpy array shape desired for the output array.
+    @param dx              grid spacing of PSF in real space units
+    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
+                           consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -271,7 +283,10 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     
     Parameters
     ----------
-    @param array_shape     the Numpy array shape desired for array views into image.
+    @param array_shape     the Numpy array shape desired for array views of ImageViewD tuple.
+    @param dx              grid spacing of PSF in real space units
+    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
+                           consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -303,6 +318,9 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     Parameters
     ----------
     @param array_shape     the Numpy array shape desired for the output array.
+    @param dx              grid spacing of PSF in real space units
+    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
+                           consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -329,7 +347,10 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
 
     Parameters
     ----------
-    @param array_shape     the Numpy array shape desired for the array view on the Image.
+    @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
+    @param dx              grid spacing of PSF in real space units
+    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
+                           consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -360,6 +381,9 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     Parameters
     ----------
     @param array_shape     the Numpy array shape desired for the output array.
+    @param dx              grid spacing of PSF in real space units
+    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
+                           consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -394,7 +418,10 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
 
     Parameters
     ----------
-    @param array_shape     the Numpy array shape desired for the array view on the Image.
+    @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
+    @param dx              grid spacing of PSF in real space units
+    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
+                           consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
