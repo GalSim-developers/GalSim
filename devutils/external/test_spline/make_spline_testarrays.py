@@ -9,6 +9,7 @@ COMA1 = 0.17
 ASTIG2 = -0.44
 DEFOCUS = -0.3
 SPHER = 0.027
+OVERSAMPLING = 2.
 
 LAM_OVER_D = 5.
 
@@ -30,7 +31,7 @@ absoutk = np.zeros(len(kxvals)) # result storage arrays
 # First make a Cubic interpolant
 interp = galsim.InterpolantXY(galsim.Cubic(tol=1.e-4))
 testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
-                            spher=SPHER, interpolantxy=interp)
+                            spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING)
 for i in xrange(len(kxvals)):
     posk = galsim.PositionD(kxvals[i], kyvals[i])
     absoutk[i] = np.abs(testobj.kValue(posk))
@@ -40,7 +41,7 @@ np.savetxt('absfKCubic_test.txt', absoutk)
 # Then make a Quintic interpolant
 interp = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))
 testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
-                            spher=SPHER, interpolantxy=interp)
+                            spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING)
 for i in xrange(len(kxvals)):
     posk = galsim.PositionD(kxvals[i], kyvals[i])
     absoutk[i] = np.abs(testobj.kValue(posk))
@@ -50,7 +51,7 @@ np.savetxt('absfKQuintic_test.txt', absoutk)
 # Then make a Lanczos5 interpolant
 interp = galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))
 testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
-                            spher=SPHER, interpolantxy=interp)
+                            spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING)
 for i in xrange(len(kxvals)):
     posk = galsim.PositionD(kxvals[i], kyvals[i])
     absoutk[i] = np.abs(testobj.kValue(posk))
@@ -60,7 +61,7 @@ np.savetxt('absfKLanczos5_test.txt', absoutk)
 # Then make a Lanczos7 interpolant
 interp = galsim.InterpolantXY(galsim.Lanczos(7, conserve_flux=True, tol=1.e-4))
 testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
-                            spher=SPHER, interpolantxy=interp)
+                            spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING)
 for i in xrange(len(kxvals)):
     posk = galsim.PositionD(kxvals[i], kyvals[i])
     absoutk[i] = np.abs(testobj.kValue(posk))
