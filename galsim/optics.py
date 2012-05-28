@@ -199,7 +199,7 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
     im = roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
-    return im / im.sum() / dx**2
+    return im / (im.sum() * dx**2)
 
 def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., spher=0., circular_pupil=True, obs=None):
