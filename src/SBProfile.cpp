@@ -99,9 +99,12 @@ namespace galsim {
     {
         xdbg<<"Start plainDraw ImageView"<<std::endl;
         // Determine desired dx:
+        xdbg<<"maxK = "<<maxK()<<std::endl;
         if (dx<=0.) dx = M_PI / maxK();
+        xdbg<<"dx = "<<dx<<std::endl;
         // recenter an existing image, to be consistent with fourierDraw:
         int xSize = I.getXMax()-I.getXMin()+1, ySize = I.getYMax()-I.getYMin()+1;
+        xdbg<<"xSize = "<<xSize<<std::endl;
         I.setOrigin(-xSize/2, -ySize/2);
 
         return fillXImage(I, dx);
@@ -112,20 +115,26 @@ namespace galsim {
     {
         xdbg<<"Start plainDraw Image"<<std::endl;
         // Determine desired dx:
+        xdbg<<"maxK = "<<maxK()<<std::endl;
         if (dx<=0.) dx = M_PI / maxK();
+        xdbg<<"dx = "<<dx<<std::endl;
         if (!I.getBounds().isDefined()) {
             if (wmult<1) throw SBError("Requested wmult<1 in plainDraw()");
             // Need to choose an image size
             int N = static_cast<int> (std::ceil(2*M_PI/(dx*stepK())));
+            xdbg<<"N = "<<N<<std::endl;
 
             // Round up to an even value
             N = 2*( (N+1)/2);
             N *= wmult; // make even bigger if desired
+            xdbg<<"N => "<<N<<std::endl;
             Bounds<int> imgsize(-N/2, N/2-1, -N/2, N/2-1);
+            xdbg<<"imgsize => "<<imgsize<<std::endl;
             I.resize(imgsize);
         } else {
             // recenter an existing image, to be consistent with fourierDraw:
             int xSize = I.getXMax()-I.getXMin()+1, ySize = I.getYMax()-I.getYMin()+1;
+            xdbg<<"xSize = "<<xSize<<std::endl;
             I.setOrigin(-xSize/2, -ySize/2);
         }
 
@@ -135,6 +144,7 @@ namespace galsim {
         ImageView<T> Iv = I.view();
         double ret = fillXImage(Iv, dx);
         I.setScale(Iv.getScale());
+        xdbg<<"scale => "<<I.getScale()<<std::endl;
         return ret;
     }
  
@@ -154,6 +164,7 @@ namespace galsim {
             } 
         }
         I.setScale(dx);
+        xdbg<<"scale => "<<I.getScale()<<std::endl;
         return totalflux * (dx*dx);
     }
 
@@ -203,14 +214,18 @@ namespace galsim {
         assert(dk <= stepK());
         XTable* xtmp=0;
         if (NFT*dk/2 > maxK()) {
+            xdbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
+            xdbg<<"Use NFT = "<<NFT<<std::endl;
             // No aliasing: build KTable and transform
             KTable kt(NFT,dk);
             fillKGrid(kt); 
             xtmp = kt.transform();
         } else {
+            xdbg<<"NFT*dk/2 = "<<NFT*dk/2<<" <= maxK() = "<<maxK()<<std::endl;
             // There will be aliasing.  Construct a KTable out to maxK() and
             // then wrap it
             int Nk = static_cast<int> (std::ceil(maxK()/dk)) * 2;
+            xdbg<<"Use Nk = "<<Nk<<std::endl;
             KTable kt(Nk, dk);
             fillKGrid(kt);
             KTable* kt2 = kt.wrap(NFT);
@@ -218,6 +233,7 @@ namespace galsim {
             delete kt2;
         }
         int Nxt = xtmp->getN();
+        xdbg<<"Nxt = "<<Nxt<<std::endl;
         Bounds<int> xb(-Nxt/2, Nxt/2-1, -Nxt/2, Nxt/2-1);
         if (I.getYMin() < xb.getYMin()
             || I.getYMax() > xb.getYMax()
@@ -304,14 +320,18 @@ namespace galsim {
         assert(dk <= stepK());
         XTable* xtmp=0;
         if (NFT*dk/2 > maxK()) {
+            xdbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
+            xdbg<<"Use NFT = "<<NFT<<std::endl;
             // No aliasing: build KTable and transform
             KTable kt(NFT,dk);
             fillKGrid(kt); 
             xtmp = kt.transform();
         } else {
+            xdbg<<"NFT*dk/2 = "<<NFT*dk/2<<" <= maxK() = "<<maxK()<<std::endl;
             // There will be aliasing.  Construct a KTable out to maxK() and
             // then wrap it
             int Nk = static_cast<int> (std::ceil(maxK()/dk)) * 2;
+            xdbg<<"Use Nk = "<<Nk<<std::endl;
             KTable kt(Nk, dk);
             fillKGrid(kt);
             KTable* kt2 = kt.wrap(NFT);
@@ -319,6 +339,7 @@ namespace galsim {
             delete kt2;
         }
         int Nxt = xtmp->getN();
+        xdbg<<"Nxt = "<<Nxt<<std::endl;
         Bounds<int> xb(-Nxt/2, Nxt/2-1, -Nxt/2, Nxt/2-1);
         if (I.getYMin() < xb.getYMin()
             || I.getYMax() > xb.getYMax()
@@ -653,6 +674,7 @@ namespace galsim {
 
     void SBAdd::add(const SBProfile& rhs, double scale) 
     {
+        xdbg<<"Start SBAdd::add.  Adding item # "<<plist.size()+1<<std::endl;
         // Need a non-const copy of the rhs:
         SBProfile* p=rhs.duplicate();
 
@@ -662,7 +684,7 @@ namespace galsim {
 
         // Add new summand(s) to the plist:
         SBAdd *sba = dynamic_cast<SBAdd*> (p);
-        if (sba) {  
+        if (sba) {
             // If rhs is an SBAdd, copy its full list here
             for (ConstIter pptr = sba->plist.begin(); pptr!=sba->plist.end(); ++pptr) {
                 if (newptr==plist.end()) {
@@ -686,6 +708,8 @@ namespace galsim {
 
         // Accumulate properties of all summands
         while (newptr != plist.end()) {
+            xdbg<<"SBAdd component has maxK, stepK = "<<
+                (*newptr)->maxK()<<" , "<<(*newptr)->stepK()<<std::endl;
             sumflux += (*newptr)->getFlux();
             sumfx += (*newptr)->getFlux() * (*newptr)->centroid().x;
             sumfy += (*newptr)->getFlux() * (*newptr)->centroid().x;
@@ -696,7 +720,7 @@ namespace galsim {
             allAnalyticK = allAnalyticK && (*newptr)->isAnalyticK();
             newptr++;
         }
-        return; 
+        xdbg<<"Net maxK, stepK = "<<maxMaxK<<" , "<<minStepK<<std::endl;
     }
 
     double SBAdd::xValue(const Position<double>& _p) const 
@@ -859,6 +883,9 @@ namespace galsim {
         xdbg<<"matrix = "<<matrixA<<','<<matrixB<<','<<matrixC<<','<<matrixD<<std::endl;
         xdbg<<"x0 = "<<x0<<std::endl;
         xdbg<<"invdet = "<<invdet<<std::endl;
+        xdbg<<"major, minor = "<<major<<", "<<minor<<std::endl;
+        xdbg<<"maxK() = "<<adaptee->maxK() / minor<<std::endl;
+        xdbg<<"stepK() = "<<adaptee->stepK() / major<<std::endl;
 
         // Calculate the values for getXRange and getYRange:
         if (adaptee->isAxisymmetric()) {
@@ -1183,6 +1210,7 @@ namespace galsim {
     //
     void SBConvolve::add(const SBProfile& rhs) 
     {
+        xdbg<<"Start SBConvolve::add.  Adding item # "<<plist.size()+1<<std::endl;
         // If this is the first thing being added to the list, initialize some accumulators
         if (plist.empty()) {
             x0 = y0 = 0.;
@@ -1227,6 +1255,8 @@ namespace galsim {
 
         // Accumulate properties of all terms
         while (newptr != plist.end()) {
+            xdbg<<"SBConvolve component has maxK, stepK = "<<
+                (*newptr)->maxK()<<" , "<<(*newptr)->stepK()<<std::endl;
             fluxProduct *= (*newptr)->getFlux();
             x0 += (*newptr)->centroid().x;
             y0 += (*newptr)->centroid().y;
@@ -1235,6 +1265,7 @@ namespace galsim {
             isStillAxisymmetric = isStillAxisymmetric && (*newptr)->isAxisymmetric();
             newptr++;
         }
+        xdbg<<"Net maxK, stepK = "<<minMaxK<<" , "<<minStepK<<std::endl;
     }
 
     void SBConvolve::fillKGrid(KTable& kt) const 
@@ -1263,10 +1294,10 @@ namespace galsim {
 
         double operator()(double x, double y) const 
         {
-            dbg<<"Convolve function for pos = "<<_pos<<" at x,y = "<<x<<','<<y<<std::endl;
+            xdbg<<"Convolve function for pos = "<<_pos<<" at x,y = "<<x<<','<<y<<std::endl;
             double v1 = _p1->xValue(Position<double>(x,y));
             double v2 = _p2->xValue(Position<double>(_pos.x-x,_pos.y-y));
-            dbg<<"Value = "<<v1<<" * "<<v2<<" = "<<v1*v2<<std::endl;
+            xdbg<<"Value = "<<v1<<" * "<<v2<<" = "<<v1*v2<<std::endl;
             return 
                 _p1->xValue(Position<double>(x,y)) *
                 _p2->xValue(Position<double>(_pos.x-x,_pos.y-y));
@@ -1286,7 +1317,7 @@ namespace galsim {
 
         integ::IntRegion<double> operator()(double x) const
         {
-            dbg<<"Get IntRegion for pos = "<<_pos<<" at x = "<<x<<std::endl;
+            xdbg<<"Get IntRegion for pos = "<<_pos<<" at x = "<<x<<std::endl;
             // First figure out each profiles y region separately.
             double ymin1,ymax1;
             splits1.clear();
@@ -1297,13 +1328,13 @@ namespace galsim {
 
             // Then take the overlap relevant for the calculation:
             //     _p1->xValue(x,y) * _p2->xValue(_x0-x,_y0-y)
-            dbg<<"p1's y range = "<<ymin1<<" ... "<<ymax1<<std::endl;
-            dbg<<"p2's y range = "<<ymin2<<" ... "<<ymax2<<std::endl;
+            xdbg<<"p1's y range = "<<ymin1<<" ... "<<ymax1<<std::endl;
+            xdbg<<"p2's y range = "<<ymin2<<" ... "<<ymax2<<std::endl;
             double ymin = std::max(ymin1, _pos.y-ymax2);
             double ymax = std::min(ymax1, _pos.y-ymin2);
-            dbg<<"Y region for x = "<<x<<" = "<<ymin<<" ... "<<ymax<<std::endl;
+            xdbg<<"Y region for x = "<<x<<" = "<<ymin<<" ... "<<ymax<<std::endl;
             if (ymax < ymin) ymax = ymin;
-            std::ostream* integ_dbgout = verbose_level >= 1 ? dbgout : 0;
+            std::ostream* integ_dbgout = verbose_level >= 2 ? dbgout : 0;
             integ::IntRegion<double> reg(ymin,ymax,integ_dbgout);
             for(size_t k=0;k<splits1.size();++k) {
                 double s = splits1[k];
@@ -1369,52 +1400,52 @@ namespace galsim {
     static void UpdateXRange(const OverlapFinder& func, double& xmin, double& xmax, 
                              const std::vector<double>& splits)
     {
-        dbg<<"Start UpdateXRange given xmin,xmax = "<<xmin<<','<<xmax<<std::endl;
+        xdbg<<"Start UpdateXRange given xmin,xmax = "<<xmin<<','<<xmax<<std::endl;
         // Find the overlap at x = xmin:
         double yrangea = func(xmin);
-        dbg<<"yrange at x = xmin = "<<yrangea<<std::endl;
+        xdbg<<"yrange at x = xmin = "<<yrangea<<std::endl;
 
         // Find the overlap at x = xmax:
         double yrangeb = func(xmax);
-        dbg<<"yrange at x = xmax = "<<yrangeb<<std::endl;
+        xdbg<<"yrange at x = xmax = "<<yrangeb<<std::endl;
 
         if (yrangea < 0. && yrangeb < 0.) {
-            dbg<<"Both ends are disjoint.  Check the splits.\n";
+            xdbg<<"Both ends are disjoint.  Check the splits.\n";
             std::vector<double> use_splits = splits;
             if (use_splits.size() == 0) {
-                dbg<<"No splits provided.  Use the middle instead.\n";
+                xdbg<<"No splits provided.  Use the middle instead.\n";
                 use_splits.push_back( (xmin+xmax)/2. );
             }
             for (size_t k=0;k<use_splits.size();++k) {
                 double xmid = use_splits[k];
                 double yrangec = func(xmid);
-                dbg<<"yrange at x = "<<xmid<<" = "<<yrangec<<std::endl;
+                xdbg<<"yrange at x = "<<xmid<<" = "<<yrangec<<std::endl;
                 if (yrangec > 0.) {
-                    dbg<<"Found a non-disjoint split\n";
-                    dbg<<"Separately adjust both xmin and xmax by finding zero crossings.\n";
+                    xdbg<<"Found a non-disjoint split\n";
+                    xdbg<<"Separately adjust both xmin and xmax by finding zero crossings.\n";
                     Solve<OverlapFinder> solver1(func,xmin,xmid);
                     solver1.setMethod(Brent);
                     double root = solver1.root();
-                    dbg<<"Found root at "<<root<<std::endl;
+                    xdbg<<"Found root at "<<root<<std::endl;
                     xmin = root;
                     Solve<OverlapFinder> solver2(func,xmid,xmax);
                     solver2.setMethod(Brent);
                     root = solver2.root();
-                    dbg<<"Found root at "<<root<<std::endl;
+                    xdbg<<"Found root at "<<root<<std::endl;
                     xmax = root;
                     return;
                 }
             }
-            dbg<<"All split locations are also disjoint, so set xmin = xmax.\n";
+            xdbg<<"All split locations are also disjoint, so set xmin = xmax.\n";
             xmin = xmax;
         } else if (yrangea > 0. && yrangeb > 0.) {
-            dbg<<"Neither end is disjoint.  Integrate the full range\n";
+            xdbg<<"Neither end is disjoint.  Integrate the full range\n";
         } else {
-            dbg<<"One end is disjoint.  Find the zero crossing.\n";
+            xdbg<<"One end is disjoint.  Find the zero crossing.\n";
             Solve<OverlapFinder> solver(func,xmin,xmax);
             solver.setMethod(Brent);
             double root = solver.root();
-            dbg<<"Found root at "<<root<<std::endl;
+            xdbg<<"Found root at "<<root<<std::endl;
             if (yrangea < 0.) xmin = root;
             else xmax = root;
         }
@@ -1423,49 +1454,49 @@ namespace galsim {
     static void AddSplitsAtBends(const OverlapFinder& func, double xmin, double xmax, 
                                  std::vector<double>& splits)
     {
-        dbg<<"Start AddSplitsAtBends given xmin,xmax = "<<xmin<<','<<xmax<<std::endl;
+        xdbg<<"Start AddSplitsAtBends given xmin,xmax = "<<xmin<<','<<xmax<<std::endl;
         // Find the overlap at x = xmin:
         double yrangea = func(xmin);
-        dbg<<"yrange at x = xmin = "<<yrangea<<std::endl;
+        xdbg<<"yrange at x = xmin = "<<yrangea<<std::endl;
 
         // Find the overlap at x = xmax:
         double yrangeb = func(xmax);
-        dbg<<"yrange at x = xmax = "<<yrangeb<<std::endl;
+        xdbg<<"yrange at x = xmax = "<<yrangeb<<std::endl;
 
         if (yrangea * yrangeb > 0.) {
-            dbg<<"Both ends are the same sign.  Check the splits.\n";
+            xdbg<<"Both ends are the same sign.  Check the splits.\n";
             std::vector<double> use_splits = splits;
             if (use_splits.size() == 0) {
-                dbg<<"No splits provided.  Use the middle instead.\n";
+                xdbg<<"No splits provided.  Use the middle instead.\n";
                 use_splits.push_back( (xmin+xmax)/2. );
             }
             for (size_t k=0;k<use_splits.size();++k) {
                 double xmid = use_splits[k];
                 double yrangec = func(xmid);
-                dbg<<"yrange at x = "<<xmid<<" = "<<yrangec<<std::endl;
+                xdbg<<"yrange at x = "<<xmid<<" = "<<yrangec<<std::endl;
                 if (yrangea * yrangec < 0.) {
-                    dbg<<"Found split with the opposite sign\n";
-                    dbg<<"Find crossings on both sides:\n";
+                    xdbg<<"Found split with the opposite sign\n";
+                    xdbg<<"Find crossings on both sides:\n";
                     Solve<OverlapFinder> solver1(func,xmin,xmid);
                     solver1.setMethod(Brent);
                     double root = solver1.root();
-                    dbg<<"Found root at "<<root<<std::endl;
+                    xdbg<<"Found root at "<<root<<std::endl;
                     splits.push_back(root);
                     Solve<OverlapFinder> solver2(func,xmid,xmax);
                     solver2.setMethod(Brent);
                     root = solver2.root();
-                    dbg<<"Found root at "<<root<<std::endl;
+                    xdbg<<"Found root at "<<root<<std::endl;
                     splits.push_back(root);
                     return;
                 }
             }
-            dbg<<"All split locations have the same sign, so don't add any new splits\n";
+            xdbg<<"All split locations have the same sign, so don't add any new splits\n";
         } else {
-            dbg<<"Ends have opposite signs.  Look for zero crossings.\n";
+            xdbg<<"Ends have opposite signs.  Look for zero crossings.\n";
             Solve<OverlapFinder> solver(func,xmin,xmax);
             solver.setMethod(Brent);
             double root = solver.root();
-            dbg<<"Found root at "<<root<<std::endl;
+            xdbg<<"Found root at "<<root<<std::endl;
             splits.push_back(root);
         }
     }
@@ -1481,17 +1512,17 @@ namespace galsim {
         // So p2 is always taken to be a rectangle rather than possibly a circle.
         assert(p1->isAxisymmetric() || !p2->isAxisymmetric());
         
-        dbg<<"Start RealSpaceConvolve for pos = "<<pos<<std::endl;
+        xdbg<<"Start RealSpaceConvolve for pos = "<<pos<<std::endl;
         double xmin1, xmax1, xmin2, xmax2;
         std::vector<double> xsplits1, xsplits2;
         p1->getXRange(xmin1,xmax1,xsplits1);
         p2->getXRange(xmin2,xmax2,xsplits2);
-        dbg<<"p1 X range = "<<xmin1<<"  "<<xmax1<<std::endl;
-        dbg<<"p2 X range = "<<xmin2<<"  "<<xmax2<<std::endl;
+        xdbg<<"p1 X range = "<<xmin1<<"  "<<xmax1<<std::endl;
+        xdbg<<"p2 X range = "<<xmin2<<"  "<<xmax2<<std::endl;
 
         // Check for early exit
         if (pos.x < xmin1 + xmin2 || pos.x > xmax1 + xmax2) {
-            dbg<<"x is outside range, so trivially 0\n";
+            xdbg<<"x is outside range, so trivially 0\n";
             return 0;
         }
 
@@ -1499,28 +1530,28 @@ namespace galsim {
         std::vector<double> ysplits1, ysplits2;
         p1->getYRange(ymin1,ymax1,ysplits1);
         p2->getYRange(ymin2,ymax2,ysplits2);
-        dbg<<"p1 Y range = "<<ymin1<<"  "<<ymax1<<std::endl;
-        dbg<<"p2 Y range = "<<ymin2<<"  "<<ymax2<<std::endl;
+        xdbg<<"p1 Y range = "<<ymin1<<"  "<<ymax1<<std::endl;
+        xdbg<<"p2 Y range = "<<ymin2<<"  "<<ymax2<<std::endl;
         // Second check for early exit
         if (pos.y < ymin1 + ymin2 || pos.y > ymax1 + ymax2) {
-            dbg<<"y is outside range, so trivially 0\n";
+            xdbg<<"y is outside range, so trivially 0\n";
             return 0;
         }
 
         double xmin = std::max(xmin1, pos.x - xmax2);
         double xmax = std::min(xmax1, pos.x - xmin2);
-        dbg<<"xmin..xmax = "<<xmin<<" ... "<<xmax<<std::endl;
+        xdbg<<"xmin..xmax = "<<xmin<<" ... "<<xmax<<std::endl;
 
         // Consolidate the splits from each profile in to a single list to use.
         std::vector<double> xsplits;
         for(size_t k=0;k<xsplits1.size();++k) {
             double s = xsplits1[k];
-            dbg<<"p1 has split at "<<s<<std::endl;
+            xdbg<<"p1 has split at "<<s<<std::endl;
             if (s > xmin && s < xmax) xsplits.push_back(s);
         }
         for(size_t k=0;k<xsplits2.size();++k) {
             double s = pos.x-xsplits2[k];
-            dbg<<"p2 has split at "<<xsplits2[k]<<", which is really (pox.x-s) "<<s<<std::endl;
+            xdbg<<"p2 has split at "<<xsplits2[k]<<", which is really (pox.x-s) "<<s<<std::endl;
             if (s > xmin && s < xmax) xsplits.push_back(s);
         }
 
@@ -1540,7 +1571,7 @@ namespace galsim {
 
             // Third check for early exit
             if (xmin >= xmax) { 
-                dbg<<"p1 and p2 are disjoint, so trivially 0\n";
+                xdbg<<"p1 and p2 are disjoint, so trivially 0\n";
                 return 0.; 
             }
 
@@ -1556,10 +1587,10 @@ namespace galsim {
 
         ConvolveFunc conv(p1,p2,pos);
 
-        std::ostream* integ_dbgout = verbose_level >= 1 ? dbgout : 0;
+        std::ostream* integ_dbgout = verbose_level >= 2 ? dbgout : 0;
         integ::IntRegion<double> xreg(xmin,xmax,integ_dbgout);
         if (dbgout && verbose_level >= 2) xreg.useFXMap();
-        dbg<<"xreg = "<<xmin<<" ... "<<xmax<<std::endl;
+        xdbg<<"xreg = "<<xmin<<" ... "<<xmax<<std::endl;
 
         // Need to re-check validity of splits, since xmin,xmax may have changed.
         for(size_t k=0;k<xsplits.size();++k) {
@@ -1583,10 +1614,10 @@ namespace galsim {
 #ifdef TIMING
         gettimeofday(&tp,0);
         double t2 = tp.tv_sec + tp.tv_usec/1.e6;
-        dbg<<"Time for ("<<pos.x<<','<<pos.y<<") = "<<t2-t1<<std::endl;
+        xdbg<<"Time for ("<<pos.x<<','<<pos.y<<") = "<<t2-t1<<std::endl;
 #endif
 
-        dbg<<"Found result = "<<result<<std::endl;
+        xdbg<<"Found result = "<<result<<std::endl;
         return result;
     }
 
@@ -2037,6 +2068,7 @@ namespace galsim {
         // How far should nominal profile extend?
         // Estimate number of effective radii needed to enclose
 
+        xdbg<<"Determine xMax\n";
         double xMax = 5.; // Go to at least 5r_e
         {
             // Successive approximation method:
@@ -2045,19 +2077,25 @@ namespace galsim {
             double oldz=0.;
             int niter=0;
             const int MAXIT = 15;
+            xdbg<<"Start with z = "<<z<<std::endl;
             while ( std::abs(oldz-z)>0.01 && niter<MAXIT) {
                 niter++;
                 oldz = z;
                 z = a - std::log(ALIAS_THRESHOLD*std::sqrt(2*M_PI*a)*(1.+1./(12.*a)+1./(288.*a*a)))
                     +(a-1.)*std::log(z/a) + std::log(1. + (a-1.)/z + (a-1.)*(a-2.)/(z*z));
             }
+            xdbg<<"Converged at z = "<<z<<std::endl;
             double r=std::pow(z/b, n);
+            xdbg<<"r = (z/b)^n = "<<r<<std::endl;
             if (r>xMax) xMax = r;
+            xdbg<<"xMax = "<<xMax<<std::endl;
         }
         stepK = M_PI / xMax;
+        xdbg<<"stepK = "<<stepK<<std::endl;
 
         // Going to calculate another outer radius for the integration of the 
         // Hankel transforms:
+        xdbg<<"Determine integrateMax\n";
         double integrateMax=xMax;
         const double integrationLoss=0.001;
         {
@@ -2067,14 +2105,16 @@ namespace galsim {
             double oldz=0.;
             int niter=0;
             const int MAXIT = 15;
+            xdbg<<"Start with z = "<<z<<std::endl;
             while ( std::abs(oldz-z)>0.01 && niter<MAXIT) {
                 niter++;
                 oldz = z;
                 z = a - std::log(integrationLoss*std::sqrt(2.*M_PI*a)*(1.+1./(12.*a)+1./(288.*a*a)))
                     +(a-1.)*std::log(z/a) + std::log(1. + (a-1.)/z + (a-1.)*(a-2.)/(z*z));
             }
+            xdbg<<"Converged at z = "<<z<<std::endl;
             double r=std::pow(z/b, n);
-            //std::cerr << "99.9% radius " << r <<std::endl;
+            xdbg << "99.9% radius " << r <<std::endl;
             if (r>integrateMax) integrateMax = r;    
         }
 
@@ -2093,6 +2133,7 @@ namespace galsim {
         // will be our maxK.
         // Then extend the table another order of magnitude either in k
         //  or in FT, whichever comes first.
+        xdbg<<"Determine maxK\n";
         logkStep = 0.05;
         // Here is preset range of acceptable maxK:
         const double MINMAXK = 10.;
@@ -2100,6 +2141,7 @@ namespace galsim {
         maxK = MINMAXK;
         double lastVal=1.;
         double lk = logkMin;
+        xdbg<<"logkMin = "<<logkMin<<std::endl;
         while (lk < std::log(maxK*10.) && lastVal>ALIAS_THRESHOLD/10.) {
             SersicIntegrand I(n, b, std::exp(lk));
             // Need to make sure we are resolving oscillations in the integral:
@@ -2112,7 +2154,9 @@ namespace galsim {
             logkMax = lk;
             lk += logkStep;
         }
+        xdbg<<"maxK with val >= ALIAS_THRESHOLD ("<<ALIAS_THRESHOLD<<") = "<<maxK<<std::endl;
         maxK = std::min(MAXMAXK, maxK); // largest acceptable
+        xdbg<<"Final maxK = "<<maxK<<std::endl;
         ksqMax = exp(2.*logkMax);
 
         // Next, set up the classes for photon shooting
@@ -2132,15 +2176,15 @@ namespace galsim {
                        double size, RadiusType rType) : 
         beta(beta_), flux(flux_), ft(Table<double,double>::spline)
     {
-        dbg<<"Start SBMoffat constructor: \n";
-        dbg<<"beta = "<<beta<<"\n";
-        dbg<<"flux = "<<flux<<"\n";
+        xdbg<<"Start SBMoffat constructor: \n";
+        xdbg<<"beta = "<<beta<<"\n";
+        xdbg<<"flux = "<<flux<<"\n";
 
         //First, relation between FWHM and rD:
         FWHMrD = 2.* std::sqrt(std::pow(2., 1./beta)-1.);
-        dbg<<"FWHMrD = "<<FWHMrD<<"\n";
+        xdbg<<"FWHMrD = "<<FWHMrD<<"\n";
         maxRrD = FWHMrD * truncationFWHM;
-        dbg<<"maxRrD = "<<maxRrD<<"\n";
+        xdbg<<"maxRrD = "<<maxRrD<<"\n";
 #if 1
         // Make FFT's periodic at 4x truncation radius or 1.5x diam at ALIAS_THRESHOLD,
         // whichever is smaller
@@ -2150,10 +2194,10 @@ namespace galsim {
         // Make FFT's periodic at 4x truncation radius or 8x half-light radius:
         stepKrD = M_PI / (2.*std::max(maxRrD, 16.));
 #endif
-        dbg<<"stepKrD = "<<stepKrD<<"\n";
+        xdbg<<"stepKrD = "<<stepKrD<<"\n";
         // And be sure to get at least 16 pts across FWHM when drawing:
         maxKrD = 16.*M_PI / FWHMrD;
-        dbg<<"maxKrD = "<<maxKrD<<"\n";
+        xdbg<<"maxKrD = "<<maxKrD<<"\n";
 
         // Analytic integration of total flux:
         fluxFactor = 1. - pow( 1+maxRrD*maxRrD, (1.-beta));
@@ -2183,8 +2227,9 @@ namespace galsim {
         _rD_sq = rD * rD;
         norm = flux * (beta - 1.) / (M_PI * fluxFactor * _rD_sq);
 
-        dbg << "Moffat rD " << rD << " fluxFactor " << fluxFactor
+        xdbg << "Moffat rD " << rD << " fluxFactor " << fluxFactor
             << " norm " << norm << " maxRrD " << maxRrD << std::endl;
+        xdbg << "maxR = "<<_maxR<<", maxK = "<<maxKrD/rD<<", stepK = "<<stepKrD/rD<<std::endl;
 
         if (beta == 1) pow_beta = &SBMoffat::pow_1;
         else if (beta == 2) pow_beta = &SBMoffat::pow_2;
