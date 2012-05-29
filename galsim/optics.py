@@ -274,7 +274,7 @@ def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     return np.ascontiguousarray(otf) / otf[0, 0].real
 
 def otf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
-              coma1=0., coma2=0., spher=0., kmax=np.pi, circular_pupil=True, obs=None):
+              coma1=0., coma2=0., spher=0., circular_pupil=True, obs=None):
     """@brief Return the complex OTF of a circular (default) or square pupil with low-order
     aberrations as a (real, imag) tuple of ImageViewD objects rather than a complex numpy array.
 
@@ -413,7 +413,7 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     return ptf
 
 def ptf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
-              coma1=0., coma2=0., spher=0., kmax=np.pi, circular_pupil=True, obs=None):
+              coma1=0., coma2=0., spher=0., circular_pupil=True, obs=None):
     """@brief Return the PTF [radians] of a circular (default) or square pupil with low-order
     aberrations as an ImageViewD.
 
