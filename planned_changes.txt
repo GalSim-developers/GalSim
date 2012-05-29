@@ -133,3 +133,16 @@ Other possible changes in python:
   but at fixed surface brightness.  **I suggest that we postpone this until issue #159 has been
   resolved, so I will open another issue for it rather than including it with this work!**
 
+*************************
+
+This is not a design issue, but it is worth mentioning some other changes that will have to happen
+as a result of the above:
+
+* unit tests: those that involve shears will have to be changed in various ways.  For those that
+  involve comparison with a reference image, we'll have to either change the reference image or
+  change how the shear is defined in the test to be consistent with the old shear convention.  I
+  think that the former is preferable.
+
+* demo scripts: we have to decide if we want the shears (of PSFs and/or galaxies) to be e1/e2 or
+  g1/g2.  My inclination is to assume that the shears that are meant to represent a non-round but
+  unlensed shape (of galaxy/PSF) are e1/e2, and that lensing shears are g1/g2.
