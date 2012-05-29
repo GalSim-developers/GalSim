@@ -9,6 +9,7 @@ import subprocess
 import math
 import numpy
 import logging
+import time
 
 # This machinery lets us run Python examples even though they aren't positioned
 # properly to find galsim as a package in the current directory.
@@ -383,32 +384,40 @@ def Script2():
 
         logger.info('Start work on image %d',input_cat.current)
 
+        t1 = time.time()
         psf = galsim.BuildGSObject(config.psf, input_cat, logger)
         logger.info('   Made PSF profile')
+        t2 = time.time()
 
         pix = galsim.BuildGSObject(config.pix, input_cat, logger)
         logger.info('   Made pixel profile')
+        t3 = time.time()
 
         gal = galsim.BuildGSObject(config.gal, input_cat, logger)
         logger.info('   Made galaxy profile')
+        t4 = time.time()
 
         final = galsim.Convolve(psf,pix,gal)
         #im = final.draw(dx=pixel_scale)  # It makes these as 768 x 768 images.  A bit big.
         im = galsim.ImageF(image_xmax, image_ymax)
         final.draw(im, dx=pixel_scale)
         logger.info('   Drew image: size = %d x %d',im.xMax-im.xMin+1, im.yMax-im.yMin+1)
+        t5 = time.time()
 
         # Add Poisson noise
         im += sky_level
         im.addNoise(galsim.CCDNoise(rng))
         im -= sky_level
         logger.info('   Added noise')
+        t6 = time.time()
 
         # Store that into the list of all images
         all_images += [im]
 
         # increment the row of the catalog that we should use for the next iteration
         input_cat.current += 1
+        t6 = time.time()
+        print '   Times: ',t2-t1,t3-t2,t4-t3,t5-t4,t6-t5
 
     logger.info('Done making images of galaxies')
 
