@@ -30,10 +30,6 @@
 // considering that jx<0 must be conjugated.
 //
 // *"forward" transform, x->k, has -1 in exponent.
-//
-// *value in the table must be multiplied by "scaleby" double to get
-// the correctly dimensioned/scaled value.  Done automatically when getting/setting.  You'll get
-// NaN's on some operations if scaleby becomes zero.
 
 #ifndef FFT_H
 #define FFT_H
@@ -103,16 +99,16 @@ namespace galsim {
     public:
         KTable(int _N, double _dk, std::complex<double> _value=0.);
 
-        KTable(const KTable& rhs) : array(0), N(rhs.N), dk(rhs.dk), scaleby(rhs.scaleby) 
+        KTable(const KTable& rhs) : array(0), N(rhs.N), dk(rhs.dk)
         { copy_array(rhs); }
 
-        KTable() : array(0), N(0), dk(0), scaleby(0) {} // dummy constructor
+        KTable() : array(0), N(0), dk(0) {} // dummy constructor
 
         KTable& operator=(const KTable& rhs) 
         {
             if (&rhs==this) return *this;
             copy_array(rhs);
-            N=rhs.N; dk=rhs.dk; scaleby=rhs.scaleby;
+            N=rhs.N; dk=rhs.dk; 
             return *this;
         }
         
@@ -142,8 +138,8 @@ namespace galsim {
 
         void accumulate(const KTable& rhs, double scalar=1.); // this += scalar*rhs
 
-        void operator*=(double scalar) { scaleby *= scalar; cache.clear(); }
         void operator*=(const KTable& rhs);
+        void operator*=(double scalar);
 
         // Produce a new KTable which wraps this one onto range +-Nout/2.  Nout will
         // be raised to even value.  In other words, aliases the data.
@@ -174,7 +170,6 @@ namespace galsim {
         std::complex<double>* array;
         int N; //Size in each dimension.
         double dk; //k-space increment
-        double scaleby; //multiply table by this to get values
 
         size_t index(int ix, int iy) const  //Return index into data array.
         {
@@ -220,14 +215,14 @@ namespace galsim {
     public:
         XTable(int _N, double _dx, double _value=0.);
 
-        XTable(const XTable& rhs) : array(0), N(rhs.N), dx(rhs.dx), scaleby(rhs.scaleby) 
+        XTable(const XTable& rhs) : array(0), N(rhs.N), dx(rhs.dx)
         { copy_array(rhs); };
 
         XTable& operator=(const XTable& rhs) 
         {
             if (&rhs==this) return *this;
             copy_array(rhs);
-            N=rhs.N; dx=rhs.dx; scaleby=rhs.scaleby;
+            N=rhs.N; dx=rhs.dx; 
             return *this;
         }
 
@@ -257,7 +252,7 @@ namespace galsim {
 
         void accumulate(const XTable& rhs, double scalar=1.); // this += scalar*rhs
 
-        void operator*=(double scalar) { scaleby *= scalar; cache.clear(); }
+        void operator*=(double scalar);
 
         // Produce a new XTable which wraps this one onto range +-Nout/2.  Nout will
         // be raised to even value.  
@@ -281,7 +276,6 @@ namespace galsim {
         double* array; //hold the values.
         int N; //Size in each dimension.
         double dx; //k-space increment
-        double scaleby; //multiply table by this to get values
 
         size_t index(int ix, int iy) const //Return index into data array.
         {
