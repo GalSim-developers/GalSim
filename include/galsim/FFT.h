@@ -46,7 +46,13 @@
 #include "Std.h"
 #include "Interpolant.h"
 
+    // Define this to get extra debugging checks in the FFT routines.
+    // Since these routines are not available to the end user, once code is working
+    // it should be ok to turn these off for some modest speed up.
+//#define FFT_DEBUG
+
 namespace galsim {
+
 
     // Class for errors
     class FFTError : public std::runtime_error 
@@ -170,14 +176,30 @@ namespace galsim {
         double dk; //k-space increment
         double scaleby; //multiply table by this to get values
 
-        size_t index(int ix, int iy) const; //Return index into data array.
-        // this is also responsible for bounds checking.
+        size_t index(int ix, int iy) const  //Return index into data array.
+        {
+            // this is also responsible for bounds checking when FFT_DEBUG is turned on.
+#ifdef FFT_DEBUG
+            if (ix<-N/2 || ix>N/2 || iy<-N/2 || iy>N/2)
+                FormatAndThrow<FFTOutofRange>() << "KTable index (" << ix << "," << iy
+                    << ") out of range for N=" << N;
+#endif
+            if (ix<0) {
+                ix=-ix; iy=-iy; //need the conjugate in this case
+            }
+            if (iy<0) iy+=N;
+            return iy*(N/2+1)+ix;
+        }
 
         void copy_array(const KTable& rhs); //copy an array
         void get_array(const std::complex<double> value=0.); //allocate an array  
         void kill_array(); //deallocate array
+#ifdef FFT_DEBUG
         void check_array() const 
         { if (!array) throw FFTError("KTable operation on null array"); }
+#else
+        void check_array() const {}
+#endif
 
         // Objects used to accelerate interpolation with seperable interpolants:
         mutable std::deque<std::complex<double> > cache;
@@ -266,8 +288,12 @@ namespace galsim {
         void get_array(const double value); //allocate an array
         void copy_array(const XTable& rhs); //copy an array
         void kill_array(); //deallocate array
+#ifdef FFT_DEBUG
         void check_array() const 
         { if (!array) throw FFTError("KTable operation on null array"); }
+#else
+        void check_array() const {}
+#endif
 
         // Objects used to accelerate interpolation with seperable interpolants:
         mutable std::deque<double> cache;

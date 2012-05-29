@@ -27,25 +27,14 @@ namespace galsim {
 
     KTable::KTable(int _N, double _dk, std::complex<double> value) 
     {
+#ifdef FFT_DEBUG
         if (_N<=0) throw FFTError("KTable size <=0");
+#endif
         N = 2*((_N+1)/2); //Round size up to even.
         dk = _dk;
         get_array(value);
         scaleby=1.;
         return;
-    }
-
-
-    size_t KTable::index(int ix, int iy) const 
-    {
-        if (ix<-N/2 || ix>N/2 || iy<-N/2 || iy>N/2) 
-            FormatAndThrow<FFTOutofRange>() << "KTable index (" << ix << "," << iy
-                << ") out of range for N=" << N;
-        if (ix<0) {
-            ix=-ix; iy=-iy; //need the conjugate in this case
-        }
-        if (iy<0) iy+=N;
-        return iy*(N/2+1)+ix;
     }
 
     std::complex<double> KTable::kval(int ix, int iy) const 
@@ -81,8 +70,10 @@ namespace galsim {
     void KTable::copy_array(const KTable& rhs) 
     {
         cache.clear(); // invalidate any stored interpolations
+#ifdef FFT_DEBUG
         if (rhs.array==0) 
             throw FFTError("KTable::copy_array from null array");
+#endif
         if (array!=0 && N!=rhs.N) kill_array();
         N = rhs.N; // makes sure our array will be of same size
         if (array==0) array = (std::complex<double>*) fftw_malloc(sizeof(std::complex<double>)*N*(N/2+1)); // allocate space
@@ -113,10 +104,12 @@ namespace galsim {
     void KTable::accumulate(const KTable& rhs, double scalar) 
     {
         cache.clear(); // invalidate any stored interpolations
-        check_array();
         scalar *= rhs.scaleby / scaleby;
+#ifdef FFT_DEBUG
+        check_array();
         if (N != rhs.N) throw FFTError("KTable::accumulate() with mismatched sizes");
         if (dk != rhs.dk) throw FFTError("KTable::accumulate() with mismatched dk");
+#endif
         for (int i=0; i<N*(N/2+1); i++)
             array[i]+=scalar * rhs.array[i];
         return;
@@ -125,9 +118,11 @@ namespace galsim {
     void KTable::operator*=(const KTable& rhs) 
     {
         cache.clear(); // invalidate any stored interpolations
+#ifdef FFT_DEBUG
         check_array();
         if (N != rhs.N) throw FFTError("KTable::operator*=() with mismatched sizes");
         if (dk != rhs.dk) throw FFTError("KTable::operator*=() with mismatched dk");
+#endif
         scaleby *= rhs.scaleby;
         for (int i=0; i<N*(N/2+1); i++)
             array[i]*=rhs.array[i];
@@ -503,7 +498,10 @@ namespace galsim {
         check_array();
         x*=dk; y*=dk;
         // Don't evaluate if x not in fundamental period +-PI/dk:
-        if (std::abs(x) > M_PI || std::abs(y) > M_PI) throw FFTOutofRange(" (x,y) too big in xval()");
+#ifdef FFT_DEBUG
+        if (std::abs(x) > M_PI || std::abs(y) > M_PI) 
+            throw FFTOutofRange(" (x,y) too big in xval()");
+#endif
         std::complex<double> I(0.,1.);
         std::complex<double> dxphase=std::exp(I*x);
         std::complex<double> dyphase=std::exp(I*y);
@@ -558,7 +556,9 @@ namespace galsim {
         // convert to phases:
         x0*=dk; y0*=dk;
         // too big will just be wrapping around:
+#ifdef FFT_DEBUG
         if (x0 > M_PI || y0 > M_PI) throw FFTOutofRange("(x0,y0) too big in translate()");
+#endif
         std::complex<double> I(0.,1.);
         std::complex<double> dxphase=std::exp(std::complex<double>(0.,-x0));
         std::complex<double> dyphase=std::exp(std::complex<double>(0.,-y0));
@@ -597,7 +597,9 @@ namespace galsim {
 
     XTable::XTable(int _N, double _dx, double value) 
     {
+#ifdef FFT_DEBUG
         if (_N<=0) throw FFTError("XTable size <=0");
+#endif
         N = 2*((_N+1)/2); //Round size up to even.
         dx = _dx;
         get_array(value);
@@ -641,8 +643,10 @@ namespace galsim {
     void XTable::copy_array(const XTable& rhs) 
     {
         cache.clear(); // invalidate any stored interpolations
+#ifdef FFT_DEBUG
         if (rhs.array==0) 
             throw FFTError("XTable::copy_array from null array");
+#endif
         if (array!=0 && N!=rhs.N) kill_array();
         if (array==0)   array = (double*) fftw_malloc(sizeof(double)*N*N);
         for (int i=0; i<N*N; i++)
@@ -674,7 +678,9 @@ namespace galsim {
         check_array();
         cache.clear(); // invalidate any stored interpolations
         scalar *= rhs.scaleby / scaleby;
+#ifdef FFT_DEBUG
         if (N != rhs.N) throw FFTError("XTable::accumulate() with mismatched sizes");
+#endif
         for (int i=0; i<N*N; i++)
             array[i] +=scalar * rhs.array[i];
         return;
@@ -684,9 +690,7 @@ namespace galsim {
     // x any y in physical units (to be divided by dx for indices)
     double XTable::interpolate(double x, double y, const Interpolant2d& interp) const 
     {
-#ifdef DANIELS_TRACING
-        cout << "interpolating " << x << " " << y << " " << endl;
-#endif
+        xdbg << "interpolating " << x << " " << y << " " << std::endl;
         x /= dx;
         y /= dx;
         int ixMin, ixMax, iyMin, iyMax;
@@ -846,8 +850,10 @@ namespace galsim {
         check_array();
         // Don't evaluate if k not in fundamental period 
         kx*=dx; ky*=dx;
+#ifdef FFT_DEBUG
         if (std::abs(kx) > M_PI || std::abs(ky) > M_PI) 
             throw FFTOutofRange("XTable::kval() args out of range");
+#endif
         std::complex<double> I(0.,1.);
         std::complex<double> dxphase=std::exp(-I*kx);
         std::complex<double> dyphase=std::exp(-I*ky);
@@ -884,7 +890,9 @@ namespace galsim {
 
         fftw_plan plan = fftw_plan_dft_c2r_2d(
             N, N, reinterpret_cast<fftw_complex*> (t_array), xt->array, FFTW_MEASURE);
+#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
+#endif
         delete xt;
         fftw_free(t_array);
         fftw_destroy_plan(plan);
@@ -914,7 +922,9 @@ namespace galsim {
         fftw_plan plan = 
             fftw_plan_dft_c2r_2d(
                 N, N, reinterpret_cast<fftw_complex*> (t_array), xt->array, FFTW_ESTIMATE);
+#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
+#endif
 
         // Run the transform:
         fftw_execute(plan);
@@ -948,7 +958,9 @@ namespace galsim {
 
         fftw_plan plan = fftw_plan_dft_c2r_2d(
             N, N, reinterpret_cast<fftw_complex*> (t_array), xt.array, FFTW_ESTIMATE);
+#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
+#endif
 
         // Run the transform:
         fftw_execute(plan);
@@ -973,7 +985,9 @@ namespace galsim {
 
         fftw_plan plan = fftw_plan_dft_r2c_2d(
             N,N, t_array, reinterpret_cast<fftw_complex*> (kt->array), FFTW_MEASURE);
+#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
+#endif
 
         delete kt;
         fftw_free(t_array);
@@ -989,7 +1003,9 @@ namespace galsim {
 
         fftw_plan plan = fftw_plan_dft_r2c_2d(
             N,N, array, reinterpret_cast<fftw_complex*> (kt->array), FFTW_ESTIMATE);
+#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
+#endif
         fftw_execute(plan);
         fftw_destroy_plan(plan);
 
