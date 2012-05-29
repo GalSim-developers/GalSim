@@ -99,10 +99,6 @@ struct PySBProfile {
         // We also don't need to make 'W' a template parameter in this case,
         // but it's easier to do that than write out the full class_ type.
         wrapper
-            .def("fillXImage", 
-                 (double (SBProfile::*)(ImageView<U> &, double) const)&SBProfile::fillXImage, 
-                 bp::args("image", "dx"),
-                 "Utility for drawing into Image data structures")
             .def("drawShoot", 
                  (void (SBProfile::*)(Image<U> &, double, UniformDeviate& ) const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),

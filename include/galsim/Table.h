@@ -78,7 +78,8 @@ namespace galsim {
         Table(const A* argvec, const V* valvec, int N, interpolant in=linear);
         Table(const std::vector<A>& a, const std::vector<V>& v, interpolant in=linear);
 
-        Table(std::istream& is, interpolant in=linear) : v(), iType(in), isReady(), y2() { read(is); }
+        Table(std::istream& is, interpolant in=linear) : v(), iType(in), isReady(), y2() 
+        { read(is); }
 
         void clear() { v.clear(); isReady=false; }
         void read(std::istream& is);
@@ -121,8 +122,10 @@ namespace galsim {
             isReady=false; setup();
         }
 
-        void dump() const {
-            setup(); for (citer p=v.begin(); p!=v.end(); ++p) 
+        void dump() const 
+        {
+            setup(); 
+            for (citer p=v.begin(); p!=v.end(); ++p) 
                 std::cout << p->arg << " " << p->val << std::endl; 
         }
 

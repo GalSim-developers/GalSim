@@ -551,6 +551,7 @@ namespace galsim {
         void fourierDrawK(Image<T>& re, Image<T>& im, double dk=0., int wmult=1) const; 
         //@}
 
+    protected:
         /** 
          * @brief Utility for drawing into Image data structures.
          *
@@ -592,6 +593,12 @@ namespace galsim {
         // implements this as a template:
         template <typename T>
         double doFillXImage2(ImageView<T>& image, double dx) const;
+
+        // Classes that need to be able to call protected SBProfile::fill* functions
+        // are made friends.
+        friend class SBAdd;
+        friend class SBConvolve;
+        friend class SBDeconvolve;
     };
 
     /** 
@@ -807,6 +814,7 @@ namespace galsim {
          */
         virtual double getNegativeFlux() const;
 
+    protected:
         // Overrides for better efficiency:
         virtual void fillKGrid(KTable& kt) const;
         virtual void fillXGrid(XTable& xt) const;
@@ -1766,13 +1774,13 @@ namespace galsim {
 
         SBProfile* duplicate() const { return new SBBox(*this); }
 
+    protected:
         // Override to put in fractional edge values:
         void fillXGrid(XTable& xt) const;
 
         template <typename T>
         double fillXImage(ImageView<T>& I, double dx) const;
 
-    protected:
         virtual double doFillXImage(ImageView<float>& I, double dx) const
         { return fillXImage(I,dx); }
         virtual double doFillXImage(ImageView<double>& I, double dx) const
@@ -1832,6 +1840,7 @@ namespace galsim {
             throw SBError("SBLaguerre::shoot() is not implemented");
         }
 
+    protected:
         // void fillKGrid(KTable& kt) const;
         // void fillXGrid(XTable& xt) const;
 
@@ -1860,7 +1869,7 @@ namespace galsim {
         double _maxR; ///< Calculated value: maxRrD * rD
         double _maxR_sq; ///< Calculated value: maxR * maxR
 
-        Table<double,double> ft;  ///< Lookup table for Fourier transform of Moffat.
+        mutable Table<double,double> ft;  ///< Lookup table for Fourier transform of Moffat.
 
     public:
         /** @brief Constructor.
@@ -1946,6 +1955,10 @@ namespace galsim {
          */
         void setRd(double rD_) { rD = rD_; }
 
+    protected:
+        //void fillXGrid(KTable& kt) const;
+        //void fillKGrid(KTable& kt) const;
+
     private:
         double (*pow_beta)(double x, double beta);
 
@@ -1955,6 +1968,9 @@ namespace galsim {
         static double pow_4(double x, double ) { return x*x*x*x; }
         static double pow_int(double x, double beta) { return std::pow(x,int(beta)); }
         static double pow_gen(double x, double beta) { return std::pow(x,beta); }
+
+        /// Setup the FT Table.
+        void setupFT() const;
     };
 
 

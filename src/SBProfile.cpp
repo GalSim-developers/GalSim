@@ -617,11 +617,12 @@ namespace galsim {
     {
         int N = xt.getN();
         double dx = xt.getDx();
-        for (int iy = -N/2; iy < N/2; iy++)
+        for (int iy = -N/2; iy < N/2; iy++) {
             for (int ix = -N/2; ix < N/2; ix++) {
                 Position<double> x(ix*dx,iy*dx);
                 xt.xSet(ix,iy,xValue(x));
             }
+        }
         return;
     }
 
@@ -2129,23 +2130,30 @@ namespace galsim {
 
     SBMoffat::SBMoffat(double beta_, double truncationFWHM, double flux_,
                        double size, RadiusType rType) : 
-        beta(beta_), flux(flux_), norm(1.), rD(1.),
-        ft(Table<double,double>::spline)
+        beta(beta_), flux(flux_), ft(Table<double,double>::spline)
     {
+        dbg<<"Start SBMoffat constructor: \n";
+        dbg<<"beta = "<<beta<<"\n";
+        dbg<<"flux = "<<flux<<"\n";
+
         //First, relation between FWHM and rD:
         FWHMrD = 2.* std::sqrt(std::pow(2., 1./beta)-1.);
+        dbg<<"FWHMrD = "<<FWHMrD<<"\n";
         maxRrD = FWHMrD * truncationFWHM;
+        dbg<<"maxRrD = "<<maxRrD<<"\n";
 #if 1
         // Make FFT's periodic at 4x truncation radius or 1.5x diam at ALIAS_THRESHOLD,
         // whichever is smaller
         stepKrD = 2.*M_PI / std::min(4.*maxRrD, 
-                                    3.*std::sqrt(pow(ALIAS_THRESHOLD, -1./beta)-1.));
+                                     3.*std::sqrt(pow(ALIAS_THRESHOLD, -1./beta)-1.));
 #else
         // Make FFT's periodic at 4x truncation radius or 8x half-light radius:
         stepKrD = M_PI / (2.*std::max(maxRrD, 16.));
 #endif
+        dbg<<"stepKrD = "<<stepKrD<<"\n";
         // And be sure to get at least 16 pts across FWHM when drawing:
         maxKrD = 16.*M_PI / FWHMrD;
+        dbg<<"maxKrD = "<<maxKrD<<"\n";
 
         // Analytic integration of total flux:
         fluxFactor = 1. - pow( 1+maxRrD*maxRrD, (1.-beta));
@@ -2184,7 +2192,11 @@ namespace galsim {
         else if (beta == 4) pow_beta = &SBMoffat::pow_4;
         else if (beta == int(beta)) pow_beta = &SBMoffat::pow_int;
         else pow_beta = &SBMoffat::pow_gen;
+    }
 
+    void SBMoffat::setupFT() const
+    {
+        if (ft.size() > 0) return;
 
         // Get FFT by doing 2k transform over 2x the truncation radius
         // ??? need to do better here
@@ -2196,7 +2208,8 @@ namespace galsim {
         for (int iy=-N/2; iy<N/2; iy++) {
             for (int ix=-N/2; ix<N/2; ix++) {
                 double rsq = dx*dx*(ix*ix+iy*iy);
-                xt.xSet(ix, iy, rsq<=_maxRrD_sq ? 1./pow_beta(1.+rsq,beta) : 0.);
+                if (rsq <= _maxRrD_sq) xt.xSet(ix,iy,1./pow_beta(1.+rsq,beta));
+                // XTable values are initialized to 0, so don't need to set ones with rsq > max
             }
         }
         KTable* kt = xt.transform();
@@ -2206,14 +2219,11 @@ namespace galsim {
             ft.addEntry( i*dk, kt->kval(0,-i).real() * nn);
         }
         delete kt;
-
     }
 
     std::complex<double> SBMoffat::kValue(const Position<double>& k) const 
     {
-        // MJ: Are we ever worried about overflow or underflow here?  Probably not.
-        //     So use direct sqrt rather than hypot, which is much slower.
-        //double kk = hypot(k.x, k.y)*rD;
+        setupFT();
         double kk = sqrt(k.x*k.x + k.y*k.y)*rD;
         if (kk > ft.argMax()) return 0.;
         else return ft(kk);
