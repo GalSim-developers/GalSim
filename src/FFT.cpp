@@ -891,42 +891,9 @@ namespace galsim {
         fftw_destroy_plan(plan);
     }
 
+
     // Fourier transform from (complex) k to x:
-    XTable* KTable::transform() const 
-    {
-        check_array();
-        // We'll need a new k array because FFTW kills the k array in this
-        // operation.  Also, to put x=0 in center of array, we need to flop
-        // every other sign of k array, and need to scale.
-
-        std::complex<double>* t_array = 
-            (std::complex<double>*) fftw_malloc(sizeof(std::complex<double>)*N*(N/2+1));
-        double fac = scaleby * dk * dk / (4*M_PI*M_PI);
-        long int ind=0;
-        for (int iy=0; iy<N; iy++)
-            for (int ix=0; ix<=N/2; ix++) {
-                if ( (ix+iy)%2==0) t_array[ind]=fac * array[ind];
-                else t_array[ind] = -fac* array[ind];
-                ind++;
-            }
-
-        XTable* xt = new XTable( N, 2*M_PI/(N*dk) );
-
-        fftw_plan plan = 
-            fftw_plan_dft_c2r_2d(
-                N, N, reinterpret_cast<fftw_complex*> (t_array), xt->array, FFTW_ESTIMATE);
-#ifdef FFT_DEBUG
-        if (plan==NULL) throw FFTInvalid();
-#endif
-
-        // Run the transform:
-        fftw_execute(plan);
-        fftw_destroy_plan(plan);
-        fftw_free(t_array);
-        return xt;
-    }
-
-    // same function, takes XTable reference as agrument 
+    // This version takes XTable reference as agrument 
     void KTable::transform(XTable& xt) const 
     {
         check_array();
@@ -942,12 +909,13 @@ namespace galsim {
             (std::complex<double>*) fftw_malloc(sizeof(std::complex<double>)*N*(N/2+1));
         double fac = scaleby * dk * dk / (4*M_PI*M_PI);
         long int ind=0;
-        for (int iy=0; iy<N; iy++)
+        for (int iy=0; iy<N; iy++) {
             for (int ix=0; ix<=N/2; ix++) {
                 if ( (ix+iy)%2==0) t_array[ind]=fac * array[ind];
                 else t_array[ind] = -fac* array[ind];
                 ind++;
             }
+        }
 
         fftw_plan plan = fftw_plan_dft_c2r_2d(
             N, N, reinterpret_cast<fftw_complex*> (t_array), xt.array, FFTW_ESTIMATE);
@@ -962,6 +930,14 @@ namespace galsim {
 
         xt.dx = 2*M_PI/(N*dk);
         xt.scaleby = 1.;
+    }
+
+    // Same thing, but return a new XTable
+    XTable* KTable::transform() const 
+    {
+        XTable* xt = new XTable( N, 2*M_PI/(N*dk) );
+        transform(*xt);
+        return xt;
     }
 
     void XTable::fftwMeasure() const 
@@ -988,14 +964,12 @@ namespace galsim {
     }
 
     // Fourier transform from x back to (complex) k:
-    KTable* XTable::transform() const 
+    void XTable::transform(KTable& kt) const 
     {
         check_array();
 
-        KTable* kt = new KTable( N, 2*M_PI/(N*dx) );
-
         fftw_plan plan = fftw_plan_dft_r2c_2d(
-            N,N, array, reinterpret_cast<fftw_complex*> (kt->array), FFTW_ESTIMATE);
+            N,N, array, reinterpret_cast<fftw_complex*> (kt.array), FFTW_ESTIMATE);
 #ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
 #endif
@@ -1007,13 +981,22 @@ namespace galsim {
         size_t ind=0;
         for (int iy=0; iy<N; iy++) {
             for (int ix=0; ix<=N/2; ix++) {
-                if ( (ix+iy)%2==0) kt->array[ind] *= fac;
-                else kt->array[ind] *= -fac;
+                if ( (ix+iy)%2==0) kt.array[ind] *= fac;
+                else kt.array[ind] *= -fac;
                 ind++;
             }
         }
+        kt.dk = 2*M_PI/(N*dx);
+        kt.scaleby = 1.;
+    }
 
+    // Same thing, but return a new KTable
+    KTable* XTable::transform() const 
+    {
+        KTable* kt = new KTable( N, 2*M_PI/(N*dx) );
+        transform(*kt);
         return kt;
     }
+
 
 }

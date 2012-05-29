@@ -236,6 +236,7 @@ namespace galsim {
         ///// Fourier transforms:
         // FFT to give pointer to a new KTable
         KTable* transform() const;
+        void transform(KTable& kt) const;
 
         // Have FFTW develop "wisdom" on doing this kind of transform
         void fftwMeasure() const;
