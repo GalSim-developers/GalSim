@@ -370,7 +370,6 @@ namespace galsim {
             plainDrawK(Re, Im, dk, wmult);   // calculate in k space
         else               
             fourierDrawK(Re, Im, dk, wmult); // calculate via FT from real space
-        return;
     }
 
     template <typename T>
@@ -380,7 +379,6 @@ namespace galsim {
             plainDrawK(Re, Im, dk, wmult);   // calculate in k space
         else               
             fourierDrawK(Re, Im, dk, wmult); // calculate via FT from real space
-        return;
     }
 
     template <typename T>
@@ -410,8 +408,6 @@ namespace galsim {
 
         Re.setScale(dk);
         Im.setScale(dk);
-
-        return;
     }
 
     template <typename T>
@@ -454,8 +450,6 @@ namespace galsim {
 
         Re.setScale(dk);
         Im.setScale(dk);
-
-        return;
     }
 
     // Build K domain by transform from X domain.  This is likely
@@ -644,7 +638,6 @@ namespace galsim {
                 xt.xSet(ix,iy,xValue(x));
             }
         }
-        return;
     }
 
     void SBProfile::fillKGrid(KTable& kt) const 
@@ -658,7 +651,6 @@ namespace galsim {
                 kt.kSet(ix,iy,kValue(k));
             }
         }
-        return;
     }
 
     //
@@ -784,7 +776,6 @@ namespace galsim {
         sumflux *=m;
         sumfx *= m;
         sumfy *= m;
-        return;
     }
 
     double SBAdd::getPositiveFlux() const {
@@ -1908,6 +1899,42 @@ namespace galsim {
         return totalflux * (dx*dx);
     }
 
+    // Override fillKGrid for efficiency, since kValues are separable.
+    void SBBox::fillKGrid(KTable& kt) const 
+    {
+        int N = kt.getN();
+        double dk = kt.getDk();
+
+        std::vector<double> sinc_x(N/2+1);
+        std::vector<double> sinc_y(N/2+1);
+        if (xw == yw) { // Typical
+            for (int i = 0; i <= N/2; i++) {
+                sinc_x[i] = sinc(0.5 * i * dk * xw);
+                sinc_y[i] = sinc_x[i];
+            }
+        } else {
+            for (int i = 0; i <= N/2; i++) {
+                sinc_x[i] = sinc(0.5 * i * dk * xw);
+                sinc_y[i] = sinc(0.5 * i * dk * yw);
+            }
+        }
+
+        for (int iy = -N/2; iy < N/2; iy++) {
+            // Only need ix>=0 because it's Hermitian:
+            for (int ix = 0; ix <= N/2; ix++) {
+#if 0
+                // The Normal version copied from SBProfile version of this.
+                Position<double> k(ix*dk,iy*dk);
+                kt.kSet(ix,iy,kValue(k));
+                // The value returned by kValue(k)
+                double kvalue = flux * sinc(0.5*k.x*xw)*sinc(0.5*k.y*yw);
+#else
+                kt.kSet(ix,iy,flux * sinc_x[std::abs(ix)] * sinc_y[std::abs(iy)]);
+#endif
+            }
+        }
+    }
+
 #ifdef USE_LAGUERRE
     //
     // SBLaguerre Class
@@ -1986,7 +2013,6 @@ namespace galsim {
         double newflux=flux_;
         if (getFlux()!=0.) newflux /= getFlux();
         bvec.rVector() *= newflux;
-        return;
     }
 
 #endif

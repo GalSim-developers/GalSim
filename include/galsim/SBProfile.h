@@ -1777,6 +1777,8 @@ namespace galsim {
     protected:
         // Override to put in fractional edge values:
         void fillXGrid(XTable& xt) const;
+        // Override for efficiency:
+        void fillKGrid(KTable& kt) const;
 
         template <typename T>
         double fillXImage(ImageView<T>& I, double dx) const;
