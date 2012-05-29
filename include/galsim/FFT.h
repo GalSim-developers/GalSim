@@ -282,8 +282,20 @@ namespace galsim {
         double dx; //k-space increment
         double scaleby; //multiply table by this to get values
 
-        size_t index(int ix, int iy) const; //Return index into data array.
-        // this is also responsible for bounds checking.
+        size_t index(int ix, int iy) const //Return index into data array.
+        {
+            // this is also responsible for bounds checking.
+            // origin will be in center.
+            ix += N/2;
+            iy += N/2;
+#ifdef FFT_DEBUG
+            if (ix<0 || ix>=N || iy<0 || iy>=N) 
+                FormatAndThrow<FFTOutofRange>() << "XTable index (" << ix << "," << iy
+                    << ") out of range for N=" << N;
+#endif
+            return iy*N+ix;
+        }
+
 
         void get_array(const double value); //allocate an array
         void copy_array(const XTable& rhs); //copy an array

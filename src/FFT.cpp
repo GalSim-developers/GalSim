@@ -131,7 +131,9 @@ namespace galsim {
 
     KTable* KTable::wrap(int Nout) const 
     {
+#ifdef FFT_DEBUG
         if (Nout < 0) FormatAndThrow<FFTError>() << "KTable::wrap invalid Nout= " << Nout;
+#endif
         // Make it even:
         Nout = 2*((Nout+1)/2);
         KTable* out = new KTable(Nout, dk, std::complex<double>(0.,0.));
@@ -172,7 +174,9 @@ namespace galsim {
 
     XTable* XTable::wrap(int Nout) const 
     {
+#ifdef FFT_DEBUG
         if (Nout < 0) FormatAndThrow<FFTError>() << "XTable::wrap invalid Nout= " << Nout;
+#endif
         // Make it even:
         Nout = 2*((Nout+1)/2);
         XTable* out = new XTable(Nout, dx, 0.);
@@ -605,17 +609,6 @@ namespace galsim {
         get_array(value);
         scaleby=1.;
         return;
-    }
-
-    size_t XTable::index(int ix, int iy) const 
-    {
-        // origin will be in center.
-        ix += N/2;
-        iy += N/2;
-        if (ix<0 || ix>=N || iy<0 || iy>=N) 
-            FormatAndThrow<FFTOutofRange>() << "XTable index (" << ix << "," << iy
-                << ") out of range for N=" << N;
-        return iy*N+ix;
     }
 
     double XTable::xval(int ix, int iy) const 
