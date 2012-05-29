@@ -667,14 +667,11 @@ def test_sbprofile_realspace_distorted_convolve():
     conv.add(pixel3)
 
     # Note: Using an image created from Maple "exact" calculations.
-    # TODO.  Still waiting on Maple to finish this calculation.  It's taking forever.
-    # For now just use the Fourier calculation and reduce the level of required
-    # accuracy to 4 decimal places rather than 5.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel_distorted.fits"))
     img = galsim.ImageF(saved_img.bounds)
     conv.draw(img,dx=0.2)
     printval(img, saved_img)
-    np.testing.assert_array_almost_equal(img.array, saved_img.array, 4,
+    np.testing.assert_array_almost_equal(img.array, saved_img.array, 5,
         err_msg="distorted Moffat convolved with distorted Box disagrees with expected result")
 
     # Repeat with the GSObject version of this:
@@ -688,33 +685,33 @@ def test_sbprofile_realspace_distorted_convolve():
     conv = galsim.Convolve([psf,pixel],real_space=True)
     conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            img.array, saved_img.array, 4,
+            img.array, saved_img.array, 5,
             err_msg="Using Convolve([psf,pixel]) (distorted) disagrees with expected result")
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel,real_space=True)
     conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            img.array, saved_img.array, 4,
+            img.array, saved_img.array, 5,
             err_msg="Using Convolve(psf,pixel) (distorted) disagrees with expected result")
     conv = galsim.Convolve(psf,real_space=True)
     conv.add(pixel)
     conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            img.array, saved_img.array, 4,
+            img.array, saved_img.array, 5,
             err_msg="Using Convolve(psf), add(pixel) (distorted) disagrees with expected result")
     conv = galsim.Convolve(real_space=True)
     conv.add(pixel)
     conv.add(psf)
     conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            img.array, saved_img.array, 4,
+            img.array, saved_img.array, 5,
             err_msg="Using Convolve(), add both (distorted) disagrees with expected result")
      # The real-space convolution algorithm is not (trivially) independent of the order of
     # the two things being convolved.  So check the opposite order.
     conv = galsim.Convolve([pixel,psf],real_space=True)
     conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
-            img.array, saved_img.array, 4,
+            img.array, saved_img.array, 5,
             err_msg="Using Convolve([pixel,psf]) (distorted) disagrees with expected result")
  
 def test_sbprofile_realspace_shearconvolve():

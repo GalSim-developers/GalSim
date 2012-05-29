@@ -11,21 +11,23 @@ import numpy
 import pyfits
 import os
 
-input_file = "moffat_pixel.dat"
-output_file = "moffat_pixel.fits"
+for input_file in [ "moffat_pixel.dat" , "moffat_pixel_distorted.dat" ]:
 
-nx = 61
-ny = 61
+    output_file = input_file.split('.')[0] + '.fits'
+    print input_file, output_file
 
-fin = open(input_file,'r')
-vals = map(float,fin.readlines())
+    nx = 61
+    ny = 61
 
-array = numpy.array(vals).reshape(nx,ny)
+    fin = open(input_file,'r')
+    vals = map(float,fin.readlines())
 
-hdus = pyfits.HDUList()
-hdu = pyfits.PrimaryHDU(array)
-hdus.append(hdu)
+    array = numpy.array(vals).reshape(nx,ny).transpose()
 
-if os.path.isfile(output_file):
-    os.remove(output_file)
-hdus.writeto(output_file)
+    hdus = pyfits.HDUList()
+    hdu = pyfits.PrimaryHDU(array)
+    hdus.append(hdu)
+
+    if os.path.isfile(output_file):
+        os.remove(output_file)
+    hdus.writeto(output_file)
