@@ -942,9 +942,14 @@ namespace galsim {
 
         std::complex<double> kValue(const Position<double>& k) const 
         {
+#if 1
+            std::complex<double> phase = std::polar(absdet , -k.x*x0.x-k.y*x0.y); 
+            return adaptee->kValue(fwdT(k)) * phase;
+#else
             std::complex<double> phaseexp(0,-k.x*x0.x-k.y*x0.y); // phase exponent
             std::complex<double> kv(absdet*adaptee->kValue(fwdT(k))*std::exp(phaseexp));
             return kv; 
+#endif
         }
 
         bool isAxisymmetric() const { return stillIsAxisymmetric; }

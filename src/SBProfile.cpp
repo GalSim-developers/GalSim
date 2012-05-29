@@ -708,8 +708,10 @@ namespace galsim {
 
     std::complex<double> SBAdd::kValue(const Position<double>& _p) const 
     {
-        std::complex<double> kv = 0.;  
-        for (ConstIter pptr = plist.begin(); pptr != plist.end(); ++pptr)
+        ConstIter pptr = plist.begin();
+        assert(pptr != plist.end());
+        std::complex<double> kv = (*pptr)->kValue(_p);
+        for (++pptr; pptr != plist.end(); ++pptr)
             kv += (*pptr)->kValue(_p);
         return kv;
     } 
@@ -1654,8 +1656,7 @@ namespace galsim {
     std::complex<double> SBGaussian::kValue(const Position<double>& p) const
     {
         double r2 = p.x*p.x + p.y*p.y;
-        std::complex<double> kval(flux * std::exp(-(r2)*_sigma_sq/2.),0.);
-        return kval;
+        return flux * std::exp(-r2 * _sigma_sq/2.);
     }
 
 
@@ -1686,8 +1687,7 @@ namespace galsim {
     {
         double kk = p.x*p.x+p.y*p.y;
         double temp = 1. + kk*_r0_sq;         // [1+k^2*r0^2]
-        std::complex<double> kval( flux/std::sqrt(temp*temp*temp), 0.);
-        return kval;
+        return flux/std::sqrt(temp*temp*temp);
     }
 
     //
@@ -1783,9 +1783,7 @@ namespace galsim {
     {
         double radius = std::sqrt(p.x*p.x+p.y*p.y);
         // calculate circular FT(PSF) on p'=(x',y')
-        double r = annuli_autocorrelation(radius);
-        std::complex<double> kval(r, 0.);
-        return kval*flux;
+        return flux * annuli_autocorrelation(radius);
     }
 
 
@@ -1809,8 +1807,7 @@ namespace galsim {
 
     std::complex<double> SBBox::kValue(const Position<double>& p) const
     {
-        std::complex<double> kval( sinc(0.5*p.x*xw)*sinc(0.5*p.y*yw), 0.);
-        return kval*flux;
+        return flux * sinc(0.5*p.x*xw)*sinc(0.5*p.y*yw);
     }
 
     // Override fillXGrid so we can partially fill pixels at edge of box.
@@ -1967,8 +1964,7 @@ namespace galsim {
 
     double SBSersic::SersicInfo::kValue(double ksq) const 
     {
-        if (ksq<0.) 
-            throw SBError("Negative k-squared passed to SersicInfo");
+        assert(ksq >= 0.);
         if (ksq==0.) 
             return 1.;
 
@@ -1981,7 +1977,7 @@ namespace galsim {
 
         // simple linear interpolation to this value
         double fstep = (lk-logkMin)/logkStep;
-        int index = static_cast<int> (std::floor(fstep));
+        int index = int(std::floor(fstep));
         assert(index < int(lookup.size())-1);
         fstep -= index;
         return lookup[index]*(1.-fstep) + fstep*lookup[index+1];
@@ -1994,7 +1990,7 @@ namespace galsim {
         SersicIntegrand(double n, double b_, double k_):
             invn(1./n), b(b_), k(k_) {}
         double operator()(double r) const 
-            { return r*std::exp(-b*std::pow(r, invn))*j0(k*r); }
+        { return r*std::exp(-b*std::pow(r, invn))*j0(k*r); }
 
     private:
         double invn;
