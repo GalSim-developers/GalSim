@@ -1688,6 +1688,7 @@ namespace galsim {
         double kk = p.x*p.x+p.y*p.y;
         double temp = 1. + kk*_r0_sq;         // [1+k^2*r0^2]
         return flux/std::sqrt(temp*temp*temp);
+        // NB: flux*std::pow(temp,-1.5) is slower.
     }
 
     //
@@ -1965,21 +1966,20 @@ namespace galsim {
     double SBSersic::SersicInfo::kValue(double ksq) const 
     {
         assert(ksq >= 0.);
-        if (ksq==0.) 
-            return 1.;
+
+        if (ksq>=ksqMax)
+            return 0.; // truncate the Fourier transform
+        if (ksq<ksqMin)
+            return 1. + ksq*(kderiv2 + ksq*kderiv4); // Use quartic approx at low k
 
         double lk=0.5*std::log(ksq); // Lookup table is logarithmic
 
-        if (lk<logkMin)
-            return 1. + ksq*(kderiv2 + ksq*kderiv4); // Use quartic approx at low k
-        if (lk>=logkMax)
-            return 0.; // truncate the Fourier transform
-
         // simple linear interpolation to this value
         double fstep = (lk-logkMin)/logkStep;
-        int index = int(std::floor(fstep));
+        double findex = std::floor(fstep);
+        int index = int(findex);
         assert(index < int(lookup.size())-1);
-        fstep -= index;
+        fstep -= findex;
         return lookup[index]*(1.-fstep) + fstep*lookup[index+1];
     }
 
@@ -2031,6 +2031,7 @@ namespace galsim {
         double smallK = std::pow(kAccuracy / kderiv4, 0.25);
         if (smallK < lookupMin) lookupMin = smallK;
         logkMin = std::log(lookupMin);
+        ksqMin = lookupMin * lookupMin;
 
         // How far should nominal profile extend?
         // Estimate number of effective radii needed to enclose
@@ -2082,7 +2083,6 @@ namespace galsim {
         const double INTEGRATION_ABSTOL=1e-5;
         {
             SersicIntegrand I(n, b, 0.);
-            // Integrate with at least 2^10 steps and up to 2^16:
             norm = integ::int1d(
                 I, 0., integrateMax, INTEGRATION_RELTOL, INTEGRATION_ABSTOL);
         }
@@ -2112,6 +2112,7 @@ namespace galsim {
             lk += logkStep;
         }
         maxK = std::min(MAXMAXK, maxK); // largest acceptable
+        ksqMax = exp(2.*logkMax);
 
         // Next, set up the classes for photon shooting
         _radialPtr = new SersicRadialFunction(n, b);

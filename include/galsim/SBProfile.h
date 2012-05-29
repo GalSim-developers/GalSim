@@ -1375,6 +1375,8 @@ namespace galsim {
             double logkMax; ///< Maximum log(k) in lookup table.
             double logkStep; ///< Stepsize in log(k) in lookup table.
             std::vector<double> lookup; ///< Lookup table.
+            double ksqMin; ///< Minimum ksq to use lookup table.
+            double ksqMax; ///< Maximum ksq to use lookup table.
 
             SersicRadialFunction* _radialPtr;  ///< Function class used for photon shooting
             OneDimensionalDeviate* _sampler;   ///< Class that does numerical photon shooting
