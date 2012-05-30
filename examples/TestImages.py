@@ -1,6 +1,14 @@
 """
 A script to make some example images for Claire to use, to test how her bulge/disk decompositions
-compare with reality (for some version of reality).
+compare with our simulated bulge/disk galaxies with an ACS PSF.  The purpose of this comparison is
+(a) to validate against a known and well-tested galaxy simulation code, (b) to make sure that if
+we have galaxy model fits to the COSMOS images, that we can reconstruct what the best-fit galaxy
+images must look like (i.e., that our conventions for radii definitions and so on are correct), and
+(c) to understand if there are any regimes where bulge/disk decompositions have problematic
+parameter degeneracies.  For more information, see
+https://github.com/GalSim-developers/GalSim/issues/96
+
+The comparison did not reveal any major systematic issues.
 """
 
 import sys
@@ -22,11 +30,13 @@ if not os.path.isdir('output'):
     os.mkdir('output')
 PSFFile = os.path.join('data','147246.0_150.416558_1.998697.psf.fits')
 outDir = os.path.join('output','testImage.')
+
+# galaxy parameters
 bulge2Total = [0.0, 1.0/3, 2.0/3, 1.0]
 bulgeEllip = [0.2]
 diskEllip = [0.2, 0.45, 0.7]
-invSN = [0.01]
-nRealization = [10]
+invSN = [0.00, 0.01, 0.02]
+nRealization = [1, 10, 10]
 if len(invSN) is not len(nRealization):
     raise RuntimeError("Grids in inverse S/N and number of noise realizations do not have same size!")
 diskRe = [0.5, 1.0]
@@ -35,10 +45,12 @@ if len(diskRe) is not len(bulgeRe):
     raise RuntimeError("Grids in bulge and disk scale lengths do not have same size!")
 nBulge = 4.0
 nDisk = 1.0
-sigmaBulge = 1.0 # dispersion in Sersic n for bulge
-sigmaDisk = 0.2 # dispersion in Sersic n for disk
 pixelScale = 0.03 # we are simulating ACS data
 totFlux = 1000.0 # total flux for galaxy
+
+#### note: the following parameters were not used ####
+sigmaBulge = 1.0 # dispersion in Sersic n for bulge
+sigmaDisk = 0.2 # dispersion in Sersic n for disk
 
 # read in ePSF and normalize (note: already includes pixel response, don't have to do separately)
 l3 = galsim.Lanczos(3, True, 1.0E-4)
@@ -132,4 +144,4 @@ for bt in bulge2Total:
                             convGalaxyImg.write(outFile, clobber=True)
                             print 'Wrote image to file %s' % outFile
                         
-# For infinite S/N case, make some dispersion around the bulge and disk Sersic n values
+# For infinite S/N case, make some dispersion around the bulge and disk Sersic n values: later?
