@@ -59,7 +59,14 @@ def kxky(array_shape=(256, 256)):
 def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_D=2., circular_pupil=True,
                          obs=0.):
     """Generate a pupil plane, including a central obscuration such as caused by a secondary mirror.
-    
+
+    @param array_shape     the Numpy array shape desired for the output array.
+    @param dx              grid spacing of PSF in real space units.
+    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
+                           consistency).
+    @param circular_pupil  adopt a circular pupil?
+    @param obs             radius ratio of central obscuration.
+
     Returns a tuple (rho, theta, in_pupil), the first two of which are the coordinates of the
     pupil in unit disc-scaled coordinates for use by Zernike polynomials for describing the
     wavefront across the pupil plane.  The array in_pupil is a vector of Bools used to specify
@@ -116,6 +123,7 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
+    @param obs             radius ratio of central obscuration
     
     Outputs the wavefront for kx, ky locations corresponding to kxky(array_shape).
     """
@@ -175,6 +183,7 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., as
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
+    @param obs             radius ratio of central obscuration
     """
     array = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                       astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -209,7 +218,7 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             add a central obstruction due to secondary mirror?
+    @param obs             radius ratio of central obscuration
     """
     wf = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                    astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -244,7 +253,7 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             add a central obstruction due to secondary mirror?
+    @param obs             radius ratio of central obscuration
     """
     array = psf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -278,7 +287,7 @@ def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             add a central obstruction due to secondary mirror?
+    @param obs             radius ratio of central obscuration
     """
     wf = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                    astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -313,7 +322,7 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             add a central obstruction due to secondary mirror?
+    @param obs             radius ratio of central obscuration
     """
     array = otf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -348,7 +357,7 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             add a central obstruction due to secondary mirror?
+    @param obs             radius ratio of central obscuration
     """
     return np.abs(otf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                       astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -379,7 +388,7 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             add a central obstruction due to secondary mirror?
+    @param obs             radius ratio of central obscuration
     """
     array = mtf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -413,7 +422,7 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             add a central obstruction due to secondary mirror?
+    @param obs             radius ratio of central obscuration
     """
     kx, ky = kxky(array_shape)
     k2 = (kx**2 + ky**2)
@@ -452,7 +461,7 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             add a central obstruction due to secondary mirror?
+    @param obs             radius ratio of central obscuration
     """
     array = ptf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
