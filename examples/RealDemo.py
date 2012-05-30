@@ -2,8 +2,8 @@
 """
 A basic script demonstrating usage of the RealGalaxy functionality.
 """
-# NOTE: if catalog and image files for real galaxies are not in examples/data/, this cannot be run
-# (and, even if they are there, it must be run while sitting in examples/)!!!
+# NOTE: if catalog and image files for real galaxies are not in examples/data/, this cannot be run -
+# and, even if they are there, it must be run while sitting in examples/ !!!
 
 import sys
 import os
@@ -22,7 +22,8 @@ except ImportError:
 real_catalog_filename = 'data/real_galaxy_catalog_example.fits'
 image_dir = 'data'
 output_dir = 'output'
-good_psf_central_fwhm = 0.6 # arcsec; FWHM of smaller Gaussian in the double Gaussian for good seeing
+good_psf_central_fwhm = 0.6 # arcsec; FWHM of smaller Gaussian in the double Gaussian for good 
+                            # seeing
 bad_psf_central_fwhm = 1.3 # arcsec; FWHM of smaller Gaussian in the double Gaussian for bad seeing
 central_psf_amp = 0.8 # relative contribution of inner Gaussian in the double Gaussian PSF
 outer_fwhm_mult = 2.0 # ratio of (outer)/(inner) Gaussian FWHM for double Gaussian PSF
@@ -50,16 +51,19 @@ bad_epsf = galsim.Convolve(bad_psf, pixel)
 print "Simulating unsheared galaxy in good seeing..."
 sim_image_good_noshear = galsim.simReal(real_galaxy, good_epsf, pixel_scale, rand_rotate = False)
 print "Simulating sheared galaxy in good seeing..."
-sim_image_good_shear = galsim.simReal(real_galaxy, good_epsf, pixel_scale, g1 = g1, g2 = g2, rand_rotate = False)
+sim_image_good_shear = galsim.simReal(real_galaxy, good_epsf, pixel_scale, g1 = g1, g2 = g2,
+                                      rand_rotate = False)
 
 # simulate some crappy ground-based data, e.g., a bad night at SDSS; with and without shear
 print "Simulating unsheared galaxy in bad seeing..."
 sim_image_bad_noshear = galsim.simReal(real_galaxy, bad_epsf, pixel_scale, rand_rotate = False)
 print "Simulating sheared galaxy in bad seeing..."
-sim_image_bad_shear = galsim.simReal(real_galaxy, bad_epsf, pixel_scale, g1 = g1, g2 = g2, rand_rotate = False)
+sim_image_bad_shear = galsim.simReal(real_galaxy, bad_epsf, pixel_scale, g1 = g1, g2 = g2,
+                                     rand_rotate = False)
 
 # write to files: original galaxy, original PSF, 2 target PSFs, 4 simulated images
 # note: will differ each time it is run, because we chose a random image
+print "Writing results to files!"
 orig_gal_img = real_galaxy.original_image.draw(dx = real_galaxy.pixel_scale)
 orig_gal_img.write(os.path.join(output_dir, 'demoreal.orig_gal.fits'), clobber = True)
 
@@ -72,7 +76,11 @@ good_epsf_img.write(os.path.join(output_dir, 'demoreal.good_target_PSF.fits'), c
 bad_epsf_img = bad_epsf.draw(dx = pixel_scale)
 bad_epsf_img.write(os.path.join(output_dir, 'demoreal.bad_target_PSF.fits'), clobber = True)
 
-sim_image_good_noshear.write(os.path.join(output_dir, 'demoreal.good_simulated_image.noshear.fits'), clobber = True)
-sim_image_good_shear.write(os.path.join(output_dir, 'demoreal.good_simulated_image.shear.fits'), clobber = True)
-sim_image_bad_noshear.write(os.path.join(output_dir, 'demoreal.bad_simulated_image.noshear.fits'), clobber = True)
-sim_image_bad_shear.write(os.path.join(output_dir, 'demoreal.bad_simulated_image.shear.fits'), clobber = True)
+sim_image_good_noshear.write(os.path.join(output_dir, 'demoreal.good_simulated_image.noshear.fits'),
+                             clobber = True)
+sim_image_good_shear.write(os.path.join(output_dir, 'demoreal.good_simulated_image.shear.fits'),
+                           clobber = True)
+sim_image_bad_noshear.write(os.path.join(output_dir, 'demoreal.bad_simulated_image.noshear.fits'),
+                            clobber = True)
+sim_image_bad_shear.write(os.path.join(output_dir, 'demoreal.bad_simulated_image.shear.fits'),
+                          clobber = True)
