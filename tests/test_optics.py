@@ -253,7 +253,7 @@ def test_OpticalPSF_vs_Airy():
                                              err_msg="Unaberrated Optical not quite equal to Airy")
 
 def test_OpticalPSF_vs_Airy_with_obs():
-    """Compare the array view on an unaberrated OpticalPSF to that of an Airy.
+    """Compare the array view on an unaberrated OpticalPSF with osbcuration to that of an Airy.
     """
     lod = 7.5    # lambda/D value: don't choose unity in case symmetry hides something
     obses = (0.1, 0.3, 0.5) # central obscuration radius ratios
