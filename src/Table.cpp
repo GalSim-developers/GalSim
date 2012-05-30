@@ -4,6 +4,8 @@
 #include <cmath>
 #include <vector>
 
+#include <iostream>
+
 namespace galsim {
 
     // Look up an index.  Use STL binary search; maybe faster to use
@@ -13,7 +15,7 @@ namespace galsim {
         if (a<_argMin() || a>_argMax()) throw TableOutOfRange();
         // Go directly to index if arguments are regularly spaced.
         if (equalSpaced) {
-            int index = int( std::ceil( (a-argMin()) / dx) );
+            int index = int( std::ceil( (a-_argMin()) / dx) );
             if (index >= int(v.size())) --index; // in case of rounding error
             if (index == 0) ++index;
             // check if we need to move ahead or back one step due to rounding errors
@@ -21,29 +23,39 @@ namespace galsim {
             while (a < v[index-1].arg) --index;
             return index;
         } else {
+            // Warning: I think all of this is correct, but as far as I can tell, 
+            // this branch is never tested in our unit tests.  So if someone decides
+            // to use Table without equally spaced entries, this function should
+            // be checkout it in more detail.
             assert(lastIndex >= 1);
             assert(lastIndex < int(v.size()));
-            Entry e0 = v[lastIndex-1];
-            Entry e1 = v[lastIndex];
 
-            // TODO: This might be sped up by also checking the one above or below the current
-            // lastIndex before going to the full binary search.
-            if ( a < e0.arg ) {
-                // Look for the entry from 0..lastIndex-1:
-                Entry e(a,0); 
-                iter p = std::upper_bound(v.begin(), v.begin()+lastIndex-1, e);
-                assert(p != v.begin());
-                assert(p != v.begin()+lastIndex-1);
-                lastIndex = p-v.begin();
-                return lastIndex;
-            } else if (a > e1.arg) {
-                // Look for the entry from lastIndex..end
-                Entry e(a,0); 
-                iter p = std::lower_bound(v.begin()+lastIndex, v.end(), e);
-                assert(p != v.begin()+lastIndex);
-                assert(p != v.end());
-                lastIndex = p-v.begin();
-                return lastIndex;
+            if ( a < v[lastIndex-1].arg ) {
+                assert(lastIndex-2 >= 0);
+                // Check to see if the previous one is it.
+                if (a >= v[lastIndex-2].arg) return --lastIndex; 
+                else {
+                    // Look for the entry from 0..lastIndex-1:
+                    Entry e(a,0); 
+                    iter p = std::upper_bound(v.begin(), v.begin()+lastIndex-1, e);
+                    assert(p != v.begin());
+                    assert(p != v.begin()+lastIndex-1);
+                    lastIndex = p-v.begin();
+                    return lastIndex;
+                }
+            } else if (a > v[lastIndex].arg) {
+                assert(lastIndex+1 < int(v.size()));
+                // Check to see if the next one is it.
+                if (a <= v[lastIndex+1].arg) return ++lastIndex;
+                else {
+                    // Look for the entry from lastIndex..end
+                    Entry e(a,0); 
+                    iter p = std::lower_bound(v.begin()+lastIndex+1, v.end(), e);
+                    assert(p != v.begin()+lastIndex+1);
+                    assert(p != v.end());
+                    lastIndex = p-v.begin();
+                    return lastIndex;
+                }
             } else {
                 // Then lastIndex is correct.
                 return lastIndex;
@@ -116,9 +128,7 @@ namespace galsim {
         A a, int i, const std::vector<Entry>& v, const std::vector<V>& )
     {
         A h = v[i].arg - v[i-1].arg;
-        if (h == 0.) return v[i].val;
         A aa = (v[i].arg - a) / h;
-        //A bb = (a-v[i-1].arg) / h;
         A bb = 1. - aa;
         return aa*v[i-1].val + bb*v[i].val;
     }
@@ -127,19 +137,18 @@ namespace galsim {
     V Table<V,A>::splineInterpolate(
         A a, int i, const std::vector<Entry>& v, const std::vector<V>& y2)
     {
-        A h = v[i].arg - v[i-1].arg;
-        if (h == 0.) return v[i].val;
 #if 0
         // Direct calculation saved for comparison:
+        A h = v[i].arg - v[i-1].arg;
         A aa = (v[i].arg - a)/h;
-        A bb = (a - v[i-1].arg)/h;
+        A bb = 1. - aa;
         return aa*v[i-1].val +bb*v[i].val +
             ((aa*aa*aa-aa)*y2[i-1]+(bb*bb*bb-bb)*y2[i]) *
             (h*h)/6.0;
 #else
         // Factor out h factors, so only need 1 division by h.
         // Also, use the fact that bb = h-aa to simplify the calculation. 
-        // (In the above version it was bb = 1-aa.)
+        A h = v[i].arg - v[i-1].arg;
         A aa = (v[i].arg - a);
         A bb = h-aa;
         return ( aa*v[i-1].val + bb*v[i].val -
@@ -206,12 +215,13 @@ namespace galsim {
         // ...within this fractional error:
         const double tolerance = 0.01;
         dx = (v.back().arg - v.front().arg) / (v.size()-1);
+        if (dx == 0.) 
+            throw TableError("First and last Table entry are equal.");
         equalSpaced = true;
         for (int i=1; i<int(v.size()); i++) {
-            if ( std::abs( ((v[i].arg-v[0].arg)/dx - i)) > tolerance) {
-                equalSpaced = false;
-                break;
-            }
+            if ( std::abs( ((v[i].arg-v[0].arg)/dx - i)) > tolerance) equalSpaced = false;
+            if (v[i].arg == v[i-1].arg)
+                throw TableError("Table has repeated arguments.");
         }
 
         switch (iType) {
