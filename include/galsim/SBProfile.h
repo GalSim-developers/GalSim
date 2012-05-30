@@ -1013,6 +1013,10 @@ namespace galsim {
         void fillKGrid(KTable& kt) const; // optimized phase calculation
     };
 
+    // Defined in RealSpaceConvolve.cpp
+    double RealSpaceConvolve(
+        const SBProfile* p1, const SBProfile* p2, const Position<double>& pos, double flux);
+
     /**
      * @brief Convolve SBProfiles.
      *
