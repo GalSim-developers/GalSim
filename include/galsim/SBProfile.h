@@ -40,6 +40,22 @@ namespace galsim {
     namespace sbp {
 
         // Magic numbers:
+        
+        /// Constant giving minimum FFT size we're willing to do.
+        const int MINIMUM_FFT_SIZE = 128;
+
+        /// Constant giving maximum FFT size we're willing to do.
+        const int MAXIMUM_FFT_SIZE = 4096;
+
+        /**
+         * @brief A rough indicator of how good the FFTs need to be for setting `maxK()` and 
+         * `stepK()` values.  
+         *
+         * Generic indicator of what level of error one is willing to tolerate from 
+         * numerical approximations, such as aliasing, or necessary truncation / folding 
+         * of functions that extend to infinity. 
+         */
+        const double ALIAS_THRESHOLD = 0.005;
 
         //@{
         /** 
@@ -52,6 +68,18 @@ namespace galsim {
          */
         const double realspace_conv_relerr = 1.e-3;
         const double realspace_conv_abserr = 1.e-6;
+        //@}
+        
+
+        //@{
+        /**
+         * @brief Target accuracy for other integrations in SBProfile
+         *
+         * For Sersic and Moffat, we numerically integrate the Hankel transform.
+         * These are used for the precision in those integrals.
+         */
+        const double integration_relerr = 1.e-3;
+        const double integration_abserr = 1.e-5;
         //@}
 
     }
@@ -86,17 +114,6 @@ namespace galsim {
     class SBProfile 
     {
     protected:
-        static const int MINIMUM_FFT_SIZE;///< Constant giving minimum FFT size we're willing to do.
-        static const int MAXIMUM_FFT_SIZE;///< Constant giving maximum FFT size we're willing to do.
-        /**
-         * @brief A rough indicator of how good the FFTs need to be for setting `maxK()` and 
-         * `stepK()` values.  
-         *
-         *  Generic indicator of what level of error one is willing to tolerate from numerical approximations,
-         * such as aliasing, or necessary truncation / folding of functions that extend to infinity. 
-         */
-        static const double ALIAS_THRESHOLD;
-
     public:
 
         /** 
@@ -1267,9 +1284,10 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
 
         // Extend to 4 sigma in both domains, or more if needed to reach EE spec
-        double maxK() const { return std::max(4., std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
+        double maxK() const 
+        { return std::max(4., std::sqrt(-2.*log(sbp::ALIAS_THRESHOLD))) / sigma; }
         double stepK() const 
-        { return M_PI/std::max(4., std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
+        { return M_PI/std::max(4., std::sqrt(-2.*log(sbp::ALIAS_THRESHOLD))) / sigma; }
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
 
@@ -1547,7 +1565,7 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
 
         // Set maxK where the FT is down to 0.001 or threshold, whichever is harder.
-        double maxK() const { return std::max(10., pow(ALIAS_THRESHOLD, -1./3.))/r0; }
+        double maxK() const { return std::max(10., pow(sbp::ALIAS_THRESHOLD, -1./3.))/r0; }
         double stepK() const;
 
         Position<double> centroid() const 
@@ -1637,7 +1655,7 @@ namespace galsim {
         double stepK() const 
         { 
             return std::min( 
-                ALIAS_THRESHOLD * 0.5 * D * pow(M_PI,3.) * (1.-obscuration) ,
+                sbp::ALIAS_THRESHOLD * 0.5 * D * pow(M_PI,3.) * (1.-obscuration) ,
                 M_PI * D / 5.);
         }
 
@@ -1754,7 +1772,7 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        double maxK() const { return 2. / ALIAS_THRESHOLD / std::max(xw,yw); }  
+        double maxK() const { return 2. / sbp::ALIAS_THRESHOLD / std::max(xw,yw); }  
         double stepK() const { return M_PI/std::max(xw,yw)/2.; } 
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 

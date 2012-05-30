@@ -36,13 +36,6 @@ namespace galsim {
     // FT components instead of doing a larger FT and then subsampling!
     // ??? Make a formula for asymptotic high-k SBSersic::kValue ??
 
-    // Parameters controlling behavior of all classes:
-    const int SBProfile::MINIMUM_FFT_SIZE = 128;
-    const int SBProfile::MAXIMUM_FFT_SIZE = 4096;
-    // Allow aliasing of Fourier modes below this amplitude, roughly.
-    // Also set the FFT image size such that this fraction of flux (or less) is "folded."
-    const double SBProfile::ALIAS_THRESHOLD = 0.005;
-
 
     //
     // Virtual methods of Base Class "SBProfile"
@@ -200,10 +193,11 @@ namespace galsim {
 
         // Round up to a good size for making FFTs:
         int NFT = goodFFTSize(Nnofold);
-        NFT = std::max(NFT,MINIMUM_FFT_SIZE);
+        NFT = std::max(NFT,sbp::MINIMUM_FFT_SIZE);
         xdbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
-        if (NFT > MAXIMUM_FFT_SIZE)
-            FormatAndThrow<SBError>() << "fourierDraw() requires an FFT that is too large, " << NFT;
+        if (NFT > sbp::MAXIMUM_FFT_SIZE)
+            FormatAndThrow<SBError>() << 
+                "fourierDraw() requires an FFT that is too large, " << NFT;
 
         // Move the output image to be centered near zero
         I.setOrigin(-xSize/2, -ySize/2);
@@ -294,10 +288,11 @@ namespace galsim {
 
         // Round up to a good size for making FFTs:
         int NFT = goodFFTSize(Nnofold);
-        NFT = std::max(NFT,MINIMUM_FFT_SIZE);
+        NFT = std::max(NFT,sbp::MINIMUM_FFT_SIZE);
         xdbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
-        if (NFT > MAXIMUM_FFT_SIZE)
-            FormatAndThrow<SBError>() << "fourierDraw() requires an FFT that is too large, " << NFT;
+        if (NFT > sbp::MAXIMUM_FFT_SIZE)
+            FormatAndThrow<SBError>() << 
+                "fourierDraw() requires an FFT that is too large, " << NFT;
 
         // If we are free to set up output image, make it size of FFT
         if (sizeIsFree) {
@@ -490,9 +485,9 @@ namespace galsim {
         kRange = Nnofold * dk / oversamp;
 
         // Round up to a power of 2 to get required FFT size
-        int NFT = MINIMUM_FFT_SIZE;
-        while (NFT < Nnofold && NFT<= MAXIMUM_FFT_SIZE) NFT *= 2;
-        if (NFT > MAXIMUM_FFT_SIZE)
+        int NFT = sbp::MINIMUM_FFT_SIZE;
+        while (NFT < Nnofold && NFT<= sbp::MAXIMUM_FFT_SIZE) NFT *= 2;
+        if (NFT > sbp::MAXIMUM_FFT_SIZE)
             throw SBError("fourierDrawK() requires an FFT that is too large");
 
         // Move the output image to be centered near zero
@@ -572,9 +567,9 @@ namespace galsim {
         }
 
         // Round up to a power of 2 to get required FFT size
-        int NFT = MINIMUM_FFT_SIZE;
-        while (NFT < Nnofold && NFT<= MAXIMUM_FFT_SIZE) NFT *= 2;
-        if (NFT > MAXIMUM_FFT_SIZE)
+        int NFT = sbp::MINIMUM_FFT_SIZE;
+        while (NFT < Nnofold && NFT<= sbp::MAXIMUM_FFT_SIZE) NFT *= 2;
+        if (NFT > sbp::MAXIMUM_FFT_SIZE)
             throw SBError("fourierDrawK() requires an FFT that is too large");
 
         // If we are free to set up output image, make it size of FFT less oversampling
@@ -1765,8 +1760,8 @@ namespace galsim {
     double SBExponential::stepK() const
     {
         // A fast solution to (1+R)exp(-R)=ALIAS_THRESHOLD:
-        double R = -std::log(ALIAS_THRESHOLD);
-        for (int i=0; i<3; i++) R = -std::log(ALIAS_THRESHOLD) + std::log(1.+R);
+        double R = -std::log(sbp::ALIAS_THRESHOLD);
+        for (int i=0; i<3; i++) R = -std::log(sbp::ALIAS_THRESHOLD) + std::log(1.+R);
         R = std::max(6., R);
         return M_PI / (R*r0);
     }
@@ -2035,7 +2030,7 @@ namespace galsim {
     double SBLaguerre::maxK() const 
     {
         // Start with value for plain old Gaussian:
-        double m=std::max(4., std::sqrt(-2.*std::log(ALIAS_THRESHOLD))) / sigma;
+        double m=std::max(4., std::sqrt(-2.*std::log(sbp::ALIAS_THRESHOLD))) / sigma;
         // Grow as sqrt of order
         if (bvec.getOrder()>1) m *= std::sqrt(bvec.getOrder()/1.);
         return m;
@@ -2044,7 +2039,7 @@ namespace galsim {
     double SBLaguerre::stepK() const 
     {
         // Start with value for plain old Gaussian:
-        double m= M_PI/std::max(4., std::sqrt(-2.*std::log(ALIAS_THRESHOLD))) / sigma;
+        double m= M_PI/std::max(4., std::sqrt(-2.*std::log(sbp::ALIAS_THRESHOLD))) / sigma;
         // Shrink as sqrt of order
         if (bvec.getOrder()>1) m /= std::sqrt(bvec.getOrder()/1.);
         return m;
@@ -2198,8 +2193,9 @@ namespace galsim {
             while ( std::abs(oldz-z)>0.01 && niter<MAXIT) {
                 niter++;
                 oldz = z;
-                z = a - std::log(ALIAS_THRESHOLD*std::sqrt(2*M_PI*a)*(1.+1./(12.*a)+1./(288.*a*a)))
-                    +(a-1.)*std::log(z/a) + std::log(1. + (a-1.)/z + (a-1.)*(a-2.)/(z*z));
+                z = a - std::log(sbp::ALIAS_THRESHOLD*std::sqrt(2*M_PI*a)*
+                                 (1.+1./(12.*a)+1./(288.*a*a))) +
+                    (a-1.)*std::log(z/a) + std::log(1. + (a-1.)/z + (a-1.)*(a-2.)/(z*z));
             }
             xdbg<<"Converged at z = "<<z<<std::endl;
             double r=std::pow(z/b, n);
@@ -2226,8 +2222,9 @@ namespace galsim {
             while ( std::abs(oldz-z)>0.01 && niter<MAXIT) {
                 niter++;
                 oldz = z;
-                z = a - std::log(integrationLoss*std::sqrt(2.*M_PI*a)*(1.+1./(12.*a)+1./(288.*a*a)))
-                    +(a-1.)*std::log(z/a) + std::log(1. + (a-1.)/z + (a-1.)*(a-2.)/(z*z));
+                z = a - std::log(integrationLoss*std::sqrt(2.*M_PI*a)*
+                                 (1.+1./(12.*a)+1./(288.*a*a))) +
+                    (a-1.)*std::log(z/a) + std::log(1. + (a-1.)/z + (a-1.)*(a-2.)/(z*z));
             }
             xdbg<<"Converged at z = "<<z<<std::endl;
             double r=std::pow(z/b, n);
@@ -2236,14 +2233,9 @@ namespace galsim {
         }
 
         // Normalization for integral at k=0:
-        double norm;
-        const double INTEGRATION_RELTOL=0.0001;
-        const double INTEGRATION_ABSTOL=1e-5;
-        {
-            SersicIntegrand I(n, b, 0.);
-            norm = integ::int1d(
-                I, 0., integrateMax, INTEGRATION_RELTOL, INTEGRATION_ABSTOL);
-        }
+        SersicIntegrand I(n, b, 0.);
+        double norm = integ::int1d(
+            I, 0., integrateMax, sbp::integration_relerr, sbp::integration_abserr);
 
         // Now start building the lookup table for FT of the profile.
         // Keep track of where the FT drops below ALIAS_THRESHOLD - this
@@ -2259,19 +2251,19 @@ namespace galsim {
         double lastVal=1.;
         double lk = logkMin;
         xdbg<<"logkMin = "<<logkMin<<std::endl;
-        while (lk < std::log(maxK*10.) && lastVal>ALIAS_THRESHOLD/10.) {
+        while (lk < std::log(maxK*10.) && lastVal>sbp::ALIAS_THRESHOLD/10.) {
             SersicIntegrand I(n, b, std::exp(lk));
             // Need to make sure we are resolving oscillations in the integral:
             double val = integ::int1d(
-                I, 0., integrateMax, INTEGRATION_RELTOL, INTEGRATION_ABSTOL*norm);
+                I, 0., integrateMax, sbp::integration_relerr, sbp::integration_abserr*norm);
             //std::cerr << "Integrate k " << exp(lk) << " result " << val/norm << std::endl;
             val /= norm;
             lookup.push_back(val);
-            if (val >= ALIAS_THRESHOLD) maxK = std::max(maxK, std::exp(lk));
+            if (val >= sbp::ALIAS_THRESHOLD) maxK = std::max(maxK, std::exp(lk));
             logkMax = lk;
             lk += logkStep;
         }
-        xdbg<<"maxK with val >= ALIAS_THRESHOLD ("<<ALIAS_THRESHOLD<<") = "<<maxK<<std::endl;
+        xdbg<<"maxK with val >= ALIAS_THRESHOLD ("<<sbp::ALIAS_THRESHOLD<<") = "<<maxK<<std::endl;
         maxK = std::min(MAXMAXK, maxK); // largest acceptable
         xdbg<<"Final maxK = "<<maxK<<std::endl;
         ksqMax = exp(2.*logkMax);
@@ -2306,7 +2298,7 @@ namespace galsim {
         // Make FFT's periodic at 4x truncation radius or 1.5x diam at ALIAS_THRESHOLD,
         // whichever is smaller
         stepKrD = 2.*M_PI / std::min(4.*maxRrD, 
-                                     3.*std::sqrt(pow(ALIAS_THRESHOLD, -1./beta)-1.));
+                                     3.*std::sqrt(pow(sbp::ALIAS_THRESHOLD, -1./beta)-1.));
 #else
         // Make FFT's periodic at 4x truncation radius or 8x half-light radius:
         stepKrD = M_PI / (2.*std::max(maxRrD, 16.));
@@ -2344,9 +2336,9 @@ namespace galsim {
         _rD_sq = rD * rD;
         norm = flux * (beta - 1.) / (M_PI * fluxFactor * _rD_sq);
 
-        xdbg << "Moffat rD " << rD << " fluxFactor " << fluxFactor
+        dbg << "Moffat rD " << rD << " fluxFactor " << fluxFactor
             << " norm " << norm << " maxRrD " << maxRrD << std::endl;
-        xdbg << "maxR = "<<_maxR<<", maxK = "<<maxKrD/rD<<", stepK = "<<stepKrD/rD<<std::endl;
+        dbg << "maxR = "<<_maxR<<", maxK = "<<maxKrD/rD<<", stepK = "<<stepKrD/rD<<std::endl;
 
         if (beta == 1) pow_beta = &SBMoffat::pow_1;
         else if (beta == 2) pow_beta = &SBMoffat::pow_2;
@@ -2354,38 +2346,48 @@ namespace galsim {
         else if (beta == 4) pow_beta = &SBMoffat::pow_4;
         else if (beta == int(beta)) pow_beta = &SBMoffat::pow_int;
         else pow_beta = &SBMoffat::pow_gen;
+
+        // TODO: Once SBProfile is immutable, this should move back to the start
+        // of kValue.  But for now, it's better to do it here, so copies don't have
+        // to recalculate ft.
+        setupFT();
     }
+
+    // Integrand class for the Hankel transform of Moffat
+    class MoffatIntegrand : public std::unary_function<double,double>
+    {
+    public:
+        MoffatIntegrand(double beta, double k, double (*pb)(double, double)) : 
+            _beta(beta), _k(k), pow_beta(pb) {}
+        double operator()(double r) const 
+        { return r/pow_beta(1.+r*r, _beta)*j0(_k*r); }
+
+    private:
+        double _beta;
+        double _k;
+        double (*pow_beta)(double x, double beta);
+    };
 
     void SBMoffat::setupFT() const
     {
         if (ft.size() > 0) return;
 
-        // Get FFT by doing 2k transform over 2x the truncation radius
-        // ??? need to do better here
-        // ??? also install quadratic behavior near k=0?
+        // Do a Hankel transform and store the results in a lookup table.
+        // Use 2048 values across 2 x the truncation radius.
         const int N=2048;
-        double dx = std::max(4.*maxRrD, 64.) / N;
-        XTable xt(N, dx);
-        dx = xt.getDx();
-        for (int iy=-N/2; iy<N/2; iy++) {
-            for (int ix=-N/2; ix<N/2; ix++) {
-                double rsq = dx*dx*(ix*ix+iy*iy);
-                if (rsq <= _maxRrD_sq) xt.xSet(ix,iy,1./pow_beta(1.+rsq,beta));
-                // XTable values are initialized to 0, so don't need to set ones with rsq > max
-            }
-        }
-        KTable* kt = xt.transform();
-        double dk = kt->getDk();
-        double nn = flux / kt->kval(0,0).real();
+        double dk = 2.*M_PI / std::max(4.*maxRrD, 64.);
+        double nn = norm * 2.*M_PI * _rD_sq;
         for (int i=0; i<=N/2; i++) {
-            ft.addEntry( i*dk, kt->kval(0,-i).real() * nn);
+            double k = i*dk;
+            MoffatIntegrand I(beta, k, pow_beta);
+            double val = integ::int1d(
+                I, 0., maxRrD, sbp::integration_relerr, sbp::integration_abserr);
+            ft.addEntry( k, val * nn );
         }
-        delete kt;
     }
 
     std::complex<double> SBMoffat::kValue(const Position<double>& k) const 
     {
-        setupFT();
         double kk = sqrt(k.x*k.x + k.y*k.y)*rD;
         if (kk > ft.argMax()) return 0.;
         else return ft(kk);
@@ -2577,7 +2579,7 @@ namespace galsim {
         double xmin = (1.1 - 0.5*obscuration);
         // Use Schroeder (10.1.18) limit of EE at large radius.
         // to stop sampler at radius with EE>(1-ALIAS_THRESHOLD).
-        double maximumRadius = 2./(ALIAS_THRESHOLD * M_PI*M_PI * (1-obscuration));
+        double maximumRadius = 2./(sbp::ALIAS_THRESHOLD * M_PI*M_PI * (1-obscuration));
         while (xmin < maximumRadius) {
             ranges.push_back(xmin);
             xmin += 0.5;
