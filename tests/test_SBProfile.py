@@ -137,6 +137,8 @@ def do_shoot(prof, img, dx, name):
     print 'nphot = ',nphot
     img2 = img.copy()
     prof.drawShoot(img2,nphot)
+    #img.write("junk.fits")
+    #img2.write("junk2.fits")
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
@@ -1008,6 +1010,7 @@ def test_sbprofile_sbinterpolatedimage():
 
 
 if __name__ == "__main__":
+    test_sbprofile_shift()
     test_sbprofile_gaussian()
     test_sbprofile_gaussian_properties()
     test_gaussian_radii()

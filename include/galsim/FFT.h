@@ -128,13 +128,18 @@ namespace galsim {
         // Data access methods:
         // return value at grid point ix,iy (k = (ix*dk, iy*dk))
         std::complex<double> kval(int ix, int iy) const; 
+        std::complex<double> kval2(int ix, int iy) const 
+        { return array[index2(ix,iy)]; }
 
         // interpolate to k=(kx, ky) - WILL wrap k values to fill interpolant kernel
         std::complex<double> interpolate(double kx, double ky, const Interpolant2d& interp) const;
 
         void kSet(int ix, int iy, std::complex<double> value);
+        void kSet2(int ix, int iy, std::complex<double> value)
+        { array[index2(ix,iy)]=value; }
 
         void clear();  // Set all values to zero
+        void clearCache() const { cache.clear(); }
 
         void accumulate(const KTable& rhs, double scalar=1.); // this += scalar*rhs
 
@@ -185,6 +190,11 @@ namespace galsim {
             if (iy<0) iy+=N;
             return iy*(N/2+1)+ix;
         }
+
+        // This skips all the adjustments to ix,iy, so both should be positive and 
+        // folded appropriately.
+        size_t index2(int ix, int iy) const  //Return index into data array.
+        { return iy*(N/2+1)+ix; }
 
         void copy_array(const KTable& rhs); //copy an array
         void get_array(const std::complex<double> value=0.); //allocate an array  
@@ -249,6 +259,7 @@ namespace galsim {
         void xSet(int ix, int iy, double value);
 
         void clear();  // Set all values to zero
+        void clearCache() const { cache.clear(); }
 
         void accumulate(const XTable& rhs, double scalar=1.); // this += scalar*rhs
 
@@ -313,7 +324,7 @@ namespace galsim {
     template <class T>
     void KTable::fill(const T& f) 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         std::complex<double> *zptr=array;
         double kx, ky;
         for (int iy=0; iy< N/2; iy++) {

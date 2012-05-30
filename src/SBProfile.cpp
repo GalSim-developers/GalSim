@@ -22,7 +22,7 @@
 std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cerr;
 //std::ostream* dbgout = 0;
-int verbose_level = 2;
+int verbose_level = 1;
 #else
 std::ostream* dbgout = 0;
 int verbose_level = 0;
@@ -633,8 +633,9 @@ namespace galsim {
         int N = xt.getN();
         double dx = xt.getDx();
         for (int iy = -N/2; iy < N/2; iy++) {
+            double y = iy*dx;
             for (int ix = -N/2; ix < N/2; ix++) {
-                Position<double> x(ix*dx,iy*dx);
+                Position<double> x(ix*dx,y);
                 xt.xSet(ix,iy,xValue(x));
             }
         }
@@ -644,6 +645,8 @@ namespace galsim {
     {
         int N = kt.getN();
         double dk = kt.getDk();
+#if 0
+        // The simple version, saved for reference
         for (int iy = -N/2; iy < N/2; iy++) {
             // Only need ix>=0 because it's Hermitian:
             for (int ix = 0; ix <= N/2; ix++) {
@@ -651,6 +654,28 @@ namespace galsim {
                 kt.kSet(ix,iy,kValue(k));
             }
         }
+#else
+        // A faster version that pulls out all the if statements
+        kt.clearCache();
+        // First iy=0
+        Position<double> k1(0.,0.);
+        for (int ix = 0; ix <= N/2; ix++, k1.x += dk) kt.kSet2(ix,0,kValue(k1));
+
+        // Then iy = 1..N/2-1
+        k1.y = dk;
+        Position<double> k2(0.,-dk);
+        for (int iy = 1; iy < N/2; iy++, k1.y += dk, k2.y -= dk) {
+            k1.x = k2.x = 0.;
+            for (int ix = 0; ix <= N/2; ix++, k1.x += dk, k2.x += dk) {
+                kt.kSet2(ix,iy,kValue(k1));
+                kt.kSet2(ix,N-iy,kValue(k2));
+            }
+        }
+
+        // Finally, iy = N/2
+        k1.x = 0.;
+        for (int ix = 0; ix <= N/2; ix++, k1.x += dk) kt.kSet2(ix,N/2,kValue(k1));
+#endif
     }
 
     //
@@ -1169,6 +1194,8 @@ namespace galsim {
         double N = (double) kt.getN();
         double dk = kt.getDk();
 
+#if 0
+        // The simpler version, saved for reference
         if (x0.x==0. && x0.y==0.) {
             // Branch to faster calculation if there is no centroid shift:
             for (int iy = -N/2; iy < N/2; iy++) {
@@ -1194,6 +1221,52 @@ namespace galsim {
                 yphase *= dyphase;
             }
         }
+#else
+        // A faster version that pulls out all the if statements
+        kt.clearCache();
+
+        if (x0.x==0. && x0.y==0.) {
+            // Branch to faster calculation if there is no centroid shift:
+            Position<double> k1(0.,0.);
+            for (int ix = 0; ix <= N/2; ix++, k1.x += dk) kt.kSet2(ix,0,kValNoPhase(k1));
+            k1.y = dk;
+            Position<double> k2(0.,-dk);
+            for (int iy = 1; iy < N/2; ++iy, k1.y += dk, k2.y -= dk) {
+                k1.x = k2.x = 0.;
+                for (int ix = 0; ix <= N/2; ++ix, k1.x += dk, k2.x += dk) {
+                    kt.kSet2(ix,iy, kValNoPhase(k1));
+                    kt.kSet2(ix,N-iy, kValNoPhase(k2));
+                }
+            }
+            k1.x = 0.;
+            for (int ix = 0; ix <= N/2; ix++, k1.x += dk) kt.kSet2(ix,N/2,kValNoPhase(k1));
+        } else {
+            std::complex<double> dxphase = std::polar(1.,-dk*x0.x);
+            std::complex<double> dyphase = std::polar(1.,-dk*x0.y);
+            // xphase, yphase: current phase value
+            std::complex<double> yphase = 1.;
+            Position<double> k1(0.,0.);
+            std::complex<double> phase = yphase; // since kx=0 to start
+            for (int ix = 0; ix <= N/2; ++ix, k1.x += dk, phase *= dxphase) {
+                kt.kSet2(ix,0, kValNoPhase(k1) * phase);
+            }
+            k1.y = dk; yphase *= dyphase;
+            Position<double> k2(0.,-dk);  
+            std::complex<double> phase2;
+            for (int iy = 1; iy < N/2; iy++, k1.y += dk, k2.y -= dk, yphase *= dyphase) {
+                k1.x = k2.x = 0.; phase = yphase; phase2 = conj(yphase);
+                for (int ix = 0; ix <= N/2; ++ix, k1.x += dk, k2.x += dk,
+                     phase *= dxphase, phase2 *= dxphase) {
+                    kt.kSet2(ix,iy, kValNoPhase(k1) * phase);
+                    kt.kSet2(ix,N-iy, kValNoPhase(k2) * phase2);
+                }
+            }
+            k1.x = 0.; phase = yphase; 
+            for (int ix = 0; ix <= N/2; ++ix, k1.x += dk, phase *= dxphase) {
+                kt.kSet2(ix,N/2, kValNoPhase(k1) * phase);
+            }
+        }
+#endif
     }
 
     //
@@ -1905,6 +1978,23 @@ namespace galsim {
         int N = kt.getN();
         double dk = kt.getDk();
 
+#if 0
+        // The simple version, saved for reference
+        for (int iy = -N/2; iy < N/2; iy++) {
+            // Only need ix>=0 because it's Hermitian:
+            for (int ix = 0; ix <= N/2; ix++) {
+                Position<double> k(ix*dk,iy*dk);
+                // The value returned by kValue(k)
+                double kvalue = flux * sinc(0.5*k.x*xw) * sinc(0.5*k.y*yw);
+                kt.kSet(ix,iy,kvalue);
+            }
+        }
+#else
+        // A faster version that pulls out all the if statements and store the 
+        // relevant sinc functions in two arrays, so we don't need to keep calling 
+        // sinc on the same values over and over.
+        
+        kt.clearCache();
         std::vector<double> sinc_x(N/2+1);
         std::vector<double> sinc_y(N/2+1);
         if (xw == yw) { // Typical
@@ -1919,20 +2009,21 @@ namespace galsim {
             }
         }
 
-        for (int iy = -N/2; iy < N/2; iy++) {
-            // Only need ix>=0 because it's Hermitian:
+        // Now do the unrolled version with kSet2
+        for (int ix = 0; ix <= N/2; ix++) {
+            kt.kSet2(ix,0, flux * sinc_x[ix] * sinc_y[0]);
+        }
+        for (int iy = 1; iy < N/2; iy++) {
             for (int ix = 0; ix <= N/2; ix++) {
-#if 0
-                // The Normal version copied from SBProfile version of this.
-                Position<double> k(ix*dk,iy*dk);
-                kt.kSet(ix,iy,kValue(k));
-                // The value returned by kValue(k)
-                double kvalue = flux * sinc(0.5*k.x*xw)*sinc(0.5*k.y*yw);
-#else
-                kt.kSet(ix,iy,flux * sinc_x[std::abs(ix)] * sinc_y[std::abs(iy)]);
-#endif
+                double kval = flux * sinc_x[ix] * sinc_y[iy];
+                kt.kSet2(ix,iy,kval);
+                kt.kSet2(ix,N-iy,kval);
             }
         }
+        for (int ix = 0; ix <= N/2; ix++) {
+            kt.kSet2(ix,N/2, flux * sinc_x[ix] * sinc_y[N/2]);
+        }
+#endif
     }
 
 #ifdef USE_LAGUERRE

@@ -36,7 +36,7 @@ namespace galsim {
     }
 
     std::complex<double> KTable::kval(int ix, int iy) const 
-    { 
+    {
         check_array();
         std::complex<double> retval=array[index(ix,iy)];
         if (ix<0) return conj(retval);
@@ -46,7 +46,7 @@ namespace galsim {
     void KTable::kSet(int ix, int iy, std::complex<double> value) 
     {
         check_array();
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         if (ix<0) {
             array[index(ix,iy)]=conj(value);
             if (ix==-N/2) array[index(ix,-iy)]=value;
@@ -65,7 +65,7 @@ namespace galsim {
 
     void KTable::copy_array(const KTable& rhs) 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
 #ifdef FFT_DEBUG
         if (rhs.array==0) 
             throw FFTError("KTable::copy_array from null array");
@@ -79,7 +79,7 @@ namespace galsim {
 
     void KTable::clear() 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         if (!array) return;
         for (int i=0; i<N*(N/2+1); i++)
             array[i] = std::complex<double>(0.,0.);
@@ -87,7 +87,7 @@ namespace galsim {
 
     void KTable::kill_array() 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         if (!array) return;
         fftw_free(array);
         array=0;
@@ -95,7 +95,7 @@ namespace galsim {
 
     void KTable::accumulate(const KTable& rhs, double scalar) 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         check_array();
 #ifdef FFT_DEBUG
         if (N != rhs.N) throw FFTError("KTable::accumulate() with mismatched sizes");
@@ -107,7 +107,7 @@ namespace galsim {
 
     void KTable::operator*=(const KTable& rhs) 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         check_array();
 #ifdef FFT_DEBUG
         if (N != rhs.N) throw FFTError("KTable::operator*=() with mismatched sizes");
@@ -119,7 +119,7 @@ namespace galsim {
 
     void KTable::operator*=(double scale)
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         check_array();
         for (int i=0; i<N*(N/2+1); i++)
             array[i] *= scale;
@@ -258,7 +258,7 @@ namespace galsim {
             // re-using the sums over rows.  So we will keep a 
             // cache of them.
             if (ixy != cacheInterp || kx!=cacheX) {
-                cache.clear();
+                clearCache();
                 cacheX = kx;
                 cacheInterp = ixy;
             }
@@ -275,7 +275,7 @@ namespace galsim {
                         return cache[index];
                 }
                 // Desired row not in cache - kill cache, continue as normal.
-                cache.clear();
+                clearCache();
             }
 
             // Build the x component of interpolant
@@ -345,7 +345,7 @@ namespace galsim {
     // Fill table from a function:
     void KTable::fill(KTable::function1 func)
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         check_array();
         std::complex<double>* zptr=array;
         double kx, ky;
@@ -548,7 +548,7 @@ namespace galsim {
     // Translate the PSF to be for source at (x0,y0);
     void KTable::translate(double x0, double y0) 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         check_array();
         // convert to phases:
         x0*=dk; y0*=dk;
@@ -610,7 +610,7 @@ namespace galsim {
     void XTable::xSet(int ix, int iy, double value) 
     {
         check_array();
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         array[index(ix,iy)]=value;
     }
 
@@ -623,7 +623,7 @@ namespace galsim {
 
     void XTable::copy_array(const XTable& rhs) 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
 #ifdef FFT_DEBUG
         if (rhs.array==0) 
             throw FFTError("XTable::copy_array from null array");
@@ -637,7 +637,7 @@ namespace galsim {
     void XTable::kill_array() 
     {
         if (!array) return;
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         fftw_free(array);
         array=0;
     }
@@ -645,7 +645,7 @@ namespace galsim {
     void XTable::clear() 
     {
         if (!array) return;
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         for (int i=0; i<N*N; i++)
             array[i] = 0.;
     }
@@ -653,7 +653,7 @@ namespace galsim {
     void XTable::accumulate(const XTable& rhs, double scalar) 
     {
         check_array();
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
 #ifdef FFT_DEBUG
         if (N != rhs.N) throw FFTError("XTable::accumulate() with mismatched sizes");
 #endif
@@ -664,7 +664,7 @@ namespace galsim {
     void XTable::operator*=(double scale) 
     {
         check_array();
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         for (int i=0; i<N*N; i++)
             array[i] *= scale;
     }
@@ -709,7 +709,7 @@ namespace galsim {
             // re-using the sums over rows.  So we will keep a 
             // cache of them.
             if (ixy != cacheInterp || x!=cacheX) {
-                cache.clear();
+                clearCache();
                 cacheX = x;
                 cacheInterp = ixy;
             }
@@ -727,7 +727,7 @@ namespace galsim {
                     }
                 }
                 // Desired row not in cache - kill cache, continue as normal.
-                cache.clear();
+                clearCache();
             }
 
             // Build x factors for interpolant
@@ -778,7 +778,7 @@ namespace galsim {
     void XTable::fill(XTable::function1 func)
     {
         check_array();
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         double* zptr=array;
         double x, y;
         for (int iy=0; iy<N; iy++) {
