@@ -72,13 +72,13 @@ namespace galsim {
         enum interpolant { linear, spline, floor, ceil };
 
         //Construct empty table
-        Table(interpolant i=linear) : v(), iType(i), isReady(false), y2() {} 
+        Table(interpolant i=linear) : iType(i), isReady(false) {} 
 
         //Table from two arrays:
         Table(const A* argvec, const V* valvec, int N, interpolant in=linear);
         Table(const std::vector<A>& a, const std::vector<V>& v, interpolant in=linear);
 
-        Table(std::istream& is, interpolant in=linear) : v(), iType(in), isReady(), y2() 
+        Table(std::istream& is, interpolant in=linear) : iType(in), isReady(false)
         { read(is); }
 
         void clear() { v.clear(); isReady=false; }
@@ -96,15 +96,13 @@ namespace galsim {
         A argMin() const 
         { 
             setup();
-            if (v.size()>0) return v.front().arg;
-            else throw TableError("argMin for null Table");
+            return _argMin();
         }
         //Largest argument
         A argMax() const 
         { 
             setup();
-            if (v.size()>0) return v.back().arg;
-            else throw TableError("argMax for null Table");
+            return _argMax();
         }
 
         template <class T>
@@ -134,22 +132,39 @@ namespace galsim {
         typedef typename std::vector<Entry>::const_iterator citer;
         typedef typename std::vector<Entry>::iterator iter;
 
-        mutable std::vector<Entry> v;
         interpolant iType;
-        mutable int lastIndex; //Index for last lookup into table.
-        mutable bool  isReady; //Flag if table has been prepped.
-        mutable bool  equalSpaced; //Flag set if arguments are nearly equally spaced.
+        mutable bool isReady; //Flag if table has been prepped.
+        mutable bool equalSpaced; //Flag set if arguments are nearly equally spaced.
         mutable A dx; // ...in which case this is argument interval
+        mutable int lastIndex; //Index for last lookup into table.
+
+        mutable std::vector<Entry> v;
         mutable std::vector<V> y2; //vector of 2nd derivs for spline
 
+        // Private versions that don't check for a null table:
+        A _argMin() const { return v.front().arg; }
+        A _argMax() const { return v.back().arg; }
+
         //get index to 1st element >= argument.  Can throw the exception here.
-        iter upperIndex(const A a) const;
+        int upperIndex(const A a) const;
 
         void sortIt() const { std::sort(v.begin(), v.end()); }
         void setup() const; //Do any necessary preparation;
+        void setupSpline() const; // Calculate the y2 vector
 
         //Interpolate value btwn p & --p:
-        V interpolate(const A a, const citer p) const; 
+        mutable V (*interpolate)(A a, int i, const std::vector<Entry>& v,
+                                 const std::vector<V>& y2);
+
+        static V linearInterpolate(A a, int i, const std::vector<Entry>& v,
+                                   const std::vector<V>& y2);
+        static V splineInterpolate(A a, int i, const std::vector<Entry>& v,
+                                   const std::vector<V>& y2);
+        static V floorInterpolate(A a, int i, const std::vector<Entry>& v,
+                                  const std::vector<V>& y2);
+        static V ceilInterpolate(A a, int i, const std::vector<Entry>& v,
+                                 const std::vector<V>& y2);
+
     };
 
 }
