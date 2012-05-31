@@ -333,7 +333,7 @@ class OpticalPSF(GSObject):
     --------------
     @code
     optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0.,
-                                        coma2=0., spher=0., circular_pupil=True, obs=0.,
+                                        coma2=0., spher=0., circular_pupil=True, obscuration=0.,
                                         interpolantxy=None, oversampling=1.5, pad_factor=1.5)
     @endcode
 
@@ -350,7 +350,7 @@ class OpticalPSF(GSObject):
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             radius ratio of central obscuration [default obs=0.]
+    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
     @param interpolantxy   optional keyword for specifying the interpolation scheme [default =
                            galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))].
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
@@ -362,7 +362,8 @@ class OpticalPSF(GSObject):
                            i.e. those larger than order unity. 
     """
     def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-                 circular_pupil=True, obs=0., interpolantxy=None, oversampling=1.5, pad_factor=1.5):
+                 circular_pupil=True, obscuration=0., interpolantxy=None, oversampling=1.5,
+                 pad_factor=1.5):
         # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
         import galsim.optics
         # Choose dx for lookup table using Nyquist for optical aperture and the specified
@@ -370,7 +371,7 @@ class OpticalPSF(GSObject):
         dx_lookup = .5 * lam_over_D / oversampling
         # Use a similar prescription as SBAiry to set Airy stepK and thus reference unpadded image
         # size in physical units
-        stepk_airy = min(ALIAS_THRESHOLD * .5 * np.pi**3 * (1. - obs) / lam_over_D,
+        stepk_airy = min(ALIAS_THRESHOLD * .5 * np.pi**3 * (1. - obscuration) / lam_over_D,
                          np.pi / 5. / lam_over_D)
         # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
         # also make npix always *odd* so that opticalPSF lookup table array is correctly centred:
@@ -380,7 +381,7 @@ class OpticalPSF(GSObject):
         optimage = galsim.optics.psf_image(lam_over_D=lam_over_D, dx=dx_lookup,
                                            array_shape=(npix, npix), defocus=defocus, astig1=astig1,
                                            astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                                           circular_pupil=circular_pupil, obs=obs)
+                                           circular_pupil=circular_pupil, obscuration=obscuration)
         # If interpolant not specified on input, use a high-ish n lanczos
         if interpolantxy == None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)

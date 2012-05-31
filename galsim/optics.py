@@ -55,7 +55,7 @@ def kxky(array_shape=(256, 256)):
     return np.meshgrid(k_xaxis, k_yaxis)
 
 def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_D=2., circular_pupil=True,
-                         obs=0.):
+                         obscuration=0.):
     """Generate a pupil plane, including a central obscuration such as caused by a secondary mirror.
 
     @param array_shape     the Numpy array shape desired for the output array.
@@ -63,7 +63,7 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_D=2., circular_
     @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
                            consistency).
     @param circular_pupil  adopt a circular pupil?
-    @param obs             radius ratio of central obscuration.
+    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
 
     Returns a tuple (rho, theta, in_pupil), the first two of which are the coordinates of the
     pupil in unit disc-scaled coordinates for use by Zernike polynomials for describing the
@@ -78,19 +78,21 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_D=2., circular_
     theta = np.arctan2(ky, kx)
     # Cut out circular pupil if desired (default, square pupil optionally supported) and include 
     # central obscuration
+    if obscuration >= 1.:
+        raise ValueError("Pupil fully obscured! obscuration ="+str(obscuration)+" (>= 1)")
     if circular_pupil:
         in_pupil = (rho < 1.)
-        if obs > 0.:
-            in_pupil = in_pupil * (rho >= obs)  # * acts like "and" for boolean arrays
+        if obscuration > 0.:
+            in_pupil = in_pupil * (rho >= obscuration)  # * acts like "and" for boolean arrays
     else:
         in_pupil = (np.abs(kx) < .5 * kmax_internal) * (np.abs(ky) < .5 * kmax_internal)
-        if obs > 0.:
-            in_pupil = in_pupil * ((np.abs(kx) >= .5 * obs * kmax_internal) *
-                                   (np.abs(ky) >= .5 * obs * kmax_internal))
+        if obscuration > 0.:
+            in_pupil = in_pupil * ((np.abs(kx) >= .5 * obscuration * kmax_internal) *
+                                   (np.abs(ky) >= .5 * obscuration * kmax_internal))
     return rho, theta, in_pupil
 
 def wavefront(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
-              coma1=0., coma2=0., spher=0., circular_pupil=True, obs=0.):
+              coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """Return a complex, aberrated wavefront across a circular (default) or square pupil.
     
     Outputs a complex image (shape=array_shape) of a circular pupil wavefront of unit amplitude
@@ -121,14 +123,15 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             radius ratio of central obscuration
+    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
     
     Outputs the wavefront for kx, ky locations corresponding to kxky(array_shape).
     """
     # Define the pupil coordinates and non-zero regions based on input kwargs
     rho, theta, in_pupil = generate_pupil_plane(array_shape=array_shape, dx=dx,
                                                 lam_over_D=lam_over_D,
-                                                circular_pupil=circular_pupil, obs=obs)
+                                                circular_pupil=circular_pupil,
+                                                obscuration=obscuration)
     pi = np.pi # minor but saves Python checking the entire np. namespace every time I need pi    
     # Then make wavefront image
     wf = np.zeros(array_shape, dtype=complex)
@@ -150,7 +153,7 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     return wf
 
 def wavefront_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
-                    coma1=0., coma2=0., spher=0., circular_pupil=True, obs=0.):
+                    coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return wavefront as a (real, imag) tuple of ImageViewD objects rather than complex
     numpy array.
 
@@ -181,16 +184,16 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., as
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             radius ratio of central obscuration
+    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
     """
     array = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                       astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                      circular_pupil=circular_pupil, obs=obs)
+                      circular_pupil=circular_pupil, obscuration=obscuration)
     return (galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64))),
             galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64))))
 
 def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0., coma1=0.,
-        coma2=0., spher=0., circular_pupil=True, obs=0.):
+        coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return numpy array containing circular (default) or square pupil PSF with low-order
     aberrations.
 
@@ -216,18 +219,18 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             radius ratio of central obscuration
+    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
     """
     wf = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                    astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                   circular_pupil=circular_pupil, obs=obs)
+                   circular_pupil=circular_pupil, obscuration=obscuration)
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
     im = roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
     return im / (im.sum() * dx**2)
 
 def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
-              coma1=0., coma2=0., spher=0., circular_pupil=True, obs=0.):
+              coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return circular (default) or square pupil PSF with low-order aberrations as an
     ImageViewD.
 
@@ -251,15 +254,15 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             radius ratio of central obscuration
+    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
     """
     array = psf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                circular_pupil=circular_pupil, obs=obs)
+                circular_pupil=circular_pupil, obscuration=obscuration)
     return galsim.ImageViewD(array.astype(np.float64))
 
 def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0., coma1=0.,
-        coma2=0., spher=0., circular_pupil=True, obs=0.):
+        coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return the complex OTF of a circular (default) or square pupil with low-order
     aberrations as a numpy array.
 
@@ -285,18 +288,18 @@ def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             radius ratio of central obscuration
+    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
     """
     wf = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                    astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                   circular_pupil=circular_pupil, obs=obs)
+                   circular_pupil=circular_pupil, obscuration=obscuration)
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     otf = np.fft.ifft2((ftwf * ftwf.conj()).real)
     # Make unit flux before returning
     return np.ascontiguousarray(otf) / otf[0, 0].real
 
 def otf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
-              coma1=0., coma2=0., spher=0., circular_pupil=True, obs=0.):
+              coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return the complex OTF of a circular (default) or square pupil with low-order
     aberrations as a (real, imag) tuple of ImageViewD objects rather than a complex numpy array.
 
@@ -320,16 +323,16 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             radius ratio of central obscuration
+    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
     """
     array = otf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                circular_pupil=circular_pupil, obs=obs)
+                circular_pupil=circular_pupil, obscuration=obscuration)
     return (galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64))),
             galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64))))
 
 def mtf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0., coma1=0.,
-        coma2=0., spher=0., circular_pupil=True, obs=0.):
+        coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return numpy array containing the MTF of a circular (default) or square pupil with
     low-order aberrations.
 
@@ -355,14 +358,14 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             radius ratio of central obscuration
+    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
     """
     return np.abs(otf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                       astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                      obs=obs, circular_pupil=circular_pupil))
+                      obscuration=obscuration, circular_pupil=circular_pupil))
 
 def mtf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
-              coma1=0., coma2=0., spher=0., circular_pupil=True, obs=0.):
+              coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return the MTF of a circular (default) or square pupil with low-order aberrations as
     an ImageViewD.
 
@@ -386,15 +389,15 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             radius ratio of central obscuration
+    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
     """
     array = mtf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                circular_pupil=circular_pupil, obs=obs)
+                circular_pupil=circular_pupil, obscuration=obscuration)
     return galsim.ImageViewD(array.astype(np.float64))
 
 def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0., coma1=0.,
-        coma2=0., spher=0., circular_pupil=True, obs=0.):
+        coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return numpy array containing the PTF [radians] of a circular (default) or square
     pupil with low-order aberrations.
 
@@ -420,7 +423,7 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             radius ratio of central obscuration
+    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
     """
     kx, ky = kxky(array_shape)
     k2 = (kx**2 + ky**2)
@@ -430,12 +433,12 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     ptf[k2 < kmax_internal**2] = np.angle(otf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D,
                                               defocus=defocus, astig1=astig1, astig2=astig2,
                                               coma1=coma1, coma2=coma2, spher=spher,
-                                              circular_pupil=circular_pupil, obs=obs)[k2 <
-                                                                            kmax_internal**2])
+                                              circular_pupil=circular_pupil,
+                                              obscuration=obscuration)[k2 < kmax_internal**2])
     return ptf
 
 def ptf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
-              coma1=0., coma2=0., spher=0., circular_pupil=True, obs=0.):
+              coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return the PTF [radians] of a circular (default) or square pupil with low-order
     aberrations as an ImageViewD.
 
@@ -459,10 +462,10 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obs             radius ratio of central obscuration
+    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
     """
     array = ptf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                circular_pupil=circular_pupil, obs=obs)
+                circular_pupil=circular_pupil, obscuration=obscuration)
     return galsim.ImageViewD(array.astype(np.float64))
 
