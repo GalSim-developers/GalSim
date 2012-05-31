@@ -308,8 +308,8 @@ class DeVaucouleurs(GSObject):
 class Airy(GSObject):
     """@brief GalSim Airy, which has an SBAiry in the SBProfile attribute.
     """
-    def __init__(self, D=1., obs=0., flux=1.):
-        GSObject.__init__(self, galsim.SBAiry(D=D, obs=obs, flux=flux))
+    def __init__(self, D=1., obscuration=0., flux=1.):
+        GSObject.__init__(self, galsim.SBAiry(D=D, obscuration=obscuration, flux=flux))
     # Ditto!
 
 
