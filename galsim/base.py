@@ -334,7 +334,7 @@ class OpticalPSF(GSObject):
     @code
     optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0.,
                                         coma2=0., spher=0., circular_pupil=True, obs=0.,
-                                        interpolantxy=None, dx=1., oversampling=1.5, pad_factor=1.5)
+                                        interpolantxy=None, oversampling=1.5, pad_factor=1.5)
     @endcode
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
