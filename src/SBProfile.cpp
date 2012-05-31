@@ -2,7 +2,7 @@
 // Functions for the Surface Brightness Profile Class
 //
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "integ/Int.h"
@@ -22,7 +22,7 @@
 std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cerr;
 //std::ostream* dbgout = 0;
-int verbose_level = 1;
+int verbose_level = 2;
 #endif
 
 #include <numeric>
@@ -728,21 +728,21 @@ namespace galsim {
         xdbg<<"Net maxK, stepK = "<<maxMaxK<<" , "<<minStepK<<'\n';
     }
 
-    double SBAdd::xValue(const Position<double>& _p) const 
+    double SBAdd::xValue(const Position<double>& p) const 
     {
         double xv = 0.;  
         for (ConstIter pptr = plist.begin(); pptr != plist.end(); ++pptr)
-            xv += (*pptr)->xValue(_p);
+            xv += (*pptr)->xValue(p);
         return xv;
     } 
 
-    std::complex<double> SBAdd::kValue(const Position<double>& _p) const 
+    std::complex<double> SBAdd::kValue(const Position<double>& k) const 
     {
         ConstIter pptr = plist.begin();
         assert(pptr != plist.end());
-        std::complex<double> kv = (*pptr)->kValue(_p);
+        std::complex<double> kv = (*pptr)->kValue(k);
         for (++pptr; pptr != plist.end(); ++pptr)
-            kv += (*pptr)->kValue(_p);
+            kv += (*pptr)->kValue(k);
         return kv;
     } 
 
@@ -1393,18 +1393,67 @@ namespace galsim {
     //
     // "SBGaussian" Class 
     //
-    double SBGaussian::xValue(const Position<double>& p) const
+
+    SBGaussian::SBGaussian(double flux, double sigma) :
+        _flux(flux), _sigma(sigma), _sigma_sq(sigma*sigma)
     {
-        double r2 = p.x*p.x + p.y*p.y;
-        double xval = flux * std::exp( -r2/(2.*_sigma_sq) );
-        xval /= 2.*M_PI*(_sigma_sq);  // normalize
-        return xval;
+        // For large k, we clip the result of kValue to 0.
+        // We do this when the correct anser is less than kvalue_accuracy.
+        // exp(-k^2*sigma^2/2) = kvalue_accuracy
+        _ksq_max = -2. * log(sbp::kvalue_accuracy) / _sigma_sq;
+
+        // For small k, we can use up to quartic in the taylor expansion to avoid the exp.
+        // This is acceptable when the next term is less than kvalue_accuracy.
+        // 1/48 (k^2 r0^2)^3 = kvalue_accuracy
+        _ksq_min = std::pow(sbp::kvalue_accuracy * 48., 1./3.) / _sigma_sq;
+
+        _norm = _flux / (_sigma_sq * 2. * M_PI);
+
+        xdbg<<"Gaussian:\n";
+        xdbg<<"_flux = "<<_flux<<'\n';
+        xdbg<<"_sigma = "<<_sigma<<'\n';
+        xdbg<<"_sigma_sq = "<<_sigma_sq<<'\n';
+        xdbg<<"_ksq_max = "<<_ksq_max<<'\n';
+        xdbg<<"_ksq_min = "<<_ksq_min<<'\n';
+        xdbg<<"_norm = "<<_norm<<'\n';
+        xdbg<<"maxK() = "<<maxK()<<'\n';
+        xdbg<<"stepK() = "<<stepK()<<'\n';
     }
 
-    std::complex<double> SBGaussian::kValue(const Position<double>& p) const
+    // Set maxK where the FT is down to 0.001 or threshold, whichever is harder.
+    double SBGaussian::maxK() const 
+    { return std::max(4., sqrt(-2.*log(sbp::ALIAS_THRESHOLD)))/_sigma; }
+
+    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // most ALIAS_THRESHOLD of the flux.
+    double SBGaussian::stepK() const
     {
-        double r2 = p.x*p.x + p.y*p.y;
-        return flux * std::exp(-r2 * _sigma_sq/2.);
+        // int( exp(-r^2/2) r, r=0..R) = 1 - exp(-R^2/2)
+        // exp(-R^2/2) = ALIAS_THRESHOLD
+        double R = sqrt(-2.*std::log(sbp::ALIAS_THRESHOLD));
+        // Make sure it is at least 4 sigma;
+        R = std::max(4., R);
+        return M_PI / (R*_sigma);
+    }
+
+    double SBGaussian::xValue(const Position<double>& p) const
+    {
+        double rsq = p.x*p.x + p.y*p.y;
+        return _norm * std::exp( -rsq/(2.*_sigma_sq) );
+    }
+
+    std::complex<double> SBGaussian::kValue(const Position<double>& k) const
+    {
+        double ksq = k.x*k.x+k.y*k.y;
+
+        if (ksq > _ksq_max) {
+            return 0.;
+        } else if (ksq < _ksq_min) {
+            ksq *= _sigma_sq;
+            return _flux*(1. - 0.5*ksq*(1. - 0.25*ksq));
+        } else {
+            return _flux * std::exp(-ksq * _sigma_sq/2.);
+        }
     }
 
 
@@ -1567,11 +1616,11 @@ namespace galsim {
         return annuli_intersect(1.,obscuration,k_scaled)/norm;
     }
 
-    std::complex<double> SBAiry::kValue(const Position<double>& p) const
+    std::complex<double> SBAiry::kValue(const Position<double>& k) const
     {
-        double radius = std::sqrt(p.x*p.x+p.y*p.y);
+        double kk = std::sqrt(k.x*k.x+k.y*k.y);
         // calculate circular FT(PSF) on p'=(x',y')
-        return flux * annuli_autocorrelation(radius);
+        return flux * annuli_autocorrelation(kk);
     }
 
 
@@ -1593,9 +1642,9 @@ namespace galsim {
             return std::sin(u)/u;
     }
 
-    std::complex<double> SBBox::kValue(const Position<double>& p) const
+    std::complex<double> SBBox::kValue(const Position<double>& k) const
     {
-        return flux * sinc(0.5*p.x*xw)*sinc(0.5*p.y*yw);
+        return flux * sinc(0.5*k.x*xw)*sinc(0.5*k.y*yw);
     }
 
     // Override fillXGrid so we can partially fill pixels at edge of box.
@@ -2191,7 +2240,7 @@ namespace galsim {
     PhotonArray SBGaussian::shoot(int N, UniformDeviate& u) const 
     {
         PhotonArray result(N);
-        double fluxPerPhoton = flux/N;
+        double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
             double xu, yu, rsq;
@@ -2202,7 +2251,7 @@ namespace galsim {
             } while (rsq>=1. || rsq==0.);
             
             // Then map it to desired Gaussian with analytic transformation
-            double factor = sigma*sqrt( -2.*log(rsq)/rsq);
+            double factor = _sigma*sqrt( -2.*log(rsq)/rsq);
             result.setPhoton(i,factor*xu, factor*yu, fluxPerPhoton);
         }
         return result;

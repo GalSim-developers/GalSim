@@ -93,7 +93,7 @@ namespace galsim {
          * than this.  But whenever we do an explicit calculation about this, this is
          * the value we use.
          */
-        const double kvalue_accuracy = 1.e-4;
+        const double kvalue_accuracy = 1.e-5;
     }
 
     /// @brief Exception class thrown by SBProfiles.
@@ -150,7 +150,7 @@ namespace galsim {
          *
          * @param[in] _p 2D position in real space.
          */
-        virtual double xValue(const Position<double>& _p) const =0;
+        virtual double xValue(const Position<double>& p) const =0;
 
         //@{
         /**
@@ -177,7 +177,7 @@ namespace galsim {
          *
          * @param[in] _p 2D position in k space.
          */
-        virtual std::complex<double> kValue(const Position<double>& _p) const =0; 
+        virtual std::complex<double> kValue(const Position<double>& k) const =0; 
 
         virtual double maxK() const =0; ///< Value of k beyond which aliasing can be neglected.
 
@@ -224,7 +224,7 @@ namespace galsim {
         /// @brief Set the total flux of the SBProfile
         //
         /// @param[in] flux_ flux
-        virtual void setFlux(double flux_=1.) =0;
+        virtual void setFlux(double flux_) =0;
 
         // ****Methods implemented in base class****
 
@@ -762,9 +762,9 @@ namespace galsim {
 
         SBProfile* duplicate() const { return new SBAdd(*this); } 
 
-        double xValue(const Position<double>& _p) const;
+        double xValue(const Position<double>& p) const;
 
-        std::complex<double> kValue(const Position<double>& _p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
 
         double maxK() const { return maxMaxK; }
         double stepK() const { return minStepK; }
@@ -810,7 +810,7 @@ namespace galsim {
         { return Position<double>(sumfx / sumflux, sumfy / sumflux); }
 
         virtual double getFlux() const { return sumflux; }
-        virtual void setFlux(double flux_=1.);
+        virtual void setFlux(double flux_);
 
         /**
          * @brief Shoot photons through this SBAdd.
@@ -1005,7 +1005,7 @@ namespace galsim {
         Position<double> centroid() const { return x0+fwd(adaptee->centroid()); }
 
         double getFlux() const { return adaptee->getFlux()*absdet; }
-        void setFlux(double flux_=1.) { adaptee->setFlux(flux_/absdet); }
+        void setFlux(double flux_) { adaptee->setFlux(flux_/absdet); }
 
         double getPositiveFlux() const { return adaptee->getPositiveFlux()*absdet; }
         double getNegativeFlux() const { return adaptee->getNegativeFlux()*absdet; }
@@ -1172,7 +1172,7 @@ namespace galsim {
         SBProfile* duplicate() const { return new SBConvolve(*this); } 
 
         // Do the real-space conovlution to calculate this.
-        double xValue(const Position<double>& _p) const;
+        double xValue(const Position<double>& p) const;
 
         std::complex<double> kValue(const Position<double>& k) const 
         {
@@ -1237,7 +1237,7 @@ namespace galsim {
         { return Position<double>(x0, y0); }
 
         double getFlux() const { return fluxScale * fluxProduct; }
-        void setFlux(double flux_=1.) { fluxScale = flux_/fluxProduct; }
+        void setFlux(double flux_) { fluxScale = flux_/fluxProduct; }
 
         double getPositiveFlux() const;
         double getNegativeFlux() const;
@@ -1271,44 +1271,38 @@ namespace galsim {
      */
     class SBGaussian : public SBProfile 
     {
-    private:
-        double flux; ///< Flux of the Surface Brightness Profile.
-
-        /// @brief Characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`.
-        double sigma;
-        double _sigma_sq; ///< Calculated value: sigma*sigma
-
     public:
         /** 
          * @brief Constructor.
          *
-         * @param[in] flux_  flux of the Surface Brightness Profile (default `flux_ = 1.`).
-         * @param[in] sigma_ characteristic size, surface brightness scales as 
-         *                   `exp[-r^2 / (2. * sigma^2)] (default `sigma_ = 1.`).
+         * @param[in] flux   flux of the Surface Brightness Profile (default `flux = 1.`).
+         * @param[in] sigma  characteristic size, surface brightness scales as 
+         *                   `exp[-r^2 / (2. * sigma^2)] (default `sigma = 1.`).
          */
-        SBGaussian(double flux_=1., double sigma_=1.) :
-            flux(flux_), sigma(sigma_), _sigma_sq(sigma*sigma) {}
+        SBGaussian(double flux=1., double sigma=1.);
 
         /// @brief Destructor.
         ~SBGaussian() {}                        
 
-        double xValue(const Position<double>& _p) const;
-        std::complex<double> kValue(const Position<double>& _p) const;
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return true; } 
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        // Extend to 4 sigma in both domains, or more if needed to reach EE spec
-        double maxK() const 
-        { return std::max(4., std::sqrt(-2.*log(sbp::ALIAS_THRESHOLD))) / sigma; }
-        double stepK() const 
-        { return M_PI/std::max(4., std::sqrt(-2.*log(sbp::ALIAS_THRESHOLD))) / sigma; }
+        double maxK() const;
+        double stepK() const;
+
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
 
-        double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; }
+        double getFlux() const { return _flux; }
+        void setFlux(double flux) 
+        { 
+            _flux = flux; 
+            _norm = _flux / (_sigma_sq * 2. * M_PI);
+        }
         /**
          * @brief Shoot photons through this SBGaussian.
          *
@@ -1323,6 +1317,16 @@ namespace galsim {
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBGaussian(*this); }
+
+    private:
+        double _flux; ///< Flux of the Surface Brightness Profile.
+
+        /// @brief Characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`.
+        double _sigma;
+        double _sigma_sq; ///< Calculated value: sigma*sigma
+        double _ksq_min; ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
+        double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
+        double _norm; ///< flux / sigma^2 / 2pi
     };
 
     /**
@@ -1521,7 +1525,7 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; }
+        void setFlux(double flux_) { flux=flux_; }
 
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
@@ -1583,7 +1587,11 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
-        void setFlux(double flux) { _flux=flux; }
+        void setFlux(double flux) 
+        {
+            _flux = flux; 
+            _norm = _flux / (_r0_sq * 2. * M_PI);
+        }
 
         /// @brief Exponential photon-shooting done with rapid iterative solution of inverse
         /// cumulative distribution
@@ -1659,8 +1667,8 @@ namespace galsim {
 
         // Methods (Barney: mostly described by SBProfile Doxys, with maxK() and stepK() 
         // prescription described in class description).
-        double xValue(const Position<double>& _p) const;
-        std::complex<double> kValue(const Position<double>& _p) const;
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return true; } 
         bool isAnalyticX() const { return true; }
@@ -1682,7 +1690,7 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; } 
+        void setFlux(double flux_) { flux=flux_; } 
 
         /**
          * @brief Subclass is a scale-free version of the Airy radial function.
@@ -1784,8 +1792,8 @@ namespace galsim {
         ~SBBox() {}
 
         // Methods (Barney: public methods Doxified via SBProfile).
-        double xValue(const Position<double>& _p) const;
-        std::complex<double> kValue(const Position<double>& _p) const;
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return false; } 
         bool isAnalyticX() const { return true; }
@@ -1804,7 +1812,7 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; }
+        void setFlux(double flux_) { flux=flux_; }
 
         /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
@@ -1858,8 +1866,8 @@ namespace galsim {
         // implementation dependent methods
         SBProfile* duplicate() const { return new SBLaguerre(*this); }
 
-        double xValue(const Position<double>& _p) const;
-        std::complex<double> kValue(const Position<double>& _p) const;
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
 
         double maxK() const;
         double stepK() const;
@@ -1872,7 +1880,7 @@ namespace galsim {
         { throw SBError("SBLaguerre::centroid calculations not yet implemented"); }
 
         double getFlux() const;
-        void setFlux(double flux_=1.);
+        void setFlux(double flux_);
 
         /// @brief Photon-shooting is not implemented for SBLaguerre, will throw an exception.
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const {
@@ -1969,7 +1977,7 @@ namespace galsim {
 
 
         double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; }
+        void setFlux(double flux_) { flux=flux_; }
 
         /**
          * @brief Moffat photon shooting is done by analytic inversion of cumulative flux distribution.
