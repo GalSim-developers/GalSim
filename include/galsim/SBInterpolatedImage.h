@@ -102,10 +102,12 @@ namespace galsim {
          * image or the interpolation kernel have negative regions, then negative-flux photons can
          * be generated.  Noisy images or ring-y kernels will generate a lot of shot noise in
          * the shoot() output.  Not all kernels have photon-shooting implemented.  It may be best to
-         * stick to nearest-neighbor and linear interpolation kernels if you wish to avoid these issues.
+         * stick to nearest-neighbor and linear interpolation kernels if you wish to avoid these 
+         * issues.
          *
-         * Use the `Delta` Interpolant if you do not want to waste time moving the photons from their pixel 
-         * centers.  But you will regret any attempt to draw images analytically with that one.
+         * Use the `Delta` Interpolant if you do not want to waste time moving the photons from 
+         * their pixel centers.  But you will regret any attempt to draw images analytically with 
+         * that one.
          *
          * Photon shooting with the Sinc kernel is a bad idea and is currently forbidden.
          *
