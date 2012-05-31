@@ -1899,7 +1899,7 @@ namespace galsim {
          *
          * @param[in] beta           Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
          * @param[in] truncationFWHM outer truncation in units of FWHM (default `truncationFWHM = 
-         * 2.`).
+         * 2.`).  If truncationFWHM = 0, then no truncation is applied.
          * @param[in] flux           Flux (default `flux = 1.`).
          * @param[in] size           Size specification (default `size = 1.`).
          * @param[in] rType          Kind of size being specified (default `HALF_LIGHT_RADIUS`).
@@ -1911,7 +1911,7 @@ namespace galsim {
             SCALE_RADIUS
         };
 
-        SBMoffat(double beta, double truncationFWHM=2., double flux=1., double size=1.,
+        SBMoffat(double beta, double truncationFWHM=0., double flux=1., double size=1.,
                  RadiusType rType=HALF_LIGHT_RADIUS);
 
         // Default copy constructor should be fine.

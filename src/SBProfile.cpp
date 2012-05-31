@@ -2103,16 +2103,27 @@ namespace galsim {
         xdbg<<"beta = "<<_beta<<"\n";
         xdbg<<"flux = "<<_flux<<"\n";
 
-        //First, relation between FWHM and rD:
+        // First, relation between FWHM and rD:
         double FWHMrD = 2.* std::sqrt(std::pow(2., 1./_beta)-1.);
         xdbg<<"FWHMrD = "<<FWHMrD<<"\n";
-        double maxRrD = FWHMrD * truncationFWHM;
-        xdbg<<"maxRrD = "<<maxRrD<<"\n";
+        double maxRrD;
+        if (truncationFWHM > 0.) {
+            maxRrD = FWHMrD * truncationFWHM;
+            xdbg<<"maxRrD = "<<maxRrD<<"\n";
 
-        // Analytic integration of total flux:
-        _fluxFactor = 1. - pow( 1+maxRrD*maxRrD, (1.-_beta));
+            // Analytic integration of total flux:
+            _fluxFactor = 1. - pow( 1+maxRrD*maxRrD, (1.-_beta));
+        } else {
+            _fluxFactor = 1.;
 
-        // Get half-light radius in units of rD:
+            // Set maxRrD to the radius where surface brightness is kvalue_accuracy
+            // of center value.  (I know this isn't  a kvalue, but the same level 
+            // is probably appropriate here.)
+            // (1+R^2)^-beta = kvalue_accuracy
+            // And ignore the 1+ part of (1+R^2), so
+            maxRrD = std::pow(sbp::kvalue_accuracy,-1./(2.*_beta));
+            xdbg<<"Not truncate.  Calculated maxRrD = "<<maxRrD<<"\n";
+        }
 
         // Set size of this instance according to type of size given in constructor:
         switch (rType) {
@@ -2121,6 +2132,7 @@ namespace galsim {
                break;
           case HALF_LIGHT_RADIUS: 
                {
+                   // Get half-light radius in units of rD:
                    double rerD = sqrt( pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
                    _rD = size / rerD;
                }
@@ -2184,7 +2196,7 @@ namespace galsim {
         dbg<<"Find Moffat stepK\n";
         dbg<<"beta = "<<_beta<<'\n';
 #if 1
-        // The fractional flux out to radius R is
+        // The fractional flux out to radius R is (if not truncated)
         // 1 - (1+R^2)^(1-beta)
         // So solve (1+R^2)^(1-beta) = ALIAS_THRESHOLD
         if (_beta <= 1.01) {
@@ -2194,6 +2206,7 @@ namespace galsim {
             // Ignore the 1 in (1+R^2), so approximately:
             double R = std::pow(sbp::ALIAS_THRESHOLD, 0.5/(1.-_beta)) * _rD;
             dbg<<"R = "<<R<<'\n';
+            // If it is truncated at less than this, drop to that value.
             if (R > _maxR) R = _maxR;
             dbg<<"_maxR = "<<_maxR<<'\n';
             dbg<<"R => "<<R<<'\n';

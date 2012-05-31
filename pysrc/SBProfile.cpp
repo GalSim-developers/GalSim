@@ -477,7 +477,7 @@ struct PySBMoffat {
             .def("__init__", 
                  bp::make_constructor(
                      &construct, bp::default_call_policies(),
-                     (bp::arg("beta"), bp::arg("truncationFWHM")=2.,
+                     (bp::arg("beta"), bp::arg("truncationFWHM")=0.,
                       bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(),
                       bp::arg("scale_radius")=bp::object(), bp::arg("fwhm")=bp::object())
                  )

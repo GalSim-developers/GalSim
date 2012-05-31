@@ -269,7 +269,7 @@ class Gaussian(GSObject):
 class Moffat(GSObject):
     """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
-    def __init__(self, beta, truncationFWHM=2., flux=1.,
+    def __init__(self, beta, truncationFWHM=0., flux=1.,
                  half_light_radius=None, scale_radius=None, fwhm=None):
         GSObject.__init__(self, galsim.SBMoffat(beta, truncationFWHM=truncationFWHM, flux=flux,
                           half_light_radius=half_light_radius, scale_radius=scale_radius, fwhm=fwhm))
