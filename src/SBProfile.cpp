@@ -672,135 +672,137 @@ namespace galsim {
 
     void SBAdd::initialize() 
     {
-        sumflux = sumfx = sumfy = 0.;
-        maxMaxK = minStepK = 0.;
-        allAxisymmetric = allAnalyticX = allAnalyticK = true;
+        _sumflux = _sumfx = _sumfy = 0.;
+        _maxMaxK = _minStepK = 0.;
+        _allAxisymmetric = _allAnalyticX = _allAnalyticK = true;
     }
 
     void SBAdd::add(const SBProfile& rhs, double scale) 
     {
-        xdbg<<"Start SBAdd::add.  Adding item # "<<plist.size()+1<<'\n';
+        xdbg<<"Start SBAdd::add.  Adding item # "<<_plist.size()+1<<'\n';
         // Need a non-const copy of the rhs:
         SBProfile* p=rhs.duplicate();
 
-
         // Keep track of where first new summand is on list:
-        Iter newptr = plist.end();
+        Iter newptr = _plist.end();
 
-        // Add new summand(s) to the plist:
-        SBAdd *sba = dynamic_cast<SBAdd*> (p);
+        // Add new summand(s) to the _plist:
+        SBAdd *sba = dynamic_cast<SBAdd*>(p);
         if (sba) {
             // If rhs is an SBAdd, copy its full list here
-            for (ConstIter pptr = sba->plist.begin(); pptr!=sba->plist.end(); ++pptr) {
-                if (newptr==plist.end()) {
-                    plist.push_back((*pptr)->duplicate()); 
+            for (ConstIter pptr = sba->_plist.begin(); pptr!=sba->_plist.end(); ++pptr) {
+                if (newptr==_plist.end()) {
+                    _plist.push_back((*pptr)->duplicate()); 
                     // Rescale flux for duplicate copy if desired:
                     if (scale!=1.) 
-                        plist.back()->setFlux( scale*plist.back()->getFlux());
-                    newptr = --plist.end();  // That was first new summand
+                        _plist.back()->setFlux( scale*_plist.back()->getFlux());
+                    newptr = --_plist.end();  // That was first new summand
                 } else {
-                    plist.push_back((*pptr)->duplicate()); 
+                    _plist.push_back((*pptr)->duplicate()); 
                 }
             }
             delete sba; // no memory leak! 
         } else {
-            plist.push_back(p);
+            _plist.push_back(p);
             // Rescale flux for duplicate copy if desired:
             if (scale!=1.) 
-                plist.back()->setFlux( scale*plist.back()->getFlux());
-            newptr = --plist.end();  // That was first new summand
+                _plist.back()->setFlux( scale*_plist.back()->getFlux());
+            newptr = --_plist.end();  // That was first new summand
         }
 
         // Accumulate properties of all summands
-        while (newptr != plist.end()) {
+        while (newptr != _plist.end()) {
             xdbg<<"SBAdd component has maxK, stepK = "<<
                 (*newptr)->maxK()<<" , "<<(*newptr)->stepK()<<'\n';
-            sumflux += (*newptr)->getFlux();
-            sumfx += (*newptr)->getFlux() * (*newptr)->centroid().x;
-            sumfy += (*newptr)->getFlux() * (*newptr)->centroid().x;
-            if ( (*newptr)->maxK() > maxMaxK) maxMaxK = (*newptr)->maxK();
-            if ( minStepK<=0. || ((*newptr)->stepK() < minStepK)) minStepK = (*newptr)->stepK();
-            allAxisymmetric = allAxisymmetric && (*newptr)->isAxisymmetric();
-            allAnalyticX = allAnalyticX && (*newptr)->isAnalyticX();
-            allAnalyticK = allAnalyticK && (*newptr)->isAnalyticK();
+            _sumflux += (*newptr)->getFlux();
+            _sumfx += (*newptr)->getFlux() * (*newptr)->centroid().x;
+            _sumfy += (*newptr)->getFlux() * (*newptr)->centroid().x;
+            if ( (*newptr)->maxK() > _maxMaxK) 
+                _maxMaxK = (*newptr)->maxK();
+            if ( _minStepK<=0. || ((*newptr)->stepK() < _minStepK) ) 
+                _minStepK = (*newptr)->stepK();
+            _allAxisymmetric = _allAxisymmetric && (*newptr)->isAxisymmetric();
+            _allAnalyticX = _allAnalyticX && (*newptr)->isAnalyticX();
+            _allAnalyticK = _allAnalyticK && (*newptr)->isAnalyticK();
             newptr++;
         }
-        xdbg<<"Net maxK, stepK = "<<maxMaxK<<" , "<<minStepK<<'\n';
+        xdbg<<"Net maxK, stepK = "<<_maxMaxK<<" , "<<_minStepK<<'\n';
     }
 
     double SBAdd::xValue(const Position<double>& p) const 
     {
-        double xv = 0.;  
-        for (ConstIter pptr = plist.begin(); pptr != plist.end(); ++pptr)
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        double xv = (*pptr)->xValue(p);
+        for (++pptr; pptr != _plist.end(); ++pptr)
             xv += (*pptr)->xValue(p);
         return xv;
     } 
 
     std::complex<double> SBAdd::kValue(const Position<double>& k) const 
     {
-        ConstIter pptr = plist.begin();
-        assert(pptr != plist.end());
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
         std::complex<double> kv = (*pptr)->kValue(k);
-        for (++pptr; pptr != plist.end(); ++pptr)
+        for (++pptr; pptr != _plist.end(); ++pptr)
             kv += (*pptr)->kValue(k);
         return kv;
     } 
 
     void SBAdd::fillKGrid(KTable& kt) const 
     {
-        if (plist.empty()) kt.clear();
-        ConstIter pptr = plist.begin();
+        if (_plist.empty()) kt.clear();
+        ConstIter pptr = _plist.begin();
         (*pptr)->fillKGrid(kt);
-        ++pptr;
-        if (pptr==plist.end()) return;
-        int N = kt.getN();
-        double dk = kt.getDk();
-        KTable k2(N,dk);
-        for ( ; pptr!= plist.end(); ++pptr) {
-            (*pptr)->fillKGrid(k2);
-            kt.accumulate(k2);
+        if (++pptr != _plist.end()) {
+            KTable k2(kt.getN(),kt.getDk());
+            for ( ; pptr!= _plist.end(); ++pptr) {
+                (*pptr)->fillKGrid(k2);
+                kt.accumulate(k2);
+            }
         }
     }
 
     void SBAdd::fillXGrid(XTable& xt) const 
     {
-        if (plist.empty()) xt.clear();
-        ConstIter pptr = plist.begin();
+        if (_plist.empty()) xt.clear();
+        ConstIter pptr = _plist.begin();
         (*pptr)->fillXGrid(xt);
-        ++pptr;
-        if (pptr==plist.end()) return;
-        int N = xt.getN();
-        double dx = xt.getDx();
-        XTable x2(N,dx);
-        for ( ; pptr!= plist.end(); ++pptr) {
-            (*pptr)->fillXGrid(x2);
-            xt.accumulate(x2);
+        if (++pptr != _plist.end()) {
+            XTable x2(xt.getN(),xt.getDx());
+            for ( ; pptr!= _plist.end(); ++pptr) {
+                (*pptr)->fillXGrid(x2);
+                xt.accumulate(x2);
+            }
         }
     }
 
-    void SBAdd::setFlux(double f) 
+    void SBAdd::setFlux(double flux) 
     {
-        if (sumflux==0.) throw SBError("SBAdd::setFlux not possible when flux=0 to start");
-        double m = f/getFlux();  // Factor by which to change flux
-        for (Iter pptr = plist.begin(); pptr != plist.end(); ++pptr) {
+        if (_sumflux==0.) throw SBError("SBAdd::setFlux not possible when flux=0 to start");
+        double m = flux/_sumflux;  // Factor by which to change flux
+        for (Iter pptr = _plist.begin(); pptr != _plist.end(); ++pptr) {
             double pf = (*pptr)->getFlux();  
             (*pptr)->setFlux(pf*m);
         }
-        sumflux *=m;
-        sumfx *= m;
-        sumfy *= m;
+        _sumflux = flux;
+        _sumfx *= m;
+        _sumfy *= m;
     }
 
-    double SBAdd::getPositiveFlux() const {
+    double SBAdd::getPositiveFlux() const 
+    {
         double result = 0.;
-        for (std::list<SBProfile*>::const_iterator pptr = plist.begin(); pptr != plist.end(); ++pptr) {
+        for (ConstIter pptr = _plist.begin(); pptr != _plist.end(); ++pptr) {
             result += (*pptr)->getPositiveFlux();  
         }
         return result;
     }
-    double SBAdd::getNegativeFlux() const {
+
+    double SBAdd::getNegativeFlux() const 
+    {
         double result = 0.;
-        for (std::list<SBProfile*>::const_iterator pptr = plist.begin(); pptr != plist.end(); ++pptr) {
+        for (ConstIter pptr = _plist.begin(); pptr != _plist.end(); ++pptr) {
             result += (*pptr)->getNegativeFlux();  
         }
         return result;
@@ -1262,37 +1264,37 @@ namespace galsim {
     //
     void SBConvolve::add(const SBProfile& rhs) 
     {
-        xdbg<<"Start SBConvolve::add.  Adding item # "<<plist.size()+1<<'\n';
+        xdbg<<"Start SBConvolve::add.  Adding item # "<<_plist.size()+1<<'\n';
         // If this is the first thing being added to the list, initialize some accumulators
-        if (plist.empty()) {
-            x0 = y0 = 0.;
-            fluxProduct = 1.;
-            minMaxK = 0.;
-            minStepK = 0.;
-            isStillAxisymmetric = true;
+        if (_plist.empty()) {
+            _x0 = _y0 = 0.;
+            _fluxProduct = 1.;
+            _minMaxK = 0.;
+            _minStepK = 0.;
+            _isStillAxisymmetric = true;
         }
 
         // Need a non-const copy of the rhs:
         SBProfile* p=rhs.duplicate();
 
         // Keep track of where first new term is on list:
-        Iter newptr = plist.end();
+        Iter newptr = _plist.end();
 
-        // Add new terms(s) to the plist:
+        // Add new terms(s) to the _plist:
         SBConvolve *sbc = dynamic_cast<SBConvolve*> (p);
         if (sbc) {  
             // If rhs is an SBConvolve, copy its list here
-            fluxScale *= sbc->fluxScale;
-            for (Iter pptr = sbc->plist.begin(); pptr!=sbc->plist.end(); ++pptr) {
+            _fluxScale *= sbc->_fluxScale;
+            for (Iter pptr = sbc->_plist.begin(); pptr!=sbc->_plist.end(); ++pptr) {
                 if (!(*pptr)->isAnalyticK() && !_real_space) 
                     throw SBError("SBConvolve requires members to be analytic in k");
                 if (!(*pptr)->isAnalyticX() && _real_space)
                     throw SBError("Real_space SBConvolve requires members to be analytic in x");
-                if (newptr==plist.end()) {
-                    plist.push_back((*pptr)->duplicate()); 
-                    newptr = --plist.end();  // That was first new term
+                if (newptr==_plist.end()) {
+                    _plist.push_back((*pptr)->duplicate()); 
+                    newptr = --_plist.end();  // That was first new term
                 } else {
-                    plist.push_back((*pptr)->duplicate()); 
+                    _plist.push_back((*pptr)->duplicate()); 
                 }
             }
             delete sbc; // no memory leak! 
@@ -1301,39 +1303,39 @@ namespace galsim {
                 throw SBError("SBConvolve requires members to be analytic in k");
             if (!rhs.isAnalyticX() && _real_space)
                 throw SBError("Real-space SBConvolve requires members to be analytic in x");
-            plist.push_back(p);
-            newptr = --plist.end();  // That was first new term
+            _plist.push_back(p);
+            newptr = --_plist.end();  // That was first new term
         }
 
         // Accumulate properties of all terms
-        while (newptr != plist.end()) {
+        while (newptr != _plist.end()) {
             xdbg<<"SBConvolve component has maxK, stepK = "<<
                 (*newptr)->maxK()<<" , "<<(*newptr)->stepK()<<'\n';
-            fluxProduct *= (*newptr)->getFlux();
-            x0 += (*newptr)->centroid().x;
-            y0 += (*newptr)->centroid().y;
-            if ( minMaxK<=0. || (*newptr)->maxK() < minMaxK) minMaxK = (*newptr)->maxK();
-            if ( minStepK<=0. || ((*newptr)->stepK() < minStepK)) minStepK = (*newptr)->stepK();
-            isStillAxisymmetric = isStillAxisymmetric && (*newptr)->isAxisymmetric();
+            _fluxProduct *= (*newptr)->getFlux();
+            _x0 += (*newptr)->centroid().x;
+            _y0 += (*newptr)->centroid().y;
+            if ( _minMaxK<=0. || (*newptr)->maxK() < _minMaxK)
+                _minMaxK = (*newptr)->maxK();
+            if ( _minStepK<=0. || ((*newptr)->stepK() < _minStepK))
+                _minStepK = (*newptr)->stepK();
+            _isStillAxisymmetric = _isStillAxisymmetric && (*newptr)->isAxisymmetric();
             newptr++;
         }
-        xdbg<<"Net maxK, stepK = "<<minMaxK<<" , "<<minStepK<<'\n';
+        xdbg<<"Net maxK, stepK = "<<_minMaxK<<" , "<<_minStepK<<'\n';
     }
 
     void SBConvolve::fillKGrid(KTable& kt) const 
     {
-        if (plist.empty()) kt.clear();
-        ConstIter pptr = plist.begin();
+        if (_plist.empty()) kt.clear();
+        ConstIter pptr = _plist.begin();
         (*pptr)->fillKGrid(kt);
-        kt *= fluxScale;
-        ++pptr;
-        if (pptr==plist.end()) return;
-        int N = kt.getN();
-        double dk = kt.getDk();
-        KTable k2(N,dk);
-        for ( ; pptr!= plist.end(); ++pptr) {
-            (*pptr)->fillKGrid(k2);
-            kt*=k2;
+        kt *= _fluxScale;
+        if (++pptr != _plist.end()) {
+            KTable k2(kt.getN(),kt.getDk());
+            for ( ; pptr!= _plist.end(); ++pptr) {
+                (*pptr)->fillKGrid(k2);
+                kt *= k2;
+            }
         }
     }
 
@@ -1345,26 +1347,38 @@ namespace galsim {
         // probably rare that this will be more efficient if N > 2.
         // For now, we don't bother implementing this for N > 2.
         
-        if (plist.empty()) return 0.;
-        else if (plist.size() == 1) return plist.front()->xValue(pos);
-        else if (plist.size() > 2) 
+        if (_plist.empty()) return 0.;
+        else if (_plist.size() == 1) return _plist.front()->xValue(pos);
+        else if (_plist.size() > 2) 
             throw SBError("Real-space integration of more than 2 profiles is not implemented.");
         else {
-            const SBProfile* p1 = plist.front();
-            const SBProfile* p2 = plist.back();
+            const SBProfile* p1 = _plist.front();
+            const SBProfile* p2 = _plist.back();
             if (p2->isAxisymmetric())
-                return RealSpaceConvolve(p2,p1,pos,fluxProduct);
+                return RealSpaceConvolve(p2,p1,pos,_fluxProduct);
             else 
-                return RealSpaceConvolve(p1,p2,pos,fluxProduct);
+                return RealSpaceConvolve(p1,p2,pos,_fluxProduct);
         }
     }
 
-    double SBConvolve::getPositiveFlux() const {
-        if (plist.empty()) return 0.;
-        std::list<SBProfile*>::const_iterator pptr = plist.begin();
-        double pResult = (*pptr)->getPositiveFlux() * fluxScale;
-        double nResult = (*pptr)->getNegativeFlux() * fluxScale;
-        for (++pptr; pptr!=plist.end(); ++pptr) {
+    std::complex<double> SBConvolve::kValue(const Position<double>& k) const 
+    {
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        std::complex<double> kv = (*pptr)->kValue(k);
+        for (++pptr; pptr != _plist.end(); ++pptr)
+            kv *= (*pptr)->kValue(k);
+        return kv;
+    } 
+
+
+    double SBConvolve::getPositiveFlux() const 
+    {
+        if (_plist.empty()) return 0.;
+        std::list<SBProfile*>::const_iterator pptr = _plist.begin();
+        double pResult = (*pptr)->getPositiveFlux() * _fluxScale;
+        double nResult = (*pptr)->getNegativeFlux() * _fluxScale;
+        for (++pptr; pptr!=_plist.end(); ++pptr) {
             double p = (*pptr)->getPositiveFlux();
             double n = (*pptr)->getNegativeFlux();
             double pNew = p*pResult + n*nResult;
@@ -1375,12 +1389,13 @@ namespace galsim {
     }
 
     // Note duplicated code here, could be caching results for tiny efficiency gain
-    double SBConvolve::getNegativeFlux() const {
-        if (plist.empty()) return 0.;
-        std::list<SBProfile*>::const_iterator pptr = plist.begin();
-        double pResult = (*pptr)->getPositiveFlux() * fluxScale;
-        double nResult = (*pptr)->getNegativeFlux() * fluxScale;
-        for (++pptr; pptr!=plist.end(); ++pptr) {
+    double SBConvolve::getNegativeFlux() const 
+    {
+        if (_plist.empty()) return 0.;
+        std::list<SBProfile*>::const_iterator pptr = _plist.begin();
+        double pResult = (*pptr)->getPositiveFlux() * _fluxScale;
+        double nResult = (*pptr)->getNegativeFlux() * _fluxScale;
+        for (++pptr; pptr!=_plist.end(); ++pptr) {
             double p = (*pptr)->getPositiveFlux();
             double n = (*pptr)->getNegativeFlux();
             double pNew = p*pResult + n*nResult;
@@ -2178,16 +2193,14 @@ namespace galsim {
 
         // Get photons from each summand, using BinomialDeviate to
         // randomize distribution of photons among summands
-        for (std::list<SBProfile*>::const_iterator pptr = plist.begin(); 
-             pptr!= plist.end();
-             ++pptr) {
+        for (ConstIter pptr = _plist.begin(); pptr!= _plist.end(); ++pptr) {
             double thisAbsoluteFlux = (*pptr)->getPositiveFlux() + (*pptr)->getNegativeFlux();
 
             // How many photons to shoot from this summand?
             int thisN = remainingN;  // All of what's left, if this is the last summand...
             std::list<SBProfile*>::const_iterator nextPtr = pptr;
             ++nextPtr;
-            if (nextPtr!=plist.end()) {
+            if (nextPtr!=_plist.end()) {
                 // otherwise allocate a randomized fraction of the remaining photons to this summand:
                 BinomialDeviate bd(u, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux);
                 thisN = bd();
@@ -2210,16 +2223,16 @@ namespace galsim {
 
     PhotonArray SBConvolve::shoot(int N, UniformDeviate& u) const 
     {
-        std::list<SBProfile*>::const_iterator pptr = plist.begin();
-        if (pptr==plist.end())
+        std::list<SBProfile*>::const_iterator pptr = _plist.begin();
+        if (pptr==_plist.end())
             throw SBError("Cannot shoot() for empty SBConvolve");
         PhotonArray result = (*pptr)->shoot(N, u);
-        if (fluxScale!=1.) result.scaleFlux(fluxScale);
+        if (_fluxScale!=1.) result.scaleFlux(_fluxScale);
         // It is necessary to shuffle when convolving because we do
         // do not have a gaurantee that the convolvee's photons are
         // uncorrelated, e.g. they might both have their negative ones
         // at the end.
-        for (++pptr; pptr != plist.end(); ++pptr)
+        for (++pptr; pptr != _plist.end(); ++pptr)
             result.convolveShuffle( (*pptr)->shoot(N, u), u);
         return result;
     }

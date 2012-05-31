@@ -125,7 +125,6 @@ namespace galsim {
      */
     class SBProfile 
     {
-    protected:
     public:
 
         /** 
@@ -222,9 +221,7 @@ namespace galsim {
         virtual double getFlux() const =0; ///< Get the total flux of the SBProfile.
 
         /// @brief Set the total flux of the SBProfile
-        //
-        /// @param[in] flux_ flux
-        virtual void setFlux(double flux_) =0;
+        virtual void setFlux(double flux) =0;
 
         // ****Methods implemented in base class****
 
@@ -333,17 +330,18 @@ namespace galsim {
         virtual double getPositiveFlux() const { return getFlux()>0. ? getFlux() : 0.; }
 
         /**
-         * @brief Return expectation value of absolute value of flux in negative photons from shoot()
+         * @brief Return expectation value of absolute value of flux in negative photons from 
+         * shoot()
          *
          * Returns expectation value of (absolute value of) flux returned in negative-valued photons
-         * when shoot() is called for this object.  Default implementation is to return getFlux() if it
-         * is negative, 0 otherwise,
+         * when shoot() is called for this object.  
+         * Default implementation is to return getFlux() if it is negative, 0 otherwise,
          * which will be the case when the SBProfile is constructed entirely from elements that
          * have the same sign.
          *
          * It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the
-         * same thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
-         * cases involving lookup tables, etc.
+         * same thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy 
+         * in cases involving lookup tables, etc.
          *
          * @returns Expected absolute value of negative-photon flux.
          */
@@ -638,59 +636,31 @@ namespace galsim {
      */
     class SBAdd : public SBProfile 
     {
-    protected:
-        /// @brief The plist content is a pointer to a fresh copy of the summands.
-        std::list<SBProfile*> plist; 
-        typedef std::list<SBProfile*>::iterator Iter;
-        typedef std::list<SBProfile*>::const_iterator ConstIter;
-
-    private:
-        double sumflux; ///< Keeps track of the cumulated flux of all summands.
-        double sumfx; ///< Keeps track of the cumulated `fx` of all summands.
-        double sumfy; ///< Keeps track of the cumulated `fy` of all summands.
-        double maxMaxK; ///< Keeps track of the cumulated `maxK()` of all summands.
-        double minStepK; ///< Keeps track of the cumulated `minStepK()` of all summands.
-        double minMinX; ///< Keeps track of the cumulated `minX()` of all summands.
-        double maxMaxX; ///< Keeps track of the cumulated `maxX()` of all summands.
-        double minMinY; ///< Keeps track of the cumulated `minY()` of all summands.
-        double maxMaxY; ///< Keeps track of the cumulated `maxY()` of all summands.
-
-        /// @brief Keeps track of the cumulated `isAxisymmetric()` properties of all summands.
-        bool allAxisymmetric;
-
-        /// @brief Keeps track of the cumulated `isAnalyticX()` property of all summands. 
-        bool allAnalyticX; 
-
-        /// @brief Keeps track of the cumulated `isAnalyticK()` properties of all summands.
-        bool allAnalyticK; 
-
-        void initialize();  ///< Sets all private book-keeping variables to starting state.
-
     public:
         /// @brief Constructor, empty.
-        SBAdd() : plist() { initialize(); }
+        SBAdd() { initialize(); }
 
         /** 
          * @brief Constructor, 1 input.
          *
          * @param[in] s1 SBProfile.
          */
-        SBAdd(const SBProfile& s1) : plist() { initialize(); add(s1); }
+        SBAdd(const SBProfile& s1) { initialize(); add(s1); }
 
         /** @brief Constructor, 2 inputs.
          *
          * @param[in] s1 first SBProfile.
          * @param[in] s2 second SBProfile.
          */
-        SBAdd(const SBProfile& s1, const SBProfile& s2) : plist() 
-        { initialize(); add(s1);  add(s2); }
+        SBAdd(const SBProfile& s1, const SBProfile& s2)
+        { initialize(); add(s1); add(s2); }
 
         /** 
          * @brief Constructor, list of inputs.
          *
          * @param[in] slist list of SBProfiles.
          */
-        SBAdd(const std::list<SBProfile*> slist) : plist() 
+        SBAdd(const std::list<SBProfile*> slist)
         {
             initialize();
             for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
@@ -702,15 +672,15 @@ namespace galsim {
          * @param[in] rhs SBAdd to be copied.
          */
         SBAdd(const SBAdd& rhs) : 
-            plist(), sumflux(rhs.sumflux), sumfx(rhs.sumfx),
-            sumfy(rhs.sumfy), maxMaxK(rhs.maxMaxK), minStepK(rhs.minStepK), 
-            minMinX(rhs.minMinX), maxMaxX(rhs.maxMaxX),
-            minMinY(rhs.minMinY), maxMaxY(rhs.maxMaxY),
-            allAxisymmetric(rhs.allAxisymmetric),
-            allAnalyticX(rhs.allAnalyticX), allAnalyticK(rhs.allAnalyticK)  
+            _sumflux(rhs._sumflux), _sumfx(rhs._sumfx),
+            _sumfy(rhs._sumfy), _maxMaxK(rhs._maxMaxK), _minStepK(rhs._minStepK), 
+            _minMinX(rhs._minMinX), _maxMaxX(rhs._maxMaxX),
+            _minMinY(rhs._minMinY), _maxMaxY(rhs._maxMaxY),
+            _allAxisymmetric(rhs._allAxisymmetric),
+            _allAnalyticX(rhs._allAnalyticX), _allAnalyticK(rhs._allAnalyticK)  
         {
-            for (ConstIter sbptr = rhs.plist.begin(); sbptr!=rhs.plist.end(); ++sbptr)
-                plist.push_back((*sbptr)->duplicate());
+            for (ConstIter sbptr = rhs._plist.begin(); sbptr!=rhs._plist.end(); ++sbptr)
+                _plist.push_back((*sbptr)->duplicate());
         }
 
         /** @brief Assignment
@@ -724,31 +694,31 @@ namespace galsim {
             if (&rhs == this) return *this;
             // Clean up previous stuff
 
-            for (Iter pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; 
+            for (Iter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr)  delete *pptr; 
 
             // New copies of all convolve-ees:
-            plist.clear();
-            for (ConstIter rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
-                plist.push_back((*rhsptr)->duplicate()); 
+            _plist.clear();
+            for (ConstIter rhsptr = rhs._plist.begin(); rhsptr!=rhs._plist.end(); ++rhsptr)
+                _plist.push_back((*rhsptr)->duplicate()); 
             // And copy other configurations:
-            sumflux = rhs.sumflux;
-            sumfx = rhs.sumfx;
-            sumfy = rhs.sumfy;
-            maxMaxK = rhs.maxMaxK;
-            minMinX = rhs.minMinX;
-            maxMaxX = rhs.maxMaxX;
-            minMinY = rhs.minMinY;
-            maxMaxY = rhs.maxMaxY;
-            minStepK = rhs.minStepK;
-            allAxisymmetric = rhs.allAxisymmetric;
-            allAnalyticX = rhs.allAnalyticX;
-            allAnalyticK = rhs.allAnalyticK;
+            _sumflux = rhs._sumflux;
+            _sumfx = rhs._sumfx;
+            _sumfy = rhs._sumfy;
+            _maxMaxK = rhs._maxMaxK;
+            _minMinX = rhs._minMinX;
+            _maxMaxX = rhs._maxMaxX;
+            _minMinY = rhs._minMinY;
+            _maxMaxY = rhs._maxMaxY;
+            _minStepK = rhs._minStepK;
+            _allAxisymmetric = rhs._allAxisymmetric;
+            _allAnalyticX = rhs._allAnalyticX;
+            _allAnalyticK = rhs._allAnalyticK;
             return *this;
         }
 
         /// @brief Destructor.
         ~SBAdd() 
-        { for (Iter pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; }
+        { for (Iter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr)  delete *pptr; }
 
         /** 
          * @brief SBAdd specific method for adding additional SBProfiles
@@ -766,13 +736,13 @@ namespace galsim {
 
         std::complex<double> kValue(const Position<double>& k) const;
 
-        double maxK() const { return maxMaxK; }
-        double stepK() const { return minStepK; }
+        double maxK() const { return _maxMaxK; }
+        double stepK() const { return _minStepK; }
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
         { 
             xmin = integ::MOCK_INF; xmax = -integ::MOCK_INF; 
-            for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+            for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
                 double xmin_1, xmax_1;
                 (*pptr)->getXRange(xmin_1,xmax_1,splits);
                 if (xmin_1 < xmin) xmin = xmin_1;
@@ -783,7 +753,7 @@ namespace galsim {
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
         {
             ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
-            for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+            for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
                 double ymin_1, ymax_1;
                 (*pptr)->getYRange(ymin_1,ymax_1,splits);
                 if (ymin_1 < ymin) ymin = ymin_1;
@@ -794,7 +764,7 @@ namespace galsim {
         void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
         {
             ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
-            for (ConstIter pptr = plist.begin(); pptr!=plist.end(); ++pptr) {
+            for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
                 double ymin_1, ymax_1;
                 (*pptr)->getYRange(x,ymin_1,ymax_1,splits);
                 if (ymin_1 < ymin) ymin = ymin_1;
@@ -802,15 +772,15 @@ namespace galsim {
             }
         }
 
-        bool isAxisymmetric() const { return allAxisymmetric; }
-        bool isAnalyticX() const { return allAnalyticX; }
-        bool isAnalyticK() const { return allAnalyticK; }
+        bool isAxisymmetric() const { return _allAxisymmetric; }
+        bool isAnalyticX() const { return _allAnalyticX; }
+        bool isAnalyticK() const { return _allAnalyticK; }
 
         virtual Position<double> centroid() const 
-        { return Position<double>(sumfx / sumflux, sumfy / sumflux); }
+        { return Position<double>(_sumfx / _sumflux, _sumfy / _sumflux); }
 
-        virtual double getFlux() const { return sumflux; }
-        virtual void setFlux(double flux_);
+        virtual double getFlux() const { return _sumflux; }
+        virtual void setFlux(double flux);
 
         /**
          * @brief Shoot photons through this SBAdd.
@@ -847,6 +817,33 @@ namespace galsim {
         // Overrides for better efficiency:
         virtual void fillKGrid(KTable& kt) const;
         virtual void fillXGrid(XTable& xt) const;
+
+    private:
+        typedef std::list<SBProfile*>::iterator Iter;
+        typedef std::list<SBProfile*>::const_iterator ConstIter;
+
+        /// @brief The plist content is a pointer to a fresh copy of the summands.
+        std::list<SBProfile*> _plist; 
+        double _sumflux; ///< Keeps track of the cumulated flux of all summands.
+        double _sumfx; ///< Keeps track of the cumulated `fx` of all summands.
+        double _sumfy; ///< Keeps track of the cumulated `fy` of all summands.
+        double _maxMaxK; ///< Keeps track of the cumulated `maxK()` of all summands.
+        double _minStepK; ///< Keeps track of the cumulated `minStepK()` of all summands.
+        double _minMinX; ///< Keeps track of the cumulated `minX()` of all summands.
+        double _maxMaxX; ///< Keeps track of the cumulated `maxX()` of all summands.
+        double _minMinY; ///< Keeps track of the cumulated `minY()` of all summands.
+        double _maxMaxY; ///< Keeps track of the cumulated `maxY()` of all summands.
+
+        /// @brief Keeps track of the cumulated `isAxisymmetric()` properties of all summands.
+        bool _allAxisymmetric;
+
+        /// @brief Keeps track of the cumulated `isAnalyticX()` property of all summands. 
+        bool _allAnalyticX; 
+
+        /// @brief Keeps track of the cumulated `isAnalyticK()` properties of all summands.
+        bool _allAnalyticK; 
+
+        void initialize();  ///< Sets all private book-keeping variables to starting state.
     };
 
     /**
@@ -1037,29 +1034,9 @@ namespace galsim {
      */
     class SBConvolve : public SBProfile 
     {
-    private:
-        /// @brief The plist content is a copy_ptr (cf. smart ptrs) listing SBProfiles.
-        std::list<SBProfile*> plist;
-        typedef std::list<SBProfile*>::iterator Iter;
-        typedef std::list<SBProfile*>::const_iterator ConstIter;
-
-        double fluxScale; ///< Flux scaling.
-        double x0; ///< Centroid position in x.
-        double y0; ///< Centroid position in y.
-        bool isStillAxisymmetric; ///< Is output SBProfile shape still circular?
-        double minMaxK; ///< Minimum maxK() of the convolved SBProfiles.
-        double minStepK; ///< Minimum stepK() of the convolved SBProfiles.
-        double sumMinX; ///< sum of minX() of the convolved SBProfiles.
-        double sumMaxX; ///< sum of maxX() of the convolved SBProfiles.
-        double sumMinY; ///< sum of minY() of the convolved SBProfiles.
-        double sumMaxY; ///< sum of maxY() of the convolved SBProfiles.
-        double fluxProduct; ///< Flux of the product.
-        bool _real_space; ///< Whether to do convolution as an integral in real space.
-
     public:
         /// @brief Constructor, empty.
-        explicit SBConvolve(bool real_space=false) : 
-            plist(), fluxScale(1.), _real_space(real_space) {}
+        explicit SBConvolve(bool real_space=false) : _fluxScale(1.), _real_space(real_space) {}
 
         /**
          * @brief Constructor, 1 input.
@@ -1068,7 +1045,7 @@ namespace galsim {
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
         SBConvolve(const SBProfile& s1, bool real_space=false, double f=1.) :
-            plist(), fluxScale(f), _real_space(real_space)
+            _fluxScale(f), _real_space(real_space)
         { add(s1); }
 
         /**
@@ -1079,7 +1056,7 @@ namespace galsim {
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
         SBConvolve(const SBProfile& s1, const SBProfile& s2, bool real_space=false, double f=1.) : 
-            plist(), fluxScale(f), _real_space(real_space)
+            _fluxScale(f), _real_space(real_space)
         { add(s1);  add(s2); }
 
         /**
@@ -1090,10 +1067,9 @@ namespace galsim {
          * @param[in] s3 third SBProfile.
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
-        SBConvolve(
-            const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
-            bool real_space=false, double f=1.) :
-            plist(), fluxScale(f), _real_space(real_space)
+        SBConvolve(const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
+                   bool real_space=false, double f=1.) :
+            _fluxScale(f), _real_space(real_space)
         { add(s1);  add(s2);  add(s3); }
 
         /**
@@ -1103,7 +1079,7 @@ namespace galsim {
          * @param[in] f Input: optional scaling factor for final flux (default `f = 1.`).
          */
         SBConvolve(const std::list<SBProfile*> slist, bool real_space=false, double f=1.) :
-            plist(), fluxScale(f), _real_space(real_space)
+            _fluxScale(f), _real_space(real_space)
         { for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr) add(**sptr); }
 
         /** @brief Copy constructor.
@@ -1111,16 +1087,16 @@ namespace galsim {
          * @param[in] rhs SBProfile.
          */
         SBConvolve(const SBConvolve& rhs) : 
-            plist(), fluxScale(rhs.fluxScale),
-            x0(rhs.x0), y0(rhs.y0),
-            isStillAxisymmetric(rhs.isStillAxisymmetric),
-            minMaxK(rhs.minMaxK), minStepK(rhs.minStepK),
-            sumMinX(rhs.sumMinX), sumMaxX(rhs.sumMaxX), 
-            sumMinY(rhs.sumMinY), sumMaxY(rhs.sumMaxY), 
-            fluxProduct(rhs.fluxProduct), _real_space(rhs._real_space)
+            _fluxScale(rhs._fluxScale),
+            _x0(rhs._x0), _y0(rhs._y0),
+            _isStillAxisymmetric(rhs._isStillAxisymmetric),
+            _minMaxK(rhs._minMaxK), _minStepK(rhs._minStepK),
+            _sumMinX(rhs._sumMinX), _sumMaxX(rhs._sumMaxX), 
+            _sumMinY(rhs._sumMinY), _sumMaxY(rhs._sumMaxY), 
+            _fluxProduct(rhs._fluxProduct), _real_space(rhs._real_space)
         {
-            for (ConstIter rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
-                plist.push_back((*rhsptr)->duplicate()); 
+            for (ConstIter rhsptr = rhs._plist.begin(); rhsptr!=rhs._plist.end(); ++rhsptr)
+                _plist.push_back((*rhsptr)->duplicate()); 
         }
 
         /** @brief Assignment
@@ -1134,30 +1110,30 @@ namespace galsim {
             if (&rhs == this) return *this;
             // Clean up previous stuff
 
-            for (Iter pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; 
+            for (Iter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr)  delete *pptr; 
             // New copies of all convolve-ees:
-            plist.clear();
-            for (ConstIter rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
-                plist.push_back((*rhsptr)->duplicate()); 
+            _plist.clear();
+            for (ConstIter rhsptr = rhs._plist.begin(); rhsptr!=rhs._plist.end(); ++rhsptr)
+                _plist.push_back((*rhsptr)->duplicate()); 
             // And copy other configurations:
-            fluxScale = rhs.fluxScale;
-            x0 = rhs.x0;
-            y0 = rhs.y0;
-            isStillAxisymmetric = rhs.isStillAxisymmetric;
-            minMaxK = rhs.minMaxK;
-            minStepK = rhs.minStepK;
-            sumMinX = rhs.sumMinX;
-            sumMaxX = rhs.sumMaxX;
-            sumMinY = rhs.sumMinY;
-            sumMaxY = rhs.sumMaxY;
-            fluxProduct = rhs.fluxProduct;
+            _fluxScale = rhs._fluxScale;
+            _x0 = rhs._x0;
+            _y0 = rhs._y0;
+            _isStillAxisymmetric = rhs._isStillAxisymmetric;
+            _minMaxK = rhs._minMaxK;
+            _minStepK = rhs._minStepK;
+            _sumMinX = rhs._sumMinX;
+            _sumMaxX = rhs._sumMaxX;
+            _sumMinY = rhs._sumMinY;
+            _sumMaxY = rhs._sumMaxY;
+            _fluxProduct = rhs._fluxProduct;
             _real_space = rhs._real_space;
             return *this;
         }
 
         /// @brief Destructor.
         ~SBConvolve() 
-        { for (Iter pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; }
+        { for (Iter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr)  delete *pptr; }
 
         /** 
          * @brief SBConvolve specific method for adding new members.
@@ -1174,19 +1150,13 @@ namespace galsim {
         // Do the real-space conovlution to calculate this.
         double xValue(const Position<double>& p) const;
 
-        std::complex<double> kValue(const Position<double>& k) const 
-        {
-            std::complex<double> product(fluxScale,0);
-            for (ConstIter pptr=plist.begin(); pptr!=plist.end(); ++pptr)
-                product *= (*pptr)->kValue(k);
-            return product; 
-        }
+        std::complex<double> kValue(const Position<double>& k) const;
 
-        bool isAxisymmetric() const { return isStillAxisymmetric; }
+        bool isAxisymmetric() const { return _isStillAxisymmetric; }
         bool isAnalyticX() const { return _real_space; }
         bool isAnalyticK() const { return !_real_space; }    // convolvees must all meet this
-        double maxK() const { return minMaxK; }
-        double stepK() const { return minStepK; }
+        double maxK() const { return _minMaxK; }
+        double stepK() const { return _minStepK; }
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
         { 
@@ -1197,9 +1167,9 @@ namespace galsim {
             // I didn't try to get that right.  (Note: ignoring the splits won't be
             // wrong -- just not optimal.)
             std::vector<double> splits0;
-            ConstIter pptr = plist.begin();
+            ConstIter pptr = _plist.begin();
             (*pptr)->getXRange(xmin,xmax,splits0);
-            for (++pptr; pptr!=plist.end(); ++pptr) {
+            for (++pptr; pptr!=_plist.end(); ++pptr) {
                 double xmin_1, xmax_1;
                 (*pptr)->getXRange(xmin_1,xmax_1,splits0);
                 xmin += xmin_1;
@@ -1210,9 +1180,9 @@ namespace galsim {
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
         {
             std::vector<double> splits0;
-            ConstIter pptr = plist.begin();
+            ConstIter pptr = _plist.begin();
             (*pptr)->getYRange(ymin,ymax,splits0);
-            for (++pptr; pptr!=plist.end(); ++pptr) {
+            for (++pptr; pptr!=_plist.end(); ++pptr) {
                 double ymin_1, ymax_1;
                 (*pptr)->getYRange(ymin_1,ymax_1,splits0);
                 ymin += ymin_1;
@@ -1223,9 +1193,9 @@ namespace galsim {
         void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
         {
             std::vector<double> splits0;
-            ConstIter pptr = plist.begin();
+            ConstIter pptr = _plist.begin();
             (*pptr)->getYRange(x,ymin,ymax,splits0);
-            for (++pptr; pptr!=plist.end(); ++pptr) {
+            for (++pptr; pptr!=_plist.end(); ++pptr) {
                 double ymin_1, ymax_1;
                 (*pptr)->getYRange(x,ymin_1,ymax_1,splits0);
                 ymin += ymin_1;
@@ -1234,10 +1204,10 @@ namespace galsim {
         }
 
         Position<double> centroid() const 
-        { return Position<double>(x0, y0); }
+        { return Position<double>(_x0, _y0); }
 
-        double getFlux() const { return fluxScale * fluxProduct; }
-        void setFlux(double flux_) { fluxScale = flux_/fluxProduct; }
+        double getFlux() const { return _fluxScale * _fluxProduct; }
+        void setFlux(double flux) { _fluxScale = flux/_fluxProduct; }
 
         double getPositiveFlux() const;
         double getNegativeFlux() const;
@@ -1252,8 +1222,28 @@ namespace galsim {
          */
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
 
-        // Overrides for better efficiency:
+    protected:
+        // Override for better efficiency:
         virtual void fillKGrid(KTable& kt) const;
+
+    private:
+        typedef std::list<SBProfile*>::iterator Iter;
+        typedef std::list<SBProfile*>::const_iterator ConstIter;
+
+        /// @brief The plist content is a copy_ptr (cf. smart ptrs) listing SBProfiles.
+        std::list<SBProfile*> _plist;
+        double _fluxScale; ///< Flux scaling.
+        double _x0; ///< Centroid position in x.
+        double _y0; ///< Centroid position in y.
+        bool _isStillAxisymmetric; ///< Is output SBProfile shape still circular?
+        double _minMaxK; ///< Minimum maxK() of the convolved SBProfiles.
+        double _minStepK; ///< Minimum stepK() of the convolved SBProfiles.
+        double _sumMinX; ///< sum of minX() of the convolved SBProfiles.
+        double _sumMaxX; ///< sum of maxX() of the convolved SBProfiles.
+        double _sumMinY; ///< sum of minY() of the convolved SBProfiles.
+        double _sumMaxY; ///< sum of maxY() of the convolved SBProfiles.
+        double _fluxProduct; ///< Flux of the product.
+        bool _real_space; ///< Whether to do convolution as an integral in real space.
     };
 
     /////////////////////////////////////////////////////////////////////////////////////
