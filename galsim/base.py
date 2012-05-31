@@ -375,8 +375,7 @@ class OpticalPSF(GSObject):
                          np.pi / 5. / lam_over_D)
         # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
         # also make npix always *odd* so that opticalPSF lookup table array is correctly centred:
-        npix = 1 + 2 * (0.5 * np.ceil(pad_factor * (2. * np.pi / stepk_airy)
-                                      / dx_lookup)).astype(int)
+        npix = 1 + (np.ceil(pad_factor * (2. * np.pi / stepk_airy) / dx_lookup)).astype(int)
         # Make the psf image using this dx and array shape
         optimage = galsim.optics.psf_image(lam_over_D=lam_over_D, dx=dx_lookup,
                                            array_shape=(npix, npix), defocus=defocus, astig1=astig1,
