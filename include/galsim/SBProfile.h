@@ -1613,44 +1613,35 @@ namespace galsim {
      */
     class SBAiry : public SBProfile 
     {
-    private:
-        /** 
-         * @brief `D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, 
-         * else `D` = (telescope diam) / lambda if arg is in radians of field angle.
-         */
-        double D; 
-
-        double obscuration; ///< Radius ratio of central obscuration.
-        double flux; ///< Flux.
-        double norm; ///< Calculated value: flux*D*D
-
     public:
         /**
          * @brief Constructor.
          *
-         * @param[in] D_    `D` = (telescope diam) / (lambda * focal length) if arg is focal plane 
+         * @param[in] D     `D` = (telescope diam) / (lambda * focal length) if arg is focal plane 
          *                  position, else `D` = (telescope diam) / lambda if arg is in radians of 
-         *                  field angle (default `D_ = 1.`).
-         * @param[in] obs_  radius ratio of central obscuration (default `obs_ = 0.`).
-         * @param[in] flux_ flux (default `flux_ = 1.`).
+         *                  field angle (default `D = 1.`).
+         * @param[in] obs   radius ratio of central obscuration (default `obs = 0.`).
+         * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBAiry(double D_=1., double obs_=0., double flux_=1.) :
-            D(D_), obscuration(obs_), flux(flux_), norm(flux*D*D),
-            _sampler(0), _radial(obscuration) {}
+        SBAiry(double D=1., double obs=0., double flux=1.) :
+            _D(D), _obscuration(obs), _flux(flux), _norm(flux*D*D),
+            _sampler(0), _radial(_obscuration) {}
 
-        /// @brief Copy constructor: photon-shooting structures are not copied, will be re-computed in copy
+        /// @brief Copy constructor: photon-shooting structures are not copied, will be
+        /// re-computed in copy
         SBAiry(const SBAiry& rhs): 
-            D(rhs.D), obscuration(rhs.obscuration), flux(rhs.flux), norm(rhs.norm),
-            _sampler(0), _radial(obscuration) {}
+            _D(rhs._D), _obscuration(rhs._obscuration), _flux(rhs._flux), _norm(rhs._norm),
+            _sampler(0), _radial(_obscuration) {}
 
         /// @brief Assignment operator: photon-shooting structures are discarded, will be
         /// re-computed in copy
-        const SBAiry& operator=(const SBAiry& rhs) {
-            D = rhs.D;
-            obscuration = rhs.obscuration;
-            flux = rhs.flux;
-            norm = rhs.norm;
-            _radial.setObscuration(obscuration);
+        SBAiry& operator=(const SBAiry& rhs) 
+        {
+            _D = rhs._D;
+            _obscuration = rhs._obscuration;
+            _flux = rhs._flux;
+            _norm = rhs._norm;
+            _radial.setObscuration(_obscuration);
             flushSampler();
             return *this;
         }
@@ -1667,23 +1658,41 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        double maxK() const { return 2*M_PI*D; } ///< Set at hard limit for Airy disk.
-
-        // stepK makes transforms go to at least 5 lam/D or EE>(1-ALIAS_THRESHOLD).
-        // Schroeder (10.1.18) gives limit of EE at large radius.
-        // This stepK could probably be relaxed, it makes overly accurate FFTs.
-        double stepK() const 
-        { 
-            return std::min( 
-                sbp::ALIAS_THRESHOLD * 0.5 * D * pow(M_PI,3.) * (1.-obscuration) ,
-                M_PI * D / 5.);
-        }
+        double maxK() const;
+        double stepK() const;
 
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
 
-        double getFlux() const { return flux; }
-        void setFlux(double flux_) { flux=flux_; } 
+        double getFlux() const { return _flux; }
+        void setFlux(double flux) 
+        {
+            _flux = flux; 
+            _norm = flux * _D*_D;
+        }
+
+        /**
+         * @brief Airy photon-shooting is done numerically with `OneDimensionalDeviate` class.
+         *
+         * @param[in] N Total number of photons to produce.
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+
+        SBProfile* duplicate() const { return new SBAiry(*this); }
+
+    private:
+        /** 
+         * @brief `_D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, 
+         * else `_D` = (telescope diam) / lambda if arg is in radians of field angle.
+         */
+        double _D; 
+
+        double _obscuration; ///< Radius ratio of central obscuration.
+        double _flux; ///< Flux.
+        double _norm; ///< Calculated value: flux*D*D
+
 
         /**
          * @brief Subclass is a scale-free version of the Airy radial function.
@@ -1693,7 +1702,8 @@ namespace galsim {
          * Input radius is in units of lambda/D.  Output normalized
          * to integrate to unity over input units.
          */
-        class AiryRadialFunction: public FluxDensity {
+        class AiryRadialFunction: public FluxDensity 
+        {
         public:
             /**
              * @brief Constructor
@@ -1711,39 +1721,26 @@ namespace galsim {
             double _obscuration; ///> Central obstruction size
         };
 
-        /**
-         * @brief Airy photon-shooting is done numerically with `OneDimensionalDeviate` class.
-         *
-         * @param[in] N Total number of photons to produce.
-         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
-         */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
-
-        SBProfile* duplicate() const { return new SBAiry(*this); }
-
-    private: 
         mutable OneDimensionalDeviate* _sampler; ///< Class that can sample radial distribution
         AiryRadialFunction _radial;  ///< Class that embodies the radial Airy function.
 
-        double chord(const double r, const double h) const; ///< Circle chord length at `h < r`.
+        /// Circle chord length at `h < r`.
+        double chord(const double r, const double h) const; 
 
         /// @brief Area inside intersection of 2 circles radii `r` & `s`, seperated by `t`.
-        double circle_intersection(
-            double r, double s, double t) const; 
+        double circle_intersection(double r, double s, double t) const; 
 
         /// @brief Area of two intersecting identical annuli.
-        double annuli_intersect(
-            double r1, double r2, double t) const; 
+        double annuli_intersect(double r1, double r2, double t) const; 
+
         /** 
          * @brief Beam pattern of annular aperture, in k space, which is just the autocorrelation 
          * of two annuli.  Normalized to unity at `k=0` for now.
          */
         double annuli_autocorrelation(const double k) const; 
 
-        void checkSampler() const; ///< See if `OneDimensionalDeviate` for photon shooting is configured.
+        void checkSampler() const; ///< See if `OneDimensionalDeviate` is configured.
         void flushSampler() const; ///< Discard the photon-shooting sampler class.
-
     };
 
     /** 
@@ -1755,30 +1752,19 @@ namespace galsim {
      */ 
     class SBBox : public SBProfile 
     {
-    private:
-        double xw;   ///< Boxcar function is `xw` x `yw` across.
-        double yw;   ///< Boxcar function is `xw` x `yw` across.
-        double flux; ///< Flux.
-        double _norm; ///< Calculated value: flux / (xw*yw)
-        /** 
-         * @brief Sinc function used to describe Boxcar in k space. 
-         * @param[in] u Normalized wavenumber.
-         */
-        double sinc(const double u) const; 
-
     public:
         /** 
          * @brief Constructor.
          *
-         * @param[in] xw_   width of Boxcar function along x (default `xw_ = 1.`).
-         * @param[in] yw_   width of Boxcar function along y (default `yw_ = 0.`).
-         * @param[in] flux_ flux (default `flux_ = 1.`).
+         * @param[in] xw    width of Boxcar function along x (default `xw = 1.`).
+         * @param[in] yw    width of Boxcar function along y (default `yw = 0.`).
+         * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBBox(double xw_=1., double yw_=0., double flux_=1.) :
-            xw(xw_), yw(yw_), flux(flux_)
+        SBBox(double xw=1., double yw=0., double flux=1.) :
+            _xw(xw), _yw(yw), _flux(flux)
         {
-            if (yw==0.) yw=xw; 
-            _norm = flux / (xw * yw);
+            if (_yw==0.) _yw=_xw; 
+            _norm = _flux / (_xw * _yw);
         }
 
         /// @brief Destructor.
@@ -1792,20 +1778,23 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        double maxK() const { return 2. / sbp::ALIAS_THRESHOLD / std::max(xw,yw); }  
-        double stepK() const { return M_PI/std::max(xw,yw)/2.; } 
+        double maxK() const { return 2. / sbp::ALIAS_THRESHOLD / std::max(_xw,_yw); }  
+        double stepK() const { return M_PI/std::max(_xw,_yw)/2.; } 
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
-        { xmin = -0.5*xw;  xmax = 0.5*xw; }
+        { xmin = -0.5*_xw;  xmax = 0.5*_xw; }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
-        { ymin = -0.5*yw;  ymax = 0.5*yw; }
+        { ymin = -0.5*_yw;  ymax = 0.5*_yw; }
 
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
 
-        double getFlux() const { return flux; }
-        void setFlux(double flux_) { flux=flux_; }
+        double getFlux() const { return _flux; }
+        void setFlux(double flux) { 
+            _flux = flux; 
+            _norm = flux / (_xw*_yw);
+        }
 
         /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
@@ -1829,6 +1818,18 @@ namespace galsim {
         { return fillXImage(I,dx); }
         virtual double doFillXImage(ImageView<int>& I, double dx) const
         { return fillXImage(I,dx); }
+
+    private:
+        double _xw;   ///< Boxcar function is `xw` x `yw` across.
+        double _yw;   ///< Boxcar function is `xw` x `yw` across.
+        double _flux; ///< Flux.
+        double _norm; ///< Calculated value: flux / (xw*yw)
+
+        /** 
+         * @brief Sinc function used to describe Boxcar in k space. 
+         * @param[in] u Normalized wavenumber.
+         */
+        double sinc(const double u) const; 
 
     };
 
@@ -1893,31 +1894,13 @@ namespace galsim {
      */
     class SBMoffat : public SBProfile 
     {
-    private:
-        double beta; ///< Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
-        double flux; ///< Flux.
-        double norm; ///< Normalization. (Including the flux)
-        double rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
-        // In units of rD:
-        double maxRrD; ///< Maximum `r` in units of `rD`.
-        double maxKrD; ///< Maximum lookup table `k` in units of `rD`.
-        double stepKrD; ///< Stepsize lookup table `k` in units of `rD`.
-        double FWHMrD;  ///< Full Width at Half Maximum in units of `rD`.
-        double fluxFactor; ///< Integral of total flux in terms of 'rD' units.
-        double _rD_sq; ///< Calculated value: rD*rD;
-        double _maxRrD_sq; ///< Calculated value: maxRrD * maxRrD
-        double _maxR; ///< Calculated value: maxRrD * rD
-        double _maxR_sq; ///< Calculated value: maxR * maxR
-
-        mutable Table<double,double> ft;  ///< Lookup table for Fourier transform of Moffat.
-
     public:
         /** @brief Constructor.
          *
-         * @param[in] beta_          Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
+         * @param[in] beta           Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
          * @param[in] truncationFWHM outer truncation in units of FWHM (default `truncationFWHM = 
          * 2.`).
-         * @param[in] flux_          Flux (default `flux_ = 1.`).
+         * @param[in] flux           Flux (default `flux = 1.`).
          * @param[in] size           Size specification (default `size = 1.`).
          * @param[in] rType          Kind of size being specified (default `HALF_LIGHT_RADIUS`).
          */
@@ -1928,21 +1911,15 @@ namespace galsim {
             SCALE_RADIUS
         };
 
-        SBMoffat(
-            double beta_, double truncationFWHM=2., double flux_=1., double size=1.,
-            RadiusType rType=HALF_LIGHT_RADIUS);
+        SBMoffat(double beta, double truncationFWHM=2., double flux=1., double size=1.,
+                 RadiusType rType=HALF_LIGHT_RADIUS);
 
         // Default copy constructor should be fine.
 
         /// @brief Destructor.
         ~SBMoffat() {}
 
-        double xValue(const Position<double>& p) const 
-        {
-            double rsq = p.x*p.x+p.y*p.y;
-            if (rsq >= _maxR_sq) return 0.;
-            else return norm / pow_beta(1.+rsq/_rD_sq, beta);
-        }
+        double xValue(const Position<double>& p) const;
 
         std::complex<double> kValue(const Position<double>& k) const; 
 
@@ -1950,8 +1927,8 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
-        double maxK() const { return maxKrD / rD; }   
-        double stepK() const { return stepKrD / rD; } 
+        double maxK() const;
+        double stepK() const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
         { xmin = -_maxR; xmax = _maxR; }
@@ -1969,11 +1946,16 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
 
-        double getFlux() const { return flux; }
-        void setFlux(double flux_) { flux=flux_; }
+        double getFlux() const { return _flux; }
+        void setFlux(double flux) 
+        { 
+            _flux = flux; 
+            _norm = flux * (_beta-1.) / (M_PI * _fluxFactor * _rD_sq);
+        }
 
         /**
-         * @brief Moffat photon shooting is done by analytic inversion of cumulative flux distribution.
+         * @brief Moffat photon shooting is done by analytic inversion of cumulative flux 
+         * distribution.
          *
          * Will require 2 uniform deviates per photon, plus analytic function (pow and sqrt)
          */
@@ -1984,22 +1966,26 @@ namespace galsim {
         // Methods that only work for Moffat:
 
         /// @brief Returns the Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
-        double getBeta() const { return beta; }
-
-        /// @brief Set the FWHM. @param fwhm Input: new FWHM.
-        void setFWHM(double fwhm) { rD = fwhm / FWHMrD; }
-
-        /** 
-         * @brief Set the Moffat scale radius for profile `[1 + (r / rD)^2]^beta`. 
-         * @param rD_ Input: new `rD`.
-         */
-        void setRd(double rD_) { rD = rD_; }
+        double getBeta() const { return _beta; }
 
     protected:
         //void fillXGrid(KTable& kt) const;
         //void fillKGrid(KTable& kt) const;
 
     private:
+        double _beta; ///< Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
+        double _flux; ///< Flux.
+        double _norm; ///< Normalization. (Including the flux)
+        double _rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
+        double _maxR; ///< Maximum `r`
+        double _FWHM;  ///< Full Width at Half Maximum in units of `rD`.
+        double _fluxFactor; ///< Integral of total flux in terms of 'rD' units.
+        double _rD_sq; ///< Calculated value: rD*rD;
+        double _maxR_sq; ///< Calculated value: maxR * maxR
+        double _maxK; ///< Maximum k with kValue > 1.e-3
+
+        mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
+
         double (*pow_beta)(double x, double beta);
 
         static double pow_1(double x, double ) { return x; }
@@ -2010,7 +1996,7 @@ namespace galsim {
         static double pow_gen(double x, double beta) { return std::pow(x,beta); }
 
         /// Setup the FT Table.
-        void setupFT() const;
+        void setupFT();
     };
 
 
@@ -2041,10 +2027,10 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] flux_ flux (default `flux_ = 1.`).
-         * @param[in] r0_   Half-light radius (default `r0_ = 1.`).
+         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] r0    Half-light radius (default `r0 = 1.`).
          */
-        SBDeVaucouleurs(double flux_=1., double r0_=1.) : SBSersic(4., flux_, r0_) {}
+        SBDeVaucouleurs(double flux=1., double r0=1.) : SBSersic(4., flux, r0) {}
 
         /// @brief Destructor.
         ~SBDeVaucouleurs() {}

@@ -382,33 +382,33 @@ def Script2():
         if i is not input_cat.current:
             raise ValueError('i is out of sync with current.')
 
-        logger.info('Start work on image %d',input_cat.current)
+        logger.info('Image %d',input_cat.current)
 
         t1 = time.time()
         psf = galsim.BuildGSObject(config.psf, input_cat, logger)
-        logger.info('   Made PSF profile')
+        #logger.info('   Made PSF profile')
         t2 = time.time()
 
         pix = galsim.BuildGSObject(config.pix, input_cat, logger)
-        logger.info('   Made pixel profile')
+        #logger.info('   Made pixel profile')
         t3 = time.time()
 
         gal = galsim.BuildGSObject(config.gal, input_cat, logger)
-        logger.info('   Made galaxy profile')
+        #logger.info('   Made galaxy profile')
         t4 = time.time()
 
         final = galsim.Convolve(psf,pix,gal)
         #im = final.draw(dx=pixel_scale)  # It makes these as 768 x 768 images.  A bit big.
         im = galsim.ImageF(image_xmax, image_ymax)
         final.draw(im, dx=pixel_scale)
-        logger.info('   Drew image: size = %d x %d',im.xMax-im.xMin+1, im.yMax-im.yMin+1)
+        #logger.info('   Drew image: size = %d x %d',im.xMax-im.xMin+1, im.yMax-im.yMin+1)
         t5 = time.time()
 
         # Add Poisson noise
         im += sky_level
         im.addNoise(galsim.CCDNoise(rng))
         im -= sky_level
-        logger.info('   Added noise')
+        #logger.info('   Added noise')
         t6 = time.time()
 
         # Store that into the list of all images

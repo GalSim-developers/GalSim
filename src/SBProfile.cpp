@@ -1605,8 +1605,31 @@ namespace galsim {
 
     double SBAiry::xValue(const Position<double>& p) const 
     {
-        double radius = std::sqrt(p.x*p.x+p.y*p.y) * D;
-        return norm * _radial(radius);
+        double radius = std::sqrt(p.x*p.x+p.y*p.y) * _D;
+        return _norm * _radial(radius);
+    }
+
+    std::complex<double> SBAiry::kValue(const Position<double>& k) const
+    {
+        double kk = std::sqrt(k.x*k.x+k.y*k.y);
+        // calculate circular FT(PSF) on p'=(x',y')
+        return _flux * annuli_autocorrelation(kk);
+    }
+
+    // Set maxK to hard limit for Airy disk.
+    double SBAiry::maxK() const 
+    { return 2.*M_PI*_D; }
+
+    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // most ALIAS_THRESHOLD of the flux.
+    double SBAiry::stepK() const
+    {
+        // Schroeder (10.1.18) gives limit of EE at large radius.
+        // This stepK could probably be relaxed, it makes overly accurate FFTs.
+        double R = 1. / (sbp::ALIAS_THRESHOLD * 0.5 * pow(M_PI,2.) * (1.-_obscuration));
+        // Use at least 5 lam/D
+        R = std::max(R,5.);
+        return M_PI * _D / R;
     }
 
     double SBAiry::chord(const double r, const double h) const 
@@ -1663,16 +1686,9 @@ namespace galsim {
      * autocorrelation of two annuli.  Normalize to unity at k=0 for now */
     double SBAiry::annuli_autocorrelation(const double k) const 
     {
-        double k_scaled = k / (M_PI*D);
-        double norm = M_PI*(1. - obscuration*obscuration);
-        return annuli_intersect(1.,obscuration,k_scaled)/norm;
-    }
-
-    std::complex<double> SBAiry::kValue(const Position<double>& k) const
-    {
-        double kk = std::sqrt(k.x*k.x+k.y*k.y);
-        // calculate circular FT(PSF) on p'=(x',y')
-        return flux * annuli_autocorrelation(kk);
+        double k_scaled = k / (M_PI*_D);
+        double norm = M_PI*(1. - _obscuration*_obscuration);
+        return annuli_intersect(1.,_obscuration,k_scaled)/norm;
     }
 
 
@@ -1682,7 +1698,7 @@ namespace galsim {
 
     double SBBox::xValue(const Position<double>& p) const 
     {
-        if (fabs(p.x) < 0.5*xw && fabs(p.y) < 0.5*yw) return _norm;
+        if (fabs(p.x) < 0.5*_xw && fabs(p.y) < 0.5*_yw) return _norm;
         else return 0.;  // do not use this function for fillXGrid()!
     }
 
@@ -1696,7 +1712,7 @@ namespace galsim {
 
     std::complex<double> SBBox::kValue(const Position<double>& k) const
     {
-        return flux * sinc(0.5*k.x*xw)*sinc(0.5*k.y*yw);
+        return _flux * sinc(0.5*k.x*_xw)*sinc(0.5*k.y*_yw);
     }
 
     // Override fillXGrid so we can partially fill pixels at edge of box.
@@ -1706,15 +1722,15 @@ namespace galsim {
         double dx = xt.getDx(); // pixel grid size
 
         // Pixel index where edge of box falls:
-        int xedge = static_cast<int> ( std::ceil(xw / (2*dx) - 0.5) );
-        int yedge = static_cast<int> ( std::ceil(yw / (2*dx) - 0.5) );
+        int xedge = static_cast<int> ( std::ceil(_xw / (2*dx) - 0.5) );
+        int yedge = static_cast<int> ( std::ceil(_yw / (2*dx) - 0.5) );
         // Fraction of edge pixel that is filled by box:
-        double xfrac = xw / (2*dx) - xedge + 0.5;
+        double xfrac = _xw / (2*dx) - xedge + 0.5;
         assert(xfrac>0. && xfrac<=1.);
-        double yfrac = yw / (2*dx) - yedge + 0.5;
+        double yfrac = _yw / (2*dx) - yedge + 0.5;
         assert(yfrac>0. && yfrac<=1.);
-        if (xedge==0) xfrac = xw/dx;
-        if (yedge==0) yfrac = yw/dx;
+        if (xedge==0) xfrac = _xw/dx;
+        if (yedge==0) yfrac = _yw/dx;
 
         double yfac;
         for (int iy = -N/2; iy < N/2; iy++) {
@@ -1735,15 +1751,15 @@ namespace galsim {
     double SBBox::fillXImage(ImageView<T>& I, double dx) const 
     {
         // Pixel index where edge of box falls:
-        int xedge = static_cast<int> ( std::ceil(xw / (2*dx) - 0.5) );
-        int yedge = static_cast<int> ( std::ceil(yw / (2*dx) - 0.5) );
+        int xedge = static_cast<int> ( std::ceil(_xw / (2*dx) - 0.5) );
+        int yedge = static_cast<int> ( std::ceil(_yw / (2*dx) - 0.5) );
         // Fraction of edge pixel that is filled by box:
-        double xfrac = xw / (2*dx) - xedge + 0.5;
+        double xfrac = _xw / (2*dx) - xedge + 0.5;
         assert(xfrac>0. && xfrac<=1.);
-        double yfrac = yw / (2*dx) - yedge + 0.5;
+        double yfrac = _yw / (2*dx) - yedge + 0.5;
         assert(yfrac>0. && yfrac<=1.);
-        if (xedge==0) xfrac = xw/dx;
-        if (yedge==0) yfrac = yw/dx;
+        if (xedge==0) xfrac = _xw/dx;
+        if (yedge==0) yfrac = _yw/dx;
 
         double totalflux = 0.;
         double xfac;
@@ -1777,7 +1793,7 @@ namespace galsim {
             for (int ix = 0; ix <= N/2; ix++) {
                 Position<double> k(ix*dk,iy*dk);
                 // The value returned by kValue(k)
-                double kvalue = flux * sinc(0.5*k.x*xw) * sinc(0.5*k.y*yw);
+                double kvalue = _flux * sinc(0.5*k.x*_xw) * sinc(0.5*k.y*_yw);
                 kt.kSet(ix,iy,kvalue);
             }
         }
@@ -1789,31 +1805,31 @@ namespace galsim {
         kt.clearCache();
         std::vector<double> sinc_x(N/2+1);
         std::vector<double> sinc_y(N/2+1);
-        if (xw == yw) { // Typical
+        if (_xw == _yw) { // Typical
             for (int i = 0; i <= N/2; i++) {
-                sinc_x[i] = sinc(0.5 * i * dk * xw);
+                sinc_x[i] = sinc(0.5 * i * dk * _xw);
                 sinc_y[i] = sinc_x[i];
             }
         } else {
             for (int i = 0; i <= N/2; i++) {
-                sinc_x[i] = sinc(0.5 * i * dk * xw);
-                sinc_y[i] = sinc(0.5 * i * dk * yw);
+                sinc_x[i] = sinc(0.5 * i * dk * _xw);
+                sinc_y[i] = sinc(0.5 * i * dk * _yw);
             }
         }
 
         // Now do the unrolled version with kSet2
         for (int ix = 0; ix <= N/2; ix++) {
-            kt.kSet2(ix,0, flux * sinc_x[ix] * sinc_y[0]);
+            kt.kSet2(ix,0, _flux * sinc_x[ix] * sinc_y[0]);
         }
         for (int iy = 1; iy < N/2; iy++) {
             for (int ix = 0; ix <= N/2; ix++) {
-                double kval = flux * sinc_x[ix] * sinc_y[iy];
+                double kval = _flux * sinc_x[ix] * sinc_y[iy];
                 kt.kSet2(ix,iy,kval);
                 kt.kSet2(ix,N-iy,kval);
             }
         }
         for (int ix = 0; ix <= N/2; ix++) {
-            kt.kSet2(ix,N/2, flux * sinc_x[ix] * sinc_y[N/2]);
+            kt.kSet2(ix,N/2, _flux * sinc_x[ix] * sinc_y[N/2]);
         }
 #endif
     }
@@ -1891,9 +1907,9 @@ namespace galsim {
         return flux;
     }
 
-    void SBLaguerre::setFlux(double flux_) 
+    void SBLaguerre::setFlux(double flux) 
     {
-        double newflux=flux_;
+        double newflux=flux;
         if (getFlux()!=0.) newflux /= getFlux();
         bvec.rVector() *= newflux;
     }
@@ -2072,82 +2088,125 @@ namespace galsim {
         _sampler = new OneDimensionalDeviate( *_radialPtr, range, true);
     }
 
-    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate& ud) const {
+    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate& ud) const 
+    {
         PhotonArray result = _sampler->shoot(N,ud);
         result.scaleFlux(norm);
         return result;
     }
 
-    SBMoffat::SBMoffat(double beta_, double truncationFWHM, double flux_,
+    SBMoffat::SBMoffat(double beta, double truncationFWHM, double flux,
                        double size, RadiusType rType) : 
-        beta(beta_), flux(flux_), ft(Table<double,double>::spline)
+        _beta(beta), _flux(flux), _ft(Table<double,double>::spline)
     {
         xdbg<<"Start SBMoffat constructor: \n";
-        xdbg<<"beta = "<<beta<<"\n";
-        xdbg<<"flux = "<<flux<<"\n";
+        xdbg<<"beta = "<<_beta<<"\n";
+        xdbg<<"flux = "<<_flux<<"\n";
 
         //First, relation between FWHM and rD:
-        FWHMrD = 2.* std::sqrt(std::pow(2., 1./beta)-1.);
+        double FWHMrD = 2.* std::sqrt(std::pow(2., 1./_beta)-1.);
         xdbg<<"FWHMrD = "<<FWHMrD<<"\n";
-        maxRrD = FWHMrD * truncationFWHM;
+        double maxRrD = FWHMrD * truncationFWHM;
         xdbg<<"maxRrD = "<<maxRrD<<"\n";
-#if 1
-        // Make FFT's periodic at 4x truncation radius or 1.5x diam at ALIAS_THRESHOLD,
-        // whichever is smaller
-        stepKrD = 2.*M_PI / std::min(4.*maxRrD, 
-                                     3.*std::sqrt(pow(sbp::ALIAS_THRESHOLD, -1./beta)-1.));
-#else
-        // Make FFT's periodic at 4x truncation radius or 8x half-light radius:
-        stepKrD = M_PI / (2.*std::max(maxRrD, 16.));
-#endif
-        xdbg<<"stepKrD = "<<stepKrD<<"\n";
-        // And be sure to get at least 16 pts across FWHM when drawing:
-        maxKrD = 16.*M_PI / FWHMrD;
-        xdbg<<"maxKrD = "<<maxKrD<<"\n";
 
         // Analytic integration of total flux:
-        fluxFactor = 1. - pow( 1+maxRrD*maxRrD, (1.-beta));
+        _fluxFactor = 1. - pow( 1+maxRrD*maxRrD, (1.-_beta));
 
         // Get half-light radius in units of rD:
 
         // Set size of this instance according to type of size given in constructor:
         switch (rType) {
           case FWHM:
-               rD = size / FWHMrD;
+               _rD = size / FWHMrD;
                break;
           case HALF_LIGHT_RADIUS: 
                {
-                   double rerD = sqrt( pow(1.-0.5*fluxFactor , 1./(1.-beta)) - 1.);
-                   rD = size / rerD;
+                   double rerD = sqrt( pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
+                   _rD = size / rerD;
                }
                break;
           case SCALE_RADIUS:
-               rD = size;
+               _rD = size;
                break;
           default:
                throw SBError("Unknown SBMoffat::RadiusType");
         }
-        _maxR = maxRrD * rD;
+        _FWHM = FWHMrD * _rD;
+        _maxR = maxRrD * _rD;
         _maxR_sq = _maxR * _maxR;
-        _maxRrD_sq = maxRrD * maxRrD;
-        _rD_sq = rD * rD;
-        norm = flux * (beta - 1.) / (M_PI * fluxFactor * _rD_sq);
+        _rD_sq = _rD * _rD;
+        _norm = _flux * (_beta-1.) / (M_PI * _fluxFactor * _rD_sq);
 
-        dbg << "Moffat rD " << rD << " fluxFactor " << fluxFactor
-            << " norm " << norm << " maxRrD " << maxRrD << '\n';
-        dbg << "maxR = "<<_maxR<<", maxK = "<<maxKrD/rD<<", stepK = "<<stepKrD/rD<<'\n';
+        dbg << "Moffat rD " << _rD << " fluxFactor " << _fluxFactor
+            << " norm " << _norm << " maxRrD " << _maxR << '\n';
 
-        if (beta == 1) pow_beta = &SBMoffat::pow_1;
-        else if (beta == 2) pow_beta = &SBMoffat::pow_2;
-        else if (beta == 3) pow_beta = &SBMoffat::pow_3;
-        else if (beta == 4) pow_beta = &SBMoffat::pow_4;
-        else if (beta == int(beta)) pow_beta = &SBMoffat::pow_int;
+        if (_beta == 1) pow_beta = &SBMoffat::pow_1;
+        else if (_beta == 2) pow_beta = &SBMoffat::pow_2;
+        else if (_beta == 3) pow_beta = &SBMoffat::pow_3;
+        else if (_beta == 4) pow_beta = &SBMoffat::pow_4;
+        else if (_beta == int(_beta)) pow_beta = &SBMoffat::pow_int;
         else pow_beta = &SBMoffat::pow_gen;
 
-        // TODO: Once SBProfile is immutable, this should move back to the start
-        // of kValue.  But for now, it's better to do it here, so copies don't have
-        // to recalculate ft.
         setupFT();
+    }
+
+    double SBMoffat::xValue(const Position<double>& p) const 
+    {
+        double rsq = p.x*p.x + p.y*p.y;
+        if (rsq > _maxR_sq) return 0.;
+        else return _norm / pow_beta(1.+rsq/_rD_sq, _beta);
+    }
+
+    std::complex<double> SBMoffat::kValue(const Position<double>& k) const 
+    {
+        double ksq = k.x*k.x + k.y*k.y;
+        if (ksq > _ft.argMax()) return 0.;
+        else return _ft(ksq);
+    }
+
+    // Set maxK where the FT is down to 0.001 or threshold, whichever is harder.
+    double SBMoffat::maxK() const 
+    {
+        // _maxK is determined during setupFT() as the last k value to have a  kValue > 1.e-3.
+#if 1
+        return _maxK;
+#else
+        // Old version from Gary:
+        // Require at least 16 points across FWHM when drawing:
+        return 16.*M_PI / _FWHM;
+#endif
+    }
+
+    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // most ALIAS_THRESHOLD of the flux.
+    double SBMoffat::stepK() const
+    {
+        dbg<<"Find Moffat stepK\n";
+        dbg<<"beta = "<<_beta<<'\n';
+#if 1
+        // The fractional flux out to radius R is
+        // 1 - (1+R^2)^(1-beta)
+        // So solve (1+R^2)^(1-beta) = ALIAS_THRESHOLD
+        if (_beta <= 1.01) {
+            // Then flux never converges, so just use truncation radius
+            return M_PI / _maxR;
+        } else {
+            // Ignore the 1 in (1+R^2), so approximately:
+            double R = std::pow(sbp::ALIAS_THRESHOLD, 0.5/(1.-_beta)) * _rD;
+            dbg<<"R = "<<R<<'\n';
+            if (R > _maxR) R = _maxR;
+            dbg<<"_maxR = "<<_maxR<<'\n';
+            dbg<<"R => "<<R<<'\n';
+            dbg<<"stepk = "<<(M_PI/R)<<'\n';
+            return M_PI / R;
+        }
+#else
+        // Old version from Gary:
+        // Make FFT's periodic at 4x truncation radius or 1.5x diam at ALIAS_THRESHOLD,
+        // whichever is smaller
+        return 2.*M_PI / std::min(4.*_maxR, 
+                                  3.*std::sqrt(pow(sbp::ALIAS_THRESHOLD, -1./_beta)-1.)*_rD);
+#endif
     }
 
     // Integrand class for the Hankel transform of Moffat
@@ -2165,30 +2224,34 @@ namespace galsim {
         double (*pow_beta)(double x, double beta);
     };
 
-    void SBMoffat::setupFT() const
+    void SBMoffat::setupFT()
     {
-        if (ft.size() > 0) return;
+        if (_ft.size() > 0) return;
 
         // Do a Hankel transform and store the results in a lookup table.
-        // Use 2048 values across 2 x the truncation radius.
+        // TODO: N = 2048 is a bit arbitrary.  Should figure out a better choice for this.
         const int N=2048;
+        double maxRrD = _maxR / _rD;
         double dk = 2.*M_PI / std::max(4.*maxRrD, 64.);
-        double nn = norm * 2.*M_PI * _rD_sq;
+        double nn = _norm * 2.*M_PI * _rD_sq;
+
+        // Along the way, find the last k that has a kValue > 1.e-3
+        double maxK_val = std::min(0.001, sbp::ALIAS_THRESHOLD) * _flux;
         for (int i=0; i<=N/2; i++) {
             double k = i*dk;
-            MoffatIntegrand I(beta, k, pow_beta);
+            MoffatIntegrand I(_beta, k, pow_beta);
             double val = integ::int1d(
                 I, 0., maxRrD, sbp::integration_relerr, sbp::integration_abserr);
-            xdbg<<"ft("<<k<<") = "<<val*nn<<'\n';
-            ft.addEntry( k, val * nn );
+            val *= nn;
+            double kreal = k / _rD;
+            xdbg<<"ft("<<kreal<<") = "<<val<<'\n';
+            if (val > maxK_val) _maxK = kreal;
+            _ft.addEntry( kreal*kreal, val );
         }
-    }
-
-    std::complex<double> SBMoffat::kValue(const Position<double>& k) const 
-    {
-        double kk = sqrt(k.x*k.x + k.y*k.y)*rD;
-        if (kk > ft.argMax()) return 0.;
-        else return ft(kk);
+        dbg<<"maxK = "<<_maxK;
+        // Convert back to real units.
+        _maxK /= _rD;
+        dbg<<"maxK => "<<_maxK;
     }
 
     /*************************************************************
@@ -2355,26 +2418,28 @@ namespace galsim {
         checkSampler();
         PhotonArray pa=_sampler->shoot(N, u);
         // Then rescale for this flux & size
-        pa.scaleFlux(flux);
-        pa.scaleXY(1./D);
+        pa.scaleFlux(_flux);
+        pa.scaleXY(1./_D);
         return pa;
     }
 
-    void SBAiry::flushSampler() const {
+    void SBAiry::flushSampler() const 
+    {
         if (_sampler) {
             delete _sampler;
             _sampler = 0;
         }
     }
 
-    void SBAiry::checkSampler() const {
+    void SBAiry::checkSampler() const 
+    {
         if (_sampler) return;
         std::vector<double> ranges(1,0.);
         // Break Airy function into ranges that will not have >1 extremum:
-        double xmin = (1.1 - 0.5*obscuration);
+        double xmin = (1.1 - 0.5*_obscuration);
         // Use Schroeder (10.1.18) limit of EE at large radius.
         // to stop sampler at radius with EE>(1-ALIAS_THRESHOLD).
-        double maximumRadius = 2./(sbp::ALIAS_THRESHOLD * M_PI*M_PI * (1-obscuration));
+        double maximumRadius = 2./(sbp::ALIAS_THRESHOLD * M_PI*M_PI * (1-_obscuration));
         while (xmin < maximumRadius) {
             ranges.push_back(xmin);
             xmin += 0.5;
@@ -2387,7 +2452,7 @@ namespace galsim {
     {
         PhotonArray result(N);
         for (int i=0; i<result.size(); i++)
-            result.setPhoton(i, xw*(u()-0.5), yw*(u()-0.5), flux/N);
+            result.setPhoton(i, _xw*(u()-0.5), _yw*(u()-0.5), _flux/N);
         return result;
     }
 
@@ -2395,7 +2460,7 @@ namespace galsim {
     {
         // Moffat has analytic inverse-cumulative-flux function.
         PhotonArray result(N);
-        double fluxPerPhoton = flux/N;
+        double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
             double xu, yu, rsq;
@@ -2406,8 +2471,8 @@ namespace galsim {
             } while (rsq>=1. || rsq==0.);
             
             // Then map it to the Moffat flux distribution
-            double newRsq = pow( 1.-rsq*fluxFactor , 1./(1.-beta)) - 1.;
-            double rFactor = rD*sqrt(newRsq / rsq);
+            double newRsq = pow( 1.-rsq*_fluxFactor , 1./(1.-_beta)) - 1.;
+            double rFactor = _rD*sqrt(newRsq / rsq);
             result.setPhoton(i,rFactor*xu, rFactor*yu, fluxPerPhoton);
         }
         return result;
