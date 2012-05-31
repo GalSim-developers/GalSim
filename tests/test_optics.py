@@ -261,7 +261,7 @@ def test_OpticalPSF_vs_Airy_with_obs():
     D = 1. / lod
     for obs in obses:
         airy_test = galsim.Airy(D=D, obs=obs, flux=1.)
-        optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1, obs=obs) #pad same as an Airy
+        optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1, obscuration=obs)
         airy_array = airy_test.draw(dx=1.).array
         airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2: 
                                      airy_array.shape[0]/2 + nlook/2,   
