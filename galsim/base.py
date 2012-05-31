@@ -388,32 +388,38 @@ class OpticalPSF(GSObject):
         GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D, dx=dx))
 
 class AtmosphericPSF(GSObject):
-    """Base class for long exposure atmospheric PSF class.
+    """Base class for long exposure Kolmogorov PSF.
 
-    @param lam_over_r0    wavelength divided by Fried parameter
+    Initialization
+    --------------
+    @code
+    atmospheric_psf = galsim.Atmospheric(lam_over_r0, interpolantxy=None, oversampling=1.5)
+    @endcode
+
+    Initialized atmospheric_psf as a galsim.AtmophericPSF() instance.
+
+    @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
+                           consistency), where r0 is the Fried parameter.
+    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
+                           [default = 1.5], setting oversampling < 1 will produce aliasing in the 
+                           PSF (not good).
     """
-    def __init__(self, lam_over_r0, interpolantxy=None):
-        # The Kolmogorov PSF is roughly a Moffat. Set stepk as done for SBMoffat.
-        # The best fit beta for Kolmogorov turbulence is ~4.765 (Trujillo et al. 2010, MNRAS 328,
-        # 977). The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0.
+    def __init__(self, lam_over_r0, interpolantxy=None, oversampling=1.5):
+        # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
         fwhm = 0.976 * lam_over_r0
-        # rD is the scale radius of the profile `[1 + (r / rD)^2]^beta`
-        # stepk and maxk are set as in SBMoffat
-#        rD = 2. * fwhm / (2. * np.sqrt(2**(1 / 4.765) - 1))
-#        stepk_moffat = np.pi / 32.
-#        self.maxk = 16. * np.pi * rD / fwhm
-#        print "maxk", self.maxk
-#        npix = np.ceil(self.maxk / stepk_moffat).astype(int)
-#        print "npix", npix
-#        dx = np.pi / self.maxk
-#        print "dx", dx
-        npix = 256
-        dx = 1
-        atmoimage = galsim.atmosphere.psf_image(lam_over_r0, array_shape=(npix, npix), dx=dx)
+        dx_lookup = .5 * fwhm / oversampling
+        # Fold at 10 times the FWHM
+        stepk_kolmogorov = np.pi / (10. * fwhm)
+        # Odd array to center the interpolant on the centroid. Might want to pad this later to
+        # make a nice size array for FFT, but for typical seeing, arrays will be very small.
+        npix = 1 + (np.ceil(2. * np.pi / stepk_kolmogorov)).astype(int)
+        atmoimage = galsim.atmosphere.psf_image(array_shape=(npix, npix), dx=dx_lookup, 
+                                                lam_over_r0=lam_over_r0)
         if interpolantxy == None:
             l5 = galsim.Lanczos(5, True, 1e-4)
             self.Interpolant2D = galsim.InterpolantXY(l5)
-        GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, dx=dx))
+        GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, 
+                                                           dx=dx_lookup))
        
         
 class RealGalaxy(GSObject):
