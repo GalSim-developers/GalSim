@@ -78,8 +78,8 @@ namespace galsim {
          * For Sersic and Moffat, we numerically integrate the Hankel transform.
          * These are used for the precision in those integrals.
          */
-        const double integration_relerr = 1.e-3;
-        const double integration_abserr = 1.e-5;
+        const double integration_relerr = 1.e-4;
+        const double integration_abserr = 1.e-8;
         //@}
 
         /**
@@ -1983,6 +1983,7 @@ namespace galsim {
         double _rD_sq; ///< Calculated value: rD*rD;
         double _maxR_sq; ///< Calculated value: maxR * maxR
         double _maxK; ///< Maximum k with kValue > 1.e-3
+        mutable double _stepK; ///< Step K necessary to avoid folding
 
         mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
 

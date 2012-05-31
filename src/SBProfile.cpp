@@ -1611,6 +1611,12 @@ namespace galsim {
 
     std::complex<double> SBAiry::kValue(const Position<double>& k) const
     {
+        // TODO: I think the sqrt can be skipped, but need to follow through 
+        //       some of the other functions here to use ksq, rather than K
+        //       (which is called t in e.g. circle_intersection and annuli_intersect.
+        //       However, I haven't gone through this yet, because we don't have
+        //       any unit tests currently that would test this, and I didn't 
+        //       feel like making them just now.
         double kk = std::sqrt(k.x*k.x+k.y*k.y);
         // calculate circular FT(PSF) on p'=(x',y')
         return _flux * annuli_autocorrelation(kk);
@@ -2097,7 +2103,7 @@ namespace galsim {
 
     SBMoffat::SBMoffat(double beta, double truncationFWHM, double flux,
                        double size, RadiusType rType) : 
-        _beta(beta), _flux(flux), _ft(Table<double,double>::spline)
+        _beta(beta), _flux(flux), _stepK(0.), _ft(Table<double,double>::spline)
     {
         xdbg<<"Start SBMoffat constructor: \n";
         xdbg<<"beta = "<<_beta<<"\n";
@@ -2193,33 +2199,36 @@ namespace galsim {
     // most ALIAS_THRESHOLD of the flux.
     double SBMoffat::stepK() const
     {
-        dbg<<"Find Moffat stepK\n";
-        dbg<<"beta = "<<_beta<<'\n';
+        if (_stepK == 0.) {
+            dbg<<"Find Moffat stepK\n";
+            dbg<<"beta = "<<_beta<<'\n';
 #if 1
-        // The fractional flux out to radius R is (if not truncated)
-        // 1 - (1+R^2)^(1-beta)
-        // So solve (1+R^2)^(1-beta) = ALIAS_THRESHOLD
-        if (_beta <= 1.01) {
-            // Then flux never converges, so just use truncation radius
-            return M_PI / _maxR;
-        } else {
-            // Ignore the 1 in (1+R^2), so approximately:
-            double R = std::pow(sbp::ALIAS_THRESHOLD, 0.5/(1.-_beta)) * _rD;
-            dbg<<"R = "<<R<<'\n';
-            // If it is truncated at less than this, drop to that value.
-            if (R > _maxR) R = _maxR;
-            dbg<<"_maxR = "<<_maxR<<'\n';
-            dbg<<"R => "<<R<<'\n';
-            dbg<<"stepk = "<<(M_PI/R)<<'\n';
-            return M_PI / R;
-        }
+            // The fractional flux out to radius R is (if not truncated)
+            // 1 - (1+R^2)^(1-beta)
+            // So solve (1+R^2)^(1-beta) = ALIAS_THRESHOLD
+            if (_beta <= 1.1) {
+                // Then flux never converges (or nearly so), so just use truncation radius
+                _stepK = M_PI / _maxR;
+            } else {
+                // Ignore the 1 in (1+R^2), so approximately:
+                double R = std::pow(sbp::ALIAS_THRESHOLD, 0.5/(1.-_beta)) * _rD;
+                dbg<<"R = "<<R<<'\n';
+                // If it is truncated at less than this, drop to that value.
+                if (R > _maxR) R = _maxR;
+                dbg<<"_maxR = "<<_maxR<<'\n';
+                dbg<<"R => "<<R<<'\n';
+                dbg<<"stepk = "<<(M_PI/R)<<'\n';
+                _stepK = M_PI / R;
+            }
 #else
-        // Old version from Gary:
-        // Make FFT's periodic at 4x truncation radius or 1.5x diam at ALIAS_THRESHOLD,
-        // whichever is smaller
-        return 2.*M_PI / std::min(4.*_maxR, 
-                                  3.*std::sqrt(pow(sbp::ALIAS_THRESHOLD, -1./_beta)-1.)*_rD);
+            // Old version from Gary:
+            // Make FFT's periodic at 4x truncation radius or 1.5x diam at ALIAS_THRESHOLD,
+            // whichever is smaller
+            _stepK = 2.*M_PI / std::min(4.*_maxR, 
+                                        3.*std::sqrt(pow(sbp::ALIAS_THRESHOLD, -1./_beta)-1.)*_rD);
 #endif
+        }
+        return _stepK;
     }
 
     // Integrand class for the Hankel transform of Moffat
@@ -2242,29 +2251,35 @@ namespace galsim {
         if (_ft.size() > 0) return;
 
         // Do a Hankel transform and store the results in a lookup table.
-        // TODO: N = 2048 is a bit arbitrary.  Should figure out a better choice for this.
-        const int N=2048;
-        double maxRrD = _maxR / _rD;
-        double dk = 2.*M_PI / std::max(4.*maxRrD, 64.);
+        
         double nn = _norm * 2.*M_PI * _rD_sq;
+        double maxR = _fluxFactor == 1. ? integ::MOCK_INF : _maxR / _rD;
 
         // Along the way, find the last k that has a kValue > 1.e-3
         double maxK_val = std::min(0.001, sbp::ALIAS_THRESHOLD) * _flux;
-        for (int i=0; i<=N/2; i++) {
-            double k = i*dk;
+        // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
+        // (It's oscillatory, so want to make sure not to stop at a zero crossing.)
+        double thresh = sbp::kvalue_accuracy * _flux;
+
+        // These are dimensionless k values for doing the integral.
+        double dk = std::min(0.1, stepK() * _rD);
+        double k = 0.;
+        for(int n_below_thresh=0; n_below_thresh < 5; k += dk) {
             MoffatIntegrand I(_beta, k, pow_beta);
             double val = integ::int1d(
-                I, 0., maxRrD, sbp::integration_relerr, sbp::integration_abserr);
+                I, 0., maxR, sbp::integration_relerr, sbp::integration_abserr);
             val *= nn;
+
             double kreal = k / _rD;
-            xdbg<<"ft("<<kreal<<") = "<<val<<'\n';
-            if (val > maxK_val) _maxK = kreal;
+            xdbg<<"ft("<<kreal<<") = "<<val<<std::endl;
             _ft.addEntry( kreal*kreal, val );
+
+            if (std::abs(val) > maxK_val) _maxK = kreal;
+
+            if (std::abs(val) > thresh) n_below_thresh = 0;
+            else ++n_below_thresh;
         }
-        dbg<<"maxK = "<<_maxK;
-        // Convert back to real units.
-        _maxK /= _rD;
-        dbg<<"maxK => "<<_maxK;
+        dbg<<"maxK = "<<_maxK<<'\n';
     }
 
     /*************************************************************
