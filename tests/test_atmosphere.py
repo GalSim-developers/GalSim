@@ -46,6 +46,36 @@ def test_doublegaussian_vs_refimg():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Two Gaussian reference image disagrees with DoubleGaussian class")   
 
+def test_AtmosphericPSF_properties():
+    """Test some basic properties of a known Atmospheric PSF.
+    """
+    apsf = galsim.AtmosphericPSF(lam_over_r0=1.5)
+    # Check that we are centered on (0, 0)
+    cen = galsim._galsim.PositionD(0, 0)
+    np.testing.assert_almost_equal((apsf.centroid().x, apsf.centroid().y), (cen.x, cen.y), 10,
+                                   err_msg="Atmospheric PSF not centered on (0, 0)")
+    # Check Fourier properties
+    np.testing.assert_almost_equal(apsf.maxK(), 24.051209331580893, 9,
+                                   err_msg="Atmospheric PSF .maxk() does not return known value.")
+    np.testing.assert_almost_equal(apsf.stepK(), 0.30662966724998858, 9,
+                                   err_msg="Atmospheric PSF .stepk() does not return known value.")
+    np.testing.assert_almost_equal(apsf.kValue(cen), 1+0j, 4,
+                                   err_msg="Atmospheric PSF k value at (0, 0) is not 1+0j.")
+
+def test_AtmosphericPSF_flux():
+    """Test that the flux of the atmospheric PSF is normalized to unity.
+    """
+    lors = np.linspace(1.5, 3., 5) # Different lambda_over_r0 values
+    for lor in lors:
+        apsf = galsim.AtmosphericPSF(lam_over_r0=lor)
+        np.testing.assert_almost_equal(apsf.getFlux(), 1., 6, 
+                                       err_msg="Flux of atmospheric PSF (ImageViewD) is not 1.")
+        img_array = apsf.draw(dx=1.).array
+        np.testing.assert_almost_equal(img_array.sum(), 1., 2,
+                                       err_msg="Flux of atmospheric PSF (image array) is not 1.")
+        
+        
 if __name__ == "__main__":
     test_doublegaussian_vs_sbadd()
     test_doublegaussian_vs_refimg()
+    test_AtmosphericPSF_flux()
