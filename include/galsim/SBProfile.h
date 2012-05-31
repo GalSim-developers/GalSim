@@ -1009,8 +1009,14 @@ namespace galsim {
         std::complex<double> (*_kValue)(
             const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
             const Position<double>& k, const Position<double>& cen);
+        std::complex<double> (*_kValueNoPhase)(
+            const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& , const Position<double>& );
 
-        static std::complex<double> _kValueNoPhase(
+        static std::complex<double> _kValueNoPhaseNoDet(
+            const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& , const Position<double>& );
+        static std::complex<double> _kValueNoPhaseWithDet(
             const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
             const Position<double>& , const Position<double>& );
         static std::complex<double> _kValueWithPhase(

@@ -12,12 +12,6 @@
 
 #include <fstream>
 
-// To time the real-space convolution integrals...
-//#define TIMING
-#ifdef TIMING
-#include <sys/time.h>
-#endif
-
 #ifdef DEBUGLOGGING
 std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cerr;
@@ -885,7 +879,11 @@ namespace galsim {
             && (_mA==_mD)
             && (_cen.x==0.) && (_cen.y==0.); // Need pure rotation
 
-        if (_cen.x == 0. && _cen.y == 0.) _kValue = &SBDistort::_kValueNoPhase;
+        if (std::abs(det-1.) < sbp::kvalue_accuracy) 
+            _kValueNoPhase = &SBDistort::_kValueNoPhaseNoDet;
+        else
+            _kValueNoPhase = &SBDistort::_kValueNoPhaseWithDet;
+        if (_cen.x == 0. && _cen.y == 0.) _kValue = _kValueNoPhase;
         else _kValue = &SBDistort::_kValueWithPhase;
 
         xdbg<<"Distortion init\n";
@@ -1282,7 +1280,12 @@ namespace galsim {
     std::complex<double> SBDistort::kValueNoPhase(const Position<double>& k) const
     { return _kValueNoPhase(_adaptee,fwdT(k),_absdet,k,_cen); }
 
-    std::complex<double> SBDistort::_kValueNoPhase(
+    std::complex<double> SBDistort::_kValueNoPhaseNoDet(
+        const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+        const Position<double>& , const Position<double>& )
+    { return adaptee->kValue(fwdTk); }
+
+    std::complex<double> SBDistort::_kValueNoPhaseWithDet(
         const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
         const Position<double>& , const Position<double>& )
     { return absdet * adaptee->kValue(fwdTk); }
@@ -2176,6 +2179,7 @@ namespace galsim {
             MoffatIntegrand I(beta, k, pow_beta);
             double val = integ::int1d(
                 I, 0., maxRrD, sbp::integration_relerr, sbp::integration_abserr);
+            xdbg<<"ft("<<k<<") = "<<val*nn<<'\n';
             ft.addEntry( k, val * nn );
         }
     }
