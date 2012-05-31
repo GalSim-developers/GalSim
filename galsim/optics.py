@@ -17,8 +17,6 @@ PTF = phase transfer function = p, where OTF = MTF * exp(i * p)
 
 Wavefront = the amplitude and phase of the incident light on the telescope pupil, encoded as a
 complex number. The OTF is the autocorrelation function of the wavefront.
-
-TODO: Implement a centrally-obstructed pupil plane (e.g. such as is caused by secondary mirrors).
 """
 
 def roll2d(image, (iroll, jroll)):
