@@ -418,7 +418,7 @@ struct PySBAiry {
         bp::class_<SBAiry,bp::bases<SBProfile>,boost::noncopyable>(
             "SBAiry",
             bp::init<double,double,double>(
-                (bp::arg("D")=1., bp::arg("obs")=0., bp::arg("flux")=1.)
+                (bp::arg("D")=1., bp::arg("obscuration")=0., bp::arg("flux")=1.)
             )
         );
     }
