@@ -82,6 +82,18 @@ namespace galsim {
         const double integration_abserr = 1.e-5;
         //@}
 
+        /**
+         * @brief Accuracy of values in k-space.
+         *
+         * If a k-value is less than kvalue_accuracy, then it may be set to zero.
+         * Similarly, if an alternate calculation has errors less than kvalue_accuracy,
+         * then it may be used instead of an exact calculation.
+         * Note: This does not necessarily imply that all kvalues are this accurate.
+         * There may be cases where other choices we have made lead to errors greater 
+         * than this.  But whenever we do an explicit calculation about this, this is
+         * the value we use.
+         */
+        const double kvalue_accuracy = 1.e-4;
     }
 
     /// @brief Exception class thrown by SBProfiles.
@@ -1530,27 +1542,23 @@ namespace galsim {
      */
     class SBExponential : public SBProfile 
     {
-    private:
-        double r0;   ///< Characteristic size of profile `exp[-(r / r0)]`.
-        double flux; ///< Flux.
-        double _r0_sq; ///< Calculated value: r0*r0
     public:
         /** 
          * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in 
          * SBSersic.
          *
-         * @param[in] flux_ flux (default `flux_ = 1.`).
-         * @param[in] r0_   scale length for the profile that scales as `exp[-(r / r0)]`, NOT the 
-         *                  half-light radius `re` as in SBSersic (default `r0_ = 1.`).
+         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] r0    scale length for the profile that scales as `exp[-(r / r0)]`, NOT the 
+         *                  half-light radius `re` as in SBSersic (default `r0 = 1.`).
          */
-        SBExponential(double flux_=1., double r0_=1.) : r0(r0_), flux(flux_), _r0_sq(r0*r0) {}
+        SBExponential(double flux=1., double r0=1.);
 
         /// @brief Destructor.
         ~SBExponential() {}
 
         // Methods
-        double xValue(const Position<double>& _p) const;
-        std::complex<double> kValue(const Position<double>& _p) const;
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
         { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; splits.push_back(0.); }
@@ -1561,28 +1569,35 @@ namespace galsim {
         void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
         { 
             ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; 
-            if (std::abs(x/r0) < 1.e-2) splits.push_back(0.); 
+            if (std::abs(x/_r0) < 1.e-2) splits.push_back(0.); 
         }
 
         bool isAxisymmetric() const { return true; } 
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        // Set maxK where the FT is down to 0.001 or threshold, whichever is harder.
-        double maxK() const { return std::max(10., pow(sbp::ALIAS_THRESHOLD, -1./3.))/r0; }
+        double maxK() const;
         double stepK() const;
 
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
 
-        double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; }
+        double getFlux() const { return _flux; }
+        void setFlux(double flux) { _flux=flux; }
 
         /// @brief Exponential photon-shooting done with rapid iterative solution of inverse
         /// cumulative distribution
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBExponential(*this); }
+
+    private:
+        double _flux; ///< Flux.
+        double _r0;   ///< Characteristic size of profile `exp[-(r / r0)]`.
+        double _r0_sq; ///< Calculated value: r0*r0
+        double _ksq_min; ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
+        double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
+        double _norm; ///< flux / r0^2 / 2pi
     };
 
     /** 
