@@ -3,7 +3,15 @@
 #include <limits>
 #include <algorithm>
 
+//#define DEBUGLOGGING
 #include "Shear.h"
+
+#ifdef DEBUGLOGGING
+std::ostream* dbgout = new std::ofstream("debug.out");
+//std::ostream* dbgout = &std::cerr;
+//std::ostream* dbgout = 0;
+int verbose_level = 2;
+#endif
 
 // Convention for Shear addition is that s1 + s2 is shear by s1
 // followed by shear of s2.  Note that this differs from the
@@ -13,6 +21,7 @@ namespace galsim {
 
     Shear& Shear::setE1E2(double e1in, double e2in) 
     {
+        dbg<<"Shear setE1E2 "<<e1in<<','<<e2in<<'\n';
         hasMatrix = false;
         e1 = e1in;
         e2 = e2in;
@@ -21,6 +30,7 @@ namespace galsim {
 
     Shear& Shear::setEBeta(double ein, Angle betain) 
     {
+        dbg<<"Shear setEBeta "<<ein<<','<<betain<<'\n';
         hasMatrix = false;
         e1 = ein*std::cos(2.*betain.rad());
         e2 = ein*std::sin(2.*betain.rad());
@@ -29,6 +39,7 @@ namespace galsim {
 
     Shear& Shear::setEta1Eta2(double eta1in, double eta2in) 
     {
+        dbg<<"Shear setEta1Eta2 "<<eta1in<<','<<eta2in<<'\n';
         double scale;
         hasMatrix = false;
         // get ratio of e amplitude to eta amplitude:
@@ -42,6 +53,7 @@ namespace galsim {
 
     Shear& Shear::setEtaBeta(double etain, Angle betain) 
     {
+        dbg<<"Shear setEtaBeta "<<etain<<','<<betain<<'\n';
         double e;
         hasMatrix = false;
         e = std::tanh(etain);
@@ -65,15 +77,16 @@ namespace galsim {
     {
         // get ratio of eta amplitude to e amplitude:
         double esq = getESq();
-        double scale = (esq>1e-6) ? (1-std::sqrt(1-esq))/esq : 1.;
+        double scale = (esq>1.e-6) ? (1.-std::sqrt(1.-esq))/esq : 0.5;
         g1 = e1*scale;
         g2 = e2*scale;
     }
 
     Shear& Shear::setG1G2(double g1, double g2) 
     {
+        dbg<<"Shear setG1G2 "<<g1<<','<<g2<<'\n';
         // get ratio of eta amplitude to e amplitude:
-        double scale = 2./(1+g1*g1+g2*g2);
+        double scale = 2./(1.+g1*g1+g2*g2);
         e1 = g1*scale;
         e2 = g2*scale;
         return *this;
@@ -81,6 +94,7 @@ namespace galsim {
 
     Shear& Shear::operator+=(const Shear& s2) 
     {
+        dbg<<"Shear op+=\n";
         double s1sq = e1*e1+e2*e2;
         if (s1sq==0.) { (*this)=s2; return *this;}
 
@@ -91,8 +105,8 @@ namespace galsim {
 #endif
         assert(s1sq<=1. && s2sq<=1.); //addition requires a realizable shear.
 
-        double denom=1.+e1*s2.e1 + e2*s2.e2;
-        if (denom==0.) {e1=e2=0.; return *this;}
+        double denom = 1. + e1*s2.e1 + e2*s2.e2;
+        if (denom==0.) { e1=e2=0.; return *this; }
 
         double temp = 1.-std::sqrt(1.-s1sq);
         double e1new = e1 + s2.e1 + temp*(e1 * s2.e2 - e2 * s2.e1)*e2/s1sq;
@@ -105,6 +119,7 @@ namespace galsim {
 
     Shear& Shear::operator-=(const Shear& s2) 
     {
+        dbg<<"Shear op-=\n";
         //NOTE that s1 -= s2 will produce s1 + (-s2) according to 
         // the local convention.
         return Shear::operator+=(-s2);
@@ -144,6 +159,7 @@ namespace galsim {
 
     Shear& Shear::operator*=(const double d) 
     {
+        dbg<<"Shear op*=\n";
         e1 *= d; e2 *= d;
         hasMatrix = false;
         return *this;
@@ -151,6 +167,7 @@ namespace galsim {
 
     Shear& Shear::operator/=(const double d) 
     {
+        dbg<<"Shear op/=\n";
         hasMatrix = false;
         return Shear::operator*=(1./d);
     }
@@ -194,25 +211,31 @@ namespace galsim {
 
     void Shear::calcMatrix() const 
     {
+        if (hasMatrix) return;
+        dbg<<"Shear calcMatrix\n";
+        dbg<<"e1,e2 = "<<e1<<','<<e2<<'\n';
+
         //  Matrix is defined here to be for forward point map, source plane
         // to image plane for a circular source that acquires this shape.
         // +eta in xx posn.
-        if (hasMatrix) return;
         double esq= e1*e1+e2*e2;
-        assert (esq<1.); //Must be realizable
-        if (esq<1e-3) {
+        dbg<<"esq = "<<esq<<'\n';
+        assert (esq < 1.); //Must be realizable
+
+        if (esq < 1.e-4) {
             //Small-e approximation ok to part in 10^-6.
-            matrixA = 1.+0.5*e1;
-            matrixB = 1.-0.5*e1;
+            matrixA = 1.+0.5*e1+0.125*esq;
+            matrixB = 1.-0.5*e1+0.125*esq;
             matrixC = +0.5*e2;
         } else {
-            double temp = std::sqrt(1-esq);
-            double cc=std::sqrt(0.5*(1+1./temp));
-            temp = (1-temp)/esq;
-            matrixA = cc*(1+temp*e1);
-            matrixB = cc*(1-temp*e1);
+            double temp = std::sqrt(1.-esq);
+            double cc=std::sqrt(0.5*(1.+1./temp));
+            temp = (1.-temp)/esq;
+            matrixA = cc*(1.+temp*e1);
+            matrixB = cc*(1.-temp*e1);
             matrixC = +cc*temp*e2;
         }
+        dbg<<"matrix = "<<matrixA<<','<<matrixB<<','<<matrixC<<'\n';
         hasMatrix = true;
     }
 
@@ -231,6 +254,7 @@ namespace galsim {
 
     Ellipse Ellipse::fromMatrix(const tmv::Matrix<double>& m, Angle& rotation, bool& parityFlip) 
     {
+        dbg<<"ellipse from matrix "<<m<<'\n';
         assert(m.nrows()==2 && m.ncols()==2);
         double det = m(0,0)*m(1,1) - m(0,1)*m(1,0);
         parityFlip = false;
@@ -276,6 +300,7 @@ namespace galsim {
 
     Ellipse& Ellipse::operator+=(const Ellipse& e2) 
     {
+        dbg<<"ellipse +=\n";
         Position<double> x3 = fwd(e2.getX0());
         x0 = x3;
         s += e2.getS();
