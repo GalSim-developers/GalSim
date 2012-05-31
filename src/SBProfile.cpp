@@ -2,7 +2,7 @@
 // Functions for the Surface Brightness Profile Class
 //
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "integ/Int.h"
@@ -814,25 +814,25 @@ namespace galsim {
     //
     SBDistort::SBDistort(
         const SBProfile& sbin, double mA, double mB, double mC, double mD,
-        const Position<double>& x0_) :
-        matrixA(mA), matrixB(mB), matrixC(mC), matrixD(mD), x0(x0_)
+        const Position<double>& cen) :
+        _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen)
     {
         SBProfile* p=sbin.duplicate();
         SBDistort* sbd = dynamic_cast<SBDistort*> (p);
         if (sbd) {
             // We are distorting something that's already a distortion.
             // So just compound the affine transformaions
-            adaptee = sbd->adaptee->duplicate();
-            x0 = x0_ + fwd(sbd->x0);
+            _adaptee = sbd->_adaptee->duplicate();
+            _cen = cen + fwd(sbd->_cen);
             // New matrix is product (M_this) * (M_old)
-            matrixA = mA*sbd->matrixA + mB*sbd->matrixC;
-            matrixB = mA*sbd->matrixB + mB*sbd->matrixD;
-            matrixC = mC*sbd->matrixA + mD*sbd->matrixC;
-            matrixD = mC*sbd->matrixB + mD*sbd->matrixD;
+            _mA = mA*sbd->_mA + mB*sbd->_mC;
+            _mB = mA*sbd->_mB + mB*sbd->_mD;
+            _mC = mC*sbd->_mA + mD*sbd->_mC;
+            _mD = mC*sbd->_mB + mD*sbd->_mD;
             delete sbd;
         } else {
             // Distorting something generic
-            adaptee = p;
+            _adaptee = p;
         }
         initialize();
     }
@@ -841,62 +841,65 @@ namespace galsim {
     {
         // First get what we need from the Ellipse:
         tmv::Matrix<double> m = e_.getMatrix();
-        matrixA = m(0,0);
-        matrixB = m(0,1);
-        matrixC = m(1,0);
-        matrixD = m(1,1);
-        x0 = e_.getX0();
+        _mA = m(0,0);
+        _mB = m(0,1);
+        _mC = m(1,0);
+        _mD = m(1,1);
+        _cen = e_.getX0();
         // Then repeat generic construction:
         SBProfile* p=sbin.duplicate();
         SBDistort* sbd = dynamic_cast<SBDistort*> (p);
         if (sbd) {
             // We are distorting something that's already a distortion.
             // So just compound the affine transformaions
-            adaptee = sbd->adaptee->duplicate();
-            x0 = e_.getX0() + fwd(sbd->x0);
+            _adaptee = sbd->_adaptee->duplicate();
+            _cen = e_.getX0() + fwd(sbd->_cen);
             // New matrix is product (M_this) * (M_old)
-            double mA = matrixA; double mB=matrixB; double mC=matrixC; double mD=matrixD;
-            matrixA = mA*sbd->matrixA + mB*sbd->matrixC;
-            matrixB = mA*sbd->matrixB + mB*sbd->matrixD;
-            matrixC = mC*sbd->matrixA + mD*sbd->matrixC;
-            matrixD = mC*sbd->matrixB + mD*sbd->matrixD;
+            double mA = _mA; double mB=_mB; double mC=_mC; double mD=_mD;
+            _mA = mA*sbd->_mA + mB*sbd->_mC;
+            _mB = mA*sbd->_mB + mB*sbd->_mD;
+            _mC = mC*sbd->_mA + mD*sbd->_mC;
+            _mD = mC*sbd->_mB + mD*sbd->_mD;
             delete sbd;
         } else {
             // Distorting something generic
-            adaptee = p;
+            _adaptee = p;
         }
         initialize();
     }
 
     void SBDistort::initialize() 
     {
-        double det = matrixA*matrixD-matrixB*matrixC;
+        double det = _mA*_mD-_mB*_mC;
         if (det==0.) throw SBError("Attempt to SBDistort with degenerate matrix");
-        absdet = std::abs(det);
-        invdet = 1./det;
+        _absdet = std::abs(det);
+        _invdet = 1./det;
 
-        double h1 = hypot( matrixA+matrixD, matrixB-matrixC);
-        double h2 = hypot( matrixA-matrixD, matrixB+matrixC);
-        major = 0.5*std::abs(h1+h2);
-        minor = 0.5*std::abs(h1-h2);
-        if (major<minor) std::swap(major,minor);
-        stillIsAxisymmetric = adaptee->isAxisymmetric() 
-            && (matrixB==-matrixC) 
-            && (matrixA==matrixD)
-            && (x0.x==0.) && (x0.y==0.); // Need pure rotation
+        double h1 = hypot( _mA+_mD, _mB-_mC);
+        double h2 = hypot( _mA-_mD, _mB+_mC);
+        _major = 0.5*std::abs(h1+h2);
+        _minor = 0.5*std::abs(h1-h2);
+        if (_major<_minor) std::swap(_major,_minor);
+        _stillIsAxisymmetric = _adaptee->isAxisymmetric() 
+            && (_mB==-_mC) 
+            && (_mA==_mD)
+            && (_cen.x==0.) && (_cen.y==0.); // Need pure rotation
+
+        if (_cen.x == 0. && _cen.y == 0.) _kValue = &SBDistort::_kValueNoPhase;
+        else _kValue = &SBDistort::_kValueWithPhase;
 
         xdbg<<"Distortion init\n";
-        xdbg<<"matrix = "<<matrixA<<','<<matrixB<<','<<matrixC<<','<<matrixD<<'\n';
-        xdbg<<"x0 = "<<x0<<'\n';
-        xdbg<<"invdet = "<<invdet<<'\n';
-        xdbg<<"major, minor = "<<major<<", "<<minor<<'\n';
-        xdbg<<"maxK() = "<<adaptee->maxK() / minor<<'\n';
-        xdbg<<"stepK() = "<<adaptee->stepK() / major<<'\n';
+        xdbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<'\n';
+        xdbg<<"_cen = "<<_cen<<'\n';
+        xdbg<<"_invdet = "<<_invdet<<'\n';
+        xdbg<<"_major, _minor = "<<_major<<", "<<_minor<<'\n';
+        xdbg<<"maxK() = "<<_adaptee->maxK() / _minor<<'\n';
+        xdbg<<"stepK() = "<<_adaptee->stepK() / _major<<'\n';
 
         // Calculate the values for getXRange and getYRange:
-        if (adaptee->isAxisymmetric()) {
+        if (_adaptee->isAxisymmetric()) {
             // The original is a circle, so first get its radius.
-            adaptee->getXRange(_xmin,_xmax,_xsplits);
+            _adaptee->getXRange(_xmin,_xmax,_xsplits);
             if (_xmax == integ::MOCK_INF) {
                 // Then these are correct, and use +- inf for y range too.
                 _ymin = -integ::MOCK_INF;
@@ -910,44 +913,44 @@ namespace galsim {
                 // xmin = -R sqrt(A^2 + B^2) + x0
                 // ymax = R sqrt(C^2 + D^2) + y0
                 // ymin = -R sqrt(C^2 + D^2) + y0
-                double AApBB = matrixA*matrixA + matrixB*matrixB;
+                double AApBB = _mA*_mA + _mB*_mB;
                 double sqrtAApBB = sqrt(AApBB);
                 double temp = sqrtAApBB * R;
-                _xmin = -temp + x0.x;
-                _xmax = temp + x0.x;
-                double CCpDD = matrixC*matrixC + matrixD*matrixD;
+                _xmin = -temp + _cen.x;
+                _xmax = temp + _cen.x;
+                double CCpDD = _mC*_mC + _mD*_mD;
                 double sqrtCCpDD = sqrt(CCpDD);
                 temp = sqrt(CCpDD) * R;
-                _ymin = -temp + x0.y;
-                _ymax = temp + x0.y;
+                _ymin = -temp + _cen.y;
+                _ymax = temp + _cen.y;
                 _ysplits.resize(_xsplits.size());
                 for (size_t k=0;k<_xsplits.size();++k) {
                     // The split points work the same way.  Scale them by the same factor we
-                    // scaled the R value above, then add x0.x or x0.y.
+                    // scaled the R value above, then add _cen.x or _cen.y.
                     double split = _xsplits[k];
-                    xdbg<<"Adaptee split at "<<split<<'\n';
-                    _xsplits[k] = sqrtAApBB * split + x0.x;
-                    _ysplits[k] = sqrtCCpDD * split + x0.y;
-                    xdbg<<"-> x,y splits at "<<_xsplits[k]<<"  "<<_ysplits[k]<<'\n';
+                    xxdbg<<"Adaptee split at "<<split<<'\n';
+                    _xsplits[k] = sqrtAApBB * split + _cen.x;
+                    _ysplits[k] = sqrtCCpDD * split + _cen.y;
+                    xxdbg<<"-> x,y splits at "<<_xsplits[k]<<"  "<<_ysplits[k]<<'\n';
                 }
                 // Now a couple of calculations that get reused in getYRange(x,yminymax):
-                _coeff_b = (matrixA*matrixC + matrixB*matrixD) / AApBB;
+                _coeff_b = (_mA*_mC + _mB*_mD) / AApBB;
                 _coeff_c = CCpDD / AApBB;
-                _coeff_c2 = absdet*absdet / AApBB;
-                xdbg<<"adaptee is axisymmetric.\n";
-                xdbg<<"adaptees maxR = "<<R<<'\n';
-                xdbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<'\n';
-                xdbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<'\n';
+                _coeff_c2 = _absdet*_absdet / AApBB;
+                xxdbg<<"adaptee is axisymmetric.\n";
+                xxdbg<<"adaptees maxR = "<<R<<'\n';
+                xxdbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<'\n';
+                xxdbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<'\n';
             }
         } else {
             // Apply the distortion to each of the four corners of the original
             // and find the minimum and maximum.
             double xmin_1, xmax_1;
             std::vector<double> xsplits0;
-            adaptee->getXRange(xmin_1,xmax_1,xsplits0);
+            _adaptee->getXRange(xmin_1,xmax_1,xsplits0);
             double ymin_1, ymax_1;
             std::vector<double> ysplits0;
-            adaptee->getYRange(ymin_1,ymax_1,ysplits0);
+            _adaptee->getYRange(ymin_1,ymax_1,ysplits0);
             // Note: This doesn't explicitly check for MOCK_INF values.
             // It shouldn't be a problem, since the integrator will still treat
             // large values near MOCK_INF as infinity, but it just means that 
@@ -956,92 +959,92 @@ namespace galsim {
             Position<double> br = fwd(Position<double>(xmax_1,ymin_1));
             Position<double> tl = fwd(Position<double>(xmin_1,ymax_1));
             Position<double> tr = fwd(Position<double>(xmax_1,ymax_1));
-            _xmin = std::min(std::min(std::min(bl.x,br.x),tl.x),tr.x) + x0.x;
-            _xmax = std::max(std::max(std::max(bl.x,br.x),tl.x),tr.x) + x0.x;
-            _ymin = std::min(std::min(std::min(bl.y,br.y),tl.y),tr.y) + x0.y;
-            _ymax = std::max(std::max(std::max(bl.y,br.y),tl.y),tr.y) + x0.y;
-            xdbg<<"adaptee is not axisymmetric.\n";
-            xdbg<<"adaptees x range = "<<xmin_1<<" ... "<<xmax_1<<'\n';
-            xdbg<<"adaptees y range = "<<ymin_1<<" ... "<<ymax_1<<'\n';
-            xdbg<<"Corners are: bl = "<<bl<<'\n';
-            xdbg<<"             br = "<<br<<'\n';
-            xdbg<<"             tl = "<<tl<<'\n';
-            xdbg<<"             tr = "<<tr<<'\n';
-            xdbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<'\n';
-            xdbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<'\n';
-            if (bl.x + x0.x > _xmin && bl.x + x0.x < _xmax) {
-                xdbg<<"X Split from bl.x = "<<bl.x+x0.x<<'\n';
-                _xsplits.push_back(bl.x+x0.x);
+            _xmin = std::min(std::min(std::min(bl.x,br.x),tl.x),tr.x) + _cen.x;
+            _xmax = std::max(std::max(std::max(bl.x,br.x),tl.x),tr.x) + _cen.x;
+            _ymin = std::min(std::min(std::min(bl.y,br.y),tl.y),tr.y) + _cen.y;
+            _ymax = std::max(std::max(std::max(bl.y,br.y),tl.y),tr.y) + _cen.y;
+            xxdbg<<"adaptee is not axisymmetric.\n";
+            xxdbg<<"adaptees x range = "<<xmin_1<<" ... "<<xmax_1<<'\n';
+            xxdbg<<"adaptees y range = "<<ymin_1<<" ... "<<ymax_1<<'\n';
+            xxdbg<<"Corners are: bl = "<<bl<<'\n';
+            xxdbg<<"             br = "<<br<<'\n';
+            xxdbg<<"             tl = "<<tl<<'\n';
+            xxdbg<<"             tr = "<<tr<<'\n';
+            xxdbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<'\n';
+            xxdbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<'\n';
+            if (bl.x + _cen.x > _xmin && bl.x + _cen.x < _xmax) {
+                xxdbg<<"X Split from bl.x = "<<bl.x+_cen.x<<'\n';
+                _xsplits.push_back(bl.x+_cen.x);
             }
-            if (br.x + x0.x > _xmin && br.x + x0.x < _xmax) {
-                xdbg<<"X Split from br.x = "<<br.x+x0.x<<'\n';
-                _xsplits.push_back(br.x+x0.x);
+            if (br.x + _cen.x > _xmin && br.x + _cen.x < _xmax) {
+                xxdbg<<"X Split from br.x = "<<br.x+_cen.x<<'\n';
+                _xsplits.push_back(br.x+_cen.x);
             }
-            if (tl.x + x0.x > _xmin && tl.x + x0.x < _xmax) {
-                xdbg<<"X Split from tl.x = "<<tl.x+x0.x<<'\n';
-                _xsplits.push_back(tl.x+x0.x);
+            if (tl.x + _cen.x > _xmin && tl.x + _cen.x < _xmax) {
+                xxdbg<<"X Split from tl.x = "<<tl.x+_cen.x<<'\n';
+                _xsplits.push_back(tl.x+_cen.x);
             }
-            if (tr.x + x0.x > _xmin && tr.x + x0.x < _xmax) {
-                xdbg<<"X Split from tr.x = "<<tr.x+x0.x<<'\n';
-                _xsplits.push_back(tr.x+x0.x);
+            if (tr.x + _cen.x > _xmin && tr.x + _cen.x < _xmax) {
+                xxdbg<<"X Split from tr.x = "<<tr.x+_cen.x<<'\n';
+                _xsplits.push_back(tr.x+_cen.x);
             }
-            if (bl.y + x0.y > _ymin && bl.y + x0.y < _ymax) {
-                xdbg<<"Y Split from bl.y = "<<bl.y+x0.y<<'\n';
-                _ysplits.push_back(bl.y+x0.y);
+            if (bl.y + _cen.y > _ymin && bl.y + _cen.y < _ymax) {
+                xxdbg<<"Y Split from bl.y = "<<bl.y+_cen.y<<'\n';
+                _ysplits.push_back(bl.y+_cen.y);
             }
-            if (br.y + x0.y > _ymin && br.y + x0.y < _ymax) {
-                xdbg<<"Y Split from br.y = "<<br.y+x0.y<<'\n';
-                _ysplits.push_back(br.y+x0.y);
+            if (br.y + _cen.y > _ymin && br.y + _cen.y < _ymax) {
+                xxdbg<<"Y Split from br.y = "<<br.y+_cen.y<<'\n';
+                _ysplits.push_back(br.y+_cen.y);
             }
-            if (tl.y + x0.y > _ymin && tl.y + x0.y < _ymax) {
-                xdbg<<"Y Split from tl.y = "<<tl.y+x0.y<<'\n';
-                _ysplits.push_back(tl.y+x0.y);
+            if (tl.y + _cen.y > _ymin && tl.y + _cen.y < _ymax) {
+                xxdbg<<"Y Split from tl.y = "<<tl.y+_cen.y<<'\n';
+                _ysplits.push_back(tl.y+_cen.y);
             }
-            if (tr.y + x0.y > _ymin && tr.y + x0.y < _ymax) {
-                xdbg<<"Y Split from tr.y = "<<tr.y+x0.y<<'\n';
-                _ysplits.push_back(tr.y+x0.y);
+            if (tr.y + _cen.y > _ymin && tr.y + _cen.y < _ymax) {
+                xxdbg<<"Y Split from tr.y = "<<tr.y+_cen.y<<'\n';
+                _ysplits.push_back(tr.y+_cen.y);
             }
             // If the adaptee has any splits, try to propagate those up
             for(size_t k=0;k<xsplits0.size();++k) {
-                xdbg<<"Adaptee xsplit at "<<xsplits0[k]<<'\n';
+                xxdbg<<"Adaptee xsplit at "<<xsplits0[k]<<'\n';
                 Position<double> bx = fwd(Position<double>(xsplits0[k],ymin_1));
                 Position<double> tx = fwd(Position<double>(xsplits0[k],ymax_1));
-                if (bx.x + x0.x > _xmin && bx.x + x0.x < _xmax) {
-                    xdbg<<"X Split from bx.x = "<<bx.x+x0.x<<'\n';
-                    _xsplits.push_back(bx.x+x0.x);
+                if (bx.x + _cen.x > _xmin && bx.x + _cen.x < _xmax) {
+                    xxdbg<<"X Split from bx.x = "<<bx.x+_cen.x<<'\n';
+                    _xsplits.push_back(bx.x+_cen.x);
                 }
-                if (tx.x + x0.x > _xmin && tx.x + x0.x < _xmax) {
-                    xdbg<<"X Split from tx.x = "<<tx.x+x0.x<<'\n';
-                    _xsplits.push_back(tx.x+x0.x);
+                if (tx.x + _cen.x > _xmin && tx.x + _cen.x < _xmax) {
+                    xxdbg<<"X Split from tx.x = "<<tx.x+_cen.x<<'\n';
+                    _xsplits.push_back(tx.x+_cen.x);
                 }
-                if (bx.y + x0.y > _ymin && bx.y + x0.y < _ymax) {
-                    xdbg<<"Y Split from bx.y = "<<bx.y+x0.y<<'\n';
-                    _ysplits.push_back(bx.y+x0.y);
+                if (bx.y + _cen.y > _ymin && bx.y + _cen.y < _ymax) {
+                    xxdbg<<"Y Split from bx.y = "<<bx.y+_cen.y<<'\n';
+                    _ysplits.push_back(bx.y+_cen.y);
                 }
-                if (tx.y + x0.y > _ymin && tx.y + x0.y < _ymax) {
-                    xdbg<<"Y Split from tx.y = "<<tx.y+x0.y<<'\n';
-                    _ysplits.push_back(tx.y+x0.y);
+                if (tx.y + _cen.y > _ymin && tx.y + _cen.y < _ymax) {
+                    xxdbg<<"Y Split from tx.y = "<<tx.y+_cen.y<<'\n';
+                    _ysplits.push_back(tx.y+_cen.y);
                 }
             }
             for(size_t k=0;k<ysplits0.size();++k) {
-                xdbg<<"Adaptee ysplit at "<<ysplits0[k]<<'\n';
+                xxdbg<<"Adaptee ysplit at "<<ysplits0[k]<<'\n';
                 Position<double> yl = fwd(Position<double>(xmin_1,ysplits0[k]));
                 Position<double> yr = fwd(Position<double>(xmax_1,ysplits0[k]));
-                if (yl.x + x0.x > _xmin && yl.x + x0.x < _xmax) {
-                    xdbg<<"X Split from tl.x = "<<tl.x+x0.x<<'\n';
-                    _xsplits.push_back(yl.x+x0.x);
+                if (yl.x + _cen.x > _xmin && yl.x + _cen.x < _xmax) {
+                    xxdbg<<"X Split from tl.x = "<<tl.x+_cen.x<<'\n';
+                    _xsplits.push_back(yl.x+_cen.x);
                 }
-                if (yr.x + x0.x > _xmin && yr.x + x0.x < _xmax) {
-                    xdbg<<"X Split from yr.x = "<<yr.x+x0.x<<'\n';
-                    _xsplits.push_back(yr.x+x0.x);
+                if (yr.x + _cen.x > _xmin && yr.x + _cen.x < _xmax) {
+                    xxdbg<<"X Split from yr.x = "<<yr.x+_cen.x<<'\n';
+                    _xsplits.push_back(yr.x+_cen.x);
                 }
-                if (yl.y + x0.y > _ymin && yl.y + x0.y < _ymax) {
-                    xdbg<<"Y Split from yl.y = "<<yl.y+x0.y<<'\n';
-                    _ysplits.push_back(yl.y+x0.y);
+                if (yl.y + _cen.y > _ymin && yl.y + _cen.y < _ymax) {
+                    xxdbg<<"Y Split from yl.y = "<<yl.y+_cen.y<<'\n';
+                    _ysplits.push_back(yl.y+_cen.y);
                 }
-                if (yr.y + x0.y > _ymin && yr.y + x0.y < _ymax) {
-                    xdbg<<"Y Split from yr.y = "<<yr.y+x0.y<<'\n';
-                    _ysplits.push_back(yr.y+x0.y);
+                if (yr.y + _cen.y > _ymin && yr.y + _cen.y < _ymax) {
+                    xxdbg<<"Y Split from yr.y = "<<yr.y+_cen.y<<'\n';
+                    _ysplits.push_back(yr.y+_cen.y);
                 }
             }
         }
@@ -1062,10 +1065,10 @@ namespace galsim {
     void SBDistort::getYRange(double x, double& ymin, double& ymax,
                               std::vector<double>& splits) const
     {
-        xdbg<<"Distortion getYRange for x = "<<x<<'\n';
-        if (adaptee->isAxisymmetric()) {
+        xxdbg<<"Distortion getYRange for x = "<<x<<'\n';
+        if (_adaptee->isAxisymmetric()) {
             std::vector<double> splits0;
-            adaptee->getYRange(ymin,ymax,splits0);
+            _adaptee->getYRange(ymin,ymax,splits0);
             if (ymax == integ::MOCK_INF) return;
             double R = ymax;
             // The circlue with radius R is mapped onto an ellipse with (x,y) given by:
@@ -1081,20 +1084,20 @@ namespace galsim {
             // -> y^2 - 2b y = c
             //    (y - b)^2 = c + b^2
             //    y = b +- sqrt(c + b^2)
-            double b = _coeff_b * (x-x0.x);
-            double c = _coeff_c2 * R*R - _coeff_c * (x-x0.x) * (x-x0.x);
+            double b = _coeff_b * (x-_cen.x);
+            double c = _coeff_c2 * R*R - _coeff_c * (x-_cen.x) * (x-_cen.x);
             double d = sqrt(c + b*b);
-            ymax = b + d + x0.y;
-            ymin = b - d + x0.y;
+            ymax = b + d + _cen.y;
+            ymin = b - d + _cen.y;
             for (size_t k=0;k<splits0.size();++k) if (splits0[k] >= 0.) {
                 double r = splits0[k];
-                double c = _coeff_c2 * r*r - _coeff_c * (x-x0.x) * (x-x0.x);
+                double c = _coeff_c2 * r*r - _coeff_c * (x-_cen.x) * (x-_cen.x);
                 double d = sqrt(c+b*b);
-                splits.push_back(b + d + x0.y);
-                splits.push_back(b - d + x0.y);
+                splits.push_back(b + d + _cen.y);
+                splits.push_back(b - d + _cen.y);
             }
-            xdbg<<"Axisymmetric adaptee with R = "<<R<<'\n';
-            xdbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<'\n';
+            xxdbg<<"Axisymmetric adaptee with R = "<<R<<'\n';
+            xxdbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<'\n';
         } else {
             // There are 4 lines to check for where they intersect the given x.
             // Start with the adaptee's given ymin.
@@ -1113,67 +1116,63 @@ namespace galsim {
             //
             // We also need to check for A or B = 0, since then only one pair of lines is
             // relevant.
-            xdbg<<"Non-axisymmetric adaptee\n";
-            if (matrixA == 0.) {
-                xdbg<<"matrixA == 0:\n";
+            xxdbg<<"Non-axisymmetric adaptee\n";
+            if (_mA == 0.) {
+                xxdbg<<"_mA == 0:\n";
                 double xmin_1, xmax_1;
                 std::vector<double> xsplits0;
-                adaptee->getXRange(xmin_1,xmax_1,xsplits0);
-                xdbg<<"xmin_1, xmax_1 = "<<xmin_1<<','<<xmax_1<<'\n';
-                ymin = matrixC * xmin_1 + matrixD * (x - x0.x - matrixA*xmin_1) / matrixB + x0.y;
-                ymax = matrixC * xmax_1 + matrixD * (x - x0.x - matrixA*xmax_1) / matrixB + x0.y;
+                _adaptee->getXRange(xmin_1,xmax_1,xsplits0);
+                xxdbg<<"xmin_1, xmax_1 = "<<xmin_1<<','<<xmax_1<<'\n';
+                ymin = _mC * xmin_1 + _mD * (x - _cen.x - _mA*xmin_1) / _mB + _cen.y;
+                ymax = _mC * xmax_1 + _mD * (x - _cen.x - _mA*xmax_1) / _mB + _cen.y;
                 if (ymax < ymin) std::swap(ymin,ymax);
                 for(size_t k=0;k<xsplits0.size();++k) {
                     double xx = xsplits0[k];
-                    splits.push_back(
-                        matrixC * xx + matrixD * (x - x0.x - matrixA*xx) / matrixB + x0.y);
+                    splits.push_back(_mC * xx + _mD * (x - _cen.x - _mA*xx) / _mB + _cen.y);
                 }
-            } else if (matrixB == 0.) {
-                xdbg<<"matrixB == 0:\n";
+            } else if (_mB == 0.) {
+                xxdbg<<"_mB == 0:\n";
                 double ymin_1, ymax_1;
                 std::vector<double> ysplits0;
-                adaptee->getYRange(ymin_1,ymax_1,ysplits0);
-                xdbg<<"ymin_1, ymax_1 = "<<ymin_1<<','<<ymax_1<<'\n';
-                ymin = matrixC * (x - x0.x - matrixB*ymin_1) / matrixA + matrixD*ymin_1 + x0.y;
-                ymax = matrixC * (x - x0.x - matrixB*ymax_1) / matrixA + matrixD*ymax_1 + x0.y;
+                _adaptee->getYRange(ymin_1,ymax_1,ysplits0);
+                xxdbg<<"ymin_1, ymax_1 = "<<ymin_1<<','<<ymax_1<<'\n';
+                ymin = _mC * (x - _cen.x - _mB*ymin_1) / _mA + _mD*ymin_1 + _cen.y;
+                ymax = _mC * (x - _cen.x - _mB*ymax_1) / _mA + _mD*ymax_1 + _cen.y;
                 if (ymax < ymin) std::swap(ymin,ymax);
                 for(size_t k=0;k<ysplits0.size();++k) {
                     double yy = ysplits0[k];
-                    splits.push_back(
-                        matrixC * (x - x0.x - matrixB*yy) / matrixA + matrixD*yy + x0.y);
+                    splits.push_back(_mC * (x - _cen.x - _mB*yy) / _mA + _mD*yy + _cen.y);
                 }
             } else {
-                xdbg<<"matrixA,B != 0:\n";
+                xxdbg<<"_mA,B != 0:\n";
                 double ymin_1, ymax_1;
                 std::vector<double> xsplits0;
-                adaptee->getYRange(ymin_1,ymax_1,xsplits0);
-                xdbg<<"ymin_1, ymax_1 = "<<ymin_1<<','<<ymax_1<<'\n';
-                ymin = matrixC * (x - x0.x - matrixB*ymin_1) / matrixA + matrixD*ymin_1 + x0.y;
-                ymax = matrixC * (x - x0.x - matrixB*ymax_1) / matrixA + matrixD*ymax_1 + x0.y;
-                xdbg<<"From top and bottom: ymin,ymax = "<<ymin<<','<<ymax<<'\n';
+                _adaptee->getYRange(ymin_1,ymax_1,xsplits0);
+                xxdbg<<"ymin_1, ymax_1 = "<<ymin_1<<','<<ymax_1<<'\n';
+                ymin = _mC * (x - _cen.x - _mB*ymin_1) / _mA + _mD*ymin_1 + _cen.y;
+                ymax = _mC * (x - _cen.x - _mB*ymax_1) / _mA + _mD*ymax_1 + _cen.y;
+                xxdbg<<"From top and bottom: ymin,ymax = "<<ymin<<','<<ymax<<'\n';
                 if (ymax < ymin) std::swap(ymin,ymax);
                 double xmin_1, xmax_1;
                 std::vector<double> ysplits0;
-                adaptee->getXRange(xmin_1,xmax_1,ysplits0);
-                xdbg<<"xmin_1, xmax_1 = "<<xmin_1<<','<<xmax_1<<'\n';
-                ymin_1 = matrixC * xmin_1 + matrixD * (x - x0.x - matrixA*xmin_1) / matrixB + x0.y;
-                ymax_1 = matrixC * xmax_1 + matrixD * (x - x0.x - matrixA*xmax_1) / matrixB + x0.y;
-                xdbg<<"From left and right: ymin,ymax = "<<ymin_1<<','<<ymax_1<<'\n';
+                _adaptee->getXRange(xmin_1,xmax_1,ysplits0);
+                xxdbg<<"xmin_1, xmax_1 = "<<xmin_1<<','<<xmax_1<<'\n';
+                ymin_1 = _mC * xmin_1 + _mD * (x - _cen.x - _mA*xmin_1) / _mB + _cen.y;
+                ymax_1 = _mC * xmax_1 + _mD * (x - _cen.x - _mA*xmax_1) / _mB + _cen.y;
+                xxdbg<<"From left and right: ymin,ymax = "<<ymin_1<<','<<ymax_1<<'\n';
                 if (ymax_1 < ymin_1) std::swap(ymin_1,ymax_1);
                 if (ymin_1 > ymin) ymin = ymin_1;
                 if (ymax_1 < ymax) ymax = ymax_1;
                 for(size_t k=0;k<ysplits0.size();++k) {
                     double yy = ysplits0[k];
-                    splits.push_back(
-                        matrixC * (x - x0.x - matrixB*yy) / matrixA + matrixD*yy + x0.y);
+                    splits.push_back(_mC * (x - _cen.x - _mB*yy) / _mA + _mD*yy + _cen.y);
                 }
                 for(size_t k=0;k<xsplits0.size();++k) {
                     double xx = xsplits0[k];
-                    splits.push_back(
-                        matrixC * xx + matrixD * (x - x0.x - matrixA*xx) / matrixB + x0.y);
+                    splits.push_back(_mC * xx + _mD * (x - _cen.x - _mA*xx) / _mB + _cen.y);
                 }
             }
-            xdbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<'\n';
+            xxdbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<'\n';
         }
     }
 
@@ -1186,17 +1185,17 @@ namespace galsim {
 
 #if 0
         // The simpler version, saved for reference
-        if (x0.x==0. && x0.y==0.) {
+        if (_cen.x==0. && _cen.y==0.) {
             // Branch to faster calculation if there is no centroid shift:
             for (int iy = -N/2; iy < N/2; iy++) {
                 // only need ix>=0 since it's Hermitian:
                 for (int ix = 0; ix <= N/2; ix++) {
                     Position<double> k(ix*dk,iy*dk);
-                    kt.kSet(ix,iy,kValNoPhase(k));
+                    kt.kSet(ix,iy,kValueNoPhase(k));
                 }
             }
         } else {
-            std::complex<double> dxexp(0,-dk*x0.x),   dyexp(0,-dk*x0.y);
+            std::complex<double> dxexp(0,-dk*_cen.x),   dyexp(0,-dk*_cen.y);
             std::complex<double> dxphase(std::exp(dxexp)), dyphase(std::exp(dyexp));
             // xphase, yphase: current phase value
             std::complex<double> yphase(std::exp(-dyexp*N/2.));
@@ -1205,7 +1204,7 @@ namespace galsim {
                 // Only ix>=0 since it's Hermitian:
                 for (int ix = 0; ix <= N/2; ix++) {
                     Position<double> k(ix*dk,iy*dk);
-                    kt.kSet(ix,iy,kValNoPhase(k) * phase);
+                    kt.kSet(ix,iy,kValueNoPhase(k) * phase);
                     phase *= dxphase;
                 }
                 yphase *= dyphase;
@@ -1213,51 +1212,86 @@ namespace galsim {
         }
 #else
         // A faster version that pulls out all the if statements
+        // and keeps track of fwdT(k) as we go
         kt.clearCache();
 
-        if (x0.x==0. && x0.y==0.) {
+        double dkA = dk*_mA;
+        double dkB = dk*_mB;
+        if (_cen.x==0. && _cen.y==0.) {
             // Branch to faster calculation if there is no centroid shift:
             Position<double> k1(0.,0.);
-            for (int ix = 0; ix <= N/2; ix++, k1.x += dk) kt.kSet2(ix,0,kValNoPhase(k1));
-            k1.y = dk;
+            Position<double> fwdTk1(0.,0.);
+            for (int ix = 0; ix <= N/2; ix++, fwdTk1.x += dkA, fwdTk1.y += dkB) {
+                // NB: the last two terms are not used by _kValueNoPhase,
+                // so it's ok that k1.x is not kept up to date.
+                kt.kSet2(ix,0,_kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen));
+            }
+            k1.y = dk; 
             Position<double> k2(0.,-dk);
+            Position<double> fwdTk2;
             for (int iy = 1; iy < N/2; ++iy, k1.y += dk, k2.y -= dk) {
-                k1.x = k2.x = 0.;
-                for (int ix = 0; ix <= N/2; ++ix, k1.x += dk, k2.x += dk) {
-                    kt.kSet2(ix,iy, kValNoPhase(k1));
-                    kt.kSet2(ix,N-iy, kValNoPhase(k2));
+                fwdTk1 = fwdT(k1); fwdTk2 = fwdT(k2);
+                for (int ix = 0; ix <= N/2; ++ix,
+                     fwdTk1.x += dkA, fwdTk1.y += dkB, fwdTk2.x += dkA, fwdTk2.y += dkB) {
+                    kt.kSet2(ix,iy, _kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen));
+                    kt.kSet2(ix,N-iy, _kValueNoPhase(_adaptee,fwdTk2,_absdet,k2,_cen));
                 }
             }
-            k1.x = 0.;
-            for (int ix = 0; ix <= N/2; ix++, k1.x += dk) kt.kSet2(ix,N/2,kValNoPhase(k1));
+            fwdTk1 = fwdT(k1);
+            for (int ix = 0; ix <= N/2; ix++, fwdTk1.x += dkA, fwdTk1.y += dkB) {
+                kt.kSet2(ix,N/2,_kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen));
+            }
         } else {
-            std::complex<double> dxphase = std::polar(1.,-dk*x0.x);
-            std::complex<double> dyphase = std::polar(1.,-dk*x0.y);
+            std::complex<double> dxphase = std::polar(1.,-dk*_cen.x);
+            std::complex<double> dyphase = std::polar(1.,-dk*_cen.y);
             // xphase, yphase: current phase value
             std::complex<double> yphase = 1.;
             Position<double> k1(0.,0.);
+            Position<double> fwdTk1(0.,0.);
             std::complex<double> phase = yphase; // since kx=0 to start
-            for (int ix = 0; ix <= N/2; ++ix, k1.x += dk, phase *= dxphase) {
-                kt.kSet2(ix,0, kValNoPhase(k1) * phase);
+            for (int ix = 0; ix <= N/2; ++ix,
+                 fwdTk1.x += dkA, fwdTk1.y += dkB, phase *= dxphase) {
+                kt.kSet2(ix,0, _kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen) * phase);
             }
             k1.y = dk; yphase *= dyphase;
             Position<double> k2(0.,-dk);  
+            Position<double> fwdTk2;
             std::complex<double> phase2;
             for (int iy = 1; iy < N/2; iy++, k1.y += dk, k2.y -= dk, yphase *= dyphase) {
-                k1.x = k2.x = 0.; phase = yphase; phase2 = conj(yphase);
-                for (int ix = 0; ix <= N/2; ++ix, k1.x += dk, k2.x += dk,
+                fwdTk1 = fwdT(k1); fwdTk2 = fwdT(k2);
+                phase = yphase; phase2 = conj(yphase);
+                for (int ix = 0; ix <= N/2; ++ix,
+                     fwdTk1.x += dkA, fwdTk1.y += dkB, fwdTk2.x += dkA, fwdTk2.y += dkB,
                      phase *= dxphase, phase2 *= dxphase) {
-                    kt.kSet2(ix,iy, kValNoPhase(k1) * phase);
-                    kt.kSet2(ix,N-iy, kValNoPhase(k2) * phase2);
+                    kt.kSet2(ix,iy, _kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen) * phase);
+                    kt.kSet2(ix,N-iy, _kValueNoPhase(_adaptee,fwdTk2,_absdet,k1,_cen) * phase2);
                 }
             }
-            k1.x = 0.; phase = yphase; 
-            for (int ix = 0; ix <= N/2; ++ix, k1.x += dk, phase *= dxphase) {
-                kt.kSet2(ix,N/2, kValNoPhase(k1) * phase);
+            fwdTk1 = fwdT(k1);
+            phase = yphase; 
+            for (int ix = 0; ix <= N/2; ++ix, fwdTk1.x += dkA, fwdTk1.y += dkB, phase *= dxphase) {
+                kt.kSet2(ix,N/2, _kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen) * phase);
             }
         }
 #endif
     }
+
+    std::complex<double> SBDistort::kValue(const Position<double>& k) const
+    { return _kValue(_adaptee,fwdT(k),_absdet,k,_cen); }
+
+    std::complex<double> SBDistort::kValueNoPhase(const Position<double>& k) const
+    { return _kValueNoPhase(_adaptee,fwdT(k),_absdet,k,_cen); }
+
+    std::complex<double> SBDistort::_kValueNoPhase(
+        const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+        const Position<double>& , const Position<double>& )
+    { return absdet * adaptee->kValue(fwdTk); }
+
+    std::complex<double> SBDistort::_kValueWithPhase(
+        const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+        const Position<double>& k, const Position<double>& cen)
+    { return adaptee->kValue(fwdTk) * std::polar(absdet , -k.x*cen.x-k.y*cen.y); }
+
 
     //
     // SBConvolve class - adding new members
@@ -2241,11 +2275,10 @@ namespace galsim {
     {
         // Simple job here: just remap coords of each photon, then change flux
         // If there is overall magnification in the transform
-        PhotonArray result = adaptee->shoot(N,u);
+        PhotonArray result = _adaptee->shoot(N,u);
         for (int i=0; i<result.size(); i++) {
-            Position<double> xy = fwd(Position<double>(result.getX(i),
-                                                       result.getY(i))+x0);
-            result.setPhoton(i,xy.x, xy.y, result.getFlux(i)*absdet);
+            Position<double> xy = fwd(Position<double>(result.getX(i), result.getY(i))+_cen);
+            result.setPhoton(i,xy.x, xy.y, result.getFlux(i)*_absdet);
         }
         return result;
     }

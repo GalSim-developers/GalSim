@@ -850,60 +850,13 @@ namespace galsim {
      * @brief An affine transformation of another SBProfile.
      *
      * Stores a duplicate of its target.
-     * Origin of original shape will now appear at `x0`.
+     * Origin of original shape will now appear at `_cen`.
      * Flux is NOT conserved in transformation - surface brightness is preserved.
      * We keep track of all distortions in a 2x2 matrix `M = [(A B), (C D)]` = [row1, row2] 
-     * plus a 2-element Positon object `x0` for the shift.
+     * plus a 2-element Positon object `cen` for the shift.
      */
     class SBDistort : public SBProfile 
     {
-
-    private:
-        SBProfile* adaptee; ///< SBProfile being adapted/distorted
-        double matrixA; ///< A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-        double matrixB; ///< B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-        double matrixC; ///< C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-        double matrixD; ///< D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-        // Calculate and save these:
-        Position<double> x0;  ///< Centroid position.
-        double absdet;  ///< Determinant (flux magnification) of `M` matrix.
-        double invdet;  ///< Inverse determinant of `M` matrix.
-        double major; ///< Major axis of ellipse produced from unit circle.
-        double minor; ///< Minor axis of ellipse produced from unit circle.
-        bool stillIsAxisymmetric; ///< Is output SBProfile shape still circular?
-        double _xmin, _xmax, _ymin, _ymax; ///< Ranges propagated from adaptee
-        double _coeff_b, _coeff_c, _coeff_c2; ///< Values used in getYRange(x,ymin,ymax);
-        std::vector<double> _xsplits, _ysplits; ///< Good split points for the intetegrals
-
-    private:
-        /// @brief Initialize the SBDistort.
-        void initialize();
-
-        /** 
-         * @brief Forward coordinate transform with `M` matrix.
-         *
-         * @param[in] p input position.
-         * @returns transformed position.
-         */
-        Position<double> fwd(const Position<double>& p) const 
-        { return Position<double>(matrixA*p.x+matrixB*p.y,matrixC*p.x+matrixD*p.y); }
-
-        /// @brief Forward coordinate transform with transpose of `M` matrix.
-        Position<double> fwdT(const Position<double>& p) const 
-        { return Position<double>(matrixA*p.x+matrixC*p.y , matrixB*p.x+matrixD*p.y); }
-
-        /// @brief Inverse coordinate transform with `M` matrix.
-        Position<double> inv(const Position<double>& p) const 
-        {
-            return Position<double>(invdet*(matrixD*p.x-matrixB*p.y),
-                                    invdet*(-matrixC*p.x+matrixA*p.y) );
-        }
-
-        /// @brief Returns the the k value (no phase).
-        std::complex<double> kValNoPhase(const Position<double>& k) const 
-        { return absdet*adaptee->kValue(fwdT(k)); }
-
-
     public:
         /** 
          * @brief General constructor.
@@ -913,19 +866,18 @@ namespace galsim {
          * @param[in] mB B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
          * @param[in] mC C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
          * @param[in] mD D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-         * @param[in] x0_ 2-element (x, y) Position for the translational shift.
+         * @param[in] cen 2-element (x, y) Position for the translational shift.
          */
-        SBDistort(
-            const SBProfile& sbin, double mA, double mB, double mC, double mD,
-            const Position<double>& x0_=Position<double>(0.,0.));
+        SBDistort(const SBProfile& sbin, double mA, double mB, double mC, double mD,
+                  const Position<double>& cen=Position<double>(0.,0.));
 
         /** 
          * @brief Construct from an input Ellipse class object
          *
          * @param[in] sbin SBProfile being distorted.
-         * @param[in] e_ Ellipse.
+         * @param[in] e  Ellipse.
          */
-        SBDistort(const SBProfile& sbin, const Ellipse e_=Ellipse());
+        SBDistort(const SBProfile& sbin, const Ellipse e=Ellipse());
 
         /** 
          * @brief Copy constructor
@@ -934,12 +886,12 @@ namespace galsim {
          */
         SBDistort(const SBDistort& rhs) 
         {
-            adaptee = rhs.adaptee->duplicate();
-            matrixA = (rhs.matrixA); 
-            matrixB = (rhs.matrixB); 
-            matrixC = (rhs.matrixC);
-            matrixD = (rhs.matrixD); 
-            x0 = (rhs.x0);
+            _adaptee = rhs._adaptee->duplicate();
+            _mA = (rhs._mA); 
+            _mB = (rhs._mB); 
+            _mC = (rhs._mC);
+            _mD = (rhs._mD); 
+            _cen = (rhs._cen);
             initialize();
         }
 
@@ -953,45 +905,35 @@ namespace galsim {
         {
             // Self-assignment is nothing:
             if (&rhs == this) return *this;
-            if (adaptee) { delete adaptee; adaptee=0; }
-            adaptee = rhs.adaptee->duplicate();
-            matrixA = (rhs.matrixA); 
-            matrixB = (rhs.matrixB); 
-            matrixC = (rhs.matrixC);
-            matrixD = (rhs.matrixD); 
-            x0 = (rhs.x0);
+            if (_adaptee) { delete _adaptee; _adaptee=0; }
+            _adaptee = rhs._adaptee->duplicate();
+            _mA = (rhs._mA); 
+            _mB = (rhs._mB); 
+            _mC = (rhs._mC);
+            _mD = (rhs._mD); 
+            _cen = (rhs._cen);
             initialize();
             return *this;
         }
 
         /// @brief Destructor.
-        ~SBDistort() { delete adaptee; adaptee=0; }
+        ~SBDistort() { delete _adaptee; _adaptee=0; }
 
         // methods doxy described in base clase SBProfile
         SBProfile* duplicate() const 
         { return new SBDistort(*this); } 
 
         double xValue(const Position<double>& p) const 
-        { return adaptee->xValue(inv(p-x0)); }
+        { return _adaptee->xValue(inv(p-_cen)); }
 
-        std::complex<double> kValue(const Position<double>& k) const 
-        {
-#if 1
-            std::complex<double> phase = std::polar(absdet , -k.x*x0.x-k.y*x0.y); 
-            return adaptee->kValue(fwdT(k)) * phase;
-#else
-            std::complex<double> phaseexp(0,-k.x*x0.x-k.y*x0.y); // phase exponent
-            std::complex<double> kv(absdet*adaptee->kValue(fwdT(k))*std::exp(phaseexp));
-            return kv; 
-#endif
-        }
+        std::complex<double> kValue(const Position<double>& k) const;
 
-        bool isAxisymmetric() const { return stillIsAxisymmetric; }
-        bool isAnalyticX() const { return adaptee->isAnalyticX(); }
-        bool isAnalyticK() const { return adaptee->isAnalyticK(); }
+        bool isAxisymmetric() const { return _stillIsAxisymmetric; }
+        bool isAnalyticX() const { return _adaptee->isAnalyticX(); }
+        bool isAnalyticK() const { return _adaptee->isAnalyticK(); }
 
-        double maxK() const { return adaptee->maxK() / minor; }
-        double stepK() const { return adaptee->stepK() / major; }
+        double maxK() const { return _adaptee->maxK() / _minor; }
+        double stepK() const { return _adaptee->stepK() / _major; }
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const;
 
@@ -999,13 +941,13 @@ namespace galsim {
 
         void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const;
 
-        Position<double> centroid() const { return x0+fwd(adaptee->centroid()); }
+        Position<double> centroid() const { return _cen+fwd(_adaptee->centroid()); }
 
-        double getFlux() const { return adaptee->getFlux()*absdet; }
-        void setFlux(double flux_) { adaptee->setFlux(flux_/absdet); }
+        double getFlux() const { return _adaptee->getFlux()*_absdet; }
+        void setFlux(double flux_) { _adaptee->setFlux(flux_/_absdet); }
 
-        double getPositiveFlux() const { return adaptee->getPositiveFlux()*absdet; }
-        double getNegativeFlux() const { return adaptee->getNegativeFlux()*absdet; }
+        double getPositiveFlux() const { return _adaptee->getPositiveFlux()*_absdet; }
+        double getNegativeFlux() const { return _adaptee->getNegativeFlux()*_absdet; }
 
         /**
          * @brief Shoot photons through this SBDistort.
@@ -1020,6 +962,61 @@ namespace galsim {
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         void fillKGrid(KTable& kt) const; // optimized phase calculation
+    
+    private:
+        SBProfile* _adaptee; ///< SBProfile being adapted/distorted
+        double _mA; ///< A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+        double _mB; ///< B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+        double _mC; ///< C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+        double _mD; ///< D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+        // Calculate and save these:
+        Position<double> _cen;  ///< Centroid position.
+        double _absdet;  ///< Determinant (flux magnification) of `M` matrix.
+        double _invdet;  ///< Inverse determinant of `M` matrix.
+        double _major; ///< Major axis of ellipse produced from unit circle.
+        double _minor; ///< Minor axis of ellipse produced from unit circle.
+        bool _stillIsAxisymmetric; ///< Is output SBProfile shape still circular?
+        double _xmin, _xmax, _ymin, _ymax; ///< Ranges propagated from adaptee
+        double _coeff_b, _coeff_c, _coeff_c2; ///< Values used in getYRange(x,ymin,ymax);
+        std::vector<double> _xsplits, _ysplits; ///< Good split points for the intetegrals
+
+        /// @brief Initialize the SBDistort.
+        void initialize();
+
+        /** 
+         * @brief Forward coordinate transform with `M` matrix.
+         *
+         * @param[in] p input position.
+         * @returns transformed position.
+         */
+        Position<double> fwd(const Position<double>& p) const 
+        { return Position<double>(_mA*p.x+_mB*p.y,_mC*p.x+_mD*p.y); }
+
+        /// @brief Forward coordinate transform with transpose of `M` matrix.
+        Position<double> fwdT(const Position<double>& p) const 
+        { return Position<double>(_mA*p.x+_mC*p.y , _mB*p.x+_mD*p.y); }
+
+        /// @brief Inverse coordinate transform with `M` matrix.
+        Position<double> inv(const Position<double>& p) const 
+        {
+            return Position<double>(_invdet*(_mD*p.x-_mB*p.y),
+                                    _invdet*(-_mC*p.x+_mA*p.y) );
+        }
+
+        /// @brief Returns the the k value (no phase).
+        std::complex<double> kValueNoPhase(const Position<double>& k) const;
+
+        std::complex<double> (*_kValue)(
+            const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& k, const Position<double>& cen);
+
+        static std::complex<double> _kValueNoPhase(
+            const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& , const Position<double>& );
+        static std::complex<double> _kValueWithPhase(
+            const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& k, const Position<double>& cen);
+
     };
 
     // Defined in RealSpaceConvolve.cpp
