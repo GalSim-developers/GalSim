@@ -631,7 +631,7 @@ object_param_dict = {"Gaussian":       { "required" : (),
                                          "optional" : () },
                      "AtmosphericPSF": { "required" : (),
                                          "size"     : ("lam_over_r0",),
-                                         "optional" : () } }
+                                         "optional" : ("dx", "oversampling") } }
 
 
 class AttributeDict(object):
