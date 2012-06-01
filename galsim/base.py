@@ -393,10 +393,10 @@ class AtmosphericPSF(GSObject):
     Initialization
     --------------
     @code
-    atmospheric_psf = galsim.Atmospheric(lam_over_r0, interpolantxy=None, oversampling=1.5)
+    atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolantxy=None, oversampling=1.5)
     @endcode
 
-    Initialized atmospheric_psf as a galsim.AtmophericPSF() instance.
+    Initialized atmospheric_psf as a galsim.AtmosphericPSF() instance.
 
     @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
                            consistency), where r0 is the Fried parameter.
