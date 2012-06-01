@@ -416,8 +416,8 @@ class AtmosphericPSF(GSObject):
         atmoimage = galsim.atmosphere.psf_image(array_shape=(npix, npix), dx=dx_lookup, 
                                                 lam_over_r0=lam_over_r0)
         if interpolantxy == None:
-            l5 = galsim.Lanczos(5, True, 1e-4)
-            self.Interpolant2D = galsim.InterpolantXY(l5)
+            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1e-4)
+            self.Interpolant2D = galsim.InterpolantXY(lan5)
         GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, 
                                                            dx=dx_lookup))
        
