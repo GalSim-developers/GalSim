@@ -352,7 +352,7 @@ class OpticalPSF(GSObject):
     @param circular_pupil  adopt a circular pupil?
     @param obs             add a central obstruction due to secondary mirror?
     @param interpolantxy   optional keyword for specifying the interpolation scheme [default =
-                           galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
+                           galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))].
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
                            [default = 2.], setting oversampling < 1 will produce aliasing in the 
                            PSF (not good).
@@ -452,7 +452,8 @@ class RealGalaxy(GSObject):
     @param uniform_deviate      A uniform deviate to use for selecting a random galaxy (optional)
     @param interpolant          optional keyword for specifying the
                                 real-space interpolation scheme
-                                [default = galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
+                                [default = galsim.InterpolantXY(galsim.Lanczos(5, 
+                                           conserve_flux=True, tol=1.e-4))].
     """
     def __init__(self, real_galaxy_catalog, index = None, ID = None, random = False,
                  uniform_deviate = None, interpolant = None):
