@@ -137,8 +137,6 @@ def do_shoot(prof, img, dx, name):
     print 'nphot = ',nphot
     img2 = img.copy()
     prof.drawShoot(img2,nphot)
-    #img.write("junk.fits")
-    #img2.write("junk2.fits")
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
@@ -175,7 +173,7 @@ def test_sbprofile_gaussian_properties():
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid(), cen)
     # Check Fourier properties
-    np.testing.assert_equal(psf.maxK(), 4.0)
+    np.testing.assert_equal(psf.maxK(), 3.7169221888498383)
     np.testing.assert_almost_equal(psf.stepK(), 0.78539816339744828)
     np.testing.assert_equal(psf.kValue(cen), 1+0j)
     # Check input flux vs output flux
@@ -352,8 +350,6 @@ def test_sbprofile_airy():
 def test_sbprofile_box():
     """Test the generation of a specific box profile using SBProfile against a known result.
     """
-    # MJ: Could use yw=0, which means use yw=xw, but this is not as intuitive as just
-    #     making xw and yw both = 1 (or both = pixel_scale normally).
     mySBP = galsim.SBBox(xw=1, yw=1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -401,13 +397,8 @@ def test_sbprofile_moffat_properties():
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid(), cen)
     # Check Fourier properties
-    # MJ: I'm not sure how useful it is to check these values (for any of the profiles).
-    #     What matters is that the images are convolved correctly not that the particular
-    #     stepk and maxk matches a previous calculation.
     np.testing.assert_almost_equal(psf.maxK(), 11.569262763913111)
     np.testing.assert_almost_equal(psf.stepK(), 1.0695706520648969)
-    #np.testing.assert_almost_equal(psf.maxK(), 34.226260866076707)
-    #np.testing.assert_almost_equal(psf.stepK(), 0.53478529889112425)
     np.testing.assert_almost_equal(psf.kValue(cen), 1.8+0j)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
@@ -1015,6 +1006,8 @@ def test_sbprofile_sbinterpolatedimage():
 
 
 if __name__ == "__main__":
+    test_sbprofile_rescale()
+
     test_sbprofile_gaussian()
     test_sbprofile_gaussian_properties()
     test_gaussian_radii()

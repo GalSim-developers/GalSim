@@ -2,7 +2,7 @@
 // Functions for the Surface Brightness Profile Class
 //
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "integ/Int.h"
@@ -51,7 +51,7 @@ namespace galsim {
 
     ImageView<float> SBProfile::draw(double dx, int wmult) const 
     {
-        xdbg<<"Start draw that returns ImageView"<<'\n';
+        dbg<<"Start draw that returns ImageView"<<std::endl;
         Image<float> img;
         draw(img, dx, wmult);
         return img.view();
@@ -60,7 +60,7 @@ namespace galsim {
     template <typename T>
     double SBProfile::draw(ImageView<T>& img, double dx, int wmult) const 
     {
-        xdbg<<"Start draw ImageView"<<'\n';
+        dbg<<"Start draw ImageView"<<std::endl;
         if (isAnalyticX())
             return plainDraw(img, dx, wmult);
         else
@@ -70,7 +70,7 @@ namespace galsim {
     template <typename T>
     double SBProfile::draw(Image<T>& img, double dx, int wmult) const 
     {
-        xdbg<<"Start draw Image"<<'\n';
+        dbg<<"Start draw Image"<<std::endl;
         if (isAnalyticX())
             return plainDraw(img, dx, wmult);
         else
@@ -81,14 +81,14 @@ namespace galsim {
     template <typename T>
     double SBProfile::plainDraw(ImageView<T>& I, double dx, int wmult) const 
     {
-        xdbg<<"Start plainDraw ImageView"<<'\n';
+        dbg<<"Start plainDraw ImageView"<<std::endl;
         // Determine desired dx:
-        xdbg<<"maxK = "<<maxK()<<'\n';
+        dbg<<"maxK = "<<maxK()<<std::endl;
         if (dx<=0.) dx = M_PI / maxK();
-        xdbg<<"dx = "<<dx<<'\n';
+        dbg<<"dx = "<<dx<<std::endl;
         // recenter an existing image, to be consistent with fourierDraw:
         int xSize = I.getXMax()-I.getXMin()+1, ySize = I.getYMax()-I.getYMin()+1;
-        xdbg<<"xSize = "<<xSize<<'\n';
+        dbg<<"xSize = "<<xSize<<std::endl;
         I.setOrigin(-xSize/2, -ySize/2);
 
         return fillXImage(I, dx);
@@ -97,28 +97,28 @@ namespace galsim {
     template <typename T>
     double SBProfile::plainDraw(Image<T>& I, double dx, int wmult) const 
     {
-        xdbg<<"Start plainDraw Image"<<'\n';
+        dbg<<"Start plainDraw Image"<<std::endl;
         // Determine desired dx:
-        xdbg<<"maxK = "<<maxK()<<'\n';
+        dbg<<"maxK = "<<maxK()<<std::endl;
         if (dx<=0.) dx = M_PI / maxK();
-        xdbg<<"dx = "<<dx<<'\n';
+        dbg<<"dx = "<<dx<<std::endl;
         if (!I.getBounds().isDefined()) {
             if (wmult<1) throw SBError("Requested wmult<1 in plainDraw()");
             // Need to choose an image size
             int N = static_cast<int> (std::ceil(2*M_PI/(dx*stepK())));
-            xdbg<<"N = "<<N<<'\n';
+            dbg<<"N = "<<N<<std::endl;
 
             // Round up to an even value
             N = 2*( (N+1)/2);
             N *= wmult; // make even bigger if desired
-            xdbg<<"N => "<<N<<'\n';
+            dbg<<"N => "<<N<<std::endl;
             Bounds<int> imgsize(-N/2, N/2-1, -N/2, N/2-1);
-            xdbg<<"imgsize => "<<imgsize<<'\n';
+            dbg<<"imgsize => "<<imgsize<<std::endl;
             I.resize(imgsize);
         } else {
             // recenter an existing image, to be consistent with fourierDraw:
             int xSize = I.getXMax()-I.getXMin()+1, ySize = I.getYMax()-I.getYMin()+1;
-            xdbg<<"xSize = "<<xSize<<'\n';
+            dbg<<"xSize = "<<xSize<<std::endl;
             I.setOrigin(-xSize/2, -ySize/2);
         }
 
@@ -128,14 +128,14 @@ namespace galsim {
         ImageView<T> Iv = I.view();
         double ret = fillXImage(Iv, dx);
         I.setScale(Iv.getScale());
-        xdbg<<"scale => "<<I.getScale()<<'\n';
+        dbg<<"scale => "<<I.getScale()<<std::endl;
         return ret;
     }
  
     template <typename T>
     double SBProfile::doFillXImage2(ImageView<T>& I, double dx) const 
     {
-        xdbg<<"Start doFillXImage2"<<'\n';
+        xdbg<<"Start doFillXImage2"<<std::endl;
         double totalflux=0;
         for (int y = I.getYMin(); y <= I.getYMax(); y++) {
             int x = I.getXMin(); 
@@ -148,7 +148,7 @@ namespace galsim {
             } 
         }
         I.setScale(dx);
-        xdbg<<"scale => "<<I.getScale()<<'\n';
+        xdbg<<"scale => "<<I.getScale()<<std::endl;
         return totalflux * (dx*dx);
     }
 
@@ -167,12 +167,12 @@ namespace galsim {
             dx = M_PI / maxK();
         }
 
-        xdbg << " maxK() " << maxK() << " dx " << dx << '\n';
+        dbg << " maxK() " << maxK() << " dx " << dx << std::endl;
 
         // Now decide how big the FT must be to avoid folding:
         double xRange = 2*M_PI*wmult / stepK();
         int Nnofold = static_cast<int> (std::ceil(xRange / dx -0.0001));
-        xdbg << " stepK() " << stepK() << " Nnofold " << Nnofold << '\n';
+        dbg << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
 
         // W must make something big enough to cover the target image size:
         int xSize, ySize;
@@ -184,33 +184,33 @@ namespace galsim {
 
         // Round up to a good size for making FFTs:
         int NFT = goodFFTSize(Nnofold);
-        NFT = std::max(NFT,sbp::MINIMUM_FFT_SIZE);
-        xdbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << '\n';
-        if (NFT > sbp::MAXIMUM_FFT_SIZE)
+        NFT = std::max(NFT,sbp::minimum_fft_size);
+        dbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
+        if (NFT > sbp::maximum_fft_size)
             FormatAndThrow<SBError>() << 
                 "fourierDraw() requires an FFT that is too large, " << NFT;
 
         // Move the output image to be centered near zero
         I.setOrigin(-xSize/2, -ySize/2);
         double dk = 2.*M_PI/(NFT*dx);
-        xdbg << 
+        dbg << 
             " After adjustments: dx " << dx << " dk " << dk << 
-            " maxK " << dk*NFT/2 << '\n';
+            " maxK " << dk*NFT/2 << std::endl;
         assert(dk <= stepK());
         XTable* xtmp=0;
         if (NFT*dk/2 > maxK()) {
-            xdbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<'\n';
-            xdbg<<"Use NFT = "<<NFT<<'\n';
+            dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
+            dbg<<"Use NFT = "<<NFT<<std::endl;
             // No aliasing: build KTable and transform
             KTable kt(NFT,dk);
             fillKGrid(kt); 
             xtmp = kt.transform();
         } else {
-            xdbg<<"NFT*dk/2 = "<<NFT*dk/2<<" <= maxK() = "<<maxK()<<'\n';
+            dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" <= maxK() = "<<maxK()<<std::endl;
             // There will be aliasing.  Construct a KTable out to maxK() and
             // then wrap it
             int Nk = static_cast<int> (std::ceil(maxK()/dk)) * 2;
-            xdbg<<"Use Nk = "<<Nk<<'\n';
+            dbg<<"Use Nk = "<<Nk<<std::endl;
             KTable kt(Nk, dk);
             fillKGrid(kt);
             KTable* kt2 = kt.wrap(NFT);
@@ -218,14 +218,14 @@ namespace galsim {
             delete kt2;
         }
         int Nxt = xtmp->getN();
-        xdbg<<"Nxt = "<<Nxt<<'\n';
+        dbg<<"Nxt = "<<Nxt<<std::endl;
         Bounds<int> xb(-Nxt/2, Nxt/2-1, -Nxt/2, Nxt/2-1);
         if (I.getYMin() < xb.getYMin()
             || I.getYMax() > xb.getYMax()
             || I.getXMin() < xb.getXMin()
             || I.getXMax() > xb.getXMax()) {
-            std::cerr << "Bounds error!! target image bounds " << I.getBounds()
-                << " and FFT range " << xb << '\n';
+            dbg << "Bounds error!! target image bounds " << I.getBounds()
+                << " and FFT range " << xb << std::endl;
             throw SBError("fourierDraw() FT bounds do not cover target image");
         }
         double sum=0.;
@@ -258,12 +258,12 @@ namespace galsim {
             dx = M_PI / maxK();
         }
 
-        xdbg << " maxK() " << maxK() << " dx " << dx << '\n';
+        dbg << " maxK() " << maxK() << " dx " << dx << std::endl;
 
         // Now decide how big the FT must be to avoid folding:
         double xRange = 2*M_PI*wmult / stepK();
         int Nnofold = static_cast<int> (std::ceil(xRange / dx -0.0001));
-        xdbg << " stepK() " << stepK() << " Nnofold " << Nnofold << '\n';
+        dbg << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
 
         // And if there is a target image size, we must make something big enough to cover
         // the target image size:
@@ -278,9 +278,9 @@ namespace galsim {
 
         // Round up to a good size for making FFTs:
         int NFT = goodFFTSize(Nnofold);
-        NFT = std::max(NFT,sbp::MINIMUM_FFT_SIZE);
-        xdbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << '\n';
-        if (NFT > sbp::MAXIMUM_FFT_SIZE)
+        NFT = std::max(NFT,sbp::minimum_fft_size);
+        dbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
+        if (NFT > sbp::maximum_fft_size)
             FormatAndThrow<SBError>() << 
                 "fourierDraw() requires an FFT that is too large, " << NFT;
 
@@ -299,24 +299,24 @@ namespace galsim {
             I.setOrigin(-xSize/2, -ySize/2);
         }
         double dk = 2.*M_PI/(NFT*dx);
-        xdbg << 
+        dbg << 
             " After adjustments: dx " << dx << " dk " << dk << 
-            " maxK " << dk*NFT/2 << '\n';
+            " maxK " << dk*NFT/2 << std::endl;
         assert(dk <= stepK());
         XTable* xtmp=0;
         if (NFT*dk/2 > maxK()) {
-            xdbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<'\n';
-            xdbg<<"Use NFT = "<<NFT<<'\n';
+            dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
+            dbg<<"Use NFT = "<<NFT<<std::endl;
             // No aliasing: build KTable and transform
             KTable kt(NFT,dk);
             fillKGrid(kt); 
             xtmp = kt.transform();
         } else {
-            xdbg<<"NFT*dk/2 = "<<NFT*dk/2<<" <= maxK() = "<<maxK()<<'\n';
+            dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" <= maxK() = "<<maxK()<<std::endl;
             // There will be aliasing.  Construct a KTable out to maxK() and
             // then wrap it
             int Nk = static_cast<int> (std::ceil(maxK()/dk)) * 2;
-            xdbg<<"Use Nk = "<<Nk<<'\n';
+            dbg<<"Use Nk = "<<Nk<<std::endl;
             KTable kt(Nk, dk);
             fillKGrid(kt);
             KTable* kt2 = kt.wrap(NFT);
@@ -324,14 +324,14 @@ namespace galsim {
             delete kt2;
         }
         int Nxt = xtmp->getN();
-        xdbg<<"Nxt = "<<Nxt<<'\n';
+        dbg<<"Nxt = "<<Nxt<<std::endl;
         Bounds<int> xb(-Nxt/2, Nxt/2-1, -Nxt/2, Nxt/2-1);
         if (I.getYMin() < xb.getYMin()
             || I.getYMax() > xb.getYMax()
             || I.getXMin() < xb.getXMin()
             || I.getXMax() > xb.getXMax()) {
-            std::cerr << "Bounds error!! target image bounds " << I.getBounds()
-                << " and FFT range " << xb << '\n';
+            dbg << "Bounds error!! target image bounds " << I.getBounds()
+                << " and FFT range " << xb << std::endl;
             throw SBError("fourierDraw() FT bounds do not cover target image");
         }
         double sum=0.;
@@ -474,9 +474,9 @@ namespace galsim {
         kRange = Nnofold * dk / oversamp;
 
         // Round up to a power of 2 to get required FFT size
-        int NFT = sbp::MINIMUM_FFT_SIZE;
-        while (NFT < Nnofold && NFT<= sbp::MAXIMUM_FFT_SIZE) NFT *= 2;
-        if (NFT > sbp::MAXIMUM_FFT_SIZE)
+        int NFT = sbp::minimum_fft_size;
+        while (NFT < Nnofold && NFT<= sbp::maximum_fft_size) NFT *= 2;
+        if (NFT > sbp::maximum_fft_size)
             throw SBError("fourierDrawK() requires an FFT that is too large");
 
         // Move the output image to be centered near zero
@@ -494,9 +494,9 @@ namespace galsim {
             || Re.getYMax()*oversamp > kb.getYMax()
             || Re.getXMin()*oversamp < kb.getXMin()
             || Re.getXMax()*oversamp > kb.getXMax()) {
-            std::cerr << "Bounds error!! oversamp is " << oversamp
+            dbg << "Bounds error!! oversamp is " << oversamp
                 << " target image bounds " << Re.getBounds()
-                << " and FFT range " << kb << '\n';
+                << " and FFT range " << kb << std::endl;
             throw SBError("fourierDrawK() FT bounds do not cover target image");
         }
 
@@ -555,9 +555,9 @@ namespace galsim {
         }
 
         // Round up to a power of 2 to get required FFT size
-        int NFT = sbp::MINIMUM_FFT_SIZE;
-        while (NFT < Nnofold && NFT<= sbp::MAXIMUM_FFT_SIZE) NFT *= 2;
-        if (NFT > sbp::MAXIMUM_FFT_SIZE)
+        int NFT = sbp::minimum_fft_size;
+        while (NFT < Nnofold && NFT<= sbp::maximum_fft_size) NFT *= 2;
+        if (NFT > sbp::maximum_fft_size)
             throw SBError("fourierDrawK() requires an FFT that is too large");
 
         // If we are free to set up output image, make it size of FFT less oversampling
@@ -592,9 +592,9 @@ namespace galsim {
             || Re.getYMax()*oversamp > kb.getYMax()
             || Re.getXMin()*oversamp < kb.getXMin()
             || Re.getXMax()*oversamp > kb.getXMax()) {
-            std::cerr << "Bounds error!! oversamp is " << oversamp
+            dbg << "Bounds error!! oversamp is " << oversamp
                 << " target image bounds " << Re.getBounds()
-                << " and FFT range " << kb << '\n';
+                << " and FFT range " << kb << std::endl;
             throw SBError("fourierDrawK() FT bounds do not cover target image");
         }
 
@@ -673,7 +673,7 @@ namespace galsim {
 
     void SBAdd::add(const SBProfile& rhs, double scale) 
     {
-        xdbg<<"Start SBAdd::add.  Adding item # "<<_plist.size()+1<<'\n';
+        xdbg<<"Start SBAdd::add.  Adding item # "<<_plist.size()+1<<std::endl;
         // Need a non-const copy of the rhs:
         SBProfile* p=rhs.duplicate();
 
@@ -707,7 +707,7 @@ namespace galsim {
         // Accumulate properties of all summands
         while (newptr != _plist.end()) {
             xdbg<<"SBAdd component has maxK, stepK = "<<
-                (*newptr)->maxK()<<" , "<<(*newptr)->stepK()<<'\n';
+                (*newptr)->maxK()<<" , "<<(*newptr)->stepK()<<std::endl;
             _sumflux += (*newptr)->getFlux();
             _sumfx += (*newptr)->getFlux() * (*newptr)->centroid().x;
             _sumfy += (*newptr)->getFlux() * (*newptr)->centroid().x;
@@ -720,7 +720,7 @@ namespace galsim {
             _allAnalyticK = _allAnalyticK && (*newptr)->isAnalyticK();
             newptr++;
         }
-        xdbg<<"Net maxK, stepK = "<<_maxMaxK<<" , "<<_minStepK<<'\n';
+        xdbg<<"Net maxK, stepK = "<<_maxMaxK<<" , "<<_minStepK<<std::endl;
     }
 
     double SBAdd::xValue(const Position<double>& p) const 
@@ -887,12 +887,12 @@ namespace galsim {
         else _kValue = &SBDistort::_kValueWithPhase;
 
         xdbg<<"Distortion init\n";
-        xdbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<'\n';
-        xdbg<<"_cen = "<<_cen<<'\n';
-        xdbg<<"_invdet = "<<_invdet<<'\n';
-        xdbg<<"_major, _minor = "<<_major<<", "<<_minor<<'\n';
-        xdbg<<"maxK() = "<<_adaptee->maxK() / _minor<<'\n';
-        xdbg<<"stepK() = "<<_adaptee->stepK() / _major<<'\n';
+        xdbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
+        xdbg<<"_cen = "<<_cen<<std::endl;
+        xdbg<<"_invdet = "<<_invdet<<std::endl;
+        xdbg<<"_major, _minor = "<<_major<<", "<<_minor<<std::endl;
+        xdbg<<"maxK() = "<<_adaptee->maxK() / _minor<<std::endl;
+        xdbg<<"stepK() = "<<_adaptee->stepK() / _major<<std::endl;
 
         // Calculate the values for getXRange and getYRange:
         if (_adaptee->isAxisymmetric()) {
@@ -926,19 +926,19 @@ namespace galsim {
                     // The split points work the same way.  Scale them by the same factor we
                     // scaled the R value above, then add _cen.x or _cen.y.
                     double split = _xsplits[k];
-                    xxdbg<<"Adaptee split at "<<split<<'\n';
+                    xxdbg<<"Adaptee split at "<<split<<std::endl;
                     _xsplits[k] = sqrtAApBB * split + _cen.x;
                     _ysplits[k] = sqrtCCpDD * split + _cen.y;
-                    xxdbg<<"-> x,y splits at "<<_xsplits[k]<<"  "<<_ysplits[k]<<'\n';
+                    xxdbg<<"-> x,y splits at "<<_xsplits[k]<<"  "<<_ysplits[k]<<std::endl;
                 }
                 // Now a couple of calculations that get reused in getYRange(x,yminymax):
                 _coeff_b = (_mA*_mC + _mB*_mD) / AApBB;
                 _coeff_c = CCpDD / AApBB;
                 _coeff_c2 = _absdet*_absdet / AApBB;
                 xxdbg<<"adaptee is axisymmetric.\n";
-                xxdbg<<"adaptees maxR = "<<R<<'\n';
-                xxdbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<'\n';
-                xxdbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<'\n';
+                xxdbg<<"adaptees maxR = "<<R<<std::endl;
+                xxdbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<std::endl;
+                xxdbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<std::endl;
             }
         } else {
             // Apply the distortion to each of the four corners of the original
@@ -962,86 +962,86 @@ namespace galsim {
             _ymin = std::min(std::min(std::min(bl.y,br.y),tl.y),tr.y) + _cen.y;
             _ymax = std::max(std::max(std::max(bl.y,br.y),tl.y),tr.y) + _cen.y;
             xxdbg<<"adaptee is not axisymmetric.\n";
-            xxdbg<<"adaptees x range = "<<xmin_1<<" ... "<<xmax_1<<'\n';
-            xxdbg<<"adaptees y range = "<<ymin_1<<" ... "<<ymax_1<<'\n';
-            xxdbg<<"Corners are: bl = "<<bl<<'\n';
-            xxdbg<<"             br = "<<br<<'\n';
-            xxdbg<<"             tl = "<<tl<<'\n';
-            xxdbg<<"             tr = "<<tr<<'\n';
-            xxdbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<'\n';
-            xxdbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<'\n';
+            xxdbg<<"adaptees x range = "<<xmin_1<<" ... "<<xmax_1<<std::endl;
+            xxdbg<<"adaptees y range = "<<ymin_1<<" ... "<<ymax_1<<std::endl;
+            xxdbg<<"Corners are: bl = "<<bl<<std::endl;
+            xxdbg<<"             br = "<<br<<std::endl;
+            xxdbg<<"             tl = "<<tl<<std::endl;
+            xxdbg<<"             tr = "<<tr<<std::endl;
+            xxdbg<<"xmin..xmax = "<<_xmin<<" ... "<<_xmax<<std::endl;
+            xxdbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<std::endl;
             if (bl.x + _cen.x > _xmin && bl.x + _cen.x < _xmax) {
-                xxdbg<<"X Split from bl.x = "<<bl.x+_cen.x<<'\n';
+                xxdbg<<"X Split from bl.x = "<<bl.x+_cen.x<<std::endl;
                 _xsplits.push_back(bl.x+_cen.x);
             }
             if (br.x + _cen.x > _xmin && br.x + _cen.x < _xmax) {
-                xxdbg<<"X Split from br.x = "<<br.x+_cen.x<<'\n';
+                xxdbg<<"X Split from br.x = "<<br.x+_cen.x<<std::endl;
                 _xsplits.push_back(br.x+_cen.x);
             }
             if (tl.x + _cen.x > _xmin && tl.x + _cen.x < _xmax) {
-                xxdbg<<"X Split from tl.x = "<<tl.x+_cen.x<<'\n';
+                xxdbg<<"X Split from tl.x = "<<tl.x+_cen.x<<std::endl;
                 _xsplits.push_back(tl.x+_cen.x);
             }
             if (tr.x + _cen.x > _xmin && tr.x + _cen.x < _xmax) {
-                xxdbg<<"X Split from tr.x = "<<tr.x+_cen.x<<'\n';
+                xxdbg<<"X Split from tr.x = "<<tr.x+_cen.x<<std::endl;
                 _xsplits.push_back(tr.x+_cen.x);
             }
             if (bl.y + _cen.y > _ymin && bl.y + _cen.y < _ymax) {
-                xxdbg<<"Y Split from bl.y = "<<bl.y+_cen.y<<'\n';
+                xxdbg<<"Y Split from bl.y = "<<bl.y+_cen.y<<std::endl;
                 _ysplits.push_back(bl.y+_cen.y);
             }
             if (br.y + _cen.y > _ymin && br.y + _cen.y < _ymax) {
-                xxdbg<<"Y Split from br.y = "<<br.y+_cen.y<<'\n';
+                xxdbg<<"Y Split from br.y = "<<br.y+_cen.y<<std::endl;
                 _ysplits.push_back(br.y+_cen.y);
             }
             if (tl.y + _cen.y > _ymin && tl.y + _cen.y < _ymax) {
-                xxdbg<<"Y Split from tl.y = "<<tl.y+_cen.y<<'\n';
+                xxdbg<<"Y Split from tl.y = "<<tl.y+_cen.y<<std::endl;
                 _ysplits.push_back(tl.y+_cen.y);
             }
             if (tr.y + _cen.y > _ymin && tr.y + _cen.y < _ymax) {
-                xxdbg<<"Y Split from tr.y = "<<tr.y+_cen.y<<'\n';
+                xxdbg<<"Y Split from tr.y = "<<tr.y+_cen.y<<std::endl;
                 _ysplits.push_back(tr.y+_cen.y);
             }
             // If the adaptee has any splits, try to propagate those up
             for(size_t k=0;k<xsplits0.size();++k) {
-                xxdbg<<"Adaptee xsplit at "<<xsplits0[k]<<'\n';
+                xxdbg<<"Adaptee xsplit at "<<xsplits0[k]<<std::endl;
                 Position<double> bx = fwd(Position<double>(xsplits0[k],ymin_1));
                 Position<double> tx = fwd(Position<double>(xsplits0[k],ymax_1));
                 if (bx.x + _cen.x > _xmin && bx.x + _cen.x < _xmax) {
-                    xxdbg<<"X Split from bx.x = "<<bx.x+_cen.x<<'\n';
+                    xxdbg<<"X Split from bx.x = "<<bx.x+_cen.x<<std::endl;
                     _xsplits.push_back(bx.x+_cen.x);
                 }
                 if (tx.x + _cen.x > _xmin && tx.x + _cen.x < _xmax) {
-                    xxdbg<<"X Split from tx.x = "<<tx.x+_cen.x<<'\n';
+                    xxdbg<<"X Split from tx.x = "<<tx.x+_cen.x<<std::endl;
                     _xsplits.push_back(tx.x+_cen.x);
                 }
                 if (bx.y + _cen.y > _ymin && bx.y + _cen.y < _ymax) {
-                    xxdbg<<"Y Split from bx.y = "<<bx.y+_cen.y<<'\n';
+                    xxdbg<<"Y Split from bx.y = "<<bx.y+_cen.y<<std::endl;
                     _ysplits.push_back(bx.y+_cen.y);
                 }
                 if (tx.y + _cen.y > _ymin && tx.y + _cen.y < _ymax) {
-                    xxdbg<<"Y Split from tx.y = "<<tx.y+_cen.y<<'\n';
+                    xxdbg<<"Y Split from tx.y = "<<tx.y+_cen.y<<std::endl;
                     _ysplits.push_back(tx.y+_cen.y);
                 }
             }
             for(size_t k=0;k<ysplits0.size();++k) {
-                xxdbg<<"Adaptee ysplit at "<<ysplits0[k]<<'\n';
+                xxdbg<<"Adaptee ysplit at "<<ysplits0[k]<<std::endl;
                 Position<double> yl = fwd(Position<double>(xmin_1,ysplits0[k]));
                 Position<double> yr = fwd(Position<double>(xmax_1,ysplits0[k]));
                 if (yl.x + _cen.x > _xmin && yl.x + _cen.x < _xmax) {
-                    xxdbg<<"X Split from tl.x = "<<tl.x+_cen.x<<'\n';
+                    xxdbg<<"X Split from tl.x = "<<tl.x+_cen.x<<std::endl;
                     _xsplits.push_back(yl.x+_cen.x);
                 }
                 if (yr.x + _cen.x > _xmin && yr.x + _cen.x < _xmax) {
-                    xxdbg<<"X Split from yr.x = "<<yr.x+_cen.x<<'\n';
+                    xxdbg<<"X Split from yr.x = "<<yr.x+_cen.x<<std::endl;
                     _xsplits.push_back(yr.x+_cen.x);
                 }
                 if (yl.y + _cen.y > _ymin && yl.y + _cen.y < _ymax) {
-                    xxdbg<<"Y Split from yl.y = "<<yl.y+_cen.y<<'\n';
+                    xxdbg<<"Y Split from yl.y = "<<yl.y+_cen.y<<std::endl;
                     _ysplits.push_back(yl.y+_cen.y);
                 }
                 if (yr.y + _cen.y > _ymin && yr.y + _cen.y < _ymax) {
-                    xxdbg<<"Y Split from yr.y = "<<yr.y+_cen.y<<'\n';
+                    xxdbg<<"Y Split from yr.y = "<<yr.y+_cen.y<<std::endl;
                     _ysplits.push_back(yr.y+_cen.y);
                 }
             }
@@ -1063,7 +1063,7 @@ namespace galsim {
     void SBDistort::getYRange(double x, double& ymin, double& ymax,
                               std::vector<double>& splits) const
     {
-        xxdbg<<"Distortion getYRange for x = "<<x<<'\n';
+        xxdbg<<"Distortion getYRange for x = "<<x<<std::endl;
         if (_adaptee->isAxisymmetric()) {
             std::vector<double> splits0;
             _adaptee->getYRange(ymin,ymax,splits0);
@@ -1094,8 +1094,8 @@ namespace galsim {
                 splits.push_back(b + d + _cen.y);
                 splits.push_back(b - d + _cen.y);
             }
-            xxdbg<<"Axisymmetric adaptee with R = "<<R<<'\n';
-            xxdbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<'\n';
+            xxdbg<<"Axisymmetric adaptee with R = "<<R<<std::endl;
+            xxdbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<std::endl;
         } else {
             // There are 4 lines to check for where they intersect the given x.
             // Start with the adaptee's given ymin.
@@ -1120,7 +1120,7 @@ namespace galsim {
                 double xmin_1, xmax_1;
                 std::vector<double> xsplits0;
                 _adaptee->getXRange(xmin_1,xmax_1,xsplits0);
-                xxdbg<<"xmin_1, xmax_1 = "<<xmin_1<<','<<xmax_1<<'\n';
+                xxdbg<<"xmin_1, xmax_1 = "<<xmin_1<<','<<xmax_1<<std::endl;
                 ymin = _mC * xmin_1 + _mD * (x - _cen.x - _mA*xmin_1) / _mB + _cen.y;
                 ymax = _mC * xmax_1 + _mD * (x - _cen.x - _mA*xmax_1) / _mB + _cen.y;
                 if (ymax < ymin) std::swap(ymin,ymax);
@@ -1133,7 +1133,7 @@ namespace galsim {
                 double ymin_1, ymax_1;
                 std::vector<double> ysplits0;
                 _adaptee->getYRange(ymin_1,ymax_1,ysplits0);
-                xxdbg<<"ymin_1, ymax_1 = "<<ymin_1<<','<<ymax_1<<'\n';
+                xxdbg<<"ymin_1, ymax_1 = "<<ymin_1<<','<<ymax_1<<std::endl;
                 ymin = _mC * (x - _cen.x - _mB*ymin_1) / _mA + _mD*ymin_1 + _cen.y;
                 ymax = _mC * (x - _cen.x - _mB*ymax_1) / _mA + _mD*ymax_1 + _cen.y;
                 if (ymax < ymin) std::swap(ymin,ymax);
@@ -1146,18 +1146,18 @@ namespace galsim {
                 double ymin_1, ymax_1;
                 std::vector<double> xsplits0;
                 _adaptee->getYRange(ymin_1,ymax_1,xsplits0);
-                xxdbg<<"ymin_1, ymax_1 = "<<ymin_1<<','<<ymax_1<<'\n';
+                xxdbg<<"ymin_1, ymax_1 = "<<ymin_1<<','<<ymax_1<<std::endl;
                 ymin = _mC * (x - _cen.x - _mB*ymin_1) / _mA + _mD*ymin_1 + _cen.y;
                 ymax = _mC * (x - _cen.x - _mB*ymax_1) / _mA + _mD*ymax_1 + _cen.y;
-                xxdbg<<"From top and bottom: ymin,ymax = "<<ymin<<','<<ymax<<'\n';
+                xxdbg<<"From top and bottom: ymin,ymax = "<<ymin<<','<<ymax<<std::endl;
                 if (ymax < ymin) std::swap(ymin,ymax);
                 double xmin_1, xmax_1;
                 std::vector<double> ysplits0;
                 _adaptee->getXRange(xmin_1,xmax_1,ysplits0);
-                xxdbg<<"xmin_1, xmax_1 = "<<xmin_1<<','<<xmax_1<<'\n';
+                xxdbg<<"xmin_1, xmax_1 = "<<xmin_1<<','<<xmax_1<<std::endl;
                 ymin_1 = _mC * xmin_1 + _mD * (x - _cen.x - _mA*xmin_1) / _mB + _cen.y;
                 ymax_1 = _mC * xmax_1 + _mD * (x - _cen.x - _mA*xmax_1) / _mB + _cen.y;
-                xxdbg<<"From left and right: ymin,ymax = "<<ymin_1<<','<<ymax_1<<'\n';
+                xxdbg<<"From left and right: ymin,ymax = "<<ymin_1<<','<<ymax_1<<std::endl;
                 if (ymax_1 < ymin_1) std::swap(ymin_1,ymax_1);
                 if (ymin_1 > ymin) ymin = ymin_1;
                 if (ymax_1 < ymax) ymax = ymax_1;
@@ -1170,7 +1170,7 @@ namespace galsim {
                     splits.push_back(_mC * xx + _mD * (x - _cen.x - _mA*xx) / _mB + _cen.y);
                 }
             }
-            xxdbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<'\n';
+            xxdbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<std::endl;
         }
     }
 
@@ -1301,7 +1301,7 @@ namespace galsim {
     //
     void SBConvolve::add(const SBProfile& rhs) 
     {
-        xdbg<<"Start SBConvolve::add.  Adding item # "<<_plist.size()+1<<'\n';
+        dbg<<"Start SBConvolve::add.  Adding item # "<<_plist.size()+1<<std::endl;
         // If this is the first thing being added to the list, initialize some accumulators
         if (_plist.empty()) {
             _x0 = _y0 = 0.;
@@ -1346,8 +1346,8 @@ namespace galsim {
 
         // Accumulate properties of all terms
         while (newptr != _plist.end()) {
-            xdbg<<"SBConvolve component has maxK, stepK = "<<
-                (*newptr)->maxK()<<" , "<<(*newptr)->stepK()<<'\n';
+            dbg<<"SBConvolve component has maxK, stepK = "<<
+                (*newptr)->maxK()<<" , "<<(*newptr)->stepK()<<std::endl;
             _fluxProduct *= (*newptr)->getFlux();
             _x0 += (*newptr)->centroid().x;
             _y0 += (*newptr)->centroid().y;
@@ -1358,7 +1358,7 @@ namespace galsim {
             _isStillAxisymmetric = _isStillAxisymmetric && (*newptr)->isAxisymmetric();
             newptr++;
         }
-        xdbg<<"Net maxK, stepK = "<<_minMaxK<<" , "<<_minStepK<<'\n';
+        dbg<<"Net maxK, stepK = "<<_minMaxK<<" , "<<_minStepK<<std::endl;
     }
 
     void SBConvolve::fillKGrid(KTable& kt) const 
@@ -1452,7 +1452,7 @@ namespace galsim {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct anser is less than kvalue_accuracy.
         // exp(-k^2*sigma^2/2) = kvalue_accuracy
-        _ksq_max = -2. * log(sbp::kvalue_accuracy) / _sigma_sq;
+        _ksq_max = -2. * std::log(sbp::kvalue_accuracy) / _sigma_sq;
 
         // For small k, we can use up to quartic in the taylor expansion to avoid the exp.
         // This is acceptable when the next term is less than kvalue_accuracy.
@@ -1461,28 +1461,28 @@ namespace galsim {
 
         _norm = _flux / (_sigma_sq * 2. * M_PI);
 
-        xdbg<<"Gaussian:\n";
-        xdbg<<"_flux = "<<_flux<<'\n';
-        xdbg<<"_sigma = "<<_sigma<<'\n';
-        xdbg<<"_sigma_sq = "<<_sigma_sq<<'\n';
-        xdbg<<"_ksq_max = "<<_ksq_max<<'\n';
-        xdbg<<"_ksq_min = "<<_ksq_min<<'\n';
-        xdbg<<"_norm = "<<_norm<<'\n';
-        xdbg<<"maxK() = "<<maxK()<<'\n';
-        xdbg<<"stepK() = "<<stepK()<<'\n';
+        dbg<<"Gaussian:\n";
+        dbg<<"_flux = "<<_flux<<std::endl;
+        dbg<<"_sigma = "<<_sigma<<std::endl;
+        dbg<<"_sigma_sq = "<<_sigma_sq<<std::endl;
+        dbg<<"_ksq_max = "<<_ksq_max<<std::endl;
+        dbg<<"_ksq_min = "<<_ksq_min<<std::endl;
+        dbg<<"_norm = "<<_norm<<std::endl;
+        dbg<<"maxK() = "<<maxK()<<std::endl;
+        dbg<<"stepK() = "<<stepK()<<std::endl;
     }
 
-    // Set maxK where the FT is down to 0.001 or threshold, whichever is harder.
+    // Set maxK to the value where the FT is down to maxk_threshold
     double SBGaussian::maxK() const 
-    { return std::max(4., sqrt(-2.*log(sbp::ALIAS_THRESHOLD)))/_sigma; }
+    { return sqrt(-2.*std::log(sbp::maxk_threshold))/_sigma; }
 
     // The amount of flux missed in a circle of radius pi/stepk should miss at 
-    // most ALIAS_THRESHOLD of the flux.
+    // most alias_threshold of the flux.
     double SBGaussian::stepK() const
     {
         // int( exp(-r^2/2) r, r=0..R) = 1 - exp(-R^2/2)
-        // exp(-R^2/2) = ALIAS_THRESHOLD
-        double R = sqrt(-2.*std::log(sbp::ALIAS_THRESHOLD));
+        // exp(-R^2/2) = alias_threshold
+        double R = sqrt(-2.*std::log(sbp::alias_threshold));
         // Make sure it is at least 4 sigma;
         R = std::max(4., R);
         return M_PI / (R*_sigma);
@@ -1528,30 +1528,33 @@ namespace galsim {
 
         _norm = _flux / (_r0_sq * 2. * M_PI);
 
-        xdbg<<"Exponential:\n";
-        xdbg<<"_flux = "<<_flux<<'\n';
-        xdbg<<"_r0 = "<<_r0<<'\n';
-        xdbg<<"_r0_sq = "<<_r0_sq<<'\n';
-        xdbg<<"_ksq_max = "<<_ksq_max<<'\n';
-        xdbg<<"_ksq_min = "<<_ksq_min<<'\n';
-        xdbg<<"_norm = "<<_norm<<'\n';
-        xdbg<<"maxK() = "<<maxK()<<'\n';
-        xdbg<<"stepK() = "<<stepK()<<'\n';
+        dbg<<"Exponential:\n";
+        dbg<<"_flux = "<<_flux<<std::endl;
+        dbg<<"_r0 = "<<_r0<<std::endl;
+        dbg<<"_r0_sq = "<<_r0_sq<<std::endl;
+        dbg<<"_ksq_max = "<<_ksq_max<<std::endl;
+        dbg<<"_ksq_min = "<<_ksq_min<<std::endl;
+        dbg<<"_norm = "<<_norm<<std::endl;
+        dbg<<"maxK() = "<<maxK()<<std::endl;
+        dbg<<"stepK() = "<<stepK()<<std::endl;
     }
 
-    // Set maxK where the FT is down to 0.001 or threshold, whichever is harder.
+    // Set maxK to the value where the FT is down to maxk_threshold
     double SBExponential::maxK() const 
-    { return std::max(10., pow(sbp::ALIAS_THRESHOLD, -1./3.))/_r0; }
+    { return pow(sbp::maxk_threshold, -1./3.)/_r0; }
 
     // The amount of flux missed in a circle of radius pi/stepk should miss at 
-    // most ALIAS_THRESHOLD of the flux.
+    // most alias_threshold of the flux.
     double SBExponential::stepK() const
     {
         // int( exp(-r) r, r=0..R) = (1 - exp(-R) - Rexp(-R))
         // Fraction excluded is thus (1+R) exp(-R)
-        // A fast solution to (1+R)exp(-R)=ALIAS_THRESHOLD:
-        double R = -std::log(sbp::ALIAS_THRESHOLD);
-        for (int i=0; i<3; i++) R = -std::log(sbp::ALIAS_THRESHOLD) + std::log(1.+R);
+        // A fast solution to (1+R)exp(-R) = x:
+        // log(1+R) - R = log(x)
+        // R = log(1+R) - log(x)
+        double logx = std::log(sbp::alias_threshold);
+        double R = -logx;
+        for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
         // Make sure it is at least 6 scale radii.
         R = std::max(6., R);
         return M_PI / (R*_r0);
@@ -1583,6 +1586,10 @@ namespace galsim {
     // SBAiry Class
     //
 
+    SBAiry::SBAiry(double D, double obs, double flux) :
+        _D(D), _obscuration(obs), _flux(flux), _norm(flux*D*D),
+        _sampler(0), _radial(_obscuration) {}
+
     // This is a scale-free version of the Airy radial function.
     // Input radius is in units of lambda/D.  Output normalized
     // to integrate to unity over input units.
@@ -1592,10 +1599,10 @@ namespace galsim {
         double xval;
         if (nu<0.01) {
             // lim j1(u)/u = 1/2
-            xval =  (1-_obscuration*_obscuration);
+            xval =  (1.-_obscuration*_obscuration);
         } else {
-            xval = 2*( j1(nu) - _obscuration*j1(_obscuration*nu)) /
-                nu ; //See Schroeder eq (10.1.10)
+            // See Schroeder eq (10.1.10)
+            xval = 2.*( j1(nu) - _obscuration*j1(_obscuration*nu)) / nu ; 
         }
         xval*=xval;
         // Normalize to give unit flux integrated over area.
@@ -1627,12 +1634,12 @@ namespace galsim {
     { return 2.*M_PI*_D; }
 
     // The amount of flux missed in a circle of radius pi/stepk should miss at 
-    // most ALIAS_THRESHOLD of the flux.
+    // most alias_threshold of the flux.
     double SBAiry::stepK() const
     {
         // Schroeder (10.1.18) gives limit of EE at large radius.
         // This stepK could probably be relaxed, it makes overly accurate FFTs.
-        double R = 1. / (sbp::ALIAS_THRESHOLD * 0.5 * pow(M_PI,2.) * (1.-_obscuration));
+        double R = 1. / (sbp::alias_threshold * 0.5 * M_PI * M_PI * (1.-_obscuration));
         // Use at least 5 lam/D
         R = std::max(R,5.);
         return M_PI * _D / R;
@@ -1710,7 +1717,7 @@ namespace galsim {
 
     double SBBox::sinc(const double u) const 
     {
-        if (u<0.001 && u>-0.001)
+        if (std::abs(u) < 1.e-3)
             return 1.-u*u/6.;
         else
             return std::sin(u)/u;
@@ -1719,6 +1726,20 @@ namespace galsim {
     std::complex<double> SBBox::kValue(const Position<double>& k) const
     {
         return _flux * sinc(0.5*k.x*_xw)*sinc(0.5*k.y*_yw);
+    }
+
+    // Set maxK to the value where the FT is down to maxk_threshold
+    double SBBox::maxK() const 
+    { 
+        return 2. / (sbp::maxk_threshold * std::min(_xw,_yw));
+    }
+
+    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // most alias_threshold of the flux.
+    double SBBox::stepK() const
+    {
+        // In this case sqrt(xw^2 + yw^2) encloses all the flux, so use that.
+        return M_PI / hypot(_xw,_yw);
     }
 
     // Override fillXGrid so we can partially fill pixels at edge of box.
@@ -1849,7 +1870,7 @@ namespace galsim {
     double SBLaguerre::maxK() const 
     {
         // Start with value for plain old Gaussian:
-        double m=std::max(4., std::sqrt(-2.*std::log(sbp::ALIAS_THRESHOLD))) / sigma;
+        double m=std::max(4., std::sqrt(-2.*std::log(sbp::alias_threshold))) / sigma;
         // Grow as sqrt of order
         if (bvec.getOrder()>1) m *= std::sqrt(bvec.getOrder()/1.);
         return m;
@@ -1858,7 +1879,7 @@ namespace galsim {
     double SBLaguerre::stepK() const 
     {
         // Start with value for plain old Gaussian:
-        double m= M_PI/std::max(4., std::sqrt(-2.*std::log(sbp::ALIAS_THRESHOLD))) / sigma;
+        double m= M_PI/std::max(4., std::sqrt(-2.*std::log(sbp::alias_threshold))) / sigma;
         // Shrink as sqrt of order
         if (bvec.getOrder()>1) m /= std::sqrt(bvec.getOrder()/1.);
         return m;
@@ -1926,184 +1947,199 @@ namespace galsim {
     // First need to define the static member that holds info on all the Sersic n's
     SBSersic::InfoBarn SBSersic::nmap;
 
+    SBSersic::SBSersic(double n, double flux, double re) :
+        _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _norm(_flux/_re_sq),
+        _info(nmap.get(_n))
+    {
+        _ksq_max = _info->getKsqMax() * _re_sq;
+    }
+
+    double SBSersic::xValue(const Position<double>& p) const
+    {  return _norm * _info->xValue((p.x*p.x+p.y*p.y)/_re_sq); }
+
+    std::complex<double> SBSersic::kValue(const Position<double>& k) const
+    { 
+        double ksq = k.x*k.x + k.y*k.y;
+        if (ksq > _ksq_max) 
+            return 0.;
+        else
+            return _flux * _info->kValue(ksq * _re_sq);
+    }
+
+    double SBSersic::maxK() const { return _info->maxK() / _re; }
+    double SBSersic::stepK() const { return _info->stepK() / _re; }
+
+    double SBSersic::SersicInfo::xValue(double xsq) const 
+    { return _norm * std::exp(-_b*std::pow(xsq,_inv2n)); }
+
     double SBSersic::SersicInfo::kValue(double ksq) const 
     {
         assert(ksq >= 0.);
 
-        if (ksq>=ksqMax)
+        if (ksq>=_ksq_max)
             return 0.; // truncate the Fourier transform
-        if (ksq<ksqMin)
-            return 1. + ksq*(kderiv2 + ksq*kderiv4); // Use quartic approx at low k
-
-        double lk=0.5*std::log(ksq); // Lookup table is logarithmic
-
-        // simple linear interpolation to this value
-        double fstep = (lk-logkMin)/logkStep;
-        double findex = std::floor(fstep);
-        int index = int(findex);
-        assert(index < int(lookup.size())-1);
-        fstep -= findex;
-        return lookup[index]*(1.-fstep) + fstep*lookup[index+1];
+        else if (ksq<_ksq_min)
+            return 1. + ksq*(_kderiv2 + ksq*_kderiv4); // Use quartic approx at low k
+        else {
+            double lk=0.5*std::log(ksq); // Lookup table is logarithmic
+            return _ft(lk);
+        }
     }
 
     // Integrand class for the Hankel transform of Sersic
     class SersicIntegrand : public std::unary_function<double,double>
     {
     public:
-        SersicIntegrand(double n, double b_, double k_):
-            invn(1./n), b(b_), k(k_) {}
+        SersicIntegrand(double n, double b, double k):
+            _invn(1./n), _b(b), _k(k) {}
         double operator()(double r) const 
-        { return r*std::exp(-b*std::pow(r, invn))*j0(k*r); }
+        { return r*std::exp(-_b*std::pow(r, _invn))*j0(_k*r); }
 
     private:
-        double invn;
-        double b;
-        double k;
+        double _invn;
+        double _b;
+        double _k;
     };
 
+    // Find what radius encloses (1-missing_flux_frac) of the total flux in a Sersic profile
+    double SBSersic::SersicInfo::findMaxR(double missing_flux_frac, double gamma2n)
+    { 
+        // int(exp(-b r^1/n) r, r=R..inf) = x * int(exp(-b r^1/n) r, r=0..inf)
+        //                                = x n b^-2n Gamma(2n)
+        // Change variables: u = b r^1/n,
+        // du = b/n r^(1-n)/n dr
+        //    = b/n r^1/n dr/r
+        //    = u/n dr/r
+        // r dr = n du r^2 / u
+        //      = n du (u/b)^2n / u
+        // n b^-2n int(u^(2n-1) exp(-u), u=bR^1/n..inf) = x n b^-2n Gamma(2n)
+        // Let z = b R^1/n
+        //
+        // int(u^(2n-1) exp(-u), u=z..inf) = x Gamma(2n)
+        //
+        // The lhs is an incomplete gamma function: Gamma(2n,z), which according to
+        // Abramowitz & Stegun (6.5.32) has a high-z asymptotic form of:
+        // Gamma(2n,z) ~= z^(2n-1) exp(-z) (1 + (2n-2)/z + (2n-2)(2n-3)/z^2 + ... )
+        // ln(x Gamma(2n)) = (2n-1) ln(z) - z + 2(n-1)/z + 2(n-1)(n-2)/z^2
+        // z = -ln(x Gamma(2n) + (2n-1) ln(z) + 2(n-1)/z + 2(n-1)(n-2)/z^2
+        // Iterate this until converge.  Should be quick.
+        dbg<<"Find maxR for missing_flux_frac = "<<missing_flux_frac<<std::endl;
+        double z0 = -std::log(missing_flux_frac * gamma2n);
+        // Successive approximation method:
+        double z = 4.*(_n+1.);  // A decent starting guess for a range of n.
+        double oldz = 0.;
+        const int MAXIT = 15;
+        dbg<<"Start with z = "<<z<<std::endl;
+        for(int niter=0; niter < MAXIT; ++niter) {
+            oldz = z;
+            z = z0 + (2.*_n-1.) * std::log(z) + 2.*(_n-1.)/z + 2.*(_n-1.)*(_n-2.)/(z*z);
+            dbg<<"z = "<<z<<", dz = "<<z-oldz<<std::endl;
+            if (std::abs(z-oldz) < 0.01) break;
+        }
+        dbg<<"Converged at z = "<<z<<std::endl;
+        double R=std::pow(z/_b, _n);
+        dbg<<"R = (z/b)^n = "<<R<<std::endl;
+        return R;
+    }
 
     // Constructor to initialize Sersic constants and k lookup table
-    SBSersic::SersicInfo::SersicInfo(double n): inv2n(1./(2.*n)) 
+    SBSersic::SersicInfo::SersicInfo(double n) : _n(n), _inv2n(1./(2.*n)) 
     {
         // Going to constraint range of allowed n to those I have looked at
-        if (n<0.5 || n>4.2) throw SBError("Requested Sersic index out of range");
+        if (_n<0.5 || _n>4.2) throw SBError("Requested Sersic index out of range");
 
         // Formula for b from Ciotti & Bertin (1999)
-        b = 2.*n - (1./3.)
-            + (4./405.)/n
-            + (46./25515.)/(n*n)
-            + (131./1148175.)/(n*n*n)
-            - (2194697./30690717750.)/(n*n*n*n);
+        _b = 2.*_n - (1./3.)
+            + (4./405.)/_n
+            + (46./25515.)/(_n*_n)
+            + (131./1148175.)/(_n*_n*_n)
+            - (2194697./30690717750.)/(_n*_n*_n*_n);
 
-        double b2n = std::pow(b,2.*n);  // used frequently here
+        double b2n = std::pow(_b,2.*_n);  // used frequently here
+        double b4n = b2n*b2n;
         // The normalization factor to give unity flux integral:
-        norm = b2n / (2.*M_PI*n*tgamma(2.*n));
+        double gamma2n = tgamma(2.*_n);
+        _norm = b2n / (2.*M_PI*_n*gamma2n);
 
+        // The small-k expansion of the Hankel transform is (normalized to have flux=1):
+        // 1 - Gamma(4n) / 4 b^2n Gamma(2n) + Gamma(6n) / 64 b^4n Gamma(2n)
+        //   - Gamma(8n) / 2304 b^6n Gamma(2n)
         // The quadratic term of small-k expansion:
-        kderiv2 = -tgamma(4.*n) / (4.*b2n*tgamma(2.*n)) ; 
+        _kderiv2 = -tgamma(4.*_n) / (4.*b2n*gamma2n) ; 
         // And a quartic term:
-        kderiv4 = tgamma(6.*n) / (64.*b2n*b2n*tgamma(2.*n));
+        _kderiv4 = tgamma(6.*_n) / (64.*b4n*gamma2n);
 
-        xdbg << "Building for n=" << n << " b= " << b << " norm= " << norm << '\n';
-        xdbg << "Deriv terms: " << kderiv2 << " " << kderiv4 << '\n';
+        dbg << "Building for n=" << _n << " b= " << _b << " norm= " << _norm << std::endl;
+        dbg << "Deriv terms: " << _kderiv2 << " " << _kderiv4 << std::endl;
 
-        // When is it safe to use low-k approximation?  See when
-        // quartic term is at threshold
-        double lookupMin = 0.05; // Default lower limit for lookup table
-        const double kAccuracy=0.001; // What errors in FT coefficients are acceptable?
-        double smallK = std::pow(kAccuracy / kderiv4, 0.25);
-        if (smallK < lookupMin) lookupMin = smallK;
-        logkMin = std::log(lookupMin);
-        ksqMin = lookupMin * lookupMin;
+        // When is it safe to use low-k approximation?  
+        // See when next term past quartic is at accuracy threshold
+        double kderiv6 = tgamma(8*_n) / (2304.*b4n*b2n*gamma2n);
+        dbg<<"kderiv6 = "<<kderiv6<<std::endl;
+        double kmin = std::pow(sbp::kvalue_accuracy / kderiv6, 1./6.);
+        dbg<<"kmin = "<<kmin<<std::endl;
+        _ksq_min = kmin * kmin;
 
         // How far should nominal profile extend?
-        // Estimate number of effective radii needed to enclose
-
-        xdbg<<"Determine xMax\n";
-        double xMax = 5.; // Go to at least 5r_e
-        {
-            // Successive approximation method:
-            double a=2.*n;
-            double z=a;
-            double oldz=0.;
-            int niter=0;
-            const int MAXIT = 15;
-            xdbg<<"Start with z = "<<z<<'\n';
-            while ( std::abs(oldz-z)>0.01 && niter<MAXIT) {
-                niter++;
-                oldz = z;
-                z = a - std::log(sbp::ALIAS_THRESHOLD*std::sqrt(2*M_PI*a)*
-                                 (1.+1./(12.*a)+1./(288.*a*a))) +
-                    (a-1.)*std::log(z/a) + std::log(1. + (a-1.)/z + (a-1.)*(a-2.)/(z*z));
-            }
-            xdbg<<"Converged at z = "<<z<<'\n';
-            double r=std::pow(z/b, n);
-            xdbg<<"r = (z/b)^n = "<<r<<'\n';
-            if (r>xMax) xMax = r;
-            xdbg<<"xMax = "<<xMax<<'\n';
-        }
-        stepK = M_PI / xMax;
-        xdbg<<"stepK = "<<stepK<<'\n';
-
-        // Going to calculate another outer radius for the integration of the 
-        // Hankel transforms:
-        xdbg<<"Determine integrateMax\n";
-        double integrateMax=xMax;
-        const double integrationLoss=0.001;
-        {
-            // Successive approximation method:
-            double a=2.*n;
-            double z=a;
-            double oldz=0.;
-            int niter=0;
-            const int MAXIT = 15;
-            xdbg<<"Start with z = "<<z<<'\n';
-            while ( std::abs(oldz-z)>0.01 && niter<MAXIT) {
-                niter++;
-                oldz = z;
-                z = a - std::log(integrationLoss*std::sqrt(2.*M_PI*a)*
-                                 (1.+1./(12.*a)+1./(288.*a*a))) +
-                    (a-1.)*std::log(z/a) + std::log(1. + (a-1.)/z + (a-1.)*(a-2.)/(z*z));
-            }
-            xdbg<<"Converged at z = "<<z<<'\n';
-            double r=std::pow(z/b, n);
-            xdbg << "99.9% radius " << r <<'\n';
-            if (r>integrateMax) integrateMax = r;    
-        }
-
-        // Normalization for integral at k=0:
-        SersicIntegrand I(n, b, 0.);
-        double norm = integ::int1d(
-            I, 0., integrateMax, sbp::integration_relerr, sbp::integration_abserr);
+        // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
+        double R = findMaxR(sbp::alias_threshold,gamma2n);
+        // Go to at least 5 re
+        if (R < 5) R = 5;
+        dbg<<"R => "<<R<<std::endl;
+        _stepK = M_PI / R;
+        dbg<<"stepK = "<<_stepK<<std::endl;
 
         // Now start building the lookup table for FT of the profile.
-        // Keep track of where the FT drops below ALIAS_THRESHOLD - this
-        // will be our maxK.
-        // Then extend the table another order of magnitude either in k
-        //  or in FT, whichever comes first.
-        xdbg<<"Determine maxK\n";
-        logkStep = 0.05;
-        // Here is preset range of acceptable maxK:
-        const double MINMAXK = 10.;
-        const double MAXMAXK = 50.; 
-        maxK = MINMAXK;
-        double lastVal=1.;
-        double lk = logkMin;
-        xdbg<<"logkMin = "<<logkMin<<'\n';
-        while (lk < std::log(maxK*10.) && lastVal>sbp::ALIAS_THRESHOLD/10.) {
-            SersicIntegrand I(n, b, std::exp(lk));
-            // Need to make sure we are resolving oscillations in the integral:
+        
+        // Normalization for integral at k=0:
+        double hankel_norm = _n*gamma2n/b2n;
+        dbg<<"hankel_norm = "<<hankel_norm<<std::endl;
+
+        // Along the way, find the last k that has a kValue > 1.e-3
+        double maxlogk = 0.;
+        // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
+        int n_below_thresh = 0;
+
+        double integ_maxR = findMaxR(sbp::kvalue_accuracy * hankel_norm,gamma2n);
+        //double integ_maxR = integ::MOCK_INF;
+
+        double dlogk = 0.1;
+        // Don't go past k = 500
+        for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
+            SersicIntegrand I(_n, _b, std::exp(logk));
             double val = integ::int1d(
-                I, 0., integrateMax, sbp::integration_relerr, sbp::integration_abserr*norm);
-            //std::cerr << "Integrate k " << exp(lk) << " result " << val/norm << '\n';
-            val /= norm;
-            lookup.push_back(val);
-            if (val >= sbp::ALIAS_THRESHOLD) maxK = std::max(maxK, std::exp(lk));
-            logkMax = lk;
-            lk += logkStep;
+                I, 0., integ_maxR, sbp::integration_relerr, sbp::integration_abserr*hankel_norm);
+            val /= hankel_norm;
+            xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<std::endl;
+            _ft.addEntry(logk,val);
+
+            if (std::abs(val) > sbp::maxk_threshold) maxlogk = logk;
+
+            if (std::abs(val) > sbp::kvalue_accuracy) n_below_thresh = 0;
+            else ++n_below_thresh;
+            if (n_below_thresh == 5) break;
         }
-        xdbg<<"maxK with val >= ALIAS_THRESHOLD ("<<sbp::ALIAS_THRESHOLD<<") = "<<maxK<<'\n';
-        maxK = std::min(MAXMAXK, maxK); // largest acceptable
-        xdbg<<"Final maxK = "<<maxK<<'\n';
-        ksqMax = exp(2.*logkMax);
+        _maxK = exp(maxlogk);
+        xdbg<<"maxK with val >= "<<sbp::maxk_threshold<<" = "<<_maxK<<std::endl;
+        _ksq_max = exp(_ft.argMax());
 
         // Next, set up the classes for photon shooting
-        _radialPtr = new SersicRadialFunction(n, b);
+        _radial = new SersicRadialFunction(_n, _b);
         std::vector<double> range(2,0.);
-        range[1] = integrateMax;
-        _sampler = new OneDimensionalDeviate( *_radialPtr, range, true);
+        range[1] = R;
+        _sampler = new OneDimensionalDeviate( *_radial, range, true);
     }
 
     PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate& ud) const 
     {
         PhotonArray result = _sampler->shoot(N,ud);
-        result.scaleFlux(norm);
+        result.scaleFlux(_norm);
         return result;
     }
 
     SBMoffat::SBMoffat(double beta, double truncationFWHM, double flux,
                        double size, RadiusType rType) : 
-        _beta(beta), _flux(flux), _stepK(0.), _ft(Table<double,double>::spline)
+        _beta(beta), _flux(flux), _ft(Table<double,double>::spline)
     {
         xdbg<<"Start SBMoffat constructor: \n";
         xdbg<<"beta = "<<_beta<<"\n";
@@ -2156,7 +2192,7 @@ namespace galsim {
         _norm = _flux * (_beta-1.) / (M_PI * _fluxFactor * _rD_sq);
 
         dbg << "Moffat rD " << _rD << " fluxFactor " << _fluxFactor
-            << " norm " << _norm << " maxRrD " << _maxR << '\n';
+            << " norm " << _norm << " maxRrD " << _maxR << std::endl;
 
         if (_beta == 1) pow_beta = &SBMoffat::pow_1;
         else if (_beta == 2) pow_beta = &SBMoffat::pow_2;
@@ -2182,7 +2218,7 @@ namespace galsim {
         else return _ft(ksq);
     }
 
-    // Set maxK where the FT is down to 0.001 or threshold, whichever is harder.
+    // Set maxK to the value where the FT is down to maxk_threshold
     double SBMoffat::maxK() const 
     {
         // _maxK is determined during setupFT() as the last k value to have a  kValue > 1.e-3.
@@ -2196,39 +2232,36 @@ namespace galsim {
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should miss at 
-    // most ALIAS_THRESHOLD of the flux.
+    // most alias_threshold of the flux.
     double SBMoffat::stepK() const
     {
-        if (_stepK == 0.) {
-            dbg<<"Find Moffat stepK\n";
-            dbg<<"beta = "<<_beta<<'\n';
+        dbg<<"Find Moffat stepK\n";
+        dbg<<"beta = "<<_beta<<std::endl;
 #if 1
-            // The fractional flux out to radius R is (if not truncated)
-            // 1 - (1+R^2)^(1-beta)
-            // So solve (1+R^2)^(1-beta) = ALIAS_THRESHOLD
-            if (_beta <= 1.1) {
-                // Then flux never converges (or nearly so), so just use truncation radius
-                _stepK = M_PI / _maxR;
-            } else {
-                // Ignore the 1 in (1+R^2), so approximately:
-                double R = std::pow(sbp::ALIAS_THRESHOLD, 0.5/(1.-_beta)) * _rD;
-                dbg<<"R = "<<R<<'\n';
-                // If it is truncated at less than this, drop to that value.
-                if (R > _maxR) R = _maxR;
-                dbg<<"_maxR = "<<_maxR<<'\n';
-                dbg<<"R => "<<R<<'\n';
-                dbg<<"stepk = "<<(M_PI/R)<<'\n';
-                _stepK = M_PI / R;
-            }
-#else
-            // Old version from Gary:
-            // Make FFT's periodic at 4x truncation radius or 1.5x diam at ALIAS_THRESHOLD,
-            // whichever is smaller
-            _stepK = 2.*M_PI / std::min(4.*_maxR, 
-                                        3.*std::sqrt(pow(sbp::ALIAS_THRESHOLD, -1./_beta)-1.)*_rD);
-#endif
+        // The fractional flux out to radius R is (if not truncated)
+        // 1 - (1+R^2)^(1-beta)
+        // So solve (1+R^2)^(1-beta) = alias_threshold
+        if (_beta <= 1.1) {
+            // Then flux never converges (or nearly so), so just use truncation radius
+            return M_PI / _maxR;
+        } else {
+            // Ignore the 1 in (1+R^2), so approximately:
+            double R = std::pow(sbp::alias_threshold, 0.5/(1.-_beta)) * _rD;
+            dbg<<"R = "<<R<<std::endl;
+            // If it is truncated at less than this, drop to that value.
+            if (R > _maxR) R = _maxR;
+            dbg<<"_maxR = "<<_maxR<<std::endl;
+            dbg<<"R => "<<R<<std::endl;
+            dbg<<"stepk = "<<(M_PI/R)<<std::endl;
+            return M_PI / R;
         }
-        return _stepK;
+#else
+        // Old version from Gary:
+        // Make FFT's periodic at 4x truncation radius or 1.5x diam at alias_threshold,
+        // whichever is smaller
+        return 2.*M_PI / std::min(4.*_maxR, 
+                                  3.*std::sqrt(pow(sbp::alias_threshold, -1./_beta)-1.)*_rD);
+#endif
     }
 
     // Integrand class for the Hankel transform of Moffat
@@ -2253,18 +2286,22 @@ namespace galsim {
         // Do a Hankel transform and store the results in a lookup table.
         
         double nn = _norm * 2.*M_PI * _rD_sq;
-        double maxR = _fluxFactor == 1. ? integ::MOCK_INF : _maxR / _rD;
+        //double maxR = _fluxFactor == 1. ? integ::MOCK_INF : _maxR / _rD;
+        double maxR = _maxR / _rD;
 
         // Along the way, find the last k that has a kValue > 1.e-3
-        double maxK_val = std::min(0.001, sbp::ALIAS_THRESHOLD) * _flux;
+        double maxK_val = sbp::maxk_threshold * _flux;
+        dbg<<"Looking for maxK_val = "<<maxK_val<<std::endl;
         // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
         // (It's oscillatory, so want to make sure not to stop at a zero crossing.)
         double thresh = sbp::kvalue_accuracy * _flux;
 
         // These are dimensionless k values for doing the integral.
-        double dk = std::min(0.1, stepK() * _rD);
-        double k = 0.;
-        for(int n_below_thresh=0; n_below_thresh < 5; k += dk) {
+        double dk = 0.1;
+        dbg<<"dk = "<<dk<<std::endl;
+        int n_below_thresh = 0;
+        // Don't go past k = 50
+        for(double k=0.; k < 50; k += dk) {
             MoffatIntegrand I(_beta, k, pow_beta);
             double val = integ::int1d(
                 I, 0., maxR, sbp::integration_relerr, sbp::integration_abserr);
@@ -2278,8 +2315,9 @@ namespace galsim {
 
             if (std::abs(val) > thresh) n_below_thresh = 0;
             else ++n_below_thresh;
+            if (n_below_thresh == 5) break;
         }
-        dbg<<"maxK = "<<_maxK<<'\n';
+        dbg<<"maxK = "<<_maxK<<std::endl;
     }
 
     /*************************************************************
@@ -2294,15 +2332,15 @@ namespace galsim {
         // Clear image before adding photons, for consistency with draw() methods.
         img.fill(0.);  
         double origN = N;
-        xdbg<<"origN = "<<origN<<'\n';
+        xdbg<<"origN = "<<origN<<std::endl;
         while (N > maxN) {
-            xdbg<<"shoot "<<maxN<<'\n';
+            xdbg<<"shoot "<<maxN<<std::endl;
             PhotonArray pa = shoot(maxN, u);
             pa.scaleFlux(maxN / origN);
             pa.addTo(img);
             N -= maxN;
         }
-        xdbg<<"shoot "<<N<<'\n';
+        xdbg<<"shoot "<<N<<std::endl;
         PhotonArray pa = shoot(int(N), u);
         pa.scaleFlux(N / origN);
         pa.addTo(img);
@@ -2392,7 +2430,7 @@ namespace galsim {
             } while (rsq>=1. || rsq==0.);
             
             // Then map it to desired Gaussian with analytic transformation
-            double factor = _sigma*sqrt( -2.*log(rsq)/rsq);
+            double factor = _sigma*sqrt( -2.*std::log(rsq)/rsq);
             result.setPhoton(i,factor*xu, factor*yu, fluxPerPhoton);
         }
         return result;
@@ -2401,9 +2439,9 @@ namespace galsim {
     PhotonArray SBSersic::shoot(int N, UniformDeviate& ud) const
     {
         // Get photons from the SersicInfo structure, rescale flux and size for this instance
-        PhotonArray result = info->shoot(N,ud);
-        result.scaleFlux(flux);
-        result.scaleXY(re);
+        PhotonArray result = _info->shoot(N,ud);
+        result.scaleFlux(_flux);
+        result.scaleXY(_re);
         return result;
     }
 
@@ -2466,8 +2504,11 @@ namespace galsim {
         // Break Airy function into ranges that will not have >1 extremum:
         double xmin = (1.1 - 0.5*_obscuration);
         // Use Schroeder (10.1.18) limit of EE at large radius.
-        // to stop sampler at radius with EE>(1-ALIAS_THRESHOLD).
-        double maximumRadius = 2./(sbp::ALIAS_THRESHOLD * M_PI*M_PI * (1-_obscuration));
+        // to stop sampler at radius with EE>(1-alias_threshold).
+        // TODO: Is alias_threshold appropriate for photon shooting?  
+        //       Should we introduce another parameter that might work similarly
+        //       and try to be consistent across all profiles?
+        double maximumRadius = 2./(sbp::alias_threshold * M_PI*M_PI * (1-_obscuration));
         while (xmin < maximumRadius) {
             ranges.push_back(xmin);
             xmin += 0.5;

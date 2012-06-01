@@ -42,46 +42,35 @@ namespace galsim {
         // Magic numbers:
         
         /// Constant giving minimum FFT size we're willing to do.
-        const int MINIMUM_FFT_SIZE = 128;
+        const int minimum_fft_size = 128;
 
         /// Constant giving maximum FFT size we're willing to do.
-        const int MAXIMUM_FFT_SIZE = 4096;
+        const int maximum_fft_size = 4096;
 
         /**
-         * @brief A rough indicator of how good the FFTs need to be for setting `maxK()` and 
-         * `stepK()` values.  
+         * @brief A threshold parameter used for setting the stepK value for FFTs.
          *
-         * Generic indicator of what level of error one is willing to tolerate from 
-         * numerical approximations, such as aliasing, or necessary truncation / folding 
-         * of functions that extend to infinity. 
+         * The FFT's stepK is set so that at most a fraction of (1-alias_threshold)
+         * of the flux of any profile is aliased.
          */
-        const double ALIAS_THRESHOLD = 0.005;
+        const double alias_threshold = 5.e-3;
+
+        /**
+         * @brief A threshold parameter used for setting the maxK value for FFTs.
+         *
+         * The FFT's maxK is set so that the k-values that are excluded off the edge of 
+         * the image are less than maxk_threshold.
+         */
+        const double maxk_threshold = 1.e-3;
 
         //@{
         /** 
          * @brief The target accuracy for realspace convolution.
-         *
-         * I think these are more than accurate enough for making the images.
-         * TODO: Should have the fourier convolution use a similar kind of 
-         * accuracy target to calculate the maxK and stepK values, rather than 
-         * the heuristics it uses currently.
          */
         const double realspace_conv_relerr = 1.e-3;
         const double realspace_conv_abserr = 1.e-6;
         //@}
         
-
-        //@{
-        /**
-         * @brief Target accuracy for other integrations in SBProfile
-         *
-         * For Sersic and Moffat, we numerically integrate the Hankel transform.
-         * These are used for the precision in those integrals.
-         */
-        const double integration_relerr = 1.e-4;
-        const double integration_abserr = 1.e-8;
-        //@}
-
         /**
          * @brief Accuracy of values in k-space.
          *
@@ -92,8 +81,21 @@ namespace galsim {
          * There may be cases where other choices we have made lead to errors greater 
          * than this.  But whenever we do an explicit calculation about this, this is
          * the value we use.
+         *
+         * Note that this would typically be more stringent than maxk_threshold.
          */
         const double kvalue_accuracy = 1.e-5;
+
+        //@{
+        /**
+         * @brief Target accuracy for other integrations in SBProfile
+         *
+         * For Sersic and Moffat, we numerically integrate the Hankel transform.
+         * These are used for the precision in those integrals.
+         */
+        const double integration_relerr = kvalue_accuracy;
+        const double integration_abserr = kvalue_accuracy * 1.e-2;
+        //@}
     }
 
     /// @brief Exception class thrown by SBProfiles.
@@ -1260,7 +1262,7 @@ namespace galsim {
      * and the characteristic size `sigma` where the radial profile of the circular Gaussian
      * drops off as `exp[-r^2 / (2. * sigma^2)]`.
      * The maxK() and stepK() are for the SBGaussian are chosen to extend to 4 sigma in both 
-     * real and k domains, or more if needed to reach the `ALIAS_THRESHOLD` spec.
+     * real and k domains, or more if needed to reach the `alias_threshold` spec.
      */
     class SBGaussian : public SBProfile 
     {
@@ -1331,12 +1333,78 @@ namespace galsim {
     class SBSersic : public SBProfile 
     {
     public:
+        /**
+         * @brief Constructor.
+         *
+         * @param[in] n     Sersic index.
+         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] re    half-light radius (default `re = 1.`).
+         */
+        SBSersic(double n, double flux=1., double re=1.);
+
+        // Default copy constructor should be fine.
+
+        /// @brief Destructor.
+        ~SBSersic() {}
+
+        // Barney note: methods below already doxyfied via SBProfile, except for getN
+
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
+
+        double maxK() const;
+        double stepK() const;
+
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
+        { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; splits.push_back(0.); }
+
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; splits.push_back(0.); }
+
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        {
+            ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; 
+            if (std::abs(x/_re) < 1.e-2) splits.push_back(0.); 
+        }
+
+        bool isAxisymmetric() const { return true; }
+        bool isAnalyticX() const { return true; }
+        bool isAnalyticK() const { return true; }  // 1d lookup table
+
+        Position<double> centroid() const 
+        { return Position<double>(0., 0.); }
+
+        double getFlux() const { return _flux; }
+        void setFlux(double flux) 
+        { 
+            _flux = flux; 
+            _norm = flux/_re_sq;
+        }
+
+        /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+
+        SBProfile* duplicate() const { return new SBSersic(*this); }
+
+        /// @brief A method that only works for Sersic, @returns the Sersic index `n`.
+        double getN() const { return _n; }
+
+    private:
+
+        double _n; ///< Sersic index.
+        double _flux; ///< Flux.
+        double _re;   ///< Half-light radius.
+        double _re_sq; ///< Calculated value: _re*_re
+        double _norm; ///< Calculated value: _flux/_re_sq
+        double _ksq_max; ///< The ksq_max value from info rescaled with this re value.
+
         /** 
          * @brief Subclass of `SBSersic` which provides the un-normalized radial function.
          *
          * Serves as interface to `OneDimensionalDeviate` used for sampling from this distribution.
          */
-        class SersicRadialFunction: public FluxDensity {
+        class SersicRadialFunction: public FluxDensity 
+        {
         public:
             /**
              * @brief Constructor
@@ -1355,7 +1423,7 @@ namespace galsim {
             double _invn; ///> 1/n
             double _b;  /// radial normalization constant
         };
-    private:
+
         /// @brief A private class that caches the needed parameters for each Sersic index `n`.
         class SersicInfo 
         {
@@ -1366,13 +1434,11 @@ namespace galsim {
              */
             SersicInfo(double n); 
             /// @brief Destructor: deletes photon-shooting classes if necessary
-            ~SersicInfo() {
-                if (_radialPtr) delete _radialPtr;
+            ~SersicInfo() 
+            {
+                if (_radial) delete _radial;
                 if (_sampler) delete _sampler;
             }
-            double inv2n;   ///< `1 / (2 * n)`
-            double maxK;    ///< Value of k beyond which aliasing can be neglected.
-            double stepK;   ///< Sampling in k space necessary to avoid folding of image in x space.
 
             /** 
              * @brief Returns the real space value of the Sersic function, normalized to unit flux
@@ -1381,10 +1447,15 @@ namespace galsim {
              * taking sqrt in most user code.
              * @returns Value of Sersic function, normalized to unit flux.
              */
-            double xValue(double xsq) const { return norm*std::exp(-b*std::pow(xsq,inv2n)); } 
+            double xValue(double xsq) const;
 
             /// @brief Looks up the k value for the SBProfile from a lookup table.
             double kValue(double ksq) const;
+
+            double maxK() const { return _maxK; }
+            double stepK() const { return _stepK; }
+
+            double getKsqMax() const { return _ksq_max; }
 
             /**
              * @brief Shoot photons through unit-size, unnormalized profile
@@ -1401,25 +1472,32 @@ namespace galsim {
             SersicInfo(const SersicInfo& rhs); ///< Hides the copy constructor.
             void operator=(const SersicInfo& rhs); ///<Hide assignment operator.
 
+            double _n; ///< Sersic index.
+
             /** 
              * @brief Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`, calculated from Sersic 
              * index `n` and half-light radius `re`.
              */
-            double b; 
+            double _b; 
 
-            double norm; ///< Amplitude scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`.
-            double kderiv2; ///< Quadratic dependence near k=0.
-            double kderiv4; ///< Quartic dependence near k=0.
-            double logkMin; ///< Minimum log(k) in lookup table.
-            double logkMax; ///< Maximum log(k) in lookup table.
-            double logkStep; ///< Stepsize in log(k) in lookup table.
-            std::vector<double> lookup; ///< Lookup table.
-            double ksqMin; ///< Minimum ksq to use lookup table.
-            double ksqMax; ///< Maximum ksq to use lookup table.
+            double _inv2n;   ///< `1 / (2 * n)`
+            double _maxK;    ///< Value of k beyond which aliasing can be neglected.
+            double _stepK;   ///< Sampling in k space necessary to avoid folding 
 
-            SersicRadialFunction* _radialPtr;  ///< Function class used for photon shooting
+            double _norm; ///< Amplitude scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`.
+            double _kderiv2; ///< Quadratic dependence near k=0.
+            double _kderiv4; ///< Quartic dependence near k=0.
+            Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
+            double _ksq_min; ///< Minimum ksq to use lookup table.
+            double _ksq_max; ///< Maximum ksq to use lookup table.
+
+            SersicRadialFunction* _radial;  ///< Function class used for photon shooting
             OneDimensionalDeviate* _sampler;   ///< Class that does numerical photon shooting
+
+            double findMaxR(double missing_flux_fraction, double gamma2n);
         };
+
+        const SersicInfo* _info; ///< Points to info structure for this n.
 
         /** 
          * @brief A map to hold one copy of the SersicInfo for each `n` ever used during the 
@@ -1463,70 +1541,6 @@ namespace galsim {
             }
         };
         static InfoBarn nmap; ///> One static map of all `SersicInfo` structures for whole program.
-
-        // Now the parameters of this instance of SBSersic:
-        double n; ///< Sersic index.
-        double flux; ///< Flux.
-        double re;   ///< Half-light radius.
-        const SersicInfo* info; ///< Points to info structure for this n.
-        double _re_sq; ///< Calculated value: re*re
-
-    public:
-        /**
-         * @brief Constructor.
-         *
-         * @param[in] n_    Sersic index.
-         * @param[in] flux_ flux (default `flux_ = 1.`).
-         * @param[in] re_   half-light radius (default `re_ = 1.`).
-         */
-        SBSersic(double n_, double flux_=1., double re_=1.) :
-            n(n_), flux(flux_), re(re_), info(nmap.get(n)), _re_sq(re*re) {}
-
-        // Default copy constructor should be fine.
-
-        /// @brief Destructor.
-        ~SBSersic() {}
-
-        // Barney note: methods below already doxyfied via SBProfile, except for getN
-
-        double xValue(const Position<double>& p) const 
-        { return flux*info->xValue((p.x*p.x+p.y*p.y)/_re_sq) / _re_sq; }
-
-        std::complex<double> kValue(const Position<double>& k) const 
-        { return std::complex<double>( flux*info->kValue((k.x*k.x+k.y*k.y)*_re_sq), 0.); }
-
-        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
-        { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; splits.push_back(0.); }
-
-        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
-        { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; splits.push_back(0.); }
-
-        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
-        {
-            ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; 
-            if (std::abs(x/re) < 1.e-2) splits.push_back(0.); 
-        }
-
-        bool isAxisymmetric() const { return true; }
-        bool isAnalyticX() const { return true; }
-        bool isAnalyticK() const { return true; }  // 1d lookup table
-
-        double maxK() const { return info->maxK / re; }
-        double stepK() const { return info->stepK / re; }
-
-        Position<double> centroid() const 
-        { return Position<double>(0., 0.); }
-
-        double getFlux() const { return flux; }
-        void setFlux(double flux_) { flux=flux_; }
-
-        /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
-
-        SBProfile* duplicate() const { return new SBSersic(*this); }
-
-        /// @brief A method that only works for Sersic, @returns the Sersic index `n`.
-        double getN() const { return n; }
     };
 
     /** 
@@ -1534,7 +1548,7 @@ namespace galsim {
      *
      * This is a special case of the Sersic profile, but is given a separate class since the 
      * Fourier transform has closed form and can be generated without lookup tables.
-     * The maxK() is set to where the FT is down to 0.001, or via `ALIAS_THRESHOLD`, whichever is 
+     * The maxK() is set to where the FT is down to 0.001, or via `alias_threshold`, whichever is 
      * harder.
      */
     class SBExponential : public SBProfile 
@@ -1606,7 +1620,7 @@ namespace galsim {
      * circular aperture), with central obscuration.
      *
      * maxK() is set at the hard limit for Airy disks, stepK() makes transforms go to at least 
-     * 5 lam/D or EE>(1-ALIAS_THRESHOLD).  Schroeder (10.1.18) gives limit of EE at large radius.
+     * 5 lam/D or EE>(1-alias_threshold).  Schroeder (10.1.18) gives limit of EE at large radius.
      * This stepK could probably be relaxed, it makes overly accurate FFTs.
      * Note x & y are in units of lambda/D here.  Integral over area will give unity in this 
      * normalization.
@@ -1623,9 +1637,7 @@ namespace galsim {
          * @param[in] obs   radius ratio of central obscuration (default `obs = 0.`).
          * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBAiry(double D=1., double obs=0., double flux=1.) :
-            _D(D), _obscuration(obs), _flux(flux), _norm(flux*D*D),
-            _sampler(0), _radial(_obscuration) {}
+        SBAiry(double D=1., double obs=0., double flux=1.);
 
         /// @brief Copy constructor: photon-shooting structures are not copied, will be
         /// re-computed in copy
@@ -1778,8 +1790,8 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        double maxK() const { return 2. / sbp::ALIAS_THRESHOLD / std::max(_xw,_yw); }  
-        double stepK() const { return M_PI/std::max(_xw,_yw)/2.; } 
+        double maxK() const;
+        double stepK() const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
         { xmin = -0.5*_xw;  xmax = 0.5*_xw; }
@@ -1791,7 +1803,8 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
-        void setFlux(double flux) { 
+        void setFlux(double flux) 
+        { 
             _flux = flux; 
             _norm = flux / (_xw*_yw);
         }
@@ -1983,9 +1996,8 @@ namespace galsim {
         double _rD_sq; ///< Calculated value: rD*rD;
         double _maxR_sq; ///< Calculated value: maxR * maxR
         double _maxK; ///< Maximum k with kValue > 1.e-3
-        mutable double _stepK; ///< Step K necessary to avoid folding
 
-        mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
+        Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
 
         double (*pow_beta)(double x, double beta);
 
