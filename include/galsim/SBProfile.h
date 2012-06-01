@@ -1546,8 +1546,6 @@ namespace galsim {
      *
      * This is a special case of the Sersic profile, but is given a separate class since the 
      * Fourier transform has closed form and can be generated without lookup tables.
-     * The maxK() is set to where the FT is down to 0.001, or via `alias_threshold`, whichever is 
-     * harder.
      */
     class SBExponential : public SBProfile 
     {
@@ -1906,7 +1904,7 @@ namespace galsim {
          *
          * @param[in] beta           Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
          * @param[in] truncationFWHM outer truncation in units of FWHM (default `truncationFWHM = 
-         * 2.`).  If truncationFWHM = 0, then no truncation is applied.
+         * 0.`).  If truncationFWHM = 0, then no truncation is applied.
          * @param[in] flux           Flux (default `flux = 1.`).
          * @param[in] size           Size specification (default `size = 1.`).
          * @param[in] rType          Kind of size being specified (default `HALF_LIGHT_RADIUS`).

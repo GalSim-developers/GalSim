@@ -1006,8 +1006,6 @@ def test_sbprofile_sbinterpolatedimage():
 
 
 if __name__ == "__main__":
-    test_sbprofile_rescale()
-
     test_sbprofile_gaussian()
     test_sbprofile_gaussian_properties()
     test_gaussian_radii()
