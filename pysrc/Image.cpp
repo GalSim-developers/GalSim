@@ -1,4 +1,6 @@
 
+#include "boost/python.hpp" // header that includes Python.h always needs to come first
+
 #ifdef __INTEL_COMPILER
 #pragma warning (disable : 47)
 #endif
@@ -8,8 +10,6 @@
 #ifdef __INTEL_COMPILER
 #pragma warning (default : 47)
 #endif
-
-#include "boost/python.hpp"
 
 #define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
 #define NO_IMPORT_ARRAY

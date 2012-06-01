@@ -8,8 +8,6 @@
  *
  * The SBProfiles include common star, galaxy, and PSF shapes.
  * If you have not defined USE_LAGUERRE, the SBLaguerre class will be skipped.
- * If you have not defined USE_IMAGES, all of the drawing routines are disabled but you will no 
- * longer be dependent on the Image and FITS classes.
  */
 
 #include <cmath>
@@ -18,28 +16,22 @@
 #include <vector>
 #include <algorithm>
 
-/**
- * Remove this to disable the drawing routines. Also removes dependencies on Image and FITS classes.
- */
-#define USE_IMAGES 
-
 #define USE_LAGUERRE ///< Remove this to skip the SBLaguerre classes.
 
 #include "Std.h"
 #include "Shear.h"
 #include "FFT.h"
 #include "Table.h"
+#include "Random.h"
 #include "Angle.h"
-
-#ifdef USE_IMAGES
 #include "Image.h"
-#endif
 
 #ifdef USE_LAGUERRE
 #include "Laguerre.h"
 #endif
 
-// ??? could += for SBAdd, or *= to SBConvolve
+#include "PhotonArray.h"
+
 // ??? Ask for super-Nyquist sampling factor in draw??
 namespace galsim {
 
@@ -77,7 +69,10 @@ namespace galsim {
         static const int MAXIMUM_FFT_SIZE;///< Constant giving maximum FFT size we're willing to do.
         /**
          * @brief A rough indicator of how good the FFTs need to be for setting `maxK()` and 
-         * `stepK()` values.
+         * `stepK()` values.  
+         *
+         *  Generic indicator of what level of error one is willing to tolerate from numerical approximations,
+         * such as aliasing, or necessary truncation / folding of functions that extend to infinity. 
          */
         static const double ALIAS_THRESHOLD;
 
@@ -120,7 +115,7 @@ namespace galsim {
         virtual double nyquistDx() const { return M_PI / maxK(); }
 
         /**
-         * @brief Sampling in k space necessary to avoid folding of image in x space.
+         * @brief Sampling in k space necessary to avoid folding too much of image in x space.
          *
          * (TODO: Ensure that derived classes get additional info as needed).
          */
@@ -207,9 +202,111 @@ namespace galsim {
          */
         virtual SBProfile* shift(double dx, double dy) const;
 
-#ifdef USE_IMAGES
-        // **** Drawing routines ****
+        /**
+         * @brief Shoot photons through this SBProfile.
+         *
+         * Returns an array of photon coordinates and fluxes that are drawn from the light
+         * distribution of this SBProfile.  Absolute value of each photons' flux should be
+         * approximately equal, but some photons can be negative as needed to represent negative
+         * regions.  Note that the ray-shooting method is not intended to produce a randomized value
+         * of the total object flux, so do not assume that there will be sqrt(N) error on the flux.
+         * In fact most implementations will return a PhotonArray with exactly correct flux, with
+         * only the *distribution* of flux on the sky that will definitely have sampling noise.
+         *
+         * The one definitive gaurantee is that, in the limit of large number of photons, the
+         * surface brightness distribution of the photons will converge on the SB pattern defined by
+         * the object.
+         *
+         * Objects with regions of negative flux will result in creation of photons with negative
+         * flux.  Absolute value of negative photons' flux should be nearly equal to the standard
+         * flux of positive photons.  Shot-noise fluctuations between the number of positive and
+         * negative photons will produce noise in the total net flux carried by the output
+         * [PhotonArray](@ref PhotonArray).
+         *
+         * The typical implementation will be to take the integral of the absolute value of flux,
+         * and divide it nearly equally into N photons.  The photons are then drawn from the
+         * distribution of the *absolute value* of flux.  If a photon is drawn from a region of
+         * negative flux, then that photon's flux is negated.  Because of cancellation, this means
+         * that each photon will carry more than `getFlux()/N` flux if there are negative-flux
+         * regions in the object.  It also means that during convolution, addition, or
+         * interpolation, positive- and negative-flux photons can be contributing to the same region
+         * of the image.  Their cancellation means that the shot noise may be substantially higher
+         * than you would expect if you had only positive-flux photons.
+         *
+         * The photon flux may also vary slightly as a means of speeding up photon-shooting, as an
+         * alternative to rejection sampling.  See `OneDimensionalDeviate` documentation.
+         *
+         * It should be rare to use this method or any `PhotonArray` in user code - the method
+         * `drawShoot()` will more typically put the results directly into an image.
+         *
+         * @param[in] N Total number of photons to produce.
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const=0;
 
+        /**
+         * @brief Return expectation value of flux in positive photons when shoot() is called
+         *
+         * Returns expectation value of flux returned in positive-valued photons when 
+         * [shoot()](@ref shoot)
+         * is called for this object.  Default implementation is to return getFlux(), if it is
+         * positive, or 0 otherwise, which will be
+         * the case when the SBProfile is constructed entirely from elements of the same sign.
+         *
+         * It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the same
+         * thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
+         * cases involving lookup tables, etc.
+         *
+         * @returns Expected positive-photon flux.
+         */
+        virtual double getPositiveFlux() const {return getFlux()>0. ? getFlux() : 0.;}
+
+        /**
+         * @brief Return expectation value of absolute value of flux in negative photons from shoot()
+         *
+         * Returns expectation value of (absolute value of) flux returned in negative-valued photons
+         * when shoot() is called for this object.  Default implementation is to return getFlux() if it
+         * is negative, 0 otherwise,
+         * which will be the case when the SBProfile is constructed entirely from elements that
+         * have the same sign.
+         *
+         * It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the
+         * same thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
+         * cases involving lookup tables, etc.
+         *
+         * @returns Expected absolute value of negative-photon flux.
+         */
+        virtual double getNegativeFlux() const {return getFlux()>0. ? 0. : -getFlux();}
+
+        // **** Drawing routines ****
+        //@{
+        /**
+         * @brief Draw this SBProfile into Image by shooting photons.
+         *
+         * The input image must have defined boundaries and pixel scale.  The photons generated by
+         * the shoot() method will be binned into the target Image.  See caveats in `shoot()`
+         * docstring.  Input `Image` will be cleared before drawing in the photons.  Scale and
+         * location of the `Image` pixels will not be altered.  Photons falling outside the `Image`
+         * range will be ignored.
+         *
+         * It is important to remember that the `Image` produced by `drawShoot` represents the
+         * `SBProfile` _as convolved with the square Image pixel._ So do not expect an exact match,
+         * even in the limit of large photon number, between the outputs of `draw` and `drawShoot`.
+         * You should convolve the `SBProfile` with an `SBBox(dx)` in order to match what will be
+         * produced by `drawShoot` onto an image with pixel scale `dx`.
+         *
+         * @param[in] img Image to draw on.
+         * @param[in] N Total number of photons to produce.
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         */
+        template <class T>
+        void drawShoot(ImageView<T> img, double N, UniformDeviate& ud) const;
+        template <class T>
+        void drawShoot(Image<T>& img, double N, UniformDeviate& ud) const {
+            drawShoot(img.view(), N, ud);
+        }
+        //@}
 
         /** 
          * @brief Draw an image of the SBProfile in real space.
@@ -426,7 +523,6 @@ namespace galsim {
         template <typename T>
         double fillXImage(ImageView<T>& image, double dx) const  // return flux integral
         { return doFillXImage(image, dx); }
-#endif
 
         /**
          * @brief Utility for drawing a k grid into FFT data structures - not intended for public 
@@ -440,7 +536,6 @@ namespace galsim {
          */
         virtual void fillXGrid(XTable& xt) const;
 
-#ifdef USE_IMAGES
         // Virtual functions cannot be templates, so to make fillXImage work like a virtual
         // function, we have it call these, which need to include all the types of Image
         // that we want to use.
@@ -456,7 +551,6 @@ namespace galsim {
         // implements this as a template:
         template <typename T>
         double doFillXImage2(ImageView<T>& image, double dx) const;
-#endif
     };
 
     /** 
@@ -578,7 +672,7 @@ namespace galsim {
          * @brief SBAdd specific method for adding additional SBProfiles
          *
          * @param[in] rhs SBProfile.
-         * @param[in] scale allows for rescaling flux by this factor.
+         * @param[in] scale allows for rescaling flux of the new summand by this factor.
          */
         void add(const SBProfile& rhs, double scale=1.);
 
@@ -602,6 +696,37 @@ namespace galsim {
 
         virtual double getFlux() const { return sumflux; }
         virtual void setFlux(double flux_=1.);
+
+        /**
+         * @brief Shoot photons through this SBAdd.
+         *
+         * SBAdd will divide the N photons among its summands with probabilities proportional to
+         * their integrated (absolute) fluxes.  Note that the order of photons in output array will
+         * not be random as different summands' outputs are simply concatenated.
+         * @param[in] N Total number of photons to produce.
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        /**
+         * @brief Give total positive flux of all summands
+         *
+         * Note that `getPositiveFlux()` return from SBAdd may not equal the integral of positive
+         * regions of the image, because summands could have positive and negative regions
+         * cancelling each other.  Rather it will be the sum of the `getPositiveFlux()` of all the
+         * images.
+         * @returns Total positive flux of all summands
+         */
+        virtual double getPositiveFlux() const;
+        /** @brief Give absolute value of total negative flux of all summands
+         *
+         * Note that `getNegativeFlux()` return from SBAdd may not equal the integral of negative
+         * regions of the image, because summands could have positive and negative regions
+         * cancelling each other. Rather it will be the sum of the `getNegativeFlux()` of all the
+         * images.
+         * @returns Absolute value of total negative flux of all summands
+         */
+        virtual double getNegativeFlux() const;
 
         // Overrides for better efficiency:
         virtual void fillKGrid(KTable& kt) const;
@@ -758,6 +883,21 @@ namespace galsim {
 
         double getFlux() const { return adaptee->getFlux()*absdet; }
         void setFlux(double flux_=1.) { adaptee->setFlux(flux_/absdet); }
+
+        double getPositiveFlux() const {return adaptee->getPositiveFlux()*absdet;}
+        double getNegativeFlux() const {return adaptee->getNegativeFlux()*absdet;}
+
+        /**
+         * @brief Shoot photons through this SBDistort.
+         *
+         * SBDistort will simply apply the affine distortion to coordinates of photons
+         * generated by its adaptee, and rescale the flux by the determinant of the distortion
+         * matrix.
+         * @param[in] N Total number of photons to produce.
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         void fillKGrid(KTable& kt) const; // optimized phase calculation
     };
@@ -922,9 +1062,26 @@ namespace galsim {
         double getFlux() const { return fluxScale * fluxProduct; }
         void setFlux(double flux_=1.) { fluxScale = flux_/fluxProduct; }
 
+        double getPositiveFlux() const;
+        double getNegativeFlux() const;
+        /**
+         * @brief Shoot photons through this SBConvolve.
+         *
+         * SBConvolve will add the displacements of photons generated by each convolved component.
+         * Their fluxes are multiplied (modulo factor of N).
+         * @param[in] N Total number of photons to produce.
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+
         // Overrides for better efficiency:
         virtual void fillKGrid(KTable& kt) const;
     };
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    // Below here are the concrete "atomic" SBProfile types
+    /////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Gaussian Surface Brightness Profile
@@ -972,6 +1129,19 @@ namespace galsim {
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
+        /**
+         * @brief Shoot photons through this SBGaussian.
+         *
+         * SBGaussian shoots photons by analytic transformation of the unit disk.  Slightly more
+         * than 2 uniform deviates are drawn per photon, with some analytic function calls (sqrt,
+         * etc.)
+         *
+         * @param[in] N Total number of photons to produce.
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+
         SBProfile* duplicate() const { return new SBGaussian(*this); }
     };
 
@@ -983,31 +1153,76 @@ namespace galsim {
      */
     class SBSersic : public SBProfile 
     {
+    public:
+        /** 
+         * @brief Subclass of `SBSersic` which provides the un-normalized radial function.
+         *
+         * Serves as interface to `OneDimensionalDeviate` used for sampling from this distribution.
+         */
+        class SersicRadialFunction: public FluxDensity {
+        public:
+            /**
+             * @brief Constructor
+             *
+             * @param[in] n  Sersic index
+             * @param[in] b  Factor which makes radius argument enclose half the flux.
+             */
+            SersicRadialFunction(double n, double b): _invn(1./n), _b(b) {}
+            /**
+             * @brief The un-normalized Sersic function
+             * @param[in] r radius, in units of half-light radius.
+             * @returns Sersic function, normalized to unity at origin
+             */
+            double operator()(double r) const {return std::exp(-_b*std::pow(r,_invn)); } 
+        private:
+            double _invn; ///> 1/n
+            double _b;  /// radial normalization constant
+        };
     private:
         /// @brief A private class that caches the needed parameters for each Sersic index `n`.
         class SersicInfo 
         {
         public:
             /** 
-             * @brief This class contains all the info needed to calculate values for a given 
-             * Sersic index `n`.
+             * @brief Constructor
+             * @param[in] n Sersic index
              */
             SersicInfo(double n); 
+            /// @brief Destructor: deletes photon-shooting classes if necessary
+            ~SersicInfo() {
+                if (_radialPtr) delete _radialPtr;
+                if (_sampler) delete _sampler;
+            }
             double inv2n;   ///< `1 / (2 * n)`
             double maxK;    ///< Value of k beyond which aliasing can be neglected.
             double stepK;   ///< Sampling in k space necessary to avoid folding of image in x space.
 
             /** 
-             * @brief Returns the real space value of the Sersic using the formula 
-             * `exp(-b*pow(xsq,inv2n))` (see private attributes).
+             * @brief Returns the real space value of the Sersic function, normalized to unit flux
+             * (see private attributes).
+             * @param[in] xsq The *square* of the radius, in units of half-light radius. Avoids 
+             * taking sqrt in most user code.
+             * @returns Value of Sersic function, normalized to unit flux.
              */
             double xValue(double xsq) const { return norm*std::exp(-b*std::pow(xsq,inv2n)); } 
 
             /// @brief Looks up the k value for the SBProfile from a lookup table.
             double kValue(double ksq) const;
 
+            /**
+             * @brief Shoot photons through unit-size, unnormalized profile
+             * Sersic profiles are sampled with a numerical method, using class
+             * `OneDimensionalDeviate`.
+             *
+             * @param[in] N Total number of photons to produce.
+             * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+             * @returns PhotonArray containing all the photons' info.
+             */
+            PhotonArray shoot(int N, UniformDeviate& ud) const;
+
         private:
-            SersicInfo(const SersicInfo& rhs) {} ///< Hides the copy constructor.
+            SersicInfo(const SersicInfo& rhs); ///< Hides the copy constructor.
+            void operator=(const SersicInfo& rhs); ///<Hide assignment operator.
 
             /** 
              * @brief Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`, calculated from Sersic 
@@ -1022,11 +1237,15 @@ namespace galsim {
             double logkMax; ///< Maximum log(k) in lookup table.
             double logkStep; ///< Stepsize in log(k) in lookup table.
             std::vector<double> lookup; ///< Lookup table.
+
+            SersicRadialFunction* _radialPtr;  ///< Function class used for photon shooting
+            OneDimensionalDeviate* _sampler;   ///< Class that does numerical photon shooting
         };
 
         /** 
          * @brief A map to hold one copy of the SersicInfo for each `n` ever used during the 
-         * program run.  Make one static copy of this map.
+         * program run.  Make one static copy of this map.  *Be careful of this when multithreading:*
+         * Should build one `SBSersic` with each `n` value before dispatching multiple threads.
          */
         class InfoBarn : public std::map<double, const SersicInfo*> 
         {
@@ -1064,7 +1283,7 @@ namespace galsim {
                 }
             }
         };
-        static InfoBarn nmap;
+        static InfoBarn nmap; ///> One static map of all `SersicInfo` structures for whole program.
 
         // Now the parameters of this instance of SBSersic:
         double n; ///< Sersic index.
@@ -1114,6 +1333,9 @@ namespace galsim {
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
+
+        /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBSersic(*this); }
 
@@ -1166,6 +1388,10 @@ namespace galsim {
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
 
+        /// @brief Exponential photon-shooting done with rapid iterative solution of inverse
+        /// cumulative distribution
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+
         SBProfile* duplicate() const { return new SBExponential(*this); }
     };
 
@@ -1192,19 +1418,37 @@ namespace galsim {
         double flux; ///< Flux.
 
     public:
-        /** Brief Constructor.
+        /**
+         * @brief Constructor.
          *
-         * @param[in] D_    `D` = (telescope diam) / (lambda * focal length) if arg is focal plane 
-         *                  position, else `D` = (telescope diam) / lambda if arg is in radians of 
-         *                  field angle (default `D_ = 1.`).
-         * @param[in] obs_  radius ratio of central obscuration (default `obs_ = 0.`).
-         * @param[in] flux_ flux (default `flux_ = 1.`).
+         * @param[in] D_            `D` = (telescope diam) / (lambda * focal length) if arg is focal
+         *                          plane position, else `D` = (telescope diam) / lambda if arg is 
+         *                          in radians of field angle (default `D_ = 1.`).
+         * @param[in] obscuration_  dimension of central obscuration as fraction of pupil dimension,
+         *                          in range [0., 1.) (default `obscuration_ = 0.`).
+         * @param[in] flux_         flux (default `flux_ = 1.`).
          */
-        SBAiry(double D_=1., double obs_=0., double flux_=1.) :
-            D(D_), obscuration(obs_), flux(flux_) {}
+        SBAiry(double D_=1., double obscuration_=0., double flux_=1.) :
+            D(D_), obscuration(obscuration_), flux(flux_), _sampler(0), _radial(obscuration) {}
 
+        /// @brief Copy constructor: photon-shooting structures are not copied, will be re-computed
+        /// in copy
+        SBAiry(const SBAiry& rhs): D(rhs.D), obscuration(rhs.obscuration), flux(rhs.flux),
+                                   _sampler(0), _radial(obscuration) {}
+
+        /// @brief Assignment operator: photon-shooting structures are discarded, will be
+        /// re-computed in copy
+        const SBAiry& operator=(const SBAiry& rhs) {
+            D = rhs.D;
+            obscuration = rhs.obscuration;
+            flux = rhs.flux;
+            _radial.setObscuration(obscuration);
+            flushSampler();
+            return *this;
+        }
+            
         /// @brief Destructor.
-        ~SBAiry() {}
+        ~SBAiry() {flushSampler();}
 
         // Methods (Barney: mostly described by SBProfile Doxys, with maxK() and stepK() 
         // prescription described in class description).
@@ -1231,11 +1475,49 @@ namespace galsim {
         { Position<double> p(0., 0.); return p; }
 
         double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; }
+        void setFlux(double flux_=1.) {flux=flux_; } 
+
+        /**
+         * @brief Subclass is a scale-free version of the Airy radial function.
+         *
+         * Serves as interface to numerical photon-shooting class `OneDimensionalDeviate`.
+         *
+         * Input radius is in units of lambda/D.  Output normalized
+         * to integrate to unity over input units.
+         */
+        class AiryRadialFunction: public FluxDensity {
+        public:
+            /**
+             * @brief Constructor
+             * @param[in] obscuration Fractional linear size of central obscuration of pupil.
+             */
+            AiryRadialFunction(double obscuration): _obscuration(obscuration) {}
+            /**
+             * @brief Return the Airy function
+             * @param[in] radius Radius in units of (lambda / D)
+             * @returns Airy function, normalized to integrate to unity.
+             */
+            double operator()(double radius) const;
+            void setObscuration(double obscuration) {_obscuration=obscuration;}
+        private:
+            double _obscuration; ///> Central obstruction size
+        };
+
+        /**
+         * @brief Airy photon-shooting is done numerically with `OneDimensionalDeviate` class.
+         *
+         * @param[in] N Total number of photons to produce.
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBAiry(*this); }
 
     private: 
+        mutable OneDimensionalDeviate* _sampler; ///< Class that can sample radial distribution
+        AiryRadialFunction _radial;  ///< Class that embodies the radial Airy function.
+
         double chord(const double r, const double h) const; ///< Circle chord length at `h < r`.
 
         /// @brief Area inside intersection of 2 circles radii `r` & `s`, seperated by `t`.
@@ -1250,6 +1532,10 @@ namespace galsim {
          * of two annuli.  Normalized to unity at `k=0` for now.
          */
         double annuli_autocorrelation(const double k) const; 
+
+        void checkSampler() const; ///< Check `OneDimensionalDeviate` for photon shooting configured
+        void flushSampler() const; ///< Discard the photon-shooting sampler class.
+
     };
 
     /** 
@@ -1293,8 +1579,8 @@ namespace galsim {
         bool isAxisymmetric() const { return false; } 
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
-
-        double maxK() const { return 2. / ALIAS_THRESHOLD / std::max(xw,yw); }  
+ 
+        double maxK() const { return 2. / ALIAS_THRESHOLD / std::max(xw,yw); }
         double stepK() const { return M_PI/std::max(xw,yw)/2; } 
 
         Position<double> centroid() const 
@@ -1302,6 +1588,9 @@ namespace galsim {
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
+
+        /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBBox(*this); }
 
@@ -1312,7 +1601,6 @@ namespace galsim {
         double fillXImage(ImageView<T>& I, double dx) const;
 
     protected:
-#ifdef USE_IMAGES
         virtual double doFillXImage(ImageView<float>& I, double dx) const
         { return fillXImage(I,dx); }
         virtual double doFillXImage(ImageView<double>& I, double dx) const
@@ -1321,7 +1609,6 @@ namespace galsim {
         { return fillXImage(I,dx); }
         virtual double doFillXImage(ImageView<int>& I, double dx) const
         { return fillXImage(I,dx); }
-#endif
 
     };
 
@@ -1368,6 +1655,11 @@ namespace galsim {
         double getFlux() const;
         void setFlux(double flux_=1.);
 
+        /// @brief Photon-shooting is not implemented for SBLaguerre, will throw an exception.
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const {
+            throw SBError("SBLaguerre::shoot() is not implemented");
+        }
+
         // void fillKGrid(KTable& kt) const;
         // void fillXGrid(XTable& xt) const;
 
@@ -1391,6 +1683,7 @@ namespace galsim {
         double stepKrD; ///< Stepsize lookup table `k` in units of `rD`.
         double FWHMrD;  ///< Full Width at Half Maximum in units of `rD`.
         double rerD;    ///< Half-light radius in units of `rD`.
+        double fluxFactor; ///< Integral of unnormalized flux
 
         Table<double,double> ft;  ///< Lookup table for Fourier transform of Moffat.
 
@@ -1443,6 +1736,13 @@ namespace galsim {
 
         double getFlux() const { return flux; }
         void setFlux(double flux_=1.) { flux=flux_; }
+
+        /**
+         * @brief Moffat photon shooting is done by analytic inversion of cumulative flux distribution.
+         *
+         * Will require 2 uniform deviates per photon, plus analytic function (pow and sqrt)
+         */
+        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBMoffat(*this); }
 

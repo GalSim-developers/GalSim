@@ -1,7 +1,21 @@
 #!/usr/bin/env python
 """
-A script that can be run from the command-line to check the properties of images, parallel to
-MeasMoments as compiled from the .cpp
+This script can be run from the command-line to check the properties of images, in particular, the
+adaptive moments that come from iteratively determining the best-fit Gaussian for the object at the
+center of an image.
+
+It takes arguments from the command line, i.e.
+MeasMoments.py image_file [guess_sigma sky_level]
+where the ones in brackets are optional:
+image_file: A file containing an image for which the moments should be measured
+[guess_sigma]: An initial guess for the Gaussian sigma of the image
+[sky_level]: If the image contains a non-zero sky level, it must be specified
+
+Results will be printed to stdout:
+Status (0 = success), Mxx, Myy, Mxy, e1, e2, number of iterations, total flux in best-fit elliptical
+Gaussian, x centroid, y centroid
+
+Here we use the e1 = (Mxx - Myy)/(Mxx + Myy) and e2 = 2*Mxy/(Mxx + Mxy) definition of ellipticity.
 """
 
 import sys
@@ -17,16 +31,10 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-# We want to take arguments from the command-line, i.e.
-# MeasMoments.py image_file [guess_sigma sky_level]
-# where the ones in brackets are optional.  This will make the behavior nearly parallel to the
-# executable from the C++, so those who are used to its behavior can simply replace it with a call
-# to this python script.
-
-numArg = len(sys.argv)-1 # first entry in sys.argv is the name of the script
+# properly handle command-line arguments
+numArg = len(sys.argv)-1
 if (numArg < 1 or numArg > 3):
     raise RuntimeError("Wrong number of command-line arguments: should be in the range 1...3!")
-
 image_file = sys.argv[1]
 guess_sigma = 5.0
 sky_level = 0.0
@@ -35,10 +43,15 @@ if (numArg >= 2):
 if (numArg == 3):
     sky_level = float(sys.argv[3])
 
+# read in image
 image = galsim.fits.read(image_file)
 if sky_level > 0.:
     image -= sky_level
+
+# measure adaptive moments
 result = galsim.FindAdaptiveMom(image, guess_sig = guess_sigma)
+
+# manipulate results to get moments
 e1_val = result.observed_shape.getE1()
 e2_val = result.observed_shape.getE2()
 a_val = (1.0 + e1_val) / (1.0 - e1_val)
@@ -47,6 +60,7 @@ mxx = a_val * (result.moments_sigma**2) / b_val
 myy = (result.moments_sigma**2) / b_val
 mxy = 0.5 * e2_val * (mxx + myy)
 
+# output results
 print '%d   %12.6f   %12.6f   %12.6f   %12.6f   %12.6f   %03d    %12.6f   %12.6f %12.6f' % \
         (result.moments_status, mxx, myy, mxy, e1_val, e2_val, result.moments_n_iter,
          result.moments_amp, result.moments_centroid.x-result.image_bounds.getXMin(),

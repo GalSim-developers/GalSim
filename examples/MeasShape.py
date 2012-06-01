@@ -1,7 +1,26 @@
 #!/usr/bin/env python
 """
-A script that can be run from the command-line to carry out PSF correction on images, parallel to
-MeasShape as compiled from the .cpp
+This script can be run from the command-line to carry out PSF correction on images, parallel to
+MeasMoments.py
+
+It takes arguments from the command line, i.e.
+MeasShape.py gal_image_file PSF_image_file [sky_var shear_estimator sky_level sky_level_PSF]
+where the ones in brackets are optional:
+gal_image_file: A file containing a PSF-convolved galaxy image
+PSF_image_file: A file containing the PSF image
+[sky_var]: An optional estimate for the sky variance in the image (only necessary if you want an
+           estimate of the error on the PSF-corrected shapes).
+[shear_estimator]: The shear estimator to use, either REGAUSS, LINEAR, BJ, or KSB (default: REGAUSS) 
+[sky_level]: If the image contains a non-zero sky level, it must be specified
+[sky_level_PSF]: If the PSF image contains a non-zero sky level, it must be specified
+
+Results will be printed to stdout:
+Status (0 = success), PSF-corrected e1, e2, measurement type ('e' = ellipticity, 'g' = shear),
+resolution factor, sigma_e, Gaussian sigma of the observed galaxy in pixels, total flux in the best-fit
+elliptical Gaussian
+
+Here we use the e1 = (Mxx - Myy)/(Mxx + Myy) and e2 = 2*Mxy/(Mxx + Mxy) definition of ellipticity.
+
 """
 
 import sys
@@ -16,17 +35,10 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-# We want to take arguments from the command-line, i.e.
-# MeasShape.py gal_image_file PSF_image_file [sky_var shear_estimator sky_level]
-# where the ones in brackets are optional.  This will make the behavior nearly parallel to the
-# executable from the C++, so those who are used to its behavior can simply replace it with a call
-# to this python script.
-
-numArg = len(sys.argv)-1 # first entry in sys.argv is the name of the script
+# process arguments
+numArg = len(sys.argv)-1
 if (numArg < 2 or numArg > 6):
     raise RuntimeError("Wrong number of command-line arguments: should be in the range 2...6!")
-
-# process args
 gal_image_file = sys.argv[1]
 PSF_image_file = sys.argv[2]
 sky_var = 0.0

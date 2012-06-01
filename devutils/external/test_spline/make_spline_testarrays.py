@@ -22,8 +22,8 @@ LAM_OVER_D = 5.
 # ...and the updated OpticalPSF code from commit:
 # 6925d74efa8bbec8f2d8de0cdeda58a926a6ade2
 #
-# Revert to the commit one after this commit (where this function is added) and `scons -c`,
-# `scons` to re-run this script.
+# Revert to the commit one after this commit (6c077855db16a07486d3753f2d7aec825e5e6414) and 
+# `scons -c`, then `scons` to rebuild using old NR splines before re-running this script.
 
 # Some arbitrary kx, ky k space values to test
 kxvals = np.array((1.3, 0.71, -4.3)) * np.pi / 2.
