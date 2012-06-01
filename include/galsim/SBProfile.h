@@ -7,7 +7,6 @@
  * Profiles.
  *
  * The SBProfiles include common star, galaxy, and PSF shapes.
- * If you have not defined USE_LAGUERRE, the SBLaguerre class will be skipped.
  */
 
 #include <cmath>
@@ -15,8 +14,6 @@
 #include <map>
 #include <vector>
 #include <algorithm>
-
-#define USE_LAGUERRE ///< Remove this to skip the SBLaguerre classes.
 
 #include "Std.h"
 #include "Shear.h"
@@ -28,9 +25,7 @@
 
 #include "Image.h"
 
-#ifdef USE_LAGUERRE
 #include "Laguerre.h"
-#endif
 
 #include "PhotonArray.h"
 
@@ -1846,26 +1841,22 @@ namespace galsim {
 
     };
 
-#ifdef USE_LAGUERRE
     /// @brief Class for describing Gauss-Laguerre polynomial Surface Brightness Profiles.
     class SBLaguerre : public SBProfile 
     {
-    private:
-        LVector bvec;  ///< `bvec[n,n]` contains flux information for the `(n, n)` basis function.
-        double sigma;  ///< Scale size of Gauss-Laguerre basis set.
     public:
         /** 
          * @brief Constructor.
          *
-         * @param[in] bvec_  `bvec[n,n]` contains flux information for the `(n, n)` basis function.
-         * @param[in] sigma_ scale size of Gauss-Laguerre basis set (default `sigma_ = 1.`).
+         * @param[in] bvec   `bvec[n,n]` contains flux information for the `(n, n)` basis function.
+         * @param[in] sigma  scale size of Gauss-Laguerre basis set (default `sigma = 1.`).
          */
-        SBLaguerre(LVector bvec_=LVector(), double sigma_=1.) : 
-            bvec(bvec_.duplicate()), sigma(sigma_) {}
+        SBLaguerre(LVector bvec=LVector(), double sigma=1.) : 
+            _bvec(bvec.duplicate()), _sigma(sigma) {}
 
         /// @brief Copy Constructor. 
         SBLaguerre(const SBLaguerre& rhs) :
-            bvec(rhs.bvec.duplicate()), sigma(rhs.sigma) {}
+            _bvec(rhs._bvec.duplicate()), _sigma(rhs._sigma) {}
 
         /// @brief Destructor. 
         ~SBLaguerre() {}
@@ -1898,8 +1889,10 @@ namespace galsim {
         // void fillKGrid(KTable& kt) const;
         // void fillXGrid(XTable& xt) const;
 
+    private:
+        LVector _bvec;  ///< `bvec[n,n]` contains flux information for the `(n, n)` basis function.
+        double _sigma;  ///< Scale size of Gauss-Laguerre basis set.
     };
-#endif
 
     /**
      * @brief Surface Brightness for the Moffat Profile (an approximate description of ground-based

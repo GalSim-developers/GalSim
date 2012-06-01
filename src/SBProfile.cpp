@@ -1861,7 +1861,6 @@ namespace galsim {
 #endif
     }
 
-#ifdef USE_LAGUERRE
     //
     // SBLaguerre Class
     //
@@ -1870,34 +1869,34 @@ namespace galsim {
     double SBLaguerre::maxK() const 
     {
         // Start with value for plain old Gaussian:
-        double m=std::max(4., std::sqrt(-2.*std::log(sbp::alias_threshold))) / sigma;
+        double maxk = sqrt(-2.*std::log(sbp::maxk_threshold))/_sigma; 
         // Grow as sqrt of order
-        if (bvec.getOrder()>1) m *= std::sqrt(bvec.getOrder()/1.);
-        return m;
+        if (_bvec.getOrder() > 1) maxk *= std::sqrt(double(_bvec.getOrder()));
+        return maxk;
     }
 
     double SBLaguerre::stepK() const 
     {
         // Start with value for plain old Gaussian:
-        double m= M_PI/std::max(4., std::sqrt(-2.*std::log(sbp::alias_threshold))) / sigma;
-        // Shrink as sqrt of order
-        if (bvec.getOrder()>1) m /= std::sqrt(bvec.getOrder()/1.);
-        return m;
+        double R = std::max(4., sqrt(-2.*std::log(sbp::alias_threshold)));
+        // Grow as sqrt of order
+        if (_bvec.getOrder() > 1) R *= std::sqrt(double(_bvec.getOrder()));
+        return M_PI / (R*_sigma);
     }
 
     double SBLaguerre::xValue(const Position<double>& p) const 
     {
-        LVector psi(bvec.getOrder());
-        psi.fillBasis(p.x/sigma, p.y/sigma, sigma);
-        double xval = bvec.dot(psi);
+        LVector psi(_bvec.getOrder());
+        psi.fillBasis(p.x/_sigma, p.y/_sigma, _sigma);
+        double xval = _bvec.dot(psi);
         return xval;
     }
 
     std::complex<double> SBLaguerre::kValue(const Position<double>& k) const 
     {
-        int N=bvec.getOrder();
+        int N=_bvec.getOrder();
         LVector psi(N);
-        psi.fillBasis(k.x*sigma, k.y*sigma);  // Fourier[Psi_pq] is unitless
+        psi.fillBasis(k.x*_sigma, k.y*_sigma);  // Fourier[Psi_pq] is unitless
         // rotate kvalues of Psi with i^(p+q)
         // dotting b_pq with psi in k-space:
         double rr=0.;
@@ -1905,7 +1904,7 @@ namespace galsim {
         {
             for (PQIndex pq(0,0); !pq.pastOrder(N); pq.nextDistinct()) {
                 int j = pq.rIndex();
-                double x = bvec[j]*psi[j] + (pq.isReal() ? 0 : bvec[j+1]*psi[j+1]);
+                double x = _bvec[j]*psi[j] + (pq.isReal() ? 0 : _bvec[j+1]*psi[j+1]);
                 switch (pq.N() % 4) {
                   case 0: 
                        rr += x;
@@ -1929,8 +1928,8 @@ namespace galsim {
     double SBLaguerre::getFlux() const 
     {
         double flux=0.;
-        for (PQIndex pp(0,0); !pp.pastOrder(bvec.getOrder()); pp.incN())
-            flux += bvec[pp].real();  // bvec[pp] is real, but need type conv.
+        for (PQIndex pp(0,0); !pp.pastOrder(_bvec.getOrder()); pp.incN())
+            flux += _bvec[pp].real();  // _bvec[pp] is real, but need type conv.
         return flux;
     }
 
@@ -1938,10 +1937,9 @@ namespace galsim {
     {
         double newflux=flux;
         if (getFlux()!=0.) newflux /= getFlux();
-        bvec.rVector() *= newflux;
+        _bvec.rVector() *= newflux;
     }
 
-#endif
 
     // SBSersic Class 
     // First need to define the static member that holds info on all the Sersic n's
