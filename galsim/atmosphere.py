@@ -26,7 +26,8 @@ def atmospheric_mtf(array_shape=(256, 256), dx=1., lam_over_r0=1.):
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_r0     lambda / r0 in the physical units adopted for dx (user responsible for 
-                           consistency). r0 is the Fried parameter.
+                           consistency). r0 is the Fried parameter. Typical values for the 
+                           Fried parameter are on the order of 10 cm for most observatories.
     """
     # This is based on the ALIAS_THRESHOLD 0.005 in src/SBProfile.cpp and galsim/base.py
     kmax_internal = 1.2954 / lam_over_r0 * dx
@@ -43,7 +44,8 @@ def atmospheric_mtf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_r0     lambda / r0 in the physical units adopted for dx (user responsible for 
-                           consistency). r0 is the Fried parameter.
+                           consistency). r0 is the Fried parameter. Typical values for the 
+                           Fried parameter are on the order of 10 cm for most observatories.
     """
     amtf = atmospheric_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
     return galsim.ImageViewD(amtf.astype(np.float64))
@@ -56,7 +58,8 @@ def psf(array_shape=(256,256), dx=1., lam_over_r0=1.):
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_r0     lambda / r0 in the physical units adopted for dx (user responsible for 
-                           consistency). r0 is the Fried parameter.
+                           consistency). r0 is the Fried parameter. Typical values for the 
+                           Fried parameter are on the order of 10 cm for most observatories.
     """
 
     amtf = atmospheric_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
@@ -72,7 +75,8 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_r0     lambda / r0 in the physical units adopted for dx (user responsible for 
-                           consistency). r0 is the Fried parameter.
+                           consistency). r0 is the Fried parameter. Typical values for the 
+                           Fried parameter are on the order of 10 cm for most observatories.
     """
     array = psf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
     return galsim.ImageViewD(array.astype(np.float64))

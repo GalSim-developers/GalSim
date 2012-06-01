@@ -399,7 +399,8 @@ class AtmosphericPSF(GSObject):
     Initialized atmospheric_psf as a galsim.AtmosphericPSF() instance.
 
     @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
-                           consistency), where r0 is the Fried parameter.
+                           consistency), where r0 is the Fried parameter. Typical values for the 
+                           Fried parameter are on the order of 10 cm for most observatories.
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
                            [default = 1.5], setting oversampling < 1 will produce aliasing in the 
                            PSF (not good).
@@ -413,7 +414,6 @@ class AtmosphericPSF(GSObject):
         # Odd array to center the interpolant on the centroid. Might want to pad this later to
         # make a nice size array for FFT, but for typical seeing, arrays will be very small.
         npix = 1 + 2 * (np.ceil(np.pi / stepk_kolmogorov)).astype(int)
-        print npix
         atmoimage = galsim.atmosphere.psf_image(array_shape=(npix, npix), dx=dx_lookup, 
                                                 lam_over_r0=lam_over_r0)
         if interpolantxy == None:
