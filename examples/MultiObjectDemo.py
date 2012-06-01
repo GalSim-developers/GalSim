@@ -400,7 +400,7 @@ def Script2():
         #im = final.draw(dx=pixel_scale)  # It makes these as 768 x 768 images.  A bit big.
         im = galsim.ImageF(image_xmax, image_ymax)
         final.draw(im, dx=pixel_scale)
-        xsize, ysize = sim_image.array.shape
+        xsize, ysize = im.array.shape
         #logger.info('   Drew image: size = %d x %d',xsize,ysize)
         t5 = time.time()
 
@@ -417,7 +417,7 @@ def Script2():
 
         # increment the row of the catalog that we should use for the next iteration
         input_cat.current += 1
-        #logger.info('   Times: %f, %f, %f, %f, %f, %f',t2-t1,t3-t2,t4-t3,t5-t4,t6-t5,t7-t6)
+        #logger.info('   Times: %f, %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5, t7-t6)
         logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t7-t1)
 
     logger.info('Done making images of galaxies')
@@ -505,8 +505,15 @@ def Script3():
         #logger.info('   Read in training sample galaxy and PSF from file')
         t2 = time.time()
 
+        # Could skip this next line and just let simReal choose the size of the image
+        # automatically, but then some images come back as 128x128, and some as 192x192.
+        # This is fine, except that you can't then store the images in a data cube,
+        # since that requires all images to be the same size.  (The multi-extension fits
+        # file would still work just fine of course.)
+        sim_image = galsim.ImageF(128,128)
         sim_image = galsim.simReal(gal, epsf, pixel_scale, g1 = gal_g1, g2 = gal_g2,
-                                   uniform_deviate = rng, target_flux = gal_flux)
+                                   uniform_deviate = rng, target_flux = gal_flux,
+                                   image=sim_image)
         #logger.info('   Made image of galaxy after deconvolution, rotation, shearing, ')
         #logger.info('      convolving with target PSF, and resampling')
         xsize, ysize = sim_image.array.shape
@@ -524,7 +531,7 @@ def Script3():
         all_images += [sim_image]
         t5 = time.time()
 
-        logger.info('   Times: %f, %f, %f, %f',t2-t1,t3-t2,t4-t3,t5-t4)
+        logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
         logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t5-t1)
 
     logger.info('Done making images of galaxies')

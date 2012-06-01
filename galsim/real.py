@@ -53,7 +53,8 @@ class RealGalaxyCatalog:
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rotation_angle = None, 
-            rand_rotate = True, uniform_deviate = None, target_flux = 1000.0):
+            rand_rotate = True, uniform_deviate = None, target_flux = 1000.0,
+            image=None):
     """@brief Function to simulate images (no added noise) from real galaxy training data.
 
     This function takes a RealGalaxy from some training set, and manipulates it as needed to
@@ -80,6 +81,9 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     @param uniform_deviate     Uniform RNG to use for selection of the random rotation angle
                                (optional).
     @param target_flux         The target flux in the output galaxy image, default 1000.
+    @param image               As with the GSObject.draw function, if an image is provided,
+                               then it will be used and returned.
+                               If image=None, then an appropriately sized image will be created.
     """
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
@@ -134,8 +138,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
         sheared = real_galaxy.SBProfile
 
     # convolve, resample
-    out_gal = galsim.SBConvolve([sheared, target_PSF])
-    out_gal_image = out_gal.draw(dx = target_pixel_scale)
+    out_gal = galsim.Convolve([galsim.GSObject(sheared), galsim.GSObject(target_PSF)])
+    image = out_gal.draw(image=image, dx = target_pixel_scale)
 
     # return simulated image
-    return out_gal_image
+    return image
