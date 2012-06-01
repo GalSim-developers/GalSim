@@ -1738,8 +1738,8 @@ namespace galsim {
     // most alias_threshold of the flux.
     double SBBox::stepK() const
     {
-        // In this case sqrt(xw^2 + yw^2) encloses all the flux, so use that.
-        return M_PI / hypot(_xw,_yw);
+        // In this case max(xw,yw) encloses all the flux, so use that.
+        return M_PI / std::max(_xw,_yw);
     }
 
     // Override fillXGrid so we can partially fill pixels at edge of box.

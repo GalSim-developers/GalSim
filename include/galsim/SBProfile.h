@@ -773,11 +773,11 @@ namespace galsim {
         bool isAnalyticX() const { return _allAnalyticX; }
         bool isAnalyticK() const { return _allAnalyticK; }
 
-        virtual Position<double> centroid() const 
+        Position<double> centroid() const 
         { return Position<double>(_sumfx / _sumflux, _sumfy / _sumflux); }
 
-        virtual double getFlux() const { return _sumflux; }
-        virtual void setFlux(double flux);
+        double getFlux() const { return _sumflux; }
+        void setFlux(double flux);
 
         /**
          * @brief Shoot photons through this SBAdd.
@@ -789,7 +789,8 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
+
         /**
          * @brief Give total positive flux of all summands
          *
@@ -799,7 +800,8 @@ namespace galsim {
          * images.
          * @returns Total positive flux of all summands
          */
-        virtual double getPositiveFlux() const;
+        double getPositiveFlux() const;
+
         /** @brief Give absolute value of total negative flux of all summands
          *
          * Note that `getNegativeFlux()` return from SBAdd may not equal the integral of negative
@@ -808,12 +810,12 @@ namespace galsim {
          * images.
          * @returns Absolute value of total negative flux of all summands
          */
-        virtual double getNegativeFlux() const;
+        double getNegativeFlux() const;
 
     protected:
         // Overrides for better efficiency:
-        virtual void fillKGrid(KTable& kt) const;
-        virtual void fillXGrid(XTable& xt) const;
+        void fillKGrid(KTable& kt) const;
+        void fillXGrid(XTable& xt) const;
 
     private:
         typedef std::list<SBProfile*>::iterator Iter;
@@ -941,7 +943,7 @@ namespace galsim {
         Position<double> centroid() const { return _cen+fwd(_adaptee->centroid()); }
 
         double getFlux() const { return _adaptee->getFlux()*_absdet; }
-        void setFlux(double flux_) { _adaptee->setFlux(flux_/_absdet); }
+        void setFlux(double flux) { _adaptee->setFlux(flux/_absdet); }
 
         double getPositiveFlux() const { return _adaptee->getPositiveFlux()*_absdet; }
         double getNegativeFlux() const { return _adaptee->getNegativeFlux()*_absdet; }
@@ -956,9 +958,11 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
-        void fillKGrid(KTable& kt) const; // optimized phase calculation
+    protected:
+        // Override for better efficiency:
+        void fillKGrid(KTable& kt) const; 
     
     private:
         SBProfile* _adaptee; ///< SBProfile being adapted/distorted
@@ -1220,11 +1224,11 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
     protected:
         // Override for better efficiency:
-        virtual void fillKGrid(KTable& kt) const;
+        void fillKGrid(KTable& kt) const;
 
     private:
         typedef std::list<SBProfile*>::iterator Iter;
@@ -1304,7 +1308,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBGaussian(*this); }
 
@@ -1377,7 +1381,7 @@ namespace galsim {
         }
 
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBSersic(*this); }
 
@@ -1385,7 +1389,6 @@ namespace galsim {
         double getN() const { return _n; }
 
     private:
-
         double _n; ///< Sersic index.
         double _flux; ///< Flux.
         double _re;   ///< Half-light radius.
@@ -1597,7 +1600,7 @@ namespace galsim {
 
         /// @brief Exponential photon-shooting done with rapid iterative solution of inverse
         /// cumulative distribution
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBExponential(*this); }
 
@@ -1685,7 +1688,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBAiry(*this); }
 
@@ -1805,26 +1808,26 @@ namespace galsim {
         }
 
         /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBBox(*this); }
 
     protected:
+        // Override for better efficiency:
+        void fillKGrid(KTable& kt) const;
         // Override to put in fractional edge values:
         void fillXGrid(XTable& xt) const;
-        // Override for efficiency:
-        void fillKGrid(KTable& kt) const;
 
         template <typename T>
         double fillXImage(ImageView<T>& I, double dx) const;
 
-        virtual double doFillXImage(ImageView<float>& I, double dx) const
+        double doFillXImage(ImageView<float>& I, double dx) const
         { return fillXImage(I,dx); }
-        virtual double doFillXImage(ImageView<double>& I, double dx) const
+        double doFillXImage(ImageView<double>& I, double dx) const
         { return fillXImage(I,dx); }
-        virtual double doFillXImage(ImageView<short>& I, double dx) const
+        double doFillXImage(ImageView<short>& I, double dx) const
         { return fillXImage(I,dx); }
-        virtual double doFillXImage(ImageView<int>& I, double dx) const
+        double doFillXImage(ImageView<int>& I, double dx) const
         { return fillXImage(I,dx); }
 
     private:
@@ -1838,7 +1841,6 @@ namespace galsim {
          * @param[in] u Normalized wavenumber.
          */
         double sinc(const double u) const; 
-
     };
 
     /// @brief Class for describing Gauss-Laguerre polynomial Surface Brightness Profiles.
@@ -1878,12 +1880,11 @@ namespace galsim {
         { throw SBError("SBLaguerre::centroid calculations not yet implemented"); }
 
         double getFlux() const;
-        void setFlux(double flux_);
+        void setFlux(double flux);
 
         /// @brief Photon-shooting is not implemented for SBLaguerre, will throw an exception.
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const {
-            throw SBError("SBLaguerre::shoot() is not implemented");
-        }
+        PhotonArray shoot(int N, UniformDeviate& ud) const 
+        { throw SBError("SBLaguerre::shoot() is not implemented"); }
 
     protected:
         // void fillKGrid(KTable& kt) const;
@@ -1965,7 +1966,7 @@ namespace galsim {
          *
          * Will require 2 uniform deviates per photon, plus analytic function (pow and sqrt)
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBMoffat(*this); }
 
@@ -1975,8 +1976,8 @@ namespace galsim {
         double getBeta() const { return _beta; }
 
     protected:
-        //void fillXGrid(KTable& kt) const;
         //void fillKGrid(KTable& kt) const;
+        //void fillXGrid(XTable& xt) const;
 
     private:
         double _beta; ///< Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.

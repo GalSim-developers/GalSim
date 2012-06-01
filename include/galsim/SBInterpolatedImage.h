@@ -13,6 +13,15 @@
 
 namespace galsim {
 
+    namespace sbp {
+
+        // Magic numbers:
+        
+        /// FT must be at least this much larger than input
+        const double oversample_x = 4.;
+
+    }
+
     /** 
      * @brief Surface Brightness Profile represented by interpolation over one or more data 
      * tables/images.
@@ -33,20 +42,20 @@ namespace galsim {
          * @brief Initialize internal quantities and allocate data tables.
          *
          * @param[in] Npix      extent of square image is `Npix` x `Npix`.
-         * @param[in] dx_       stepsize between pixels in image data table.
+         * @param[in] dx        stepsize between pixels in image data table.
          * @param[in] i         interpolation scheme to adopt between pixels 
          *                      (TODO: Add more, document Interpolant.h, describe the Interpolant2d 
          *                      class).
          * @param[in] Nimages_ number of images.
          */
-        SBInterpolatedImage(int Npix, double dx_, const Interpolant2d& i, int Nimages_=1);
+        SBInterpolatedImage(int Npix, double dx, const Interpolant2d& i, int Nimages=1);
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
          * image.
          *
          * @param[in] img       square input Image (any of ImageF, ImageD, ImageS, ImageI).
-         * @param[in] dx_       stepsize between pixels in image data table (default value of 
+         * @param[in] dx        stepsize between pixels in image data table (default value of 
          *                      `x0_ = 0.` checks the Image header for a suitable stepsize, sets 
          *                      to `1.` if none is found). 
          * @param[in] i         interpolation scheme to adopt between pixels (TODO: Add more, 
@@ -58,7 +67,7 @@ namespace galsim {
          */
         template <typename T> 
         SBInterpolatedImage(const BaseImage<T>& img, const Interpolant2d& i,
-                            double dx_=0., double padFactor=0.);
+                            double dx=0., double padFactor=0.);
 
         /** 
          * @brief Copy Constructor.
@@ -74,15 +83,10 @@ namespace galsim {
 
         // These are all the base class members that must be implemented:
         double xValue(const Position<double>& p) const;
-
         std::complex<double> kValue(const Position<double>& p) const;
 
-        // Notice that interpolant other than sinc may make max frequency higher than
-        // the Nyquist frequency of the initial image
-        double maxK() const { return xInterp->urange() * 2.*M_PI / dx; }
-
-        // Require output FTs to be period on scale > original image extent + kernel footprint:
-        double stepK() const { return 2.*M_PI / ( (Ninitial+2*xInterp->xrange())*dx); }
+        double maxK() const;
+        double stepK() const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
         { xmin = -_max_size; xmax = _max_size; }
@@ -126,8 +130,8 @@ namespace galsim {
         double getFlux() const;
         void setFlux(double flux=1.);  // This will scale the weights vector
 
-        double getPositiveFlux() const {checkReadyToShoot(); return positiveFlux;}
-        double getNegativeFlux() const {checkReadyToShoot(); return negativeFlux;}
+        double getPositiveFlux() const {checkReadyToShoot(); return _positiveFlux;}
+        double getNegativeFlux() const {checkReadyToShoot(); return _negativeFlux;}
 
         /////////////////////
         // Methods peculiar to SBInterpolatedImage
@@ -159,13 +163,13 @@ namespace galsim {
          * @brief Set the weight vector applied for summing different planes in a multiple image 
          * SBInterpolatedImage.
          *
-         * @param[in] wts_ weight vector (??? check dimensions = `Nimages` first!)
+         * @param[in] wts weight vector (??? check dimensions = `Nimages` first!)
          */
-        void setWeights(const tmv::Vector<double>& wts_); // ??? check dimensions first!
+        void setWeights(const tmv::Vector<double>& wts); // ??? check dimensions first!
 
         /// @brief Get the weight vector applied to different planes in the multiple image 
         /// SBInterpolatedImage.
-        tmv::Vector<double> getWeights() const { return wts; }
+        tmv::Vector<double> getWeights() const { return _wts; }
 
         /** 
          * @brief Set the interpolant used in real space.
@@ -173,10 +177,10 @@ namespace galsim {
          * @param[in] interp_ interpolation scheme to adopt between pixels in real space (TODO: 
          *                    Add more, document Interpolant.h, describe the Interpolant2d class).
          */
-        void setXInterpolant(const Interpolant2d& interp_) { xInterp=&interp_; ready=false; }
+        void setXInterpolant(const Interpolant2d& interp_) { _xInterp=&interp_; _ready=false; }
 
         /// @brief Get the interpolant used in real space.
-        const Interpolant2d& getXInterpolant() const { return *xInterp; }
+        const Interpolant2d& getXInterpolant() const { return *_xInterp; }
 
         /** 
          * @brief Set the interpolant used in k space.
@@ -184,28 +188,28 @@ namespace galsim {
          * @param[in] interp_ interpolation scheme to adopt between pixels in real space (TODO: 
          *                    Add more, document Interpolant.h, describe the Interpolant2d class).
          */
-        void setKInterpolant(const Interpolant2d& interp_) { kInterp=&interp_; }
+        void setKInterpolant(const Interpolant2d& interp_) { _kInterp=&interp_; }
 
         /// @brief Get the interpolant used in k space.
-        const Interpolant2d& getKInterpolant() const { return *kInterp; }
+        const Interpolant2d& getKInterpolant() const { return *_kInterp; }
 
         /// @brief Returns linear dimension of square input data grid.
-        int getNin() const { return Ninitial; }
+        int getNin() const { return _Ninitial; }
 
         /** 
          * @brief Returns linear dimension of square Discrete Fourier transform used to make k 
          * space table.
          */
-        int getNft() const { return Nk; }
-
-        // Overrides for better efficiency with separable kernels:
-        virtual void fillKGrid(KTable& kt) const;
-        virtual void fillXGrid(XTable& xt) const;
+        int getNft() const { return _Nk; }
 
         template <typename T>
         double fillXImage(ImageView<T>& I, double dx) const;
 
     protected:
+        // Overrides for better efficiency with separable kernels:
+        virtual void fillKGrid(KTable& kt) const;
+        virtual void fillXGrid(XTable& xt) const;
+
         // These are the virtual functions, but we don't want to have to duplicate the
         // code implement these.  So each one just calls the template version.  The
         // C++ overloading rules mean that it will call the local fillXImage template 
@@ -230,41 +234,42 @@ namespace galsim {
     private:
         void checkReady() const; ///< Make sure all internal quantities are ok.
 
-        int Ninitial; ///< Size of input pixel grids.
-        double dx;  ///< Input pixel scales.
-        int Nk;  ///< Size of the padded grids and Discrete Fourier transform table.
-        double dk;  ///< Step size in k for Discrete Fourier transform table.
-        int Nimages; ///< Number of image planes to sum.
+        int _Ninitial; ///< Size of input pixel grids.
+        double _dx;  ///< Input pixel scales.
+        int _Nk;  ///< Size of the padded grids and Discrete Fourier transform table.
+        double _dk;  ///< Step size in k for Discrete Fourier transform table.
+        int _Nimages; ///< Number of image planes to sum.
 
-        const Interpolant2d* xInterp; ///< Interpolant used in real space.
-        const Interpolant2d* kInterp; ///< Interpolant used in k space.
+        const Interpolant2d* _xInterp; ///< Interpolant used in real space.
+        const Interpolant2d* _kInterp; ///< Interpolant used in k space.
 
         /// @brief Vector of weights to use for sum over images of a multiple image.
-        tmv::Vector<double> wts;
+        tmv::Vector<double> _wts;
 
         /// @brief Vector of fluxes for each image plane of a multiple image.
-        mutable tmv::Vector<double> fluxes;
+        mutable tmv::Vector<double> _fluxes;
 
         /// @brief Vector x weighted fluxes for each image plane of a multiple image.
-        mutable tmv::Vector<double> xFluxes;
+        mutable tmv::Vector<double> _xFluxes;
 
         /// @brief Vector of y weighted fluxes for each image plane of a multiple image.
-        mutable tmv::Vector<double> yFluxes;
+        mutable tmv::Vector<double> _yFluxes;
 
         // Arrays summed with weights:
-        mutable XTable* xsum; ///< Arrays summed with weights in real space.
-        mutable KTable* ksum; ///< Arrays summed with weights in k space.
-        mutable bool xsumValid; ///< Is `xsum` valid?
-        mutable bool ksumValid; ///< Is `ksum` valid?
+        mutable XTable* _xsum; ///< Arrays summed with weights in real space.
+        mutable KTable* _ksum; ///< Arrays summed with weights in k space.
+        mutable bool _xsumValid; ///< Is `xsum` valid?
+        mutable bool _ksumValid; ///< Is `ksum` valid?
 
         /** 
          * @brief Set true if kTables, centroid/flux values,etc., are set for current x pixel 
          * values.
          */
-        mutable bool ready; 
+        mutable bool _ready; 
 
         /// @brief Set true if the data structures for photon-shooting are valid
-        mutable bool readyToShoot;
+        mutable bool _readyToShoot;
+
         /// @brief Set up photon-shooting quantities, if not ready
         void checkReadyToShoot() const;
 
@@ -282,18 +287,18 @@ namespace galsim {
         private:
             double _flux;
         };
-        mutable double positiveFlux;    ///< Sum of all positive pixels' flux
-        mutable double negativeFlux;    ///< Sum of all negative pixels' flux
-        mutable ProbabilityTree<Pixel> pt; ///< Binary tree of pixels, for photon-shooting
+        mutable double _positiveFlux;    ///< Sum of all positive pixels' flux
+        mutable double _negativeFlux;    ///< Sum of all negative pixels' flux
+        mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
 
         /// @brief The default k-space interpolant
         static InterpolantXY defaultKInterpolant2d;
 
         /// @brief Vector of input data arrays.
-        std::vector<XTable*> vx;
+        std::vector<XTable*> _vx;
 
         /// @brief Mutable stuff required for kTables and interpolations.
-        mutable std::vector<KTable*> vk;
+        mutable std::vector<KTable*> _vk;
         void checkXsum() const;  ///< Used to build xsum if it's not current.
         void checkKsum() const;  ///< Used to build ksum if it's not current.
 
