@@ -47,19 +47,30 @@ class RealGalaxyCatalog:
         self.preloaded = False
         # of galaxy inclusion in training sample
 
-        ## eventually I think we'll want information about the training dataset, i.e. (dataset, ID within dataset)
+        ## eventually I think we'll want information about the training dataset, 
+        ## i.e. (dataset, ID within dataset)
 
         # note: am assuming that pyfits takes care of error handling, e.g., if the file does not
         # exist, there's no field with that name, etc.
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
     def get_index_for_id(self, ID):
+        """
+        Find which index number corresponds to the value ID in the ident field.
+        """
         if ID in self.ident:
             return self.ident.index(ID)
         else:
             raise ValueError('ID %s not found in list of IDs'%ID)
 
     def preload(self):
+        """
+        Preload the files into memory.
+        
+        There are memory implications to this, so we don't do this by default.
+        However, it can be a big speedup if memory isn't an issue.  Especially
+        if many (or all) of the images are stored in the same file as different HDUs.
+        """
         import pyfits
         import os
         self.preloaded = True
@@ -74,6 +85,9 @@ class RealGalaxyCatalog:
                 self.loaded_files[filename] = pyfits.open(full_filename)
 
     def getGal(self,i):
+        """
+        Returns the galaxy at index i as an ImageViewD object.
+        """
         if i >= len(self.gal_filename):
             raise IndexError(
                 'index %d given to getGal is out of range (0..%d)'%(i,len(self.gal_filename)-1))
@@ -88,6 +102,9 @@ class RealGalaxyCatalog:
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
     def getPSF(self,i):
+        """
+        Returns the PSF at index i as an ImageViewD object.
+        """
         if i >= len(self.PSF_filename):
             raise IndexError(
                 'index %d given to getGal is out of range (0..%d)'%(i,len(self.PSF_filename)-1))
