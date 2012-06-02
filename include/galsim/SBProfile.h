@@ -581,24 +581,18 @@ namespace galsim {
          *
          * @param[out] image    image to fill (any of ImageF, ImageD, ImageS, ImageI).
          * @param[in]  dx       grid pitch on which SBProfile image is drawn
-         *
-         * Note: Ideally, this wouldn't be public, but we want to use this from within
-         * SBAdd which has a list<SBProfile*>, and it wants to call fillXImage for each item.
-         * Unfortunately, that requires that fillXImage be public rather than protected.
          */
         template <typename T>
         double fillXImage(ImageView<T>& image, double dx) const  // return flux integral
         { return doFillXImage(image, dx); }
 
         /**
-         * @brief Utility for drawing a k grid into FFT data structures - not intended for public 
-         * use, but need to be public so that derived classes can call them.
+         * @brief Utility for drawing a k grid into FFT data structures 
          */
         virtual void fillKGrid(KTable& kt) const;
 
         /** 
-         * @brief Utility for drawing an x grid into FFT data structures - not intended for public 
-         * use, but need to be public so that derived classes can call them.
+         * @brief Utility for drawing an x grid into FFT data structures 
          */
         virtual void fillXGrid(XTable& xt) const;
 
