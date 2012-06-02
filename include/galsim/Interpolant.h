@@ -15,7 +15,8 @@ namespace galsim {
     class Interpolant;
 
     /**
-     * @brief Class to interface an interpolant to the `OneDimensionalDeviate` class for photon-shooting
+     * @brief Class to interface an interpolant to the `OneDimensionalDeviate` class for 
+     * photon-shooting
      */
     class InterpolantFunction: public FluxDensity {
     public:
@@ -49,7 +50,8 @@ namespace galsim {
         /// @brief Copy constructor: does not copy photon sampler, will need to rebuild.
         Interpolant(const Interpolant& rhs): _interp(*this), _sampler(0) {}
 
-        /// @brief Destructor (virtual for base class).  Deletes photon sampler if it has been built.
+        /// @brief Destructor (virtual for base class).
+        /// Deletes photon sampler if it has been built.
         virtual ~Interpolant() {if (_sampler) delete _sampler;}
 
         /**
@@ -80,7 +82,8 @@ namespace galsim {
         /**
          * @brief Value of interpolant in frequency space
          * @param[in] u Frequency for evaluation (cycles per pixel)
-         * @returns Value of interpolant, normalized so uval(0) = 1 for flux-conserving interpolation.
+         * @returns Value of interpolant, normalized so uval(0) = 1 for 
+         *          flux-conserving interpolation.
          */
         virtual double uval(double u) const =0;
         /**
@@ -143,7 +146,10 @@ namespace galsim {
         }
     protected:
         InterpolantFunction _interp; ///< The function to interface the Interpolant to sampler
-        mutable OneDimensionalDeviate* _sampler;  ///< Class that draws photons from this Interpolant
+
+        /// Class that draws photons from this Interpolant
+        mutable OneDimensionalDeviate* _sampler;  
+
         /// @brief Allocate photon sampler and do all of its pre-calculations
         virtual void checkSampler() const {
             if (_sampler) return;
@@ -160,7 +166,11 @@ namespace galsim {
         }
     };
 
-    ///< @brief Two-dimensional version of the `Interpolant` interface.  Methods have same meaning as in 1d
+    /**
+     * @brief Two-dimensional version of the `Interpolant` interface.
+     *
+     * Methods have same meaning as in 1d
+     */
     class Interpolant2d 
     {
     public:
@@ -178,10 +188,14 @@ namespace galsim {
 
         // Photon-shooting routines:
         /// @brief Return the integral of the positive portions of the kernel (default=1.)
-        virtual double getPositiveFlux() const {return 1.;}
-        /// @brief Return the (abs value of) integral of the negative portions of the kernel (default=0.)
-        virtual double getNegativeFlux() const {return 0.;}
-        /// @brief Return array of displacements drawn from this kernel.  Default is to throw an runtime_error
+        virtual double getPositiveFlux() const { return 1.; }
+
+        /// @brief Return the (abs value of) integral of the negative portions of the kernel 
+        /// (default=0.)
+        virtual double getNegativeFlux() const { return 0.; }
+
+        /// @brief Return array of displacements drawn from this kernel.
+        /// Default is to throw an runtime_error
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const {
             throw std::runtime_error("Interpolant2d::shoot() not implemented for this kernel");
             return PhotonArray(0);
@@ -245,7 +259,7 @@ namespace galsim {
          * @brief Access the 1d interpolant 
          * @returns Pointer to the 1d `Interpolant` that this class uses.
          */
-        const Interpolant* get1d() const {return &i1d;}
+        const Interpolant* get1d() const { return &i1d; }
 
     private:
         const Interpolant& i1d;  ///< The 1d function used in both axes here.
@@ -259,7 +273,7 @@ namespace galsim {
      */
     inline double sinc(double x) 
     {
-        if (std::abs(x)<0.001) return 1.- M_PI*M_PI*x*x/6.;
+        if (std::abs(x)<0.001) return 1.- (M_PI*M_PI/6.)*x*x;
         else return std::sin(M_PI*x)/(M_PI*x);
     }
 
@@ -278,10 +292,10 @@ namespace galsim {
             // Use rational approximation from Abramowitz & Stegun
             // cf. Eqns. 5.2.38, 5.2.39, 5.2.8 - where it says it's good to <1e-6.
             // ain't this pretty?
-            return M_PI/2.*((x>0)?1.:-1.) 
-                -(38.102495+x2*(335.677320+x2*(265.187033+x2*(38.027264+x2))))
-                / (x* (157.105423+x2*(570.236280+x2*(322.624911+x2*(40.021433+x2)))) ) * std::cos(x)
-                -(21.821899+x2*(352.018498+x2*(302.757865+x2*(42.242855+x2))))
+            return (M_PI/2.)*((x>0.)?1.:-1.) 
+                - (38.102495+x2*(335.677320+x2*(265.187033+x2*(38.027264+x2))))
+                / (x* (157.105423+x2*(570.236280+x2*(322.624911+x2*(40.021433+x2)))) )*std::cos(x)
+                - (21.821899+x2*(352.018498+x2*(302.757865+x2*(42.242855+x2))))
                 / (x2*(449.690326+x2*(1114.978885+x2*(482.485984+x2*(48.196927+x2)))))*std::sin(x);
 
         } else {
@@ -321,7 +335,7 @@ namespace galsim {
          * @brief Constructor
          * @param[in] width Width of tiny boxcar used to approximate delta function in real space.
          */
-        Delta(double width=1e-3) : _width(width) {}
+        Delta(double width=1.e-3) : _width(width) {}
         ~Delta() {}
         double xrange() const { return 0.; }
         double urange() const { return 1./_width; }
@@ -331,11 +345,11 @@ namespace galsim {
             else return 1./_width;
         }
         double uval(double u) const { return 1.; }
-        double getTolerance() const {return _width;}
+        double getTolerance() const { return _width; }
 
         // Override the default numerical photon-shooting method
-        double getPositiveFlux() const {return 1.;}
-        double getNegativeFlux() const {return 0.;}
+        double getPositiveFlux() const { return 1.; }
+        double getNegativeFlux() const { return 0.; }
         PhotonArray shoot(int N, UniformDeviate& ud) const;
     private:
         double _width;
@@ -352,9 +366,10 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Tolerance determines how far onto sinc wiggles the uval will go. Very far, by default!
+         * @param[in] tol Tolerance determines how far onto sinc wiggles the uval will go.
+         * Very far, by default!
          */
-        Nearest(double tol=1e-3) : tolerance(tol) {}
+        Nearest(double tol=1.e-3) : tolerance(tol) {}
         ~Nearest() {}
         double getTolerance() const { return tolerance; }
         double xrange() const { return 0.5; }
@@ -368,8 +383,8 @@ namespace galsim {
         double uval(double u) const { return sinc(u); }
 
         // Override the default numerical photon-shooting method
-        double getPositiveFlux() const {return 1.;}
-        double getNegativeFlux() const {return 0.;}
+        double getPositiveFlux() const { return 1.; }
+        double getNegativeFlux() const { return 0.; }
         /// @brief Nearest-neighbor interpolant photon shooting is a simple UniformDeviate call.
         PhotonArray shoot(int N, UniformDeviate& ud) const;
     private:
@@ -384,9 +399,10 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Tolerance determines how far onto sinc wiggles the xval will go. Very far, by default!
+         * @param[in] tol Tolerance determines how far onto sinc wiggles the xval will go. 
+         * Very far, by default!
          */
-        SincInterpolant(double tol=1e-3) : tolerance(tol) {}
+        SincInterpolant(double tol=1.e-3) : tolerance(tol) {}
         ~SincInterpolant() {}
         double getTolerance() const { return tolerance; }
         double xrange() const { return 1./(M_PI*tolerance); }
@@ -403,14 +419,15 @@ namespace galsim {
             // Magic formula:
             x *= M_PI;
             if (N%2==0) {
-                if (std::abs(x) < 1e-4) return 1. - x*x*(1/6.+1/2.-1./(6.*N*N));
+                if (std::abs(x) < 1.e-4) return 1. - x*x*(1/6.+1/2.-1./(6.*N*N));
                 return std::sin(x) * std::cos(x/N) / (N*std::sin(x/N));
             } else {
-                if (std::abs(x) < 1e-4) return 1. - x*x*(1-1./(N*N))/6.;
+                if (std::abs(x) < 1.e-4) return 1. - (1./6.)*x*x*(1-1./(N*N));
                 return std::sin(x) / (N*std::sin(x/N));
             }
         }
-        /// @brief Photon-shooting will be disabled for sinc function since wiggles will make it crazy
+        /// @brief Photon-shooting will be disabled for sinc function since wiggles will 
+        /// make it crazy
         PhotonArray shoot(int N, UniformDeviate& ud) const {
             throw std::runtime_error("Photon shooting is not practical with sinc Interpolant");
             return PhotonArray(N);
@@ -428,9 +445,10 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Tolerance determines how far onto sinc^2 wiggles the kval will go. Very far, by default!
+         * @param[in] tol Tolerance determines how far onto sinc^2 wiggles the kval will go.
+         * Very far, by default!
          */
-        Linear(double tol=1e-3) : tolerance(tol) {}
+        Linear(double tol=1.e-3) : tolerance(tol) {}
         ~Linear() {}
         double getTolerance() const { return tolerance; }
         double xrange() const { return 1.-0.5*tolerance; }  // Snip off endpoints near zero
@@ -443,9 +461,10 @@ namespace galsim {
         }
         double uval(double u) const { return std::pow(sinc(u),2.); }
         // Override the default numerical photon-shooting method
-        double getPositiveFlux() const {return 1.;}
-        double getNegativeFlux() const {return 0.;}
-        /// @brief Linear interpolant has fast photon-shooting by adding two uniform deviates per axis.
+        double getPositiveFlux() const { return 1.; }
+        double getNegativeFlux() const { return 0.; }
+        /// @brief Linear interpolant has fast photon-shooting by adding two uniform deviates 
+        /// per axis.
         PhotonArray shoot(int N, UniformDeviate& ud) const;
     private:
         double tolerance;
@@ -467,7 +486,7 @@ namespace galsim {
          * @param[in] fluxConserve_ Set true to adjust filter to be exact for constant inputs.
          * @param[in] tol Sets accuracy and extent of Fourier transform.
          */
-        Lanczos(int n_, bool fluxConserve_=false, double tol=1e-3) :  
+        Lanczos(int n_, bool fluxConserve_=false, double tol=1.e-3) :  
             n(n_), fluxConserve(fluxConserve_), tolerance(tol), tab(Table<double,double>::spline) 
         { setup(); }
 
@@ -481,7 +500,7 @@ namespace galsim {
             x = std::abs(x);
             if (x>=n) return 0.;
             double retval = sinc(x)*sinc(x/n);
-            if (fluxConserve) retval *= 1 + 2.*u1*(1-std::cos(2*M_PI*x));
+            if (fluxConserve) retval *= 1. + 2.*u1*(1.-std::cos(2.*M_PI*x));
             return retval;
         }
         double uval(double u) const 
@@ -489,9 +508,9 @@ namespace galsim {
             u = std::abs(u);
             double retval = u>uMax ? 0. : tab(u);
             if (!fluxConserve) return retval;
-            retval *= 1+2*u1;
-            if (u+1 < uMax) retval -= u1*tab(u+1);
-            if (std::abs(u-1) < uMax) retval -= u1*tab(std::abs(u-1));
+            retval *= 1.+2.*u1;
+            if (u+1. < uMax) retval -= u1*tab(u+1.);
+            if (std::abs(u-1.) < uMax) retval -= u1*tab(std::abs(u-1.));
             return retval;
         }
         double uCalc(double u) const;
@@ -519,7 +538,7 @@ namespace galsim {
          *
          * @param[in] tol Sets accuracy and extent of Fourier transform.
          */
-        Cubic(double tol=1e-4) : tolerance(tol), tab(Table<double,double>::spline) { setup(); }
+        Cubic(double tol=1.e-4) : tolerance(tol), tab(Table<double,double>::spline) { setup(); }
         ~Cubic() {}
 
         double getTolerance() const { return tolerance; }
@@ -529,8 +548,8 @@ namespace galsim {
         { 
             x = std::abs(x);
             if (x>=2.) return 0.;
-            if (x<1.) return 1 + x*x*(1.5*x-2.5);
-            return 2 + x*(-4. + x*(2.5 - 0.5*x));
+            if (x<1.) return 1. + x*x*(1.5*x-2.5);
+            return 2. + x*(-4. + x*(2.5 - 0.5*x));
         }
         double uval(double u) const 
         {
@@ -540,12 +559,14 @@ namespace galsim {
         double uCalc(double u) const;
 
         /// @brief Override numerical calculation with known analytic integral
-        double getPositiveFlux() const {return 13./12.;}
+        double getPositiveFlux() const { return 13./12.; }
         /// @brief Override numerical calculation with known analytic integral
-        double getNegativeFlux() const {return 1./12.;}
+        double getNegativeFlux() const { return 1./12.; }
 
     private:
-        double range; ///< x range, reduced slightly from n=2 so we're not using zero-valued endpoints.
+        /// x range, reduced slightly from n=2 so we're not using zero-valued endpoints.
+        double range; 
+
         double tolerance;    
         double uMax;  ///< Truncation point for Fourier transform
         Table<double,double> tab; ///< Tabulated Fourier transform
@@ -565,7 +586,7 @@ namespace galsim {
          * @brief Constructor
          * @param[in] tol Sets accuracy and extent of Fourier transform.
          */
-        Quintic(double tol=1e-4) : tolerance(tol), tab(Table<double,double>::spline) { setup(); }
+        Quintic(double tol=1.e-4) : tolerance(tol), tab(Table<double,double>::spline) { setup(); }
         ~Quintic() {}
         // tol is error level desired for the Fourier transform
         double getTolerance() const { return tolerance; }
@@ -574,10 +595,14 @@ namespace galsim {
         double xval(double x) const 
         { 
             x = std::abs(x);
-            if (x>=3.) return 0.;
-            if (x>=2.) return (x-2)*(x-3)*(x-3)*(-54+x*(50-11*x))/24.;
-            if (x>=1.) return (x-1)*(x-2)*(-138.+x*(348+x*(-249.+55*x)))/24.;
-            return 1 + x*x*x*(-95+x*(138-55*x))/12.;
+            if (x <= 1.)
+                return 1. + (1./12.)*x*x*x*(-95.+x*(138.-55.*x));
+            else if (x <= 2.)
+                return (1./24.)*(x-1.)*(x-2.)*(-138.+x*(348.+x*(-249.+55.*x)));
+            else if (x <= 3.)
+                return (1./24.)*(x-2.)*(x-3.)*(x-3.)*(-54.+x*(50.-11.*x));
+            else 
+                return 0.;
         }
         double uval(double u) const 
         {
@@ -586,12 +611,13 @@ namespace galsim {
         }
         double uCalc(double u) const;
     protected:
-        /// @brief Override default sampler configuration because Quintic filter has sign change in outer interval
+        /// @brief Override default sampler configuration because Quintic filter has sign 
+        /// change in outer interval
         virtual void checkSampler() const {
             if (_sampler) return;
             std::vector<double> ranges(8);
             ranges[0] = -3.;
-            ranges[1] = -(25.+sqrt(31.))/11.;  // This is the extra zero-crossing
+            ranges[1] = -(1./11.)*(25.+sqrt(31.));  // This is the extra zero-crossing
             ranges[2] = -2.;
             ranges[3] = -1.;
             for (int i=0; i<4; i++)

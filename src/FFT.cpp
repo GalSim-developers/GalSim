@@ -1,11 +1,19 @@
 // Routines for FFTW interface objects
 // This time to use Version 3 of FFTW.
 
+//#define DEBUGLOGGING
+
 #include <limits>
 #include <vector>
 #include <cassert>
 #include "FFT.h"
 #include "Std.h"
+
+#ifdef DEBUGLOGGING
+#include <fstream>
+std::ostream* dbgout = new std::ofstream("debug.out");
+int verbose_level = 2;
+#endif
 
 namespace galsim {
 
@@ -15,12 +23,12 @@ namespace galsim {
     {
         if (input<=2) return 2;
         // Reduce slightly to eliminate potential rounding errors:
-        double insize = (1.-1e-5)*input;
+        double insize = (1.-1.e-5)*input;
         double log2n = std::log(2.)*std::ceil(std::log(insize)/std::log(2.));
         double log2n3 = std::log(3.) 
            + std::log(2.)*std::ceil((std::log(insize)-std::log(3.))/std::log(2.));
         log2n3 = std::max(log2n3, std::log(6.)); // must be even number
-        int Nk = static_cast<int> (std::ceil(std::exp(std::min(log2n, log2n3))-1e-5));
+        int Nk = int(std::ceil(std::exp(std::min(log2n, log2n3))-1.e-5));
         return Nk;
     }
 
@@ -205,13 +213,16 @@ namespace galsim {
     std::complex<double> KTable::interpolate(
         double kx, double ky, const Interpolant2d& interp) const 
     {
+        dbg<<"Start KTable interpolate at "<<kx<<','<<ky<<std::endl;
+        dbg<<"N = "<<N<<std::endl;
+        dbg<<"interp xrage = "<<interp.xrange()<<std::endl;
         kx /= dk;
         ky /= dk;
         int ixMin, ixMax, iyMin, iyMax;
         if ( interp.isExactAtNodes() 
              && std::abs(kx - std::floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // x coord lies right on integer value, no interpolation in x direction
-            ixMin = static_cast<int> (std::floor(kx+0.01)) % N;
+            ixMin = int(std::floor(kx+0.01)) % N;
             if (ixMin < -N/2) ixMin += N;
             if (ixMin >= N/2) ixMin -= N;
             ixMax = ixMin;
@@ -221,10 +232,10 @@ namespace galsim {
             ixMax = N/2-1;
         } else {
             // Put both bounds of kernel footprint in range [-N/2,N/2-1]
-            ixMin = static_cast<int> (std::ceil(kx-interp.xrange())) % N;
+            ixMin = int(std::ceil(kx-interp.xrange())) % N;
             if (ixMin < -N/2) ixMin += N;
             if (ixMin >= N/2) ixMin -= N;
-            ixMax = static_cast<int> (std::floor(kx+interp.xrange())) % N;
+            ixMax = int(std::floor(kx+interp.xrange())) % N;
             if (ixMax < -N/2) ixMax += N;
             if (ixMax >= N/2) ixMax -= N;
         }
@@ -232,7 +243,7 @@ namespace galsim {
         if ( interp.isExactAtNodes() 
              && std::abs(ky - std::floor(ky+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // y coord lies right on integer value, no interpolation in y direction
-            iyMin = static_cast<int> (std::floor(ky+0.01)) % N;
+            iyMin = int(std::floor(ky+0.01)) % N;
             if (iyMin < -N/2) iyMin += N;
             if (iyMin >= N/2) iyMin -= N;
             iyMax = iyMin;
@@ -242,13 +253,15 @@ namespace galsim {
             iyMax = N/2-1;
         } else {
             // Put both bounds of kernel footprint in range [-N/2,N/2-1]
-            iyMin = static_cast<int> (std::ceil(ky-interp.xrange())) % N;
+            iyMin = int(std::ceil(ky-interp.xrange())) % N;
             if (iyMin < -N/2) iyMin += N;
             if (iyMin >= N/2) iyMin -= N;
-            iyMax = static_cast<int> (std::floor(ky+interp.xrange())) % N;
+            iyMax = int(std::floor(ky+interp.xrange())) % N;
             if (iyMax < -N/2) iyMax += N;
             if (iyMax >= N/2) iyMax -= N;
         }
+        dbg<<"ix range = "<<ixMin<<"..."<<ixMax<<std::endl;
+        dbg<<"iy range = "<<iyMin<<"..."<<iyMax<<std::endl;
 
         std::complex<double> sum = 0.;
         const InterpolantXY* ixy = dynamic_cast<const InterpolantXY*> (&interp);
@@ -257,33 +270,40 @@ namespace galsim {
             // We have the opportunity to speed up the calculation by
             // re-using the sums over rows.  So we will keep a 
             // cache of them.
-            if (ixy != cacheInterp || kx!=cacheX) {
+            if (kx != cacheX || ixy != cacheInterp) {
                 clearCache();
                 cacheX = kx;
                 cacheInterp = ixy;
-            }
-
-            // Going to have a special case for interpolation on 
-            // a single iy value:
-            if (iyMax==iyMin) {
-                if (!cache.empty()) {
-                    // See if we already have this row in cache:
-                    int index = iyMin - cacheStartY;
-                    if (index < 0) index += N;
-                    if (index < int(cache.size()))
-                        // We have it!
-                        return cache[index];
-                }
-                // Desired row not in cache - kill cache, continue as normal.
-                clearCache();
+            } else if (iyMax==iyMin && !cache.empty()) {
+                // Special case for interpolation on a single iy value:
+                // See if we already have this row in cache:
+                int index = iyMin - cacheStartY;
+                if (index < 0) index += N;
+                if (index < int(cache.size()))
+                    // We have it!
+                    return cache[index];
+                else
+                    // Desired row not in cache - kill cache, continue as normal.
+                    // (But don't clear xwt, since that's still good.)
+                    cache.clear();
             }
 
             // Build the x component of interpolant
             int nx = ixMax - ixMin + 1;
             if (nx<=0) nx+=N;
-            std::vector<double> xwt(nx);
-            for (int i=0; i<nx; i++) 
-                xwt[i] = ixy->xvalWrapped1d(i+ixMin-kx, N);
+            dbg<<"nx = "<<nx<<std::endl;
+            // This is also cached if possible.  It gets cleared when kx != cacheX above.
+            if (xwt.empty()) {
+                xwt.resize(nx);
+                int ix = ixMin;
+                for (int i=0; i<nx; ++i, ++ix) {
+                    dbg<<"Call xvalWrapped1d for ix-kx = "<<ix<<" - "<<kx<<" = "<<ix-kx<<std::endl;
+                    xwt[i] = ixy->xvalWrapped1d(ix-kx, N);
+                    dbg<<"xwt["<<i<<"] = "<<xwt[i]<<std::endl;
+                }
+            } else {
+                assert(int(xwt.size()) == nx);
+            }
 
             // cache always holds sequential y values (with wrap).  Throw away
             // elements until we get to the one we need first
@@ -295,14 +315,19 @@ namespace galsim {
                 nextSaved = cache.begin();
             }
 
-            // use kval to keep track of conjugations etc here.
-            // ??? There is an opportunity to speed up if I want
-            // ??? to do this with array incrementing.
+            // Accumulate sum of 
+            //    interp.xvalWrapped(ix-kx, iy-ky, N)*kval(ix,iy);
+            // Which separates into 
+            //    ixy->xvalWrapped(ix-kx) * ixy->xvalWrapped(iy-ky) * kval(ix,iy)
+            // The first factor is saved in xwt
+            // The second factor is constant for a given iy, so do that at the end of the loop.
+            // The third factor is the only one that needs to be computed for each ix,iy.
             int ny = iyMax - iyMin + 1;
             if (ny<=0) ny+=N;
             int iy = iyMin;
             for (int j = 0; j<ny; j++, iy++) {
                 if (iy >= N/2) iy-=N;   // wrap iy if needed
+                dbg<<"j = "<<j<<", iy = "<<iy<<std::endl;
                 std::complex<double> sumy = 0.;
                 if (nextSaved != cache.end()) {
                     // This row is cached
@@ -311,16 +336,61 @@ namespace galsim {
                 } else {
                     // Need to compute a new row's sum
                     int ix = ixMin;
+#if 0
+                    // Simple loop preserved for comparison.
                     for (int i=0; i<nx; i++, ix++) {
                         if (ix > N/2) ix-=N; //check for wrap
+                        dbg<<"i = "<<i<<", ix = "<<ix<<std::endl;
+                        dbg<<"xwt = "<<xwt[i]<<", kval = "<<kval(ix,iy)<<std::endl;
                         sumy += xwt[i]*kval(ix,iy);
+                        dbg<<"index = "<<index(ix,iy)<<", sumy -> "<<sumy<<std::endl;
                     }
+#else
+                    // Faster way using ptrs, which doesn't need to do index(ix,iy) every time.
+                    int count = nx;
+                    std::vector<double>::const_iterator xwt_it = xwt.begin();
+                    // First do any initial negative ix values:
+                    if (ix < 0) {
+                        dbg<<"Some initial negative ix: ix = "<<ix<<std::endl;
+                        const std::complex<double>* ptr = array + index(ix,iy);
+                        int count1 = std::min(count, -ix);
+                        dbg<<"count1 = "<<count1<<std::endl;
+                        count -= count1;
+                        // Note: ptr goes down in this loop, since ix is negative.
+                        for(; count1; --count1) sumy += (*xwt_it++) * conj(*ptr--);
+                        ix = 0;
+                    }
+
+                    // Next do positive ix values:
+                    if (count) {
+                        dbg<<"Positive ix: ix = "<<ix<<std::endl;
+                        const std::complex<double>* ptr = array + index(ix,iy);
+                        int count1 = std::min(count, N/2+1-ix);
+                        dbg<<"count1 = "<<count1<<std::endl;
+                        count -= count1;
+                        for(; count1; --count1) sumy += (*xwt_it++) * (*ptr++);
+
+                        // Finally if we've wrapped around again, do more negative ix values:
+                        if (count) {
+                            dbg<<"More negative ix: ix = "<<ix<<std::endl;
+                            dbg<<"count = "<<count<<std::endl;
+                            ix = -N/2 + 1;
+                            const std::complex<double>* ptr = array + index(ix,iy);
+                            assert(count < N/2-1);
+                            for(; count; --count) sumy += (*xwt_it++) * conj(*ptr--);
+                        }
+                    }
+                    assert(xwt_it == xwt.end());
+                    assert(count == 0);
+#endif
                     // Add to back of cache
                     if (cache.empty()) cacheStartY = iy;
                     cache.push_back(sumy);
                     nextSaved = cache.end();
                 }
+                dbg<<"Call xvalWrapped1d for iy-ky = "<<iy<<" - "<<ky<<" = "<<iy-ky<<std::endl;
                 sum += sumy * ixy->xvalWrapped1d(iy-ky, N);
+                dbg<<"After multiply by column xvalWrapped: sum = "<<sum<<std::endl;
             }
         } else {
             // Interpolant is not seperable, calculate weight at each point
@@ -339,6 +409,7 @@ namespace galsim {
                 }
             }
         }
+        dbg<<"Done: sum = "<<sum<<std::endl;
         return sum;
     }
 
@@ -680,10 +751,10 @@ namespace galsim {
         if ( interp.isExactAtNodes() 
              && std::abs(x - std::floor(x+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // x coord lies right on integer value, no interpolation in x direction
-            ixMin = ixMax = static_cast<int> (std::floor(x+0.01));
+            ixMin = ixMax = int(std::floor(x+0.01));
         } else {
-            ixMin = static_cast<int> (std::ceil(x-interp.xrange()));
-            ixMax = static_cast<int> (std::floor(x+interp.xrange()));
+            ixMin = int(std::ceil(x-interp.xrange()));
+            ixMax = int(std::floor(x+interp.xrange()));
         }
         ixMin = std::max(ixMin, -N/2);
         ixMax = std::min(ixMax, N/2-1);
@@ -692,10 +763,10 @@ namespace galsim {
         if ( interp.isExactAtNodes() 
              && std::abs(y - std::floor(y+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // y coord lies right on integer value, no interpolation in y direction
-            iyMin = iyMax = static_cast<int> (std::floor(y+0.01));
+            iyMin = iyMax = int(std::floor(y+0.01));
         } else {
-            iyMin = static_cast<int> (std::ceil(y-interp.xrange()));
-            iyMax = static_cast<int> (std::floor(y+interp.xrange()));
+            iyMin = int(std::ceil(y-interp.xrange()));
+            iyMax = int(std::floor(y+interp.xrange()));
         }
         iyMin = std::max(iyMin, -N/2);
         iyMax = std::min(iyMax, N/2-1);
@@ -708,33 +779,34 @@ namespace galsim {
             // We have the opportunity to speed up the calculation by
             // re-using the sums over rows.  So we will keep a 
             // cache of them.
-            if (ixy != cacheInterp || x!=cacheX) {
+            if (x != cacheX || ixy != cacheInterp) {
                 clearCache();
                 cacheX = x;
                 cacheInterp = ixy;
-            }
-
-            // Going to have a special case for interpolation on 
-            // a single iy value:
-            if (iyMax==iyMin) {
-                if (!cache.empty()) {
-                    // See if we already have this row in cache:
-                    int index = iyMin - cacheStartY;
-                    if (index < 0) index += N;
-                    if (index < int(cache.size())) {
-                        // We have it!
-                        return cache[index];
-                    }
-                }
-                // Desired row not in cache - kill cache, continue as normal.
-                clearCache();
+            } else if (iyMax==iyMin && !cache.empty()) {
+                // Special case for interpolation on a single iy value:
+                // See if we already have this row in cache:
+                int index = iyMin - cacheStartY;
+                if (index < 0) index += N;
+                if (index < int(cache.size())) 
+                    // We have it!
+                    return cache[index];
+                else
+                    // Desired row not in cache - kill cache, continue as normal.
+                    // (But don't clear xwt, since that's still good.)
+                    cache.clear();
             }
 
             // Build x factors for interpolant
             int nx = ixMax - ixMin + 1;
-            std::vector<double> xwt(nx);
-            for (int i=0; i<nx; i++) 
-                xwt[i] = ixy->xval1d(i+ixMin-x);
+            // This is also cached if possible.  It gets cleared when kx != cacheX above.
+            if (xwt.empty()) {
+                xwt.resize(nx);
+                for (int i=0; i<nx; i++) 
+                    xwt[i] = ixy->xval1d(i+ixMin-x);
+            } else {
+                assert(int(xwt.size()) == nx);
+            }
 
             // cache always holds sequential y values (no wrap).  Throw away
             // elements until we get to the one we need first
@@ -754,8 +826,10 @@ namespace galsim {
                 } else {
                     // Need to compute a new row's sum
                     double* dptr = array + index(ixMin, iy);
-                    for (int i=0; i<nx; i++, dptr++)
-                        sumy += xwt[i] * (*dptr);
+                    std::vector<double>::const_iterator xwt_it = xwt.begin();
+                    int count = nx;
+                    for(; count; --count) sumy += (*xwt_it++) * (*dptr++);
+                    assert(xwt_it == xwt.end());
                     // Add to back of cache
                     if (cache.empty()) cacheStartY = iy;
                     cache.push_back(sumy);

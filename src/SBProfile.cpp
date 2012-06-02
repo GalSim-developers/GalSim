@@ -14,8 +14,6 @@
 
 #ifdef DEBUGLOGGING
 std::ostream* dbgout = new std::ofstream("debug.out");
-//std::ostream* dbgout = &std::cerr;
-//std::ostream* dbgout = 0;
 int verbose_level = 2;
 #endif
 

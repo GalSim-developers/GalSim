@@ -139,7 +139,11 @@ namespace galsim {
         { array[index2(ix,iy)]=value; }
 
         void clear();  // Set all values to zero
-        void clearCache() const { cache.clear(); }
+        void clearCache() const 
+        {
+            cache.clear(); 
+            xwt.clear();
+        }
 
         void accumulate(const KTable& rhs, double scalar=1.); // this += scalar*rhs
 
@@ -208,6 +212,7 @@ namespace galsim {
 
         // Objects used to accelerate interpolation with seperable interpolants:
         mutable std::deque<std::complex<double> > cache;
+        mutable std::vector<double> xwt;
         mutable int cacheStartY;
         mutable double cacheX;
         mutable const InterpolantXY* cacheInterp;
@@ -259,7 +264,11 @@ namespace galsim {
         void xSet(int ix, int iy, double value);
 
         void clear();  // Set all values to zero
-        void clearCache() const { cache.clear(); }
+        void clearCache() const 
+        {
+            cache.clear(); 
+            xwt.clear();
+        }
 
         void accumulate(const XTable& rhs, double scalar=1.); // this += scalar*rhs
 
@@ -315,6 +324,7 @@ namespace galsim {
 
         // Objects used to accelerate interpolation with seperable interpolants:
         mutable std::deque<double> cache;
+        mutable std::vector<double> xwt;
         mutable double cacheX;
         mutable int cacheStartY;
         mutable const InterpolantXY* cacheInterp;
