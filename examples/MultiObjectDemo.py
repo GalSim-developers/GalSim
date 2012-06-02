@@ -479,6 +479,7 @@ def Script3():
 
     # Read in galaxy catalog
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, image_dir)
+    real_galaxy_catalog.preload()
     n_gal = real_galaxy_catalog.n
     logger.info('Read in %d real galaxies from catalog', n_gal)
 

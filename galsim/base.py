@@ -439,30 +439,26 @@ class RealGalaxy(GSObject):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
             use_index = index
         elif ID != None:
-            raise NotImplementedError('Selecting galaxy based on its ID not implemented')
+            if (random == True):
+                raise RuntimeError('Too many methods for selecting a galaxy!')
+            use_index = real_galaxy_catalog.get_index_for_id(ID)
         elif random == True:
             if uniform_deviate == None:
                 uniform_deviate = galsim.UniformDeviate()
-            use_index = int(real_galaxy_catalog.n * uniform_deviate()) # this will round down, to get index in
-                                                                           # range [0, n-1]
+            use_index = int(real_galaxy_catalog.n * uniform_deviate()) 
+            # this will round down, to get index in range [0, n-1]
         else:
             raise RuntimeError('No method specified for selecting a galaxy!')
         if random == False and uniform_deviate != None:
             import warnings
-            message = "Warning: uniform_deviate supplied, but random selection method was not chosen!"
-            warnings.warn(message)
+            msg = "Warning: uniform_deviate supplied, but random selection method was not chosen!"
+            warnings.warn(msg)
 
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
         # consider exporting this code into fits.py in some function that takes a filename and HDU,
         # and returns an ImageView
-        gal_image_numpy = pyfits.getdata(os.path.join(real_galaxy_catalog.imagedir,
-                                                      real_galaxy_catalog.gal_filename[use_index]),
-                                         real_galaxy_catalog.gal_hdu[use_index])
-        gal_image = galsim.ImageViewD(np.ascontiguousarray(gal_image_numpy.astype(np.float64)))
-        PSF_image_numpy = pyfits.getdata(os.path.join(real_galaxy_catalog.imagedir,
-                                                      real_galaxy_catalog.PSF_filename[use_index]),
-                                         real_galaxy_catalog.PSF_hdu[use_index])
-        PSF_image = galsim.ImageViewD(np.ascontiguousarray(PSF_image_numpy.astype(np.float64)))
+        gal_image = real_galaxy_catalog.getGal(use_index)
+        PSF_image = real_galaxy_catalog.getPSF(use_index)
 
         # choose proper interpolant
         if interpolant != None and isinstance(interpolant, galsim.InterpolantXY) == False:
