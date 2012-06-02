@@ -831,15 +831,15 @@ namespace galsim {
         initialize();
     }
 
-    SBDistort::SBDistort(const SBProfile& sbin, const Ellipse e_) 
+    SBDistort::SBDistort(const SBProfile& sbin, const Ellipse e) 
     {
         // First get what we need from the Ellipse:
-        tmv::Matrix<double> m = e_.getMatrix();
+        tmv::Matrix<double> m = e.getMatrix();
         _mA = m(0,0);
         _mB = m(0,1);
         _mC = m(1,0);
         _mD = m(1,1);
-        _cen = e_.getX0();
+        _cen = e.getX0();
         // Then repeat generic construction:
         SBProfile* p=sbin.duplicate();
         SBDistort* sbd = dynamic_cast<SBDistort*> (p);
@@ -847,7 +847,7 @@ namespace galsim {
             // We are distorting something that's already a distortion.
             // So just compound the affine transformaions
             _adaptee = sbd->_adaptee->duplicate();
-            _cen = e_.getX0() + fwd(sbd->_cen);
+            _cen = e.getX0() + fwd(sbd->_cen);
             // New matrix is product (M_this) * (M_old)
             double mA = _mA; double mB=_mB; double mC=_mC; double mD=_mD;
             _mA = mA*sbd->_mA + mB*sbd->_mC;
@@ -1384,18 +1384,19 @@ namespace galsim {
         // probably rare that this will be more efficient if N > 2.
         // For now, we don't bother implementing this for N > 2.
         
-        if (_plist.empty()) return 0.;
-        else if (_plist.size() == 1) return _plist.front()->xValue(pos);
-        else if (_plist.size() > 2) 
-            throw SBError("Real-space integration of more than 2 profiles is not implemented.");
-        else {
+        if (_plist.size() == 2) {
             const SBProfile* p1 = _plist.front();
             const SBProfile* p2 = _plist.back();
             if (p2->isAxisymmetric())
                 return RealSpaceConvolve(p2,p1,pos,_fluxProduct);
             else 
                 return RealSpaceConvolve(p1,p2,pos,_fluxProduct);
-        }
+        } else if (_plist.empty()) 
+            return 0.;
+        else if (_plist.size() == 1) 
+            return _plist.front()->xValue(pos);
+        else 
+            throw SBError("Real-space integration of more than 2 profiles is not implemented.");
     }
 
     std::complex<double> SBConvolve::kValue(const Position<double>& k) const 
