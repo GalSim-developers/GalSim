@@ -365,7 +365,11 @@ def test_sbprofile_box():
             err_msg="Using GSObject Pixel disagrees with expected result")
 
     # Test photon shooting.
-    do_shoot(pixel,myImg,0.2,"Pixel")
+    # Need to convolve with something, or else the fourier convolution will 
+    # make a huge image in fourier space.  So convolve with a small gaussian
+    # to smooth out the sharp cutoff.
+    pixel2 = galsim.Convolve(pixel, galsim.Gaussian(sigma=0.3))
+    do_shoot(pixel2,myImg,0.2,"Pixel")
 
 
 def test_sbprofile_moffat():
