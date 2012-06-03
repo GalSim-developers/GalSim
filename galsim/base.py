@@ -57,7 +57,7 @@ class GSObject:
     def copy(self):
         """@brief Returns a copy of an object as the SBProfile attribute of a new GSObject instance.
         """
-        return GSObject(self.SBProfile.duplicate())
+        return GSObject(self.SBProfile)
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
     #

@@ -861,7 +861,7 @@ namespace galsim {
             && (_mA==_mD)
             && (_cen.x==0.) && (_cen.y==0.); // Need pure rotation
 
-        if (std::abs(det-1.) < sbp::kvalue_accuracy) 
+        if (std::abs(det*_fluxScaling-1.) < sbp::kvalue_accuracy) 
             _kValueNoPhase = &SBDistort::_kValueNoPhaseNoDet;
         else
             _kValueNoPhase = &SBDistort::_kValueNoPhaseWithDet;
@@ -1028,6 +1028,9 @@ namespace galsim {
                 }
             }
         }
+        // At this point we are done with _absdet per se.  Multiply it by _fluxScaling
+        // so we can use it as the scale factor for kValue and getFlux.
+        _absdet *= _fluxScaling;
     }
 
     void SBDistort::SBDistortImpl::getXRange(

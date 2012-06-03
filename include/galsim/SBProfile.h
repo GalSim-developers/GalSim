@@ -959,12 +959,12 @@ namespace galsim {
 
             Position<double> centroid() const { return _cen+fwd(_adaptee.centroid()); }
 
-            double getFlux() const { return _adaptee.getFlux()*_absdet*_fluxScaling; }
+            double getFlux() const { return _adaptee.getFlux()*_absdet; }
 
             double getPositiveFlux() const 
-            { return _adaptee.getPositiveFlux()*_absdet*_fluxScaling; }
+            { return _adaptee.getPositiveFlux()*_absdet; }
             double getNegativeFlux() const 
-            { return _adaptee.getNegativeFlux()*_absdet*_fluxScaling; }
+            { return _adaptee.getNegativeFlux()*_absdet; }
 
             PhotonArray shoot(int N, UniformDeviate& ud) const;
 
