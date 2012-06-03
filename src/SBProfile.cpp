@@ -95,6 +95,7 @@ namespace galsim {
         dbg<<"xSize = "<<xSize<<std::endl;
         I.setOrigin(-xSize/2, -ySize/2);
 
+        assert(_pimpl.get());
         return _pimpl->fillXImage(I, dx);
     }
 
@@ -130,6 +131,7 @@ namespace galsim {
         // return _pimpl->fillXImage(I.view(), dx);
         // (And switch fillXImage to take a const ImageView<T>& argument.)
         ImageView<T> Iv = I.view();
+        assert(_pimpl.get());
         double ret = _pimpl->fillXImage(Iv, dx);
         I.setScale(Iv.getScale());
         dbg<<"scale => "<<I.getScale()<<std::endl;
@@ -207,6 +209,7 @@ namespace galsim {
             dbg<<"Use NFT = "<<NFT<<std::endl;
             // No aliasing: build KTable and transform
             KTable kt(NFT,dk);
+            assert(_pimpl.get());
             _pimpl->fillKGrid(kt); 
             xtmp = kt.transform();
         } else {
@@ -216,6 +219,7 @@ namespace galsim {
             int Nk = static_cast<int> (std::ceil(maxK()/dk)) * 2;
             dbg<<"Use Nk = "<<Nk<<std::endl;
             KTable kt(Nk, dk);
+            assert(_pimpl.get());
             _pimpl->fillKGrid(kt);
             KTable* kt2 = kt.wrap(NFT);
             xtmp = kt2->transform();
@@ -313,6 +317,7 @@ namespace galsim {
             dbg<<"Use NFT = "<<NFT<<std::endl;
             // No aliasing: build KTable and transform
             KTable kt(NFT,dk);
+            assert(_pimpl.get());
             _pimpl->fillKGrid(kt); 
             xtmp = kt.transform();
         } else {
@@ -322,6 +327,7 @@ namespace galsim {
             int Nk = static_cast<int> (std::ceil(maxK()/dk)) * 2;
             dbg<<"Use Nk = "<<Nk<<std::endl;
             KTable kt(Nk, dk);
+            assert(_pimpl.get());
             _pimpl->fillKGrid(kt);
             KTable* kt2 = kt.wrap(NFT);
             xtmp = kt2->transform();
@@ -489,6 +495,7 @@ namespace galsim {
 
         double dx = 2.*M_PI*oversamp/(NFT*dk);
         XTable xt(NFT,dx);
+        assert(_pimpl.get());
         _pimpl->fillXGrid(xt);
         KTable *ktmp = xt.transform();
 
@@ -587,6 +594,7 @@ namespace galsim {
 
         double dx = 2.*M_PI*oversamp/(NFT*dk);
         XTable xt(NFT,dx);
+        assert(_pimpl.get());
         _pimpl->fillXGrid(xt);
         KTable *ktmp = xt.transform();
 
@@ -672,6 +680,7 @@ namespace galsim {
     {
         xdbg<<"Start SBAdd::add.  Adding item # "<<_plist.size()+1<<std::endl;
         // Add new summand(s) to the _plist:
+        assert(rhs._pimpl.get());
         const SBAddImpl *sba = dynamic_cast<const SBAddImpl*>(rhs._pimpl.get());
         if (sba) {
             // If rhs is an SBAdd, copy its full list here
@@ -729,10 +738,12 @@ namespace galsim {
     {
         if (_plist.empty()) kt.clear();
         ConstIter pptr = _plist.begin();
+        assert(pptr->_pimpl.get());
         pptr->_pimpl->fillKGrid(kt);
         if (++pptr != _plist.end()) {
             KTable k2(kt.getN(),kt.getDk());
             for ( ; pptr!= _plist.end(); ++pptr) {
+                assert(pptr->_pimpl.get());
                 pptr->_pimpl->fillKGrid(k2);
                 kt.accumulate(k2);
             }
@@ -743,10 +754,12 @@ namespace galsim {
     {
         if (_plist.empty()) xt.clear();
         ConstIter pptr = _plist.begin();
+        assert(pptr->_pimpl.get());
         pptr->_pimpl->fillXGrid(xt);
         if (++pptr != _plist.end()) {
             XTable x2(xt.getN(),xt.getDx());
             for ( ; pptr!= _plist.end(); ++pptr) {
+                assert(pptr->_pimpl.get());
                 pptr->_pimpl->fillXGrid(x2);
                 xt.accumulate(x2);
             }
@@ -780,6 +793,7 @@ namespace galsim {
         const Position<double>& cen, double fluxScaling) :
         _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _fluxScaling(fluxScaling)
     {
+        assert(sbin._pimpl.get());
         const SBDistortImpl *sbd = dynamic_cast<const SBDistortImpl*>(sbin._pimpl.get());
         if (sbd) {
             // We are distorting something that's already a distortion.
@@ -799,7 +813,7 @@ namespace galsim {
     }
 
     SBDistort::SBDistortImpl::SBDistortImpl(
-        const SBProfile& sbin, const Ellipse e, double fluxScaling) : _fluxScaling(fluxScaling)
+        const SBProfile& sbin, const Ellipse& e, double fluxScaling) : _fluxScaling(fluxScaling)
     {
         // First get what we need from the Ellipse:
         tmv::Matrix<double> m = e.getMatrix();
@@ -809,6 +823,7 @@ namespace galsim {
         _mD = m(1,1);
         _cen = e.getX0();
         // Then repeat generic construction:
+        assert(sbin._pimpl.get());
         const SBDistortImpl *sbd = dynamic_cast<const SBDistortImpl*>(sbin._pimpl.get());
         if (sbd) {
             // We are distorting something that's already a distortion.
@@ -1273,6 +1288,7 @@ namespace galsim {
         dbg<<"Start SBConvolveImpl::add.  Adding item # "<<_plist.size()+1<<std::endl;
 
         // Add new terms(s) to the _plist:
+        assert(rhs._pimpl.get());
         const SBConvolveImpl *sbc = dynamic_cast<const SBConvolveImpl*>(rhs._pimpl.get());
         if (sbc) {  
             // If rhs is an SBConvolve, copy its list here
@@ -1319,10 +1335,12 @@ namespace galsim {
     {
         if (_plist.empty()) kt.clear();
         ConstIter pptr = _plist.begin();
+        assert(pptr->_pimpl.get());
         pptr->_pimpl->fillKGrid(kt);
         if (++pptr != _plist.end()) {
             KTable k2(kt.getN(),kt.getDk());
             for ( ; pptr!= _plist.end(); ++pptr) {
+                assert(pptr->_pimpl.get());
                 pptr->_pimpl->fillKGrid(k2);
                 kt *= k2;
             }
@@ -2280,12 +2298,14 @@ namespace galsim {
         xdbg<<"origN = "<<origN<<std::endl;
         while (N > maxN) {
             xdbg<<"shoot "<<maxN<<std::endl;
+            assert(_pimpl.get());
             PhotonArray pa = _pimpl->shoot(maxN, u);
             pa.scaleFlux(maxN / origN);
             pa.addTo(img);
             N -= maxN;
         }
         xdbg<<"shoot "<<N<<std::endl;
+        assert(_pimpl.get());
         PhotonArray pa = _pimpl->shoot(int(N), u);
         pa.scaleFlux(N / origN);
         pa.addTo(img);

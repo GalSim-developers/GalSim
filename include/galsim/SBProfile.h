@@ -133,12 +133,10 @@ namespace galsim {
      *
      * Well, technically, there is also a default constructor to make it easier to use
      * containers of SBProfiles.  However, it is an error to use an SBProfile that
-     * has been default constructed for any purpose.  We always assume the internal
-     * pointer is not null without checking.  So use of a default constructed SBProfile
-     * will probably lead to a segmentation fault.  Caveat programmor.
+     * has been default constructed for any purpose. 
      *
-     * Also, operator= is invalid.  This goes along with the idea that SBProfiles are 
-     * immutable, so op= isn't allowed.
+     * The assignment operator does a shallow copy, replacing the current contents of
+     * the SBProfile with that of the rhs profile.  
      *
      */
 
@@ -169,6 +167,10 @@ namespace galsim {
         /// Only legitimate public constructor is a copy constructor.
         SBProfile(const SBProfile& rhs) : _pimpl(rhs._pimpl) {}
 
+        /// operator= replaces the current contents with those of the rhs.
+        SBProfile& operator=(const SBProfile& rhs) 
+        { _pimpl = rhs._pimpl; return *this; }
+
         /// Destructor isn't virtual, since derived classes don't have anything to cleanup.
         ~SBProfile() {}                        
 
@@ -182,7 +184,10 @@ namespace galsim {
          * @param[in] _p 2D position in real space.
          */
         double xValue(const Position<double>& p) const
-        { return _pimpl->xValue(p); }
+        { 
+            assert(_pimpl.get());
+            return _pimpl->xValue(p); 
+        }
 
         /**
          * @brief Return value of SBProfile at a chosen 2D position in k space.
@@ -190,7 +195,10 @@ namespace galsim {
          * @param[in] _p 2D position in k space.
          */
         std::complex<double> kValue(const Position<double>& k) const
-        { return _pimpl->kValue(k); }
+        { 
+            assert(_pimpl.get());
+            return _pimpl->kValue(k); 
+        }
 
         //@{
         /**
@@ -202,26 +210,47 @@ namespace galsim {
          *  Derived classes may override this if they a have different range.
          */
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
-        { _pimpl->getXRange(xmin,xmax,splits); }
+        { 
+            assert(_pimpl.get());
+            _pimpl->getXRange(xmin,xmax,splits); 
+        }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
-        { _pimpl->getYRange(ymin,ymax,splits); }
+        { 
+            assert(_pimpl.get());
+            _pimpl->getYRange(ymin,ymax,splits); 
+        }
 
         void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
-        { _pimpl->getYRange(x,ymin,ymax,splits); }
+        { 
+            assert(_pimpl.get());
+            _pimpl->getYRange(x,ymin,ymax,splits); 
+        }
         //@}
 
         /// @brief Value of k beyond which aliasing can be neglected.
-        double maxK() const { return _pimpl->maxK(); }
+        double maxK() const 
+        { 
+            assert(_pimpl.get());
+            return _pimpl->maxK(); 
+        }
 
         /// @brief Image pixel spacing that does not alias maxK.
         double nyquistDx() const { return M_PI / maxK(); }
 
         /// @brief Sampling in k space necessary to avoid folding too much of image in x space.
-        double stepK() const { return _pimpl->stepK(); }
+        double stepK() const 
+        { 
+            assert(_pimpl.get());
+            return _pimpl->stepK(); 
+        }
 
         /// @brief Characteristic that can affect efficiency of evaluation.
-        bool isAxisymmetric() const { return _pimpl->isAxisymmetric(); }
+        bool isAxisymmetric() const 
+        { 
+            assert(_pimpl.get());
+            return _pimpl->isAxisymmetric(); 
+        }
 
         /** 
          * @brief Characteristic that can affect efficiency of evaluation.
@@ -229,7 +258,11 @@ namespace galsim {
          * SBProfile is "analytic" in the real domain if values can be determined immediately at 
          * any position through formula or a stored table (no DFT).
          */
-        bool isAnalyticX() const { return _pimpl->isAnalyticX(); }
+        bool isAnalyticX() const 
+        { 
+            assert(_pimpl.get());
+            return _pimpl->isAnalyticX(); 
+        }
 
         /**
          * @brief Characteristic that can affect efficiency of evaluation.
@@ -237,13 +270,25 @@ namespace galsim {
          * SBProfile is "analytic" in the k domain if values can be determined immediately at any 
          * position through formula or a stored table (no DFT).
          */
-        bool isAnalyticK() const { return _pimpl->isAnalyticK(); }
+        bool isAnalyticK() const 
+        { 
+            assert(_pimpl.get());
+            return _pimpl->isAnalyticK(); 
+        }
 
         /// @brief Returns (X, Y) centroid of SBProfile.
-        Position<double> centroid() const { return _pimpl->centroid(); }
+        Position<double> centroid() const 
+        { 
+            assert(_pimpl.get());
+            return _pimpl->centroid(); 
+        }
 
         /// @brief Get the total flux of the SBProfile.
-        double getFlux() const { return _pimpl->getFlux(); }
+        double getFlux() const 
+        { 
+            assert(_pimpl.get());
+            return _pimpl->getFlux(); 
+        }
 
         // ****Methods implemented in base class****
 
@@ -330,7 +375,11 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        PhotonArray shoot(int N, UniformDeviate& ud) const { return _pimpl->shoot(N,ud); }
+        PhotonArray shoot(int N, UniformDeviate& ud) const 
+        { 
+            assert(_pimpl.get());
+            return _pimpl->shoot(N,ud); 
+        }
 
         /**
          * @brief Return expectation value of flux in positive photons when shoot() is called
@@ -347,7 +396,11 @@ namespace galsim {
          *
          * @returns Expected positive-photon flux.
          */
-        double getPositiveFlux() const { return _pimpl->getPositiveFlux(); }
+        double getPositiveFlux() const 
+        { 
+            assert(_pimpl.get());
+            return _pimpl->getPositiveFlux(); 
+        }
 
         /**
          * @brief Return expectation value of absolute value of flux in negative photons from 
@@ -365,7 +418,11 @@ namespace galsim {
          *
          * @returns Expected absolute value of negative-photon flux.
          */
-        double getNegativeFlux() const { return _pimpl->getNegativeFlux(); }
+        double getNegativeFlux() const 
+        { 
+            assert(_pimpl.get());
+            return _pimpl->getNegativeFlux(); 
+        }
 
         // **** Drawing routines ****
         //@{
@@ -682,10 +739,6 @@ namespace galsim {
         SBProfile(SBProfileImpl* pimpl) : _pimpl(pimpl) {}
 
         boost::shared_ptr<SBProfileImpl> _pimpl;
-
-    private:
-        // op= is undefined
-        void operator=(const SBProfile& rhs);
     };
 
     /** 
@@ -864,7 +917,7 @@ namespace galsim {
          * @param[in] sbin SBProfile being distorted.
          * @param[in] e  Ellipse.
          */
-        SBDistort(const SBProfile& sbin, const Ellipse e=Ellipse(), double fluxScaling=1.) : 
+        SBDistort(const SBProfile& sbin, const Ellipse& e=Ellipse(), double fluxScaling=1.) : 
             SBProfile(new SBDistortImpl(sbin,e,fluxScaling)) {}
 
         /// @brief Copy constructor
@@ -882,7 +935,7 @@ namespace galsim {
             SBDistortImpl(const SBProfile& sbin, double mA, double mB, double mC, double mD,
                           const Position<double>& cen, double fluxScaling);
 
-            SBDistortImpl(const SBProfile& sbin, const Ellipse e, double fluxScaling);
+            SBDistortImpl(const SBProfile& sbin, const Ellipse& e, double fluxScaling);
 
             ~SBDistortImpl() {}
 
