@@ -183,7 +183,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
         raise RuntimeError("Error: requested shear is >1!")
 
     # make sure target PSF is normalized
-    target_PSF.setFlux(1.0)
+    target_PSF = target_PSF.setFlux(1.0)
 
     # rotate
     if rotation_angle != None:

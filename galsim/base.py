@@ -23,7 +23,7 @@ class GSObject:
 
     # Make op* and op*= work to adjust the flux of an object
     def __imul__(self, other):
-        self.setFlux(other * self.getFlux())
+        self.scaleFlux(other)
         return self
 
     def __mul__(self, other):
@@ -38,7 +38,7 @@ class GSObject:
 
     # Likewise for op/ and op/=
     def __idiv__(self, other):
-        self.setFlux(self.getFlux() / other)
+        self.scaleFlux(1. / other)
         return self
 
     def __div__(self, other):
@@ -96,12 +96,6 @@ class GSObject:
         """
         return self.SBProfile.centroid()
 
-    def setFlux(self, flux=1.):
-        """@brief Set the flux of the object.
-        """
-        self.SBProfile.setFlux(flux)
-        return
-
     def getFlux(self):
         """@brief Returns the flux of the object.
         """
@@ -125,6 +119,16 @@ class GSObject:
         @param position  A 2D galsim.PositionD/I instance giving the position in k space.
         """
         return self.SBProfile.kValue(position)
+
+    def scaleFlux(self, fluxRatio):
+        """@brief Multiply the flux of the object by fluxRatio
+        """
+        GSObject.__init__(self, self.SBProfile.scaleFlux(fluxRatio))
+
+    def setFlux(self, flux):
+        """@brief Set the flux of the object.
+        """
+        GSObject.__init__(self, self.SBProfile.setFlux(flux))
 
     def applyDistortion(self, ellipse):
         """@brief Apply a galsim.Ellipse distortion to this object.

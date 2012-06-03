@@ -838,7 +838,7 @@ def test_sbprofile_rescale():
     """Test the flux rescaling of a Sersic profile against a known result.
     """
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
-    mySBP.setFlux(2)
+    mySBP = mySBP.setFlux(2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_doubleflux.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
@@ -904,7 +904,7 @@ def test_sbprofile_sbinterpolatedimage():
         flux_tot = image_out.array.sum()
         print 'flux_tot = ',flux_tot
 
-        sbinterp.setFlux(sbinterp.getFlux() / flux_max)
+        sbinterp = sbinterp.scaleFlux(1. / flux_max)
         nphot = flux_tot / flux_max / photon_shoot_accuracy**2
         print 'nphot = ',nphot
         ud = galsim.UniformDeviate()

@@ -172,7 +172,13 @@ namespace galsim {
         { _pimpl = rhs._pimpl; return *this; }
 
         /// Destructor isn't virtual, since derived classes don't have anything to cleanup.
-        ~SBProfile() {}                        
+        ~SBProfile() 
+        {
+            // Not strictly necessary, but it sets the ptr to 0, so if somehow someone
+            // manages to use an SBProfile after it was deleted, the assert(_pimpl.get())
+            // will trigger an exception.
+            _pimpl.reset();
+        }
 
         /** 
          * @brief Return value of SBProfile at a chosen 2D position in real space.
@@ -293,6 +299,14 @@ namespace galsim {
         // ****Methods implemented in base class****
 
         // Transformations (all are special cases of affine transformations via SBDistort):
+
+        /**
+         * @brief Multiple the flux by fluxRatio
+         *
+         * This returns a new SBProfile that represents a new Surface Brightness 
+         * Profile with the new flux. 
+         */
+        SBDistort scaleFlux(double fluxRatio) const; 
 
         /**
          * @brief Set the flux to a new value
@@ -664,7 +678,7 @@ namespace galsim {
             SBProfileImpl() {}
 
             // Virtual destructor
-            virtual ~SBProfileImpl() {}                        
+            virtual ~SBProfileImpl() {}
 
             // Pure virtual functions:
             virtual double xValue(const Position<double>& p) const =0;
@@ -940,7 +954,7 @@ namespace galsim {
             ~SBDistortImpl() {}
 
             double xValue(const Position<double>& p) const 
-            { return _adaptee.xValue(inv(p-_cen) * _fluxScaling); }
+            { return _adaptee.xValue(inv(p-_cen)) * _fluxScaling; }
 
             std::complex<double> kValue(const Position<double>& k) const;
 
@@ -980,7 +994,7 @@ namespace galsim {
             Position<double> _cen;  ///< Centroid position.
 
             // Calculate and save these:
-            double _absdet;  ///< Determinant (flux magnification) of `M` matrix.
+            double _absdet;  ///< Determinant (flux magnification) of `M` matrix * fluxScaling
             double _fluxScaling;  ///< Amount to multiply flux by.
             double _invdet;  ///< Inverse determinant of `M` matrix.
             double _major; ///< Major axis of ellipse produced from unit circle.
@@ -1453,6 +1467,7 @@ namespace galsim {
                 }
                 return info;
             }
+
             /// @brief Destructor.
             ~InfoBarn() 
             {

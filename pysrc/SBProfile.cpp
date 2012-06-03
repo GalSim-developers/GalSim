@@ -10,11 +10,11 @@ namespace galsim {
 namespace {
 
 typedef bp::return_value_policy<bp::manage_new_object> ManageNew;
-typedef bp::return_value_policy<bp::return_by_value> ReturnByValue;
 
 struct PyPhotonArray {
     
-    static PhotonArray * construct(bp::object const & vx, bp::object const & vy, bp::object const & vflux) {
+    static PhotonArray * construct(bp::object const & vx, bp::object const & vy,
+                                   bp::object const & vflux) {
         Py_ssize_t size = bp::len(vx);
         if (size != bp::len(vx)) {
             PyErr_SetString(PyExc_ValueError,
@@ -199,11 +199,12 @@ struct PySBProfile {
                  " DFT.")
             .def("centroid", &SBProfile::centroid)
             .def("getFlux", &SBProfile::getFlux)
-            .def("setFlux", &SBProfile::setFlux, bp::args("flux"), ReturnByValue())
-            .def("distort", &SBProfile::distort, bp::args("e"), ReturnByValue())
-            .def("shear", &SBProfile::shear, bp::args("e1", "e2"), ReturnByValue())
-            .def("rotate", &SBProfile::rotate, bp::args("theta"), ReturnByValue())
-            .def("shift", &SBProfile::shift, bp::args("dx", "dy"), ReturnByValue())
+            .def("scaleFlux", &SBProfile::setFlux, bp::args("fluxRatio"))
+            .def("setFlux", &SBProfile::setFlux, bp::args("flux"))
+            .def("distort", &SBProfile::distort, bp::args("e"))
+            .def("shear", &SBProfile::shear, bp::args("e1", "e2"))
+            .def("rotate", &SBProfile::rotate, bp::args("theta"))
+            .def("shift", &SBProfile::shift, bp::args("dx", "dy"))
             .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
             .def("draw", (ImageView<float> (SBProfile::*)(double, int) const)&SBProfile::draw,
                  (bp::arg("dx")=0., bp::arg("wmult")=1), "default draw routine")
@@ -521,7 +522,7 @@ void pyExportSBProfile() {
     PySBDeVaucouleurs::wrap();
     PyPhotonArray::wrap();
 
-    bp::def("SBParse", &galsim::SBParse, galsim::ReturnByValue());
+    bp::def("SBParse", &galsim::SBParse);
 }
 
 } // namespace galsim

@@ -1,7 +1,17 @@
 
 #include <algorithm>
 
+//#define DEBUGLOGGING
+
 #include "SBInterpolatedImage.h"
+
+#ifdef DEBUGLOGGING
+#include <fstream>
+//std::ostream* dbgout = new std::ofstream("debug.out");
+std::ostream* dbgout = &std::cerr;
+int verbose_level = 2;
+#endif
+
 
 namespace galsim {
 
@@ -56,7 +66,7 @@ namespace galsim {
         if (padFactor <= 0.) padFactor = sbp::oversample_x;
         // Choose the padded size for input array - size 2^N or 3*2^N
         // Make FFT either 2^n or 3x2^n
-        _Nk = goodFFTSize(static_cast<int> (std::floor(padFactor*_Ninitial)));
+        _Nk = goodFFTSize(int(std::floor(padFactor*_Ninitial)));
         _dk = TWOPI / (_Nk*_dx);
 
         // allocate xTables
@@ -219,7 +229,6 @@ namespace galsim {
     // Same deal: reverse axis order if we have separable interpolant in X domain
     void SBInterpolatedImage::SBInterpolatedImageImpl::fillXGrid(XTable& xt) const 
     {
-        dbg << "SBInterpolatedImage::fillXGrid called" << std::endl;
         if ( dynamic_cast<const InterpolantXY*> (_xInterp)) {
             int N = xt.getN();
             double dx = xt.getDx();
@@ -286,13 +295,13 @@ namespace galsim {
     double SBInterpolatedImage::SBInterpolatedImageImpl::xValue(const Position<double>& p) const 
     {
         // Interpolate WITHOUT wrapping the image.
-        int ixMin = static_cast<int> ( std::ceil(p.x/_dx - _xInterp->xrange()));
+        int ixMin = int( std::ceil(p.x/_dx - _xInterp->xrange()));
         ixMin = std::max(ixMin, -_Ninitial/2);
-        int ixMax = static_cast<int> ( std::floor(p.x/_dx + _xInterp->xrange()));
+        int ixMax = int( std::floor(p.x/_dx + _xInterp->xrange()));
         ixMax = std::min(ixMax, _Ninitial/2-1);
-        int iyMin = static_cast<int> ( std::ceil(p.y/_dx - _xInterp->xrange()));
+        int iyMin = int( std::ceil(p.y/_dx - _xInterp->xrange()));
         iyMin = std::max(iyMin, -_Ninitial/2);
-        int iyMax = static_cast<int> ( std::floor(p.y/_dx + _xInterp->xrange()));
+        int iyMax = int( std::floor(p.y/_dx + _xInterp->xrange()));
         iyMax = std::min(iyMax, _Ninitial/2-1);
 
         if (ixMax < ixMin || iyMax < iyMin) return 0.;  // kernel does not overlap data
@@ -314,24 +323,24 @@ namespace galsim {
     }
 
     std::complex<double> SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
-        const Position<double>& p) const 
+        const Position<double>& k) const 
     {
         checkReady();
         // Interpolate in k space, first apply kInterp kernel to wrapped
         // k-space data, then multiply by FT of xInterp kernel.
 
         // Don't bother if the desired k value is cut off by the x interpolant:
-        double ux = p.x*_dx/TWOPI;
+        double ux = k.x*_dx/TWOPI;
         if (std::abs(ux) > _xInterp->urange()) return std::complex<double>(0.,0.);
-        double uy = p.y*_dx/TWOPI;
+        double uy = k.y*_dx/TWOPI;
         if (std::abs(uy) > _xInterp->urange()) return std::complex<double>(0.,0.);
         double xKernelTransform = _xInterp->uval(ux, uy);
 
         // Range of k points within kernel
-        int ixMin = static_cast<int> (std::ceil(p.x/_dk - _kInterp->xrange()));
-        int ixMax = static_cast<int> (std::floor(p.x/_dk + _kInterp->xrange()));
-        int iyMin = static_cast<int> (std::ceil(p.y/_dk - _kInterp->xrange()));
-        int iyMax = static_cast<int> (std::floor(p.y/_dk + _kInterp->xrange()));
+        int ixMin = int(std::ceil(k.x/_dk - _kInterp->xrange()));
+        int ixMax = int(std::floor(k.x/_dk + _kInterp->xrange()));
+        int iyMin = int(std::ceil(k.y/_dk - _kInterp->xrange()));
+        int iyMax = int(std::floor(k.y/_dk + _kInterp->xrange()));
 
         int ixLast = std::min(ixMax, ixMin+_Nk-1);
         int iyLast = std::min(iyMax, iyMin+_Nk-1);
@@ -346,10 +355,10 @@ namespace galsim {
                 double sumk = 0.;
                 int iyy=iy;
                 while (iyy <= iyMax) {
-                    double deltaY = p.y/_dk - iyy;
+                    double deltaY = k.y/_dk - iyy;
                     int ixx = ix;
                     while (ixx <= ixMax) {
-                        double deltaX = p.x/_dk - ixx;
+                        double deltaX = k.x/_dk - ixx;
                         sumk += _kInterp->xval(deltaX, deltaY);
                         ixx += _Nk;
                     }
