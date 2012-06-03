@@ -260,6 +260,8 @@ namespace galsim {
         mutable KTable* _ksum; ///< Arrays summed with weights in k space.
         mutable bool _xsumValid; ///< Is `xsum` valid?
         mutable bool _ksumValid; ///< Is `ksum` valid?
+        mutable bool _xsumnew; ///< Was xsum created with its own call to new XTable
+        mutable bool _ksumnew; ///< Was ksum created with its own call to new KTable
 
         /** 
          * @brief Set true if kTables, centroid/flux values,etc., are set for current x pixel 

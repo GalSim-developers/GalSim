@@ -20,7 +20,8 @@ namespace galsim {
         _wts(_Nimages, 1.), _fluxes(_Nimages, 1.), 
         _xFluxes(_Nimages, 0.), _yFluxes(_Nimages,0.),
         _xsum(0), _ksum(0), _xsumValid(false), _ksumValid(false),
-        _ready(false), _readyToShoot(false) 
+        _xsumnew(false), _ksumnew(false),
+        _ready(false), _readyToShoot(false)
     {
         assert(_Ninitial%2==0);
         assert(_Ninitial>=2);
@@ -44,7 +45,8 @@ namespace galsim {
         _wts(_Nimages, 1.), _fluxes(_Nimages, 1.), 
         _xFluxes(_Nimages, 0.), _yFluxes(_Nimages,0.),
         _xsum(0), _ksum(0), _xsumValid(false), _ksumValid(false),
-        _ready(false), _readyToShoot(false) 
+        _xsumnew(false), _ksumnew(false),
+        _ready(false), _readyToShoot(false)
     {
         _Ninitial = std::max( img.getYMax()-img.getYMin()+1, img.getXMax()-img.getXMin()+1);
         _Ninitial = _Ninitial + _Ninitial%2;
@@ -78,6 +80,7 @@ namespace galsim {
         _xInterp(rhs._xInterp), _kInterp(rhs._kInterp),
         _wts(rhs._wts), _fluxes(rhs._fluxes), _xFluxes(rhs._xFluxes), _yFluxes(rhs._yFluxes),
         _xsum(0), _ksum(0), _xsumValid(false), _ksumValid(false), 
+        _xsumnew(false), _ksumnew(false),
         _ready(rhs._ready), _readyToShoot(false), _max_size(rhs._max_size)
     {
         // copy tables
@@ -91,8 +94,8 @@ namespace galsim {
     {
         for (size_t i=0; i<_vx.size(); i++) if (_vx[i]) { delete _vx[i]; _vx[i]=0; }
         for (size_t i=0; i<_vk.size(); i++) if (_vk[i]) { delete _vk[i]; _vk[i]=0; }
-        if (_xsum) { delete _xsum; _xsum=0; }
-        if (_ksum) { delete _ksum; _ksum=0; }
+        if (_xsumnew) { delete _xsum; _xsum=0; }
+        if (_ksumnew) { delete _ksum; _ksum=0; }
     }
 
     double SBInterpolatedImage::getFlux() const 
@@ -190,15 +193,20 @@ namespace galsim {
     {
         checkReady();
         if (_xsumValid) return;
-        if (!_xsum) {
-            _xsum = new XTable(*_vx[0]);
-            *_xsum *= _wts[0];
+        if (!_xsum && _Nimages == 1 && _wts[0] == 1.) {
+            _xsum = _vx[0];
         } else {
-            _xsum->clear();
-            _xsum->accumulate(*_vx[0], _wts[0]);
+            if (!_xsum) {
+                _xsum = new XTable(*_vx[0]);
+                _xsumnew = true;
+                *_xsum *= _wts[0];
+            } else {
+                _xsum->clear();
+                _xsum->accumulate(*_vx[0], _wts[0]);
+            }
+            for (int i=1; i<_Nimages; i++)
+                _xsum->accumulate(*_vx[i], _wts[i]);
         }
-        for (int i=1; i<_Nimages; i++)
-            _xsum->accumulate(*_vx[i], _wts[i]);
         _xsumValid = true;
     }
 
@@ -206,15 +214,20 @@ namespace galsim {
     {
         checkReady();
         if (_ksumValid) return;
-        if (!_ksum) {
-            _ksum = new KTable(*_vk[0]);
-            *_ksum *= _wts[0];
+        if (!_ksum && _Nimages == 1 && _wts[0] == 1.) {
+            _ksum = _vk[0];
         } else {
-            _ksum->clear();
-            _ksum->accumulate(*_vk[0], _wts[0]);
+            if (!_ksum) {
+                _ksum = new KTable(*_vk[0]);
+                _ksumnew = true;
+                *_ksum *= _wts[0];
+            } else {
+                _ksum->clear();
+                _ksum->accumulate(*_vk[0], _wts[0]);
+            }
+            for (int i=1; i<_Nimages; i++)
+                _ksum->accumulate(*_vk[i], _wts[i]);
         }
-        for (int i=1; i<_Nimages; i++)
-            _ksum->accumulate(*_vk[i], _wts[i]);
         _ksumValid = true;
     }
 
