@@ -140,6 +140,8 @@ namespace galsim {
      *
      */
 
+    class SBDistort;
+
     class SBProfile
     {
     public:
@@ -1406,6 +1408,8 @@ namespace galsim {
         { return static_cast<const SBSersicImpl&>(*_pimpl).getHalfLightRadius(); }
 
     protected:
+        class SersicInfo;
+
     class SBSersicImpl : public SBProfileImpl
     {
     public:
@@ -1731,6 +1735,34 @@ namespace galsim {
         ~SBAiry() {}
 
     protected:
+
+        /**
+         * @brief Subclass is a scale-free version of the Airy radial function.
+         *
+         * Serves as interface to numerical photon-shooting class `OneDimensionalDeviate`.
+         *
+         * Input radius is in units of lambda/D.  Output normalized
+         * to integrate to unity over input units.
+         */
+        class AiryRadialFunction: public FluxDensity 
+        {
+        public:
+            /**
+             * @brief Constructor
+             * @param[in] obscuration Fractional linear size of central obscuration of pupil.
+             */
+            AiryRadialFunction(double obscuration): _obscuration(obscuration) {}
+            /**
+             * @brief Return the Airy function
+             * @param[in] radius Radius in units of (lambda / D)
+             * @returns Airy function, normalized to integrate to unity.
+             */
+            double operator()(double radius) const;
+            void setObscuration(double obscuration) { _obscuration=obscuration; }
+        private:
+            double _obscuration; ///> Central obstruction size
+        };
+
     class SBAiryImpl : public SBProfileImpl 
     {
     public:
@@ -1798,33 +1830,6 @@ namespace galsim {
         SBAiryImpl(const SBAiryImpl& rhs);
         void operator=(const SBAiryImpl& rhs);
     };
-
-        /**
-         * @brief Subclass is a scale-free version of the Airy radial function.
-         *
-         * Serves as interface to numerical photon-shooting class `OneDimensionalDeviate`.
-         *
-         * Input radius is in units of lambda/D.  Output normalized
-         * to integrate to unity over input units.
-         */
-        class AiryRadialFunction: public FluxDensity 
-        {
-        public:
-            /**
-             * @brief Constructor
-             * @param[in] obscuration Fractional linear size of central obscuration of pupil.
-             */
-            AiryRadialFunction(double obscuration): _obscuration(obscuration) {}
-            /**
-             * @brief Return the Airy function
-             * @param[in] radius Radius in units of (lambda / D)
-             * @returns Airy function, normalized to integrate to unity.
-             */
-            double operator()(double radius) const;
-            void setObscuration(double obscuration) { _obscuration=obscuration; }
-        private:
-            double _obscuration; ///> Central obstruction size
-        };
 
     private:
         // op= is undefined
