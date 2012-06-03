@@ -793,35 +793,20 @@ namespace galsim {
     SBDistort::SBDistortImpl::SBDistortImpl(
         const SBProfile& sbin, double mA, double mB, double mC, double mD,
         const Position<double>& cen, double fluxScaling) :
-        _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _fluxScaling(fluxScaling)
+        _adaptee(sbin), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _fluxScaling(fluxScaling)
     {
         dbg<<"Start DistortImpl (1)\n";
         dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", fluxScaling = "<<_fluxScaling<<std::endl;
-        assert(sbin._pimpl.get());
-        const SBDistortImpl* sbd = dynamic_cast<const SBDistortImpl*>(sbin._pimpl.get());
-        if (sbd) {
-            dbg<<"wrapping another distortion.\n";
-            // We are distorting something that's already a distortion.
-            // So just compound the affine transformaions
-            _adaptee = sbd->_adaptee;
-            _cen = cen + fwd(sbd->_cen);
-            // New matrix is product (M_this) * (M_old)
-            _mA = mA*sbd->_mA + mB*sbd->_mC;
-            _mB = mA*sbd->_mB + mB*sbd->_mD;
-            _mC = mC*sbd->_mA + mD*sbd->_mC;
-            _mD = mC*sbd->_mB + mD*sbd->_mD;
-            _fluxScaling *= sbd->_fluxScaling;
-        } else {
-            dbg<<"wrapping a non-distortion.\n";
-            // Distorting something generic
-            _adaptee = sbin;
-        }
+
+        // All the actual initialization is in a separate function so we can share code
+        // with the other constructor.
         initialize();
     }
 
     SBDistort::SBDistortImpl::SBDistortImpl(
-        const SBProfile& sbin, const Ellipse& e, double fluxScaling) : _fluxScaling(fluxScaling)
+        const SBProfile& sbin, const Ellipse& e, double fluxScaling) :
+        _adaptee(sbin), _cen(e.getX0()), _fluxScaling(fluxScaling)
     {
         dbg<<"Start DistortImpl (2)\n";
         dbg<<"e = "<<e<<", fluxScaling = "<<_fluxScaling<<std::endl;
@@ -831,33 +816,52 @@ namespace galsim {
         _mB = m(0,1);
         _mC = m(1,0);
         _mD = m(1,1);
-        _cen = e.getX0();
-        // Then repeat generic construction:
-        assert(sbin._pimpl.get());
-        const SBDistortImpl* sbd = dynamic_cast<const SBDistortImpl*>(sbin._pimpl.get());
-        if (sbd) {
-            dbg<<"wrapping another distortion.\n";
-            // We are distorting something that's already a distortion.
-            // So just compound the affine transformaions
-            _adaptee = sbd->_adaptee;
-            _cen = e.getX0() + fwd(sbd->_cen);
-            // New matrix is product (M_this) * (M_old)
-            double mA = _mA; double mB=_mB; double mC=_mC; double mD=_mD;
-            _mA = mA*sbd->_mA + mB*sbd->_mC;
-            _mB = mA*sbd->_mB + mB*sbd->_mD;
-            _mC = mC*sbd->_mA + mD*sbd->_mC;
-            _mD = mC*sbd->_mB + mD*sbd->_mD;
-            _fluxScaling *= sbd->_fluxScaling;
-        } else {
-            dbg<<"wrapping a non-distortion.\n";
-            // Distorting something generic
-            _adaptee = sbin;
-        }
+
+        // Then move on to the rest of the initialization process.
         initialize();
     }
 
     void SBDistort::SBDistortImpl::initialize() 
     {
+        dbg<<"Start SBDistortImpl initialize\n";
+        // First check if our adaptee is really another SBDistort:
+        assert(_adaptee._pimpl.get());
+        const SBDistortImpl* sbd = dynamic_cast<const SBDistortImpl*>(_adaptee._pimpl.get());
+        dbg<<"sbd = "<<sbd<<std::endl;
+        if (sbd) {
+            dbg<<"wrapping another distortion.\n";
+            // We are distorting something that's already a distortion.
+            // So just compound the affine transformaions
+            // New matrix is product (M_this) * (M_old)
+            double mA = _mA; double mB=_mB; double mC=_mC; double mD=_mD;
+            _cen += Position<double>(mA*sbd->_cen.x + mB*sbd->_cen.y,
+                                     mC*sbd->_cen.x + mD*sbd->_cen.y);
+            _mA = mA*sbd->_mA + mB*sbd->_mC;
+            _mB = mA*sbd->_mB + mB*sbd->_mD;
+            _mC = mC*sbd->_mA + mD*sbd->_mC;
+            _mD = mC*sbd->_mB + mD*sbd->_mD;
+            _fluxScaling *= sbd->_fluxScaling;
+            dbg<<"before set adaptee"<<std::endl;
+            _adaptee = sbd->_adaptee;
+            dbg<<"after set adaptee"<<std::endl;
+        } else {
+            dbg<<"wrapping a non-distortion.\n";
+        }
+   
+        // It will be reasonably common to have an identity matrix (for just
+        // a flux scaling and/or shift) for (A,B,C,D).  If so, we can use simpler
+        // versions of fwd and inv:
+        if (_mA == 1. && _mB == 0. && _mC == 0. && _mD == 1.) {
+            dbg<<"Using identity functions for fwd and inv\n";
+            _fwd = &SBDistort::_ident;
+            _inv = &SBDistort::_ident;
+        } else {
+            dbg<<"Using normal fwd and inv\n";
+            _fwd = &SBDistort::_fwd_normal;
+            _inv = &SBDistort::_inv_normal;
+        }
+
+        // Calculate some derived quantities:
         double det = _mA*_mD-_mB*_mC;
         if (det==0.) throw SBError("Attempt to SBDistort with degenerate matrix");
         _absdet = std::abs(det);
@@ -872,16 +876,6 @@ namespace galsim {
             && (_mB==-_mC) 
             && (_mA==_mD)
             && (_cen.x==0.) && (_cen.y==0.); // Need pure rotation
-
-        if (std::abs(_absdet*_fluxScaling-1.) < sbp::kvalue_accuracy) {
-            xdbg<<"absdet * fluxscaling = "<<_absdet*_fluxScaling<<" = 1, so use NoDet version.\n";
-            _kValueNoPhase = &SBDistort::_kValueNoPhaseNoDet;
-        } else {
-            xdbg<<"absdet * fluxscaling = "<<_absdet*_fluxScaling<<" != 1, so use WithDet version.\n";
-            _kValueNoPhase = &SBDistort::_kValueNoPhaseWithDet;
-        }
-        if (_cen.x == 0. && _cen.y == 0.) _kValue = _kValueNoPhase;
-        else _kValue = &SBDistort::_kValueWithPhase;
 
         xdbg<<"Distortion init\n";
         xdbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
@@ -1049,6 +1043,17 @@ namespace galsim {
         // so we can use it as the scale factor for kValue and getFlux.
         _absdet *= _fluxScaling;
         xdbg<<"_absdet -> "<<_absdet<<std::endl;
+
+        // Figure out which function we need for kValue and kValueNoPhase
+        if (std::abs(_absdet-1.) < sbp::kvalue_accuracy) {
+            xdbg<<"absdet = "<<_absdet*_fluxScaling<<" = 1, so use NoDet version.\n";
+            _kValueNoPhase = &SBDistort::_kValueNoPhaseNoDet;
+        } else {
+            xdbg<<"absdet = "<<_absdet*_fluxScaling<<" != 1, so use WithDet version.\n";
+            _kValueNoPhase = &SBDistort::_kValueNoPhaseWithDet;
+        }
+        if (_cen.x == 0. && _cen.y == 0.) _kValue = _kValueNoPhase;
+        else _kValue = &SBDistort::_kValueWithPhase;
     }
 
     void SBDistort::SBDistortImpl::getXRange(

@@ -1013,15 +1013,15 @@ namespace galsim {
              * @returns transformed position.
              */
             Position<double> fwd(const Position<double>& p) const 
-            { return Position<double>(_mA*p.x+_mB*p.y,_mC*p.x+_mD*p.y); }
+            { return _fwd(_mA,_mB,_mC,_mD,p.x,p.y,_invdet); }
 
             /// @brief Forward coordinate transform with transpose of `M` matrix.
             Position<double> fwdT(const Position<double>& p) const 
-            { return Position<double>(_mA*p.x+_mC*p.y , _mB*p.x+_mD*p.y); }
+            { return _fwd(_mA,_mC,_mB,_mD,p.x,p.y,_invdet); }
 
             /// @brief Inverse coordinate transform with `M` matrix.
             Position<double> inv(const Position<double>& p) const 
-            { return Position<double>(_invdet*(_mD*p.x-_mB*p.y), _invdet*(-_mC*p.x+_mA*p.y) ); }
+            { return _inv(_mA,_mB,_mC,_mD,p.x,p.y,_invdet); }
 
             /// @brief Returns the the k value (no phase).
             std::complex<double> kValueNoPhase(const Position<double>& k) const;
@@ -1032,6 +1032,11 @@ namespace galsim {
             std::complex<double> (*_kValueNoPhase)(
                 const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
                 const Position<double>& , const Position<double>& );
+
+            Position<double> (*_fwd)(
+                double mA, double mB, double mC, double mD, double x, double y, double );
+            Position<double> (*_inv)(
+                double mA, double mB, double mC, double mD, double x, double y, double invdet);
 
             // Copy constructor and op= are undefined.
             SBDistortImpl(const SBDistortImpl& rhs);
@@ -1047,6 +1052,16 @@ namespace galsim {
         static std::complex<double> _kValueWithPhase(
             const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
             const Position<double>& k, const Position<double>& cen);
+
+        static Position<double> _fwd_normal(
+            double mA, double mB, double mC, double mD, double x, double y, double )
+        { return Position<double>(mA*x + mB*y, mC*x + mD*y); }
+        static Position<double> _inv_normal(
+            double mA, double mB, double mC, double mD, double x, double y, double invdet)
+        { return Position<double>(invdet*(mD*x - mB*y), invdet*(-mC*x + mA*y)); }
+        static Position<double> _ident(
+            double , double , double , double , double x, double y, double )
+        { return Position<double>(x,y); }
 
     private:
         // op= is undefined
