@@ -532,7 +532,7 @@ def Script3():
         all_images += [sim_image]
         t5 = time.time()
 
-        logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
+        #logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
         logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t5-t1)
 
     logger.info('Done making images of galaxies')
@@ -579,8 +579,7 @@ def main(argv):
         Script2()
 
     if scriptNum == 0 or scriptNum == 3:
-        for iter in range(1):
-            Script3()
+        Script3()
 
 if __name__ == "__main__":
     main(sys.argv)
