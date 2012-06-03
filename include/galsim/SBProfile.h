@@ -35,7 +35,7 @@ namespace galsim {
     namespace sbp {
 
         // Magic numbers:
-        
+
         /// Constant giving minimum FFT size we're willing to do.
         const int minimum_fft_size = 128;
 
@@ -65,7 +65,7 @@ namespace galsim {
         const double realspace_conv_relerr = 1.e-3;
         const double realspace_conv_abserr = 1.e-6;
         //@}
-        
+
         /**
          * @brief Accuracy of values in k-space.
          *
@@ -131,19 +131,45 @@ namespace galsim {
      * The only constructor for SBProfile is the copy constructor.  All SBProfiles need
      * to be created as one of the derived types that have real constructors.
      *
+     * Well, technically, there is also a default constructor to make it easier to use
+     * containers of SBProfiles.  However, it is an error to use an SBProfile that
+     * has been default constructed for any purpose.  We always assume the internal
+     * pointer is not null without checking.  So use of a default constructed SBProfile
+     * will probably lead to a segmentation fault.  Caveat programmor.
+     *
      * Also, operator= is invalid.  This goes along with the idea that SBProfiles are 
      * immutable, so op= isn't allowed.
      *
      */
 
+    class SBAdd;
+    class SBDistort;
+    class SBConvolve;
+    class SBDeconvolve;
+
     class SBProfile
     {
     public:
 
-        /// Only (public) constructor is a copy constructor.
-        SBProfile(const SBProfile& rhs) : pimpl(rhs.pimpl) {}
+        /**
+         * @brief Default constructor for convenience only.  Do not use!
+         *
+         * This constructor is only provided so you can do things like:
+         * @code
+         * std::list<SBProfile> prof_list;
+         * prof_list.push_back(psf);
+         * prof_list.push_back(gal);
+         * prof_list.push_back(pix);
+         * @endcode
+         * The default constructor for std::list strangely requires a default
+         * constructor for the argument type, even though it isn't ever really used.
+         */
+        SBProfile() {}
 
-        /// Destructor isn't virtual, since derived classes don't have anything to delete.
+        /// Only legitimate public constructor is a copy constructor.
+        SBProfile(const SBProfile& rhs) : _pimpl(rhs._pimpl) {}
+
+        /// Destructor isn't virtual, since derived classes don't have anything to cleanup.
         ~SBProfile() {}                        
 
         /** 
@@ -156,7 +182,7 @@ namespace galsim {
          * @param[in] _p 2D position in real space.
          */
         double xValue(const Position<double>& p) const
-        { return pimpl->xValue(p); }
+        { return _pimpl->xValue(p); }
 
         /**
          * @brief Return value of SBProfile at a chosen 2D position in k space.
@@ -164,7 +190,7 @@ namespace galsim {
          * @param[in] _p 2D position in k space.
          */
         std::complex<double> kValue(const Position<double>& k) const
-        { return pimpl->kValue(k); }
+        { return _pimpl->kValue(k); }
 
         //@{
         /**
@@ -176,26 +202,26 @@ namespace galsim {
          *  Derived classes may override this if they a have different range.
          */
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
-        { pimpl->getXRange(xmin,xmax,splits); }
+        { _pimpl->getXRange(xmin,xmax,splits); }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
-        { pimpl->getYRange(ymin,ymax,splits); }
+        { _pimpl->getYRange(ymin,ymax,splits); }
 
         void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
-        { pimpl->getYRange(x,ymin,ymax,splits); }
+        { _pimpl->getYRange(x,ymin,ymax,splits); }
         //@}
 
         /// @brief Value of k beyond which aliasing can be neglected.
-        double maxK() const { return pimpl->maxK(); }
+        double maxK() const { return _pimpl->maxK(); }
 
         /// @brief Image pixel spacing that does not alias maxK.
         double nyquistDx() const { return M_PI / maxK(); }
 
         /// @brief Sampling in k space necessary to avoid folding too much of image in x space.
-        double stepK() const { return pimpl->stepK(); }
+        double stepK() const { return _pimpl->stepK(); }
 
         /// @brief Characteristic that can affect efficiency of evaluation.
-        bool isAxisymmetric() const { return pimpl->isAxisymmetric(); }
+        bool isAxisymmetric() const { return _pimpl->isAxisymmetric(); }
 
         /** 
          * @brief Characteristic that can affect efficiency of evaluation.
@@ -203,7 +229,7 @@ namespace galsim {
          * SBProfile is "analytic" in the real domain if values can be determined immediately at 
          * any position through formula or a stored table (no DFT).
          */
-        bool isAnalyticX() const { return pimpl->isAnalyticX(); }
+        bool isAnalyticX() const { return _pimpl->isAnalyticX(); }
 
         /**
          * @brief Characteristic that can affect efficiency of evaluation.
@@ -211,13 +237,13 @@ namespace galsim {
          * SBProfile is "analytic" in the k domain if values can be determined immediately at any 
          * position through formula or a stored table (no DFT).
          */
-        bool isAnalyticK() const { return pimpl->isAnalyticK(); }
+        bool isAnalyticK() const { return _pimpl->isAnalyticK(); }
 
         /// @brief Returns (X, Y) centroid of SBProfile.
-        Position<double> centroid() const { return pimpl->centroid(); }
+        Position<double> centroid() const { return _pimpl->centroid(); }
 
         /// @brief Get the total flux of the SBProfile.
-        double getFlux() const { return pimpl->getFlux(); }
+        double getFlux() const { return _pimpl->getFlux(); }
 
         // ****Methods implemented in base class****
 
@@ -245,7 +271,7 @@ namespace galsim {
          * This returns a pointer to a new SBProfile that represents a new Surface Brightness 
          * Profile sheared by the given amount..
          */
-        SBDistort shear(double e1, double e2) const { return distort(Ellipse(e1,e2)); }
+        SBDistort shear(double e1, double e2) const;
 
         /** 
          * @brief Rotation distortion transformation.
@@ -304,7 +330,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        PhotonArray shoot(int N, UniformDeviate& ud) const { return pimpl->shoot(N,ud); }
+        PhotonArray shoot(int N, UniformDeviate& ud) const { return _pimpl->shoot(N,ud); }
 
         /**
          * @brief Return expectation value of flux in positive photons when shoot() is called
@@ -321,7 +347,7 @@ namespace galsim {
          *
          * @returns Expected positive-photon flux.
          */
-        double getPositiveFlux() const { return pimpl->getPositiveFlux(); }
+        double getPositiveFlux() const { return _pimpl->getPositiveFlux(); }
 
         /**
          * @brief Return expectation value of absolute value of flux in negative photons from 
@@ -339,7 +365,7 @@ namespace galsim {
          *
          * @returns Expected absolute value of negative-photon flux.
          */
-        double getNegativeFlux() const { return pimpl->getNegativeFlux(); }
+        double getNegativeFlux() const { return _pimpl->getNegativeFlux(); }
 
         // **** Drawing routines ****
         //@{
@@ -573,9 +599,6 @@ namespace galsim {
 
     protected:
 
-        // Regular constructor only available to derived classes
-        SBProfile(SBProfileImpl* pimpl) : _pimpl(pimpl) {}
-
         class SBProfileImpl
         {
         public:
@@ -642,17 +665,21 @@ namespace galsim {
             template <typename T>
             double doFillXImage2(ImageView<T>& image, double dx) const;
 
-            // Classes that need to be able to call protected SBProfile::fill* functions
-            // are made friends.
-            friend class SBAddImpl;
-            friend class SBConvolveImpl;
-            friend class SBDeconvolveImpl;
-
         private:
             // Copy constructor and op= are undefined.
             SBProfileImpl(const SBProfileImpl& rhs);
             void operator=(const SBProfileImpl& rhs);
         };
+
+        // Classes that need to be able to access _pimpl object of other SBProfiles
+        // are made friends.
+        friend class SBAdd;
+        friend class SBDistort;
+        friend class SBConvolve;
+        friend class SBDeconvolve;
+
+        // Regular constructor only available to derived classes
+        SBProfile(SBProfileImpl* pimpl) : _pimpl(pimpl) {}
 
         boost::shared_ptr<SBProfileImpl> _pimpl;
 
@@ -674,17 +701,19 @@ namespace galsim {
          * @param[in] s1 first SBProfile.
          * @param[in] s2 second SBProfile.
          */
-        SBAdd(const SBProfile& s1, const SBProfile& s2) : SBProfile(new SBAddImpl(s1,s2)) {}
+        SBAdd(const SBProfile& s1, const SBProfile& s2) :
+            SBProfile(new SBAddImpl(s1,s2)) {}
 
         /** 
          * @brief Constructor, list of inputs.
          *
          * @param[in] slist list of SBProfiles.
          */
-        SBAdd(const std::list<SBProfile*> slist) : SBProfile(new SBAddImpl(slist)) {}
+        SBAdd(const std::list<SBProfile> slist) : 
+            SBProfile(new SBAddImpl(slist)) {}
 
         /// @brief Copy constructor.
-        SBAdd(const SBAdd& rhs) {}
+        SBAdd(const SBAdd& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor.
         ~SBAdd() {}
@@ -695,13 +724,13 @@ namespace galsim {
         {
         public:
             SBAddImpl(const SBProfile& s1, const SBProfile& s2)
-            { initialize(); add(s1); add(s2); }
+            { add(s1); add(s2); initialize(); }
 
             SBAddImpl(const std::list<SBProfile> slist)
             {
-                initialize();
                 for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
                     add(*sptr); 
+                initialize();
             }
 
             ~SBAddImpl() {}
@@ -719,7 +748,7 @@ namespace galsim {
                 xmin = integ::MOCK_INF; xmax = -integ::MOCK_INF; 
                 for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
                     double xmin_1, xmax_1;
-                    (*pptr)->getXRange(xmin_1,xmax_1,splits);
+                    pptr->getXRange(xmin_1,xmax_1,splits);
                     if (xmin_1 < xmin) xmin = xmin_1;
                     if (xmax_1 > xmax) xmax = xmax_1;
                 }
@@ -730,7 +759,7 @@ namespace galsim {
                 ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
                 for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
                     double ymin_1, ymax_1;
-                    (*pptr)->getYRange(ymin_1,ymax_1,splits);
+                    pptr->getYRange(ymin_1,ymax_1,splits);
                     if (ymin_1 < ymin) ymin = ymin_1;
                     if (ymax_1 > ymax) ymax = ymax_1;
                 }
@@ -741,7 +770,7 @@ namespace galsim {
                 ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
                 for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
                     double ymin_1, ymax_1;
-                    (*pptr)->getYRange(x,ymin_1,ymax_1,splits);
+                    pptr->getYRange(x,ymin_1,ymax_1,splits);
                     if (ymin_1 < ymin) ymin = ymin_1;
                     if (ymax_1 > ymax) ymax = ymax_1;
                 }
@@ -764,8 +793,8 @@ namespace galsim {
             void fillKGrid(KTable& kt) const;
             void fillXGrid(XTable& xt) const;
 
-            typedef std::list<SBProfile*>::iterator Iter;
-            typedef std::list<SBProfile*>::const_iterator ConstIter;
+            typedef std::list<SBProfile>::iterator Iter;
+            typedef std::list<SBProfile>::const_iterator ConstIter;
 
         private:
             /// @brief The plist content is a pointer to a fresh copy of the summands.
@@ -827,7 +856,7 @@ namespace galsim {
         SBDistort(const SBProfile& sbin,
                   double mA, double mB, double mC, double mD, 
                   const Position<double>& cen=Position<double>(0.,0.), double fluxScaling=1.) :
-            SBProfile(new SBDistortImpl(sbin,mA,mB,mC,mD,fluxScaling,cen)) {}
+            SBProfile(new SBDistortImpl(sbin,mA,mB,mC,mD,cen,fluxScaling)) {}
 
         /** 
          * @brief Construct from an input Ellipse 
@@ -836,10 +865,10 @@ namespace galsim {
          * @param[in] e  Ellipse.
          */
         SBDistort(const SBProfile& sbin, const Ellipse e=Ellipse(), double fluxScaling=1.) : 
-            SBProfile(new SBDistort(sbin,e,fluxScaling)) {}
+            SBProfile(new SBDistortImpl(sbin,e,fluxScaling)) {}
 
         /// @brief Copy constructor
-        SBDistort(const SBDistort& rhs) {}
+        SBDistort(const SBDistort& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor
         ~SBDistort() {}
@@ -855,19 +884,19 @@ namespace galsim {
 
             SBDistortImpl(const SBProfile& sbin, const Ellipse e, double fluxScaling);
 
-            ~SBDistortImpl()
+            ~SBDistortImpl() {}
 
             double xValue(const Position<double>& p) const 
-            { return _adaptee->xValue(inv(p-_cen) * _fluxScaling); }
+            { return _adaptee.xValue(inv(p-_cen) * _fluxScaling); }
 
             std::complex<double> kValue(const Position<double>& k) const;
 
             bool isAxisymmetric() const { return _stillIsAxisymmetric; }
-            bool isAnalyticX() const { return _adaptee->isAnalyticX(); }
-            bool isAnalyticK() const { return _adaptee->isAnalyticK(); }
+            bool isAnalyticX() const { return _adaptee.isAnalyticX(); }
+            bool isAnalyticK() const { return _adaptee.isAnalyticK(); }
 
-            double maxK() const { return _adaptee->maxK() / _minor; }
-            double stepK() const { return _adaptee->stepK() / _major; }
+            double maxK() const { return _adaptee.maxK() / _minor; }
+            double stepK() const { return _adaptee.stepK() / _major; }
 
             void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const;
 
@@ -875,14 +904,14 @@ namespace galsim {
 
             void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const;
 
-            Position<double> centroid() const { return _cen+fwd(_adaptee->centroid()); }
+            Position<double> centroid() const { return _cen+fwd(_adaptee.centroid()); }
 
-            double getFlux() const { return _adaptee->getFlux()*_absdet*_fluxScaling; }
+            double getFlux() const { return _adaptee.getFlux()*_absdet*_fluxScaling; }
 
             double getPositiveFlux() const 
-            { return _adaptee->getPositiveFlux()*_absdet*_fluxScaling; }
+            { return _adaptee.getPositiveFlux()*_absdet*_fluxScaling; }
             double getNegativeFlux() const 
-            { return _adaptee->getNegativeFlux()*_absdet*_fluxScaling; }
+            { return _adaptee.getNegativeFlux()*_absdet*_fluxScaling; }
 
             PhotonArray shoot(int N, UniformDeviate& ud) const;
 
@@ -937,20 +966,20 @@ namespace galsim {
                 const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
                 const Position<double>& , const Position<double>& );
 
-            static std::complex<double> _kValueNoPhaseNoDet(
-                const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
-                const Position<double>& , const Position<double>& );
-            static std::complex<double> _kValueNoPhaseWithDet(
-                const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
-                const Position<double>& , const Position<double>& );
-            static std::complex<double> _kValueWithPhase(
-                const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
-                const Position<double>& k, const Position<double>& cen);
-
             // Copy constructor and op= are undefined.
             SBDistortImpl(const SBDistortImpl& rhs);
             void operator=(const SBDistortImpl& rhs);
         };
+
+        static std::complex<double> _kValueNoPhaseNoDet(
+            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& , const Position<double>& );
+        static std::complex<double> _kValueNoPhaseWithDet(
+            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& , const Position<double>& );
+        static std::complex<double> _kValueWithPhase(
+            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& k, const Position<double>& cen);
 
     private:
         // op= is undefined
@@ -996,11 +1025,11 @@ namespace galsim {
          *
          * @param[in] slist Input: list of SBProfiles.
          */
-        SBConvolve(const std::list<SBProfile*> slist, bool real_space=false) :
+        SBConvolve(const std::list<SBProfile> slist, bool real_space=false) :
             SBProfile(new SBConvolveImpl(slist,real_space)) {}
 
         /// @brief Copy constructor.
-        SBConvolve(const SBConvolve& rhs) {}
+        SBConvolve(const SBConvolve& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor.
         ~SBConvolve() {}
@@ -1013,16 +1042,20 @@ namespace galsim {
 
             SBConvolveImpl(const SBProfile& s1, const SBProfile& s2, bool real_space) : 
                 _real_space(real_space)
-            { add(s1);  add(s2); }
+            { add(s1);  add(s2); initialize(); }
 
             SBConvolveImpl(const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
-                       bool real_space, double f) :
+                           bool real_space) :
                 _real_space(real_space)
-            { add(s1);  add(s2);  add(s3); }
+            { add(s1);  add(s2);  add(s3); initialize(); }
 
-            SBConvolveImpl(const std::list<SBProfile> slist, bool real_space.) :
+            SBConvolveImpl(const std::list<SBProfile> slist, bool real_space) :
                 _real_space(real_space)
-            { for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr) add(*sptr); }
+            {
+                for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr) 
+                    add(*sptr); 
+                initialize(); 
+            }
 
             ~SBConvolveImpl() {}
 
@@ -1047,10 +1080,10 @@ namespace galsim {
                 // wrong -- just not optimal.)
                 std::vector<double> splits0;
                 ConstIter pptr = _plist.begin();
-                (*pptr)->getXRange(xmin,xmax,splits0);
+                pptr->getXRange(xmin,xmax,splits0);
                 for (++pptr; pptr!=_plist.end(); ++pptr) {
                     double xmin_1, xmax_1;
-                    (*pptr)->getXRange(xmin_1,xmax_1,splits0);
+                    pptr->getXRange(xmin_1,xmax_1,splits0);
                     xmin += xmin_1;
                     xmax += xmax_1;
                 }
@@ -1060,10 +1093,10 @@ namespace galsim {
             {
                 std::vector<double> splits0;
                 ConstIter pptr = _plist.begin();
-                (*pptr)->getYRange(ymin,ymax,splits0);
+                pptr->getYRange(ymin,ymax,splits0);
                 for (++pptr; pptr!=_plist.end(); ++pptr) {
                     double ymin_1, ymax_1;
-                    (*pptr)->getYRange(ymin_1,ymax_1,splits0);
+                    pptr->getYRange(ymin_1,ymax_1,splits0);
                     ymin += ymin_1;
                     ymax += ymax_1;
                 }
@@ -1073,10 +1106,10 @@ namespace galsim {
             {
                 std::vector<double> splits0;
                 ConstIter pptr = _plist.begin();
-                (*pptr)->getYRange(x,ymin,ymax,splits0);
+                pptr->getYRange(x,ymin,ymax,splits0);
                 for (++pptr; pptr!=_plist.end(); ++pptr) {
                     double ymin_1, ymax_1;
-                    (*pptr)->getYRange(x,ymin_1,ymax_1,splits0);
+                    pptr->getYRange(x,ymin_1,ymax_1,splits0);
                     ymin += ymin_1;
                     ymax += ymax_1;
                 }
@@ -1085,7 +1118,7 @@ namespace galsim {
             Position<double> centroid() const 
             { return Position<double>(_x0, _y0); }
 
-            double getFlux() const { return _fluxScale * _fluxProduct; }
+            double getFlux() const { return _fluxProduct; }
 
             double getPositiveFlux() const;
             double getNegativeFlux() const;
@@ -1094,12 +1127,10 @@ namespace galsim {
             void fillKGrid(KTable& kt) const;
 
         private:
-            typedef std::list<SBProfile*>::iterator Iter;
-            typedef std::list<SBProfile*>::const_iterator ConstIter;
+            typedef std::list<SBProfile>::iterator Iter;
+            typedef std::list<SBProfile>::const_iterator ConstIter;
 
-            /// @brief The plist content is a copy_ptr (cf. smart ptrs) listing SBProfiles.
-            std::list<SBProfile*> _plist;
-            double _fluxScale; ///< Flux scaling.
+            std::list<SBProfile> _plist; ///< list of profiles to convolve
             double _x0; ///< Centroid position in x.
             double _y0; ///< Centroid position in y.
             bool _isStillAxisymmetric; ///< Is output SBProfile shape still circular?
@@ -1111,6 +1142,8 @@ namespace galsim {
             double _sumMaxY; ///< sum of maxY() of the convolved SBProfiles.
             double _fluxProduct; ///< Flux of the product.
             bool _real_space; ///< Whether to do convolution as an integral in real space.
+
+            void initialize();
 
             // Copy constructor and op= are undefined.
             SBConvolveImpl(const SBConvolveImpl& rhs);
@@ -1149,12 +1182,12 @@ namespace galsim {
             SBProfile(new SBGaussianImpl(flux,sigma)) {}
 
         /// @brief Copy constructor.
-        SBGaussian(const SBGaussian& rhs) {}
+        SBGaussian(const SBGaussian& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor.
         ~SBGaussian() {}                        
 
-        double getSigma() const { return static_cast<const SBGaussianImpl&>(*pimpl).getSigma(); }
+        double getSigma() const { return static_cast<const SBGaussianImpl&>(*_pimpl).getSigma(); }
 
     protected:
         class SBGaussianImpl : public SBProfileImpl
@@ -1223,15 +1256,15 @@ namespace galsim {
             SBProfile(new SBSersicImpl(n,flux,re)) {}
 
         /// @brief Copy constructor.
-        SBSersic(const SBSersic& rhs) {}
+        SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor.
         ~SBSersic() {}
 
-        double getN() const { return static_cast<const SBSersicImpl&>(*pimpl).getN(); }
+        double getN() const { return static_cast<const SBSersicImpl&>(*_pimpl).getN(); }
 
         double getHalfLightRadius() const 
-        { return static_cast<const SBSersicImpl&>(*pimpl).getHalfLightRadius(); }
+        { return static_cast<const SBSersicImpl&>(*_pimpl).getHalfLightRadius(); }
 
     protected:
 
@@ -1380,6 +1413,7 @@ namespace galsim {
 
         class SBSersicImpl : public SBProfileImpl
         {
+        public:
             SBSersicImpl(double n, double flux, double re);
 
             ~SBSersicImpl() {}
@@ -1461,13 +1495,13 @@ namespace galsim {
             SBProfile(new SBExponentialImpl(flux,r0)) {}
 
         /// @brief Copy constructor.
-        SBExponential(const SBExponential& rhs) {}
+        SBExponential(const SBExponential& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor.
         ~SBExponential() {}
 
         double getScaleRadius() const 
-        { return static_cast<const SBExponentialImpl&>(*pimpl).getScaleRadius(); }
+        { return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); }
 
     protected:
         class SBExponentialImpl : public SBProfileImpl
@@ -1552,7 +1586,7 @@ namespace galsim {
             SBProfile(new SBAiryImpl(D,obs,flux)) {}
 
         /// @brief Copy constructor
-        SBAiry(const SBAiry& rhs) {}
+        SBAiry(const SBAiry& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor.
         ~SBAiry() {}
@@ -1673,7 +1707,7 @@ namespace galsim {
             SBProfile(new SBBoxImpl(xw,yw,flux)) {}
 
         /// @brief Copy constructor.
-        SBBox(const SBBox& rhs) {}
+        SBBox(const SBBox& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor.
         ~SBBox() {}
@@ -1764,7 +1798,7 @@ namespace galsim {
             SBProfile(new SBLaguerreImpl(bvec,sigma)) {}
 
         /// @brief Copy Constructor. 
-        SBLaguerre(const SBLaguerre& rhs) {}
+        SBLaguerre(const SBLaguerre& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor. 
         ~SBLaguerre() {}
@@ -1841,13 +1875,13 @@ namespace galsim {
 
 
         /// @brief Copy constructor.
-        SBMoffat(const SBMoffat& rhs) {}
+        SBMoffat(const SBMoffat& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor.
         ~SBMoffat() {}
 
         double getBeta() const 
-        { return static_cast<const SBMoffatImpl&>(*pimpl).getBeta(); }
+        { return static_cast<const SBMoffatImpl&>(*_pimpl).getBeta(); }
 
     protected:
         class SBMoffatImpl : public SBProfileImpl 
@@ -1907,13 +1941,6 @@ namespace galsim {
 
             double (*pow_beta)(double x, double beta);
 
-            static double pow_1(double x, double ) { return x; }
-            static double pow_2(double x, double ) { return x*x; }
-            static double pow_3(double x, double ) { return x*x*x; }
-            static double pow_4(double x, double ) { return x*x*x*x; }
-            static double pow_int(double x, double beta) { return std::pow(x,int(beta)); }
-            static double pow_gen(double x, double beta) { return std::pow(x,beta); }
-
             /// Setup the FT Table.
             void setupFT();
 
@@ -1921,6 +1948,13 @@ namespace galsim {
             SBMoffatImpl(const SBMoffatImpl& rhs);
             void operator=(const SBMoffatImpl& rhs);
         };
+
+        static double pow_1(double x, double ) { return x; }
+        static double pow_2(double x, double ) { return x*x; }
+        static double pow_3(double x, double ) { return x*x*x; }
+        static double pow_4(double x, double ) { return x*x*x*x; }
+        static double pow_int(double x, double beta) { return std::pow(x,int(beta)); }
+        static double pow_gen(double x, double beta) { return std::pow(x,beta); }
 
     private:
         // op= is undefined
