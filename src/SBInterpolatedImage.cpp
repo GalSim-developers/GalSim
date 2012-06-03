@@ -12,7 +12,7 @@ namespace galsim {
 
     InterpolantXY SBInterpolatedImage::defaultKInterpolant2d(defaultKInterpolant1d);
 
-    SBInterpolatedImage::SBInterpolatedImage(
+    SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         int Npix, double dx, const Interpolant2d& i, int Nimages) :  
         
         _Ninitial(Npix+Npix%2), _dx(dx), _Nimages(Nimages),
@@ -36,7 +36,7 @@ namespace galsim {
     }
 
     template <typename T>
-    SBInterpolatedImage::SBInterpolatedImage(
+    SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<T>& img, const Interpolant2d& i, double dx, double padFactor) : 
 
         _dx(dx), _Nimages(1),
@@ -73,21 +73,7 @@ namespace galsim {
         _max_size = (_Ninitial+2*_xInterp->xrange())*_dx;
     }
 
-    SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs):
-        _Ninitial(rhs._Ninitial), _dx(rhs._dx), _Nk(rhs._Nk), _Nimages(rhs._Nimages),
-        _xInterp(rhs._xInterp), _kInterp(rhs._kInterp),
-        _wts(rhs._wts), _fluxes(rhs._fluxes), _xFluxes(rhs._xFluxes), _yFluxes(rhs._yFluxes),
-        _xsum(0), _ksum(0), _xsumValid(false), _ksumValid(false), 
-        _ready(rhs._ready), _readyToShoot(false), _max_size(rhs._max_size)
-    {
-        // copy tables
-        for (int i=0; i<_Nimages; i++) {
-            _vx.push_back(new XTable(*rhs._vx[i]));
-            if (_ready) _vk.push_back(new KTable(*rhs._vk[i]));
-        }
-    }
-
-    SBInterpolatedImage::~SBInterpolatedImage() 
+    SBInterpolatedImage::SBInterpolatedImageImpl::~SBInterpolatedImageImpl() 
     {
         for (size_t i=0; i<_vx.size(); i++) if (_vx[i]) { delete _vx[i]; _vx[i]=0; }
         for (size_t i=0; i<_vk.size(); i++) if (_vk[i]) { delete _vk[i]; _vk[i]=0; }
@@ -95,30 +81,21 @@ namespace galsim {
         if (_ksum) { delete _ksum; _ksum=0; }
     }
 
-    double SBInterpolatedImage::getFlux() const 
+    double SBInterpolatedImage::SBInterpolatedImageImpl::getFlux() const 
     {
         checkReady();
         return _wts * _fluxes;
     }
 
-    void SBInterpolatedImage::setFlux(double flux) 
-    {
-        checkReady();
-        double factor = flux/getFlux();
-        _wts *= factor;
-        if (_xsumValid) *_xsum *= factor;
-        if (_ksumValid) *_ksum *= factor;
-        _readyToShoot = false;   // Need to rescale all the cumulative fluxes
-    }
-
-    Position<double> SBInterpolatedImage::centroid() const 
+    Position<double> SBInterpolatedImage::SBInterpolatedImageImpl::centroid() const 
     {
         checkReady();
         double wtsfluxes = _wts * _fluxes;
         return Position<double>((_wts * _xFluxes) / wtsfluxes, (_wts * _yFluxes) / wtsfluxes);
     }
 
-    void SBInterpolatedImage::setPixel(double value, int ix, int iy, int iz) 
+    void SBInterpolatedImage::SBInterpolatedImageImpl::setPixel(
+        double value, int ix, int iy, int iz) 
     {
         if (iz < 0 || iz>=_Nimages)
             FormatAndThrow<SBError>() << 
@@ -135,7 +112,7 @@ namespace galsim {
         _vx[iz]->xSet(ix, iy, value);
     }
 
-    double SBInterpolatedImage::getPixel(int ix, int iy, int iz) const 
+    double SBInterpolatedImage::SBInterpolatedImageImpl::getPixel(int ix, int iy, int iz) const 
     {
         if (iz < 0 || iz>=_Nimages)
             FormatAndThrow<SBError>() << 
@@ -144,7 +121,7 @@ namespace galsim {
         return _vx[iz]->xval(ix, iy);
     }
 
-    void SBInterpolatedImage::setWeights(const tmv::Vector<double>& wts) 
+    void SBInterpolatedImage::SBInterpolatedImageImpl::setWeights(const tmv::Vector<double>& wts) 
     {
         assert(_wts.size()==_Nimages);
         _wts = wts;
@@ -153,7 +130,7 @@ namespace galsim {
         _readyToShoot = false;
     }
 
-    void SBInterpolatedImage::checkReady() const 
+    void SBInterpolatedImage::SBInterpolatedImageImpl::checkReady() const 
     {
         if (_ready) return;
         // Flush old kTables if any;
@@ -186,7 +163,7 @@ namespace galsim {
         assert(int(_vk.size())==_Nimages);
     }
 
-    void SBInterpolatedImage::checkXsum() const 
+    void SBInterpolatedImage::SBInterpolatedImageImpl::checkXsum() const 
     {
         checkReady();
         if (_xsumValid) return;
@@ -202,7 +179,7 @@ namespace galsim {
         _xsumValid = true;
     }
 
-    void SBInterpolatedImage::checkKsum() const 
+    void SBInterpolatedImage::SBInterpolatedImageImpl::checkKsum() const 
     {
         checkReady();
         if (_ksumValid) return;
@@ -218,7 +195,7 @@ namespace galsim {
         _ksumValid = true;
     }
 
-    void SBInterpolatedImage::fillKGrid(KTable& kt) const 
+    void SBInterpolatedImage::SBInterpolatedImageImpl::fillKGrid(KTable& kt) const 
     {
         // This override of base class is to permit potential efficiency gain from
         // separable interpolant kernel.  If so, the KTable interpolation routine
@@ -235,16 +212,14 @@ namespace galsim {
             }
         } else {
             // Otherwise just use the normal routine to fill the grid:
-            SBProfile::fillKGrid(kt);
+            SBProfileImpl::fillKGrid(kt);
         }
     }
 
     // Same deal: reverse axis order if we have separable interpolant in X domain
-    void SBInterpolatedImage::fillXGrid(XTable& xt) const 
+    void SBInterpolatedImage::SBInterpolatedImageImpl::fillXGrid(XTable& xt) const 
     {
-#ifdef DANIELS_TRACING
-        cout << "SBInterpolatedImage::fillXGrid called" << endl;
-#endif
+        dbg << "SBInterpolatedImage::fillXGrid called" << std::endl;
         if ( dynamic_cast<const InterpolantXY*> (_xInterp)) {
             int N = xt.getN();
             double dx = xt.getDx();
@@ -256,14 +231,15 @@ namespace galsim {
             }
         } else {
             // Otherwise just use the normal routine to fill the grid:
-            SBProfile::fillXGrid(xt);
+            SBProfileImpl::fillXGrid(xt);
         }
     }
 
     // One more time: for images now
     // Returns total flux
     template <typename T>
-    double SBInterpolatedImage::fillXImage(ImageView<T>& I, double dx) const 
+    double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
+        ImageView<T>& I, double dx) const 
     {
         if ( dynamic_cast<const InterpolantXY*> (_xInterp)) {
             double sum=0.;
@@ -281,18 +257,19 @@ namespace galsim {
             // Otherwise just use the normal routine to fill the grid:
             // Note that we need to call doFillXImage, not fillXImage here,
             // to avoid the virtual function resolution.
-            return SBProfile::doFillXImage(I,dx);
+            return SBProfileImpl::doFillXImage(I,dx);
         }
     }
 
 #ifndef OLD_WAY
-    double SBInterpolatedImage::xValue(const Position<double>& p) const 
+    double SBInterpolatedImage::SBInterpolatedImageImpl::xValue(const Position<double>& p) const 
     {
         checkXsum();
         return _xsum->interpolate(p.x, p.y, *_xInterp);
     }
 
-    std::complex<double> SBInterpolatedImage::kValue(const Position<double>& p) const 
+    std::complex<double> SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
+        const Position<double>& p) const 
     {
         // Don't bother if the desired k value is cut off by the x interpolant:
         double ux = p.x*_dx/TWOPI;
@@ -306,7 +283,7 @@ namespace galsim {
     }
 
 #else
-    double SBInterpolatedImage::xValue(const Position<double>& p) const 
+    double SBInterpolatedImage::SBInterpolatedImageImpl::xValue(const Position<double>& p) const 
     {
         // Interpolate WITHOUT wrapping the image.
         int ixMin = static_cast<int> ( std::ceil(p.x/_dx - _xInterp->xrange()));
@@ -336,7 +313,8 @@ namespace galsim {
         return _wts * data * kernel;
     }
 
-    std::complex<double> SBInterpolatedImage::kValue(const Position<double>& p) const 
+    std::complex<double> SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
+        const Position<double>& p) const 
     {
         checkReady();
         // Interpolate in k space, first apply kInterp kernel to wrapped
@@ -396,7 +374,7 @@ namespace galsim {
 #endif
 
     // Set maxK to the value where the FT is down to maxk_threshold
-    double SBInterpolatedImage::maxK() const 
+    double SBInterpolatedImage::SBInterpolatedImageImpl::maxK() const 
     {
         // Notice that interpolant other than sinc may make max frequency higher than
         // the Nyquist frequency of the initial image
@@ -414,7 +392,7 @@ namespace galsim {
 
     // The amount of flux missed in a circle of radius pi/stepk should miss at 
     // most alias_threshold of the flux.
-    double SBInterpolatedImage::stepK() const 
+    double SBInterpolatedImage::SBInterpolatedImageImpl::stepK() const 
     {
         // In this case, R = original image extent + kernel footprint, which we
         // have already stored as _max_size.
@@ -422,7 +400,7 @@ namespace galsim {
     }
 
 
-    void SBInterpolatedImage::checkReadyToShoot() const 
+    void SBInterpolatedImage::SBInterpolatedImageImpl::checkReadyToShoot() const 
     {
         if (_readyToShoot) return;
 
@@ -450,7 +428,8 @@ namespace galsim {
     }
 
     // Photon-shooting 
-    PhotonArray SBInterpolatedImage::shoot(int N, UniformDeviate& ud) const
+    PhotonArray SBInterpolatedImage::SBInterpolatedImageImpl::shoot(
+        int N, UniformDeviate& ud) const
     {
         assert(N>=0);
         checkReadyToShoot();
@@ -483,13 +462,13 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template SBInterpolatedImage::SBInterpolatedImage(
+    template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<float>& img, const Interpolant2d& i, double dx, double padFactor);
-    template SBInterpolatedImage::SBInterpolatedImage(
+    template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<double>& img, const Interpolant2d& i, double dx, double padFactor);
-    template SBInterpolatedImage::SBInterpolatedImage(
+    template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<short>& img, const Interpolant2d& i, double dx, double padFactor);
-    template SBInterpolatedImage::SBInterpolatedImage(
+    template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<int>& img, const Interpolant2d& i, double dx, double padFactor);
 }
 
