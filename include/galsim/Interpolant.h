@@ -3,6 +3,7 @@
 #define INTERPOLANT_H
 
 #include <cmath>
+#include <boost/shared_ptr.hpp>
 
 #include "Std.h"
 #include "Table.h"

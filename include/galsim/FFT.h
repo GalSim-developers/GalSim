@@ -37,6 +37,8 @@
 #include <stdexcept>
 #include <deque>
 #include <complex>
+#include <boost/shared_ptr.hpp>
+
 #include "fftw3.h"
 
 #include "Std.h"

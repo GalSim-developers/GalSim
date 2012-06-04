@@ -14,6 +14,7 @@
 #include <map>
 #include <vector>
 #include <algorithm>
+#include <boost/shared_ptr.hpp>
 
 #include "Std.h"
 #include "Shear.h"
