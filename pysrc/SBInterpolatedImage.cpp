@@ -44,9 +44,7 @@ void pyExportSBInterpolatedImage() {
     bp::class_<Interpolant2d,boost::noncopyable>("Interpolant2d", bp::no_init);
     bp::class_<InterpolantXY,bp::bases<Interpolant2d>,boost::noncopyable>(
         "InterpolantXY",
-        bp::init<const Interpolant &>(bp::arg("i1d"))[
-            bp::with_custodian_and_ward<1,2>() // keep i1d arg alive as long as self is alive
-        ]
+        bp::init<boost::shared_ptr<Interpolant> >(bp::arg("i1d"))
     );
     bp::class_<Delta,bp::bases<Interpolant>,boost::noncopyable>(
         "Delta", bp::init<double>(bp::arg("tol")=1E-3)

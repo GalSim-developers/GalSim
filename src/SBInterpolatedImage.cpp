@@ -17,7 +17,7 @@ namespace galsim {
     const double TWOPI = 2.*M_PI;
 
     // Default k-space interpolant is quintic:
-    Quintic defaultKInterpolant1d(sbp::kvalue_accuracy);
+    boost::shared_ptr<Quintic> defaultKInterpolant1d(new Quintic(sbp::kvalue_accuracy));
 
     InterpolantXY SBInterpolatedImage::defaultKInterpolant2d(defaultKInterpolant1d);
 
