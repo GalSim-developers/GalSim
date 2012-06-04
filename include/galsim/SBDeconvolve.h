@@ -24,11 +24,11 @@ namespace galsim {
     public:
         /// @brief Constructor.
         SBDeconvolve(const SBProfile& adaptee) : _adaptee(adaptee.duplicate()) 
-        { _maxksq = pow(maxK(),2.); }
+        { _maxksq = std::pow(maxK(),2.); }
 
         /// @brief Copy constructor.
         SBDeconvolve(const SBDeconvolve& rhs) : _adaptee(rhs._adaptee->duplicate()) 
-        { _maxksq = pow(maxK(),2.); }
+        { _maxksq = std::pow(maxK(),2.); }
 
         /// @brief Operator (TODO: ask Gary about this bit...)
         SBDeconvolve& operator=(const SBDeconvolve& rhs)

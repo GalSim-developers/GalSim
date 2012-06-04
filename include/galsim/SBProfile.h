@@ -45,7 +45,7 @@ namespace galsim {
         /**
          * @brief A threshold parameter used for setting the stepK value for FFTs.
          *
-         * The FFT's stepK is set so that at most a fraction of (1-alias_threshold)
+         * The FFT's stepK is set so that at most a fraction alias_threshold
          * of the flux of any profile is aliased.
          */
         const double alias_threshold = 5.e-3;
