@@ -191,8 +191,8 @@ namespace galsim {
         mutable tmv::Vector<double> _yFluxes;
 
         // Arrays summed with weights:
-        mutable XTable* _xsum; ///< Arrays summed with weights in real space.
-        mutable KTable* _ksum; ///< Arrays summed with weights in k space.
+        mutable boost::shared_ptr<XTable> _xsum; ///< Arrays summed with weights in real space.
+        mutable boost::shared_ptr<KTable> _ksum; ///< Arrays summed with weights in k space.
         mutable bool _xsumValid; ///< Is `xsum` valid?
         mutable bool _ksumValid; ///< Is `ksum` valid?
         mutable bool _xsumnew; ///< Was xsum created with its own call to new XTable
@@ -215,24 +215,24 @@ namespace galsim {
          * @brief Simple structure used to index all pixels for photon shooting
          */
         struct Pixel {
-            Pixel(double x_=0., double y_=0., double flux=0.): 
-                x(x_), y(y_), _flux(flux) {isPositive = _flux>=0;}
             double x;
             double y;
-            double getFlux() const {return _flux;}
             bool isPositive;
-        private:
-            double _flux;
+            double flux;
+
+            Pixel(double x_=0., double y_=0., double flux_=0.): 
+                x(x_), y(y_), flux(flux_) { isPositive = flux>=0.; }
+            double getFlux() const { return flux; }
         };
         mutable double _positiveFlux;    ///< Sum of all positive pixels' flux
         mutable double _negativeFlux;    ///< Sum of all negative pixels' flux
         mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
 
         /// @brief Vector of input data arrays.
-        std::vector<XTable*> _vx;
+        std::vector<boost::shared_ptr<XTable> > _vx;
 
         /// @brief Mutable stuff required for kTables and interpolations.
-        mutable std::vector<KTable*> _vk;
+        mutable std::vector<boost::shared_ptr<KTable> > _vk;
         void checkXsum() const;  ///< Used to build xsum if it's not current.
         void checkKsum() const;  ///< Used to build ksum if it's not current.
 

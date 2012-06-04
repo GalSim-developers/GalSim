@@ -28,8 +28,7 @@ namespace galsim {
         _xInterp(&i), _kInterp(&defaultKInterpolant2d),
         _wts(_Nimages, 1.), _fluxes(_Nimages, 1.), 
         _xFluxes(_Nimages, 0.), _yFluxes(_Nimages,0.),
-        _xsum(0), _ksum(0), _xsumValid(false), _ksumValid(false),
-        _xsumnew(false), _ksumnew(false),
+        _xsumValid(false), _ksumValid(false),
         _ready(false), _readyToShoot(false)
     {
         assert(_Ninitial%2==0);
@@ -41,7 +40,7 @@ namespace galsim {
 
         // allocate xTables
         for (int i=0; i<_Nimages; i++) 
-            _vx.push_back(new XTable(_Nk, _dx));
+            _vx.push_back(boost::shared_ptr<XTable>(new XTable(_Nk, _dx)));
         _max_size = (_Ninitial+2.*_xInterp->xrange())*_dx;
     }
 
@@ -53,8 +52,7 @@ namespace galsim {
         _xInterp(&i), _kInterp(&defaultKInterpolant2d),
         _wts(_Nimages, 1.), _fluxes(_Nimages, 1.), 
         _xFluxes(_Nimages, 0.), _yFluxes(_Nimages,0.),
-        _xsum(0), _ksum(0), _xsumValid(false), _ksumValid(false),
-        _xsumnew(false), _ksumnew(false),
+        _xsumValid(false), _ksumValid(false),
         _ready(false), _readyToShoot(false)
     {
         _Ninitial = std::max( img.getYMax()-img.getYMin()+1, img.getXMax()-img.getXMin()+1);
@@ -72,7 +70,7 @@ namespace galsim {
 
         // allocate xTables
         for (int i=0; i<_Nimages; i++) 
-            _vx.push_back(new XTable(_Nk, _dx));
+            _vx.push_back(boost::shared_ptr<XTable>(new XTable(_Nk, _dx)));
         // fill data from image, shifting to center the image in the table
         int xStart = -((img.getXMax()-img.getXMin()+1)/2);
         int yTab = -((img.getYMax()-img.getYMin()+1)/2);
@@ -84,13 +82,7 @@ namespace galsim {
         _max_size = (_Ninitial+2*_xInterp->xrange())*_dx;
     }
 
-    SBInterpolatedImage::SBInterpolatedImageImpl::~SBInterpolatedImageImpl() 
-    {
-        for (size_t i=0; i<_vx.size(); i++) if (_vx[i]) { delete _vx[i]; _vx[i]=0; }
-        for (size_t i=0; i<_vk.size(); i++) if (_vk[i]) { delete _vk[i]; _vk[i]=0; }
-        if (_xsumnew) { delete _xsum; _xsum=0; }
-        if (_ksumnew) { delete _ksum; _ksum=0; }
-    }
+    SBInterpolatedImage::SBInterpolatedImageImpl::~SBInterpolatedImageImpl() {}
 
     double SBInterpolatedImage::SBInterpolatedImageImpl::getFlux() const 
     {
@@ -145,7 +137,6 @@ namespace galsim {
     {
         if (_ready) return;
         // Flush old kTables if any;
-        for (size_t i=0; i<_vk.size(); i++) { delete _vk[i]; _vk[i]=0; }
         _vk.clear();
 
         for (int i=0; i<_Nimages; i++) {
@@ -182,8 +173,7 @@ namespace galsim {
             _xsum = _vx[0];
         } else {
             if (!_xsum) {
-                _xsum = new XTable(*_vx[0]);
-                _xsumnew = true;
+                _xsum.reset(new XTable(*_vx[0]));
                 *_xsum *= _wts[0];
             } else {
                 _xsum->clear();
@@ -203,8 +193,7 @@ namespace galsim {
             _ksum = _vk[0];
         } else {
             if (!_ksum) {
-                _ksum = new KTable(*_vk[0]);
-                _ksumnew = true;
+                _ksum.reset(new KTable(*_vk[0]));
                 *_ksum *= _wts[0];
             } else {
                 _ksum->clear();

@@ -205,7 +205,7 @@ namespace galsim {
             " After adjustments: dx " << dx << " dk " << dk << 
             " maxK " << dk*NFT/2 << std::endl;
         assert(dk <= stepK());
-        XTable* xtmp=0;
+        boost::shared_ptr<XTable> xtmp;
         if (NFT*dk/2 > maxK()) {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
             dbg<<"Use NFT = "<<NFT<<std::endl;
@@ -223,9 +223,7 @@ namespace galsim {
             KTable kt(Nk, dk);
             assert(_pimpl.get());
             _pimpl->fillKGrid(kt);
-            KTable* kt2 = kt.wrap(NFT);
-            xtmp = kt2->transform();
-            delete kt2;
+            xtmp = kt.wrap(NFT)->transform();
         }
         int Nxt = xtmp->getN();
         dbg<<"Nxt = "<<Nxt<<std::endl;
@@ -247,7 +245,6 @@ namespace galsim {
 
         I.setScale(dx);
 
-        delete xtmp;  // no memory leak!
         return sum*dx*dx;;
     }
 
@@ -313,7 +310,7 @@ namespace galsim {
             " After adjustments: dx " << dx << " dk " << dk << 
             " maxK " << dk*NFT/2 << std::endl;
         assert(dk <= stepK());
-        XTable* xtmp=0;
+        boost::shared_ptr<XTable> xtmp;
         if (NFT*dk/2 > maxK()) {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
             dbg<<"Use NFT = "<<NFT<<std::endl;
@@ -331,9 +328,7 @@ namespace galsim {
             KTable kt(Nk, dk);
             assert(_pimpl.get());
             _pimpl->fillKGrid(kt);
-            KTable* kt2 = kt.wrap(NFT);
-            xtmp = kt2->transform();
-            delete kt2;
+            xtmp = kt.wrap(NFT)->transform();
         }
         int Nxt = xtmp->getN();
         dbg<<"Nxt = "<<Nxt<<std::endl;
@@ -355,7 +350,6 @@ namespace galsim {
 
         I.setScale(dx);
 
-        delete xtmp;  // no memory leak!
         return sum*dx*dx;;
     }
 
@@ -499,7 +493,7 @@ namespace galsim {
         XTable xt(NFT,dx);
         assert(_pimpl.get());
         _pimpl->fillXGrid(xt);
-        KTable *ktmp = xt.transform();
+        boost::shared_ptr<KTable> ktmp = xt.transform();
 
         int Nkt = ktmp->getN();
         Bounds<int> kb(-Nkt/2, Nkt/2-1, -Nkt/2, Nkt/2-1);
@@ -521,8 +515,6 @@ namespace galsim {
 
         Re.setScale(dk);
         Im.setScale(dk);
-
-        delete ktmp;  // no memory leak!
     }
 
     template <typename T>
@@ -598,7 +590,7 @@ namespace galsim {
         XTable xt(NFT,dx);
         assert(_pimpl.get());
         _pimpl->fillXGrid(xt);
-        KTable *ktmp = xt.transform();
+        boost::shared_ptr<KTable> ktmp = xt.transform();
 
         int Nkt = ktmp->getN();
         Bounds<int> kb(-Nkt/2, Nkt/2-1, -Nkt/2, Nkt/2-1);
@@ -620,8 +612,6 @@ namespace galsim {
 
         Re.setScale(dk);
         Im.setScale(dk);
-
-        delete ktmp;  // no memory leak!
     }
 
     void SBProfile::SBProfileImpl::fillXGrid(XTable& xt) const 
