@@ -107,7 +107,7 @@ class RealGalaxyCatalog:
         """
         if i >= len(self.PSF_filename):
             raise IndexError(
-                'index %d given to getGal is out of range (0..%d)'%(i,len(self.PSF_filename)-1))
+                'index %d given to getPSF is out of range (0..%d)'%(i,len(self.PSF_filename)-1))
         import pyfits
         import os
         import numpy
