@@ -8,17 +8,15 @@ import logging
 # --- pixel scale ---
 #
 # Image sampling rate / separation between pixels. Sets the physical units for all lengths in the
-# output images.  If including pixel integration, it probably makes sense for 
-# config.PSF.Pixel.xw and config.PSF.Pixel.yw (defaults = 1.) to be set to config.dx.
+# output images.  This is also used as the value for the xw and yw parameters of any Pixel components
+# in the PSF when those values are not set explicitly.
 config.dx = 1.
-
 
 # --- PSF type ---
 #
-# Specify the PSF type(s) for the simulated galaxy images; placing a None object as the first entry
-# tells GalSim to expect this type information to come from the input catalogue.
+# Specify the PSF type(s) for the simulated galaxy images.
 #
-# The currently available PSF_types are:
+# The currently available PSF types are:
 #
 # "Gaussian"         A Gaussian light distribution.
 # "DoubleGaussian"   A sum of two Gaussians found to provide a reasonable empirical fit to ground-
@@ -36,24 +34,24 @@ config.dx = 1.
 # More than one PSF can be specified via adding multiple entries to the list below; the resulting
 # PSF in the output image will be the *convolution* of all entries in the list.
 #
-config.PSF.type = ["Moffat", "Pixel"]
+config.PSF.types = [Moffat, Pixel]
+
 #
-# Distributions for PSF parameters (including constant values) may be set below.  These will be 
-# overwritten by any values for these parameters found in the input catalogues.
+# Distributions for PSF parameters (including constant values) may be set below.
 #
-# e.g.:
-#
-# config.PSF.Moffat.beta = 3.   # Note that single scalar values are interpreted as constants
-# config.PSF.Moffat.e1.distribution = "GaussianDeviate"
-# config.PSF.Moffat.e1.mean = 0.
-# config.PSF.Moffat.e1.sigma = 0.03
+# The indices correspond to the components set in the types list (starting with zero).
 #
 # Any parameters not set either in configuration files or input catalogues will adopt their
-# keyword default values, and GalSim will raise a Warning.
-config.PSF.Moffat.flux = 1.
-config.PSF.Pixel.flux = 1.
-config.PSF.Pixel.xw = config.dx
-config.PSF.Pixel.yw = config.dx
+# keyword default values (if possible).
+#
+# These can be set explicitly to constants, drawn from random number distributions, or read
+# from the catalog.  For example:
+#
+# config.PSF[0].beta = 3.   # set to a constant
+# config.PSF[0].e1 = GaussianRandom(mean=0, sigma=0.03)   # draw from a Gaussian distribution
+# config.PSF[0].e2 = GaussianRandom(mean=0, sigma=0.03)
+# config.PSF[0].fwhm = FromCatalog(column=1)    # read from column #1 in the input catalog
+#
 
 
 # --- galaxy type ---
@@ -75,21 +73,16 @@ config.PSF.Pixel.yw = config.dx
 # More than one galaxy can be specified via adding multiple entries to the list below; the resulting
 # galaxy in the output image will be the *sum* of all entries in the list.
 #
-config.galaxy.type = ["DeVaucouleurs", "Exponential"]
+config.galaxy.type = [DeVaucouleurs, Exponential]
+
 #
 # Distributions for galaxy parameters (including constant values) may be set below.  These will be 
 # overwritten by any values for these parameters found in the input catalogues.
 #
-# e.g.:
+# Parameters for galaxies can be set as constants or drawn from random distributions or pulled from
+# the input catalogs, in the same manner as the parameters of PSF components.
 #
-# config.galaxy.Exponential.half_light_radius.distribution = "GammaDeviate"
-# config.galaxy.Exponential.half_light_radius.alpha = 3.5
-# config.galaxy.Exponential.half_light_radius.beta = 1.3
-#
-# Any parameters not set either in configuration files or input catalogues will adopt their
-# keyword default values, and GalSim will raise a Warning.
-config.galaxy.DeVaucouleurs.flux = 1000.
-config.galaxy.Exponential.flux = 1000.
+
 
 # --- shear ---
 #
