@@ -65,6 +65,11 @@ namespace galsim {
         double stepK() const { return _adaptee->stepK(); }
 
         bool isAxisymmetric() const { return _adaptee->isAxisymmetric(); }
+
+        // Of course, a deconvolution could have hard edges, but since we can't use this
+        // in a real-space convolution anyway, just return false here.
+        bool hasHardEdges() const { return false; }
+
         bool isAnalyticX() const { return false; }
         bool isAnalyticK() const { return true; }
 

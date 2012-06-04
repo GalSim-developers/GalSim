@@ -96,6 +96,10 @@ namespace galsim {
 
         bool isAxisymmetric() const { return false; }
 
+        // We'll use false here, but really, there's not an easy way to tell.
+        // Certainly an Image _could_ have hard edges.
+        bool hasHardEdges() const { return false; }
+
         // This class will be set up so that both x and k domain values
         // are found by interpolation of a table:
         bool isAnalyticX() const { return true; }

@@ -667,6 +667,7 @@ namespace galsim {
         _sumflux = _sumfx = _sumfy = 0.;
         _maxMaxK = _minStepK = 0.;
         _allAxisymmetric = _allAnalyticX = _allAnalyticK = true;
+        _anyHardEdges = false;
     }
 
     void SBAdd::add(const SBProfile& rhs, double scale) 
@@ -714,6 +715,7 @@ namespace galsim {
             if ( _minStepK<=0. || ((*newptr)->stepK() < _minStepK) ) 
                 _minStepK = (*newptr)->stepK();
             _allAxisymmetric = _allAxisymmetric && (*newptr)->isAxisymmetric();
+            _anyHardEdges = _anyHardEdges || (*newptr)->hasHardEdges();
             _allAnalyticX = _allAnalyticX && (*newptr)->isAnalyticX();
             _allAnalyticK = _allAnalyticK && (*newptr)->isAnalyticK();
             newptr++;

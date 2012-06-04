@@ -194,6 +194,12 @@ namespace galsim {
          */
         virtual bool isAxisymmetric() const =0;
 
+        /**
+         *  @brief The presence of hard edges help determine whether real space 
+         *  convolution might be a better choice.
+         */
+        virtual bool hasHardEdges() const =0;
+
         /** 
          * @brief Characteristic that can affect efficiency of evaluation.
          *
@@ -667,7 +673,7 @@ namespace galsim {
             _sumfy(rhs._sumfy), _maxMaxK(rhs._maxMaxK), _minStepK(rhs._minStepK), 
             _minMinX(rhs._minMinX), _maxMaxX(rhs._maxMaxX),
             _minMinY(rhs._minMinY), _maxMaxY(rhs._maxMaxY),
-            _allAxisymmetric(rhs._allAxisymmetric),
+            _allAxisymmetric(rhs._allAxisymmetric), _anyHardEdges(rhs._anyHardEdges),
             _allAnalyticX(rhs._allAnalyticX), _allAnalyticK(rhs._allAnalyticK)  
         {
             for (ConstIter sbptr = rhs._plist.begin(); sbptr!=rhs._plist.end(); ++sbptr)
@@ -702,6 +708,7 @@ namespace galsim {
             _maxMaxY = rhs._maxMaxY;
             _minStepK = rhs._minStepK;
             _allAxisymmetric = rhs._allAxisymmetric;
+            _anyHardEdges = rhs._anyHardEdges;
             _allAnalyticX = rhs._allAnalyticX;
             _allAnalyticK = rhs._allAnalyticK;
             return *this;
@@ -764,6 +771,7 @@ namespace galsim {
         }
 
         bool isAxisymmetric() const { return _allAxisymmetric; }
+        bool hasHardEdges() const { return _anyHardEdges; }
         bool isAnalyticX() const { return _allAnalyticX; }
         bool isAnalyticK() const { return _allAnalyticK; }
 
@@ -829,6 +837,9 @@ namespace galsim {
 
         /// @brief Keeps track of the cumulated `isAxisymmetric()` properties of all summands.
         bool _allAxisymmetric;
+
+        /// @brief Keeps track of whether any summands have hard edges.
+        bool _anyHardEdges;
 
         /// @brief Keeps track of the cumulated `isAnalyticX()` property of all summands. 
         bool _allAnalyticX; 
@@ -922,6 +933,7 @@ namespace galsim {
         std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return _stillIsAxisymmetric; }
+        bool hasHardEdges() const { return _adaptee->hasHardEdges(); }
         bool isAnalyticX() const { return _adaptee->isAnalyticX(); }
         bool isAnalyticK() const { return _adaptee->isAnalyticK(); }
 
@@ -1191,6 +1203,7 @@ namespace galsim {
         std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return _isStillAxisymmetric; }
+        bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return _real_space; }
         bool isAnalyticK() const { return !_real_space; }    // convolvees must all meet this
         double maxK() const { return _minMaxK; }
@@ -1316,6 +1329,7 @@ namespace galsim {
         std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return true; } 
+        bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
@@ -1401,6 +1415,7 @@ namespace galsim {
         }
 
         bool isAxisymmetric() const { return true; }
+        bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
@@ -1614,6 +1629,7 @@ namespace galsim {
         }
 
         bool isAxisymmetric() const { return true; } 
+        bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
@@ -1697,6 +1713,7 @@ namespace galsim {
         std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return true; } 
+        bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
@@ -1817,6 +1834,7 @@ namespace galsim {
         std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return false; } 
+        bool hasHardEdges() const { return true; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
@@ -1905,6 +1923,7 @@ namespace galsim {
         double stepK() const;
 
         bool isAxisymmetric() const { return false; }
+        bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
@@ -1963,6 +1982,7 @@ namespace galsim {
         std::complex<double> kValue(const Position<double>& k) const; 
 
         bool isAxisymmetric() const { return true; } 
+        bool hasHardEdges() const { return (1.-_fluxFactor) > sbp::maxk_threshold; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
