@@ -63,7 +63,8 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_D=2., circular_
     @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
                            consistency).
     @param circular_pupil  adopt a circular pupil?
-    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
 
     Returns a tuple (rho, theta, in_pupil), the first two of which are the coordinates of the
     pupil in unit disc-scaled coordinates for use by Zernike polynomials for describing the
@@ -123,7 +124,8 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
     
     Outputs the wavefront for kx, ky locations corresponding to kxky(array_shape).
     """
@@ -184,7 +186,8 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., as
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
     """
     array = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                       astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -219,7 +222,8 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
     """
     wf = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                    astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -254,7 +258,8 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
     """
     array = psf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -288,7 +293,8 @@ def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
     """
     wf = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                    astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -323,7 +329,8 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
     """
     array = otf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -358,7 +365,8 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
     """
     return np.abs(otf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                       astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -389,7 +397,8 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
     """
     array = mtf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -423,7 +432,8 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
     """
     kx, ky = kxky(array_shape)
     k2 = (kx**2 + ky**2)
@@ -462,7 +472,8 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
     """
     array = ptf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,

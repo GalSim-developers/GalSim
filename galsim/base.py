@@ -350,7 +350,8 @@ class OpticalPSF(GSObject):
     @param coma2           coma along y in units of incident light wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
     @param circular_pupil  adopt a circular pupil?
-    @param obscuration     dimension of central obscuration as fraction of pupil dimension, [0., 1.)
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear 
+                           dimension, [0., 1.) [default = 0.]
     @param interpolantxy   optional keyword for specifying the interpolation scheme [default =
                            galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))].
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
