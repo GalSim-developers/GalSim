@@ -1421,14 +1421,15 @@ namespace galsim {
         /**
          * @brief Constructor.
          *
-         * @param[in] D_    `D` = (telescope diam) / (lambda * focal length) if arg is focal plane 
-         *                  position, else `D` = (telescope diam) / lambda if arg is in radians of 
-         *                  field angle (default `D_ = 1.`).
-         * @param[in] obs_  radius ratio of central obscuration (default `obs_ = 0.`).
-         * @param[in] flux_ flux (default `flux_ = 1.`).
+         * @param[in] D_            `D` = (telescope diam) / (lambda * focal length) if arg is focal
+         *                          plane position, else `D` = (telescope diam) / lambda if arg is 
+         *                          in radians of field angle (default `D_ = 1.`).
+         * @param[in] obscuration_  dimension of central obscuration as fraction of pupil dimension,
+         *                          in range [0., 1.) (default `obscuration_ = 0.`).
+         * @param[in] flux_         flux (default `flux_ = 1.`).
          */
-        SBAiry(double D_=1., double obs_=0., double flux_=1.) :
-            D(D_), obscuration(obs_), flux(flux_), _sampler(0), _radial(obscuration) {}
+        SBAiry(double D_=1., double obscuration_=0., double flux_=1.) :
+            D(D_), obscuration(obscuration_), flux(flux_), _sampler(0), _radial(obscuration) {}
 
         /// @brief Copy constructor: photon-shooting structures are not copied, will be re-computed
         /// in copy
@@ -1532,7 +1533,7 @@ namespace galsim {
          */
         double annuli_autocorrelation(const double k) const; 
 
-        void checkSampler() const; ///< See if `OneDimensionalDeviate` for photon shooting is configured.
+        void checkSampler() const; ///< Check `OneDimensionalDeviate` for photon shooting configured
         void flushSampler() const; ///< Discard the photon-shooting sampler class.
 
     };
