@@ -523,7 +523,43 @@ class Add(GSObject):
 
 
 class Convolve(GSObject):
-    """@brief Base class for defining the python interface to the SBConvolve C++ class.
+    """
+    @brief A class for convolving 2 or more GSObjects
+
+    The objects to be convolved may be provided either as multiple unnamed arguments
+    (e.g. Convolve(psf,gal,pix)) or as a list (e.g. Convolve[psf,gal,pix]).
+    Any number of objects may be provided using either syntax.  (Even 0 or 1, although
+    that doesn't really make much sense.)
+   
+    The convolution will normally be done using discrete Fourier transforms of 
+    each of the component profiles, multiplying them together, and then transforming
+    back to real space.
+   
+    The stepK used for the k-space image will be the minimum of the stepK calculated for 
+    each of the components.  This means that the largest object (in real space) will
+    be adequately sampled in k-space.  Note that using the minimum is appropriate if
+    the various stepK() values are not very similar.  However, if you are convolving
+    100 things that are all about the same size, then the resulting image will be a
+    factor of sqrt(100) = 10 times larger.  Thus, taking the minimum stepK will not be
+    small enough to adequately sample the final image.  If this is ever a use case that 
+    we want to entertain, then we might want to revisit the stepK calculation in SBConvolve.
+    
+    The maxK used for the k-space image will be the minimum of the maxK calculated for
+    each component.  Since the k-space images are multiplied, if one of them is 
+    essentially zero beyond some k value, then that will be true of the final image
+    as well.
+    
+    There is also an option to do the convolution as integrals in real space.
+    To do this, use the optional keyword argument real_space=true.
+    Currently, the real-space integration is only enabled for 2 profiles.
+    (Aside from the trivial implementaion for 1 profile.)  If you try to use it 
+    for more than 2 profiles, an exception will be raised.
+    
+    The real-space convolution is normally slower than the DFT convolution.
+    The exception is if both component profiles have hard edges.  e.g. a truncated
+    Moffat with a Pixel.  In that case, the maxK for each component is quite large
+    since the ringing dies off fairly slowly.  So it can be quicker to use 
+    real-space convolution instead.
     """
     def __init__(self, *args, **kwargs):
         # Check kwargs first

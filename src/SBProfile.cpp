@@ -1539,7 +1539,7 @@ namespace galsim {
 
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBExponential::SBExponentialImpl::maxK() const 
-    { return pow(sbp::maxk_threshold, -1./3.)/_r0; }
+    { return std::pow(sbp::maxk_threshold, -1./3.)/_r0; }
 
     // The amount of flux missed in a circle of radius pi/stepk should miss at 
     // most alias_threshold of the flux.
@@ -1560,7 +1560,7 @@ namespace galsim {
 
     double SBExponential::SBExponentialImpl::xValue(const Position<double>& p) const
     {
-        double r = std::sqrt(p.x*p.x + p.y*p.y);
+        double r = sqrt(p.x*p.x + p.y*p.y);
         return _norm * std::exp(-r/_r0);
     }
 
@@ -1575,7 +1575,7 @@ namespace galsim {
             return _flux*(1. - 1.5*ksq*(1. - 1.25*ksq));
         } else {
             double temp = 1. + ksq*_r0_sq;
-            return _flux/(temp*std::sqrt(temp));
+            return _flux/(temp*sqrt(temp));
             // NB: flux*std::pow(temp,-1.5) is slower.
         }
     }
@@ -1610,7 +1610,7 @@ namespace galsim {
 
     double SBAiry::SBAiryImpl::xValue(const Position<double>& p) const 
     {
-        double radius = std::sqrt(p.x*p.x+p.y*p.y) * _D;
+        double radius = sqrt(p.x*p.x+p.y*p.y) * _D;
         return _norm * _radial(radius);
     }
 
@@ -1622,7 +1622,7 @@ namespace galsim {
         //       However, I haven't gone through this yet, because we don't have
         //       any unit tests currently that would test this, and I didn't 
         //       feel like making them just now.
-        double kk = std::sqrt(k.x*k.x+k.y*k.y);
+        double kk = sqrt(k.x*k.x+k.y*k.y);
         // calculate circular FT(PSF) on p'=(x',y')
         return _flux * annuli_autocorrelation(kk);
     }
@@ -1648,7 +1648,7 @@ namespace galsim {
         if (r<h) throw SBError("Airy calculation r<h");
         else if (r==0.) return 0.;
         else if (r<0. || h<0.) throw SBError("Airy calculation (r||h)<0");
-        return r*r*std::asin(h/r) -h*std::sqrt(r*r-h*h);
+        return r*r*std::asin(h/r) -h*sqrt(r*r-h*h);
     }
 
     /* area inside intersection of 2 circles radii r & s, seperated by t*/
@@ -1671,7 +1671,7 @@ namespace galsim {
         if (h<0.) {
             throw SBError("Airy calculation half-height invalid");
         }
-        h = std::sqrt(h);
+        h = sqrt(h);
 
         if (t*t < r*r - s*s) 
             return M_PI*s*s - chord(s,h) + chord(r,h);
@@ -1869,7 +1869,7 @@ namespace galsim {
         // Start with value for plain old Gaussian:
         double maxk = sqrt(-2.*std::log(sbp::maxk_threshold))/_sigma; 
         // Grow as sqrt of order
-        if (_bvec.getOrder() > 1) maxk *= std::sqrt(double(_bvec.getOrder()));
+        if (_bvec.getOrder() > 1) maxk *= sqrt(double(_bvec.getOrder()));
         return maxk;
     }
 
@@ -1878,7 +1878,7 @@ namespace galsim {
         // Start with value for plain old Gaussian:
         double R = std::max(4., sqrt(-2.*std::log(sbp::alias_threshold)));
         // Grow as sqrt of order
-        if (_bvec.getOrder() > 1) R *= std::sqrt(double(_bvec.getOrder()));
+        if (_bvec.getOrder() > 1) R *= sqrt(double(_bvec.getOrder()));
         return M_PI / (R*_sigma);
     }
 
@@ -2135,7 +2135,7 @@ namespace galsim {
         xdbg<<"flux = "<<_flux<<"\n";
 
         // First, relation between FWHM and rD:
-        double FWHMrD = 2.* std::sqrt(std::pow(2., 1./_beta)-1.);
+        double FWHMrD = 2.* sqrt(std::pow(2., 1./_beta)-1.);
         xdbg<<"FWHMrD = "<<FWHMrD<<"\n";
         double maxRrD;
         if (truncationFWHM > 0.) {
@@ -2143,7 +2143,7 @@ namespace galsim {
             xdbg<<"maxRrD = "<<maxRrD<<"\n";
 
             // Analytic integration of total flux:
-            _fluxFactor = 1. - pow( 1+maxRrD*maxRrD, (1.-_beta));
+            _fluxFactor = 1. - std::pow( 1+maxRrD*maxRrD, (1.-_beta));
         } else {
             _fluxFactor = 1.;
 
@@ -2164,7 +2164,7 @@ namespace galsim {
           case HALF_LIGHT_RADIUS: 
                {
                    // Get half-light radius in units of rD:
-                   double rerD = sqrt( pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
+                   double rerD = sqrt( std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
                    _rD = size / rerD;
                }
                break;
@@ -2249,7 +2249,7 @@ namespace galsim {
         // Make FFT's periodic at 4x truncation radius or 1.5x diam at alias_threshold,
         // whichever is smaller
         return 2.*M_PI / std::min(4.*_maxR, 
-                                  3.*std::sqrt(pow(sbp::alias_threshold, -1./_beta)-1.)*_rD);
+                                  3.*sqrt(std::pow(sbp::alias_threshold, -1./_beta)-1.)*_rD);
 #endif
     }
 
@@ -2456,7 +2456,7 @@ namespace galsim {
             }
             // Initial guess
             y = -std::log(y);
-            double r = y>2 ? y : std::sqrt(2*y);
+            double r = y>2 ? y : sqrt(2*y);
             double dy = y - r + std::log(1+r);
             while ( std::abs(dy) > Y_TOLERANCE) {
                 r = r + (1+r)*dy/r;
@@ -2531,7 +2531,7 @@ namespace galsim {
             } while (rsq>=1. || rsq==0.);
             
             // Then map it to the Moffat flux distribution
-            double newRsq = pow( 1.-rsq*_fluxFactor , 1./(1.-_beta)) - 1.;
+            double newRsq = std::pow( 1.-rsq*_fluxFactor , 1./(1.-_beta)) - 1.;
             double rFactor = _rD*sqrt(newRsq / rsq);
             result.setPhoton(i,rFactor*xu, rFactor*yu, fluxPerPhoton);
         }

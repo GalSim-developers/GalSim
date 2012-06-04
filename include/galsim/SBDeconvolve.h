@@ -37,7 +37,7 @@ namespace galsim {
         {
         public:
             SBDeconvolveImpl(const SBProfile& adaptee) : _adaptee(adaptee)
-            { _maxksq = pow(maxK(),2.); }
+            { _maxksq = std::pow(maxK(),2.); }
 
             ~SBDeconvolveImpl() {}
 

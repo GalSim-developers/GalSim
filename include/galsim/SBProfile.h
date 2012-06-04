@@ -45,7 +45,7 @@ namespace galsim {
         /**
          * @brief A threshold parameter used for setting the stepK value for FFTs.
          *
-         * The FFT's stepK is set so that at most a fraction of (1-alias_threshold)
+         * The FFT's stepK is set so that at most a fraction alias_threshold
          * of the flux of any profile is aliased.
          */
         const double alias_threshold = 5.e-3;
@@ -1112,9 +1112,49 @@ namespace galsim {
     /**
      * @brief Convolve SBProfiles.
      *
-     * Convolve two, three or more SBProfiles together 
-     * TODO: Add a more detailed description here.
+     * Convolve one, two, three or more SBProfiles together.
+     *
+     * The profiles to be convolved may be provided either as the first 1, 2, or 3
+     * parameters in the constructor, or as a std::list<SBProfile*>.
+     *
+     * The convolution will normally be done using discrete Fourier transforms of 
+     * each of the component profiles, multiplying them together, and then transforming
+     * back to real space.
+     *
+     * The stepK used for the k-space image will be the minimum of the stepK() calculated for 
+     * each of the components.  This means that the largest object (in real space) will
+     * be adequately sampled in k-space.  Note that using the minimum is appropriate if
+     * the various stepK() values are not very similar.  However, if you are convolving
+     * 100 things that are all about the same size, then the resulting image will be a
+     * factor of sqrt(100) = 10 times larger.  Thus, taking the minimum stepK will not be
+     * small enough to adequately sample the final image.  If this is ever a use case * that 
+     * we want to entertain, then we might want to revisit the stepK calculation here.
+     *
+     * The maxK used for the k-space image will be the minimum of the maxK() calculated for
+     * each component.  Since the k-space images are multiplied, if one of them is 
+     * essentially zero beyond some k value, then that will be true of the final image
+     * as well.
+     *
+     * There is also an option to do the convolution as integrals in real space.
+     * Each constructor has an optional boolean parmeter, real_space, that comes
+     * immediately after the list of profiles to convolve.  Currently, the real-space
+     * integration is only enabled for 2 profiles.  (Aside from the trivial implementaion
+     * for 1 profile.)  If you try to use it for more than 2 profiles, an exception will
+     * be thrown.  
+     *
+     * The real-space convolution is normally slower than the DFT convolution.
+     * The exception is if both component profiles have hard edges.  e.g. a truncated
+     * Moffat with a Box.  In that case, the maxK for each component is quite large
+     * since the ringing dies off fairly slowly.  So it can be quicker to use 
+     * real-space convolution instead.
+     *
+     * Finally, there is another optional parameter in the constructors which can set
+     * an overall flux scale for the final image.  The nominal flux is normally just
+     * the product of the fluxes of each of the component profiles.  However, if you
+     * set f to something other than 1, then the final flux will be f times the 
+     * product of the component fluxes.
      */
+    // TODO: the fluxScale stuff hasn't been ported to the python layer yet.
     class SBConvolve : public SBProfile 
     {
     public:
