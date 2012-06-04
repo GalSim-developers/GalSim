@@ -942,14 +942,13 @@ namespace galsim {
         for (int i=0; i<N*(N/2+1); i++)
             t_array[i] = array[i];
 
-        XTable* xt = new XTable( N, 2*M_PI/(N*dk) );
+        XTable xt( N, 2*M_PI/(N*dk) );
 
         fftw_plan plan = fftw_plan_dft_c2r_2d(
-            N, N, reinterpret_cast<fftw_complex*> (t_array), xt->array, FFTW_MEASURE);
+            N, N, reinterpret_cast<fftw_complex*> (t_array), xt.array, FFTW_MEASURE);
 #ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
 #endif
-        delete xt;
         fftw_free(t_array);
         fftw_destroy_plan(plan);
     }
@@ -1012,15 +1011,14 @@ namespace galsim {
         for (int i=0; i<N*N; i++)
             t_array[i] = array[i];
 
-        KTable* kt = new KTable( N, 2*M_PI/(N*dx) );
+        KTable kt( N, 2*M_PI/(N*dx) );
 
         fftw_plan plan = fftw_plan_dft_r2c_2d(
-            N,N, t_array, reinterpret_cast<fftw_complex*> (kt->array), FFTW_MEASURE);
+            N,N, t_array, reinterpret_cast<fftw_complex*> (kt.array), FFTW_MEASURE);
 #ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
 #endif
 
-        delete kt;
         fftw_free(t_array);
         fftw_destroy_plan(plan);
     }
