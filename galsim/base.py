@@ -76,6 +76,11 @@ class GSObject:
         """
         return self.SBProfile.stepK()
 
+    def hasHardEdges(self):
+        """@brief Returns True if there are any hard edges in the profile.
+        """
+        return self.SBProfile.hasHardEdges()
+
     def isAxisymmetric(self):
         """@brief Returns True if axially symmetric: affects efficiency of evaluation.
         """
@@ -550,7 +555,7 @@ class Convolve(GSObject):
     as well.
     
     There is also an option to do the convolution as integrals in real space.
-    To do this, use the optional keyword argument real_space=true.
+    To do this, use the optional keyword argument real_space=True.
     Currently, the real-space integration is only enabled for 2 profiles.
     (Aside from the trivial implementaion for 1 profile.)  If you try to use it 
     for more than 2 profiles, an exception will be raised.
@@ -559,36 +564,88 @@ class Convolve(GSObject):
     The exception is if both component profiles have hard edges.  e.g. a truncated
     Moffat with a Pixel.  In that case, the maxK for each component is quite large
     since the ringing dies off fairly slowly.  So it can be quicker to use 
-    real-space convolution instead.
+    real-space convolution instead.  Also, real-space convolution tends to be more
+    accurate in this case as well.
+
+    If you do not specify either True or False explicitly, then we check if 
+    there are 2 profiles, both of which have hard edges.  In this case, we 
+    automatically use real-space convolution.  In all other cases, the 
+    default is to use the DFT algorithm.
     """
     def __init__(self, *args, **kwargs):
         # Check kwargs first
         # The only kwarg we're looking for is real_space, which can be True or False
-        # (default if omitted is False), which specifies whether to do the convolution
+        # (default if omitted is None), which specifies whether to do the convolution
         # as an integral in real space rather than as a product in fourier space.
-        real_space = kwargs.pop("real_space",False)
+        # If the parameter is omitted (or explicitly given as None I guess), then
+        # we will usually do the fourier method.  However, if there are 2 components
+        # _and_ both of them have hard edges, then we use real-space convolution.
+        real_space = kwargs.pop("real_space",None)
+
         if kwargs:
             # This exception seems inappropriate, but I don't know which one is better.
             # I really want something like a ParameterError or ArgumentError, but that
             # doesn't seem to exist in the standard hierarchy.  Maybe RuntimeError?
-            raise NameError("Unknown names argument(s) to Convolve constructor: %s"%kwargs.keys())
+            raise NameError("Unknown named argument(s) to Convolve constructor: %s"%kwargs.keys())
 
-        # This is a workaround for the fact that Python doesn't allow multiple constructors.
-        # So check the number and type of the arguments here in the single __init__ method.
+        # If 1 argument, check if it is a list:
+        if len(args) == 1 and isinstance(args[0],list):
+            args = args[0]
+
+        hard_edge = True
+        for obj in args:
+            if not obj.hasHardEdges():
+                hard_edge = False
+
+        if real_space is None:
+            # Figure out if it makes more sense to use real-space convolution.
+            if len(args) == 2:
+                real_space = hard_edge
+            elif len(args) == 1:
+                real_space = obj.isAnalyticX()
+            else:
+                real_space = False
+
+        # Warn if doing DFT convolution for objects with hard edges.
+        if not real_space and hard_edge:
+            import warnings
+            if len(args) == 2:
+                msg = """
+                Doing convolution of 2 objects, both with hard edges.
+                This might be more accurate and/or faster using real_space=True"""
+            else:
+                msg = """
+                Doing convolution where all objects have hard edges.
+                There might be some inaccuracies due to ringing in k-space."""
+            warnings.warn(msg)
+
+        # Can't do real space if nobj > 2
+        if real_space and len(args) > 2:
+            import warnings
+            msg = """
+            Real-space convolution of more than 2 objects is not implemented.
+            Switching to DFT method."""
+            warnings.warn(msg)
+            real_space = False
+
+        # Can't do real space if any object is not analytic
+        if real_space:
+            for obj in args:
+                if not obj.isAnalyticX():
+                    import warnings
+                    msg = """
+                    A component to be convolved is not analytic in real space.
+                    Cannot use real space convolution.
+                    Switching to DFT method."""
+                    warnings.warn(msg)
+                    real_space = False
+                    break
+
         if len(args) == 0:
-            # No arguments.  Start with none and add objects later with add(obj)
             GSObject.__init__(self, galsim.SBConvolve(real_space=real_space))
         elif len(args) == 1:
-            # 1 argment.  Should be either a GSObject or a list of GSObjects
-            if isinstance(args[0], GSObject):
-                # If single argument is a GSObject, then use the SBConvolve for a single SBProfile.
-                GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile,real_space=real_space))
-            else:
-                # Otherwise, should be a list of GSObjects
-                SBList = [obj.SBProfile for obj in args[0]]
-                GSObject.__init__(self, galsim.SBConvolve(SBList,real_space=real_space))
+            GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile,real_space=real_space))
         elif len(args) == 2:
-            # 2 arguments.  Should both be GSObjects.
             GSObject.__init__(self, galsim.SBConvolve(
                     args[0].SBProfile,args[1].SBProfile,real_space=real_space))
         else:

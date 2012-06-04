@@ -697,6 +697,7 @@ namespace galsim {
         _sumflux = _sumfx = _sumfy = 0.;
         _maxMaxK = _minStepK = 0.;
         _allAxisymmetric = _allAnalyticX = _allAnalyticK = true;
+        _anyHardEdges = false;
 
         // Accumulate properties of all summands
         for(ConstIter it=_plist.begin(); it!=_plist.end(); ++it) {
@@ -710,6 +711,7 @@ namespace galsim {
             if ( _minStepK<=0. || (it->stepK() < _minStepK) ) 
                 _minStepK = it->stepK();
             _allAxisymmetric = _allAxisymmetric && it->isAxisymmetric();
+            _anyHardEdges = _anyHardEdges || it->hasHardEdges();
             _allAnalyticX = _allAnalyticX && it->isAnalyticX();
             _allAnalyticK = _allAnalyticK && it->isAnalyticK();
         }

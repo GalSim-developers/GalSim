@@ -365,11 +365,7 @@ def test_sbprofile_box():
             err_msg="Using GSObject Pixel disagrees with expected result")
 
     # Test photon shooting.
-    # Need to convolve with something, or else the fourier convolution will 
-    # make a huge image in fourier space.  So convolve with a small gaussian
-    # to smooth out the sharp cutoff.
-    pixel2 = galsim.Convolve(pixel, galsim.Gaussian(sigma=0.3))
-    do_shoot(pixel2,myImg,0.2,"Pixel")
+    do_shoot(pixel,myImg,0.2,"Pixel")
 
 
 def test_sbprofile_moffat():
@@ -517,13 +513,14 @@ def test_sbprofile_convolve():
     # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
-    conv = galsim.Convolve([psf,pixel])
+    # We'll do the real space convolution below
+    conv = galsim.Convolve([psf,pixel],real_space=False)
     conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 4,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     # Other ways to do the convolution:
-    conv = galsim.Convolve(psf,pixel)
+    conv = galsim.Convolve(psf,pixel,real_space=False)
     conv.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 4,
@@ -641,20 +638,21 @@ def test_sbprofile_realspace_distorted_convolve():
     pixel.applyShear(0.2,0.0)
     pixel.applyRotation(80 * galsim.degrees)
     pixel.applyShift(0.13,0.27)
-    conv = galsim.Convolve([psf,pixel],real_space=True)
+    # NB: real-space is chosen automatically
+    conv = galsim.Convolve([psf,pixel])
     conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using Convolve([psf,pixel]) (distorted) disagrees with expected result")
     # Other ways to do the convolution:
-    conv = galsim.Convolve(psf,pixel,real_space=True)
+    conv = galsim.Convolve(psf,pixel)
     conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using Convolve(psf,pixel) (distorted) disagrees with expected result")
     # The real-space convolution algorithm is not (trivially) independent of the order of
     # the two things being convolved.  So check the opposite order.
-    conv = galsim.Convolve([pixel,psf],real_space=True)
+    conv = galsim.Convolve([pixel,psf])
     conv.draw(img,dx=0.2)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,

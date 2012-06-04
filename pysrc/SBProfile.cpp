@@ -194,6 +194,7 @@ struct PySBProfile {
             .def("stepK", &SBProfile::stepK,
                  "Sampling in k space necessary to avoid folding of image in x space")
             .def("isAxisymmetric", &SBProfile::isAxisymmetric)
+            .def("hasHardEdges", &SBProfile::hasHardEdges)
             .def("isAnalyticX", &SBProfile::isAnalyticX,
                  "True if real-space values can be determined immediately at any position without\n"
                  " DFT.")

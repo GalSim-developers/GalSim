@@ -96,7 +96,7 @@ def Script1():
     pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
     logger.info('Made pixel profile')
 
-    final_psf = galsim.Convolve(psf,pix,real_space=True)
+    final_psf = galsim.Convolve(psf,pix)
     logger.info('Made final_psf profile')
 
     # This profile is placed with different noise realizations at each postage
