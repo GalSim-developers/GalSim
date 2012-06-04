@@ -3,7 +3,7 @@ from . import generators
 from .. import base
 
 class GSObjectNode(machinery.NodeBase):
-    flux = generators.RandomizableField(default=1., required=False)
+    flux = generators.GeneratableField(default=1., required=False)
 
     target = None  # GSObject class or factory function used by apply; should be set by derived classes.
 
@@ -19,8 +19,8 @@ class GSObjectNode(machinery.NodeBase):
         return self.target(**kwds)
 
 class EllipticalObjectNode(GSObjectNode):
-    g1 = generators.RandomizableField(default=None, required=False)
-    g2 = generators.RandomizableField(default=None, required=False)
+    g1 = generators.GeneratableField(default=None, required=False)
+    g2 = generators.GeneratableField(default=None, required=False)
 
     def apply(self, row):
         # could remove this implementation if we add ellipticity kwds to GSObject constructors
@@ -33,35 +33,35 @@ class EllipticalObjectNode(GSObjectNode):
         return result
 
 class MoffatNode(EllipticalObjectNode):
-    beta = generators.RandomizableField(default=None, required=False)
-    truncationFWHM = generators.RandomizableField(default=2., required=False)
-    fwhm = generators.RandomizableField(default=None, required=False)
-    half_light_radius = generators.RandomizableField(default=None, required=False)    
-    scale_radius = generators.RandomizableField(default=None, required=False)    
+    beta = generators.GeneratableField(default=None, required=False)
+    truncationFWHM = generators.GeneratableField(default=2., required=False)
+    fwhm = generators.GeneratableField(default=None, required=False)
+    half_light_radius = generators.GeneratableField(default=None, required=False)    
+    scale_radius = generators.GeneratableField(default=None, required=False)    
 
     target = base.Moffat
 
 class DeVaucouleursNode(EllipticalObjectNode):
-    half_light_radius = generators.RandomizableField(default=None, required=False)    
+    half_light_radius = generators.GeneratableField(default=None, required=False)    
 
     target = base.DeVaucouleurs
 
 class ExponentialNode(EllipticalObjectNode):
-    half_light_radius = generators.RandomizableField(default=None, required=False)    
-    scale_radius = generators.RandomizableField(default=None, required=False)    
+    half_light_radius = generators.GeneratableField(default=None, required=False)    
+    scale_radius = generators.GeneratableField(default=None, required=False)    
 
     target = base.Exponential
 
 class GaussianNode(EllipticalObjectNode):
-    half_light_radius = generators.RandomizableField(default=None, required=False)
-    sigma = generators.RandomizableField(default=None, required=False)
-    fwhm = generators.RandomizableField(default=None, required=False)
+    half_light_radius = generators.GeneratableField(default=None, required=False)
+    sigma = generators.GeneratableField(default=None, required=False)
+    fwhm = generators.GeneratableField(default=None, required=False)
 
     target = base.Gaussian
 
 class SersicNode(EllipticalObjectNode):
-    n = generators.RandomizableField(default=None, required=False)
-    half_light_radius = generators.RandomizableField(default=None, required=False)
+    n = generators.GeneratableField(default=None, required=False)
+    half_light_radius = generators.GeneratableField(default=None, required=False)
 
     target = base.Sersic
 
@@ -89,8 +89,8 @@ class GalaxyNode(machinery.ListNodeBase):
         return base.Add(components)
 
 class ShearNode(machinery.NodeBase):
-    g1 = generators.RandomizableField(default=0., required=True)
-    g2 = generators.RandomizableField(default=0., required=True)
+    g1 = generators.GeneratableField(default=0., required=True)
+    g2 = generators.GeneratableField(default=0., required=True)
     
 class RootNode(machinery.NodeBase):
     dx = machinery.Field(float, default=1., required=True)
