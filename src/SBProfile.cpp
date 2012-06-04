@@ -1588,7 +1588,7 @@ namespace galsim {
 
     SBAiry::SBAiryImpl::SBAiryImpl(double D, double obs, double flux) :
         _D(D), _obscuration(obs), _flux(flux), _norm(flux*D*D),
-        _sampler(0), _radial(_obscuration) {}
+        _radial(_obscuration) {}
 
     // This is a scale-free version of the Airy radial function.
     // Input radius is in units of lambda/D.  Output normalized
@@ -2115,10 +2115,10 @@ namespace galsim {
         _ksq_max = exp(_ft.argMax());
 
         // Next, set up the classes for photon shooting
-        _radial = new SersicRadialFunction(_n, _b);
+        _radial.reset(new SersicRadialFunction(_n, _b));
         std::vector<double> range(2,0.);
         range[1] = R;
-        _sampler = new OneDimensionalDeviate( *_radial, range, true);
+        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
     }
 
     PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate& ud) const 
@@ -2483,16 +2483,11 @@ namespace galsim {
     }
 
     void SBAiry::SBAiryImpl::flushSampler() const 
-    {
-        if (_sampler) {
-            delete _sampler;
-            _sampler = 0;
-        }
-    }
+    { _sampler.reset(); }
 
     void SBAiry::SBAiryImpl::checkSampler() const 
     {
-        if (_sampler) return;
+        if (_sampler.get()) return;
         std::vector<double> ranges(1,0.);
         // Break Airy function into ranges that will not have >1 extremum:
         double xmin = (1.1 - 0.5*_obscuration);
@@ -2507,7 +2502,7 @@ namespace galsim {
             xmin += 0.5;
         }
         ranges.push_back(xmin);
-        _sampler = new OneDimensionalDeviate(_radial, ranges, true);
+        _sampler.reset(new OneDimensionalDeviate(_radial, ranges, true));
     }
 
     PhotonArray SBBox::SBBoxImpl::shoot(int N, UniformDeviate& u) const

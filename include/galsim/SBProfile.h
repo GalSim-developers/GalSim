@@ -1560,12 +1560,9 @@ namespace galsim {
              * @param[in] n Sersic index
              */
             SersicInfo(double n); 
+
             /// @brief Destructor: deletes photon-shooting classes if necessary
-            ~SersicInfo() 
-            {
-                if (_radial) delete _radial;
-                if (_sampler) delete _sampler;
-            }
+            ~SersicInfo() {}
 
             /** 
              * @brief Returns the real space value of the Sersic function,
@@ -1618,8 +1615,11 @@ namespace galsim {
             double _ksq_min; ///< Minimum ksq to use lookup table.
             double _ksq_max; ///< Maximum ksq to use lookup table.
 
-            SersicRadialFunction* _radial;  ///< Function class used for photon shooting
-            OneDimensionalDeviate* _sampler;   ///< Class that does numerical photon shooting
+            /// Function class used for photon shooting
+            boost::shared_ptr<SersicRadialFunction> _radial;  
+
+            /// Class that does numerical photon shooting
+            boost::shared_ptr<OneDimensionalDeviate> _sampler;   
 
             double findMaxR(double missing_flux_fraction, double gamma2n);
         };
@@ -1630,7 +1630,7 @@ namespace galsim {
          * *Be careful of this when multithreading:*
          * Should build one `SBSersic` with each `n` value before dispatching multiple threads.
          */
-        class InfoBarn : public std::map<double, const SersicInfo*> 
+        class InfoBarn : public std::map<double, boost::shared_ptr<SersicInfo> > 
         {
         public:
 
@@ -1647,25 +1647,21 @@ namespace galsim {
                  */
                 const int MAX_SERSIC_TABLES = 100; 
 
-                const SersicInfo* info = (*this)[n];
-                if (info==0) {
-                    info = new SersicInfo(n);
-                    (*this)[n] = info;
-                    if (int(size()) > MAX_SERSIC_TABLES)
+                MapIter it = _map.find(n);
+                if (it == _map.end()) {
+                    boost::shared_ptr<SersicInfo> info(new SersicInfo(n));
+                    _map[n] = info;
+                    if (int(_map.size()) > MAX_SERSIC_TABLES)
                         throw SBError("Storing Sersic info for too many n values");
+                    return info.get();
+                } else {
+                    return it->second.get();
                 }
-                return info;
             }
 
-            /// @brief Destructor.
-            ~InfoBarn() 
-            {
-                typedef std::map<double,const SersicInfo*>::iterator mapit;
-                for (mapit pos = begin(); pos != end(); ++pos) {
-                    delete pos->second;
-                    pos->second = 0;
-                }
-            }
+        private:
+            typedef std::map<double, boost::shared_ptr<SersicInfo> >::iterator MapIter;
+            std::map<double, boost::shared_ptr<SersicInfo> > _map;
         };
 
         /// One static map of all `SersicInfo` structures for whole program.
@@ -1866,7 +1862,9 @@ namespace galsim {
         double _flux; ///< Flux.
         double _norm; ///< Calculated value: flux*D*D
 
-        mutable OneDimensionalDeviate* _sampler; ///< Class that can sample radial distribution
+        ///< Class that can sample radial distribution
+        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler; 
+
         AiryRadialFunction _radial;  ///< Class that embodies the radial Airy function.
 
         /// Circle chord length at `h < r`.
