@@ -76,6 +76,11 @@ class GSObject:
         """
         return self.SBProfile.stepK()
 
+    def hasHardEdges(self):
+        """@brief Returns True if there are any hard edges in the profile.
+        """
+        return self.SBProfile.hasHardEdges()
+
     def isAxisymmetric(self):
         """@brief Returns True if axially symmetric: affects efficiency of evaluation.
         """
@@ -585,7 +590,7 @@ class Convolve(GSObject):
 
         hard_edge = True
         for obj in args:
-            if not obj.SBProfile.hasHardEdges():
+            if not obj.hasHardEdges():
                 hard_edge = False
 
         if real_space is None:
@@ -593,10 +598,11 @@ class Convolve(GSObject):
             if len(args) == 2:
                 real_space = hard_edge
             elif len(args) == 1:
-                real_space = obj.SBProfile.isAnalyticX()
+                real_space = obj.isAnalyticX()
             else:
                 real_space = False
 
+        # Warn if doing DFT convolution for objects with hard edges.
         if not real_space and hard_edge:
             import warnings
             if len(args) == 2:
@@ -609,9 +615,27 @@ class Convolve(GSObject):
                 There might be some inaccuracies due to ringing in k-space."""
             warnings.warn(msg)
 
+        # Can't do real space if nobj > 2
         if real_space and len(args) > 2:
-            raise NotImplementedError(
-                "Real-space convolution of more than 2 objects is not implemented.")
+            import warnings
+            msg = """
+            Real-space convolution of more than 2 objects is not implemented.
+            Switching to DFT method."""
+            warnings.warn(msg)
+            real_space = False
+
+        # Can't do real space if any object is not analytic
+        if real_space:
+            for obj in args:
+                if not obj.isAnalyticX():
+                    import warnings
+                    msg = """
+                    A component to be convolved is not analytic in real space.
+                    Cannot use real space convolution.
+                    Switching to DFT method."""
+                    warnings.warn(msg)
+                    real_space = False
+                    break
 
         if len(args) == 0:
             GSObject.__init__(self, galsim.SBConvolve(real_space=real_space))
