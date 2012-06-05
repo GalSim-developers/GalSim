@@ -264,7 +264,7 @@ namespace galsim {
             scale = -det;
         } else if (det==0.) {
             // Degenerate transformation.  Return some junk
-            return Ellipse(0., 0., -std::numeric_limits<double>::max(), 0., 0.);
+            return Ellipse(Shear(0.0, 0.0), -std::numeric_limits<double>::max(), Position(0.0, 0.0));
         } else {
             scale = det;
         }

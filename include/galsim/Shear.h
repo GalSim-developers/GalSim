@@ -1,12 +1,9 @@
-
-// A class definition for shear.  Allows get/set via various
-// representations of the geometrical shear quantity.
-
-// Also contains "Ellipse" class which is combination of shear,
-// translation, and magnification, i.e. maps a circle into
-// and ellipse.
-
-// Details on each below
+/**
+ * @file Shear.h Contains a class definition for Shear and Ellipse.
+ *
+ * Shear is used to represent shape distortions; Ellipse includes shear, translation and
+ * magnification.
+*/
 
 #ifndef SHEAR_H
 #define SHEAR_H
@@ -179,23 +176,18 @@ namespace galsim {
     std::ostream& operator<<(std::ostream& os, const Shear& s);
     std::istream& operator>>(std::istream& is, Shear& s);
 
-    // Class to describe transformation from an ellipse
-    // with center x0, size exp(mu), and shape s to the unit circle.
-    // Map from source plane to image plane is defined as
-    // E(x) = T(D(S(x))), where S=shear, D=dilation, T=translation.
-    // Conventions for order of compounding, etc., are same as for Shear.
+    /**
+     * @brief A base class representing transformation from an ellipse to the unit circle.
+     *
+     * The purpose of this C++ class is to represent transformation from an ellipse with center x0,
+     * size exp(mu), and shape s to the unit circle.  The map from source plane to image plane is
+     * defined as E(x) = T(D(S(x))), where S=shear, D=dilation, T=translation.  Conventions for
+     * order of compounding, etc., are same as for Shear.
+     */
     class Ellipse 
     {
     public:
-        explicit Ellipse(
-            double e1=0., double e2=0., double _m=0., 
-            double _x=0., double _y=0.) : mu(_m), x0(_x,_y)
-        {
-            expmu=std::exp(mu);
-            s.setE1E2(e1, e2);
-        }
-
-        Ellipse(const Shear& _s, double _mu, const Position<double> _p) :
+        explicit Ellipse(const Shear& _s, double _mu, const Position<double> _p) :
             s(_s), mu(_mu), x0(_p) 
         { expmu=std::exp(mu); }
 
