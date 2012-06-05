@@ -36,10 +36,10 @@ namespace galsim {
 
         // Magic numbers:
         
-        /// Constant giving minimum FFT size we're willing to do.
+        /// @brief Constant giving minimum FFT size we're willing to do.
         const int minimum_fft_size = 128;
 
-        /// Constant giving maximum FFT size we're willing to do.
+        /// @brief Constant giving maximum FFT size we're willing to do.
         const int maximum_fft_size = 4096;
 
         /**
@@ -662,6 +662,7 @@ namespace galsim {
 
         /** 
          * @brief Copy constructor.
+         *
          * @param[in] rhs SBAdd to be copied.
          */
         SBAdd(const SBAdd& rhs) : 
@@ -1129,7 +1130,8 @@ namespace galsim {
             _fluxScale(f), _real_space(real_space)
         { for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr) add(**sptr); }
 
-        /** @brief Copy constructor.
+        /** 
+         * @brief Copy constructor.
          *
          * @param[in] rhs SBProfile.
          */
@@ -1315,7 +1317,7 @@ namespace galsim {
          *
          * @param[in] flux   flux of the Surface Brightness Profile (default `flux = 1.`).
          * @param[in] sigma  characteristic size, surface brightness scales as 
-         *                   `exp[-r^2 / (2. * sigma^2)] (default `sigma = 1.`).
+         *                   `exp[-r^2 / (2. * sigma^2)]` (default `sigma = 1.`).
          */
         SBGaussian(double flux=1., double sigma=1.);
 
@@ -1682,14 +1684,18 @@ namespace galsim {
          */
         SBAiry(double D=1., double obs=0., double flux=1.);
 
-        /// @brief Copy constructor: photon-shooting structures are not copied, will be
-        /// re-computed in copy
+        /**
+         * @brief Copy constructor: photon-shooting structures are not copied, will be
+         * re-computed in copy
+         */
         SBAiry(const SBAiry& rhs): 
             _D(rhs._D), _obscuration(rhs._obscuration), _flux(rhs._flux), _norm(rhs._norm),
             _sampler(0), _radial(_obscuration) {}
 
-        /// @brief Assignment operator: photon-shooting structures are discarded, will be
-        /// re-computed in copy
+        /**
+         * @brief Assignment operator: photon-shooting structures are discarded, will be
+         * re-computed in copy
+         */
         SBAiry& operator=(const SBAiry& rhs) 
         {
             _D = rhs._D;
