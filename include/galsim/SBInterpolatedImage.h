@@ -46,7 +46,7 @@ namespace galsim {
          * @param[in] i         interpolation scheme to adopt between pixels 
          *                      (TODO: Add more, document Interpolant.h, describe the Interpolant2d 
          *                      class).
-         * @param[in] Nimages_ number of images.
+         * @param[in] Nimages  number of images.
          */
         SBInterpolatedImage(int Npix, double dx, const Interpolant2d& i, int Nimages=1);
 

@@ -1307,7 +1307,7 @@ namespace galsim {
             _x0 = _y0 = 0.;
             _fluxProduct = 1.;
             _minMaxK = 0.;
-            _minStepK = 0.;
+            _netStepK = 0.;
             _isStillAxisymmetric = true;
         }
 
@@ -1345,20 +1345,21 @@ namespace galsim {
         }
 
         // Accumulate properties of all terms
+        _netStepK = 0.;  // Accumulate Sum 1/stepk^2
         while (newptr != _plist.end()) {
-            dbg<<"SBConvolve component has maxK, stepK = "<<
-                (*newptr)->maxK()<<" , "<<(*newptr)->stepK()<<std::endl;
+            double maxk = (*newptr)->maxK();
+            double stepk = (*newptr)->stepK();
+            dbg<<"SBConvolve component has maxK, stepK = "<<maxk<<" , "<<stepk<<std::endl;
             _fluxProduct *= (*newptr)->getFlux();
             _x0 += (*newptr)->centroid().x;
             _y0 += (*newptr)->centroid().y;
-            if ( _minMaxK<=0. || (*newptr)->maxK() < _minMaxK)
-                _minMaxK = (*newptr)->maxK();
-            if ( _minStepK<=0. || ((*newptr)->stepK() < _minStepK))
-                _minStepK = (*newptr)->stepK();
+            if ( _minMaxK<=0. || maxk < _minMaxK) _minMaxK = maxk;
+            _netStepK += 1./(stepk*stepk);
             _isStillAxisymmetric = _isStillAxisymmetric && (*newptr)->isAxisymmetric();
             newptr++;
         }
-        dbg<<"Net maxK, stepK = "<<_minMaxK<<" , "<<_minStepK<<std::endl;
+        _netStepK = 1./sqrt(_netStepK);  // Convert to (Sum 1/stepk^2)^(-1/2)
+        dbg<<"Net maxK, stepK = "<<_minMaxK<<" , "<<_netStepK<<std::endl;
     }
 
     void SBConvolve::fillKGrid(KTable& kt) const 

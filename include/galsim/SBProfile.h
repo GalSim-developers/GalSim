@@ -144,7 +144,7 @@ namespace galsim {
          * (SBConvolve) that require an FFT to determine real-space values.  In this case, an 
          * SBError will be thrown.
          *
-         * @param[in] _p 2D position in real space.
+         * @param[in] p 2D position in real space.
          */
         virtual double xValue(const Position<double>& p) const =0;
 
@@ -171,7 +171,7 @@ namespace galsim {
         /**
          * @brief Return value of SBProfile at a chosen 2D position in k space.
          *
-         * @param[in] _p 2D position in k space.
+         * @param[in] k 2D position in k space.
          */
         virtual std::complex<double> kValue(const Position<double>& k) const =0; 
 
@@ -592,14 +592,10 @@ namespace galsim {
         double fillXImage(ImageView<T>& image, double dx) const  // return flux integral
         { return doFillXImage(image, dx); }
 
-        /**
-         * @brief Utility for drawing a k grid into FFT data structures 
-         */
+        /// @brief Utility for drawing a k grid into FFT data structures 
         virtual void fillKGrid(KTable& kt) const;
 
-        /** 
-         * @brief Utility for drawing an x grid into FFT data structures 
-         */
+        /// @brief Utility for drawing an x grid into FFT data structures 
         virtual void fillXGrid(XTable& xt) const;
 
         // Virtual functions cannot be templates, so to make fillXImage work like a virtual
@@ -1048,14 +1044,11 @@ namespace galsim {
      * each of the component profiles, multiplying them together, and then transforming
      * back to real space.
      *
-     * The stepK used for the k-space image will be the minimum of the stepK() calculated for 
-     * each of the components.  This means that the largest object (in real space) will
-     * be adequately sampled in k-space.  Note that using the minimum is appropriate if
-     * the various stepK() values are not very similar.  However, if you are convolving
-     * 100 things that are all about the same size, then the resulting image will be a
-     * factor of sqrt(100) = 10 times larger.  Thus, taking the minimum stepK will not be
-     * small enough to adequately sample the final image.  If this is ever a use case * that 
-     * we want to entertain, then we might want to revisit the stepK calculation here.
+     * The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2)
+     * where the sum is over all teh components being convolved.  Since the size of 
+     * the convolved image scales roughly as the quadrature sum of the components,
+     * this should be close to Pi/Rmax where Rmax is the radius that encloses
+     * all but (1-alias_threshold) of the flux in the final convolved image..
      *
      * The maxK used for the k-space image will be the minimum of the maxK() calculated for
      * each component.  Since the k-space images are multiplied, if one of them is 
@@ -1092,6 +1085,7 @@ namespace galsim {
          * @brief Constructor, 1 input.
          *
          * @param[in] s1 SBProfile.
+         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
         SBConvolve(const SBProfile& s1, bool real_space=false, double f=1.) :
@@ -1103,6 +1097,7 @@ namespace galsim {
          *
          * @param[in] s1 first SBProfile.
          * @param[in] s2 second SBProfile.
+         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
         SBConvolve(const SBProfile& s1, const SBProfile& s2, bool real_space=false, double f=1.) : 
@@ -1115,6 +1110,7 @@ namespace galsim {
          * @param[in] s1 first SBProfile.
          * @param[in] s2 second SBProfile.
          * @param[in] s3 third SBProfile.
+         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
         SBConvolve(const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
@@ -1126,6 +1122,7 @@ namespace galsim {
          * @brief Constructor, list of inputs.
          *
          * @param[in] slist Input: list of SBProfiles.
+         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          * @param[in] f Input: optional scaling factor for final flux (default `f = 1.`).
          */
         SBConvolve(const std::list<SBProfile*> slist, bool real_space=false, double f=1.) :
@@ -1140,7 +1137,7 @@ namespace galsim {
             _fluxScale(rhs._fluxScale),
             _x0(rhs._x0), _y0(rhs._y0),
             _isStillAxisymmetric(rhs._isStillAxisymmetric),
-            _minMaxK(rhs._minMaxK), _minStepK(rhs._minStepK),
+            _minMaxK(rhs._minMaxK), _netStepK(rhs._netStepK),
             _sumMinX(rhs._sumMinX), _sumMaxX(rhs._sumMaxX), 
             _sumMinY(rhs._sumMinY), _sumMaxY(rhs._sumMaxY), 
             _fluxProduct(rhs._fluxProduct), _real_space(rhs._real_space)
@@ -1171,7 +1168,7 @@ namespace galsim {
             _y0 = rhs._y0;
             _isStillAxisymmetric = rhs._isStillAxisymmetric;
             _minMaxK = rhs._minMaxK;
-            _minStepK = rhs._minStepK;
+            _netStepK = rhs._netStepK;
             _sumMinX = rhs._sumMinX;
             _sumMaxX = rhs._sumMaxX;
             _sumMinY = rhs._sumMinY;
@@ -1207,7 +1204,7 @@ namespace galsim {
         bool isAnalyticX() const { return _real_space; }
         bool isAnalyticK() const { return !_real_space; }    // convolvees must all meet this
         double maxK() const { return _minMaxK; }
-        double stepK() const { return _minStepK; }
+        double stepK() const { return _netStepK; }
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
         { 
@@ -1288,7 +1285,7 @@ namespace galsim {
         double _y0; ///< Centroid position in y.
         bool _isStillAxisymmetric; ///< Is output SBProfile shape still circular?
         double _minMaxK; ///< Minimum maxK() of the convolved SBProfiles.
-        double _minStepK; ///< Minimum stepK() of the convolved SBProfiles.
+        double _netStepK; ///< Minimum stepK() of the convolved SBProfiles.
         double _sumMinX; ///< sum of minX() of the convolved SBProfiles.
         double _sumMaxX; ///< sum of maxX() of the convolved SBProfiles.
         double _sumMinY; ///< sum of minY() of the convolved SBProfiles.
