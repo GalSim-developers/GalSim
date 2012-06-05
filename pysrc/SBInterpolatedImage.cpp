@@ -10,21 +10,53 @@ namespace {
 struct PySBInterpolatedImage {
 
     template <typename U, typename W>
+    static void wrapTemplates_Multi(W & wrapper) {
+        wrapper
+            .def(bp::init<const std::vector<boost::shared_ptr<BaseImage<U> > >&, double, double>(
+                     (bp::arg("images"),
+                      bp::arg("dx")=0., bp::arg("padFactor")=0.)
+                 ))
+            .def(bp::init<const BaseImage<U> &, double, double>(
+                     (bp::arg("image"),
+                      bp::arg("dx")=0., bp::arg("padFactor")=0.)
+                 ))
+            ;
+    }
+
+    template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def(bp::init<const BaseImage<U> &, const InterpolantXY &, double, double>(
-                     (bp::args("image", "i"), bp::arg("dx")=0., bp::arg("padFactor")=0.)
+            .def(bp::init<const BaseImage<U> &,
+                 boost::shared_ptr<InterpolantXY>,
+                 boost::shared_ptr<InterpolantXY>,
+                 double, double>(
+                     (bp::arg("image"),
+                      bp::arg("xInterp")=bp::object(),
+                      bp::arg("kInterp")=bp::object(),
+                      bp::arg("dx")=0., bp::arg("padFactor")=0.)
                  ))
             ;
     }
 
     static void wrap() {
+        bp::class_< MultipleImageHelper > pyMultipleImageHelper(
+            "MultipleImageHelper", bp::init<const MultipleImageHelper &>()
+        );
+        wrapTemplates_Multi<float>(pyMultipleImageHelper);
+        wrapTemplates_Multi<double>(pyMultipleImageHelper);
+        wrapTemplates_Multi<short>(pyMultipleImageHelper);
+        wrapTemplates_Multi<int>(pyMultipleImageHelper);
+
         bp::class_< SBInterpolatedImage, bp::bases<SBProfile> > pySBInterpolatedImage(
             "SBInterpolatedImage", bp::init<const SBInterpolatedImage &>()
         );
         pySBInterpolatedImage
-            .def(bp::init<int, double, const InterpolantXY &, int>(
-                     (bp::args("nPix", "dx", "i"), bp::arg("nImages")=1)
+            .def(bp::init<const MultipleImageHelper&, const std::vector<double>&,
+                 boost::shared_ptr<InterpolantXY>,
+                 boost::shared_ptr<InterpolantXY> >(
+                     (bp::args("multi","weights"),
+                      bp::arg("xInterp")=bp::object(),
+                      bp::arg("kInterp")=bp::object())
                  ))
             ;
         wrapTemplates<float>(pySBInterpolatedImage);

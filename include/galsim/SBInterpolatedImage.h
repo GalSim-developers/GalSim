@@ -16,11 +16,132 @@ namespace galsim {
     namespace sbp {
 
         // Magic numbers:
-        
-        /// FT must be at least this much larger than input
+
+        /// @brief FT must be at least this much larger than input
         const double oversample_x = 4.;
 
+        /// @brief The default k-space interpolator
+        const boost::shared_ptr<Quintic> defaultKInterpolant1d(new Quintic(sbp::kvalue_accuracy));
+        const boost::shared_ptr<InterpolantXY> defaultKInterpolant2d(
+            new InterpolantXY(defaultKInterpolant1d));
+
+        /// @brief The default real-space interpolator
+        const boost::shared_ptr<Lanczos> defaultXInterpolant1d(new Lanczos(5,true,kvalue_accuracy));
+        const boost::shared_ptr<InterpolantXY> defaultXInterpolant2d(
+            new InterpolantXY(defaultXInterpolant1d));
     }
+
+    /**
+     * @brief A Helper class that stores multiple images and their fourier transforms
+     *
+     * One of the ways to create an SBInterpolatedImage is to build it from a 
+     * weighted sum of several component images.  The idea is that the component
+     * images would be constant, but the weights might vary across the field of view.
+     * (E.g. they could be principal components of the PSF).
+     *
+     * This class stores those images along with helpful derived information
+     * (most notably, the fourier transforms), so that each SBInterpolatedImage
+     * doesn't have to recalculate everything from scratch.
+     */
+
+    class MultipleImageHelper
+    {
+    public:
+        /** 
+         * @brief Construct from a std::vector of images.
+         *
+         * @param[in] images    List of images to use
+         * @param[in] dx        Stepsize between pixels in image data table (default value of 
+         *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
+         *                      to `1.` if none is found). 
+         * @param[in] padFactor Multiple by which to increase the image size when zero-padding for 
+         *                      the Fourier transform (default `padFactor = 4`)
+         */
+        template <typename T>
+        MultipleImageHelper(const std::vector<boost::shared_ptr<BaseImage<T> > >& images,
+                            double dx=0., double padFactor=0.);
+
+        /** 
+         * @brief Convenience constructor that only takes a single image.
+         *
+         * @param[in] img       Single input image
+         * @param[in] dx        Stepsize between pixels in image data table (default value of 
+         *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
+         *                      to `1.` if none is found). 
+         * @param[in] padFactor Multiple by which to increase the image size when zero-padding for 
+         *                      the Fourier transform (default `padFactor = 4`)
+         */
+        template <typename T>
+        MultipleImageHelper(const BaseImage<T>& image,
+                            double dx=0., double padFactor=0.);
+
+        /// @brief Copies are shallow, so can pass by value without any copying.
+        MultipleImageHelper(const MultipleImageHelper& rhs) : _pimpl(rhs._pimpl) {}
+
+        /// @brief Replace the current contents with the contents of rhs.
+        MultipleImageHelper& operator=(const MultipleImageHelper& rhs)
+        {
+            if (this != &rhs) _pimpl = rhs._pimpl;
+            return *this;
+        }
+
+        ~MultipleImageHelper() {}
+
+        /// @brief How many images are being stored.
+        size_t size() const { return _pimpl->vx.size(); }
+
+        /// @brief Get the XTable for the i-th image.
+        boost::shared_ptr<XTable> getXTable(int i) const { return _pimpl->vx[i]; }
+
+        /// @brief Get the KTable for the i-th image.
+        boost::shared_ptr<KTable> getKTable(int i) const;
+
+        /// @brief Get the flux of the i-th image.
+        double getFlux(int i) const { return _pimpl->flux[i]; }
+
+        /// @brief Get the x-weighted flux of the i-th image.
+        double getXFlux(int i) const { return _pimpl->xflux[i]; }
+
+        /// @brief Get the y-weighted flux of the i-th image.
+        double getYFlux(int i) const { return _pimpl->yflux[i]; }
+
+        /// @brief Get the initial (unpadded) size of the images.
+        int getNin() const { return _pimpl->Ninitial; }
+
+        /// @brief Get the size of the images in k-space.
+        int getNft() const { return _pimpl->Nk; }
+
+        /// @brief Get the scale size being used for the images.
+        double getScale() const { return _pimpl->dx; }
+
+    private:
+        // Note: I'm not bothering to make this a real class with setters and getters and all.
+        // A struct is good enough for what we need.
+        // Just want it to be easy to make shallow copies.
+        struct MultipleImageHelperImpl
+        {
+            int Ninitial; ///< maximum size of input images
+            int Nk;  ///< Size of the padded grids and Discrete Fourier transform table.
+            double dx;  ///< Input pixel scales.
+
+            /// @brief input images converted into XTables.
+            std::vector<boost::shared_ptr<XTable> > vx;
+
+            /// @brief fourier transforms of the images
+            std::vector<boost::shared_ptr<KTable> > vk;
+
+            /// @brief Vector of fluxes for each image plane of a multiple image.
+            std::vector<double> flux;
+
+            /// @brief Vector x weighted fluxes for each image plane of a multiple image.
+            std::vector<double> xflux;
+
+            /// @brief Vector of y weighted fluxes for each image plane of a multiple image.
+            std::vector<double> yflux;
+        };
+
+        boost::shared_ptr<MultipleImageHelperImpl> _pimpl;
+    };
 
     /** 
      * @brief Surface Brightness Profile represented by interpolation over one or more data 
@@ -30,46 +151,67 @@ namespace galsim {
      * the Nyquist frequency of the input image, although it should be noted that interpolants 
      * other than the ideal sinc function may make the max frequency higher than this.  The output
      * is required to be periodic on a scale > original image extent + kernel footprint, and 
-     * stepK() is set accordingly.  Multiple images can be stored as data tables in an 
-     * SBInterpolatedImage object. A vector weight can then be used to express Surface 
-     * Brightness Profiles as sums of these interpolated images.
-     * (TODO: Add more!!!)
+     * stepK() is set accordingly. 
+     *
+     * The normal way to make an SBInterpolatedImage is to provide the image to interpolate
+     * and the interpolation scheme.  See Interpolant.h for more about the different 
+     * kind of interpolation.  
+     *
+     * You can provide different interpolation schemes for real and fourier space
+     * (passed as xInterp and kInterp respectively).  If either one is omitted, the 
+     * defaults are:
+     * xInterp = Lanczos(5, fluxConserve=true, tol=kvalue_accuracy)
+     * kInterp = Quintic(tol=kvalue_accuracy)
+     *
+     * There are also optional arguments for the pixel size (default is to get it from
+     * the image), and a factor by which to pad the image (default = 4).
+     *
+     * You can also make an SBInterpolatedImage as a weighted sum of several images
+     * using MultipleImageHelper.  This helper object holds the images and their fourier
+     * transforms, so it is efficient to make many SBInterpolatedImages with different
+     * weight vectors.  This version does not take the `dx` or `padFactor` parameters,
+     * since these are set in the MultipleImageHelper constructor.
      */
     class SBInterpolatedImage : public SBProfile 
     {
     public:
-        /**
-         * @brief Initialize internal quantities and allocate data tables.
+        /** 
+         * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
+         * image.
          *
-         * @param[in] Npix      extent of square image is `Npix` x `Npix`.
-         * @param[in] dx        stepsize between pixels in image data table.
-         * @param[in] i         interpolation scheme to adopt between pixels 
-         *                      (TODO: Add more, document Interpolant.h, describe the Interpolant2d 
-         *                      class).
-         * @param[in] Nimages_ number of images.
+         * @param[in] img       Input Image (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] xInterp   Interpolation scheme to adopt between pixels 
+         * @param[in] kInterp   Interpolation scheme to adopt in k-space
+         * @param[in] dx        Stepsize between pixels in image data table (default value of 
+         *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
+         *                      to `1.` if none is found). 
+         * @param[in] padFactor Multiple by which to increase the image size when zero-padding for 
+         *                      the Fourier transform (default `padFactor = 4`)
          */
-        SBInterpolatedImage(int Npix, double dx, const Interpolant2d& i, int Nimages=1) :
-            SBProfile(new SBInterpolatedImageImpl(Npix,dx,i,Nimages)) {}
+        template <typename T> 
+        SBInterpolatedImage(
+            const BaseImage<T>& img, 
+            boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
+            boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
+            double dx=0., double padFactor=0.) :
+            SBProfile(new SBInterpolatedImageImpl(img,xInterp,kInterp,dx,padFactor)) {}
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
          * image.
          *
-         * @param[in] img       square input Image (any of ImageF, ImageD, ImageS, ImageI).
-         * @param[in] dx        stepsize between pixels in image data table (default value of 
-         *                      `x0_ = 0.` checks the Image header for a suitable stepsize, sets 
-         *                      to `1.` if none is found). 
-         * @param[in] i         interpolation scheme to adopt between pixels (TODO: Add more, 
-         *                      document Interpolant.h, describe the Interpolant2d class).
-         * @param[in] padFactor multiple by which to increase the image size when zero-padding for 
-         *                      the Fourier transform (default `padFactor = 0.` forces adoption of 
-         *                      the currently-hardwired `OVERSAMPLE_X = 4.` parameter value for 
-         *                      `padFactor`).
+         * @param[in] multi     MultipleImageHelper object which stores the information about
+         *                      the component images and their fourier transforms.
+         * @param[in] weights   The weights to use for each component image.
+         * @param[in] xInterp   Interpolation scheme to adopt between pixels 
+         * @param[in] kInterp   Interpolation scheme to adopt in k-space
          */
-        template <typename T> 
-        SBInterpolatedImage(const BaseImage<T>& img, const Interpolant2d& i,
-                            double dx=0., double padFactor=0.) :
-            SBProfile(new SBInterpolatedImageImpl(img,i,dx,padFactor)) {}
+        SBInterpolatedImage(
+            const MultipleImageHelper& multi,
+            const std::vector<double>& weights,
+            boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
+            boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d) :
+            SBProfile(new SBInterpolatedImageImpl(multi,weights,xInterp,kInterp)) {}
 
         /// @brief Copy Constructor.
         SBInterpolatedImage(const SBInterpolatedImage& rhs) : SBProfile(rhs) {}
@@ -82,11 +224,16 @@ namespace galsim {
     class SBInterpolatedImageImpl : public SBProfileImpl 
     {
     public:
-        SBInterpolatedImageImpl(int Npix, double dx, const Interpolant2d& i, int Nimages);
-
         template <typename T> 
-        SBInterpolatedImageImpl(const BaseImage<T>& img, const Interpolant2d& i,
-                                double dx, double padFactor);
+        SBInterpolatedImageImpl(
+            const BaseImage<T>& img, 
+            boost::shared_ptr<Interpolant2d> xInterp,
+            boost::shared_ptr<Interpolant2d> kInterp,
+            double dx, double padFactor);
+
+        SBInterpolatedImageImpl(
+            const MultipleImageHelper& multi, const std::vector<double>& weights,
+            boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp);
 
         ~SBInterpolatedImageImpl();
 
@@ -122,22 +269,6 @@ namespace galsim {
         double getPositiveFlux() const { checkReadyToShoot(); return _positiveFlux; }
         double getNegativeFlux() const { checkReadyToShoot(); return _negativeFlux; }
 
-        void setPixel(double value, int ix, int iy, int iz=0);
-        double getPixel(int ix, int iy, int iz=0) const;
-
-        void setWeights(const tmv::Vector<double>& wts); // ??? check dimensions first!
-        tmv::Vector<double> getWeights() const { return _wts; }
-
-        void setXInterpolant(const Interpolant2d& interp_) { _xInterp=&interp_; _ready=false; }
-        const Interpolant2d& getXInterpolant() const { return *_xInterp; }
-
-        void setKInterpolant(const Interpolant2d& interp_) { _kInterp=&interp_; }
-        const Interpolant2d& getKInterpolant() const { return *_kInterp; }
-
-        int getNin() const { return _Ninitial; }
-
-        int getNft() const { return _Nk; }
-
         template <typename T>
         double fillXImage(ImageView<T>& I, double dx) const;
 
@@ -167,42 +298,22 @@ namespace galsim {
         { return fillXImage(I,dx); }
 
     private:
-        void checkReady() const; ///< Make sure all internal quantities are ok.
 
-        int _Ninitial; ///< Size of input pixel grids.
-        double _dx;  ///< Input pixel scales.
-        int _Nk;  ///< Size of the padded grids and Discrete Fourier transform table.
-        double _dk;  ///< Step size in k for Discrete Fourier transform table.
-        int _Nimages; ///< Number of image planes to sum.
+        MultipleImageHelper _multi;
+        std::vector<double> _wts;
 
-        const Interpolant2d* _xInterp; ///< Interpolant used in real space.
-        const Interpolant2d* _kInterp; ///< Interpolant used in k space.
+        boost::shared_ptr<Interpolant2d> _xInterp; ///< Interpolant used in real space.
+        boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
 
-        /// @brief Vector of weights to use for sum over images of a multiple image.
-        tmv::Vector<double> _wts;
+        boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
+        mutable boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
 
-        /// @brief Vector of fluxes for each image plane of a multiple image.
-        mutable tmv::Vector<double> _fluxes;
+        /// @brief Make ktab if necessary.
+        void checkK() const;
 
-        /// @brief Vector x weighted fluxes for each image plane of a multiple image.
-        mutable tmv::Vector<double> _xFluxes;
+        double _max_size; ///< Calculated value: Ninitial+2*xInterp->xrange())*dx
 
-        /// @brief Vector of y weighted fluxes for each image plane of a multiple image.
-        mutable tmv::Vector<double> _yFluxes;
-
-        // Arrays summed with weights:
-        mutable boost::shared_ptr<XTable> _xsum; ///< Arrays summed with weights in real space.
-        mutable boost::shared_ptr<KTable> _ksum; ///< Arrays summed with weights in k space.
-        mutable bool _xsumValid; ///< Is `xsum` valid?
-        mutable bool _ksumValid; ///< Is `ksum` valid?
-        mutable bool _xsumnew; ///< Was xsum created with its own call to new XTable
-        mutable bool _ksumnew; ///< Was ksum created with its own call to new KTable
-
-        /** 
-         * @brief Set true if kTables, centroid/flux values,etc., are set for current x pixel 
-         * values.
-         */
-        mutable bool _ready; 
+        void initialize(); ///< Put code common to both constructors here.
 
         /// @brief Set true if the data structures for photon-shooting are valid
         mutable bool _readyToShoot;
@@ -228,23 +339,10 @@ namespace galsim {
         mutable double _negativeFlux;    ///< Sum of all negative pixels' flux
         mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
 
-        /// @brief Vector of input data arrays.
-        std::vector<boost::shared_ptr<XTable> > _vx;
-
-        /// @brief Mutable stuff required for kTables and interpolations.
-        mutable std::vector<boost::shared_ptr<KTable> > _vk;
-        void checkXsum() const;  ///< Used to build xsum if it's not current.
-        void checkKsum() const;  ///< Used to build ksum if it's not current.
-
-        double _max_size; ///< Calculated value: Ninitial+2*xInterp->xrange())*dx
-
         // Copy constructor and op= are undefined.
         SBInterpolatedImageImpl(const SBInterpolatedImageImpl& rhs);
         void operator=(const SBInterpolatedImageImpl& rhs);
     };
-
-        /// @brief The default k-space interpolant
-        static InterpolantXY defaultKInterpolant2d;
 
     private:
         // op= is undefined
