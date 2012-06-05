@@ -112,7 +112,7 @@ namespace galsim {
         if (!I.getBounds().isDefined()) {
             if (wmult<1) throw SBError("Requested wmult<1 in plainDraw()");
             // Need to choose an image size
-            int N = static_cast<int> (std::ceil(2*M_PI/(dx*stepK())));
+            int N = int(std::ceil(2*M_PI/(dx*stepK())));
             dbg<<"N = "<<N<<std::endl;
 
             // Round up to an even value
@@ -179,7 +179,7 @@ namespace galsim {
 
         // Now decide how big the FT must be to avoid folding:
         double xRange = 2*M_PI*wmult / stepK();
-        int Nnofold = static_cast<int> (std::ceil(xRange / dx -0.0001));
+        int Nnofold = int(std::ceil(xRange / dx -0.0001));
         dbg << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
 
         // W must make something big enough to cover the target image size:
@@ -218,7 +218,7 @@ namespace galsim {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" <= maxK() = "<<maxK()<<std::endl;
             // There will be aliasing.  Construct a KTable out to maxK() and
             // then wrap it
-            int Nk = static_cast<int> (std::ceil(maxK()/dk)) * 2;
+            int Nk = int(std::ceil(maxK()/dk)) * 2;
             dbg<<"Use Nk = "<<Nk<<std::endl;
             KTable kt(Nk, dk);
             assert(_pimpl.get());
@@ -269,7 +269,7 @@ namespace galsim {
 
         // Now decide how big the FT must be to avoid folding:
         double xRange = 2*M_PI*wmult / stepK();
-        int Nnofold = static_cast<int> (std::ceil(xRange / dx -0.0001));
+        int Nnofold = int(std::ceil(xRange / dx -0.0001));
         dbg << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
 
         // And if there is a target image size, we must make something big enough to cover
@@ -323,7 +323,7 @@ namespace galsim {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" <= maxK() = "<<maxK()<<std::endl;
             // There will be aliasing.  Construct a KTable out to maxK() and
             // then wrap it
-            int Nk = static_cast<int> (std::ceil(maxK()/dk)) * 2;
+            int Nk = int(std::ceil(maxK()/dk)) * 2;
             dbg<<"Use Nk = "<<Nk<<std::endl;
             KTable kt(Nk, dk);
             assert(_pimpl.get());
@@ -411,7 +411,7 @@ namespace galsim {
         if (!Re.getBounds().isDefined()) {
             if (wmult<1) throw SBError("Requested wmult<1 in plainDrawK()");
             // Need to choose an image size
-            int N = static_cast<int> (std::ceil(2.*maxK()*wmult / dk));
+            int N = int(std::ceil(2.*maxK()*wmult / dk));
             // Round up to an even value
             N = 2*( (N+1)/2);
 
@@ -463,12 +463,12 @@ namespace galsim {
             // We have a value we must produce.  Do we need to oversample in k
             // to avoid folding from real space?
             // Note a little room for numerical slop before triggering oversampling:
-            oversamp = static_cast<int> ( std::ceil(dk/stepK() - 0.0001));
+            oversamp = int( std::ceil(dk/stepK() - 0.0001));
         }
 
         // Now decide how big the FT must be to avoid folding
         double kRange = 2*maxK()*wmult;
-        int Nnofold = static_cast<int> (std::ceil(oversamp*kRange / dk -0.0001));
+        int Nnofold = int(std::ceil(oversamp*kRange / dk -0.0001));
 
         // And if there is a target image size, we must make something big enough to cover
         // the target image size:
@@ -537,13 +537,13 @@ namespace galsim {
             // We have a value we must produce.  Do we need to oversample in k
             // to avoid folding from real space?
             // Note a little room for numerical slop before triggering oversampling:
-            oversamp = static_cast<int> ( std::ceil(dk/stepK() - 0.0001));
+            oversamp = int( std::ceil(dk/stepK() - 0.0001));
             canReduceDk = false; // Force output image to input dx.
         }
 
         // Now decide how big the FT must be to avoid folding
         double kRange = 2*maxK()*wmult;
-        int Nnofold = static_cast<int> (std::ceil(oversamp*kRange / dk -0.0001));
+        int Nnofold = int(std::ceil(oversamp*kRange / dk -0.0001));
 
         // And if there is a target image size, we must make something big enough to cover
         // the target image size:
@@ -1335,8 +1335,8 @@ namespace galsim {
 
         _netStepK = 0.;  // Accumulate Sum 1/stepk^2
         for(ConstIter it=_plist.begin(); it!=_plist.end(); ++it) {
-            double maxk = (*newptr)->maxK();
-            double stepk = (*newptr)->stepK();
+            double maxk = it->maxK();
+            double stepk = it->stepK();
             dbg<<"SBConvolve component has maxK, stepK = "<<maxk<<" , "<<stepk<<std::endl;
             _fluxProduct *= it->getFlux();
             _x0 += it->centroid().x;
@@ -1576,8 +1576,8 @@ namespace galsim {
     // SBAiry Class
     //
 
-    SBAiry::SBAiryImpl::SBAiryImpl(double D, double obs, double flux) :
-        _D(D), _obscuration(obs), _flux(flux), _norm(flux*D*D),
+    SBAiry::SBAiryImpl::SBAiryImpl(double D, double obscuration, double flux) :
+        _D(D), _obscuration(obscuration), _flux(flux), _norm(flux*D*D),
         _radial(_obscuration) {}
 
     // This is a scale-free version of the Airy radial function.
@@ -1739,8 +1739,8 @@ namespace galsim {
         double dx = xt.getDx(); // pixel grid size
 
         // Pixel index where edge of box falls:
-        int xedge = static_cast<int> ( std::ceil(_xw / (2*dx) - 0.5) );
-        int yedge = static_cast<int> ( std::ceil(_yw / (2*dx) - 0.5) );
+        int xedge = int( std::ceil(_xw / (2*dx) - 0.5) );
+        int yedge = int( std::ceil(_yw / (2*dx) - 0.5) );
         // Fraction of edge pixel that is filled by box:
         double xfrac = _xw / (2*dx) - xedge + 0.5;
         assert(xfrac>0. && xfrac<=1.);
@@ -1768,8 +1768,8 @@ namespace galsim {
     double SBBox::SBBoxImpl::fillXImage(ImageView<T>& I, double dx) const 
     {
         // Pixel index where edge of box falls:
-        int xedge = static_cast<int> ( std::ceil(_xw / (2*dx) - 0.5) );
-        int yedge = static_cast<int> ( std::ceil(_yw / (2*dx) - 0.5) );
+        int xedge = int( std::ceil(_xw / (2*dx) - 0.5) );
+        int yedge = int( std::ceil(_yw / (2*dx) - 0.5) );
         // Fraction of edge pixel that is filled by box:
         double xfrac = _xw / (2*dx) - xedge + 0.5;
         assert(xfrac>0. && xfrac<=1.);

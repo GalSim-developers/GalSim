@@ -1774,14 +1774,15 @@ namespace galsim {
         /**
          * @brief Constructor.
          *
-         * @param[in] D     `D` = (telescope diam) / (lambda * focal length) if arg is focal plane 
-         *                  position, else `D` = (telescope diam) / lambda if arg is in radians of 
-         *                  field angle (default `D = 1.`).
-         * @param[in] obs   radius ratio of central obscuration (default `obs = 0.`).
-         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] D            `D` = (telescope diam) / (lambda * focal length) if arg is focal 
+         *                         plane position, else `D` = (telescope diam) / lambda if arg is 
+         *                         in radians of field angle (default `D = 1.`).
+         * @param[in] obscuration  linear dimension of central obscuration as fraction of pupil
+         *                         dimension (default `obscuration = 0.`).
+         * @param[in] flux         flux (default `flux = 1.`).
          */
-        SBAiry(double D=1., double obs=0., double flux=1.) :
-            SBProfile(new SBAiryImpl(D,obs,flux)) {}
+        SBAiry(double D=1., double obscuration=0., double flux=1.) :
+            SBProfile(new SBAiryImpl(D,obscuration,flux)) {}
 
         /// @brief Copy constructor
         SBAiry(const SBAiry& rhs) : SBProfile(rhs) {}
@@ -1883,7 +1884,7 @@ namespace galsim {
          */
         double annuli_autocorrelation(const double k) const; 
 
-        void checkSampler() const; ///< See if `OneDimensionalDeviate` is configured.
+        void checkSampler() const; ///< Check if `OneDimensionalDeviate` is configured.
         void flushSampler() const; ///< Discard the photon-shooting sampler class.
 
         // Copy constructor and op= are undefined.

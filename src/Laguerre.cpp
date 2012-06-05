@@ -934,7 +934,7 @@ namespace galsim {
 
         const double TOLERANCE=0.001; //radius accuracy required
         const double maxR = 5.;
-        double ustep=0.5/sqrt(static_cast<double> (maxP+1));
+        double ustep=0.5/sqrt(double(maxP)+1.);
         double u1 = 0.0001;
         double f1 = func(u1);
         double u2;

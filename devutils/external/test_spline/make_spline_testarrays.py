@@ -20,9 +20,9 @@ LAM_OVER_D = 5.
 # 8a9b04085b873f63be4fb56ae4fa5a0ca78a0387
 #
 # ...and the updated OpticalPSF code from commit:
-# 6925d74efa8bbec8f2d8de0cdeda58a926a6ade2
+# 8038c8ec4b9bf9d96f97b249d4db4c0828e661a5
 #
-# Revert to the commit one after this commit (6c077855db16a07486d3753f2d7aec825e5e6414) and 
+# Revert to the commit one after this commit (f60e36e788c7415877b7d1f121c487b35b4a2b95) and 
 # `scons -c`, then `scons` to rebuild using old NR splines before re-running this script.
 
 # Some arbitrary kx, ky k space values to test
