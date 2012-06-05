@@ -213,9 +213,6 @@ namespace galsim {
         bool operator!=(const Ellipse& rhs) const 
         { return (mu!=rhs.mu || x0!=rhs.x0 || s != rhs.s); }
 
-        void reset(double e1=0., double e2=0., double _m=0., double _x=0., double _y=0.) 
-        { s.setE1E2(e1,e2); mu=_m; expmu=std::exp(mu); x0.x=_x; x0.y=_y; }
-
         void reset(const Shear& _s, double _mu, const Position<double> _p) 
         { s=_s; mu=_mu; expmu=std::exp(mu); x0=_p; }
 
