@@ -399,8 +399,12 @@ class AtmosphericPSF(GSObject):
     Initialized atmospheric_psf as a galsim.AtmosphericPSF() instance.
 
     @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
-                           consistency), where r0 is the Fried parameter. Typical values for the 
-                           Fried parameter are on the order of 10 cm for most observatories.
+                           consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
+                           PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
+                           values for the Fried parameter are on the order of 10 cm for most 
+                           observatories and up to 20 cm for excellent sites. The values are 
+                           usually quoted at lambda = 500 nm and r0 depends weakly on wavelength
+                           [r0 ~ lambda^(-6/5)].
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
                            [default = 1.5], setting oversampling < 1 will produce aliasing in the 
                            PSF (not good).
