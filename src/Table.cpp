@@ -106,7 +106,7 @@ namespace galsim {
             int i = upperIndex(a);
             return interpolate(a,i,v,y2);
         } catch (TableOutOfRange) {
-            return static_cast<V> (0);
+            return V(0);
         }
     }
 

@@ -301,7 +301,7 @@ namespace galsim {
         // We could modify the urange method of Interpolant to take a threshold value
         // at that point, rather than just use the constructor's value, but it's 
         // probably not worth it.  It will probably be very rare that the final maxK
-        // value of the FFT will be due to and SBInterpolatedImage.  Usually, this will
+        // value of the FFT will be due to an SBInterpolatedImage.  Usually, this will
         // be convolved by a PSF that will have a smaller maxK.
         return _xInterp->urange() * 2.*M_PI / _multi.getScale(); 
     }

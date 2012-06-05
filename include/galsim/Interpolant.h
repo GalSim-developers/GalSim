@@ -158,7 +158,7 @@ namespace galsim {
             if (_sampler.get()) return;
             // Will assume by default that the Interpolant kernel changes sign at non-zero
             // integers, with one extremum in each integer range.
-            int nKnots = static_cast<int> (ceil(xrange()));
+            int nKnots = int(ceil(xrange()));
             std::vector<double> ranges(2*nKnots);
             for (int i=1; i<=nKnots; i++) {
                 double knot = std::min(1.*i, xrange());
