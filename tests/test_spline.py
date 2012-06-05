@@ -28,6 +28,7 @@ DEFOCUS = -0.3
 SPHER = 0.027
 LAM_OVER_D = 5.
 OVERSAMPLING = 2.
+PAD_FACTOR=2.
 
 # Some arbitrary kx, ky k space values to test
 KXVALS = np.array((1.3, 0.71, -4.3)) * np.pi / 2.
@@ -38,7 +39,8 @@ def test_Cubic_spline():
     """
     interp = galsim.InterpolantXY(galsim.Cubic(tol=1.e-4))
     testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
-                                spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING)
+                                spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING,
+                                pad_factor=PAD_FACTOR)
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
     for i in xrange(len(KXVALS)):
@@ -55,7 +57,8 @@ def test_Quintic_spline():
     """
     interp = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))
     testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
-                                spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING)
+                                spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING,
+                                pad_factor=PAD_FACTOR)
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
     for i in xrange(len(KXVALS)):
@@ -72,7 +75,8 @@ def test_Lanczos5_spline():
     """
     interp = galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))
     testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
-                                spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING)
+                                spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING,
+                                pad_factor=PAD_FACTOR)
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
     for i in xrange(len(KXVALS)):
@@ -89,7 +93,8 @@ def test_Lanczos7_spline():
     """
     interp = galsim.InterpolantXY(galsim.Lanczos(7, conserve_flux=True, tol=1.e-4))
     testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
-                                spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING)
+                                spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING,
+                                pad_factor=PAD_FACTOR)
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
     for i in xrange(len(KXVALS)):

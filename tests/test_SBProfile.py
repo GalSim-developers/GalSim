@@ -329,7 +329,7 @@ def test_sersic_radii():
 def test_sbprofile_airy():
     """Test the generation of a specific Airy profile using SBProfile against a known result.
     """
-    mySBP = galsim.SBAiry(D=0.8, obs=0.1, flux=1)
+    mySBP = galsim.SBAiry(D=0.8, obscuration=0.1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
@@ -337,7 +337,7 @@ def test_sbprofile_airy():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
             err_msg="Airy profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
-    airy = galsim.Airy(D=0.8, obs=0.1, flux=1)
+    airy = galsim.Airy(D=0.8, obscuration=0.1, flux=1)
     airy.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
