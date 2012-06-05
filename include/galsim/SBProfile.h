@@ -335,10 +335,12 @@ namespace galsim {
         /** 
          * @brief Shear distortion transformation (affine without rotation or dilation).
          *
-         * This returns a pointer to a new SBProfile that represents a new Surface Brightness 
-         * Profile sheared by the given amount..
+         * @param[in] g1 Reduced shear g1 by which to shear the SBProfile.
+         * @param[in] g2 Reduced shear g2 by which to shear the SBProfile.
+         * @returns A pointer to a new SBProfile that represents a new Surface Brightness
+         * Profile sheared by the given amount.
          */
-        SBDistort shear(double e1, double e2) const;
+        SBDistort shear(double g1, double g2) const;
 
         /** 
          * @brief Rotation distortion transformation.

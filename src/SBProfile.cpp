@@ -38,8 +38,12 @@ namespace galsim {
     SBDistort SBProfile::distort(const Ellipse& e) const 
     { return SBDistort(*this,e); }
 
-    SBDistort SBProfile::shear(double e1, double e2) const
-    { return SBDistort(*this,Ellipse(e1,e2)); }
+    SBDistort SBProfile::shear(double g1, double g2) const {
+        s = Shear(g1, g2);
+        e = Ellipse();
+        e.setS(s);
+        return distort(e);
+    }
 
     SBDistort SBProfile::rotate(const Angle& theta) const 
     {
