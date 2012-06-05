@@ -300,7 +300,7 @@ namespace galsim {
              (xmax1 == integ::MOCK_INF || xmin2 == -integ::MOCK_INF) ) {
 
             // Update the xmin and xmax values if the top of one profile crosses through
-            // the bootom of the other.  Then part of the nominal range will in fact
+            // the bottom of the other.  Then part of the nominal range will in fact
             // be disjoint.  This leads to a bunch of 0's for the inner integral which
             // makes it harder for the outer integral to converge.
             OverlapFinder func1(p1,p2,pos,1);

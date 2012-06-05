@@ -956,7 +956,7 @@ namespace galsim {
 
 
     // Fourier transform from (complex) k to x:
-    // This version takes XTable reference as agrument 
+    // This version takes XTable reference as argument 
     void KTable::transform(XTable& xt) const 
     {
         check_array();

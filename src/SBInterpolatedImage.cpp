@@ -58,7 +58,7 @@ namespace galsim {
         if (padFactor <= 0.) padFactor = sbp::oversample_x;
         // Choose the padded size for input array - size 2^N or 3*2^N
         // Make FFT either 2^n or 3x2^n
-        _Nk = goodFFTSize(static_cast<int> (std::floor(padFactor*_Ninitial)));
+        _Nk = goodFFTSize(int(std::floor(padFactor*_Ninitial)));
         _dk = TWOPI / (_Nk*_dx);
 
         // allocate xTables
@@ -322,13 +322,13 @@ namespace galsim {
     double SBInterpolatedImage::xValue(const Position<double>& p) const 
     {
         // Interpolate WITHOUT wrapping the image.
-        int ixMin = static_cast<int> ( std::ceil(p.x/_dx - _xInterp->xrange()));
+        int ixMin = int( std::ceil(p.x/_dx - _xInterp->xrange()));
         ixMin = std::max(ixMin, -_Ninitial/2);
-        int ixMax = static_cast<int> ( std::floor(p.x/_dx + _xInterp->xrange()));
+        int ixMax = int( std::floor(p.x/_dx + _xInterp->xrange()));
         ixMax = std::min(ixMax, _Ninitial/2-1);
-        int iyMin = static_cast<int> ( std::ceil(p.y/_dx - _xInterp->xrange()));
+        int iyMin = int( std::ceil(p.y/_dx - _xInterp->xrange()));
         iyMin = std::max(iyMin, -_Ninitial/2);
-        int iyMax = static_cast<int> ( std::floor(p.y/_dx + _xInterp->xrange()));
+        int iyMax = int( std::floor(p.y/_dx + _xInterp->xrange()));
         iyMax = std::min(iyMax, _Ninitial/2-1);
 
         if (ixMax < ixMin || iyMax < iyMin) return 0.;  // kernel does not overlap data
@@ -363,10 +363,10 @@ namespace galsim {
         double xKernelTransform = _xInterp->uval(ux, uy);
 
         // Range of k points within kernel
-        int ixMin = static_cast<int> (std::ceil(p.x/_dk - _kInterp->xrange()));
-        int ixMax = static_cast<int> (std::floor(p.x/_dk + _kInterp->xrange()));
-        int iyMin = static_cast<int> (std::ceil(p.y/_dk - _kInterp->xrange()));
-        int iyMax = static_cast<int> (std::floor(p.y/_dk + _kInterp->xrange()));
+        int ixMin = int(std::ceil(p.x/_dk - _kInterp->xrange()));
+        int ixMax = int(std::floor(p.x/_dk + _kInterp->xrange()));
+        int iyMin = int(std::ceil(p.y/_dk - _kInterp->xrange()));
+        int iyMax = int(std::floor(p.y/_dk + _kInterp->xrange()));
 
         int ixLast = std::min(ixMax, ixMin+_Nk-1);
         int iyLast = std::min(iyMax, iyMin+_Nk-1);
@@ -420,7 +420,7 @@ namespace galsim {
         // We could modify the urange method of Interpolant to take a threshold value
         // at that point, rather than just use the constructor's value, but it's 
         // probably not worth it.  It will probably be very rare that the final maxK
-        // value of the FFT will be due to and SBInterpolatedImage.  Usually, this will
+        // value of the FFT will be due to an SBInterpolatedImage.  Usually, this will
         // be convolved by a PSF that will have a smaller maxK.
         return _xInterp->urange() * 2.*M_PI / _dx; 
     }
