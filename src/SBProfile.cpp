@@ -1335,8 +1335,8 @@ namespace galsim {
 
         _netStepK = 0.;  // Accumulate Sum 1/stepk^2
         for(ConstIter it=_plist.begin(); it!=_plist.end(); ++it) {
-            double maxk = (*newptr)->maxK();
-            double stepk = (*newptr)->stepK();
+            double maxk = it->maxK();
+            double stepk = it->stepK();
             dbg<<"SBConvolve component has maxK, stepK = "<<maxk<<" , "<<stepk<<std::endl;
             _fluxProduct *= it->getFlux();
             _x0 += it->centroid().x;
@@ -1576,7 +1576,7 @@ namespace galsim {
     // SBAiry Class
     //
 
-    SBAiry::SBAiryImpl::SBAiryImpl(double D, double obs, double flux) :
+    SBAiry::SBAiryImpl::SBAiryImpl(double D, double obscuration, double flux) :
         _D(D), _obscuration(obscuration), _flux(flux), _norm(flux*D*D),
         _radial(_obscuration) {}
 
