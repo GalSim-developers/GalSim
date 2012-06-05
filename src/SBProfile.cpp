@@ -29,31 +29,31 @@ namespace galsim {
     // Virtual methods of Base Class "SBProfile"
     //
 
-    SBDistort SBProfile::scaleFlux(double fluxRatio) const
-    { return SBDistort(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); }
+    SBTransform SBProfile::scaleFlux(double fluxRatio) const
+    { return SBTransform(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); }
 
-    SBDistort SBProfile::setFlux(double flux) const
-    { return SBDistort(*this,1.,0.,0.,1.,Position<double>(0.,0.),flux/getFlux()); }
+    SBTransform SBProfile::setFlux(double flux) const
+    { return SBTransform(*this,1.,0.,0.,1.,Position<double>(0.,0.),flux/getFlux()); }
 
-    SBDistort SBProfile::distort(const Ellipse& e) const 
-    { return SBDistort(*this,e); }
+    SBTransform SBProfile::transform(const Ellipse& e) const
+    { return SBTransform(*this,e); }
 
-    SBDistort SBProfile::shear(double g1, double g2) const {
+    SBTransform SBProfile::shear(double g1, double g2) const {
         s = Shear(g1, g2);
         e = Ellipse();
         e.setS(s);
-        return distort(e);
+        return transform(e);
     }
 
-    SBDistort SBProfile::rotate(const Angle& theta) const 
+    SBTransform SBProfile::rotate(const Angle& theta) const
     {
-        return SBDistort(*this,
-                         std::cos(theta.rad()),-std::sin(theta.rad()),
-                         std::sin(theta.rad()),std::cos(theta.rad())); 
+        return SBTransform(*this,
+                           std::cos(theta.rad()),-std::sin(theta.rad()),
+                           std::sin(theta.rad()),std::cos(theta.rad())); 
     }
 
-    SBDistort SBProfile::shift(double dx, double dy) const 
-    { return SBDistort(*this,1.,0.,0.,1., Position<double>(dx,dy)); }
+    SBTransform SBProfile::shift(double dx, double dy) const 
+    { return SBTransform(*this,1.,0.,0.,1., Position<double>(dx,dy)); }
 
     //
     // Common methods of Base Class "SBProfile"
@@ -784,14 +784,14 @@ namespace galsim {
         
 
     //
-    // "SBDistort" Class 
+    // "SBTransform" Class
     //
-    SBDistort::SBDistortImpl::SBDistortImpl(
+    SBTransform::SBTransformImpl::SBTransformImpl(
         const SBProfile& sbin, double mA, double mB, double mC, double mD,
         const Position<double>& cen, double fluxScaling) :
         _adaptee(sbin), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _fluxScaling(fluxScaling)
     {
-        dbg<<"Start DistortImpl (1)\n";
+        dbg<<"Start TransformImpl (1)\n";
         dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", fluxScaling = "<<_fluxScaling<<std::endl;
 
@@ -800,11 +800,11 @@ namespace galsim {
         initialize();
     }
 
-    SBDistort::SBDistortImpl::SBDistortImpl(
+    SBTransform::SBTransformImpl::SBTransformImpl(
         const SBProfile& sbin, const Ellipse& e, double fluxScaling) :
         _adaptee(sbin), _cen(e.getX0()), _fluxScaling(fluxScaling)
     {
-        dbg<<"Start DistortImpl (2)\n";
+        dbg<<"Start TransformImpl (2)\n";
         dbg<<"e = "<<e<<", fluxScaling = "<<_fluxScaling<<std::endl;
         // First get what we need from the Ellipse:
         tmv::Matrix<double> m = e.getMatrix();
@@ -817,16 +817,16 @@ namespace galsim {
         initialize();
     }
 
-    void SBDistort::SBDistortImpl::initialize() 
+    void SBTransform::SBTransformImpl::initialize()
     {
-        dbg<<"Start SBDistortImpl initialize\n";
-        // First check if our adaptee is really another SBDistort:
+        dbg<<"Start SBTransformImpl initialize\n";
+        // First check if our adaptee is really another SBTransform:
         assert(_adaptee._pimpl.get());
-        const SBDistortImpl* sbd = dynamic_cast<const SBDistortImpl*>(_adaptee._pimpl.get());
+        const SBTransformImpl* sbd = dynamic_cast<const SBTransformImpl*>(_adaptee._pimpl.get());
         dbg<<"sbd = "<<sbd<<std::endl;
         if (sbd) {
-            dbg<<"wrapping another distortion.\n";
-            // We are distorting something that's already a distortion.
+            dbg<<"wrapping another transformation.\n";
+            // We are transforming something that's already a transformation.
             // So just compound the affine transformaions
             // New matrix is product (M_this) * (M_old)
             double mA = _mA; double mB=_mB; double mC=_mC; double mD=_mD;
@@ -841,7 +841,7 @@ namespace galsim {
             _adaptee = sbd->_adaptee;
             dbg<<"after set adaptee"<<std::endl;
         } else {
-            dbg<<"wrapping a non-distortion.\n";
+            dbg<<"wrapping a non-transformation.\n";
         }
    
         // It will be reasonably common to have an identity matrix (for just
@@ -849,17 +849,17 @@ namespace galsim {
         // versions of fwd and inv:
         if (_mA == 1. && _mB == 0. && _mC == 0. && _mD == 1.) {
             dbg<<"Using identity functions for fwd and inv\n";
-            _fwd = &SBDistort::_ident;
-            _inv = &SBDistort::_ident;
+            _fwd = &SBTransform::_ident;
+            _inv = &SBTransform::_ident;
         } else {
             dbg<<"Using normal fwd and inv\n";
-            _fwd = &SBDistort::_fwd_normal;
-            _inv = &SBDistort::_inv_normal;
+            _fwd = &SBTransform::_fwd_normal;
+            _inv = &SBTransform::_inv_normal;
         }
 
         // Calculate some derived quantities:
         double det = _mA*_mD-_mB*_mC;
-        if (det==0.) throw SBError("Attempt to SBDistort with degenerate matrix");
+        if (det==0.) throw SBError("Attempt to SBTransform with degenerate matrix");
         _absdet = std::abs(det);
         _invdet = 1./det;
 
@@ -873,7 +873,7 @@ namespace galsim {
             && (_mA==_mD)
             && (_cen.x==0.) && (_cen.y==0.); // Need pure rotation
 
-        xdbg<<"Distortion init\n";
+        xdbg<<"Transformation init\n";
         xdbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         xdbg<<"_cen = "<<_cen<<std::endl;
         xdbg<<"_invdet = "<<_invdet<<std::endl;
@@ -893,7 +893,7 @@ namespace galsim {
                 _ymax = integ::MOCK_INF;
             } else {
                 double R = _xmax;
-                // The distortion takes each point on the circle to the following new coordinates:
+                // The transformation takes each point on the circle to the following new coordinates:
                 // (x,y) -> (A*x + B*y + x0 , C*x + D*y + y0)
                 // Using x = R cos(t) and y = R sin(t), we can find the minimum wrt t as:
                 // xmax = R sqrt(A^2 + B^2) + x0
@@ -930,7 +930,7 @@ namespace galsim {
                 xxdbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<std::endl;
             }
         } else {
-            // Apply the distortion to each of the four corners of the original
+            // Apply the transformation to each of the four corners of the original
             // and find the minimum and maximum.
             double xmin_1, xmax_1;
             std::vector<double> xsplits0;
@@ -1043,33 +1043,33 @@ namespace galsim {
         // Figure out which function we need for kValue and kValueNoPhase
         if (std::abs(_absdet-1.) < sbp::kvalue_accuracy) {
             xdbg<<"absdet = "<<_absdet*_fluxScaling<<" = 1, so use NoDet version.\n";
-            _kValueNoPhase = &SBDistort::_kValueNoPhaseNoDet;
+            _kValueNoPhase = &SBTransform::_kValueNoPhaseNoDet;
         } else {
             xdbg<<"absdet = "<<_absdet*_fluxScaling<<" != 1, so use WithDet version.\n";
-            _kValueNoPhase = &SBDistort::_kValueNoPhaseWithDet;
+            _kValueNoPhase = &SBTransform::_kValueNoPhaseWithDet;
         }
         if (_cen.x == 0. && _cen.y == 0.) _kValue = _kValueNoPhase;
-        else _kValue = &SBDistort::_kValueWithPhase;
+        else _kValue = &SBTransform::_kValueWithPhase;
     }
 
-    void SBDistort::SBDistortImpl::getXRange(
+    void SBTransform::SBTransformImpl::getXRange(
         double& xmin, double& xmax, std::vector<double>& splits) const
     {
         xmin = _xmin; xmax = _xmax;
         splits.insert(splits.end(),_xsplits.begin(),_xsplits.end());
     }
 
-    void SBDistort::SBDistortImpl::getYRange(
+    void SBTransform::SBTransformImpl::getYRange(
         double& ymin, double& ymax, std::vector<double>& splits) const
     {
         ymin = _ymin; ymax = _ymax;
         splits.insert(splits.end(),_ysplits.begin(),_ysplits.end());
     }
 
-    void SBDistort::SBDistortImpl::getYRange(double x, double& ymin, double& ymax,
+    void SBTransform::SBTransformImpl::getYRange(double x, double& ymin, double& ymax,
                               std::vector<double>& splits) const
     {
-        xxdbg<<"Distortion getYRange for x = "<<x<<std::endl;
+        xxdbg<<"Transformation getYRange for x = "<<x<<std::endl;
         if (_adaptee.isAxisymmetric()) {
             std::vector<double> splits0;
             _adaptee.getYRange(ymin,ymax,splits0);
@@ -1105,14 +1105,14 @@ namespace galsim {
         } else {
             // There are 4 lines to check for where they intersect the given x.
             // Start with the adaptee's given ymin.
-            // This line is distorted onto the line:
+            // This line is transformed onto the line:
             // (x',ymin) -> ( A x' + B ymin + x0 , C x' + D ymin + y0 )
             // x' = (x - x0 - B ymin) / A
             // y = C x' + D ymin + y0 
             //   = C (x - x0 - B ymin) / A + D ymin + y0
             // The top line is analagous for ymax instead of ymin.
             // 
-            // The left line is distorted as:
+            // The left line is transformed as:
             // (xmin,y) -> ( A xmin + B y' + x0 , C xmin + D y' + y0 )
             // y' = (x - x0 - A xmin) / B
             // y = C xmin + D (x - x0 - A xmin) / B + y0
@@ -1182,7 +1182,7 @@ namespace galsim {
 
     // Specialization of fillKGrid is desired since the phase terms from shift 
     // are factorizable:
-    void SBDistort::SBDistortImpl::fillKGrid(KTable& kt) const 
+    void SBTransform::SBTransformImpl::fillKGrid(KTable& kt) const
     {
         double N = (double) kt.getN();
         double dk = kt.getDk();
@@ -1280,23 +1280,23 @@ namespace galsim {
 #endif
     }
 
-    std::complex<double> SBDistort::SBDistortImpl::kValue(const Position<double>& k) const
+    std::complex<double> SBTransform::SBTransformImpl::kValue(const Position<double>& k) const
     { return _kValue(_adaptee,fwdT(k),_absdet,k,_cen); }
 
-    std::complex<double> SBDistort::SBDistortImpl::kValueNoPhase(const Position<double>& k) const
+    std::complex<double> SBTransform::SBTransformImpl::kValueNoPhase(const Position<double>& k) const
     { return _kValueNoPhase(_adaptee,fwdT(k),_absdet,k,_cen); }
 
-    std::complex<double> SBDistort::_kValueNoPhaseNoDet(
+    std::complex<double> SBTransform::_kValueNoPhaseNoDet(
         const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
         const Position<double>& , const Position<double>& )
     { return adaptee.kValue(fwdTk); }
 
-    std::complex<double> SBDistort::_kValueNoPhaseWithDet(
+    std::complex<double> SBTransform::_kValueNoPhaseWithDet(
         const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
         const Position<double>& , const Position<double>& )
     { return absdet * adaptee.kValue(fwdTk); }
 
-    std::complex<double> SBDistort::_kValueWithPhase(
+    std::complex<double> SBTransform::_kValueWithPhase(
         const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
         const Position<double>& k, const Position<double>& cen)
     { return adaptee.kValue(fwdTk) * std::polar(absdet , -k.x*cen.x-k.y*cen.y); }
@@ -2115,7 +2115,7 @@ namespace galsim {
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
     }
 
-    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate& ud) const 
+    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate& ud) const
     {
         PhotonArray result = _sampler->shoot(N,ud);
         result.scaleFlux(_norm);
@@ -2391,7 +2391,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBDistort::SBDistortImpl::shoot(int N, UniformDeviate& u) const 
+    PhotonArray SBTransform::SBTransformImpl::shoot(int N, UniformDeviate& u) const 
     {
         // Simple job here: just remap coords of each photon, then change flux
         // If there is overall magnification in the transform

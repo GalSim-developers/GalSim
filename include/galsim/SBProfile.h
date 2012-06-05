@@ -114,7 +114,7 @@ namespace galsim {
      * Currently we have the following possible implementations of SBProfile:
      * Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic
      * SBLaguerre: Gauss-Laguerre expansion
-     * SBDistort: affine transformation of another SBProfile
+     * SBTransform: affine transformation of another SBProfile
      * SBRotate: rotated version of another SBProfile
      * SBAdd: sum of SBProfiles
      * SBConvolve: convolution of other SBProfiles
@@ -141,7 +141,7 @@ namespace galsim {
      *
      */
 
-    class SBDistort;
+    class SBTransform;
 
     class SBProfile
     {
@@ -306,7 +306,7 @@ namespace galsim {
 
         // ****Methods implemented in base class****
 
-        // Transformations (all are special cases of affine transformations via SBDistort):
+        // Transformations (all are special cases of affine transformations via SBTransform):
 
         /**
          * @brief Multiple the flux by fluxRatio
@@ -314,7 +314,7 @@ namespace galsim {
          * This returns a new SBProfile that represents a new Surface Brightness 
          * Profile with the new flux. 
          */
-        SBDistort scaleFlux(double fluxRatio) const; 
+        SBTransform scaleFlux(double fluxRatio) const;
 
         /**
          * @brief Set the flux to a new value
@@ -322,33 +322,33 @@ namespace galsim {
          * This returns a new SBProfile that represents a new Surface Brightness 
          * Profile with the new flux. 
          */
-        SBDistort setFlux(double flux) const; 
+        SBTransform setFlux(double flux) const;
 
         /**
-         * @brief Ellipse distortion transformation (affine without rotation).
+         * @brief Ellipse transformation (affine without rotation).
          *
          * This returns a new SBProfile that represents a new Surface Brightness 
          * Profile with the requested transformation.
          */
-        SBDistort distort(const Ellipse& e) const; 
+        SBTransform transform(const Ellipse& e) const;
 
         /** 
-         * @brief Shear distortion transformation (affine without rotation or dilation).
+         * @brief Shear transformation (affine without rotation or dilation).
          *
          * @param[in] g1 Reduced shear g1 by which to shear the SBProfile.
          * @param[in] g2 Reduced shear g2 by which to shear the SBProfile.
          * @returns A pointer to a new SBProfile that represents a new Surface Brightness
          * Profile sheared by the given amount.
          */
-        SBDistort shear(double g1, double g2) const;
+        SBTransform shear(double g1, double g2) const;
 
         /** 
-         * @brief Rotation distortion transformation.
+         * @brief Rotation transformation.
          *
          * This returns a pointer to a new SBProfile that represents a new Surface Brightness 
          * Profile rotated by the given angle.
          */
-        SBDistort rotate(const Angle& theta) const;
+        SBTransform rotate(const Angle& theta) const;
 
         /**
          * @brief Translation transformation.
@@ -356,7 +356,7 @@ namespace galsim {
          * This returns a pointer to a new SBProfile that represents a new Surface Brightness 
          * Profile shifted by the given amount.
          */
-        SBDistort shift(double dx, double dy) const;
+        SBTransform shift(double dx, double dy) const;
 
         /**
          * @brief Shoot photons through this SBProfile.
@@ -756,7 +756,7 @@ namespace galsim {
         // Classes that need to be able to access _pimpl object of other SBProfiles
         // are made friends.
         friend class SBAdd;
-        friend class SBDistort;
+        friend class SBTransform;
         friend class SBConvolve;
         friend class SBDeconvolve;
 
@@ -950,13 +950,13 @@ namespace galsim {
      * plus a 2-element Positon object `cen` for the shift, and a flux scaling,
      * in addition to the scaling implicit in the matrix M = abs(det(M)).
      */
-    class SBDistort : public SBProfile 
+    class SBTransform : public SBProfile
     {
     public:
         /** 
          * @brief General constructor.
          *
-         * @param[in] sbin SBProfile being distorted
+         * @param[in] sbin SBProfile being transform
          * @param[in] mA A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
          * @param[in] mB B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
          * @param[in] mC C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
@@ -964,38 +964,38 @@ namespace galsim {
          * @param[in] cen 2-element (x, y) Position for the translational shift.
          * @param[in] fluxScaling Amount by which the flux should be multiplied.
          */
-        SBDistort(const SBProfile& sbin,
-                  double mA, double mB, double mC, double mD, 
-                  const Position<double>& cen=Position<double>(0.,0.), double fluxScaling=1.) :
-            SBProfile(new SBDistortImpl(sbin,mA,mB,mC,mD,cen,fluxScaling)) {}
+        SBTransform(const SBProfile& sbin,
+                    double mA, double mB, double mC, double mD,
+                    const Position<double>& cen=Position<double>(0.,0.), double fluxScaling=1.) :
+            SBProfile(new SBTransformImpl(sbin,mA,mB,mC,mD,cen,fluxScaling)) {}
 
         /** 
          * @brief Construct from an input Ellipse 
          *
-         * @param[in] sbin SBProfile being distorted.
+         * @param[in] sbin SBProfile being transformed
          * @param[in] e  Ellipse.
          */
-        SBDistort(const SBProfile& sbin, const Ellipse& e=Ellipse(), double fluxScaling=1.) : 
-            SBProfile(new SBDistortImpl(sbin,e,fluxScaling)) {}
+        SBTransform(const SBProfile& sbin, const Ellipse& e=Ellipse(), double fluxScaling=1.) :
+            SBProfile(new SBTransformImpl(sbin,e,fluxScaling)) {}
 
         /// @brief Copy constructor
-        SBDistort(const SBDistort& rhs) : SBProfile(rhs) {}
+        SBTransform(const SBTransform& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor
-        ~SBDistort() {}
+        ~SBTransform() {}
 
     protected:
 
-    class SBDistortImpl : public SBProfileImpl
+    class SBTransformImpl : public SBProfileImpl
     {
     public:
 
-        SBDistortImpl(const SBProfile& sbin, double mA, double mB, double mC, double mD,
-                      const Position<double>& cen, double fluxScaling);
+        SBTransformImpl(const SBProfile& sbin, double mA, double mB, double mC, double mD,
+                        const Position<double>& cen, double fluxScaling);
 
-        SBDistortImpl(const SBProfile& sbin, const Ellipse& e, double fluxScaling);
+        SBTransformImpl(const SBProfile& sbin, const Ellipse& e, double fluxScaling);
 
-        ~SBDistortImpl() {}
+        ~SBTransformImpl() {}
 
         double xValue(const Position<double>& p) const 
         { return _adaptee.xValue(inv(p-_cen)) * _fluxScaling; }
@@ -1026,9 +1026,9 @@ namespace galsim {
         { return _adaptee.getNegativeFlux()*_absdet; }
 
         /**
-         * @brief Shoot photons through this SBDistort.
+         * @brief Shoot photons through this SBTransform.
          *
-         * SBDistort will simply apply the affine distortion to coordinates of photons
+         * SBTransform will simply apply the affine transformation to coordinates of photons
          * generated by its adaptee, and rescale the flux by the determinant of the distortion
          * matrix.
          * @param[in] N Total number of photons to produce.
@@ -1041,7 +1041,7 @@ namespace galsim {
         void fillKGrid(KTable& kt) const; 
 
     private:
-        SBProfile _adaptee; ///< SBProfile being adapted/distorted
+        SBProfile _adaptee; ///< SBProfile being adapted/transformed
 
         double _mA; ///< A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
         double _mB; ///< B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
@@ -1095,8 +1095,8 @@ namespace galsim {
             double mA, double mB, double mC, double mD, double x, double y, double invdet);
 
         // Copy constructor and op= are undefined.
-        SBDistortImpl(const SBDistortImpl& rhs);
-        void operator=(const SBDistortImpl& rhs);
+        SBTransformImpl(const SBTransformImpl& rhs);
+        void operator=(const SBTransformImpl& rhs);
     };
 
         static std::complex<double> _kValueNoPhaseNoDet(
@@ -1121,7 +1121,7 @@ namespace galsim {
 
     private:
         // op= is undefined
-        void operator=(const SBDistort& rhs);
+        void operator=(const SBTransform& rhs);
     };
 
     // Defined in RealSpaceConvolve.cpp
@@ -2186,7 +2186,7 @@ namespace galsim {
     };
 
     /// @brief This class is for backwards compatibility; prefer rotate() method.
-    class SBRotate : public SBDistort 
+    class SBRotate : public SBTransform
     {
     public:
         /** 
@@ -2196,9 +2196,9 @@ namespace galsim {
          * @param[in] theta Rotation angle in radians anticlockwise.
          */
         SBRotate(const SBProfile& s, Angle theta) :
-            SBDistort(s, 
-                      std::cos(theta.rad()), -std::sin(theta.rad()),
-                      std::sin(theta.rad()), std::cos(theta.rad())) {}
+            SBTransform(s,
+                        std::cos(theta.rad()), -std::sin(theta.rad()),
+                        std::sin(theta.rad()), std::cos(theta.rad())) {}
     };
 
     /**
