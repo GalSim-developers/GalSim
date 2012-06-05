@@ -263,3 +263,42 @@ class ListNodeBase(NodeBase):
         for element in self:
             if isinstance(element, NodeBase):
                 element.finish(uniform, columns)
+
+def nested(*args, **kwds):
+    """
+    A decorator that  can be used to define a nested node class and add it as a field
+    in one step.  It's used like this:
+
+    class Outer(NodeBase):
+        ...
+        @nested(*args, **kwds)
+        class inner(NodeBase):
+            ...
+
+    This is roughly equivalent to:
+
+    class Outer(NodeBase):
+        ...
+        class inner(NodeBase):
+            ...
+        inner = Field(inner, *args, **kwds)
+
+    One can also omit the parenthesis if no arguments are passed:
+
+    class Outer(NodeBase):
+        ...
+        @nested
+        class inner(NodeBase):
+            ...
+
+    In all cases, the docstring of the inner class will be used as the field
+    documentation unless a 'doc' keyword argument is passed to the decorator.
+    """
+    if kwds or len(args) != 1 or not issubclass(args[0], NodeBase):
+        kwds.setdefault("doc", cls.__doc__)
+        def decorate(cls):
+            return Field(cls, *args, **kwds)
+        return decorate
+    else:
+        cls = args[0]
+        return Field(cls, doc=cls.__doc__)

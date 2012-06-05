@@ -70,32 +70,9 @@ class PixelNode(GSObjectNode):
     yw = Field(default=None, required=False)
 
 # TODO: more PSF component nodes
-
-class PSFNode(machinery.ListNodeBase):
-    choices = (MoffatNode, PixelNode)
-    context = {"Moffat": MoffatNode, "Pixel": PixelNode}
-
-    def apply(self, row):
-        components = [element.apply(row) for element in self]
-        return base.Convolve(components)
-
-class GalaxyNode(machinery.ListNodeBase):
-    choices = (GaussianNode, ExponentialNode, DeVaucouleursNode, SersicNode)
-    context = {"Gaussian": GaussianNode, "Exponential": ExponentialNode,
-               "DeVaucouleurs": DeVaucouleursNode, "Sersic": SersicNode}
-
-    def apply(self, row):
-        components = [element.apply(row) for element in self]
-        return base.Add(components)
-
-class ShearNode(machinery.NodeBase):
-    g1 = generators.GeneratableField(default=0., required=True)
-    g2 = generators.GeneratableField(default=0., required=True)
     
 class RootNode(machinery.NodeBase):
     dx = machinery.Field(float, default=1., required=True)
-    PSF = machinery.Field(PSFNode, default=True)
-    galaxy = machinery.Field(GalaxyNode, default=True)
     shear = machinery.Field(ShearNode, default=True)
     
     def finish(self):
@@ -104,3 +81,27 @@ class RootNode(machinery.NodeBase):
             if isinstance(element, PixelNode):
                 if element.xw is None: element.xw = self.dx
                 if element.yw is None: element.yw = self.dx
+
+    @machinery.nested
+    class psf(machinery.ListNodeBase):
+        choices = (MoffatNode, PixelNode)
+        context = {"Moffat": MoffatNode, "Pixel": PixelNode}
+
+        def apply(self, row):
+            components = [element.apply(row) for element in self]
+            return base.Convolve(components)
+
+    @machinery.nested
+    class galaxy(machinery.ListNodeBase):
+        choices = (GaussianNode, ExponentialNode, DeVaucouleursNode, SersicNode)
+        context = {"Gaussian": GaussianNode, "Exponential": ExponentialNode,
+                   "DeVaucouleurs": DeVaucouleursNode, "Sersic": SersicNode}
+
+        def apply(self, row):
+            components = [element.apply(row) for element in self]
+            return base.Add(components)
+
+    @machinery.nested
+    class shear(machinery.NodeBase):
+        g1 = generators.GeneratableField(default=0., required=True)
+        g2 = generators.GeneratableField(default=0., required=True)
