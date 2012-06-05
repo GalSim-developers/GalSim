@@ -528,8 +528,7 @@ class Add(GSObject):
 
 
 class Convolve(GSObject):
-    """
-    @brief A class for convolving 2 or more GSObjects
+    """@brief A class for convolving 2 or more GSObjects.
 
     The objects to be convolved may be provided either as multiple unnamed arguments
     (e.g. Convolve(psf,gal,pix)) or as a list (e.g. Convolve[psf,gal,pix]).
@@ -540,14 +539,11 @@ class Convolve(GSObject):
     each of the component profiles, multiplying them together, and then transforming
     back to real space.
    
-    The stepK used for the k-space image will be the minimum of the stepK calculated for 
-    each of the components.  This means that the largest object (in real space) will
-    be adequately sampled in k-space.  Note that using the minimum is appropriate if
-    the various stepK() values are not very similar.  However, if you are convolving
-    100 things that are all about the same size, then the resulting image will be a
-    factor of sqrt(100) = 10 times larger.  Thus, taking the minimum stepK will not be
-    small enough to adequately sample the final image.  If this is ever a use case that 
-    we want to entertain, then we might want to revisit the stepK calculation in SBConvolve.
+    The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2)
+    where the sum is over all teh components being convolved.  Since the size of 
+    the convolved image scales roughly as the quadrature sum of the components,
+    this should be close to Pi/Rmax where Rmax is the radius that encloses
+    all but (1-alias_threshold) of the flux in the final convolved image..
     
     The maxK used for the k-space image will be the minimum of the maxK calculated for
     each component.  Since the k-space images are multiplied, if one of them is 
@@ -583,10 +579,8 @@ class Convolve(GSObject):
         real_space = kwargs.pop("real_space",None)
 
         if kwargs:
-            # This exception seems inappropriate, but I don't know which one is better.
-            # I really want something like a ParameterError or ArgumentError, but that
-            # doesn't seem to exist in the standard hierarchy.  Maybe RuntimeError?
-            raise NameError("Unknown named argument(s) to Convolve constructor: %s"%kwargs.keys())
+            raise TypeError(
+                "Convolve constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
         # If 1 argument, check if it is a list:
         if len(args) == 1 and isinstance(args[0],list):
@@ -619,27 +613,28 @@ class Convolve(GSObject):
                 There might be some inaccuracies due to ringing in k-space."""
             warnings.warn(msg)
 
-        # Can't do real space if nobj > 2
-        if real_space and len(args) > 2:
-            import warnings
-            msg = """
-            Real-space convolution of more than 2 objects is not implemented.
-            Switching to DFT method."""
-            warnings.warn(msg)
-            real_space = False
-
-        # Can't do real space if any object is not analytic
         if real_space:
-            for obj in args:
-                if not obj.isAnalyticX():
-                    import warnings
-                    msg = """
-                    A component to be convolved is not analytic in real space.
-                    Cannot use real space convolution.
-                    Switching to DFT method."""
-                    warnings.warn(msg)
-                    real_space = False
-                    break
+            # Can't do real space if nobj > 2
+            if len(args) > 2:
+                import warnings
+                msg = """
+                Real-space convolution of more than 2 objects is not implemented.
+                Switching to DFT method."""
+                warnings.warn(msg)
+                real_space = False
+
+            # Also can't do real space if any object is not analytic, so check for that.
+            else:
+                for obj in args:
+                    if not obj.isAnalyticX():
+                        import warnings
+                        msg = """
+                        A component to be convolved is not analytic in real space.
+                        Cannot use real space convolution.
+                        Switching to DFT method."""
+                        warnings.warn(msg)
+                        real_space = False
+                        break
 
         if len(args) == 0:
             GSObject.__init__(self, galsim.SBConvolve(real_space=real_space))

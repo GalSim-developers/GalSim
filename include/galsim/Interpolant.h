@@ -51,8 +51,7 @@ namespace galsim {
         /// @brief Copy constructor: does not copy photon sampler, will need to rebuild.
         Interpolant(const Interpolant& rhs): _interp(*this) {}
 
-        /// @brief Destructor (virtual for base class).
-        /// Deletes photon sampler if it has been built.
+        /// @brief Destructor 
         virtual ~Interpolant() {}
 
         /**
@@ -194,12 +193,18 @@ namespace galsim {
         /// @brief Return the integral of the positive portions of the kernel (default=1.)
         virtual double getPositiveFlux() const { return 1.; }
 
-        /// @brief Return the (abs value of) integral of the negative portions of the kernel 
-        /// (default=0.)
+        /**
+         * @brief Return the (abs value of) integral of the negative portions of the kernel 
+         * 
+         * Default=0.
+         */
         virtual double getNegativeFlux() const { return 0.; }
 
-        /// @brief Return array of displacements drawn from this kernel.
-        /// Default is to throw an runtime_error
+        /**
+         * @brief Return array of displacements drawn from this kernel.
+         *
+         * Default is to throw an runtime_error
+         */
         virtual PhotonArray shoot(int N, UniformDeviate& ud) const 
         {
             throw std::runtime_error("Interpolant2d::shoot() not implemented for this kernel");
@@ -432,8 +437,10 @@ namespace galsim {
                 return std::sin(x) / (N*std::sin(x/N));
             }
         }
-        /// @brief Photon-shooting will be disabled for sinc function since wiggles will 
-        /// make it crazy
+        /**
+         * @brief Photon-shooting will be disabled for sinc function since wiggles will 
+         * make it crazy
+         */
         PhotonArray shoot(int N, UniformDeviate& ud) const {
             throw std::runtime_error("Photon shooting is not practical with sinc Interpolant");
             return PhotonArray(N);
@@ -469,8 +476,10 @@ namespace galsim {
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
-        /// @brief Linear interpolant has fast photon-shooting by adding two uniform deviates 
-        /// per axis.
+        /**
+         * @brief Linear interpolant has fast photon-shooting by adding two uniform deviates 
+         * per axis.
+         */
         PhotonArray shoot(int N, UniformDeviate& ud) const;
     private:
         double _tolerance;
@@ -624,8 +633,10 @@ namespace galsim {
         double uCalc(double u) const;
 
     protected:
-        /// @brief Override default sampler configuration because Quintic filter has sign 
-        /// change in outer interval
+        /**
+         * @brief Override default sampler configuration because Quintic filter has sign 
+         * change in outer interval
+         */
         virtual void checkSampler() const 
         {
             if (_sampler.get()) return;

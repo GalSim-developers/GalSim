@@ -37,10 +37,10 @@ namespace galsim {
 
         // Magic numbers:
 
-        /// Constant giving minimum FFT size we're willing to do.
+        /// @brief Constant giving minimum FFT size we're willing to do.
         const int minimum_fft_size = 128;
 
-        /// Constant giving maximum FFT size we're willing to do.
+        /// @brief Constant giving maximum FFT size we're willing to do.
         const int maximum_fft_size = 4096;
 
         /**
@@ -185,7 +185,7 @@ namespace galsim {
          * (SBConvolve) that require an FFT to determine real-space values.  In this case, an 
          * SBError will be thrown.
          *
-         * @param[in] _p 2D position in real space.
+         * @param[in] p 2D position in real space.
          */
         double xValue(const Position<double>& p) const
         { 
@@ -196,7 +196,7 @@ namespace galsim {
         /**
          * @brief Return value of SBProfile at a chosen 2D position in k space.
          *
-         * @param[in] _p 2D position in k space.
+         * @param[in] k 2D position in k space.
          */
         std::complex<double> kValue(const Position<double>& k) const
         { 
@@ -1138,14 +1138,11 @@ namespace galsim {
      * each of the component profiles, multiplying them together, and then transforming
      * back to real space.
      *
-     * The stepK used for the k-space image will be the minimum of the stepK() calculated for 
-     * each of the components.  This means that the largest object (in real space) will
-     * be adequately sampled in k-space.  Note that using the minimum is appropriate if
-     * the various stepK() values are not very similar.  However, if you are convolving
-     * 100 things that are all about the same size, then the resulting image will be a
-     * factor of sqrt(100) = 10 times larger.  Thus, taking the minimum stepK will not be
-     * small enough to adequately sample the final image.  If this is ever a use case * that 
-     * we want to entertain, then we might want to revisit the stepK calculation here.
+     * The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2)
+     * where the sum is over all teh components being convolved.  Since the size of 
+     * the convolved image scales roughly as the quadrature sum of the components,
+     * this should be close to Pi/Rmax where Rmax is the radius that encloses
+     * all but (1-alias_threshold) of the flux in the final convolved image..
      *
      * The maxK used for the k-space image will be the minimum of the maxK() calculated for
      * each component.  Since the k-space images are multiplied, if one of them is 
@@ -1171,16 +1168,15 @@ namespace galsim {
      * set f to something other than 1, then the final flux will be f times the 
      * product of the component fluxes.
      */
-    // TODO: the fluxScale stuff hasn't been ported to the python layer yet.
     class SBConvolve : public SBProfile 
     {
     public:
-
         /**
          * @brief Constructor, 2 inputs.
          *
          * @param[in] s1 first SBProfile.
          * @param[in] s2 second SBProfile.
+         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          */
         SBConvolve(const SBProfile& s1, const SBProfile& s2, bool real_space=false) :
             SBProfile(new SBConvolveImpl(s1,s2,real_space)) {}
@@ -1191,6 +1187,7 @@ namespace galsim {
          * @param[in] s1 first SBProfile.
          * @param[in] s2 second SBProfile.
          * @param[in] s3 third SBProfile.
+         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          */
         SBConvolve(const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
                    bool real_space=false) :
@@ -1200,6 +1197,7 @@ namespace galsim {
          * @brief Constructor, list of inputs.
          *
          * @param[in] slist Input: list of SBProfiles.
+         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          */
         SBConvolve(const std::list<SBProfile> slist, bool real_space=false) :
             SBProfile(new SBConvolveImpl(slist,real_space)) {}
@@ -1247,7 +1245,7 @@ namespace galsim {
         bool isAnalyticX() const { return _real_space; }
         bool isAnalyticK() const { return !_real_space; }    // convolvees must all meet this
         double maxK() const { return _minMaxK; }
-        double stepK() const { return _minStepK; }
+        double stepK() const { return _netStepK; }
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
         { 
@@ -1323,7 +1321,7 @@ namespace galsim {
         double _y0; ///< Centroid position in y.
         bool _isStillAxisymmetric; ///< Is output SBProfile shape still circular?
         double _minMaxK; ///< Minimum maxK() of the convolved SBProfiles.
-        double _minStepK; ///< Minimum stepK() of the convolved SBProfiles.
+        double _netStepK; ///< Minimum stepK() of the convolved SBProfiles.
         double _sumMinX; ///< sum of minX() of the convolved SBProfiles.
         double _sumMaxX; ///< sum of maxX() of the convolved SBProfiles.
         double _sumMinY; ///< sum of minY() of the convolved SBProfiles.
@@ -1364,7 +1362,7 @@ namespace galsim {
          *
          * @param[in] flux   flux of the Surface Brightness Profile (default `flux = 1.`).
          * @param[in] sigma  characteristic size, surface brightness scales as 
-         *                   `exp[-r^2 / (2. * sigma^2)] (default `sigma = 1.`).
+         *                   `exp[-r^2 / (2. * sigma^2)]` (default `sigma = 1.`).
          */
         SBGaussian(double flux=1., double sigma=1.) :
             SBProfile(new SBGaussianImpl(flux,sigma)) {}
@@ -1809,12 +1807,14 @@ namespace galsim {
              * @param[in] obscuration Fractional linear size of central obscuration of pupil.
              */
             AiryRadialFunction(double obscuration): _obscuration(obscuration) {}
+
             /**
              * @brief Return the Airy function
              * @param[in] radius Radius in units of (lambda / D)
              * @returns Airy function, normalized to integrate to unity.
              */
             double operator()(double radius) const;
+
             void setObscuration(double obscuration) { _obscuration=obscuration; }
         private:
             double _obscuration; ///> Central obstruction size
