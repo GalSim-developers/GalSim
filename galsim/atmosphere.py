@@ -17,7 +17,7 @@ class DoubleGaussian(galsim.Add):
         sblist.append(galsim.Gaussian(flux2, sigma=sigma2, fwhm=fwhm2))
         galsim.Add.__init__(self, sblist)
 
-def atmospheric_mtf(array_shape=(256, 256), dx=1., lam_over_r0=1.):
+def kolmogorov_mtf(array_shape=(256, 256), dx=1., lam_over_r0=1.):
     """@brief Return the atmospheric modulation transfer function for long exposures with 
     Kolmogorov turbulence as a numpy array. 
 
@@ -32,10 +32,10 @@ def atmospheric_mtf(array_shape=(256, 256), dx=1., lam_over_r0=1.):
     # This is based on the ALIAS_THRESHOLD 0.005 in src/SBProfile.cpp and galsim/base.py
     kmax_internal = 1.2954 / lam_over_r0 * dx
     kx, ky = galsim.optics.kxky(array_shape)
-    amtf = np.exp(-3.442 * (lam_over_r0 * np.hypot(kx, ky) / (np.pi* kmax_internal))**(5. / 3.))
+    amtf = np.exp(-3.442 * (np.hypot(kx, ky) / kmax_internal / np.pi)**(5. / 3.))
     return amtf
 
-def atmospheric_mtf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
+def kolmogorov_mtf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
     """@brief Return the atmospheric modulation transfer function for long exposures with 
     Kolmogorov turbulence as an ImageViewD. 
 
@@ -47,10 +47,10 @@ def atmospheric_mtf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
                            consistency). r0 is the Fried parameter. Typical values for the 
                            Fried parameter are on the order of 10 cm for most observatories.
     """
-    amtf = atmospheric_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
+    amtf = kolmogorov_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
     return galsim.ImageViewD(amtf.astype(np.float64))
 
-def psf(array_shape=(256,256), dx=1., lam_over_r0=1.):
+def kolmogorov_psf(array_shape=(256,256), dx=1., lam_over_r0=1.):
     """@brief Return numpy array containing long exposure Kolmogorov PSF.
     
     Parameters
@@ -61,13 +61,12 @@ def psf(array_shape=(256,256), dx=1., lam_over_r0=1.):
                            consistency). r0 is the Fried parameter. Typical values for the 
                            Fried parameter are on the order of 10 cm for most observatories.
     """
-
-    amtf = atmospheric_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
+    amtf = kolmogorov_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
     ftmtf = np.fft.fft2(amtf)
     im = galsim.optics.roll2d((ftmtf * ftmtf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2))
     return im / (im.sum() * dx**2)
     
-def psf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
+def kolmogorov_psf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
     """@brief Return long exposure Kolmogorov PSF as an ImageViewD.
 
     Parameters
@@ -78,5 +77,5 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
                            consistency). r0 is the Fried parameter. Typical values for the 
                            Fried parameter are on the order of 10 cm for most observatories.
     """
-    array = psf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
+    array = kolmogorov_psf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
     return galsim.ImageViewD(array.astype(np.float64))

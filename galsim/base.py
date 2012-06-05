@@ -414,8 +414,8 @@ class AtmosphericPSF(GSObject):
         # Odd array to center the interpolant on the centroid. Might want to pad this later to
         # make a nice size array for FFT, but for typical seeing, arrays will be very small.
         npix = 1 + 2 * (np.ceil(np.pi / stepk_kolmogorov)).astype(int)
-        atmoimage = galsim.atmosphere.psf_image(array_shape=(npix, npix), dx=dx_lookup, 
-                                                lam_over_r0=lam_over_r0)
+        atmoimage = galsim.atmosphere.kolmogorov_psf_image(array_shape=(npix, npix), dx=dx_lookup, 
+                                                           lam_over_r0=lam_over_r0)
         if interpolantxy == None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1e-4)
             self.Interpolant2D = galsim.InterpolantXY(lan5)
