@@ -237,7 +237,7 @@ def test_OpticalPSF_vs_Airy():
     nlook = 100          # size of array region at the centre of each image to compare
     for lod in lods:
         D = 1. / lod
-        airy_test = galsim.Airy(D=D, obs=0., flux=1.)
+        airy_test = galsim.Airy(D=D, obscuration=0., flux=1.)
         optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1) #pad same as an Airy, natch!
         airy_array = airy_test.draw(dx=1.).array
         airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2: 
@@ -251,6 +251,30 @@ def test_OpticalPSF_vs_Airy():
                                          optics_array.shape[1]/2 + nlook/2]
         np.testing.assert_array_almost_equal(optics_array_test, airy_array_test, decimal_dft, 
                                              err_msg="Unaberrated Optical not quite equal to Airy")
+
+def test_OpticalPSF_vs_Airy_with_obs():
+    """Compare the array view on an unaberrated OpticalPSF with osbcuration to that of an Airy.
+    """
+    lod = 7.5    # lambda/D value: don't choose unity in case symmetry hides something
+    obses = (0.1, 0.3, 0.5) # central obscuration radius ratios
+    nlook = 100          # size of array region at the centre of each image to compare
+    D = 1. / lod
+    for obs in obses:
+        airy_test = galsim.Airy(D=D, obscuration=obs, flux=1.)
+        optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1, obscuration=obs)
+        airy_array = airy_test.draw(dx=1.).array
+        airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2: 
+                                     airy_array.shape[0]/2 + nlook/2,   
+                                     airy_array.shape[1]/2 - nlook/2:
+                                     airy_array.shape[1]/2 + nlook/2]
+        optics_array = optics_test.draw(dx=1.).array 
+        optics_array_test = optics_array[optics_array.shape[0]/2 - nlook/2:
+                                         optics_array.shape[0]/2 + nlook/2, 
+                                         optics_array.shape[1]/2 - nlook/2:
+                                         optics_array.shape[1]/2 + nlook/2]
+        np.testing.assert_array_almost_equal(optics_array_test, airy_array_test, decimal_dft, 
+                                             err_msg="Unaberrated Optical with obscuration not "
+                                                     "quite equal to Airy")
 
 
 if __name__ == "__main__":
@@ -271,3 +295,4 @@ if __name__ == "__main__":
     test_ptf_image_view()
     test_OpticalPSF_flux()
     test_OpticalPSF_vs_Airy()
+    test_OpticalPSF_vs_Airy_with_obs()
