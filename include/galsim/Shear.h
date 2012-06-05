@@ -187,7 +187,8 @@ namespace galsim {
     class Ellipse 
     {
     public:
-        explicit Ellipse(const Shear& _s, double _mu, const Position<double> _p) :
+        explicit Ellipse(const Shear& _s = Shear(), double _mu = 0., 
+                         const Position<double> _p = Position<double>()) :
             s(_s), mu(_mu), x0(_p) 
         { expmu=std::exp(mu); }
 
