@@ -13,14 +13,17 @@ typedef bp::return_value_policy<bp::manage_new_object> ManageNew;
 
 struct PyPhotonArray {
     
-    static PhotonArray * construct(bp::object const & vx, bp::object const & vy, bp::object const & vflux) {
+    static PhotonArray * construct(bp::object const & vx, bp::object const & vy,
+                                   bp::object const & vflux) {
         Py_ssize_t size = bp::len(vx);
         if (size != bp::len(vx)) {
-            PyErr_SetString(PyExc_ValueError, "Length of vx array does not match  length of vy array");
+            PyErr_SetString(PyExc_ValueError,
+                            "Length of vx array does not match  length of vy array");
             bp::throw_error_already_set();
         }
         if (size != bp::len(vflux)) {
-            PyErr_SetString(PyExc_ValueError, "Length of vx array does not match length of vflux array");
+            PyErr_SetString(PyExc_ValueError,
+                            "Length of vx array does not match length of vflux array");
             bp::throw_error_already_set();
         }
         std::vector<double> vx_(size);
@@ -51,7 +54,8 @@ struct PyPhotonArray {
         pyPhotonArray
             .def(
                 "__init__",
-                bp::make_constructor(&construct, bp::default_call_policies(), bp::args("vx", "vy", "vflux"))
+                bp::make_constructor(&construct, bp::default_call_policies(),
+                                     bp::args("vx", "vy", "vflux"))
             )
             .def(bp::init<int>(bp::args("n")))
             .def("__len__", &PhotonArray::size)
@@ -99,10 +103,6 @@ struct PySBProfile {
         // We also don't need to make 'W' a template parameter in this case,
         // but it's easier to do that than write out the full class_ type.
         wrapper
-            .def("fillXImage", 
-                 (double (SBProfile::*)(ImageView<U> &, double) const)&SBProfile::fillXImage, 
-                 bp::args("image", "dx"),
-                 "Utility for drawing into Image data structures")
             .def("drawShoot", 
                  (void (SBProfile::*)(Image<U> &, double, UniformDeviate& ) const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
@@ -183,7 +183,6 @@ struct PySBProfile {
 
         bp::class_<SBProfile,boost::noncopyable> pySBProfile("SBProfile", doc, bp::no_init);
         pySBProfile
-            .def("duplicate", &SBProfile::duplicate, ManageNew())
             .def("xValue", &SBProfile::xValue,
                  "Return value of SBProfile at a chosen 2d position in real space.\n"
                  "May not be implemented for derived classes (e.g. SBConvolve) that\n"
@@ -195,16 +194,18 @@ struct PySBProfile {
             .def("stepK", &SBProfile::stepK,
                  "Sampling in k space necessary to avoid folding of image in x space")
             .def("isAxisymmetric", &SBProfile::isAxisymmetric)
+            .def("hasHardEdges", &SBProfile::hasHardEdges)
             .def("isAnalyticX", &SBProfile::isAnalyticX,
                  "True if real-space values can be determined immediately at any position without\n"
                  " DFT.")
             .def("centroid", &SBProfile::centroid)
             .def("getFlux", &SBProfile::getFlux)
-            .def("setFlux", &SBProfile::setFlux)
-            .def("distort", &SBProfile::distort, bp::args("e"), ManageNew())
-            .def("shear", &SBProfile::shear, bp::args("e1", "e2"), ManageNew())
-            .def("rotate", &SBProfile::rotate, bp::args("theta"), ManageNew())
-            .def("shift", &SBProfile::shift, bp::args("dx", "dy"), ManageNew())
+            .def("scaleFlux", &SBProfile::setFlux, bp::args("fluxRatio"))
+            .def("setFlux", &SBProfile::setFlux, bp::args("flux"))
+            .def("distort", &SBProfile::distort, bp::args("e"))
+            .def("shear", &SBProfile::shear, bp::args("e1", "e2"))
+            .def("rotate", &SBProfile::rotate, bp::args("theta"))
+            .def("shift", &SBProfile::shift, bp::args("dx", "dy"))
             .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
             .def("draw", (ImageView<float> (SBProfile::*)(double, int) const)&SBProfile::draw,
                  (bp::arg("dx")=0., bp::arg("wmult")=1), "default draw routine")
@@ -219,26 +220,23 @@ struct PySBAdd {
 
     // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
     static SBAdd * construct(bp::object const & iterable) {
-        bp::stl_input_iterator<SBProfile*> begin(iterable), end;
-        std::list<SBProfile*> plist(begin, end);
+        bp::stl_input_iterator<SBProfile> begin(iterable), end;
+        std::list<SBProfile> plist(begin, end);
         return new SBAdd(plist);
     }
 
     static void wrap() {
         static char const * doc = 
-            "Sum of SBProfile.  Note that this class stores duplicates of its summands,\n"
-            "so they cannot be changed after adding them."
+            "Sum of SBProfiles."
             ;
             
-        bp::class_< SBAdd, bp::bases<SBProfile> >("SBAdd", doc, bp::init<>())
+        bp::class_< SBAdd, bp::bases<SBProfile> >("SBAdd", doc, bp::no_init)
             // bp tries the overloads in reverse order, so we wrap the most general one first
             // to ensure we try it last
             .def("__init__", bp::make_constructor(&construct, bp::default_call_policies(),
                                                   bp::args("slist")))
-            .def(bp::init<const SBProfile &>(bp::args("s1")))
             .def(bp::init<const SBProfile &, const SBProfile &>(bp::args("s1", "s2")))
             .def(bp::init<const SBAdd &>())
-            .def("add", &SBAdd::add, (bp::arg("rhs"), bp::arg("scale")=1.))
             ;
     }
 
@@ -249,18 +247,18 @@ struct PySBDistort {
     static void wrap() {
         static char const * doc = 
             "SBDistort is an affine transformation of another SBProfile.\n"
-            "Stores a duplicate of its target.\n"
             "Origin of original shape will now appear at x0.\n"
             "Flux is NOT conserved in transformation - SB is preserved."
             ;
             
         bp::class_< SBDistort, bp::bases<SBProfile> >("SBDistort", doc, bp::no_init)
-            .def(bp::init<const SBProfile &, double, double, double, double, Position<double> >(
+            .def(bp::init<const SBProfile &, double, double, double, double, Position<double>, double >(
                      (bp::args("sbin", "mA", "mB", "mC", "mD"),
-                      bp::arg("x0")=Position<double>(0.,0.))
+                      bp::arg("x0")=Position<double>(0.,0.),
+                      bp::arg("fluxScaling")=1.)
                  ))
-            .def(bp::init<const SBProfile &, const Ellipse &>(
-                     (bp::arg("sbin"), bp::arg("e")=Ellipse())
+            .def(bp::init<const SBProfile &, const Ellipse &, double>(
+                     (bp::arg("sbin"), bp::arg("e")=Ellipse(), bp::arg("fluxScaling")=1.)
                  ))
             .def(bp::init<const SBDistort &>())
             ;
@@ -271,31 +269,27 @@ struct PySBDistort {
 struct PySBConvolve {
 
     // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
-    static SBConvolve * construct(bp::object const & iterable, double f) {
-        bp::stl_input_iterator<SBProfile*> begin(iterable), end;
-        std::list<SBProfile*> plist(begin, end);
-        return new SBConvolve(plist, f);
+    static SBConvolve * construct(bp::object const & iterable, bool real_space) {
+        bp::stl_input_iterator<SBProfile> begin(iterable), end;
+        std::list<SBProfile> plist(begin, end);
+        return new SBConvolve(plist, real_space);
     }
 
     static void wrap() {
-        bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::init<>())
+        bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::no_init)
             // bp tries the overloads in reverse order, so we wrap the most general one first
             // to ensure we try it last
             .def("__init__", 
                  bp::make_constructor(&construct, bp::default_call_policies(), 
-                                      (bp::arg("slist"), bp::arg("f")=1.)
+                                      (bp::arg("slist"), bp::arg("real_space")=false)
                  ))
-            .def(bp::init<const SBProfile &, double>(
-                     (bp::args("s1"), bp::arg("f")=1.)
+            .def(bp::init<const SBProfile &, const SBProfile &, bool>(
+                     (bp::args("s1", "s2"), bp::arg("real_space")=false)
                  ))
-            .def(bp::init<const SBProfile &, const SBProfile &, double>(
-                     (bp::args("s1", "s2"), bp::arg("f")=1.)
-                 ))
-            .def(bp::init<const SBProfile &, const SBProfile &, const SBProfile &, double>(
-                     (bp::args("s1", "s2", "s3"), bp::arg("f")=1.)
+            .def(bp::init<const SBProfile &, const SBProfile &, const SBProfile &, bool>(
+                     (bp::args("s1", "s2", "s3"), bp::arg("real_space")=false)
                  ))
             .def(bp::init<const SBConvolve &>())
-            .def("add", &SBConvolve::add)
             ;
     }
 
@@ -479,7 +473,7 @@ struct PySBMoffat {
             .def("__init__", 
                  bp::make_constructor(
                      &construct, bp::default_call_policies(),
-                     (bp::arg("beta"), bp::arg("truncationFWHM")=2.,
+                     (bp::arg("beta"), bp::arg("truncationFWHM")=0.,
                       bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(),
                       bp::arg("scale_radius")=bp::object(), bp::arg("fwhm")=bp::object())
                  )
@@ -529,7 +523,7 @@ void pyExportSBProfile() {
     PySBDeVaucouleurs::wrap();
     PyPhotonArray::wrap();
 
-    bp::def("SBParse", &galsim::SBParse, galsim::ManageNew());
+    bp::def("SBParse", &galsim::SBParse);
 }
 
 } // namespace galsim

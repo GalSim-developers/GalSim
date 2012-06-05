@@ -9,6 +9,7 @@ import subprocess
 import math
 import numpy
 import logging
+import time
 
 # This machinery lets us run Python examples even though they aren't positioned
 # properly to find galsim as a package in the current directory.
@@ -103,7 +104,6 @@ def Script1():
     psf_image = galsim.ImageF(nx_pixels * nx_stamps , ny_pixels * ny_stamps)
     psf_image.setOrigin(0,0) # For my convenience -- switch to C indexing convention.
     psf_centroid_shift_sq = psf_centroid_shift**2
-    logger.info('i,j,x,y')
     for ix in range(nx_stamps):
         for iy in range(ny_stamps):
             # The -2's in the next line rather than -1 are to provide a border of
@@ -134,7 +134,7 @@ def Script1():
 
             x = b.center().x
             y = b.center().y
-            logger.info('%d,%d,%.0f,%0.f',ix,iy,x,y)
+            logger.info('PSF (%d,%d): center = (%.0f,%0.f)',ix,iy,x,y)
 
     logger.info('Done making images of PSF postage stamps')
 
@@ -181,7 +181,6 @@ def Script1():
     gal_centroid_shift_sq = gal_centroid_shift**2
     first_in_pair = True  # Make pairs that are rotated by 45 degrees
     gd = galsim.GaussianDeviate(rng, sigma=gal_ellip_rms)
-    logger.info('i,j,x,y,ellip,theta')
     for ix in range(nx_stamps):
         for iy in range(ny_stamps):
             # The -2's in the next line rather than -1 are to provide a border of
@@ -235,7 +234,8 @@ def Script1():
 
             x = b.center().x
             y = b.center().y
-            logger.info('%d,%d,%.0f,%.0f,%.4f,%.3f',ix,iy,x,y,ellip,theta)
+            logger.info('Galaxy (%d,%d): center = (%.0f,%0.f)  (e,theta) = (%.4f,%.3f)',
+                    ix,iy,x,y,ellip,theta)
 
     logger.info('Done making images of Galaxy postage stamps')
 
@@ -381,34 +381,44 @@ def Script2():
         if i is not input_cat.current:
             raise ValueError('i is out of sync with current.')
 
-        logger.info('Start work on image %d',input_cat.current)
+        t1 = time.time()
+        #logger.info('Image %d',input_cat.current)
 
         psf = galsim.BuildGSObject(config.psf, input_cat, logger)
-        logger.info('   Made PSF profile')
+        #logger.info('   Made PSF profile')
+        t2 = time.time()
 
         pix = galsim.BuildGSObject(config.pix, input_cat, logger)
-        logger.info('   Made pixel profile')
+        #logger.info('   Made pixel profile')
+        t3 = time.time()
 
         gal = galsim.BuildGSObject(config.gal, input_cat, logger)
-        logger.info('   Made galaxy profile')
+        #logger.info('   Made galaxy profile')
+        t4 = time.time()
 
         final = galsim.Convolve(psf,pix,gal)
         #im = final.draw(dx=pixel_scale)  # It makes these as 768 x 768 images.  A bit big.
         im = galsim.ImageF(image_xmax, image_ymax)
         final.draw(im, dx=pixel_scale)
-        logger.info('   Drew image: size = %d x %d',im.xMax-im.xMin+1, im.yMax-im.yMin+1)
+        xsize, ysize = im.array.shape
+        #logger.info('   Drew image: size = %d x %d',xsize,ysize)
+        t5 = time.time()
 
         # Add Poisson noise
         im += sky_level
         im.addNoise(galsim.CCDNoise(rng))
         im -= sky_level
-        logger.info('   Added noise')
+        #logger.info('   Added noise')
+        t6 = time.time()
 
         # Store that into the list of all images
         all_images += [im]
+        t7 = time.time()
 
         # increment the row of the catalog that we should use for the next iteration
         input_cat.current += 1
+        #logger.info('   Times: %f, %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5, t7-t6)
+        logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t7-t1)
 
     logger.info('Done making images of galaxies')
 
@@ -469,6 +479,7 @@ def Script3():
 
     # Read in galaxy catalog
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, image_dir)
+    real_galaxy_catalog.preload()
     n_gal = real_galaxy_catalog.n
     logger.info('Read in %d real galaxies from catalog', n_gal)
 
@@ -488,26 +499,41 @@ def Script3():
     # Build the images
     all_images = []
     for i in range(n_gal):
-        logger.info('Start work on image %d',i)
+        #logger.info('Start work on image %d',i)
+        t1 = time.time()
 
         gal = galsim.RealGalaxy(real_galaxy_catalog, index = i)
-        logger.info('   Read in training sample galaxy and PSF from file')
+        #logger.info('   Read in training sample galaxy and PSF from file')
+        t2 = time.time()
 
+        # Could skip this next line and just let simReal choose the size of the image
+        # automatically, but then some images come back as 128x128, and some as 192x192.
+        # This is fine, except that you can't then store the images in a data cube,
+        # since that requires all images to be the same size.  (The multi-extension fits
+        # file would still work just fine of course.)
+        sim_image = galsim.ImageF(128,128)
         sim_image = galsim.simReal(gal, epsf, pixel_scale, g1 = gal_g1, g2 = gal_g2,
-                                   uniform_deviate = rng, target_flux = gal_flux)
-        logger.info('   Made image of galaxy after deconvolution, rotation, shearing, ')
-        logger.info('      convolving with target PSF, and resampling')
+                                   uniform_deviate = rng, target_flux = gal_flux,
+                                   image=sim_image)
+        #logger.info('   Made image of galaxy after deconvolution, rotation, shearing, ')
+        #logger.info('      convolving with target PSF, and resampling')
         xsize, ysize = sim_image.array.shape
-        logger.info('   Final image size: (%d, %d)',xsize, ysize)
+        #logger.info('   Final image size: (%d, %d)',xsize, ysize)
+        t3 = time.time()
 
         # Add Poisson noise
         sim_image += sky_level
         sim_image.addNoise(galsim.CCDNoise(rng))
         sim_image -= sky_level
-        logger.info('   Added Poisson noise')
+        #logger.info('   Added Poisson noise')
+        t4 = time.time()
 
         # Store that into the list of all images
         all_images += [sim_image]
+        t5 = time.time()
+
+        #logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
+        logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t5-t1)
 
     logger.info('Done making images of galaxies')
 

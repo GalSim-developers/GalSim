@@ -23,74 +23,67 @@ namespace galsim {
     {
     public:
         /// @brief Constructor.
-        SBDeconvolve(const SBProfile& adaptee_) : adaptee(adaptee_.duplicate()) 
-        { maxksq = pow(maxK(),2.); }
+        SBDeconvolve(const SBProfile& adaptee) :
+            SBProfile(new SBDeconvolveImpl(adaptee)) {}
 
         /// @brief Copy constructor.
-        SBDeconvolve(const SBDeconvolve& rhs) : adaptee(rhs.adaptee->duplicate()) 
-        { maxksq = pow(maxK(),2.); }
-
-        /// @brief Operator (TODO: ask Gary about this bit...)
-        SBDeconvolve& operator=(const SBDeconvolve& rhs)
-        {
-            if (&rhs == this) return *this;
-            if (adaptee) {
-                delete adaptee; 
-                adaptee = 0;
-            }
-            adaptee = rhs.adaptee->duplicate();
-            maxksq = rhs.maxksq;
-            return *this;
-        }
+        SBDeconvolve(const SBDeconvolve& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor.
-        ~SBDeconvolve() { delete adaptee; }
+        ~SBDeconvolve() {}
 
-        SBProfile* duplicate() const { return new SBDeconvolve(*this); }
+    protected:
+    class SBDeconvolveImpl : public SBProfileImpl
+    {
+    public:
+        SBDeconvolveImpl(const SBProfile& adaptee) : _adaptee(adaptee)
+        { _maxksq = std::pow(maxK(),2.); }
 
-        // These are all the base class members that must be implemented:
+        ~SBDeconvolveImpl() {}
 
-        /// @brief xValue() not implemented for SBDeconvolve.
-        double xValue(Position<double> p) const 
+        // xValue() not implemented for SBDeconvolve.
+        double xValue(const Position<double>& p) const 
         { throw SBError("SBDeconvolve::xValue() not implemented"); }
 
-        std::complex<double> kValue(Position<double> p) const 
+        std::complex<double> kValue(const Position<double>& k) const 
         {
-            return (p.x*p.x+p.y*p.y) <= maxksq ?
-                1./adaptee->kValue(p) :
+            return (k.x*k.x+k.y*k.y) <= _maxksq ?
+                1./_adaptee.kValue(k) :
                 std::complex<double>(0.,0.); 
         }
 
-        double maxK() const { return adaptee->maxK(); }
+        double maxK() const { return _adaptee.maxK(); }
+        double stepK() const { return _adaptee.stepK(); }
 
-        // Require output FTs to be period on scale > original image extent + kernel footprint:
-        double stepK() const { return adaptee->stepK(); }
+        bool isAxisymmetric() const { return _adaptee.isAxisymmetric(); }
 
-        bool isAxisymmetric() const { return adaptee->isAxisymmetric(); }
+        // Of course, a deconvolution could have hard edges, but since we can't use this
+        // in a real-space convolution anyway, just return false here.
+        bool hasHardEdges() const { return false; }
+
         bool isAnalyticX() const { return false; }
         bool isAnalyticK() const { return true; }
 
-        Position<double> centroid() const { return -adaptee->centroid(); }
+        Position<double> centroid() const { return -_adaptee.centroid(); }
 
-        /// @brief setCentroid() not implemented for SBDeconvolve.
-        void setCentroid(Position<double> _p) 
-        { throw SBError("setCentroid not allowed for SBDeconvolve"); }
+        double getFlux() const { return 1./_adaptee.getFlux(); }
 
-        double getFlux() const { return 1./adaptee->getFlux(); }
-        void setFlux(double flux=1.) { adaptee->setFlux(1./flux); }
-
-        PhotonArray shoot(int N, UniformDeviate& u) const {
+        PhotonArray shoot(int N, UniformDeviate& u) const 
+        {
             throw SBError("SBDeconvolve::shoot() not implemented");
             return PhotonArray(N);
         }
 
+    protected:
+
         // Override for better efficiency if adaptee has it:
-        virtual void fillKGrid(KTable& kt) const 
+        void fillKGrid(KTable& kt) const 
         {
-            adaptee->fillKGrid(kt);
+            assert(_adaptee._pimpl.get());
+            _adaptee._pimpl->fillKGrid(kt);
             // Flip or clip:
             int N = kt.getN();
-            int maxiksq = maxksq / (kt.getDk()*kt.getDk());
+            int maxiksq = _maxksq / (kt.getDk()*kt.getDk());
             // Only need ix>=0 because it's Hermitian, but also
             // don't want to repeat the ix=0, N/2 twice:
             for (int iy = -N/2; iy < N/2; iy++) {
@@ -116,8 +109,17 @@ namespace galsim {
         }
 
     private:
-        SBProfile* adaptee;
-        double maxksq;
+        SBProfile _adaptee;
+        double _maxksq;
+
+        // Copy constructor and op= are undefined.
+        SBDeconvolveImpl(const SBDeconvolveImpl& rhs);
+        void operator=(const SBDeconvolveImpl& rhs);
+    };
+
+    private:
+        // op= is undefined
+        void operator=(const SBDeconvolve& rhs);
     };
 
 }

@@ -137,14 +137,16 @@
 #include <ostream>
 #include <complex>
 #include <stdexcept>
-
+#include <boost/shared_ptr.hpp>
 
 #include "MoreFunctional.h"
-#include "IntGKPData10.h"
+//#include "IntGKPData10.h"
+#include "IntGKPData1.h"
 namespace galsim {
 namespace integ {
 
     const double MOCK_INF = 1.e100;  ///< May be used to indicate infinity in integration regions.
+    const double MOCK_INF2 = 1.e10;  ///< Anything larger than this is treated as infinity.
     const double DEFRELERR = 1.e-6;  ///< The default target relative error if not specified.
     const double DEFABSERR = 1.e-15; ///< The default target absolute error if not specified.
 
@@ -194,20 +196,20 @@ namespace integ {
          * the negative of the integral from b to a.
          */
         IntRegion(
-            const T _a,  ///< The left end of the region
-            const T _b,  ///< The right end of the region
-            std::ostream* _dbgout=0  ///< An optional ostream for diagnostic info
+            const T a,  ///< The left end of the region
+            const T b,  ///< The right end of the region
+            std::ostream* dbgout_=0,  ///< An optional ostream for diagnostic info
+            std::map<T,T>* fxmap_=0   ///< Known results
         ) :
-            a(_a), b(_b), error(0.), area(0), dbgout(_dbgout) {}
-
+            _a(a), _b(b), _error(0.), _area(0), dbgout(dbgout_), fxmap(fxmap_) {}
 
         /// op< sorts by the error estimate
         bool operator<(const IntRegion<T>& r2) const 
-        { return error < r2.error; }
+        { return _error < r2._error; }
 
         /// op> sorts by the error estimate
         bool operator>(const IntRegion<T>& r2) const 
-        { return error > r2.error; }
+        { return _error > r2._error; }
 
         /** 
          * @brief Subdivide a region according to the current split points or biset
@@ -217,34 +219,120 @@ namespace integ {
          * This is worth doing if you know about any discontinuities, zeros or poles 
          * in the function you are integrating.
          */
-        void subDivide(std::vector<IntRegion<T> >* children) 
+        void subDivide(std::vector<IntRegion<T> >& children) 
         {
-            assert(children->size() == 0);
-            if (splitpoints.size() == 0) bisect();
-            if (splitpoints.size() > 1) 
-                std::sort(splitpoints.begin(),splitpoints.end());
+            assert(children.size() == 0);
 
-#if 0
-            if (a>splitpoints[0] || b < splitpoints.back()) {
-                std::cerr<<"a,b = "<<a<<','<<b<<std::endl;
-                std::cerr<<"splitpoints = ";
-                for(size_t i=0;i<splitpoints.size();i++) 
-                    std::cerr<<splitpoints[i]<<"  "; 
-                std::cerr<<std::endl;
+            // If no current split points, then just use bisection.
+            if (_split_points.size() == 0) bisect();
+
+            if (_split_points.size() > 1) 
+                std::sort(_split_points.begin(),_split_points.end());
+
+            assert(_split_points[0] >= _a);
+            assert(_split_points.back() <= _b);
+            integ_dbg1<<"Using split points:\n";
+            integ_dbg1<<_split_points[0]<<'\n';
+            children.push_back(IntRegion<T>(_a,_split_points[0],dbgout,fxmap));
+            for(size_t i=1;i<_split_points.size();i++) {
+                integ_dbg1<<_split_points[i]<<'\n';
+                children.push_back(
+                    IntRegion<T>(_split_points[i-1],_split_points[i],dbgout,fxmap));
             }
-#endif
-            assert(splitpoints[0] >= a);
-            assert(splitpoints.back() <= b);
-            children->push_back(IntRegion<T>(a,splitpoints[0],dbgout));
-            for(size_t i=1;i<splitpoints.size();i++) {
-                children->push_back(
-                    IntRegion<T>(splitpoints[i-1],splitpoints[i],dbgout));
-            }
-            children->push_back(IntRegion<T>(splitpoints.back(),b,dbgout));
+            children.push_back(IntRegion<T>(_split_points.back(),_b,dbgout,fxmap));
         }
 
         /// Set a split point at the bisection
-        void bisect() { splitpoints.push_back((a+b)/2.); }
+        void bisect() { _split_points.push_back((_a+_b)/2.); }
+
+        /// Search for zero crossings based on values stored in fxmap
+        void findZeroCrossings()
+        {
+            typedef typename std::map<T,T>::const_iterator MapIter;
+            if (fxmap) {
+                MapIter start = fxmap->lower_bound(_a);
+                MapIter end = fxmap->upper_bound(_b);
+                if (start == end) return;
+                MapIter previt = start;
+                MapIter it = start;
+                integ_dbg1<<"f("<<it->first<<") = "<<it->second<<"\n";
+                bool zero_train = false;
+                integ_dbg1<<"Start search for zero crossings\n";
+                integ_dbg1<<"first = "<<it->first<<" , "<<it->second<<std::endl;
+                while (++it != end) {
+                    integ_dbg1<<"f("<<it->first<<") = "<<it->second<<"\n";
+                    if ( (it->second > T(0) && previt->second < T(0)) ||
+                         (it->second < T(0) && previt->second > T(0)) ) {
+                        integ_dbg1<<"Found zero crossing.\n";
+                        integ_dbg1<<"prev = "<<previt->first<<" , "<<previt->second<<std::endl;
+                        integ_dbg1<<"this = "<<it->first<<" , "<<it->second<<std::endl;
+                        double m = (it->first - previt->first) / (it->second - previt->second);
+                        double x = it->first - m * it->second;
+                        integ_dbg1<<"m = "<<m<<", x = "<<x<<std::endl;
+                        _split_points.push_back(x);
+                    } else if (zero_train && it->second != T(0)) {
+                        integ_dbg1<<"Found end of zero train.\n";
+                        integ_dbg1<<"prev = "<<previt->first<<" , "<<previt->second<<std::endl;
+                        integ_dbg1<<"this = "<<it->first<<" , "<<it->second<<std::endl;
+                        _split_points.push_back(previt->first);
+                        _split_points.push_back(it->first);
+                        zero_train = false;
+                        MapIter nextit = it; ++nextit;
+                        if (nextit != end) {
+                            integ_dbg1<<"Not last element in list.  Try to refine\n";
+                            integ_dbg1<<"next = "<<nextit->first<<" , "<<nextit->second<<std::endl;
+                            double m = (it->first - nextit->first) / (it->second - nextit->second);
+                            double x = it->first - m * it->second;
+                            integ_dbg1<<"m = "<<m<<", x = "<<x<<std::endl;
+                            if (x > previt->first && x < it->first) {
+                                integ_dbg1<<"Valid extrapolation.\n";
+                                _split_points.push_back(x);
+                            } else {
+                                integ_dbg1<<"Invalid extrapolation.  Ignore.\n";
+                            }
+                        }
+                    } else if (!zero_train && it->second == T(0)) {
+                        if (previt->second == T(0)) zero_train = true;
+                        else {
+                            integ_dbg1<<"Found possible start of zero train.\n";
+                            integ_dbg1<<"prev = "<<previt->first<<" , "<<previt->second<<std::endl;
+                            integ_dbg1<<"this = "<<it->first<<" , "<<it->second<<std::endl;
+                            MapIter nextit = it; ++nextit;
+                            if (nextit != end) {
+                                integ_dbg1<<"this is last in list.  Just add last two as splits\n";
+                                _split_points.push_back(previt->first);
+                                _split_points.push_back(it->first);
+                            } else if (nextit->second == T(0)) {
+                                integ_dbg1<<"Yes.  Start of zero train.\n";
+                                _split_points.push_back(previt->first);
+                                _split_points.push_back(it->first);
+                                MapIter previt2 = previt;
+                                --previt2;
+                                if (previt2 != start) {
+                                    integ_dbg1<<"Not first element in list.  Try to refine\n";
+                                    integ_dbg1<<"prev2 = "<<previt2->first<<" , "<<previt2->second<<std::endl;
+                                    double m = (previt->first - previt2->first) /
+                                        (previt->second - previt2->second);
+                                    double x = previt->first - m * previt->second;
+                                    integ_dbg1<<"m = "<<m<<", x = "<<x<<std::endl;
+                                    if (x > previt->first && x < it->first) {
+                                        integ_dbg1<<"Valid extrapolation.\n";
+                                        _split_points.push_back(x);
+                                    } else {
+                                        integ_dbg1<<"Invalid extrapolation.  Ignore.\n";
+                                    }
+                                }
+                            } else {
+                                integ_dbg1<<"No.  Not start of zero train.\n";
+                                integ_dbg1<<"Just add this point as split point\n";
+                                _split_points.push_back(it->first);
+                            }
+                        }
+                    }
+                    previt = it;
+                }
+            }
+        }
 
         /**
          * @brief Add a split point to the current list to be used by the next subDivide call
@@ -252,32 +340,40 @@ namespace integ {
          * This is worth doing if you know about any discontinuities, zeros or poles 
          * in the function you are integrating.
          */
-        void addSplit(const T x) { splitpoints.push_back(x); }
+        void addSplit(const T x) { _split_points.push_back(x); }
 
         /// Get the number of split points currently set.
-        size_t getNSplit() const { return splitpoints.size(); }
+        size_t getNSplit() const { return _split_points.size(); }
 
         /// Get the left end of the region
-        const T& left() const { return a; }
+        const T& left() const { return _a; }
 
         /// Get the right end of the region
-        const T& right() const { return b; }
+        const T& right() const { return _b; }
 
         /// Get the current error estimate
-        const T& getErr() const { return error; }
+        const T& getErr() const { return _error; }
 
         /// Get the current estimate of the integral over the region
-        const T& getArea() const { return area; }
+        const T& getArea() const { return _area; }
 
         /// Set a new estimate of the area and error
-        void setArea(const T& a, const T& e) { area = a; error = e; }
+        void setArea(const T& a, const T& e) { _area = a; _error = e; }
+
+        /// Setup an fxmap for this region.
+        void useFXMap() 
+        { _fxmap_source.reset(new std::map<T,T>()); fxmap = _fxmap_source.get(); }
 
     private:
-        T a,b,error,area;
-        std::vector<T> splitpoints;
+        T _a,_b,_error,_area;
+        std::vector<T> _split_points;
 
     public:
         std::ostream* dbgout;
+        std::map<T,T>* fxmap;
+
+    private:
+        boost::shared_ptr<std::map<T,T> > _fxmap_source;
     };
 
     /// Rescale the error if int |f| dx or int |f-mean| dx are too large
@@ -326,8 +422,7 @@ namespace integ {
         const UF& func, ///< The function to integrate
         IntRegion<typename UF::result_type>& reg, ///< The region with the bounds
         const typename UF::result_type relerr,  ///< The target relative error
-        const typename UF::result_type abserr,  ///< The target absolute error
-        std::map<typename UF::result_type,typename UF::result_type>* fxmap=0 ///< Known results
+        const typename UF::result_type abserr  ///< The target absolute error
     )
     {
         typedef typename UF::result_type T;
@@ -338,27 +433,36 @@ namespace integ {
         const T abs_half_length = std::abs(half_length);
         const T center = 0.5 * (b + a);
         const T f_center = func(center);
+        if (reg.fxmap) (*reg.fxmap)[center] = f_center;
 #ifdef COUNTFEVAL
         nfeval++;
 #endif
+        const int nmax = 2*gkp_x<T>(NGKPLEVELS-1).size()-1;
+        static std::vector<T> fv1(nmax), fv2(nmax);
+
+        fv1.clear();
+        fv2.clear();
+        assert(fv1.size() == 0);
+        assert(fv2.size() == 0);
+        assert(int(fv1.capacity()) == nmax);
+        assert(int(fv2.capacity()) == nmax);
 
         assert(gkp_wb<T>(0).size() == gkp_x<T>(0).size()+1);
         T area1 = gkp_wb<T>(0).back() * f_center;
-        std::vector<T> fv1, fv2;
-        fv1.reserve(2*gkp_x<T>(0).size()+1);
-        fv2.reserve(2*gkp_x<T>(0).size()+1);
-        for (size_t k=0; k<gkp_x<T>(0).size(); k++) {
+        int n0 = gkp_x<T>(0).size();
+        for (int k=0; k<n0; k++) {
             const T abscissa = half_length * gkp_x<T>(0)[k];
             const T fval1 = func(center - abscissa);
             const T fval2 = func(center + abscissa);
             area1 += gkp_wb<T>(0)[k] * (fval1+fval2);
             fv1.push_back(fval1);
             fv2.push_back(fval2);
-            if (fxmap) {
-                (*fxmap)[center-abscissa] = fval1;
-                (*fxmap)[center+abscissa] = fval2;
+            if (reg.fxmap) {
+                (*reg.fxmap)[center-abscissa] = fval1;
+                (*reg.fxmap)[center+abscissa] = fval2;
             }
         }
+        area1 *= half_length;
 #ifdef COUNTFEVAL
         nfeval+=gkp_x<T>(0).size()*2;
 #endif
@@ -381,7 +485,8 @@ namespace integ {
                     int_abs += gkp_wa<T>(level)[k] *
                         (std::abs(fv1[k]) + std::abs(fv2[k]));
             }
-            for (size_t k=0; k<gkp_x<T>(level).size(); k++) {
+            int nl = gkp_x<T>(level).size();
+            for (int k=0; k<nl; k++) {
                 const T abscissa = half_length * gkp_x<T>(level)[k];
                 const T fval1 = func(center - abscissa);
                 const T fval2 = func(center + abscissa);
@@ -391,9 +496,9 @@ namespace integ {
                     int_abs += gkp_wb<T>(level)[k] * (std::abs(fval1) + std::abs(fval2));
                 fv1.push_back(fval1);
                 fv2.push_back(fval2);
-                if (fxmap) {
-                    (*fxmap)[center-abscissa] = fval1;
-                    (*fxmap)[center+abscissa] = fval2;
+                if (reg.fxmap) {
+                    (*reg.fxmap)[center-abscissa] = fval1;
+                    (*reg.fxmap)[center+abscissa] = fval2;
                 }
             }
 #ifdef COUNTFEVAL
@@ -420,6 +525,8 @@ namespace integ {
 
             integ_dbg2<<"at level "<<level<<" area2 = "<<area2;
             integ_dbg2<<" +- "<<err<<std::endl;
+            integ_dbg2<<"error was "<<std::abs(area2-area1)<<std::endl;
+            integ_dbg2<<"rescaled using int_abs = "<<int_abs<<", int_absdiff = "<<int_absdiff<<std::endl;
 
             //  Test for convergence.
             if (err < abserr || err < relerr * std::abs(area2)) {
@@ -429,11 +536,15 @@ namespace integ {
             }
             area1 = area2;
         }
+        assert(int(fv1.size()) == nmax);
+        assert(int(fv2.size()) == nmax);
 
         // Failed to converge.  Return with current estimate of area and error
         reg.setArea(area1,err);
 
-        integ_dbg2<<"Failed to reach tolerance with highest-order GKP rule";
+        integ_dbg2<<"Failed to reach tolerance with highest-order GKP rule\n";
+
+        if (reg.fxmap) reg.findZeroCrossings();
 
         return false;
     }
@@ -454,17 +565,12 @@ namespace integ {
      * which gave the largest absolute error until the integral converges.
      *
      * The area and estimated error are returned as reg.getArea() and reg.getErr()
-     *
-     * If desired, *fxmap returns a std::map of x,f(x) values that were calculated
-     * during the integration process.
      */
     template <class UF> 
     inline void intGKP(
         const UF& func, IntRegion<typename UF::result_type>& reg,
         const typename UF::result_type relerr,
-        const typename UF::result_type abserr,
-        std::map<typename UF::result_type,
-        typename UF::result_type>* fxmap=0)
+        const typename UF::result_type abserr)
     {
         typedef typename UF::result_type T;
         const T eps = std::numeric_limits<T>::epsilon();
@@ -474,16 +580,26 @@ namespace integ {
         assert(abserr >= 0.);
         assert(relerr > 0.);
 
+        // Check for early exit:
+        if (reg.left() == reg.right()) {
+            integ_dbg2<<"left == right, so integral is trivially 0.\n";
+            reg.setArea(0.,0.);
+            return;
+        }
+
         // Perform the first integration 
-        bool done = intGKPNA(func, reg, relerr, abserr, fxmap);
-        if (done) return;
+        bool done = intGKPNA(func, reg, relerr, abserr);
+        if (done) {
+            integ_dbg2<<"GKPNA suceeded, so we're done.\n";
+            return;
+        }
 
         integ_dbg2<<"In adaptive GKP, failed first pass... subdividing\n";
         integ_dbg2<<"Intial range = "<<reg.left()<<".."<<reg.right()<<std::endl;
 
         int roundoff_type1 = 0, error_type = 0;
         T roundoff_type2 = 0.;
-        size_t iteration = 1;
+        int iteration = 1;
 
         // Keep track of all subdivision in a priority_queue.  
         // The top() is always the largest value, and pop() removes it.
@@ -508,7 +624,7 @@ namespace integ {
             integ_dbg2<<"parent area = "<<parent.getArea();
             integ_dbg2<<" +- "<<parent.getErr()<<std::endl;
             std::vector<IntRegion<T> > children;
-            parent.subDivide(&children);
+            parent.subDivide(children);
             // For "GKP", there are only two, but for GKPOSC, there is one 
             // for each oscillation in region
 
@@ -663,14 +779,14 @@ namespace integ {
 
         integ_dbg2<<"start int1d: "<<reg.left()<<".."<<reg.right()<<std::endl;
 
-        if ((reg.left() <= -MOCK_INF && reg.right() > 0) ||
-            (reg.right() >= MOCK_INF && reg.left() < 0)) { 
+        if ((reg.left() <= -MOCK_INF2 && reg.right() > 0) ||
+            (reg.right() >= MOCK_INF2 && reg.left() < 0)) { 
             reg.addSplit(0);
         }
 
         if (reg.getNSplit() > 0) {
             std::vector<IntRegion<T> > children;
-            reg.subDivide(&children);
+            reg.subDivide(children);
             integ_dbg2<<"Subdivided into "<<children.size()<<" children\n";
             T answer=0;
             T err=0;
@@ -687,17 +803,19 @@ namespace integ {
             reg.setArea(answer,err);
             return answer;
         } else {
-            if (reg.left() <= -MOCK_INF) {
+            if (reg.left() <= -MOCK_INF2) {
                 integ_dbg2<<"left = -infinity, right = "<<
                     reg.right()<<std::endl;
                 assert(reg.right() <= 0.);
                 IntRegion<T> modreg(1./(reg.right()-1.),0.,reg.dbgout);
+                if (reg.fxmap) modreg.useFXMap();
                 intGKP(Aux2<UF>(func),modreg,relerr,abserr);
                 reg.setArea(modreg.getArea(),modreg.getErr());
-            } else if (reg.right() >= MOCK_INF) {
+            } else if (reg.right() >= MOCK_INF2) {
                 integ_dbg2<<"left = "<<reg.left()<<", right = infinity\n";
                 assert(reg.left() >= 0.);
                 IntRegion<T> modreg(0.,1./(reg.left()+1.),reg.dbgout);
+                if (reg.fxmap) modreg.useFXMap();
                 intGKP(Aux1<UF>(func),modreg,relerr,abserr);
                 reg.setArea(modreg.getArea(),modreg.getErr());
             } else {
