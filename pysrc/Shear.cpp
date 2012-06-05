@@ -33,6 +33,7 @@ struct PyShear {
             "But can get/set the ellipticity by two other measures:\n"
             "g is \"reduced shear\" such that g=(a-b)/(a+b)\n"
             "eta is \"conformal shear\" such that a/b = exp(eta).\n"
+            "The constructor takes g1/g2 (reduced shear) only.\n"
             "Beta is always the position angle of major axis.\n"
             "FIXME: what convention for position angle?\n"
             "\n"
@@ -46,8 +47,8 @@ struct PyShear {
             ;
             
 
-        bp::class_<Shear>("Shear", doc, bp::init<const Shear &>())
-            .def(bp::init<double,double>((bp::arg("e1")=0.,bp::arg("e2")=0.)))
+        bp::class_<Shear>("_Shear", doc, bp::init<const Shear &>())
+            .def(bp::init<double,double>((bp::arg("g1")=0.,bp::arg("g2")=0.)))
             .def("setE1E2", &Shear::setE1E2, (bp::arg("e1")=0.,bp::arg("e2")=0.),
                  bp::return_self<>())
             .def("setEBeta", &Shear::setEBeta, (bp::arg("e")=0.,bp::arg("beta")=0.),
@@ -116,14 +117,13 @@ struct PyEllipse {
             "E(x) = T(D(S(x))), where S=shear, D=dilation, T=translation.\n"
             "Conventions for order of compounding, etc., are same as for Shear.\n"
             ;
-        bp::class_<Ellipse>("Ellipse", doc, bp::init<const Ellipse &>())
+        bp::class_<Ellipse>("_Ellipse", doc, bp::init<const Ellipse &>())
             .def(
-                bp::init<double,double,double,double,double>(
-                    (bp::arg("e1")=0.,bp::arg("e2")=0.,bp::arg("mu")=0.,bp::arg("x")=0.,
-                     bp::arg("y")=0.)
-                )
+                 bp::init<const Shear &, double, const Position<double> &>(
+                     (bp::arg("s")=Shear(), bp::arg("mu")=0., 
+                      bp::arg("p")=Position<double>())
+                     )
             )
-            .def(bp::init<const Shear &, double, const Position<double> &>(bp::args("s", "mu", "p")))
             .def(-bp::self)
             .def(bp::self + bp::self)
             .def(bp::self - bp::self)
@@ -131,8 +131,6 @@ struct PyEllipse {
             .def(bp::self -= bp::self)
             .def(bp::self == bp::self)
             .def(bp::self != bp::self)
-            .def("reset", (void (Ellipse::*)(double,double,double,double,double))&Ellipse::reset,
-                 (bp::arg("e1")=0.,bp::arg("e2")=0.,bp::arg("m")=0.,bp::arg("x")=0.,bp::arg("y")=0.))
             .def("reset", (void (Ellipse::*)(const Shear &, double, const Position<double>))&Ellipse::reset,
                  bp::args("s", "mu", "p"))
             .def("fwd", &Ellipse::fwd, "FIXME: needs documentation!")

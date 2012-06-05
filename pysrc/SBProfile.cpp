@@ -160,7 +160,7 @@ struct PySBProfile {
             "Currently we have the following possible implementations of SBProfile:\n"
             "Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic\n"
             "SBLaguerre: Gauss-Laguerre expansion\n"
-            "SBDistort: affine transformation of another SBProfile\n"
+            "SBTransform: affine transformation of another SBProfile\n"
             "SBRotate: rotated version of another SBProfile\n"
             "SBAdd: sum of SBProfiles\n"
             "SBConvolve: convolution of other SBProfiles\n"
@@ -202,8 +202,8 @@ struct PySBProfile {
             .def("getFlux", &SBProfile::getFlux)
             .def("scaleFlux", &SBProfile::setFlux, bp::args("fluxRatio"))
             .def("setFlux", &SBProfile::setFlux, bp::args("flux"))
-            .def("distort", &SBProfile::distort, bp::args("e"))
-            .def("shear", &SBProfile::shear, bp::args("e1", "e2"))
+            .def("transform", &SBProfile::transform, bp::args("e"))
+            .def("shear", &SBProfile::shear, bp::args("g1", "g2"))
             .def("rotate", &SBProfile::rotate, bp::args("theta"))
             .def("shift", &SBProfile::shift, bp::args("dx", "dy"))
             .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
@@ -242,16 +242,16 @@ struct PySBAdd {
 
 };
 
-struct PySBDistort {
+struct PySBTransform {
 
     static void wrap() {
         static char const * doc = 
-            "SBDistort is an affine transformation of another SBProfile.\n"
+            "SBTransform is an affine transformation of another SBProfile.\n"
             "Origin of original shape will now appear at x0.\n"
             "Flux is NOT conserved in transformation - SB is preserved."
             ;
             
-        bp::class_< SBDistort, bp::bases<SBProfile> >("SBDistort", doc, bp::no_init)
+        bp::class_< SBTransform, bp::bases<SBProfile> >("SBTransform", doc, bp::no_init)
             .def(bp::init<const SBProfile &, double, double, double, double, Position<double>, double >(
                      (bp::args("sbin", "mA", "mB", "mC", "mD"),
                       bp::arg("x0")=Position<double>(0.,0.),
@@ -260,7 +260,7 @@ struct PySBDistort {
             .def(bp::init<const SBProfile &, const Ellipse &, double>(
                      (bp::arg("sbin"), bp::arg("e")=Ellipse(), bp::arg("fluxScaling")=1.)
                  ))
-            .def(bp::init<const SBDistort &>())
+            .def(bp::init<const SBTransform &>())
             ;
     }
 
@@ -511,7 +511,7 @@ struct PySBDeVaucouleurs {
 void pyExportSBProfile() {
     PySBProfile::wrap();
     PySBAdd::wrap();
-    PySBDistort::wrap();
+    PySBTransform::wrap();
     PySBConvolve::wrap();
     PySBDeconvolve::wrap();
     PySBGaussian::wrap();
