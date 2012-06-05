@@ -262,6 +262,9 @@ class Gaussian(GSObject):
         GSObject.__init__(self, galsim.SBGaussian(flux=flux, half_light_radius=half_light_radius, 
                                                   sigma=sigma, fwhm=fwhm))
 
+    def getHalfLightRadius(self):
+        return self.GSObject.getHalfLightRadius()
+
     # Hmmm, these Gaussian-specific methods do not appear to be wrapped yet (will add issue to 
     # myself for this)... when they are, uncomment below:
     # def getSigma(self):
@@ -274,14 +277,15 @@ class Gaussian(GSObject):
 class Moffat(GSObject):
     """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
-    def __init__(self, beta, truncationFWHM=0., flux=1.,
-                 half_light_radius=None, scale_radius=None, fwhm=None):
-        GSObject.__init__(self, galsim.SBMoffat(beta, truncationFWHM=truncationFWHM, flux=flux,
-                          half_light_radius=half_light_radius, scale_radius=scale_radius, fwhm=fwhm))
-    # As for the Gaussian currently only the base layer SBProfile methods are wrapped
-    # def getBeta(self):
-    #     return self.SBProfile.getBeta()
-    # ...etc.
+    def __init__(self, beta, flux=1., half_light_radius=None, scale_radius=None, fwhm=None,
+                 trunc=0.):
+        GSObject.__init__(self, galsim.SBMoffat(beta, flux=flux,
+                                                half_light_radius=half_light_radius,
+                                                scale_radius=scale_radius, fwhm=fwhm,
+                                                trunc=trunc))
+
+    def getHalfLightRadius(self):
+        return self.GSObject.getHalfLightRadius()
 
 
 class Sersic(GSObject):
@@ -289,7 +293,9 @@ class Sersic(GSObject):
     """
     def __init__(self, n, flux=1., half_light_radius=None):
         GSObject.__init__(self, galsim.SBSersic(n, flux=flux, half_light_radius=half_light_radius))
-    # Ditto!
+
+    def getHalfLightRadius(self):
+        return self.GSObject.getHalfLightRadius()
 
 
 class Exponential(GSObject):
@@ -298,7 +304,9 @@ class Exponential(GSObject):
     def __init__(self, flux=1., half_light_radius=None, scale_radius=None):
         GSObject.__init__(self, galsim.SBExponential(flux=flux, half_light_radius=half_light_radius,
                                                      scale_radius=scale_radius))
-    # Ditto!
+
+    def getHalfLightRadius(self):
+        return self.GSObject.getHalfLightRadius()
 
 
 class DeVaucouleurs(GSObject):
@@ -307,7 +315,9 @@ class DeVaucouleurs(GSObject):
     def __init__(self, flux=1., half_light_radius=None):
         GSObject.__init__(self, galsim.SBDeVaucouleurs(flux=flux, 
                                                        half_light_radius=half_light_radius))
-    # Ditto!
+
+    def getHalfLightRadius(self):
+        return self.GSObject.getHalfLightRadius()
 
 
 class Airy(GSObject):
@@ -315,8 +325,9 @@ class Airy(GSObject):
     """
     def __init__(self, D=1., obscuration=0., flux=1.):
         GSObject.__init__(self, galsim.SBAiry(D=D, obscuration=obscuration, flux=flux))
-    # Ditto!
 
+    def getHalfLightRadius(self):
+        return self.GSObject.getHalfLightRadius()
 
 class Pixel(GSObject):
     """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
@@ -325,7 +336,11 @@ class Pixel(GSObject):
         if yw is None:
             yw = xw
         GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
-    # Ditto!
+
+    def getHalfLightRadius(self):
+        return NotImplementedError("All the light within a Pixel is contained within its borders. "
+                                   +"Try the Pixel.getXWidth() and Pixel.getYWidth() methods.")
+
 
 class OpticalPSF(GSObject):
     """@brief Class describing aberrated PSFs due to telescope optics.
@@ -395,6 +410,9 @@ class OpticalPSF(GSObject):
             self.Interpolant2D = interpolantxy
         GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D,
                                                            dx=dx_lookup))
+    def getHalfLightRadius(self):
+        return NotImplementedError("Half light radius calculation not implemented for OpticalPSF "
+                                   +"objects.")
 
 
 class RealGalaxy(GSObject):
@@ -490,6 +508,10 @@ class RealGalaxy(GSObject):
 
         GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
 
+def getHalfLightRadius(self):
+        return NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
+                                   +"objects.")
+
 class Add(GSObject):
     """@brief Base class for defining the python interface to the SBAdd C++ class.
     """
@@ -520,6 +542,8 @@ class Add(GSObject):
     def add(self, obj, scale=1.):
         self.SBProfile.add(obj.SBProfile, scale)
 
+    def getHalfLightRadius(self):
+        return NotImplementedError("Half light radius calculation not implemented for Add objects.")
 
 class Convolve(GSObject):
     """@brief A class for convolving 2 or more GSObjects.
@@ -645,12 +669,20 @@ class Convolve(GSObject):
     def add(self, obj):
         self.SBProfile.add(obj.SBProfile)
 
+    def getHalfLightRadius(self):
+        return NotImplementedError("Half light radius calculation not implemented for Convolve "+
+                                   "objects.")
+
 class Deconvolve(GSObject):
     """@brief Base class for defining the python interface to the SBDeconvolve C++ class.
     """
     def __init__(self, farg):
         # the single argument should be one of our base classes
         GSObject.__init__(self, galsim.SBDeconvolve(farg.SBProfile))
+
+    def getHalfLightRadius(self):
+        return NotImplementedError("Half light radius calculation not implemented for Deconvolve "+
+                                   "objects.")
 
 
 # Now we define a dictionary containing all the GSobject subclass names as keys, referencing a
