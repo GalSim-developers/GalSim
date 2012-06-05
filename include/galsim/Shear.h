@@ -26,16 +26,39 @@
 
 namespace galsim {
 
+    /**
+     * @brief A base class representing shears.
+     *
+     * The purpose of this C++ class is to represent both deviations from roundness due to galaxy
+     * intrinsic shapes, and due to lensing shears.  Given semi-major and semi-minor axis lengths
+     * "a" and "b", there are numerous ways to represent shears:
+     *
+     * eta = "conformal shear", a/b = exp(eta)
+     * g = "reduced shear", g=(a-b)/(a+b)
+     * e = "distortion", e=(a^2-b^2)/(a^2+b^2)
+     * q = "axis ratio", q=b/a
+     * To specify both components, we have a value Beta that is the position angle of the major
+     * axis.
+     *
+     * Shears are represented internally by e1 and e2, which relate to second moments via
+     * e1 = (Mxx - Myy) / (Mxx + Myy)
+     * e2 = 2 Mxy / (Mxx + Myy)
+     * however, given that lensing specialists most commonly think in terms of reduced shear, the
+     * constructor that takes two numbers expects (g1, g2).  A user who wishes to specify another
+     * type of shape should use methods, i.e.
+     *     s = Shear();
+     *     s.setE1E2(my_e1, my_e2);
+     */
+
     class Shear 
     {
         friend Shear operator*(const double, const Shear& );
 
     public:
         // Construct w/o variance
-        explicit Shear(double _e1=0., double _e2=0.) : 
-            e1(_e1),e2(_e2), hasMatrix(false),
-            matrixA(0), matrixB(0), matrixC(0)
-        {} 
+        explicit Shear(double g1=0., double g2=0.) :
+            hasMatrix(false), matrixA(0), matrixB(0), matrixC(0)
+                { setG1G2(g1, g2); }
 
         Shear(const Shear& rhs) :
             e1(rhs.e1), e2(rhs.e2), hasMatrix(rhs.hasMatrix),
@@ -76,7 +99,11 @@ namespace galsim {
 
         //negation
         Shear operator-() const 
-        { return Shear(-e1,-e2); }
+        {
+            double e=getE();
+            return e>0. ? Shear(-e1*getG()/getE(), -e2*getG()/getE()) : Shear(0.0, 0.0);
+            return Shear(-e1,-e2);
+        }
 
         // Composition operation: returns ellipticity of
         // circle that is sheared first by RHS and then by
@@ -162,8 +189,11 @@ namespace galsim {
     public:
         explicit Ellipse(
             double e1=0., double e2=0., double _m=0., 
-            double _x=0., double _y=0.) : s(e1,e2), mu(_m), x0(_x,_y) 
-        { expmu=std::exp(mu); }
+            double _x=0., double _y=0.) : mu(_m), x0(_x,_y)
+        {
+            expmu=std::exp(mu);
+            s.setE1E2(e1, e2);
+        }
 
         Ellipse(const Shear& _s, double _mu, const Position<double> _p) :
             s(_s), mu(_mu), x0(_p) 
