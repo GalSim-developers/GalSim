@@ -70,8 +70,8 @@ def test_AtmosphericPSF_flux():
         apsf = galsim.AtmosphericPSF(lam_over_r0=lor)
         np.testing.assert_almost_equal(apsf.getFlux(), 1., 6, 
                                        err_msg="Flux of atmospheric PSF (ImageViewD) is not 1.")
-        # .draw() throws a warning if it doesn't get a float. This
-        # includes np.float64. Convert to have the test pass.
+        # .draw() throws a warning if it doesn't get a float. This includes np.float64. Convert to
+        # have the test pass.
         dx = float(lor / 10.)
         img_array = apsf.draw(dx=dx).array
         np.testing.assert_almost_equal(img_array.sum() * dx**2, 1., 3,
@@ -83,16 +83,17 @@ def test_AtmosphericPSF_fwhm():
     lors = np.linspace(0.5, 2., 5) # Different lambda_over_r0 values
     for lor in lors:
         apsf = galsim.AtmosphericPSF(lam_over_r0=lor)
-        # .draw() throws a warning if it doesn't get a float. This
-        # includes np.float64. Convert to have the test pass.
-        dx = float(lor / 10.)
+        # .draw() throws a warning if it doesn't get a float. This includes np.float64. Convert to
+        # have the test pass.
+        dx_scale = 10
+        dx = float(lor / dx_scale)
         psf_array = apsf.draw(dx=dx).array
         nx, ny = psf_array.shape
         profile = psf_array[nx / 2, ny / 2:]
         # Now get the last array index where the profile value exceeds half the peak value as a 
         # rough estimator of the HWHM.
         hwhm_index = np.where(profile > profile.max() / 2.)[0][-1]
-        np.testing.assert_equal(hwhm_index, 5, 
+        np.testing.assert_equal(hwhm_index, dx_scale / 2, 
                                 err_msg="Kolmogorov PSF does not have the expected FWHM.")
         
 if __name__ == "__main__":
