@@ -26,48 +26,87 @@ namespace galsim {
      * gain<=0 will shut off the Poisson noise, and Gaussian value will just have value 
      * RMS=readNoise.
      */
-    class CCDNoise {
-    private: 
-        double _gain;    // flux corresponding to one photon
-        double _readNoise; // std. dev. of uniform Gaussian noise (when divided by _gain).
-        UniformDeviate& _ud;
-        // Gaussian and Poisson deviates will use common uniform deviate generator
-        GaussianDeviate _gd;
-        PoissonDeviate _pd;
+    class CCDNoise : public BaseDeviate
+    {
     public:
-         /**
-         * @brief Construct a new noise model
+        /**
+         * @brief Construct a new noise model, using time of day as seed.
          *
-         * @param[in] ud UniformDeviate that will be called to generate all randoms
-         * @param[in] gain Electrons per ADU in the input Images, used for Poisson noise.
+         * @param[in] gain      Electrons per ADU in the input Images, used for Poisson noise.
          * @param[in] readNoise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
          */
-       CCDNoise(UniformDeviate& ud, double gain=1., double readNoise=0.):
+        CCDNoise(double gain=1., double readNoise=0.):
             _gain(gain),
             _readNoise(readNoise),
-            _ud(ud), 
-            _gd(_ud, 0., 1.),
-            _pd(_ud) {
+            _gd(0., 1.),
+            _pd(_gd) 
+        {
             if (_readNoise > 0.) _gd.setSigma( _readNoise / (_gain > 0. ? _gain : 1.));
         }
+ 
+        /**
+         * @brief Construct a new noise model, using the provided value as seed.
+         *
+         * @param[in] lseed     Seed to use
+         * @param[in] gain      Electrons per ADU in the input Images, used for Poisson noise.
+         * @param[in] readNoise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
+         */
+        CCDNoise(long lseed, double gain=1., double readNoise=0.):
+            _gain(gain),
+            _readNoise(readNoise),
+            _gd(lseed, 0., 1.),
+            _pd(_gd) 
+        {
+            if (_readNoise > 0.) _gd.setSigma( _readNoise / (_gain > 0. ? _gain : 1.));
+        }
+ 
+        /**
+         * @brief Construct a new noise model, sharing the random number generator with rhs.
+         *
+         * @param[in] rhs       Other deviate with which to share the RNG
+         * @param[in] gain      Electrons per ADU in the input Images, used for Poisson noise.
+         * @param[in] readNoise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
+         */
+        CCDNoise(const BaseDeviate& dev, double gain=1., double readNoise=0.):
+            _gain(gain),
+            _readNoise(readNoise),
+            _gd(dev, 0., 1.),
+            _pd(dev) 
+        {
+            if (_readNoise > 0.) _gd.setSigma( _readNoise / (_gain > 0. ? _gain : 1.));
+        }
+
+        /**
+         * @brief Construct a copy that shares the RNG with rhs.
+         *
+         * Note: the default constructed op= function will do the same thing.
+         */
+        CCDNoise(const CCDNoise& rhs) : 
+            BaseDeviate(rhs), _gain(rhs._gain), _readNoise(rhs._readNoise),
+            _gd(rhs._gd), _pd(rhs._pd) {}
+ 
+
         /**
          * @brief Report current gain value
          *
          * @return Gain value (e/ADU)
          */
-        double getGain() const {return _gain;}
+        double getGain() const { return _gain; }
+
         /**
          * @brief Report current read noise
          *
          * @return Read noise value (e, if gain>0, else in ADU)
          */
-        double getReadNoise() const {return _readNoise;}
+        double getReadNoise() const { return _readNoise; }
+
         /**
          * @brief Set gain value
          *
          * @param[in] gain Gain value (e/ADU)
          */
-        void setGain(double gain) {
+        void setGain(double gain) 
+        {
             _gain = gain;
             if (_readNoise > 0.) _gd.setSigma( _readNoise / (_gain > 0. ? _gain : 1.));
         }
@@ -76,7 +115,8 @@ namespace galsim {
          *
          * @param[in] readNoise Read noise value (e, if gain>0, else in ADU)
          */
-        void setReadNoise(double readNoise) {
+        void setReadNoise(double readNoise) 
+        {
             _readNoise = readNoise;
             if (_readNoise > 0.) _gd.setSigma( _readNoise / (_gain > 0. ? _gain : 1.));
         }
@@ -157,7 +197,15 @@ namespace galsim {
             // then call noise method to instantiate noise
             (*this).applyTo(data);
         }
+
+    private: 
+        double _gain;    // flux corresponding to one photon
+        double _readNoise; // std. dev. of uniform Gaussian noise (when divided by _gain).
+
+        GaussianDeviate _gd;
+        PoissonDeviate _pd;
     };
+
 };  // namespace galsim
 
 #endif
