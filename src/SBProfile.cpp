@@ -39,9 +39,8 @@ namespace galsim {
     { return SBTransform(*this,e); }
 
     SBTransform SBProfile::shear(double g1, double g2) const {
-        s = Shear(g1, g2);
-        e = Ellipse();
-        e.setS(s);
+        Shear s = Shear(g1, g2);
+        Ellipse e = Ellipse(s, 0.0, Position<double>());
         return transform(e);
     }
 

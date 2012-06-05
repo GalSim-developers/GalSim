@@ -293,7 +293,7 @@ namespace galsim {
                     if (args.size()!=1
                         || !isNumber((*ia)->print(),f))
                         throw SBError("SBParse: bad arguments for dilation: " + args.print());
-                    Ellipse e(Shear(0.0, 0.0), std::log(f), Position(0.0, 0.0));
+                    Ellipse e(Shear(), std::log(f), Position<double>());
                     dbg << "** Leaving SBParse after dilating by " << f << std::endl;
                     return base.transform(e);
                 } else if (TranslateOp::test(i)) {

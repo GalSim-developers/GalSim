@@ -975,7 +975,9 @@ namespace galsim {
          * @param[in] sbin SBProfile being transformed
          * @param[in] e  Ellipse.
          */
-        SBTransform(const SBProfile& sbin, const Ellipse& e=Ellipse(), double fluxScaling=1.) :
+        SBTransform(const SBProfile& sbin,
+                    const Ellipse& e=Ellipse(Shear(), 0.0, Position<double>()),
+                    double fluxScaling=1.) :
             SBProfile(new SBTransformImpl(sbin,e,fluxScaling)) {}
 
         /// @brief Copy constructor
