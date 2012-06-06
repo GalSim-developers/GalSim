@@ -15,6 +15,20 @@
 #ifdef DEBUGLOGGING
 std::ostream* dbgout = new std::ofstream("debug.out");
 int verbose_level = 2;
+// There are three levels of verbosity which can be helpful when debugging,
+// which are written as dbg, xdbg, xxdbg (all defined in Std.h).
+// It's Mike's way to have debug statements in the code that are really easy to turn 
+// on and off.
+//
+// If DEBUGLOGGING is #defined, then these write out to *dbgout, according to the value
+// of verbose_level.
+// dbg requires verbose_level >= 1
+// xdbg requires verbose_level >= 2
+// xxdbg requires verbose_level >= 3
+//
+// If DEBUGLOGGING is not defined, the all three becomes just `if (false) std::cerr`,
+// so the compiler parses the statement fine, but trivially optimizes the code away,
+// so there is no efficiency hit from leaving them in the code.
 #endif
 
 #include <numeric>
@@ -120,9 +134,6 @@ namespace galsim {
             I.setOrigin(-xSize/2, -ySize/2);
         }
 
-        // TODO: If we decide not to keep the scale, then can switch to simply:
-        // return fillXImage(I.view(), dx);
-        // (And switch fillXImage to take a const ImageView<T>& argument.)
         ImageView<T> Iv = I.view();
         double ret = fillXImage(Iv, dx);
         I.setScale(Iv.getScale());
@@ -169,6 +180,7 @@ namespace galsim {
 
         // Now decide how big the FT must be to avoid folding:
         double xRange = 2*M_PI*wmult / stepK();
+        // Some slop to keep from getting extra pixels due to roundoff errors in calculations.
         int Nnofold = int(std::ceil(xRange / dx -0.0001));
         dbg << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
 
@@ -260,6 +272,7 @@ namespace galsim {
 
         // Now decide how big the FT must be to avoid folding:
         double xRange = 2*M_PI*wmult / stepK();
+        // Some slop to keep from getting extra pixels due to roundoff errors in calculations.
         int Nnofold = int(std::ceil(xRange / dx -0.0001));
         dbg << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
 
@@ -460,6 +473,7 @@ namespace galsim {
 
         // Now decide how big the FT must be to avoid folding
         double kRange = 2*maxK()*wmult;
+        // Some slop to keep from getting extra pixels due to roundoff errors in calculations.
         int Nnofold = int(std::ceil(oversamp*kRange / dk -0.0001));
 
         // And if there is a target image size, we must make something big enough to cover
@@ -536,6 +550,7 @@ namespace galsim {
 
         // Now decide how big the FT must be to avoid folding
         double kRange = 2*maxK()*wmult;
+        // Some slop to keep from getting extra pixels due to roundoff errors in calculations.
         int Nnofold = int(std::ceil(oversamp*kRange / dk -0.0001));
 
         // And if there is a target image size, we must make something big enough to cover
@@ -1452,7 +1467,7 @@ namespace galsim {
         _flux(flux), _sigma(sigma), _sigma_sq(sigma*sigma)
     {
         // For large k, we clip the result of kValue to 0.
-        // We do this when the correct anser is less than kvalue_accuracy.
+        // We do this when the correct answer is less than kvalue_accuracy.
         // exp(-k^2*sigma^2/2) = kvalue_accuracy
         _ksq_max = -2. * std::log(sbp::kvalue_accuracy) / _sigma_sq;
 
@@ -1519,7 +1534,7 @@ namespace galsim {
         _flux(flux), _r0(r0), _r0_sq(r0*r0)
     {
         // For large k, we clip the result of kValue to 0.
-        // We do this when the correct anser is less than kvalue_accuracy.
+        // We do this when the correct answer is less than kvalue_accuracy.
         // (1+k^2 r0^2)^-1.5 = kvalue_accuracy
         _ksq_max = (std::pow(sbp::kvalue_accuracy,-1./1.5)-1.) / _r0_sq;
 
@@ -1599,6 +1614,8 @@ namespace galsim {
     {
         double nu = radius*M_PI;
         double xval;
+        // TODO: Check this limit.  Should use kvalue_accuracy?  
+        // (Not in k space, though, so maybe need a new xvalue_accuracy...)
         if (nu<0.01) {
             // lim j1(u)/u = 1/2
             xval =  (1.-_obscuration*_obscuration);
@@ -1608,6 +1625,8 @@ namespace galsim {
         }
         xval*=xval;
         // Normalize to give unit flux integrated over area.
+        // TODO: Save this as _norm, so this can become xval *= _norm;
+        // i.e. _norm = M_PI / (4.*(1.-_obscuration*_obscuration))
         xval /= (1-_obscuration*_obscuration)*4./M_PI;
         return xval;
     }
@@ -2459,7 +2478,7 @@ namespace galsim {
         for (int i=0; i<N; i++) {
             double y = u();
             if (y==0.) {
-                // Runt case of infinite radius - just set to origin:
+                // In case of infinite radius - just set to origin:
                 result.setPhoton(i,0.,0.,fluxPerPhoton);
                 continue;
             }
@@ -2508,6 +2527,7 @@ namespace galsim {
         // TODO: Is alias_threshold appropriate for photon shooting?  
         //       Should we introduce another parameter that might work similarly
         //       and try to be consistent across all profiles?
+        //       Or maybe the same new xvalue_accuracy I proposed above.
         double maximumRadius = 2./(sbp::alias_threshold * M_PI*M_PI * (1-_obscuration));
         while (xmin < maximumRadius) {
             ranges.push_back(xmin);
