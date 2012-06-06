@@ -139,10 +139,10 @@ namespace galsim {
 
     template <typename T>
     SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<T>& img, 
+        const BaseImage<T>& image, 
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double dx, double padFactor) : 
-        _multi(img,dx,padFactor), _wts(1,1.), _xInterp(xInterp), _kInterp(kInterp),
+        _multi(image,dx,padFactor), _wts(1,1.), _xInterp(xInterp), _kInterp(kInterp),
         _readyToShoot(false)
     { initialize(); }
 
@@ -399,16 +399,16 @@ namespace galsim {
         const BaseImage<short>& image, double dx, double padFactor);
 
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<float>& img, boost::shared_ptr<Interpolant2d> xInterp,
+        const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<double>& img, boost::shared_ptr<Interpolant2d> xInterp,
+        const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<int>& img, boost::shared_ptr<Interpolant2d> xInterp,
+        const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<short>& img, boost::shared_ptr<Interpolant2d> xInterp,
+        const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
 
     template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(

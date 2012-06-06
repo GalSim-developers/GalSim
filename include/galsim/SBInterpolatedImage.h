@@ -64,7 +64,7 @@ namespace galsim {
         /** 
          * @brief Convenience constructor that only takes a single image.
          *
-         * @param[in] img       Single input image
+         * @param[in] image     Single input image
          * @param[in] dx        Stepsize between pixels in image data table (default value of 
          *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
          *                      to `1.` if none is found). 
@@ -179,7 +179,7 @@ namespace galsim {
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
          * image.
          *
-         * @param[in] img       Input Image (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] image     Input Image (any of ImageF, ImageD, ImageS, ImageI).
          * @param[in] xInterp   Interpolation scheme to adopt between pixels 
          * @param[in] kInterp   Interpolation scheme to adopt in k-space
          * @param[in] dx        Stepsize between pixels in image data table (default value of 
@@ -190,11 +190,11 @@ namespace galsim {
          */
         template <typename T> 
         SBInterpolatedImage(
-            const BaseImage<T>& img, 
+            const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
             boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
             double dx=0., double padFactor=0.) :
-            SBProfile(new SBInterpolatedImageImpl(img,xInterp,kInterp,dx,padFactor)) {}
+            SBProfile(new SBInterpolatedImageImpl(image,xInterp,kInterp,dx,padFactor)) {}
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
@@ -226,7 +226,7 @@ namespace galsim {
     public:
         template <typename T> 
         SBInterpolatedImageImpl(
-            const BaseImage<T>& img, 
+            const BaseImage<T>& image, 
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
             double dx, double padFactor);

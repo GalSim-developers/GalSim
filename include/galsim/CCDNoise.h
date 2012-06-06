@@ -61,9 +61,9 @@ namespace galsim {
         }
  
         /**
-         * @brief Construct a new noise model, sharing the random number generator with rhs.
+         * @brief Construct a new noise model, sharing the random number generator with dev.
          *
-         * @param[in] rhs       Other deviate with which to share the RNG
+         * @param[in] dev       Other deviate with which to share the RNG
          * @param[in] gain      Electrons per ADU in the input Images, used for Poisson noise.
          * @param[in] readNoise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
          */

@@ -972,6 +972,7 @@ namespace galsim {
          *
          * @param[in] sbin SBProfile being distorted.
          * @param[in] e  Ellipse.
+         * @param[in] fluxScaling Amount by which the flux should be multiplied.
          */
         SBDistort(const SBProfile& sbin, const Ellipse& e=Ellipse(), double fluxScaling=1.) : 
             SBProfile(new SBDistortImpl(sbin,e,fluxScaling)) {}
