@@ -141,12 +141,17 @@ def do_shoot(prof, img, dx, name):
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
 
+def funcname():
+    import inspect
+    return inspect.stack()[1][3]
 
 # define a series of tests
 
 def test_sbprofile_gaussian():
     """Test the generation of a specific Gaussian profile using SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -163,11 +168,15 @@ def test_sbprofile_gaussian():
 
     # Test photon shooting.
     do_shoot(gauss,myImg,0.2,"Gaussian")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_gaussian_properties():
     """Test some basic properties of the SBGaussian profile.
     """
+    import time
+    t1 = time.time()
     psf = galsim.SBGaussian(flux=1, sigma=1)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
@@ -182,10 +191,16 @@ def test_sbprofile_gaussian_properties():
         outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.15915494309189535)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_gaussian_radii():
     """Test initialization of Gaussian with different types of radius specification.
     """
+    import time
+    t1 = time.time()
+    import time
+    t1 = time.time()
     # first test half-light-radius
     my_test_dx = test_dx
     my_prev_ratio = init_ratio
@@ -228,10 +243,14 @@ def test_gaussian_radii():
         my_test_dx /= 2.0
     np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
             err_msg="Error in Gaussian constructor with FWHM")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sbprofile_exponential():
     """Test the generation of a specific exp profile using SBProfile against a known result. 
     """
+    import time
+    t1 = time.time()
     re = 1.0
     r0 = re/1.67839
     mySBP = galsim.SBExponential(flux=1., scale_radius=r0)
@@ -250,11 +269,15 @@ def test_sbprofile_exponential():
 
     # Test photon shooting.
     do_shoot(expon,myImg,0.2,"Exponential")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_exponential_radii():
     """Test initialization of Exponential with different types of radius specification.
     """
+    import time
+    t1 = time.time()
     # first test half-light-radius
     my_test_dx = test_dx
     my_prev_ratio = init_ratio
@@ -283,10 +306,14 @@ def test_exponential_radii():
         my_test_dx /= 2.0
     np.testing.assert_almost_equal(my_ratio, np.exp(-1.0), decimal = 2,
             err_msg="Error in Exponential constructor with scale radius")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sbprofile_sersic():
     """Test the generation of a specific Sersic profile using SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -305,11 +332,15 @@ def test_sbprofile_sersic():
     # Convolve with a small gaussian to smooth out the central peak.
     sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
     do_shoot(sersic2,myImg,0.2,"Sersic")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sersic_radii():
     """Test initialization of Sersic with different types of radius specification.
     """
+    import time
+    t1 = time.time()
     # test half-light-radius
     for sersicn in test_sersic_n:
         my_test_dx = test_dx
@@ -325,10 +356,14 @@ def test_sersic_radii():
             my_test_dx /= 2.0
         np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
                 err_msg="Error in Sersic constructor with half-light radius")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sbprofile_airy():
     """Test the generation of a specific Airy profile using SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBAiry(D=0.8, obscuration=0.1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -345,11 +380,15 @@ def test_sbprofile_airy():
 
     # Test photon shooting.
     do_shoot(airy,myImg,0.2,"Airy")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_box():
     """Test the generation of a specific box profile using SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBBox(xw=1, yw=1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -366,11 +405,15 @@ def test_sbprofile_box():
 
     # Test photon shooting.
     do_shoot(pixel,myImg,0.2,"Pixel")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_moffat():
     """Test the generation of a specific Moffat profile using SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBMoffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -387,11 +430,15 @@ def test_sbprofile_moffat():
 
     # Test photon shooting.
     do_shoot(moffat,myImg,0.2,"Moffat")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_moffat_properties():
     """Test some basic properties of the SBMoffat profile.
     """
+    import time
+    t1 = time.time()
     psf = galsim.SBMoffat(beta=2.0, truncationFWHM=2, flux=1.8, half_light_radius=1)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
@@ -406,10 +453,14 @@ def test_sbprofile_moffat_properties():
         outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_moffat_radii():
     """Test initialization of Moffat with different types of radius specification.
     """
+    import time
+    t1 = time.time()
     test_beta = 2.
     # first test half-light-radius
     my_test_dx = test_dx
@@ -428,10 +479,14 @@ def test_moffat_radii():
             err_msg="Error in Moffat constructor with half-light radius")
     # then test scale -- later!  this method takes too long
     # then test FWHM -- later!  this method takes too long
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sbprofile_smallshear():
     """Test the application of a small shear to a Gaussian SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     e1 = 0.02
     e2 = 0.02
@@ -461,11 +516,15 @@ def test_sbprofile_smallshear():
  
     # Test photon shooting.
     do_shoot(gauss,myImg,0.2,"sheared Gaussian")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_largeshear():
     """Test the application of a large shear to a Sersic SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
     e1 = 0.0
     e2 = 0.5
@@ -495,11 +554,15 @@ def test_sbprofile_largeshear():
     # Convolve with a small gaussian to smooth out the central peak.
     devauc2 = galsim.Convolve(devauc, galsim.Gaussian(sigma=0.3))
     do_shoot(devauc2,myImg,0.2,"sheared DeVauc")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
  
 def test_sbprofile_convolve():
     """Test the convolution of a Moffat and a Box SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve(mySBP)
@@ -542,11 +605,15 @@ def test_sbprofile_convolve():
  
     # Test photon shooting.
     do_shoot(conv,myImg,0.2,"Moffat * Pixel")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_shearconvolve():
     """Test the convolution of a sheared Gaussian and a Box SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     e1 = 0.04
     e2 = 0.0
@@ -592,11 +659,15 @@ def test_sbprofile_shearconvolve():
  
     # Test photon shooting.
     do_shoot(conv,myImg,0.2,"sheared Gaussian * Pixel")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_realspace_convolve():
     """Test the real-space convolution of a Moffat and a Box SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     psf = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.SBConvolve(psf,real_space=True)
@@ -643,6 +714,8 @@ def test_sbprofile_realspace_convolve():
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
  
 
 def test_sbprofile_realspace_distorted_convolve():
@@ -651,6 +724,8 @@ def test_sbprofile_realspace_distorted_convolve():
     to stress test the code that deals with this for real-space convolutions that wouldn't
     be tested otherwise.
     """
+    import time
+    t1 = time.time()
     psf = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     psf_shear = galsim.Shear()
     psf_shear.setG1G2(0.11,0.17)
@@ -713,11 +788,15 @@ def test_sbprofile_realspace_distorted_convolve():
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using Convolve([pixel,psf]) (distorted) disagrees with expected result")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
  
 def test_sbprofile_realspace_shearconvolve():
     """Test the real-space convolution of a sheared Gaussian and a Box SBProfile against a 
        known result.
     """
+    import time
+    t1 = time.time()
     psf = galsim.SBGaussian(flux=1, sigma=1)
     e1 = 0.04
     e2 = 0.0
@@ -767,10 +846,14 @@ def test_sbprofile_realspace_shearconvolve():
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sbprofile_rotate():
     """Test the 45 degree rotation of a sheared Sersic profile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBSersic(n=2.5, flux=1, half_light_radius=1)
     mySBP_shear = mySBP.shear(0.2, 0.0)
     mySBP_shear_rotate = mySBP_shear.rotate(45.0 * galsim.degrees)
@@ -793,11 +876,15 @@ def test_sbprofile_rotate():
     # Convolve with a small gaussian to smooth out the central peak.
     gal2 = galsim.Convolve(gal, galsim.Gaussian(sigma=0.3))
     do_shoot(gal2,myImg,0.2,"rotated sheared Sersic")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_mag():
     """Test the magnification (size x 1.5) of an exponential profile against a known result.
     """
+    import time
+    t1 = time.time()
     re = 1.0
     r0 = re/1.67839
     mySBP = galsim.SBExponential(flux=1, scale_radius=r0)
@@ -819,11 +906,15 @@ def test_sbprofile_mag():
  
     # Test photon shooting.
     do_shoot(gal,myImg,0.2,"dilated Exponential")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_add():
     """Test the addition of two rescaled Gaussian profiles against a known double Gaussian result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBGaussian(flux=0.75, sigma=1)
     mySBP2 = galsim.SBGaussian(flux=0.25, sigma=3)
     myAdd = galsim.SBAdd(mySBP, mySBP2)
@@ -887,11 +978,15 @@ def test_sbprofile_add():
  
     # Test photon shooting.
     do_shoot(sum,myImg,0.2,"sum of 2 Gaussians")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_shift():
     """Test the translation of a Box profile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBBox(xw=0.2, yw=0.2, flux=1)
     mySBP_shift = mySBP.shift(0.2, -0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_shift.fits"))
@@ -917,11 +1012,15 @@ def test_sbprofile_shift():
     gauss.applyShift(0.4,-0.3)
     myImg = gauss.draw(dx=0.2)
     do_shoot(gauss,myImg,0.2,"shifted Gaussian")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_rescale():
     """Test the flux rescaling of a Sersic profile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     mySBP.setFlux(2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_doubleflux.fits"))
@@ -959,11 +1058,15 @@ def test_sbprofile_rescale():
     # Convolve with a small gaussian to smooth out the central peak.
     sersic3 = galsim.Convolve(sersic2, galsim.Gaussian(sigma=0.3))
     do_shoot(sersic3,myImg,0.2,"scaled Sersic")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_sbinterpolatedimage():
     """Test that we can make SBInterpolatedImages from Images of various types, and convert back.
     """
+    import time
+    t1 = time.time()
     # for each type, try to make an SBInterpolatedImage, and check that when we draw an image from
     # that SBInterpolatedImage that it is the same as the original
     l3 = galsim.Lanczos(3, True, 1.0E-4)
@@ -1004,6 +1107,8 @@ def test_sbprofile_sbinterpolatedimage():
         np.testing.assert_array_almost_equal(
                 image_comp.array, image_out.array, photon_decimal_test,
                 err_msg="Photon shooting for interpolated image disagrees with expected result")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 
