@@ -30,10 +30,6 @@
 // considering that jx<0 must be conjugated.
 //
 // *"forward" transform, x->k, has -1 in exponent.
-//
-// *value in the table must be multiplied by "scaleby" double to get
-// the correctly dimensioned/scaled value.  Done automatically when getting/setting.  You'll get
-// NaN's on some operations if scaleby becomes zero.
 
 #ifndef FFT_H
 #define FFT_H
@@ -46,7 +42,13 @@
 #include "Std.h"
 #include "Interpolant.h"
 
+    // Define this to get extra debugging checks in the FFT routines.
+    // Since these routines are not available to the end user, once code is working
+    // it should be ok to turn these off for some modest speed up.
+//#define FFT_DEBUG
+
 namespace galsim {
+
 
     // Class for errors
     class FFTError : public std::runtime_error 
@@ -97,16 +99,16 @@ namespace galsim {
     public:
         KTable(int _N, double _dk, std::complex<double> _value=0.);
 
-        KTable(const KTable& rhs) : array(0), N(rhs.N), dk(rhs.dk), scaleby(rhs.scaleby) 
+        KTable(const KTable& rhs) : array(0), N(rhs.N), dk(rhs.dk)
         { copy_array(rhs); }
 
-        KTable() : array(0), N(0), dk(0), scaleby(0) {} // dummy constructor
+        KTable() : array(0), N(0), dk(0) {} // dummy constructor
 
         KTable& operator=(const KTable& rhs) 
         {
             if (&rhs==this) return *this;
             copy_array(rhs);
-            N=rhs.N; dk=rhs.dk; scaleby=rhs.scaleby;
+            N=rhs.N; dk=rhs.dk; 
             return *this;
         }
         
@@ -126,18 +128,27 @@ namespace galsim {
         // Data access methods:
         // return value at grid point ix,iy (k = (ix*dk, iy*dk))
         std::complex<double> kval(int ix, int iy) const; 
+        std::complex<double> kval2(int ix, int iy) const 
+        { return array[index2(ix,iy)]; }
 
         // interpolate to k=(kx, ky) - WILL wrap k values to fill interpolant kernel
         std::complex<double> interpolate(double kx, double ky, const Interpolant2d& interp) const;
 
         void kSet(int ix, int iy, std::complex<double> value);
+        void kSet2(int ix, int iy, std::complex<double> value)
+        { array[index2(ix,iy)]=value; }
 
         void clear();  // Set all values to zero
+        void clearCache() const 
+        {
+            cache.clear(); 
+            xwt.clear();
+        }
 
         void accumulate(const KTable& rhs, double scalar=1.); // this += scalar*rhs
 
-        void operator*=(double scalar) { scaleby *= scalar; cache.clear(); }
         void operator*=(const KTable& rhs);
+        void operator*=(double scalar);
 
         // Produce a new KTable which wraps this one onto range +-Nout/2.  Nout will
         // be raised to even value.  In other words, aliases the data.
@@ -168,19 +179,40 @@ namespace galsim {
         std::complex<double>* array;
         int N; //Size in each dimension.
         double dk; //k-space increment
-        double scaleby; //multiply table by this to get values
 
-        size_t index(int ix, int iy) const; //Return index into data array.
-        // this is also responsible for bounds checking.
+        size_t index(int ix, int iy) const  //Return index into data array.
+        {
+            // this is also responsible for bounds checking when FFT_DEBUG is turned on.
+#ifdef FFT_DEBUG
+            if (ix<-N/2 || ix>N/2 || iy<-N/2 || iy>N/2)
+                FormatAndThrow<FFTOutofRange>() << "KTable index (" << ix << "," << iy
+                    << ") out of range for N=" << N;
+#endif
+            if (ix<0) {
+                ix=-ix; iy=-iy; //need the conjugate in this case
+            }
+            if (iy<0) iy+=N;
+            return iy*(N/2+1)+ix;
+        }
+
+        // This skips all the adjustments to ix,iy, so both should be positive and 
+        // folded appropriately.
+        size_t index2(int ix, int iy) const  //Return index into data array.
+        { return iy*(N/2+1)+ix; }
 
         void copy_array(const KTable& rhs); //copy an array
         void get_array(const std::complex<double> value=0.); //allocate an array  
         void kill_array(); //deallocate array
+#ifdef FFT_DEBUG
         void check_array() const 
         { if (!array) throw FFTError("KTable operation on null array"); }
+#else
+        void check_array() const {}
+#endif
 
         // Objects used to accelerate interpolation with seperable interpolants:
         mutable std::deque<std::complex<double> > cache;
+        mutable std::vector<double> xwt;
         mutable int cacheStartY;
         mutable double cacheX;
         mutable const InterpolantXY* cacheInterp;
@@ -198,14 +230,14 @@ namespace galsim {
     public:
         XTable(int _N, double _dx, double _value=0.);
 
-        XTable(const XTable& rhs) : array(0), N(rhs.N), dx(rhs.dx), scaleby(rhs.scaleby) 
+        XTable(const XTable& rhs) : array(0), N(rhs.N), dx(rhs.dx)
         { copy_array(rhs); };
 
         XTable& operator=(const XTable& rhs) 
         {
             if (&rhs==this) return *this;
             copy_array(rhs);
-            N=rhs.N; dx=rhs.dx; scaleby=rhs.scaleby;
+            N=rhs.N; dx=rhs.dx; 
             return *this;
         }
 
@@ -214,6 +246,7 @@ namespace galsim {
         ///// Fourier transforms:
         // FFT to give pointer to a new KTable
         KTable* transform() const;
+        void transform(KTable& kt) const;
 
         // Have FFTW develop "wisdom" on doing this kind of transform
         void fftwMeasure() const;
@@ -231,10 +264,15 @@ namespace galsim {
         void xSet(int ix, int iy, double value);
 
         void clear();  // Set all values to zero
+        void clearCache() const 
+        {
+            cache.clear(); 
+            xwt.clear();
+        }
 
         void accumulate(const XTable& rhs, double scalar=1.); // this += scalar*rhs
 
-        void operator*=(double scalar) { scaleby *= scalar; cache.clear(); }
+        void operator*=(double scalar);
 
         // Produce a new XTable which wraps this one onto range +-Nout/2.  Nout will
         // be raised to even value.  
@@ -258,19 +296,35 @@ namespace galsim {
         double* array; //hold the values.
         int N; //Size in each dimension.
         double dx; //k-space increment
-        double scaleby; //multiply table by this to get values
 
-        size_t index(int ix, int iy) const; //Return index into data array.
-        // this is also responsible for bounds checking.
+        size_t index(int ix, int iy) const //Return index into data array.
+        {
+            // this is also responsible for bounds checking.
+            // origin will be in center.
+            ix += N/2;
+            iy += N/2;
+#ifdef FFT_DEBUG
+            if (ix<0 || ix>=N || iy<0 || iy>=N) 
+                FormatAndThrow<FFTOutofRange>() << "XTable index (" << ix << "," << iy
+                    << ") out of range for N=" << N;
+#endif
+            return iy*N+ix;
+        }
+
 
         void get_array(const double value); //allocate an array
         void copy_array(const XTable& rhs); //copy an array
         void kill_array(); //deallocate array
+#ifdef FFT_DEBUG
         void check_array() const 
         { if (!array) throw FFTError("KTable operation on null array"); }
+#else
+        void check_array() const {}
+#endif
 
         // Objects used to accelerate interpolation with seperable interpolants:
         mutable std::deque<double> cache;
+        mutable std::vector<double> xwt;
         mutable double cacheX;
         mutable int cacheStartY;
         mutable const InterpolantXY* cacheInterp;
@@ -280,7 +334,7 @@ namespace galsim {
     template <class T>
     void KTable::fill(const T& f) 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         std::complex<double> *zptr=array;
         double kx, ky;
         for (int iy=0; iy< N/2; iy++) {

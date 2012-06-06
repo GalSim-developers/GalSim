@@ -2,7 +2,7 @@
  * @file IntGKPData10.h
  *
  * @brief Gauss-Kronrod-Patterson quadrature coefficients using the 
- *        10-, 20-, 43-, 87- and 175-point rule.
+ *        10-, 21-, 43-, 87- and 175-point rule.
  *
  * The coefficients up through the 87-point rule  were calculated with 
  * 101 decimal digit arithmetic by L. W. Fullerton, Bell Labs, Nov 1981. 

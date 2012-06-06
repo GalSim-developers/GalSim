@@ -76,6 +76,11 @@ class GSObject:
         """
         return self.SBProfile.stepK()
 
+    def hasHardEdges(self):
+        """@brief Returns True if there are any hard edges in the profile.
+        """
+        return self.SBProfile.hasHardEdges()
+
     def isAxisymmetric(self):
         """@brief Returns True if axially symmetric: affects efficiency of evaluation.
         """
@@ -198,7 +203,7 @@ class GSObject:
         if type(dx) != float:
             raise Warning("Input dx not a float, converting...")
             dx = float(dx)
-        if image is None:
+        if image == None:
             return self.SBProfile.draw(dx=dx, wmult=wmult)
         else :
             self.SBProfile.draw(image, dx=dx, wmult=wmult)
@@ -269,7 +274,7 @@ class Gaussian(GSObject):
 class Moffat(GSObject):
     """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
-    def __init__(self, beta, truncationFWHM=2., flux=1.,
+    def __init__(self, beta, truncationFWHM=0., flux=1.,
                  half_light_radius=None, scale_radius=None, fwhm=None):
         GSObject.__init__(self, galsim.SBMoffat(beta, truncationFWHM=truncationFWHM, flux=flux,
                           half_light_radius=half_light_radius, scale_radius=scale_radius, fwhm=fwhm))
@@ -437,30 +442,26 @@ class RealGalaxy(GSObject):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
             use_index = index
         elif ID != None:
-            raise NotImplementedError('Selecting galaxy based on its ID not implemented')
+            if (random == True):
+                raise RuntimeError('Too many methods for selecting a galaxy!')
+            use_index = real_galaxy_catalog.get_index_for_id(ID)
         elif random == True:
             if uniform_deviate == None:
                 uniform_deviate = galsim.UniformDeviate()
-            use_index = int(real_galaxy_catalog.n * uniform_deviate()) # this will round down, to get index in
-                                                                           # range [0, n-1]
+            use_index = int(real_galaxy_catalog.n * uniform_deviate()) 
+            # this will round down, to get index in range [0, n-1]
         else:
             raise RuntimeError('No method specified for selecting a galaxy!')
         if random == False and uniform_deviate != None:
             import warnings
-            message = "Warning: uniform_deviate supplied, but random selection method was not chosen!"
-            warnings.warn(message)
+            msg = "Warning: uniform_deviate supplied, but random selection method was not chosen!"
+            warnings.warn(msg)
 
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
         # consider exporting this code into fits.py in some function that takes a filename and HDU,
         # and returns an ImageView
-        gal_image_numpy = pyfits.getdata(os.path.join(real_galaxy_catalog.imagedir,
-                                                      real_galaxy_catalog.gal_filename[use_index]),
-                                         real_galaxy_catalog.gal_hdu[use_index])
-        gal_image = galsim.ImageViewD(np.ascontiguousarray(gal_image_numpy.astype(np.float64)))
-        PSF_image_numpy = pyfits.getdata(os.path.join(real_galaxy_catalog.imagedir,
-                                                      real_galaxy_catalog.PSF_filename[use_index]),
-                                         real_galaxy_catalog.PSF_hdu[use_index])
-        PSF_image = galsim.ImageViewD(np.ascontiguousarray(PSF_image_numpy.astype(np.float64)))
+        gal_image = real_galaxy_catalog.getGal(use_index)
+        PSF_image = real_galaxy_catalog.getPSF(use_index)
 
         # choose proper interpolant
         if interpolant != None and isinstance(interpolant, galsim.InterpolantXY) == False:
@@ -521,30 +522,125 @@ class Add(GSObject):
 
 
 class Convolve(GSObject):
-    """@brief Base class for defining the python interface to the SBConvolve C++ class.
+    """@brief A class for convolving 2 or more GSObjects.
+
+    The objects to be convolved may be provided either as multiple unnamed arguments
+    (e.g. Convolve(psf,gal,pix)) or as a list (e.g. Convolve[psf,gal,pix]).
+    Any number of objects may be provided using either syntax.  (Even 0 or 1, although
+    that doesn't really make much sense.)
+   
+    The convolution will normally be done using discrete Fourier transforms of 
+    each of the component profiles, multiplying them together, and then transforming
+    back to real space.
+   
+    The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2)
+    where the sum is over all teh components being convolved.  Since the size of 
+    the convolved image scales roughly as the quadrature sum of the components,
+    this should be close to Pi/Rmax where Rmax is the radius that encloses
+    all but (1-alias_threshold) of the flux in the final convolved image..
+    
+    The maxK used for the k-space image will be the minimum of the maxK calculated for
+    each component.  Since the k-space images are multiplied, if one of them is 
+    essentially zero beyond some k value, then that will be true of the final image
+    as well.
+    
+    There is also an option to do the convolution as integrals in real space.
+    To do this, use the optional keyword argument real_space=True.
+    Currently, the real-space integration is only enabled for 2 profiles.
+    (Aside from the trivial implementaion for 1 profile.)  If you try to use it 
+    for more than 2 profiles, an exception will be raised.
+    
+    The real-space convolution is normally slower than the DFT convolution.
+    The exception is if both component profiles have hard edges.  e.g. a truncated
+    Moffat with a Pixel.  In that case, the maxK for each component is quite large
+    since the ringing dies off fairly slowly.  So it can be quicker to use 
+    real-space convolution instead.  Also, real-space convolution tends to be more
+    accurate in this case as well.
+
+    If you do not specify either True or False explicitly, then we check if 
+    there are 2 profiles, both of which have hard edges.  In this case, we 
+    automatically use real-space convolution.  In all other cases, the 
+    default is to use the DFT algorithm.
     """
-    def __init__(self, *args):
-        # This is a workaround for the fact that Python doesn't allow multiple constructors.
-        # So check the number and type of the arguments here in the single __init__ method.
-        if len(args) == 0:
-            # No arguments.  Start with none and add objects later with add(obj)
-            GSObject.__init__(self, galsim.SBConvolve())
-        elif len(args) == 1:
-            # 1 argment.  Should be either a GSObject or a list of GSObjects
-            if isinstance(args[0], GSObject):
-                # If single argument is a GSObject, then use the SBConvolve for a single SBProfile.
-                GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile))
+    def __init__(self, *args, **kwargs):
+        # Check kwargs first
+        # The only kwarg we're looking for is real_space, which can be True or False
+        # (default if omitted is None), which specifies whether to do the convolution
+        # as an integral in real space rather than as a product in fourier space.
+        # If the parameter is omitted (or explicitly given as None I guess), then
+        # we will usually do the fourier method.  However, if there are 2 components
+        # _and_ both of them have hard edges, then we use real-space convolution.
+        real_space = kwargs.pop("real_space",None)
+
+        if kwargs:
+            raise TypeError(
+                "Convolve constructor got unexpected keyword argument(s): %s"%kwargs.keys())
+
+        # If 1 argument, check if it is a list:
+        if len(args) == 1 and isinstance(args[0],list):
+            args = args[0]
+
+        hard_edge = True
+        for obj in args:
+            if not obj.hasHardEdges():
+                hard_edge = False
+
+        if real_space is None:
+            # Figure out if it makes more sense to use real-space convolution.
+            if len(args) == 2:
+                real_space = hard_edge
+            elif len(args) == 1:
+                real_space = obj.isAnalyticX()
             else:
-                # Otherwise, should be a list of GSObjects
-                SBList = [obj.SBProfile for obj in args[0]]
-                GSObject.__init__(self, galsim.SBConvolve(SBList))
+                real_space = False
+
+        # Warn if doing DFT convolution for objects with hard edges.
+        if not real_space and hard_edge:
+            import warnings
+            if len(args) == 2:
+                msg = """
+                Doing convolution of 2 objects, both with hard edges.
+                This might be more accurate and/or faster using real_space=True"""
+            else:
+                msg = """
+                Doing convolution where all objects have hard edges.
+                There might be some inaccuracies due to ringing in k-space."""
+            warnings.warn(msg)
+
+        if real_space:
+            # Can't do real space if nobj > 2
+            if len(args) > 2:
+                import warnings
+                msg = """
+                Real-space convolution of more than 2 objects is not implemented.
+                Switching to DFT method."""
+                warnings.warn(msg)
+                real_space = False
+
+            # Also can't do real space if any object is not analytic, so check for that.
+            else:
+                for obj in args:
+                    if not obj.isAnalyticX():
+                        import warnings
+                        msg = """
+                        A component to be convolved is not analytic in real space.
+                        Cannot use real space convolution.
+                        Switching to DFT method."""
+                        warnings.warn(msg)
+                        real_space = False
+                        break
+
+        if len(args) == 0:
+            GSObject.__init__(self, galsim.SBConvolve(real_space=real_space))
+        elif len(args) == 1:
+            GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile,real_space=real_space))
         elif len(args) == 2:
-            # 2 arguments.  Should both be GSObjects.
-            GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile,args[1].SBProfile))
+            GSObject.__init__(self, galsim.SBConvolve(
+                    args[0].SBProfile,args[1].SBProfile,real_space=real_space))
         else:
             # > 2 arguments.  Convert to a list of SBProfiles
             SBList = [obj.SBProfile for obj in args]
-            GSObject.__init__(self, galsim.SBConvolve(SBList))
+            GSObject.__init__(self, galsim.SBConvolve(SBList,real_space=real_space))
 
     def add(self, obj):
         self.SBProfile.add(obj.SBProfile)

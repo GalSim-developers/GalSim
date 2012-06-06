@@ -1,11 +1,19 @@
 // Routines for FFTW interface objects
 // This time to use Version 3 of FFTW.
 
+//#define DEBUGLOGGING
+
 #include <limits>
 #include <vector>
 #include <cassert>
 #include "FFT.h"
 #include "Std.h"
+
+#ifdef DEBUGLOGGING
+#include <fstream>
+std::ostream* dbgout = new std::ofstream("debug.out");
+int verbose_level = 2;
+#endif
 
 namespace galsim {
 
@@ -15,43 +23,30 @@ namespace galsim {
     {
         if (input<=2) return 2;
         // Reduce slightly to eliminate potential rounding errors:
-        double insize = (1.-1e-5)*input;
+        double insize = (1.-1.e-5)*input;
         double log2n = std::log(2.)*std::ceil(std::log(insize)/std::log(2.));
         double log2n3 = std::log(3.) 
            + std::log(2.)*std::ceil((std::log(insize)-std::log(3.))/std::log(2.));
         log2n3 = std::max(log2n3, std::log(6.)); // must be even number
-        int Nk = static_cast<int> (std::ceil(std::exp(std::min(log2n, log2n3))-1e-5));
+        int Nk = int(std::ceil(std::exp(std::min(log2n, log2n3))-1.e-5));
         return Nk;
     }
 
 
     KTable::KTable(int _N, double _dk, std::complex<double> value) 
     {
+#ifdef FFT_DEBUG
         if (_N<=0) throw FFTError("KTable size <=0");
+#endif
         N = 2*((_N+1)/2); //Round size up to even.
         dk = _dk;
         get_array(value);
-        scaleby=1.;
-        return;
-    }
-
-
-    size_t KTable::index(int ix, int iy) const 
-    {
-        if (ix<-N/2 || ix>N/2 || iy<-N/2 || iy>N/2) 
-            FormatAndThrow<FFTOutofRange>() << "KTable index (" << ix << "," << iy
-                << ") out of range for N=" << N;
-        if (ix<0) {
-            ix=-ix; iy=-iy; //need the conjugate in this case
-        }
-        if (iy<0) iy+=N;
-        return iy*(N/2+1)+ix;
     }
 
     std::complex<double> KTable::kval(int ix, int iy) const 
-    { 
+    {
         check_array();
-        std::complex<double> retval=scaleby*array[index(ix,iy)];
+        std::complex<double> retval=array[index(ix,iy)];
         if (ix<0) return conj(retval);
         else return retval;
     }
@@ -59,88 +54,93 @@ namespace galsim {
     void KTable::kSet(int ix, int iy, std::complex<double> value) 
     {
         check_array();
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         if (ix<0) {
-            array[index(ix,iy)]=conj(value)/scaleby;
-            if (ix==-N/2) array[index(ix,-iy)]=value/scaleby;
+            array[index(ix,iy)]=conj(value);
+            if (ix==-N/2) array[index(ix,-iy)]=value;
         } else {
-            array[index(ix,iy)]=value/scaleby;
-            if (ix==0 || ix==N/2) array[index(ix,-iy)]=conj(value)/scaleby;
+            array[index(ix,iy)]=value;
+            if (ix==0 || ix==N/2) array[index(ix,-iy)]=conj(value);
         }
-        return;
     }
 
     void KTable::get_array(const std::complex<double> value) 
     {
         array = (std::complex<double>*) fftw_malloc(sizeof(std::complex<double>)*N*(N/2+1));
         for (int i=0; i<N*(N/2+1); i++)
-            array[i]=value;
-        return;
+            array[i] = value;
     }
 
     void KTable::copy_array(const KTable& rhs) 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
+#ifdef FFT_DEBUG
         if (rhs.array==0) 
             throw FFTError("KTable::copy_array from null array");
+#endif
         if (array!=0 && N!=rhs.N) kill_array();
         N = rhs.N; // makes sure our array will be of same size
         if (array==0) array = (std::complex<double>*) fftw_malloc(sizeof(std::complex<double>)*N*(N/2+1)); // allocate space
         for (int i=0; i<N*(N/2+1); i++) // copy element by element
-            array[i]=rhs.array[i];
-        return;
+            array[i] = rhs.array[i];
     }
 
     void KTable::clear() 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         if (!array) return;
         for (int i=0; i<N*(N/2+1); i++)
-            array[i]=std::complex<double>(0.,0.);
-        scaleby = 1.;
-        return;
+            array[i] = std::complex<double>(0.,0.);
     }
 
     void KTable::kill_array() 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         if (!array) return;
         fftw_free(array);
         array=0;
-        return;
     }
 
     void KTable::accumulate(const KTable& rhs, double scalar) 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         check_array();
-        scalar *= rhs.scaleby / scaleby;
+#ifdef FFT_DEBUG
         if (N != rhs.N) throw FFTError("KTable::accumulate() with mismatched sizes");
         if (dk != rhs.dk) throw FFTError("KTable::accumulate() with mismatched dk");
+#endif
         for (int i=0; i<N*(N/2+1); i++)
-            array[i]+=scalar * rhs.array[i];
-        return;
+            array[i] += scalar * rhs.array[i];
     }
 
     void KTable::operator*=(const KTable& rhs) 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         check_array();
+#ifdef FFT_DEBUG
         if (N != rhs.N) throw FFTError("KTable::operator*=() with mismatched sizes");
         if (dk != rhs.dk) throw FFTError("KTable::operator*=() with mismatched dk");
-        scaleby *= rhs.scaleby;
+#endif
         for (int i=0; i<N*(N/2+1); i++)
-            array[i]*=rhs.array[i];
-        return;
+            array[i] *= rhs.array[i];
+    }
+
+    void KTable::operator*=(double scale)
+    {
+        clearCache(); // invalidate any stored interpolations
+        check_array();
+        for (int i=0; i<N*(N/2+1); i++)
+            array[i] *= scale;
     }
 
     KTable* KTable::wrap(int Nout) const 
     {
+#ifdef FFT_DEBUG
         if (Nout < 0) FormatAndThrow<FFTError>() << "KTable::wrap invalid Nout= " << Nout;
+#endif
         // Make it even:
         Nout = 2*((Nout+1)/2);
         KTable* out = new KTable(Nout, dk, std::complex<double>(0.,0.));
-        out->scaleby = scaleby;
         for (int iyin=-N/2; iyin<N/2; iyin++) {
             int iyout = iyin;
             while (iyout < -Nout/2) iyout+=Nout;
@@ -177,11 +177,12 @@ namespace galsim {
 
     XTable* XTable::wrap(int Nout) const 
     {
+#ifdef FFT_DEBUG
         if (Nout < 0) FormatAndThrow<FFTError>() << "XTable::wrap invalid Nout= " << Nout;
+#endif
         // Make it even:
         Nout = 2*((Nout+1)/2);
         XTable* out = new XTable(Nout, dx, 0.);
-        out->scaleby = scaleby;
         // What is (-N/2) wrapped to (+- Nout/2)?
         int excess = (N % Nout) / 2;  // Note N and Nout are positive.
         const int startOut = (excess==0) ? -Nout/2 : Nout/2 - excess;
@@ -212,13 +213,16 @@ namespace galsim {
     std::complex<double> KTable::interpolate(
         double kx, double ky, const Interpolant2d& interp) const 
     {
+        dbg<<"Start KTable interpolate at "<<kx<<','<<ky<<std::endl;
+        dbg<<"N = "<<N<<std::endl;
+        dbg<<"interp xrage = "<<interp.xrange()<<std::endl;
         kx /= dk;
         ky /= dk;
         int ixMin, ixMax, iyMin, iyMax;
         if ( interp.isExactAtNodes() 
              && std::abs(kx - std::floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // x coord lies right on integer value, no interpolation in x direction
-            ixMin = static_cast<int> (std::floor(kx+0.01)) % N;
+            ixMin = int(std::floor(kx+0.01)) % N;
             if (ixMin < -N/2) ixMin += N;
             if (ixMin >= N/2) ixMin -= N;
             ixMax = ixMin;
@@ -228,10 +232,10 @@ namespace galsim {
             ixMax = N/2-1;
         } else {
             // Put both bounds of kernel footprint in range [-N/2,N/2-1]
-            ixMin = static_cast<int> (std::ceil(kx-interp.xrange())) % N;
+            ixMin = int(std::ceil(kx-interp.xrange())) % N;
             if (ixMin < -N/2) ixMin += N;
             if (ixMin >= N/2) ixMin -= N;
-            ixMax = static_cast<int> (std::floor(kx+interp.xrange())) % N;
+            ixMax = int(std::floor(kx+interp.xrange())) % N;
             if (ixMax < -N/2) ixMax += N;
             if (ixMax >= N/2) ixMax -= N;
         }
@@ -239,7 +243,7 @@ namespace galsim {
         if ( interp.isExactAtNodes() 
              && std::abs(ky - std::floor(ky+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // y coord lies right on integer value, no interpolation in y direction
-            iyMin = static_cast<int> (std::floor(ky+0.01)) % N;
+            iyMin = int(std::floor(ky+0.01)) % N;
             if (iyMin < -N/2) iyMin += N;
             if (iyMin >= N/2) iyMin -= N;
             iyMax = iyMin;
@@ -249,13 +253,15 @@ namespace galsim {
             iyMax = N/2-1;
         } else {
             // Put both bounds of kernel footprint in range [-N/2,N/2-1]
-            iyMin = static_cast<int> (std::ceil(ky-interp.xrange())) % N;
+            iyMin = int(std::ceil(ky-interp.xrange())) % N;
             if (iyMin < -N/2) iyMin += N;
             if (iyMin >= N/2) iyMin -= N;
-            iyMax = static_cast<int> (std::floor(ky+interp.xrange())) % N;
+            iyMax = int(std::floor(ky+interp.xrange())) % N;
             if (iyMax < -N/2) iyMax += N;
             if (iyMax >= N/2) iyMax -= N;
         }
+        dbg<<"ix range = "<<ixMin<<"..."<<ixMax<<std::endl;
+        dbg<<"iy range = "<<iyMin<<"..."<<iyMax<<std::endl;
 
         std::complex<double> sum = 0.;
         const InterpolantXY* ixy = dynamic_cast<const InterpolantXY*> (&interp);
@@ -264,33 +270,40 @@ namespace galsim {
             // We have the opportunity to speed up the calculation by
             // re-using the sums over rows.  So we will keep a 
             // cache of them.
-            if (ixy != cacheInterp || kx!=cacheX) {
-                cache.clear();
+            if (kx != cacheX || ixy != cacheInterp) {
+                clearCache();
                 cacheX = kx;
                 cacheInterp = ixy;
-            }
-
-            // Going to have a special case for interpolation on 
-            // a single iy value:
-            if (iyMax==iyMin) {
-                if (!cache.empty()) {
-                    // See if we already have this row in cache:
-                    int index = iyMin - cacheStartY;
-                    if (index < 0) index += N;
-                    if (index < int(cache.size()))
-                        // We have it!
-                        return cache[index];
-                }
-                // Desired row not in cache - kill cache, continue as normal.
-                cache.clear();
+            } else if (iyMax==iyMin && !cache.empty()) {
+                // Special case for interpolation on a single iy value:
+                // See if we already have this row in cache:
+                int index = iyMin - cacheStartY;
+                if (index < 0) index += N;
+                if (index < int(cache.size()))
+                    // We have it!
+                    return cache[index];
+                else
+                    // Desired row not in cache - kill cache, continue as normal.
+                    // (But don't clear xwt, since that's still good.)
+                    cache.clear();
             }
 
             // Build the x component of interpolant
             int nx = ixMax - ixMin + 1;
             if (nx<=0) nx+=N;
-            std::vector<double> xwt(nx);
-            for (int i=0; i<nx; i++) 
-                xwt[i] = ixy->xvalWrapped1d(i+ixMin-kx, N);
+            dbg<<"nx = "<<nx<<std::endl;
+            // This is also cached if possible.  It gets cleared when kx != cacheX above.
+            if (xwt.empty()) {
+                xwt.resize(nx);
+                int ix = ixMin;
+                for (int i=0; i<nx; ++i, ++ix) {
+                    dbg<<"Call xvalWrapped1d for ix-kx = "<<ix<<" - "<<kx<<" = "<<ix-kx<<std::endl;
+                    xwt[i] = ixy->xvalWrapped1d(ix-kx, N);
+                    dbg<<"xwt["<<i<<"] = "<<xwt[i]<<std::endl;
+                }
+            } else {
+                assert(int(xwt.size()) == nx);
+            }
 
             // cache always holds sequential y values (with wrap).  Throw away
             // elements until we get to the one we need first
@@ -302,14 +315,19 @@ namespace galsim {
                 nextSaved = cache.begin();
             }
 
-            // use kval to keep track of conjugations etc here.
-            // ??? There is an opportunity to speed up if I want
-            // ??? to do this with array incrementing.
+            // Accumulate sum of 
+            //    interp.xvalWrapped(ix-kx, iy-ky, N)*kval(ix,iy);
+            // Which separates into 
+            //    ixy->xvalWrapped(ix-kx) * ixy->xvalWrapped(iy-ky) * kval(ix,iy)
+            // The first factor is saved in xwt
+            // The second factor is constant for a given iy, so do that at the end of the loop.
+            // The third factor is the only one that needs to be computed for each ix,iy.
             int ny = iyMax - iyMin + 1;
             if (ny<=0) ny+=N;
             int iy = iyMin;
             for (int j = 0; j<ny; j++, iy++) {
                 if (iy >= N/2) iy-=N;   // wrap iy if needed
+                dbg<<"j = "<<j<<", iy = "<<iy<<std::endl;
                 std::complex<double> sumy = 0.;
                 if (nextSaved != cache.end()) {
                     // This row is cached
@@ -318,16 +336,61 @@ namespace galsim {
                 } else {
                     // Need to compute a new row's sum
                     int ix = ixMin;
+#if 0
+                    // Simple loop preserved for comparison.
                     for (int i=0; i<nx; i++, ix++) {
                         if (ix > N/2) ix-=N; //check for wrap
+                        dbg<<"i = "<<i<<", ix = "<<ix<<std::endl;
+                        dbg<<"xwt = "<<xwt[i]<<", kval = "<<kval(ix,iy)<<std::endl;
                         sumy += xwt[i]*kval(ix,iy);
+                        dbg<<"index = "<<index(ix,iy)<<", sumy -> "<<sumy<<std::endl;
                     }
+#else
+                    // Faster way using ptrs, which doesn't need to do index(ix,iy) every time.
+                    int count = nx;
+                    std::vector<double>::const_iterator xwt_it = xwt.begin();
+                    // First do any initial negative ix values:
+                    if (ix < 0) {
+                        dbg<<"Some initial negative ix: ix = "<<ix<<std::endl;
+                        const std::complex<double>* ptr = array + index(ix,iy);
+                        int count1 = std::min(count, -ix);
+                        dbg<<"count1 = "<<count1<<std::endl;
+                        count -= count1;
+                        // Note: ptr goes down in this loop, since ix is negative.
+                        for(; count1; --count1) sumy += (*xwt_it++) * conj(*ptr--);
+                        ix = 0;
+                    }
+
+                    // Next do positive ix values:
+                    if (count) {
+                        dbg<<"Positive ix: ix = "<<ix<<std::endl;
+                        const std::complex<double>* ptr = array + index(ix,iy);
+                        int count1 = std::min(count, N/2+1-ix);
+                        dbg<<"count1 = "<<count1<<std::endl;
+                        count -= count1;
+                        for(; count1; --count1) sumy += (*xwt_it++) * (*ptr++);
+
+                        // Finally if we've wrapped around again, do more negative ix values:
+                        if (count) {
+                            dbg<<"More negative ix: ix = "<<ix<<std::endl;
+                            dbg<<"count = "<<count<<std::endl;
+                            ix = -N/2 + 1;
+                            const std::complex<double>* ptr = array + index(ix,iy);
+                            assert(count < N/2-1);
+                            for(; count; --count) sumy += (*xwt_it++) * conj(*ptr--);
+                        }
+                    }
+                    assert(xwt_it == xwt.end());
+                    assert(count == 0);
+#endif
                     // Add to back of cache
                     if (cache.empty()) cacheStartY = iy;
                     cache.push_back(sumy);
                     nextSaved = cache.end();
                 }
+                dbg<<"Call xvalWrapped1d for iy-ky = "<<iy<<" - "<<ky<<" = "<<iy-ky<<std::endl;
                 sum += sumy * ixy->xvalWrapped1d(iy-ky, N);
+                dbg<<"After multiply by column xvalWrapped: sum = "<<sum<<std::endl;
             }
         } else {
             // Interpolant is not seperable, calculate weight at each point
@@ -346,13 +409,14 @@ namespace galsim {
                 }
             }
         }
+        dbg<<"Done: sum = "<<sum<<std::endl;
         return sum;
     }
 
     // Fill table from a function:
     void KTable::fill(KTable::function1 func)
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         check_array();
         std::complex<double>* zptr=array;
         double kx, ky;
@@ -390,7 +454,6 @@ namespace galsim {
             }
             *(zptr++) = conj(tmp2[-iy]);      // [kx/dk] = ix = N/2
         }
-        return;
     } 
 
     // Integrate a function over k - can be function of k or of PSF(k)
@@ -404,34 +467,34 @@ namespace galsim {
         // Do the positive y frequencies
         for (int iy=0; iy<= N/2; iy++) {
             ky = iy*dk;
-            val = *(zptr++) * scaleby;
+            val = *(zptr++);
             kx = 0.;
             sum += func(kx,ky,val); //x DC term
             for (int ix=1; ix< N/2 ; ix++) {
                 kx = ix*dk;
-                val = *(zptr++) * scaleby;
+                val = *(zptr++);
                 sum += func(kx,ky,val);
                 sum += func(-kx,-ky,conj(val));
             }
             kx = dk*N/2;
-            val = *(zptr++) * scaleby;
+            val = *(zptr++);
             sum += func(kx,ky,val); // x Nyquist freq
         }
 
         // wrap to the negative ky's
         for (int iy=-N/2+1; iy< 0; iy++) {
             ky = iy*dk;
-            val = *(zptr++) * scaleby;
+            val = *(zptr++);
             kx = 0.;
             sum += func(kx,ky,val); //x DC term
             for (int ix=1; ix< N/2 ; ix++) {
                 kx = ix*dk;
-                val = *(zptr++) * scaleby;
+                val = *(zptr++);
                 sum += func(kx,ky,val);
                 sum += func(-kx,-ky,conj(val));
             }
             kx = dk*N/2;
-            val = *(zptr++) * scaleby;
+            val = *(zptr++);
             sum += func(kx,ky,val); // x Nyquist
         }
         sum *= dk*dk;
@@ -446,21 +509,21 @@ namespace galsim {
         std::complex<double>* zptr=array;
         // Do the positive y frequencies
         for (int iy=0; iy<= N/2; iy++) {
-            sum += *(zptr++) * scaleby;    // x DC term
+            sum += *(zptr++);    // x DC term
             for (int ix=1; ix< N/2 ; ix++) {
-                sum += *(zptr) * scaleby;
-                sum += conj(*(zptr++) * scaleby);
+                sum += *(zptr);
+                sum += conj(*(zptr++));
             }
-            sum += *(zptr++) * scaleby;
+            sum += *(zptr++);
         }
         // wrap to the negative ky's
         for (int iy=-N/2+1; iy< 0; iy++) {
-            sum += *(zptr++) * scaleby;    // x DC term
+            sum += *(zptr++);    // x DC term
             for (int ix=1; ix< N/2 ; ix++) {
-                sum += *(zptr) * scaleby;
-                sum += conj(*(zptr++) * scaleby);
+                sum += *(zptr);
+                sum += conj(*(zptr++));
             }
-            sum += *(zptr++) * scaleby;
+            sum += *(zptr++);
         }
         sum *= dk*dk;
         return sum;
@@ -480,7 +543,7 @@ namespace galsim {
             ky = iy*dk;
             for (int ix=0; ix<= N/2 ; ix++) {
                 kx = ix*dk;
-                val = *(zptr++) * scaleby;
+                val = *(zptr++);
                 *(lptr++)= func(kx,ky,val);
             }
         }
@@ -489,7 +552,7 @@ namespace galsim {
             ky = iy*dk;
             for (int ix=0; ix<= N/2 ; ix++) {
                 kx = ix*dk;
-                val = *(zptr++) * scaleby;
+                val = *(zptr++);
                 *(lptr++)= func(kx,ky,val);
             }
         }
@@ -503,7 +566,10 @@ namespace galsim {
         check_array();
         x*=dk; y*=dk;
         // Don't evaluate if x not in fundamental period +-PI/dk:
-        if (std::abs(x) > M_PI || std::abs(y) > M_PI) throw FFTOutofRange(" (x,y) too big in xval()");
+#ifdef FFT_DEBUG
+        if (std::abs(x) > M_PI || std::abs(y) > M_PI) 
+            throw FFTOutofRange(" (x,y) too big in xval()");
+#endif
         std::complex<double> I(0.,1.);
         std::complex<double> dxphase=std::exp(I*x);
         std::complex<double> dyphase=std::exp(I*y);
@@ -546,19 +612,21 @@ namespace galsim {
             yphase *= dyphase;
         }
 
-        sum *= dk*dk*scaleby/(4.*M_PI*M_PI); //inverse xform has 2pi in it.
+        sum *= dk*dk/(4.*M_PI*M_PI); //inverse xform has 2pi in it.
         return sum;
     }
 
     // Translate the PSF to be for source at (x0,y0);
     void KTable::translate(double x0, double y0) 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         check_array();
         // convert to phases:
         x0*=dk; y0*=dk;
         // too big will just be wrapping around:
+#ifdef FFT_DEBUG
         if (x0 > M_PI || y0 > M_PI) throw FFTOutofRange("(x0,y0) too big in translate()");
+#endif
         std::complex<double> I(0.,1.);
         std::complex<double> dxphase=std::exp(std::complex<double>(0.,-x0));
         std::complex<double> dyphase=std::exp(std::complex<double>(0.,-y0));
@@ -592,111 +660,101 @@ namespace galsim {
             }
             yphase *= dyphase;
         }
-        return;
     }
 
     XTable::XTable(int _N, double _dx, double value) 
     {
+#ifdef FFT_DEBUG
         if (_N<=0) throw FFTError("XTable size <=0");
+#endif
         N = 2*((_N+1)/2); //Round size up to even.
         dx = _dx;
         get_array(value);
-        scaleby=1.;
-        return;
-    }
-
-    size_t XTable::index(int ix, int iy) const 
-    {
-        // origin will be in center.
-        ix += N/2;
-        iy += N/2;
-        if (ix<0 || ix>=N || iy<0 || iy>=N) 
-            FormatAndThrow<FFTOutofRange>() << "XTable index (" << ix << "," << iy
-                << ") out of range for N=" << N;
-        return iy*N+ix;
     }
 
     double XTable::xval(int ix, int iy) const 
     {
         check_array();
-        return scaleby*array[index(ix,iy)];
+        return array[index(ix,iy)];
     }
 
     void XTable::xSet(int ix, int iy, double value) 
     {
         check_array();
-        cache.clear(); // invalidate any stored interpolations
-        array[index(ix,iy)]=value/scaleby;
-        return;
+        clearCache(); // invalidate any stored interpolations
+        array[index(ix,iy)]=value;
     }
 
     void XTable::get_array(const double value) 
     {
         array = (double*) fftw_malloc(sizeof(double)*N*N);
         for (int i=0; i<N*N; i++)
-            array[i]=value;
-        return;
+            array[i] = value;
     }
 
     void XTable::copy_array(const XTable& rhs) 
     {
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
+#ifdef FFT_DEBUG
         if (rhs.array==0) 
             throw FFTError("XTable::copy_array from null array");
+#endif
         if (array!=0 && N!=rhs.N) kill_array();
         if (array==0)   array = (double*) fftw_malloc(sizeof(double)*N*N);
         for (int i=0; i<N*N; i++)
-            array[i]=rhs.array[i];
-        return;
+            array[i] = rhs.array[i];
     }
 
     void XTable::kill_array() 
     {
         if (!array) return;
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         fftw_free(array);
         array=0;
-        return;
     }
 
     void XTable::clear() 
     {
         if (!array) return;
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         for (int i=0; i<N*N; i++)
-            array[i]=0.;
-        scaleby = 1.;
-        return;
+            array[i] = 0.;
     }
 
     void XTable::accumulate(const XTable& rhs, double scalar) 
     {
         check_array();
-        cache.clear(); // invalidate any stored interpolations
-        scalar *= rhs.scaleby / scaleby;
+        clearCache(); // invalidate any stored interpolations
+#ifdef FFT_DEBUG
         if (N != rhs.N) throw FFTError("XTable::accumulate() with mismatched sizes");
+#endif
         for (int i=0; i<N*N; i++)
-            array[i] +=scalar * rhs.array[i];
-        return;
+            array[i] += scalar * rhs.array[i];
+    }
+
+    void XTable::operator*=(double scale) 
+    {
+        check_array();
+        clearCache(); // invalidate any stored interpolations
+        for (int i=0; i<N*N; i++)
+            array[i] *= scale;
     }
 
     // Interpolate table (linearly) to some specific k:
     // x any y in physical units (to be divided by dx for indices)
     double XTable::interpolate(double x, double y, const Interpolant2d& interp) const 
     {
-#ifdef DANIELS_TRACING
-        cout << "interpolating " << x << " " << y << " " << endl;
-#endif
+        xdbg << "interpolating " << x << " " << y << " " << std::endl;
         x /= dx;
         y /= dx;
         int ixMin, ixMax, iyMin, iyMax;
         if ( interp.isExactAtNodes() 
              && std::abs(x - std::floor(x+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // x coord lies right on integer value, no interpolation in x direction
-            ixMin = ixMax = static_cast<int> (std::floor(x+0.01));
+            ixMin = ixMax = int(std::floor(x+0.01));
         } else {
-            ixMin = static_cast<int> (std::ceil(x-interp.xrange()));
-            ixMax = static_cast<int> (std::floor(x+interp.xrange()));
+            ixMin = int(std::ceil(x-interp.xrange()));
+            ixMax = int(std::floor(x+interp.xrange()));
         }
         ixMin = std::max(ixMin, -N/2);
         ixMax = std::min(ixMax, N/2-1);
@@ -705,10 +763,10 @@ namespace galsim {
         if ( interp.isExactAtNodes() 
              && std::abs(y - std::floor(y+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // y coord lies right on integer value, no interpolation in y direction
-            iyMin = iyMax = static_cast<int> (std::floor(y+0.01));
+            iyMin = iyMax = int(std::floor(y+0.01));
         } else {
-            iyMin = static_cast<int> (std::ceil(y-interp.xrange()));
-            iyMax = static_cast<int> (std::floor(y+interp.xrange()));
+            iyMin = int(std::ceil(y-interp.xrange()));
+            iyMax = int(std::floor(y+interp.xrange()));
         }
         iyMin = std::max(iyMin, -N/2);
         iyMax = std::min(iyMax, N/2-1);
@@ -721,33 +779,34 @@ namespace galsim {
             // We have the opportunity to speed up the calculation by
             // re-using the sums over rows.  So we will keep a 
             // cache of them.
-            if (ixy != cacheInterp || x!=cacheX) {
-                cache.clear();
+            if (x != cacheX || ixy != cacheInterp) {
+                clearCache();
                 cacheX = x;
                 cacheInterp = ixy;
-            }
-
-            // Going to have a special case for interpolation on 
-            // a single iy value:
-            if (iyMax==iyMin) {
-                if (!cache.empty()) {
-                    // See if we already have this row in cache:
-                    int index = iyMin - cacheStartY;
-                    if (index < 0) index += N;
-                    if (index < int(cache.size())) {
-                        // We have it!
-                        return cache[index]*scaleby;
-                    }
-                }
-                // Desired row not in cache - kill cache, continue as normal.
-                cache.clear();
+            } else if (iyMax==iyMin && !cache.empty()) {
+                // Special case for interpolation on a single iy value:
+                // See if we already have this row in cache:
+                int index = iyMin - cacheStartY;
+                if (index < 0) index += N;
+                if (index < int(cache.size())) 
+                    // We have it!
+                    return cache[index];
+                else
+                    // Desired row not in cache - kill cache, continue as normal.
+                    // (But don't clear xwt, since that's still good.)
+                    cache.clear();
             }
 
             // Build x factors for interpolant
             int nx = ixMax - ixMin + 1;
-            std::vector<double> xwt(nx);
-            for (int i=0; i<nx; i++) 
-                xwt[i] = ixy->xval1d(i+ixMin-x);
+            // This is also cached if possible.  It gets cleared when kx != cacheX above.
+            if (xwt.empty()) {
+                xwt.resize(nx);
+                for (int i=0; i<nx; i++) 
+                    xwt[i] = ixy->xval1d(i+ixMin-x);
+            } else {
+                assert(int(xwt.size()) == nx);
+            }
 
             // cache always holds sequential y values (no wrap).  Throw away
             // elements until we get to the one we need first
@@ -767,8 +826,10 @@ namespace galsim {
                 } else {
                     // Need to compute a new row's sum
                     double* dptr = array + index(ixMin, iy);
-                    for (int i=0; i<nx; i++, dptr++)
-                        sumy += xwt[i]* (*dptr);
+                    std::vector<double>::const_iterator xwt_it = xwt.begin();
+                    int count = nx;
+                    for(; count; --count) sumy += (*xwt_it++) * (*dptr++);
+                    assert(xwt_it == xwt.end());
                     // Add to back of cache
                     if (cache.empty()) cacheStartY = iy;
                     cache.push_back(sumy);
@@ -784,14 +845,14 @@ namespace galsim {
                     sum += *dptr * interp.xval(ix-x, iy-y);
             }
         }
-        return sum * scaleby;
+        return sum;
     }
 
     // Fill table from a function:
     void XTable::fill(XTable::function1 func)
     {
         check_array();
-        cache.clear(); // invalidate any stored interpolations
+        clearCache(); // invalidate any stored interpolations
         double* zptr=array;
         double x, y;
         for (int iy=0; iy<N; iy++) {
@@ -801,7 +862,6 @@ namespace galsim {
                 *(zptr++) = func(x,y);
             }
         }
-        return;
     }
 
     // Integrate a function over x - can be function of x or of PSF(x)
@@ -818,7 +878,7 @@ namespace galsim {
             y = (iy-N/2)*dx;
             for (int ix=0; ix< N ; ix++) {
                 x = (ix-N/2)*dx;
-                val = *(zptr++) * scaleby;
+                val = *(zptr++);
                 sum += func(x,y,val);
             }
         }
@@ -834,7 +894,7 @@ namespace galsim {
         double* zptr=array;
         for (int iy=-N/2; iy< N/2; iy++) 
             for (int ix=-N/2; ix< N/2; ix++) {
-                sum += *(zptr++) * scaleby;
+                sum += *(zptr++);
             }
         sum *= dx*dx;
         return (double) sum;
@@ -846,8 +906,10 @@ namespace galsim {
         check_array();
         // Don't evaluate if k not in fundamental period 
         kx*=dx; ky*=dx;
+#ifdef FFT_DEBUG
         if (std::abs(kx) > M_PI || std::abs(ky) > M_PI) 
             throw FFTOutofRange("XTable::kval() args out of range");
+#endif
         std::complex<double> I(0.,1.);
         std::complex<double> dxphase=std::exp(-I*kx);
         std::complex<double> dyphase=std::exp(-I*ky);
@@ -866,7 +928,7 @@ namespace galsim {
             }
             yphase *= dyphase;
         }
-        sum *= dx*dx*scaleby;
+        sum *= dx*dx;
         return sum;
     }
 
@@ -884,46 +946,17 @@ namespace galsim {
 
         fftw_plan plan = fftw_plan_dft_c2r_2d(
             N, N, reinterpret_cast<fftw_complex*> (t_array), xt->array, FFTW_MEASURE);
+#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
+#endif
         delete xt;
         fftw_free(t_array);
         fftw_destroy_plan(plan);
     }
 
+
     // Fourier transform from (complex) k to x:
-    XTable* KTable::transform() const 
-    {
-        check_array();
-        // We'll need a new k array because FFTW kills the k array in this
-        // operation.  Also, to put x=0 in center of array, we need to flop
-        // every other sign of k array, and need to scale.
-
-        std::complex<double>* t_array = 
-            (std::complex<double>*) fftw_malloc(sizeof(std::complex<double>)*N*(N/2+1));
-        double fac = scaleby * dk * dk / (4*M_PI*M_PI);
-        long int ind=0;
-        for (int iy=0; iy<N; iy++)
-            for (int ix=0; ix<=N/2; ix++) {
-                if ( (ix+iy)%2==0) t_array[ind]=fac * array[ind];
-                else t_array[ind] = -fac* array[ind];
-                ind++;
-            }
-
-        XTable* xt = new XTable( N, 2*M_PI/(N*dk) );
-
-        fftw_plan plan = 
-            fftw_plan_dft_c2r_2d(
-                N, N, reinterpret_cast<fftw_complex*> (t_array), xt->array, FFTW_ESTIMATE);
-        if (plan==NULL) throw FFTInvalid();
-
-        // Run the transform:
-        fftw_execute(plan);
-        fftw_destroy_plan(plan);
-        fftw_free(t_array);
-        return xt;
-    }
-
-    // same function, takes XTable reference as agrument 
+    // This version takes XTable reference as argument 
     void KTable::transform(XTable& xt) const 
     {
         check_array();
@@ -937,18 +970,21 @@ namespace galsim {
 
         std::complex<double>* t_array = 
             (std::complex<double>*) fftw_malloc(sizeof(std::complex<double>)*N*(N/2+1));
-        double fac = scaleby * dk * dk / (4*M_PI*M_PI);
+        double fac = dk * dk / (4*M_PI*M_PI);
         long int ind=0;
-        for (int iy=0; iy<N; iy++)
+        for (int iy=0; iy<N; iy++) {
             for (int ix=0; ix<=N/2; ix++) {
                 if ( (ix+iy)%2==0) t_array[ind]=fac * array[ind];
                 else t_array[ind] = -fac* array[ind];
                 ind++;
             }
+        }
 
         fftw_plan plan = fftw_plan_dft_c2r_2d(
             N, N, reinterpret_cast<fftw_complex*> (t_array), xt.array, FFTW_ESTIMATE);
+#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
+#endif
 
         // Run the transform:
         fftw_execute(plan);
@@ -956,7 +992,14 @@ namespace galsim {
         fftw_free(t_array);
 
         xt.dx = 2*M_PI/(N*dk);
-        xt.scaleby = 1.;
+    }
+
+    // Same thing, but return a new XTable
+    XTable* KTable::transform() const 
+    {
+        XTable* xt = new XTable( N, 2*M_PI/(N*dk) );
+        transform(*xt);
+        return xt;
     }
 
     void XTable::fftwMeasure() const 
@@ -973,7 +1016,9 @@ namespace galsim {
 
         fftw_plan plan = fftw_plan_dft_r2c_2d(
             N,N, t_array, reinterpret_cast<fftw_complex*> (kt->array), FFTW_MEASURE);
+#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
+#endif
 
         delete kt;
         fftw_free(t_array);
@@ -981,30 +1026,38 @@ namespace galsim {
     }
 
     // Fourier transform from x back to (complex) k:
-    KTable* XTable::transform() const 
+    void XTable::transform(KTable& kt) const 
     {
         check_array();
 
-        KTable* kt = new KTable( N, 2*M_PI/(N*dx) );
-
         fftw_plan plan = fftw_plan_dft_r2c_2d(
-            N,N, array, reinterpret_cast<fftw_complex*> (kt->array), FFTW_ESTIMATE);
+            N,N, array, reinterpret_cast<fftw_complex*> (kt.array), FFTW_ESTIMATE);
+#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
+#endif
         fftw_execute(plan);
         fftw_destroy_plan(plan);
 
         // Now scale the k spectrum and flip signs for x=0 in middle.
-        double fac = scaleby * dx * dx; 
+        double fac = dx * dx; 
         size_t ind=0;
         for (int iy=0; iy<N; iy++) {
             for (int ix=0; ix<=N/2; ix++) {
-                if ( (ix+iy)%2==0) kt->array[ind] *= fac;
-                else kt->array[ind] *= -fac;
+                if ( (ix+iy)%2==0) kt.array[ind] *= fac;
+                else kt.array[ind] *= -fac;
                 ind++;
             }
         }
+        kt.dk = 2*M_PI/(N*dx);
+    }
 
+    // Same thing, but return a new KTable
+    KTable* XTable::transform() const 
+    {
+        KTable* kt = new KTable( N, 2*M_PI/(N*dx) );
+        transform(*kt);
         return kt;
     }
+
 
 }

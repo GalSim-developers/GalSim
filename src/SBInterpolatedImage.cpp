@@ -6,216 +6,229 @@
 namespace galsim {
 
     const double TWOPI = 2.*M_PI;
-    const double OVERSAMPLE_X = 4.;  // FT must be at least this much larger than input
 
     // Default k-space interpolant is quintic:
-    Quintic defaultKInterpolant1d(1e-4);
+    Quintic defaultKInterpolant1d(sbp::kvalue_accuracy);
 
     InterpolantXY SBInterpolatedImage::defaultKInterpolant2d(defaultKInterpolant1d);
 
     SBInterpolatedImage::SBInterpolatedImage(
-        int Npix, double dx_, const Interpolant2d& i, int Nimages_) :  
+        int Npix, double dx, const Interpolant2d& i, int Nimages) :  
         
-        Ninitial(Npix+Npix%2), dx(dx_), Nimages(Nimages_),
-        xInterp(&i), kInterp(&defaultKInterpolant2d),
-        wts(Nimages, 1.), fluxes(Nimages, 1.), 
-        xFluxes(Nimages, 0.), yFluxes(Nimages,0.),
-        xsum(0), ksum(0), xsumValid(false), ksumValid(false),
-        ready(false), readyToShoot(false) 
+        _Ninitial(Npix+Npix%2), _dx(dx), _Nimages(Nimages),
+        _xInterp(&i), _kInterp(&defaultKInterpolant2d),
+        _wts(_Nimages, 1.), _fluxes(_Nimages, 1.), 
+        _xFluxes(_Nimages, 0.), _yFluxes(_Nimages,0.),
+        _xsum(0), _ksum(0), _xsumValid(false), _ksumValid(false),
+        _xsumnew(false), _ksumnew(false),
+        _ready(false), _readyToShoot(false)
     {
-        assert(Ninitial%2==0);
-        assert(Ninitial>=2);
+        assert(_Ninitial%2==0);
+        assert(_Ninitial>=2);
         // Choose the padded size for input array - size 2^N or 3*2^N
         // Make FFT either 2^n or 3x2^n
-        Nk = goodFFTSize(OVERSAMPLE_X*Ninitial);
-        dk = TWOPI / (Nk*dx);
+        _Nk = goodFFTSize(sbp::oversample_x*_Ninitial);
+        _dk = TWOPI / (_Nk*_dx);
 
         // allocate xTables
-        for (int i=0; i<Nimages; i++) 
-            vx.push_back(new XTable(Nk, dx));
+        for (int i=0; i<_Nimages; i++) 
+            _vx.push_back(new XTable(_Nk, _dx));
+        _max_size = (_Ninitial+2.*_xInterp->xrange())*_dx;
     }
 
     template <typename T>
     SBInterpolatedImage::SBInterpolatedImage(
-        const BaseImage<T>& img, const Interpolant2d& i, double dx_, double padFactor) : 
+        const BaseImage<T>& img, const Interpolant2d& i, double dx, double padFactor) : 
 
-        dx(dx_), Nimages(1),
-        xInterp(&i), kInterp(&defaultKInterpolant2d),
-        wts(Nimages, 1.), fluxes(Nimages, 1.), 
-        xFluxes(Nimages, 0.), yFluxes(Nimages,0.),
-        xsum(0), ksum(0), xsumValid(false), ksumValid(false),
-        ready(false), readyToShoot(false) 
+        _dx(dx), _Nimages(1),
+        _xInterp(&i), _kInterp(&defaultKInterpolant2d),
+        _wts(_Nimages, 1.), _fluxes(_Nimages, 1.), 
+        _xFluxes(_Nimages, 0.), _yFluxes(_Nimages,0.),
+        _xsum(0), _ksum(0), _xsumValid(false), _ksumValid(false),
+        _xsumnew(false), _ksumnew(false),
+        _ready(false), _readyToShoot(false)
     {
-        Ninitial = std::max( img.getYMax()-img.getYMin()+1, img.getXMax()-img.getXMin()+1);
-        Ninitial = Ninitial + Ninitial%2;
-        assert(Ninitial%2==0);
-        assert(Ninitial>=2);
-        if (dx<=0.) {
-            dx = img.getScale();
+        _Ninitial = std::max( img.getYMax()-img.getYMin()+1, img.getXMax()-img.getXMin()+1);
+        _Ninitial = _Ninitial + _Ninitial%2;
+        assert(_Ninitial%2==0);
+        assert(_Ninitial>=2);
+        if (_dx<=0.) {
+            _dx = img.getScale();
         }
-        if (padFactor <= 0.) padFactor = OVERSAMPLE_X;
+        if (padFactor <= 0.) padFactor = sbp::oversample_x;
         // Choose the padded size for input array - size 2^N or 3*2^N
         // Make FFT either 2^n or 3x2^n
-        Nk = goodFFTSize(static_cast<int> (std::floor(padFactor*Ninitial)));
-        dk = TWOPI / (Nk*dx);
+        _Nk = goodFFTSize(int(std::floor(padFactor*_Ninitial)));
+        _dk = TWOPI / (_Nk*_dx);
 
         // allocate xTables
-        for (int i=0; i<Nimages; i++) 
-            vx.push_back(new XTable(Nk, dx));
+        for (int i=0; i<_Nimages; i++) 
+            _vx.push_back(new XTable(_Nk, _dx));
         // fill data from image, shifting to center the image in the table
         int xStart = -((img.getXMax()-img.getXMin()+1)/2);
         int yTab = -((img.getYMax()-img.getYMin()+1)/2);
         for (int iy = img.getYMin(); iy<= img.getYMax(); iy++, yTab++) {
             int xTab = xStart;
             for (int ix = img.getXMin(); ix<= img.getXMax(); ix++, xTab++) 
-                vx.front()->xSet(xTab, yTab, img(ix,iy));
+                _vx.front()->xSet(xTab, yTab, img(ix,iy));
         }
+        _max_size = (_Ninitial+2*_xInterp->xrange())*_dx;
     }
 
     SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs):
-        Ninitial(rhs.Ninitial), dx(rhs.dx), Nk(rhs.Nk), Nimages(rhs.Nimages),
-        xInterp(rhs.xInterp), kInterp(rhs.kInterp),
-        wts(rhs.wts), fluxes(rhs.fluxes), xFluxes(rhs.xFluxes), yFluxes(rhs.yFluxes),
-        xsum(0), ksum(0), xsumValid(false), ksumValid(false), ready(rhs.ready),
-        readyToShoot(false) 
+        _Ninitial(rhs._Ninitial), _dx(rhs._dx), _Nk(rhs._Nk), _Nimages(rhs._Nimages),
+        _xInterp(rhs._xInterp), _kInterp(rhs._kInterp),
+        _wts(rhs._wts), _fluxes(rhs._fluxes), _xFluxes(rhs._xFluxes), _yFluxes(rhs._yFluxes),
+        _xsum(0), _ksum(0), _xsumValid(false), _ksumValid(false), 
+        _xsumnew(false), _ksumnew(false),
+        _ready(rhs._ready), _readyToShoot(false), _max_size(rhs._max_size)
     {
         // copy tables
-        for (int i=0; i<Nimages; i++) {
-            vx.push_back(new XTable(*rhs.vx[i]));
-            if (ready)     vk.push_back(new KTable(*rhs.vk[i]));
+        for (int i=0; i<_Nimages; i++) {
+            _vx.push_back(new XTable(*rhs._vx[i]));
+            if (_ready) _vk.push_back(new KTable(*rhs._vk[i]));
         }
     }
 
     SBInterpolatedImage::~SBInterpolatedImage() 
     {
-        for (size_t i=0; i<vx.size(); i++) if (vx[i]) { delete vx[i]; vx[i]=0; }
-        for (size_t i=0; i<vk.size(); i++) if (vk[i]) { delete vk[i]; vk[i]=0; }
-        if (xsum) { delete xsum; xsum=0; }
-        if (ksum) { delete ksum; ksum=0; }
+        for (size_t i=0; i<_vx.size(); i++) if (_vx[i]) { delete _vx[i]; _vx[i]=0; }
+        for (size_t i=0; i<_vk.size(); i++) if (_vk[i]) { delete _vk[i]; _vk[i]=0; }
+        if (_xsumnew) { delete _xsum; _xsum=0; }
+        if (_ksumnew) { delete _ksum; _ksum=0; }
     }
 
     double SBInterpolatedImage::getFlux() const 
     {
         checkReady();
-        return wts * fluxes;
+        return _wts * _fluxes;
     }
 
     void SBInterpolatedImage::setFlux(double flux) 
     {
         checkReady();
         double factor = flux/getFlux();
-        wts *= factor;
-        if (xsumValid) *xsum *= factor;
-        if (ksumValid) *ksum *= factor;
-        readyToShoot = false;   // Need to rescale all the cumulative fluxes
+        _wts *= factor;
+        if (_xsumValid) *_xsum *= factor;
+        if (_ksumValid) *_ksum *= factor;
+        _readyToShoot = false;   // Need to rescale all the cumulative fluxes
     }
 
     Position<double> SBInterpolatedImage::centroid() const 
     {
         checkReady();
-        double wtsfluxes = wts * fluxes;
-        Position<double> p((wts * xFluxes) / wtsfluxes, (wts * yFluxes) / wtsfluxes);
-        return p;
+        double wtsfluxes = _wts * _fluxes;
+        return Position<double>((_wts * _xFluxes) / wtsfluxes, (_wts * _yFluxes) / wtsfluxes);
     }
 
     void SBInterpolatedImage::setPixel(double value, int ix, int iy, int iz) 
     {
-        if (iz < 0 || iz>=Nimages)
+        if (iz < 0 || iz>=_Nimages)
             FormatAndThrow<SBError>() << 
                 "SBInterpolatedImage::setPixel image number " << iz << " out of bounds";
-        if (ix < -Ninitial/2 || ix >= Ninitial / 2)
+        if (ix < -_Ninitial/2 || ix >= _Ninitial / 2)
             FormatAndThrow<SBError>() << 
                 "SBInterpolatedImage::setPixel x coordinate " << ix << " out of bounds";
-        if (iy < -Ninitial/2 || iy >= Ninitial / 2)
+        if (iy < -_Ninitial/2 || iy >= _Ninitial / 2)
             FormatAndThrow<SBError>() << 
                 "SBInterpolatedImage::setPixel x coordinate " << iy << " out of bounds";
 
-        ready = false;
-        readyToShoot = false;
-        vx[iz]->xSet(ix, iy, value);
+        _ready = false;
+        _readyToShoot = false;
+        _vx[iz]->xSet(ix, iy, value);
     }
 
     double SBInterpolatedImage::getPixel(int ix, int iy, int iz) const 
     {
-        if (iz < 0 || iz>=Nimages)
+        if (iz < 0 || iz>=_Nimages)
             FormatAndThrow<SBError>() << 
                 "SBInterpolatedImage::getPixel image number " << iz << " out of bounds";
 
-        return vx[iz]->xval(ix, iy);
+        return _vx[iz]->xval(ix, iy);
     }
 
-    void SBInterpolatedImage::setWeights(const tmv::Vector<double>& wts_) 
+    void SBInterpolatedImage::setWeights(const tmv::Vector<double>& wts) 
     {
-        assert(wts_.size()==Nimages);
-        wts = wts_;
-        xsumValid = false;
-        ksumValid = false;
-        readyToShoot = false;
+        assert(_wts.size()==_Nimages);
+        _wts = wts;
+        _xsumValid = false;
+        _ksumValid = false;
+        _readyToShoot = false;
     }
 
     void SBInterpolatedImage::checkReady() const 
     {
-        if (ready) return;
+        if (_ready) return;
         // Flush old kTables if any;
-        for (size_t i=0; i<vk.size(); i++) { delete vk[i]; vk[i]=0; }
-        vk.clear();
+        for (size_t i=0; i<_vk.size(); i++) { delete _vk[i]; _vk[i]=0; }
+        _vk.clear();
 
-        for (int i=0; i<Nimages; i++) {
+        for (int i=0; i<_Nimages; i++) {
             // Get sums:
             double sum = 0.;
             double sumx = 0.;
             double sumy = 0.;
-            for (int iy=-Ninitial/2; iy<Ninitial/2; iy++) {
-                for (int ix=-Ninitial/2; ix<Ninitial/2; ix++) {
-                    double value = vx[i]->xval(ix, iy);
+            for (int iy=-_Ninitial/2; iy<_Ninitial/2; iy++) {
+                for (int ix=-_Ninitial/2; ix<_Ninitial/2; ix++) {
+                    double value = _vx[i]->xval(ix, iy);
                     sum += value;
                     sumx += value*ix;
                     sumy += value*iy;
                 }
             }
-            fluxes[i] = sum*dx*dx;
-            xFluxes[i] = sumx * std::pow(dx, 3.);
-            yFluxes[i] = sumy * std::pow(dx, 3.);
+            _fluxes[i] = sum*_dx*_dx;
+            _xFluxes[i] = sumx * std::pow(_dx, 3.);
+            _yFluxes[i] = sumy * std::pow(_dx, 3.);
 
             // Conduct FFT
-            vk.push_back( vx[i]->transform());
+            _vk.push_back( _vx[i]->transform());
         }
-        ready = true;
-        xsumValid = false;
-        ksumValid = false;
-        assert(int(vk.size())==Nimages);
+        _ready = true;
+        _xsumValid = false;
+        _ksumValid = false;
+        assert(int(_vk.size())==_Nimages);
     }
 
     void SBInterpolatedImage::checkXsum() const 
     {
         checkReady();
-        if (xsumValid) return;
-        if (!xsum) {
-            xsum = new XTable(*vx[0]);
-            *xsum *= wts[0];
+        if (_xsumValid) return;
+        if (!_xsum && _Nimages == 1 && _wts[0] == 1.) {
+            _xsum = _vx[0];
         } else {
-            xsum->clear();
-            xsum->accumulate(*vx[0], wts[0]);
+            if (!_xsum) {
+                _xsum = new XTable(*_vx[0]);
+                _xsumnew = true;
+                *_xsum *= _wts[0];
+            } else {
+                _xsum->clear();
+                _xsum->accumulate(*_vx[0], _wts[0]);
+            }
+            for (int i=1; i<_Nimages; i++)
+                _xsum->accumulate(*_vx[i], _wts[i]);
         }
-        for (int i=1; i<Nimages; i++)
-            xsum->accumulate(*vx[i], wts[i]);
-        xsumValid = true;
+        _xsumValid = true;
     }
 
     void SBInterpolatedImage::checkKsum() const 
     {
         checkReady();
-        if (ksumValid) return;
-        if (!ksum) {
-            ksum = new KTable(*vk[0]);
-            *ksum *= wts[0];
+        if (_ksumValid) return;
+        if (!_ksum && _Nimages == 1 && _wts[0] == 1.) {
+            _ksum = _vk[0];
         } else {
-            ksum->clear();
-            ksum->accumulate(*vk[0], wts[0]);
+            if (!_ksum) {
+                _ksum = new KTable(*_vk[0]);
+                _ksumnew = true;
+                *_ksum *= _wts[0];
+            } else {
+                _ksum->clear();
+                _ksum->accumulate(*_vk[0], _wts[0]);
+            }
+            for (int i=1; i<_Nimages; i++)
+                _ksum->accumulate(*_vk[i], _wts[i]);
         }
-        for (int i=1; i<Nimages; i++)
-            ksum->accumulate(*vk[i], wts[i]);
-        ksumValid = true;
+        _ksumValid = true;
     }
 
     void SBInterpolatedImage::fillKGrid(KTable& kt) const 
@@ -223,7 +236,7 @@ namespace galsim {
         // This override of base class is to permit potential efficiency gain from
         // separable interpolant kernel.  If so, the KTable interpolation routine
         // will go faster if we make y iteration the inner loop.
-        if (dynamic_cast<const InterpolantXY*> (kInterp)) {
+        if (dynamic_cast<const InterpolantXY*> (_kInterp)) {
             int N = kt.getN();
             double dk = kt.getDk();
             // Only need ix>=0 because it's Hermitian:
@@ -245,7 +258,7 @@ namespace galsim {
 #ifdef DANIELS_TRACING
         cout << "SBInterpolatedImage::fillXGrid called" << endl;
 #endif
-        if ( dynamic_cast<const InterpolantXY*> (xInterp)) {
+        if ( dynamic_cast<const InterpolantXY*> (_xInterp)) {
             int N = xt.getN();
             double dx = xt.getDx();
             for (int ix = -N/2; ix < N/2; ix++) {
@@ -265,7 +278,7 @@ namespace galsim {
     template <typename T>
     double SBInterpolatedImage::fillXImage(ImageView<T>& I, double dx) const 
     {
-        if ( dynamic_cast<const InterpolantXY*> (xInterp)) {
+        if ( dynamic_cast<const InterpolantXY*> (_xInterp)) {
             double sum=0.;
             for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
                 for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {
@@ -286,80 +299,80 @@ namespace galsim {
     }
 
 #ifndef OLD_WAY
-    double SBInterpolatedImage::xValue(Position<double> p) const 
+    double SBInterpolatedImage::xValue(const Position<double>& p) const 
     {
         checkXsum();
-        return xsum->interpolate(p.x, p.y, *xInterp);
+        return _xsum->interpolate(p.x, p.y, *_xInterp);
     }
 
-    std::complex<double> SBInterpolatedImage::kValue(Position<double> p) const 
+    std::complex<double> SBInterpolatedImage::kValue(const Position<double>& p) const 
     {
         // Don't bother if the desired k value is cut off by the x interpolant:
-        double ux = p.x*dx/TWOPI;
-        if (std::abs(ux) > xInterp->urange()) return std::complex<double>(0.,0.);
-        double uy = p.y*dx/TWOPI;
-        if (std::abs(uy) > xInterp->urange()) return std::complex<double>(0.,0.);
-        double xKernelTransform = xInterp->uval(ux, uy);
+        double ux = p.x*_dx/TWOPI;
+        if (std::abs(ux) > _xInterp->urange()) return std::complex<double>(0.,0.);
+        double uy = p.y*_dx/TWOPI;
+        if (std::abs(uy) > _xInterp->urange()) return std::complex<double>(0.,0.);
+        double xKernelTransform = _xInterp->uval(ux, uy);
 
         checkKsum();
-        return xKernelTransform * ksum->interpolate(p.x, p.y, *kInterp);
+        return xKernelTransform * _ksum->interpolate(p.x, p.y, *_kInterp);
     }
 
 #else
-    double SBInterpolatedImage::xValue(Position<double> p) const 
+    double SBInterpolatedImage::xValue(const Position<double>& p) const 
     {
         // Interpolate WITHOUT wrapping the image.
-        int ixMin = static_cast<int> ( std::ceil(p.x/dx - xInterp->xrange()));
-        ixMin = std::max(ixMin, -Ninitial/2);
-        int ixMax = static_cast<int> ( std::floor(p.x/dx + xInterp->xrange()));
-        ixMax = std::min(ixMax, Ninitial/2-1);
-        int iyMin = static_cast<int> ( std::ceil(p.y/dx - xInterp->xrange()));
-        iyMin = std::max(iyMin, -Ninitial/2);
-        int iyMax = static_cast<int> ( std::floor(p.y/dx + xInterp->xrange()));
-        iyMax = std::min(iyMax, Ninitial/2-1);
+        int ixMin = int( std::ceil(p.x/_dx - _xInterp->xrange()));
+        ixMin = std::max(ixMin, -_Ninitial/2);
+        int ixMax = int( std::floor(p.x/_dx + _xInterp->xrange()));
+        ixMax = std::min(ixMax, _Ninitial/2-1);
+        int iyMin = int( std::ceil(p.y/_dx - _xInterp->xrange()));
+        iyMin = std::max(iyMin, -_Ninitial/2);
+        int iyMax = int( std::floor(p.y/_dx + _xInterp->xrange()));
+        iyMax = std::min(iyMax, _Ninitial/2-1);
 
         if (ixMax < ixMin || iyMax < iyMin) return 0.;  // kernel does not overlap data
         int npts = (ixMax - ixMin+1)*(iyMax-iyMin+1);
         tmv::Vector<double> kernel(npts,0.);
-        tmv::Matrix<double> data(Nimages, npts, 0.);
+        tmv::Matrix<double> data(_Nimages, npts, 0.);
         int ipt = 0;
         for (int iy = iyMin; iy <= iyMax; iy++) {
-            double deltaY = p.y/dx - iy;
+            double deltaY = p.y/_dx - iy;
             for (int ix = ixMin; ix <= ixMax; ix++, ipt++) {
-                double deltaX = p.x/dx - ix;
-                kernel[ipt] = xInterp->xval(deltaX, deltaY);
-                for (int iz=0; iz<Nimages; iz++) {
-                    data(iz, ipt) = vx[iz]->xval(ix, iy);
+                double deltaX = p.x/_dx - ix;
+                kernel[ipt] = _xInterp->xval(deltaX, deltaY);
+                for (int iz=0; iz<_Nimages; iz++) {
+                    data(iz, ipt) = _vx[iz]->xval(ix, iy);
                 }
             }
         }
-        return wts * data * kernel;
+        return _wts * data * kernel;
     }
 
-    std::complex<double> SBInterpolatedImage::kValue(Position<double> p) const 
+    std::complex<double> SBInterpolatedImage::kValue(const Position<double>& p) const 
     {
         checkReady();
         // Interpolate in k space, first apply kInterp kernel to wrapped
         // k-space data, then multiply by FT of xInterp kernel.
 
         // Don't bother if the desired k value is cut off by the x interpolant:
-        double ux = p.x*dx/TWOPI;
-        if (std::abs(ux) > xInterp->urange()) return std::complex<double>(0.,0.);
-        double uy = p.y*dx/TWOPI;
-        if (std::abs(uy) > xInterp->urange()) return std::complex<double>(0.,0.);
-        double xKernelTransform = xInterp->uval(ux, uy);
+        double ux = p.x*_dx/TWOPI;
+        if (std::abs(ux) > _xInterp->urange()) return std::complex<double>(0.,0.);
+        double uy = p.y*_dx/TWOPI;
+        if (std::abs(uy) > _xInterp->urange()) return std::complex<double>(0.,0.);
+        double xKernelTransform = _xInterp->uval(ux, uy);
 
         // Range of k points within kernel
-        int ixMin = static_cast<int> (std::ceil(p.x/dk - kInterp->xrange()));
-        int ixMax = static_cast<int> (std::floor(p.x/dk + kInterp->xrange()));
-        int iyMin = static_cast<int> (std::ceil(p.y/dk - kInterp->xrange()));
-        int iyMax = static_cast<int> (std::floor(p.y/dk + kInterp->xrange()));
+        int ixMin = int(std::ceil(p.x/_dk - _kInterp->xrange()));
+        int ixMax = int(std::floor(p.x/_dk + _kInterp->xrange()));
+        int iyMin = int(std::ceil(p.y/_dk - _kInterp->xrange()));
+        int iyMax = int(std::floor(p.y/_dk + _kInterp->xrange()));
 
-        int ixLast = std::min(ixMax, ixMin+Nk-1);
-        int iyLast = std::min(iyMax, iyMin+Nk-1);
+        int ixLast = std::min(ixMax, ixMin+_Nk-1);
+        int iyLast = std::min(iyMax, iyMin+_Nk-1);
         int npts = (ixLast-ixMin+1) * (iyLast-iyMin+1);
         tmv::Vector<double> kernel(npts, 0.);
-        tmv::Matrix<std::complex<double> > data(Nimages, npts, std::complex<double>(0.,0.));
+        tmv::Matrix<std::complex<double> > data(_Nimages, npts, std::complex<double>(0.,0.));
 
         int ipt = 0;
         for (int iy = iyMin; iy <= iyLast; iy++) {
@@ -368,57 +381,85 @@ namespace galsim {
                 double sumk = 0.;
                 int iyy=iy;
                 while (iyy <= iyMax) {
-                    double deltaY = p.y/dk - iyy;
+                    double deltaY = p.y/_dk - iyy;
                     int ixx = ix;
                     while (ixx <= ixMax) {
-                        double deltaX = p.x/dk - ixx;
-                        sumk += kInterp->xval(deltaX, deltaY);
-                        ixx += Nk;
+                        double deltaX = p.x/_dk - ixx;
+                        sumk += _kInterp->xval(deltaX, deltaY);
+                        ixx += _Nk;
                     }
-                    iyy += Nk;
+                    iyy += _Nk;
                 }
                 // Shift ix,iy into un-aliased zone to get k value
-                iyy = iy % Nk;  
-                if(iyy>=Nk/2) iyy-=Nk; 
-                if(iyy<-Nk/2) iyy+=Nk;
-                int ixx = ix % Nk;  
-                if(ixx>=Nk/2) ixx-=Nk; 
-                if(ixx<-Nk/2) ixx+=Nk;
-                for (int iz=0; iz<Nimages; iz++) 
-                    data(iz, ipt) = vk[iz]->kval(ixx, iyy);
+                iyy = iy % _Nk;  
+                if(iyy>=_Nk/2) iyy-=_Nk; 
+                if(iyy<-_Nk/2) iyy+=_Nk;
+                int ixx = ix % _Nk;  
+                if(ixx>=_Nk/2) ixx-=_Nk; 
+                if(ixx<-_Nk/2) ixx+=_Nk;
+                for (int iz=0; iz<_Nimages; iz++) 
+                    data(iz, ipt) = _vk[iz]->kval(ixx, iyy);
                 kernel[ipt] = sumk;
                 ipt++;
             }
         }
-        return xKernelTransform*(wts * data * kernel);
+        return xKernelTransform*(_wts * data * kernel);
     }
 
 #endif
 
-    void SBInterpolatedImage::checkReadyToShoot() const {
-        if (readyToShoot) return;
+    // Set maxK to the value where the FT is down to maxk_threshold
+    double SBInterpolatedImage::maxK() const 
+    {
+        // Notice that interpolant other than sinc may make max frequency higher than
+        // the Nyquist frequency of the initial image
+        
+        // Also, since we used kvalue_accuracy for the threshold of _xInterp
+        // (at least for the default quintic interpolant) rather than maxk_threshold,
+        // this will probably be larger than we really need.
+        // We could modify the urange method of Interpolant to take a threshold value
+        // at that point, rather than just use the constructor's value, but it's 
+        // probably not worth it.  It will probably be very rare that the final maxK
+        // value of the FFT will be due to an SBInterpolatedImage.  Usually, this will
+        // be convolved by a PSF that will have a smaller maxK.
+        return _xInterp->urange() * 2.*M_PI / _dx; 
+    }
+
+    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // most alias_threshold of the flux.
+    double SBInterpolatedImage::stepK() const 
+    {
+        // In this case, R = original image extent + kernel footprint, which we
+        // have already stored as _max_size.
+        return M_PI / _max_size;
+    }
+
+
+    void SBInterpolatedImage::checkReadyToShoot() const 
+    {
+        if (_readyToShoot) return;
 
         // Build the sets holding cumulative fluxes of all Pixels
         checkXsum();
-        positiveFlux = 0.;
-        negativeFlux = 0.;
-        pt.clear();
-        for (int iy=-Ninitial/2; iy<Ninitial/2; iy++) {
-            double y = iy*dx;
-            for (int ix=-Ninitial/2; ix<Ninitial/2; ix++) {
-                double flux = xsum->xval(ix,iy) * dx*dx;
+        _positiveFlux = 0.;
+        _negativeFlux = 0.;
+        _pt.clear();
+        for (int iy=-_Ninitial/2; iy<_Ninitial/2; iy++) {
+            double y = iy*_dx;
+            for (int ix=-_Ninitial/2; ix<_Ninitial/2; ix++) {
+                double flux = _xsum->xval(ix,iy) * _dx*_dx;
                 if (flux==0.) continue;
-                double x=ix*dx;
+                double x=ix*_dx;
                 if (flux > 0.) {
-                    positiveFlux += flux;
+                    _positiveFlux += flux;
                 } else {
-                    negativeFlux += -flux;
+                    _negativeFlux += -flux;
                 }
-                pt.push_back(Pixel(x,y,flux));
+                _pt.push_back(Pixel(x,y,flux));
             }
         }
-        pt.buildTree();
-        readyToShoot = true;
+        _pt.buildTree();
+        _readyToShoot = true;
     }
 
     // Photon-shooting 
@@ -435,32 +476,33 @@ namespace galsim {
         assert(N>=0);
 
         PhotonArray result(N);
-        if (N<=0 || pt.empty()) return result;
-        double totalAbsFlux = positiveFlux + negativeFlux;
+        if (N<=0 || _pt.empty()) return result;
+        double totalAbsFlux = _positiveFlux + _negativeFlux;
         double fluxPerPhoton = totalAbsFlux / N;
         for (int i=0; i<N; i++) {
             double unitRandom = ud();
-            Pixel* p = pt.find(unitRandom);
+            Pixel* p = _pt.find(unitRandom);
             result.setPhoton(i, p->x, p->y, 
                              p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }
 
-        // Last step is to convolve with the interpolation kernel.  Can skip if using a 2d delta function
-        const InterpolantXY* xyPtr = dynamic_cast<const InterpolantXY*> (xInterp);
+        // Last step is to convolve with the interpolation kernel. 
+        // Can skip if using a 2d delta function
+        const InterpolantXY* xyPtr = dynamic_cast<const InterpolantXY*> (_xInterp);
         if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d())))
-             result.convolve(xInterp->shoot(N, ud));
+             result.convolve(_xInterp->shoot(N, ud));
 
         return result;
     }
 
     // instantiate template functions for expected image types
     template SBInterpolatedImage::SBInterpolatedImage(
-        const BaseImage<float>& img, const Interpolant2d& i, double dx_, double padFactor);
+        const BaseImage<float>& img, const Interpolant2d& i, double dx, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImage(
-        const BaseImage<double>& img, const Interpolant2d& i, double dx_, double padFactor);
+        const BaseImage<double>& img, const Interpolant2d& i, double dx, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImage(
-        const BaseImage<short>& img, const Interpolant2d& i, double dx_, double padFactor);
+        const BaseImage<short>& img, const Interpolant2d& i, double dx, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImage(
-        const BaseImage<int>& img, const Interpolant2d& i, double dx_, double padFactor);
+        const BaseImage<int>& img, const Interpolant2d& i, double dx, double padFactor);
 }
 
