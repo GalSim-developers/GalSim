@@ -40,11 +40,7 @@ test_hlr = 1.0
 test_fwhm = 1.0
 test_sigma = 1.0
 test_scale = 1.0
-test_dx = 0.2
 test_sersic_n = [1.5, 2.5]
-target_precision = 0.004 # convergence criterion governing choice of pixel scale
-init_ratio = 1000.0 # a junk value to start with
-convergence_value = init_ratio # a junk value to start with, should be >> target_precision
 
 # define some functions to carry out computations that are carried out by several of the tests
 
@@ -199,50 +195,38 @@ def test_gaussian_radii():
     """
     import time
     t1 = time.time()
-    import time
-    t1 = time.time()
+    # TODO: Once we have getHalfLightRadius, we should repeat the hlr test for the
+    #       versions that create the object from sigma or fwhm.
+    import math
     # first test half-light-radius
-    my_test_dx = test_dx
-    my_prev_ratio = init_ratio
-    my_convergence_value = convergence_value
-    while (my_convergence_value > target_precision):
-        test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
-        test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx) / \
-                np.sum(test_gal_image.array)
-        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-        my_prev_ratio = my_ratio
-        my_test_dx /= 2.0
-    np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
+    test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
+    dr = 1.e-4
+    r = 0.
+    sum = 0.
+    while r < test_hlr:
+        sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
+        r += dr
+    sum *= 2. * math.pi * dr
+    print 'sum = ',sum
+    np.testing.assert_almost_equal(sum, 0.5, decimal=4,
             err_msg="Error in Gaussian constructor with half-light radius")
+
     # then test sigma
-    my_test_dx = test_dx
-    my_prev_ratio = init_ratio
-    my_convergence_value = convergence_value
-    while (my_convergence_value > target_precision):
-        test_gal = galsim.Gaussian(flux = 1., sigma = test_sigma)
-        test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntensityAtRadius(test_gal_image, test_sigma/my_test_dx) / \
-                np.max(test_gal_image.array)
-        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-        my_prev_ratio = my_ratio
-        my_test_dx /= 2.0
-    np.testing.assert_almost_equal(my_ratio, np.exp(-0.5), decimal = 2,
+    test_gal = galsim.Gaussian(flux = 1., sigma = test_sigma)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_sigma,0)) / center
+    print 'sigma ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, np.exp(-0.5), decimal=4,
             err_msg="Error in Gaussian constructor with sigma")
+
     # then test FWHM
-    my_test_dx = test_dx
-    my_prev_ratio = init_ratio
-    my_convergence_value = convergence_value
-    while (my_convergence_value > target_precision):
-        test_gal = galsim.Gaussian(flux = 1., fwhm = test_fwhm)
-        test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntensityAtRadius(test_gal_image, 0.5*test_fwhm/my_test_dx) / \
-                np.max(test_gal_image.array)
-        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-        my_prev_ratio = my_ratio
-        my_test_dx /= 2.0
-    np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
-            err_msg="Error in Gaussian constructor with FWHM")
+    test_gal = galsim.Gaussian(flux = 1., fwhm = test_fwhm)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
+    print 'fwhm ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, 0.5, decimal=4,
+            err_msg="Error in Gaussian constructor with fwhm")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -277,35 +261,29 @@ def test_exponential_radii():
     """Test initialization of Exponential with different types of radius specification.
     """
     import time
-    t1 = time.time()
+    t1 = time.time() 
+    import math
     # first test half-light-radius
-    my_test_dx = test_dx
-    my_prev_ratio = init_ratio
-    my_convergence_value = convergence_value
-    while (my_convergence_value > target_precision):
-        test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
-        test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx) / \
-                np.sum(test_gal_image.array)
-        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-        my_prev_ratio = my_ratio
-        my_test_dx /= 2.0
-    np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
+    test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
+    dr = 1.e-4
+    r = 0.
+    sum = 0.
+    while r < test_hlr:
+        sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
+        r += dr
+    sum *= 2. * math.pi * dr
+    print 'sum = ',sum
+    np.testing.assert_almost_equal(sum, 0.5, decimal=4,
             err_msg="Error in Exponential constructor with half-light radius")
+
     # then test scale
-    my_test_dx = test_dx
-    my_prev_ratio = init_ratio
-    my_convergence_value = convergence_value
-    while (my_convergence_value > target_precision):
-        test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale)
-        test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntensityAtRadius(test_gal_image, test_scale/my_test_dx) / \
-                np.max(test_gal_image.array)
-        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-        my_prev_ratio = my_ratio
-        my_test_dx /= 2.0
-    np.testing.assert_almost_equal(my_ratio, np.exp(-1.0), decimal = 2,
-            err_msg="Error in Exponential constructor with scale radius")
+    test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
+    print 'scale ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, np.exp(-1.0), decimal=4,
+            err_msg="Error in Exponential constructor with scale")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -341,21 +319,21 @@ def test_sersic_radii():
     """
     import time
     t1 = time.time()
-    # test half-light-radius
-    for sersicn in test_sersic_n:
-        my_test_dx = test_dx
-        my_prev_ratio = init_ratio
-        my_convergence_value = convergence_value
-        while (my_convergence_value > target_precision):
-            test_gal = galsim.Sersic(sersicn, flux = 1., half_light_radius = test_hlr)
-            test_gal_image = test_gal.draw(dx = my_test_dx)
-            my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx) / \
-                    np.sum(test_gal_image.array)
-            my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-            my_prev_ratio = my_ratio
-            my_test_dx /= 2.0
-        np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
-                err_msg="Error in Sersic constructor with half-light radius")
+    import math
+    for n in test_sersic_n:
+        # test half-light-radius
+        test_gal = galsim.Sersic(n=n, flux = 1., half_light_radius = test_hlr)
+        dr = 1.e-4
+        r = 0.
+        sum = 0.
+        while r < test_hlr:
+            sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
+            r += dr
+        sum *= 2. * math.pi * dr
+        print 'sum = ',sum
+        np.testing.assert_almost_equal(sum, 0.5, decimal=4,
+                err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -459,26 +437,73 @@ def test_sbprofile_moffat_properties():
 def test_moffat_radii():
     """Test initialization of Moffat with different types of radius specification.
     """
-    import time
+    import time 
     t1 = time.time()
-    test_beta = 2.
+    import math
     # first test half-light-radius
-    my_test_dx = test_dx
-    my_prev_ratio = init_ratio
-    my_convergence_value = convergence_value
-    while (my_convergence_value > target_precision):
-        test_gal = galsim.Moffat(beta=test_beta, truncationFWHM=5, flux = 1.,
-                half_light_radius = test_hlr)
-        test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx) / \
-                np.sum(test_gal_image.array)
-        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-        my_prev_ratio = my_ratio
-        my_test_dx /= 2.0
-    np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
+    test_beta = 2.
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr)
+    dr = 1.e-4
+    r = 0.
+    sum = 0.
+    while r < test_hlr:
+        sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
+        r += dr
+    sum *= 2. * math.pi * dr
+    print 'sum = ',sum
+    np.testing.assert_almost_equal(sum, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with half-light radius")
-    # then test scale -- later!  this method takes too long
-    # then test FWHM -- later!  this method takes too long
+
+    # then test scale
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, scale_radius = test_scale)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
+    print 'scale ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, pow(2,-test_beta), decimal=4,
+            err_msg="Error in Moffat constructor with scale")
+
+    # then test FWHM
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, fwhm = test_fwhm)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
+    print 'fwhm ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, 0.5, decimal=4,
+            err_msg="Error in Moffat constructor with fwhm")
+
+    # Now repeat everything using a severe trunctation.  (Above had no truncation.)
+    # first test half-light-radius
+    test_beta = 2.
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, truncationFWHM=2,
+            half_light_radius = test_hlr)
+    dr = 1.e-4
+    r = 0.
+    sum = 0.
+    while r < test_hlr:
+        sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
+        r += dr
+    sum *= 2. * math.pi * dr
+    print 'sum = ',sum
+    np.testing.assert_almost_equal(sum, 0.5, decimal=4,
+            err_msg="Error in Moffat constructor with half-light radius")
+
+    # then test scale
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, truncationFWHM=2,
+            scale_radius = test_scale)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
+    print 'scale ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, pow(2,-test_beta), decimal=4,
+            err_msg="Error in Moffat constructor with scale")
+
+    # then test FWHM
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, truncationFWHM=2,
+            fwhm = test_fwhm)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
+    print 'fwhm ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, 0.5, decimal=4,
+            err_msg="Error in Moffat constructor with fwhm")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1113,6 +1138,11 @@ def test_sbprofile_sbinterpolatedimage():
 
 
 if __name__ == "__main__":
+    test_gaussian_radii()
+    test_exponential_radii()
+    test_sersic_radii()
+    test_moffat_radii()
+
     test_sbprofile_gaussian()
     test_sbprofile_gaussian_properties()
     test_gaussian_radii()

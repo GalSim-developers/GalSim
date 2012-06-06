@@ -15,9 +15,15 @@ import galsim.atmosphere
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
                                                           # images. 
 
+def funcname():
+    import inspect
+    return inspect.stack()[1][3]
+
 def test_doublegaussian_vs_sbadd():
     """Test that profiles from galsim.atmosphere.DoubleGaussian equal those from SBGaussian/SBAdd.
     """
+    import time
+    t1 = time.time()
     for flux1 in np.linspace(0.2, 3, 3):
         for sigma1 in np.linspace(0.2, 3, 3):
             for flux2 in np.linspace(0.2, 3, 3):
@@ -36,15 +42,21 @@ def test_doublegaussian_vs_sbadd():
                     g2 = galsim.SBGaussian(flux2, fwhm=fwhm2)
                     dbl2 = galsim.SBAdd(g1, g2)
                     np.testing.assert_almost_equal(dbl1.draw().array, dbl2.draw().array)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_doublegaussian_vs_refimg():
     """Test a specific double Gaussian from galsim.atmosphere.DoubleGaussian against a saved result.
     """
+    import time
+    t1 = time.time()
     dblg = galsim.atmosphere.DoubleGaussian(0.75, 0.25, sigma1=1., sigma2=3.)
     myImg = dblg.draw(dx=0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Two Gaussian reference image disagrees with DoubleGaussian class")   
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_doublegaussian_vs_sbadd()
