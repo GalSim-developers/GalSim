@@ -36,44 +36,13 @@ photon_decimal_test = 2
 
 # for radius tests - specify half-light-radius, FHWM, sigma to be compared with high-res image (with
 # pixel scale chosen iteratively until convergence is achieved, beginning with test_dx)
-test_hlr = 1.0
-test_fwhm = 1.0
-test_sigma = 1.0
-test_scale = 1.0
+test_hlr = 1.8
+test_fwhm = 1.8
+test_sigma = 1.8
+test_scale = 1.8
 test_sersic_n = [1.5, 2.5]
 
 # define some functions to carry out computations that are carried out by several of the tests
-
-def getRGrid(image1):
-    # function to get the value of radius from the image center at the position of each pixel
-    xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0]) + image1.getXMin(),
-                               np.arange(np.shape(image1.array)[1]) + image1.getYMin())
-    xcent = np.mean(xgrid * image1.array) / np.mean(image1.array)
-    ycent = np.mean(ygrid * image1.array) / np.mean(image1.array)
-    rgrid = np.sqrt((xgrid-xcent)**2 + (ygrid-ycent)**2)
-    return rgrid
-
-def getIntegratedFlux(image1, radius):
-    # integrate to compute the flux in an image within some chosen radius [units: pixels], in a
-    # clunky but transparent way -- will only be reasonably accurate for high-resolution images.
-    return np.sum(image1.array[np.where(getRGrid(image1) < radius)])
-
-def getIntensityAtRadius(image1, radius):
-    # get the intensity in an image at some chosen radius [units: pixels] from the center, in a
-    # clunky yet transparent way -- will only be reasonably accurate for high-resolution images, not
-    # right at the center.
-    rgrid = getRGrid(image1)
-    rvec = np.arange(1., np.max(rgrid), 1.)
-    Ivec = 0 * rvec
-    rgrid_nearest = (np.round(rgrid)).astype(np.integer)
-    ind_below = np.max(np.where(rvec < radius))
-    ind_above = np.min(np.where(rvec >= radius))
-    newvec = image1.array[np.where(rgrid_nearest == ind_below)]
-    Ibelow = np.sum(newvec)/len(newvec)
-    newvec = image1.array[np.where(rgrid_nearest == ind_above)]
-    Iabove = np.sum(newvec)/len(newvec)
-    delta = (radius - rvec[ind_below])/(rvec[ind_above]-rvec[ind_below])
-    return (delta*Iabove + (1.0-delta)*Ibelow)
 
 def printval(image1, image2):
     print "New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array)
