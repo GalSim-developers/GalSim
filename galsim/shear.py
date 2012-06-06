@@ -35,117 +35,106 @@ There can be no mixing and matching, e.g., specifying g1 and e2.  It is permissi
 one of two components, with the other assumed to be zero.  If a magnitude such as e, g, eta, or q is
 specified, then theta is also required to be specified.
 """
-class Shear:
+class Shear(_galsim._Shear):
     def __init__(self, **kwargs):
         # note, no *args because we're not allowing Shear to be initialized with unnamed args!
         import numpy as np
 
         # check the named args: if a component of e, g, or eta, then require that the other
         # component is zero if not set, and don't allow specification of mixed pairs like e1 and g2
-        g1 = kwargs.pop('g1', None)
-        g2 = kwargs.pop('g2', None)
-        if g1 != None or g2 != None:
-            if kwargs:
-                raise RuntimeError(
-                    "Shear constructor using g1/g2 got unexpected argument(s): %s"%kwargs.keys())
-            if (g1 == None):
-                g1 = 0.0
-            if (g2 == None):
-                g2 = 0.0
-            g = np.sqrt(g1**2 + g2**2)
-            if (g < 1):
-                return galsim._Shear(g1, g2)
-            else:
-                raise ValueError("Requested shear exceeds 1: %f"%g)
-
-        e1 = kwargs.pop('e1', None)
-        e2 = kwargs.pop('e2', None)
-        if e1 != None or e2 != None:
-            if kwargs:
-                raise RuntimeError(
-                    "Shear constructor using e1/e2 got unexpected argument(s): %s"%kwargs.keys())
-            if (e1 == None):
-                e1 = 0.0
-            if (e2 == None):
-                e2 = 0.0
-            e = np.sqrt(e1**2 + e2**2)
-            if (e < 1):
-                s = galsim._Shear()
-                s.setE1E2(e1, e2)
-                return s
-            else:
-                raise ValueError("Requested distortion exceeds 1: %s"%e)
-
-        eta1 = kwargs.pop('eta1', None)
-        eta2 = kwargs.pop('eta2', None)
-        if eta1 != None or eta2 != None:
-            if kwargs:
-                raise RuntimeError(
-                    "Shear constructor using eta1/eta2 got unexpected argument(s): %s"%kwargs.keys())
-            if (eta1 == None):
-                eta1 = 0.0
-            if (eta2 == None):
-                eta2 = 0.0
-            s = galsim._Shear()
-            s.setEta1Eta2(eta1, e2)
-            return s
-
         # check the named args: require also a position angle if we didn't get g1/g2, e1/e2, or
         # eta1/eta2
-        theta = kwargs.pop('theta')
-        if (theta == None):
+        if not kwargs:
+            raise RuntimeError("No keywords given to initialize Shear!")
+        if len(kwargs) > 2:
             raise RuntimeError(
-                "Shear constructor did not get 2 components, OR a magnitude and position angle!")
-        if not isinstance(theta, galsim.Angle) :
-            raise RuntimeError("The position angle that was supplied is not an Angle instance!")
-
-        g = kwargs.pop('g')
-        if (g != None):
-            if abs(g) > 1:
-                raise ValueError("Requested shear exceeds 1: %f"%g)
-            if kwargs:
-                raise RuntimeError(
-                    "Shear constructor using g/theta got unexpected argument(s): %s"%kwargs.keys())
-            g1 = np.cos(2.0*np.pi)*g
-            g2 = np.sin(2.0*np.pi)*g
-            return galsim._Shear(g1, g2)
-
-        e = kwargs.pop('e')
-        if (e != None):
-            if abs(e) > 1:
-                raise ValueError("Requested distortion exceeds 1: %f"%e)
-            if kwargs:
-                raise RuntimeError(
-                    "Shear constructor using e/theta got unexpected argument(s): %s"%kwargs.keys())
-            s = galsim._Shear()
-            s.setEBeta(e, theta)
-            return s
-
-        eta = kwargs.pop('eta')
-        if (eta != None):
-            if kwargs:
-                raise RuntimeError(
-                    "Shear constructor using eta/theta got unexpected argument(s): %s"%kwargs.keys())
-            s = galsim._Shear()
-            s.setEtaBeta(eta, theta)
-            return s
-
-        q = kwargs.pop('q')
-        if (q != None):
-            if q <= 0 or q > 1:
-                raise ValueError("Cannot use requested axis ratio of %f!"%q)
-            if kwargs:
-                raise RuntimeError(
-                    "Shear constructor using q/theta got unexpected argument(s): %s"%kwargs.keys())
-            s = galsim._Shear()
-            eta = -np.log(q)
-            s.setEtaBeta(eta, theta)
-            return s
-
+                "Shear constructor received too many keyword arguments (max 2): %s"%kwargs.keys())
+        g1 = kwargs.pop('g1', None)
+        g2 = kwargs.pop('g2', None)
+        e1 = kwargs.pop('e1', None)
+        e2 = kwargs.pop('e2', None)
+        eta1 = kwargs.pop('eta1', None)
+        eta2 = kwargs.pop('eta2', None)
+        theta = kwargs.pop('theta', None)
+        g = kwargs.pop('g', None)
+        e = kwargs.pop('e', None)
+        eta = kwargs.pop('eta', None)
+        q = kwargs.pop('q', None)
         # make sure there is no other random keyword arg provided
         if kwargs:
             raise RuntimeError(
                 "Shear constructor got unexpected argument(s): %s"%kwargs.keys())
+
+        # Now go through the possibilities
+        use_shear = None
+        if g1 != None or g2 != None:
+            if g1 == None:
+                g1 = 0.0
+            if g2 == None:
+                g2 = 0.0
+            g = np.sqrt(g1**2 + g2**2)
+            if g < 1:
+                use_shear = _galsim._Shear(g1, g2)
+            else:
+                raise ValueError("Requested shear exceeds 1: %f"%g)
+        elif e1 != None or e2 != None:
+            if use_shear != None:
+                raise RuntimeError("Tried to initialize Shear in too many ways!")
+            if e1 == None:
+                e1 = 0.0
+            if e2 == None:
+                e2 = 0.0
+            e = np.sqrt(e1**2 + e2**2)
+            if e < 1:
+                use_shear = _galsim._Shear()
+                use_shear.setE1E2(e1, e2)
+            else:
+                raise ValueError("Requested distortion exceeds 1: %s"%e)
+        elif eta1 != None or eta2 != None:
+            if use_shear != None:
+                raise RuntimeError("Tried to initialize Shear in too many ways!")
+            if eta1 == None:
+                eta1 = 0.0
+            if eta2 == None:
+                eta2 = 0.0
+            use_shear = _galsim._Shear()
+            use_shear.setEta1Eta2(eta1, e2)
+        # from here on, we need a magnitude and position angle, so check the PA
+        elif theta == None:
+            raise RuntimeError(
+                "Shear constructor did not get 2 components, OR a magnitude and position angle!")
+        elif not isinstance(theta, _galsim.Angle) :
+            raise RuntimeError("The position angle that was supplied is not an Angle instance!")
+        elif g != None:
+            if use_shear != None:
+                raise RuntimeError("Tried to initialize Shear in too many ways!")
+            if abs(g) > 1:
+                raise ValueError("Requested shear exceeds 1: %f"%g)
+            g1 = np.cos(2.0*np.pi)*g
+            g2 = np.sin(2.0*np.pi)*g
+            use_shear = _galsim._Shear(g1, g2)
+        elif e != None:
+            if use_shear != None:
+                raise RuntimeError("Tried to initialize Shear in too many ways!")
+            if abs(e) > 1:
+                raise ValueError("Requested distortion exceeds 1: %f"%e)
+            use_shear = _galsim._Shear()
+            use_shear.setEBeta(e, theta)
+        elif eta != None:
+            if use_shear != None:
+                raise RuntimeError("Tried to initialize Shear in too many ways!")
+            use_shear = _galsim._Shear()
+            use_shear.setEtaBeta(eta, theta)
+        elif q != None:
+            if use_shear != None:
+                raise RuntimeError("Tried to initialize Shear in too many ways!")
+            if q <= 0 or q > 1:
+                raise ValueError("Cannot use requested axis ratio of %f!"%q)
+            use_shear = _galsim._Shear()
+            eta = -np.log(q)
+            use_shear.setEtaBeta(eta, theta)
+
+        self = use_shear
 
 def Shear_repr(self):
     return (self.__class__.__name__+"(e1="+str(self.getE1())+", e2="+str(self.getE2())+")")
@@ -153,6 +142,6 @@ def Shear_repr(self):
 def Shear_str(self):
     return ("("+str(self.getE1())+", "+str(self.getE2())+")")
 
-_galsim._Shear.__repr__ = Shear_repr
-_galsim._Shear.__str__ = Shear_str
+Shear.__repr__ = Shear_repr
+Shear.__str__ = Shear_str
 
