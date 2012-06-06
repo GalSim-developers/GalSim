@@ -70,7 +70,7 @@ def kolmogorov_psf(array_shape=(256,256), dx=1., lam_over_r0=1.):
                            PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
                            values for the Fried parameter are on the order of 10 cm for most 
                            observatories and up to 20 cm for excellent sites. The values are 
-                           usually quoted at lambda = 500 nm and r0 depends weakly on wavelength
+                           usually quoted at lambda = 500 nm and r0 depends on wavelength
                            [r0 ~ lambda^(-6/5)].
     """
     amtf = kolmogorov_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
