@@ -150,9 +150,11 @@ namespace galsim {
         void reset(long lseed) { _rng.reset(new rng_type(lseed)); }
 
         /**
-         * @brief Make this object share its random number generator with rhs.
+         * @brief Make this object share its random number generator with another Deviate.
+         *
+         * It discards whatever rng it had been using and starts sharing the one held by dev.
          */
-        void reset(const BaseDeviate& rhs) { _rng = rhs._rng; }
+        void reset(const BaseDeviate& dev) { _rng = dev._rng; }
 
    protected:
 

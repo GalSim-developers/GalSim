@@ -58,6 +58,9 @@ struct PyBaseDeviate {
                  (bp::arg("lseed")),
                  "Re-seed the PRNG using specified seed, and sever the connection to any other "
                  "Deviate.")
+            .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
+                 (bp::arg("dev")),
+                 "Re-connect this Deviate with the rng in another one")
             ;
     }
 
