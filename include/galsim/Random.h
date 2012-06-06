@@ -96,19 +96,19 @@ namespace galsim {
          * Note that microsecond counter is the seed, so BaseDeviates constructed in rapid
          * succession will not be independent. 
          */
-        BaseDeviate() : rng(new rng_type()) { seedtime(); } 
+        BaseDeviate() : _rng(new rng_type()) { seedtime(); } 
 
         /**
          * @brief Construct and seed a new BaseDeviate, using the provided value as seed.
          *
          * @param[in] lseed A long-integer seed for the RNG.
          */
-        BaseDeviate(long lseed) : rng(new rng_type(lseed)) {} 
+        BaseDeviate(long lseed) : _rng(new rng_type(lseed)) {} 
 
         /**
          * @brief Construct a new BaseDeviate, sharing the random number generator with rhs.
          */
-        BaseDeviate(const BaseDeviate& rhs) : rng(rhs.rng) {} 
+        BaseDeviate(const BaseDeviate& rhs) : _rng(rhs._rng) {} 
 
         /**
          * @brief Destructor
@@ -131,7 +131,7 @@ namespace galsim {
          *
          * Note that this will reseed all Deviates currently sharing the RNG with this one.
          */
-        void seed(long lseed) { rng->seed(lseed); }
+        void seed(long lseed) { _rng->seed(lseed); }
 
         /**
          * @brief Like seed(), but severs the relationship between other Deviates.
@@ -139,7 +139,7 @@ namespace galsim {
          * Other Deviates that had been using the same RNG will be unaffected, while this 
          * Deviate will obtain a fresh RNG seeding by the current time.
          */
-        void reset() { rng.reset(new rng_type()); seedtime(); }
+        void reset() { _rng.reset(new rng_type()); seedtime(); }
 
         /**
          * @brief Like seed(lseed), but severs the relationship between other Deviates.
@@ -147,11 +147,16 @@ namespace galsim {
          * Other Deviates that had been using the same RNG will be unaffected, while this 
          * Deviate will obtain a fresh RNG seeding by the current time.
          */
-        void reset(long lseed) { rng.reset(new rng_type(lseed)); }
+        void reset(long lseed) { _rng.reset(new rng_type(lseed)); }
+
+        /**
+         * @brief Make this object share its random number generator with rhs.
+         */
+        void reset(const BaseDeviate& rhs) { _rng = rhs._rng; }
 
    protected:
 
-        boost::shared_ptr<rng_type> rng;
+        boost::shared_ptr<rng_type> _rng;
 
         /**
          * @brief Private routine to seed with microsecond counter from time-of-day structure.
@@ -160,7 +165,7 @@ namespace galsim {
         {
             struct timeval tp;
             gettimeofday(&tp,NULL);
-            rng->seed(tp.tv_usec);
+            _rng->seed(tp.tv_usec);
         }
     };
 
@@ -187,7 +192,7 @@ namespace galsim {
          *
          * @return A uniform deviate in the interval [0.,1.)
          */
-        double operator() () { return urd(*this->rng); }
+        double operator() () { return urd(*this->_rng); }
 
         /**
          * @brief Add Uniform pseudo-random deviates to every element in a supplied Image.
@@ -249,7 +254,7 @@ namespace galsim {
          *
          * @return A Gaussian deviate with current mean and sigma
          */
-        double operator() () { return normal(*this->rng); }
+        double operator() () { return normal(*this->_rng); }
 
         /**
          * @brief Get current distribution mean
@@ -343,7 +348,7 @@ namespace galsim {
          *
          * @return A binomial deviate with current N and p
          */
-        int operator()() { return bd(*this->rng); }
+        int operator()() { return bd(*this->_rng); }
 
         /**
          * @brief Report current value of N
@@ -433,7 +438,7 @@ namespace galsim {
          *
          * @return A Poisson deviate with current mean
          */
-        int operator()() { return pd(*this->rng); }
+        int operator()() { return pd(*this->_rng); }
 
         /**
          * @brief Report current distribution mean
@@ -517,7 +522,7 @@ namespace galsim {
          *
          * @return A Weibull deviate with current shape k and scale lam.
          */
-        double operator() () { return weibull(*this->rng); }
+        double operator() () { return weibull(*this->_rng); }
 
         /**
          * @brief Get current distribution shape parameter a.
@@ -618,7 +623,7 @@ namespace galsim {
          *
          * @return A Gamma deviate with current shape alpha and scale beta.
          */
-        double operator() () { return gamma(*this->rng); }
+        double operator() () { return gamma(*this->_rng); }
 
         /**
          * @brief Get current distribution shape parameter alpha.
@@ -713,7 +718,7 @@ namespace galsim {
          *
          * @return A Chi^2 deviate with current degrees-of-freedom parameter n.
          */
-        double operator() () { return chi_squared(*this->rng); }
+        double operator() () { return chi_squared(*this->_rng); }
 
         /**
          * @brief Get current distribution degrees-of-freedom parameter n.
