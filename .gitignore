@@ -15,3 +15,5 @@ tests/nosetests.xml
 examples/output/*
 devutils/sizeof_SIFD
 gs.error
+*junk*
+debug.out

@@ -1,5 +1,14 @@
+
+#define DEBUGLOGGING
+
 #include "Interpolant.h"
 #include "integ/Int.h"
+
+#ifdef DEBUGLOGGING
+#include <fstream>
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
+#endif
 
 namespace galsim {
 
@@ -52,17 +61,23 @@ namespace galsim {
         // sum over all arguments x+jN that are within range.
         // Start by finding x+jN closest to zero
         double xdown = x - N*std::floor(x/N + 0.5);
-        double xup = xdown+N;
-        double sum = 0.;
-        while (std::abs(xdown) <= xrange()) {
-            sum += xval(xdown);
-            xdown -= N;
+        assert(std::abs(xdown) <= N);
+        if (xrange() <= N) {
+            // This is the usual case.
+            return xval(xdown);
+        } else {
+            double xup = xdown+N;
+            double sum = 0.;
+            while (std::abs(xdown) <= xrange()) {
+                sum += xval(xdown);
+                xdown -= N;
+            }
+            while (xup <= xrange()) {
+                sum += xval(xup);
+                xup += N;
+            }
+            return sum;
         }
-        while (xup <= xrange()) {
-            sum += xval(xup);
-            xup += N;
-        }
-        return sum;
     }
 
     double Lanczos::uCalc(double u) const 

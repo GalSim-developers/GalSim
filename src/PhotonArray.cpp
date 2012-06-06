@@ -90,7 +90,7 @@ namespace galsim {
 
         for (int iOut = N-1; iOut>=0; iOut--) {
             // Randomly select an input photon to use at this output
-            int iIn = static_cast<int> (floor( (iOut+1)*ud()));
+            int iIn = int(floor( (iOut+1)*ud()));
             if (iIn > iOut) iIn=iOut;  // should not happen, but be safe
             if (iIn < iOut) {
                 // Save input information
@@ -131,8 +131,8 @@ namespace galsim {
         double fluxScale = 1./(dx*dx);  // Factor to turn flux into surface brightness in an Image pixel
 
         for (int i=0; i<size(); i++) {
-            int ix = static_cast<int> (floor(_x[i]/dx + 0.5));
-            int iy = static_cast<int> (floor(_y[i]/dx + 0.5));
+            int ix = int(floor(_x[i]/dx + 0.5));
+            int iy = int(floor(_y[i]/dx + 0.5));
             if (b.includes(ix,iy)) target(ix,iy) += _flux[i]*fluxScale;
         }
     }
