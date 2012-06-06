@@ -25,7 +25,7 @@ ell3 = galsim.Ellipse(s, y_shift = 0.2)
 ell4 = galsim.Ellipse(dilation = 0.0, shear = s)
 @endcode
 """
-class Ellipse(_galsim._Ellipse):
+class Ellipse:
     def __init__(self, *args, **kwargs):
         import numpy as np
 
@@ -85,7 +85,62 @@ class Ellipse(_galsim._Ellipse):
         if use_shift == None:
             use_shift = _galsim.PositionD(0.0, 0.0)
 
-        self = _galsim._Ellipse(s = use_shear, mu = use_dil, p = use_shift)
+        self.Ellipse = _galsim._Ellipse(s = use_shear, mu = use_dil, p = use_shift)
+
+    #### propagate through all the methods from C++
+    # define all the various operators on Ellipse objects
+    def __neg__(self):
+        return -self.Ellipse
+    def __add__(self, other):
+        return self.Ellipse + other.Ellipse
+    def __sub__(self, other):
+        return self.Ellipse - other.Ellipse
+    def __iadd__(self, other):
+        self.Ellipse += other.Ellipse
+    def __isub__(self, other):
+        self.Ellipse -= other.Ellipse
+    def __eq__(self, other):
+        return self.Ellipse == other.Ellipse
+    def __ne__(self, other):
+        return self.Ellipse != other.Ellipse
+    def reset(self, s, mu, p):
+        self.Ellipse.reset(s, mu, p)
+    def fwd(self, p):
+        return self.Ellipse.fwd(p)
+    def inv(self, p):
+        return self.Ellipse.inv(p)
+    # methods for setting values
+    def setS(self, s):
+        self.Ellipse.setS(s)
+    def setMu(self, mu):
+        self.Ellipse.setMu(mu)
+    def setX0(self, p):
+        self.Ellipse.setX0(p)
+    # methods for getting values
+    def getS(self):
+        return self.Ellipse.getS()
+    def getMu(self):
+        return self.Ellipse.getMu()
+    def getX0(self):
+        return self.Ellipse.getX0()
+    def getMajor(self):
+        return self.Ellipse.getMajor()
+    def getMinor(self):
+        return self.Ellipse.getMinor()
+    def getBeta(self):
+        return self.Ellipse.getBeta()
+    def range(self):
+        return self.Ellipse.range()
+    def getMatrix(self):
+        return self.Ellipse.getMatrix()
+    # or access values directly
+    s = property(getS)
+    mu = property(getMu)
+    x0 = property(getX0)
+    major = property(getMajor)
+    minor = property(getMinor)
+    beta = property(getBeta)
+    range = property(range)
 
 def Ellipse_repr(self):
     shear = self.getS()  # extract the e1 and e2 from the Shear instance
