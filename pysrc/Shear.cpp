@@ -81,6 +81,7 @@ struct PyShear {
             .def(bp::self == bp::self)
             .def(bp::self != bp::self)
             .def(bp::self * bp::other<double>())
+            .def(bp::other<double>() * bp::self)
             .def(bp::self / bp::other<double>())
             .def(bp::self *= bp::other<double>())
             .def(bp::self /= bp::other<double>())
