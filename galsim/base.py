@@ -2,6 +2,7 @@ import os
 import collections
 import numpy as np
 import galsim
+import utilities
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
@@ -145,7 +146,7 @@ class GSObject:
     def applyShear(self, g1, g2):
         """@brief Apply a (g1, g2) shear to this object, where |g| = (a-b)/(a+b).
         """
-        e1, e2 = g1g2_to_e1e2(g1, g2)
+        e1, e2 = utilities.g1g2_to_e1e2(g1, g2)
         GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
 
     def applyRotation(self, theta):
@@ -176,7 +177,7 @@ class GSObject:
     def createSheared(self, g1, g2):
         """@brief Returns A new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
         """
-        e1, e2 = g1g2_to_e1e2(g1, g2)
+        e1, e2 = utilities.g1g2_to_e1e2(g1, g2)
         return GSObject(self.SBProfile.distort(galsim.Ellipse(e1,e2)))
 
     def createRotated(self, theta):
