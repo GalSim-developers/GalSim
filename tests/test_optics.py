@@ -290,15 +290,13 @@ def test_OpticalPSF_flux():
     import time
     t1 = time.time()
     lods = (1., 4., 9.) # lambda/D values: don't choose unity in case symmetry hides something
-    nlook = 512
+    nlook = 512         # Need a bit bigger image than below to get enough flux
     image = galsim.ImageF(nlook,nlook)
     for lod in lods:
         optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1)
-        print 'lod = ',lod
         optics_array = optics_test.draw(dx=1.,image=image).array 
-        print 'optics_array.shape = ',optics_array.shape
         np.testing.assert_almost_equal(optics_array.sum(), 1., 2, 
-                                       err_msg="Unaberrated Optical flux not quite unity.")
+                err_msg="Unaberrated Optical flux not quite unity.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -312,23 +310,12 @@ def test_OpticalPSF_vs_Airy():
     image = galsim.ImageF(nlook,nlook)
     for lod in lods:
         D = 1. / lod
-        print 'lod = ',lod
         airy_test = galsim.Airy(D=D, obscuration=0., flux=1.)
         optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1) #pad same as an Airy, natch!
         airy_array = airy_test.draw(dx=1.,image=image).array
-        print 'airy_array.shape = ',airy_array.shape
-        airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2: 
-                                     airy_array.shape[0]/2 + nlook/2,   
-                                     airy_array.shape[1]/2 - nlook/2:
-                                     airy_array.shape[1]/2 + nlook/2]
         optics_array = optics_test.draw(dx=1.,image=image).array 
-        print 'optics_array.shape = ',optics_array.shape
-        optics_array_test = optics_array[optics_array.shape[0]/2 - nlook/2:
-                                         optics_array.shape[0]/2 + nlook/2, 
-                                         optics_array.shape[1]/2 - nlook/2:
-                                         optics_array.shape[1]/2 + nlook/2]
-        np.testing.assert_array_almost_equal(optics_array_test, airy_array_test, decimal_dft, 
-                                             err_msg="Unaberrated Optical not quite equal to Airy")
+        np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
+                err_msg="Unaberrated Optical not quite equal to Airy")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -343,24 +330,12 @@ def test_OpticalPSF_vs_Airy_with_obs():
     image = galsim.ImageF(nlook,nlook)
     D = 1. / lod
     for obs in obses:
-        print 'obs = ',obs
         airy_test = galsim.Airy(D=D, obscuration=obs, flux=1.)
         optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1, obscuration=obs)
         airy_array = airy_test.draw(dx=1.,image=image).array
-        print 'airy_array.shape = ',airy_array.shape
-        airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2: 
-                                     airy_array.shape[0]/2 + nlook/2,   
-                                     airy_array.shape[1]/2 - nlook/2:
-                                     airy_array.shape[1]/2 + nlook/2]
         optics_array = optics_test.draw(dx=1.,image=image).array 
-        print 'optics_array.shape = ',optics_array.shape
-        optics_array_test = optics_array[optics_array.shape[0]/2 - nlook/2:
-                                         optics_array.shape[0]/2 + nlook/2, 
-                                         optics_array.shape[1]/2 - nlook/2:
-                                         optics_array.shape[1]/2 + nlook/2]
-        np.testing.assert_array_almost_equal(optics_array_test, airy_array_test, decimal_dft, 
-                                             err_msg="Unaberrated Optical with obscuration not "
-                                                     "quite equal to Airy")
+        np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
+                err_msg="Unaberrated Optical with obscuration not quite equal to Airy")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
