@@ -99,10 +99,6 @@ struct PySBProfile {
         // We also don't need to make 'W' a template parameter in this case,
         // but it's easier to do that than write out the full class_ type.
         wrapper
-            .def("fillXImage", 
-                 (double (SBProfile::*)(ImageView<U> &, double) const)&SBProfile::fillXImage, 
-                 bp::args("image", "dx"),
-                 "Utility for drawing into Image data structures")
             .def("drawShoot", 
                  (void (SBProfile::*)(Image<U> &, double, UniformDeviate& ) const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
@@ -195,6 +191,7 @@ struct PySBProfile {
             .def("stepK", &SBProfile::stepK,
                  "Sampling in k space necessary to avoid folding of image in x space")
             .def("isAxisymmetric", &SBProfile::isAxisymmetric)
+            .def("hasHardEdges", &SBProfile::hasHardEdges)
             .def("isAnalyticX", &SBProfile::isAnalyticX,
                  "True if real-space values can be determined immediately at any position without\n"
                  " DFT.")
@@ -271,28 +268,30 @@ struct PySBDistort {
 struct PySBConvolve {
 
     // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
-    static SBConvolve * construct(bp::object const & iterable, double f) {
+    static SBConvolve * construct(bp::object const & iterable, bool real_space, double f) {
         bp::stl_input_iterator<SBProfile*> begin(iterable), end;
         std::list<SBProfile*> plist(begin, end);
-        return new SBConvolve(plist, f);
+        return new SBConvolve(plist, real_space, f);
     }
 
     static void wrap() {
-        bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::init<>())
+        bp::class_< SBConvolve, bp::bases<SBProfile> >(
+            "SBConvolve", bp::init<bool>(bp::arg("real_space")=false))
             // bp tries the overloads in reverse order, so we wrap the most general one first
             // to ensure we try it last
             .def("__init__", 
                  bp::make_constructor(&construct, bp::default_call_policies(), 
-                                      (bp::arg("slist"), bp::arg("f")=1.)
+                                      (bp::arg("slist"), bp::arg("real_space")=false,
+                                       bp::arg("f")=1.)
                  ))
-            .def(bp::init<const SBProfile &, double>(
-                     (bp::args("s1"), bp::arg("f")=1.)
+            .def(bp::init<const SBProfile &, bool, double>(
+                     (bp::args("s1"), bp::arg("real_space")=false, bp::arg("f")=1.)
                  ))
-            .def(bp::init<const SBProfile &, const SBProfile &, double>(
-                     (bp::args("s1", "s2"), bp::arg("f")=1.)
+            .def(bp::init<const SBProfile &, const SBProfile &, bool, double>(
+                     (bp::args("s1", "s2"), bp::arg("real_space")=false, bp::arg("f")=1.)
                  ))
-            .def(bp::init<const SBProfile &, const SBProfile &, const SBProfile &, double>(
-                     (bp::args("s1", "s2", "s3"), bp::arg("f")=1.)
+            .def(bp::init<const SBProfile &, const SBProfile &, const SBProfile &, bool, double>(
+                     (bp::args("s1", "s2", "s3"), bp::arg("real_space")=false, bp::arg("f")=1.)
                  ))
             .def(bp::init<const SBConvolve &>())
             .def("add", &SBConvolve::add)
@@ -418,7 +417,7 @@ struct PySBAiry {
         bp::class_<SBAiry,bp::bases<SBProfile>,boost::noncopyable>(
             "SBAiry",
             bp::init<double,double,double>(
-                (bp::arg("D")=1., bp::arg("obs")=0., bp::arg("flux")=1.)
+                (bp::arg("D")=1., bp::arg("obscuration")=0., bp::arg("flux")=1.)
             )
         );
     }
@@ -479,7 +478,7 @@ struct PySBMoffat {
             .def("__init__", 
                  bp::make_constructor(
                      &construct, bp::default_call_policies(),
-                     (bp::arg("beta"), bp::arg("truncationFWHM")=2.,
+                     (bp::arg("beta"), bp::arg("truncationFWHM")=0.,
                       bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(),
                       bp::arg("scale_radius")=bp::object(), bp::arg("fwhm")=bp::object())
                  )

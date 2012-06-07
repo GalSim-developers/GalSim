@@ -242,7 +242,7 @@ namespace galsim {
             std::string::const_iterator pr=rhs.begin();
             std::string::const_iterator pl=ps->keyword.begin();
             while (pr!=rhs.end()) {
-                if ( static_cast<char> (toupper(*pl)) != *pr) return false;
+                if (toupper(*pl) != *pr) return false;
                 ++pl; ++pr;
             }
             return true;
@@ -291,26 +291,17 @@ namespace galsim {
         void addMember(
             const char *k, T* vptr, const int _f=0, const char *c="",
             const T& d=0, const T& lo=0, const T& up=0)  
-        {
-            l.push_back( 
-                static_cast<PsetMember*> ( new PsetMem<T>(k, vptr, _f, c, d, lo, up) ) ); 
-        }
+        { l.push_back(new PsetMem<T>(k, vptr, _f, c, d, lo, up) ); }
 
         // string specialization; note set up to use string literals as input:
         void addMember(
             const char *k, std::string* vptr, const int _f=0, const char *c="", const char *d="")  
-        {
-            l.push_back( 
-                static_cast<PsetMember*> ( new PsetMem<std::string>(k, vptr, _f, c, d) ) ); 
-        }
+        { l.push_back(new PsetMem<std::string>(k, vptr, _f, c, d) ); }
 
         // bool specialization - no upper or lower
         void addMember(
             const char *k, bool* vptr, const int _f=0, const char *c="", const bool d=false)  
-        {
-            l.push_back( 
-                static_cast<PsetMember*> ( new PsetMem<bool>(k, vptr, _f, c, d) ) ); 
-        }
+        { l.push_back(new PsetMem<bool>(k, vptr, _f, c, d) ); }
 
         void addMemberNoValue(const char *k, const int _f=0, const char *c="");
 

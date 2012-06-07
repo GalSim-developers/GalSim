@@ -7,7 +7,6 @@
  * Profiles.
  *
  * The SBProfiles include common star, galaxy, and PSF shapes.
- * If you have not defined USE_LAGUERRE, the SBLaguerre class will be skipped.
  */
 
 #include <cmath>
@@ -16,24 +15,83 @@
 #include <vector>
 #include <algorithm>
 
-#define USE_LAGUERRE ///< Remove this to skip the SBLaguerre classes.
-
 #include "Std.h"
 #include "Shear.h"
 #include "FFT.h"
 #include "Table.h"
 #include "Random.h"
 #include "Angle.h"
+#include "integ/Int.h"
+
 #include "Image.h"
 
-#ifdef USE_LAGUERRE
 #include "Laguerre.h"
-#endif
 
 #include "PhotonArray.h"
 
 // ??? Ask for super-Nyquist sampling factor in draw??
 namespace galsim {
+
+    namespace sbp {
+
+        // Magic numbers:
+        
+        /// @brief Constant giving minimum FFT size we're willing to do.
+        const int minimum_fft_size = 128;
+
+        /// @brief Constant giving maximum FFT size we're willing to do.
+        const int maximum_fft_size = 4096;
+
+        /**
+         * @brief A threshold parameter used for setting the stepK value for FFTs.
+         *
+         * The FFT's stepK is set so that at most a fraction alias_threshold
+         * of the flux of any profile is aliased.
+         */
+        const double alias_threshold = 5.e-3;
+
+        /**
+         * @brief A threshold parameter used for setting the maxK value for FFTs.
+         *
+         * The FFT's maxK is set so that the k-values that are excluded off the edge of 
+         * the image are less than maxk_threshold.
+         */
+        const double maxk_threshold = 1.e-3;
+
+        //@{
+        /** 
+         * @brief The target accuracy for realspace convolution.
+         */
+        const double realspace_conv_relerr = 1.e-3;
+        const double realspace_conv_abserr = 1.e-6;
+        //@}
+        
+        /**
+         * @brief Accuracy of values in k-space.
+         *
+         * If a k-value is less than kvalue_accuracy, then it may be set to zero.
+         * Similarly, if an alternate calculation has errors less than kvalue_accuracy,
+         * then it may be used instead of an exact calculation.
+         * Note: This does not necessarily imply that all kvalues are this accurate.
+         * There may be cases where other choices we have made lead to errors greater 
+         * than this.  But whenever we do an explicit calculation about this, this is
+         * the value we use.
+         *
+         * Note that this would typically be more stringent than maxk_threshold.
+         */
+        const double kvalue_accuracy = 1.e-5;
+
+        //@{
+        /**
+         * @brief Target accuracy for other integrations in SBProfile
+         *
+         * For Sersic and Moffat, we numerically integrate the Hankel transform.
+         * These are used for the precision in those integrals.
+         */
+        const double integration_relerr = kvalue_accuracy;
+        const double integration_abserr = kvalue_accuracy * 1.e-2;
+        //@}
+    }
 
     /// @brief Exception class thrown by SBProfiles.
     class SBError : public std::runtime_error 
@@ -64,18 +122,6 @@ namespace galsim {
      */
     class SBProfile 
     {
-    protected:
-        static const int MINIMUM_FFT_SIZE;///< Constant giving minimum FFT size we're willing to do.
-        static const int MAXIMUM_FFT_SIZE;///< Constant giving maximum FFT size we're willing to do.
-        /**
-         * @brief A rough indicator of how good the FFTs need to be for setting `maxK()` and 
-         * `stepK()` values.  
-         *
-         *  Generic indicator of what level of error one is willing to tolerate from numerical approximations,
-         * such as aliasing, or necessary truncation / folding of functions that extend to infinity. 
-         */
-        static const double ALIAS_THRESHOLD;
-
     public:
 
         /** 
@@ -98,16 +144,36 @@ namespace galsim {
          * (SBConvolve) that require an FFT to determine real-space values.  In this case, an 
          * SBError will be thrown.
          *
-         * @param[in] _p 2D position in real space.
+         * @param[in] p 2D position in real space.
          */
-        virtual double xValue(Position<double> _p) const =0;
+        virtual double xValue(const Position<double>& p) const =0;
+
+        //@{
+        /**
+         *  @brief Define the range over which the profile is not trivially zero.
+         *
+         *  These values are used when a real-space convolution is requested to define
+         *  the appropriate range of integration.
+         *  The implementation here is +- infinity for both x and y.  
+         *  Derived classes may override this if they a have different range.
+         */
+        virtual void getXRange(double& xmin, double& xmax, std::vector<double>& /*splits*/) const 
+        { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
+
+        virtual void getYRange(double& ymin, double& ymax, std::vector<double>& /*splits*/) const 
+        { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+
+        virtual void getYRange(double /*x*/, double& ymin, double& ymax,
+                               std::vector<double>& splits) const 
+        { getYRange(ymin,ymax,splits); }
+        //@}
 
         /**
          * @brief Return value of SBProfile at a chosen 2D position in k space.
          *
-         * @param[in] _p 2D position in k space.
+         * @param[in] k 2D position in k space.
          */
-        virtual std::complex<double> kValue(Position<double> _p) const =0; 
+        virtual std::complex<double> kValue(const Position<double>& k) const =0; 
 
         virtual double maxK() const =0; ///< Value of k beyond which aliasing can be neglected.
 
@@ -127,6 +193,12 @@ namespace galsim {
          * (TODO: Ensure that derived classes get additional info as needed).
          */
         virtual bool isAxisymmetric() const =0;
+
+        /**
+         *  @brief The presence of hard edges help determine whether real space 
+         *  convolution might be a better choice.
+         */
+        virtual bool hasHardEdges() const =0;
 
         /** 
          * @brief Characteristic that can affect efficiency of evaluation.
@@ -152,9 +224,7 @@ namespace galsim {
         virtual double getFlux() const =0; ///< Get the total flux of the SBProfile.
 
         /// @brief Set the total flux of the SBProfile
-        //
-        /// @param[in] flux_ flux
-        virtual void setFlux(double flux_=1.) =0;
+        virtual void setFlux(double flux) =0;
 
         // ****Methods implemented in base class****
 
@@ -260,24 +330,25 @@ namespace galsim {
          *
          * @returns Expected positive-photon flux.
          */
-        virtual double getPositiveFlux() const {return getFlux()>0. ? getFlux() : 0.;}
+        virtual double getPositiveFlux() const { return getFlux()>0. ? getFlux() : 0.; }
 
         /**
-         * @brief Return expectation value of absolute value of flux in negative photons from shoot()
+         * @brief Return expectation value of absolute value of flux in negative photons from 
+         * shoot()
          *
          * Returns expectation value of (absolute value of) flux returned in negative-valued photons
-         * when shoot() is called for this object.  Default implementation is to return getFlux() if it
-         * is negative, 0 otherwise,
+         * when shoot() is called for this object.  
+         * Default implementation is to return getFlux() if it is negative, 0 otherwise,
          * which will be the case when the SBProfile is constructed entirely from elements that
          * have the same sign.
          *
          * It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the
-         * same thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
-         * cases involving lookup tables, etc.
+         * same thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy 
+         * in cases involving lookup tables, etc.
          *
          * @returns Expected absolute value of negative-photon flux.
          */
-        virtual double getNegativeFlux() const {return getFlux()>0. ? 0. : -getFlux();}
+        virtual double getNegativeFlux() const { return getFlux()>0. ? 0. : -getFlux(); }
 
         // **** Drawing routines ****
         //@{
@@ -510,30 +581,21 @@ namespace galsim {
         void fourierDrawK(Image<T>& re, Image<T>& im, double dk=0., int wmult=1) const; 
         //@}
 
+    protected:
         /** 
          * @brief Utility for drawing into Image data structures.
          *
          * @param[out] image    image to fill (any of ImageF, ImageD, ImageS, ImageI).
          * @param[in]  dx       grid pitch on which SBProfile image is drawn
-         *
-         * Note: Ideally, this wouldn't be public, but we want to use this from within
-         * SBAdd which has a list<SBProfile*>, and it wants to call fillXImage for each item.
-         * Unfortunately, that requires that fillXImage be public rather than protected.
          */
         template <typename T>
         double fillXImage(ImageView<T>& image, double dx) const  // return flux integral
         { return doFillXImage(image, dx); }
 
-        /**
-         * @brief Utility for drawing a k grid into FFT data structures - not intended for public 
-         * use, but need to be public so that derived classes can call them.
-         */
+        /// @brief Utility for drawing a k grid into FFT data structures 
         virtual void fillKGrid(KTable& kt) const;
 
-        /** 
-         * @brief Utility for drawing an x grid into FFT data structures - not intended for public 
-         * use, but need to be public so that derived classes can call them.
-         */
+        /// @brief Utility for drawing an x grid into FFT data structures 
         virtual void fillXGrid(XTable& xt) const;
 
         // Virtual functions cannot be templates, so to make fillXImage work like a virtual
@@ -551,6 +613,12 @@ namespace galsim {
         // implements this as a template:
         template <typename T>
         double doFillXImage2(ImageView<T>& image, double dx) const;
+
+        // Classes that need to be able to call protected SBProfile::fill* functions
+        // are made friends.
+        friend class SBAdd;
+        friend class SBConvolve;
+        friend class SBDeconvolve;
     };
 
     /** 
@@ -561,72 +629,52 @@ namespace galsim {
      */
     class SBAdd : public SBProfile 
     {
-    protected:
-        /// @brief The plist content is a pointer to a fresh copy of the summands.
-        std::list<SBProfile*> plist; 
-    private:
-        double sumflux; ///< Keeps track of the cumulated flux of all summands.
-        double sumfx; ///< Keeps track of the cumulated `fx` of all summands.
-        double sumfy; ///< Keeps track of the cumulated `fy` of all summands.
-        double maxMaxK; ///< Keeps track of the cumulated `maxK()` of all summands.
-        double minStepK; ///< Keeps track of the cumulated `minStepK()` of all summands.
-
-        /// @brief Keeps track of the cumulated `isAxisymmetric()` properties of all summands.
-        bool allAxisymmetric;
-
-        /// @brief Keeps track of the cumulated `isAnalyticX()` property of all summands. 
-        bool allAnalyticX; 
-
-        /// @brief Keeps track of the cumulated `isAnalyticK()` properties of all summands.
-        bool allAnalyticK; 
-
-        void initialize();  ///< Sets all private book-keeping variables to starting state.
-
     public:
         /// @brief Constructor, empty.
-        SBAdd() : plist() { initialize(); }
+        SBAdd() { initialize(); }
 
         /** 
          * @brief Constructor, 1 input.
          *
          * @param[in] s1 SBProfile.
          */
-        SBAdd(const SBProfile& s1) : plist() { initialize(); add(s1); }
+        SBAdd(const SBProfile& s1) { initialize(); add(s1); }
 
         /** @brief Constructor, 2 inputs.
          *
          * @param[in] s1 first SBProfile.
          * @param[in] s2 second SBProfile.
          */
-        SBAdd(const SBProfile& s1, const SBProfile& s2) : plist() 
-        { initialize(); add(s1);  add(s2); }
+        SBAdd(const SBProfile& s1, const SBProfile& s2)
+        { initialize(); add(s1); add(s2); }
 
         /** 
          * @brief Constructor, list of inputs.
          *
          * @param[in] slist list of SBProfiles.
          */
-        SBAdd(const std::list<SBProfile*> slist) : plist() 
+        SBAdd(const std::list<SBProfile*> slist)
         {
             initialize();
-            std::list<SBProfile*>::const_iterator sptr;
-            for (sptr = slist.begin(); sptr!=slist.end(); ++sptr)
+            for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
                 add(**sptr); 
         }
 
         /** 
          * @brief Copy constructor.
+         *
          * @param[in] rhs SBAdd to be copied.
          */
         SBAdd(const SBAdd& rhs) : 
-            plist(), sumflux(rhs.sumflux), sumfx(rhs.sumfx),
-            sumfy(rhs.sumfy), maxMaxK(rhs.maxMaxK), minStepK(rhs.minStepK), 
-            allAxisymmetric(rhs.allAxisymmetric),
-            allAnalyticX(rhs.allAnalyticX), allAnalyticK(rhs.allAnalyticK)  
+            _sumflux(rhs._sumflux), _sumfx(rhs._sumfx),
+            _sumfy(rhs._sumfy), _maxMaxK(rhs._maxMaxK), _minStepK(rhs._minStepK), 
+            _minMinX(rhs._minMinX), _maxMaxX(rhs._maxMaxX),
+            _minMinY(rhs._minMinY), _maxMaxY(rhs._maxMaxY),
+            _allAxisymmetric(rhs._allAxisymmetric), _anyHardEdges(rhs._anyHardEdges),
+            _allAnalyticX(rhs._allAnalyticX), _allAnalyticK(rhs._allAnalyticK)  
         {
-            std::list<SBProfile*>::const_iterator sbptr;
-            for (sbptr = rhs.plist.begin(); sbptr!=rhs.plist.end(); ++sbptr)
-                plist.push_back((*sbptr)->duplicate());
+            for (ConstIter sbptr = rhs._plist.begin(); sbptr!=rhs._plist.end(); ++sbptr)
+                _plist.push_back((*sbptr)->duplicate());
         }
 
         /** @brief Assignment
@@ -640,33 +688,32 @@ namespace galsim {
             if (&rhs == this) return *this;
             // Clean up previous stuff
 
-            for (std::list<SBProfile*>::iterator pptr = plist.begin(); 
-                 pptr!=plist.end(); 
-                 ++pptr)  
-                delete *pptr; 
+            for (Iter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr)  delete *pptr; 
+
             // New copies of all convolve-ees:
-            plist.clear();
-            std::list<SBProfile*>::const_iterator rhsptr;
-            for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
-                plist.push_back((*rhsptr)->duplicate()); 
+            _plist.clear();
+            for (ConstIter rhsptr = rhs._plist.begin(); rhsptr!=rhs._plist.end(); ++rhsptr)
+                _plist.push_back((*rhsptr)->duplicate()); 
             // And copy other configurations:
-            sumflux = rhs.sumflux;
-            sumfx = rhs.sumfx;
-            sumfy = rhs.sumfy;
-            maxMaxK = rhs.maxMaxK;
-            minStepK = rhs.minStepK;
-            allAxisymmetric = rhs.allAxisymmetric;
-            allAnalyticX = rhs.allAnalyticX;
-            allAnalyticK = rhs.allAnalyticK;
+            _sumflux = rhs._sumflux;
+            _sumfx = rhs._sumfx;
+            _sumfy = rhs._sumfy;
+            _maxMaxK = rhs._maxMaxK;
+            _minMinX = rhs._minMinX;
+            _maxMaxX = rhs._maxMaxX;
+            _minMinY = rhs._minMinY;
+            _maxMaxY = rhs._maxMaxY;
+            _minStepK = rhs._minStepK;
+            _allAxisymmetric = rhs._allAxisymmetric;
+            _anyHardEdges = rhs._anyHardEdges;
+            _allAnalyticX = rhs._allAnalyticX;
+            _allAnalyticK = rhs._allAnalyticK;
             return *this;
         }
 
         /// @brief Destructor.
         ~SBAdd() 
-        { 
-            std::list<SBProfile*>::iterator pptr;
-            for (pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; 
-        }
+        { for (Iter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr)  delete *pptr; }
 
         /** 
          * @brief SBAdd specific method for adding additional SBProfiles
@@ -680,22 +727,56 @@ namespace galsim {
 
         SBProfile* duplicate() const { return new SBAdd(*this); } 
 
-        double xValue(Position<double> _p) const;
+        double xValue(const Position<double>& p) const;
 
-        std::complex<double> kValue(Position<double> _p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
 
-        double maxK() const { return maxMaxK; }
-        double stepK() const { return minStepK; }
+        double maxK() const { return _maxMaxK; }
+        double stepK() const { return _minStepK; }
 
-        bool isAxisymmetric() const { return allAxisymmetric; }
-        bool isAnalyticX() const { return allAnalyticX; }
-        bool isAnalyticK() const { return allAnalyticK; }
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
+        { 
+            xmin = integ::MOCK_INF; xmax = -integ::MOCK_INF; 
+            for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
+                double xmin_1, xmax_1;
+                (*pptr)->getXRange(xmin_1,xmax_1,splits);
+                if (xmin_1 < xmin) xmin = xmin_1;
+                if (xmax_1 > xmax) xmax = xmax_1;
+            }
+        }
 
-        virtual Position<double> centroid() const 
-        {Position<double> p(sumfx / sumflux, sumfy / sumflux); return p; }
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        {
+            ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
+            for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
+                double ymin_1, ymax_1;
+                (*pptr)->getYRange(ymin_1,ymax_1,splits);
+                if (ymin_1 < ymin) ymin = ymin_1;
+                if (ymax_1 > ymax) ymax = ymax_1;
+            }
+        }
 
-        virtual double getFlux() const { return sumflux; }
-        virtual void setFlux(double flux_=1.);
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        {
+            ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
+            for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
+                double ymin_1, ymax_1;
+                (*pptr)->getYRange(x,ymin_1,ymax_1,splits);
+                if (ymin_1 < ymin) ymin = ymin_1;
+                if (ymax_1 > ymax) ymax = ymax_1;
+            }
+        }
+
+        bool isAxisymmetric() const { return _allAxisymmetric; }
+        bool hasHardEdges() const { return _anyHardEdges; }
+        bool isAnalyticX() const { return _allAnalyticX; }
+        bool isAnalyticK() const { return _allAnalyticK; }
+
+        Position<double> centroid() const 
+        { return Position<double>(_sumfx / _sumflux, _sumfy / _sumflux); }
+
+        double getFlux() const { return _sumflux; }
+        void setFlux(double flux);
 
         /**
          * @brief Shoot photons through this SBAdd.
@@ -707,7 +788,8 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
+
         /**
          * @brief Give total positive flux of all summands
          *
@@ -717,7 +799,8 @@ namespace galsim {
          * images.
          * @returns Total positive flux of all summands
          */
-        virtual double getPositiveFlux() const;
+        double getPositiveFlux() const;
+
         /** @brief Give absolute value of total negative flux of all summands
          *
          * Note that `getNegativeFlux()` return from SBAdd may not equal the integral of negative
@@ -726,75 +809,55 @@ namespace galsim {
          * images.
          * @returns Absolute value of total negative flux of all summands
          */
-        virtual double getNegativeFlux() const;
+        double getNegativeFlux() const;
 
+    protected:
         // Overrides for better efficiency:
-        virtual void fillKGrid(KTable& kt) const;
-        virtual void fillXGrid(XTable& xt) const;
+        void fillKGrid(KTable& kt) const;
+        void fillXGrid(XTable& xt) const;
+
+    private:
+        typedef std::list<SBProfile*>::iterator Iter;
+        typedef std::list<SBProfile*>::const_iterator ConstIter;
+
+        /// @brief The plist content is a pointer to a fresh copy of the summands.
+        std::list<SBProfile*> _plist; 
+        double _sumflux; ///< Keeps track of the cumulated flux of all summands.
+        double _sumfx; ///< Keeps track of the cumulated `fx` of all summands.
+        double _sumfy; ///< Keeps track of the cumulated `fy` of all summands.
+        double _maxMaxK; ///< Keeps track of the cumulated `maxK()` of all summands.
+        double _minStepK; ///< Keeps track of the cumulated `minStepK()` of all summands.
+        double _minMinX; ///< Keeps track of the cumulated `minX()` of all summands.
+        double _maxMaxX; ///< Keeps track of the cumulated `maxX()` of all summands.
+        double _minMinY; ///< Keeps track of the cumulated `minY()` of all summands.
+        double _maxMaxY; ///< Keeps track of the cumulated `maxY()` of all summands.
+
+        /// @brief Keeps track of the cumulated `isAxisymmetric()` properties of all summands.
+        bool _allAxisymmetric;
+
+        /// @brief Keeps track of whether any summands have hard edges.
+        bool _anyHardEdges;
+
+        /// @brief Keeps track of the cumulated `isAnalyticX()` property of all summands. 
+        bool _allAnalyticX; 
+
+        /// @brief Keeps track of the cumulated `isAnalyticK()` properties of all summands.
+        bool _allAnalyticK; 
+
+        void initialize();  ///< Sets all private book-keeping variables to starting state.
     };
 
     /**
      * @brief An affine transformation of another SBProfile.
      *
      * Stores a duplicate of its target.
-     * Origin of original shape will now appear at `x0`.
+     * Origin of original shape will now appear at `_cen`.
      * Flux is NOT conserved in transformation - surface brightness is preserved.
      * We keep track of all distortions in a 2x2 matrix `M = [(A B), (C D)]` = [row1, row2] 
-     * plus a 2-element Positon object `x0` for the shift.
+     * plus a 2-element Positon object `cen` for the shift.
      */
     class SBDistort : public SBProfile 
     {
-
-    private:
-        SBProfile* adaptee; ///< SBProfile being adapted/distorted
-        double matrixA; ///< A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-        double matrixB; ///< B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-        double matrixC; ///< C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-        double matrixD; ///< D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-        // Calculate and save these:
-        Position<double> x0;  ///< Centroid position.
-        double absdet;  ///< Determinant (flux magnification) of `M` matrix.
-        double invdet;  ///< Inverse determinant of `M` matrix.
-        double major; ///< Major axis of ellipse produced from unit circle.
-        double minor; ///< Minor axis of ellipse produced from unit circle.
-        bool stillIsAxisymmetric; ///< Is output SBProfile shape still circular?
-
-    private:
-        /// @brief Initialize the SBDistort.
-        void initialize();
-
-        /** 
-         * @brief Forward coordinate transform with `M` matrix.
-         *
-         * @param[in] p input position.
-         * @returns transformed position.
-         */
-        Position<double> fwd(Position<double> p) const 
-        {
-            Position<double> out(matrixA*p.x+matrixB*p.y,matrixC*p.x+matrixD*p.y);
-            return out; 
-        }
-
-        /// @brief Forward coordinate transform with transpose of `M` matrix.
-        Position<double> fwdT(Position<double> p) const 
-        {
-            Position<double> out(matrixA*p.x+matrixC*p.y,matrixB*p.x+matrixD*p.y);
-            return out; 
-        }
-
-        /// @brief Inverse coordinate transform with `M` matrix.
-        Position<double> inv(Position<double> p) const 
-        {
-            Position<double> out(invdet*(matrixD*p.x-matrixB*p.y),
-                                 invdet*(-matrixC*p.x+matrixA*p.y));
-            return out; 
-        }
-
-        /// @brief Returns the the k value (no phase).
-        std::complex<double> kValNoPhase(Position<double> k) const 
-        { return absdet*adaptee->kValue(fwdT(k)); }
-
-
     public:
         /** 
          * @brief General constructor.
@@ -804,19 +867,18 @@ namespace galsim {
          * @param[in] mB B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
          * @param[in] mC C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
          * @param[in] mD D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-         * @param[in] x0_ 2-element (x, y) Position for the translational shift.
+         * @param[in] cen 2-element (x, y) Position for the translational shift.
          */
-        SBDistort(
-            const SBProfile& sbin, double mA, double mB, double mC, double mD,
-            Position<double> x0_=Position<double>(0.,0.));
+        SBDistort(const SBProfile& sbin, double mA, double mB, double mC, double mD,
+                  const Position<double>& cen=Position<double>(0.,0.));
 
         /** 
          * @brief Construct from an input Ellipse class object
          *
          * @param[in] sbin SBProfile being distorted.
-         * @param[in] e_ Ellipse.
+         * @param[in] e  Ellipse.
          */
-        SBDistort(const SBProfile& sbin, const Ellipse e_=Ellipse());
+        SBDistort(const SBProfile& sbin, const Ellipse e=Ellipse());
 
         /** 
          * @brief Copy constructor
@@ -825,12 +887,12 @@ namespace galsim {
          */
         SBDistort(const SBDistort& rhs) 
         {
-            adaptee = rhs.adaptee->duplicate();
-            matrixA = (rhs.matrixA); 
-            matrixB = (rhs.matrixB); 
-            matrixC = (rhs.matrixC);
-            matrixD = (rhs.matrixD); 
-            x0 = (rhs.x0);
+            _adaptee = rhs._adaptee->duplicate();
+            _mA = (rhs._mA); 
+            _mB = (rhs._mB); 
+            _mC = (rhs._mC);
+            _mD = (rhs._mD); 
+            _cen = (rhs._cen);
             initialize();
         }
 
@@ -844,48 +906,50 @@ namespace galsim {
         {
             // Self-assignment is nothing:
             if (&rhs == this) return *this;
-            if (adaptee) {delete adaptee; adaptee=0; }
-            adaptee = rhs.adaptee->duplicate();
-            matrixA = (rhs.matrixA); 
-            matrixB = (rhs.matrixB); 
-            matrixC = (rhs.matrixC);
-            matrixD = (rhs.matrixD); 
-            x0 = (rhs.x0);
+            if (_adaptee) { delete _adaptee; _adaptee=0; }
+            _adaptee = rhs._adaptee->duplicate();
+            _mA = (rhs._mA); 
+            _mB = (rhs._mB); 
+            _mC = (rhs._mC);
+            _mD = (rhs._mD); 
+            _cen = (rhs._cen);
             initialize();
             return *this;
         }
 
         /// @brief Destructor.
-        ~SBDistort() { delete adaptee; adaptee=0; }
+        ~SBDistort() { delete _adaptee; _adaptee=0; }
 
         // methods doxy described in base clase SBProfile
         SBProfile* duplicate() const 
         { return new SBDistort(*this); } 
 
-        double xValue(Position<double> p) const 
-        { return adaptee->xValue(inv(p-x0)); }
+        double xValue(const Position<double>& p) const 
+        { return _adaptee->xValue(inv(p-_cen)); }
 
-        std::complex<double> kValue(Position<double> k) const 
-        {
-            std::complex<double> phaseexp(0,-k.x*x0.x-k.y*x0.y); // phase exponent
-            std::complex<double> kv(absdet*adaptee->kValue(fwdT(k))*std::exp(phaseexp));
-            return kv; 
-        }
+        std::complex<double> kValue(const Position<double>& k) const;
 
-        bool isAxisymmetric() const { return stillIsAxisymmetric; }
-        bool isAnalyticX() const { return adaptee->isAnalyticX(); }
-        bool isAnalyticK() const { return adaptee->isAnalyticK(); }
+        bool isAxisymmetric() const { return _stillIsAxisymmetric; }
+        bool hasHardEdges() const { return _adaptee->hasHardEdges(); }
+        bool isAnalyticX() const { return _adaptee->isAnalyticX(); }
+        bool isAnalyticK() const { return _adaptee->isAnalyticK(); }
 
-        double maxK() const { return adaptee->maxK() / minor; }
-        double stepK() const { return adaptee->stepK() / major; }
+        double maxK() const { return _adaptee->maxK() / _minor; }
+        double stepK() const { return _adaptee->stepK() / _major; }
 
-        Position<double> centroid() const { return x0+fwd(adaptee->centroid()); }
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const;
 
-        double getFlux() const { return adaptee->getFlux()*absdet; }
-        void setFlux(double flux_=1.) { adaptee->setFlux(flux_/absdet); }
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const;
 
-        double getPositiveFlux() const {return adaptee->getPositiveFlux()*absdet;}
-        double getNegativeFlux() const {return adaptee->getNegativeFlux()*absdet;}
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const;
+
+        Position<double> centroid() const { return _cen+fwd(_adaptee->centroid()); }
+
+        double getFlux() const { return _adaptee->getFlux()*_absdet; }
+        void setFlux(double flux) { _adaptee->setFlux(flux/_absdet); }
+
+        double getPositiveFlux() const { return _adaptee->getPositiveFlux()*_absdet; }
+        double getNegativeFlux() const { return _adaptee->getNegativeFlux()*_absdet; }
 
         /**
          * @brief Shoot photons through this SBDistort.
@@ -897,42 +961,136 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
-        void fillKGrid(KTable& kt) const; // optimized phase calculation
+    protected:
+        // Override for better efficiency:
+        void fillKGrid(KTable& kt) const; 
+    
+    private:
+        SBProfile* _adaptee; ///< SBProfile being adapted/distorted
+        double _mA; ///< A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+        double _mB; ///< B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+        double _mC; ///< C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+        double _mD; ///< D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
+        // Calculate and save these:
+        Position<double> _cen;  ///< Centroid position.
+        double _absdet;  ///< Determinant (flux magnification) of `M` matrix.
+        double _invdet;  ///< Inverse determinant of `M` matrix.
+        double _major; ///< Major axis of ellipse produced from unit circle.
+        double _minor; ///< Minor axis of ellipse produced from unit circle.
+        bool _stillIsAxisymmetric; ///< Is output SBProfile shape still circular?
+        double _xmin, _xmax, _ymin, _ymax; ///< Ranges propagated from adaptee
+        double _coeff_b, _coeff_c, _coeff_c2; ///< Values used in getYRange(x,ymin,ymax);
+        std::vector<double> _xsplits, _ysplits; ///< Good split points for the intetegrals
+
+        /// @brief Initialize the SBDistort.
+        void initialize();
+
+        /** 
+         * @brief Forward coordinate transform with `M` matrix.
+         *
+         * @param[in] p input position.
+         * @returns transformed position.
+         */
+        Position<double> fwd(const Position<double>& p) const 
+        { return Position<double>(_mA*p.x+_mB*p.y,_mC*p.x+_mD*p.y); }
+
+        /// @brief Forward coordinate transform with transpose of `M` matrix.
+        Position<double> fwdT(const Position<double>& p) const 
+        { return Position<double>(_mA*p.x+_mC*p.y , _mB*p.x+_mD*p.y); }
+
+        /// @brief Inverse coordinate transform with `M` matrix.
+        Position<double> inv(const Position<double>& p) const 
+        {
+            return Position<double>(_invdet*(_mD*p.x-_mB*p.y),
+                                    _invdet*(-_mC*p.x+_mA*p.y) );
+        }
+
+        /// @brief Returns the the k value (no phase).
+        std::complex<double> kValueNoPhase(const Position<double>& k) const;
+
+        std::complex<double> (*_kValue)(
+            const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& k, const Position<double>& cen);
+        std::complex<double> (*_kValueNoPhase)(
+            const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& , const Position<double>& );
+
+        static std::complex<double> _kValueNoPhaseNoDet(
+            const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& , const Position<double>& );
+        static std::complex<double> _kValueNoPhaseWithDet(
+            const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& , const Position<double>& );
+        static std::complex<double> _kValueWithPhase(
+            const SBProfile* adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& k, const Position<double>& cen);
+
     };
+
+    // Defined in RealSpaceConvolve.cpp
+    double RealSpaceConvolve(
+        const SBProfile* p1, const SBProfile* p2, const Position<double>& pos, double flux);
 
     /**
      * @brief Convolve SBProfiles.
      *
-     * Convolve one, two, three or more SBProfiles together (TODO: Add a more detailed description
-     * here).
+     * Convolve one, two, three or more SBProfiles together.
+     *
+     * The profiles to be convolved may be provided either as the first 1, 2, or 3
+     * parameters in the constructor, or as a std::list<SBProfile*>.
+     *
+     * The convolution will normally be done using discrete Fourier transforms of 
+     * each of the component profiles, multiplying them together, and then transforming
+     * back to real space.
+     *
+     * The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2)
+     * where the sum is over all teh components being convolved.  Since the size of 
+     * the convolved image scales roughly as the quadrature sum of the components,
+     * this should be close to Pi/Rmax where Rmax is the radius that encloses
+     * all but (1-alias_threshold) of the flux in the final convolved image..
+     *
+     * The maxK used for the k-space image will be the minimum of the maxK() calculated for
+     * each component.  Since the k-space images are multiplied, if one of them is 
+     * essentially zero beyond some k value, then that will be true of the final image
+     * as well.
+     *
+     * There is also an option to do the convolution as integrals in real space.
+     * Each constructor has an optional boolean parmeter, real_space, that comes
+     * immediately after the list of profiles to convolve.  Currently, the real-space
+     * integration is only enabled for 2 profiles.  (Aside from the trivial implementaion
+     * for 1 profile.)  If you try to use it for more than 2 profiles, an exception will
+     * be thrown.  
+     *
+     * The real-space convolution is normally slower than the DFT convolution.
+     * The exception is if both component profiles have hard edges.  e.g. a truncated
+     * Moffat with a Box.  In that case, the maxK for each component is quite large
+     * since the ringing dies off fairly slowly.  So it can be quicker to use 
+     * real-space convolution instead.
+     *
+     * Finally, there is another optional parameter in the constructors which can set
+     * an overall flux scale for the final image.  The nominal flux is normally just
+     * the product of the fluxes of each of the component profiles.  However, if you
+     * set f to something other than 1, then the final flux will be f times the 
+     * product of the component fluxes.
      */
+    // TODO: the fluxScale stuff hasn't been ported to the python layer yet.
     class SBConvolve : public SBProfile 
     {
-    private:
-        /// @brief The plist content is a copy_ptr (cf. smart ptrs) listing SBProfiles.
-        std::list<SBProfile*> plist;
-
-        double fluxScale; ///< Flux scaling.
-        double x0; ///< Centroid position in x.
-        double y0; ///< Centroid position in y.
-        bool isStillAxisymmetric; ///< Is output SBProfile shape still circular?
-        double minMaxK; ///< Minimum maxK() of the convolved SBProfiles.
-        double minStepK; ///< Minimum stepK() of the convolved SBProfiles.
-        double fluxProduct; ///< Flux of the product.
-
     public:
         /// @brief Constructor, empty.
-        SBConvolve() : plist(), fluxScale(1.) {} 
+        explicit SBConvolve(bool real_space=false) : _fluxScale(1.), _real_space(real_space) {}
 
         /**
          * @brief Constructor, 1 input.
          *
          * @param[in] s1 SBProfile.
+         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
-        SBConvolve(const SBProfile& s1, double f=1.) : plist(), fluxScale(f) 
+        SBConvolve(const SBProfile& s1, bool real_space=false, double f=1.) :
+            _fluxScale(f), _real_space(real_space)
         { add(s1); }
 
         /**
@@ -940,10 +1098,11 @@ namespace galsim {
          *
          * @param[in] s1 first SBProfile.
          * @param[in] s2 second SBProfile.
+         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
-        SBConvolve(const SBProfile& s1, const SBProfile& s2, double f=1.) : 
-            plist(), fluxScale(f) 
+        SBConvolve(const SBProfile& s1, const SBProfile& s2, bool real_space=false, double f=1.) : 
+            _fluxScale(f), _real_space(real_space)
         { add(s1);  add(s2); }
 
         /**
@@ -952,40 +1111,41 @@ namespace galsim {
          * @param[in] s1 first SBProfile.
          * @param[in] s2 second SBProfile.
          * @param[in] s3 third SBProfile.
+         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          * @param[in] f scaling factor for final flux (default `f = 1.`).
          */
-        SBConvolve(
-            const SBProfile& s1, const SBProfile& s2, const SBProfile& s3, double f=1.) :
-            plist(), fluxScale(f) 
+        SBConvolve(const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
+                   bool real_space=false, double f=1.) :
+            _fluxScale(f), _real_space(real_space)
         { add(s1);  add(s2);  add(s3); }
 
         /**
          * @brief Constructor, list of inputs.
          *
          * @param[in] slist Input: list of SBProfiles.
+         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          * @param[in] f Input: optional scaling factor for final flux (default `f = 1.`).
          */
-        SBConvolve(const std::list<SBProfile*> slist, double f=1.) :
-            plist(), fluxScale(f) 
-        { 
-            std::list<SBProfile*>::const_iterator sptr;
-            for (sptr = slist.begin(); sptr!=slist.end(); ++sptr) add(**sptr); 
-        }
+        SBConvolve(const std::list<SBProfile*> slist, bool real_space=false, double f=1.) :
+            _fluxScale(f), _real_space(real_space)
+        { for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr) add(**sptr); }
 
-        /** @brief Copy constructor.
+        /** 
+         * @brief Copy constructor.
          *
          * @param[in] rhs SBProfile.
          */
         SBConvolve(const SBConvolve& rhs) : 
-            plist(), fluxScale(rhs.fluxScale),
-            x0(rhs.x0), y0(rhs.y0),
-            isStillAxisymmetric(rhs.isStillAxisymmetric),
-            minMaxK(rhs.minMaxK), minStepK(rhs.minStepK),
-            fluxProduct(rhs.fluxProduct) 
+            _fluxScale(rhs._fluxScale),
+            _x0(rhs._x0), _y0(rhs._y0),
+            _isStillAxisymmetric(rhs._isStillAxisymmetric),
+            _minMaxK(rhs._minMaxK), _netStepK(rhs._netStepK),
+            _sumMinX(rhs._sumMinX), _sumMaxX(rhs._sumMaxX), 
+            _sumMinY(rhs._sumMinY), _sumMaxY(rhs._sumMaxY), 
+            _fluxProduct(rhs._fluxProduct), _real_space(rhs._real_space)
         {
-            std::list<SBProfile*>::const_iterator rhsptr;
-            for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
-                plist.push_back((*rhsptr)->duplicate()); 
+            for (ConstIter rhsptr = rhs._plist.begin(); rhsptr!=rhs._plist.end(); ++rhsptr)
+                _plist.push_back((*rhsptr)->duplicate()); 
         }
 
         /** @brief Assignment
@@ -999,32 +1159,30 @@ namespace galsim {
             if (&rhs == this) return *this;
             // Clean up previous stuff
 
-            for (std::list<SBProfile*>::iterator pptr = plist.begin(); 
-                 pptr!=plist.end(); 
-                 ++pptr)  
-                delete *pptr; 
+            for (Iter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr)  delete *pptr; 
             // New copies of all convolve-ees:
-            plist.clear();
-            std::list<SBProfile*>::const_iterator rhsptr;
-            for (rhsptr = rhs.plist.begin(); rhsptr!=rhs.plist.end(); ++rhsptr)
-                plist.push_back((*rhsptr)->duplicate()); 
+            _plist.clear();
+            for (ConstIter rhsptr = rhs._plist.begin(); rhsptr!=rhs._plist.end(); ++rhsptr)
+                _plist.push_back((*rhsptr)->duplicate()); 
             // And copy other configurations:
-            fluxScale = rhs.fluxScale;
-            x0 = rhs.x0;
-            y0 = rhs.y0;
-            isStillAxisymmetric = rhs.isStillAxisymmetric;
-            minMaxK = rhs.minMaxK;
-            minStepK = rhs.minStepK;
-            fluxProduct = rhs.fluxProduct;
+            _fluxScale = rhs._fluxScale;
+            _x0 = rhs._x0;
+            _y0 = rhs._y0;
+            _isStillAxisymmetric = rhs._isStillAxisymmetric;
+            _minMaxK = rhs._minMaxK;
+            _netStepK = rhs._netStepK;
+            _sumMinX = rhs._sumMinX;
+            _sumMaxX = rhs._sumMaxX;
+            _sumMinY = rhs._sumMinY;
+            _sumMaxY = rhs._sumMaxY;
+            _fluxProduct = rhs._fluxProduct;
+            _real_space = rhs._real_space;
             return *this;
         }
 
         /// @brief Destructor.
         ~SBConvolve() 
-        { 
-            std::list<SBProfile*>::iterator pptr;
-            for (pptr = plist.begin(); pptr!=plist.end(); ++pptr)  delete *pptr; 
-        }
+        { for (Iter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr)  delete *pptr; }
 
         /** 
          * @brief SBConvolve specific method for adding new members.
@@ -1038,29 +1196,68 @@ namespace galsim {
         // implementation dependent methods:
         SBProfile* duplicate() const { return new SBConvolve(*this); } 
 
-        double xValue(Position<double> _p) const 
-        { throw SBError("SBConvolve::xValue() not allowed"); } 
+        // Do the real-space conovlution to calculate this.
+        double xValue(const Position<double>& p) const;
 
-        std::complex<double> kValue(Position<double> k) const 
-        {
-            std::list<SBProfile*>::const_iterator pptr;
-            std::complex<double> product(fluxScale,0);
-            for (pptr=plist.begin(); pptr!=plist.end(); ++pptr)
-                product *= (*pptr)->kValue(k);
-            return product; 
+        std::complex<double> kValue(const Position<double>& k) const;
+
+        bool isAxisymmetric() const { return _isStillAxisymmetric; }
+        bool hasHardEdges() const { return false; }
+        bool isAnalyticX() const { return _real_space; }
+        bool isAnalyticK() const { return !_real_space; }    // convolvees must all meet this
+        double maxK() const { return _minMaxK; }
+        double stepK() const { return _netStepK; }
+
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
+        { 
+            // Getting the splits correct would require a bit of work.
+            // So if we ever do real-space convolutions where one of the elements 
+            // is (or includes) another convolution, we might want to rework this a 
+            // bit.  But I don't think this is really every going to be used, so
+            // I didn't try to get that right.  (Note: ignoring the splits won't be
+            // wrong -- just not optimal.)
+            std::vector<double> splits0;
+            ConstIter pptr = _plist.begin();
+            (*pptr)->getXRange(xmin,xmax,splits0);
+            for (++pptr; pptr!=_plist.end(); ++pptr) {
+                double xmin_1, xmax_1;
+                (*pptr)->getXRange(xmin_1,xmax_1,splits0);
+                xmin += xmin_1;
+                xmax += xmax_1;
+            }
         }
 
-        bool isAxisymmetric() const { return isStillAxisymmetric; }
-        bool isAnalyticX() const { return false; }
-        bool isAnalyticK() const { return true; }    // convolvees must all meet this
-        double maxK() const { return minMaxK; }
-        double stepK() const { return minStepK; }
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        {
+            std::vector<double> splits0;
+            ConstIter pptr = _plist.begin();
+            (*pptr)->getYRange(ymin,ymax,splits0);
+            for (++pptr; pptr!=_plist.end(); ++pptr) {
+                double ymin_1, ymax_1;
+                (*pptr)->getYRange(ymin_1,ymax_1,splits0);
+                ymin += ymin_1;
+                ymax += ymax_1;
+            }
+        }
+
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        {
+            std::vector<double> splits0;
+            ConstIter pptr = _plist.begin();
+            (*pptr)->getYRange(x,ymin,ymax,splits0);
+            for (++pptr; pptr!=_plist.end(); ++pptr) {
+                double ymin_1, ymax_1;
+                (*pptr)->getYRange(x,ymin_1,ymax_1,splits0);
+                ymin += ymin_1;
+                ymax += ymax_1;
+            }
+        }
 
         Position<double> centroid() const 
-        { Position<double> p(x0, y0); return p; }
+        { return Position<double>(_x0, _y0); }
 
-        double getFlux() const { return fluxScale * fluxProduct; }
-        void setFlux(double flux_=1.) { fluxScale = flux_/fluxProduct; }
+        double getFlux() const { return _fluxScale * _fluxProduct; }
+        void setFlux(double flux) { _fluxScale = flux/_fluxProduct; }
 
         double getPositiveFlux() const;
         double getNegativeFlux() const;
@@ -1073,10 +1270,30 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
-        // Overrides for better efficiency:
-        virtual void fillKGrid(KTable& kt) const;
+    protected:
+        // Override for better efficiency:
+        void fillKGrid(KTable& kt) const;
+
+    private:
+        typedef std::list<SBProfile*>::iterator Iter;
+        typedef std::list<SBProfile*>::const_iterator ConstIter;
+
+        /// @brief The plist content is a copy_ptr (cf. smart ptrs) listing SBProfiles.
+        std::list<SBProfile*> _plist;
+        double _fluxScale; ///< Flux scaling.
+        double _x0; ///< Centroid position in x.
+        double _y0; ///< Centroid position in y.
+        bool _isStillAxisymmetric; ///< Is output SBProfile shape still circular?
+        double _minMaxK; ///< Minimum maxK() of the convolved SBProfiles.
+        double _netStepK; ///< Minimum stepK() of the convolved SBProfiles.
+        double _sumMinX; ///< sum of minX() of the convolved SBProfiles.
+        double _sumMaxX; ///< sum of maxX() of the convolved SBProfiles.
+        double _sumMinY; ///< sum of minY() of the convolved SBProfiles.
+        double _sumMaxY; ///< sum of maxY() of the convolved SBProfiles.
+        double _fluxProduct; ///< Flux of the product.
+        bool _real_space; ///< Whether to do convolution as an integral in real space.
     };
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -1090,45 +1307,43 @@ namespace galsim {
      * and the characteristic size `sigma` where the radial profile of the circular Gaussian
      * drops off as `exp[-r^2 / (2. * sigma^2)]`.
      * The maxK() and stepK() are for the SBGaussian are chosen to extend to 4 sigma in both 
-     * real and k domains, or more if needed to reach the `ALIAS_THRESHOLD` spec.
+     * real and k domains, or more if needed to reach the `alias_threshold` spec.
      */
     class SBGaussian : public SBProfile 
     {
-    private:
-        double flux; ///< Flux of the Surface Brightness Profile.
-
-        /// @brief Characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`.
-        double sigma;
-
     public:
         /** 
          * @brief Constructor.
          *
-         * @param[in] flux_  flux of the Surface Brightness Profile (default `flux_ = 1.`).
-         * @param[in] sigma_ characteristic size, surface brightness scales as 
-         *                   `exp[-r^2 / (2. * sigma^2)] (default `sigma_ = 1.`).
+         * @param[in] flux   flux of the Surface Brightness Profile (default `flux = 1.`).
+         * @param[in] sigma  characteristic size, surface brightness scales as 
+         *                   `exp[-r^2 / (2. * sigma^2)]` (default `sigma = 1.`).
          */
-        SBGaussian(double flux_=1., double sigma_=1.) : flux(flux_), sigma(sigma_) {}
+        SBGaussian(double flux=1., double sigma=1.);
 
         /// @brief Destructor.
         ~SBGaussian() {}                        
 
-        double xValue(Position<double> _p) const;
-        std::complex<double> kValue(Position<double> _p) const;
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return true; } 
+        bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        // Extend to 4 sigma in both domains, or more if needed to reach EE spec
-        double maxK() const { return std::max(4., std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
-        double stepK() const 
-        { return M_PI/std::max(4., std::sqrt(-2.*log(ALIAS_THRESHOLD))) / sigma; }
-        Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        double maxK() const;
+        double stepK() const;
 
-        double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; }
+        Position<double> centroid() const 
+        { return Position<double>(0., 0.); }
+
+        double getFlux() const { return _flux; }
+        void setFlux(double flux) 
+        { 
+            _flux = flux; 
+            _norm = _flux / (_sigma_sq * 2. * M_PI);
+        }
         /**
          * @brief Shoot photons through this SBGaussian.
          *
@@ -1140,9 +1355,19 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBGaussian(*this); }
+
+    private:
+        double _flux; ///< Flux of the Surface Brightness Profile.
+
+        /// @brief Characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`.
+        double _sigma;
+        double _sigma_sq; ///< Calculated value: sigma*sigma
+        double _ksq_min; ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
+        double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
+        double _norm; ///< flux / sigma^2 / 2pi
     };
 
     /**
@@ -1154,12 +1379,78 @@ namespace galsim {
     class SBSersic : public SBProfile 
     {
     public:
+        /**
+         * @brief Constructor.
+         *
+         * @param[in] n     Sersic index.
+         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] re    half-light radius (default `re = 1.`).
+         */
+        SBSersic(double n, double flux=1., double re=1.);
+
+        // Default copy constructor should be fine.
+
+        /// @brief Destructor.
+        ~SBSersic() {}
+
+        // Barney note: methods below already doxyfied via SBProfile, except for getN
+
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
+
+        double maxK() const;
+        double stepK() const;
+
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
+        { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; splits.push_back(0.); }
+
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; splits.push_back(0.); }
+
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        {
+            ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; 
+            if (std::abs(x/_re) < 1.e-2) splits.push_back(0.); 
+        }
+
+        bool isAxisymmetric() const { return true; }
+        bool hasHardEdges() const { return false; }
+        bool isAnalyticX() const { return true; }
+        bool isAnalyticK() const { return true; }  // 1d lookup table
+
+        Position<double> centroid() const 
+        { return Position<double>(0., 0.); }
+
+        double getFlux() const { return _flux; }
+        void setFlux(double flux) 
+        { 
+            _flux = flux; 
+            _norm = flux/_re_sq;
+        }
+
+        /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
+
+        SBProfile* duplicate() const { return new SBSersic(*this); }
+
+        /// @brief A method that only works for Sersic, @returns the Sersic index `n`.
+        double getN() const { return _n; }
+
+    private:
+        double _n; ///< Sersic index.
+        double _flux; ///< Flux.
+        double _re;   ///< Half-light radius.
+        double _re_sq; ///< Calculated value: _re*_re
+        double _norm; ///< Calculated value: _flux/_re_sq
+        double _ksq_max; ///< The ksq_max value from info rescaled with this re value.
+
         /** 
          * @brief Subclass of `SBSersic` which provides the un-normalized radial function.
          *
          * Serves as interface to `OneDimensionalDeviate` used for sampling from this distribution.
          */
-        class SersicRadialFunction: public FluxDensity {
+        class SersicRadialFunction: public FluxDensity 
+        {
         public:
             /**
              * @brief Constructor
@@ -1173,12 +1464,12 @@ namespace galsim {
              * @param[in] r radius, in units of half-light radius.
              * @returns Sersic function, normalized to unity at origin
              */
-            double operator()(double r) const {return std::exp(-_b*std::pow(r,_invn)); } 
+            double operator()(double r) const { return std::exp(-_b*std::pow(r,_invn)); } 
         private:
             double _invn; ///> 1/n
             double _b;  /// radial normalization constant
         };
-    private:
+
         /// @brief A private class that caches the needed parameters for each Sersic index `n`.
         class SersicInfo 
         {
@@ -1189,13 +1480,11 @@ namespace galsim {
              */
             SersicInfo(double n); 
             /// @brief Destructor: deletes photon-shooting classes if necessary
-            ~SersicInfo() {
-                if (_radialPtr) delete _radialPtr;
+            ~SersicInfo() 
+            {
+                if (_radial) delete _radial;
                 if (_sampler) delete _sampler;
             }
-            double inv2n;   ///< `1 / (2 * n)`
-            double maxK;    ///< Value of k beyond which aliasing can be neglected.
-            double stepK;   ///< Sampling in k space necessary to avoid folding of image in x space.
 
             /** 
              * @brief Returns the real space value of the Sersic function, normalized to unit flux
@@ -1204,10 +1493,15 @@ namespace galsim {
              * taking sqrt in most user code.
              * @returns Value of Sersic function, normalized to unit flux.
              */
-            double xValue(double xsq) const { return norm*std::exp(-b*std::pow(xsq,inv2n)); } 
+            double xValue(double xsq) const;
 
             /// @brief Looks up the k value for the SBProfile from a lookup table.
             double kValue(double ksq) const;
+
+            double maxK() const { return _maxK; }
+            double stepK() const { return _stepK; }
+
+            double getKsqMax() const { return _ksq_max; }
 
             /**
              * @brief Shoot photons through unit-size, unnormalized profile
@@ -1224,23 +1518,32 @@ namespace galsim {
             SersicInfo(const SersicInfo& rhs); ///< Hides the copy constructor.
             void operator=(const SersicInfo& rhs); ///<Hide assignment operator.
 
+            double _n; ///< Sersic index.
+
             /** 
              * @brief Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`, calculated from Sersic 
              * index `n` and half-light radius `re`.
              */
-            double b; 
+            double _b; 
 
-            double norm; ///< Amplitude scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`.
-            double kderiv2; ///< Quadratic dependence near k=0.
-            double kderiv4; ///< Quartic dependence near k=0.
-            double logkMin; ///< Minimum log(k) in lookup table.
-            double logkMax; ///< Maximum log(k) in lookup table.
-            double logkStep; ///< Stepsize in log(k) in lookup table.
-            std::vector<double> lookup; ///< Lookup table.
+            double _inv2n;   ///< `1 / (2 * n)`
+            double _maxK;    ///< Value of k beyond which aliasing can be neglected.
+            double _stepK;   ///< Sampling in k space necessary to avoid folding 
 
-            SersicRadialFunction* _radialPtr;  ///< Function class used for photon shooting
+            double _norm; ///< Amplitude scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`.
+            double _kderiv2; ///< Quadratic dependence near k=0.
+            double _kderiv4; ///< Quartic dependence near k=0.
+            Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
+            double _ksq_min; ///< Minimum ksq to use lookup table.
+            double _ksq_max; ///< Maximum ksq to use lookup table.
+
+            SersicRadialFunction* _radial;  ///< Function class used for photon shooting
             OneDimensionalDeviate* _sampler;   ///< Class that does numerical photon shooting
+
+            double findMaxR(double missing_flux_fraction, double gamma2n);
         };
+
+        const SersicInfo* _info; ///< Points to info structure for this n.
 
         /** 
          * @brief A map to hold one copy of the SersicInfo for each `n` ever used during the 
@@ -1284,63 +1587,6 @@ namespace galsim {
             }
         };
         static InfoBarn nmap; ///> One static map of all `SersicInfo` structures for whole program.
-
-        // Now the parameters of this instance of SBSersic:
-        double n; ///< Sersic index.
-        double flux; ///< Flux.
-        double re;   ///< Half-light radius.
-        const SersicInfo* info; ///< Points to info structure for this n.
-
-    public:
-        /**
-         * @brief Constructor.
-         *
-         * @param[in] n_    Sersic index.
-         * @param[in] flux_ flux (default `flux_ = 1.`).
-         * @param[in] re_   half-light radius (default `re_ = 1.`).
-         */
-        SBSersic(double n_, double flux_=1., double re_=1.) :
-            n(n_), flux(flux_), re(re_), info(nmap.get(n)) {}
-
-        // Default copy constructor should be fine.
-
-        /// @brief Destructor.
-        ~SBSersic() {}
-
-        // Barney note: methods below already doxyfied via SBProfile, except for getN
-
-        double xValue(Position<double> p) const 
-        {
-            p /= re;
-            return flux*info->xValue(p.x*p.x+p.y*p.y) / (re*re);
-        }
-
-        std::complex<double> kValue(Position<double> k) const 
-        {
-            k *= re;
-            return std::complex<double>( flux*info->kValue(k.x*k.x+k.y*k.y), 0.);
-        }
-
-        bool isAxisymmetric() const { return true; }
-        bool isAnalyticX() const { return true; }
-        bool isAnalyticK() const { return true; }  // 1d lookup table
-
-        double maxK() const { return info->maxK / re; }
-        double stepK() const { return info->stepK / re; }
-
-        Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
-
-        double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; }
-
-        /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
-
-        SBProfile* duplicate() const { return new SBSersic(*this); }
-
-        /// @brief A method that only works for Sersic, @returns the Sersic index `n`.
-        double getN() const { return n; }
     };
 
     /** 
@@ -1348,51 +1594,70 @@ namespace galsim {
      *
      * This is a special case of the Sersic profile, but is given a separate class since the 
      * Fourier transform has closed form and can be generated without lookup tables.
-     * The maxK() is set to where the FT is down to 0.001, or via `ALIAS_THRESHOLD`, whichever is 
-     * harder.
      */
     class SBExponential : public SBProfile 
     {
-    private:
-        double r0;   ///< Characteristic size of profile `exp[-(r / r0)]`.
-        double flux; ///< Flux.
     public:
         /** 
          * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in 
          * SBSersic.
          *
-         * @param[in] flux_ flux (default `flux_ = 1.`).
-         * @param[in] r0_   scale length for the profile that scales as `exp[-(r / r0)]`, NOT the 
-         *                  half-light radius `re` as in SBSersic (default `r0_ = 1.`).
+         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] r0    scale length for the profile that scales as `exp[-(r / r0)]`, NOT the 
+         *                  half-light radius `re` as in SBSersic (default `r0 = 1.`).
          */
-        SBExponential(double flux_=1., double r0_=1.) : r0(r0_), flux(flux_) {}
+        SBExponential(double flux=1., double r0=1.);
 
         /// @brief Destructor.
         ~SBExponential() {}
 
         // Methods
-        double xValue(Position<double> _p) const;
-        std::complex<double> kValue(Position<double> _p) const;
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
+
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
+        { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; splits.push_back(0.); }
+
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; splits.push_back(0.); }
+
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        { 
+            ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; 
+            if (std::abs(x/_r0) < 1.e-2) splits.push_back(0.); 
+        }
 
         bool isAxisymmetric() const { return true; } 
+        bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        // Set maxK where the FT is down to 0.001 or threshold, whichever is harder.
-        double maxK() const { return std::max(10., pow(ALIAS_THRESHOLD, -1./3.))/r0; }
+        double maxK() const;
         double stepK() const;
 
         Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        { return Position<double>(0., 0.); }
 
-        double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; }
+        double getFlux() const { return _flux; }
+        void setFlux(double flux) 
+        {
+            _flux = flux; 
+            _norm = _flux / (_r0_sq * 2. * M_PI);
+        }
 
         /// @brief Exponential photon-shooting done with rapid iterative solution of inverse
         /// cumulative distribution
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBExponential(*this); }
+
+    private:
+        double _flux; ///< Flux.
+        double _r0;   ///< Characteristic size of profile `exp[-(r / r0)]`.
+        double _r0_sq; ///< Calculated value: r0*r0
+        double _ksq_min; ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
+        double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
+        double _norm; ///< flux / r0^2 / 2pi
     };
 
     /** 
@@ -1400,81 +1665,97 @@ namespace galsim {
      * circular aperture), with central obscuration.
      *
      * maxK() is set at the hard limit for Airy disks, stepK() makes transforms go to at least 
-     * 5 lam/D or EE>(1-ALIAS_THRESHOLD).  Schroeder (10.1.18) gives limit of EE at large radius.
+     * 5 lam/D or EE>(1-alias_threshold).  Schroeder (10.1.18) gives limit of EE at large radius.
      * This stepK could probably be relaxed, it makes overly accurate FFTs.
      * Note x & y are in units of lambda/D here.  Integral over area will give unity in this 
      * normalization.
      */
     class SBAiry : public SBProfile 
     {
-    private:
-        /** 
-         * @brief `D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, 
-         * else `D` = (telescope diam) / lambda if arg is in radians of field angle.
-         */
-        double D; 
-
-        double obscuration; ///< Radius ratio of central obscuration.
-        double flux; ///< Flux.
-
     public:
         /**
          * @brief Constructor.
          *
-         * @param[in] D_    `D` = (telescope diam) / (lambda * focal length) if arg is focal plane 
-         *                  position, else `D` = (telescope diam) / lambda if arg is in radians of 
-         *                  field angle (default `D_ = 1.`).
-         * @param[in] obs_  radius ratio of central obscuration (default `obs_ = 0.`).
-         * @param[in] flux_ flux (default `flux_ = 1.`).
+         * @param[in] D            `D` = (telescope diam) / (lambda * focal length) if arg is focal 
+         *                         plane position, else `D` = (telescope diam) / lambda if arg is 
+         *                         in radians of field angle (default `D = 1.`).
+         * @param[in] obscuration  linear dimension of central obscuration as fraction of pupil
+         *                         dimension (default `obscuration = 0.`).
+         * @param[in] flux         flux (default `flux = 1.`).
          */
-        SBAiry(double D_=1., double obs_=0., double flux_=1.) :
-            D(D_), obscuration(obs_), flux(flux_), _sampler(0), _radial(obscuration) {}
+        SBAiry(double D=1., double obscuration=0., double flux=1.);
 
-        /// @brief Copy constructor: photon-shooting structures are not copied, will be re-computed
-        /// in copy
-        SBAiry(const SBAiry& rhs): D(rhs.D), obscuration(rhs.obscuration), flux(rhs.flux),
-                                   _sampler(0), _radial(obscuration) {}
+        /**
+         * @brief Copy constructor: photon-shooting structures are not copied, will be
+         * re-computed in copy
+         */
+        SBAiry(const SBAiry& rhs): 
+            _D(rhs._D), _obscuration(rhs._obscuration), _flux(rhs._flux), _norm(rhs._norm),
+            _sampler(0), _radial(_obscuration) {}
 
-        /// @brief Assignment operator: photon-shooting structures are discarded, will be
-        /// re-computed in copy
-        const SBAiry& operator=(const SBAiry& rhs) {
-            D = rhs.D;
-            obscuration = rhs.obscuration;
-            flux = rhs.flux;
-            _radial.setObscuration(obscuration);
+        /**
+         * @brief Assignment operator: photon-shooting structures are discarded, will be
+         * re-computed in copy
+         */
+        SBAiry& operator=(const SBAiry& rhs) 
+        {
+            _D = rhs._D;
+            _obscuration = rhs._obscuration;
+            _flux = rhs._flux;
+            _norm = rhs._norm;
+            _radial.setObscuration(_obscuration);
             flushSampler();
             return *this;
         }
             
         /// @brief Destructor.
-        ~SBAiry() {flushSampler();}
+        ~SBAiry() { flushSampler(); }
 
         // Methods (Barney: mostly described by SBProfile Doxys, with maxK() and stepK() 
         // prescription described in class description).
-        double xValue(Position<double> _p) const;
-        std::complex<double> kValue(Position<double> _p) const;
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return true; } 
+        bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        double maxK() const { return 2*M_PI*D; } ///< Set at hard limit for Airy disk.
-
-        // stepK makes transforms go to at least 5 lam/D or EE>(1-ALIAS_THRESHOLD).
-        // Schroeder (10.1.18) gives limit of EE at large radius.
-        // This stepK could probably be relaxed, it makes overly accurate FFTs.
-        double stepK() const 
-        { 
-            return std::min( 
-                ALIAS_THRESHOLD * 0.5 * D * pow(M_PI,3.) * (1-obscuration) ,
-                M_PI * D / 5.);
-        }
+        double maxK() const;
+        double stepK() const;
 
         Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        { return Position<double>(0., 0.); }
 
-        double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) {flux=flux_; } 
+        double getFlux() const { return _flux; }
+        void setFlux(double flux) 
+        {
+            _flux = flux; 
+            _norm = flux * _D*_D;
+        }
+
+        /**
+         * @brief Airy photon-shooting is done numerically with `OneDimensionalDeviate` class.
+         *
+         * @param[in] N Total number of photons to produce.
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
+         */
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
+
+        SBProfile* duplicate() const { return new SBAiry(*this); }
+
+    private:
+        /** 
+         * @brief `_D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, 
+         * else `_D` = (telescope diam) / lambda if arg is in radians of field angle.
+         */
+        double _D; 
+
+        double _obscuration; ///< Radius ratio of central obscuration.
+        double _flux; ///< Flux.
+        double _norm; ///< Calculated value: flux*D*D
+
 
         /**
          * @brief Subclass is a scale-free version of the Airy radial function.
@@ -1484,7 +1765,8 @@ namespace galsim {
          * Input radius is in units of lambda/D.  Output normalized
          * to integrate to unity over input units.
          */
-        class AiryRadialFunction: public FluxDensity {
+        class AiryRadialFunction: public FluxDensity 
+        {
         public:
             /**
              * @brief Constructor
@@ -1497,44 +1779,31 @@ namespace galsim {
              * @returns Airy function, normalized to integrate to unity.
              */
             double operator()(double radius) const;
-            void setObscuration(double obscuration) {_obscuration=obscuration;}
+            void setObscuration(double obscuration) { _obscuration=obscuration; }
         private:
             double _obscuration; ///> Central obstruction size
         };
 
-        /**
-         * @brief Airy photon-shooting is done numerically with `OneDimensionalDeviate` class.
-         *
-         * @param[in] N Total number of photons to produce.
-         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
-         */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
-
-        SBProfile* duplicate() const { return new SBAiry(*this); }
-
-    private: 
         mutable OneDimensionalDeviate* _sampler; ///< Class that can sample radial distribution
         AiryRadialFunction _radial;  ///< Class that embodies the radial Airy function.
 
-        double chord(const double r, const double h) const; ///< Circle chord length at `h < r`.
+        /// Circle chord length at `h < r`.
+        double chord(const double r, const double h) const; 
 
         /// @brief Area inside intersection of 2 circles radii `r` & `s`, seperated by `t`.
-        double circle_intersection(
-            double r, double s, double t) const; 
+        double circle_intersection(double r, double s, double t) const; 
 
         /// @brief Area of two intersecting identical annuli.
-        double annuli_intersect(
-            double r1, double r2, double t) const; 
+        double annuli_intersect(double r1, double r2, double t) const; 
+
         /** 
          * @brief Beam pattern of annular aperture, in k space, which is just the autocorrelation 
          * of two annuli.  Normalized to unity at `k=0` for now.
          */
         double annuli_autocorrelation(const double k) const; 
 
-        void checkSampler() const; ///< See if `OneDimensionalDeviate` for photon shooting is configured.
+        void checkSampler() const; ///< Check if `OneDimensionalDeviate` is configured.
         void flushSampler() const; ///< Discard the photon-shooting sampler class.
-
     };
 
     /** 
@@ -1546,91 +1815,104 @@ namespace galsim {
      */ 
     class SBBox : public SBProfile 
     {
-    private:
-        double xw;   ///< Boxcar function is `xw` x `yw` across.
-        double yw;   ///< Boxcar function is `xw` x `yw` across.
-        double flux; ///< Flux.
-        /** 
-         * @brief Sinc function used to describe Boxcar in k space. 
-         * @param[in] u Normalized wavenumber.
-         */
-        double sinc(const double u) const; 
-
     public:
         /** 
          * @brief Constructor.
          *
-         * @param[in] xw_   width of Boxcar function along x (default `xw_ = 1.`).
-         * @param[in] yw_   width of Boxcar function along y (default `yw_ = 0.`).
-         * @param[in] flux_ flux (default `flux_ = 1.`).
+         * @param[in] xw    width of Boxcar function along x (default `xw = 1.`).
+         * @param[in] yw    width of Boxcar function along y (default `yw = 0.`).
+         * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBBox(double xw_=1., double yw_=0., double flux_=1.) :
-            xw(xw_), yw(yw_), flux(flux_) 
-        { if (yw==0.) yw=xw; }
+        SBBox(double xw=1., double yw=0., double flux=1.) :
+            _xw(xw), _yw(yw), _flux(flux)
+        {
+            if (_yw==0.) _yw=_xw; 
+            _norm = _flux / (_xw * _yw);
+        }
 
         /// @brief Destructor.
         ~SBBox() {}
 
         // Methods (Barney: public methods Doxified via SBProfile).
-        double xValue(Position<double> _p) const;
-        std::complex<double> kValue(Position<double> _p) const;
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return false; } 
+        bool hasHardEdges() const { return true; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
- 
-        double maxK() const { return 2. / ALIAS_THRESHOLD / std::max(xw,yw); }
-        double stepK() const { return M_PI/std::max(xw,yw)/2; } 
+
+        double maxK() const;
+        double stepK() const;
+
+        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
+        { xmin = -0.5*_xw;  xmax = 0.5*_xw; }
+
+        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
+        { ymin = -0.5*_yw;  ymax = 0.5*_yw; }
 
         Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        { return Position<double>(0., 0.); }
 
-        double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; }
+        double getFlux() const { return _flux; }
+        void setFlux(double flux) 
+        { 
+            _flux = flux; 
+            _norm = flux / (_xw*_yw);
+        }
 
         /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBBox(*this); }
 
+    protected:
+        // Override for better efficiency:
+        void fillKGrid(KTable& kt) const;
         // Override to put in fractional edge values:
         void fillXGrid(XTable& xt) const;
 
         template <typename T>
         double fillXImage(ImageView<T>& I, double dx) const;
 
-    protected:
-        virtual double doFillXImage(ImageView<float>& I, double dx) const
+        double doFillXImage(ImageView<float>& I, double dx) const
         { return fillXImage(I,dx); }
-        virtual double doFillXImage(ImageView<double>& I, double dx) const
+        double doFillXImage(ImageView<double>& I, double dx) const
         { return fillXImage(I,dx); }
-        virtual double doFillXImage(ImageView<short>& I, double dx) const
+        double doFillXImage(ImageView<short>& I, double dx) const
         { return fillXImage(I,dx); }
-        virtual double doFillXImage(ImageView<int>& I, double dx) const
+        double doFillXImage(ImageView<int>& I, double dx) const
         { return fillXImage(I,dx); }
 
+    private:
+        double _xw;   ///< Boxcar function is `xw` x `yw` across.
+        double _yw;   ///< Boxcar function is `xw` x `yw` across.
+        double _flux; ///< Flux.
+        double _norm; ///< Calculated value: flux / (xw*yw)
+
+        /** 
+         * @brief Sinc function used to describe Boxcar in k space. 
+         * @param[in] u Normalized wavenumber.
+         */
+        double sinc(const double u) const; 
     };
 
-#ifdef USE_LAGUERRE
     /// @brief Class for describing Gauss-Laguerre polynomial Surface Brightness Profiles.
     class SBLaguerre : public SBProfile 
     {
-    private:
-        LVector bvec;  ///< `bvec[n,n]` contains flux information for the `(n, n)` basis function.
-        double sigma;  ///< Scale size of Gauss-Laguerre basis set.
     public:
         /** 
          * @brief Constructor.
          *
-         * @param[in] bvec_  `bvec[n,n]` contains flux information for the `(n, n)` basis function.
-         * @param[in] sigma_ scale size of Gauss-Laguerre basis set (default `sigma_ = 1.`).
+         * @param[in] bvec   `bvec[n,n]` contains flux information for the `(n, n)` basis function.
+         * @param[in] sigma  scale size of Gauss-Laguerre basis set (default `sigma = 1.`).
          */
-        SBLaguerre(LVector bvec_=LVector(), double sigma_=1.) : 
-            bvec(bvec_.duplicate()), sigma(sigma_) {}
+        SBLaguerre(LVector bvec=LVector(), double sigma=1.) : 
+            _bvec(bvec.duplicate()), _sigma(sigma) {}
 
         /// @brief Copy Constructor. 
         SBLaguerre(const SBLaguerre& rhs) :
-            bvec(rhs.bvec.duplicate()), sigma(rhs.sigma) {}
+            _bvec(rhs._bvec.duplicate()), _sigma(rhs._sigma) {}
 
         /// @brief Destructor. 
         ~SBLaguerre() {}
@@ -1638,13 +1920,14 @@ namespace galsim {
         // implementation dependent methods
         SBProfile* duplicate() const { return new SBLaguerre(*this); }
 
-        double xValue(Position<double> _p) const;
-        std::complex<double> kValue(Position<double> _p) const;
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
 
         double maxK() const;
         double stepK() const;
 
         bool isAxisymmetric() const { return false; }
+        bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
@@ -1652,18 +1935,20 @@ namespace galsim {
         { throw SBError("SBLaguerre::centroid calculations not yet implemented"); }
 
         double getFlux() const;
-        void setFlux(double flux_=1.);
+        void setFlux(double flux);
 
         /// @brief Photon-shooting is not implemented for SBLaguerre, will throw an exception.
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const {
-            throw SBError("SBLaguerre::shoot() is not implemented");
-        }
+        PhotonArray shoot(int N, UniformDeviate& ud) const 
+        { throw SBError("SBLaguerre::shoot() is not implemented"); }
 
+    protected:
         // void fillKGrid(KTable& kt) const;
         // void fillXGrid(XTable& xt) const;
 
+    private:
+        LVector _bvec;  ///< `bvec[n,n]` contains flux information for the `(n, n)` basis function.
+        double _sigma;  ///< Scale size of Gauss-Laguerre basis set.
     };
-#endif
 
     /**
      * @brief Surface Brightness for the Moffat Profile (an approximate description of ground-based
@@ -1671,28 +1956,13 @@ namespace galsim {
      */
     class SBMoffat : public SBProfile 
     {
-    private:
-        double beta; ///< Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
-        double flux; ///< Flux.
-        double norm; ///< Normalization.
-        double rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
-        // In units of rD:
-        double maxRrD; ///< Maximum `r` in units of `rD`.
-        double maxKrD; ///< Maximum lookup table `k` in units of `rD`.
-        double stepKrD; ///< Stepsize lookup table `k` in units of `rD`.
-        double FWHMrD;  ///< Full Width at Half Maximum in units of `rD`.
-        double rerD;    ///< Half-light radius in units of `rD`.
-        double fluxFactor; ///< Integral of unnormalized flux
-
-        Table<double,double> ft;  ///< Lookup table for Fourier transform of Moffat.
-
     public:
         /** @brief Constructor.
          *
-         * @param[in] beta_          Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
+         * @param[in] beta           Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
          * @param[in] truncationFWHM outer truncation in units of FWHM (default `truncationFWHM = 
-         * 2.`).
-         * @param[in] flux_          Flux (default `flux_ = 1.`).
+         * 0.`).  If truncationFWHM = 0, then no truncation is applied.
+         * @param[in] flux           Flux (default `flux = 1.`).
          * @param[in] size           Size specification (default `size = 1.`).
          * @param[in] rType          Kind of size being specified (default `HALF_LIGHT_RADIUS`).
          */
@@ -1703,61 +1973,93 @@ namespace galsim {
             SCALE_RADIUS
         };
 
-        SBMoffat(
-            double beta_, double truncationFWHM=2., double flux_=1., double size=1.,
-            RadiusType rType=HALF_LIGHT_RADIUS);
+        SBMoffat(double beta, double truncationFWHM=0., double flux=1., double size=1.,
+                 RadiusType rType=HALF_LIGHT_RADIUS);
 
         // Default copy constructor should be fine.
 
         /// @brief Destructor.
         ~SBMoffat() {}
 
-        double xValue(Position<double> p) const 
-        {
-            p /= rD;
-            double rsq = p.x*p.x+p.y*p.y;
-            if (rsq >= maxRrD*maxRrD) return 0.;
-            else return flux*norm*pow(1+rsq, -beta) / (rD*rD);
-        }
+        double xValue(const Position<double>& p) const;
 
-        std::complex<double> kValue(Position<double> k) const; 
+        std::complex<double> kValue(const Position<double>& k) const; 
 
         bool isAxisymmetric() const { return true; } 
+        bool hasHardEdges() const { return (1.-_fluxFactor) > sbp::maxk_threshold; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
-        double maxK() const { return maxKrD / rD; }   
-        double stepK() const { return stepKrD / rD; } 
+        double maxK() const;
+        double stepK() const;
+
+        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
+        { xmin = -_maxR; xmax = _maxR; }
+
+        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
+        { ymin = -_maxR; ymax = _maxR; }
+
+        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& ) const 
+        {
+            ymax = sqrt(_maxR_sq - x*x);
+            ymin = -ymax;
+        }
 
         Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        { return Position<double>(0., 0.); }
 
 
-        double getFlux() const { return flux; }
-        void setFlux(double flux_=1.) { flux=flux_; }
+        double getFlux() const { return _flux; }
+        void setFlux(double flux) 
+        { 
+            _flux = flux; 
+            _norm = flux * (_beta-1.) / (M_PI * _fluxFactor * _rD_sq);
+        }
 
         /**
-         * @brief Moffat photon shooting is done by analytic inversion of cumulative flux distribution.
+         * @brief Moffat photon shooting is done by analytic inversion of cumulative flux 
+         * distribution.
          *
          * Will require 2 uniform deviates per photon, plus analytic function (pow and sqrt)
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& ud) const;
+        PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         SBProfile* duplicate() const { return new SBMoffat(*this); }
 
         // Methods that only work for Moffat:
 
         /// @brief Returns the Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
-        double getBeta() const { return beta; }
+        double getBeta() const { return _beta; }
 
-        /// @brief Set the FWHM. @param fwhm Input: new FWHM.
-        void setFWHM(double fwhm) { rD = fwhm / FWHMrD; }
+    protected:
+        //void fillKGrid(KTable& kt) const;
+        //void fillXGrid(XTable& xt) const;
 
-        /** 
-         * @brief Set the Moffat scale radius for profile `[1 + (r / rD)^2]^beta`. 
-         * @param rD_ Input: new `rD`.
-         */
-        void setRd(double rD_) { rD = rD_; }
+    private:
+        double _beta; ///< Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
+        double _flux; ///< Flux.
+        double _norm; ///< Normalization. (Including the flux)
+        double _rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
+        double _maxR; ///< Maximum `r`
+        double _FWHM;  ///< Full Width at Half Maximum in units of `rD`.
+        double _fluxFactor; ///< Integral of total flux in terms of 'rD' units.
+        double _rD_sq; ///< Calculated value: rD*rD;
+        double _maxR_sq; ///< Calculated value: maxR * maxR
+        double _maxK; ///< Maximum k with kValue > 1.e-3
+
+        Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
+
+        double (*pow_beta)(double x, double beta);
+
+        static double pow_1(double x, double ) { return x; }
+        static double pow_2(double x, double ) { return x*x; }
+        static double pow_3(double x, double ) { return x*x*x; }
+        static double pow_4(double x, double ) { return x*x*x*x; }
+        static double pow_int(double x, double beta) { return std::pow(x,int(beta)); }
+        static double pow_gen(double x, double beta) { return std::pow(x,beta); }
+
+        /// Setup the FT Table.
+        void setupFT();
     };
 
 
@@ -1788,10 +2090,10 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] flux_ flux (default `flux_ = 1.`).
-         * @param[in] r0_   Half-light radius (default `r0_ = 1.`).
+         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] r0    Half-light radius (default `r0 = 1.`).
          */
-        SBDeVaucouleurs(double flux_=1., double r0_=1.) : SBSersic(4., flux_, r0_) {}
+        SBDeVaucouleurs(double flux=1., double r0=1.) : SBSersic(4., flux, r0) {}
 
         /// @brief Destructor.
         ~SBDeVaucouleurs() {}
@@ -1800,7 +2102,7 @@ namespace galsim {
         SBProfile* duplicate() const { return new SBDeVaucouleurs(*this); }
 
         Position<double> centroid() const 
-        { Position<double> p(0., 0.); return p; }
+        { return Position<double>(0., 0.); }
 
 
     };

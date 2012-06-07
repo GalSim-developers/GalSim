@@ -44,16 +44,84 @@ class RealGalaxyCatalog:
         self.mag = cat.field('mag') # apparent magnitude
         self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., "F814W"
         self.weight = cat.field('weight') # weight factor to account for size-dependent probability
+        self.preloaded = False
         # of galaxy inclusion in training sample
 
-        ## eventually I think we'll want information about the training dataset, i.e. (dataset, ID within dataset)
+        ## eventually I think we'll want information about the training dataset, 
+        ## i.e. (dataset, ID within dataset)
 
         # note: am assuming that pyfits takes care of error handling, e.g., if the file does not
         # exist, there's no field with that name, etc.
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
+    def get_index_for_id(self, ID):
+        """
+        Find which index number corresponds to the value ID in the ident field.
+        """
+        if ID in self.ident:
+            return self.ident.index(ID)
+        else:
+            raise ValueError('ID %s not found in list of IDs'%ID)
+
+    def preload(self):
+        """
+        Preload the files into memory.
+        
+        There are memory implications to this, so we don't do this by default.
+        However, it can be a big speedup if memory isn't an issue.  Especially
+        if many (or all) of the images are stored in the same file as different HDUs.
+        """
+        import pyfits
+        import os
+        self.preloaded = True
+        self.loaded_files = {}
+        for filename in self.gal_filename:
+            if filename not in self.loaded_files:
+                full_filename = os.path.join(self.imagedir,filename)
+                self.loaded_files[filename] = pyfits.open(full_filename)
+        for filename in self.PSF_filename:
+            if filename not in self.loaded_files:
+                full_filename = os.path.join(self.imagedir,filename)
+                self.loaded_files[filename] = pyfits.open(full_filename)
+
+    def getGal(self,i):
+        """
+        Returns the galaxy at index i as an ImageViewD object.
+        """
+        if i >= len(self.gal_filename):
+            raise IndexError(
+                'index %d given to getGal is out of range (0..%d)'%(i,len(self.gal_filename)-1))
+        import pyfits
+        import os
+        import numpy
+        if self.preloaded:
+            array = self.loaded_files[self.gal_filename[i]][self.gal_hdu[i]].data
+        else:
+            filename = os.path.join(self.imagedir,self.gal_filename[i])
+            array = pyfits.getdata(filename,self.gal_hdu[i])
+        return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
+
+    def getPSF(self,i):
+        """
+        Returns the PSF at index i as an ImageViewD object.
+        """
+        if i >= len(self.PSF_filename):
+            raise IndexError(
+                'index %d given to getPSF is out of range (0..%d)'%(i,len(self.PSF_filename)-1))
+        import pyfits
+        import os
+        import numpy
+        if self.preloaded:
+            array = self.loaded_files[self.PSF_filename[i]][self.PSF_hdu[i]].data
+        else:
+            filename = os.path.join(self.imagedir,self.PSF_filename[i])
+            array = pyfits.getdata(filename,self.PSF_hdu[i])
+        return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
+
+
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rotation_angle = None, 
-            rand_rotate = True, uniform_deviate = None, target_flux = 1000.0):
+            rand_rotate = True, uniform_deviate = None, target_flux = 1000.0,
+            image=None):
     """@brief Function to simulate images (no added noise) from real galaxy training data.
 
     This function takes a RealGalaxy from some training set, and manipulates it as needed to
@@ -80,6 +148,9 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     @param uniform_deviate     Uniform RNG to use for selection of the random rotation angle
                                (optional).
     @param target_flux         The target flux in the output galaxy image, default 1000.
+    @param image               As with the GSObject.draw function, if an image is provided,
+                               then it will be used and returned.
+                               If image=None, then an appropriately sized image will be created.
     """
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
@@ -134,8 +205,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
         sheared = real_galaxy.SBProfile
 
     # convolve, resample
-    out_gal = galsim.SBConvolve([sheared, target_PSF])
-    out_gal_image = out_gal.draw(dx = target_pixel_scale)
+    out_gal = galsim.Convolve([galsim.GSObject(sheared), galsim.GSObject(target_PSF)])
+    image = out_gal.draw(image=image, dx = target_pixel_scale)
 
     # return simulated image
-    return out_gal_image
+    return image

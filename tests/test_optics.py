@@ -129,21 +129,25 @@ def test_simple_wavefront():
     """Test the MTF of a pure circular pupil against the known result.
     """
     kx, ky = galsim.optics.kxky(testshape)
-    kmax_test = 0.75 * np.pi # Choose some kmax for the test
+    dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
+    lod_test = 8. # }
+    kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code 
     kmag = np.sqrt(kx**2 + ky**2) / kmax_test # Set up array of |k| in units of kmax_test
     # Simple pupil wavefront should merely be unit ordinate tophat of radius kmax / 2: 
     in_pupil = kmag < .5
     wf_true = np.zeros(kmag.shape)
     wf_true[in_pupil] = 1.
     # Compare
-    wf = galsim.optics.wavefront(array_shape=testshape, kmax=kmax_test)
+    wf = galsim.optics.wavefront(array_shape=testshape, dx=dx_test, lam_over_D=lod_test)
     np.testing.assert_array_almost_equal(wf, wf_true, decimal=decimal)
 
 def test_simple_mtf():
     """Test the MTF of a pure circular pupil against the known result.
     """
     kx, ky = galsim.optics.kxky(testshape)
-    kmax_test = 0.75 * np.pi # Choose some kmax for the test
+    dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
+    lod_test = 8. # }
+    kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code 
     kmag = np.sqrt(kx**2 + ky**2) / kmax_test # Set up array of |k| in units of kmax_test
     in_pupil = kmag < 1.
     # Then use analytic formula for MTF of circ pupil (fun to derive)
@@ -151,7 +155,7 @@ def test_simple_mtf():
     mtf_true[in_pupil] = (np.arccos(kmag[in_pupil]) - kmag[in_pupil] *
                           np.sqrt(1. - kmag[in_pupil]**2)) * 2. / np.pi
     # Compare
-    mtf = galsim.optics.mtf(array_shape=testshape, kmax=kmax_test)
+    mtf = galsim.optics.mtf(array_shape=testshape, dx=dx_test, lam_over_D=lod_test)
     np.testing.assert_array_almost_equal(mtf, mtf_true, decimal=decimal_dft)
 
 def test_simple_ptf():
@@ -169,11 +173,14 @@ def test_consistency_psf_mtf():
     """Test that the MTF of a pure circular pupil is |FT{PSF}|.
     """
     kx, ky = galsim.optics.kxky(testshape)
-    kmax_test = 0.75 * np.pi # Choose some kmax for the test
-    psf = galsim.optics.psf(array_shape=testshape, kmax=kmax_test)
+    dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
+    lod_test = 8. # }
+    kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code 
+    psf = galsim.optics.psf(array_shape=testshape, dx=dx_test, lam_over_D=lod_test)
+    psf *= dx_test**2 # put the PSF into flux units rather than SB for comparison
     mtf_test = np.abs(np.fft.fft2(psf))
     # Compare
-    mtf = galsim.optics.mtf(array_shape=testshape, kmax=kmax_test)
+    mtf = galsim.optics.mtf(array_shape=testshape, dx=dx_test, lam_over_D=lod_test)
     np.testing.assert_array_almost_equal(mtf, mtf_test, decimal=decimal_dft)
 
 def test_wavefront_image_view():
@@ -230,7 +237,7 @@ def test_OpticalPSF_vs_Airy():
     nlook = 100          # size of array region at the centre of each image to compare
     for lod in lods:
         D = 1. / lod
-        airy_test = galsim.Airy(D=D, obs=0., flux=1.)
+        airy_test = galsim.Airy(D=D, obscuration=0., flux=1.)
         optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1) #pad same as an Airy, natch!
         airy_array = airy_test.draw(dx=1.).array
         airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2: 
@@ -244,6 +251,30 @@ def test_OpticalPSF_vs_Airy():
                                          optics_array.shape[1]/2 + nlook/2]
         np.testing.assert_array_almost_equal(optics_array_test, airy_array_test, decimal_dft, 
                                              err_msg="Unaberrated Optical not quite equal to Airy")
+
+def test_OpticalPSF_vs_Airy_with_obs():
+    """Compare the array view on an unaberrated OpticalPSF with osbcuration to that of an Airy.
+    """
+    lod = 7.5    # lambda/D value: don't choose unity in case symmetry hides something
+    obses = (0.1, 0.3, 0.5) # central obscuration radius ratios
+    nlook = 100          # size of array region at the centre of each image to compare
+    D = 1. / lod
+    for obs in obses:
+        airy_test = galsim.Airy(D=D, obscuration=obs, flux=1.)
+        optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1, obscuration=obs)
+        airy_array = airy_test.draw(dx=1.).array
+        airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2: 
+                                     airy_array.shape[0]/2 + nlook/2,   
+                                     airy_array.shape[1]/2 - nlook/2:
+                                     airy_array.shape[1]/2 + nlook/2]
+        optics_array = optics_test.draw(dx=1.).array 
+        optics_array_test = optics_array[optics_array.shape[0]/2 - nlook/2:
+                                         optics_array.shape[0]/2 + nlook/2, 
+                                         optics_array.shape[1]/2 - nlook/2:
+                                         optics_array.shape[1]/2 + nlook/2]
+        np.testing.assert_array_almost_equal(optics_array_test, airy_array_test, decimal_dft, 
+                                             err_msg="Unaberrated Optical with obscuration not "
+                                                     "quite equal to Airy")
 
 
 if __name__ == "__main__":
@@ -264,3 +295,4 @@ if __name__ == "__main__":
     test_ptf_image_view()
     test_OpticalPSF_flux()
     test_OpticalPSF_vs_Airy()
+    test_OpticalPSF_vs_Airy_with_obs()

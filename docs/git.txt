@@ -173,7 +173,7 @@ git checkout TAGNAME
 
 To list all tags, use
 
-git tags
+git tag -l
 
 and to get information about some particular tag, use
 
