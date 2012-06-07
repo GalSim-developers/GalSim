@@ -785,7 +785,7 @@ namespace galsim {
          *
          * @param[in] slist list of SBProfiles.
          */
-        SBAdd(const std::list<SBProfile> slist) : 
+        SBAdd(const std::list<SBProfile>& slist) : 
             SBProfile(new SBAddImpl(slist)) {}
 
         /// @brief Copy constructor.
@@ -802,7 +802,7 @@ namespace galsim {
         SBAddImpl(const SBProfile& s1, const SBProfile& s2)
         { add(s1); add(s2); initialize(); }
 
-        SBAddImpl(const std::list<SBProfile> slist)
+        SBAddImpl(const std::list<SBProfile>& slist)
         {
             for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
                 add(*sptr); 
@@ -1200,7 +1200,7 @@ namespace galsim {
          * @param[in] slist Input: list of SBProfiles.
          * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          */
-        SBConvolve(const std::list<SBProfile> slist, bool real_space=false) :
+        SBConvolve(const std::list<SBProfile>& slist, bool real_space=false) :
             SBProfile(new SBConvolveImpl(slist,real_space)) {}
 
         /// @brief Copy constructor.
@@ -1224,7 +1224,7 @@ namespace galsim {
             _real_space(real_space)
         { add(s1);  add(s2);  add(s3); initialize(); }
 
-        SBConvolveImpl(const std::list<SBProfile> slist, bool real_space) :
+        SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space) :
             _real_space(real_space)
         {
             for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr) 

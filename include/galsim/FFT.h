@@ -282,7 +282,7 @@ namespace galsim {
         void check_array() const {}
 #endif
 
-        // Objects used to accelerate interpolation with seperable interpolants:
+        // Objects used to accelerate interpolation with separable interpolants:
         mutable std::deque<std::complex<double> > _cache;
         mutable std::vector<double> _xwt;
         mutable int _cacheStartY;
@@ -390,7 +390,7 @@ namespace galsim {
         void check_array() const {}
 #endif
 
-        // Objects used to accelerate interpolation with seperable interpolants:
+        // Objects used to accelerate interpolation with separable interpolants:
         mutable std::deque<double> _cache;
         mutable std::vector<double> _xwt;
         mutable double _cacheX;
