@@ -218,33 +218,6 @@ class GSObject:
         self.SBProfile.drawShoot(image, N, ud)
          
 
-# Define "convenience function for going from (g1, g2) -> (e1, e2), used by two methods
-# in the GSObject class and by one function in real.py:
-def g1g2_to_e1e2(g1, g2):
-    """@brief Convenience function for going from (g1, g2) -> (e1, e2), used by two methods in the 
-    GSObject class.
-    """
-    # SBProfile expects an e1,e2 distortion, rather than a shear,
-    # so we need to convert:
-    # e = (a^2-b^2) / (a^2+b^2)
-    # g = (a-b) / (a+b)
-    # b/a = (1-g)/(1+g)
-    # e = (1-(b/a)^2) / (1+(b/a)^2)
-    import math
-    gsq = g1*g1 + g2*g2
-    if gsq > 0.:
-        g = math.sqrt(gsq)
-        boa = (1-g) / (1+g)
-        e = (1 - boa*boa) / (1 + boa*boa)
-        e1 = g1 * (e/g)
-        e2 = g2 * (e/g)
-        return e1, e2
-    elif gsq == 0.:
-        return 0., 0.
-    else:
-        raise ValueError("Input |g|^2 < 0, cannot convert.")
-
-
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
 # SBPs...
 #
