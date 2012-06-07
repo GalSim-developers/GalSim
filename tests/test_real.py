@@ -9,6 +9,7 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+import galsim.utilities
 
 # set up any necessary info for tests
 ### Note: changes to either of the tests below might require regeneration of the catalog and image
@@ -66,8 +67,8 @@ def test_real_galaxy_ideal():
     ## for the generation of the ideal right answer, we need to add the intrinsic shape of the
     ## galaxy and the lensing shear using the rule for addition of distortions which is ugly, but oh
     ## well:
-    (d1, d2) = galsim.g1g2_to_e1e2(fake_gal_shear1, fake_gal_shear2)
-    (d1app, d2app) = galsim.g1g2_to_e1e2(targ_applied_shear1, targ_applied_shear2)
+    (d1, d2) = galsim.utilities.g1g2_to_e1e2(fake_gal_shear1, fake_gal_shear2)
+    (d1app, d2app) = galsim.utilities.g1g2_to_e1e2(targ_applied_shear1, targ_applied_shear2)
     denom = 1.0 + d1*d1app + d2*d2app
     dapp_sq = d1app**2 + d2app**2
     d1tot = (d1 + d1app + d2app/dapp_sq*(1.0 - np.sqrt(1.0-dapp_sq))*(d2*d1app - d1*d2app))/denom
@@ -92,7 +93,7 @@ def test_real_galaxy_ideal():
                     # compute analytically the expected galaxy moments:
                     mxx_gal, myy_gal, mxy_gal = ellip_to_moments(d1tot, d2tot, sigma_ideal)
                     # compute analytically the expected PSF moments:
-                    targ_PSF_e1, targ_PSF_e2 = galsim.g1g2_to_e1e2(tps1, tps2)
+                    targ_PSF_e1, targ_PSF_e2 = galsim.utilities.g1g2_to_e1e2(tps1, tps2)
                     targ_PSF_sigma = (tpf/tps)*fwhm_to_sigma
                     mxx_PSF, myy_PSF, mxy_PSF = ellip_to_moments(targ_PSF_e1, targ_PSF_e2,
                                                                  targ_PSF_sigma)
