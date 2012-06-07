@@ -63,8 +63,14 @@ sigma_e_expected = np.array([
         [0.185276702, 0.184300955, 0.184300955, 0.173478300],
         [0.073020065, 0.070270966, 0.070270966, 0.061856263] ])
 
+def funcname():
+    import inspect
+    return inspect.stack()[1][3]
+
 def test_moments_basic():
     """Test that we can properly recover adaptive moments for Gaussians."""
+    import time
+    t1 = time.time()
     for sig in gaussian_sig_values:
         for g1 in shear_values:
             for g2 in shear_values:
@@ -86,9 +92,13 @@ def test_moments_basic():
                 np.testing.assert_almost_equal(result.observed_shape.getE2(),
                                                distortion_2, err_msg = "- incorrect e2",
                                                decimal = decimal_shape)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_shearest_basic():
     """Test that we can recover shears for Gaussian galaxies and PSFs."""
+    import time
+    t1 = time.time()
     for sig in gaussian_sig_values:
         for g1 in shear_values:
             for g2 in shear_values:
@@ -110,9 +120,13 @@ def test_shearest_basic():
                 np.testing.assert_almost_equal(result.corrected_shape.getE2(),
                                                distortion_2, err_msg = "- incorrect e2",
                                                decimal = decimal_shape)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_shearest_precomputed():
     """Test that we can recover shears the same as before the code was put into GalSim."""
+    import time
+    t1 = time.time()
     # loop over real galaxies
     for index in range(len(file_indices)):
         # define input filenames
@@ -146,6 +160,8 @@ def test_shearest_precomputed():
             np.testing.assert_almost_equal(result.corrected_shape_err,
                                            sigma_e_expected[index][method_index], decimal =
                                            decimal_shape)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_moments_basic()
