@@ -40,6 +40,11 @@ class Field(object):
                 raise TypeError("Cannot set required field '%s' to None." 
                                 % self._get_full_name(instance))
         if issubclass(self.type, NodeBase):
+            if issubclass(value, NodeBase):
+                # setting 'outer.inner = Foo' is treated like 'outer.inner = Foo()'; the former
+                # might be considered a nicer config syntax, even though it's weird if you
+                # think of it like Python.
+                value = value()
             if not isinstance(value, self.type):
                 raise TypeError("Cannot set field '%s' of type '%s' to an instance of type '%s'."
                                 % (self._get_full_name(instance), self.type.__name__, 
@@ -55,12 +60,9 @@ class Field(object):
 
     @staticmethod
     def _update_node_path(instance, value, name):
-        if value.path or value._parent:
+        if value.path:
             raise NotImplementedError("Relocating/copying nodes is not currently supported.")
         value.path = instance.path + (name,)
-        # This is a reference cycle Python's garbage collector should be able to break eventually,
-        # but if it causes problems we could use the weakref module.
-        value.parent = instance
 
     def _get_full_name(self, instance):
         return ".".join(instance.path + (self.name,))
@@ -147,14 +149,6 @@ class NodeBase(object):
         """
         return ".".join(self.path)
 
-    def _set_type(self, value):
-        # Setting 'root.node.type = Foo' is roughly equivalent to 'root.node = Foo()', but
-        # it looks more natural in configuration files.
-        setattr(self.parent, self.path[-1], value)
-    def _get_type(self):
-        return type(self)
-    type = property(_get_type, _set_type)
-
     def load(self, filename):
         """
         Modify self by executing the given file, which should contain statements
@@ -178,7 +172,7 @@ class NodeBase(object):
         """
         Prepare the config hierarchy to be used to process a catalog.
 
-        Subclasses shouls set any nested fields that have computable defaults, setup
+        Subclasses should set any nested fields that have computable defaults, setup
         any random number generators by passing them the given UniformDeviate, and
         raise an exception if any parameters are invalid.
 
@@ -228,8 +222,6 @@ class ListNodeBase(NodeBase):
             if element.path:
                 raise NotImplementedError("Relocating/copying nodes is not currently supported.")
             element.path = self.path[:-1] + ("%s[%d]" % (self.path[-1], index),)
-            # another reference cycle here
-            element.parent = self
 
     def __getitem__(self, index):
         return self._elements[index]
@@ -259,10 +251,10 @@ class ListNodeBase(NodeBase):
 
         This implementation simply calls finish on any list elements that are nodes.
         """
-        NodeBase.finish(self, uniform, columns)
+        NodeBase.finish(self, **kwds)
         for element in self:
             if isinstance(element, NodeBase):
-                element.finish(uniform, columns)
+                element.finish(**kwds)
 
 def nested(*args, **kwds):
     """

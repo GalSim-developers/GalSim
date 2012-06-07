@@ -34,7 +34,7 @@ config.dx = 1.
 # More than one PSF can be specified via adding multiple entries to the list below; the resulting
 # PSF in the output image will be the *convolution* of all entries in the list.
 #
-config.PSF.types = [Moffat, Pixel]
+config.psf.types = [Moffat, Pixel]
 
 #
 # Distributions for PSF parameters (including constant values) may be set below.
@@ -47,10 +47,10 @@ config.PSF.types = [Moffat, Pixel]
 # These can be set explicitly to constants, drawn from random number distributions, or read
 # from the catalog.  For example:
 #
-# config.PSF[0].beta = 3.   # set to a constant
-# config.PSF[0].e1 = GaussianRandom(mean=0, sigma=0.03)   # draw from a Gaussian distribution
-# config.PSF[0].e2 = GaussianRandom(mean=0, sigma=0.03)
-# config.PSF[0].fwhm = FromCatalog(column=1)    # read from column #1 in the input catalog
+# config.psf[0].beta = 3.                                 # set to a constant
+# config.psf[0].e1 = GaussianRandom(mean=0, sigma=0.03)   # draw from a Gaussian distribution
+# config.psf[0].e2 = GaussianRandom(mean=0, sigma=0.03)
+# config.psf[0].fwhm = FromCatalog(column="seeing")       # read from "seeing" column
 #
 
 
@@ -73,7 +73,7 @@ config.PSF.types = [Moffat, Pixel]
 # More than one galaxy can be specified via adding multiple entries to the list below; the resulting
 # galaxy in the output image will be the *sum* of all entries in the list.
 #
-config.galaxy.type = [DeVaucouleurs, Exponential]
+config.galaxy.types = [DeVaucouleurs, Exponential]
 
 #
 # Distributions for galaxy parameters (including constant values) may be set below.  These will be 
@@ -113,7 +113,7 @@ config.shear.g2 = 0.
 # Distributions for noise model parameters may be set below.  These will be overwritten by any 
 # values for these parameters found in the input catalogues.
 #
-config.noise.distribution = ["CCDNoise"] 
+config.noise = CCDNoise
 config.noise.gain = 1.
 config.noise.read_noise = 1.
 

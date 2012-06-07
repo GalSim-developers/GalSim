@@ -1,11 +1,14 @@
 from . import machinery
 from . import generators
 from .. import base
+from .. import _galsim
+
+#-------------------------------------------------------------------------------------------------
+# Config nodes for PSF and galaxy components
 
 class GSObjectNode(machinery.NodeBase):
     flux = generators.GeneratableField(default=1., required=False)
-
-    target = None  # GSObject class or factory function used by apply; should be set by derived classes.
+    target = None  # GSObject class returned by apply; should be set by derived classes.
 
     def apply(self, row):
         """
@@ -38,42 +41,122 @@ class MoffatNode(EllipticalObjectNode):
     fwhm = generators.GeneratableField(default=None, required=False)
     half_light_radius = generators.GeneratableField(default=None, required=False)    
     scale_radius = generators.GeneratableField(default=None, required=False)    
-
     target = base.Moffat
 
 class DeVaucouleursNode(EllipticalObjectNode):
     half_light_radius = generators.GeneratableField(default=None, required=False)    
-
     target = base.DeVaucouleurs
 
 class ExponentialNode(EllipticalObjectNode):
     half_light_radius = generators.GeneratableField(default=None, required=False)    
     scale_radius = generators.GeneratableField(default=None, required=False)    
-
     target = base.Exponential
 
 class GaussianNode(EllipticalObjectNode):
     half_light_radius = generators.GeneratableField(default=None, required=False)
     sigma = generators.GeneratableField(default=None, required=False)
     fwhm = generators.GeneratableField(default=None, required=False)
-
     target = base.Gaussian
 
 class SersicNode(EllipticalObjectNode):
     n = generators.GeneratableField(default=None, required=False)
     half_light_radius = generators.GeneratableField(default=None, required=False)
-
     target = base.Sersic
 
 class PixelNode(GSObjectNode):
-    xw = Field(default=None, required=False) # but see RootNode.finish()
-    yw = Field(default=None, required=False)
+    xw = machinery.Field(default=None, required=False) # but see RootNode.finish()
+    yw = machinery.Field(default=None, required=False)
+
 
 # TODO: more PSF component nodes
+
+
+#-------------------------------------------------------------------------------------------------
+# Config nodes for pixel noise generators
+
+class NoiseNodeBase(NodeBase):
+    """
+    Base class for nodes that set the pixel noise to add to simulated images.
+    """
+
+    target = None  # random deviate class created by apply; should be set by derived classes
+
+    def finish(self, **kwds):
+        NodeBase.finish(self, **kwds)
+        self.uniform = kwds["uniform"]
+
+    def apply(self, row):
+        kwds = generators.makeDict(self, row, self.fields.keys())
+        return self.target(self.uniform, **kwds)
+
+class CCDNoiseNode(NoiseNodeBase):
+    gain = generators.GeneratableField(default=1., required=True)
+    readNoise = generators.GeneratableField(default=0., required=True)
+    target = _galsim.CCDNoise
+
+class GaussianNoiseNode(NoiseNodeBase):
+    mean = generators.GeneratableField(default=0., required=True)
+    sigma = generators.GeneratableField(default=1., required=True)
+    target = _galsim.GaussianDeviate
+
+class PoissonNoiseNode(NoiseNodeBase):
+    mean = generators.GeneratableField(default=1., required=True)
+    target = _galsim.PoissonDeviate
+
+#-------------------------------------------------------------------------------------------------
+# Config nodes to specify input catalog types and their properties
+
+class InputCatNodeBase(NodeBase):
+
+    def read(self):
+        """
+        Iterate over the catalog's records, yielding a sequence of fields for each row.
+        """
+        raise NotImplementedError()
+
+class DummyInputCatNode(InputCatNodeBase):
+    """
+    A dummy input catalog with no columns and fixed size.  All parameters must
+    be fixed or randomly generated.
+    """
+    size = machinery.Field(type=int, required=True, default=None,
+                           doc="Number of postage stamps to generate")
+
+    def read(self):
+        for i in xrange(self.size):
+            yield ()
+
+class AsciiInputCatNode(InputCatNodeBase):
+    filename = machinery.Field(type=str, required=True, default=None)
+    columns = machinery.Field(type=list, required=True, default=[])
+
+    def finish(self, **kwds):
+        for column in self.columns:
+            if not isinstance(column, basestring):
+                raise TypeError("ASCII column names must be strings; '%s' is not" % column)
+        InputCatNodeBase.finish(self, **kwds)
     
-class RootNode(machinery.NodeBase):
+    def read(self):
+        with open(self.filename, 'r') as file:
+            for line in file:
+                yield line.split()
+
+# TODO: FITS input catalogs
+
+#-------------------------------------------------------------------------------------------------
+# Config hierarchy definition for multi-postage-stamp image generation
+
+class PostageStampRootNode(machinery.NodeBase):
     dx = machinery.Field(float, default=1., required=True)
     shear = machinery.Field(ShearNode, default=True)
+
+    context = {
+        "CCDNoise": CCDNoiseNode,
+        "GaussianNoise": GaussianNoiseNode,
+        "PoissonNoise": PoissonNoiseNode,
+        "DummyInputCat": DummyInputCatNode,
+        "AsciiInputCat": AsciiInputCatNode,
+    }
     
     def finish(self):
         machinery.NodeBase.finish(self)
@@ -105,3 +188,13 @@ class RootNode(machinery.NodeBase):
     class shear(machinery.NodeBase):
         g1 = generators.GeneratableField(default=0., required=True)
         g2 = generators.GeneratableField(default=0., required=True)
+
+    noise = machinery.Field(NoiseNodeBase, default=None, required=False)
+
+    @machinery.nested
+    class sky(machinery.NodeBase):
+        value = generators.GeneratableField(default=0., required=True)
+        postsubtract = machinery.Field(type=bool, default=False, required=True)
+
+    input_cat = machinery.Field(InputCatNodeBase, default=None, required=True)
+    
