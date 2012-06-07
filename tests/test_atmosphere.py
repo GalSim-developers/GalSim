@@ -52,12 +52,13 @@ def test_AtmosphericPSF_properties():
     apsf = galsim.AtmosphericPSF(lam_over_r0=1.5)
     # Check that we are centered on (0, 0)
     cen = galsim._galsim.PositionD(0, 0)
-    np.testing.assert_almost_equal((apsf.centroid().x, apsf.centroid().y), (cen.x, cen.y), 10,
-                                   err_msg="Atmospheric PSF not centered on (0, 0)")
+    np.testing.assert_array_almost_equal(
+            [apsf.centroid().x, apsf.centroid().y], [cen.x, cen.y], 10,
+            err_msg="Atmospheric PSF not centered on (0, 0)")
     # Check Fourier properties
     np.testing.assert_almost_equal(apsf.maxK(), 24.051209331580893, 9,
                                    err_msg="Atmospheric PSF .maxk() does not return known value.")
-    np.testing.assert_almost_equal(apsf.stepK(), 0.30662966724998858, 9,
+    np.testing.assert_almost_equal(apsf.stepK(), 0.15331483362499429, 9,
                                    err_msg="Atmospheric PSF .stepk() does not return known value.")
     np.testing.assert_almost_equal(apsf.kValue(cen), 1+0j, 4,
                                    err_msg="Atmospheric PSF k value at (0, 0) is not 1+0j.")
@@ -100,3 +101,5 @@ if __name__ == "__main__":
     test_doublegaussian_vs_sbadd()
     test_doublegaussian_vs_refimg()
     test_AtmosphericPSF_flux()
+    test_AtmosphericPSF_properties()
+    test_AtmosphericPSF_fwhm()
