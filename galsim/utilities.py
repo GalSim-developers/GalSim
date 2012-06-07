@@ -1,3 +1,4 @@
+import numpy as np
 
 def roll2d(image, (iroll, jroll)):
     """Perform a 2D roll (circular shift) on a supplied 2D numpy array, conveniently.

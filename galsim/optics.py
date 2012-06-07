@@ -1,5 +1,6 @@
 import numpy as np
 import galsim
+import utilities
 
 """@file optics.py @brief Module containing the optical PSF generation routines.
 
@@ -18,7 +19,7 @@ PTF = phase transfer function = p, where OTF = MTF * exp(i * p)
 Wavefront = the amplitude and phase of the incident light on the telescope pupil, encoded as a
 complex number. The OTF is the autocorrelation function of the wavefront.
 """
-import utilities
+
 
 def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_D=2., circular_pupil=True,
                          obscuration=0.):
@@ -39,7 +40,7 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_D=2., circular_
     """
     kmax_internal = dx * 2. * np.pi / lam_over_D # INTERNAL kmax in units of array grid spacing
     # Build kx, ky coords
-    kx, ky = kxky(array_shape)
+    kx, ky = utilities.kxky(array_shape)
     # Then define unit disc rho and theta pupil coords for Zernike polynomials
     rho = np.sqrt((kx**2 + ky**2) / (.5 * kmax_internal)**2)
     theta = np.arctan2(ky, kx)
@@ -196,7 +197,7 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
                    circular_pupil=circular_pupil, obscuration=obscuration)
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
-    im = roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
+    im = utilities.roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
     return im / (im.sum() * dx**2)
 
 def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
@@ -401,7 +402,7 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    kx, ky = kxky(array_shape)
+    kx, ky = utilities.kxky(array_shape)
     k2 = (kx**2 + ky**2)
     ptf = np.zeros(array_shape)
     kmax_internal = dx * 2. * np.pi / lam_over_D # INTERNAL kmax in units of array grid spacing
