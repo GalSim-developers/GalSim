@@ -396,7 +396,46 @@ class OpticalPSF(GSObject):
         GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D,
                                                            dx=dx_lookup))
 
+class AtmosphericPSF(GSObject):
+    """Base class for long exposure Kolmogorov PSF.
 
+    Initialization
+    --------------
+    @code
+    atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolantxy=None, oversampling=1.5)
+    @endcode
+
+    Initialized atmospheric_psf as a galsim.AtmosphericPSF() instance.
+
+    @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
+                           consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
+                           PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
+                           values for the Fried parameter are on the order of 10 cm for most 
+                           observatories and up to 20 cm for excellent sites. The values are 
+                           usually quoted at lambda = 500 nm and r0 depends weakly on wavelength
+                           [r0 ~ lambda^(-6/5)].
+    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
+                           [default = 1.5], setting oversampling < 1 will produce aliasing in the 
+                           PSF (not good).
+    """
+    def __init__(self, lam_over_r0, interpolantxy=None, oversampling=1.5):
+        # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
+        fwhm = 0.976 * lam_over_r0
+        dx_lookup = .5 * fwhm / oversampling
+        # Fold at 10 times the FWHM
+        stepk_kolmogorov = np.pi / (10. * fwhm)
+        # Odd array to center the interpolant on the centroid. Might want to pad this later to
+        # make a nice size array for FFT, but for typical seeing, arrays will be very small.
+        npix = 1 + 2 * (np.ceil(np.pi / stepk_kolmogorov)).astype(int)
+        atmoimage = galsim.atmosphere.kolmogorov_psf_image(array_shape=(npix, npix), dx=dx_lookup, 
+                                                           lam_over_r0=lam_over_r0)
+        if interpolantxy == None:
+            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1e-4)
+            self.Interpolant2D = galsim.InterpolantXY(lan5)
+        GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, 
+                                                           dx=dx_lookup))
+       
+        
 class RealGalaxy(GSObject):
     """@brief Class describing real galaxies from some training dataset.
 
@@ -427,7 +466,8 @@ class RealGalaxy(GSObject):
     @param uniform_deviate      A uniform deviate to use for selecting a random galaxy (optional)
     @param interpolant          optional keyword for specifying the
                                 real-space interpolation scheme
-                                [default = galsim.InterpolantXY(galsim.Lanczos(5, True, 1.e-4))].
+                                [default = galsim.InterpolantXY(galsim.Lanczos(5, 
+                                           conserve_flux=True, tol=1.e-4))].
     """
     def __init__(self, real_galaxy_catalog, index = None, ID = None, random = False,
                  uniform_deviate = None, interpolant = None):
@@ -693,7 +733,10 @@ object_param_dict = {"Gaussian":       { "required" : (),
                                                        "pad_factor") },
                      "DoubleGaussian": { "required" : (), 
                                          "size"     : ("sigma1, sigma2, fwhm1, fwhm2",), 
-                                         "optional" : () } }
+                                         "optional" : () },
+                     "AtmosphericPSF": { "required" : (),
+                                         "size"     : ("lam_over_r0",),
+                                         "optional" : ("dx", "oversampling") } }
 
 
 class AttributeDict(object):
