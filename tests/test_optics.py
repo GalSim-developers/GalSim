@@ -8,6 +8,7 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+    import utilities
 import galsim.optics
 
 
@@ -27,13 +28,13 @@ def test_check_all_contiguous():
     """
     #Check that roll2d outputs contiguous arrays whatever the input
     imcstyle = np.random.random(size=testshape)
-    rolltest = galsim.optics.roll2d(imcstyle, (+1, -1))
+    rolltest = galsim.utilities.roll2d(imcstyle, (+1, -1))
     assert rolltest.flags.c_contiguous
     imfstyle = np.random.random(size=testshape).T
-    rolltest = galsim.optics.roll2d(imfstyle, (+1, -1))
+    rolltest = galsim.utilities.roll2d(imfstyle, (+1, -1))
     assert rolltest.flags.c_contiguous
     # Check kx, ky
-    kx, ky = galsim.optics.kxky(testshape)
+    kx, ky = galsim.utilities.kxky(testshape)
     assert kx.flags.c_contiguous
     assert ky.flags.c_contiguous
     # Check basic outputs from wavefront, psf and mtf (array contents won't matter, so we'll use
@@ -47,7 +48,7 @@ def test_check_all_contiguous():
 def test_simple_wavefront():
     """Test the MTF of a pure circular pupil against the known result.
     """
-    kx, ky = galsim.optics.kxky(testshape)
+    kx, ky = galsim.utilities.kxky(testshape)
     dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
     lod_test = 8. # }
     kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code 
@@ -63,7 +64,7 @@ def test_simple_wavefront():
 def test_simple_mtf():
     """Test the MTF of a pure circular pupil against the known result.
     """
-    kx, ky = galsim.optics.kxky(testshape)
+    kx, ky = galsim.utilities.kxky(testshape)
     dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
     lod_test = 8. # }
     kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code 
@@ -91,7 +92,7 @@ def test_simple_ptf():
 def test_consistency_psf_mtf():
     """Test that the MTF of a pure circular pupil is |FT{PSF}|.
     """
-    kx, ky = galsim.optics.kxky(testshape)
+    kx, ky = galsim.utilities.kxky(testshape)
     dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
     lod_test = 8. # }
     kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code 
