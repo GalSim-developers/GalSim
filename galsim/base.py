@@ -452,7 +452,9 @@ class AtmosphericPSF(GSObject):
             self.Interpolant2D = galsim.InterpolantXY(lan5)
         GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, 
                                                            dx=dx_lookup))
-       
+    def getHalfLightRadius(self):
+        return NotImplementedError("Half light radius calculation not yet implemented for "+
+                                   "Atmospheric PSF objects (could be though).")
         
 class RealGalaxy(GSObject):
     """@brief Class describing real galaxies from some training dataset.
