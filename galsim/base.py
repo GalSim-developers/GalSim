@@ -278,18 +278,29 @@ class Moffat(GSObject):
     """
     def __init__(self, beta, flux=1., half_light_radius=None, scale_radius=None, fwhm=None,
                  trunc=0.):
+        if trunc > 0. and half_light_radius != None:
+            # This error is also thrown by SBProfile, raising a RuntimeError, but might as well
+            # catch it here first with a more descriptive/apposite Exception type:
+            raise NotImplementedError("Setting Moffat size via half light radius not supported for "
+                                      +"trunc > 0.")
         GSObject.__init__(self, galsim.SBMoffat(beta, flux=flux,
                                                 half_light_radius=half_light_radius,
                                                 scale_radius=scale_radius, fwhm=fwhm,
                                                 trunc=trunc))
+    def getBeta(self):
+        """@brief Return the beta parameter for this Moffat profile.
+        """
+        return self.SBProfile.getScaleRadius()
 
     def getScaleRadius(self):
         """@brief Return the scale radius for this Moffat profile.
         """
+        return self.SBProfile.getScaleRadius()
         
     def getFWHM(self):
         """@brief Return the FWHM for this Moffat profile.
         """
+        return self.SBProfile.getFWHM()
 
     def getHalfLightRadius(self):
         """@brief Return the half light radius for this Moffat profile.
@@ -350,14 +361,14 @@ class Airy(GSObject):
 
     def getHalfLightRadius(self):
         if self.SBProfile.getObscuration() == 0.:
- # For an unobscured Airy, we have the following result which can be derived using the integral
+ # For an unobscured Airy, we have the following factor which can be derived using the integral
  # result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk), solved for half
  # total flux using the free online tool Wolfram Alpha:
  # http://www.wolframalpha.com/input/?i=Solve[BesselJ[0%2C+x]^2+%2B+BesselJ[1%2C+x]^2+%3D%3D+1%2F2]
             return self.SBProfile.getD() * 1.6802247461942010
         else:
-            # In principle can find the half-light radius as a function of D and obscuration too,
-            # but it will be much more involved.
+            # In principle can find the half light radius as a function of D and obscuration too,
+            # but it will be much more involved...!
             raise NotImplementedError("Half light radius calculation not implemented for Airy "+
                                       "objects with non-zero obscuration.")
 
@@ -453,6 +464,8 @@ class OpticalPSF(GSObject):
         GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D,
                                                            dx=dx_lookup))
     def getHalfLightRadius(self):
+        # The half light radius is a complex function for aberrated optical PSFs, so just give
+        # up gracelessly...
         return NotImplementedError("Half light radius calculation not implemented for OpticalPSF "
                                    +"objects.")
 
@@ -495,6 +508,7 @@ class AtmosphericPSF(GSObject):
         GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, 
                                                            dx=dx_lookup))
     def getHalfLightRadius(self):
+        # TODO: This seems like it would not be impossible to calculate
         return NotImplementedError("Half light radius calculation not yet implemented for "+
                                    "Atmospheric PSF objects (could be though).")
         
@@ -592,7 +606,7 @@ class RealGalaxy(GSObject):
 
         GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
 
-def getHalfLightRadius(self):
+    def getHalfLightRadius(self):
         return NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
                                    +"objects.")
 
