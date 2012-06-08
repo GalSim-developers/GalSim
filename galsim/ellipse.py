@@ -89,50 +89,29 @@ class Ellipse:
 
     #### propagate through all the methods from C++
     # define all the various operators on Ellipse objects
-    def __neg__(self):
-        return -self.Ellipse
-    def __add__(self, other):
-        return self.Ellipse + other.Ellipse
-    def __sub__(self, other):
-        return self.Ellipse - other.Ellipse
-    def __iadd__(self, other):
-        self.Ellipse += other.Ellipse
-    def __isub__(self, other):
-        self.Ellipse -= other.Ellipse
-    def __eq__(self, other):
-        return self.Ellipse == other.Ellipse
-    def __ne__(self, other):
-        return self.Ellipse != other.Ellipse
-    def reset(self, s, mu, p):
-        self.Ellipse.reset(s, mu, p)
-    def fwd(self, p):
-        return self.Ellipse.fwd(p)
-    def inv(self, p):
-        return self.Ellipse.inv(p)
+    def __neg__(self): return -self.Ellipse
+    def __add__(self, other): return self.Ellipse + other.Ellipse
+    def __sub__(self, other): return self.Ellipse - other.Ellipse
+    def __iadd__(self, other): self.Ellipse += other.Ellipse
+    def __isub__(self, other): self.Ellipse -= other.Ellipse
+    def __eq__(self, other): return self.Ellipse == other.Ellipse
+    def __ne__(self, other): return self.Ellipse != other.Ellipse
+    def reset(self, s, mu, p): self.Ellipse.reset(s, mu, p)
+    def fwd(self, p): return self.Ellipse.fwd(p)
+    def inv(self, p): return self.Ellipse.inv(p)
     # methods for setting values
-    def setS(self, s):
-        self.Ellipse.setS(s)
-    def setMu(self, mu):
-        self.Ellipse.setMu(mu)
-    def setX0(self, p):
-        self.Ellipse.setX0(p)
+    def setS(self, s): self.Ellipse.setS(s)
+    def setMu(self, mu): self.Ellipse.setMu(mu)
+    def setX0(self, p): self.Ellipse.setX0(p)
     # methods for getting values
-    def getS(self):
-        return self.Ellipse.getS()
-    def getMu(self):
-        return self.Ellipse.getMu()
-    def getX0(self):
-        return self.Ellipse.getX0()
-    def getMajor(self):
-        return self.Ellipse.getMajor()
-    def getMinor(self):
-        return self.Ellipse.getMinor()
-    def getBeta(self):
-        return self.Ellipse.getBeta()
-    def range(self):
-        return self.Ellipse.range()
-    def getMatrix(self):
-        return self.Ellipse.getMatrix()
+    def getS(self): return self.Ellipse.getS()
+    def getMu(self): return self.Ellipse.getMu()
+    def getX0(self): return self.Ellipse.getX0()
+    def getMajor(self): return self.Ellipse.getMajor()
+    def getMinor(self): return self.Ellipse.getMinor()
+    def getBeta(self): return self.Ellipse.getBeta()
+    def range(self): return self.Ellipse.range()
+    def getMatrix(self): return self.Ellipse.getMatrix()
     # or access values directly
     s = property(getS)
     mu = property(getMu)
