@@ -117,8 +117,8 @@ class Shear:
                     raise TypeError("Tried to initialize Shear in too many ways!")
                 if abs(g) > 1:
                     raise ValueError("Requested shear exceeds 1: %f"%g)
-                g1 = np.cos(2.0*np.pi)*g
-                g2 = np.sin(2.0*np.pi)*g
+                g1 = np.cos(beta.rad())*g
+                g2 = np.sin(beta.rad())*g
                 use_shear = _galsim._Shear(g1, g2)
             elif e != None:
                 if use_shear != None:
