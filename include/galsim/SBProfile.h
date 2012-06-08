@@ -1344,6 +1344,7 @@ namespace galsim {
             _flux = flux; 
             _norm = _flux / (_sigma_sq * 2. * M_PI);
         }
+        /// @brief Returns the size parameter `sigma` of the SBGaussian.
         double getSigma() const { return _sigma; }
         /**
          * @brief Shoot photons through this SBGaussian.
@@ -1428,6 +1429,7 @@ namespace galsim {
             _flux = flux; 
             _norm = flux/_re_sq;
         }
+        /// @brief Returns the half light radius `re`.
         double getHalfLightRadius() const { return _re; }
 
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
@@ -1646,6 +1648,7 @@ namespace galsim {
             _flux = flux; 
             _norm = _flux / (_r0_sq * 2. * M_PI);
         }
+        /// @brief Returns the scale radius `r0` of the SBExponential.
         double getScaleRadius() const { return _r0; }
 
         /// @brief Exponential photon-shooting done with rapid iterative solution of inverse
@@ -1736,7 +1739,9 @@ namespace galsim {
             _flux = flux; 
             _norm = flux * _D*_D;
         }
+        /// @brief Returns the size parameter `D` of the SBAiry.
         double getD() const {return _D; }
+        /// @brief Returns the `obscuration` parameter of the SBAiry.
         double getObscuration() const { return _obscuration; }
 
         /**
@@ -1865,7 +1870,9 @@ namespace galsim {
             _flux = flux; 
             _norm = flux / (_xw*_yw);
         }
+        /// @brief Returns the x dimension width of the SBBox.
         double getXWidth() const { return _xw; }
+        /// @brief Returns the y dimension width of the SBBox.
         double getYWidth() const { return _yw; }
 
         /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
@@ -1967,11 +1974,11 @@ namespace galsim {
         /** @brief Constructor.
          *
          * @param[in] beta           Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
-         * @param[in] truncationFWHM outer truncation in units of FWHM (default `truncationFWHM = 
-         * 0.`).  If truncationFWHM = 0, then no truncation is applied.
          * @param[in] flux           Flux (default `flux = 1.`).
          * @param[in] size           Size specification (default `size = 1.`).
-         * @param[in] rType          Kind of size being specified (default `HALF_LIGHT_RADIUS`).
+         * @param[in] rType          Kind of size being specified (default `FWHM`).
+         * @param[in] trunc          Outer truncation radius in same physical units as size,
+         *                           trunc = 0. for no truncation (default `trunc = 0.`). 
          */
         enum  RadiusType
         {
@@ -1980,8 +1987,8 @@ namespace galsim {
             SCALE_RADIUS
         };
 
-        SBMoffat(double beta, double truncationFWHM=0., double flux=1., double size=1.,
-                 RadiusType rType=HALF_LIGHT_RADIUS);
+        SBMoffat(double beta, double trunc=0., double flux=1., double size=1.,
+                 RadiusType rType=FWHM);
 
         // Default copy constructor should be fine.
 
@@ -2037,6 +2044,12 @@ namespace galsim {
 
         /// @brief Returns the Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
         double getBeta() const { return _beta; }
+        /// @brief Returns the scale radius rD of the Moffat profile `[1 + (r / rD)^2]^beta`.
+        double getScaleRadius() const { return _rD; }
+        /// @brief Returns the FWHM of the Moffat profile.
+        double getFWHM() const { return _FWHM; }
+        /// @brief Returns the half light radius of the Moffat profile.
+        double getHalfLightRadius() const;
 
     protected:
         //void fillKGrid(KTable& kt) const;
@@ -2048,7 +2061,8 @@ namespace galsim {
         double _norm; ///< Normalization. (Including the flux)
         double _rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
         double _maxR; ///< Maximum `r`
-        double _FWHM;  ///< Full Width at Half Maximum in units of `rD`.
+        double _FWHM;  ///< Full Width at Half Maximum.
+        double _trunc;  ///< Outer truncation radius in same physical units as `_rD`
         double _fluxFactor; ///< Integral of total flux in terms of 'rD' units.
         double _rD_sq; ///< Calculated value: rD*rD;
         double _maxR_sq; ///< Calculated value: maxR * maxR
