@@ -1865,6 +1865,8 @@ namespace galsim {
             _flux = flux; 
             _norm = flux / (_xw*_yw);
         }
+        double getXWidth() const { return _xw; }
+        double getYWidth() const { return _yw; }
 
         /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
         PhotonArray shoot(int N, UniformDeviate& ud) const;

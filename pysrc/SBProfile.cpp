@@ -448,9 +448,13 @@ struct PySBBox {
             .def("__init__",
                  bp::make_constructor(
                                       &construct, bp::default_call_policies(),
-                                      (bp::arg("xw")=bp::object(), bp::arg("yw")=bp::object(), bp::arg("flux")=1.)
+                                      (bp::arg("xw")=bp::object(), bp::arg("yw")=bp::object(), 
+                                       bp::arg("flux")=1.)
                                       )
-                 );
+                 )
+             .def("getXWidth", &SBBox::getXWidth)
+             .def("getYWidth", &SBBox::getYWidth)
+             ;
     }
 };
 

@@ -283,8 +283,16 @@ class Moffat(GSObject):
                                                 scale_radius=scale_radius, fwhm=fwhm,
                                                 trunc=trunc))
 
+    def getScaleRadius(self):
+        """@brief Return the scale radius for this Moffat profile.
+        """
+        
+    def getFWHM(self):
+        """@brief Return the FWHM for this Moffat profile.
+        """
+
     def getHalfLightRadius(self):
-        """@brief Return the half light radius for this Sersic profile.
+        """@brief Return the half light radius for this Moffat profile.
         """
         return self.SBProfile.getHalfLightRadius()
     
@@ -364,6 +372,16 @@ class Pixel(GSObject):
     def getHalfLightRadius(self):
         return NotImplementedError("All the light within a Pixel is contained within its borders. "
                                    +"Try the Pixel.getXWidth() and Pixel.getYWidth() methods.")
+
+    def getXWidth(self):
+        """@brief Return the width of the pixel in the x dimension.
+        """
+        return self.SBProfile.getXWidth()
+
+    def getYWidth(self):
+        """@brief Return the width of the pixel in the y dimension.
+        """
+        return self.SBProfile.getYWidth()
 
 
 class OpticalPSF(GSObject):
