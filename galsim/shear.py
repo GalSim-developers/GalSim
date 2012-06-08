@@ -36,113 +36,120 @@ one of two components, with the other assumed to be zero.  If a magnitude such a
 specified, then beta is also required to be specified.
 """
 class Shear:
-    def __init__(self, **kwargs):
-        # note, no *args because we're not allowing Shear to be initialized with unnamed args!
+    def __init__(self, *args, **kwargs):
         import numpy as np
 
-        # check the named args: if a component of e, g, or eta, then require that the other
-        # component is zero if not set, and don't allow specification of mixed pairs like e1 and g2
-        # check the named args: require also a position angle if we didn't get g1/g2, e1/e2, or
-        # eta1/eta2
-        if not kwargs:
-            raise RuntimeError("No keywords given to initialize Shear!")
-        if len(kwargs) > 2:
-            raise RuntimeError(
-                "Shear constructor received too many keyword arguments (max 2): %s"%kwargs.keys())
-        g1 = kwargs.pop('g1', None)
-        g2 = kwargs.pop('g2', None)
-        e1 = kwargs.pop('e1', None)
-        e2 = kwargs.pop('e2', None)
-        eta1 = kwargs.pop('eta1', None)
-        eta2 = kwargs.pop('eta2', None)
-        beta = kwargs.pop('beta', None)
-        g = kwargs.pop('g', None)
-        e = kwargs.pop('e', None)
-        eta = kwargs.pop('eta', None)
-        q = kwargs.pop('q', None)
-        # make sure there is no other random keyword arg provided
-        if kwargs:
-            raise RuntimeError(
-                "Shear constructor got unexpected argument(s): %s"%kwargs.keys())
+        # unnamed arg has to be a _Shear
+        if len(args) == 1:
+            if isinstance(args[0], _galsim._Shear):
+                self._shear = args[0]
+        elif len(args) > 1:
+            raise RuntimeError("Too many unnamed arguments to initialize Shear: %s"%args)
+        else:
 
-        # Now go through the possibilities for combinations of args
-        use_shear = None
-        if g1 != None or g2 != None:
-            if g1 == None:
-                g1 = 0.0
-            if g2 == None:
-                g2 = 0.0
-            g = np.sqrt(g1**2 + g2**2)
-            if g < 1:
-                use_shear = _galsim._Shear(g1, g2)
-            else:
-                raise ValueError("Requested shear exceeds 1: %f"%g)
-        elif e1 != None or e2 != None:
-            if use_shear != None:
-                raise RuntimeError("Tried to initialize Shear in too many ways!")
-            if e1 == None:
-                e1 = 0.0
-            if e2 == None:
-                e2 = 0.0
-            e = np.sqrt(e1**2 + e2**2)
-            if e < 1:
+            # check the named args: if a component of e, g, or eta, then require that the other
+            # component is zero if not set, and don't allow specification of mixed pairs like e1 and
+            # g2 check the named args: require also a position angle if we didn't get g1/g2, e1/e2,
+            # or eta1/eta2
+            if not kwargs:
+                raise RuntimeError("No keywords given to initialize Shear!")
+            if len(kwargs) > 2:
+                raise RuntimeError(
+                    "Shear constructor received too many keyword arguments (max 2): %s"%kwargs.keys())
+            g1 = kwargs.pop('g1', None)
+            g2 = kwargs.pop('g2', None)
+            e1 = kwargs.pop('e1', None)
+            e2 = kwargs.pop('e2', None)
+            eta1 = kwargs.pop('eta1', None)
+            eta2 = kwargs.pop('eta2', None)
+            beta = kwargs.pop('beta', None)
+            g = kwargs.pop('g', None)
+            e = kwargs.pop('e', None)
+            eta = kwargs.pop('eta', None)
+            q = kwargs.pop('q', None)
+            # make sure there is no other random keyword arg provided
+            if kwargs:
+                raise RuntimeError(
+                    "Shear constructor got unexpected argument(s): %s"%kwargs.keys())
+
+            # Now go through the possibilities for combinations of args
+            use_shear = None
+            if g1 != None or g2 != None:
+                if g1 == None:
+                    g1 = 0.0
+                if g2 == None:
+                    g2 = 0.0
+                g = np.sqrt(g1**2 + g2**2)
+                if g < 1:
+                    use_shear = _galsim._Shear(g1, g2)
+                else:
+                    raise ValueError("Requested shear exceeds 1: %f"%g)
+            elif e1 != None or e2 != None:
+                if use_shear != None:
+                    raise RuntimeError("Tried to initialize Shear in too many ways!")
+                if e1 == None:
+                    e1 = 0.0
+                if e2 == None:
+                    e2 = 0.0
+                e = np.sqrt(e1**2 + e2**2)
+                if e < 1:
+                    use_shear = _galsim._Shear()
+                    use_shear.setE1E2(e1, e2)
+                else:
+                    raise ValueError("Requested distortion exceeds 1: %s"%e)
+            elif eta1 != None or eta2 != None:
+                if use_shear != None:
+                    raise RuntimeError("Tried to initialize Shear in too many ways!")
+                if eta1 == None:
+                    eta1 = 0.0
+                if eta2 == None:
+                    eta2 = 0.0
                 use_shear = _galsim._Shear()
-                use_shear.setE1E2(e1, e2)
-            else:
-                raise ValueError("Requested distortion exceeds 1: %s"%e)
-        elif eta1 != None or eta2 != None:
-            if use_shear != None:
-                raise RuntimeError("Tried to initialize Shear in too many ways!")
-            if eta1 == None:
-                eta1 = 0.0
-            if eta2 == None:
-                eta2 = 0.0
-            use_shear = _galsim._Shear()
-            use_shear.setEta1Eta2(eta1, e2)
-        # from here on, we need a magnitude and position angle, so check the PA
-        elif beta == None:
-            raise RuntimeError(
-                "Shear constructor did not get 2 components, OR a magnitude and position angle!")
-        elif not isinstance(beta, _galsim.Angle) :
-            raise RuntimeError("The position angle that was supplied is not an Angle instance!")
-        elif g != None:
-            if use_shear != None:
-                raise RuntimeError("Tried to initialize Shear in too many ways!")
-            if abs(g) > 1:
-                raise ValueError("Requested shear exceeds 1: %f"%g)
-            g1 = np.cos(2.0*np.pi)*g
-            g2 = np.sin(2.0*np.pi)*g
-            use_shear = _galsim._Shear(g1, g2)
-        elif e != None:
-            if use_shear != None:
-                raise RuntimeError("Tried to initialize Shear in too many ways!")
-            if abs(e) > 1:
-                raise ValueError("Requested distortion exceeds 1: %f"%e)
-            use_shear = _galsim._Shear()
-            use_shear.setEBeta(e, beta)
-        elif eta != None:
-            if use_shear != None:
-                raise RuntimeError("Tried to initialize Shear in too many ways!")
-            use_shear = _galsim._Shear()
-            use_shear.setEtaBeta(eta, beta)
-        elif q != None:
-            if use_shear != None:
-                raise RuntimeError("Tried to initialize Shear in too many ways!")
-            if q <= 0 or q > 1:
-                raise ValueError("Cannot use requested axis ratio of %f!"%q)
-            use_shear = _galsim._Shear()
-            eta = -np.log(q)
-            use_shear.setEtaBeta(eta, beta)
+                use_shear.setEta1Eta2(eta1, e2)
+            # from here on, we need a magnitude and position angle, so check the PA
+            elif beta == None:
+                raise RuntimeError(
+                    "Shear constructor did not get 2 components, OR a magnitude and position angle!")
+            elif not isinstance(beta, _galsim.Angle) :
+                raise RuntimeError("The position angle that was supplied is not an Angle instance!")
+            elif g != None:
+                if use_shear != None:
+                    raise RuntimeError("Tried to initialize Shear in too many ways!")
+                if abs(g) > 1:
+                    raise ValueError("Requested shear exceeds 1: %f"%g)
+                g1 = np.cos(2.0*np.pi)*g
+                g2 = np.sin(2.0*np.pi)*g
+                use_shear = _galsim._Shear(g1, g2)
+            elif e != None:
+                if use_shear != None:
+                    raise RuntimeError("Tried to initialize Shear in too many ways!")
+                if abs(e) > 1:
+                    raise ValueError("Requested distortion exceeds 1: %f"%e)
+                use_shear = _galsim._Shear()
+                use_shear.setEBeta(e, beta)
+            elif eta != None:
+                if use_shear != None:
+                    raise RuntimeError("Tried to initialize Shear in too many ways!")
+                use_shear = _galsim._Shear()
+                use_shear.setEtaBeta(eta, beta)
+            elif q != None:
+                if use_shear != None:
+                    raise RuntimeError("Tried to initialize Shear in too many ways!")
+                if q <= 0 or q > 1:
+                    raise ValueError("Cannot use requested axis ratio of %f!"%q)
+                use_shear = _galsim._Shear()
+                eta = -np.log(q)
+                use_shear.setEtaBeta(eta, beta)
 
-        self._shear = use_shear
+            self._shear = use_shear
 
     #### propagate through all the methods from C++
     # define all the methods for setting shear values
-    def setE1E2(self, e1=0.0, e2=0.0): return self._shear.setE1E2(e1, e2)
-    def setEBeta(self, e=0.0, beta=None): return self._shear.setEBeta(e, beta)
-    def setEta1Eta2(self, eta1=0.0, eta2=0.0): return self._shear.setEta1Eta2(eta1, eta2)
-    def setEtaBeta(self, eta=0.0, beta=None): return self._shear.setEtaBeta(eta, beta)
-    def setG1G2(self, g1=0.0, g2=0.0): return self._shear.setG1G2(g1, g2)
+    def setE1E2(self, e1=0.0, e2=0.0): self._shear.setE1E2(e1, e2)
+    def setEBeta(self, e=0.0, beta=None): self._shear.setEBeta(e, beta)
+    def setEta1Eta2(self, eta1=0.0, eta2=0.0): self._shear.setEta1Eta2(eta1, eta2)
+    def setEtaBeta(self, eta=0.0, beta=None): self._shear.setEtaBeta(eta, beta)
+    def setG1G2(self, g1=0.0, g2=0.0): self._shear.setG1G2(g1, g2)
     # define all the methods to get shear values
     def getE1(self): return self._shear.getE1()
     def getE2(self): return self._shear.getE2()
@@ -160,17 +167,17 @@ class Shear:
     eta = property(getEta)
     g = property(getG)
     # define all the various operators on Shear objects
-    def __neg__(self): return -self._shear
-    def __add__(self, other): return self._shear + other._shear
-    def __sub__(self, other): return self._shear - other._shear
+    def __neg__(self): return Shear(-self._shear)
+    def __add__(self, other): return Shear(self._shear + other._shear)
+    def __sub__(self, other): return Shear(self._shear - other._shear)
     def __iadd__(self, other): self._shear += other._shear
     def __isub__(self, other): self._shear -= other._shear
     def rotationWith(self, other): return self._shear.rotationWith(other)
     def __eq__(self, other): return self._shear == other._shear
     def __ne__(self, other): return self._shear != other._shear
-    def __mul__(self, val): return self._shear * val
-    def __rmul__(self, val): return self._shear * val
-    def __div__(self, val): return self._shear / val
+    def __mul__(self, val): return Shear(self._shear * val)
+    def __rmul__(self, val): return Shear(self._shear * val)
+    def __div__(self, val): return Shear(self._shear / val)
     def __imul__(self, val): self._shear *= val
     def __idiv__(self, val): self._shear /= val
     def fwd(self, p): return self._shear.fwd(p)
