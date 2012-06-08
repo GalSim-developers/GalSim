@@ -36,48 +36,13 @@ photon_decimal_test = 2
 
 # for radius tests - specify half-light-radius, FHWM, sigma to be compared with high-res image (with
 # pixel scale chosen iteratively until convergence is achieved, beginning with test_dx)
-test_hlr = 1.0
-test_fwhm = 1.0
-test_sigma = 1.0
-test_scale = 1.0
-test_dx = 0.2
+test_hlr = 1.8
+test_fwhm = 1.8
+test_sigma = 1.8
+test_scale = 1.8
 test_sersic_n = [1.5, 2.5]
-target_precision = 0.004 # convergence criterion governing choice of pixel scale
-init_ratio = 1000.0 # a junk value to start with
-convergence_value = init_ratio # a junk value to start with, should be >> target_precision
 
 # define some functions to carry out computations that are carried out by several of the tests
-
-def getRGrid(image1):
-    # function to get the value of radius from the image center at the position of each pixel
-    xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0]) + image1.getXMin(),
-                               np.arange(np.shape(image1.array)[1]) + image1.getYMin())
-    xcent = np.mean(xgrid * image1.array) / np.mean(image1.array)
-    ycent = np.mean(ygrid * image1.array) / np.mean(image1.array)
-    rgrid = np.sqrt((xgrid-xcent)**2 + (ygrid-ycent)**2)
-    return rgrid
-
-def getIntegratedFlux(image1, radius):
-    # integrate to compute the flux in an image within some chosen radius [units: pixels], in a
-    # clunky but transparent way -- will only be reasonably accurate for high-resolution images.
-    return np.sum(image1.array[np.where(getRGrid(image1) < radius)])
-
-def getIntensityAtRadius(image1, radius):
-    # get the intensity in an image at some chosen radius [units: pixels] from the center, in a
-    # clunky yet transparent way -- will only be reasonably accurate for high-resolution images, not
-    # right at the center.
-    rgrid = getRGrid(image1)
-    rvec = np.arange(1., np.max(rgrid), 1.)
-    Ivec = 0 * rvec
-    rgrid_nearest = (np.round(rgrid)).astype(np.integer)
-    ind_below = np.max(np.where(rvec < radius))
-    ind_above = np.min(np.where(rvec >= radius))
-    newvec = image1.array[np.where(rgrid_nearest == ind_below)]
-    Ibelow = np.sum(newvec)/len(newvec)
-    newvec = image1.array[np.where(rgrid_nearest == ind_above)]
-    Iabove = np.sum(newvec)/len(newvec)
-    delta = (radius - rvec[ind_below])/(rvec[ind_above]-rvec[ind_below])
-    return (delta*Iabove + (1.0-delta)*Ibelow)
 
 def printval(image1, image2):
     print "New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array)
@@ -141,12 +106,17 @@ def do_shoot(prof, img, dx, name):
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
 
+def funcname():
+    import inspect
+    return inspect.stack()[1][3]
 
 # define a series of tests
 
 def test_sbprofile_gaussian():
     """Test the generation of a specific Gaussian profile using SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -163,11 +133,15 @@ def test_sbprofile_gaussian():
 
     # Test photon shooting.
     do_shoot(gauss,myImg,0.2,"Gaussian")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_gaussian_properties():
     """Test some basic properties of the SBGaussian profile.
     """
+    import time
+    t1 = time.time()
     psf = galsim.SBGaussian(flux=1, sigma=1)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
@@ -182,56 +156,54 @@ def test_sbprofile_gaussian_properties():
         outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.15915494309189535)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_gaussian_radii():
     """Test initialization of Gaussian with different types of radius specification.
     """
+    import time
+    t1 = time.time()
+    # TODO: Once we have getHalfLightRadius, we should repeat the hlr test for the
+    #       versions that create the object from sigma or fwhm.
+    import math
     # first test half-light-radius
-    my_test_dx = test_dx
-    my_prev_ratio = init_ratio
-    my_convergence_value = convergence_value
-    while (my_convergence_value > target_precision):
-        test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
-        test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx) / \
-                np.sum(test_gal_image.array)
-        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-        my_prev_ratio = my_ratio
-        my_test_dx /= 2.0
-    np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
+    test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
+    dr = 1.e-4
+    r = 0.
+    sum = 0.
+    while r < test_hlr:
+        sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
+        r += dr
+    sum *= 2. * math.pi * dr
+    print 'sum = ',sum
+    np.testing.assert_almost_equal(sum, 0.5, decimal=4,
             err_msg="Error in Gaussian constructor with half-light radius")
+
     # then test sigma
-    my_test_dx = test_dx
-    my_prev_ratio = init_ratio
-    my_convergence_value = convergence_value
-    while (my_convergence_value > target_precision):
-        test_gal = galsim.Gaussian(flux = 1., sigma = test_sigma)
-        test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntensityAtRadius(test_gal_image, test_sigma/my_test_dx) / \
-                np.max(test_gal_image.array)
-        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-        my_prev_ratio = my_ratio
-        my_test_dx /= 2.0
-    np.testing.assert_almost_equal(my_ratio, np.exp(-0.5), decimal = 2,
+    test_gal = galsim.Gaussian(flux = 1., sigma = test_sigma)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_sigma,0)) / center
+    print 'sigma ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, np.exp(-0.5), decimal=4,
             err_msg="Error in Gaussian constructor with sigma")
+
     # then test FWHM
-    my_test_dx = test_dx
-    my_prev_ratio = init_ratio
-    my_convergence_value = convergence_value
-    while (my_convergence_value > target_precision):
-        test_gal = galsim.Gaussian(flux = 1., fwhm = test_fwhm)
-        test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntensityAtRadius(test_gal_image, 0.5*test_fwhm/my_test_dx) / \
-                np.max(test_gal_image.array)
-        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-        my_prev_ratio = my_ratio
-        my_test_dx /= 2.0
-    np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
-            err_msg="Error in Gaussian constructor with FWHM")
+    test_gal = galsim.Gaussian(flux = 1., fwhm = test_fwhm)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
+    print 'fwhm ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, 0.5, decimal=4,
+            err_msg="Error in Gaussian constructor with fwhm")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sbprofile_exponential():
     """Test the generation of a specific exp profile using SBProfile against a known result. 
     """
+    import time
+    t1 = time.time()
     re = 1.0
     r0 = re/1.67839
     mySBP = galsim.SBExponential(flux=1., scale_radius=r0)
@@ -250,43 +222,45 @@ def test_sbprofile_exponential():
 
     # Test photon shooting.
     do_shoot(expon,myImg,0.2,"Exponential")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_exponential_radii():
     """Test initialization of Exponential with different types of radius specification.
     """
+    import time
+    t1 = time.time() 
+    import math
     # first test half-light-radius
-    my_test_dx = test_dx
-    my_prev_ratio = init_ratio
-    my_convergence_value = convergence_value
-    while (my_convergence_value > target_precision):
-        test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
-        test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx) / \
-                np.sum(test_gal_image.array)
-        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-        my_prev_ratio = my_ratio
-        my_test_dx /= 2.0
-    np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
+    test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
+    dr = 1.e-4
+    r = 0.
+    sum = 0.
+    while r < test_hlr:
+        sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
+        r += dr
+    sum *= 2. * math.pi * dr
+    print 'sum = ',sum
+    np.testing.assert_almost_equal(sum, 0.5, decimal=4,
             err_msg="Error in Exponential constructor with half-light radius")
+
     # then test scale
-    my_test_dx = test_dx
-    my_prev_ratio = init_ratio
-    my_convergence_value = convergence_value
-    while (my_convergence_value > target_precision):
-        test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale)
-        test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntensityAtRadius(test_gal_image, test_scale/my_test_dx) / \
-                np.max(test_gal_image.array)
-        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-        my_prev_ratio = my_ratio
-        my_test_dx /= 2.0
-    np.testing.assert_almost_equal(my_ratio, np.exp(-1.0), decimal = 2,
-            err_msg="Error in Exponential constructor with scale radius")
+    test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
+    print 'scale ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, np.exp(-1.0), decimal=4,
+            err_msg="Error in Exponential constructor with scale")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sbprofile_sersic():
     """Test the generation of a specific Sersic profile using SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -305,30 +279,38 @@ def test_sbprofile_sersic():
     # Convolve with a small gaussian to smooth out the central peak.
     sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
     do_shoot(sersic2,myImg,0.2,"Sersic")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sersic_radii():
     """Test initialization of Sersic with different types of radius specification.
     """
-    # test half-light-radius
-    for sersicn in test_sersic_n:
-        my_test_dx = test_dx
-        my_prev_ratio = init_ratio
-        my_convergence_value = convergence_value
-        while (my_convergence_value > target_precision):
-            test_gal = galsim.Sersic(sersicn, flux = 1., half_light_radius = test_hlr)
-            test_gal_image = test_gal.draw(dx = my_test_dx)
-            my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx) / \
-                    np.sum(test_gal_image.array)
-            my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-            my_prev_ratio = my_ratio
-            my_test_dx /= 2.0
-        np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
-                err_msg="Error in Sersic constructor with half-light radius")
+    import time
+    t1 = time.time()
+    import math
+    for n in test_sersic_n:
+        # test half-light-radius
+        test_gal = galsim.Sersic(n=n, flux = 1., half_light_radius = test_hlr)
+        dr = 1.e-4
+        r = 0.
+        sum = 0.
+        while r < test_hlr:
+            sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
+            r += dr
+        sum *= 2. * math.pi * dr
+        print 'sum = ',sum
+        np.testing.assert_almost_equal(sum, 0.5, decimal=4,
+                err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sbprofile_airy():
     """Test the generation of a specific Airy profile using SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBAiry(D=0.8, obscuration=0.1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -345,11 +327,15 @@ def test_sbprofile_airy():
 
     # Test photon shooting.
     do_shoot(airy,myImg,0.2,"Airy")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_box():
     """Test the generation of a specific box profile using SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBBox(xw=1, yw=1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -366,11 +352,15 @@ def test_sbprofile_box():
 
     # Test photon shooting.
     do_shoot(pixel,myImg,0.2,"Pixel")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_moffat():
     """Test the generation of a specific Moffat profile using SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBMoffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -387,11 +377,15 @@ def test_sbprofile_moffat():
 
     # Test photon shooting.
     do_shoot(moffat,myImg,0.2,"Moffat")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_moffat_properties():
     """Test some basic properties of the SBMoffat profile.
     """
+    import time
+    t1 = time.time()
     psf = galsim.SBMoffat(beta=2.0, truncationFWHM=2, flux=1.8, half_light_radius=1)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
@@ -406,32 +400,87 @@ def test_sbprofile_moffat_properties():
         outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_moffat_radii():
     """Test initialization of Moffat with different types of radius specification.
     """
-    test_beta = 2.
+    import time 
+    t1 = time.time()
+    import math
     # first test half-light-radius
-    my_test_dx = test_dx
-    my_prev_ratio = init_ratio
-    my_convergence_value = convergence_value
-    while (my_convergence_value > target_precision):
-        test_gal = galsim.Moffat(beta=test_beta, truncationFWHM=5, flux = 1.,
-                half_light_radius = test_hlr)
-        test_gal_image = test_gal.draw(dx = my_test_dx)
-        my_ratio = getIntegratedFlux(test_gal_image, test_hlr/my_test_dx) / \
-                np.sum(test_gal_image.array)
-        my_convergence_value = np.fabs((my_ratio - my_prev_ratio)/my_prev_ratio)
-        my_prev_ratio = my_ratio
-        my_test_dx /= 2.0
-    np.testing.assert_almost_equal(my_ratio, 0.5, decimal = 2,
+    test_beta = 2.
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr)
+    dr = 1.e-4
+    r = 0.
+    sum = 0.
+    while r < test_hlr:
+        sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
+        r += dr
+    sum *= 2. * math.pi * dr
+    print 'sum = ',sum
+    np.testing.assert_almost_equal(sum, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with half-light radius")
-    # then test scale -- later!  this method takes too long
-    # then test FWHM -- later!  this method takes too long
+
+    # then test scale
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, scale_radius = test_scale)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
+    print 'scale ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, pow(2,-test_beta), decimal=4,
+            err_msg="Error in Moffat constructor with scale")
+
+    # then test FWHM
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, fwhm = test_fwhm)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
+    print 'fwhm ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, 0.5, decimal=4,
+            err_msg="Error in Moffat constructor with fwhm")
+
+    # Now repeat everything using a severe trunctation.  (Above had no truncation.)
+    # first test half-light-radius
+    test_beta = 2.
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, truncationFWHM=2,
+            half_light_radius = test_hlr)
+    dr = 1.e-4
+    r = 0.
+    sum = 0.
+    while r < test_hlr:
+        sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
+        r += dr
+    sum *= 2. * math.pi * dr
+    print 'sum = ',sum
+    np.testing.assert_almost_equal(sum, 0.5, decimal=4,
+            err_msg="Error in Moffat constructor with half-light radius")
+
+    # then test scale
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, truncationFWHM=2,
+            scale_radius = test_scale)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
+    print 'scale ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, pow(2,-test_beta), decimal=4,
+            err_msg="Error in Moffat constructor with scale")
+
+    # then test FWHM
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, truncationFWHM=2,
+            fwhm = test_fwhm)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
+    print 'fwhm ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, 0.5, decimal=4,
+            err_msg="Error in Moffat constructor with fwhm")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sbprofile_smallshear():
     """Test the application of a small shear to a Gaussian SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     e1 = 0.02
     e2 = 0.02
@@ -461,11 +510,15 @@ def test_sbprofile_smallshear():
  
     # Test photon shooting.
     do_shoot(gauss,myImg,0.2,"sheared Gaussian")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_largeshear():
     """Test the application of a large shear to a Sersic SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
     e1 = 0.0
     e2 = 0.5
@@ -495,11 +548,15 @@ def test_sbprofile_largeshear():
     # Convolve with a small gaussian to smooth out the central peak.
     devauc2 = galsim.Convolve(devauc, galsim.Gaussian(sigma=0.3))
     do_shoot(devauc2,myImg,0.2,"sheared DeVauc")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
  
 def test_sbprofile_convolve():
     """Test the convolution of a Moffat and a Box SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve(mySBP)
@@ -542,11 +599,15 @@ def test_sbprofile_convolve():
  
     # Test photon shooting.
     do_shoot(conv,myImg,0.2,"Moffat * Pixel")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_shearconvolve():
     """Test the convolution of a sheared Gaussian and a Box SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     e1 = 0.04
     e2 = 0.0
@@ -592,11 +653,15 @@ def test_sbprofile_shearconvolve():
  
     # Test photon shooting.
     do_shoot(conv,myImg,0.2,"sheared Gaussian * Pixel")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_realspace_convolve():
     """Test the real-space convolution of a Moffat and a Box SBProfile against a known result.
     """
+    import time
+    t1 = time.time()
     psf = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.SBConvolve(psf,real_space=True)
@@ -643,6 +708,8 @@ def test_sbprofile_realspace_convolve():
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
  
 
 def test_sbprofile_realspace_distorted_convolve():
@@ -651,6 +718,8 @@ def test_sbprofile_realspace_distorted_convolve():
     to stress test the code that deals with this for real-space convolutions that wouldn't
     be tested otherwise.
     """
+    import time
+    t1 = time.time()
     psf = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     psf_shear = galsim.Shear()
     psf_shear.setG1G2(0.11,0.17)
@@ -713,11 +782,15 @@ def test_sbprofile_realspace_distorted_convolve():
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using Convolve([pixel,psf]) (distorted) disagrees with expected result")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
  
 def test_sbprofile_realspace_shearconvolve():
     """Test the real-space convolution of a sheared Gaussian and a Box SBProfile against a 
        known result.
     """
+    import time
+    t1 = time.time()
     psf = galsim.SBGaussian(flux=1, sigma=1)
     e1 = 0.04
     e2 = 0.0
@@ -767,10 +840,14 @@ def test_sbprofile_realspace_shearconvolve():
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sbprofile_rotate():
     """Test the 45 degree rotation of a sheared Sersic profile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBSersic(n=2.5, flux=1, half_light_radius=1)
     mySBP_shear = mySBP.shear(0.2, 0.0)
     mySBP_shear_rotate = mySBP_shear.rotate(45.0 * galsim.degrees)
@@ -793,11 +870,15 @@ def test_sbprofile_rotate():
     # Convolve with a small gaussian to smooth out the central peak.
     gal2 = galsim.Convolve(gal, galsim.Gaussian(sigma=0.3))
     do_shoot(gal2,myImg,0.2,"rotated sheared Sersic")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_mag():
     """Test the magnification (size x 1.5) of an exponential profile against a known result.
     """
+    import time
+    t1 = time.time()
     re = 1.0
     r0 = re/1.67839
     mySBP = galsim.SBExponential(flux=1, scale_radius=r0)
@@ -819,11 +900,15 @@ def test_sbprofile_mag():
  
     # Test photon shooting.
     do_shoot(gal,myImg,0.2,"dilated Exponential")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_add():
     """Test the addition of two rescaled Gaussian profiles against a known double Gaussian result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBGaussian(flux=0.75, sigma=1)
     mySBP2 = galsim.SBGaussian(flux=0.25, sigma=3)
     myAdd = galsim.SBAdd(mySBP, mySBP2)
@@ -887,11 +972,15 @@ def test_sbprofile_add():
  
     # Test photon shooting.
     do_shoot(sum,myImg,0.2,"sum of 2 Gaussians")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_shift():
     """Test the translation of a Box profile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBBox(xw=0.2, yw=0.2, flux=1)
     mySBP_shift = mySBP.shift(0.2, -0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_shift.fits"))
@@ -917,11 +1006,15 @@ def test_sbprofile_shift():
     gauss.applyShift(0.4,-0.3)
     myImg = gauss.draw(dx=0.2)
     do_shoot(gauss,myImg,0.2,"shifted Gaussian")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_rescale():
     """Test the flux rescaling of a Sersic profile against a known result.
     """
+    import time
+    t1 = time.time()
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     mySBP.setFlux(2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_doubleflux.fits"))
@@ -959,11 +1052,15 @@ def test_sbprofile_rescale():
     # Convolve with a small gaussian to smooth out the central peak.
     sersic3 = galsim.Convolve(sersic2, galsim.Gaussian(sigma=0.3))
     do_shoot(sersic3,myImg,0.2,"scaled Sersic")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_sbprofile_sbinterpolatedimage():
     """Test that we can make SBInterpolatedImages from Images of various types, and convert back.
     """
+    import time
+    t1 = time.time()
     # for each type, try to make an SBInterpolatedImage, and check that when we draw an image from
     # that SBInterpolatedImage that it is the same as the original
     l3 = galsim.Lanczos(3, True, 1.0E-4)
@@ -1004,10 +1101,17 @@ def test_sbprofile_sbinterpolatedimage():
         np.testing.assert_array_almost_equal(
                 image_comp.array, image_out.array, photon_decimal_test,
                 err_msg="Photon shooting for interpolated image disagrees with expected result")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 
 if __name__ == "__main__":
+    test_gaussian_radii()
+    test_exponential_radii()
+    test_sersic_radii()
+    test_moffat_radii()
+
     test_sbprofile_gaussian()
     test_sbprofile_gaussian_properties()
     test_gaussian_radii()
