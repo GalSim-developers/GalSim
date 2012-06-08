@@ -158,6 +158,8 @@ class Shear:
     def getBeta(self): return self._shear.getBeta()
     def getEta(self): return self._shear.getEta()
     def getG(self): return self._shear.getG()
+    def getG1(self): return self._shear.getG1()
+    def getG2(self): return self._shear.getG2()
     # make it possible to access g, e, etc. of some Shear object called name using name.g, name.e
     e1 = property(getE1)
     e2 = property(getE2)
@@ -166,6 +168,8 @@ class Shear:
     beta = property(getBeta)
     eta = property(getEta)
     g = property(getG)
+    g1 = property(getG1)
+    g2 = property(getG2)
     # define all the various operators on Shear objects
     def __neg__(self): return Shear(-self._shear)
     def __add__(self, other): return Shear(self._shear + other._shear)

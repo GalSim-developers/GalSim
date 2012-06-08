@@ -89,6 +89,18 @@ namespace galsim {
             double e=getE();  
             return e>0. ? (1-std::sqrt(1-e*e))/e : 0.;
         }
+        double getG1() const
+        {
+            double esq = getESq();
+            double scale = (esq>1.e-6) ? (1.-std::sqrt(1.-esq))/esq : 0.5;
+            return e1*scale;
+        }
+        double getG2() const
+        {
+            double esq = getESq();
+            double scale = (esq>1.e-6) ? (1.-std::sqrt(1.-esq))/esq : 0.5;
+            return e2*scale;
+        }
 
         void getEta1Eta2(double& eta1, double& eta2) const;
         void getG1G2(double& g1, double& g2) const;

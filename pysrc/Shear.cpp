@@ -66,6 +66,8 @@ struct PyShear {
             .def("getBeta", &Shear::getBeta)
             .def("getEta", &Shear::getEta)
             .def("getG", &Shear::getG)
+            .def("getG1", &Shear::getG1)
+            .def("getG2", &Shear::getG2)
             .def(-bp::self)
             .def(bp::self + bp::self)
             .def(bp::self - bp::self)
