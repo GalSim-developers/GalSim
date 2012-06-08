@@ -134,23 +134,23 @@ class Shear:
             eta = -np.log(q)
             use_shear.setEtaBeta(eta, beta)
 
-        self.Shear = use_shear
+        self._shear = use_shear
 
     #### propagate through all the methods from C++
     # define all the methods for setting shear values
-    def setE1E2(self, e1=0.0, e2=0.0): return self.Shear.setE1E2(e1, e2)
-    def setEBeta(self, e=0.0, beta=None): return self.Shear.setEBeta(e, beta)
-    def setEta1Eta2(self, eta1=0.0, eta2=0.0): return self.Shear.setEta1Eta2(eta1, eta2)
-    def setEtaBeta(self, eta=0.0, beta=None): return self.Shear.setEtaBeta(eta, beta)
-    def setG1G2(self, g1=0.0, g2=0.0): return self.Shear.setG1G2(g1, g2)
+    def setE1E2(self, e1=0.0, e2=0.0): return self._shear.setE1E2(e1, e2)
+    def setEBeta(self, e=0.0, beta=None): return self._shear.setEBeta(e, beta)
+    def setEta1Eta2(self, eta1=0.0, eta2=0.0): return self._shear.setEta1Eta2(eta1, eta2)
+    def setEtaBeta(self, eta=0.0, beta=None): return self._shear.setEtaBeta(eta, beta)
+    def setG1G2(self, g1=0.0, g2=0.0): return self._shear.setG1G2(g1, g2)
     # define all the methods to get shear values
-    def getE1(self): return self.Shear.getE1()
-    def getE2(self): return self.Shear.getE2()
-    def getE(self): return self.Shear.getE()
-    def getESq(self): return self.Shear.getESq()
-    def getBeta(self): return self.Shear.getBeta()
-    def getEta(self): return self.Shear.getEta()
-    def getG(self): return self.Shear.getG()
+    def getE1(self): return self._shear.getE1()
+    def getE2(self): return self._shear.getE2()
+    def getE(self): return self._shear.getE()
+    def getESq(self): return self._shear.getESq()
+    def getBeta(self): return self._shear.getBeta()
+    def getEta(self): return self._shear.getEta()
+    def getG(self): return self._shear.getG()
     # make it possible to access g, e, etc. of some Shear object called name using name.g, name.e
     e1 = property(getE1)
     e2 = property(getE2)
@@ -160,22 +160,22 @@ class Shear:
     eta = property(getEta)
     g = property(getG)
     # define all the various operators on Shear objects
-    def __neg__(self): return -self.Shear
-    def __add__(self, other): return self.Shear + other.Shear
-    def __sub__(self, other): return self.Shear - other.Shear
-    def __iadd__(self, other): self.Shear += other.Shear
-    def __isub__(self, other): self.Shear -= other.Shear
-    def rotationWith(self, other): return self.Shear.rotationWith(other)
-    def __eq__(self, other): return self.Shear == other.Shear
-    def __ne__(self, other): return self.Shear != other.Shear
-    def __mul__(self, val): return self.Shear * val
-    def __rmul__(self, val): return self.Shear * val
-    def __div__(self, val): return self.Shear / val
-    def __imul__(self, val): self.Shear *= val
-    def __idiv__(self, val): self.Shear /= val
-    def fwd(self, p): return self.Shear.fwd(p)
-    def inv(self, p): return self.Shear.inv(p)
-    def getMatrix(self, a, b, c): self.Shear.getMatrix(a, b, c)
+    def __neg__(self): return -self._shear
+    def __add__(self, other): return self._shear + other._shear
+    def __sub__(self, other): return self._shear - other._shear
+    def __iadd__(self, other): self._shear += other._shear
+    def __isub__(self, other): self._shear -= other._shear
+    def rotationWith(self, other): return self._shear.rotationWith(other)
+    def __eq__(self, other): return self._shear == other._shear
+    def __ne__(self, other): return self._shear != other._shear
+    def __mul__(self, val): return self._shear * val
+    def __rmul__(self, val): return self._shear * val
+    def __div__(self, val): return self._shear / val
+    def __imul__(self, val): self._shear *= val
+    def __idiv__(self, val): self._shear /= val
+    def fwd(self, p): return self._shear.fwd(p)
+    def inv(self, p): return self._shear.inv(p)
+    def getMatrix(self, a, b, c): self._shear.getMatrix(a, b, c)
 
 def Shear_repr(self):
     return (self.__class__.__name__+"(e1="+str(self.getE1())+", e2="+str(self.getE2())+")")
