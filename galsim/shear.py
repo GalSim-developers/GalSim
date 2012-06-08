@@ -44,7 +44,7 @@ class Shear:
             if isinstance(args[0], _galsim._Shear):
                 self._shear = args[0]
         elif len(args) > 1:
-            raise RuntimeError("Too many unnamed arguments to initialize Shear: %s"%args)
+            raise TypeError("Too many unnamed arguments to initialize Shear: %s"%args)
         else:
 
             # check the named args: if a component of e, g, or eta, then require that the other
@@ -52,9 +52,9 @@ class Shear:
             # g2 check the named args: require also a position angle if we didn't get g1/g2, e1/e2,
             # or eta1/eta2
             if not kwargs:
-                raise RuntimeError("No keywords given to initialize Shear!")
+                raise TypeError("No keywords given to initialize Shear!")
             if len(kwargs) > 2:
-                raise RuntimeError(
+                raise TypeError(
                     "Shear constructor received too many keyword arguments (max 2): %s"%kwargs.keys())
             g1 = kwargs.pop('g1', None)
             g2 = kwargs.pop('g2', None)
@@ -69,7 +69,7 @@ class Shear:
             q = kwargs.pop('q', None)
             # make sure there is no other random keyword arg provided
             if kwargs:
-                raise RuntimeError(
+                raise TypeError(
                     "Shear constructor got unexpected argument(s): %s"%kwargs.keys())
 
             # Now go through the possibilities for combinations of args
@@ -86,7 +86,7 @@ class Shear:
                     raise ValueError("Requested shear exceeds 1: %f"%g)
             elif e1 != None or e2 != None:
                 if use_shear != None:
-                    raise RuntimeError("Tried to initialize Shear in too many ways!")
+                    raise TypeError("Tried to initialize Shear in too many ways!")
                 if e1 == None:
                     e1 = 0.0
                 if e2 == None:
@@ -99,7 +99,7 @@ class Shear:
                     raise ValueError("Requested distortion exceeds 1: %s"%e)
             elif eta1 != None or eta2 != None:
                 if use_shear != None:
-                    raise RuntimeError("Tried to initialize Shear in too many ways!")
+                    raise TypeError("Tried to initialize Shear in too many ways!")
                 if eta1 == None:
                     eta1 = 0.0
                 if eta2 == None:
@@ -108,13 +108,13 @@ class Shear:
                 use_shear.setEta1Eta2(eta1, e2)
             # from here on, we need a magnitude and position angle, so check the PA
             elif beta == None:
-                raise RuntimeError(
+                raise TypeError(
                     "Shear constructor did not get 2 components, OR a magnitude and position angle!")
             elif not isinstance(beta, _galsim.Angle) :
-                raise RuntimeError("The position angle that was supplied is not an Angle instance!")
+                raise TypeError("The position angle that was supplied is not an Angle instance!")
             elif g != None:
                 if use_shear != None:
-                    raise RuntimeError("Tried to initialize Shear in too many ways!")
+                    raise TypeError("Tried to initialize Shear in too many ways!")
                 if abs(g) > 1:
                     raise ValueError("Requested shear exceeds 1: %f"%g)
                 g1 = np.cos(2.0*np.pi)*g
@@ -122,19 +122,19 @@ class Shear:
                 use_shear = _galsim._Shear(g1, g2)
             elif e != None:
                 if use_shear != None:
-                    raise RuntimeError("Tried to initialize Shear in too many ways!")
+                    raise TypeError("Tried to initialize Shear in too many ways!")
                 if abs(e) > 1:
                     raise ValueError("Requested distortion exceeds 1: %f"%e)
                 use_shear = _galsim._Shear()
                 use_shear.setEBeta(e, beta)
             elif eta != None:
                 if use_shear != None:
-                    raise RuntimeError("Tried to initialize Shear in too many ways!")
+                    raise TypeError("Tried to initialize Shear in too many ways!")
                 use_shear = _galsim._Shear()
                 use_shear.setEtaBeta(eta, beta)
             elif q != None:
                 if use_shear != None:
-                    raise RuntimeError("Tried to initialize Shear in too many ways!")
+                    raise TypeError("Tried to initialize Shear in too many ways!")
                 if q <= 0 or q > 1:
                     raise ValueError("Cannot use requested axis ratio of %f!"%q)
                 use_shear = _galsim._Shear()

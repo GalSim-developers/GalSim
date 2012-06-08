@@ -44,18 +44,18 @@ class Ellipse:
                 for this_arg in args:
                     if isinstance(this_arg, galsim.Shear):
                         if use_shear != None:
-                            raise RuntimeError("Ellipse received two unnamed Shear arguments!")
+                            raise TypeError("Ellipse received two unnamed Shear arguments!")
                         use_shear = this_arg
                     elif isinstance(this_arg, float) or isinstance(this_arg, double):
                         if use_dil != None:
-                            raise RuntimeError("Ellipse received two unnamed float/double arguments!")
+                            raise TypeError("Ellipse received two unnamed float/double arguments!")
                         use_dil = this_arg
                     elif isinstance(this_arg, _galsim.PositionD):
                         if use_shift != None:
-                            raise RuntimeError("Ellipse received two unnamed Position arguments!")
+                            raise TypeError("Ellipse received two unnamed Position arguments!")
                         use_shift = this_arg
                     else:
-                        raise RuntimeError(
+                        raise TypeError(
                             "Ellipse received an unnamed argument of a type that is not permitted!")
 
             # if no args, check kwargs: if one is shear, then use that
