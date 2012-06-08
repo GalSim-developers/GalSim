@@ -2156,20 +2156,50 @@ namespace galsim {
         return result;
     }
 
-    SBMoffat::SBMoffat(double beta, double truncationFWHM, double flux,
+    SBMoffat::SBMoffat(double beta, double trunc, double flux,
                        double size, RadiusType rType) : 
-        _beta(beta), _flux(flux), _ft(Table<double,double>::spline)
+        _beta(beta), _flux(flux), _trunc(trunc), _ft(Table<double,double>::spline)
     {
         xdbg<<"Start SBMoffat constructor: \n";
         xdbg<<"beta = "<<_beta<<"\n";
         xdbg<<"flux = "<<_flux<<"\n";
+        xdbg<<"trunc = "<<_trunc<<"\n";
 
         // First, relation between FWHM and rD:
         double FWHMrD = 2.* sqrt(std::pow(2., 1./_beta)-1.);
         xdbg<<"FWHMrD = "<<FWHMrD<<"\n";
+
+        // Set size of this instance according to type of size given in constructor:
+        switch (rType) {
+          case FWHM:
+               _rD = size / FWHMrD;
+               break;
+          case HALF_LIGHT_RADIUS: 
+               {
+		   // Note that _fluxFactor is needed for calculating the half light radius,
+                   // and thus _rD, and with trunc in physical units _rD is needed to calculate the
+                   // _fluxFactor via maxRrD!! Need to think about how to break this circularity...
+                   if (trunc > 0.){
+                       throw SBError("Setting Moffat size via half light radius not supported for "
+                                     "trunc > 0.");
+                   } else {
+                       // If trunc = 0., calculate half-light radius in units of rD:
+                   // OLD: double rerD = sqrt( std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
+                       double rerD = sqrt( std::pow(1. - 0.5, 1./(1.-_beta)) - 1.);
+                       _rD = size / rerD;
+                   }
+               }
+               break;
+          case SCALE_RADIUS:
+               _rD = size;
+               break;
+          default:
+               throw SBError("Unknown SBMoffat::RadiusType");
+        }
+
         double maxRrD;
-        if (truncationFWHM > 0.) {
-            maxRrD = FWHMrD * truncationFWHM;
+        if (trunc > 0.) {
+            maxRrD = trunc / _rD;  // note new usage of trunc in physical units requires _rD here
             xdbg<<"maxRrD = "<<maxRrD<<"\n";
 
             // Analytic integration of total flux:
@@ -2186,24 +2216,6 @@ namespace galsim {
             xdbg<<"Not truncate.  Calculated maxRrD = "<<maxRrD<<"\n";
         }
 
-        // Set size of this instance according to type of size given in constructor:
-        switch (rType) {
-          case FWHM:
-               _rD = size / FWHMrD;
-               break;
-          case HALF_LIGHT_RADIUS: 
-               {
-                   // Get half-light radius in units of rD:
-                   double rerD = sqrt( std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
-                   _rD = size / rerD;
-               }
-               break;
-          case SCALE_RADIUS:
-               _rD = size;
-               break;
-          default:
-               throw SBError("Unknown SBMoffat::RadiusType");
-        }
         _FWHM = FWHMrD * _rD;
         _maxR = maxRrD * _rD;
         _maxR_sq = _maxR * _maxR;
@@ -2221,6 +2233,16 @@ namespace galsim {
         else pow_beta = &SBMoffat::pow_gen;
 
         setupFT();
+    }
+
+    double SBMoffat::getHalfLightRadius() const
+    {
+        // BARNEY NOTE: A little inefficient to calculate rerD every getHLR call?  Done since
+        // rerD depends on _fluxFactor and thus requires _rD in advance, so this needs to happen
+        // largely post setup. And it doesn't seem efficient to ALWAYS calculate it above...
+        // Get half-light radius in units of rD:
+        double rerD = sqrt(std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
+        return _rD * rerD;
     }
 
     double SBMoffat::xValue(const Position<double>& p) const 
