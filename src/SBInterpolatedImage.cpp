@@ -61,6 +61,7 @@ namespace galsim {
         _pimpl->xflux.resize(images.size());
         _pimpl->yflux.resize(images.size());
         for (size_t i=0; i<images.size(); ++i) {
+            dbg<<"Image "<<i<<std::endl;
             double sum = 0.;
             double sumx = 0.;
             double sumy = 0.;
@@ -68,19 +69,24 @@ namespace galsim {
             const BaseImage<T>& img = *images[i];
             int xStart = -((img.getXMax()-img.getXMin()+1)/2);
             int y = -((img.getYMax()-img.getYMin()+1)/2);
+            dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
             for (int iy = img.getYMin(); iy<= img.getYMax(); iy++, y++) {
                 int x = xStart;
                 for (int ix = img.getXMin(); ix<= img.getXMax(); ix++, x++) {
                     double value = img(ix,iy);
                     _pimpl->vx[i]->xSet(x, y, value);
                     sum += value;
-                    sumx += value*ix;
-                    sumy += value*iy;
+                    sumx += value*x;
+                    sumy += value*y;
+                    xdbg<<"ix,iy,x,y = "<<ix<<','<<iy<<','<<x<<','<<y<<std::endl;
+                    xdbg<<"value = "<<value<<", sums = "<<sum<<','<<sumx<<','<<sumy<<std::endl;
                 }
             }
             _pimpl->flux[i] = sum * dx2;
             _pimpl->xflux[i] = sumx * dx3;
             _pimpl->yflux[i] = sumy * dx3;
+            dbg<<"flux = "<<_pimpl->flux[i]<<
+                ", xflux = "<<_pimpl->xflux[i]<<", yflux = "<<_pimpl->yflux[i]<<std::endl;
         }
     }
 
@@ -116,19 +122,24 @@ namespace galsim {
         _pimpl->vx[0].reset(new XTable(_pimpl->Nk, _pimpl->dx));
         int xStart = -((image.getXMax()-image.getXMin()+1)/2);
         int y = -((image.getYMax()-image.getYMin()+1)/2);
+        dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
         for (int iy = image.getYMin(); iy<= image.getYMax(); iy++, y++) {
             int x = xStart;
             for (int ix = image.getXMin(); ix<= image.getXMax(); ix++, x++) {
                 double value = image(ix,iy);
                 _pimpl->vx[0]->xSet(x, y, value);
                 sum += value;
-                sumx += value*ix;
-                sumy += value*iy;
+                sumx += value*x;
+                sumy += value*y;
+                xdbg<<"ix,iy,x,y = "<<ix<<','<<iy<<','<<x<<','<<y<<std::endl;
+                xdbg<<"value = "<<value<<", sums = "<<sum<<','<<sumx<<','<<sumy<<std::endl;
             }
         }
         _pimpl->flux[0] = sum * dx2;
         _pimpl->xflux[0] = sumx * dx3;
         _pimpl->yflux[0] = sumy * dx3;
+        dbg<<"flux = "<<_pimpl->flux[0]<<
+            ", xflux = "<<_pimpl->xflux[0]<<", yflux = "<<_pimpl->yflux[0]<<std::endl;
     }
 
     boost::shared_ptr<KTable> MultipleImageHelper::getKTable(int i) const 
@@ -139,10 +150,10 @@ namespace galsim {
 
     template <typename T>
     SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<T>& img, 
+        const BaseImage<T>& image, 
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double dx, double padFactor) : 
-        _multi(img,dx,padFactor), _wts(1,1.), _xInterp(xInterp), _kInterp(kInterp),
+        _multi(image,dx,padFactor), _wts(1,1.), _xInterp(xInterp), _kInterp(kInterp),
         _readyToShoot(false)
     { initialize(); }
 
@@ -399,16 +410,16 @@ namespace galsim {
         const BaseImage<short>& image, double dx, double padFactor);
 
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<float>& img, boost::shared_ptr<Interpolant2d> xInterp,
+        const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<double>& img, boost::shared_ptr<Interpolant2d> xInterp,
+        const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<int>& img, boost::shared_ptr<Interpolant2d> xInterp,
+        const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<short>& img, boost::shared_ptr<Interpolant2d> xInterp,
+        const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
 
     template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(

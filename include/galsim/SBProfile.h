@@ -974,6 +974,7 @@ namespace galsim {
          *
          * @param[in] sbin SBProfile being transformed
          * @param[in] e  Ellipse.
+         * @param[in] fluxScaling Amount by which the flux should be multiplied.
          */
         SBTransform(const SBProfile& sbin,
                     const Ellipse& e=Ellipse(),
