@@ -408,9 +408,10 @@ struct PySBExponential {
                 "__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
                     (bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(), 
-                     bp::arg("scale_radius")=bp::object())
-                )
-            );
+                     bp::arg("scale_radius")=bp::object()))
+             )
+            .def("getScaleRadius", &SBExponential::getScaleRadius)
+            ;
     }
 };
 
@@ -421,7 +422,10 @@ struct PySBAiry {
             bp::init<double,double,double>(
                 (bp::arg("D")=1., bp::arg("obscuration")=0., bp::arg("flux")=1.)
             )
-        );
+        )
+        .def("getD", &SBAiry::getD)
+        .def("getObscuration", &SBAiry::getObscuration)
+        ;
     }
 };
 
@@ -509,6 +513,7 @@ struct PySBDeVaucouleurs {
                      (bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object())
                  )
             )
+            .def("getHalfLightRadius", &SBDeVaucouleurs::getHalfLightRadius)
             ;
     }
 };

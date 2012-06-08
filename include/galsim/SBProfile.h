@@ -1646,6 +1646,7 @@ namespace galsim {
             _flux = flux; 
             _norm = _flux / (_r0_sq * 2. * M_PI);
         }
+        double getScaleRadius() const { return _r0; }
 
         /// @brief Exponential photon-shooting done with rapid iterative solution of inverse
         /// cumulative distribution
@@ -1735,6 +1736,8 @@ namespace galsim {
             _flux = flux; 
             _norm = flux * _D*_D;
         }
+        double getD() const {return _D; }
+        double getObscuration() const { return _obscuration; }
 
         /**
          * @brief Airy photon-shooting is done numerically with `OneDimensionalDeviate` class.
@@ -2105,7 +2108,6 @@ namespace galsim {
 
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
-
 
     };
 

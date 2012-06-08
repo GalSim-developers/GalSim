@@ -289,7 +289,6 @@ class Moffat(GSObject):
         return self.SBProfile.getHalfLightRadius()
     
 
-
 class Sersic(GSObject):
     """@brief GalSim Sersic, which has an SBSersic in the SBProfile attribute.
     """
@@ -309,8 +308,17 @@ class Exponential(GSObject):
         GSObject.__init__(self, galsim.SBExponential(flux=flux, half_light_radius=half_light_radius,
                                                      scale_radius=scale_radius))
 
+    def getScaleRadius(self):
+        """@brief Return the scale radius for this Exponential profile.
+        """
+        return self.SBProfile.getScaleRadius()
+
     def getHalfLightRadius(self):
-        return self.SBProfile.getHalfLightRadius()
+        """@brief Return the half light radius for this Exponential profile.
+        """
+        # Factor not analytic, but can be calculated by iterative solution of equation:
+        #  (re / r0) = ln[(re / r0) + 1] + ln(2)
+        return self.SBProfile.getScaleRadius() * 1.6783469900166605
 
 
 class DeVaucouleurs(GSObject):
@@ -321,6 +329,8 @@ class DeVaucouleurs(GSObject):
                                                        half_light_radius=half_light_radius))
 
     def getHalfLightRadius(self):
+        """@brief Return the half light radius for this DeVaucouleurs profile.
+        """
         return self.SBProfile.getHalfLightRadius()
 
 
@@ -331,7 +341,17 @@ class Airy(GSObject):
         GSObject.__init__(self, galsim.SBAiry(D=D, obscuration=obscuration, flux=flux))
 
     def getHalfLightRadius(self):
-        return self.SBProfile.getHalfLightRadius()
+        if self.SBProfile.getObscuration() == 0.:
+ # For an unobscured Airy, we have the following result which can be derived using the integral
+ # result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk), solved for half
+ # total flux using the free online tool Wolfram Alpha:
+ # http://www.wolframalpha.com/input/?i=Solve[BesselJ[0%2C+x]^2+%2B+BesselJ[1%2C+x]^2+%3D%3D+1%2F2]
+            return self.SBProfile.getD() * 1.6802247461942010
+        else:
+            # In principle can find the half-light radius as a function of D and obscuration too,
+            # but it will be much more involved.
+            raise NotImplementedError("Half light radius calculation not implemented for Airy "+
+                                      "objects with non-zero obscuration.")
 
 class Pixel(GSObject):
     """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
