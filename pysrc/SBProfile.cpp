@@ -461,7 +461,7 @@ struct PySBBox {
 struct PySBMoffat {
 
     static SBMoffat * construct(
-        double beta, double truncationFWHM, double flux,
+        double beta, double trunc, double flux,
         const bp::object & half_light_radius,
         const bp::object & scale_radius,
         const bp::object & fwhm
@@ -480,7 +480,7 @@ struct PySBMoffat {
             s = bp::extract<double>(fwhm);
             rType = SBMoffat::FWHM;
         }
-        return new SBMoffat(beta, truncationFWHM, flux, s, rType);
+        return new SBMoffat(beta, trunc, flux, s, rType);
     }
 
     static void wrap() {
@@ -488,11 +488,15 @@ struct PySBMoffat {
             .def("__init__", 
                  bp::make_constructor(
                      &construct, bp::default_call_policies(),
-                     (bp::arg("beta"), bp::arg("truncationFWHM")=0.,
+                     (bp::arg("beta"), bp::arg("trunc")=0.,
                       bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(),
                       bp::arg("scale_radius")=bp::object(), bp::arg("fwhm")=bp::object())
                  )
             )
+            .def("getBeta", &SBMoffat::getBeta)
+            .def("getScaleRadius", &SBMoffat::getScaleRadius)
+            .def("getFWHM", &SBMoffat::getFWHM)
+            .def("getHalfLightRadius", &SBMoffat::getHalfLightRadius)
             ;
     }
 };
