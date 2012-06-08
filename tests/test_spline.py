@@ -34,9 +34,15 @@ PAD_FACTOR=2.
 KXVALS = np.array((1.3, 0.71, -4.3)) * np.pi / 2.
 KYVALS = np.array((.8, -2., -.31,)) * np.pi / 2.
 
+def funcname():
+    import inspect
+    return inspect.stack()[1][3]
+
 def test_Cubic_spline():
     """Test the spline tabulation of the k space Cubic interpolant.
     """
+    import time
+    t1 = time.time()
     interp = galsim.InterpolantXY(galsim.Cubic(tol=1.e-4))
     testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
                                 spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING,
@@ -51,10 +57,14 @@ def test_Cubic_spline():
     np.testing.assert_array_almost_equal(refKvals, testKvals, DECIMAL,
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Cubic interpolant.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_Quintic_spline():
     """Test the spline tabulation of the k space Quintic interpolant.
     """
+    import time
+    t1 = time.time()
     interp = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))
     testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
                                 spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING,
@@ -69,10 +79,14 @@ def test_Quintic_spline():
     np.testing.assert_array_almost_equal(refKvals, testKvals, DECIMAL,
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Quintic interpolant.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_Lanczos5_spline():
     """Test the spline tabulation of the k space Lanczos-5 interpolant.
     """
+    import time
+    t1 = time.time()
     interp = galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))
     testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
                                 spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING,
@@ -87,10 +101,14 @@ def test_Lanczos5_spline():
     np.testing.assert_array_almost_equal(refKvals, testKvals, DECIMAL,
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Lanczos-5 interpolant.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
     
 def test_Lanczos7_spline():
     """Test the spline tabulation of the k space Lanczos-5 interpolant.
     """
+    import time
+    t1 = time.time()
     interp = galsim.InterpolantXY(galsim.Lanczos(7, conserve_flux=True, tol=1.e-4))
     testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
                                 spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING,
@@ -105,6 +123,8 @@ def test_Lanczos7_spline():
     np.testing.assert_array_almost_equal(refKvals, testKvals, DECIMAL,
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Lanczos-7 interpolant.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_Cubic_spline()

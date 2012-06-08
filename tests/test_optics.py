@@ -22,9 +22,15 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
                  # not precisely equivalent to its continuous counterpart.
            # See http://en.wikipedia.org/wiki/File:From_Continuous_To_Discrete_Fourier_Transform.gif
 
+def funcname():
+    import inspect
+    return inspect.stack()[1][3]
+
 def test_roll2d_circularity():
     """Test both integer and float arrays are unchanged by full circular roll.
     """
+    import time
+    t1 = time.time()
     # Make heterogenous 2D array, integers first, test that a full roll gives the same as the inputs
     int_image = np.random.random_integers(low=0, high=1, size=testshape)
     np.testing.assert_array_equal(int_image,
@@ -35,10 +41,14 @@ def test_roll2d_circularity():
     np.testing.assert_array_equal(flt_image,
                                   galsim.optics.roll2d(flt_image, flt_image.shape),
                                   err_msg='galsim.optics.roll2D failed flt array circularity test')
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_roll2d_fwdbck():
     """Test both integer and float arrays are unchanged by unit forward and backward roll.
     """
+    import time
+    t1 = time.time()
     # Make heterogenous 2D array, integers first, test that a +1, -1 roll gives the same as initial
     int_image = np.random.random_integers(low=0, high=1, size=testshape)
     np.testing.assert_array_equal(int_image,
@@ -51,10 +61,14 @@ def test_roll2d_fwdbck():
                                   galsim.optics.roll2d(galsim.optics.roll2d(flt_image, (+1, +1)),
                                                        (-1, -1)),
                                   err_msg='galsim.optics.roll2D failed flt array fwd/back test')
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_roll2d_join():
     """Test both integer and float arrays are equivalent if rolling +1/-1 or -/+(shape[i/j] - 1).
     """
+    import time
+    t1 = time.time()
     # Make heterogenous 2D array, integers first
     int_image = np.random.random_integers(low=0, high=1, size=testshape)
     np.testing.assert_array_equal(galsim.optics.roll2d(int_image, (+1, -1)),
@@ -75,10 +89,14 @@ def test_roll2d_join():
                                   galsim.optics.roll2d(flt_image, (+(flt_image.shape[0] - 1),
                                                                    -(flt_image.shape[1] - 1))),
                                   err_msg='galsim.optics.roll2D failed flt array -/+ join test')
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_kxky():
     """Test that the basic properties of kx and ky are right.
     """
+    import time
+    t1 = time.time()
     kx, ky = galsim.optics.kxky((4, 4))
     kxref = np.array([0., 0.25, -0.5, -0.25]) * 2. * np.pi
     kyref = np.array([0., 0.25, -0.5, -0.25]) * 2. * np.pi
@@ -88,11 +106,15 @@ def test_kxky():
     for j in xrange(4):
         np.testing.assert_array_almost_equal(ky[:, j], kyref, decimal=decimal,
                                              err_msg='failed ky equivalence on row j = '+str(j))
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_kxky_plusone():
     """Test that the basic properties of kx and ky are right...
     But increment testshape used in test_kxky by one to test both odd and even cases.
     """
+    import time
+    t1 = time.time()
     kx, ky = galsim.optics.kxky((4 + 1, 4 + 1))
     kxref = np.array([0., 0.2, 0.4, -0.4, -0.2]) * 2. * np.pi
     kyref = np.array([0., 0.2, 0.4, -0.4, -0.2]) * 2. * np.pi
@@ -102,10 +124,14 @@ def test_kxky_plusone():
     for j in xrange(4 + 1):
         np.testing.assert_array_almost_equal(ky[:, j], kyref, decimal=decimal,
                                              err_msg='failed ky equivalence on row j = '+str(j))
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_check_all_contiguous():
     """Test all galsim.optics outputs are C-contiguous as required by the galsim.Image class.
     """
+    import time
+    t1 = time.time()
     #Check that roll2d outputs contiguous arrays whatever the input
     imcstyle = np.random.random(size=testshape)
     rolltest = galsim.optics.roll2d(imcstyle, (+1, -1))
@@ -124,10 +150,14 @@ def test_check_all_contiguous():
     assert galsim.optics.otf(array_shape=testshape).flags.c_contiguous
     assert galsim.optics.mtf(array_shape=testshape).flags.c_contiguous
     assert galsim.optics.ptf(array_shape=testshape).flags.c_contiguous
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_simple_wavefront():
     """Test the MTF of a pure circular pupil against the known result.
     """
+    import time
+    t1 = time.time()
     kx, ky = galsim.optics.kxky(testshape)
     dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
     lod_test = 8. # }
@@ -140,10 +170,14 @@ def test_simple_wavefront():
     # Compare
     wf = galsim.optics.wavefront(array_shape=testshape, dx=dx_test, lam_over_D=lod_test)
     np.testing.assert_array_almost_equal(wf, wf_true, decimal=decimal)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_simple_mtf():
     """Test the MTF of a pure circular pupil against the known result.
     """
+    import time
+    t1 = time.time()
     kx, ky = galsim.optics.kxky(testshape)
     dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
     lod_test = 8. # }
@@ -157,10 +191,14 @@ def test_simple_mtf():
     # Compare
     mtf = galsim.optics.mtf(array_shape=testshape, dx=dx_test, lam_over_D=lod_test)
     np.testing.assert_array_almost_equal(mtf, mtf_true, decimal=decimal_dft)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_simple_ptf():
     """Test the PTF of a pure circular pupil against the known result (zero).
     """
+    import time
+    t1 = time.time()
     ptf_true = np.zeros(testshape)
     # Compare
     ptf = galsim.optics.ptf(array_shape=testshape)
@@ -168,10 +206,14 @@ def test_simple_ptf():
     # hairy when dividing a small number by another small number
     nmad_ptfdiff = np.median(np.abs(ptf - np.median(ptf_true)))
     assert nmad_ptfdiff <= 10.**(-decimal)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_consistency_psf_mtf():
     """Test that the MTF of a pure circular pupil is |FT{PSF}|.
     """
+    import time
+    t1 = time.time()
     kx, ky = galsim.optics.kxky(testshape)
     dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
     lod_test = 8. # }
@@ -182,99 +224,120 @@ def test_consistency_psf_mtf():
     # Compare
     mtf = galsim.optics.mtf(array_shape=testshape, dx=dx_test, lam_over_D=lod_test)
     np.testing.assert_array_almost_equal(mtf, mtf_test, decimal=decimal_dft)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_wavefront_image_view():
     """Test that the ImageF.array view of the wavefront is consistent with the wavefront array.
     """
+    import time
+    t1 = time.time()
     array = galsim.optics.wavefront(array_shape=testshape)
     (real, imag) = galsim.optics.wavefront_image(array_shape=testshape)
     np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
     np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_psf_image_view():
     """Test that the ImageF.array view of the PSF is consistent with the PSF array.
     """
+    import time
+    t1 = time.time()
     array = galsim.optics.psf(array_shape=testshape)
     image = galsim.optics.psf_image(array_shape=testshape)
     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array, decimal)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_otf_image_view():
     """Test that the ImageF.array view of the OTF is consistent with the OTF array.
     """
+    import time
+    t1 = time.time()
     array = galsim.optics.otf(array_shape=testshape)
     (real, imag) = galsim.optics.otf_image(array_shape=testshape)
     np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
     np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_mtf_image_view():
     """Test that the ImageF.array view of the MTF is consistent with the MTF array.
     """
+    import time
+    t1 = time.time()
     array = galsim.optics.mtf(array_shape=testshape)
     image = galsim.optics.mtf_image(array_shape=testshape)
     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_ptf_image_view():
     """Test that the ImageF.array view of the OTF is consistent with the OTF array.
     """
+    import time
+    t1 = time.time()
     array = galsim.optics.ptf(array_shape=testshape)
     image = galsim.optics.ptf_image(array_shape=testshape)
     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_OpticalPSF_flux():
     """Compare an unaberrated OpticalPSF flux to unity.
     """
-    lods = (4., 9., 16.) # lambda/D values: don't choose unity in case symmetry hides something
+    import time
+    t1 = time.time()
+    lods = (1., 4., 9.) # lambda/D values: don't choose unity in case symmetry hides something
+    nlook = 512         # Need a bit bigger image than below to get enough flux
+    image = galsim.ImageF(nlook,nlook)
     for lod in lods:
         optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1)
-        optics_array = optics_test.draw(dx=1.).array 
+        optics_array = optics_test.draw(dx=1.,image=image).array 
         np.testing.assert_almost_equal(optics_array.sum(), 1., 2, 
-                                       err_msg="Unaberrated Optical flux not quite unity.")
+                err_msg="Unaberrated Optical flux not quite unity.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_OpticalPSF_vs_Airy():
     """Compare the array view on an unaberrated OpticalPSF to that of an Airy.
     """
+    import time
+    t1 = time.time()
     lods = (4., 9., 16.) # lambda/D values: don't choose unity in case symmetry hides something
-    nlook = 100          # size of array region at the centre of each image to compare
+    nlook = 100
+    image = galsim.ImageF(nlook,nlook)
     for lod in lods:
         D = 1. / lod
         airy_test = galsim.Airy(D=D, obscuration=0., flux=1.)
         optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1) #pad same as an Airy, natch!
-        airy_array = airy_test.draw(dx=1.).array
-        airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2: 
-                                     airy_array.shape[0]/2 + nlook/2,   
-                                     airy_array.shape[1]/2 - nlook/2:
-                                     airy_array.shape[1]/2 + nlook/2]
-        optics_array = optics_test.draw(dx=1.).array 
-        optics_array_test = optics_array[optics_array.shape[0]/2 - nlook/2:
-                                         optics_array.shape[0]/2 + nlook/2, 
-                                         optics_array.shape[1]/2 - nlook/2:
-                                         optics_array.shape[1]/2 + nlook/2]
-        np.testing.assert_array_almost_equal(optics_array_test, airy_array_test, decimal_dft, 
-                                             err_msg="Unaberrated Optical not quite equal to Airy")
+        airy_array = airy_test.draw(dx=1.,image=image).array
+        optics_array = optics_test.draw(dx=1.,image=image).array 
+        np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
+                err_msg="Unaberrated Optical not quite equal to Airy")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_OpticalPSF_vs_Airy_with_obs():
     """Compare the array view on an unaberrated OpticalPSF with osbcuration to that of an Airy.
     """
+    import time
+    t1 = time.time()
     lod = 7.5    # lambda/D value: don't choose unity in case symmetry hides something
     obses = (0.1, 0.3, 0.5) # central obscuration radius ratios
     nlook = 100          # size of array region at the centre of each image to compare
+    image = galsim.ImageF(nlook,nlook)
     D = 1. / lod
     for obs in obses:
         airy_test = galsim.Airy(D=D, obscuration=obs, flux=1.)
         optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1, obscuration=obs)
-        airy_array = airy_test.draw(dx=1.).array
-        airy_array_test = airy_array[airy_array.shape[0]/2 - nlook/2: 
-                                     airy_array.shape[0]/2 + nlook/2,   
-                                     airy_array.shape[1]/2 - nlook/2:
-                                     airy_array.shape[1]/2 + nlook/2]
-        optics_array = optics_test.draw(dx=1.).array 
-        optics_array_test = optics_array[optics_array.shape[0]/2 - nlook/2:
-                                         optics_array.shape[0]/2 + nlook/2, 
-                                         optics_array.shape[1]/2 - nlook/2:
-                                         optics_array.shape[1]/2 + nlook/2]
-        np.testing.assert_array_almost_equal(optics_array_test, airy_array_test, decimal_dft, 
-                                             err_msg="Unaberrated Optical with obscuration not "
-                                                     "quite equal to Airy")
+        airy_array = airy_test.draw(dx=1.,image=image).array
+        optics_array = optics_test.draw(dx=1.,image=image).array 
+        np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
+                err_msg="Unaberrated Optical with obscuration not quite equal to Airy")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
