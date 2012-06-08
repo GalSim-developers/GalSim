@@ -147,10 +147,10 @@ class GSObject:
         GSObject.__init__(self, self.SBProfile.distort(ellipse))
         
     def applyShear(self, g1, g2):
-        """@brief Apply a (g1, g2) shear to this object, where |g| = (a-b)/(a+b).
+        """@brief Apply a (g1, g2) shear to this object, where reduced
+        shear |g| = (a-b)/(a+b).
         """
-        e1, e2 = g1g2_to_e1e2(g1, g2)
-        GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
+        GSObject.__init__(self, self.SBProfile.shear(g1, g2))
 
     def applyRotation(self, theta):
         """@brief Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
@@ -178,10 +178,10 @@ class GSObject:
         return GSObject(self.SBProfile.distort(ellipse))
 
     def createSheared(self, g1, g2):
-        """@brief Returns A new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
+        """@brief Returns A new GSObject by applying a (g1, g2) shear,
+        where reduced shear |g| = (a-b)/(a+b).
         """
-        e1, e2 = g1g2_to_e1e2(g1, g2)
-        return GSObject(self.SBProfile.distort(galsim.Ellipse(e1,e2)))
+        return GSObject(self.SBProfile.shear(g1, g2))
 
     def createRotated(self, theta):
         """@brief Returns a new GSObject by applying a rotation theta (Angle object, +ve
