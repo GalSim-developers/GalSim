@@ -261,17 +261,16 @@ class Gaussian(GSObject):
     def __init__(self, flux=1., half_light_radius=None, sigma=None, fwhm=None):
         GSObject.__init__(self, galsim.SBGaussian(flux=flux, half_light_radius=half_light_radius, 
                                                   sigma=sigma, fwhm=fwhm))
+        
+    def getSigma(self):
+        """@brief Return the sigma scale length for this Gaussian profile.
+        """
+        return self.SBProfile.getSigma()
 
     def getHalfLightRadius(self):
-        return self.GSObject.getHalfLightRadius()
-
-    # Hmmm, these Gaussian-specific methods do not appear to be wrapped yet (will add issue to 
-    # myself for this)... when they are, uncomment below:
-    # def getSigma(self):
-    #     return self.SBProfile.getSigma()
-    #
-    # def setSigma(self, sigma):
-    #     return self.SBProfile.setSigma(sigma)
+        """@brief Return the half light radius for this Gaussian profile.
+        """
+        return self.SBProfile.getSigma() * 1.1774100225154747 # factor = sqrt[2ln(2)]
 
 
 class Moffat(GSObject):
@@ -285,7 +284,10 @@ class Moffat(GSObject):
                                                 trunc=trunc))
 
     def getHalfLightRadius(self):
-        return self.GSObject.getHalfLightRadius()
+        """@brief Return the half light radius for this Sersic profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
+    
 
 
 class Sersic(GSObject):
@@ -295,7 +297,9 @@ class Sersic(GSObject):
         GSObject.__init__(self, galsim.SBSersic(n, flux=flux, half_light_radius=half_light_radius))
 
     def getHalfLightRadius(self):
-        return self.GSObject.getHalfLightRadius()
+        """@brief Return the half light radius for this Sersic profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
 
 
 class Exponential(GSObject):
@@ -306,7 +310,7 @@ class Exponential(GSObject):
                                                      scale_radius=scale_radius))
 
     def getHalfLightRadius(self):
-        return self.GSObject.getHalfLightRadius()
+        return self.SBProfile.getHalfLightRadius()
 
 
 class DeVaucouleurs(GSObject):
@@ -317,7 +321,7 @@ class DeVaucouleurs(GSObject):
                                                        half_light_radius=half_light_radius))
 
     def getHalfLightRadius(self):
-        return self.GSObject.getHalfLightRadius()
+        return self.SBProfile.getHalfLightRadius()
 
 
 class Airy(GSObject):
@@ -327,7 +331,7 @@ class Airy(GSObject):
         GSObject.__init__(self, galsim.SBAiry(D=D, obscuration=obscuration, flux=flux))
 
     def getHalfLightRadius(self):
-        return self.GSObject.getHalfLightRadius()
+        return self.SBProfile.getHalfLightRadius()
 
 class Pixel(GSObject):
     """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.

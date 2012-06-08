@@ -1344,6 +1344,7 @@ namespace galsim {
             _flux = flux; 
             _norm = _flux / (_sigma_sq * 2. * M_PI);
         }
+        double getSigma() const { return _sigma; }
         /**
          * @brief Shoot photons through this SBGaussian.
          *
@@ -1427,6 +1428,7 @@ namespace galsim {
             _flux = flux; 
             _norm = flux/_re_sq;
         }
+        double getHalfLightRadius() const { return _re; }
 
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
         PhotonArray shoot(int N, UniformDeviate& ud) const;

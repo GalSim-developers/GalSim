@@ -345,9 +345,10 @@ struct PySBGaussian {
                 "__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
                     (bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(), 
-                     bp::arg("sigma")=bp::object(), bp::arg("fwhm")=bp::object())
-                )
-            );
+                     bp::arg("sigma")=bp::object(), bp::arg("fwhm")=bp::object()))
+            )
+            .def("getSigma", &SBGaussian::getSigma)
+            ;
     }
 };
 
@@ -371,6 +372,7 @@ struct PySBSersic {
                      (bp::arg("n"), bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object())
                                       )
                  )
+            .def("getHalfLightRadius", &SBSersic::getHalfLightRadius)
             ;
     }
 };
