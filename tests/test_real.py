@@ -58,8 +58,14 @@ def moments_to_ellip(mxx, myy, mxy):
     sig = (mxx*myy - mxy**2)**(0.25)
     return e1, e2, sig
 
+def funcname():
+    import inspect
+    return inspect.stack()[1][3]
+
 def test_real_galaxy_ideal():
     """Test accuracy of various calculations with fake Gaussian RealGalaxy vs. ideal expectations"""
+    import time
+    t1 = time.time()
     # read in faked Gaussian RealGalaxy from file
     rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir)
     rg = galsim.RealGalaxy(rgc, index = ind_fake)
@@ -108,9 +114,13 @@ def test_real_galaxy_ideal():
                     sheared.draw(expected_image, dx = tps)
                     np.testing.assert_array_almost_equal(sim_image.array, expected_image.array, decimal = 3,
                         err_msg = "Error in comparison of ideal Gaussian RealGalaxy calculations")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_real_galaxy_saved():
     """Test accuracy of various calculations with real RealGalaxy vs. stored SHERA result"""
+    import time
+    t1 = time.time()
     # read in real RealGalaxy from file
     rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir)
     rg = galsim.RealGalaxy(rgc, index = ind_real)
@@ -137,6 +147,8 @@ def test_real_galaxy_saved():
                                    err_msg = "Error in comparison with SHERA result: e2")
     np.testing.assert_almost_equal(sbp_res.moments_sigma, shera_res.moments_sigma, 2,
                                    err_msg = "Error in comparison with SHERA result: sigma")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_real_galaxy_ideal()
