@@ -106,6 +106,20 @@ def do_shoot(prof, img, dx, name):
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
 
+def radial_integrate(prof, minr, maxr, dr):
+    """A simple helper that calculates int 2pi r f(r) dr, from rmin to rmax
+       for an axially symmetric profile.
+    """
+    import math
+    assert prof.isAxisymmetric()
+    r = minr
+    sum = 0.
+    while r < maxr:
+        sum += r * prof.xValue(galsim.PositionD(r,0)) 
+        r += dr
+    sum *= 2. * math.pi * dr
+    return sum
+ 
 def funcname():
     import inspect
     return inspect.stack()[1][3]
@@ -169,15 +183,9 @@ def test_gaussian_radii():
     import math
     # first test half-light-radius
     test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
-    dr = 1.e-4
-    r = 0.
-    sum = 0.
-    while r < test_hlr:
-        sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
-        r += dr
-    sum *= 2. * math.pi * dr
-    print 'sum = ',sum
-    np.testing.assert_almost_equal(sum, 0.5, decimal=4,
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    print 'hlr_sum = ',hlr_sum
+    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
             err_msg="Error in Gaussian constructor with half-light radius")
 
     # then test sigma
@@ -234,15 +242,9 @@ def test_exponential_radii():
     import math
     # first test half-light-radius
     test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
-    dr = 1.e-4
-    r = 0.
-    sum = 0.
-    while r < test_hlr:
-        sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
-        r += dr
-    sum *= 2. * math.pi * dr
-    print 'sum = ',sum
-    np.testing.assert_almost_equal(sum, 0.5, decimal=4,
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    print 'hlr_sum = ',hlr_sum
+    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
             err_msg="Error in Exponential constructor with half-light radius")
 
     # then test scale
@@ -292,15 +294,9 @@ def test_sersic_radii():
     for n in test_sersic_n:
         # test half-light-radius
         test_gal = galsim.Sersic(n=n, flux = 1., half_light_radius = test_hlr)
-        dr = 1.e-4
-        r = 0.
-        sum = 0.
-        while r < test_hlr:
-            sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
-            r += dr
-        sum *= 2. * math.pi * dr
-        print 'sum = ',sum
-        np.testing.assert_almost_equal(sum, 0.5, decimal=4,
+        hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+        print 'hlr_sum = ',hlr_sum
+        np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
                 err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
 
     t2 = time.time()
@@ -412,15 +408,9 @@ def test_moffat_radii():
     # first test half-light-radius
     test_beta = 2.
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr)
-    dr = 1.e-4
-    r = 0.
-    sum = 0.
-    while r < test_hlr:
-        sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
-        r += dr
-    sum *= 2. * math.pi * dr
-    print 'sum = ',sum
-    np.testing.assert_almost_equal(sum, 0.5, decimal=4,
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    print 'hlr_sum = ',hlr_sum
+    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with half-light radius")
 
     # then test scale
@@ -451,8 +441,8 @@ def test_moffat_radii():
         sum += r * test_gal.xValue(galsim.PositionD(r,0)) 
         r += dr
     sum *= 2. * math.pi * dr
-    print 'sum = ',sum
-    np.testing.assert_almost_equal(sum, 0.5, decimal=4,
+    print 'hlr_sum = ',hlr_sum
+    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with half-light radius")
 
     # then test scale
