@@ -665,7 +665,14 @@ def test_sbprofile_realspace_convolve():
     """
     import time
     t1 = time.time()
-    psf = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
+    # Code was formerly:
+    # mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
+    #
+    # ...but this is no longer allowed since we changed the handling of trunc to be in physical
+    # units.  However, the same profile can be constructed using fwhm=1.0927449310213702, as
+    # calculated by interval bisection in devutils/external/calculate_moffat_radii.py
+    psf = galsim.SBMoffat(beta=1.5, fwhm=1.0927449310213702, trunc=4*1.0927449310213702,
+                          flux=1)
     pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.SBConvolve(psf,real_space=True)
     conv.add(pixel)
@@ -678,7 +685,8 @@ def test_sbprofile_realspace_convolve():
     np.testing.assert_array_almost_equal(img.array, saved_img.array, 5,
         err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
-    psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
+    psf = galsim.Moffat(beta=1.5, fwhm=1.0927449310213702, trunc=4*1.0927449310213702,
+                        flux=1)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel],real_space=True)
     conv.draw(img,dx=0.2)
