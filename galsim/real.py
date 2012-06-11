@@ -1,4 +1,5 @@
 import galsim
+import utilities
 
 """@file real.py @brief Necessary functions for dealing with real galaxies and their catalogs.
 """
