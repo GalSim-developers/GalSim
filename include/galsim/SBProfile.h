@@ -1379,7 +1379,7 @@ namespace galsim {
         double getSigma() const 
         { 
             assert(dynamic_cast<const SBGaussianImpl*>(_pimpl.get()));
-            return static_cast<const SBGaussianImpl&>(*_pimpl).getSigma(); 
+            return dynamic_cast<const SBGaussianImpl&>(*_pimpl).getSigma(); 
         }
 
     protected:
@@ -1469,13 +1469,13 @@ namespace galsim {
         double getN() const 
         { 
             assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
-            return static_cast<const SBSersicImpl&>(*_pimpl).getN(); 
+            return dynamic_cast<const SBSersicImpl&>(*_pimpl).getN(); 
         }
 
         double getHalfLightRadius() const 
         {
             assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
-            return static_cast<const SBSersicImpl&>(*_pimpl).getHalfLightRadius(); 
+            return dynamic_cast<const SBSersicImpl&>(*_pimpl).getHalfLightRadius(); 
         }
 
     protected:
@@ -1714,7 +1714,7 @@ namespace galsim {
         double getScaleRadius() const 
         { 
             assert(dynamic_cast<const SBExponentialImpl*>(_pimpl.get()));
-            return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
+            return dynamic_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
         }
 
     protected:
@@ -2115,7 +2115,7 @@ namespace galsim {
         double getBeta() const 
         {
             assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
-            return static_cast<const SBMoffatImpl&>(*_pimpl).getBeta(); 
+            return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getBeta(); 
         }
 
     protected:

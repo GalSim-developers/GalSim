@@ -205,7 +205,6 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
 
     # convolve, resample
     out_gal = galsim.Convolve([sheared, galsim.GSObject(target_PSF)])
-    print 'out_gal.flux = ',out_gal.getFlux()
     image = out_gal.draw(image=image, dx = target_pixel_scale)
 
     # return simulated image
