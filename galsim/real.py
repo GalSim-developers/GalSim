@@ -200,13 +200,12 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
 
     # shear
     if (g1 != 0.0 or g2 != 0.0):
-        e1, e2 = utilities.g1g2_to_e1e2(g1, g2)
-        sheared = real_galaxy.SBProfile.shear(e1, e2)
+        sheared = real_galaxy.createSheared(g1,g2)
     else:
-        sheared = real_galaxy.SBProfile
+        sheared = real_galaxy
 
     # convolve, resample
-    out_gal = galsim.Convolve([galsim.GSObject(sheared), galsim.GSObject(target_PSF)])
+    out_gal = galsim.Convolve([sheared, galsim.GSObject(target_PSF)])
     image = out_gal.draw(image=image, dx = target_pixel_scale)
 
     # return simulated image

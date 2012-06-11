@@ -12,6 +12,7 @@
 #endif
 
 #ifdef DEBUGLOGGING
+#include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
 int verbose_level = 1;
 #endif
@@ -24,22 +25,22 @@ namespace galsim {
         public std::binary_function<double,double,double>
     {
     public:
-        ConvolveFunc(const SBProfile* p1, const SBProfile* p2, const Position<double>& pos) :
+        ConvolveFunc(const SBProfile& p1, const SBProfile& p2, const Position<double>& pos) :
             _p1(p1), _p2(p2), _pos(pos) {}
 
         double operator()(double x, double y) const 
         {
             xdbg<<"Convolve function for pos = "<<_pos<<" at x,y = "<<x<<','<<y<<std::endl;
-            double v1 = _p1->xValue(Position<double>(x,y));
-            double v2 = _p2->xValue(Position<double>(_pos.x-x,_pos.y-y));
+            double v1 = _p1.xValue(Position<double>(x,y));
+            double v2 = _p2.xValue(Position<double>(_pos.x-x,_pos.y-y));
             xdbg<<"Value = "<<v1<<" * "<<v2<<" = "<<v1*v2<<std::endl;
             return 
-                _p1->xValue(Position<double>(x,y)) *
-                _p2->xValue(Position<double>(_pos.x-x,_pos.y-y));
+                _p1.xValue(Position<double>(x,y)) *
+                _p2.xValue(Position<double>(_pos.x-x,_pos.y-y));
         }
     private:
-        const SBProfile* _p1;
-        const SBProfile* _p2;
+        const SBProfile& _p1;
+        const SBProfile& _p2;
         const Position<double>& _pos;
     };
 
@@ -47,7 +48,7 @@ namespace galsim {
         public std::unary_function<double, integ::IntRegion<double> >
     {
     public:
-        YRegion(const SBProfile* p1, const SBProfile* p2, const Position<double>& pos) :
+        YRegion(const SBProfile& p1, const SBProfile& p2, const Position<double>& pos) :
             _p1(p1), _p2(p2), _pos(pos) {}
 
         integ::IntRegion<double> operator()(double x) const
@@ -56,13 +57,13 @@ namespace galsim {
             // First figure out each profiles y region separately.
             double ymin1,ymax1;
             splits1.clear();
-            _p1->getYRange(x,ymin1,ymax1,splits1);
+            _p1.getYRange(x,ymin1,ymax1,splits1);
             double ymin2,ymax2;
             splits2.clear();
-            _p2->getYRange(_pos.x-x,ymin2,ymax2,splits2);
+            _p2.getYRange(_pos.x-x,ymin2,ymax2,splits2);
 
             // Then take the overlap relevant for the calculation:
-            //     _p1->xValue(x,y) * _p2->xValue(x0-x,y0-y)
+            //     _p1.xValue(x,y) * _p2.xValue(x0-x,y0-y)
             xdbg<<"p1's y range = "<<ymin1<<" ... "<<ymax1<<std::endl;
             xdbg<<"p2's y range = "<<ymin2<<" ... "<<ymax2<<std::endl;
             double ymin = std::max(ymin1, _pos.y-ymax2);
@@ -86,8 +87,8 @@ namespace galsim {
             return reg;
         }
     private:
-        const SBProfile* _p1;
-        const SBProfile* _p2;
+        const SBProfile& _p1;
+        const SBProfile& _p2;
         const Position<double>& _pos;
         mutable std::vector<double> splits1, splits2;
     };
@@ -105,7 +106,7 @@ namespace galsim {
     // mode = 3 and 4 are for finding the bends.
     struct OverlapFinder
     {
-        OverlapFinder(const SBProfile* p1, const SBProfile* p2, const Position<double>& pos,
+        OverlapFinder(const SBProfile& p1, const SBProfile& p2, const Position<double>& pos,
                       int mode) :
             _p1(p1), _p2(p2), _pos(pos), _mode(mode) 
         { assert(_mode >= 1 && _mode <= 4); }
@@ -113,8 +114,8 @@ namespace galsim {
         {
             double ymin1, ymax1, ymin2, ymax2;
             splits.clear();
-            _p1->getYRange(x,ymin1,ymax1,splits);
-            _p2->getYRange(_pos.x-x,ymin2,ymax2,splits);
+            _p1.getYRange(x,ymin1,ymax1,splits);
+            _p2.getYRange(_pos.x-x,ymin2,ymax2,splits);
             // Note: the real ymin,ymax for p2 are _pos.y-ymax2 and _pos.y-ymin2
             ymin2 = _pos.y - ymin2;
             ymax2 = _pos.y - ymax2;
@@ -127,8 +128,8 @@ namespace galsim {
         }
 
     private:
-        const SBProfile* _p1;
-        const SBProfile* _p2;
+        const SBProfile& _p1;
+        const SBProfile& _p2;
         const Position<double>& _pos;
         int _mode;
         mutable std::vector<double> splits;
@@ -241,7 +242,7 @@ namespace galsim {
     }
 
     double RealSpaceConvolve(
-        const SBProfile* p1, const SBProfile* p2, const Position<double>& pos, double flux)
+        const SBProfile& p1, const SBProfile& p2, const Position<double>& pos, double flux)
     {
         // Coming in, if only one of them is axisymmetric, it should be p1.
         // This cuts down on some of the logic below.
@@ -249,13 +250,13 @@ namespace galsim {
         // axisymmetric.  But that involves a bit of geometry to get the right cuts,
         // so I didn't bother, since I don't think we'll be doing that too often.
         // So p2 is always taken to be a rectangle rather than possibly a circle.
-        assert(p1->isAxisymmetric() || !p2->isAxisymmetric());
+        assert(p1.isAxisymmetric() || !p2.isAxisymmetric());
         
         xdbg<<"Start RealSpaceConvolve for pos = "<<pos<<std::endl;
         double xmin1, xmax1, xmin2, xmax2;
         std::vector<double> xsplits1, xsplits2;
-        p1->getXRange(xmin1,xmax1,xsplits1);
-        p2->getXRange(xmin2,xmax2,xsplits2);
+        p1.getXRange(xmin1,xmax1,xsplits1);
+        p2.getXRange(xmin2,xmax2,xsplits2);
         xdbg<<"p1 X range = "<<xmin1<<"  "<<xmax1<<std::endl;
         xdbg<<"p2 X range = "<<xmin2<<"  "<<xmax2<<std::endl;
 
@@ -267,8 +268,8 @@ namespace galsim {
 
         double ymin1, ymax1, ymin2, ymax2;
         std::vector<double> ysplits1, ysplits2;
-        p1->getYRange(ymin1,ymax1,ysplits1);
-        p2->getYRange(ymin2,ymax2,ysplits2);
+        p1.getYRange(ymin1,ymax1,ysplits1);
+        p2.getYRange(ymin2,ymax2,ysplits2);
         xdbg<<"p1 Y range = "<<ymin1<<"  "<<ymax1<<std::endl;
         xdbg<<"p2 Y range = "<<ymin2<<"  "<<ymax2<<std::endl;
         // Second check for early exit

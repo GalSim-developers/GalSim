@@ -1,5 +1,5 @@
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "Interpolant.h"
 #include "integ/Int.h"
@@ -12,23 +12,27 @@
 
 namespace galsim {
 
-    double InterpolantFunction::operator()(double x) const  {return _interp.xval(x);}
+    double InterpolantFunction::operator()(double x) const  { return _interp.xval(x); }
 
-    double InterpolantXY::getPositiveFlux() const {
-        return i1d.getPositiveFlux()*i1d.getPositiveFlux()
-            + i1d.getNegativeFlux()*i1d.getNegativeFlux();
+    double InterpolantXY::getPositiveFlux() const 
+    {
+        return _i1d->getPositiveFlux()*_i1d->getPositiveFlux()
+            + _i1d->getNegativeFlux()*_i1d->getNegativeFlux();
     }
-    double InterpolantXY::getNegativeFlux() const {
-        return 2.*i1d.getPositiveFlux()*i1d.getNegativeFlux();
-    }
-    PhotonArray InterpolantXY::shoot(int N, UniformDeviate& ud) const {
+
+    double InterpolantXY::getNegativeFlux() const 
+    { return 2.*_i1d->getPositiveFlux()*_i1d->getNegativeFlux(); }
+
+    PhotonArray InterpolantXY::shoot(int N, UniformDeviate& ud) const 
+    {
         // Going to assume here that there is not a need to randomize any Interpolant
-        PhotonArray result = i1d.shoot(N, ud);   // get X coordinates
-        result.takeYFrom(i1d.shoot(N, ud));
+        PhotonArray result = _i1d->shoot(N, ud);   // get X coordinates
+        result.takeYFrom(_i1d->shoot(N, ud));
         return result;
     }
 
-    PhotonArray Delta::shoot(int N, UniformDeviate& ud) const {
+    PhotonArray Delta::shoot(int N, UniformDeviate& ud) const 
+    {
         PhotonArray result(N);
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++)  {
@@ -37,7 +41,8 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray Nearest::shoot(int N, UniformDeviate& ud) const {
+    PhotonArray Nearest::shoot(int N, UniformDeviate& ud) const 
+    {
         PhotonArray result(N);
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++)  {
@@ -46,7 +51,8 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray Linear::shoot(int N, UniformDeviate& ud) const {
+    PhotonArray Linear::shoot(int N, UniformDeviate& ud) const 
+    {
         PhotonArray result(N);
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++) {
@@ -82,8 +88,8 @@ namespace galsim {
 
     double Lanczos::uCalc(double u) const 
     {
-        double vp=n*(2*u+1);
-        double vm=n*(2*u-1);
+        double vp=_n*(2*u+1);
+        double vm=_n*(2*u-1);
         double retval = (vm-1.)*Si(M_PI*(vm-1.))
             -(vm+1.)*Si(M_PI*(vm+1.))
             -(vp-1.)*Si(M_PI*(vp-1.))
@@ -95,49 +101,49 @@ namespace galsim {
     {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
-        range = n*(1-0.1*std::sqrt(tolerance));
-        const double uStep = 0.01/n;
-        uMax = 0.;
-        double u = tab.size()>0 ? tab.argMax() + uStep : 0.;
-        while ( u - uMax < 1./n || u<1.1) {
+        _range = _n*(1-0.1*std::sqrt(_tolerance));
+        const double uStep = 0.01/_n;
+        _uMax = 0.;
+        double u = _tab.size()>0 ? _tab.argMax() + uStep : 0.;
+        while ( u - _uMax < 1./_n || u<1.1) {
             double ft = uCalc(u);
-            tab.addEntry(u, ft);
-            if (std::abs(ft) > tolerance) uMax = u;
+            _tab.addEntry(u, ft);
+            if (std::abs(ft) > _tolerance) _uMax = u;
             u += uStep;
         }
-        u1 = uCalc(1.);
+        _u1 = uCalc(1.);
     }
 
     class CubicIntegrand : public std::unary_function<double,double>
     {
     public:
-        CubicIntegrand(double u_, const Cubic& c_): u(u_), c(c_) {}
-        double operator()(double x) const { return c.xval(x)*std::cos(2*M_PI*u*x); }
+        CubicIntegrand(double u, const Cubic& c): _u(u), _c(c) {}
+        double operator()(double x) const { return _c.xval(x)*std::cos(2*M_PI*_u*x); }
 
     private:
-        double u;
-        const Cubic& c;
+        double _u;
+        const Cubic& _c;
     };
 
     double Cubic::uCalc(double u) const 
     {
         CubicIntegrand ci(u, *this);
-        return 2.*( integ::int1d(ci, 0., 1., 0.1*tolerance, 0.1*tolerance)
-                    + integ::int1d(ci, 1., 2., 0.1*tolerance, 0.1*tolerance));
+        return 2.*( integ::int1d(ci, 0., 1., 0.1*_tolerance, 0.1*_tolerance)
+                    + integ::int1d(ci, 1., 2., 0.1*_tolerance, 0.1*_tolerance));
     }
 
     void Cubic::setup() 
     {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
-        range = 2.-0.1*tolerance;
+        _range = 2.-0.1*_tolerance;
         const double uStep = 0.001;
-        uMax = 0.;
-        double u = tab.size()>0 ? tab.argMax() + uStep : 0.;
-        while ( u - uMax < 1. || u<1.1) {
+        _uMax = 0.;
+        double u = _tab.size()>0 ? _tab.argMax() + uStep : 0.;
+        while ( u - _uMax < 1. || u<1.1) {
             double ft = uCalc(u);
-            tab.addEntry(u, ft);
-            if (std::abs(ft) > tolerance) uMax = u;
+            _tab.addEntry(u, ft);
+            if (std::abs(ft) > _tolerance) _uMax = u;
             u += uStep;
         }
     }
@@ -145,33 +151,33 @@ namespace galsim {
     class QuinticIntegrand : public std::unary_function<double,double>
     {
     public:
-        QuinticIntegrand(double u_, const Quintic& c_): u(u_), c(c_) {}
-        double operator()(double x) const { return c.xval(x)*std::cos(2*M_PI*u*x); }
+        QuinticIntegrand(double u, const Quintic& c): _u(u), _c(c) {}
+        double operator()(double x) const { return _c.xval(x)*std::cos(2*M_PI*_u*x); }
     private:
-        double u;
-        const Quintic& c;
+        double _u;
+        const Quintic& _c;
     };
 
     double Quintic::uCalc(double u) const 
     {
         QuinticIntegrand qi(u, *this);
-        return 2.*( integ::int1d(qi, 0., 1., 0.1*tolerance, 0.1*tolerance)
-                    + integ::int1d(qi, 1., 2., 0.1*tolerance, 0.1*tolerance)
-                    + integ::int1d(qi, 2., 3., 0.1*tolerance, 0.1*tolerance));
+        return 2.*( integ::int1d(qi, 0., 1., 0.1*_tolerance, 0.1*_tolerance)
+                    + integ::int1d(qi, 1., 2., 0.1*_tolerance, 0.1*_tolerance)
+                    + integ::int1d(qi, 2., 3., 0.1*_tolerance, 0.1*_tolerance));
     }
 
     void Quintic::setup() 
     {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
-        range = 3.-0.1*tolerance;
+        _range = 3.-0.1*_tolerance;
         const double uStep = 0.001;
-        uMax = 0.;
-        double u = tab.size()>0 ? tab.argMax() + uStep : 0.;
-        while ( u - uMax < 1. || u<1.1) {
+        _uMax = 0.;
+        double u = _tab.size()>0 ? _tab.argMax() + uStep : 0.;
+        while ( u - _uMax < 1. || u<1.1) {
             double ft = uCalc(u);
-            tab.addEntry(u, ft);
-            if (std::abs(ft) > tolerance) uMax = u;
+            _tab.addEntry(u, ft);
+            if (std::abs(ft) > _tolerance) _uMax = u;
             u += uStep;
         }
     }
