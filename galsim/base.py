@@ -2,6 +2,7 @@ import os
 import collections
 import numpy as np
 import galsim
+import utilities
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
@@ -145,7 +146,7 @@ class GSObject:
     def applyShear(self, g1, g2):
         """@brief Apply a (g1, g2) shear to this object, where |g| = (a-b)/(a+b).
         """
-        e1, e2 = g1g2_to_e1e2(g1, g2)
+        e1, e2 = utilities.g1g2_to_e1e2(g1, g2)
         GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
 
     def applyRotation(self, theta):
@@ -176,7 +177,7 @@ class GSObject:
     def createSheared(self, g1, g2):
         """@brief Returns A new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
         """
-        e1, e2 = g1g2_to_e1e2(g1, g2)
+        e1, e2 = utilities.g1g2_to_e1e2(g1, g2)
         return GSObject(self.SBProfile.distort(galsim.Ellipse(e1,e2)))
 
     def createRotated(self, theta):
@@ -217,33 +218,6 @@ class GSObject:
             ud = galsim.UniformDeviate()
         self.SBProfile.drawShoot(image, N, ud)
          
-
-# Define "convenience function for going from (g1, g2) -> (e1, e2), used by two methods
-# in the GSObject class and by one function in real.py:
-def g1g2_to_e1e2(g1, g2):
-    """@brief Convenience function for going from (g1, g2) -> (e1, e2), used by two methods in the 
-    GSObject class.
-    """
-    # SBProfile expects an e1,e2 distortion, rather than a shear,
-    # so we need to convert:
-    # e = (a^2-b^2) / (a^2+b^2)
-    # g = (a-b) / (a+b)
-    # b/a = (1-g)/(1+g)
-    # e = (1-(b/a)^2) / (1+(b/a)^2)
-    import math
-    gsq = g1*g1 + g2*g2
-    if gsq > 0.:
-        g = math.sqrt(gsq)
-        boa = (1-g) / (1+g)
-        e = (1 - boa*boa) / (1 + boa*boa)
-        e1 = g1 * (e/g)
-        e2 = g2 * (e/g)
-        return e1, e2
-    elif gsq == 0.:
-        return 0., 0.
-    else:
-        raise ValueError("Input |g|^2 < 0, cannot convert.")
-
 
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
 # SBPs...
