@@ -43,6 +43,8 @@ class Shear:
         if len(args) == 1:
             if isinstance(args[0], _galsim._Shear):
                 self._shear = args[0]
+            else:
+                raise TypeError("Unnamed argument to initialize Shear must be a _Shear!")
         elif len(args) > 1:
             raise TypeError("Too many unnamed arguments to initialize Shear: %s"%args)
         else:
@@ -132,7 +134,7 @@ class Shear:
                 eta = -np.log(q)
                 use_shear.setEtaBeta(eta, beta)
             elif 'beta' in kwargs:
-                raise RuntimeError("beta provided to Shear constructor, but not g/e/eta/q")
+                raise TypeError("beta provided to Shear constructor, but not g/e/eta/q")
             else:
                 raise RuntimeError(
                     "No appropriate shear specification given to Shear constructor")
