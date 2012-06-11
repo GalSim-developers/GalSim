@@ -54,7 +54,8 @@ struct PyPhotonArray {
         pyPhotonArray
             .def(
                 "__init__",
-                bp::make_constructor(&construct, bp::default_call_policies(), bp::args("vx", "vy", "vflux"))
+                bp::make_constructor(&construct, bp::default_call_policies(), 
+                                     bp::args("vx", "vy", "vflux"))
             )
             .def(bp::init<int>(bp::args("n")))
             .def("__len__", &PhotonArray::size)
@@ -103,11 +104,13 @@ struct PySBProfile {
         // but it's easier to do that than write out the full class_ type.
         wrapper
             .def("drawShoot", 
-                 (void (SBProfile::*)(Image<U> &, double, UniformDeviate& ) const)&SBProfile::drawShoot,
+                 (void (SBProfile::*)(Image<U> &, double, UniformDeviate& ) 
+                  const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
                  "Draw object into existing image using photon shooting.")
             .def("drawShoot", 
-                 (void (SBProfile::*)(ImageView<U>, double, UniformDeviate& ) const)&SBProfile::drawShoot,
+                 (void (SBProfile::*)(ImageView<U>, double, UniformDeviate& ) 
+                  const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
                  "Draw object into existing image using photon shooting.")
             .def("draw", 
@@ -127,15 +130,18 @@ struct PySBProfile {
                  (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "Draw in place using only Fourier methods")
             .def("drawK",
-                 (void (SBProfile::*)(ImageView<U> &, ImageView<U> &, double, int) const)&SBProfile::drawK,
+                 (void (SBProfile::*)(ImageView<U> &, ImageView<U> &, double, int) 
+                  const)&SBProfile::drawK,
                  (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "Draw in k-space automatically")
             .def("plainDrawK",
-                 (void (SBProfile::*)(ImageView<U> &, ImageView<U> &, double, int) const)&SBProfile::plainDrawK,
+                 (void (SBProfile::*)(ImageView<U> &, ImageView<U> &, double, int) 
+                  const)&SBProfile::plainDrawK,
                  (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "evaluate in k-space automatically")
             .def("fourierDrawK",
-                 (void (SBProfile::*)(ImageView<U> &, ImageView<U> &, double, int) const)&SBProfile::fourierDrawK,
+                 (void (SBProfile::*)(ImageView<U> &, ImageView<U> &, double, int) 
+                  const)&SBProfile::fourierDrawK,
                  (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
                  "FT from x-space")
             ;
