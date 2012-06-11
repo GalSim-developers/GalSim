@@ -58,6 +58,27 @@ def moments_to_ellip(mxx, myy, mxy):
     sig = (mxx*myy - mxy**2)**(0.25)
     return e1, e2, sig
 
+def printval(image1, image2):
+    print "New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array)
+    print "Sum of values: ", np.sum(image1.array), np.sum(image2.array)
+    print "Minimum image value: ", np.min(image1.array), np.min(image2.array)
+    print "Maximum image value: ", np.max(image1.array), np.max(image2.array)
+    print "Peak location: ", image1.array.argmax(), image2.array.argmax()
+    print "Moments Mx, My, Mxx, Myy, Mxy for new array: "
+    getmoments(image1)
+    print "Moments Mx, My, Mxx, Myy, Mxy for saved array: "
+    getmoments(image2)
+
+def getmoments(image1):
+    xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0]) + image1.getXMin(), 
+                               np.arange(np.shape(image1.array)[1]) + image1.getYMin())
+    mx = np.mean(xgrid * image1.array) / np.mean(image1.array)
+    my = np.mean(ygrid * image1.array) / np.mean(image1.array)
+    mxx = np.mean(((xgrid-mx)**2) * image1.array) / np.mean(image1.array)
+    myy = np.mean(((ygrid-my)**2) * image1.array) / np.mean(image1.array)
+    mxy = np.mean((xgrid-mx) * (ygrid-my) * image1.array) / np.mean(image1.array)
+    print "    ", mx-image1.getXMin(), my-image1.getYMin(), mxx, myy, mxy
+
 def funcname():
     import inspect
     return inspect.stack()[1][3]
@@ -87,6 +108,7 @@ def test_real_galaxy_ideal():
         for tpf in targ_PSF_fwhm:
             for tps1 in targ_PSF_shear1:
                 for tps2 in targ_PSF_shear2:
+                    print 'tps,tpf,tps1,tps2 = ',tps,tpf,tps1,tps2
                     # make target PSF
                     targ_PSF = galsim.Gaussian(fwhm = tpf)
                     targ_PSF.applyShear(tps1, tps2)
@@ -109,9 +131,10 @@ def test_real_galaxy_ideal():
 
                     # compare with images that are expected
                     expected_gaussian = galsim.SBGaussian(flux = fake_gal_flux, sigma = tps*tot_sigma)
-                    sheared = expected_gaussian.shear(tot_e1, tot_e2) # SBProfile.shear takes a distortion
+                    expected_gaussian.applyDistortion(galsim.Ellipse(tot_e1, tot_e2))
                     expected_image = galsim.ImageD(sim_image.array.shape[0], sim_image.array.shape[1])
-                    sheared.draw(expected_image, dx = tps)
+                    expected_gaussian.draw(expected_image, dx = tps)
+                    printval(expected_image,sim_image)
                     np.testing.assert_array_almost_equal(sim_image.array, expected_image.array, decimal = 3,
                         err_msg = "Error in comparison of ideal Gaussian RealGalaxy calculations")
     t2 = time.time()
