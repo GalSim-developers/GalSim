@@ -13,14 +13,17 @@ typedef bp::return_value_policy<bp::manage_new_object> ManageNew;
 
 struct PyPhotonArray {
     
-    static PhotonArray * construct(bp::object const & vx, bp::object const & vy, bp::object const & vflux) {
+    static PhotonArray * construct(bp::object const & vx, bp::object const & vy, 
+                                   bp::object const & vflux) {
         Py_ssize_t size = bp::len(vx);
         if (size != bp::len(vx)) {
-            PyErr_SetString(PyExc_ValueError, "Length of vx array does not match  length of vy array");
+            PyErr_SetString(PyExc_ValueError, 
+                            "Length of vx array does not match  length of vy array");
             bp::throw_error_already_set();
         }
         if (size != bp::len(vflux)) {
-            PyErr_SetString(PyExc_ValueError, "Length of vx array does not match length of vflux array");
+            PyErr_SetString(PyExc_ValueError, 
+                            "Length of vx array does not match length of vflux array");
             bp::throw_error_already_set();
         }
         std::vector<double> vx_(size);
