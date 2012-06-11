@@ -181,8 +181,9 @@ struct PySBProfile {
             "finer sampling in k space and have less folding.\n"
             ;
 
-        bp::class_<SBProfile,boost::noncopyable> pySBProfile("SBProfile", doc, bp::no_init);
+        bp::class_<SBProfile> pySBProfile("SBProfile", doc, bp::no_init);
         pySBProfile
+            .def(bp::init<const SBProfile &>())
             .def("xValue", &SBProfile::xValue,
                  "Return value of SBProfile at a chosen 2d position in real space.\n"
                  "May not be implemented for derived classes (e.g. SBConvolve) that\n"
@@ -202,10 +203,10 @@ struct PySBProfile {
             .def("getFlux", &SBProfile::getFlux)
             .def("scaleFlux", &SBProfile::setFlux, bp::args("fluxRatio"))
             .def("setFlux", &SBProfile::setFlux, bp::args("flux"))
-            .def("distort", &SBProfile::distort, bp::args("e"))
-            .def("shear", &SBProfile::shear, bp::args("e1", "e2"))
-            .def("rotate", &SBProfile::rotate, bp::args("theta"))
-            .def("shift", &SBProfile::shift, bp::args("dx", "dy"))
+            .def("applyDistortion", &SBProfile::applyDistortion, bp::args("e"))
+            .def("applyShear", &SBProfile::applyShear, bp::args("e1", "e2"))
+            .def("applyRotation", &SBProfile::applyRotation, bp::args("theta"))
+            .def("applyShift", &SBProfile::applyShift, bp::args("dx", "dy"))
             .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
             .def("draw", (ImageView<float> (SBProfile::*)(double, int) const)&SBProfile::draw,
                  (bp::arg("dx")=0., bp::arg("wmult")=1), "default draw routine")

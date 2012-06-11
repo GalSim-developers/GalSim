@@ -2,7 +2,7 @@
 // Functions for the Surface Brightness Profile Class
 //
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "integ/Int.h"
@@ -43,27 +43,45 @@ namespace galsim {
     // Virtual methods of Base Class "SBProfile"
     //
 
-    SBDistort SBProfile::scaleFlux(double fluxRatio) const
-    { return SBDistort(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); }
-
-    SBDistort SBProfile::setFlux(double flux) const
-    { return SBDistort(*this,1.,0.,0.,1.,Position<double>(0.,0.),flux/getFlux()); }
-
-    SBDistort SBProfile::distort(const Ellipse& e) const 
-    { return SBDistort(*this,e); }
-
-    SBDistort SBProfile::shear(double e1, double e2) const
-    { return SBDistort(*this,Ellipse(e1,e2)); }
-
-    SBDistort SBProfile::rotate(const Angle& theta) const 
-    {
-        return SBDistort(*this,
-                         std::cos(theta.rad()),-std::sin(theta.rad()),
-                         std::sin(theta.rad()),std::cos(theta.rad())); 
+    void SBProfile::scaleFlux(double fluxRatio)
+    { 
+        SBDistort d(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); 
+        _pimpl = d._pimpl;
     }
 
-    SBDistort SBProfile::shift(double dx, double dy) const 
-    { return SBDistort(*this,1.,0.,0.,1., Position<double>(dx,dy)); }
+    void SBProfile::setFlux(double flux)
+    { 
+        SBDistort d(*this,1.,0.,0.,1.,Position<double>(0.,0.),flux/getFlux());
+        _pimpl = d._pimpl;
+    }
+
+    void SBProfile::applyDistortion(const Ellipse& e)
+    {
+        SBDistort d(*this,e);
+        _pimpl = d._pimpl;
+    }
+
+    void SBProfile::applyShear(double g1, double g2)
+    {
+        Shear s;
+        s.setG1G2(g1,g2);
+        SBDistort d(*this,Ellipse(s.getE1(),s.getE2()));
+        _pimpl = d._pimpl;
+    }
+
+    void SBProfile::applyRotation(const Angle& theta)
+    {
+        SBDistort d(*this,
+                    std::cos(theta.rad()),-std::sin(theta.rad()),
+                    std::sin(theta.rad()),std::cos(theta.rad()));
+        _pimpl = d._pimpl;
+    }
+
+    void SBProfile::applyShift(double dx, double dy)
+    { 
+        SBDistort d(*this,1.,0.,0.,1., Position<double>(dx,dy));
+        _pimpl = d._pimpl;
+    }
 
     //
     // Common methods of Base Class "SBProfile"

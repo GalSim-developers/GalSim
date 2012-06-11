@@ -57,7 +57,7 @@ class GSObject:
     def copy(self):
         """@brief Returns a copy of an object as the SBProfile attribute of a new GSObject instance.
         """
-        return GSObject(self.SBProfile)
+        return GSObject(galsim.SBProfile(self.SBProfile))
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
     #
@@ -128,12 +128,12 @@ class GSObject:
     def scaleFlux(self, fluxRatio):
         """@brief Multiply the flux of the object by fluxRatio
         """
-        GSObject.__init__(self, self.SBProfile.scaleFlux(fluxRatio))
+        self.SBProfile.scaleFlux(fluxRatio)
 
     def setFlux(self, flux):
         """@brief Set the flux of the object.
         """
-        GSObject.__init__(self, self.SBProfile.setFlux(flux))
+        self.SBProfile.setFlux(flux)
 
     def applyDistortion(self, ellipse):
         """@brief Apply a galsim.Ellipse distortion to this object.
@@ -144,25 +144,25 @@ class GSObject:
 
         where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
         """
-        GSObject.__init__(self, self.SBProfile.distort(ellipse))
+        self.SBProfile.applyDistortion(ellipse)
         
     def applyShear(self, g1, g2):
         """@brief Apply a (g1, g2) shear to this object, where |g| = (a-b)/(a+b).
         """
         e1, e2 = g1g2_to_e1e2(g1, g2)
-        GSObject.__init__(self, self.SBProfile.distort(galsim.Ellipse(e1, e2)))
+        self.SBProfile.applyDistortion(galsim.Ellipse(e1, e2))
 
     def applyRotation(self, theta):
         """@brief Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
-        GSObject.__init__(self, self.SBProfile.rotate(theta))
+        self.SBProfile.applyRotation(theta)
         
     def applyShift(self, dx, dy):
         """@brief Apply a (dx, dy) shift to this object.
         """
-        GSObject.__init__(self, self.SBProfile.shift(dx, dy))
+        self.SBProfile.applyShift(dx, dy)
 
     # Also add methods which create a new GSObject with the transformations applied...
     #
@@ -175,13 +175,17 @@ class GSObject:
 
         where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
         """
-        return GSObject(self.SBProfile.distort(ellipse))
+        ret = self.copy()
+        ret.applyDistortion(ellipse)
+        return ret
 
     def createSheared(self, g1, g2):
         """@brief Returns A new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
         """
         e1, e2 = g1g2_to_e1e2(g1, g2)
-        return GSObject(self.SBProfile.distort(galsim.Ellipse(e1,e2)))
+        ret = self.copy()
+        ret.applyDistortion(galsim.Ellipse(e1,e2))
+        return ret
 
     def createRotated(self, theta):
         """@brief Returns a new GSObject by applying a rotation theta (Angle object, +ve
@@ -189,12 +193,16 @@ class GSObject:
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
-        return GSObject(self.SBProfile.rotate(theta))
+        ret = self.copy()
+        ret.applyRotation(theta)
+        return ret
         
     def createShifted(self, dx, dy):
         """@brief Returns a new GSObject by applying a (dx, dy) shift.
         """
-        return GSObject(self.SBProfile.shift(dx, dy))
+        ret = self.copy()
+        ret.applyShift(dx, dy)
+        return ret
 
     def draw(self, image=None, dx=0., wmult=1):
         """@brief Returns an Image of the object, with bounds optionally set by an input Image.
