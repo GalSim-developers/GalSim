@@ -1,5 +1,6 @@
 import numpy as np
 import galsim
+import utilities
 
 """@file optics.py @brief Module containing the optical PSF generation routines.
 
@@ -19,40 +20,6 @@ Wavefront = the amplitude and phase of the incident light on the telescope pupil
 complex number. The OTF is the autocorrelation function of the wavefront.
 """
 
-def roll2d(image, (iroll, jroll)):
-    """Perform a 2D roll (circular shift) on a supplied 2D numpy array, conveniently.
-
-    Parameters
-    ----------
-    @param image            the numpy array to be circular shifted.
-    @param (iroll, jroll)   the roll in the i and j dimensions, respectively.
-
-    @returns the rolled image.
-    """
-    return np.roll(np.roll(image, jroll, axis=1), iroll, axis=0)
-
-def kxky(array_shape=(256, 256)):
-    """Return the tuple kx, ky corresponding to the DFT of a unit integer-sampled array of input
-    shape.
-    
-    Uses the SBProfile conventions for Fourier space, so k varies in approximate range (-pi, pi].
-    Uses the most common DFT element ordering conventions (and those of FFTW), so that `(0, 0)`
-    array element corresponds to `(kx, ky) = (0, 0)`.
-
-    See also the docstring for np.fftfreq, which uses the same DFT convention, and is called here,
-    but misses a factor of pi.
-    
-    Adopts Numpy array index ordering so that the trailing axis corresponds to kx, rather than the
-    leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
-    uses this convention.
-
-    Parameters
-    ----------
-    @param array_shape   the Numpy array shape desired for `kx, ky`. 
-    """
-    k_xaxis = np.fft.fftfreq(array_shape[1]) * 2. * np.pi
-    k_yaxis = np.fft.fftfreq(array_shape[0]) * 2. * np.pi
-    return np.meshgrid(k_xaxis, k_yaxis)
 
 def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_D=2., circular_pupil=True,
                          obscuration=0.):
@@ -73,7 +40,7 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_D=2., circular_
     """
     kmax_internal = dx * 2. * np.pi / lam_over_D # INTERNAL kmax in units of array grid spacing
     # Build kx, ky coords
-    kx, ky = kxky(array_shape)
+    kx, ky = utilities.kxky(array_shape)
     # Then define unit disc rho and theta pupil coords for Zernike polynomials
     rho = np.sqrt((kx**2 + ky**2) / (.5 * kmax_internal)**2)
     theta = np.arctan2(ky, kx)
@@ -230,7 +197,7 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
                    circular_pupil=circular_pupil, obscuration=obscuration)
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
-    im = roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
+    im = utilities.roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
     return im / (im.sum() * dx**2)
 
 def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
@@ -435,7 +402,7 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    kx, ky = kxky(array_shape)
+    kx, ky = utilities.kxky(array_shape)
     k2 = (kx**2 + ky**2)
     ptf = np.zeros(array_shape)
     kmax_internal = dx * 2. * np.pi / lam_over_D # INTERNAL kmax in units of array grid spacing

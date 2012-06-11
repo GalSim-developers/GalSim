@@ -2,6 +2,7 @@
 import numpy as np
 
 import galsim
+import utilities
 
 """\file atmosphere.py Simple atmospheric PSF generation routines
 """
@@ -35,7 +36,7 @@ def kolmogorov_mtf(array_shape=(256, 256), dx=1., lam_over_r0=1.):
     """
     # This is based on the ALIAS_THRESHOLD 0.005 in src/SBProfile.cpp and galsim/base.py
     kmax_internal = 1.2954 / lam_over_r0 * dx
-    kx, ky = galsim.optics.kxky(array_shape)
+    kx, ky = galsim.utilities.kxky(array_shape)
     amtf = np.exp(-3.442 * (np.hypot(kx, ky) / kmax_internal / np.pi)**(5. / 3.))
     return amtf
 
@@ -75,7 +76,8 @@ def kolmogorov_psf(array_shape=(256,256), dx=1., lam_over_r0=1.):
     """
     amtf = kolmogorov_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
     ftmtf = np.fft.fft2(amtf)
-    im = galsim.optics.roll2d((ftmtf * ftmtf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2))
+    im = galsim.utilities.roll2d((ftmtf * ftmtf.conj()).real, (array_shape[0] / 2,
+                                                               array_shape[1] / 2))
     return im / (im.sum() * dx**2)
     
 def kolmogorov_psf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
