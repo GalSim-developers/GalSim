@@ -1317,9 +1317,9 @@ namespace galsim {
          *
          * @param[in] flux   flux of the Surface Brightness Profile (default `flux = 1.`).
          * @param[in] sigma  characteristic size, surface brightness scales as 
-         *                   `exp[-r^2 / (2. * sigma^2)]` (default `sigma = 1.`).
+         *                   `exp[-r^2 / (2. * sigma^2)]`.
          */
-        SBGaussian(double flux=1., double sigma=1.);
+        SBGaussian(double flux=1., double sigma);
 
         /// @brief Destructor.
         ~SBGaussian() {}                        
@@ -1386,9 +1386,9 @@ namespace galsim {
          *
          * @param[in] n     Sersic index.
          * @param[in] flux  flux (default `flux = 1.`).
-         * @param[in] re    half-light radius (default `re = 1.`).
+         * @param[in] re    half-light radius.
          */
-        SBSersic(double n, double flux=1., double re=1.);
+        SBSersic(double n, double flux=1., double re);
 
         // Default copy constructor should be fine.
 
@@ -1608,9 +1608,9 @@ namespace galsim {
          *
          * @param[in] flux  flux (default `flux = 1.`).
          * @param[in] r0    scale length for the profile that scales as `exp[-(r / r0)]`, NOT the 
-         *                  half-light radius `re` as in SBSersic (default `r0 = 1.`).
+         *                  half-light radius `re`.
          */
-        SBExponential(double flux=1., double r0=1.);
+        SBExponential(double flux=1., double r0);
 
         /// @brief Destructor.
         ~SBExponential() {}
@@ -1684,12 +1684,12 @@ namespace galsim {
          *
          * @param[in] D            `D` = (telescope diam) / (lambda * focal length) if arg is focal 
          *                         plane position, else `D` = (telescope diam) / lambda if arg is 
-         *                         in radians of field angle (default `D = 1.`).
+         *                         in radians of field angle.
          * @param[in] obscuration  linear dimension of central obscuration as fraction of pupil
          *                         dimension (default `obscuration = 0.`).
          * @param[in] flux         flux (default `flux = 1.`).
          */
-        SBAiry(double D=1., double obscuration=0., double flux=1.);
+        SBAiry(double D, double obscuration=0., double flux=1.);
 
         /**
          * @brief Copy constructor: photon-shooting structures are not copied, will be
@@ -1829,11 +1829,11 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] xw    width of Boxcar function along x (default `xw = 1.`).
-         * @param[in] yw    width of Boxcar function along y (default `yw = 0.`).
+         * @param[in] xw    width of Boxcar function along x.
+         * @param[in] yw    width of Boxcar function along y.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBBox(double xw=1., double yw=0., double flux=1.) :
+        SBBox(double xw, double yw, double flux=1.) :
             _xw(xw), _yw(yw), _flux(flux)
         {
             if (_yw==0.) _yw=_xw; 
@@ -1975,8 +1975,9 @@ namespace galsim {
          *
          * @param[in] beta           Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
          * @param[in] flux           Flux (default `flux = 1.`).
-         * @param[in] size           Size specification (default `size = 1.`).
-         * @param[in] rType          Kind of size being specified (default `FWHM`).
+         * @param[in] size           Size specification.
+         * @param[in] rType          Kind of size being specified (one of FWHM, HALF_LIGHT_RADIUS,
+         *                           SCALE_RADIUS).
          * @param[in] trunc          Outer truncation radius in same physical units as size,
          *                           trunc = 0. for no truncation (default `trunc = 0.`). 
          */
@@ -1987,8 +1988,8 @@ namespace galsim {
             SCALE_RADIUS
         };
 
-        SBMoffat(double beta, double trunc=0., double flux=1., double size=1.,
-                 RadiusType rType=FWHM);
+        SBMoffat(double beta, double trunc=0., double flux=1., double size,
+                 RadiusType rType);
 
         // Default copy constructor should be fine.
 
@@ -2112,9 +2113,9 @@ namespace galsim {
          * @brief Constructor.
          *
          * @param[in] flux  flux (default `flux = 1.`).
-         * @param[in] r0    Half-light radius (default `r0 = 1.`).
+         * @param[in] r0    Half-light radius.
          */
-        SBDeVaucouleurs(double flux=1., double r0=1.) : SBSersic(4., flux, r0) {}
+        SBDeVaucouleurs(double flux=1., double r0) : SBSersic(4., flux, r0) {}
 
         /// @brief Destructor.
         ~SBDeVaucouleurs() {}
