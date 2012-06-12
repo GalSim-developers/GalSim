@@ -43,30 +43,45 @@ namespace galsim {
     // Virtual methods of Base Class "SBProfile"
     //
 
-    SBTransform SBProfile::scaleFlux(double fluxRatio) const
-    { return SBTransform(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); }
+    void SBProfile::scaleFlux(double fluxRatio)
+    { 
+        SBTransform d(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); 
+        _pimpl = d._pimpl;
+    }
 
-    SBTransform SBProfile::setFlux(double flux) const
-    { return SBTransform(*this,1.,0.,0.,1.,Position<double>(0.,0.),flux/getFlux()); }
+    void SBProfile::setFlux(double flux)
+    { 
+        SBTransform d(*this,1.,0.,0.,1.,Position<double>(0.,0.),flux/getFlux());
+        _pimpl = d._pimpl;
+    }
 
-    SBTransform SBProfile::transform(const Ellipse& e) const
-    { return SBTransform(*this,e); }
+    void SBProfile::applyTransformation(const Ellipse& e)
+    {
+        SBTransform d(*this,e);
+        _pimpl = d._pimpl;
+    }
 
-    SBTransform SBProfile::shear(double g1, double g2) const {
+    void SBProfile::applyShear(double g1, double g2)
+    {
         Shear s = Shear(g1, g2);
         Ellipse e = Ellipse(s, 0.0, Position<double>());
-        return transform(e);
+        SBTransform d(*this,e);
+        _pimpl = d._pimpl;
     }
 
-    SBTransform SBProfile::rotate(const Angle& theta) const
+    void SBProfile::applyRotation(const Angle& theta)
     {
-        return SBTransform(*this,
-                           std::cos(theta.rad()),-std::sin(theta.rad()),
-                           std::sin(theta.rad()),std::cos(theta.rad())); 
+        SBTransform d(*this,
+                    std::cos(theta.rad()),-std::sin(theta.rad()),
+                    std::sin(theta.rad()),std::cos(theta.rad()));
+        _pimpl = d._pimpl;
     }
 
-    SBTransform SBProfile::shift(double dx, double dy) const 
-    { return SBTransform(*this,1.,0.,0.,1., Position<double>(dx,dy)); }
+    void SBProfile::applyShift(double dx, double dy)
+    { 
+        SBTransform d(*this,1.,0.,0.,1., Position<double>(dx,dy));
+        _pimpl = d._pimpl;
+    }
 
     //
     // Common methods of Base Class "SBProfile"
