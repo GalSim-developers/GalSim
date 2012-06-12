@@ -2155,8 +2155,8 @@ namespace galsim {
         return result;
     }
 
-    SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double truncationFWHM, double flux,
-                       double size, RadiusType rType) : 
+    SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double flux, double size, RadiusType rType,
+                                         double trunc) : 
         _beta(beta), _flux(flux), _trunc(trunc), _ft(Table<double,double>::spline)
     {
         xdbg<<"Start SBMoffat constructor: \n";
@@ -2234,8 +2234,7 @@ namespace galsim {
         setupFT();
     }
 
-    double SBMoffat::SBMoffatImpl::xValue(const Position<double>& p) const 
-    double SBMoffat::getHalfLightRadius() const
+    double SBMoffat::SBMoffatImpl::getHalfLightRadius() const 
     {
         // BARNEY NOTE: A little inefficient to calculate rerD every getHLR call?  Done since
         // rerD depends on _fluxFactor and thus requires _rD in advance, so this needs to happen

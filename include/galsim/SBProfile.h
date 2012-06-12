@@ -2119,6 +2119,24 @@ namespace galsim {
             return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getBeta(); 
         }
 
+        double getFWHM() const 
+        {
+            assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getFWHM(); 
+        }
+
+        double getScaleRadius() const 
+        {
+            assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getScaleRadius();
+        }
+
+        double getHalfLightRadius() const 
+        {
+            assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getHalfLightRadius();
+        }
+
     protected:
     class SBMoffatImpl : public SBProfileImpl 
     {
