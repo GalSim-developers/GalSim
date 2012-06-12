@@ -2135,7 +2135,7 @@ namespace galsim {
          *                           trunc = 0. for no truncation (default `trunc = 0.`). 
          * @param[in] flux           Flux (default `flux = 1.`).
          */
-        SBMoffat(double beta, double size, RadiusType rType=HALF_LIGHT_RADIUS, double trunc=0., 
+        SBMoffat(double beta, double size, RadiusType rType, double trunc=0., 
                  double flux=1.) :
 	  SBProfile(new SBMoffatImpl(beta, size, rType, trunc, flux)) {}
 
