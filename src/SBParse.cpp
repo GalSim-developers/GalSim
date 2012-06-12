@@ -407,9 +407,8 @@ namespace galsim {
             double beta = dargs[0];
             double trunc = dargs[1];
             double fwhm = (nargs>2) ? dargs[2] : 1.;
-            enum  RadiusType{ FWHM, HALF_LIGHT_RADIUS, SCALE_RADIUS } rtype;  
-            //^ Barney: had a C++ fail accessing the SBMoffat type definition of this, so gave up...
-            rtype=FWHM;
+	    SBMoffat::RadiusType rtype = (SBMoffat::RadiusType)(0); //FWHM first element of enum
+            //^ Barney: having a C++ fail with the above, looking for assistance!... Is this OK?
             dbg << "**Returning moffat with beta, trunc, flux, fwhm " << beta
                 << " " << trunc << " " << flux << " " << fwhm << std::endl;
             return SBMoffat(beta, fwhm, rtype, trunc, flux);
