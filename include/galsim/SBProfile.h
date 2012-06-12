@@ -1367,7 +1367,7 @@ namespace galsim {
          * @param[in] sigma  characteristic size, surface brightness scales as 
          *                   `exp[-r^2 / (2. * sigma^2)]`.
          */
-        SBGaussian(double flux=1., double sigma=1.) :
+        SBGaussian(double flux=1., double sigma) :
             SBProfile(new SBGaussianImpl(flux,sigma)) {}
 
         /// @brief Copy constructor.
@@ -1457,7 +1457,7 @@ namespace galsim {
          * @param[in] flux  flux (default `flux = 1.`).
          * @param[in] re    half-light radius.
          */
-        SBSersic(double n, double flux=1., double re=1.) : 
+        SBSersic(double n, double flux=1., double re) : 
             SBProfile(new SBSersicImpl(n,flux,re)) {}
 
         /// @brief Copy constructor.
@@ -1702,7 +1702,7 @@ namespace galsim {
          * @param[in] r0    scale length for the profile that scales as `exp[-(r / r0)]`, NOT the 
          *                  half-light radius `re`.
          */
-        SBExponential(double flux=1., double r0=1.) :
+        SBExponential(double flux=1., double r0) :
             SBProfile(new SBExponentialImpl(flux,r0)) {}
 
         /// @brief Copy constructor.
@@ -1798,7 +1798,7 @@ namespace galsim {
          *                         dimension (default `obscuration = 0.`).
          * @param[in] flux         flux (default `flux = 1.`).
          */
-        SBAiry(double D=1., double obscuration=0., double flux=1.) :
+        SBAiry(double D, double obscuration=0., double flux=1.) :
             SBProfile(new SBAiryImpl(D,obscuration,flux)) {}
 
         /// @brief Copy constructor
@@ -1931,7 +1931,7 @@ namespace galsim {
          * @param[in] yw    width of Boxcar function along y.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBBox(double xw=1., double yw=0., double flux=1.) :
+        SBBox(double xw, double yw, double flux=1.) :
             SBProfile(new SBBoxImpl(xw,yw,flux)) {}
 
         /// @brief Copy constructor.
@@ -2102,9 +2102,9 @@ namespace galsim {
          * @param[in] trunc          Outer truncation radius in same physical units as size,
          *                           trunc = 0. for no truncation (default `trunc = 0.`). 
          */
-        SBMoffat(double beta, double truncationFWHM=0., double flux=1., double size=1.,
-                 RadiusType rType=HALF_LIGHT_RADIUS) :
-            SBProfile(new SBMoffatImpl(beta,truncationFWHM,flux,size,rType)) {}
+        SBMoffat(double beta, double flux=1., double size=1.,
+                 RadiusType rType=HALF_LIGHT_RADIUS, double trunc=0.) :
+	  SBProfile(new SBMoffatImpl(beta,flux,size,rType,trunc,)) {}
 
 
         /// @brief Copy constructor.
@@ -2240,7 +2240,7 @@ namespace galsim {
          * @param[in] flux  flux (default `flux = 1.`).
          * @param[in] r0    Half-light radius.
          */
-        SBDeVaucouleurs(double flux=1., double r0=1.) : SBSersic(4., flux, r0) {}
+        SBDeVaucouleurs(double flux=1., double r0) : SBSersic(4., flux, r0) {}
     };
 
 
