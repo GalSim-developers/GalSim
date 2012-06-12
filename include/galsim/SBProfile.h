@@ -1940,6 +1940,20 @@ namespace galsim {
         /// @brief Destructor.
         ~SBBox() {}
 
+        /// @brief Returns the x dimension width of the Pixel.
+        double getXWidth() const 
+        {
+            assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getXWidth(); 
+        }
+
+        /// @brief Returns the y dimension width of the Pixel.
+        double getYWidth() const 
+        {
+            assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getYWidth(); 
+        }
+
     protected:
     class SBBoxImpl : public SBProfileImpl 
     {
@@ -1974,6 +1988,9 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
+
+        double getXWidth() const { return _xw; }
+        double getYWidth() const { return _yw; }
 
         /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
         PhotonArray shoot(int N, UniformDeviate& ud) const;
@@ -2113,24 +2130,25 @@ namespace galsim {
         /// @brief Destructor.
         ~SBMoffat() {}
 
+        /// @brief Returns beta of the Moffat profile `[1 + (r / rD)^2]^beta`.
         double getBeta() const 
         {
             assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
             return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getBeta(); 
         }
-
+        /// @brief Returns the FWHM of the Moffat profile.
         double getFWHM() const 
         {
             assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
             return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getFWHM(); 
         }
-
+        /// @brief Returns the scale radius rD of the Moffat profile `[1 + (r / rD)^2]^beta`.
         double getScaleRadius() const 
         {
             assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
             return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getScaleRadius();
         }
-
+        /// @brief Returns the half light radius of the Moffat profile.
         double getHalfLightRadius() const 
         {
             assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
@@ -2185,11 +2203,8 @@ namespace galsim {
         PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         double getBeta() const { return _beta; }
-        /// @brief Returns the scale radius rD of the Moffat profile `[1 + (r / rD)^2]^beta`.
         double getScaleRadius() const { return _rD; }
-        /// @brief Returns the FWHM of the Moffat profile.
         double getFWHM() const { return _FWHM; }
-        /// @brief Returns the half light radius of the Moffat profile.
         double getHalfLightRadius() const;
 
     private:
