@@ -1807,6 +1807,20 @@ namespace galsim {
         /// @brief Destructor.
         ~SBAiry() {}
 
+        /// @brief Returns D param of the SBAiry.
+        double getD() const 
+        {
+            assert(dynamic_cast<const SBAiryImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBAiryImpl&>(*_pimpl).getD(); 
+        }
+
+        /// @brief Returns obscuration param of the SBAiry.
+        double getObscuration() const 
+        {
+            assert(dynamic_cast<const SBAiryImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBAiryImpl&>(*_pimpl).getObscuration(); 
+        }
+
     protected:
 
         /**
@@ -1860,6 +1874,8 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
+        double getD() const { return _D; }
+        double getObscuration() const { return _obscuration; }
 
         /**
          * @brief Airy photon-shooting is done numerically with `OneDimensionalDeviate` class.
@@ -1940,18 +1956,18 @@ namespace galsim {
         /// @brief Destructor.
         ~SBBox() {}
 
-        /// @brief Returns the x dimension width of the Pixel.
+        /// @brief Returns the x dimension width of the Boxcar.
         double getXWidth() const 
         {
-            assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
-            return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getXWidth(); 
+            assert(dynamic_cast<const SBBoxImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBBoxImpl&>(*_pimpl).getXWidth(); 
         }
 
-        /// @brief Returns the y dimension width of the Pixel.
+        /// @brief Returns the y dimension width of the Boxcar.
         double getYWidth() const 
         {
-            assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
-            return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getYWidth(); 
+            assert(dynamic_cast<const SBBoxImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBBoxImpl&>(*_pimpl).getYWidth(); 
         }
 
     protected:
