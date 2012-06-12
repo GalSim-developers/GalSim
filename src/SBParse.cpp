@@ -286,7 +286,7 @@ namespace galsim {
                         || !isNumber((*ia)->print(),g2))
                         throw SBError("SBParse: bad arguments for shear: " + args.print());
                     dbg << "** Leaving SBParse after shearing by " << g1 << " " << g2 << std::endl;
-                    base.shear(g1, g2);
+                    base.applyShear(g1, g2);
                     return base;
                 } else if (DilateOp::test(i)) {
                     delete i;
