@@ -37,7 +37,7 @@ class Ellipse:
         if len(args) > 0:
 
             # very special case: if it is given a wrapped C++ Ellipse
-            if len(args == 1) and isinstance(args[0], _galsim._Ellipse):
+            if len(args) == 1 and isinstance(args[0], _galsim._Ellipse):
                 self._ellipse = args[0]
             else:
 
@@ -45,7 +45,7 @@ class Ellipse:
                     if isinstance(this_arg, galsim.Shear):
                         if use_shear != None:
                             raise TypeError("Ellipse received two unnamed Shear arguments!")
-                        use_shear = this_arg
+                        use_shear = this_arg._shear
                     elif isinstance(this_arg, float) or isinstance(this_arg, double):
                         if use_dil != None:
                             raise TypeError("Ellipse received two unnamed float/double arguments!")
