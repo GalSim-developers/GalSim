@@ -1469,7 +1469,7 @@ namespace galsim {
     // "SBGaussian" Class 
     //
 
-    SBGaussian::SBGaussianImpl::SBGaussianImpl(double flux, double sigma) :
+  SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux) :
         _flux(flux), _sigma(sigma), _sigma_sq(sigma*sigma)
     {
         // For large k, we clip the result of kValue to 0.
@@ -1536,7 +1536,7 @@ namespace galsim {
     // SBExponential Class
     //
 
-    SBExponential::SBExponentialImpl::SBExponentialImpl(double flux, double r0) :
+  SBExponential::SBExponentialImpl::SBExponentialImpl(double r0, double flux) :
         _flux(flux), _r0(r0), _r0_sq(r0*r0)
     {
         // For large k, we clip the result of kValue to 0.
@@ -2155,8 +2155,8 @@ namespace galsim {
         return result;
     }
 
-    SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double flux, double size, RadiusType rType,
-                                         double trunc) : 
+    SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double size, RadiusType rType,
+                                         double trunc, double flux) : 
         _beta(beta), _flux(flux), _trunc(trunc), _ft(Table<double,double>::spline)
     {
         xdbg<<"Start SBMoffat constructor: \n";

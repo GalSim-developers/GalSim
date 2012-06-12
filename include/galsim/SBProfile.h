@@ -1454,11 +1454,11 @@ namespace galsim {
          * @brief Constructor.
          *
          * @param[in] n     Sersic index.
-         * @param[in] flux  flux (default `flux = 1.`).
          * @param[in] re    half-light radius.
+         * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBSersic(double n, double flux=1., double re) : 
-            SBProfile(new SBSersicImpl(n,flux,re)) {}
+      SBSersic(double n, double re, double flux=1.) : 
+	SBProfile(new SBSersicImpl(n, re, flux)) {}
 
         /// @brief Copy constructor.
         SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
@@ -1484,7 +1484,7 @@ namespace galsim {
     class SBSersicImpl : public SBProfileImpl
     {
     public:
-        SBSersicImpl(double n, double flux, double re);
+        SBSersicImpl(double n, double re, double flux);
 
         ~SBSersicImpl() {}
 
@@ -1698,12 +1698,12 @@ namespace galsim {
          * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in 
          * SBSersic.
          *
-         * @param[in] flux  flux (default `flux = 1.`).
          * @param[in] r0    scale length for the profile that scales as `exp[-(r / r0)]`, NOT the 
          *                  half-light radius `re`.
+         * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBExponential(double flux=1., double r0) :
-            SBProfile(new SBExponentialImpl(flux,r0)) {}
+      SBExponential(double r0, double flux=1.) :
+	SBProfile(new SBExponentialImpl(r0, flux)) {}
 
         /// @brief Copy constructor.
         SBExponential(const SBExponential& rhs) : SBProfile(rhs) {}
@@ -1722,7 +1722,7 @@ namespace galsim {
     {
     public:
 
-        SBExponentialImpl(double flux, double r0);
+        SBExponentialImpl(double r0, double flux);
 
         ~SBExponentialImpl() {}
 
@@ -2128,16 +2128,16 @@ namespace galsim {
         /** @brief Constructor.
          *
          * @param[in] beta           Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
-         * @param[in] flux           Flux (default `flux = 1.`).
          * @param[in] size           Size specification.
          * @param[in] rType          Kind of size being specified (one of FWHM, HALF_LIGHT_RADIUS,
          *                           SCALE_RADIUS).
          * @param[in] trunc          Outer truncation radius in same physical units as size,
          *                           trunc = 0. for no truncation (default `trunc = 0.`). 
+         * @param[in] flux           Flux (default `flux = 1.`).
          */
-        SBMoffat(double beta, double flux=1., double size=1.,
-                 RadiusType rType=HALF_LIGHT_RADIUS, double trunc=0.) :
-	  SBProfile(new SBMoffatImpl(beta,flux,size,rType,trunc,)) {}
+        SBMoffat(double beta, double size, RadiusType rType=HALF_LIGHT_RADIUS, double trunc=0., 
+                 double flux=1.) :
+	  SBProfile(new SBMoffatImpl(beta, size, rType, trunc, flux)) {}
 
 
         /// @brief Copy constructor.
@@ -2175,8 +2175,7 @@ namespace galsim {
     class SBMoffatImpl : public SBProfileImpl 
     {
     public:
-        SBMoffatImpl(double beta, double truncationFWHM, double flux, double size,
-                     RadiusType rType);
+        SBMoffatImpl(double beta, double size, RadiusType rType, double trunc, double flux);
 
         ~SBMoffatImpl() {}
 
@@ -2286,10 +2285,10 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] flux  flux (default `flux = 1.`).
          * @param[in] r0    Half-light radius.
+         * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBDeVaucouleurs(double flux=1., double r0) : SBSersic(4., flux, r0) {}
+      SBDeVaucouleurs(double r0, double flux=1.) : SBSersic(4., r0, flux) {}
     };
 
 
