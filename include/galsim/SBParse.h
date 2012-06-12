@@ -6,6 +6,6 @@
 
 namespace galsim {
 
-    SBProfile* SBParse(std::string in);
+    SBProfile SBParse(std::string in);
 
 }

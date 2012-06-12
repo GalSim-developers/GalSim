@@ -219,3 +219,45 @@ git commit --amend is another neat trick that lets you modify the last commit, a
 history even further back with git rebase -i.
 
 Again, this should only be done if you haven't pushed the changes.
+
+--- Putting git status info in your prompt ---
+
+This is a cute little trick from Paul Price.  Many people like to have the directory they are
+in as part of their prompt to help keep track of where they are in their directory structure.
+Since git always uses the same directory structure for different branches, rather than using 
+different directories a la svn, it can sometimes be hard to remember which branch you are on.
+
+Paul Price emailed the lsst-data mail list a trick to get the git branch as part of the prompt
+as well, and I (MJ) have found it very useful.  (It doesn't do anything to your prompt when you
+aren't in a git directory.)  Here is what to put in your .bashrc or .bash_profile file:
+
+function prompt_git_dirty {
+  if [[ $(git status 2> /dev/null | tail -n1) != "nothing to commit (working directory clean)" ]]; then
+    echo "*"
+  elif (( $(git status 2> /dev/null | grep 'Your branch is ahead of' | wc -l) != 0 )); then
+    echo "+"
+  fi
+}
+
+function prompt_git_branch {
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/[\1$(prompt_git_dirty)]/"
+}
+
+Then just add $(prompt_git_branch) where you want it in your prompt.  e.g. Here is mine:
+
+PS1='\[\033[01;34m\]\u@\h\[\033[00;30m\]:\w\[\033[00;31m\]$(prompt_git_branch) \[\033[00m\]\$ '
+
+An example prompt is (ignoring the colors):
+
+Mike@flute:~/GalSim[#107+] $
+
+The + after the #107 means that I have commits that haven't been pushed yet.  If I have 
+changes that haven't been committed, it will be a *:
+
+Mike@flute:~/GalSim[#107*] $
+
+When the working directory is clean, it just shows
+
+Mike@flute:~/GalSim[#107] $
+
+This is obviously completely optional, but I've found it pretty helpful when using git.

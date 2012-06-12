@@ -23,48 +23,39 @@ namespace galsim {
     {
     public:
         /// @brief Constructor.
-        SBDeconvolve(const SBProfile& adaptee) : _adaptee(adaptee.duplicate()) 
-        { _maxksq = std::pow(maxK(),2.); }
+        SBDeconvolve(const SBProfile& adaptee) :
+            SBProfile(new SBDeconvolveImpl(adaptee)) {}
 
         /// @brief Copy constructor.
-        SBDeconvolve(const SBDeconvolve& rhs) : _adaptee(rhs._adaptee->duplicate()) 
-        { _maxksq = std::pow(maxK(),2.); }
-
-        /// @brief Operator (TODO: ask Gary about this bit...)
-        SBDeconvolve& operator=(const SBDeconvolve& rhs)
-        {
-            if (&rhs == this) return *this;
-            if (_adaptee) {
-                delete _adaptee; 
-                _adaptee = 0;
-            }
-            _adaptee = rhs._adaptee->duplicate();
-            _maxksq = rhs._maxksq;
-            return *this;
-        }
+        SBDeconvolve(const SBDeconvolve& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor.
-        ~SBDeconvolve() { delete _adaptee; }
+        ~SBDeconvolve() {}
 
-        SBProfile* duplicate() const { return new SBDeconvolve(*this); }
+    protected:
+    class SBDeconvolveImpl : public SBProfileImpl
+    {
+    public:
+        SBDeconvolveImpl(const SBProfile& adaptee) : _adaptee(adaptee)
+        { _maxksq = std::pow(maxK(),2.); }
 
-        // These are all the base class members that must be implemented:
+        ~SBDeconvolveImpl() {}
 
-        /// @brief xValue() not implemented for SBDeconvolve.
+        // xValue() not implemented for SBDeconvolve.
         double xValue(const Position<double>& p) const 
         { throw SBError("SBDeconvolve::xValue() not implemented"); }
 
         std::complex<double> kValue(const Position<double>& k) const 
         {
             return (k.x*k.x+k.y*k.y) <= _maxksq ?
-                1./_adaptee->kValue(k) :
+                1./_adaptee.kValue(k) :
                 std::complex<double>(0.,0.); 
         }
 
-        double maxK() const { return _adaptee->maxK(); }
-        double stepK() const { return _adaptee->stepK(); }
+        double maxK() const { return _adaptee.maxK(); }
+        double stepK() const { return _adaptee.stepK(); }
 
-        bool isAxisymmetric() const { return _adaptee->isAxisymmetric(); }
+        bool isAxisymmetric() const { return _adaptee.isAxisymmetric(); }
 
         // Of course, a deconvolution could have hard edges, but since we can't use this
         // in a real-space convolution anyway, just return false here.
@@ -73,10 +64,9 @@ namespace galsim {
         bool isAnalyticX() const { return false; }
         bool isAnalyticK() const { return true; }
 
-        Position<double> centroid() const { return -_adaptee->centroid(); }
+        Position<double> centroid() const { return -_adaptee.centroid(); }
 
-        double getFlux() const { return 1./_adaptee->getFlux(); }
-        void setFlux(double flux=1.) { _adaptee->setFlux(1./flux); }
+        double getFlux() const { return 1./_adaptee.getFlux(); }
 
         PhotonArray shoot(int N, UniformDeviate& u) const 
         {
@@ -89,7 +79,8 @@ namespace galsim {
         // Override for better efficiency if adaptee has it:
         void fillKGrid(KTable& kt) const 
         {
-            _adaptee->fillKGrid(kt);
+            assert(_adaptee._pimpl.get());
+            _adaptee._pimpl->fillKGrid(kt);
             // Flip or clip:
             int N = kt.getN();
             int maxiksq = _maxksq / (kt.getDk()*kt.getDk());
@@ -118,8 +109,17 @@ namespace galsim {
         }
 
     private:
-        SBProfile* _adaptee;
+        SBProfile _adaptee;
         double _maxksq;
+
+        // Copy constructor and op= are undefined.
+        SBDeconvolveImpl(const SBDeconvolveImpl& rhs);
+        void operator=(const SBDeconvolveImpl& rhs);
+    };
+
+    private:
+        // op= is undefined
+        void operator=(const SBDeconvolve& rhs);
     };
 
 }
