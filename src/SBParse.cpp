@@ -407,7 +407,7 @@ namespace galsim {
             double beta = dargs[0];
             double trunc = dargs[1];
             double fwhm = (nargs>2) ? dargs[2] : 1.;
-	    enum  RadiusType{ FWHM, HALF_LIGHT_RADIUS, SCALE_RADIUS } rtype;  
+            enum  RadiusType{ FWHM, HALF_LIGHT_RADIUS, SCALE_RADIUS } rtype;  
             //^ Barney: had a C++ fail accessing the SBMoffat type definition of this, so gave up...
             rtype=FWHM;
             dbg << "**Returning moffat with beta, trunc, flux, fwhm " << beta
