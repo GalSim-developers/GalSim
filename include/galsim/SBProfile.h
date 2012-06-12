@@ -311,52 +311,54 @@ namespace galsim {
         /**
          * @brief Multiple the flux by fluxRatio
          *
-         * This returns a new SBProfile that represents a new Surface Brightness 
-         * Profile with the new flux. 
+         * This resets the internal pointer to a new SBProfile that wraps the old one
+         * with a scaled flux.  This does not change any previous uses of the SBProfile, 
+         * so if it had been used in some other context (e.g. in SBAdd or SBConvolve),
+         * that object will be unchanged and still valid.
          */
-        SBTransform scaleFlux(double fluxRatio) const;
+        void scaleFlux(double fluxRatio);
 
         /**
          * @brief Set the flux to a new value
          *
-         * This returns a new SBProfile that represents a new Surface Brightness 
-         * Profile with the new flux. 
+         * This sets the flux to a new value.  As with scaleFlux, it does not invalidate
+         * any previous uses of this object.
          */
-        SBTransform setFlux(double flux) const;
+        void setFlux(double flux);
 
         /**
-         * @brief Ellipse transformation (affine without rotation).
+         * @brief Apply a given Ellipse distortion (affine without rotation).
          *
-         * This returns a new SBProfile that represents a new Surface Brightness 
-         * Profile with the requested transformation.
+         * This transforms the object by the given transformation.  As with scaleFlux,
+         * it does not invalidate any previous uses of this object.
          */
-        SBTransform transform(const Ellipse& e) const;
+        void applyTransformation(const Ellipse& e);
 
         /** 
-         * @brief Shear transformation (affine without rotation or dilation).
+         * @brief Apply a given shear.
          *
          * @param[in] g1 Reduced shear g1 by which to shear the SBProfile.
          * @param[in] g2 Reduced shear g2 by which to shear the SBProfile.
-         * @returns A pointer to a new SBProfile that represents a new Surface Brightness
-         * Profile sheared by the given amount.
+         * This shears the object by the given shear.  As with scaleFlux, it does not 
+         * invalidate any previous uses of this object.
          */
-        SBTransform shear(double g1, double g2) const;
+        void applyShear(double g1, double g2);
 
         /** 
-         * @brief Rotation transformation.
+         * @brief Apply a given rotation.
          *
-         * This returns a pointer to a new SBProfile that represents a new Surface Brightness 
-         * Profile rotated by the given angle.
+         * This rotates the object by the given angle.  As with scaleFlux, it does not 
+         * invalidate any previous uses of this object.
          */
-        SBTransform rotate(const Angle& theta) const;
+        void applyRotation(const Angle& theta);
 
         /**
-         * @brief Translation transformation.
+         * @brief Apply a translation.
          *
-         * This returns a pointer to a new SBProfile that represents a new Surface Brightness 
-         * Profile shifted by the given amount.
+         * This shears the object by the given amount.  As with scaleFlux, it does not 
+         * invalidate any previous uses of this object.
          */
-        SBTransform shift(double dx, double dy) const;
+        void applyShift(double dx, double dy);
 
         /**
          * @brief Shoot photons through this SBProfile.
@@ -787,7 +789,7 @@ namespace galsim {
          *
          * @param[in] slist list of SBProfiles.
          */
-        SBAdd(const std::list<SBProfile> slist) : 
+        SBAdd(const std::list<SBProfile>& slist) : 
             SBProfile(new SBAddImpl(slist)) {}
 
         /// @brief Copy constructor.
@@ -804,7 +806,7 @@ namespace galsim {
         SBAddImpl(const SBProfile& s1, const SBProfile& s2)
         { add(s1); add(s2); initialize(); }
 
-        SBAddImpl(const std::list<SBProfile> slist)
+        SBAddImpl(const std::list<SBProfile>& slist)
         {
             for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
                 add(*sptr); 
@@ -1204,7 +1206,7 @@ namespace galsim {
          * @param[in] slist Input: list of SBProfiles.
          * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          */
-        SBConvolve(const std::list<SBProfile> slist, bool real_space=false) :
+        SBConvolve(const std::list<SBProfile>& slist, bool real_space=false) :
             SBProfile(new SBConvolveImpl(slist,real_space)) {}
 
         /// @brief Copy constructor.
@@ -1228,7 +1230,7 @@ namespace galsim {
             _real_space(real_space)
         { add(s1);  add(s2);  add(s3); initialize(); }
 
-        SBConvolveImpl(const std::list<SBProfile> slist, bool real_space) :
+        SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space) :
             _real_space(real_space)
         {
             for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr) 
@@ -1378,7 +1380,11 @@ namespace galsim {
         /// @brief Destructor.
         ~SBGaussian() {}
 
-        double getSigma() const { return static_cast<const SBGaussianImpl&>(*_pimpl).getSigma(); }
+        double getSigma() const 
+        { 
+            assert(dynamic_cast<const SBGaussianImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBGaussianImpl&>(*_pimpl).getSigma(); 
+        }
 
     protected:
     class SBGaussianImpl : public SBProfileImpl
@@ -1464,10 +1470,17 @@ namespace galsim {
         /// @brief Destructor.
         ~SBSersic() {}
 
-        double getN() const { return static_cast<const SBSersicImpl&>(*_pimpl).getN(); }
+        double getN() const 
+        { 
+            assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBSersicImpl&>(*_pimpl).getN(); 
+        }
 
         double getHalfLightRadius() const 
-        { return static_cast<const SBSersicImpl&>(*_pimpl).getHalfLightRadius(); }
+        {
+            assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBSersicImpl&>(*_pimpl).getHalfLightRadius(); 
+        }
 
     protected:
         class SersicInfo;
@@ -1703,7 +1716,10 @@ namespace galsim {
         ~SBExponential() {}
 
         double getScaleRadius() const 
-        { return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); }
+        { 
+            assert(dynamic_cast<const SBExponentialImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
+        }
 
     protected:
     class SBExponentialImpl : public SBProfileImpl
@@ -2101,7 +2117,10 @@ namespace galsim {
         ~SBMoffat() {}
 
         double getBeta() const 
-        { return static_cast<const SBMoffatImpl&>(*_pimpl).getBeta(); }
+        {
+            assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getBeta(); 
+        }
 
     protected:
     class SBMoffatImpl : public SBProfileImpl 

@@ -474,10 +474,10 @@ def test_sbprofile_smallshear():
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     e1 = 0.02
     e2 = 0.02
-    mySBP_shear = mySBP.shear(e1,e2)
+    mySBP.applyDistortion(galsim.Ellipse(e1,e2))
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP_shear.draw(myImg,dx=0.2)
+    mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Small-shear Gaussian profile disagrees with expected result")
@@ -512,10 +512,10 @@ def test_sbprofile_largeshear():
     mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
     e1 = 0.0
     e2 = 0.5
-    mySBP_shear = mySBP.shear(e1,e2)
+    mySBP.applyDistortion(galsim.Ellipse(e1,e2))
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP_shear.draw(myImg,dx=0.2)
+    mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Large-shear DeVauc profile disagrees with expected result")
@@ -587,9 +587,9 @@ def test_sbprofile_shearconvolve():
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     e1 = 0.04
     e2 = 0.0
-    mySBP_shear = mySBP.shear(e1,e2)
+    mySBP.applyDistortion(galsim.Ellipse(e1,e2))
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
-    myConv = galsim.SBConvolve([mySBP_shear,mySBP2])
+    myConv = galsim.SBConvolve([mySBP,mySBP2])
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     myConv.draw(myImg,dx=0.2)
@@ -669,22 +669,19 @@ def test_sbprofile_realspace_distorted_convolve():
     import time
     t1 = time.time()
     psf = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
-    psf_shear = galsim.Shear()
-    psf_shear.setG1G2(0.11,0.17)
-    psf1 = psf.shear(psf_shear.getE1(),psf_shear.getE2())
-    psf2 = psf1.rotate(13 * galsim.degrees)
+    psf.applyShear(0.11,0.17)
+    psf.applyRotation(13 * galsim.degrees)
     pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
-    pixel_shear = galsim.Shear()
-    pixel_shear.setG1G2(0.2,0.0)
-    pixel1 = pixel.shear(pixel_shear.getE1(),pixel_shear.getE2())
-    pixel2 = pixel1.rotate(80 * galsim.degrees)
-    pixel3 = pixel2.shift(0.13,0.27)
-    conv = galsim.SBConvolve([psf2,pixel3],real_space=True)
+    pixel.applyShear(0.2,0.0)
+    pixel.applyRotation(80 * galsim.degrees)
+    pixel.applyShift(0.13,0.27)
+    conv = galsim.SBConvolve([psf,pixel],real_space=True)
 
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel_distorted.fits"))
     img = galsim.ImageF(saved_img.bounds)
     conv.draw(img,dx=0.2)
+    img.write("junk.fits")
     printval(img, saved_img)
     np.testing.assert_array_almost_equal(img.array, saved_img.array, 5,
         err_msg="distorted Moffat convolved with distorted Box disagrees with expected result")
@@ -728,9 +725,9 @@ def test_sbprofile_realspace_shearconvolve():
     psf = galsim.SBGaussian(flux=1, sigma=1)
     e1 = 0.04
     e2 = 0.0
-    psf_shear = psf.shear(e1,e2)
+    psf.applyDistortion(galsim.Ellipse(e1,e2))
     pix = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
-    conv = galsim.SBConvolve([psf_shear,pix],real_space=True)
+    conv = galsim.SBConvolve([psf,pix],real_space=True)
     saved_img = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     img = galsim.ImageF(saved_img.bounds)
     conv.draw(img,dx=0.2)
@@ -769,11 +766,11 @@ def test_sbprofile_rotate():
     import time
     t1 = time.time()
     mySBP = galsim.SBSersic(n=2.5, flux=1, half_light_radius=1)
-    mySBP_shear = mySBP.shear(0.2, 0.0)
-    mySBP_shear_rotate = mySBP_shear.rotate(45.0 * galsim.degrees)
+    mySBP.applyDistortion(galsim.Ellipse(0.2, 0.0))
+    mySBP.applyRotation(45.0 * galsim.degrees)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_ellip_rotated.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP_shear_rotate.draw(myImg,dx=0.2)
+    mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="45-degree rotated elliptical Gaussian disagrees with expected result")
@@ -803,10 +800,10 @@ def test_sbprofile_mag():
     r0 = re/1.67839
     mySBP = galsim.SBExponential(flux=1, scale_radius=r0)
     myEll = galsim.Ellipse(0., 0., np.log(1.5))
-    mySBP_mag = mySBP.distort(myEll)
+    mySBP.applyDistortion(myEll)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_mag.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP_mag.draw(myImg,dx=0.2)
+    mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Magnification (x1.5) of exponential SBProfile disagrees with expected result")
@@ -889,10 +886,10 @@ def test_sbprofile_shift():
     import time
     t1 = time.time()
     mySBP = galsim.SBBox(xw=0.2, yw=0.2, flux=1)
-    mySBP_shift = mySBP.shift(0.2, -0.2)
+    mySBP.applyShift(0.2, -0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_shift.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP_shift.draw(myImg,dx=0.2)
+    mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Shifted box profile disagrees with expected result")
@@ -923,7 +920,7 @@ def test_sbprofile_rescale():
     import time
     t1 = time.time()
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
-    mySBP = mySBP.setFlux(2)
+    mySBP.setFlux(2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_doubleflux.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
@@ -993,7 +990,7 @@ def test_sbprofile_sbinterpolatedimage():
         flux_tot = image_out.array.sum()
         print 'flux_tot = ',flux_tot
 
-        sbinterp = sbinterp.scaleFlux(1. / flux_max)
+        sbinterp.scaleFlux(1. / flux_max)
         nphot = flux_tot / flux_max / photon_shoot_accuracy**2
         print 'nphot = ',nphot
         ud = galsim.UniformDeviate()

@@ -286,7 +286,8 @@ namespace galsim {
                         || !isNumber((*ia)->print(),g2))
                         throw SBError("SBParse: bad arguments for shear: " + args.print());
                     dbg << "** Leaving SBParse after shearing by " << g1 << " " << g2 << std::endl;
-                    return base.shear(g1, g2);
+                    base.applyShear(g1, g2);
+                    return base;
                 } else if (DilateOp::test(i)) {
                     delete i;
                     double f;
@@ -295,7 +296,8 @@ namespace galsim {
                         throw SBError("SBParse: bad arguments for dilation: " + args.print());
                     Ellipse e(Shear(), std::log(f), Position<double>());
                     dbg << "** Leaving SBParse after dilating by " << f << std::endl;
-                    return base.transform(e);
+                    base.applyTransformation(e);
+                    return base;
                 } else if (TranslateOp::test(i)) {
                     delete i;
                     double dx,dy;
@@ -305,7 +307,8 @@ namespace galsim {
                         throw SBError("SBParse: bad arguments for translation: " + args.print());
                     dbg << "** Leaving SBParse after translating by " << dx << " " 
                               << dy << std::endl;
-                    return base.shift(dx,dy);
+                    base.applyShift(dx,dy);
+                    return base;
                 } else if (RotateOp::test(i)) {
                     // TODO: Not sure how much we're planning on using SBParse,
                     // but if we are, it would be nice to have theta specified with units.
@@ -315,7 +318,8 @@ namespace galsim {
                         || !isNumber((*ia)->print(),theta))
                         throw SBError("SBParse: bad arguments for rotation: " + args.print());
                     dbg << "** Leaving SBParse after rotating by " << theta << std::endl;
-                    return base.rotate(theta * radians);
+                    base.applyRotation(theta * radians);
+                    return base;
                 } else if (FluxOp::test(i)) {
                     delete i;
                     double f;
@@ -323,7 +327,8 @@ namespace galsim {
                         || !isNumber((*ia)->print(),f))
                         throw SBError("SBParse: bad arguments for flux: " + args.print());
                     dbg << "** Leaving SBParse after flux set to " << f << std::endl;
-                    return base.setFlux(f);
+                    base.setFlux(f);
+                    return base;
                 }
             } else {
                 // This Word is not a modifier.  Add to argument list
@@ -425,7 +430,8 @@ namespace galsim {
                 throw SBError("SBParse error reading Laguerre PSF file " + psfName);
 
             SBLaguerre sbl(bPSF, std::exp(mu));
-            return sbl.shear(g1, g2);
+            sbl.applyShear(g1, g2);
+            return sbl;
         } else {
             throw SBError("SBParse: unrecognized primitive type: " + sbtype);
         }
