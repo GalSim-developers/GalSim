@@ -1363,12 +1363,12 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] flux   flux of the Surface Brightness Profile (default `flux = 1.`).
          * @param[in] sigma  characteristic size, surface brightness scales as 
          *                   `exp[-r^2 / (2. * sigma^2)]`.
+         * @param[in] flux   flux of the Surface Brightness Profile (default `flux = 1.`).
          */
-        SBGaussian(double flux=1., double sigma) :
-            SBProfile(new SBGaussianImpl(flux,sigma)) {}
+      SBGaussian(double sigma, double flux=1.) :
+	SBProfile(new SBGaussianImpl(sigma, flux)) {}
 
         /// @brief Copy constructor.
         SBGaussian(const SBGaussian& rhs) : SBProfile(rhs) {}
@@ -1386,7 +1386,7 @@ namespace galsim {
     class SBGaussianImpl : public SBProfileImpl
     {
     public:
-        SBGaussianImpl(double flux, double sigma);
+      SBGaussianImpl(double sigma, double flux);
 
         ~SBGaussianImpl() {}
 
