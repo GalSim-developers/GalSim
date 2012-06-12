@@ -46,7 +46,7 @@ class Shear:
             else:
                 raise TypeError("Unnamed argument to initialize Shear must be a _Shear!")
         elif len(args) > 1:
-            raise TypeError("Too many unnamed arguments to initialize Shear: %s"%args)
+            raise TypeError("Too many unnamed arguments to initialize Shear: %d"%len(args))
         else:
 
             # check the named args: if a component of e, g, or eta, then require that the other
@@ -80,7 +80,7 @@ class Shear:
                 eta1 = kwargs.pop('eta1', 0.)
                 eta2 = kwargs.pop('eta2', 0.)
                 use_shear = _galsim._Shear()
-                use_shear.setEta1Eta2(eta1, e2)
+                use_shear.setEta1Eta2(eta1, eta2)
             elif 'g' in kwargs:
                 if 'beta' not in kwargs:
                     raise TypeError(
