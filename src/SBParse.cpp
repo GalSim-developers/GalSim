@@ -355,7 +355,7 @@ namespace galsim {
             double flux=1.;
             double sigma = (nargs>0) ? dargs[0] : 1.;
             dbg << "**Returning gaussian with flux, sigma " << flux << " " << sigma << std::endl;
-            return SBGaussian(flux, sigma);
+            return SBGaussian(sigma, flux);
 
         } else if (nocaseEqual(sbtype, "exp")) {
             // Exponential Disk: args [re=1.]
@@ -364,7 +364,7 @@ namespace galsim {
             double flux=1.;
             double re = (nargs>0) ? dargs[0] : 1.;
             dbg << "**Returning exp with flux, re " << flux << " " << re << std::endl;
-            return SBExponential(flux, re/1.67839);
+            return SBExponential(re/1.67839, flux);
 
         } else if (nocaseEqual(sbtype, "sersic")) {
             // Sersic: args are [n] [re=1]
@@ -375,7 +375,7 @@ namespace galsim {
             double re = (nargs>1) ? dargs[1] : 1.;
             dbg << "**Returning sersic with n, flux, re " << n 
                 << " " << flux << " " << re << std::endl;
-            return SBSersic(n, flux, re);
+            return SBSersic(n, re, flux);
 
         } else if (nocaseEqual(sbtype, "box")) {
             // Sersic: args are [xw=1] [yw=xw]
