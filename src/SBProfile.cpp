@@ -2244,7 +2244,7 @@ namespace galsim {
         return _rD * rerD;
     }
 
-    double SBMoffat::xValue(const Position<double>& p) const 
+    double SBMoffat::SBMoffatImpl::xValue(const Position<double>& p) const 
     {
         double rsq = p.x*p.x + p.y*p.y;
         if (rsq > _maxR_sq) return 0.;
