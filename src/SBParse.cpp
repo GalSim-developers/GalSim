@@ -400,16 +400,19 @@ namespace galsim {
             return SBAiry(D,obs,flux);
 
         } else if (nocaseEqual(sbtype, "moffat")) {
-            // Airy: args are [beta] [truncationFWHM] [re=1]
+            // Moffat: args are [beta] [trunc] [fwhm=1]
             if (nargs<2 || nargs>3 || !allNumbers)
                 throw SBError("SBParse: Bad arguments for SBMoffat: " + args.print());
             double flux=1.;
             double beta = dargs[0];
-            double truncationFWHM = dargs[1];
-            double re = (nargs>2) ? dargs[2] : 1.;
-            dbg << "**Returning moffat with beta, truncation, flux, re " << beta
-                << " " << truncationFWHM << " " << flux << " " << re << std::endl;
-            return SBMoffat(beta, truncationFWHM, flux, re);
+            double trunc = dargs[1];
+            double fwhm = (nargs>2) ? dargs[2] : 1.;
+	    enum  RadiusType{ FWHM, HALF_LIGHT_RADIUS, SCALE_RADIUS } rtype;  
+            //^ Barney: had a C++ fail accessing the SBMoffat type definition of this, so gave up...
+            rtype=FWHM;
+            dbg << "**Returning moffat with beta, trunc, flux, fwhm " << beta
+                << " " << trunc << " " << flux << " " << fwhm << std::endl;
+            return SBMoffat(beta, fwhm, rtype, trunc, flux);
 
         } else if (nocaseEqual(sbtype, "laguerre")) {
             // Laguerre: args are [filename]
