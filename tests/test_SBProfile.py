@@ -558,8 +558,9 @@ def test_sbprofile_convolve():
     # ...but this is no longer allowed since we changed the handling of trunc to be in physical
     # units.  However, the same profile can be constructed using fwhm=1.0927449310213702, as
     # calculated by interval bisection in devutils/external/calculate_moffat_radii.py
-    mySBP = galsim.SBMoffat(beta=1.5, fwhm=1.0927449310213702, trunc=4*1.0927449310213702,
-                            flux=1)
+    fwhm_backwards_compatible = 1.0927449310213702
+    mySBP = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
+                            trunc=4*fwhm_backwards_compatible, flux=1)
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
@@ -570,7 +571,7 @@ def test_sbprofile_convolve():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 4,
         err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
-    psf = galsim.Moffat(beta=1.5, fwhm=1.0927449310213702, trunc=4*1.0927449310213702,
+    psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible, trunc=4*fwhm_backwards_compatible,
                         flux=1)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     # We'll do the real space convolution below
@@ -643,8 +644,9 @@ def test_sbprofile_realspace_convolve():
     # ...but this is no longer allowed since we changed the handling of trunc to be in physical
     # units.  However, the same profile can be constructed using fwhm=1.0927449310213702, as
     # calculated by interval bisection in devutils/external/calculate_moffat_radii.py
-    psf = galsim.SBMoffat(beta=1.5, fwhm=1.0927449310213702, trunc=4*1.0927449310213702,
-                          flux=1)
+    fwhm_backwards_compatible = 1.0927449310213702
+    psf = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
+                          trunc=4*fwhm_backwards_compatible, flux=1)
     pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.SBConvolve([psf,pixel],real_space=True)
     # Note: Using an image created from Maple "exact" calculations.
@@ -656,7 +658,7 @@ def test_sbprofile_realspace_convolve():
     np.testing.assert_array_almost_equal(img.array, saved_img.array, 5,
         err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
-    psf = galsim.Moffat(beta=1.5, fwhm=1.0927449310213702, trunc=4*1.0927449310213702,
+    psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible, trunc=4*fwhm_backwards_compatible,
                         flux=1)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel],real_space=True)
@@ -689,8 +691,9 @@ def test_sbprofile_realspace_distorted_convolve():
     """
     import time
     t1 = time.time()
-    psf = galsim.SBMoffat(beta=1.5, fwhm=1.0927449310213702, trunc=4*1.0927449310213702,
-                          flux=1)  # See note above
+    fwhm_backwards_compatible = 1.0927449310213702
+    psf = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
+                          trunc=4*fwhm_backwards_compatible, flux=1)  # See note in test above
     psf.applyShear(0.11,0.17)
     psf.applyRotation(13 * galsim.degrees)
     pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
@@ -708,7 +711,7 @@ def test_sbprofile_realspace_distorted_convolve():
         err_msg="distorted Moffat convolved with distorted Box disagrees with expected result")
 
     # Repeat with the GSObject version of this:
-    psf = galsim.Moffat(beta=1.5, fwhm=1.0927449310213702, trunc=4*1.0927449310213702,
+    psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible, trunc=4*fwhm_backwards_compatible,
                         flux=1)
     psf.applyShear(0.11,0.17)
     psf.applyRotation(13 * galsim.degrees)
