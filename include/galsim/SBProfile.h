@@ -1855,7 +1855,7 @@ namespace galsim {
     class SBAiryImpl : public SBProfileImpl 
     {
     public:
-        SBAiryImpl(double D, double obs, double flux);
+        SBAiryImpl(double lam_over_D, double obs, double flux);
 
         ~SBAiryImpl() { flushSampler(); }
 
@@ -1887,12 +1887,13 @@ namespace galsim {
         PhotonArray shoot(int N, UniformDeviate& ud) const;
 
     private:
+        
+        double _lam_over_D;  ///< inverse of _D (see below), harmonise inputs with other GSObjects
         /** 
          * `_D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, 
          *  else `_D` = (telescope diam) / lambda if arg is in radians of field angle.
          */
         double _D;
-        double _lam_over_D;  ///< inverse of _D, to harmonise inputs with other GalSim objects
 
         double _obscuration; ///< Radius ratio of central obscuration.
         double _flux; ///< Flux.
