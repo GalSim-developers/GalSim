@@ -386,10 +386,6 @@ class Pixel(GSObject):
             yw = xw
         GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
 
-    def getHalfLightRadius(self):
-        return NotImplementedError("All the light within a Pixel is contained within its borders. "
-                                   +"Try the Pixel.getXWidth() and Pixel.getYWidth() methods.")
-
     def getXWidth(self):
         """@brief Return the width of the pixel in the x dimension.
         """
