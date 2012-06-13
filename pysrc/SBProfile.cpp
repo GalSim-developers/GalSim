@@ -317,8 +317,8 @@ struct PySBGaussian {
     static SBGaussian * construct(
         const bp::object & half_light_radius,
         const bp::object & sigma,
-        const bp::object & fwhm
-        double flux,
+        const bp::object & fwhm,
+        double flux
     ) {
         double s = 1.0;
         checkRadii(half_light_radius, sigma, fwhm);
@@ -356,21 +356,22 @@ struct PySBGaussian {
 struct PySBSersic {
 
     static SBSersic * construct(
-        double n, double flux,
-        const bp::object & half_light_radius
+        double n, 
+        const bp::object & half_light_radius,
+        double flux
     ) {
         if (half_light_radius.ptr() == Py_None) {
             PyErr_SetString(PyExc_TypeError, "No radius parameter given");
             bp::throw_error_already_set();
         }
-        return new SBSersic(n, flux, bp::extract<double>(half_light_radius));
+        return new SBSersic(n, bp::extract<double>(half_light_radius), flux);
     }
     static void wrap() {
         bp::class_<SBSersic,bp::bases<SBProfile>,boost::noncopyable>("SBSersic", bp::no_init)
             .def("__init__",
                  bp::make_constructor(
                      &construct, bp::default_call_policies(),
-                     (bp::arg("n"), bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object())
+                     (bp::arg("n"), bp::arg("half_light_radius")=bp::object(), bp::arg("flux")=1.)
                                       )
                  )
             .def("getHalfLightRadius", &SBSersic::getHalfLightRadius)
