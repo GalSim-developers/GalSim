@@ -263,7 +263,8 @@ When the working directory is clean, it just shows
 Mike@flute:~/GalSim[#107] $
 
 If you've fetched changes from the repository, but haven't merged them, you get a '-'.  And
-if you have unmerged changes that conflict with your local changes, you get a '%'.
+if you have unpushed commit and unmerged upstream commits (which means you might be getting
+into trouble in the future), you get a '%'.
 
 This is obviously completely optional, but I've found it pretty helpful when using git.
 
