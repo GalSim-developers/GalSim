@@ -246,7 +246,7 @@ class Gaussian(GSObject):
     """
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
         GSObject.__init__(self, galsim.SBGaussian(half_light_radius=half_light_radius, 
-                                                  sigma=sigma, fwhm=fwhm, flux=flux))
+                                                  fwhm=fwhm, sigma=sigma, flux=flux))
         
     def getSigma(self):
         """@brief Return the sigma scale length for this Gaussian profile.
@@ -296,8 +296,8 @@ class Moffat(GSObject):
 class Sersic(GSObject):
     """@brief GalSim Sersic, which has an SBSersic in the SBProfile attribute.
     """
-    def __init__(self, n, flux=1., half_light_radius=None):
-        GSObject.__init__(self, galsim.SBSersic(n, flux=flux, half_light_radius=half_light_radius))
+    def __init__(self, n, half_light_radius, flux=1.):
+        GSObject.__init__(self, galsim.SBSersic(n, half_light_radius=half_light_radius, flux=flux))
 
     def getHalfLightRadius(self):
         """@brief Return the half light radius for this Sersic profile.
@@ -308,9 +308,9 @@ class Sersic(GSObject):
 class Exponential(GSObject):
     """@brief GalSim Exponential, which has an SBExponential in the SBProfile attribute.
     """
-    def __init__(self, flux=1., half_light_radius=None, scale_radius=None):
-        GSObject.__init__(self, galsim.SBExponential(flux=flux, half_light_radius=half_light_radius,
-                                                     scale_radius=scale_radius))
+    def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
+        GSObject.__init__(self, galsim.SBExponential(half_light_radius=half_light_radius,
+                                                     scale_radius=scale_radius, flux=flux))
 
     def getScaleRadius(self):
         """@brief Return the scale radius for this Exponential profile.
@@ -328,9 +328,9 @@ class Exponential(GSObject):
 class DeVaucouleurs(GSObject):
     """@brief GalSim De-Vaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
     """
-    def __init__(self, flux=1., half_light_radius=None):
-        GSObject.__init__(self, galsim.SBDeVaucouleurs(flux=flux, 
-                                                       half_light_radius=half_light_radius))
+    def __init__(self, half_light_radius=None, flux=1.):
+        GSObject.__init__(self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius,
+                                                       flux=flux))
 
     def getHalfLightRadius(self):
         """@brief Return the half light radius for this DeVaucouleurs profile.
@@ -341,7 +341,7 @@ class DeVaucouleurs(GSObject):
 class Airy(GSObject):
     """@brief GalSim Airy, which has an SBAiry in the SBProfile attribute.
     """
-    def __init__(self, D=1., obscuration=0., flux=1.):
+    def __init__(self, D, obscuration=0., flux=1.):
         GSObject.__init__(self, galsim.SBAiry(D=D, obscuration=obscuration, flux=flux))
 
     def getHalfLightRadius(self):
@@ -360,7 +360,7 @@ class Airy(GSObject):
 class Pixel(GSObject):
     """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
     """
-    def __init__(self, xw=None, yw=None, flux=1.):
+    def __init__(self, xw, yw=None, flux=1.):
         if yw is None:
             yw = xw
         GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
