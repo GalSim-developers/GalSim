@@ -468,7 +468,7 @@ class OpticalPSF(GSObject):
     def getHalfLightRadius(self):
         # The half light radius is a complex function for aberrated optical PSFs, so just give
         # up gracelessly...
-        return NotImplementedError("Half light radius calculation not implemented for OpticalPSF "
+        raise NotImplementedError("Half light radius calculation not implemented for OpticalPSF "
                                    +"objects.")
 
 class AtmosphericPSF(GSObject):
@@ -511,7 +511,7 @@ class AtmosphericPSF(GSObject):
                                                            dx=dx_lookup))
     def getHalfLightRadius(self):
         # TODO: This seems like it would not be impossible to calculate
-        return NotImplementedError("Half light radius calculation not yet implemented for "+
+        raise NotImplementedError("Half light radius calculation not yet implemented for "+
                                    "Atmospheric PSF objects (could be though).")
         
 class RealGalaxy(GSObject):
@@ -609,7 +609,7 @@ class RealGalaxy(GSObject):
         GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
 
     def getHalfLightRadius(self):
-        return NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
+        raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
                                    +"objects.")
 
 class Add(GSObject):
@@ -643,7 +643,7 @@ class Add(GSObject):
         self.SBProfile.add(obj.SBProfile, scale)
 
     def getHalfLightRadius(self):
-        return NotImplementedError("Half light radius calculation not implemented for Add objects.")
+        raise NotImplementedError("Half light radius calculation not implemented for Add objects.")
 
 class Convolve(GSObject):
     """@brief A class for convolving 2 or more GSObjects.
@@ -781,7 +781,7 @@ class Deconvolve(GSObject):
         GSObject.__init__(self, galsim.SBDeconvolve(farg.SBProfile))
 
     def getHalfLightRadius(self):
-        return NotImplementedError("Half light radius calculation not implemented for Deconvolve "+
+        raise NotImplementedError("Half light radius calculation not implemented for Deconvolve "+
                                    "objects.")
 
 
