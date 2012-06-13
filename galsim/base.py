@@ -244,9 +244,9 @@ class GSObject:
 class Gaussian(GSObject):
     """@brief GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
     """
-    def __init__(self, flux=1., half_light_radius=None, sigma=None, fwhm=None):
-        GSObject.__init__(self, galsim.SBGaussian(flux=flux, half_light_radius=half_light_radius, 
-                                                  sigma=sigma, fwhm=fwhm))
+    def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
+        GSObject.__init__(self, galsim.SBGaussian(half_light_radius=half_light_radius, 
+                                                  sigma=sigma, fwhm=fwhm, flux=flux))
         
     def getSigma(self):
         """@brief Return the sigma scale length for this Gaussian profile.
@@ -262,8 +262,8 @@ class Gaussian(GSObject):
 class Moffat(GSObject):
     """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
-    def __init__(self, beta, flux=1., half_light_radius=None, scale_radius=None, fwhm=None,
-                 trunc=0.):
+    def __init__(self, beta, fwhm=None, scale_radius=None, half_light_radius=None,
+                 trunc=0., flux=1.):
         if trunc > 0. and half_light_radius != None:
             # This error is also thrown by SBProfile, raising a RuntimeError, but might as well
             # catch it here first with a more descriptive/apposite Exception type:
