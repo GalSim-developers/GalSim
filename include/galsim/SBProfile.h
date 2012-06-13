@@ -1949,7 +1949,7 @@ namespace galsim {
          * @param[in] yw    width of Boxcar function along y.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBBox(double xw, double yw, double flux=1.) :
+        SBBox(double xw, double yw=0., double flux=1.) :
             SBProfile(new SBBoxImpl(xw,yw,flux)) {}
 
         /// @brief Copy constructor.
