@@ -464,25 +464,25 @@ struct PySBMoffat {
 
     static SBMoffat * construct(
         double beta, 
-        const bp::object & half_light_radius,
-        const bp::object & scale_radius,
         const bp::object & fwhm,
+        const bp::object & scale_radius,
+        const bp::object & half_light_radius,
         double trunc, 
         double flux
     ) {
         double s = 1.0;
         checkRadii(half_light_radius, scale_radius, fwhm);
-        SBMoffat::RadiusType rType = SBMoffat::HALF_LIGHT_RADIUS;
-        if (half_light_radius.ptr() != Py_None) {
-            s = bp::extract<double>(half_light_radius);
+        SBMoffat::RadiusType rType = SBMoffat::FWHM;
+        if (fwhm.ptr() != Py_None) {
+            s = bp::extract<double>(fwhm);
         }
         if (scale_radius.ptr() != Py_None) {
             s = bp::extract<double>(scale_radius);
             rType = SBMoffat::SCALE_RADIUS;
         }
-        if (fwhm.ptr() != Py_None) {
-            s = bp::extract<double>(fwhm);
-            rType = SBMoffat::FWHM;
+        if (half_light_radius.ptr() != Py_None) {
+            s = bp::extract<double>(half_light_radius);
+            rType = SBMoffat::HALF_LIGHT_RADIUS;
         }
         return new SBMoffat(beta, s, rType, trunc, flux);
     }
@@ -492,8 +492,9 @@ struct PySBMoffat {
             .def("__init__", 
                  bp::make_constructor(
                      &construct, bp::default_call_policies(),
-                     (bp::arg("beta"), bp::arg("half_light_radius")=bp::object(),
-                      bp::arg("scale_radius")=bp::object(), bp::arg("fwhm")=bp::object(),
+                     (bp::arg("beta"), bp::arg("fwhm")=bp::object(), 
+                      bp::arg("half_light_radius")=bp::object(), 
+                      bp::arg("scale_radius")=bp::object(),
                       bp::arg("trunc")=0., bp::arg("flux")=1.)
                  )
             )
