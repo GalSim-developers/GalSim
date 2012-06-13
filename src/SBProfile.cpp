@@ -2186,7 +2186,7 @@ namespace galsim {
                                      "trunc > 0.");
                    } else {
                        // If trunc = 0., calculate half-light radius in units of rD:
-                       // OLD: double rerD = sqrt( std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
+                       // OLD: double rerD = sqrt( std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta))-1.);
                        double rerD = sqrt( std::pow(1. - 0.5, 1./(1.-_beta)) - 1.);
                        _rD = size / rerD;
                    }
