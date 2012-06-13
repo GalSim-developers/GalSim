@@ -691,11 +691,6 @@ def test_sbprofile_realspace_distorted_convolve():
     t1 = time.time()
     psf = galsim.SBMoffat(beta=1.5, fwhm=1.0927449310213702, trunc=4*1.0927449310213702,
                           flux=1)  # See note above
-    psf_shear = galsim.Shear()
-    psf_shear.setG1G2(0.11,0.17)
-    psf1 = psf.shear(psf_shear.getE1(),psf_shear.getE2())
-    psf2 = psf1.rotate(13 * galsim.degrees)
-    psf = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     psf.applyShear(0.11,0.17)
     psf.applyRotation(13 * galsim.degrees)
     pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
