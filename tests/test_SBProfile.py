@@ -307,7 +307,7 @@ def test_sbprofile_airy():
     """
     import time
     t1 = time.time()
-    mySBP = galsim.SBAiry(D=0.8, obscuration=0.1, flux=1)
+    mySBP = galsim.SBAiry(lam_over_D=1./0.8, obscuration=0.1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
@@ -315,7 +315,7 @@ def test_sbprofile_airy():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
             err_msg="Airy profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
-    airy = galsim.Airy(D=0.8, obscuration=0.1, flux=1)
+    airy = galsim.Airy(lam_over_D=1./0.8, obscuration=0.1, flux=1)
     airy.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
