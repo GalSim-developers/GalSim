@@ -346,6 +346,8 @@ class Airy(GSObject):
                                               flux=flux))
 
     def getHalfLightRadius(self):
+        """Return the half light radius of the Airy (only supported for obscuration = 0.).
+        """
         if self.SBProfile.getObscuration() == 0.:
  # For an unobscured Airy, we have the following factor which can be derived using the integral
  # result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk), solved for half
@@ -359,6 +361,8 @@ class Airy(GSObject):
                                       "objects with non-zero obscuration.")
 
     def getFWHM(self):
+        """Return the FWHM of the Airy (only supported for obscuration = 0.).
+        """
         # As above, likewise, FWHM only easy to define for unobscured Airy
         if self.SBProfile.getObscuration == 0.:
             return self.SBProfile.getLamOverD() * 1.028993969962188;
@@ -367,6 +371,11 @@ class Airy(GSObject):
             # but it will be much more involved...!
             raise NotImplementedError("FWHM calculation not implemented for Airy "+
                                       "objects with non-zero obscuration.")
+
+    def getLamOverD(self):
+        """Return the lam_over_D parameter of the Airy (only supported for obscuration = 0.).
+        """
+        return self.SBProfile.getLamOverD()
 
 
 class Pixel(GSObject):
