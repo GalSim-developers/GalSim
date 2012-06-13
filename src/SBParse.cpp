@@ -336,7 +336,10 @@ namespace galsim {
             }
         }
 
-        // else: should be a primitive, specified by first word and rest are arguments. Build and return
+        /* 
+         * else: should be a primitive, specified by first word and rest are arguments. Build and 
+         * return
+         */
         int nargs = args.size()-1;
         // Translate arguments into doubles since that's what most primitives want.
         bool allNumbers=true;
@@ -407,7 +410,7 @@ namespace galsim {
             double beta = dargs[0];
             double trunc = dargs[1];
             double fwhm = (nargs>2) ? dargs[2] : 1.;
-	    SBMoffat::RadiusType rType = SBMoffat::FWHM;
+	        SBMoffat::RadiusType rType = SBMoffat::FWHM;
             dbg << "**Returning moffat with beta, trunc, flux, fwhm " << beta
                 << " " << trunc << " " << flux << " " << fwhm << std::endl;
             return SBMoffat(beta, fwhm, rType, trunc, flux);
