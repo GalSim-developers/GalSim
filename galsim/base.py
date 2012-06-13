@@ -341,8 +341,9 @@ class DeVaucouleurs(GSObject):
 class Airy(GSObject):
     """@brief GalSim Airy, which has an SBAiry in the SBProfile attribute.
     """
-    def __init__(self, D, obscuration=0., flux=1.):
-        GSObject.__init__(self, galsim.SBAiry(D=D, obscuration=obscuration, flux=flux))
+    def __init__(self, lam_over_D, obscuration=0., flux=1.):
+        GSObject.__init__(self, galsim.SBAiry(lam_over_D=lam_over_D, obscuration=obscuration,
+                                              flux=flux))
 
     def getHalfLightRadius(self):
         if self.SBProfile.getObscuration() == 0.:
@@ -350,7 +351,7 @@ class Airy(GSObject):
  # result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk), solved for half
  # total flux using the free online tool Wolfram Alpha:
  # http://www.wolframalpha.com/input/?i=Solve[BesselJ[0%2C+x]^2+%2B+BesselJ[1%2C+x]^2+%3D%3D+1%2F2]
-            return self.SBProfile.getD() * 1.6802247461942010
+            return self.SBProfile.getLamOverD() * 1.6802247461942010
         else:
             # In principle can find the half light radius as a function of D and obscuration too,
             # but it will be much more involved...!
