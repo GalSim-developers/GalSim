@@ -410,7 +410,7 @@ namespace galsim {
             double beta = dargs[0];
             double trunc = dargs[1];
             double fwhm = (nargs>2) ? dargs[2] : 1.;
-	        SBMoffat::RadiusType rType = SBMoffat::FWHM;
+            SBMoffat::RadiusType rType = SBMoffat::FWHM;
             dbg << "**Returning moffat with beta, trunc, flux, fwhm " << beta
                 << " " << trunc << " " << flux << " " << fwhm << std::endl;
             return SBMoffat(beta, fwhm, rType, trunc, flux);

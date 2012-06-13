@@ -2178,7 +2178,7 @@ namespace galsim {
                break;
           case HALF_LIGHT_RADIUS: 
                {
-		   // Note that _fluxFactor is needed for calculating the half light radius,
+                   // Note that _fluxFactor is needed for calculating the half light radius,
                    // and thus _rD, and with trunc in physical units _rD is needed to calculate the
                    // _fluxFactor via maxRrD!! Need to think about how to break this circularity...
                    if (trunc > 0.){
