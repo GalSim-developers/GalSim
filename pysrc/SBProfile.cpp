@@ -507,13 +507,14 @@ struct PySBMoffat {
 
 struct PySBDeVaucouleurs {
     static SBDeVaucouleurs * construct(
-        double flux, const bp::object & half_light_radius
+        const bp::object & half_light_radius,
+        double flux 
     ) {
         if (half_light_radius.ptr() == Py_None) {
             PyErr_SetString(PyExc_TypeError, "No radius parameter given");
             bp::throw_error_already_set();
         }
-        return new SBDeVaucouleurs(flux, bp::extract<double>(half_light_radius));
+        return new SBDeVaucouleurs(bp::extract<double>(half_light_radius), flux);
     }
 
     static void wrap() {
@@ -522,7 +523,7 @@ struct PySBDeVaucouleurs {
             .def("__init__",
                  bp::make_constructor(
                      &construct, bp::default_call_policies(),
-                     (bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object())
+                     (bp::arg("half_light_radius")=bp::object(), bp::arg("flux")=1.)
                  )
             )
             .def("getHalfLightRadius", &SBDeVaucouleurs::getHalfLightRadius)
