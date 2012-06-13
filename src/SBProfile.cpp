@@ -1609,9 +1609,9 @@ namespace galsim {
     // SBAiry Class
     //
 
-    SBAiry::SBAiryImpl::SBAiryImpl(double D, double obscuration, double flux) :
-        _D(D), _obscuration(obscuration), _flux(flux), _norm(flux*D*D),
-        _radial(_obscuration) {}
+    SBAiry::SBAiryImpl::SBAiryImpl(double lam_over_D, double obscuration, double flux) :
+        _lam_over_D(_lam_over_D), _D(1. / lam_over_D), _obscuration(obscuration), _flux(flux), 
+        _norm(flux / (lam_over_D*lam_over_D)), _radial(_obscuration) {}
 
     // This is a scale-free version of the Airy radial function.
     // Input radius is in units of lambda/D.  Output normalized

@@ -422,10 +422,10 @@ struct PySBAiry {
         bp::class_<SBAiry,bp::bases<SBProfile>,boost::noncopyable>(
             "SBAiry",
             bp::init<double,double,double>(
-                (bp::arg("D"), bp::arg("obscuration")=0., bp::arg("flux")=1.)
+                (bp::arg("lam_over_D"), bp::arg("obscuration")=0., bp::arg("flux")=1.)
             )
         )
-        .def("getD", &SBAiry::getD)
+        .def("getLamOverD", &SBAiry::getLamOverD)
         .def("getObscuration", &SBAiry::getObscuration)
         ;
     }

@@ -1791,15 +1791,15 @@ namespace galsim {
         /**
          * @brief Constructor.
          *
-         * @param[in] D            `D` = (telescope diam) / (lambda * focal length) if arg is focal 
-         *                         plane position, else `D` = (telescope diam) / lambda if arg is 
-         *                         in radians of field angle.
+         * @param[in] lam_over_D   `lam_over_D` = (lambda * focal length) / (telescope diam) if 
+         *                         arg is focal plane position, else `lam_over_D` = 
+         *                         lambda / (telescope diam) if arg is in radians of field angle.
          * @param[in] obscuration  linear dimension of central obscuration as fraction of pupil
          *                         dimension (default `obscuration = 0.`).
          * @param[in] flux         flux (default `flux = 1.`).
          */
-        SBAiry(double D, double obscuration=0., double flux=1.) :
-            SBProfile(new SBAiryImpl(D,obscuration,flux)) {}
+        SBAiry(double lam_over_D, double obscuration=0., double flux=1.) :
+            SBProfile(new SBAiryImpl(lam_over_D, obscuration, flux)) {}
 
         /// @brief Copy constructor
         SBAiry(const SBAiry& rhs) : SBProfile(rhs) {}
@@ -1807,11 +1807,11 @@ namespace galsim {
         /// @brief Destructor.
         ~SBAiry() {}
 
-        /// @brief Returns D param of the SBAiry.
-        double getD() const 
+        /// @brief Returns lam_over_D param of the SBAiry.
+        double getLamOverD() const 
         {
             assert(dynamic_cast<const SBAiryImpl*>(_pimpl.get()));
-            return dynamic_cast<const SBAiryImpl&>(*_pimpl).getD(); 
+            return dynamic_cast<const SBAiryImpl&>(*_pimpl).getLamOverD(); 
         }
 
         /// @brief Returns obscuration param of the SBAiry.
@@ -1874,7 +1874,7 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
-        double getD() const { return _D; }
+        double getLamOverD() const { return _lam_over_D; }
         double getObscuration() const { return _obscuration; }
 
         /**
@@ -1891,7 +1891,8 @@ namespace galsim {
          * `_D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, 
          *  else `_D` = (telescope diam) / lambda if arg is in radians of field angle.
          */
-        double _D; 
+        double _D;
+        double _lam_over_D;  ///< inverse of _D, to harmonise inputs with other GalSim objects
 
         double _obscuration; ///< Radius ratio of central obscuration.
         double _flux; ///< Flux.
