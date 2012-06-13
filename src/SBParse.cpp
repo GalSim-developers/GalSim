@@ -367,7 +367,7 @@ namespace galsim {
             double flux=1.;
             double re = (nargs>0) ? dargs[0] : 1.;
             dbg << "**Returning exp with flux, re " << flux << " " << re << std::endl;
-            return SBExponential(re/1.67839, flux);
+            return SBExponential(re / 1.6783469900166605, flux);
 
         } else if (nocaseEqual(sbtype, "sersic")) {
             // Sersic: args are [n] [re=1]
