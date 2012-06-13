@@ -1367,8 +1367,8 @@ namespace galsim {
          *                   `exp[-r^2 / (2. * sigma^2)]`.
          * @param[in] flux   flux of the Surface Brightness Profile (default `flux = 1.`).
          */
-      SBGaussian(double sigma, double flux=1.) :
-	SBProfile(new SBGaussianImpl(sigma, flux)) {}
+        SBGaussian(double sigma, double flux=1.) : 
+            SBProfile(new SBGaussianImpl(sigma, flux)) {}
 
         /// @brief Copy constructor.
         SBGaussian(const SBGaussian& rhs) : SBProfile(rhs) {}
@@ -1457,8 +1457,8 @@ namespace galsim {
          * @param[in] re    half-light radius.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-      SBSersic(double n, double re, double flux=1.) : 
-	SBProfile(new SBSersicImpl(n, re, flux)) {}
+        SBSersic(double n, double re, double flux=1.) : 
+	    SBProfile(new SBSersicImpl(n, re, flux)) {}
 
         /// @brief Copy constructor.
         SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
@@ -1702,8 +1702,8 @@ namespace galsim {
          *                  half-light radius `re`.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-      SBExponential(double r0, double flux=1.) :
-	SBProfile(new SBExponentialImpl(r0, flux)) {}
+         SBExponential(double r0, double flux=1.) :
+             SBProfile(new SBExponentialImpl(r0, flux)) {}
 
         /// @brief Copy constructor.
         SBExponential(const SBExponential& rhs) : SBProfile(rhs) {}
