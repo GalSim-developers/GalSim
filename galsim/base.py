@@ -351,8 +351,9 @@ class Airy(GSObject):
         if self.SBProfile.getObscuration() == 0.:
             # For an unobscured Airy, we have the following factor which can be derived using the
             # integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),
-            # solved for half total flux using the free online tool Wolfram Alpha:
- # http://www.wolframalpha.com/input/?i=Solve[BesselJ[0%2C+x]^2+%2B+BesselJ[1%2C+x]^2+%3D%3D+1%2F2]
+            # solved for half total flux using the free online tool Wolfram Alpha.
+            # At www.wolframalpha.com:
+            # Type "Solve[BesselJ0(x)^2+BesselJ1(x)^2=1/2]"
             return self.SBProfile.getLamOverD() * 1.6802247461942010
         else:
             # In principle can find the half light radius as a function of lam_over_D and
