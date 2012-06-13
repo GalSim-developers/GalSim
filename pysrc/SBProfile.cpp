@@ -315,10 +315,10 @@ struct PySBDeconvolve {
 struct PySBGaussian {
 
     static SBGaussian * construct(
-        double flux,
         const bp::object & half_light_radius,
         const bp::object & sigma,
         const bp::object & fwhm
+        double flux,
     ) {
         double s = 1.0;
         checkRadii(half_light_radius, sigma, fwhm);
@@ -331,7 +331,7 @@ struct PySBGaussian {
         if (fwhm.ptr() != Py_None) {
             s = bp::extract<double>(fwhm) * 0.42466090014400953; // 1 / (2(2\ln2)^(1/2))
         }
-        return new SBGaussian(flux, s);
+        return new SBGaussian(s, flux);
     }
 
     static void wrap() {
@@ -345,8 +345,8 @@ struct PySBGaussian {
             .def(
                 "__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
-                    (bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(), 
-                     bp::arg("sigma")=bp::object(), bp::arg("fwhm")=bp::object()))
+                    (bp::arg("half_light_radius")=bp::object(), bp::arg("sigma")=bp::object(), 
+                     bp::arg("fwhm")=bp::object(), bp::arg("flux")=1.))
             )
             .def("getSigma", &SBGaussian::getSigma)
             ;
