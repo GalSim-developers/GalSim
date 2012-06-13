@@ -227,16 +227,18 @@ in as part of their prompt to help keep track of where they are in their directo
 Since git always uses the same directory structure for different branches, rather than using 
 different directories a la svn, it can sometimes be hard to remember which branch you are on.
 
-Paul Price emailed the lsst-data mail list a trick to get the git branch as part of the prompt
-as well, and I (MJ) have found it very useful.  (It doesn't do anything to your prompt when you
+Paul Price developed a trick to get the git branch as part of the prompt as well, and I 
+(Jarvis) have found it very useful.  (It doesn't do anything to your prompt when you
 aren't in a git directory.)  Here is what to put in your .bashrc or .bash_profile file:
 
 function prompt_git_dirty {
-  if [[ $(git status 2> /dev/null | tail -n1) != "nothing to commit (working directory clean)" ]]; then
-    echo "*"
-  elif (( $(git status 2> /dev/null | grep 'Your branch is ahead of' | wc -l) != 0 )); then
-    echo "+"
-  fi
+  local gitstat=`git status 2> /dev/null`
+  local charstat=""
+  [[ -z $(echo $gitstat | grep "nothing to commit (working directory clean)") ]] && charstat="\*"
+  [[ -n $(echo $gitstat | grep "Your branch and '.*' have diverged") ]] && echo "${charstat}\%" && return
+  [[ -n $(echo $gitstat | grep 'Your branch is ahead of') ]] && echo "${charstat}+" && return 
+  [[ -n $(echo $gitstat | grep 'Your branch is behind') ]] && echo "${charstat}-" && return
+  echo $charstat
 }
 
 function prompt_git_branch {
@@ -251,8 +253,8 @@ An example prompt is (ignoring the colors):
 
 Mike@flute:~/GalSim[#107+] $
 
-The + after the #107 means that I have commits that haven't been pushed yet.  If I have 
-changes that haven't been committed, it will be a *:
+The '+' after the #107 means that I have commits that haven't been pushed yet.  If I have 
+changes that haven't been committed, it will be a '*':
 
 Mike@flute:~/GalSim[#107*] $
 
@@ -260,4 +262,10 @@ When the working directory is clean, it just shows
 
 Mike@flute:~/GalSim[#107] $
 
+If you've fetched changes from the repository, but haven't merged them, you get a '-'.  And
+if you have unmerged changes that conflict with your local changes, you get a '%'.
+
 This is obviously completely optional, but I've found it pretty helpful when using git.
+
+Note: Paul gives due credit, saying he "stole the idea and much of the implementation from 
+http://rubyglazed.com/post/15772234418/git-ify-your-command-line."
