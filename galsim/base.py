@@ -275,7 +275,7 @@ class Moffat(GSObject):
     def getBeta(self):
         """@brief Return the beta parameter for this Moffat profile.
         """
-        return self.SBProfile.getScaleRadius()
+        return self.SBProfile.getBeta()
 
     def getScaleRadius(self):
         """@brief Return the scale radius for this Moffat profile.
