@@ -1458,7 +1458,7 @@ namespace galsim {
          * @param[in] flux  flux (default `flux = 1.`).
          */
         SBSersic(double n, double re, double flux=1.) : 
-	        SBProfile(new SBSersicImpl(n, re, flux)) {}
+            SBProfile(new SBSersicImpl(n, re, flux)) {}
 
         /// @brief Copy constructor.
         SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
