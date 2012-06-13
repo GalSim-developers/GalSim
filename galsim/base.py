@@ -638,12 +638,9 @@ class Add(GSObject):
             SBList = [obj.SBProfile for obj in args]
             GSObject.__init__(self, galsim.SBAdd(SBList))
 
-
     def add(self, obj, scale=1.):
         self.SBProfile.add(obj.SBProfile, scale)
 
-    def getHalfLightRadius(self):
-        raise NotImplementedError("Half light radius calculation not implemented for Add objects.")
 
 class Convolve(GSObject):
     """@brief A class for convolving 2 or more GSObjects.
@@ -769,9 +766,6 @@ class Convolve(GSObject):
     def add(self, obj):
         self.SBProfile.add(obj.SBProfile)
 
-    def getHalfLightRadius(self):
-        return NotImplementedError("Half light radius calculation not implemented for Convolve "+
-                                   "objects.")
 
 class Deconvolve(GSObject):
     """@brief Base class for defining the python interface to the SBDeconvolve C++ class.
@@ -779,10 +773,6 @@ class Deconvolve(GSObject):
     def __init__(self, farg):
         # the single argument should be one of our base classes
         GSObject.__init__(self, galsim.SBDeconvolve(farg.SBProfile))
-
-    def getHalfLightRadius(self):
-        raise NotImplementedError("Half light radius calculation not implemented for Deconvolve "+
-                                   "objects.")
 
 
 # Now we define a dictionary containing all the GSobject subclass names as keys, referencing a
