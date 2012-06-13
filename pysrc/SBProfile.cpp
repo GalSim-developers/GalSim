@@ -383,9 +383,9 @@ struct PySBExponential {
 
 
     static SBExponential * construct(
-        double flux,
         const bp::object & half_light_radius,
-        const bp::object & scale_radius
+        const bp::object & scale_radius,
+        double flux
     ) {
         double s = 1.0;
         checkRadii(half_light_radius, scale_radius, bp::object());
@@ -395,7 +395,7 @@ struct PySBExponential {
         if (scale_radius.ptr() != Py_None) {
             s = bp::extract<double>(scale_radius);
         }
-        return new SBExponential(flux, s);
+        return new SBExponential(s, flux);
     }
 
     static void wrap() {
@@ -409,8 +409,8 @@ struct PySBExponential {
             .def(
                 "__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
-                    (bp::arg("flux")=1., bp::arg("half_light_radius")=bp::object(), 
-                     bp::arg("scale_radius")=bp::object()))
+                    (bp::arg("half_light_radius")=bp::object(), 
+                     bp::arg("scale_radius")=bp::object(), (bp::arg("flux")=1.))
              )
             .def("getScaleRadius", &SBExponential::getScaleRadius)
             ;
