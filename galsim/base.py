@@ -353,10 +353,21 @@ class Airy(GSObject):
  # http://www.wolframalpha.com/input/?i=Solve[BesselJ[0%2C+x]^2+%2B+BesselJ[1%2C+x]^2+%3D%3D+1%2F2]
             return self.SBProfile.getLamOverD() * 1.6802247461942010
         else:
-            # In principle can find the half light radius as a function of D and obscuration too,
-            # but it will be much more involved...!
+            # In principle can find the half light radius as a function of lam_over_D and
+            # obscuration too, but it will be much more involved...!
             raise NotImplementedError("Half light radius calculation not implemented for Airy "+
                                       "objects with non-zero obscuration.")
+
+    def getFWHM(self):
+        # As above, likewise, FWHM only easy to define for unobscured Airy
+        if self.SBProfile.getObscuration == 0.:
+            return self.SBProfile.getLamOverD() * 1.028993969962188;
+        else:
+            # In principle can find the FWHM as a function of lam_over_D and obscuration too,
+            # but it will be much more involved...!
+            raise NotImplementedError("FWHM calculation not implemented for Airy "+
+                                      "objects with non-zero obscuration.")
+
 
 class Pixel(GSObject):
     """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
