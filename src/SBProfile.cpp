@@ -168,7 +168,7 @@ namespace galsim {
         dbg<<"scale => "<<I.getScale()<<std::endl;
         return ret;
     }
- 
+
     template <typename T>
     double SBProfile::SBProfileImpl::doFillXImage2(ImageView<T>& I, double dx) const 
     {
@@ -810,7 +810,7 @@ namespace galsim {
         }
         return result;
     }
-        
+
 
     //
     // "SBDistort" Class 
@@ -872,7 +872,7 @@ namespace galsim {
         } else {
             dbg<<"wrapping a non-distortion.\n";
         }
-   
+
         // It will be reasonably common to have an identity matrix (for just
         // a flux scaling and/or shift) for (A,B,C,D).  If so, we can use simpler
         // versions of fwd and inv:
@@ -1096,7 +1096,7 @@ namespace galsim {
     }
 
     void SBDistort::SBDistortImpl::getYRange(double x, double& ymin, double& ymax,
-                              std::vector<double>& splits) const
+                                             std::vector<double>& splits) const
     {
         xxdbg<<"Distortion getYRange for x = "<<x<<std::endl;
         if (_adaptee.isAxisymmetric()) {
@@ -1405,7 +1405,7 @@ namespace galsim {
         // Note: This can only really be done one pair at a time, so it is 
         // probably rare that this will be more efficient if N > 2.
         // For now, we don't bother implementing this for N > 2.
-        
+
         if (_plist.size() == 2) {
             const SBProfile& p1 = _plist.front();
             const SBProfile& p2 = _plist.back();
@@ -1469,7 +1469,7 @@ namespace galsim {
     // "SBGaussian" Class 
     //
 
-  SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux) :
+    SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux) :
         _flux(flux), _sigma(sigma), _sigma_sq(sigma*sigma)
     {
         // For large k, we clip the result of kValue to 0.
@@ -1858,7 +1858,7 @@ namespace galsim {
         // A faster version that pulls out all the if statements and store the 
         // relevant sinc functions in two arrays, so we don't need to keep calling 
         // sinc on the same values over and over.
-        
+
         kt.clearCache();
         std::vector<double> sinc_x(N/2+1);
         std::vector<double> sinc_y(N/2+1);
@@ -2111,7 +2111,7 @@ namespace galsim {
         dbg<<"stepK = "<<_stepK<<std::endl;
 
         // Now start building the lookup table for FT of the profile.
-        
+
         // Normalization for integral at k=0:
         double hankel_norm = _n*gamma2n/b2n;
         dbg<<"hankel_norm = "<<hankel_norm<<std::endl;
@@ -2186,7 +2186,7 @@ namespace galsim {
                                      "trunc > 0.");
                    } else {
                        // If trunc = 0., calculate half-light radius in units of rD:
-                   // OLD: double rerD = sqrt( std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
+                       // OLD: double rerD = sqrt( std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
                        double rerD = sqrt( std::pow(1. - 0.5, 1./(1.-_beta)) - 1.);
                        _rD = size / rerD;
                    }
@@ -2327,7 +2327,7 @@ namespace galsim {
         if (_ft.size() > 0) return;
 
         // Do a Hankel transform and store the results in a lookup table.
-        
+
         double nn = _norm * 2.*M_PI * _rD_sq;
         //double maxR = _fluxFactor == 1. ? integ::MOCK_INF : _maxR / _rD;
         double maxR = _maxR / _rD;
@@ -2390,7 +2390,7 @@ namespace galsim {
         pa.scaleFlux(N / origN);
         pa.addTo(img);
     }
-    
+
     PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate& u) const 
     {
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
@@ -2430,7 +2430,7 @@ namespace galsim {
             if (remainingN <=0) break;
             if (remainingAbsoluteFlux <= 0.) break;
         }
-        
+
         return result;
     }
 
@@ -2473,7 +2473,7 @@ namespace galsim {
                 yu = 2.*u()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
-            
+
             // Then map it to desired Gaussian with analytic transformation
             double factor = _sigma*sqrt( -2.*std::log(rsq)/rsq);
             result.setPhoton(i,factor*xu, factor*yu, fluxPerPhoton);
@@ -2579,7 +2579,7 @@ namespace galsim {
                 yu = 2.*u()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
-            
+
             // Then map it to the Moffat flux distribution
             double newRsq = std::pow( 1.-rsq*_fluxFactor , 1./(1.-_beta)) - 1.;
             double rFactor = _rD*sqrt(newRsq / rsq);
