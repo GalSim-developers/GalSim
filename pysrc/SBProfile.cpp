@@ -410,7 +410,7 @@ struct PySBExponential {
                 "__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
                     (bp::arg("half_light_radius")=bp::object(), 
-                     bp::arg("scale_radius")=bp::object(), (bp::arg("flux")=1.))
+                     bp::arg("scale_radius")=bp::object(), (bp::arg("flux")=1.)))
              )
             .def("getScaleRadius", &SBExponential::getScaleRadius)
             ;
