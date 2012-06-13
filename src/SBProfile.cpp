@@ -1536,7 +1536,7 @@ namespace galsim {
     // SBExponential Class
     //
 
-  SBExponential::SBExponentialImpl::SBExponentialImpl(double r0, double flux) :
+    SBExponential::SBExponentialImpl::SBExponentialImpl(double r0, double flux) :
         _flux(flux), _r0(r0), _r0_sq(r0*r0)
     {
         // For large k, we clip the result of kValue to 0.
