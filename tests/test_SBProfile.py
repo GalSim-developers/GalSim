@@ -293,7 +293,7 @@ def test_sersic_radii():
     import math
     for n in test_sersic_n:
         # test half-light-radius
-        test_gal = galsim.Sersic(n=n, flux = 1., half_light_radius = test_hlr)
+        test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.)
         hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
         print 'hlr_sum = ',hlr_sum
         np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,

@@ -1965,7 +1965,7 @@ namespace galsim {
     // First need to define the static member that holds info on all the Sersic n's
     SBSersic::InfoBarn SBSersic::nmap;
 
-    SBSersic::SBSersicImpl::SBSersicImpl(double n, double flux, double re) :
+    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux) :
         _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _norm(_flux/_re_sq),
         _info(nmap.get(_n))
     {
