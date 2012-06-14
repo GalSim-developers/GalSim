@@ -444,11 +444,14 @@ def test_sbprofile_moffat():
     # Code was formerly:
     # mySBP = galsim.SBMoffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
     #
-    # ...but this is no longer allowed since we changed the handling of trunc to be in physical
-    # units.  However, the same profile can be constructed using fwhm=1.3178976627539716, as
-    # calculated by interval bisection in devutils/external/calculate_moffat_radii.py
+    # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
+    # physical units.  However, the same profile can be constructed using 
+    # fwhm=1.3178976627539716
+    # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.3178976627539716
-    mySBP = galsim.SBMoffat(beta=2, fwhm=fwhm_backwards_compatible,
+    #mySBP = galsim.SBMoffat(beta=2, fwhm=fwhm_backwards_compatible,
+                            #trunc=5*fwhm_backwards_compatible, flux=1)
+    mySBP = galsim.SBMoffat(beta=2, half_light_radius=1,
                             trunc=5*fwhm_backwards_compatible, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -457,8 +460,10 @@ def test_sbprofile_moffat():
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
             err_msg="Moffat profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
-    moffat = galsim.Moffat(beta=2, fwhm=fwhm_backwards_compatible,
+    moffat = galsim.Moffat(beta=2, half_light_radius=1,
                            trunc=5*fwhm_backwards_compatible, flux=1)
+    #moffat = galsim.Moffat(beta=2, fwhm=fwhm_backwards_compatible,
+                           #trunc=5*fwhm_backwards_compatible, flux=1)
     moffat.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -478,9 +483,10 @@ def test_sbprofile_moffat_properties():
     # Code was formerly:
     # mySBP = galsim.SBMoffat(beta=2.0, truncationFWHM=2, flux=1.8, half_light_radius=1)
     #
-    # ...but this is no longer allowed since we changed the handling of trunc to be in physical
-    # units.  However, the same profile can be constructed using fwhm=1.4686232496771867, as
-    # calculated by interval bisection in devutils/external/calculate_moffat_radii.py
+    # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
+    # physical units.  However, the same profile can be constructed using 
+    # fwhm=1.4686232496771867, 
+    # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.4686232496771867
     psf = galsim.SBMoffat(beta=2.0, fwhm=fwhm_backwards_compatible,
                           trunc=2*fwhm_backwards_compatible, flux=1.8)
@@ -491,13 +497,28 @@ def test_sbprofile_moffat_properties():
     np.testing.assert_almost_equal(psf.maxK(), 11.569262763913111)
     np.testing.assert_almost_equal(psf.stepK(), 1.0695706520648969)
     np.testing.assert_almost_equal(psf.kValue(cen), 1.8+0j)
+    np.testing.assert_almost_equal(psf.getHalfLightRadius(), 1.0)
+    np.testing.assert_almost_equal(psf.getFWHM(), fwhm_backwards_compatible)
+    np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
+
+    # Now create the same profile using the half_light_radius:
+    psf = galsim.SBMoffat(beta=2.0, half_light_radius=1.,
+            trunc=2*fwhm_backwards_compatible, flux=1.8)
+    np.testing.assert_equal(psf.centroid(), cen)
+    np.testing.assert_almost_equal(psf.maxK(), 11.569262763913111)
+    np.testing.assert_almost_equal(psf.stepK(), 1.0695706520648969)
+    np.testing.assert_almost_equal(psf.kValue(cen), 1.8+0j)
+    np.testing.assert_almost_equal(psf.getHalfLightRadius(), 1.0)
+    np.testing.assert_almost_equal(psf.getFWHM(), fwhm_backwards_compatible)
+    np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
+
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         psfFlux = galsim.SBMoffat(2.0, fwhm=fwhm_backwards_compatible,
                                   trunc=2*fwhm_backwards_compatible, flux=inFlux)
         outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
-    np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -507,7 +528,7 @@ def test_moffat_radii():
     import time 
     t1 = time.time()
     import math
-    # first test half-light-radius
+    # Test constructor using half-light-radius:
     test_beta = 2.
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr)
     hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
@@ -531,7 +552,7 @@ def test_moffat_radii():
                                    err_msg="Error in scale radius for Moffat initialized with "+ 
                                            "half-light radius")
 
-    # then test scale
+    # Test constructor using scale radius:
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, scale_radius = test_scale)
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
@@ -554,7 +575,7 @@ def test_moffat_radii():
                                    err_msg="Error in FWHM for Moffat initialized with scale "+
                                            "radius")
 
-    # then test FWHM
+    # Test constructor using FWHM:
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, fwhm = test_fwhm)
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
@@ -578,10 +599,30 @@ def test_moffat_radii():
                                            "scale radius")
 
     # Now repeat everything using a severe trunctation.  (Above had no truncation.)
-    # Note that half-light-radius cannot now be size specifier for trunc > 0, so we will be testing
-    # via the HLR received post-facto from scale and FWHM inits using the getHalfLightRadius method 
 
-    # then test scale
+    # Test constructor using half-light-radius:
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr,
+                             trunc=2*test_hlr)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    print 'hlr_sum = ',hlr_sum
+    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+            err_msg="Error in Moffat constructor with half-light radius")
+    # test that getFWHM() method provides correct FWHM
+    got_fwhm = test_gal.getFWHM()
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+                       test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'fwhm ratio = ', test_fwhm_ratio
+    np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
+            err_msg="Error in FWHM for Moffat initialized with half-light radius")
+    # test that getScaleRadius() method provides correct scale
+    got_scale = test_gal.getScaleRadius()
+    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
+                        test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'scale ratio = ', test_scale_ratio
+    np.testing.assert_almost_equal(test_scale_ratio, 2.**(-test_beta), decimal=4,
+            err_msg="Error in scale radius for Moffat initialized with half-light radius")
+
+    # Test constructor using scale radius:
     test_gal = galsim.Moffat(flux=1., beta=test_beta, trunc=2*test_scale,
                              scale_radius=test_scale)
     center = test_gal.xValue(galsim.PositionD(0,0))
@@ -605,7 +646,7 @@ def test_moffat_radii():
                                    err_msg="Error in FWHM for truncated Moffat initialized with "+
                                            "scale radius")
 
-    # then test FWHM
+    # Test constructor using FWHM:
     test_gal = galsim.Moffat(flux=1., beta=test_beta, trunc=2.*test_fwhm,
                              fwhm = test_fwhm)
     center = test_gal.xValue(galsim.PositionD(0,0))
@@ -716,9 +757,10 @@ def test_sbprofile_convolve():
     # Code was formerly:
     # mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     #
-    # ...but this is no longer allowed since we changed the handling of trunc to be in physical
-    # units.  However, the same profile can be constructed using fwhm=1.0927449310213702, as
-    # calculated by interval bisection in devutils/external/calculate_moffat_radii.py
+    # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
+    # physical units.  However, the same profile can be constructed using 
+    # fwhm=1.0927449310213702,
+    # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.0927449310213702
     mySBP = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
                             trunc=4*fwhm_backwards_compatible, flux=1)
@@ -802,11 +844,14 @@ def test_sbprofile_realspace_convolve():
     # Code was formerly:
     # mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     #
-    # ...but this is no longer allowed since we changed the handling of trunc to be in physical
-    # units.  However, the same profile can be constructed using fwhm=1.0927449310213702, as
-    # calculated by interval bisection in devutils/external/calculate_moffat_radii.py
+    # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
+    # physical units.  However, the same profile can be constructed using 
+    # fwhm=1.0927449310213702,
+    # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.0927449310213702
-    psf = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
+    #psf = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
+                          #trunc=4*fwhm_backwards_compatible, flux=1)
+    psf = galsim.SBMoffat(beta=1.5, half_light_radius=1,
                           trunc=4*fwhm_backwards_compatible, flux=1)
     pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.SBConvolve([psf,pixel],real_space=True)
@@ -819,8 +864,10 @@ def test_sbprofile_realspace_convolve():
     np.testing.assert_array_almost_equal(img.array, saved_img.array, 5,
         err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
-    psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible, trunc=4*fwhm_backwards_compatible,
-                        flux=1)
+    psf = galsim.Moffat(beta=1.5, half_light_radius=1,
+                        trunc=4*fwhm_backwards_compatible, flux=1)
+    #psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible,
+                        #trunc=4*fwhm_backwards_compatible, flux=1)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel],real_space=True)
     conv.draw(img,dx=0.2)
@@ -853,8 +900,10 @@ def test_sbprofile_realspace_distorted_convolve():
     import time
     t1 = time.time()
     fwhm_backwards_compatible = 1.0927449310213702
-    psf = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
-                          trunc=4*fwhm_backwards_compatible, flux=1)  # See note in test above
+    psf = galsim.SBMoffat(beta=1.5, half_light_radius=1,
+                          trunc=4*fwhm_backwards_compatible, flux=1)
+    #psf = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
+                          #trunc=4*fwhm_backwards_compatible, flux=1)  
     psf.applyShear(0.11,0.17)
     psf.applyRotation(13 * galsim.degrees)
     pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
@@ -872,8 +921,10 @@ def test_sbprofile_realspace_distorted_convolve():
         err_msg="distorted Moffat convolved with distorted Box disagrees with expected result")
 
     # Repeat with the GSObject version of this:
-    psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible, trunc=4*fwhm_backwards_compatible,
-                        flux=1)
+    psf = galsim.Moffat(beta=1.5, half_light_radius=1,
+                        trunc=4*fwhm_backwards_compatible, flux=1)
+    #psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible,
+                        #trunc=4*fwhm_backwards_compatible, flux=1)
     psf.applyShear(0.11,0.17)
     psf.applyRotation(13 * galsim.degrees)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
@@ -1196,6 +1247,7 @@ def test_sbprofile_sbinterpolatedimage():
 
 
 if __name__ == "__main__":
+    test_sbprofile_moffat_properties()
     test_gaussian_radii()
     test_exponential_radii()
     test_sersic_radii()

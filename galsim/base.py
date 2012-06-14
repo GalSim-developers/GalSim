@@ -269,11 +269,6 @@ class Moffat(GSObject):
     """
     def __init__(self, beta, fwhm=None, scale_radius=None, half_light_radius=None,
                  trunc=0., flux=1.):
-        if trunc > 0. and half_light_radius != None:
-            # This error is also thrown by SBProfile, raising a RuntimeError, but might as well
-            # catch it here first with a more descriptive/apposite Exception type:
-            raise NotImplementedError("Setting Moffat size via half light radius not supported for "
-                                      +"trunc > 0.")
         GSObject.__init__(self, galsim.SBMoffat(beta, fwhm=fwhm, scale_radius=scale_radius,
                                                 half_light_radius=half_light_radius, trunc=trunc,
                                                 flux=flux))

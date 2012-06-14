@@ -47,6 +47,8 @@ namespace galsim {
         T getXTolerance() const { return xTolerance; }
         void setXTolerance(T tol) { xTolerance=tol; }
         void setBounds(T lb, T ub) { lBound=lb; uBound=ub; }
+        double getLowerBound() const { return lBound; }
+        double getUpperBound() const { return uBound; }
 
         // Hunt for bracket, geometrically expanding range
         void bracket() 

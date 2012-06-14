@@ -2229,7 +2229,6 @@ namespace galsim {
         double _flux; ///< Flux.
         double _norm; ///< Normalization. (Including the flux)
         double _rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
-        mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
         double _maxR; ///< Maximum `r`
         double _FWHM;  ///< Full Width at Half Maximum.
         double _trunc;  ///< Outer truncation radius in same physical units as `_rD`
@@ -2239,6 +2238,8 @@ namespace galsim {
         double _maxK; ///< Maximum k with kValue > 1.e-3
 
         Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
+
+        mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
 
         double (*pow_beta)(double x, double beta);
 
