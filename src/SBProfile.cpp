@@ -2171,6 +2171,8 @@ namespace galsim {
         double FWHMrD = 2.* sqrt(std::pow(2., 1./_beta)-1.);
         xdbg<<"FWHMrD = "<<FWHMrD<<"\n";
 
+        _re = 0.; // initially set to zero, may be updated by size or getHalfLightRadius()
+
         // Set size of this instance according to type of size given in constructor:
         switch (rType) {
           case FWHM:
@@ -2187,8 +2189,9 @@ namespace galsim {
                    } else {
                        // If trunc = 0., calculate half-light radius in units of rD:
                        // OLD: double rerD = sqrt( std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta))-1.);
+                       _re = size;
                        double rerD = sqrt( std::pow(1. - 0.5, 1./(1.-_beta)) - 1.);
-                       _rD = size / rerD;
+                       _rD = _re / rerD;
                    }
                }
                break;
@@ -2239,12 +2242,13 @@ namespace galsim {
 
     double SBMoffat::SBMoffatImpl::getHalfLightRadius() const 
     {
-        // BARNEY NOTE: A little inefficient to calculate rerD every getHLR call?  Done since
-        // rerD depends on _fluxFactor and thus requires _rD in advance, so this needs to happen
-        // largely post setup. And it doesn't seem efficient to ALWAYS calculate it above...
-        // Get half-light radius in units of rD:
-        double rerD = sqrt(std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
-        return _rD * rerD;
+        // Done here since _re depends on _fluxFactor and thus requires _rD in advance, so this 
+        // needs to happen largely post setup. Doesn't seem efficient to ALWAYS calculate it above,
+        // so we'll just calculate it once if requested and store it.
+        if (_re == 0.) {
+            _re = _rD * sqrt(std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
+        }
+        return _re;
     }
 
     double SBMoffat::SBMoffatImpl::xValue(const Position<double>& p) const 

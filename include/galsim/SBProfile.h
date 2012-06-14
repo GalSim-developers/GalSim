@@ -2229,6 +2229,7 @@ namespace galsim {
         double _flux; ///< Flux.
         double _norm; ///< Normalization. (Including the flux)
         double _rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
+        mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
         double _maxR; ///< Maximum `r`
         double _FWHM;  ///< Full Width at Half Maximum.
         double _trunc;  ///< Outer truncation radius in same physical units as `_rD`
