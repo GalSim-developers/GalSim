@@ -178,15 +178,13 @@ def test_gaussian_radii():
     """
     import time
     t1 = time.time()
-    # TODO: Once we have getHalfLightRadius, we should repeat the hlr test for the
-    #       versions that create the object from sigma or fwhm.
     import math
     # first test half-light-radius
     test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
     hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
-            err_msg="Error in Gaussian constructor with half-light radius")
+                                   err_msg="Error in Gaussian constructor with half-light radius")
 
     # then test sigma
     test_gal = galsim.Gaussian(flux = 1., sigma = test_sigma)
@@ -194,7 +192,14 @@ def test_gaussian_radii():
     ratio = test_gal.xValue(galsim.PositionD(test_sigma,0)) / center
     print 'sigma ratio = ',ratio
     np.testing.assert_almost_equal(ratio, np.exp(-0.5), decimal=4,
-            err_msg="Error in Gaussian constructor with sigma")
+                                   err_msg="Error in Gaussian constructor with sigma")
+    # then test that image indeed has the correct HLR properties when radially integrated
+    got_hlr = test_gal.getHalfLightRadius()
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    print 'hlr_sum (profile initialized with sigma) = ',hlr_sum
+    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+                                   err_msg="Error in half light radius for Gaussian initialized "+
+                                           "with sigma.")
 
     # then test FWHM
     test_gal = galsim.Gaussian(flux = 1., fwhm = test_fwhm)
@@ -203,6 +208,13 @@ def test_gaussian_radii():
     print 'fwhm ratio = ',ratio
     np.testing.assert_almost_equal(ratio, 0.5, decimal=4,
             err_msg="Error in Gaussian constructor with fwhm")
+    # then test that image indeed has the correct HLR properties when radially integrated
+    got_hlr = test_gal.getHalfLightRadius()
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    print 'hlr_sum (profile initialized with fwhm) = ',hlr_sum
+    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+                                   err_msg="Error in half light radius for Gaussian initialized "+
+                                           "with FWHM.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -250,7 +262,8 @@ def test_exponential_radii():
     hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
-            err_msg="Error in Exponential constructor with half-light radius")
+                                   err_msg="Error in Exponential constructor with half-light "+
+                                           "radius")
 
     # then test scale
     test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale)
@@ -258,7 +271,14 @@ def test_exponential_radii():
     ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
     print 'scale ratio = ',ratio
     np.testing.assert_almost_equal(ratio, np.exp(-1.0), decimal=4,
-            err_msg="Error in Exponential constructor with scale")
+                                   err_msg="Error in Exponential constructor with scale")
+    # then test that image indeed has the correct HLR properties when radially integrated
+    got_hlr = test_gal.getHalfLightRadius()
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    print 'hlr_sum (profile initialized with scale_radius) = ',hlr_sum
+    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+                                   err_msg="Error in half light radius for Exponential initialized"+
+                                           " with scale_radius.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -330,6 +350,9 @@ def test_sbprofile_airy():
     do_shoot(airy,myImg,0.2,"Airy")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+# TODO: ADD Airy radius test
 
 
 def test_sbprofile_box():
