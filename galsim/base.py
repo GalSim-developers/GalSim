@@ -253,6 +253,11 @@ class Gaussian(GSObject):
         """
         return self.SBProfile.getSigma()
 
+    def getFWHM(self):
+        """@brief Return the FWHM for this Gaussian profile.
+        """
+        return self.SBProfile.getSigma() * 2.3548200450309493 # factor = 2 sqrt[2ln(2)]
+
     def getHalfLightRadius(self):
         """@brief Return the half light radius for this Gaussian profile.
         """
@@ -365,7 +370,7 @@ class Airy(GSObject):
         """Return the FWHM of this Airy profile (only supported for obscuration = 0.).
         """
         # As above, likewise, FWHM only easy to define for unobscured Airy
-        if self.SBProfile.getObscuration == 0.:
+        if self.SBProfile.getObscuration() == 0.:
             return self.SBProfile.getLamOverD() * 1.028993969962188;
         else:
             # In principle can find the FWHM as a function of lam_over_D and obscuration too,

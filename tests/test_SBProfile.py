@@ -220,7 +220,7 @@ def test_gaussian_radii():
     got_fwhm = test_gal.getFWHM()
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
                        test_gal.xValue(galsim.PositionD(0., 0.)))
-    print 'fwhm_test_ratio = ', test_fwhm_ratio
+    print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
                                    err_msg="Error in FWHM for Gaussian initialized with sigma.")
 
@@ -242,7 +242,7 @@ def test_gaussian_radii():
     got_sigma = test_gal.getSigma()
     test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) / 
                         test_gal.xValue(galsim.PositionD(0., 0.)))
-    print 'sigma_test_ratio = ', test_sigma_ratio
+    print 'scale ratio = ', test_sigma_ratio
     np.testing.assert_almost_equal(test_sigma_ratio, math.exp(-0.5), decimal=4,
                                    err_msg="Error in sigma for Gaussian initialized with FWHM.")
 
@@ -294,6 +294,13 @@ def test_exponential_radii():
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
                                    err_msg="Error in Exponential constructor with half-light "+
                                            "radius")
+    # then test scale getter
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_gal.getScaleRadius(),0)) / center
+    print 'scale ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, np.exp(-1.0), decimal=4,
+                                   err_msg="Error in getScaleRadius for Exponential constructed "+
+                                           "with half light radius")
 
     # then test scale
     test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale)
@@ -381,8 +388,8 @@ def test_sbprofile_airy():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_airy_radius():
-    """Test Airy half light radius is correctly set and matches image.
+def test_airy_radii():
+    """Test Airy half light radius and FWHM correctly set and match image.
     """
     import time
     t1 = time.time() 
@@ -394,6 +401,13 @@ def test_airy_radius():
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
                                    err_msg="Error in Airy half-light radius")
+    # then test FWHM getter
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(.5 * test_gal.getFWHM(),0)) / center
+    print 'fwhm ratio = ',ratio
+    np.testing.assert_almost_equal(ratio, 0.5, decimal=4,
+                                   err_msg="Error in getFWHM() for Airy.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
