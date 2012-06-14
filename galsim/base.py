@@ -353,8 +353,8 @@ class Airy(GSObject):
             # integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),
             # solved for half total flux using the free online tool Wolfram Alpha.
             # At www.wolframalpha.com:
-            # Type "Solve[BesselJ0(x)^2+BesselJ1(x)^2=1/2]"
-            return self.SBProfile.getLamOverD() * 1.6802247461942010
+            # Type "Solve[BesselJ0(x)^2+BesselJ1(x)^2=1/2]" ... and divide the result by pi
+            return self.SBProfile.getLamOverD() * 0.5348321477242647
         else:
             # In principle can find the half light radius as a function of lam_over_D and
             # obscuration too, but it will be much more involved...!

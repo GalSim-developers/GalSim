@@ -351,9 +351,21 @@ def test_sbprofile_airy():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
-# TODO: ADD Airy radius test
-
+def test_airy_radius():
+    """Test Airy half light radius is correctly set and matches image.
+    """
+    import time
+    t1 = time.time() 
+    import math
+    # first test half-light-radius
+    test_gal = galsim.Airy(lam_over_D= 1./0.8, flux=1.)
+    got_hlr = test_gal.getHalfLightRadius()
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    print 'hlr_sum = ',hlr_sum
+    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+                                   err_msg="Error in Airy half-light radius")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sbprofile_box():
     """Test the generation of a specific box profile using SBProfile against a known result.
