@@ -1376,7 +1376,7 @@ namespace galsim {
         /// @brief Destructor.
         ~SBGaussian() {}
 
-        /// @brief Returns the cahracteristic size sigma of the Gaussian profile.
+        /// @brief Returns the characteristic size sigma of the Gaussian profile.
         double getSigma() const 
         { 
             assert(dynamic_cast<const SBGaussianImpl*>(_pimpl.get()));
