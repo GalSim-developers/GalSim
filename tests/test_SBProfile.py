@@ -434,15 +434,22 @@ def test_moffat_radii():
     hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
-            err_msg="Error in Moffat constructor with half-light radius")
-
+                                   err_msg="Error in Moffat constructor with half-light radius")
+    
     # then test scale
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, scale_radius = test_scale)
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
     print 'scale ratio = ',ratio
     np.testing.assert_almost_equal(ratio, pow(2,-test_beta), decimal=4,
-            err_msg="Error in Moffat constructor with scale")
+                                   err_msg="Error in Moffat constructor with scale")
+    # then test that image indeed has the matching properties when radially integrated
+    got_hlr = test_gal.getHalfLightRadius()
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    print 'hlr_sum (profile initialized with scale_radius) = ',hlr_sum
+    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+                                   err_msg="Error in half light radius for Moffat initialized "+
+                                           "with scale radius.")
 
     # then test FWHM
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, fwhm = test_fwhm)
