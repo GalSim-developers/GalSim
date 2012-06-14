@@ -1255,6 +1255,7 @@ if __name__ == "__main__":
     test_sbprofile_sersic()
     test_sersic_radii()
     test_sbprofile_airy()
+    test_airy_radii()
     test_sbprofile_box()
     test_sbprofile_moffat()
     test_sbprofile_moffat_properties()

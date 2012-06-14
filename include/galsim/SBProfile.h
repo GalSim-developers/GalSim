@@ -1376,6 +1376,7 @@ namespace galsim {
         /// @brief Destructor.
         ~SBGaussian() {}
 
+        /// @brief Returns the cahracteristic size sigma of the Gaussian profile.
         double getSigma() const 
         { 
             assert(dynamic_cast<const SBGaussianImpl*>(_pimpl.get()));
@@ -1466,12 +1467,14 @@ namespace galsim {
         /// @brief Destructor.
         ~SBSersic() {}
 
-        double getN() const 
+        /// @brief Returns the Sersic index `n` of the profile.
+        double getN() const
         { 
             assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
             return dynamic_cast<const SBSersicImpl&>(*_pimpl).getN(); 
         }
 
+        /// @brief Returns the half light radius of the Sersic profile.
         double getHalfLightRadius() const 
         {
             assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
@@ -1711,6 +1714,7 @@ namespace galsim {
         /// @brief Destructor.
         ~SBExponential() {}
 
+        /// @brief Returns the scale radius of the Exponential profile.
         double getScaleRadius() const 
         { 
             assert(dynamic_cast<const SBExponentialImpl*>(_pimpl.get()));
