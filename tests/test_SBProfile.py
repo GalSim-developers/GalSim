@@ -1247,12 +1247,6 @@ def test_sbprofile_sbinterpolatedimage():
 
 
 if __name__ == "__main__":
-    test_sbprofile_moffat_properties()
-    test_gaussian_radii()
-    test_exponential_radii()
-    test_sersic_radii()
-    test_moffat_radii()
-
     test_sbprofile_gaussian()
     test_sbprofile_gaussian_properties()
     test_gaussian_radii()
