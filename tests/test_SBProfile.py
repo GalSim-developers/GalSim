@@ -189,7 +189,7 @@ def test_gaussian_radii():
     got_fwhm = test_gal.getFWHM()
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
                        test_gal.xValue(galsim.PositionD(0., 0.)))
-    print 'fwhm_test_ratio = ', test_fwhm_ratio
+    print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
                                    err_msg="Error in FWHM for Gaussian initialized with half-"+
                                            "light radius")
@@ -197,7 +197,7 @@ def test_gaussian_radii():
     got_sigma = test_gal.getSigma()
     test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) / 
                         test_gal.xValue(galsim.PositionD(0., 0.)))
-    print 'sigma_test_ratio = ', test_sigma_ratio
+    print 'sigma ratio = ', test_sigma_ratio
     np.testing.assert_almost_equal(test_sigma_ratio, math.exp(-0.5), decimal=4,
                                    err_msg="Error in sigma for Gaussian initialized with half-"+
                                            "light radius")
@@ -242,7 +242,7 @@ def test_gaussian_radii():
     got_sigma = test_gal.getSigma()
     test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) / 
                         test_gal.xValue(galsim.PositionD(0., 0.)))
-    print 'scale ratio = ', test_sigma_ratio
+    print 'sigma ratio = ', test_sigma_ratio
     np.testing.assert_almost_equal(test_sigma_ratio, math.exp(-0.5), decimal=4,
                                    err_msg="Error in sigma for Gaussian initialized with FWHM.")
 
@@ -514,7 +514,23 @@ def test_moffat_radii():
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
                                    err_msg="Error in Moffat constructor with half-light radius")
-    
+    # test that getFWHM() method provides correct FWHM
+    got_fwhm = test_gal.getFWHM()
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+                       test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'fwhm ratio = ', test_fwhm_ratio
+    np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
+                                   err_msg="Error in FWHM for Moffat initialized with half-"+
+                                           "light radius")
+    # test that getScaleRadius() method provides correct scale
+    got_scale = test_gal.getScaleRadius()
+    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
+                        test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'scale ratio = ', test_scale_ratio
+    np.testing.assert_almost_equal(test_scale_ratio, 2.**(-test_beta), decimal=4,
+                                   err_msg="Error in scale radius for Moffat initialized with "+ 
+                                           "half-light radius")
+
     # then test scale
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, scale_radius = test_scale)
     center = test_gal.xValue(galsim.PositionD(0,0))
@@ -529,6 +545,14 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
                                    err_msg="Error in half light radius for Moffat initialized "+
                                            "with scale radius.")
+    # test that getFWHM() method provides correct FWHM
+    got_fwhm = test_gal.getFWHM()
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+                       test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'fwhm ratio = ', test_fwhm_ratio
+    np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
+                                   err_msg="Error in FWHM for Moffat initialized with scale "+
+                                           "radius")
 
     # then test FWHM
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, fwhm = test_fwhm)
@@ -544,6 +568,14 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
                                    err_msg="Error in half light radius for Moffat initialized "+
                                            "with FWHM.")
+    # test that getScaleRadius() method provides correct scale
+    got_scale = test_gal.getScaleRadius()
+    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
+                        test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'scale ratio = ', test_scale_ratio
+    np.testing.assert_almost_equal(test_scale_ratio, 2.**(-test_beta), decimal=4,
+                                   err_msg="Error in scale radius for Moffat initialized with "+ 
+                                           "scale radius")
 
     # Now repeat everything using a severe trunctation.  (Above had no truncation.)
     # Note that half-light-radius cannot now be size specifier for trunc > 0, so we will be testing
@@ -564,6 +596,14 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
                                    err_msg="Error in half light radius for truncated Moffat "+
                                            "initialized with scale radius.")
+    # test that getFWHM() method provides correct FWHM
+    got_fwhm = test_gal.getFWHM()
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+                       test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'fwhm ratio = ', test_fwhm_ratio
+    np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
+                                   err_msg="Error in FWHM for truncated Moffat initialized with "+
+                                           "scale radius")
 
     # then test FWHM
     test_gal = galsim.Moffat(flux=1., beta=test_beta, trunc=2.*test_fwhm,
@@ -580,6 +620,14 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
                                    err_msg="Error in half light radius for truncated Moffat "+
                                            "initialized with FWHM.")
+    # test that getScaleRadius() method provides correct scale
+    got_scale = test_gal.getScaleRadius()
+    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
+                        test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'scale ratio = ', test_scale_ratio
+    np.testing.assert_almost_equal(test_scale_ratio, 2.**(-test_beta), decimal=4,
+                                   err_msg="Error in scale radius for truncated Moffat initialized"+
+                                           " with scale radius")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
