@@ -2225,7 +2225,7 @@ namespace galsim {
             xdbg<<"r2 = "<<r2<<std::endl;
             Solve<MoffatScaleRadiusFunc> solver(func,r1,r2);
             solver.setMethod(Brent);
-            solver.bracket();
+            solver.bracketUpper();
             xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
                 solver.getUpperBound()<<std::endl;
             double rd = solver.root();
