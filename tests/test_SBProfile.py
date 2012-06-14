@@ -502,7 +502,8 @@ def test_moffat_radii():
                                            "with FWHM.")
 
     # Now repeat everything using a severe trunctation.  (Above had no truncation.)
-    # Note that half-light-radius cannot now be size specifier for trunc > 0.
+    # Note that half-light-radius cannot now be size specifier for trunc > 0, so we will be testing
+    # via the HLR received post-facto from scale and FWHM inits using the getHalfLightRadius method 
 
     # then test scale
     test_gal = galsim.Moffat(flux=1., beta=test_beta, trunc=2*test_scale,
