@@ -213,7 +213,7 @@ def test_sbprofile_exponential():
     import time
     t1 = time.time()
     re = 1.0
-    r0 = re/1.67839
+    r0 = re / 1.6783469900166605
     mySBP = galsim.SBExponential(flux=1., scale_radius=r0)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
