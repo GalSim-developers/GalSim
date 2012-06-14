@@ -185,6 +185,22 @@ def test_gaussian_radii():
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
                                    err_msg="Error in Gaussian constructor with half-light radius")
+    # test that getFWHM() method provides correct FWHM
+    got_fwhm = test_gal.getFWHM()
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+                       test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'fwhm_test_ratio = ', test_fwhm_ratio
+    np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
+                                   err_msg="Error in FWHM for Gaussian initialized with half-"+
+                                           "light radius")
+    # test that getSigma() method provides correct sigma
+    got_sigma = test_gal.getSigma()
+    test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) / 
+                        test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'sigma_test_ratio = ', test_sigma_ratio
+    np.testing.assert_almost_equal(test_sigma_ratio, math.exp(-0.5), decimal=4,
+                                   err_msg="Error in sigma for Gaussian initialized with half-"+
+                                           "light radius")
 
     # then test sigma
     test_gal = galsim.Gaussian(flux = 1., sigma = test_sigma)
@@ -200,6 +216,13 @@ def test_gaussian_radii():
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
                                    err_msg="Error in half light radius for Gaussian initialized "+
                                            "with sigma.")
+    # test that getFWHM() method provides correct FWHM
+    got_fwhm = test_gal.getFWHM()
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+                       test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'fwhm_test_ratio = ', test_fwhm_ratio
+    np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
+                                   err_msg="Error in FWHM for Gaussian initialized with sigma.")
 
     # then test FWHM
     test_gal = galsim.Gaussian(flux = 1., fwhm = test_fwhm)
@@ -215,6 +238,13 @@ def test_gaussian_radii():
     np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
                                    err_msg="Error in half light radius for Gaussian initialized "+
                                            "with FWHM.")
+    # test that getSigma() method provides correct sigma
+    got_sigma = test_gal.getSigma()
+    test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) / 
+                        test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'sigma_test_ratio = ', test_sigma_ratio
+    np.testing.assert_almost_equal(test_sigma_ratio, math.exp(-0.5), decimal=4,
+                                   err_msg="Error in sigma for Gaussian initialized with FWHM.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
