@@ -213,6 +213,11 @@ def test_sbprofile_exponential():
     import time
     t1 = time.time()
     re = 1.0
+    # Note the factor below should really be 1.6783469900166605, but the value of 1.67839 is
+    # retained here as it was used by SBParse to generate the original known result (this changed
+    # in commit b77eb05ab42ecd31bc8ca03f1c0ae4ee0bc0a78b.
+    # The value of this test for regression purposes is not harmed by retaining the old scaling, it
+    # just means that the half light radius chosen for the test is not really 1, but 0.999974...
     r0 = re/1.67839
     mySBP = galsim.SBExponential(flux=1., scale_radius=r0)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
