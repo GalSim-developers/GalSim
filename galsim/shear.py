@@ -53,13 +53,13 @@ class Shear:
             # component is zero if not set, and don't allow specification of mixed pairs like e1 and
             # g2 check the named args: require also a position angle if we didn't get g1/g2, e1/e2,
             # or eta1/eta2
-            if not kwargs:
-                raise TypeError("No keywords given to initialize Shear!")
             if len(kwargs) > 2:
                 raise TypeError(
                     "Shear constructor received >2 keyword arguments: %s"%kwargs.keys())
 
-            if 'g1' in kwargs or 'g2' in kwargs:
+            if not kwargs:
+                use_shear = _galsim._Shear(0.0, 0.0)
+            elif 'g1' in kwargs or 'g2' in kwargs:
                 g1 = kwargs.pop('g1', 0.)
                 g2 = kwargs.pop('g2', 0.)
                 g = np.sqrt(g1**2 + g2**2)
@@ -135,9 +135,6 @@ class Shear:
                 use_shear.setEtaBeta(eta, beta)
             elif 'beta' in kwargs:
                 raise TypeError("beta provided to Shear constructor, but not g/e/eta/q")
-            else:
-                raise RuntimeError(
-                    "No appropriate shear specification given to Shear constructor")
 
             if kwargs:
                 raise TypeError(
