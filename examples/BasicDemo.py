@@ -121,7 +121,7 @@ def Script2():
     gal = galsim.Exponential(flux=gal_flux, scale_radius=gal_r0)
 
     # Shear the galaxy by some value.
-    gal.applyShear(g1, g2)
+    gal.applyShear(g1=g1, g2=g2)
     logger.info('Made galaxy profile')
 
     # Define the PSF profile.
@@ -248,14 +248,14 @@ def Script3():
     gal = galsim.Sersic(gal_n, flux=gal_flux, half_light_radius=gal_re)
 
     # Shear the galaxy by some value.
-    gal.applyShear(g1, g2)
+    gal.applyShear(g1=g1, g2=g2)
     logger.info('Made galaxy profile')
 
     # Define the atmospheric part of the PSF.
     atmos_a = galsim.Gaussian(sigma=atmos_a_sigma)
-    atmos_a.applyShear(atmos_a_g1 , atmos_a_g2)
+    atmos_a.applyShear(g1=atmos_a_g1 , g2=atmos_a_g2)
     atmos_b = galsim.Gaussian(sigma=atmos_b_sigma)
-    atmos_b.applyShear(atmos_b_g1 , atmos_b_g2)
+    atmos_b.applyShear(g1=atmos_b_g1 , g2=atmos_b_g2)
     atmos = atmos_fa * atmos_a + (1-atmos_fa) * atmos_b
     # Could also have written either of the following, which do the same thing:
     # atmos = galsim.Add(atmos_a, atmos_b)
@@ -281,7 +281,7 @@ def Script3():
     pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
     # Then shear them slightly by the negative of the wcs shear.
     # This way the later distortion of the full image will bring them back to square.
-    pix.applyShear(-wcs_g1, -wcs_g2)
+    pix.applyShear(g1=-wcs_g1, g2=-wcs_g2)
     logger.info('Made pixel profile')
 
     # Final profile is the convolution of these.
@@ -290,8 +290,8 @@ def Script3():
     logger.info('Convolved components into final profile')
 
     # Now apply the wcs shear to the final image.
-    final.applyShear(wcs_g1, wcs_g2)
-    final_epsf.applyShear(wcs_g1, wcs_g2)
+    final.applyShear(g1=wcs_g1, g2=wcs_g2)
+    final_epsf.applyShear(g1=wcs_g1, g2=wcs_g2)
     logger.info('Applied WCS distortion')
 
     # Draw the image with a particular pixel scale.

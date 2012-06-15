@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 Simple test of shooting photons to sample from an existing pixelized image.
-Usage: ShootInterpolated.py <input FITS> <output FITS> <dx> <dim> <nPhotons> [e1] [e2]
+Usage: ShootInterpolated.py <input FITS> <output FITS> <dx> <dim> <nPhotons> [g1] [g2]
 <input FITS> is name of the input FITS image, whose pixel scale will be treated as 1 unit.
 <output FITS> is name of FITS file image to be produced by sampling input
 dx is pixel scale for output image
 dim is number of pixels per side for output image
 nPhotons is number of photons to shoot through the image
-e1 and e2 are optional shear to be applied while shooting (specified as e1/e2-type distortions)
+g1 and g2 are reduced shears to be applied while shooting
 """
 
 # This machinery lets us run Python examples even though they aren't positioned
@@ -37,15 +37,15 @@ def main(argv):
         dxOut = float(argv[3])
         dim = int(argv[4])
         nPhotons = int(argv[5])
-        e1 = float(argv[6]) if len(argv) > 6 else 0.
-        e2 = float(argv[7]) if len(argv) > 7 else 0.
+        g1 = float(argv[6]) if len(argv) > 6 else 0.
+        g2 = float(argv[7]) if len(argv) > 7 else 0.
     except Exception as err:
         print __doc__
         raise err
 
     galaxyImg = galsim.fits.read(inname)
     galaxy = galsim.SBInterpolatedImage(galaxyImg, interp2d, 1., 1.0)
-    shearedGalaxy = galaxy.shear(e1,e2)
+    shearedGalaxy = galaxy.applyShear(g1,g2)
 
     rng = galsim.UniformDeviate(1534225)
     bounds = galsim.BoundsI(-dim/2, dim/2+1, -dim/2, dim/2+1)
