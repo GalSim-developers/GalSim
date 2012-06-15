@@ -137,13 +137,6 @@ namespace galsim {
         bool operator!=(const Shear& rhs) const 
         { return e1!=rhs.e1 || e2!=rhs.e2; }
 
-        // Multiplication/division by scalar is done on the e representation
-        // of the shear, not correct for g or eta.
-        Shear operator*(const double);
-        Shear operator/(const double);
-        Shear& operator*=(const double);
-        Shear& operator/=(const double);
-
         // Classes that treat shear as a point-set map:
         template <class T>
         Position<T> fwd(Position<T> p) const 

@@ -157,42 +157,6 @@ namespace galsim {
         return std::atan2(ss, cc) * radians;
     }
 
-    Shear& Shear::operator*=(const double d) 
-    {
-        dbg<<"Shear op*=\n";
-        e1 *= d; e2 *= d;
-        hasMatrix = false;
-        return *this;
-    }
-
-    Shear& Shear::operator/=(const double d) 
-    {
-        dbg<<"Shear op/=\n";
-        hasMatrix = false;
-        return Shear::operator*=(1./d);
-    }
-
-    Shear Shear::operator*(const double d) 
-    {
-        Shear out=*this;
-        out *= d;
-        return out;
-    }
-
-    Shear Shear::operator/(const double d) 
-    {
-        Shear out=*this;
-        out *= 1./d;
-        return out;
-    }
-
-    Shear operator*(const double d, const Shear& s) 
-    {
-        Shear out=s;
-        out *= d;
-        return out;
-    }
-
     void Shear::write(std::ostream& fout) const 
     { fout << "(" << e1 << "," << e2 << ")" ; }
 

@@ -178,11 +178,6 @@ class Shear:
     def rotationWith(self, other): return self._shear.rotationWith(other)
     def __eq__(self, other): return self._shear == other._shear
     def __ne__(self, other): return self._shear != other._shear
-    def __mul__(self, val): return Shear(self._shear * val)
-    def __rmul__(self, val): return Shear(self._shear * val)
-    def __div__(self, val): return Shear(self._shear / val)
-    def __imul__(self, val): self._shear *= val
-    def __idiv__(self, val): self._shear /= val
     def fwd(self, p): return self._shear.fwd(p)
     def inv(self, p): return self._shear.inv(p)
     def getMatrix(self, a, b, c): self._shear.getMatrix(a, b, c)
