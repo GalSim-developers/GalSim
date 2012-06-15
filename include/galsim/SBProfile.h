@@ -225,10 +225,10 @@ namespace galsim {
             _pimpl->getYRange(ymin,ymax,splits); 
         }
 
-        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
         { 
             assert(_pimpl.get());
-            _pimpl->getYRange(x,ymin,ymax,splits); 
+            _pimpl->getYRangeX(x,ymin,ymax,splits); 
         }
         //@}
 
@@ -712,7 +712,7 @@ namespace galsim {
                                std::vector<double>& /*splits*/) const 
         { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
 
-        virtual void getYRange(double /*x*/, double& ymin, double& ymax,
+        virtual void getYRangeX(double /*x*/, double& ymin, double& ymax,
                                std::vector<double>& splits) const 
         { getYRange(ymin,ymax,splits); }
 
@@ -843,12 +843,12 @@ namespace galsim {
             }
         }
 
-        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
         {
             ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
             for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
                 double ymin_1, ymax_1;
-                pptr->getYRange(x,ymin_1,ymax_1,splits);
+                pptr->getYRangeX(x,ymin_1,ymax_1,splits);
                 if (ymin_1 < ymin) ymin = ymin_1;
                 if (ymax_1 > ymax) ymax = ymax_1;
             }
@@ -1015,7 +1015,7 @@ namespace galsim {
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const;
 
-        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const;
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const;
 
         Position<double> centroid() const { return _cen+fwd(_adaptee.centroid()); }
 
@@ -1058,7 +1058,7 @@ namespace galsim {
         double _minor; ///< Minor axis of ellipse produced from unit circle.
         bool _stillIsAxisymmetric; ///< Is output SBProfile shape still circular?
         double _xmin, _xmax, _ymin, _ymax; ///< Ranges propagated from adaptee
-        double _coeff_b, _coeff_c, _coeff_c2; ///< Values used in getYRange(x,ymin,ymax);
+        double _coeff_b, _coeff_c, _coeff_c2; ///< Values used in getYRangeX(x,ymin,ymax);
         std::vector<double> _xsplits, _ysplits; ///< Good split points for the intetegrals
 
         void initialize();
@@ -1282,14 +1282,14 @@ namespace galsim {
             }
         }
 
-        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
         {
             std::vector<double> splits0;
             ConstIter pptr = _plist.begin();
-            pptr->getYRange(x,ymin,ymax,splits0);
+            pptr->getYRangeX(x,ymin,ymax,splits0);
             for (++pptr; pptr!=_plist.end(); ++pptr) {
                 double ymin_1, ymax_1;
-                pptr->getYRange(x,ymin_1,ymax_1,splits0);
+                pptr->getYRangeX(x,ymin_1,ymax_1,splits0);
                 ymin += ymin_1;
                 ymax += ymax_1;
             }
@@ -1500,7 +1500,7 @@ namespace galsim {
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
         { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; splits.push_back(0.); }
 
-        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
         {
             ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; 
             if (std::abs(x/_re) < 1.e-2) splits.push_back(0.); 
@@ -1735,7 +1735,7 @@ namespace galsim {
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
         { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; splits.push_back(0.); }
 
-        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
         { 
             ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; 
             if (std::abs(x/_r0) < 1.e-2) splits.push_back(0.); 
@@ -2145,7 +2145,7 @@ namespace galsim {
         void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
         { ymin = -_maxR; ymax = _maxR; }
 
-        void getYRange(double x, double& ymin, double& ymax, std::vector<double>& ) const 
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& ) const 
         {
             ymax = sqrt(_maxR_sq - x*x);
             ymin = -ymax;

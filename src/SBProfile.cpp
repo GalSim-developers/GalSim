@@ -949,7 +949,7 @@ namespace galsim {
                     _ysplits[k] = sqrtCCpDD * split + _cen.y;
                     xxdbg<<"-> x,y splits at "<<_xsplits[k]<<"  "<<_ysplits[k]<<std::endl;
                 }
-                // Now a couple of calculations that get reused in getYRange(x,yminymax):
+                // Now a couple of calculations that get reused in getYRangeX(x,yminymax):
                 _coeff_b = (_mA*_mC + _mB*_mD) / AApBB;
                 _coeff_c = CCpDD / AApBB;
                 _coeff_c2 = _absdet*_absdet / AApBB;
@@ -1095,10 +1095,10 @@ namespace galsim {
         splits.insert(splits.end(),_ysplits.begin(),_ysplits.end());
     }
 
-    void SBDistort::SBDistortImpl::getYRange(double x, double& ymin, double& ymax,
-                              std::vector<double>& splits) const
+    void SBDistort::SBDistortImpl::getYRangeX(
+        double x, double& ymin, double& ymax, std::vector<double>& splits) const
     {
-        xxdbg<<"Distortion getYRange for x = "<<x<<std::endl;
+        xxdbg<<"Distortion getYRangeX for x = "<<x<<std::endl;
         if (_adaptee.isAxisymmetric()) {
             std::vector<double> splits0;
             _adaptee.getYRange(ymin,ymax,splits0);
