@@ -33,7 +33,6 @@ class Ellipse:
 
         # check unnamed args: can have a Shear, float, and/or Position
         if len(args) > 0:
-
             # very special case: if it is given a wrapped C++ Ellipse
             if len(args) == 1 and isinstance(args[0], _galsim._Ellipse):
                 self._ellipse = args[0]
@@ -75,9 +74,6 @@ class Ellipse:
             else:
                 if not isinstance(use_shear, galsim.Shear):
                     raise TypeError("Shear passed to Ellipse constructor was not a galsim.Shear!")
-
-        if kwargs:
-            raise TypeError("Additional unused argument(s) to Ellipse: %s"%kwargs.keys())
 
         self._ellipse = _galsim._Ellipse(s = use_shear._shear, mu = use_dil, p = use_shift)
 
