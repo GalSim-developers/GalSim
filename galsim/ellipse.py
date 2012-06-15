@@ -115,18 +115,15 @@ class Ellipse:
     beta = property(getBeta)
     range = property(range)
 
-def Ellipse_repr(self):
-    shear = self.getS()  # extract the e1 and e2 from the Shear instance
-    x0 = self.getX0()    # extract the x0 and y0 from a Position instance
-    return (self.__class__.__name__+"(e1="+str(shear.getE1())+", e2="+str(shear.getE2())+
-            ", mu="+str(self.getMu())+", x="+str(x0.x)+", y="+str(x0.y)+")")
+    def __repr__(self):
+        shear = self.getS()  # extract the e1 and e2 from the Shear instance
+        x0 = self.getX0()    # extract the x0 and y0 from a Position instance
+        return (self.__class__.__name__+"(g1="+str(shear.getG1())+", g2="+str(shear.getG2())+
+                ", mu="+str(self.getMu())+", x="+str(x0.x)+", y="+str(x0.y)+")")
 
-def Ellipse_str(self):
-    shear = self.getS()  # extract the e1 and e2 from the Shear instance
-    x0 = self.getX0()    # extract the x0 and y0 from a Position instance
-    return ("("+str(shear.getE1())+", "+str(shear.getE2())+", "+str(self.getMu())+", "+str(x0.x)+
-            ", "+str(x0.y)+")")
-
-Ellipse.__repr__ = Ellipse_repr
-Ellipse.__str__ = Ellipse_str
+    def __str__(self):
+        shear = self.getS()  # extract the e1 and e2 from the Shear instance
+        x0 = self.getX0()    # extract the x0 and y0 from a Position instance
+        return ("("+str(shear.getG1())+", "+str(shear.getG2())+", "+str(self.getMu())+", "
+                +str(x0.x)+", "+str(x0.y)+")")
 

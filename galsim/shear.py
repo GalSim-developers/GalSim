@@ -187,12 +187,9 @@ class Shear:
     def inv(self, p): return self._shear.inv(p)
     def getMatrix(self, a, b, c): self._shear.getMatrix(a, b, c)
 
-def Shear_repr(self):
-    return (self.__class__.__name__+"(e1="+str(self.getE1())+", e2="+str(self.getE2())+")")
+    def __repr__(self):
+        return (self.__class__.__name__+"(g1="+str(self.getG1())+", g2="+str(self.getG2())+")")
 
-def Shear_str(self):
-    return ("("+str(self.getE1())+", "+str(self.getE2())+")")
-
-Shear.__repr__ = Shear_repr
-Shear.__str__ = Shear_str
+    def __str__(self):
+        return ("("+str(self.getG1())+", "+str(self.getG2())+")")
 
