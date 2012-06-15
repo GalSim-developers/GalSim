@@ -94,7 +94,7 @@ class Ellipse:
     def setMu(self, mu): self._ellipse.setMu(mu)
     def setX0(self, p): self._ellipse.setX0(p)
     # methods for getting values
-    def getS(self): return self._ellipse.getS()
+    def getS(self): return galsim.Shear(self._ellipse.getS())
     def getMu(self): return self._ellipse.getMu()
     def getX0(self): return self._ellipse.getX0()
     def getMajor(self): return self._ellipse.getMajor()
