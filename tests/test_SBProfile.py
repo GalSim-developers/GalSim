@@ -252,6 +252,55 @@ def test_gaussian_radii():
             test_sigma_ratio, math.exp(-0.5), decimal=4,
             err_msg="Error in sigma for Gaussian initialized with FWHM.")
 
+    # Check that the getters don't work after modifying the original.
+    # Note: I test all the modifiers here.  For the rest of the profile types, I'll
+    # just confirm that it is true of applyShear.  I don't think that has any chance
+    # of missing anything.
+    test_gal_flux1 = test_gal.copy()
+    print 'fwhm = ',test_gal_flux1.getFWHM()
+    print 'hlr = ',test_gal_flux1.getHalfLightRadius()
+    print 'sigma = ',test_gal_flux1.getSigma()
+    test_gal_flux1.setFlux(3.)
+    np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getFWHM")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getHalfLightRadius")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getSigma")
+
+    test_gal_flux2 = test_gal.copy()
+    print 'fwhm = ',test_gal_flux2.getFWHM()
+    print 'hlr = ',test_gal_flux2.getHalfLightRadius()
+    print 'sigma = ',test_gal_flux2.getSigma()
+    test_gal_flux2.setFlux(3.)
+    np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "getFWHM")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "getHalfLightRadius")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "getSigma")
+
+    test_gal_shear = test_gal.copy()
+    print 'fwhm = ',test_gal_shear.getFWHM()
+    print 'hlr = ',test_gal_shear.getHalfLightRadius()
+    print 'sigma = ',test_gal_shear.getSigma()
+    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getSigma")
+
+    test_gal_rot = test_gal.copy()
+    print 'fwhm = ',test_gal_rot.getFWHM()
+    print 'hlr = ',test_gal_rot.getHalfLightRadius()
+    print 'sigma = ',test_gal_rot.getSigma()
+    test_gal_rot.applyRotation(theta = 0.5 * galsim.radians)
+    np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "getFWHM")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "getHalfLightRadius")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "getSigma")
+
+    test_gal_shift = test_gal.copy()
+    print 'fwhm = ',test_gal_shift.getFWHM()
+    print 'hlr = ',test_gal_shift.getHalfLightRadius()
+    print 'sigma = ',test_gal_shift.getSigma()
+    test_gal_shift.applyShift(dx=0.11, dy=0.04)
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "getFWHM")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "getHalfLightRadius")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "getSigma")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -325,6 +374,14 @@ def test_exponential_radii():
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Exponential initialized with scale_radius.")
 
+    # Check that the getters don't work after modifying the original.
+    test_gal_shear = test_gal.copy()
+    print 'hlr = ',test_gal_shear.getHalfLightRadius()
+    print 'scale = ',test_gal_shear.getScaleRadius()
+    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -370,6 +427,28 @@ def test_sersic_radii():
         np.testing.assert_almost_equal(
                 hlr_sum, 0.5, decimal=4,
                 err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
+
+        # Check that the getters don't work after modifying the original.
+        test_gal_shear = test_gal.copy()
+        print 'n = ',test_gal_shear.getN()
+        print 'hlr = ',test_gal_shear.getHalfLightRadius()
+        test_gal_shear.applyShear(g1=0.3, g2=0.1)
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+
+    # Repeat the above for an explicit DeVaucouleurs.  (Same as n=4, but special name.)
+    test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    print 'hlr_sum = ',hlr_sum
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
+            err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
+
+    # Check that the getters don't work after modifying the original.
+    test_gal_shear = test_gal.copy()
+    print 'hlr = ',test_gal_shear.getHalfLightRadius()
+    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -421,6 +500,16 @@ def test_airy_radii():
     np.testing.assert_almost_equal(
             ratio, 0.5, decimal=4,
             err_msg="Error in getFWHM() for Airy.")
+
+    # Check that the getters don't work after modifying the original.
+    test_gal_shear = test_gal.copy()
+    print 'fwhm = ',test_gal_shear.getFWHM()
+    print 'hlr = ',test_gal_shear.getHalfLightRadius()
+    print 'lod = ',test_gal_shear.getLamOverD()
+    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getLamOverD")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -694,6 +783,18 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             test_scale_ratio, 2.**(-test_beta), decimal=4,
             err_msg="Error in scale radius for truncated Moffat initialized with scale radius")
+
+    # Check that the getters don't work after modifying the original.
+    test_gal_shear = test_gal.copy()
+    print 'beta = ',test_gal_shear.getBeta()
+    print 'fwhm = ',test_gal_shear.getFWHM()
+    print 'hlr = ',test_gal_shear.getHalfLightRadius()
+    print 'scale = ',test_gal_shear.getScaleRadius()
+    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getBeta");
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius");
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

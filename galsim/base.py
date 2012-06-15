@@ -20,6 +20,7 @@ class GSObject:
     # op+= converts this into the equivalent of an Add object
     def __iadd__(self, other):
         GSObject.__init__(self, galsim.SBAdd(self.SBProfile, other.SBProfile))
+        self.__class__ = Add
         return self
 
     # Make op* and op*= work to adjust the flux of an object
@@ -56,9 +57,16 @@ class GSObject:
 
     # Make a copy of an object
     def copy(self):
-        """@brief Returns a copy of an object as the SBProfile attribute of a new GSObject instance.
+        """@brief Returns a copy of an object
+
+           This preserves the original type of the object, so if the caller is a
+           Gaussian (for example), the copy will also be a Gaussian, and can thus call
+           the methods that are not in GSObject, but are in Gaussian (e.g. getSigma).
         """
-        return GSObject(galsim.SBProfile(self.SBProfile))
+        sbp = self.SBProfile.__class__(self.SBProfile)
+        ret = GSObject(sbp)
+        ret.__class__ = self.__class__
+        return ret
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
     #
@@ -128,16 +136,33 @@ class GSObject:
 
     def scaleFlux(self, fluxRatio):
         """@brief Multiply the flux of the object by fluxRatio
+           
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
         """
         self.SBProfile.scaleFlux(fluxRatio)
+        self.__class__ = GSObject
 
     def setFlux(self, flux):
         """@brief Set the flux of the object.
+           
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
         """
         self.SBProfile.setFlux(flux)
+        self.__class__ = GSObject
 
     def applyDistortion(self, ellipse):
         """@brief Apply a galsim.Ellipse distortion to this object.
+           
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
 
         For calling, galsim.Ellipse instances can be generated via:
 
@@ -146,24 +171,43 @@ class GSObject:
         where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
         """
         self.SBProfile.applyDistortion(ellipse)
+        self.__class__ = GSObject
         
     def applyShear(self, g1, g2):
         """@brief Apply a (g1, g2) shear to this object, where |g| = (a-b)/(a+b).
+           
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
         """
         e1, e2 = utilities.g1g2_to_e1e2(g1, g2)
         self.SBProfile.applyDistortion(galsim.Ellipse(e1, e2))
+        self.__class__ = GSObject
 
     def applyRotation(self, theta):
         """@brief Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
+           
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         self.SBProfile.applyRotation(theta)
+        self.__class__ = GSObject
         
     def applyShift(self, dx, dy):
         """@brief Apply a (dx, dy) shift to this object.
+           
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
         """
         self.SBProfile.applyShift(dx, dy)
+        self.__class__ = GSObject
 
     # Also add methods which create a new GSObject with the transformations applied...
     #
@@ -298,6 +342,11 @@ class Sersic(GSObject):
     """
     def __init__(self, n, half_light_radius, flux=1.):
         GSObject.__init__(self, galsim.SBSersic(n, half_light_radius=half_light_radius, flux=flux))
+
+    def getN(self):
+        """@brief Return the Sersic index for this profile.
+        """
+        return self.SBProfile.getN()
 
     def getHalfLightRadius(self):
         """@brief Return the half light radius for this Sersic profile.

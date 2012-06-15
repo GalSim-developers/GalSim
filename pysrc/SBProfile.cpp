@@ -335,19 +335,19 @@ struct PySBGaussian {
     }
 
     static void wrap() {
-        bp::class_<SBGaussian,bp::bases<SBProfile>,boost::noncopyable>(
+        bp::class_<SBGaussian,bp::bases<SBProfile> >(
             "SBGaussian",
             "SBGaussian(flux=1., half_light_radius=None, sigma=None, fwhm=None)\n\n"
             "Construct an exponential profile with the given flux and half-light radius,\n"
             "sigma, or FWHM.  Exactly one radius must be provided.\n",
-            bp::no_init
-        )
+            bp::no_init)
             .def(
                 "__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
                     (bp::arg("half_light_radius")=bp::object(), bp::arg("sigma")=bp::object(), 
                      bp::arg("fwhm")=bp::object(), bp::arg("flux")=1.))
             )
+            .def(bp::init<const SBGaussian &>())
             .def("getSigma", &SBGaussian::getSigma)
             ;
     }
@@ -367,13 +367,15 @@ struct PySBSersic {
         return new SBSersic(n, bp::extract<double>(half_light_radius), flux);
     }
     static void wrap() {
-        bp::class_<SBSersic,bp::bases<SBProfile>,boost::noncopyable>("SBSersic", bp::no_init)
+        bp::class_<SBSersic,bp::bases<SBProfile> >("SBSersic", bp::no_init)
             .def("__init__",
                  bp::make_constructor(
                      &construct, bp::default_call_policies(),
                      (bp::arg("n"), bp::arg("half_light_radius")=bp::object(), bp::arg("flux")=1.)
-                                      )
                  )
+            )
+            .def(bp::init<const SBSersic &>())
+            .def("getN", &SBSersic::getN)
             .def("getHalfLightRadius", &SBSersic::getHalfLightRadius)
             ;
     }
@@ -399,19 +401,19 @@ struct PySBExponential {
     }
 
     static void wrap() {
-        bp::class_<SBExponential,bp::bases<SBProfile>,boost::noncopyable>(
+        bp::class_<SBExponential,bp::bases<SBProfile> >(
             "SBExponential",
             "SBExponential(flux=1., half_light_radius=None, scale=None)\n\n"
             "Construct an exponential profile with the given flux and either half-light radius\n"
             "or scale length.  Exactly one radius must be provided.\n",
-            bp::no_init
-        )
+            bp::no_init)
             .def(
                 "__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
                     (bp::arg("half_light_radius")=bp::object(), 
                      bp::arg("scale_radius")=bp::object(), (bp::arg("flux")=1.)))
              )
+            .def(bp::init<const SBExponential &>())
             .def("getScaleRadius", &SBExponential::getScaleRadius)
             ;
     }
@@ -419,24 +421,23 @@ struct PySBExponential {
 
 struct PySBAiry {
     static void wrap() {
-        bp::class_<SBAiry,bp::bases<SBProfile>,boost::noncopyable>(
-            "SBAiry",
-            bp::init<double,double,double>(
-                (bp::arg("lam_over_D"), bp::arg("obscuration")=0., bp::arg("flux")=1.)
+        bp::class_<SBAiry,bp::bases<SBProfile> >("SBAiry", bp::no_init)
+            .def(bp::init<double,double,double>(
+                    (bp::arg("lam_over_D"), bp::arg("obscuration")=0., bp::arg("flux")=1.))
             )
-        )
-        .def("getLamOverD", &SBAiry::getLamOverD)
-        .def("getObscuration", &SBAiry::getObscuration)
-        ;
+            .def(bp::init<const SBAiry &>())
+            .def("getLamOverD", &SBAiry::getLamOverD)
+            .def("getObscuration", &SBAiry::getObscuration)
+            ;
     }
 };
 
 struct PySBBox {
 
     static SBBox * construct(
-                             const bp::object & xw,
-                             const bp::object & yw,
-                             double flux
+        const bp::object & xw,
+        const bp::object & yw,
+        double flux
     ) {
         if (xw.ptr() == Py_None || yw.ptr() == Py_None) {
             PyErr_SetString(PyExc_TypeError, "SBBox requires x and y width parameters");
@@ -446,17 +447,17 @@ struct PySBBox {
     }
 
     static void wrap() {
-        bp::class_<SBBox,bp::bases<SBProfile>,boost::noncopyable>("SBBox", bp::no_init)
+        bp::class_<SBBox,bp::bases<SBProfile> >("SBBox", bp::no_init)
             .def("__init__",
                  bp::make_constructor(
-                                      &construct, bp::default_call_policies(),
-                                      (bp::arg("xw")=bp::object(), bp::arg("yw")=bp::object(), 
-                                       bp::arg("flux")=1.)
-                                      )
-                 )
-             .def("getXWidth", &SBBox::getXWidth)
-             .def("getYWidth", &SBBox::getYWidth)
-             ;
+                     &construct, bp::default_call_policies(),
+                     (bp::arg("xw")=bp::object(), bp::arg("yw")=bp::object(), 
+                      bp::arg("flux")=1.))
+            )
+            .def(bp::init<const SBBox &>())
+            .def("getXWidth", &SBBox::getXWidth)
+            .def("getYWidth", &SBBox::getYWidth)
+            ;
     }
 };
 
@@ -488,7 +489,7 @@ struct PySBMoffat {
     }
 
     static void wrap() {
-        bp::class_<SBMoffat,bp::bases<SBProfile>,boost::noncopyable>("SBMoffat", bp::no_init)
+        bp::class_<SBMoffat,bp::bases<SBProfile> >("SBMoffat", bp::no_init)
             .def("__init__", 
                  bp::make_constructor(
                      &construct, bp::default_call_policies(),
@@ -498,6 +499,7 @@ struct PySBMoffat {
                       bp::arg("trunc")=0., bp::arg("flux")=1.)
                  )
             )
+            .def(bp::init<const SBMoffat &>())
             .def("getBeta", &SBMoffat::getBeta)
             .def("getScaleRadius", &SBMoffat::getScaleRadius)
             .def("getFWHM", &SBMoffat::getFWHM)
@@ -519,7 +521,7 @@ struct PySBDeVaucouleurs {
     }
 
     static void wrap() {
-        bp::class_<SBDeVaucouleurs,bp::bases<SBProfile>,boost::noncopyable>(
+        bp::class_<SBDeVaucouleurs,bp::bases<SBProfile> >(
             "SBDeVaucouleurs",bp::no_init)
             .def("__init__",
                  bp::make_constructor(
@@ -527,6 +529,7 @@ struct PySBDeVaucouleurs {
                      (bp::arg("half_light_radius")=bp::object(), bp::arg("flux")=1.)
                  )
             )
+            .def(bp::init<const SBDeVaucouleurs &>())
             .def("getHalfLightRadius", &SBDeVaucouleurs::getHalfLightRadius)
             ;
     }
