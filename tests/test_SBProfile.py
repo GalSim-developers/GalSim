@@ -627,11 +627,12 @@ def test_sbprofile_shearconvolve():
     """
     import time
     t1 = time.time()
-    mySBP = galsim.SBGaussian(flux=1, sigma=1)
     e1 = 0.04
     e2 = 0.0
     myShear = galsim.Shear(e1=e1, e2=e2)
     myEllipse = galsim.Ellipse(e1=e1, e2=e2)
+    # test at SBProfile level using applyShear
+    mySBP = galsim.SBGaussian(flux=1, sigma=1)
     mySBP.applyShear(g1=myShear.g1, g2=myShear.g2)
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve([mySBP,mySBP2])
@@ -641,12 +642,42 @@ def test_sbprofile_shearconvolve():
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
+    # test at SBProfile level using applyTransformation
+    mySBP = galsim.SBGaussian(flux=1, sigma=1)
+    mySBP.applyTransformation(myEllipse._ellipse)
+    mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
+    myConv = galsim.SBConvolve([mySBP,mySBP2])
+    myConv.draw(myImg,dx=0.2)
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
+        err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
+
     # Repeat with the GSObject version of this:
     psf = galsim.Gaussian(flux=1, sigma=1)
+    psf2 = psf.createSheared(e1=e1, e2=e2)
     psf.applyShear(e1=e1, e2=e2)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel])
+    conv2 = galsim.Convolve([psf2,pixel])
     conv.draw(myImg,dx=0.2)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
+    conv2.draw(myImg,dx=0.2)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
+    psf = galsim.Gaussian(flux=1, sigma=1)
+    psf2 = psf.createTransformed(myEllipse)
+    psf.applyTransformation(myEllipse)
+    pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
+    conv = galsim.Convolve([psf,pixel])
+    conv2 = galsim.Convolve([psf2,pixel])
+    conv.draw(myImg,dx=0.2)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
+    conv2.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
@@ -725,7 +756,6 @@ def test_sbprofile_realspace_distorted_convolve():
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel_distorted.fits"))
     img = galsim.ImageF(saved_img.bounds)
     conv.draw(img,dx=0.2)
-    img.write("junk.fits")
     printval(img, saved_img)
     np.testing.assert_array_almost_equal(img.array, saved_img.array, 5,
         err_msg="distorted Moffat convolved with distorted Box disagrees with expected result")
@@ -946,8 +976,13 @@ def test_sbprofile_shift():
     pixel.draw(myImg,dx=0.2)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShiift disagrees with expected result")
-    print 'After applyShift test'
+            err_msg="Using GSObject applyShift disagrees with expected result")
+    pixel = galsim.Pixel(xw=0.2, yw=0.2)
+    pixel.applyTransformation(galsim.Ellipse(galsim.PositionD(0.2, -0.2)))
+    pixel.draw(myImg,dx=0.2)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject applyTransformation disagrees with expected result")
  
     # Test photon shooting.
     # Since photon shooting compares to a DFT convolution with a box, we can't 
