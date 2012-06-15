@@ -79,7 +79,7 @@ def test_moments_basic():
                 distortion_1 = g1*conversion_factor
                 distortion_2 = g2*conversion_factor
                 gal = galsim.Gaussian(flux = 1.0, sigma = sig)
-                gal.applyShear(g1, g2)
+                gal.applyShear(g1=g1, g2=g2)
                 gal_image = gal.draw(dx = pixel_scale)
                 result = gal_image.FindAdaptiveMom()
                 # make sure we find the right Gaussian sigma
@@ -108,7 +108,7 @@ def test_shearest_basic():
                 distortion_2 = g2*conversion_factor
                 gal = galsim.Gaussian(flux = 1.0, sigma = sig)
                 psf = galsim.Gaussian(flux = 1.0, sigma = sig)
-                gal.applyShear(g1, g2)
+                gal.applyShear(g1=g1, g2=g2)
                 final = galsim.Convolve([gal, psf])
                 final_image = final.draw(dx = pixel_scale)
                 epsf_image = psf.draw(dx = pixel_scale)
