@@ -136,7 +136,8 @@ def test_sbprofile_gaussian():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
             err_msg="Gaussian profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
@@ -183,21 +184,24 @@ def test_gaussian_radii():
     test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
     hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
     print 'hlr_sum = ',hlr_sum
-    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
             err_msg="Error in Gaussian constructor with half-light radius")
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
-    np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Gaussian initialized with half-light radius")
     # test that getSigma() method provides correct sigma
     got_sigma = test_gal.getSigma()
     test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) / 
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'sigma ratio = ', test_sigma_ratio
-    np.testing.assert_almost_equal(test_sigma_ratio, math.exp(-0.5), decimal=4,
+    np.testing.assert_almost_equal(
+            test_sigma_ratio, math.exp(-0.5), decimal=4,
             err_msg="Error in sigma for Gaussian initialized with half-light radius")
 
     # Test constructor using sigma:
@@ -205,20 +209,23 @@ def test_gaussian_radii():
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_sigma,0)) / center
     print 'sigma ratio = ',ratio
-    np.testing.assert_almost_equal(ratio, np.exp(-0.5), decimal=4,
+    np.testing.assert_almost_equal(
+            ratio, np.exp(-0.5), decimal=4,
             err_msg="Error in Gaussian constructor with sigma")
     # then test that image indeed has the correct HLR properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
     hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
     print 'hlr_sum (profile initialized with sigma) = ',hlr_sum
-    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Gaussian initialized with sigma.")
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
-    np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Gaussian initialized with sigma.")
 
     # Test constructor using FWHM:
@@ -226,20 +233,23 @@ def test_gaussian_radii():
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
     print 'fwhm ratio = ',ratio
-    np.testing.assert_almost_equal(ratio, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            ratio, 0.5, decimal=4,
             err_msg="Error in Gaussian constructor with fwhm")
     # then test that image indeed has the correct HLR properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
     hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
     print 'hlr_sum (profile initialized with fwhm) = ',hlr_sum
-    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Gaussian initialized with FWHM.")
     # test that getSigma() method provides correct sigma
     got_sigma = test_gal.getSigma()
     test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) / 
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'sigma ratio = ', test_sigma_ratio
-    np.testing.assert_almost_equal(test_sigma_ratio, math.exp(-0.5), decimal=4,
+    np.testing.assert_almost_equal(
+            test_sigma_ratio, math.exp(-0.5), decimal=4,
             err_msg="Error in sigma for Gaussian initialized with FWHM.")
 
     t2 = time.time()
@@ -262,7 +272,8 @@ def test_sbprofile_exponential():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
             err_msg="Exponential profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     expon = galsim.Exponential(flux=1., scale_radius=r0)
@@ -287,13 +298,15 @@ def test_exponential_radii():
     test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
     hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
     print 'hlr_sum = ',hlr_sum
-    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
             err_msg="Error in Exponential constructor with half-light radius")
     # then test scale getter
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_gal.getScaleRadius(),0)) / center
     print 'scale ratio = ',ratio
-    np.testing.assert_almost_equal(ratio, np.exp(-1.0), decimal=4,
+    np.testing.assert_almost_equal(
+            ratio, np.exp(-1.0), decimal=4,
             err_msg="Error in getScaleRadius for Exponential constructed with half light radius")
 
     # Test constructor using scale radius:
@@ -301,13 +314,15 @@ def test_exponential_radii():
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
     print 'scale ratio = ',ratio
-    np.testing.assert_almost_equal(ratio, np.exp(-1.0), decimal=4,
+    np.testing.assert_almost_equal(
+            ratio, np.exp(-1.0), decimal=4,
             err_msg="Error in Exponential constructor with scale")
     # then test that image indeed has the correct HLR properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
     hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
     print 'hlr_sum (profile initialized with scale_radius) = ',hlr_sum
-    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Exponential initialized with scale_radius.")
 
     t2 = time.time()
@@ -323,7 +338,8 @@ def test_sbprofile_sersic():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
             err_msg="Sersic profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
@@ -351,7 +367,8 @@ def test_sersic_radii():
         test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.)
         hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
         print 'hlr_sum = ',hlr_sum
-        np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+        np.testing.assert_almost_equal(
+                hlr_sum, 0.5, decimal=4,
                 err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
 
     t2 = time.time()
@@ -367,7 +384,8 @@ def test_sbprofile_airy():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
             err_msg="Airy profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     airy = galsim.Airy(lam_over_D=1./0.8, obscuration=0.1, flux=1)
@@ -393,14 +411,16 @@ def test_airy_radii():
     got_hlr = test_gal.getHalfLightRadius()
     hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
     print 'hlr_sum = ',hlr_sum
-    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
-                                   err_msg="Error in Airy half-light radius")
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
+            err_msg="Error in Airy half-light radius")
     # test FWHM getter
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(.5 * test_gal.getFWHM(),0)) / center
     print 'fwhm ratio = ',ratio
-    np.testing.assert_almost_equal(ratio, 0.5, decimal=4,
-                                   err_msg="Error in getFWHM() for Airy.")
+    np.testing.assert_almost_equal(
+            ratio, 0.5, decimal=4,
+            err_msg="Error in getFWHM() for Airy.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -415,7 +435,8 @@ def test_sbprofile_box():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
             err_msg="Box profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     pixel = galsim.Pixel(xw=1, yw=1, flux=1)
@@ -451,7 +472,8 @@ def test_sbprofile_moffat():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
             err_msg="Moffat profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     moffat = galsim.Moffat(beta=2, half_light_radius=1,
@@ -527,21 +549,24 @@ def test_moffat_radii():
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr)
     hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
     print 'hlr_sum = ',hlr_sum
-    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with half-light radius")
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
-    np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Moffat initialized with half-light radius")
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
     test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'scale ratio = ', test_scale_ratio
-    np.testing.assert_almost_equal(test_scale_ratio, 2.**(-test_beta), decimal=4,
+    np.testing.assert_almost_equal(
+            test_scale_ratio, 2.**(-test_beta), decimal=4,
             err_msg="Error in scale radius for Moffat initialized with half-light radius")
 
     # Test constructor using scale radius:
@@ -549,20 +574,23 @@ def test_moffat_radii():
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
     print 'scale ratio = ',ratio
-    np.testing.assert_almost_equal(ratio, pow(2,-test_beta), decimal=4,
+    np.testing.assert_almost_equal(
+            ratio, pow(2,-test_beta), decimal=4,
             err_msg="Error in Moffat constructor with scale")
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
     hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
     print 'hlr_sum (profile initialized with scale_radius) = ',hlr_sum
-    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Moffat initialized with scale radius.")
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
-    np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Moffat initialized with scale radius")
 
     # Test constructor using FWHM:
@@ -570,20 +598,23 @@ def test_moffat_radii():
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
     print 'fwhm ratio = ',ratio
-    np.testing.assert_almost_equal(ratio, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            ratio, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with fwhm")
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
     hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
     print 'hlr_sum (profile initialized with FWHM) = ',hlr_sum
-    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Moffat initialized with FWHM.")
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
     test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'scale ratio = ', test_scale_ratio
-    np.testing.assert_almost_equal(test_scale_ratio, 2.**(-test_beta), decimal=4,
+    np.testing.assert_almost_equal(
+            test_scale_ratio, 2.**(-test_beta), decimal=4,
             err_msg="Error in scale radius for Moffat initialized with scale radius")
 
     # Now repeat everything using a severe trunctation.  (Above had no truncation.)
@@ -593,21 +624,24 @@ def test_moffat_radii():
                              trunc=2*test_hlr)
     hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
     print 'hlr_sum = ',hlr_sum
-    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with half-light radius")
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
-    np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Moffat initialized with half-light radius")
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
     test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'scale ratio = ', test_scale_ratio
-    np.testing.assert_almost_equal(test_scale_ratio, 2.**(-test_beta), decimal=4,
+    np.testing.assert_almost_equal(
+            test_scale_ratio, 2.**(-test_beta), decimal=4,
             err_msg="Error in scale radius for Moffat initialized with half-light radius")
 
     # Test constructor using scale radius:
@@ -616,21 +650,24 @@ def test_moffat_radii():
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
     print 'scale ratio = ', ratio
-    np.testing.assert_almost_equal(ratio, pow(2,-test_beta), decimal=4,
-                                   err_msg="Error in Moffat constructor with scale")
+    np.testing.assert_almost_equal(
+            ratio, pow(2,-test_beta), decimal=4,
+            err_msg="Error in Moffat constructor with scale")
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
     hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
     print 'hlr_sum (truncated profile initialized with scale_radius) = ',hlr_sum
-    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for truncated Moffat "+
-            "initialized with scale radius.")
+                    "initialized with scale radius.")
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
-    np.testing.assert_almost_equal(test_fwhm_ratio, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for truncated Moffat initialized with scale radius")
 
     # Test constructor using FWHM:
@@ -639,20 +676,23 @@ def test_moffat_radii():
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
     print 'fwhm ratio = ', ratio
-    np.testing.assert_almost_equal(ratio, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            ratio, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with fwhm")
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
     hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
     print 'hlr_sum (truncated profile initialized with FWHM) = ',hlr_sum
-    np.testing.assert_almost_equal(hlr_sum, 0.5, decimal=4,
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for truncated Moffat initialized with FWHM.")
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
     test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'scale ratio = ', test_scale_ratio
-    np.testing.assert_almost_equal(test_scale_ratio, 2.**(-test_beta), decimal=4,
+    np.testing.assert_almost_equal(
+            test_scale_ratio, 2.**(-test_beta), decimal=4,
             err_msg="Error in scale radius for truncated Moffat initialized with scale radius")
 
     t2 = time.time()
@@ -671,8 +711,9 @@ def test_sbprofile_smallshear():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Small-shear Gaussian profile disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Small-shear Gaussian profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
     gauss.applyDistortion(galsim.Ellipse(e1,e2))
@@ -709,8 +750,9 @@ def test_sbprofile_largeshear():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Large-shear DeVauc profile disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Large-shear DeVauc profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
     devauc.applyDistortion(galsim.Ellipse(e1,e2))
@@ -756,8 +798,9 @@ def test_sbprofile_convolve():
     myImg = galsim.ImageF(savedImg.bounds)
     myConv.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 4,
-        err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 4,
+            err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible, trunc=4*fwhm_backwards_compatible,
                         flux=1)
@@ -796,8 +839,9 @@ def test_sbprofile_shearconvolve():
     myImg = galsim.ImageF(savedImg.bounds)
     myConv.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
     psf = galsim.Gaussian(flux=1, sigma=1)
     g1,g2 = convertToShear(e1,e2)
@@ -846,8 +890,9 @@ def test_sbprofile_realspace_convolve():
     conv.draw(img,dx=0.2)
     printval(img, saved_img)
     arg = abs(saved_img.array-img.array).argmax()
-    np.testing.assert_array_almost_equal(img.array, saved_img.array, 5,
-        err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            img.array, saved_img.array, 5,
+            err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=1.5, half_light_radius=1,
                         trunc=4*fwhm_backwards_compatible, flux=1)
@@ -902,8 +947,9 @@ def test_sbprofile_realspace_distorted_convolve():
     img = galsim.ImageF(saved_img.bounds)
     conv.draw(img,dx=0.2)
     printval(img, saved_img)
-    np.testing.assert_array_almost_equal(img.array, saved_img.array, 5,
-        err_msg="distorted Moffat convolved with distorted Box disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            img.array, saved_img.array, 5,
+            err_msg="distorted Moffat convolved with distorted Box disagrees with expected result")
 
     # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=1.5, half_light_radius=1,
@@ -954,8 +1000,9 @@ def test_sbprofile_realspace_shearconvolve():
     img = galsim.ImageF(saved_img.bounds)
     conv.draw(img,dx=0.2)
     printval(img, saved_img)
-    np.testing.assert_array_almost_equal(img.array, saved_img.array, 5,
-        err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            img.array, saved_img.array, 5,
+            err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
     psf = galsim.Gaussian(flux=1, sigma=1)
     g1,g2 = convertToShear(e1,e2)
@@ -994,8 +1041,9 @@ def test_sbprofile_rotate():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="45-degree rotated elliptical Gaussian disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="45-degree rotated elliptical Gaussian disagrees with expected result")
     # Repeat with the GSObject version of this:
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1)
     gal.applyDistortion(galsim.Ellipse(0.2,0.0));
@@ -1027,8 +1075,9 @@ def test_sbprofile_mag():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Magnification (x1.5) of exponential SBProfile disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Magnification (x1.5) of exponential SBProfile disagrees with expected result")
     # Repeat with the GSObject version of this:
     gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal.applyDistortion(myEll)
@@ -1055,46 +1104,53 @@ def test_sbprofile_add():
     myImg = galsim.ImageF(savedImg.bounds)
     myAdd.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Addition of two rescaled Gaussian profiles disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Addition of two rescaled Gaussian profiles disagrees with expected result")
     # Repeat with the GSObject version of this:
     gauss1 = galsim.Gaussian(flux=0.75, sigma=1)
     gauss2 = galsim.Gaussian(flux=0.25, sigma=3)
     sum = galsim.Add(gauss1,gauss2)
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")
     # Other ways to do the sum:
     sum = gauss1 + gauss2
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")
     sum = gauss1.copy()
     sum += gauss2
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject sum = gauss1; sum += gauss2 disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject sum = gauss1; sum += gauss2 disagrees with expected result")
     sum = galsim.Add([gauss1,gauss2])
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject Add([gauss1,gauss2]) disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject Add([gauss1,gauss2]) disagrees with expected result")
     gauss1 = galsim.Gaussian(flux=1, sigma=1)
     gauss2 = galsim.Gaussian(flux=1, sigma=3)
     sum = 0.75 * gauss1 + 0.25 * gauss2
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject 0.75 * gauss1 + 0.25 * gauss2 disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject 0.75 * gauss1 + 0.25 * gauss2 disagrees with expected result")
     sum = 0.75 * gauss1
     sum += 0.25 * gauss2
     sum.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")
  
     # Test photon shooting.
     do_shoot(sum,myImg,0.2,"sum of 2 Gaussians")
@@ -1113,8 +1169,9 @@ def test_sbprofile_shift():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Shifted box profile disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Shifted box profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     pixel = galsim.Pixel(xw=0.2, yw=0.2)
     pixel.applyShift(0.2, -0.2)
@@ -1147,8 +1204,9 @@ def test_sbprofile_rescale():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Flux-rescale sersic profile disagrees with expected result")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Flux-rescale sersic profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic.setFlux(2)
@@ -1194,15 +1252,17 @@ def test_sbprofile_sbinterpolatedimage():
     for array_type in ftypes:
         image_in = galsim.ImageView[array_type](ref_array.astype(array_type))
         np.testing.assert_array_equal(
-            ref_array.astype(array_type),image_in.array,
-            err_msg="Array from input Image differs from reference array for type %s"%array_type)
+                ref_array.astype(array_type),image_in.array,
+                err_msg="Array from input Image differs from reference array for type %s"%
+                        array_type)
         sbinterp = galsim.SBInterpolatedImage(image_in, l32d, dx=1.0)
         test_array = np.zeros(testshape, dtype=array_type)
         image_out = galsim.ImageView[array_type](test_array)
         sbinterp.draw(image_out, dx=1.0)
         np.testing.assert_array_equal(
-            ref_array.astype(array_type),image_out.array,
-            err_msg="Array from output Image differs from reference array for type %s"%array_type)
+                ref_array.astype(array_type),image_out.array,
+                err_msg="Array from output Image differs from reference array for type %s"%
+                        array_type)
  
         # Since SBInterp is an SBProfile, rather than a GSObject, we can't just
         # use the do_shoot function we've been using for the others, since a few things
