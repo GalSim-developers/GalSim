@@ -57,10 +57,10 @@ namespace galsim {
             // First figure out each profiles y region separately.
             double ymin1,ymax1;
             splits1.clear();
-            _p1.getYRange(x,ymin1,ymax1,splits1);
+            _p1.getYRangeX(x,ymin1,ymax1,splits1);
             double ymin2,ymax2;
             splits2.clear();
-            _p2.getYRange(_pos.x-x,ymin2,ymax2,splits2);
+            _p2.getYRangeX(_pos.x-x,ymin2,ymax2,splits2);
 
             // Then take the overlap relevant for the calculation:
             //     _p1.xValue(x,y) * _p2.xValue(x0-x,y0-y)
@@ -114,8 +114,8 @@ namespace galsim {
         {
             double ymin1, ymax1, ymin2, ymax2;
             splits.clear();
-            _p1.getYRange(x,ymin1,ymax1,splits);
-            _p2.getYRange(_pos.x-x,ymin2,ymax2,splits);
+            _p1.getYRangeX(x,ymin1,ymax1,splits);
+            _p2.getYRangeX(_pos.x-x,ymin2,ymax2,splits);
             // Note: the real ymin,ymax for p2 are _pos.y-ymax2 and _pos.y-ymin2
             ymin2 = _pos.y - ymin2;
             ymax2 = _pos.y - ymax2;

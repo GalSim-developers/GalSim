@@ -126,6 +126,7 @@ namespace galsim {
             if (this == &rhs) return *this;
             resize(rhs._n);
             for (size_t i=0; i<_nn; ++i) _array[i] = rhs._array[i];
+            return *this;
         }
 
         ~FFTW_Array() { if (_array) fftw_free(_array); _array=0; }
