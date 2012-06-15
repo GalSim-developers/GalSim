@@ -117,7 +117,7 @@ test_script = env1.RunTests(target='tests.log', source = cpp_test)
 py_dir = os.path.join("#","galsim")
 real_py_dir = GetBuildPath(py_dir)
 py_files = glob.glob( os.path.join(real_py_dir,"*.py") )
-py_files += glob.glob( os.path.join(real_py_dir,"*.so") )
+py_files += [os.path.join(real_py_dir,"_galsim.so")]
 Depends(test_script , py_files)
 
 AlwaysBuild(test_script)
