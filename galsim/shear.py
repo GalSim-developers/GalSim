@@ -173,8 +173,8 @@ class Shear:
     def __neg__(self): return Shear(-self._shear)
     def __add__(self, other): return Shear(self._shear + other._shear)
     def __sub__(self, other): return Shear(self._shear - other._shear)
-    def __iadd__(self, other): self._shear += other._shear
-    def __isub__(self, other): self._shear -= other._shear
+    def __iadd__(self, other): return Shear(self._shear + other._shear)
+    def __isub__(self, other): return Shear(self._shear - other._shear)
     def rotationWith(self, other): return self._shear.rotationWith(other)
     def __eq__(self, other): return self._shear == other._shear
     def __ne__(self, other): return self._shear != other._shear
