@@ -23,7 +23,8 @@ unit tests to make sure that there are no errors.  You can do this by running
 `scons tests'.
 
 4) Optional: run doxygen to generate documentation, using docs/Doxyfile to
-specify all doxygen settings.
+specify all doxygen settings.  You can alternatively view the documentation on
+GitHub at http://galsim-developers.github.com/GalSim/
 
 
 --- Demonstration scripts ---

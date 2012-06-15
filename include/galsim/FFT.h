@@ -123,9 +123,11 @@ namespace galsim {
 
         FFTW_Array<T>& operator=(const FFTW_Array<T>& rhs)
         {
-            if (this == &rhs) return *this;
-            resize(rhs._n);
-            for (size_t i=0; i<_nn; ++i) _array[i] = rhs._array[i];
+            if (this != &rhs) {
+                resize(rhs._n);
+                for (size_t i=0; i<_nn; ++i) _array[i] = rhs._array[i];
+            }
+            return *this;
         }
 
         ~FFTW_Array() { if (_array) fftw_free(_array); _array=0; }
@@ -179,11 +181,12 @@ namespace galsim {
 
         KTable& operator=(const KTable& rhs) 
         {
-            if (&rhs==this) return *this;
-            clearCache();
-            _array = rhs._array;
-            _N=rhs._N;
-            _dk=rhs._dk; 
+            if (this != &rhs) {
+                clearCache();
+                _array = rhs._array;
+                _N=rhs._N;
+                _dk=rhs._dk; 
+            }
             return *this;
         }
         
@@ -305,11 +308,12 @@ namespace galsim {
 
         XTable& operator=(const XTable& rhs) 
         {
-            if (&rhs==this) return *this;
-            clearCache();
-            _array = rhs._array;
-            _N=rhs._N;
-            _dx=rhs._dx; 
+            if (this != &rhs) {
+                clearCache();
+                _array = rhs._array;
+                _N=rhs._N;
+                _dx=rhs._dx; 
+            }
             return *this;
         }
 
@@ -405,7 +409,7 @@ namespace galsim {
     void KTable::fill(const T& f) 
     {
         clearCache(); // invalidate any stored interpolations
-        std::complex<double> *zptr=_array;
+        std::complex<double>* zptr=_array.get();
         double kx, ky;
         for (int iy=0; iy< _N/2; iy++) {
             ky = iy*_dk;
