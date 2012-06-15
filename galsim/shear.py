@@ -92,8 +92,8 @@ class Shear:
                 g = kwargs.pop('g')
                 if abs(g) > 1:
                     raise ValueError("Requested shear exceeds 1: %f"%g)
-                g1 = np.cos(beta.rad())*g
-                g2 = np.sin(beta.rad())*g
+                g1 = np.cos(2.*beta.rad())*g
+                g2 = np.sin(2.*beta.rad())*g
                 use_shear = _galsim._Shear(g1, g2)
             elif 'e' in kwargs:
                 if 'beta' not in kwargs:
