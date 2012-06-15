@@ -74,6 +74,9 @@ class Ellipse:
             else:
                 if not isinstance(use_shear, galsim.Shear):
                     raise TypeError("Shear passed to Ellipse constructor was not a galsim.Shear!")
+                # if shear was passed in some way, then we should not allow any other args
+                if kwargs:
+                    raise TypeError("Keyword arguments to Ellipse not permitted: %s"%kwargs.keys())
 
         self._ellipse = _galsim._Ellipse(s = use_shear._shear, mu = use_dil, p = use_shift)
 
