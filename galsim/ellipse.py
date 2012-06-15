@@ -27,8 +27,6 @@ ell4 = galsim.Ellipse(dilation = 0.0, shear = s)
 """
 class Ellipse:
     def __init__(self, *args, **kwargs):
-        import numpy as np
-
         use_dil = None
         use_shear = None
         use_shift = None
@@ -40,58 +38,48 @@ class Ellipse:
             if len(args) == 1 and isinstance(args[0], _galsim._Ellipse):
                 self._ellipse = args[0]
             else:
-
                 for this_arg in args:
                     if isinstance(this_arg, galsim.Shear):
                         if use_shear != None:
-                            raise TypeError("Ellipse received two unnamed Shear arguments!")
-                        use_shear = this_arg._shear
-                    elif isinstance(this_arg, float) or isinstance(this_arg, double):
+                            raise TypeError("Ellipse received >1 unnamed Shear arguments!")
+                        use_shear = this_arg
+                    elif isinstance(this_arg, float):
                         if use_dil != None:
-                            raise TypeError("Ellipse received two unnamed float/double arguments!")
+                            raise TypeError("Ellipse received >1 unnamed float/double arguments!")
                         use_dil = this_arg
                     elif isinstance(this_arg, _galsim.PositionD):
                         if use_shift != None:
-                            raise TypeError("Ellipse received two unnamed Position arguments!")
+                            raise TypeError("Ellipse received >1 unnamed Position arguments!")
                         use_shift = this_arg
                     else:
                         raise TypeError(
                             "Ellipse received an unnamed argument of a type that is not permitted!")
 
-            # if no args, check kwargs: if one is shear, then use that
-            #                   look for dilation
-            #                   look for x_shift, y_shift
-            #                   if anything is left, pass to Shear constructor
-            if use_dil == None:
-                use_dil = kwargs.pop('dilation', None)
-            if use_shift == None:
-                x_shift = kwargs.pop('x_shift', None)
-                y_shift = kwargs.pop('y_shift', None)
-                if x_shift != None or y_shift != None:
-                    if x_shift == None:
-                        x_shift = 0.0
-                    if y_shift == None:
-                        y_shift = 0.0
-                    use_shift = _galsim.PositionD(x_shift, y_shift)
-            if use_shear == None:
-                use_shear = kwargs.pop('shear', None)
-                if use_shear == None:
-                    if kwargs:
-                        for key in kwargs:
-                            print "Args: %s %s"%(key, kwargs[key])
-                        use_shear = galsim.Shear(kwargs)
-                    else:
-                        use_shear = galsim.Shear(g1 = 0.0, g2 = 0.0)
+        # if no args, check kwargs: if one is shear, then use that
+        #                   look for dilation
+        #                   look for x_shift, y_shift
+        #                   if anything is left, pass to Shear constructor
+        if use_dil is None:
+            use_dil = kwargs.pop('dilation', 0.0)
+        if use_shift is None:
+            x_shift = kwargs.pop('x_shift', 0.0)
+            y_shift = kwargs.pop('y_shift', 0.0)
+            use_shift = _galsim.PositionD(x_shift, y_shift)
+        if use_shear is None:
+            use_shear = kwargs.pop('shear', None)
+            if use_shear is None:
+                if kwargs:
+                    use_shear = galsim.Shear(**kwargs)
+                else:
+                    use_shear = galsim.Shear(g1 = 0.0, g2 = 0.0)
+            else:
+                if not isinstance(use_shear, galsim.Shear):
+                    raise TypeError("Shear passed to Ellipse constructor was not a galsim.Shear!")
 
-            # make sure something was specified!
-            if use_shear == None:
-                use_shear = galsim.Shear(g1 = 0.0, g2 = 0.0)
-            if use_dil == None:
-                use_dil = 0.0
-            if use_shift == None:
-                use_shift = _galsim.PositionD(0.0, 0.0)
+        if kwargs:
+            raise TypeError("Additional unused argument(s) to Ellipse: %s"%kwargs.keys())
 
-            self._ellipse = _galsim._Ellipse(s = use_shear, mu = use_dil, p = use_shift)
+        self._ellipse = _galsim._Ellipse(s = use_shear._shear, mu = use_dil, p = use_shift)
 
     #### propagate through all the methods from C++
     # define all the various operators on Ellipse objects
@@ -102,11 +90,11 @@ class Ellipse:
     def __isub__(self, other): self._ellipse -= other._ellipse
     def __eq__(self, other): return self._ellipse == other._ellipse
     def __ne__(self, other): return self._ellipse != other._ellipse
-    def reset(self, s, mu, p): self._ellipse.reset(s, mu, p)
+    def reset(self, s, mu, p): self._ellipse.reset(s._shear, mu, p)
     def fwd(self, p): return self._ellipse.fwd(p)
     def inv(self, p): return self._ellipse.inv(p)
     # methods for setting values
-    def setS(self, s): self._ellipse.setS(s)
+    def setS(self, s): self._ellipse.setS(s._shear)
     def setMu(self, mu): self._ellipse.setMu(mu)
     def setX0(self, p): self._ellipse.setX0(p)
     # methods for getting values
