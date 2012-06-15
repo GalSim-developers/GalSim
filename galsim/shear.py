@@ -33,7 +33,8 @@ s = galsim.Shear(q=0.5, beta=galsim.Angle(0.0*galsim.radians))
 
 There can be no mixing and matching, e.g., specifying g1 and e2.  It is permissible to only specify
 one of two components, with the other assumed to be zero.  If a magnitude such as e, g, eta, or q is
-specified, then beta is also required to be specified.
+specified, then beta is also required to be specified.  It is possible to initialize a Shear with
+zero reduced shear by specifying no args or kwargs, i.e. galsim.Shear().
 """
 class Shear:
     def __init__(self, *args, **kwargs):
