@@ -205,31 +205,79 @@ class GSObject:
         ret.applyShift(dx, dy)
         return ret
 
-    def draw(self, image=None, dx=0., wmult=1):
-        """@brief Returns an Image of the object, with bounds optionally set by an input Image.
+    def draw(self, image=None, dx=0., wmult=1, normalization="flux"):
+        """@brief Draws an Image of the object, with bounds optionally set by an input Image.
 
-        TODO: describe dx, wmult.
+        @param image  If provided, this will be the image on which to draw the profile.
+                      If image=None, then an automatically-sized image will be created.
+                      (Default = None)
+        @param dx     If provided, use this as the pixel scale for the image.
+                      If dx <= 0. and image != None, then take the provided image's pixel scale.
+                      If dx <= 0. and image == None, then use pi/maxK()
+                      (Default = 0.)
+        @param wmult  A factor by which to make the intermediate images larger than 
+                      they are normally made.  (Default = 1.)
+        @param normalization  Two options for the normalization:
+                              "flux" means the the sum of the output pixels are normalized
+                                     to be equal to the total flux.  (Modulo any flux that
+                                     falls off the edge of the image of course.)
+                              "surface brightness" means that the output pixels sample
+                                     the surfact brightness distribution at each location.
+                              (Default = "flux")
+        @returns      The drawn image
         """
-    # Raise an exception here since C++ is picky about the input types
+        # Raise an exception here since C++ is picky about the input types
         if type(wmult) != int:
             raise TypeError("Input wmult should be an int")
         if type(dx) != float:
             raise Warning("Input dx not a float, converting...")
             dx = float(dx)
         if image == None:
-            return self.SBProfile.draw(dx=dx, wmult=wmult)
+            image = self.SBProfile.draw(dx=dx, wmult=wmult)
         else :
+            if dx <= 0.:
+                dx = image.getScale()
             self.SBProfile.draw(image, dx=dx, wmult=wmult)
-            return image
+        if normalization == "flux":
+            dx = image.getScale()
+            image *= dx*dx
+        elif normalization != "surface brightness":
+            raise ValueError("Invalid normalization requested: %s"%normalization)
+        return image
 
-    def drawShoot(self, image, N, ud=None):
+    def drawShoot(self, image, N, ud=None, normalization="flux"):
+        """@brief Returns an Image of the object, with bounds optionally set by an input Image.
+
+        @param image  The image on which to draw the profile.
+                      Note: Unlike for the regular draw command, this is 
+        @param N      The number of photons to use.
+        @param ud     If provided, a UniformDeviate to use for the random numbers
+                      If ud=None, one will be automatically created, using the time as a seed.
+                      (Default = None)
+        @param normalization  Two options for the normalization:
+                              "flux" means the the sum of the output pixels are normalized
+                                     to be equal to the total flux.  (Modulo any flux that
+                                     falls off the edge of the image of course.)
+                              "surface brightness" means that the output pixels sample
+                                     the surfact brightness distribution at each location.
+                              (Default = "flux")
+        @returns      (TODO!) The fraction of photons that fell off the edge of the image.
+        """
+        # Raise an exception here since C++ is picky about the input types
+        if image is None:
+            raise TypeError("drawShoot requires the image to be provided.")
         if type(N) != float:
             # if given an int, just convert it to a float
             N = float(N)
         if ud == None:
             ud = galsim.UniformDeviate()
         self.SBProfile.drawShoot(image, N, ud)
-         
+        if normalization == "flux":
+            dx = image.getScale()
+            image *= dx*dx
+        elif normalization != "surface brightness":
+            raise ValueError("Invalid normalization requested: %s"%normalization)
+
 
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
 # SBPs...
