@@ -74,14 +74,14 @@ def convertToShear(e1,e2):
     g2 = e2 * (g/e)
     return (g1,g2)
 
-def do_shoot(prof, img, dx, name):
+def do_shoot(prof, img, name):
     print 'Start do_shoot'
     # Test photon shooting for a particular profile (given as prof). 
     # Since shooting implicitly convolves with the pixel, we need to compare it to 
     # the given profile convolved with a pixel.
-    pix = galsim.Pixel(xw=dx)
+    pix = galsim.Pixel(xw=img.getScale())
     compar = galsim.Convolve(prof,pix)
-    compar.draw(img,dx=dx)
+    compar.draw(img)
     flux_max = img.array.max()
     print 'flux_max = ',flux_max
     flux_tot = img.array.sum()
@@ -105,6 +105,29 @@ def do_shoot(prof, img, dx, name):
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
+
+    # Test normalization
+    # Test with a large image to make sure we capture enough of the flux
+    dx = img.getScale()
+    img = galsim.ImageD(1024,1024)
+    img.setScale(dx)
+    test_flux = 1.8
+    compar.setFlux(test_flux)
+    compar.draw(img, normalization="surface brightness")
+    np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, 5)
+    compar.draw(img, normalization="flux")
+    np.testing.assert_almost_equal(img.array.sum(), test_flux, 5)
+
+    # FIXME: Sersic and Airy seem to be missing some flux.  They come out very close
+    # to 1.79, even with much larger images and/or many more photons.
+    # Hence we currently only test this to 1 decimal place. 
+    # We should be able to test this with decimal=photon_decimal_test.
+    prof.setFlux(test_flux)
+    prof.drawShoot(img, nphot, normalization="surface brightness")
+    np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, 1)
+    prof.drawShoot(img, nphot, normalization="flux")
+    np.testing.assert_almost_equal(img.array.sum(), test_flux, 1)
+
 
 def radial_integrate(prof, minr, maxr, dr):
     """A simple helper that calculates int 2pi r f(r) dr, from rmin to rmax
@@ -140,13 +163,13 @@ def test_sbprofile_gaussian():
             err_msg="Gaussian profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss.draw(myImg,dx=0.2)
+    gauss.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian disagrees with expected result")
 
     # Test photon shooting.
-    do_shoot(gauss,myImg,0.2,"Gaussian")
+    do_shoot(gauss,myImg,"Gaussian")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -223,13 +246,13 @@ def test_sbprofile_exponential():
             err_msg="Exponential profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     expon = galsim.Exponential(flux=1., scale_radius=r0)
-    expon.draw(myImg,dx=0.2)
+    expon.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Exponential disagrees with expected result")
 
     # Test photon shooting.
-    do_shoot(expon,myImg,0.2,"Exponential")
+    do_shoot(expon,myImg,"Exponential")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -272,7 +295,7 @@ def test_sbprofile_sersic():
             err_msg="Sersic profile disagrees with expected result")
     # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
-    sersic.draw(myImg,dx=0.2)
+    sersic.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Sersic disagrees with expected result")
@@ -280,7 +303,7 @@ def test_sbprofile_sersic():
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
-    do_shoot(sersic2,myImg,0.2,"Sersic")
+    do_shoot(sersic2,myImg,"Sersic")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -316,13 +339,13 @@ def test_sbprofile_airy():
             err_msg="Airy profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     airy = galsim.Airy(D=0.8, obscuration=0.1, flux=1)
-    airy.draw(myImg,dx=0.2)
+    airy.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy disagrees with expected result")
 
     # Test photon shooting.
-    do_shoot(airy,myImg,0.2,"Airy")
+    do_shoot(airy,myImg,"Airy")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -341,13 +364,13 @@ def test_sbprofile_box():
             err_msg="Box profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     pixel = galsim.Pixel(xw=1, yw=1, flux=1)
-    pixel.draw(myImg,dx=0.2)
+    pixel.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel disagrees with expected result")
 
     # Test photon shooting.
-    do_shoot(pixel,myImg,0.2,"Pixel")
+    do_shoot(pixel,myImg,"Pixel")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -366,13 +389,13 @@ def test_sbprofile_moffat():
             err_msg="Moffat profile disagrees with expected result") 
     # Repeat with the GSObject version of this:
     moffat = galsim.Moffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
-    moffat.draw(myImg,dx=0.2)
+    moffat.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat disagrees with expected result")
 
     # Test photon shooting.
-    do_shoot(moffat,myImg,0.2,"Moffat")
+    do_shoot(moffat,myImg,"Moffat")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -484,7 +507,7 @@ def test_sbprofile_smallshear():
     # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
     gauss.applyDistortion(galsim.Ellipse(e1,e2))
-    gauss.draw(myImg,dx=0.2)
+    gauss.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyDistortion disagrees with expected result")
@@ -493,13 +516,13 @@ def test_sbprofile_smallshear():
     g1,g2 = convertToShear(e1,e2)
     gauss = galsim.Gaussian(flux=1, sigma=1)
     gauss.applyShear(g1,g2)
-    gauss.draw(myImg,dx=0.2)
+    gauss.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyShear disagrees with expected result")
  
     # Test photon shooting.
-    do_shoot(gauss,myImg,0.2,"sheared Gaussian")
+    do_shoot(gauss,myImg,"sheared Gaussian")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -522,14 +545,14 @@ def test_sbprofile_largeshear():
     # Repeat with the GSObject version of this:
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
     devauc.applyDistortion(galsim.Ellipse(e1,e2))
-    devauc.draw(myImg,dx=0.2)
+    devauc.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyDistortion disagrees with expected result")
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
     g1,g2 = convertToShear(e1,e2)
     devauc.applyShear(g1,g2)
-    devauc.draw(myImg,dx=0.2)
+    devauc.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyShear disagrees with expected result")
@@ -537,7 +560,7 @@ def test_sbprofile_largeshear():
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     devauc2 = galsim.Convolve(devauc, galsim.Gaussian(sigma=0.3))
-    do_shoot(devauc2,myImg,0.2,"sheared DeVauc")
+    do_shoot(devauc2,myImg,"sheared DeVauc")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -562,19 +585,19 @@ def test_sbprofile_convolve():
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     # We'll do the real space convolution below
     conv = galsim.Convolve([psf,pixel],real_space=False)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 4,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel,real_space=False)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 4,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
  
     # Test photon shooting.
-    do_shoot(conv,myImg,0.2,"Moffat * Pixel")
+    do_shoot(conv,myImg,"Moffat * Pixel")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -602,19 +625,19 @@ def test_sbprofile_shearconvolve():
     psf.applyShear(g1,g2)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel])
-    conv.draw(myImg,dx=0.2)
+    conv.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel)
-    conv.draw(myImg,dx=0.2)
+    conv.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
  
     # Test photon shooting.
-    do_shoot(conv,myImg,0.2,"sheared Gaussian * Pixel")
+    do_shoot(conv,myImg,"sheared Gaussian * Pixel")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -639,23 +662,24 @@ def test_sbprofile_realspace_convolve():
     psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel],real_space=True)
-    conv.draw(img,dx=0.2)
+    conv.draw(img,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel,real_space=True)
-    conv.draw(img,dx=0.2)
+    conv.draw(img,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
     # The real-space convolution algorithm is not (trivially) independent of the order of
     # the two things being convolved.  So check the opposite order.
     conv = galsim.Convolve([pixel,psf],real_space=True)
-    conv.draw(img,dx=0.2)
+    conv.draw(img,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
  
@@ -696,23 +720,24 @@ def test_sbprofile_realspace_distorted_convolve():
     pixel.applyShift(0.13,0.27)
     # NB: real-space is chosen automatically
     conv = galsim.Convolve([psf,pixel])
-    conv.draw(img,dx=0.2)
+    conv.draw(img,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using Convolve([psf,pixel]) (distorted) disagrees with expected result")
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel)
-    conv.draw(img,dx=0.2)
+    conv.draw(img,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using Convolve(psf,pixel) (distorted) disagrees with expected result")
     # The real-space convolution algorithm is not (trivially) independent of the order of
     # the two things being convolved.  So check the opposite order.
     conv = galsim.Convolve([pixel,psf])
-    conv.draw(img,dx=0.2)
+    conv.draw(img,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using Convolve([pixel,psf]) (distorted) disagrees with expected result")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
  
@@ -740,23 +765,24 @@ def test_sbprofile_realspace_shearconvolve():
     psf.applyShear(g1,g2)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel],real_space=True)
-    conv.draw(img,dx=0.2)
+    conv.draw(img,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel,real_space=True)
-    conv.draw(img,dx=0.2)
+    conv.draw(img,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
     # The real-space convolution algorithm is not (trivially) independent of the order of
     # the two things being convolved.  So check the opposite order.
     conv = galsim.Convolve([pixel,psf],real_space=True)
-    conv.draw(img,dx=0.2)
+    conv.draw(img,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -778,7 +804,7 @@ def test_sbprofile_rotate():
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1)
     gal.applyDistortion(galsim.Ellipse(0.2,0.0));
     gal.applyRotation(45.0 * galsim.degrees)
-    gal.draw(myImg,dx=0.2)
+    gal.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyRotation disagrees with expected result")
@@ -786,7 +812,7 @@ def test_sbprofile_rotate():
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     gal2 = galsim.Convolve(gal, galsim.Gaussian(sigma=0.3))
-    do_shoot(gal2,myImg,0.2,"rotated sheared Sersic")
+    do_shoot(gal2,myImg,"rotated sheared Sersic")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -810,13 +836,13 @@ def test_sbprofile_mag():
     # Repeat with the GSObject version of this:
     gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal.applyDistortion(myEll)
-    gal.draw(myImg,dx=0.2)
+    gal.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyDistortion disagrees with expected result")
  
     # Test photon shooting.
-    do_shoot(gal,myImg,0.2,"dilated Exponential")
+    do_shoot(gal,myImg,"dilated Exponential")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -839,43 +865,43 @@ def test_sbprofile_add():
     gauss1 = galsim.Gaussian(flux=0.75, sigma=1)
     gauss2 = galsim.Gaussian(flux=0.25, sigma=3)
     sum = galsim.Add(gauss1,gauss2)
-    sum.draw(myImg,dx=0.2)
+    sum.draw(myImg,dx=0.2, normalization="surface brightness")
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")
     # Other ways to do the sum:
     sum = gauss1 + gauss2
-    sum.draw(myImg,dx=0.2)
+    sum.draw(myImg,dx=0.2, normalization="surface brightness")
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")
     sum = gauss1.copy()
     sum += gauss2
-    sum.draw(myImg,dx=0.2)
+    sum.draw(myImg,dx=0.2, normalization="surface brightness")
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject sum = gauss1; sum += gauss2 disagrees with expected result")
     sum = galsim.Add([gauss1,gauss2])
-    sum.draw(myImg,dx=0.2)
+    sum.draw(myImg,dx=0.2, normalization="surface brightness")
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject Add([gauss1,gauss2]) disagrees with expected result")
     gauss1 = galsim.Gaussian(flux=1, sigma=1)
     gauss2 = galsim.Gaussian(flux=1, sigma=3)
     sum = 0.75 * gauss1 + 0.25 * gauss2
-    sum.draw(myImg,dx=0.2)
+    sum.draw(myImg,dx=0.2, normalization="surface brightness")
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject 0.75 * gauss1 + 0.25 * gauss2 disagrees with expected result")
     sum = 0.75 * gauss1
     sum += 0.25 * gauss2
-    sum.draw(myImg,dx=0.2)
+    sum.draw(myImg,dx=0.2, normalization="surface brightness")
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")
  
     # Test photon shooting.
-    do_shoot(sum,myImg,0.2,"sum of 2 Gaussians")
+    do_shoot(sum,myImg,"sum of 2 Gaussians")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -896,20 +922,14 @@ def test_sbprofile_shift():
     # Repeat with the GSObject version of this:
     pixel = galsim.Pixel(xw=0.2, yw=0.2)
     pixel.applyShift(0.2, -0.2)
-    pixel.draw(myImg,dx=0.2)
+    pixel.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyShiift disagrees with expected result")
     print 'After applyShift test'
  
     # Test photon shooting.
-    # Since photon shooting compares to a DFT convolution with a box, we can't 
-    # do the shift test for a box here.  (Box * Box is very inaccurate with DFT)
-    # So instead we give it a shifted Gaussian to compare with.
-    gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss.applyShift(0.4,-0.3)
-    myImg = gauss.draw(dx=0.2)
-    do_shoot(gauss,myImg,0.2,"shifted Gaussian")
+    do_shoot(pixel,myImg,"shifted Box")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -930,24 +950,24 @@ def test_sbprofile_rescale():
     # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic.setFlux(2)
-    sersic.draw(myImg,dx=0.2)
+    sersic.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject setFlux disagrees with expected result")
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic *= 2
-    sersic.draw(myImg,dx=0.2)
+    sersic.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject *= 2 disagrees with expected result")
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic2 = sersic * 2
-    sersic2.draw(myImg,dx=0.2)
+    sersic2.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject obj * 2 disagrees with expected result")
     sersic2 = 2 * sersic
-    sersic2.draw(myImg,dx=0.2)
+    sersic2.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject 2 * obj disagrees with expected result")
@@ -955,7 +975,7 @@ def test_sbprofile_rescale():
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     sersic3 = galsim.Convolve(sersic2, galsim.Gaussian(sigma=0.3))
-    do_shoot(sersic3,myImg,0.2,"scaled Sersic")
+    do_shoot(sersic3,myImg,"scaled Sersic")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -997,13 +1017,14 @@ def test_sbprofile_sbinterpolatedimage():
         sbinterp.drawShoot(image_out,int(nphot),ud)
 
         # Compare this to a convolution of the sbinter with a pixel
-        pix = galsim.SBBox(xw=1.0, yw=1.0, flux=1.)
+        pix = galsim.SBBox(xw=image_out.getScale(), yw=0)
         conv = galsim.SBConvolve([sbinterp,pix])
         image_comp = image_out.copy()
-        conv.draw(image_comp, dx=1.0)
+        conv.draw(image_comp)
         np.testing.assert_array_almost_equal(
                 image_comp.array, image_out.array, photon_decimal_test,
                 err_msg="Photon shooting for interpolated image disagrees with expected result")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 

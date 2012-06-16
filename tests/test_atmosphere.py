@@ -32,7 +32,8 @@ def test_doublegaussian_vs_sbadd():
                     g1 = galsim.SBGaussian(flux1, sigma=sigma1)
                     g2 = galsim.SBGaussian(flux2, sigma=sigma2)
                     dbl2 = galsim.SBAdd(g1, g2)
-                    np.testing.assert_almost_equal(dbl1.draw().array, dbl2.draw().array)
+                    np.testing.assert_almost_equal(
+                        dbl1.draw(normalization="surface brightness").array, dbl2.draw().array)
     for flux1 in np.linspace(0.2, 3, 3):
         for fwhm1 in np.linspace(0.2, 3, 3):
             for flux2 in np.linspace(0.2, 3, 3):
@@ -41,7 +42,8 @@ def test_doublegaussian_vs_sbadd():
                     g1 = galsim.SBGaussian(flux1, fwhm=fwhm1)
                     g2 = galsim.SBGaussian(flux2, fwhm=fwhm2)
                     dbl2 = galsim.SBAdd(g1, g2)
-                    np.testing.assert_almost_equal(dbl1.draw().array, dbl2.draw().array)
+                    np.testing.assert_almost_equal(
+                        dbl1.draw(normalization="surface brightness").array, dbl2.draw().array)
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -51,7 +53,7 @@ def test_doublegaussian_vs_refimg():
     import time
     t1 = time.time()
     dblg = galsim.atmosphere.DoubleGaussian(0.75, 0.25, sigma1=1., sigma2=3.)
-    myImg = dblg.draw(dx=0.2)
+    myImg = dblg.draw(dx=0.2,normalization="surface brightness")
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Two Gaussian reference image disagrees with DoubleGaussian class")   
@@ -92,7 +94,7 @@ def test_AtmosphericPSF_flux():
         # .draw() throws a warning if it doesn't get a float. This includes np.float64. Convert to
         # have the test pass.
         dx = float(lor / 10.)
-        img_array = apsf.draw(dx=dx).array
+        img_array = apsf.draw(dx=dx,normalization="surface brightness").array
         np.testing.assert_almost_equal(img_array.sum() * dx**2, 1., 3,
                                        err_msg="Flux of atmospheric PSF (image array) is not 1.")
     t2 = time.time()
@@ -110,7 +112,7 @@ def test_AtmosphericPSF_fwhm():
         # have the test pass.
         dx_scale = 10
         dx = float(lor / dx_scale)
-        psf_array = apsf.draw(dx=dx).array
+        psf_array = apsf.draw(dx=dx,normalization="surface brightness").array
         nx, ny = psf_array.shape
         profile = psf_array[nx / 2, ny / 2:]
         # Now get the last array index where the profile value exceeds half the peak value as a 
