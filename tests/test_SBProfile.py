@@ -261,45 +261,62 @@ def test_gaussian_radii():
     print 'hlr = ',test_gal_flux1.getHalfLightRadius()
     print 'sigma = ',test_gal_flux1.getSigma()
     test_gal_flux1.setFlux(3.)
-    np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getFWHM")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getHalfLightRadius")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getSigma")
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getFWHM")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getHalfLightRadius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getSigma")
+    except ImportError:
+        # assert_raises requires nose, which we don't want to force people to install.
+        # So if they are running this without nose, we just skip these tests.
+        pass
 
     test_gal_flux2 = test_gal.copy()
     print 'fwhm = ',test_gal_flux2.getFWHM()
     print 'hlr = ',test_gal_flux2.getHalfLightRadius()
     print 'sigma = ',test_gal_flux2.getSigma()
     test_gal_flux2.setFlux(3.)
-    np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "getFWHM")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "getHalfLightRadius")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "getSigma")
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "getFWHM")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "getHalfLightRadius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "getSigma")
+    except ImportError:
+        pass
 
     test_gal_shear = test_gal.copy()
     print 'fwhm = ',test_gal_shear.getFWHM()
     print 'hlr = ',test_gal_shear.getHalfLightRadius()
     print 'sigma = ',test_gal_shear.getSigma()
     test_gal_shear.applyShear(g1=0.3, g2=0.1)
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getSigma")
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getSigma")
+    except ImportError:
+        pass
 
     test_gal_rot = test_gal.copy()
     print 'fwhm = ',test_gal_rot.getFWHM()
     print 'hlr = ',test_gal_rot.getHalfLightRadius()
     print 'sigma = ',test_gal_rot.getSigma()
     test_gal_rot.applyRotation(theta = 0.5 * galsim.radians)
-    np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "getFWHM")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "getHalfLightRadius")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "getSigma")
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "getFWHM")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "getHalfLightRadius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "getSigma")
+    except ImportError:
+        pass
 
     test_gal_shift = test_gal.copy()
     print 'fwhm = ',test_gal_shift.getFWHM()
     print 'hlr = ',test_gal_shift.getHalfLightRadius()
     print 'sigma = ',test_gal_shift.getSigma()
     test_gal_shift.applyShift(dx=0.11, dy=0.04)
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "getFWHM")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "getHalfLightRadius")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "getSigma")
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "getFWHM")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "getHalfLightRadius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "getSigma")
+    except ImportError:
+        pass
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -379,8 +396,11 @@ def test_exponential_radii():
     print 'hlr = ',test_gal_shear.getHalfLightRadius()
     print 'scale = ',test_gal_shear.getScaleRadius()
     test_gal_shear.applyShear(g1=0.3, g2=0.1)
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius")
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius")
+    except ImportError:
+        pass
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -433,8 +453,11 @@ def test_sersic_radii():
         print 'n = ',test_gal_shear.getN()
         print 'hlr = ',test_gal_shear.getHalfLightRadius()
         test_gal_shear.applyShear(g1=0.3, g2=0.1)
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN");
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+        try:
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN");
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+        except ImportError:
+            pass
 
     # Repeat the above for an explicit DeVaucouleurs.  (Same as n=4, but special name.)
     test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.)
@@ -448,7 +471,10 @@ def test_sersic_radii():
     test_gal_shear = test_gal.copy()
     print 'hlr = ',test_gal_shear.getHalfLightRadius()
     test_gal_shear.applyShear(g1=0.3, g2=0.1)
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+    except ImportError:
+        pass
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -507,9 +533,12 @@ def test_airy_radii():
     print 'hlr = ',test_gal_shear.getHalfLightRadius()
     print 'lod = ',test_gal_shear.getLamOverD()
     test_gal_shear.applyShear(g1=0.3, g2=0.1)
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getLamOverD")
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getLamOverD")
+    except ImportError:
+        pass
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -791,10 +820,13 @@ def test_moffat_radii():
     print 'hlr = ',test_gal_shear.getHalfLightRadius()
     print 'scale = ',test_gal_shear.getScaleRadius()
     test_gal_shear.applyShear(g1=0.3, g2=0.1)
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getBeta");
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius");
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getBeta");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius");
+    except ImportError:
+        pass
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
