@@ -44,19 +44,15 @@ def main(argv):
         raise err
 
     galaxyImg = galsim.fits.read(inname)
-    galaxy = galsim.SBInterpolatedImage(galaxyImg, interp2d, 1., 1.0)
-    shearedGalaxy = galaxy.applyShear(g1,g2)
+    galaxy = galsim.SBInterpolatedImage(galaxyImg, interp2d, dx=1., padFactor=1.0)
+    galaxy.applyShear(g1,g2)
 
     rng = galsim.UniformDeviate(1534225)
     bounds = galsim.BoundsI(-dim/2, dim/2+1, -dim/2, dim/2+1)
     img = galsim.ImageF(bounds)
     img.setScale(dxOut)
-    shearedGalaxy.drawShoot(img, nPhotons, rng)
+    galaxy.drawShoot(img, nPhotons, rng)
     img.write(outname)
-
-if __name__ == "__main__":
-    import sys
-    main(sys.argv)
 
 if __name__ == "__main__":
     import sys
