@@ -44,7 +44,7 @@ def main(argv):
         raise err
 
     galaxyImg = galsim.fits.read(inname)
-    galaxy = galsim.SBInterpolatedImage(galaxyImg, interp2d, 1., 1.0)
+    galaxy = galsim.SBInterpolatedImage(galaxyImg, interp2d, dx=1., padFactor=1.0)
     shearedGalaxy = galaxy.shear(e1,e2)
 
     rng = galsim.UniformDeviate(1534225)
@@ -53,10 +53,6 @@ def main(argv):
     img.setScale(dxOut)
     shearedGalaxy.drawShoot(img, nPhotons, rng)
     img.write(outname)
-
-if __name__ == "__main__":
-    import sys
-    main(sys.argv)
 
 if __name__ == "__main__":
     import sys
