@@ -143,6 +143,13 @@ def test_shear_initialization():
         # initialize with a wrapped C++ Shear object
         s2 = galsim.Shear(s._shear)
         all_shear_vals(s2, ind)
+    # finally check some examples of invalid initializations for Shear
+    np.testing.assert_raises(TypeError,galsim.Shear,0.3)
+    np.testing.assert_raises(TypeError,galsim.Shear,g1=0.3,e2=0.2)
+    np.testing.assert_raises(TypeError,galsim.Shear,eta1=0.3,beta=0.*galsim.degrees)
+    np.testing.assert_raises(TypeError,galsim.Shear,q=0.3)
+    np.testing.assert_raises(ValueError,galsim.Shear,q=1.3,beta=0.*galsim.degrees)
+    np.testing.assert_raises(ValueError,galsim.Shear,g1=0.9,g2=0.6)
 
 def test_ellipse_initialization():
     """Test that Ellipses can be initialized in a variety of ways and get the expected results."""
