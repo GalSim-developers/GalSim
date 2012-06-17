@@ -198,7 +198,6 @@ def Script1():
                     ellip = gd()
 
                 # Apply a random orientation:
-                #theta = rng() * 2. * math.pi * galsim.radians
                 theta = rng() * 2. * math.pi
                 first_in_pair = False
             else:
@@ -206,9 +205,11 @@ def Script1():
                 theta += math.pi/2
                 first_in_pair = True
 
-            this_gal = gal.createSheared(g=ellip, beta=theta*galsim.radians)
+            # apply an e1/e2-type distortion by specifying e=ellip and beta=real-space position
+            # angle
+            this_gal = gal.createSheared(e=ellip, beta=theta*galsim.radians)
 
-            # Apply the gravitational shear
+            # Apply the gravitational reduced shear by specifying g1/g2
             this_gal.applyShear(g1=gal_g1, g2=gal_g2)
 
             # Apply a random centroid shift:
