@@ -1,11 +1,19 @@
 // -*- c++ -*-
 
+//#define DEBUGLOGGING
+
 #include "OneDimensionalDeviate.h"
 #include "integ/Int.h"
 
 // Define this variable to find azimuth of 2d photons by drawing a uniform deviate for theta,
 // instead of drawing 2 deviates for a point on the unit circle.
 //#define USE_COS_SIN
+
+#ifdef DEBUGLOGGING
+#include <fstream>
+std::ostream* dbgout = new std::ofstream("debug.out");
+int verbose_level = 2;
+#endif
 
 namespace galsim {
 
@@ -25,7 +33,8 @@ namespace galsim {
                        double xmax,
                        double& extremum, 
                        int divisionSteps,
-                       double xFractionalTolerance = 1e-4) {
+                       double xFractionalTolerance = 1e-4) 
+    {
         if (xmax < xmin) std::swap(xmax,xmin);
         const double xTolerance = xFractionalTolerance*(xmax-xmin);
         // First bracket extremum by division into fixed number of steps
@@ -107,7 +116,8 @@ namespace galsim {
     }
 
 
-    double Interval::interpolateFlux(double fraction) const {
+    double Interval::interpolateFlux(double fraction) const 
+    {
         // Find the x (or radius) value that encloses fraction
         // of the flux in this Interval if the function were constant
         // over the interval.
@@ -124,7 +134,8 @@ namespace galsim {
     // Select a photon from within the interval.  unitRandom
     // as an initial random value, more from ud if needed for rejections.
     void Interval::drawWithin(double unitRandom, double& x, double& flux,
-                              UniformDeviate& ud) const {
+                              UniformDeviate& ud) const 
+    {
         double fractionOfInterval = std::min(unitRandom, 1.);
         fractionOfInterval = std::max(0., fractionOfInterval);
         x = interpolateFlux(fractionOfInterval);
@@ -139,7 +150,8 @@ namespace galsim {
         }
     }
 
-    void Interval::checkFlux() const {
+    void Interval::checkFlux() const 
+    {
         if (_fluxIsReady) return;
         if (_isRadial) {
             // Integrate r*F
@@ -162,8 +174,10 @@ namespace galsim {
     // (a) The max/min FluxDensity ratio in the interval is small enough, i.e. close to constant, or
     // (b) The total flux in the interval is below smallFlux.
     // In the former case, photons will be selected by drawing from a uniform distribution and then
-    // adjusting weights by flux.  In latter case, rejection sampling will be used to select within interval.
-    std::list<Interval> Interval::split(double smallFlux) {
+    // adjusting weights by flux.  In latter case, rejection sampling will be used to select 
+    // within interval.
+    std::list<Interval> Interval::split(double smallFlux) 
+    {
         // Get the flux in this interval 
         checkFlux();
         if (_isRadial) {
@@ -263,12 +277,21 @@ namespace galsim {
         _pt.buildTree();
     }
 
-    PhotonArray OneDimensionalDeviate::shoot(int N, UniformDeviate& ud) const {
+    PhotonArray OneDimensionalDeviate::shoot(int N, UniformDeviate& ud) const 
+    {
+        dbg<<"Start ODD::shoot\n";
+        dbg<<"isradial? "<<_isRadial<<std::endl;
+        dbg<<"N = "<<N<<std::endl;
         assert(N>=0);
         PhotonArray result(N);
         if (N==0) return result;
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
+        dbg<<"totalAbsFlux = "<<totalAbsoluteFlux<<std::endl;
         double fluxPerPhoton = totalAbsoluteFlux / N;
+        dbg<<"fluxPerPhoton = "<<fluxPerPhoton<<std::endl;
+#ifdef DEBUGLOGGING
+        double totalFlux = 0.;
+#endif
 
         // For each photon, first decide which Interval it's in, the drawWithin the interval.
         for (int i=0; i<N; i++) {
@@ -281,7 +304,12 @@ namespace galsim {
                 chosen->drawWithin(unitRandom, radius, flux, ud);
                 // Draw second ud to get azimuth 
                 double theta = 2.*M_PI*ud();
-                result.setPhoton(i, radius*std::cos(theta), radius*std::sin(theta), flux*fluxPerPhoton);
+                result.setPhoton(i,
+                                 radius*std::cos(theta), radius*std::sin(theta),
+                                 flux*fluxPerPhoton);
+#ifdef DEBUGLOGGING
+                totalFlux += flux*fluxPerPhoton;
+#endif
 #else
                 // Alternate method: doesn't need sin & cos but needs sqrt
                 // First get a point uniformly distributed in unit circle
@@ -300,6 +328,9 @@ namespace galsim {
                 // Rescale x & y:
                 double rScale = radius / std::sqrt(rsq);
                 result.setPhoton(i,xu*rScale, yu*rScale, flux*fluxPerPhoton);
+#ifdef DEBUGLOGGING
+                totalFlux += flux*fluxPerPhoton;
+#endif
 #endif            
             } else {
                 // Simple 1d interpolation
@@ -309,8 +340,14 @@ namespace galsim {
                 double x, flux;
                 chosen->drawWithin(unitRandom, x, flux, ud);
                 result.setPhoton(i, x, 0., flux*fluxPerPhoton);
+#ifdef DEBUGLOGGING
+                totalFlux += flux*fluxPerPhoton;
+#endif
             }
         }
+#ifdef DEBUGLOGGING
+        dbg<<"Total Flux = "<<totalFlux<<std::endl;
+#endif
         return result;
     }
 

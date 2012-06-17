@@ -107,26 +107,36 @@ def do_shoot(prof, img, name):
             err_msg="Photon shooting for %s disagrees with expected result"%name)
 
     # Test normalization
-    # Test with a large image to make sure we capture enough of the flux
     dx = img.getScale()
-    img = galsim.ImageD(1024,1024)
+    # Test with a large image to make sure we capture enough of the flux
+    # even for slow convergers like Airy (which needs a _very_ large image) or Sersic.
+    if 'Airy' in name:
+        img = galsim.ImageD(2048,2048)
+    elif 'Sersic' in name or 'DeVauc' in name:
+        img = galsim.ImageD(512,512)
+    else:
+        img = galsim.ImageD(128,128)
     img.setScale(dx)
     test_flux = 1.8
     compar.setFlux(test_flux)
     compar.draw(img, normalization="surface brightness")
-    np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, 5)
+    print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
+    np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, 5,
+            err_msg="Surface brightness normalization for %s disagrees with expected result"%name)
     compar.draw(img, normalization="flux")
-    np.testing.assert_almost_equal(img.array.sum(), test_flux, 5)
+    print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
+    np.testing.assert_almost_equal(img.array.sum(), test_flux, 5,
+            err_msg="Flux normalization for %s disagrees with expected result"%name)
 
-    # FIXME: Sersic and Airy seem to be missing some flux.  They come out very close
-    # to 1.79, even with much larger images and/or many more photons.
-    # Hence we currently only test this to 1 decimal place. 
-    # We should be able to test this with decimal=photon_decimal_test.
     prof.setFlux(test_flux)
     prof.drawShoot(img, nphot, normalization="surface brightness")
-    np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, 1)
+    print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
+    np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, 2,
+            err_msg="Photon shooting SB normalization for %s disagrees with expected result"%name)
     prof.drawShoot(img, nphot, normalization="flux")
-    np.testing.assert_almost_equal(img.array.sum(), test_flux, 1)
+    print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
+    np.testing.assert_almost_equal(img.array.sum(), test_flux, 2,
+            err_msg="Photon shooting flux normalization for %s disagrees with expected result"%name)
 
 
 def radial_integrate(prof, minr, maxr, dr):
@@ -345,7 +355,10 @@ def test_sbprofile_airy():
             err_msg="Using GSObject Airy disagrees with expected result")
 
     # Test photon shooting.
-    do_shoot(airy,myImg,"Airy")
+    airy = galsim.Airy(D=0.8, obscuration=0.0, flux=1)
+    do_shoot(airy,myImg,"Airy obscuration=0.0")
+    airy = galsim.Airy(D=0.8, obscuration=0.1, flux=1)
+    do_shoot(airy,myImg,"Airy obscuration=0.1")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1031,11 +1044,6 @@ def test_sbprofile_sbinterpolatedimage():
 
 
 if __name__ == "__main__":
-    test_gaussian_radii()
-    test_exponential_radii()
-    test_sersic_radii()
-    test_moffat_radii()
-
     test_sbprofile_gaussian()
     test_sbprofile_gaussian_properties()
     test_gaussian_radii()

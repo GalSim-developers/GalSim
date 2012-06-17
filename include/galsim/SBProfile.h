@@ -82,6 +82,24 @@ namespace galsim {
          */
         const double kvalue_accuracy = 1.e-5;
 
+        /**
+         * @brief Accuracy of values in real space.
+         *
+         * If a value in real space is less than xvalue_accuracy, then it may be set to zero.
+         * Similarly, if an alternate calculation has errors less than xvalue_accuracy,
+         * then it may be used instead of an exact calculation.
+         */
+        const double xvalue_accuracy = 1.e-5;
+
+        /**
+         * @brief Accuracy of total flux for photon shooting
+         *
+         * The photon shooting algorithm sometimes needs to sample the radial profile
+         * out to some value.  We choose the outer radius such that the integral encloses
+         * at least (1-shoot_flux_accuracy) of the flux.
+         */
+        const double shoot_flux_accuracy = 1.e-5;
+
         //@{
         /**
          * @brief Target accuracy for other integrations in SBProfile
@@ -1807,7 +1825,7 @@ namespace galsim {
         /// @brief Destructor.
         ~SBAiry() {}
 
-    protected:
+    //protected:
 
         /**
          * @brief Subclass is a scale-free version of the Airy radial function.
@@ -1824,7 +1842,9 @@ namespace galsim {
              * @brief Constructor
              * @param[in] obscuration Fractional linear size of central obscuration of pupil.
              */
-            AiryRadialFunction(double obscuration): _obscuration(obscuration) {}
+            AiryRadialFunction(double obscuration, double obssq) : 
+                _obscuration(obscuration), _obssq(obssq),
+                _norm(M_PI / (4.*(1.-_obssq))) {}
 
             /**
              * @brief Return the Airy function
@@ -1833,9 +1853,10 @@ namespace galsim {
              */
             double operator()(double radius) const;
 
-            void setObscuration(double obscuration) { _obscuration=obscuration; }
         private:
-            double _obscuration; ///> Central obstruction size
+            double _obscuration; ///< Central obstruction size
+            double _obssq; ///< _obscuration*_obscuration
+            double _norm; ///< Calculated value M_PI / (4.*(1-obs^2))
         };
 
     class SBAiryImpl : public SBProfileImpl 
@@ -1876,9 +1897,11 @@ namespace galsim {
          *  else `_D` = (telescope diam) / lambda if arg is in radians of field angle.
          */
         double _D; 
-
         double _obscuration; ///< Radius ratio of central obscuration.
         double _flux; ///< Flux.
+
+        double _Dsq; ///< Calculated value: D*D
+        double _obssq; ///< Calculated value: _obscuration * _obscuration
         double _norm; ///< Calculated value: flux*D*D
 
         ///< Class that can sample radial distribution
@@ -1887,19 +1910,20 @@ namespace galsim {
         AiryRadialFunction _radial;  ///< Class that embodies the radial Airy function.
 
         /// Circle chord length at `h < r`.
-        double chord(const double r, const double h) const; 
+        double chord(double r, double h, double rsq, double hsq) const; 
 
         /// @brief Area inside intersection of 2 circles radii `r` & `s`, seperated by `t`.
-        double circle_intersection(double r, double s, double t) const; 
+        double circle_intersection(double r, double s, double rsq, double ssq, double tsq) const; 
+        double circle_intersection(double r, double rsq, double tsq) const; 
 
         /// @brief Area of two intersecting identical annuli.
-        double annuli_intersect(double r1, double r2, double t) const; 
+        double annuli_intersect(double r1, double r2, double r1sq, double r2sq, double tsq) const; 
 
         /** 
          * @brief Beam pattern of annular aperture, in k space, which is just the autocorrelation 
          * of two annuli.  Normalized to unity at `k=0` for now.
          */
-        double annuli_autocorrelation(const double k) const; 
+        double annuli_autocorrelation(double ksq) const; 
 
         void checkSampler() const; ///< Check if `OneDimensionalDeviate` is configured.
         void flushSampler() const; ///< Discard the photon-shooting sampler class.
@@ -2002,7 +2026,7 @@ namespace galsim {
         double _norm; ///< Calculated value: flux / (xw*yw)
 
         // Sinc function used to describe Boxcar in k space. 
-        double sinc(const double u) const; 
+        double sinc(double u) const; 
 
         // Copy constructor and op= are undefined.
         SBBoxImpl(const SBBoxImpl& rhs);

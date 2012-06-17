@@ -1,13 +1,23 @@
 //
 // PhotonArray Class members
 //
+
+//#define DEBUGLOGGING
+
 #include <algorithm>
 #include <numeric>
 #include "PhotonArray.h"
 
+#ifdef DEBUGLOGGING
+#include <fstream>
+std::ostream* dbgout = new std::ofstream("debug.out");
+int verbose_level = 2;
+#endif
+
 namespace galsim {
 
-    PhotonArray::PhotonArray(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vflux)
+    PhotonArray::PhotonArray(std::vector<double>& vx, std::vector<double>& vy,
+                             std::vector<double>& vflux)
     {
         if (vx.size() != vy.size() || vx.size() != vflux.size())
             throw std::runtime_error("Size mismatch of input vectors to PhotonArray");
@@ -16,12 +26,14 @@ namespace galsim {
         _flux = vflux;
     }
 
-    double PhotonArray::getTotalFlux() const {
+    double PhotonArray::getTotalFlux() const 
+    {
         double total = 0.;
         return std::accumulate(_flux.begin(), _flux.end(), total);
     }
 
-    void PhotonArray::setTotalFlux(double flux) {
+    void PhotonArray::setTotalFlux(double flux) 
+    {
         double oldFlux = getTotalFlux();
         if (oldFlux==0.) return; // Do nothing if the flux is zero to start with
         scaleFlux(flux / oldFlux);
@@ -110,7 +122,8 @@ namespace galsim {
         }
     }
 
-    void PhotonArray::takeYFrom(const PhotonArray& rhs) {
+    void PhotonArray::takeYFrom(const PhotonArray& rhs) 
+    {
         int N = size();
         assert(rhs.size()==N);
         for (int i=0; i<N; i++) {
@@ -120,7 +133,8 @@ namespace galsim {
     }
 
     template <class T>
-    void PhotonArray::addTo(ImageView<T>& target) const {
+    void PhotonArray::addTo(ImageView<T>& target) const 
+    {
         double dx = target.getScale();
         Bounds<int> b = target.getBounds();
 
@@ -128,13 +142,40 @@ namespace galsim {
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
                                      " zero pixel scale or undefined Bounds");
 
-        double fluxScale = 1./(dx*dx);  // Factor to turn flux into surface brightness in an Image pixel
+        // Factor to turn flux into surface brightness in an Image pixel
+        double fluxScale = 1./(dx*dx);  
+        dbg<<"In PhotonArray::addTo\n";
+        dbg<<"fluxScale = "<<fluxScale<<std::endl;
+        dbg<<"bounds = "<<b<<std::endl;
 
+#ifdef DEBUGLOGGING
+        double totalFlux = 0.;
+        double addedFlux = 0.;
+        double lostFlux = 0.;
+#endif
         for (int i=0; i<size(); i++) {
             int ix = int(floor(_x[i]/dx + 0.5));
             int iy = int(floor(_y[i]/dx + 0.5));
-            if (b.includes(ix,iy)) target(ix,iy) += _flux[i]*fluxScale;
+#ifdef DEBUGLOGGING
+            totalFlux += _flux[i];
+#endif
+            if (b.includes(ix,iy)) {
+                target(ix,iy) += _flux[i]*fluxScale;
+#ifdef DEBUGLOGGING
+                addedFlux += _flux[i];
+#endif
+            } else {
+#ifdef DEBUGLOGGING
+                xdbg<<"lost flux at ix = "<<ix<<", iy = "<<iy<<" with flux = "<<_flux[i]<<std::endl;
+                lostFlux += _flux[i];
+#endif
+            }
         }
+#ifdef DEBUGLOGGING
+        dbg<<"totalFlux = "<<totalFlux<<std::endl;
+        dbg<<"addedlFlux = "<<addedFlux<<std::endl;
+        dbg<<"lostFlux = "<<lostFlux<<std::endl;
+#endif
     }
 
     // instantiate template functions for expected image types
