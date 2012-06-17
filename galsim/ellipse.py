@@ -70,7 +70,7 @@ class Ellipse:
                 if kwargs:
                     use_shear = galsim.Shear(**kwargs)
                 else:
-                    use_shear = galsim.Shear(g1 = 0.0, g2 = 0.0)
+                    use_shear = galsim.Shear()
             else:
                 if not isinstance(use_shear, galsim.Shear):
                     raise TypeError("Shear passed to Ellipse constructor was not a galsim.Shear!")
