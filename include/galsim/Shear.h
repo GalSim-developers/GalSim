@@ -109,9 +109,9 @@ namespace galsim {
         //negation
         Shear operator-() const 
         {
-            double e=getE();
-            return e>0. ? Shear(-e1*getG()/getE(), -e2*getG()/getE()) : Shear(0.0, 0.0);
-            return Shear(-e1,-e2);
+            double esq = getESq();
+            double scale = (esq>1.e-6) ? (1.-std::sqrt(1.-esq))/esq : 0.5;
+            return e>0. ? Shear(-e1*scale, -e2*scale) : Shear(0.0, 0.0);
         }
 
         // Composition operation: returns ellipticity of
