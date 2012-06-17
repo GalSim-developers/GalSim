@@ -27,8 +27,8 @@ s = galsim.Shear(g1=0.05, g2=0.05)
 s = galsim.Shear(g1=0.05) # assumes g2=0
 s = galsim.Shear(e1=0.05, e2=0.05)
 s = galsim.Shear(e2=0.05) # assumes e1=0
-s = galsim.Shear(eta=0.05, beta=galsim.Angle(45.0*galsim.degrees))
-s = galsim.Shear(q=0.5, beta=galsim.Angle(0.0*galsim.radians))
+s = galsim.Shear(eta=0.05, beta=45.0*galsim.degrees)
+s = galsim.Shear(q=0.5, beta=0.0*galsim.radians)
 @endcode
 
 There can be no mixing and matching, e.g., specifying g1 and e2.  It is permissible to only specify
