@@ -63,8 +63,8 @@ namespace galsim {
 
     void SBProfile::applyShear(double g1, double g2)
     {
-        Shear s = Shear(g1, g2);
-        Ellipse e = Ellipse(s, 0.0, Position<double>());
+        Shear s(g1, g2);
+        Ellipse e(s);
         SBTransform d(*this,e);
         _pimpl = d._pimpl;
     }
