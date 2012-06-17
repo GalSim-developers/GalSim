@@ -11,8 +11,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -136,18 +136,26 @@ namespace galsim {
     void Interval::drawWithin(double unitRandom, double& x, double& flux,
                               UniformDeviate& ud) const 
     {
+        //dbg<<"drawWithin interval\n";
+        //dbg<<"_flux = "<<_flux<<std::endl;
         double fractionOfInterval = std::min(unitRandom, 1.);
+        //dbg<<"fractionOfInterval = "<<fractionOfInterval<<std::endl;
         fractionOfInterval = std::max(0., fractionOfInterval);
+        //dbg<<"fractionOfInterval => "<<fractionOfInterval<<std::endl;
         x = interpolateFlux(fractionOfInterval);
+        //dbg<<"x = "<<x<<std::endl;
         flux = 1.;
         if (_useRejectionMethod) {
+            //dbg<<"use rejection\n";
             while ( ud() > std::abs((*_fluxDensityPtr)(x)) / _maxAbsDensity) {
                 x = interpolateFlux(ud());
             }
+            //dbg<<"x => "<<x<<std::endl;
             if (_flux < 0) flux = -1.;
         } else {
             flux = (*_fluxDensityPtr)(x) / _meanAbsDensity;
         }
+        //dbg<<"flux = "<<flux<<std::endl;
     }
 
     void Interval::checkFlux() const 
@@ -279,7 +287,8 @@ namespace galsim {
 
     PhotonArray OneDimensionalDeviate::shoot(int N, UniformDeviate& ud) const 
     {
-        dbg<<"Start ODD::shoot\n";
+        dbg<<"OneDimentionalDeviate shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = 1.\n";
         dbg<<"isradial? "<<_isRadial<<std::endl;
         dbg<<"N = "<<N<<std::endl;
         assert(N>=0);
@@ -289,9 +298,6 @@ namespace galsim {
         dbg<<"totalAbsFlux = "<<totalAbsoluteFlux<<std::endl;
         double fluxPerPhoton = totalAbsoluteFlux / N;
         dbg<<"fluxPerPhoton = "<<fluxPerPhoton<<std::endl;
-#ifdef DEBUGLOGGING
-        double totalFlux = 0.;
-#endif
 
         // For each photon, first decide which Interval it's in, the drawWithin the interval.
         for (int i=0; i<N; i++) {
@@ -307,9 +313,6 @@ namespace galsim {
                 result.setPhoton(i,
                                  radius*std::cos(theta), radius*std::sin(theta),
                                  flux*fluxPerPhoton);
-#ifdef DEBUGLOGGING
-                totalFlux += flux*fluxPerPhoton;
-#endif
 #else
                 // Alternate method: doesn't need sin & cos but needs sqrt
                 // First get a point uniformly distributed in unit circle
@@ -328,9 +331,6 @@ namespace galsim {
                 // Rescale x & y:
                 double rScale = radius / std::sqrt(rsq);
                 result.setPhoton(i,xu*rScale, yu*rScale, flux*fluxPerPhoton);
-#ifdef DEBUGLOGGING
-                totalFlux += flux*fluxPerPhoton;
-#endif
 #endif            
             } else {
                 // Simple 1d interpolation
@@ -340,14 +340,9 @@ namespace galsim {
                 double x, flux;
                 chosen->drawWithin(unitRandom, x, flux, ud);
                 result.setPhoton(i, x, 0., flux*fluxPerPhoton);
-#ifdef DEBUGLOGGING
-                totalFlux += flux*fluxPerPhoton;
-#endif
             }
         }
-#ifdef DEBUGLOGGING
-        dbg<<"Total Flux = "<<totalFlux<<std::endl;
-#endif
+        dbg<<"OneDimentionalDeviate Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
