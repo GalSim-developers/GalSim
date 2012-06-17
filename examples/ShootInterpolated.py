@@ -10,6 +10,10 @@ nPhotons is number of photons to shoot through the image
 g1 and g2 are reduced shears to be applied while shooting
 """
 
+# Example usage:
+# python ShootInterpolated.py data/147246.0_150.416558_1.998697_masknoise.fits tmp.fits 1 500 1000000
+
+
 # This machinery lets us run Python examples even though they aren't positioned
 # properly to find galsim as a package in the current directory.
 try:
