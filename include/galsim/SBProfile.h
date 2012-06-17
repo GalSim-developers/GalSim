@@ -339,12 +339,22 @@ namespace galsim {
          *
          * @param[in] g1 Reduced shear g1 by which to shear the SBProfile.
          * @param[in] g2 Reduced shear g2 by which to shear the SBProfile.
-         * This shears the object by the given shear.  As with scaleFlux, it does not 
+         * This shears the object by the given shear.  As with scaleFlux, it does not
          * invalidate any previous uses of this object.
          */
         void applyShear(double g1, double g2);
 
-        /** 
+        /**
+         * @brief Apply a given shear.
+         *
+         * @param[in] g1 Reduced shear g1 by which to shear the SBProfile.
+         * @param[in] g2 Reduced shear g2 by which to shear the SBProfile.
+         * This shears the object by the given shear.  As with scaleFlux, it does not
+         * invalidate any previous uses of this object.
+         */
+        void applyShear(Shear s);
+
+        /**
          * @brief Apply a given rotation.
          *
          * This rotates the object by the given angle.  As with scaleFlux, it does not 

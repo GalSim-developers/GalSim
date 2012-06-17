@@ -479,7 +479,7 @@ def test_sbprofile_smallshear():
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    mySBP.applyShear(g1=myShear._shear.getG1(), g2=myShear._shear.getG2())
+    mySBP.applyShear(myShear._shear)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
@@ -538,7 +538,7 @@ def test_sbprofile_largeshear():
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
-    mySBP.applyShear(g1=myShear._shear.getG1(), g2=myShear._shear.getG2())
+    mySBP.applyShear(myShear._shear)
     mySBP.draw(myImg,dx=0.2)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
@@ -633,7 +633,7 @@ def test_sbprofile_shearconvolve():
     myEllipse = galsim.Ellipse(e1=e1, e2=e2)
     # test at SBProfile level using applyShear
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    mySBP.applyShear(g1=myShear.g1, g2=myShear.g2)
+    mySBP.applyShear(myShear._shear)
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
@@ -744,10 +744,10 @@ def test_sbprofile_realspace_distorted_convolve():
     import time
     t1 = time.time()
     psf = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
-    psf.applyShear(g1=0.11,g2=0.17)
+    psf.applyShear(galsim.Shear(g1=0.11,g2=0.17)._shear)
     psf.applyRotation(13 * galsim.degrees)
     pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
-    pixel.applyShear(g1=0.2,g2=0.0)
+    pixel.applyShear(galsim.Shear(g1=0.2,g2=0.0)._shear)
     pixel.applyRotation(80 * galsim.degrees)
     pixel.applyShift(0.13,0.27)
     conv = galsim.SBConvolve([psf,pixel],real_space=True)

@@ -156,12 +156,12 @@ class GSObject:
                 raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
             if not isinstance(args[0], galsim.Shear):
                 raise TypeError("Error, unnamed argument to applyShear is not a galsim.Shear!")
-            self.SBProfile.applyShear(args[0].g1, args[0].g2)
+            self.SBProfile.applyShear(args[0]._shear)
         elif len(args) > 1:
             raise TypeError("Error, too many unnamed arguments to applyShear!")
         else:
             shear = galsim.Shear(**kwargs)
-            self.SBProfile.applyShear(shear.g1, shear.g2)
+            self.SBProfile.applyShear(shear._shear)
 
     def applyRotation(self, theta):
         """@brief Apply a rotation theta (Angle object, +ve anticlockwise) to this object.

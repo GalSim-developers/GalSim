@@ -69,6 +69,13 @@ namespace galsim {
         _pimpl = d._pimpl;
     }
 
+    void SBProfile::applyShear(Shear s)
+    {
+        Ellipse e(s);
+        SBTransform d(*this,e);
+        _pimpl = d._pimpl;
+    }
+
     void SBProfile::applyRotation(const Angle& theta)
     {
         SBTransform d(*this,

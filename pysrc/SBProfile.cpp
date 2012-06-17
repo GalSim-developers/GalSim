@@ -204,7 +204,9 @@ struct PySBProfile {
             .def("scaleFlux", &SBProfile::setFlux, bp::args("fluxRatio"))
             .def("setFlux", &SBProfile::setFlux, bp::args("flux"))
             .def("applyTransformation", &SBProfile::applyTransformation, bp::args("e"))
-            .def("applyShear", &SBProfile::applyShear, bp::args("g1", "g2"))
+            .def("applyShear",
+                 (void (SBProfile::*)(Shear))&SBProfile::applyShear,
+                 (bp::arg("s")))
             .def("applyRotation", &SBProfile::applyRotation, bp::args("theta"))
             .def("applyShift", &SBProfile::applyShift, bp::args("dx", "dy"))
             .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
