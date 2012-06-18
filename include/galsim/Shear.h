@@ -34,8 +34,8 @@ namespace galsim {
      * g = "reduced shear", g=(a-b)/(a+b)
      * e = "distortion", e=(a^2-b^2)/(a^2+b^2)
      * q = "axis ratio", q=b/a
-     * To specify both components, we have a value Beta that is the position angle of the major
-     * axis.
+     * To specify both components, we have a value Beta that is the
+     * real-space position angle of the major axis, i.e. e1 = e cos(2*Beta) and e2 = e sin(2*Beta).
      *
      * Shears are represented internally by e1 and e2, which relate to second moments via
      * e1 = (Mxx - Myy) / (Mxx + Myy)

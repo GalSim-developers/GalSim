@@ -15,8 +15,8 @@ distortion e = (a^2 - b^2)/(a^2 + b^2)
 conformal shear eta, with a/b = exp(eta)
 minor-to-major axis ratio q = b/a
 
-These can be thought of as a magnitude and a position angle beta, or as two components e.g., g1 and
-g2, with
+These can be thought of as a magnitude and a real-space position angle beta, or as two components
+e.g., g1 and g2, with
 
 g1 = g cos(2*beta)
 g2 = g sin(2*beta)
