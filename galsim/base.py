@@ -144,6 +144,10 @@ class GSObject:
         ellipse = galsim.Ellipse(e1, e2)
 
         where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
+
+        Note: if the ellipse includes a dilation, then this transformation will 
+        not be flux-conserving.  It conserves surface brightness instead.
+        Thus, the flux will increase by the increase in area = dilation^2.
         """
         self.SBProfile.applyDistortion(ellipse)
         
