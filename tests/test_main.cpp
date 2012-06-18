@@ -11,6 +11,12 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
+// Not sure when this was added.  Currently check for it for versions >= 4.4
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 4)
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
+
 #endif // !INTEL
 
 #include <boost/test/included/unit_test.hpp>
