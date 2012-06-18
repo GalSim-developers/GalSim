@@ -227,26 +227,6 @@ public:
     T operator()(T, T v) const { return v; }
 };
 
-template <typename T>
-class ReturnProduct
-{
-public: 
-    ReturnProduct(const T v): val(v) {}
-    T operator()(T x1) const { return x1*val; }
-private:
-    T val;
-};
-
-template <typename T>
-class ReturnSum
-{
-public: 
-    ReturnSum(const T v): val(v) {}
-    T operator()(T x1) const { return x1+val; }
-private:
-    T val;
-};
-
 } // anonymous
 
 template <typename T>
