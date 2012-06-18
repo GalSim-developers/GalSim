@@ -19,10 +19,15 @@ The following are all examples of valid calls to initialize a Ellipse object:
 @code
 s = galsim.Shear(g1=0.05, g2=0.05)
 shift = galsim.PositionD(0.0, 0.2)
-ell = galsim.Ellipse(s)
-ell2 = galsim.Ellipse(s, shift)
-ell3 = galsim.Ellipse(s, y_shift = 0.2)
-ell4 = galsim.Ellipse(dilation = 0.0, shear = s)
+ell = galsim.Ellipse() # an empty ellipse, i.e. no shearing, dilation, shifting
+ell = galsim.Ellipse(s) # represents shearing by s only
+ell = galsim.Ellipse(shear = s) # same as previous, but with keyword explicitly named
+ell = galsim.Ellipse(s, shift) # shear and shift
+ell = galsim.Ellipse(shift, s) # can specify the arguments in any order
+ell = galsim.Ellipse(s, y_shift = 0.2) # same as previous, specifying the y shift directly
+ell = galsim.Ellipse(dilation = 0.0, shear = s) # no dilation, but shear by s
+ell = galsim.Ellipse(shift, g1=0.05, g2=0.05) # arguments can be used to specify a shear
+ell = galsim.Ellipse(dilation=0.5, g=0.5, beta=45.0*galsim.degrees) # dilation, shear via keyword argument
 @endcode
 """
 class Ellipse:
