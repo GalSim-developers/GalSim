@@ -21,6 +21,8 @@ e.g., g1 and g2, with
 g1 = g cos(2*beta)
 g2 = g sin(2*beta)
 
+Note: beta is _not_ the complex phase of a complex valued shear: g1 + i g2 = g exp(2 i beta)
+
 The following are all examples of valid calls to initialize a Shear object:
 @code
 s = galsim.Shear() # empty constructor sets ellipticity/shear to zero
