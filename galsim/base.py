@@ -20,6 +20,7 @@ class GSObject:
     # op+= converts this into the equivalent of an Add object
     def __iadd__(self, other):
         GSObject.__init__(self, galsim.SBAdd(self.SBProfile, other.SBProfile))
+        self.__class__ = Add
         return self
 
     # Make op* and op*= work to adjust the flux of an object
@@ -56,9 +57,16 @@ class GSObject:
 
     # Make a copy of an object
     def copy(self):
-        """@brief Returns a copy of an object as the SBProfile attribute of a new GSObject instance.
+        """@brief Returns a copy of an object
+
+           This preserves the original type of the object, so if the caller is a
+           Gaussian (for example), the copy will also be a Gaussian, and can thus call
+           the methods that are not in GSObject, but are in Gaussian (e.g. getSigma).
         """
-        return GSObject(galsim.SBProfile(self.SBProfile))
+        sbp = self.SBProfile.__class__(self.SBProfile)
+        ret = GSObject(sbp)
+        ret.__class__ = self.__class__
+        return ret
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
     #
@@ -128,16 +136,33 @@ class GSObject:
 
     def scaleFlux(self, fluxRatio):
         """@brief Multiply the flux of the object by fluxRatio
+           
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
         """
         self.SBProfile.scaleFlux(fluxRatio)
+        self.__class__ = GSObject
 
     def setFlux(self, flux):
         """@brief Set the flux of the object.
+           
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
         """
         self.SBProfile.setFlux(flux)
+        self.__class__ = GSObject
 
     def applyDistortion(self, ellipse):
         """@brief Apply a galsim.Ellipse distortion to this object.
+           
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
 
         For calling, galsim.Ellipse instances can be generated via:
 
@@ -146,24 +171,43 @@ class GSObject:
         where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
         """
         self.SBProfile.applyDistortion(ellipse)
+        self.__class__ = GSObject
         
     def applyShear(self, g1, g2):
         """@brief Apply a (g1, g2) shear to this object, where |g| = (a-b)/(a+b).
+           
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
         """
         e1, e2 = utilities.g1g2_to_e1e2(g1, g2)
         self.SBProfile.applyDistortion(galsim.Ellipse(e1, e2))
+        self.__class__ = GSObject
 
     def applyRotation(self, theta):
         """@brief Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
+           
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         self.SBProfile.applyRotation(theta)
+        self.__class__ = GSObject
         
     def applyShift(self, dx, dy):
         """@brief Apply a (dx, dy) shift to this object.
+           
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
         """
         self.SBProfile.applyShift(dx, dy)
+        self.__class__ = GSObject
 
     # Also add methods which create a new GSObject with the transformations applied...
     #
@@ -244,74 +288,164 @@ class GSObject:
 class Gaussian(GSObject):
     """@brief GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
     """
-    def __init__(self, flux=1., half_light_radius=None, sigma=None, fwhm=None):
-        GSObject.__init__(self, galsim.SBGaussian(flux=flux, half_light_radius=half_light_radius, 
-                                                  sigma=sigma, fwhm=fwhm))
+    def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
+        GSObject.__init__(self, galsim.SBGaussian(half_light_radius=half_light_radius, 
+                                                  fwhm=fwhm, sigma=sigma, flux=flux))
+        
+    def getSigma(self):
+        """@brief Return the sigma scale length for this Gaussian profile.
+        """
+        return self.SBProfile.getSigma()
 
-    # Hmmm, these Gaussian-specific methods do not appear to be wrapped yet (will add issue to 
-    # myself for this)... when they are, uncomment below:
-    # def getSigma(self):
-    #     return self.SBProfile.getSigma()
-    #
-    # def setSigma(self, sigma):
-    #     return self.SBProfile.setSigma(sigma)
+    def getFWHM(self):
+        """@brief Return the FWHM for this Gaussian profile.
+        """
+        return self.SBProfile.getSigma() * 2.3548200450309493 # factor = 2 sqrt[2ln(2)]
+
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this Gaussian profile.
+        """
+        return self.SBProfile.getSigma() * 1.1774100225154747 # factor = sqrt[2ln(2)]
 
 
 class Moffat(GSObject):
     """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
     """
-    def __init__(self, beta, truncationFWHM=0., flux=1.,
-                 half_light_radius=None, scale_radius=None, fwhm=None):
-        GSObject.__init__(self, galsim.SBMoffat(beta, truncationFWHM=truncationFWHM, flux=flux,
-                          half_light_radius=half_light_radius, scale_radius=scale_radius, fwhm=fwhm))
-    # As for the Gaussian currently only the base layer SBProfile methods are wrapped
-    # def getBeta(self):
-    #     return self.SBProfile.getBeta()
-    # ...etc.
+    def __init__(self, beta, fwhm=None, scale_radius=None, half_light_radius=None,
+                 trunc=0., flux=1.):
+        GSObject.__init__(self, galsim.SBMoffat(beta, fwhm=fwhm, scale_radius=scale_radius,
+                                                half_light_radius=half_light_radius, trunc=trunc,
+                                                flux=flux))
+    def getBeta(self):
+        """@brief Return the beta parameter for this Moffat profile.
+        """
+        return self.SBProfile.getBeta()
 
+    def getScaleRadius(self):
+        """@brief Return the scale radius for this Moffat profile.
+        """
+        return self.SBProfile.getScaleRadius()
+        
+    def getFWHM(self):
+        """@brief Return the FWHM for this Moffat profile.
+        """
+        return self.SBProfile.getFWHM()
+
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this Moffat profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
+    
 
 class Sersic(GSObject):
     """@brief GalSim Sersic, which has an SBSersic in the SBProfile attribute.
     """
-    def __init__(self, n, flux=1., half_light_radius=None):
-        GSObject.__init__(self, galsim.SBSersic(n, flux=flux, half_light_radius=half_light_radius))
-    # Ditto!
+    def __init__(self, n, half_light_radius, flux=1.):
+        GSObject.__init__(self, galsim.SBSersic(n, half_light_radius=half_light_radius, flux=flux))
+
+    def getN(self):
+        """@brief Return the Sersic index for this profile.
+        """
+        return self.SBProfile.getN()
+
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this Sersic profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
 
 
 class Exponential(GSObject):
     """@brief GalSim Exponential, which has an SBExponential in the SBProfile attribute.
     """
-    def __init__(self, flux=1., half_light_radius=None, scale_radius=None):
-        GSObject.__init__(self, galsim.SBExponential(flux=flux, half_light_radius=half_light_radius,
-                                                     scale_radius=scale_radius))
-    # Ditto!
+    def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
+        GSObject.__init__(self, galsim.SBExponential(half_light_radius=half_light_radius,
+                                                     scale_radius=scale_radius, flux=flux))
+
+    def getScaleRadius(self):
+        """@brief Return the scale radius for this Exponential profile.
+        """
+        return self.SBProfile.getScaleRadius()
+
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this Exponential profile.
+        """
+        # Factor not analytic, but can be calculated by iterative solution of equation:
+        #  (re / r0) = ln[(re / r0) + 1] + ln(2)
+        return self.SBProfile.getScaleRadius() * 1.6783469900166605
 
 
 class DeVaucouleurs(GSObject):
     """@brief GalSim De-Vaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
     """
-    def __init__(self, flux=1., half_light_radius=None):
-        GSObject.__init__(self, galsim.SBDeVaucouleurs(flux=flux, 
-                                                       half_light_radius=half_light_radius))
-    # Ditto!
+    def __init__(self, half_light_radius=None, flux=1.):
+        GSObject.__init__(self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius,
+                                                       flux=flux))
+
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this DeVaucouleurs profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
 
 
 class Airy(GSObject):
     """@brief GalSim Airy, which has an SBAiry in the SBProfile attribute.
     """
-    def __init__(self, D=1., obscuration=0., flux=1.):
-        GSObject.__init__(self, galsim.SBAiry(D=D, obscuration=obscuration, flux=flux))
-    # Ditto!
+    def __init__(self, lam_over_D, obscuration=0., flux=1.):
+        GSObject.__init__(self, galsim.SBAiry(lam_over_D=lam_over_D, obscuration=obscuration,
+                                              flux=flux))
+
+    def getHalfLightRadius(self):
+        """Return the half light radius of this Airy profile (only supported for obscuration = 0.).
+        """
+        if self.SBProfile.getObscuration() == 0.:
+            # For an unobscured Airy, we have the following factor which can be derived using the
+            # integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),
+            # solved for half total flux using the free online tool Wolfram Alpha.
+            # At www.wolframalpha.com:
+            # Type "Solve[BesselJ0(x)^2+BesselJ1(x)^2=1/2]" ... and divide the result by pi
+            return self.SBProfile.getLamOverD() * 0.5348321477242647
+        else:
+            # In principle can find the half light radius as a function of lam_over_D and
+            # obscuration too, but it will be much more involved...!
+            raise NotImplementedError("Half light radius calculation not implemented for Airy "+
+                                      "objects with non-zero obscuration.")
+
+    def getFWHM(self):
+        """Return the FWHM of this Airy profile (only supported for obscuration = 0.).
+        """
+        # As above, likewise, FWHM only easy to define for unobscured Airy
+        if self.SBProfile.getObscuration() == 0.:
+            return self.SBProfile.getLamOverD() * 1.028993969962188;
+        else:
+            # In principle can find the FWHM as a function of lam_over_D and obscuration too,
+            # but it will be much more involved...!
+            raise NotImplementedError("FWHM calculation not implemented for Airy "+
+                                      "objects with non-zero obscuration.")
+
+    def getLamOverD(self):
+        """Return the lam_over_D parameter of this Airy profile.
+        """
+        return self.SBProfile.getLamOverD()
 
 
 class Pixel(GSObject):
     """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
     """
-    def __init__(self, xw=None, yw=None, flux=1.):
+    def __init__(self, xw, yw=None, flux=1.):
         if yw is None:
             yw = xw
         GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
-    # Ditto!
+
+    def getXWidth(self):
+        """@brief Return the width of the pixel in the x dimension.
+        """
+        return self.SBProfile.getXWidth()
+
+    def getYWidth(self):
+        """@brief Return the width of the pixel in the y dimension.
+        """
+        return self.SBProfile.getYWidth()
+
 
 class OpticalPSF(GSObject):
     """@brief Class describing aberrated PSFs due to telescope optics.
@@ -381,6 +515,11 @@ class OpticalPSF(GSObject):
             self.Interpolant2D = interpolantxy
         GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D,
                                                            dx=dx_lookup))
+    def getHalfLightRadius(self):
+        # The half light radius is a complex function for aberrated optical PSFs, so just give
+        # up gracelessly...
+        raise NotImplementedError("Half light radius calculation not implemented for OpticalPSF "
+                                   +"objects.")
 
 class AtmosphericPSF(GSObject):
     """Base class for long exposure Kolmogorov PSF.
@@ -420,7 +559,10 @@ class AtmosphericPSF(GSObject):
             self.Interpolant2D = galsim.InterpolantXY(lan5)
         GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, 
                                                            dx=dx_lookup))
-       
+    def getHalfLightRadius(self):
+        # TODO: This seems like it would not be impossible to calculate
+        raise NotImplementedError("Half light radius calculation not yet implemented for "+
+                                   "Atmospheric PSF objects (could be though).")
         
 class RealGalaxy(GSObject):
     """@brief Class describing real galaxies from some training dataset.
@@ -516,6 +658,10 @@ class RealGalaxy(GSObject):
 
         GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
 
+    def getHalfLightRadius(self):
+        raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
+                                   +"objects.")
+
 class Add(GSObject):
     """@brief Base class for defining the python interface to the SBAdd C++ class.
     """
@@ -541,7 +687,6 @@ class Add(GSObject):
             # > 2 arguments.  Convert to a list of SBProfiles
             SBList = [obj.SBProfile for obj in args]
             GSObject.__init__(self, galsim.SBAdd(SBList))
-
 
     def add(self, obj, scale=1.):
         self.SBProfile.add(obj.SBProfile, scale)
@@ -670,6 +815,7 @@ class Convolve(GSObject):
 
     def add(self, obj):
         self.SBProfile.add(obj.SBProfile)
+
 
 class Deconvolve(GSObject):
     """@brief Base class for defining the python interface to the SBDeconvolve C++ class.

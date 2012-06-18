@@ -186,26 +186,26 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     # make sure target PSF is normalized
     target_PSF.setFlux(1.0)
 
+    real_galaxy_copy = real_galaxy.copy()
+
     # rotate
     if rotation_angle != None:
-        real_galaxy.applyRotation(rotation_angle)
+        real_galaxy_copy.applyRotation(rotation_angle)
     elif rotation_angle == None and rand_rotate == True:
         if uniform_deviate == None:
             uniform_deviate = galsim.UniformDeviate()
         rand_angle = galsim.Angle(math.pi*uniform_deviate(), galsim.radians)
-        real_galaxy.applyRotation(rand_angle)
+        real_galaxy_copy.applyRotation(rand_angle)
 
     # set fluxes
-    real_galaxy.setFlux(target_flux)
+    real_galaxy_copy.setFlux(target_flux)
 
     # shear
     if (g1 != 0.0 or g2 != 0.0):
-        sheared = real_galaxy.createSheared(g1,g2)
-    else:
-        sheared = real_galaxy
+        real_galaxy_copy.applyShear(g1,g2)
 
     # convolve, resample
-    out_gal = galsim.Convolve([sheared, galsim.GSObject(target_PSF)])
+    out_gal = galsim.Convolve([real_galaxy_copy, galsim.GSObject(target_PSF)])
     image = out_gal.draw(image=image, dx = target_pixel_scale)
 
     # return simulated image

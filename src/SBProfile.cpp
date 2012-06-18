@@ -168,7 +168,7 @@ namespace galsim {
         dbg<<"scale => "<<I.getScale()<<std::endl;
         return ret;
     }
- 
+
     template <typename T>
     double SBProfile::SBProfileImpl::doFillXImage2(ImageView<T>& I, double dx) const 
     {
@@ -810,7 +810,7 @@ namespace galsim {
         }
         return result;
     }
-        
+
 
     //
     // "SBDistort" Class 
@@ -872,7 +872,7 @@ namespace galsim {
         } else {
             dbg<<"wrapping a non-distortion.\n";
         }
-   
+
         // It will be reasonably common to have an identity matrix (for just
         // a flux scaling and/or shift) for (A,B,C,D).  If so, we can use simpler
         // versions of fwd and inv:
@@ -1405,7 +1405,7 @@ namespace galsim {
         // Note: This can only really be done one pair at a time, so it is 
         // probably rare that this will be more efficient if N > 2.
         // For now, we don't bother implementing this for N > 2.
-        
+
         if (_plist.size() == 2) {
             const SBProfile& p1 = _plist.front();
             const SBProfile& p2 = _plist.back();
@@ -1469,7 +1469,7 @@ namespace galsim {
     // "SBGaussian" Class 
     //
 
-    SBGaussian::SBGaussianImpl::SBGaussianImpl(double flux, double sigma) :
+    SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux) :
         _flux(flux), _sigma(sigma), _sigma_sq(sigma*sigma)
     {
         // For large k, we clip the result of kValue to 0.
@@ -1536,7 +1536,7 @@ namespace galsim {
     // SBExponential Class
     //
 
-    SBExponential::SBExponentialImpl::SBExponentialImpl(double flux, double r0) :
+    SBExponential::SBExponentialImpl::SBExponentialImpl(double r0, double flux) :
         _flux(flux), _r0(r0), _r0_sq(r0*r0)
     {
         // For large k, we clip the result of kValue to 0.
@@ -1609,9 +1609,12 @@ namespace galsim {
     // SBAiry Class
     //
 
-    SBAiry::SBAiryImpl::SBAiryImpl(double D, double obscuration, double flux) :
-        _D(D), _obscuration(obscuration), _flux(flux), _norm(flux*D*D),
-        _radial(_obscuration) {}
+    SBAiry::SBAiryImpl::SBAiryImpl(double lam_over_D, double obscuration, double flux) :
+        _lam_over_D(lam_over_D), 
+        _D(1. / lam_over_D), 
+        _obscuration(obscuration), 
+        _flux(flux), 
+        _norm(flux / (lam_over_D*lam_over_D)), _radial(_obscuration) {}
 
     // This is a scale-free version of the Airy radial function.
     // Input radius is in units of lambda/D.  Output normalized
@@ -1855,7 +1858,7 @@ namespace galsim {
         // A faster version that pulls out all the if statements and store the 
         // relevant sinc functions in two arrays, so we don't need to keep calling 
         // sinc on the same values over and over.
-        
+
         kt.clearCache();
         std::vector<double> sinc_x(N/2+1);
         std::vector<double> sinc_y(N/2+1);
@@ -1965,7 +1968,7 @@ namespace galsim {
     // First need to define the static member that holds info on all the Sersic n's
     SBSersic::InfoBarn SBSersic::nmap;
 
-    SBSersic::SBSersicImpl::SBSersicImpl(double n, double flux, double re) :
+    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux) :
         _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _norm(_flux/_re_sq),
         _info(nmap.get(_n))
     {
@@ -2108,7 +2111,7 @@ namespace galsim {
         dbg<<"stepK = "<<_stepK<<std::endl;
 
         // Now start building the lookup table for FT of the profile.
-        
+
         // Normalization for integral at k=0:
         double hankel_norm = _n*gamma2n/b2n;
         dbg<<"hankel_norm = "<<hankel_norm<<std::endl;
@@ -2155,20 +2158,121 @@ namespace galsim {
         return result;
     }
 
-    SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double truncationFWHM, double flux,
-                       double size, RadiusType rType) : 
-        _beta(beta), _flux(flux), _ft(Table<double,double>::spline)
+    class MoffatScaleRadiusFunc 
+    {
+    public:
+        MoffatScaleRadiusFunc(double re, double rm, double beta) :
+            _re(re), _rm(rm), _beta(beta) {}
+        double operator()(double rd) const
+        {
+            double fre = 1.-std::pow(1.+(_re*_re)/(rd*rd), 1.-_beta);
+            double frm = 1.-std::pow(1.+(_rm*_rm)/(rd*rd), 1.-_beta);
+            xdbg<<"func("<<rd<<") = 2*"<<fre<<" - "<<frm<<" = "<<2.*fre-frm<<std::endl;
+            return 2.*fre-frm;
+        }
+    private:
+        double _re,_rm,_beta;
+    };
+
+    double MoffatCalculateScaleRadiusFromHLR(double re, double rm, double beta)
+    {
+        dbg<<"Start MoffatCalculateScaleRadiusFromHLR\n";
+        // The basic equation that is relevant here is the flux of a Moffat profile
+        // out to some radius.
+        // flux(R) = int( (1+r^2/rd^2 )^(-beta) 2pi r dr, r=0..R )
+        //         = (pi rd^2 / (beta-1)) (1 - (1+R^2/rd^2)^(1-beta) )
+        // For now, we can ignore the first factor.  We call the second factor fluxfactor below,
+        // or in this function f(R).
+        // 
+        // We are given two values of R for which we know that the ratio of their fluxes is 1/2:
+        // f(re) = 0.5 * f(rm)
+        //
+        if (rm == 0.) {
+            // If rm = infinity (which we actually indicate with rm=0), then we can solve for 
+            // rd analytically:
+            //
+            // f(rm) = 1
+            // f(re) = 0.5 = 1 - (1+re^2/rd^2)^(1-beta)
+            // re^2/rd^2 = 0.5^(1/(1-beta)) - 1
+            double rerd = sqrt( std::pow(0.5, 1./(1.-beta)) - 1.);
+            dbg<<"rm = 0, so analytic.\n";
+            xdbg<<"rd = re/rerd = "<<re<<" / "<<rerd<<" = "<<re/rerd<<std::endl;
+            return re / rerd;
+        } else {
+            // If trunc < infinity, then the equations are slightly circular:
+            // f(rm) = 1 - (1 + rm^2/rd^2)^(1-beta)
+            // 2*f(re) = 2 - 2*(1 + re^2/rd^2)^(1-beta)
+            // 2*(1+re^2/rd^2)^(1-beta) = 1 + (1+rm^2/rd^2)^(1-beta)
+            // 
+            // As rm decreases, rd increases.  
+            // Eventually rd increases to infinity.  When does that happen:
+            // Take the limit as rd->infinity in the above equation:
+            // 2 + 2*(1-beta) re^2/rd^2) = 1 + 1 + (1-beta) rm^2/rd^2
+            // 2 re^2 = rm^2
+            // rm = sqrt(2) * re
+            // So this is the limit for how low rm is allowed to be for a given re
+            if (rm <= sqrt(2.) * re)
+                throw SBError("Moffat truncation radius must be > sqrt(2) * half_light_radius.");
+
+            dbg<<"rm != 0, so not analytic.\n";
+            MoffatScaleRadiusFunc func(re,rm,beta);
+            // For the lower bound of rd, we can use the untruncated value:
+            double r1 = re / sqrt( std::pow(0.5, 1./(1.-beta)) - 1.);
+            xdbg<<"r1 = "<<r1<<std::endl;
+            // For the upper bound, we don't really have a good choice, so start with 2*r1
+            // and we'll expand it if necessary.
+            double r2 = 2. * r1;
+            xdbg<<"r2 = "<<r2<<std::endl;
+            Solve<MoffatScaleRadiusFunc> solver(func,r1,r2);
+            solver.setMethod(Brent);
+            solver.bracketUpper();
+            xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
+                solver.getUpperBound()<<std::endl;
+            double rd = solver.root();
+            xdbg<<"Root is "<<rd<<std::endl;
+            return rd;
+        }
+    }
+
+    SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double size, RadiusType rType,
+                                         double trunc, double flux) : 
+        _beta(beta), _flux(flux), _trunc(trunc), _ft(Table<double,double>::spline),
+        _re(0.) // initially set to zero, may be updated by size or getHalfLightRadius()
     {
         xdbg<<"Start SBMoffat constructor: \n";
         xdbg<<"beta = "<<_beta<<"\n";
         xdbg<<"flux = "<<_flux<<"\n";
+        xdbg<<"trunc = "<<_trunc<<"\n";
+
+        if (_trunc == 0. && beta <= 1.) 
+            throw SBError("Moffat profiles with beta <= 1 must be truncated.");
 
         // First, relation between FWHM and rD:
         double FWHMrD = 2.* sqrt(std::pow(2., 1./_beta)-1.);
         xdbg<<"FWHMrD = "<<FWHMrD<<"\n";
+
+        // Set size of this instance according to type of size given in constructor:
+        switch (rType) {
+          case FWHM:
+               _rD = size / FWHMrD;
+               break;
+          case HALF_LIGHT_RADIUS: 
+               {
+                   _re = size;
+                   // This is a bit complicated, so break it out into its own function.
+                   _rD = MoffatCalculateScaleRadiusFromHLR(_re,trunc,_beta);
+               }
+               break;
+          case SCALE_RADIUS:
+               _rD = size;
+               break;
+          default:
+               throw SBError("Unknown SBMoffat::RadiusType");
+        }
+
         double maxRrD;
-        if (truncationFWHM > 0.) {
-            maxRrD = FWHMrD * truncationFWHM;
+        if (trunc > 0.) {
+            maxRrD = trunc / _rD;  // note new usage of trunc in physical units requires _rD here
             xdbg<<"maxRrD = "<<maxRrD<<"\n";
 
             // Analytic integration of total flux:
@@ -2185,24 +2289,6 @@ namespace galsim {
             xdbg<<"Not truncate.  Calculated maxRrD = "<<maxRrD<<"\n";
         }
 
-        // Set size of this instance according to type of size given in constructor:
-        switch (rType) {
-          case FWHM:
-               _rD = size / FWHMrD;
-               break;
-          case HALF_LIGHT_RADIUS: 
-               {
-                   // Get half-light radius in units of rD:
-                   double rerD = sqrt( std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
-                   _rD = size / rerD;
-               }
-               break;
-          case SCALE_RADIUS:
-               _rD = size;
-               break;
-          default:
-               throw SBError("Unknown SBMoffat::RadiusType");
-        }
         _FWHM = FWHMrD * _rD;
         _maxR = maxRrD * _rD;
         _maxR_sq = _maxR * _maxR;
@@ -2220,6 +2306,17 @@ namespace galsim {
         else pow_beta = &SBMoffat::pow_gen;
 
         setupFT();
+    }
+
+    double SBMoffat::SBMoffatImpl::getHalfLightRadius() const 
+    {
+        // Done here since _re depends on _fluxFactor and thus requires _rD in advance, so this 
+        // needs to happen largely post setup. Doesn't seem efficient to ALWAYS calculate it above,
+        // so we'll just calculate it once if requested and store it.
+        if (_re == 0.) {
+            _re = _rD * sqrt(std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
+        }
+        return _re;
     }
 
     double SBMoffat::SBMoffatImpl::xValue(const Position<double>& p) const 
@@ -2302,7 +2399,7 @@ namespace galsim {
         if (_ft.size() > 0) return;
 
         // Do a Hankel transform and store the results in a lookup table.
-        
+
         double nn = _norm * 2.*M_PI * _rD_sq;
         //double maxR = _fluxFactor == 1. ? integ::MOCK_INF : _maxR / _rD;
         double maxR = _maxR / _rD;
@@ -2365,7 +2462,7 @@ namespace galsim {
         pa.scaleFlux(N / origN);
         pa.addTo(img);
     }
-    
+
     PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate& u) const 
     {
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
@@ -2405,7 +2502,7 @@ namespace galsim {
             if (remainingN <=0) break;
             if (remainingAbsoluteFlux <= 0.) break;
         }
-        
+
         return result;
     }
 
@@ -2448,7 +2545,7 @@ namespace galsim {
                 yu = 2.*u()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
-            
+
             // Then map it to desired Gaussian with analytic transformation
             double factor = _sigma*sqrt( -2.*std::log(rsq)/rsq);
             result.setPhoton(i,factor*xu, factor*yu, fluxPerPhoton);
@@ -2468,7 +2565,7 @@ namespace galsim {
     PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate& u) const
     {
         // Accuracy to which to solve for (log of) cumulative flux distribution:
-        const double Y_TOLERANCE=1e-6;
+        const double Y_TOLERANCE=1.e-6;
 
         double fluxPerPhoton = getFlux() / N;
         PhotonArray result(N);
@@ -2485,14 +2582,14 @@ namespace galsim {
             }
             // Initial guess
             y = -std::log(y);
-            double r = y>2 ? y : sqrt(2*y);
-            double dy = y - r + std::log(1+r);
+            double r = y>2. ? y : sqrt(2.*y);
+            double dy = y - r + std::log(1.+r);
             while ( std::abs(dy) > Y_TOLERANCE) {
-                r = r + (1+r)*dy/r;
-                dy = y - r + std::log(1+r);
+                r = r + (1.+r)*dy/r;
+                dy = y - r + std::log(1.+r);
             }
             // Draw another random for azimuthal angle (could use the unit-circle trick here...)
-            double theta = 2*M_PI*u();
+            double theta = 2.*M_PI*u();
             result.setPhoton(i,_r0*r*std::cos(theta), _r0*r*std::sin(theta), fluxPerPhoton);
         }
         return result;
@@ -2554,7 +2651,7 @@ namespace galsim {
                 yu = 2.*u()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
-            
+
             // Then map it to the Moffat flux distribution
             double newRsq = std::pow( 1.-rsq*_fluxFactor , 1./(1.-_beta)) - 1.;
             double rFactor = _rD*sqrt(newRsq / rsq);

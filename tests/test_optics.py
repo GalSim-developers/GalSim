@@ -198,8 +198,7 @@ def test_OpticalPSF_vs_Airy():
     nlook = 100
     image = galsim.ImageF(nlook,nlook)
     for lod in lods:
-        D = 1. / lod
-        airy_test = galsim.Airy(D=D, obscuration=0., flux=1.)
+        airy_test = galsim.Airy(lam_over_D=lod, obscuration=0., flux=1.)
         optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1) #pad same as an Airy, natch!
         airy_array = airy_test.draw(dx=1.,image=image).array
         optics_array = optics_test.draw(dx=1.,image=image).array 
@@ -217,9 +216,8 @@ def test_OpticalPSF_vs_Airy_with_obs():
     obses = (0.1, 0.3, 0.5) # central obscuration radius ratios
     nlook = 100          # size of array region at the centre of each image to compare
     image = galsim.ImageF(nlook,nlook)
-    D = 1. / lod
     for obs in obses:
-        airy_test = galsim.Airy(D=D, obscuration=obs, flux=1.)
+        airy_test = galsim.Airy(lam_over_D=lod, obscuration=obs, flux=1.)
         optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1, obscuration=obs)
         airy_array = airy_test.draw(dx=1.,image=image).array
         optics_array = optics_test.draw(dx=1.,image=image).array 
