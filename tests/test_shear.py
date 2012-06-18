@@ -150,6 +150,14 @@ def test_shear_initialization():
     np.testing.assert_raises(TypeError,galsim.Shear,q=0.3)
     np.testing.assert_raises(ValueError,galsim.Shear,q=1.3,beta=0.*galsim.degrees)
     np.testing.assert_raises(ValueError,galsim.Shear,g1=0.9,g2=0.6)
+    np.testing.assert_raises(TypeError,galsim.Shear,randomkwarg=0.1)
+    np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,randomkwarg=0.1)
+    np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,e1=0.1)
+    np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,e=0.1)
+    np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,g=0.1)
+    np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0*galsim.degrees)
+    np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0*galsim.degrees,g=0.3,eta=0.1)
+    np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0,g=0.3)
 
 def test_ellipse_initialization():
     """Test that Ellipses can be initialized in a variety of ways and get the expected results."""
@@ -225,6 +233,14 @@ def test_ellipse_initialization():
                 all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_dil=0.0, check_shear=0.0)
                 e = galsim.Ellipse(x_shift = p.x, y_shift = p.y)
                 all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_dil=0.0, check_shear=0.0)
+    # check for some cases that should fail
+    s = galsim.Shear()
+    np.testing.assert_raises(TypeError, galsim.Ellipse, s, g2=0.3)
+    np.testing.assert_raises(TypeError, galsim.Ellipse, shear=s, x_shift=1, g1=0.2)
+    np.testing.assert_raises(TypeError, galsim.Ellipse, s, shift=galsim.PositionD(), x_shift=0.1)
+    np.testing.assert_raises(TypeError, galsim.Ellipse, s, s)
+    np.testing.assert_raises(TypeError, galsim.Ellipse, g1=0.1, randomkwarg=0.7)
+    np.testing.assert_raises(TypeError, galsim.Ellipse, shear=0.1)
 
 def test_shear_methods():
     """Test that the most commonly-used methods of the Shear class give the expected results."""
