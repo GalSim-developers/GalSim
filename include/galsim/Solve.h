@@ -47,8 +47,12 @@ namespace galsim {
         T getXTolerance() const { return xTolerance; }
         void setXTolerance(T tol) { xTolerance=tol; }
         void setBounds(T lb, T ub) { lBound=lb; uBound=ub; }
+        double getLowerBound() const { return lBound; }
+        double getUpperBound() const { return uBound; }
 
         // Hunt for bracket, geometrically expanding range
+        // This version assumes that the root is to the side of the  end point that is 
+        // closer to 0.  This will be true if the function is monotonic.
         void bracket() 
         {
             const double factor=2.0;
@@ -59,17 +63,76 @@ namespace galsim {
                 fupper = func(uBound);
                 boundsAreEvaluated=true;
             }
+
+            double delta = uBound-lBound;
             for (int j=1; j<maxSteps; j++) {
                 if (fupper*flower < 0.0) return;
                 if (std::abs(flower) < std::abs(fupper)) {
-                    lBound += factor*(lBound-uBound);
+                    uBound = lBound;
+                    fupper = flower;
+                    delta *= factor;
+                    lBound -= delta;
                     flower = func(lBound);
                 } else {
-                    uBound += factor*(uBound-lBound);
+                    lBound = uBound;
+                    flower = fupper;
+                    delta *= factor;
+                    uBound += delta;
                     fupper = func(uBound);
                 }
             }
             throw SolveError("Too many iterations in bracket()");
+        }
+
+        // Hunt for bracket, geometrically expanding range
+        // This one only expands to the right for when you know that the lower bound is 
+        // definitely to the left of the root, but the upper bound might not bracket it.
+        void bracketUpper() 
+        {
+            const double factor=2.0;
+            if (uBound == lBound) 
+                throw SolveError("uBound=lBound in bracketUpper()");
+            if (!boundsAreEvaluated) {
+                flower = func(lBound);
+                fupper = func(uBound);
+                boundsAreEvaluated=true;
+            }
+
+            double delta = uBound-lBound;
+            for (int j=1; j<maxSteps; j++) {
+                if (fupper*flower < 0.0) return;
+                lBound = uBound;
+                flower = fupper;
+                delta *= factor;
+                uBound += delta;
+                fupper = func(uBound);
+            }
+            throw SolveError("Too many iterations in bracketUpper()");
+        }
+
+        // Hunt for bracket, geometrically expanding range
+        // The opposite of bracketUpper -- only expand to the left.
+        void bracketLower() 
+        {
+            const double factor = 2.0;
+            if (uBound == lBound) 
+                throw SolveError("uBound=lBound in bracketLower()");
+            if (!boundsAreEvaluated) {
+                flower = func(lBound);
+                fupper = func(uBound);
+                boundsAreEvaluated=true;
+            }
+
+            double delta = uBound-lBound;
+            for (int j=1; j<maxSteps; j++) {
+                if (fupper*flower < 0.0) return;
+                uBound = lBound;
+                fupper = flower;
+                delta *= factor;
+                lBound -= delta;
+                flower = func(lBound);
+            }
+            throw SolveError("Too many iterations in bracketLower()");
         }
 
         T root() const 

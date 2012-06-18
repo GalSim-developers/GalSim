@@ -1363,12 +1363,12 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] flux   flux of the Surface Brightness Profile (default `flux = 1.`).
          * @param[in] sigma  characteristic size, surface brightness scales as 
-         *                   `exp[-r^2 / (2. * sigma^2)]` (default `sigma = 1.`).
+         *                   `exp[-r^2 / (2. * sigma^2)]`.
+         * @param[in] flux   flux of the Surface Brightness Profile (default `flux = 1.`).
          */
-        SBGaussian(double flux=1., double sigma=1.) :
-            SBProfile(new SBGaussianImpl(flux,sigma)) {}
+        SBGaussian(double sigma, double flux=1.) : 
+            SBProfile(new SBGaussianImpl(sigma, flux)) {}
 
         /// @brief Copy constructor.
         SBGaussian(const SBGaussian& rhs) : SBProfile(rhs) {}
@@ -1376,6 +1376,7 @@ namespace galsim {
         /// @brief Destructor.
         ~SBGaussian() {}
 
+        /// @brief Returns the characteristic size sigma of the Gaussian profile.
         double getSigma() const 
         { 
             assert(dynamic_cast<const SBGaussianImpl*>(_pimpl.get()));
@@ -1386,7 +1387,7 @@ namespace galsim {
     class SBGaussianImpl : public SBProfileImpl
     {
     public:
-        SBGaussianImpl(double flux, double sigma);
+      SBGaussianImpl(double sigma, double flux);
 
         ~SBGaussianImpl() {}
 
@@ -1454,11 +1455,11 @@ namespace galsim {
          * @brief Constructor.
          *
          * @param[in] n     Sersic index.
+         * @param[in] re    half-light radius.
          * @param[in] flux  flux (default `flux = 1.`).
-         * @param[in] re    half-light radius (default `re = 1.`).
          */
-        SBSersic(double n, double flux=1., double re=1.) : 
-            SBProfile(new SBSersicImpl(n,flux,re)) {}
+        SBSersic(double n, double re, double flux=1.) : 
+            SBProfile(new SBSersicImpl(n, re, flux)) {}
 
         /// @brief Copy constructor.
         SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
@@ -1466,12 +1467,14 @@ namespace galsim {
         /// @brief Destructor.
         ~SBSersic() {}
 
-        double getN() const 
+        /// @brief Returns the Sersic index `n` of the profile.
+        double getN() const
         { 
             assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
             return dynamic_cast<const SBSersicImpl&>(*_pimpl).getN(); 
         }
 
+        /// @brief Returns the half light radius of the Sersic profile.
         double getHalfLightRadius() const 
         {
             assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
@@ -1484,7 +1487,7 @@ namespace galsim {
     class SBSersicImpl : public SBProfileImpl
     {
     public:
-        SBSersicImpl(double n, double flux, double re);
+        SBSersicImpl(double n, double re, double flux);
 
         ~SBSersicImpl() {}
 
@@ -1698,12 +1701,12 @@ namespace galsim {
          * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in 
          * SBSersic.
          *
-         * @param[in] flux  flux (default `flux = 1.`).
          * @param[in] r0    scale length for the profile that scales as `exp[-(r / r0)]`, NOT the 
-         *                  half-light radius `re` as in SBSersic (default `r0 = 1.`).
+         *                  half-light radius `re`.
+         * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBExponential(double flux=1., double r0=1.) :
-            SBProfile(new SBExponentialImpl(flux,r0)) {}
+         SBExponential(double r0, double flux=1.) :
+             SBProfile(new SBExponentialImpl(r0, flux)) {}
 
         /// @brief Copy constructor.
         SBExponential(const SBExponential& rhs) : SBProfile(rhs) {}
@@ -1711,6 +1714,7 @@ namespace galsim {
         /// @brief Destructor.
         ~SBExponential() {}
 
+        /// @brief Returns the scale radius of the Exponential profile.
         double getScaleRadius() const 
         { 
             assert(dynamic_cast<const SBExponentialImpl*>(_pimpl.get()));
@@ -1722,7 +1726,7 @@ namespace galsim {
     {
     public:
 
-        SBExponentialImpl(double flux, double r0);
+        SBExponentialImpl(double r0, double flux);
 
         ~SBExponentialImpl() {}
 
@@ -1791,21 +1795,35 @@ namespace galsim {
         /**
          * @brief Constructor.
          *
-         * @param[in] D            `D` = (telescope diam) / (lambda * focal length) if arg is focal 
-         *                         plane position, else `D` = (telescope diam) / lambda if arg is 
-         *                         in radians of field angle (default `D = 1.`).
+         * @param[in] lam_over_D   `lam_over_D` = (lambda * focal length) / (telescope diam) if 
+         *                         arg is focal plane position, else `lam_over_D` = 
+         *                         lambda / (telescope diam) if arg is in radians of field angle.
          * @param[in] obscuration  linear dimension of central obscuration as fraction of pupil
          *                         dimension (default `obscuration = 0.`).
          * @param[in] flux         flux (default `flux = 1.`).
          */
-        SBAiry(double D=1., double obscuration=0., double flux=1.) :
-            SBProfile(new SBAiryImpl(D,obscuration,flux)) {}
+        SBAiry(double lam_over_D, double obscuration=0., double flux=1.) :
+            SBProfile(new SBAiryImpl(lam_over_D, obscuration, flux)) {}
 
         /// @brief Copy constructor
         SBAiry(const SBAiry& rhs) : SBProfile(rhs) {}
 
         /// @brief Destructor.
         ~SBAiry() {}
+
+        /// @brief Returns lam_over_D param of the SBAiry.
+        double getLamOverD() const 
+        {
+            assert(dynamic_cast<const SBAiryImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBAiryImpl&>(*_pimpl).getLamOverD(); 
+        }
+
+        /// @brief Returns obscuration param of the SBAiry.
+        double getObscuration() const 
+        {
+            assert(dynamic_cast<const SBAiryImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBAiryImpl&>(*_pimpl).getObscuration(); 
+        }
 
     protected:
 
@@ -1841,7 +1859,7 @@ namespace galsim {
     class SBAiryImpl : public SBProfileImpl 
     {
     public:
-        SBAiryImpl(double D, double obs, double flux);
+        SBAiryImpl(double lam_over_D, double obs, double flux);
 
         ~SBAiryImpl() { flushSampler(); }
 
@@ -1860,6 +1878,8 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
+        double getLamOverD() const { return _lam_over_D; }
+        double getObscuration() const { return _obscuration; }
 
         /**
          * @brief Airy photon-shooting is done numerically with `OneDimensionalDeviate` class.
@@ -1871,11 +1891,13 @@ namespace galsim {
         PhotonArray shoot(int N, UniformDeviate& ud) const;
 
     private:
+        
+        double _lam_over_D;  ///< inverse of _D (see below), harmonise inputs with other GSObjects
         /** 
          * `_D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, 
          *  else `_D` = (telescope diam) / lambda if arg is in radians of field angle.
          */
-        double _D; 
+        double _D;
 
         double _obscuration; ///< Radius ratio of central obscuration.
         double _flux; ///< Flux.
@@ -1927,11 +1949,11 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] xw    width of Boxcar function along x (default `xw = 1.`).
-         * @param[in] yw    width of Boxcar function along y (default `yw = 0.`).
+         * @param[in] xw    width of Boxcar function along x.
+         * @param[in] yw    width of Boxcar function along y.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBBox(double xw=1., double yw=0., double flux=1.) :
+        SBBox(double xw, double yw=0., double flux=1.) :
             SBProfile(new SBBoxImpl(xw,yw,flux)) {}
 
         /// @brief Copy constructor.
@@ -1939,6 +1961,20 @@ namespace galsim {
 
         /// @brief Destructor.
         ~SBBox() {}
+
+        /// @brief Returns the x dimension width of the Boxcar.
+        double getXWidth() const 
+        {
+            assert(dynamic_cast<const SBBoxImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBBoxImpl&>(*_pimpl).getXWidth(); 
+        }
+
+        /// @brief Returns the y dimension width of the Boxcar.
+        double getYWidth() const 
+        {
+            assert(dynamic_cast<const SBBoxImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBBoxImpl&>(*_pimpl).getYWidth(); 
+        }
 
     protected:
     class SBBoxImpl : public SBProfileImpl 
@@ -1974,6 +2010,9 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
+
+        double getXWidth() const { return _xw; }
+        double getYWidth() const { return _yw; }
 
         /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
         PhotonArray shoot(int N, UniformDeviate& ud) const;
@@ -2095,15 +2134,16 @@ namespace galsim {
         /** @brief Constructor.
          *
          * @param[in] beta           Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
-         * @param[in] truncationFWHM outer truncation in units of FWHM (default `truncationFWHM = 
-         * 0.`).  If truncationFWHM = 0, then no truncation is applied.
+         * @param[in] size           Size specification.
+         * @param[in] rType          Kind of size being specified (one of FWHM, HALF_LIGHT_RADIUS,
+         *                           SCALE_RADIUS).
+         * @param[in] trunc          Outer truncation radius in same physical units as size,
+         *                           trunc = 0. for no truncation (default `trunc = 0.`). 
          * @param[in] flux           Flux (default `flux = 1.`).
-         * @param[in] size           Size specification (default `size = 1.`).
-         * @param[in] rType          Kind of size being specified (default `HALF_LIGHT_RADIUS`).
          */
-        SBMoffat(double beta, double truncationFWHM=0., double flux=1., double size=1.,
-                 RadiusType rType=HALF_LIGHT_RADIUS) :
-            SBProfile(new SBMoffatImpl(beta,truncationFWHM,flux,size,rType)) {}
+        SBMoffat(double beta, double size, RadiusType rType, double trunc=0., 
+                 double flux=1.) :
+            SBProfile(new SBMoffatImpl(beta, size, rType, trunc, flux)) {}
 
 
         /// @brief Copy constructor.
@@ -2112,18 +2152,36 @@ namespace galsim {
         /// @brief Destructor.
         ~SBMoffat() {}
 
+        /// @brief Returns beta of the Moffat profile `[1 + (r / rD)^2]^beta`.
         double getBeta() const 
         {
             assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
             return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getBeta(); 
+        }
+        /// @brief Returns the FWHM of the Moffat profile.
+        double getFWHM() const 
+        {
+            assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getFWHM(); 
+        }
+        /// @brief Returns the scale radius rD of the Moffat profile `[1 + (r / rD)^2]^beta`.
+        double getScaleRadius() const 
+        {
+            assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getScaleRadius();
+        }
+        /// @brief Returns the half light radius of the Moffat profile.
+        double getHalfLightRadius() const 
+        {
+            assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
+            return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getHalfLightRadius();
         }
 
     protected:
     class SBMoffatImpl : public SBProfileImpl 
     {
     public:
-        SBMoffatImpl(double beta, double truncationFWHM, double flux, double size,
-                     RadiusType rType);
+        SBMoffatImpl(double beta, double size, RadiusType rType, double trunc, double flux);
 
         ~SBMoffatImpl() {}
 
@@ -2166,6 +2224,9 @@ namespace galsim {
         PhotonArray shoot(int N, UniformDeviate& ud) const;
 
         double getBeta() const { return _beta; }
+        double getScaleRadius() const { return _rD; }
+        double getFWHM() const { return _FWHM; }
+        double getHalfLightRadius() const;
 
     private:
         double _beta; ///< Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
@@ -2173,13 +2234,16 @@ namespace galsim {
         double _norm; ///< Normalization. (Including the flux)
         double _rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
         double _maxR; ///< Maximum `r`
-        double _FWHM;  ///< Full Width at Half Maximum in units of `rD`.
+        double _FWHM;  ///< Full Width at Half Maximum.
+        double _trunc;  ///< Outer truncation radius in same physical units as `_rD`
         double _fluxFactor; ///< Integral of total flux in terms of 'rD' units.
         double _rD_sq; ///< Calculated value: rD*rD;
         double _maxR_sq; ///< Calculated value: maxR * maxR
         double _maxK; ///< Maximum k with kValue > 1.e-3
 
         Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
+
+        mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
 
         double (*pow_beta)(double x, double beta);
 
@@ -2229,10 +2293,10 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
+         * @param[in] r0    Half-light radius.
          * @param[in] flux  flux (default `flux = 1.`).
-         * @param[in] r0    Half-light radius (default `r0 = 1.`).
          */
-        SBDeVaucouleurs(double flux=1., double r0=1.) : SBSersic(4., flux, r0) {}
+      SBDeVaucouleurs(double r0, double flux=1.) : SBSersic(4., r0, flux) {}
     };
 
 
