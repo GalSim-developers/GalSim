@@ -13,6 +13,7 @@ path, filename = os.path.split(__file__) # Get the path to this file for use bel
 try:
     import galsim
 except ImportError:
+    import sys
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
