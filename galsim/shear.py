@@ -21,7 +21,9 @@ e.g., g1 and g2, with
 g1 = g cos(2*beta)
 g2 = g sin(2*beta)
 
-Note: beta is _not_ the complex phase of a complex valued shear: g1 + i g2 = g exp(2 i beta)
+Note: beta is _not_ the phase of a complex valued shear.
+Rather, the complex shear is g1 + i g2 = g exp(2 i beta).
+Likewise for eta or e.  Beta is twice the phase of the complex value.
 
 The following are all examples of valid calls to initialize a Shear object:
 @code
