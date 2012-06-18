@@ -53,7 +53,8 @@ namespace galsim {
          *
          * @param[in] N number of elements to reserve space for.
          */
-        void reserve(int N) {
+        void reserve(int N) 
+        {
             _x.reserve(N);
             _y.reserve(N);
             _flux.reserve(N);
@@ -67,7 +68,8 @@ namespace galsim {
          * @param[in] y y coordinate of photon
          * @param[in] flux flux of photon
          */
-        void setPhoton(int i, double x, double y, double flux) {
+        void setPhoton(int i, double x, double y, double flux) 
+        {
             _x[i]=x; 
             _y[i]=y;
             _flux[i]=flux;

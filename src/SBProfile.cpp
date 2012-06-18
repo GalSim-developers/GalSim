@@ -2404,15 +2404,6 @@ namespace galsim {
         pa.addTo(img);
         realizedFlux += pa.getTotalFlux();
         dbg<<"Done drawShoot.  Realized flux = "<<realizedFlux<<std::endl;
-
-        // The flux realized from photon shooting won't necessarily match exactly the 
-        // target flux because of the possibility of variable flux for the photons,
-        // and also positive and negative photons partially canceling out in a 
-        // stochastic way.
-        // So rescale the image to get the correct flux.
-        double scale = targetFlux / realizedFlux;
-        dbg<<"Rescale image by "<<scale<<std::endl;
-        img *= T(scale);
     }
     
     PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate& u) const 

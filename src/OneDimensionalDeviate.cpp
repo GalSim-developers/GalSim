@@ -343,6 +343,19 @@ namespace galsim {
             }
         }
         dbg<<"OneDimentionalDeviate Realized flux = "<<result.getTotalFlux()<<std::endl;
+
+        // The flux realized from photon shooting a OneDimensionalDeviate won't necessarily 
+        // match exactly the target flux because of the possibility of variable flux for the 
+        // photons, and also positive and negative photons partially canceling out in a 
+        // stochastic way.
+        // So rescale the image to get the correct flux.
+        double targetFlux = getPositiveFlux() - getNegativeFlux();
+        double realizedFlux = result.getTotalFlux();
+        dbg<<"targetFlux = "<<targetFlux<<std::endl;
+        dbg<<"realizedFlux = "<<realizedFlux<<std::endl;
+        double scale = targetFlux / realizedFlux;
+        dbg<<"Rescale result by "<<scale<<std::endl;
+        result.scaleFlux(scale);
         return result;
     }
 
