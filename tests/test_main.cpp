@@ -9,6 +9,7 @@
 // I think pragma GCC was introduced in gcc 4.2, so guard for >= that version 
 #if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 2)
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
 
 #endif // !INTEL
