@@ -39,15 +39,15 @@ class Ellipse:
             else:
                 for this_arg in args:
                     if isinstance(this_arg, galsim.Shear):
-                        if use_shear != None:
+                        if use_shear is not None:
                             raise TypeError("Ellipse received >1 unnamed Shear arguments!")
                         use_shear = this_arg
                     elif isinstance(this_arg, float):
-                        if use_dil != None:
+                        if use_dil is not None:
                             raise TypeError("Ellipse received >1 unnamed float/double arguments!")
                         use_dil = this_arg
                     elif isinstance(this_arg, _galsim.PositionD):
-                        if use_shift != None:
+                        if use_shift is not None:
                             raise TypeError("Ellipse received >1 unnamed Position arguments!")
                         use_shift = this_arg
                     else:
@@ -77,6 +77,9 @@ class Ellipse:
                 # if shear was passed in some way, then we should not allow any other args
                 if kwargs:
                     raise TypeError("Keyword arguments to Ellipse not permitted: %s"%kwargs.keys())
+        else:
+            if kwargs:
+                raise TypeError("Keyword arguments to Ellipse not permitted: %s"%kwargs.keys())     
 
         self._ellipse = _galsim._Ellipse(s = use_shear._shear, mu = use_dil, p = use_shift)
 
