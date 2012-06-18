@@ -56,14 +56,17 @@ class Shear:
             raise TypeError("Too many unnamed arguments to initialize Shear: %d"%len(args))
         else:
 
-            # check the named args: if a component of e, g, or eta, then require that the other
-            # component is zero if not set, and don't allow specification of mixed pairs like e1 and
-            # g2 check the named args: require also a position angle if we didn't get g1/g2, e1/e2,
-            # or eta1/eta2
+            # There is no valid set of >2 keyword arguments, so raise an exception in this case:
             if len(kwargs) > 2:
                 raise TypeError(
                     "Shear constructor received >2 keyword arguments: %s"%kwargs.keys())
 
+            # Since there are no args, check the keyword args: if a component of e, g, or eta, then
+            # require that the other component is zero if not set, and don't allow specification of
+            # mixed pairs like e1 and g2.  Also, require also a position angle if we didn't get
+            # g1/g2, e1/e2, or eta1/eta2
+
+            # first case: an empty constructor (no args/kwargs)
             if not kwargs:
                 use_shear = _galsim._Shear(0.0, 0.0)
             elif 'g1' in kwargs or 'g2' in kwargs:
@@ -143,6 +146,8 @@ class Shear:
             elif 'beta' in kwargs:
                 raise TypeError("beta provided to Shear constructor, but not g/e/eta/q")
 
+            # check for the case where there are 1 or 2 kwargs that are not valid ones for
+            # initialization a Shear
             if kwargs:
                 raise TypeError(
                     "Shear constructor got unexpected extra argument(s): %s"%kwargs.keys())

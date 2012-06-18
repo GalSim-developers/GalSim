@@ -41,6 +41,8 @@ class Ellipse:
             # very special case: if it is given a wrapped C++ Ellipse
             if len(args) == 1 and isinstance(args[0], _galsim._Ellipse):
                 self._ellipse = args[0]
+            # there are args that are not a C++ Ellipse, so we have to process them by checking for
+            # one of the allowed types
             else:
                 for this_arg in args:
                     if isinstance(this_arg, galsim.Shear):
@@ -59,10 +61,9 @@ class Ellipse:
                         raise TypeError(
                             "Ellipse received an unnamed argument of a type that is not permitted!")
 
-        # if no args, check kwargs: if one is shear, then use that
-        #                   look for dilation
-        #                   look for x_shift, y_shift
-        #                   if anything is left, pass to Shear constructor
+        # If no args, check kwargs: we start by checking for dilation or shifts, because there is a
+        # limited set of allowed keyword arguments to specify those, whereas for shear there are
+        # many allowed keyword arguments (see documentation for Shear)
         if use_dil is None:
             use_dil = kwargs.pop('dilation', 0.0)
         if use_shift is None:
@@ -79,10 +80,12 @@ class Ellipse:
             else:
                 if not isinstance(use_shear, galsim.Shear):
                     raise TypeError("Shear passed to Ellipse constructor was not a galsim.Shear!")
-                # if shear was passed in some way, then we should not allow any other args
+                # if shear was passed using the 'shear' keyword, then we should not allow any other args
                 if kwargs:
                     raise TypeError("Keyword arguments to Ellipse not permitted: %s"%kwargs.keys())
         else:
+            # if shear was specified as an unnamed argument, make sure there aren't also keyword
+            # arguments that specify shear
             if kwargs:
                 raise TypeError("Keyword arguments to Ellipse not permitted: %s"%kwargs.keys())     
 
