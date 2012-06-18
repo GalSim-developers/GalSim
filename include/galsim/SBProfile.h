@@ -115,7 +115,6 @@ namespace galsim {
      * Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic
      * SBLaguerre: Gauss-Laguerre expansion
      * SBTransform: affine transformation of another SBProfile
-     * SBRotate: rotated version of another SBProfile
      * SBAdd: sum of SBProfiles
      * SBConvolve: convolution of other SBProfiles
      * SBInterpolatedImage: surface brightness profiles defined by an image and interpolant.
@@ -2215,22 +2214,6 @@ namespace galsim {
     private:
         // op= is undefined
         void operator=(const SBMoffat& rhs);
-    };
-
-    /// @brief This class is for backwards compatibility; prefer rotate() method.
-    class SBRotate : public SBTransform
-    {
-    public:
-        /** 
-         * @brief Constructor.
-         *
-         * @param[in] s     SBProfile being rotated.
-         * @param[in] theta Rotation angle in radians anticlockwise.
-         */
-        SBRotate(const SBProfile& s, Angle theta) :
-            SBTransform(s,
-                        std::cos(theta.rad()), -std::sin(theta.rad()),
-                        std::sin(theta.rad()), std::cos(theta.rad())) {}
     };
 
     /**

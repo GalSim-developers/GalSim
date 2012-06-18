@@ -161,7 +161,6 @@ struct PySBProfile {
             "Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic\n"
             "SBLaguerre: Gauss-Laguerre expansion\n"
             "SBTransform: affine transformation of another SBProfile\n"
-            "SBRotate: rotated version of another SBProfile\n"
             "SBAdd: sum of SBProfiles\n"
             "SBConvolve: convolution of other SBProfiles\n"
             "\n"
