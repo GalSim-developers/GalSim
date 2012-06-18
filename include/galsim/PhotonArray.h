@@ -31,7 +31,7 @@ namespace galsim {
          *
          * @param[in] N Size of desired array.
          */
-        explicit PhotonArray(int N): _x(N,0.), _y(N,0.), _flux(N,0.) {}
+        explicit PhotonArray(int N): _x(N,0.), _y(N,0.), _flux(N,0.), _is_correlated(false) {}
 
         /** 
          * @brief Construct from three vectors.  Exception if vector sizes do not match.
@@ -143,8 +143,9 @@ namespace galsim {
          * the two photon streams are uncorrelated.
          *
          * @param[in] rhs PhotonArray to convolve with this one.  Must be same size.
+         * @param[in] ud  A UniformDeviate in case we need to shuffle.
          */
-        void convolve(const PhotonArray& rhs);
+        void convolve(const PhotonArray& rhs, UniformDeviate ud);
 
         /**
          * @brief Convolve this array with another, shuffling the order in which photons are combined.
@@ -155,7 +156,7 @@ namespace galsim {
          * @param[in] rhs PhotonArray to convolve with this one.  Must be same size.
          * @param[in] ud  A UniformDeviate used to shuffle the input photons.
          */
-        void convolveShuffle(const PhotonArray& rhs, UniformDeviate& ud);
+        void convolveShuffle(const PhotonArray& rhs, UniformDeviate ud);
 
         /**
          * @brief Take x displacement from this, and y displacement from x of another array, 
@@ -177,10 +178,22 @@ namespace galsim {
          */
         template <class T>
         void addTo(ImageView<T>& target) const;
+
+        /**
+         * @brief Declare the the photons in this array are correlated.
+         */
+        void setCorrelated(bool new_val=true) { _is_correlated = new_val; }
+
+        /**
+         * @brief Check if the current array has correlated photons.
+         */
+        bool isCorrelated() const { return _is_correlated; }
+
     private:
         std::vector<double> _x;      // Vector holding x coords of photons
         std::vector<double> _y;      // Vector holding y coords of photons
         std::vector<double> _flux;   // Vector holding flux of photons
+        bool _is_correlated;          // Are the photons correlated?
     };
 
 } // end namespace galsim

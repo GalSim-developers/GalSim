@@ -354,7 +354,7 @@ namespace galsim {
 
     // Photon-shooting 
     PhotonArray SBInterpolatedImage::SBInterpolatedImageImpl::shoot(
-        int N, UniformDeviate& ud) const
+        int N, UniformDeviate ud) const
     {
         assert(N>=0);
         checkReadyToShoot();
@@ -381,7 +381,7 @@ namespace galsim {
         // Can skip if using a 2d delta function
         const InterpolantXY* xyPtr = dynamic_cast<const InterpolantXY*> (_xInterp.get());
         if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d())))
-             result.convolve(_xInterp->shoot(N, ud));
+             result.convolve(_xInterp->shoot(N, ud), ud);
 
         return result;
     }

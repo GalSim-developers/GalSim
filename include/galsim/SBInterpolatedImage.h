@@ -285,7 +285,7 @@ namespace galsim {
          * @param[in] u UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate& u) const;
+        virtual PhotonArray shoot(int N, UniformDeviate u) const;
 
         double getFlux() const;
 

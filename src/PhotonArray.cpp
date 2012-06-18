@@ -7,7 +7,9 @@
 
 namespace galsim {
 
-    PhotonArray::PhotonArray(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vflux)
+    PhotonArray::PhotonArray(
+        std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vflux) :
+        _is_correlated(false)
     {
         if (vx.size() != vy.size() || vx.size() != vflux.size())
             throw std::runtime_error("Size mismatch of input vectors to PhotonArray");
@@ -60,8 +62,13 @@ namespace galsim {
         std::copy(rhs._flux.begin(), rhs._flux.end(), destination);
     }
 
-    void PhotonArray::convolve(const PhotonArray& rhs) 
+    void PhotonArray::convolve(const PhotonArray& rhs, UniformDeviate ud) 
     {
+        // If both arrays have corrlated photons, then we need to shuffle the photons
+        // as we convolve them.
+        if (_is_correlated && rhs._is_correlated) return convolveShuffle(rhs,ud);
+
+        // If neither or only one is correlated, we are ok to just use them in order.
         int N = size();
         if (rhs.size() != N) 
             throw std::runtime_error("PhotonArray::convolve with unequal size arrays");
@@ -77,9 +84,13 @@ namespace galsim {
         lIter = _flux.begin();
         rIter = rhs._flux.begin();
         for ( ; lIter!=_flux.end(); ++lIter, ++rIter) *lIter *= *rIter*N;
+
+        // If rhs was correlated, then the output will be correlated.
+        // This is ok, but we need to mark it as such.
+        if (rhs._is_correlated) _is_correlated = true;
     }
 
-    void PhotonArray::convolveShuffle(const PhotonArray& rhs, UniformDeviate& ud) 
+    void PhotonArray::convolveShuffle(const PhotonArray& rhs, UniformDeviate ud) 
     {
         int N = size();
         if (rhs.size() != N) 
