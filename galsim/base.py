@@ -156,7 +156,7 @@ class GSObject:
         self.SBProfile.setFlux(flux)
         self.__class__ = GSObject
 
-    def applyDistortion(self, ellipse):
+    def applyTransformation(self, ellipse):
         """@brief Apply a galsim.Ellipse distortion to this object.
            
         After this call, the caller's type will be a GSObject.
@@ -164,25 +164,34 @@ class GSObject:
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
 
-        For calling, galsim.Ellipse instances can be generated via:
-
-        ellipse = galsim.Ellipse(e1, e2)
-
-        where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
+        Note that Ellipse objects can be initialized in a variety of ways (see documentation of this
+        class for details).
         """
-        self.SBProfile.applyDistortion(ellipse)
+        if not isinstance(ellipse, galsim.Ellipse):
+            raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
+        self.SBProfile.applyTransformation(ellipse._ellipse)
         self.__class__ = GSObject
         
-    def applyShear(self, g1, g2):
-        """@brief Apply a (g1, g2) shear to this object, where |g| = (a-b)/(a+b).
-           
+    def applyShear(self, *args, **kwargs):
+        """@brief Apply a shear to this object, where arguments are either a galsim.Shear, or
+        arguments that will be used to initialize one.
+
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
         """
-        e1, e2 = utilities.g1g2_to_e1e2(g1, g2)
-        self.SBProfile.applyDistortion(galsim.Ellipse(e1, e2))
+        if len(args) == 1:
+            if kwargs:
+                raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
+            if not isinstance(args[0], galsim.Shear):
+                raise TypeError("Error, unnamed argument to applyShear is not a galsim.Shear!")
+            self.SBProfile.applyShear(args[0]._shear)
+        elif len(args) > 1:
+            raise TypeError("Error, too many unnamed arguments to applyShear!")
+        else:
+            shear = galsim.Shear(**kwargs)
+            self.SBProfile.applyShear(shear._shear)
         self.__class__ = GSObject
 
     def applyRotation(self, theta):
@@ -211,25 +220,25 @@ class GSObject:
 
     # Also add methods which create a new GSObject with the transformations applied...
     #
-    def createDistorted(self, ellipse):
-        """@brief Returns a new GSObject by applying a galsim.Ellipse distortion.
+    def createTransformed(self, ellipse):
+        """@brief Returns a new GSObject by applying a galsim.Ellipse transformation (shear, dilate,
+        and/or shift).
 
-        For calling, galsim.Ellipse instances can be generated via:
-
-        ellipse = galsim.Ellipse(e1, e2)
-
-        where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
+        Note that Ellipse objects can be initialized in a variety of ways (see documentation of this
+        class for details).
         """
+        if not isinstance(ellipse, galsim.Ellipse):
+            raise TypeError("Argument to createTransformed must be a galsim.Ellipse!")
         ret = self.copy()
-        ret.applyDistortion(ellipse)
+        ret.applyTransformation(ellipse)
         return ret
 
-    def createSheared(self, g1, g2):
-        """@brief Returns A new GSObject by applying a (g1, g2) shear, where |g| = (a-b)/(a+b).
+    def createSheared(self, *args, **kwargs):
+        """@brief Returns A new GSObject by applying a shear, where arguments are either a
+        galsim.Shear or keyword arguments that can be used to create one.
         """
-        e1, e2 = utilities.g1g2_to_e1e2(g1, g2)
         ret = self.copy()
-        ret.applyDistortion(galsim.Ellipse(e1,e2))
+        ret.applyShear(*args, **kwargs)
         return ret
 
     def createRotated(self, theta):

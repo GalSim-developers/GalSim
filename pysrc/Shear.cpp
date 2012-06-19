@@ -30,11 +30,12 @@ struct PyShear {
         static char const * doc = 
             "Shear is represented internally by e1 and e2, which are the second-moment\n"
             "definitions: ellipse with axes a & b has e=(a^2-b^2)/(a^2+b^2).\n"
-            "But can get/set the ellipticity by two other measures:\n"
-            "g is \"reduced shear\" such that g=(a-b)/(a+b)\n"
+            "But can get/set the ellipticity by other measures:\n"
+            "g (default constructor) is \"reduced shear\" such that g=(a-b)/(a+b)\n"
             "eta is \"conformal shear\" such that a/b = exp(eta).\n"
-            "Beta is always the position angle of major axis.\n"
-            "FIXME: what convention for position angle?\n"
+            "The constructor takes g1/g2 (reduced shear) only.\n"
+            "Beta is always the real-space position angle of major axis.\n"
+            "e.g., g1 = g cos(2*Beta), g2 = g sin(2*Beta).\n"
             "\n"
             "The + and - operators for Shear are overloaded to do\n"
             "Composition: returns ellipticity of\n"
@@ -46,8 +47,8 @@ struct PyShear {
             ;
             
 
-        bp::class_<Shear>("Shear", doc, bp::init<const Shear &>())
-            .def(bp::init<double,double>((bp::arg("e1")=0.,bp::arg("e2")=0.)))
+        bp::class_<Shear>("_Shear", doc, bp::init<const Shear &>())
+            .def(bp::init<double,double>((bp::arg("g1")=0.,bp::arg("g2")=0.)))
             .def("setE1E2", &Shear::setE1E2, (bp::arg("e1")=0.,bp::arg("e2")=0.),
                  bp::return_self<>())
             .def("setEBeta", &Shear::setEBeta, (bp::arg("e")=0.,bp::arg("beta")=0.),
@@ -65,6 +66,8 @@ struct PyShear {
             .def("getBeta", &Shear::getBeta)
             .def("getEta", &Shear::getEta)
             .def("getG", &Shear::getG)
+            .def("getG1", &Shear::getG1)
+            .def("getG2", &Shear::getG2)
             .def(-bp::self)
             .def(bp::self + bp::self)
             .def(bp::self - bp::self)
@@ -79,10 +82,6 @@ struct PyShear {
             )
             .def(bp::self == bp::self)
             .def(bp::self != bp::self)
-            .def(bp::self * bp::other<double>())
-            .def(bp::self / bp::other<double>())
-            .def(bp::self *= bp::other<double>())
-            .def(bp::self /= bp::other<double>())
             .def("fwd", &Shear::fwd<double>, "FIXME: needs documentation!")
             .def("inv", &Shear::inv<double>, "FIXME: needs documentation!")
             .def("getMatrix", &getMatrix)
@@ -116,14 +115,13 @@ struct PyEllipse {
             "E(x) = T(D(S(x))), where S=shear, D=dilation, T=translation.\n"
             "Conventions for order of compounding, etc., are same as for Shear.\n"
             ;
-        bp::class_<Ellipse>("Ellipse", doc, bp::init<const Ellipse &>())
+        bp::class_<Ellipse>("_Ellipse", doc, bp::init<const Ellipse &>())
             .def(
-                bp::init<double,double,double,double,double>(
-                    (bp::arg("e1")=0.,bp::arg("e2")=0.,bp::arg("mu")=0.,bp::arg("x")=0.,
-                     bp::arg("y")=0.)
-                )
+                 bp::init<const Shear &, double, const Position<double> &>(
+                     (bp::arg("s")=Shear(), bp::arg("mu")=0., 
+                      bp::arg("p")=Position<double>())
+                     )
             )
-            .def(bp::init<const Shear &, double, const Position<double> &>(bp::args("s", "mu", "p")))
             .def(-bp::self)
             .def(bp::self + bp::self)
             .def(bp::self - bp::self)
@@ -131,8 +129,6 @@ struct PyEllipse {
             .def(bp::self -= bp::self)
             .def(bp::self == bp::self)
             .def(bp::self != bp::self)
-            .def("reset", (void (Ellipse::*)(double,double,double,double,double))&Ellipse::reset,
-                 (bp::arg("e1")=0.,bp::arg("e2")=0.,bp::arg("m")=0.,bp::arg("x")=0.,bp::arg("y")=0.))
             .def("reset", (void (Ellipse::*)(const Shear &, double, const Position<double>))&Ellipse::reset,
                  bp::args("s", "mu", "p"))
             .def("fwd", &Ellipse::fwd, "FIXME: needs documentation!")
