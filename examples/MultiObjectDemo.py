@@ -90,7 +90,7 @@ def Script1():
 
     # Define the PSF profile
     psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm, truncationFWHM=psf_trunc)
-    psf.applyShear(psf_g1,psf_g2)
+    psf.applyShear(g1=psf_g1,g2=psf_g2)
     logger.info('Made PSF profile')
 
     pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
@@ -198,7 +198,6 @@ def Script1():
                     ellip = gd()
 
                 # Apply a random orientation:
-                #theta = rng() * 2. * math.pi * galsim.radians
                 theta = rng() * 2. * math.pi
                 first_in_pair = False
             else:
@@ -206,11 +205,12 @@ def Script1():
                 theta += math.pi/2
                 first_in_pair = True
 
-            this_gal = gal.createSheared(ellip,0)
-            this_gal.applyRotation(theta * galsim.radians)
+            # apply an e1/e2-type distortion by specifying e=ellip and beta=real-space position
+            # angle
+            this_gal = gal.createSheared(e=ellip, beta=theta*galsim.radians)
 
-            # Apply the gravitational shear
-            this_gal.applyShear(gal_g1,gal_g2)
+            # Apply the gravitational reduced shear by specifying g1/g2
+            this_gal.applyShear(g1=gal_g1, g2=gal_g2)
 
             # Apply a random centroid shift:
             rsq = 2 * gal_centroid_shift_sq

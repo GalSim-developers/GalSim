@@ -14,7 +14,7 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
 
     @code
     galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
-    galaxy.applyShear(0.05, 0.0)  # shear it by (0.05, 0) using the g=(a-b)/(a+b) definition
+    galaxy.applyShear(g1=0.05, g2=0.0)  # shear it by (0.05, 0) using the g=(a-b)/(a+b) definition
     psf = galsim.atmosphere.DoubleGaussian(flux1 = 0.7, sigma1 = 0.7, flux2 = 0.3, sigma2 = 1.5)
     pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
     final = galsim.Convolve([galaxy, psf, pixel])
@@ -24,7 +24,7 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     result = galsim.EstimateShearHSM(final_image, final_epsf_image)
     @endcode
 
-    After running the above code, result.observed_shape ["shape" = distortion, (a-b)^2/(a+b)^2] is
+    After running the above code, result.observed_shape ["shape" = distortion, (a^2-b^2)/(a^2+b^2)] is
     (0.0595676, 0), and result.corrected_shape is (0.0981158, 0), compared with the expected
     (0.09975, 0) for a perfect PSF correction method.  Note that the method will fail if the PSF or
     galaxy are too point-like to easily fit an elliptical Gaussian; when running on batches of many
@@ -109,7 +109,7 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
 
     Assuming a successful measurement, the most relevant pieces of information are
     my_moments.moments_sigma, which is |det(M)|^(1/4) [=sigma for a circular Gaussian] and
-    my_moments.observed_shape, which is a Shear.  Methods of the Shear class can be used to
+    my_moments.observed_shape, which is a C++ Shear.  Methods of the Shear class can be used to
     get the distortion (e1, e2) = (a^2-b^2)/(a^2+b^2), i.e. my_moments.observed_shape.getE1() -- or,
     to get the shear g, the conformal shear eta, and so on.
 

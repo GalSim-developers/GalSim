@@ -280,13 +280,13 @@ namespace galsim {
                 Phrase::iterator ia=args.begin();
                 if (ShearOp::test(i)) {
                     delete i;
-                    double e1, e2;
+                    double g1, g2;
                     if (args.size()!=2 
-                        || !isNumber((*(ia++))->print(),e1) 
-                        || !isNumber((*ia)->print(),e2))
+                        || !isNumber((*(ia++))->print(),g1)
+                        || !isNumber((*ia)->print(),g2))
                         throw SBError("SBParse: bad arguments for shear: " + args.print());
-                    dbg << "** Leaving SBParse after shearing by " << e1 << " " << e2 << std::endl;
-                    base.applyShear(e1,e2);
+                    dbg << "** Leaving SBParse after shearing by " << g1 << " " << g2 << std::endl;
+                    base.applyShear(g1, g2);
                     return base;
                 } else if (DilateOp::test(i)) {
                     delete i;
@@ -294,9 +294,9 @@ namespace galsim {
                     if (args.size()!=1
                         || !isNumber((*ia)->print(),f))
                         throw SBError("SBParse: bad arguments for dilation: " + args.print());
-                    Ellipse e(0., 0., std::log(f));
+                    Ellipse e(Shear(), std::log(f), Position<double>());
                     dbg << "** Leaving SBParse after dilating by " << f << std::endl;
-                    base.applyDistortion(e);
+                    base.applyTransformation(e);
                     return base;
                 } else if (TranslateOp::test(i)) {
                     delete i;
@@ -427,14 +427,14 @@ namespace galsim {
             std::string buffer;
             getlineNoComment(cpsf, buffer);
             std::istringstream iss(buffer);
-            double e1, e2, mu;
-            if (!(iss >> e1 >> e2 >> mu))
+            double g1, g2, mu;
+            if (!(iss >> g1 >> g2 >> mu))
                 throw SBError("SBParse error on Laguerre basis ellipse: " + buffer);
             if (!(cpsf >> bPSF))
                 throw SBError("SBParse error reading Laguerre PSF file " + psfName);
 
             SBLaguerre sbl(bPSF, std::exp(mu));
-            sbl.applyShear(e1, e2);
+            sbl.applyShear(g1, g2);
             return sbl;
         } else {
             throw SBError("SBParse: unrecognized primitive type: " + sbtype);
