@@ -279,6 +279,10 @@ class GSObject:
                       (Default = 1.)
         @returns      The drawn image.
         """
+        # Raise an exception immediately if the normalization type is not recognized
+        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
+            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                              "'f', 'surface brightness' or 'sb'.") % normalization)
         # Raise an exception here since C++ is picky about the input types
         if type(wmult) != int:
             raise TypeError("Input wmult should be an int")
@@ -295,8 +299,6 @@ class GSObject:
         if normalization.lower() == "flux" or normalization.lower() == "f":
             dx = image.getScale()
             image *= dx*dx
-        elif normalization.lower() != "surface brightness" and normalization.lower() != "sb":
-            raise ValueError("Invalid normalization requested: %s"%normalization)
         return image
 
     def drawShoot(self, image, N, ud=None, normalization="flux"):
@@ -318,6 +320,10 @@ class GSObject:
                               (Default = "flux")
         @returns      (TODO!) The fraction of photons that fell off the edge of the image.
         """
+        # Raise an exception immediately if the normalization type is not recognized
+        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
+            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                              "'f', 'surface brightness' or 'sb'.") % normalization)
         # Raise an exception here since C++ is picky about the input types
         if image is None:
             raise TypeError("drawShoot requires the image to be provided.")
@@ -331,8 +337,6 @@ class GSObject:
         if normalization.lower() == "flux" or normalization.lower() == "f":
             dx = image.getScale()
             image *= dx*dx
-        elif normalization.lower() != "surface brightness" and normalization.lower() != "sb":
-            raise ValueError("Invalid normalization requested: %s"%normalization)
 
 
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
