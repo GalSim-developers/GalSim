@@ -53,9 +53,9 @@ def Script1():
     psf_file_name = os.path.join('output','g08_psf.fits')
     psf_beta = 3                    #
     psf_fwhm = 2.85                 # arcsec (=pixels)
-    psf_trunc = 2.                  # FWHM
-    psf_g1 = -0.019                 #
-    psf_g2 = -0.007                 #
+    psf_trunc = 2.*psf_fwhm         # arcsec (=pixels)
+    psf_e1 = -0.019                 #
+    psf_e2 = -0.007                 #
     psf_centroid_shift = 1.0        # arcsec (=pixels)
 
     gal_file_name = os.path.join('output','g08_gal.fits')
@@ -75,7 +75,7 @@ def Script1():
     logger.info('    - postage stamps of size %d x %d pixels',nx_pixels,ny_pixels)
     logger.info('    - Moffat PSF (beta = %.1f, FWHM = %.2f, trunc = %.2f),',
             psf_beta,psf_fwhm,psf_trunc)
-    logger.info('    - PSF shear = (%.3f,%.3f)',psf_g1,psf_g2)
+    logger.info('    - PSF ellip = (%.3f,%.3f)',psf_e1,psf_e2)
     logger.info('    - PSF centroid shifts up to = %.2f pixels',psf_centroid_shift)
     logger.info('    - Sersic galaxies (n = %.1f)',gal_n)
     logger.info('    - Resolution (r_obs / r_psf) = %.2f',gal_resolution)
@@ -89,8 +89,9 @@ def Script1():
     rng = galsim.UniformDeviate(random_seed)
 
     # Define the PSF profile
-    psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm, truncationFWHM=psf_trunc)
-    psf.applyShear(g1=psf_g1,g2=psf_g2)
+    psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm, trunc=psf_trunc)
+    psf_re = psf.getHalfLightRadius()  # Need this for later...
+    psf.applyShear(e1=psf_e1,e2=psf_e2)
     logger.info('Made PSF profile')
 
     pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
@@ -144,13 +145,10 @@ def Script1():
 
     # Define the galaxy profile
 
-    # TODO: This is a hack. We should have a getHalfLightRadius() method.
-    psf_re = psf_fwhm / 2
-
     # First figure out the size we need from the resolution
-    # great08 resolution was defined as Rgp / Rp where Rp is the FWHM of the PSF
-    # and Rgp is the FWHM of the convolved galaxy.
-    # We make the approximation here that the FWHM adds in quadrature during the
+    # great08 resolution was defined as Rgp / Rp where Rp is the hlr of the PSF
+    # and Rgp is the hlr of the convolved galaxy.
+    # We make the approximation here that the hlr adds in quadrature during the
     # convolution, so we can get the unconvolved size as:
     # Rg^2 = Rgp^2 - Rp^2 = Rp^2 * (resolution^2 - 1)
     gal_re = psf_re * math.sqrt( gal_resolution**2 - 1)
@@ -205,8 +203,8 @@ def Script1():
                 theta += math.pi/2
                 first_in_pair = True
 
-            # apply an e1/e2-type distortion by specifying e=ellip and beta=real-space position
-            # angle
+            # Make a new copy of the galaxy with an applied e1/e2-type distortion 
+            # by specifying the ellipticity and a real-space position angle
             this_gal = gal.createSheared(e=ellip, beta=theta*galsim.radians)
 
             # Apply the gravitational reduced shear by specifying g1/g2
@@ -327,7 +325,7 @@ def Script2():
     config.psf.fwhm.col = 6
 
     # You can also specify both of these on the same line as a single string:
-    config.psf.truncationFWHM = 'InputCatalog col=9'
+    config.psf.trunc = 'InputCatalog col=9'
 
     # You can even nest string values using angle brackets:
     config.psf.ellip = 'E1E2 e1=<InputCatalog col=7> e2=<InputCatalog col=8>'
@@ -440,7 +438,7 @@ def Script3():
       - The number of images in the cube matches the number of rows in the catalog.
       - Each image size is computed automatically by GalSim based on the Nyquist size.
       - Both galaxies and stars.
-      - PSF is a double Gaussian (eventually Kolmogorov), the same for each galaxy.
+      - PSF is Kolmogorov, the same for each galaxy.
       - Galaxies are randomly rotated to remove the imprint of any lensing shears in the COSMOS
         data.
       - The same shear is applied to each galaxy.
@@ -458,18 +456,16 @@ def Script3():
     psf_file_name = os.path.join('output','psf_script3.fits')
 
     random_seed = 1512413
-    sky_level = 1.e6                # ADU
-    pixel_scale = 0.15              # arcsec
-    gal_flux = 1.e5                 # arbitrary choice, makes nice (not too) noisy images
-    gal_g1 = -0.027                 #
-    gal_g2 = 0.031                  #
-    psf_inner_fwhm = 0.6            # FWHM of inner Gaussian of the double Gaussian PSF, arcsec
-    psf_outer_fwhm = 2*psf_inner_fwhm
-    psf_inner_fraction = 0.8        # fraction of total PSF flux in the inner Gaussian
+    sky_level = 1.e6        # ADU
+    pixel_scale = 0.15      # arcsec
+    gal_flux = 1.e5         # arbitrary choice, makes nice (not too) noisy images
+    gal_g1 = -0.027         #
+    gal_g2 = 0.031          #
+    psf_fwhm = 0.65         # arcsec
 
     logger.info('Starting multi-object script 3 using:')
     logger.info('    - real galaxies from catalog %r',cat_file_name)
-    logger.info('    - double Gaussian PSF')
+    logger.info('    - Kolmogorov PSF, FWHM = %.2f',psf_fwhm)
     logger.info('    - pixel scale = %.2f',pixel_scale)
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
@@ -485,8 +481,7 @@ def Script3():
 
     ## Make the ePSF
     # first make the double Gaussian PSF
-    psf = galsim.atmosphere.DoubleGaussian(psf_inner_fraction, 1.0-psf_inner_fraction, fwhm1 =
-                                           psf_inner_fwhm, fwhm2 = psf_outer_fwhm)
+    psf = galsim.AtmosphericPSF(fwhm = psf_fwhm)
     # make the pixel response
     pix = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)
     # convolve PSF and pixel response function to get the effective PSF (ePSF)

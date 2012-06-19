@@ -601,15 +601,27 @@ class AtmosphericPSF(GSObject):
                            PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
                            values for the Fried parameter are on the order of 10 cm for most 
                            observatories and up to 20 cm for excellent sites. The values are 
-                           usually quoted at lambda = 500 nm and r0 depends weakly on wavelength
+                           usually quoted at lambda = 500 nm and r0 depends on wavelength as
                            [r0 ~ lambda^(-6/5)].
+    @param fwhm            FWHM of the Kolmogorov PSF.
+                           Either fwhm or lam_over_r0 (and only one) must be specified.
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
                            [default = 1.5], setting oversampling < 1 will produce aliasing in the 
                            PSF (not good).
     """
-    def __init__(self, lam_over_r0, interpolantxy=None, oversampling=1.5):
+    def __init__(self, lam_over_r0=None, fwhm=None, interpolantxy=None, oversampling=1.5):
         # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
-        fwhm = 0.976 * lam_over_r0
+        if lam_over_r0 is None :
+            if fwhm is not None :
+                lam_over_r0 = fwhm / 0.976
+            else:
+                raise TypeError("Either lam_over_r0 or fwhm must be specified for AtmosphericPSF")
+        else :
+            if fwhm is None:
+                fwhm = 0.976 * lam_over_r0
+            else:
+                raise TypeError(
+                        "Only one of lam_over_r0 and fwhm may be specified for AtmosphericPSF")
         dx_lookup = .5 * fwhm / oversampling
         # Fold at 10 times the FWHM
         stepk_kolmogorov = np.pi / (10. * fwhm)
@@ -626,7 +638,7 @@ class AtmosphericPSF(GSObject):
     def getHalfLightRadius(self):
         # TODO: This seems like it would not be impossible to calculate
         raise NotImplementedError("Half light radius calculation not yet implemented for "+
-                                   "Atmospheric PSF objects (could be though).")
+                                  "Atmospheric PSF objects (could be though).")
         
 class RealGalaxy(GSObject):
     """@brief Class describing real galaxies from some training dataset.

@@ -121,6 +121,14 @@ def Script2():
     gal = galsim.Exponential(flux=gal_flux, scale_radius=gal_r0)
 
     # Shear the galaxy by some value.
+    # There are quite a few ways you can use to specify a shape.
+    # q, beta      Axis ratio and position angle: q = b/a, 0 < q < 1
+    # e, beta      Ellipticity and position angle: |e| = (1-q^2)/(1+q^2)
+    # g, beta      ("Reduced") Shear and position angle: |g| = (1-q)/(1+q)
+    # eta, beta    Conformal shear and position angle: eta = ln(1/q)
+    # e1,e2        Ellipticity components: e1 = e cos(2 beta), e2 = e sin(2 beta)
+    # g1,g2        ("Reduced") shear components: g1 = g cos(2 beta), g2 = g sin(2 beta)
+    # eta1,eta2    Conformal shear components: eta1 = eta cos(2 beta), eta2 = eta sin(2 beta)
     gal.applyShear(g1=g1, g2=g2)
     logger.info('Made galaxy profile')
 
@@ -178,7 +186,8 @@ def Script2():
         gfac = results.corrected_shape.getG()/e_temp
     else:
         gfac = 0.
-    logger.info('    g1, g2 = %.3f, %.3f', gfac*results.corrected_shape.getE1(), gfac*results.corrected_shape.getE2())
+    logger.info('    g1, g2 = %.3f, %.3f', 
+            gfac*results.corrected_shape.getE1(), gfac*results.corrected_shape.getE2())
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
     logger.info('    g1, g2 = %.3f, %.3f', g1,g2)
     print
@@ -199,45 +208,47 @@ def Script3():
     """
     # In non-script code, use getLogger(__name__) at module scope instead.
     logger = logging.getLogger("Script3") 
-    gal_flux = 1.e5    # ADU
-    gal_n = 3.5        #
-    gal_re = 3.7       # arcsec
-    g1 = -0.23         #
-    g2 = 0.15          #
-    atmos_a_sigma=2.1  # arcsec
-    atmos_a_g1 = -0.13 # (shear for "a")
-    atmos_a_g2 = -0.09 #
-    atmos_fa=0.2       # (fraction of flux in "a")
-    atmos_b_sigma=0.9  # arcsec
-    atmos_b_g1 = 0.02  # (shear for "b")
-    atmos_b_g2 = -0.04 #
-    opt_defocus=0.53   # wavelengths
-    opt_a1=-0.29       # wavelengths
-    opt_a2=0.12        # wavelengths
-    opt_c1=0.64        # wavelengths
-    opt_c2=-0.33       # wavelengths
-    opt_padfactor=2    # multiples of Airy padding required to avoid folding for aberrated PSFs
-    lam = 800          # nm    NB: don't use lambda - that's a reserved word.
-    tel_diam = 4.      # meters 
-    pixel_scale = 0.23 # arcsec / pixel
-    wcs_g1 = -0.02     #
-    wcs_g2 = 0.01      #
-    sky_level = 1.e3   # ADU / pixel
-    gain = 1.7         # ADU / e-
-    read_noise = 0.3   # ADU / pixel
+    gal_flux = 1.e6        # ADU
+    gal_n = 3.5            #
+    gal_re = 3.7           # arcsec
+    gal_q = 0.73           # (axis ratio 0 < q < 1)
+    gal_beta = 23          # degrees (position angle on the sky)
+    atmos_a_sigma=2.1      # arcsec
+    atmos_a_e = 0.13       # (ellipticity of "a")
+    atmos_a_beta = 0.81    # radians
+    atmos_fa=0.2           # (fraction of flux in "a")
+    atmos_b_sigma=0.9      # arcsec
+    atmos_b_e = 0.04       # (ellipticity of "b")
+    atmos_b_beta = -0.17   # radians
+    opt_defocus=0.53       # wavelengths
+    opt_a1=-0.29           # wavelengths
+    opt_a2=0.12            # wavelengths
+    opt_c1=0.64            # wavelengths
+    opt_c2=-0.33           # wavelengths
+    opt_obscuration=0.3    # linear scale size of secondary mirror obscuration
+    opt_padfactor=2        # multiples of Airy padding required to avoid folding for aberrated PSFs
+    lam = 800              # nm    NB: don't use lambda - that's a reserved word.
+    tel_diam = 4.          # meters 
+    pixel_scale = 0.23     # arcsec / pixel
+    wcs_g1 = -0.02         #
+    wcs_g2 = 0.01          #
+    sky_level = 1.e3       # ADU / pixel
+    gain = 1.7             # ADU / e-
+    read_noise = 0.3       # ADU / pixel
 
     logger.info('Starting script 3 using:')
-    logger.info('    - sheared (%.2f,%.2f) Sersic galaxy (flux = %.1e, n = %.1f, re = %.2f),', 
-            g1, g2, gal_flux, gal_n, gal_re)
-    logger.info('    - sheared double-Gaussian atmospheric PSF')
-    logger.info('          First component: sigma = %.2f, shear = (%.2f,%.2f), frac = %.2f',
-            atmos_a_sigma, atmos_a_g1, atmos_a_g2, atmos_fa)
-    logger.info('          Second component: sigma = %.2f, shear = (%.2f,%.2f), frac = %.2f',
-            atmos_b_sigma, atmos_b_g1, atmos_b_g2, 1-atmos_fa)
+    logger.info('    - q,beta (%.2f,%.2f) Sersic galaxy (flux = %.1e, n = %.1f, re = %.2f),', 
+            gal_q, gal_beta, gal_flux, gal_n, gal_re)
+    logger.info('    - elliptical double-Gaussian atmospheric PSF')
+    logger.info('          First component: sigma = %.2f, e,beta = (%.2f,%.2f), frac = %.2f',
+            atmos_a_sigma, atmos_a_e, atmos_a_beta, atmos_fa)
+    logger.info('          Second component: sigma = %.2f, e,beta = (%.2f,%.2f), frac = %.2f',
+            atmos_b_sigma, atmos_b_e, atmos_b_beta, 1-atmos_fa)
     logger.info('    - optical PSF with defocus = %.2f, astigmatism = (%.2f,%.2f),',
             opt_defocus, opt_a1, opt_a2)
     logger.info('          coma = (%.2f,%.2f), lambda = %.0f nm, D = %.1f m', 
             opt_c1, opt_c2, lam, tel_diam)
+    logger.info('          obscuration linear size = %.1f',opt_obscuration)
     logger.info('    - pixel scale = %.2f,',pixel_scale)
     logger.info('    - WCS distortion = (%.2f,%.2f),',wcs_g1,wcs_g2)
     logger.info('    - Poisson noise (sky level = %.1e, gain = %.1f).',sky_level, gain)
@@ -247,15 +258,18 @@ def Script3():
     # Define the galaxy profile.
     gal = galsim.Sersic(gal_n, flux=gal_flux, half_light_radius=gal_re)
 
-    # Shear the galaxy by some value.
-    gal.applyShear(g1=g1, g2=g2)
+    # Set the shape of the galaxy according to axis ration and position angle
+    gal_shape = galsim.Shear(q=gal_q, beta=gal_beta*galsim.degrees)
+    gal.applyShear(gal_shape)
     logger.info('Made galaxy profile')
 
     # Define the atmospheric part of the PSF.
     atmos_a = galsim.Gaussian(sigma=atmos_a_sigma)
-    atmos_a.applyShear(g1=atmos_a_g1 , g2=atmos_a_g2)
+    # For the PSF shape here, we use ellipticity rather than axis ratio.
+    # And the position angle can be either degrees or radians.  Here we chose radians.
+    atmos_a.applyShear(e=atmos_a_e , beta=atmos_a_beta*galsim.radians)
     atmos_b = galsim.Gaussian(sigma=atmos_b_sigma)
-    atmos_b.applyShear(g1=atmos_b_g1 , g2=atmos_b_g2)
+    atmos_b.applyShear(e=atmos_b_e , beta=atmos_b_beta*galsim.radians)
     atmos = atmos_fa * atmos_a + (1-atmos_fa) * atmos_b
     # Could also have written either of the following, which do the same thing:
     # atmos = galsim.Add(atmos_a, atmos_b)
@@ -270,11 +284,14 @@ def Script3():
     lam_over_D *= 206265 # arcsec
     logger.info('Calculated lambda over D = %f arcsec', lam_over_D)
     # The rest of the values here should be given in units of the 
-    # wavelength of the incident light. pad_factor is used to here to reduce 'folding' for these
-    # quite strong aberration values
+    # wavelength of the incident light.
+    # pad_factor is used to here to reduce 'folding' in the fourier transform.
     optics = galsim.OpticalPSF(lam_over_D, 
-                               defocus=opt_defocus, coma1=opt_c1, coma2=opt_c2, astig1=opt_a1,
-                               astig2=opt_a2, pad_factor=opt_padfactor)
+                               defocus = opt_defocus,
+                               coma1 = opt_c1, coma2 = opt_c2,
+                               astig1 = opt_a1, astig2 = opt_a2,
+                               obscuration = opt_obscuration,
+                               pad_factor = opt_padfactor)
     logger.info('Made optical PSF profile')
 
     # Start with square pixels
@@ -333,14 +350,13 @@ def Script3():
     logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.getE1(),
                 results.observed_shape.getE2(), results.moments_sigma)
     logger.info('When carrying out Regaussianization PSF correction, HSM reports')
-    e_temp = results.corrected_shape.getE()
-    if e_temp > 0.:
-        gfac = results.corrected_shape.getG()/e_temp
-    else:
-        gfac = 0.
-    logger.info('    g1, g2 = %.3f, %.3f', gfac*results.corrected_shape.getE1(), gfac*results.corrected_shape.getE2())
+    logger.info('    e1, e2 = %.3f, %.3f',
+            results.corrected_shape.getE1(), results.corrected_shape.getE2())
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
-    logger.info('    g1, g2 = %.3f, %.3f', g1+wcs_g1, g2+wcs_g2)
+    # Convention for shear addition is to apply the second term and then the first.
+    # So wcs needs to be first and galaxy shape second.
+    total_shape = galsim.Shear(g1=wcs_g1, g2=wcs_g2) + gal_shape
+    logger.info('    e1, e2 = %.3f, %.3f', total_shape.getE1(), total_shape.getE2())
     print
 
 def main(argv):
