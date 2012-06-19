@@ -189,7 +189,9 @@ class Shear:
     g2 = property(getG2)
     # define all the various operators on Shear objects
     def __neg__(self): return Shear(-self._shear)
+    # order of operations: shear by other._shear, then by self._shear
     def __add__(self, other): return Shear(self._shear + other._shear)
+    # order of operations: shear by -other._shear, then by self._shear
     def __sub__(self, other): return Shear(self._shear - other._shear)
     def __iadd__(self, other): return Shear(self._shear + other._shear)
     def __isub__(self, other): return Shear(self._shear - other._shear)
