@@ -33,9 +33,6 @@ config_file = 'gs_scons.conf'
 # MJ: Is there a python function that might return this in a more platform-independent way?
 default_prefix = '/usr/local'  
 
-# TODO: This is JB's recommendation.  Cool?
-default_py_prefix = distutils.sysconfig.get_python_lib() 
-
 # first check for a saved conf file
 opts = Variables(config_file)
 
@@ -45,19 +42,20 @@ opts.Add('FLAGS','Compile flags to send to the compiler','')
 opts.Add('EXTRA_FLAGS','Extra flags to send to the compiler','')
 opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
 
-opts.Add(PathVariable('PREFIX','prefix for installation','', PathVariable.PathAccept))
+opts.Add(PathVariable('PREFIX','prefix for installation',
+            '', PathVariable.PathAccept))
 opts.Add(PathVariable('PYPREFIX','location of your site-packages directory',
-        default_py_prefix,PathVariable.PathAccept))
+            '', PathVariable.PathAccept))
 
 opts.Add(PathVariable('EXTRA_PATH',
             'Extra paths for executables (separated by : if more than 1)',
-            '',PathVariable.PathAccept))
+            '', PathVariable.PathAccept))
 opts.Add(PathVariable('EXTRA_LIB_PATH',
             'Extra paths for linking (separated by : if more than 1)',
-            '',PathVariable.PathAccept))
+            '', PathVariable.PathAccept))
 opts.Add(PathVariable('EXTRA_INCLUDE_PATH',
             'Extra paths for header files (separated by : if more than 1)',
-            '',PathVariable.PathAccept))
+            '', PathVariable.PathAccept))
 opts.Add(BoolVariable('IMPORT_PATHS',
             'Import PATH, C_INCLUDE_PATH and LIBRARY_PATH/LD_LIBRARY_PATH environment variables',
             False))
@@ -1083,6 +1081,18 @@ if not GetOption('help'):
     if os.path.exists("gs.error"):
         os.remove("gs.error")
         ClearCache()
+
+    # Set PYPREFIX if not given:
+    if env['PYPREFIX'] == '':
+        if sys.platform == 'linux2' and env['PREFIX'] != '':
+            # On linux, we try to match the behavior of distutils
+            env['PYPREFIX'] = distutils.sysconfig.get_python_lib(prefix=env['PREFIX']) 
+            print 'Using PYPREFIX generated from PREFIX="%s": %s'%(env['PREFIX'],env['PYPREFIX'])
+        else:
+            # On Macs, the regular python lib is usually writable, so it works fine for 
+            # installing the python modules.
+            env['PYPREFIX'] = distutils.sysconfig.get_python_lib() 
+            print 'Using default PYPREFIX = ',env['PYPREFIX']
 
     # Set up the configuration
     DoConfig(env)
