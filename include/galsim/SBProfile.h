@@ -346,8 +346,7 @@ namespace galsim {
         /**
          * @brief Apply a given shear.
          *
-         * @param[in] g1 Reduced shear g1 by which to shear the SBProfile.
-         * @param[in] g2 Reduced shear g2 by which to shear the SBProfile.
+         * @param[in] s Shear object by which to shear the SBProfile.
          * This shears the object by the given shear.  As with scaleFlux, it does not
          * invalidate any previous uses of this object.
          */
