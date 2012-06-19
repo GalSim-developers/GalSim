@@ -344,6 +344,13 @@ namespace galsim {
         }
         dbg<<"OneDimentionalDeviate Realized flux = "<<result.getTotalFlux()<<std::endl;
 
+        // This next bit is probably a bad idea, especially for profiles that have some 
+        // negative flux.  It is possible for the random photons to end up totalling a 
+        // negative value.  This should be allowed.  And certainly rescaling to get the 
+        // correct flux would be wrong (it would involve a sign flip).  Similarly, Gary
+        // pointed out that it is conceivable for someone to want to draw a profile with 
+        // zero total flux.  We don't want to rescale all the photons to 0.
+#if 0
         // The flux realized from photon shooting a OneDimensionalDeviate won't necessarily 
         // match exactly the target flux because of the possibility of variable flux for the 
         // photons, and also positive and negative photons partially canceling out in a 
@@ -356,6 +363,7 @@ namespace galsim {
         double scale = targetFlux / realizedFlux;
         dbg<<"Rescale result by "<<scale<<std::endl;
         result.scaleFlux(scale);
+#endif
         return result;
     }
 
