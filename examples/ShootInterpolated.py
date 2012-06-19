@@ -10,6 +10,10 @@ nPhotons is number of photons to shoot through the image
 e1 and e2 are optional shear to be applied while shooting (specified as e1/e2-type distortions)
 """
 
+# Example usage:
+# python ShootInterpolated.py data/147246.0_150.416558_1.998697_masknoise.fits tmp.fits 1 500 1000000
+
+
 # This machinery lets us run Python examples even though they aren't positioned
 # properly to find galsim as a package in the current directory.
 try:
@@ -44,19 +48,15 @@ def main(argv):
         raise err
 
     galaxyImg = galsim.fits.read(inname)
-    galaxy = galsim.SBInterpolatedImage(galaxyImg, interp2d, 1., 1.0)
-    shearedGalaxy = galaxy.shear(e1,e2)
+    galaxy = galsim.SBInterpolatedImage(galaxyImg, interp2d, dx=1., padFactor=1.0)
+    galaxy.applyDistortion(galsim.Ellipse(e1,e2))
 
     rng = galsim.UniformDeviate(1534225)
     bounds = galsim.BoundsI(-dim/2, dim/2+1, -dim/2, dim/2+1)
     img = galsim.ImageF(bounds)
     img.setScale(dxOut)
-    shearedGalaxy.drawShoot(img, nPhotons, rng)
+    galaxy.drawShoot(img, nPhotons, rng)
     img.write(outname)
-
-if __name__ == "__main__":
-    import sys
-    main(sys.argv)
 
 if __name__ == "__main__":
     import sys

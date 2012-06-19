@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <boost/shared_ptr.hpp>
 #include "TMV.h"
 
 #include "Std.h"
@@ -178,106 +179,99 @@ namespace galsim {
     // Reference to a pq-indexed complex element of an LVector:
     class LVectorReference 
     {
-        friend class LVector;
-    private:
-        LVectorReference(tmv::Vector<double>& v, PQIndex pq) :
-            re(&v[pq.rIndex()]), isign(pq.iSign()) {}
-        double *re;
-        int isign; // 0 if this is a real element, -1 if needs conjugation, else +1
     public:
         operator std::complex<double>() const 
         {
-            if (isign==0) return std::complex<double>(*re,0.);
-            else return std::complex<double>(*re, *(re+1)*isign);
+            if (_isign==0) return std::complex<double>(*_re,0.);
+            else return std::complex<double>(*_re, *(_re+1)*_isign);
         }
         LVectorReference& operator=(std::complex<double> z) 
         {
-            *re = z.real();
-            if (isign!=0) *(re+1)=z.imag()*isign;
+            *_re = z.real();
+            if (_isign!=0) *(_re+1)=z.imag()*_isign;
             // Choosing *not* to check for zero imaginary part here
             return *this;
         }
         LVectorReference& operator=(double d) 
         {
-            *re = d;
-            if (isign!=0) *(re+1)=0.;
+            *_re = d;
+            if (_isign!=0) *(_re+1)=0.;
             return *this;
         }
         // ??? +=, -=, etc.
+        
+    private:
+        LVectorReference(tmv::Vector<double>& v, PQIndex pq) :
+            _re(&v[pq.rIndex()]), _isign(pq.iSign()) {}
+        double *_re;
+        int _isign; // 0 if this is a real element, -1 if needs conjugation, else +1
+
+        friend class LVector;
     };
 
     class LVector 
     {
-    private:
-        int* order;
-        mutable int* pcount;
-        tmv::Vector<double>* v;
-
     public:
         // Construct/destruct:
-        LVector(int ord_=0) : 
-            order(new int(ord_)), pcount(new int(1)),
-            v(new tmv::Vector<double>(PQIndex::size(*order),0.)) {}
+        LVector(int order=0) : 
+            _order(new int(order)), _v(new tmv::Vector<double>(PQIndex::size(order),0.)) {}
 
-        LVector(const LVector& rhs) : 
-            order(rhs.order), pcount(rhs.pcount), v(rhs.v)
-        { (*pcount)++; }
+        LVector(const LVector& rhs) : _order(rhs._order), _v(rhs._v) {}
 
-        LVector(const tmv::Vector<double>& rhs, int order_);
+        LVector(const tmv::Vector<double>& v, int order) : 
+            _order(new int(order)), _v(new tmv::Vector<double>(v))
+        {
+            if (_v->size() != PQIndex::size(order)) 
+                throw LaguerreError("Input to LVector(Vector<double>) is wrong size for order");
+        }
 
         LVector& operator=(const LVector& rhs) 
         {
-            if (v==rhs.v) return *this;
-            if (--(*pcount)==0) { delete v; delete pcount; delete order; }
-            v = rhs.v; pcount = rhs.pcount; order=rhs.order;
-            (*pcount)++;
+            if (_v.get()==rhs._v.get()) return *this;
+            _v = rhs._v; _order=rhs._order;
             return *this;
         }
 
-        ~LVector() 
-        { 
-            if (--(*pcount)==0) { 
-                delete v; delete pcount; delete order;
-            }
-        }
+        ~LVector() {}
 
         LVector duplicate() const 
         {
-            LVector fresh(*order); 
-            *(fresh.v) = *v;
+            LVector fresh(*_order); 
+            *(fresh._v) = *_v;
             return fresh;
         }
 
         void resize(int neworder) 
         {
-            *order = neworder;
-            delete v; 
-            v=new tmv::Vector<double>(PQIndex::size(*order),0.);
+            if (neworder != *_order) {
+                _order.reset(new int(neworder));
+                _v.reset(new tmv::Vector<double>(PQIndex::size(*_order),0.));
+            }
         }
 
-        void clear() { v->setZero(); }
+        void clear() { _v->setZero(); }
 
         // size:
-        int getOrder() const { return *order; }
+        int getOrder() const { return *_order; }
         // Returns number of real DOF = number of complex coeffs
-        int size() const { return v->size(); }
+        int size() const { return _v->size(); }
 
         // Access the real-representation vector directly.
-        tmv::Vector<double>& rVector() { return *v; }
-        const tmv::Vector<double>& rVector() const { return *v; }
-        double operator[](int i) const { return (*v)[i]; }
-        double& operator[](int i) { return (*v)[i]; }
+        tmv::Vector<double>& rVector() { return *_v; }
+        const tmv::Vector<double>& rVector() const { return *_v; }
+        double operator[](int i) const { return (*_v)[i]; }
+        double& operator[](int i) { return (*_v)[i]; }
 
         // Access as complex elements
         // ??? no bounds checking
         std::complex<double> operator[](PQIndex pq) const 
         {
             int isign=pq.iSign();
-            if (isign==0) return std::complex<double>( (*v)[pq.rIndex()], 0.);
-            else return std::complex<double>( (*v)[pq.rIndex()], isign*(*v)[pq.rIndex()+1]);
+            if (isign==0) return std::complex<double>( (*_v)[pq.rIndex()], 0.);
+            else return std::complex<double>( (*_v)[pq.rIndex()], isign*(*_v)[pq.rIndex()+1]);
         }
         LVectorReference operator[](PQIndex pq) 
-        { return LVectorReference(*v, pq); }
+        { return LVectorReference(*_v, pq); }
         std::complex<double> operator()(int p, int q) const 
         { return (*this)[PQIndex(p,q)]; }
         LVectorReference operator()(int p, int q) 
@@ -285,40 +279,40 @@ namespace galsim {
 
         // scalar arithmetic:
         LVector& operator*=(double s) 
-        { *v *= s; return *this; }
+        { *_v *= s; return *this; }
         LVector& operator/=(double s) 
-        { *v /= s; return *this; }
+        { *_v /= s; return *this; }
 
-        LVector  operator*(double s) const 
+        LVector operator*(double s) const 
         {
-            LVector fresh(*order); 
-            *(fresh.v) = *v * s;
+            LVector fresh(*_order); 
+            *(fresh._v) = *_v * s;
             return fresh;
         }
 
-        LVector  operator/(double s) const 
+        LVector operator/(double s) const 
         {
-            LVector fresh(*order); 
-            *(fresh.v) = *v / s;
+            LVector fresh(*_order); 
+            *(fresh._v) = *_v / s;
             return fresh;
         }
 
         LVector& operator+=(const LVector& rhs) 
         {
-            assert(*order== *(rhs.order));
-            *v += *(rhs.v); 
+            assert(*_order== *(rhs._order));
+            *_v += *(rhs._v); 
             return *this;
         }
 
         LVector& operator-=(const LVector& rhs) 
         {
-            assert(*order== *(rhs.order));
-            *v -= *(rhs.v); 
+            assert(*_order== *(rhs._order));
+            *_v -= *(rhs._v); 
             return *this;
         }
 
         // Inner product of the real values.
-        double dot(const LVector& rhs) const { return (*v)*(*rhs.v); }
+        double dot(const LVector& rhs) const { return (*_v)*(*rhs._v); }
 
         // write and ??? read
         void write(std::ostream& os, int maxorder=-1) const;
@@ -344,27 +338,28 @@ namespace galsim {
         // Output matrix has m(i,j) = jth basis function at ith point
         static tmv::Matrix<double>* basis(
             const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
-            int order_, double sigma=1.);
+            int order, double sigma=1.);
 
         // Create design matrix, including factors of 1/sigma stored in invsig
         static tmv::Matrix<double>* design(
             const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
-            const tmv::Vector<double>& invsig, int order_, double sigma=1.);
+            const tmv::Vector<double>& invsig, int order, double sigma=1.);
 
         // ...or provide your own matrix
         static void design(
             tmv::Matrix<double>& out, const tmv::Vector<double>& xunit,
             const tmv::Vector<double>& yunit, const tmv::Vector<double>& invsig,
-            int order_, double sigma=1.);
+            int order, double sigma=1.);
 
         static void basis(
             tmv::Matrix<double>& out, const tmv::Vector<double>& xunit,
-            const tmv::Vector<double>& yunit, int order_, double sigma=1.);
+            const tmv::Vector<double>& yunit, int order, double sigma=1.);
 
         // Create matrices with real and imaginary parts of (Hermitian) FT of basis set:
         static void kBasis(
             const tmv::Vector<double>& kxunit, const tmv::Vector<double>& kyunit,
-            tmv::Matrix<double>*& kReal, tmv::Matrix<double>*& kImag, int order_);
+            boost::shared_ptr<tmv::Matrix<double> >& kReal,
+            boost::shared_ptr<tmv::Matrix<double> >& kImag, int order);
 
         // ?? Add routine to decompose a data vector into b's
         // ?? Add routines to evaluate summed basis at a set of x/k points
@@ -396,7 +391,10 @@ namespace galsim {
             const tmv::ConstVectorView<double>* invsig,
             tmv::MatrixView<double>* mr,
             tmv::MatrixView<double>* mi,
-            int order_, bool isK, double sigma=1.);
+            int order, bool isK, double sigma=1.);
+
+        boost::shared_ptr<int> _order;
+        boost::shared_ptr<tmv::Vector<double> > _v;
     };
 
     std::ostream& operator<<(std::ostream& os, const LVector& lv);
@@ -423,69 +421,62 @@ namespace galsim {
     class LTransform 
     {
     private:
-        int *orderIn, *orderOut;
-        mutable int *pcount;
-        tmv::Matrix<double> *m;
+        boost::shared_ptr<int> _orderIn;
+        boost::shared_ptr<int> _orderOut;
+        boost::shared_ptr<tmv::Matrix<double> > _m;
     public:
-        LTransform(int orderOut_=0, int orderIn_=0) : 
-            orderIn(new int(orderIn_)), orderOut(new int(orderOut_)), 
-            pcount(new int(1)),
-            m(new tmv::Matrix<double>(PQIndex::size(*orderOut),PQIndex::size(*orderIn),0.))
+        LTransform(int orderOut=0, int orderIn=0) : 
+            _orderIn(new int(orderIn)), _orderOut(new int(orderOut)), 
+            _m(new tmv::Matrix<double>(PQIndex::size(orderOut),PQIndex::size(orderIn),0.))
         {}
 
         LTransform(const LTransform& rhs) : 
-            orderIn(rhs.orderIn), orderOut(rhs.orderOut),
-            pcount(rhs.pcount), m(rhs.m)
-        { (*pcount)++; }
+            _orderIn(rhs._orderIn), _orderOut(rhs._orderOut), _m(rhs._m) {}
 
         // Build an LTransform from a tmv::Matrix<double> for the real degrees of freedom.
         // Matrix must have correct dimensions.
-        LTransform(const tmv::Matrix<double>& rhs, int orderOut_, int orderIn_);
+        LTransform(const tmv::Matrix<double>& rhs, int orderOut, int orderIn) :
+            _orderIn(new int(orderIn)), _orderOut(new int(orderOut)),
+            _m(new tmv::Matrix<double>(rhs))
+        {
+            if (_m->ncols()!=PQIndex::size(orderIn) || _m->nrows()!=PQIndex::size(orderOut)) 
+                throw LaguerreError("Input to LTransform(Matrix<double>) is wrong size for orders");
+        }
 
         LTransform& operator=(const LTransform& rhs) 
         {
-            if (m==rhs.m) return *this;
-            if (--(*pcount)==0) {
-                delete m; delete pcount; delete orderIn; delete orderOut;
-            }
-            m = rhs.m; pcount = rhs.pcount; 
-            orderIn=rhs.orderIn; orderOut=rhs.orderOut;
-            (*pcount)++;
+            if (_m.get()==rhs._m.get()) return *this;
+            _orderIn=rhs._orderIn; _orderOut=rhs._orderOut; _m = rhs._m; 
             return *this;
         }
 
-        ~LTransform() 
-        {
-            if (--(*pcount)==0) {
-                delete m; delete pcount; delete orderIn; delete orderOut;
-            }
-        }
+        ~LTransform() {}
 
         LTransform duplicate() const 
         {
-            LTransform fresh(*orderOut, *orderIn); 
-            *(fresh.m) = *m;
+            LTransform fresh(*_orderOut, *_orderIn); 
+            *(fresh._m) = *_m;
             return fresh;
         }
 
-        int getOrderIn() const { return *orderIn; }
-        int getOrderOut() const { return *orderOut; }
-        int sizeIn() const { return m->ncols(); }
-        int sizeOut() const { return m->nrows(); }
+        int getOrderIn() const { return *_orderIn; }
+        int getOrderOut() const { return *_orderOut; }
+        int sizeIn() const { return _m->ncols(); }
+        int sizeOut() const { return _m->nrows(); }
 
-        void clear() { m->setZero(); }
-        void identity(); // Set to identity transformation
+        void clear() { _m->setZero(); }
+        void identity() { _m->setToIdentity(); }
 
-        void resize(int newOrderOut, int newOrderIn) {
-            *orderIn = newOrderIn;
-            *orderOut = newOrderOut;
-            delete m; 
-            m=new tmv::Matrix<double>(PQIndex::size(*orderOut),PQIndex::size(*orderIn),0.);
+        void resize(int orderOut, int orderIn) 
+        {
+            _orderIn.reset(new int(orderIn));
+            _orderOut.reset(new int(orderOut));
+            _m.reset(new tmv::Matrix<double>(PQIndex::size(orderOut),PQIndex::size(orderIn),0.));
         }
 
         // Access the real-representation vector directly.
-        tmv::Matrix<double>& rMatrix() { return *m; }
-        const tmv::Matrix<double>& rMatrix() const { return *m; }
+        tmv::Matrix<double>& rMatrix() { return *_m; }
+        const tmv::Matrix<double>& rMatrix() const { return *_m; }
 
         // Element read
         std::complex<double> operator()(PQIndex pq1, PQIndex pq2) const;

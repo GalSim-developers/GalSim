@@ -2,6 +2,7 @@
 import numpy as np
 
 import galsim
+import utilities
 
 """\file atmosphere.py Simple atmospheric PSF generation routines
 """
@@ -9,12 +10,12 @@ import galsim
 class DoubleGaussian(galsim.Add):
     """Double Gaussian, which is the sum of two SBProfile Gaussian profiles
     """
-    def __init__(self, flux1=1., flux2=1., sigma1=None, sigma2=None, fwhm1=None, fwhm2=None):
+    def __init__(self, sigma1=None, sigma2=None, fwhm1=None, fwhm2=None, flux1=1., flux2=1.):
         sblist = []
         # Note: we do not have to check for improper args (0 or 2 radii specified) because this is
         # done in the C++
-        sblist.append(galsim.Gaussian(flux1, sigma=sigma1, fwhm=fwhm1))
-        sblist.append(galsim.Gaussian(flux2, sigma=sigma2, fwhm=fwhm2))
+        sblist.append(galsim.Gaussian(sigma=sigma1, fwhm=fwhm1, flux=flux1))
+        sblist.append(galsim.Gaussian(sigma=sigma2, fwhm=fwhm2, flux=flux2))
         galsim.Add.__init__(self, sblist)
 
 def kolmogorov_mtf(array_shape=(256, 256), dx=1., lam_over_r0=1.):
@@ -35,7 +36,7 @@ def kolmogorov_mtf(array_shape=(256, 256), dx=1., lam_over_r0=1.):
     """
     # This is based on the ALIAS_THRESHOLD 0.005 in src/SBProfile.cpp and galsim/base.py
     kmax_internal = 1.2954 / lam_over_r0 * dx
-    kx, ky = galsim.optics.kxky(array_shape)
+    kx, ky = galsim.utilities.kxky(array_shape)
     amtf = np.exp(-3.442 * (np.hypot(kx, ky) / kmax_internal / np.pi)**(5. / 3.))
     return amtf
 
@@ -75,7 +76,8 @@ def kolmogorov_psf(array_shape=(256,256), dx=1., lam_over_r0=1.):
     """
     amtf = kolmogorov_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
     ftmtf = np.fft.fft2(amtf)
-    im = galsim.optics.roll2d((ftmtf * ftmtf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2))
+    im = galsim.utilities.roll2d((ftmtf * ftmtf.conj()).real, (array_shape[0] / 2,
+                                                               array_shape[1] / 2))
     return im / (im.sum() * dx**2)
     
 def kolmogorov_psf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
