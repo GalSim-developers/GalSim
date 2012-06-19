@@ -271,8 +271,11 @@ class GSObject:
                                      the surface brightness distribution at each location.
                               (Default = "flux")
         @param wmult  A factor by which to make the intermediate images larger than 
-                      they are normally made.  Using wmult > 1 will take longer of course,
-                      but will produce more accurate images.  
+                      they are normally made.  The size is normally automatically chosen 
+                      to reach some preset accuracy targets (see include/galsim/SBProfile.h); 
+                      however, if you see strange artifacts in the image, you might try using 
+                      wmult > 1.  This will take longer of course, but it will produce more 
+                      accurate images, since they will have less "folding" in Fourier space.
                       (Default = 1.)
         @returns      The drawn image.
         """
