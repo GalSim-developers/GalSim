@@ -78,6 +78,9 @@ elif sys.platform == 'linux2':
     # we need to include it explicitly in the linking step for libgalsim.so. 
     # This may fail if the static libraries were not compiled if -fPIC, but I 
     # don't currently know a way to check for this.  
+    # Update: Some linux systems do require the shared libraries to be linked here,
+    # and it doesn't seem to be a problem for the ones that don't require it.
+    # Still need the static libraries to be special though.
 
     libs = env1['LIBS']
     lib_path = ['/usr/local/lib']
