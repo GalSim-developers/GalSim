@@ -12,3 +12,5 @@ SBProfile.cpp
 Shear.cpp
 StringStuff.cpp
 Table.cpp
+RealSpaceConvolve.cpp
+Random.cpp

@@ -1,16 +1,20 @@
 // Routines to parse a string into an SBProfile
 
-//#include <cctype>
 #include <sstream>
 #include <fstream>
 #include <list>
 #include <vector>
 
+// For detailed debugging info:
+//#define DEBUGLOGGING
+
 #include "SBParse.h"
 #include "StringStuff.h"
 
-// For detailed debugging info:
-// #define PARSER_DUMP
+#ifdef DEBUGLOGGING
+std::ostream* dbgout = &std::cerr;
+int verbose_level = 1;
+#endif
 
 namespace galsim {
 
@@ -43,8 +47,8 @@ namespace galsim {
     public:
         StringWord(const StringWord& rhs): std::string(rhs) {}
         StringWord(const std::string& rhs): std::string(rhs) {}
-        std::string print() const {return *this;}
-        Word* duplicate() const {return new StringWord(*this);}
+        std::string print() const { return *this; }
+        Word* duplicate() const { return new StringWord(*this); }
         ~StringWord() {}
     };
 
@@ -179,14 +183,12 @@ namespace galsim {
     }
 
     // Turn a phrase into an SBProfile, using recursive parsing.
-    SBProfile* SBParse(Phrase in) 
+    SBProfile SBParse(Phrase in) 
     {
         if (in.empty())
             throw SBError("SBParse: null expression");
 
-#ifdef PARSER_DUMP
-        std::cerr << "**Starting parser on phrase " << in.print() << std::endl;
-#endif
+        dbg << "**Starting parser on phrase " << in.print() << std::endl;
         // Strip any bounding parentheses
         while (OpenParen::test(in.front()) && CloseParen::test(in.back())) {
             // Make sure they are matched:  find the CloseParen that matches the initial open
@@ -228,21 +230,18 @@ namespace galsim {
             throw SBError("SBParse: no arguments for +");
         if (ls.size()>1) {
             // If so, the output is an SBAdd and call parser recursively on summand Phrases:
-            SBAdd* sba = new SBAdd;
-#ifdef PARSER_DUMP
-            std::cerr << "Creating SBAdd from phrases: " << std::endl;
+            std::list<SBProfile> sum;
+#ifdef DEBUGLOGGING
+            dbg << "Creating SBAdd from phrases: " << std::endl;
             for (std::list<Phrase>::iterator i=ls.begin(); i!=ls.end(); ++i) 
-                std::cerr << "* " << i->print() << std::endl;
+                dbg << "* " << i->print() << std::endl;
 #endif
             for (std::list<Phrase>::iterator i=ls.begin(); i!=ls.end(); ++i) {
-                SBProfile* summand = SBParse(*i);
-                sba->add(*summand);
-                delete summand;
+                SBProfile summand = SBParse(*i);
+                sum.push_back(summand);
             }
-#ifdef PARSER_DUMP
-            std::cerr << "**Leaving parser after SBAdd" << std::endl;
-#endif
-            return sba;
+            dbg << "**Leaving parser after SBAdd" << std::endl;
+            return SBAdd(sum);
         }
 
         ls.clear();
@@ -252,21 +251,18 @@ namespace galsim {
             throw SBError("SBParse: no arguments for *");
         if (ls.size()>1) {
             // If so, the output is an SBConvolve and call parser recursively on convolvee Phrases:
-            SBConvolve* sbc = new SBConvolve;
-#ifdef PARSER_DUMP
-            std::cerr << "Creating SBConvolve from phrases: " << std::endl;
+            std::list<SBProfile> conv;
+#ifdef DEBUGLOGGING
+            dbg << "Creating SBConvolve from phrases: " << std::endl;
             for (std::list<Phrase>::iterator i=ls.begin(); i!=ls.end(); ++i) 
-                std::cerr << "* " << i->print() << std::endl;
+                dbg << "* " << i->print() << std::endl;
 #endif
             for (std::list<Phrase>::iterator i=ls.begin(); i!=ls.end(); ++i) {
-                SBProfile* term = SBParse(*i);
-                sbc->add(*term);
-                delete term;
+                SBProfile term = SBParse(*i);
+                conv.push_back(term);
             }
-#ifdef PARSER_DUMP
-            std::cerr << "**Leaving parser after SBConvolve" << std::endl;
-#endif
-            return sbc;
+            dbg << "**Leaving parser after SBConvolve" << std::endl;
+            return SBConvolve(conv);
         }
 
         // else: any modifiers (from RHS)?
@@ -278,10 +274,8 @@ namespace galsim {
                 TranslateOp::test(i) || FluxOp::test(i) || RotateOp::test(i)) {
 
                 // Found a modifier.  Parse the LHS and apply modification
-#ifdef PARSER_DUMP
-                std::cerr << "Found modifier, phrase to modify is " << in.print() << std::endl;
-#endif
-                SBProfile* base = SBParse(in);
+                dbg << "Found modifier, phrase to modify is " << in.print() << std::endl;
+                SBProfile base = SBParse(in);
                 // Apply appropriate modification:
                 Phrase::iterator ia=args.begin();
                 if (ShearOp::test(i)) {
@@ -291,12 +285,9 @@ namespace galsim {
                         || !isNumber((*(ia++))->print(),e1) 
                         || !isNumber((*ia)->print(),e2))
                         throw SBError("SBParse: bad arguments for shear: " + args.print());
-                    SBProfile* out = base->shear(e1,e2);
-                    delete base;
-#ifdef PARSER_DUMP
-                    std::cerr << "** Leaving SBParse after shearing by " << e1 << " " << e2 << std::endl;
-#endif
-                    return out;
+                    dbg << "** Leaving SBParse after shearing by " << e1 << " " << e2 << std::endl;
+                    base.applyShear(e1,e2);
+                    return base;
                 } else if (DilateOp::test(i)) {
                     delete i;
                     double f;
@@ -304,12 +295,9 @@ namespace galsim {
                         || !isNumber((*ia)->print(),f))
                         throw SBError("SBParse: bad arguments for dilation: " + args.print());
                     Ellipse e(0., 0., std::log(f));
-                    SBProfile* out = base->distort(e);
-                    delete base;
-#ifdef PARSER_DUMP
-                    std::cerr << "** Leaving SBParse after dilating by " << f << std::endl;
-#endif
-                    return out;
+                    dbg << "** Leaving SBParse after dilating by " << f << std::endl;
+                    base.applyDistortion(e);
+                    return base;
                 } else if (TranslateOp::test(i)) {
                     delete i;
                     double dx,dy;
@@ -317,13 +305,10 @@ namespace galsim {
                         || !isNumber((*(ia++))->print(),dx) 
                         || !isNumber((*ia)->print(),dy))
                         throw SBError("SBParse: bad arguments for translation: " + args.print());
-                    SBProfile* out = base->shift(dx,dy);
-                    delete base;
-#ifdef PARSER_DUMP
-                    std::cerr << "** Leaving SBParse after translating by " << dx << " " 
+                    dbg << "** Leaving SBParse after translating by " << dx << " " 
                               << dy << std::endl;
-#endif
-                    return out;
+                    base.applyShift(dx,dy);
+                    return base;
                 } else if (RotateOp::test(i)) {
                     // TODO: Not sure how much we're planning on using SBParse,
                     // but if we are, it would be nice to have theta specified with units.
@@ -332,22 +317,17 @@ namespace galsim {
                     if (args.size()!=1
                         || !isNumber((*ia)->print(),theta))
                         throw SBError("SBParse: bad arguments for rotation: " + args.print());
-                    SBProfile* out = base->rotate(theta * radians);
-                    delete base;
-#ifdef PARSER_DUMP
-                    std::cerr << "** Leaving SBParse after rotating by " << theta << std::endl;
-#endif
-                    return out;
+                    dbg << "** Leaving SBParse after rotating by " << theta << std::endl;
+                    base.applyRotation(theta * radians);
+                    return base;
                 } else if (FluxOp::test(i)) {
                     delete i;
                     double f;
                     if (args.size()!=1
                         || !isNumber((*ia)->print(),f))
                         throw SBError("SBParse: bad arguments for flux: " + args.print());
-                    base->setFlux(f);
-#ifdef PARSER_DUMP
-                    std::cerr << "** Leaving SBParse after flux set to " << f << std::endl;
-#endif
+                    dbg << "** Leaving SBParse after flux set to " << f << std::endl;
+                    base.setFlux(f);
                     return base;
                 }
             } else {
@@ -356,7 +336,10 @@ namespace galsim {
             }
         }
 
-        // else: should be a primitive, specified by first word and rest are arguments. Build and return
+        /* 
+         * else: should be a primitive, specified by first word and rest are arguments. Build and 
+         * return
+         */
         int nargs = args.size()-1;
         // Translate arguments into doubles since that's what most primitives want.
         bool allNumbers=true;
@@ -374,10 +357,8 @@ namespace galsim {
                 throw SBError("SBParse: Bad arguments for SBGaussian: " + args.print());
             double flux=1.;
             double sigma = (nargs>0) ? dargs[0] : 1.;
-#ifdef PARSER_DUMP
-            std::cerr << "**Returning gaussian with flux, sigma " << flux << " " << sigma << std::endl;
-#endif
-            return new SBGaussian(flux, sigma);
+            dbg << "**Returning gaussian with flux, sigma " << flux << " " << sigma << std::endl;
+            return SBGaussian(sigma, flux);
 
         } else if (nocaseEqual(sbtype, "exp")) {
             // Exponential Disk: args [re=1.]
@@ -385,10 +366,8 @@ namespace galsim {
                 throw SBError("SBParse: Bad arguments for SBExponential: " + args.print());
             double flux=1.;
             double re = (nargs>0) ? dargs[0] : 1.;
-#ifdef PARSER_DUMP
-            std::cerr << "**Returning exp with flux, re " << flux << " " << re << std::endl;
-#endif
-            return new SBExponential(flux, re/1.67839);
+            dbg << "**Returning exp with flux, re " << flux << " " << re << std::endl;
+            return SBExponential(re / 1.6783469900166605, flux);
 
         } else if (nocaseEqual(sbtype, "sersic")) {
             // Sersic: args are [n] [re=1]
@@ -397,11 +376,9 @@ namespace galsim {
             double flux=1.;
             double n=dargs[0];
             double re = (nargs>1) ? dargs[1] : 1.;
-#ifdef PARSER_DUMP
-            std::cerr << "**Returning sersic with n, flux, re " << n 
-                      << " " << flux << " " << re << std::endl;
-#endif
-            return new SBSersic(n, flux, re);
+            dbg << "**Returning sersic with n, flux, re " << n 
+                << " " << flux << " " << re << std::endl;
+            return SBSersic(n, re, flux);
 
         } else if (nocaseEqual(sbtype, "box")) {
             // Sersic: args are [xw=1] [yw=xw]
@@ -410,11 +387,9 @@ namespace galsim {
             double flux=1.;
             double xw =(nargs>0) ? dargs[0] : 1.;
             double yw = (nargs>1) ? dargs[1] : xw;
-            return new SBBox(xw,yw,flux);
-#ifdef PARSER_DUMP
-            std::cerr << "**Returning sersic with xw, yw, flux " << xw
-                      << " " << yw << " " << flux << std::endl;
-#endif
+            dbg << "**Returning box with xw, yw, flux " << xw
+                << " " << yw << " " << flux << std::endl;
+            return SBBox(xw,yw,flux);
 
         } else if (nocaseEqual(sbtype, "airy")) {
             // Airy: args are [D/lambda] [obscuration]
@@ -423,27 +398,23 @@ namespace galsim {
             double flux=1.;
             double D = dargs[0];
             double obs = dargs[1];
-#ifdef PARSER_DUMP
-            std::cerr << "**Returning airy with D, obs, flux " << D
-                      << " " << obs << " " << flux << std::endl;
-#endif
-            return new SBAiry(D,obs,flux);
+            dbg << "**Returning airy with D, obs, flux " << D
+                << " " << obs << " " << flux << std::endl;
+            return SBAiry(D,obs,flux);
 
         } else if (nocaseEqual(sbtype, "moffat")) {
-            // Airy: args are [beta] [truncationFWHM] [re=1]
+            // Moffat: args are [beta] [trunc] [fwhm=1]
             if (nargs<2 || nargs>3 || !allNumbers)
                 throw SBError("SBParse: Bad arguments for SBMoffat: " + args.print());
             double flux=1.;
             double beta = dargs[0];
-            double truncationFWHM = dargs[1];
-            double re = (nargs>2) ? dargs[2] : 1.;
-#ifdef PARSER_DUMP
-            std::cerr << "**Returning moffat with beta, truncation, flux, re " << beta
-                      << " " << truncationFWHM << " " << flux << " " << re << std::endl;
-#endif
-            return new SBMoffat(beta, truncationFWHM, flux, re);
+            double trunc = dargs[1];
+            double fwhm = (nargs>2) ? dargs[2] : 1.;
+            SBMoffat::RadiusType rType = SBMoffat::FWHM;
+            dbg << "**Returning moffat with beta, trunc, flux, fwhm " << beta
+                << " " << trunc << " " << flux << " " << fwhm << std::endl;
+            return SBMoffat(beta, fwhm, rType, trunc, flux);
 
-#ifdef USE_LAGUERRE
         } else if (nocaseEqual(sbtype, "laguerre")) {
             // Laguerre: args are [filename]
             if (nargs!=1)
@@ -463,14 +434,14 @@ namespace galsim {
                 throw SBError("SBParse error reading Laguerre PSF file " + psfName);
 
             SBLaguerre sbl(bPSF, std::exp(mu));
-            return sbl.shear(e1, e2);
-#endif
+            sbl.applyShear(e1, e2);
+            return sbl;
         } else {
             throw SBError("SBParse: unrecognized primitive type: " + sbtype);
         }
     }
 
-    SBProfile* SBParse(std::string instring) 
+    SBProfile SBParse(std::string instring) 
     {
         Phrase in = wordify(instring);
         return SBParse(in);

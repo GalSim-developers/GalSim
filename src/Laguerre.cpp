@@ -17,54 +17,18 @@ const int BLOCKING_FACTOR=1024;
 
 namespace galsim {
 
-    // Build an LVector from a Vector for the real degrees of freedom.
-    // Vector must have same dimension as needed for LVector of chosen order
-    LVector::LVector(const tmv::Vector<double>& rhs, int order_) :  
-        order(new int(order_)), pcount(new int(1)), v(new tmv::Vector<double>(rhs)) 
-    {
-        if (v->size()!=PQIndex::size(*order)) {
-            delete v;
-            delete pcount;
-            delete order;
-            throw LaguerreError("Input to LVector(Vector<double>) is wrong size for order");
-        }
-    }
-
     void LVector::rotate(double theta) 
     {
         std::complex<double> z(std::cos(theta), -std::sin(theta));
         std::complex<double> imz(1., 0.);
-        for (int m=1; m<=*order; m++) {
+        for (int m=1; m<=*_order; m++) {
             imz *= z;
-            for (PQIndex pq(m,0); !pq.pastOrder(*order); pq.incN()) {
-                double* r= &(*v)[pq.rIndex()];
-                std::complex<double> newb = std::complex<double>(*r, *(r+1)) * imz;
-                *r = newb.real(); *(r+1)=newb.imag();
+            for (PQIndex pq(m,0); !pq.pastOrder(*_order); pq.incN()) {
+                int r = pq.rIndex();
+                std::complex<double> newb = std::complex<double>((*_v)[r], (*_v)[r+1]) * imz;
+                (*_v)[r] = newb.real();
+                (*_v)[r+1] = newb.imag();
             }
-        }
-    }
-
-
-    void LTransform::identity() 
-    {
-        m->setZero();
-        for (int i=0; i<std::min(m->ncols(), m->nrows()); i++)
-            (*m)(i,i)=1.;
-    }
-
-    LTransform::LTransform(const tmv::Matrix<double>& rhs, int orderOut_, int orderIn_) :
-        orderIn(new int(orderIn_)),
-        orderOut(new int(orderOut_)),
-        pcount(new int(1)),
-        m(new tmv::Matrix<double>(rhs))  
-    {
-        if (m->ncols()!=PQIndex::size(*orderIn)
-            || m->nrows()!=PQIndex::size(*orderOut)) {
-            delete m;
-            delete pcount;
-            delete orderIn;
-            delete orderOut;
-            throw LaguerreError("Input to LTransform(Matrix<double>) is wrong size for orders");
         }
     }
 
@@ -72,15 +36,15 @@ namespace galsim {
     // ???? Check these ???
     std::complex<double> LTransform::operator()(PQIndex pq1, PQIndex pq2) const 
     {
-        assert(pq1.pqValid() && !pq1.pastOrder(*orderOut));
-        assert(pq2.pqValid() && !pq2.pastOrder(*orderIn));
+        assert(pq1.pqValid() && !pq1.pastOrder(*_orderOut));
+        assert(pq2.pqValid() && !pq2.pastOrder(*_orderIn));
         int r1index=pq1.rIndex();
         int r2index=pq2.rIndex();
         int i1index=(pq1.isReal()? r1index: r1index+1);
         int i2index=(pq2.isReal()? r2index: r2index+1);
 
-        double x = (*m)(r1index,r2index) + pq1.iSign()*pq2.iSign()*(*m)(i1index,i2index);
-        double y = pq1.iSign()*(*m)(i1index,r2index) - pq2.iSign()*(*m)(r1index,i2index);
+        double x = (*_m)(r1index,r2index) + pq1.iSign()*pq2.iSign()*(*_m)(i1index,i2index);
+        double y = pq1.iSign()*(*_m)(i1index,r2index) - pq2.iSign()*(*_m)(r1index,i2index);
 
         std::complex<double> z(x,y);
         if (pq2.isReal()) z *= 0.5;
@@ -91,8 +55,8 @@ namespace galsim {
     void LTransform::set(
         PQIndex pq1, PQIndex pq2, std::complex<double> Cpq1pq2, std::complex<double> Cqp1pq2) 
     {
-        assert(pq1.pqValid() && !pq1.pastOrder(*orderOut));
-        assert(pq2.pqValid() && !pq2.pastOrder(*orderIn));
+        assert(pq1.pqValid() && !pq1.pastOrder(*_orderOut));
+        assert(pq2.pqValid() && !pq2.pastOrder(*_orderIn));
 
         const double RoundoffTolerance=1.e-15;
         std::complex<double> Cpq1qp2;
@@ -122,7 +86,7 @@ namespace galsim {
                     << " != " << Cqp1pq2;
                 throw LaguerreError(oss.str());
             }
-            (*m)(rIndex1,rIndex2) = Cpq1pq2.real() * (pq2.isReal()? 1. : 2.);
+            (*_m)(rIndex1,rIndex2) = Cpq1pq2.real() * (pq2.isReal()? 1. : 2.);
             if (pq2.isReal()) {
                 if (std::abs(Cpq1pq2.imag()) > RoundoffTolerance) {
                     std::ostringstream oss;
@@ -131,7 +95,7 @@ namespace galsim {
                     throw LaguerreError(oss.str());
                 }
             } else {
-                (*m)(rIndex1,iIndex2) = -2.*Cpq1pq2.imag();
+                (*_m)(rIndex1,iIndex2) = -2.*Cpq1pq2.imag();
             }
             return;
         } else if (pq2.isReal()) {
@@ -142,52 +106,52 @@ namespace galsim {
                     << Cpq1pq2 << " vs " << Cqp1pq2 ;
                 throw LaguerreError(oss.str());
             }
-            (*m)(rIndex1, rIndex2) = Cpq1pq2.real();
-            (*m)(iIndex1, rIndex2) = Cpq1pq2.imag();
+            (*_m)(rIndex1, rIndex2) = Cpq1pq2.real();
+            (*_m)(iIndex1, rIndex2) = Cpq1pq2.imag();
         } else {
             // Neither pq is real:
             std::complex<double> z=Cpq1pq2 + Cqp1pq2;
-            (*m)(rIndex1, rIndex2) = z.real();
-            (*m)(rIndex1, iIndex2) = -z.imag();
+            (*_m)(rIndex1, rIndex2) = z.real();
+            (*_m)(rIndex1, iIndex2) = -z.imag();
             z=Cpq1pq2 - Cqp1pq2;
-            (*m)(iIndex1, rIndex2) = z.imag();
-            (*m)(iIndex1, iIndex2) = z.real();
+            (*_m)(iIndex1, rIndex2) = z.imag();
+            (*_m)(iIndex1, iIndex2) = z.real();
         }
     }
 
     LVector LTransform::operator*(const LVector rhs) const 
     {
-        if (*orderIn != rhs.getOrder()) 
+        if (*_orderIn != rhs.getOrder()) 
             FormatAndThrow<LaguerreError>() 
-                << "Order mismatch between LTransform [" << *orderIn
+                << "Order mismatch between LTransform [" << *_orderIn
                 << "] and LVector [" << rhs.getOrder()
                 << "]";
-        tmv::Vector<double> out = (*m) * rhs.rVector();
+        tmv::Vector<double> out = (*_m) * rhs.rVector();
         // ??? avoid extra copy by assigning directly to output?
-        return LVector(out, *orderOut);
+        return LVector(out, *_orderOut);
     }
 
     LTransform LTransform::operator*(const LTransform rhs) const 
     {
-        if (*orderIn != rhs.getOrderOut()) 
+        if (*_orderIn != rhs.getOrderOut()) 
             FormatAndThrow<LaguerreError>()  
-                << "Order mismatch between LTransform [" << *orderIn
+                << "Order mismatch between LTransform [" << *_orderIn
                 << "] and LTransform [" << rhs.getOrderOut()
                 << "]";
-        tmv::Matrix<double> out = (*m) * (*rhs.m);
+        tmv::Matrix<double> out = (*_m) * (*rhs._m);
         // ??? avoid extra copy by assigning directly to output?
-        return LTransform(out, *orderOut, *(rhs.orderIn));
+        return LTransform(out, *_orderOut, *(rhs._orderIn));
     }
 
     LTransform& LTransform::operator*=(const LTransform rhs) 
     {
-        if (*orderIn != rhs.getOrderOut())
+        if (*_orderIn != rhs.getOrderOut())
             FormatAndThrow<LaguerreError>()  
-                << "Order mismatch between LTransform [" << *orderIn
+                << "Order mismatch between LTransform [" << *_orderIn
                 << "] and LTransform [" << rhs.getOrderOut()
                 << "]";
-        (*m) = (*m) * (*rhs.m);
-        *orderIn = *(rhs.orderOut);
+        (*_m) *= (*rhs._m);
+        *_orderIn = *(rhs._orderOut);
         return *this;
     }
 
@@ -209,38 +173,38 @@ namespace galsim {
 
         // Ascend m=0 first
 
-        (*v)[PQIndex(0,0).rIndex()]=tq;
+        (*_v)[PQIndex(0,0).rIndex()]=tq;
 
-        if (*order>=2) {
+        if (*_order>=2) {
             tq = (x-1)*tqm1;
-            (*v)[PQIndex(1,1).rIndex()] = tq;
+            (*_v)[PQIndex(1,1).rIndex()] = tq;
         }
 
         PQIndex pq(2,2);
-        for (int p=2; 2*p<= *order; ++p, pq.incN()) {
+        for (int p=2; 2*p<= *_order; ++p, pq.incN()) {
             tqm2 = tqm1;
             tqm1 = tq;
             tq = ((x-2*p+1)*tqm1 - (p-1)*tqm2)/p;
-            (*v)[pq.rIndex()] = tq;
+            (*_v)[pq.rIndex()] = tq;
         }
 
         // Ascend all positive m's
-        std::complex<double> zm = 2* (*v)[PQIndex(0,0).rIndex()] * z;
+        std::complex<double> zm = 2* (*_v)[PQIndex(0,0).rIndex()] * z;
 
-        for (int m=1; m<= *order; m++) {
+        for (int m=1; m<= *_order; m++) {
             pq.setPQ(m,0);
-            double *r = &(*v)[pq.rIndex()];
+            double *r = &(*_v)[pq.rIndex()];
             *r = zm.real();
             *(r+1) = zm.imag();
             tq = 1.;
             tqm1 = 0.;
 
-            for (pq.incN(); !pq.pastOrder(*order); pq.incN()) {
+            for (pq.incN(); !pq.pastOrder(*_order); pq.incN()) {
                 tqm2 = tqm1;
                 tqm1 = tq;
                 int p=pq.getP(); int q=pq.getQ(); 
                 tq = ( (x-(p+q-1))*tqm1 - sqrtn(p-1)*sqrtn(q-1)*tqm2) / (sqrtn(p)*sqrtn(q));
-                double *r = &(*v)[pq.rIndex()];
+                double *r = &(*_v)[pq.rIndex()];
                 *r = tq*zm.real();
                 *(r+1) = tq*zm.imag();
             }
@@ -251,75 +215,74 @@ namespace galsim {
 
     tmv::Matrix<double>* LVector::basis(
         const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
-        int order_, double sigma) 
+        int order, double sigma) 
     {
         assert(xunit.size()==yunit.size());
         //**/Stopwatch s; s.start();
-        tmv::Matrix<double>* mr = new tmv::Matrix<double>(xunit.size(), PQIndex::size(order_));
+        tmv::Matrix<double>* mr = new tmv::Matrix<double>(xunit.size(), PQIndex::size(order));
         //**/s.stop(); std::cerr << "setup: " << s << "sec" << std::endl;
-        basis(*mr, xunit, yunit, order_, sigma);
+        basis(*mr, xunit, yunit, order, sigma);
         return mr;
     }
 
     void LVector::basis(
         tmv::Matrix<double>& out, const tmv::Vector<double>& xunit,
-        const tmv::Vector<double>& yunit, int order_, double sigma) 
+        const tmv::Vector<double>& yunit, int order, double sigma) 
     {
         const int npts=xunit.size();
         assert(yunit.size() ==npts && out.nrows()==npts);
-        assert(out.ncols()==PQIndex::size(order_));
+        assert(out.ncols()==PQIndex::size(order));
         for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
             int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
             tmv::MatrixView<double> mr = out.rowRange(ilo,ihi);
             mBasis(xunit.subVector(ilo,ihi), yunit.subVector(ilo,ihi), 
-                   0, &mr, 0, order_, false, sigma);
+                   0, &mr, 0, order, false, sigma);
         }
     }
 
     tmv::Matrix<double>* LVector::design(
         const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
-        const tmv::Vector<double>& invsig, int order_, double sigma) 
+        const tmv::Vector<double>& invsig, int order, double sigma) 
     {
         //**/Stopwatch s; s.start();
-        tmv::Matrix<double>* mr = new tmv::Matrix<double>(xunit.size(), PQIndex::size(order_),0.);
+        tmv::Matrix<double>* mr = new tmv::Matrix<double>(xunit.size(), PQIndex::size(order),0.);
         //**/s.stop(); std::cerr << "setup: " << s << "sec" << std::endl;
-        design(*mr, xunit, yunit, invsig, order_, sigma);
+        design(*mr, xunit, yunit, invsig, order, sigma);
         return mr;
     }
 
     void LVector::design(
         tmv::Matrix<double>& out, const tmv::Vector<double>& xunit,
         const tmv::Vector<double>& yunit, const tmv::Vector<double>& invsig,
-        int order_, double sigma) 
+        int order, double sigma) 
     {
         const int npts=xunit.size();
         assert(yunit.size()==npts && out.nrows()==npts && invsig.size()==npts);
-        assert(out.ncols()==PQIndex::size(order_));
+        assert(out.ncols()==PQIndex::size(order));
         for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
             int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
             tmv::ConstVectorView<double> is = invsig.subVector(ilo,ihi);
             tmv::MatrixView<double> mr = out.rowRange(ilo,ihi);
             mBasis(xunit.subVector(ilo,ihi), yunit.subVector(ilo,ihi), 
-                   &is, &mr, 0, order_, false, sigma);
+                   &is, &mr, 0, order, false, sigma);
         }
     }
 
     void LVector::kBasis(
         const tmv::Vector<double>& kxunit, const tmv::Vector<double>& kyunit,
-        tmv::Matrix<double>*& kReal, tmv::Matrix<double>*& kImag, int order_) 
+        boost::shared_ptr<tmv::Matrix<double> >& kReal,
+        boost::shared_ptr<tmv::Matrix<double> >& kImag, int order) 
     {
-        const int ndof=PQIndex::size(order_);
+        const int ndof=PQIndex::size(order);
         const int npts = kxunit.size();
         assert (kyunit.size()==npts);
-        if (!kReal || kReal->nrows()!=npts || kReal->ncols()!=ndof) {
-            if (kReal) delete kReal;
-            kReal = new tmv::Matrix<double>(npts, ndof, 0.);
+        if (!kReal.get() || kReal->nrows()!=npts || kReal->ncols()!=ndof) {
+            kReal.reset(new tmv::Matrix<double>(npts, ndof, 0.));
         } else {
             kReal->setZero();
         }
-        if (!kImag || kImag->nrows()!=npts || kImag->ncols()!=ndof) {
-            if (kImag) delete kImag;
-            kImag = new tmv::Matrix<double>(npts, ndof, 0.);
+        if (!kImag.get() || kImag->nrows()!=npts || kImag->ncols()!=ndof) {
+            kImag.reset(new tmv::Matrix<double>(npts, ndof, 0.));
         } else {
             kImag->setZero();
         }
@@ -328,7 +291,7 @@ namespace galsim {
             tmv::MatrixView<double> mr = kReal->rowRange(ilo,ihi);
             tmv::MatrixView<double> mi = kImag->rowRange(ilo,ihi);
             mBasis(kxunit.subVector(ilo,ihi), kyunit.subVector(ilo,ihi), 
-                   0, &mr, &mi, order_, true, 1.);
+                   0, &mr, &mi, order, true, 1.);
         }
     }
 
@@ -362,9 +325,9 @@ namespace galsim {
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
         const tmv::ConstVectorView<double>* invsig,
         tmv::MatrixView<double>* mr, tmv::MatrixView<double>* mi,
-        int order_, bool isK, double sigma) 
+        int order, bool isK, double sigma) 
     {
-        const int N=order_;
+        const int N=order;
 #ifndef NDEBUG
         const int ndof=PQIndex::size(N);
 #endif
@@ -439,9 +402,9 @@ namespace galsim {
         // Now climb q's at each m
 #ifdef PTRLOOPS
         // Compile these to do arithmetic with pointer loops (TMV DiagMatrix method below)
-        tmv::Vector<double>* Lmq = new tmv::Vector<double>(npts);
-        tmv::Vector<double>* Lmqm1 = new tmv::Vector<double>(npts);
-        tmv::Vector<double>* Lmqm2 = new tmv::Vector<double>(npts);
+        boost::shared_ptr<tmv::Vector<double> > Lmq(new tmv::Vector<double>(npts));
+        boost::shared_ptr<tmv::Vector<double> > Lmqm1(new tmv::Vector<double>(npts));
+        boost::shared_ptr<tmv::Vector<double> > Lmqm2(new tmv::Vector<double>(npts));
         for (int m=0; m<=N; m++) {
             PQIndex pq(m,0);
             int iQ0 = pq.rIndex();
@@ -479,10 +442,11 @@ namespace galsim {
             for (pq.incN(); !pq.pastOrder(N); pq.incN()) {
                 {
                     // cycle the Lmq vectors
-                    tmv::Vector<double>* tmp = Lmqm2;
-                    Lmqm2 = Lmqm1;
-                    Lmqm1 = Lmq;
-                    Lmq = tmp;
+                    // Lmq <- Lmqm2
+                    // Lmqm1 <- Lmq
+                    // Lmqm2 <- Lmqm1
+                    Lmqm2.swap(Lmqm1);
+                    Lmqm1.swap(Lmq);
                 }
                 {
                     double f1 = - (pq.getP()+pq.getQ()-1.);
@@ -519,9 +483,9 @@ namespace galsim {
 #else
 
         // Make three DiagMatrix to hold Lmq's during recurrence calculations
-        tmv::DiagMatrix<double>* Lmq = new tmv::DiagMatrix<double>(npts);
-        tmv::DiagMatrix<double>* Lmqm1 = new tmv::DiagMatrix<double>(npts);
-        tmv::DiagMatrix<double>* Lmqm2 = new tmv::DiagMatrix<double>(npts);
+        boost::shared_ptr<tmv::DiagMatrix<double> > Lmq(new tmv::DiagMatrix<double>(npts));
+        boost::shared_ptr<tmv::DiagMatrix<double> > Lmqm1(new tmv::DiagMatrix<double>(npts));
+        boost::shared_ptr<tmv::DiagMatrix<double> > Lmqm2(new tmv::DiagMatrix<double>(npts));
         for (int m=0; m<=N; m++) {
             PQIndex pq(m,0);
             int iQ0 = pq.rIndex();
@@ -551,10 +515,11 @@ namespace galsim {
             for (pq.incN(); !pq.pastOrder(N); pq.incN()) {
                 {
                     // cycle the Lmq vectors
-                    tmv::DiagMatrix<double>* tmp = Lmqm2;
-                    Lmqm2 = Lmqm1;
-                    Lmqm1 = Lmq;
-                    Lmq = tmp;
+                    // Lmqm2 <- Lmqm1
+                    // Lmqm1 <- Lmq
+                    // Lmq <- Lmqm2
+                    Lmqm2.swap(Lmqm1);
+                    Lmqm1.swap(Lmq);
                 }
                 double invsqrtpq = 1./sqrtn(pq.getP())/sqrtn(pq.getQ());
                 *Lmq = (Rsq - (pq.getP()+pq.getQ()-1.)) * (*Lmqm1) * (isK ? -invsqrtpq : invsqrtpq);
@@ -578,7 +543,6 @@ namespace galsim {
             }
         }
 #endif  // PTRLOOPS
-        delete Lmq; delete Lmqm1; delete Lmqm2;
     }
 
 
@@ -591,13 +555,13 @@ namespace galsim {
         if (maxP > getOrder()/2) maxP=getOrder()/2;
         double retval=0.;
         for (int p=0; p<=maxP; p++)
-            retval += (*v)[PQIndex(p,p).rIndex()];
+            retval += (*_v)[PQIndex(p,p).rIndex()];
         return retval;
     }
 
     double LVector::apertureFlux(double R_, int maxP) const 
     {
-        static tmv::Vector<double> *fp=0;
+        static boost::shared_ptr<tmv::Vector<double> > fp;
         static double R=-1.;
         static double psize=-1;
 
@@ -606,15 +570,9 @@ namespace galsim {
         if (maxP<0) maxP= getOrder()/2;
         if (maxP > getOrder()/2) maxP=getOrder()/2;
 
-        if (!fp || R_ != R || maxP>psize) {
-            if (!fp) {
-                fp = new tmv::Vector<double>(maxP);
-                psize = maxP;
-            } else if (maxP != psize) {
-                delete fp; 
-                fp = new tmv::Vector<double>(maxP);
-                psize = maxP;
-            }
+        if (!fp.get() || R_ != R || maxP>psize) {
+            fp.reset(new tmv::Vector<double>(maxP));
+            psize = maxP;
             R = R_;
             tmv::Vector<double> Lp(maxP+1);
             tmv::Vector<double> Qp(maxP+1);
@@ -635,7 +593,7 @@ namespace galsim {
 
         double flux = 0.;
         for (int p=0; p<=maxP; p++)
-            flux += (*v)[PQIndex(p,p).rIndex()] * (*fp)[p];
+            flux += (*_v)[PQIndex(p,p).rIndex()] * (*fp)[p];
         return flux;
     }
 
@@ -650,9 +608,9 @@ namespace galsim {
     {
         int oldprec = os.precision(8);
         std::ios::fmtflags oldf = os.setf(std::ios::scientific,std::ios::floatfield);
-        if (maxorder < 0 || maxorder > *order)
-            maxorder = *order;
-        os << *order << std::endl;
+        if (maxorder < 0 || maxorder > *_order)
+            maxorder = *_order;
+        os << *_order << std::endl;
         for (int n=0; n<=maxorder; n++) {
             for(PQIndex pq(n,0); !pq.needsConjugation(); pq.decm()) {
                 os << " " << std::setw(2) << pq.getP() 
@@ -705,19 +663,19 @@ namespace galsim {
     const tmv::ConstMatrixView<double> LVector::Generator(
         GType iparam, int orderOut, int orderIn) 
     {
-        static tmv::Matrix<double> *gmu;
-        static tmv::Matrix<double> *gx;
-        static tmv::Matrix<double> *gy;
-        static tmv::Matrix<double> *ge1;
-        static tmv::Matrix<double> *ge2;
-        static tmv::Matrix<double> *grot;
+        static boost::shared_ptr<tmv::Matrix<double> > gmu;
+        static boost::shared_ptr<tmv::Matrix<double> > gx;
+        static boost::shared_ptr<tmv::Matrix<double> > gy;
+        static boost::shared_ptr<tmv::Matrix<double> > ge1;
+        static boost::shared_ptr<tmv::Matrix<double> > ge2;
+        static boost::shared_ptr<tmv::Matrix<double> > grot;
 
         const int sizeIn = PQIndex::size(orderIn);
         const int sizeOut = PQIndex::size(orderOut);
 
         const int order = std::max(orderOut, orderIn);
         if (iparam==iMu) {
-            if (!gmu || gmu->nrows()<PQIndex::size(order)) {
+            if (!gmu.get() || gmu->nrows()<PQIndex::size(order)) {
                 LTransform lt(order, order);
 
                 for (PQIndex pq(0,0); !pq.pastOrder(order); pq.nextDistinct()) {
@@ -739,13 +697,12 @@ namespace galsim {
                         else lt.set(pq,pqprime,zz, 0.);
                     }
                 }
-                if (gmu) delete gmu;
-                gmu = new tmv::Matrix<double>(lt.rMatrix());
+                gmu.reset(new tmv::Matrix<double>(lt.rMatrix()));
             }
             return gmu->subMatrix(0, sizeOut, 0, sizeIn);
         }
         if (iparam==iX) {
-            if (!gx || gx->nrows()<PQIndex::size(order)) {
+            if (!gx.get() || gx->nrows()<PQIndex::size(order)) {
                 LTransform lt(order, order);
 
                 for (PQIndex pq(0,0); !pq.pastOrder(order); pq.nextDistinct()) {
@@ -785,14 +742,13 @@ namespace galsim {
                         }
                     }
                 }
-                if (gx) delete gx;
-                gx = new tmv::Matrix<double>(lt.rMatrix());
+                gx.reset(new tmv::Matrix<double>(lt.rMatrix()));
             }
             return gx->subMatrix(0, sizeOut, 0, sizeIn);
         }
 
         if (iparam==iY) {
-            if (!gy || gy->nrows()<PQIndex::size(order)) {
+            if (!gy.get() || gy->nrows()<PQIndex::size(order)) {
                 LTransform lt(order, order);
 
                 for (PQIndex pq(0,0); !pq.pastOrder(order); pq.nextDistinct()) {
@@ -832,14 +788,13 @@ namespace galsim {
                         }
                     }
                 }
-                if (gy) delete gy;
-                gy = new tmv::Matrix<double>(lt.rMatrix());
+                gy.reset(new tmv::Matrix<double>(lt.rMatrix()));
             }
             return gy->subMatrix(0, sizeOut, 0, sizeIn);
         }
 
         if (iparam==iE1) {
-            if (!ge1 || ge1->nrows()<PQIndex::size(order)) {
+            if (!ge1.get() || ge1->nrows()<PQIndex::size(order)) {
                 LTransform lt(order, order);
 
                 for (PQIndex pq(0,0); !pq.pastOrder(order); pq.nextDistinct()) {
@@ -881,14 +836,13 @@ namespace galsim {
                         }
                     }
                 }
-                if (ge1) delete ge1;
-                ge1 = new tmv::Matrix<double>(lt.rMatrix());
+                ge1.reset(new tmv::Matrix<double>(lt.rMatrix()));
             }
             return ge1->subMatrix(0, sizeOut, 0, sizeIn);
         }
 
         if (iparam==iE2) {
-            if (!ge2 || ge2->nrows()<PQIndex::size(order)) {
+            if (!ge2.get() || ge2->nrows()<PQIndex::size(order)) {
                 LTransform lt(order, order);
 
                 for (PQIndex pq(0,0); !pq.pastOrder(order); pq.nextDistinct()) {
@@ -930,22 +884,20 @@ namespace galsim {
                         }
                     }
                 }
-                if (ge2) delete ge2;
-                ge2 = new tmv::Matrix<double>(lt.rMatrix());
+                ge2.reset(new tmv::Matrix<double>(lt.rMatrix()));
             }
             return ge2->subMatrix(0, sizeOut, 0, sizeIn);
         }
 
         if (iparam==iRot) {
             // Rotation is diagonal - could use a DiagMatrix perhaps
-            if (!grot || grot->nrows()<PQIndex::size(order)) {
+            if (!grot.get() || grot->nrows()<PQIndex::size(order)) {
                 LTransform lt(order, order);
                 for (PQIndex pq(0,0); !pq.pastOrder(order); pq.nextDistinct()) {
                     int m = pq.m();
                     if (m>0) lt.set(pq,pq, std::complex<double>(0.,-m), 0.);
                 }
-                if (grot) delete grot;
-                grot = new tmv::Matrix<double>(lt.rMatrix());
+                grot.reset(new tmv::Matrix<double>(lt.rMatrix()));
             }
             return grot->subMatrix(0, sizeOut, 0, sizeIn);
         } else {
@@ -982,7 +934,7 @@ namespace galsim {
 
         const double TOLERANCE=0.001; //radius accuracy required
         const double maxR = 5.;
-        double ustep=0.5/sqrt(static_cast<double> (maxP+1));
+        double ustep=0.5/sqrt(double(maxP)+1.);
         double u1 = 0.0001;
         double f1 = func(u1);
         double u2;
