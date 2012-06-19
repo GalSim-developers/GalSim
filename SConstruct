@@ -1087,7 +1087,7 @@ if not GetOption('help'):
         if sys.platform == 'linux2' and env['PREFIX'] != '':
             # On linux, we try to match the behavior of distutils
             env['PYPREFIX'] = distutils.sysconfig.get_python_lib(prefix=env['PREFIX']) 
-            print 'Using PYPREFIX generated from PREFIX="%s": %s'%(env['PREFIX'],env['PYPREFIX'])
+            print 'Using PYPREFIX generated from PREFIX = ',env['PYPREFIX']
         else:
             # On Macs, the regular python lib is usually writable, so it works fine for 
             # installing the python modules.
