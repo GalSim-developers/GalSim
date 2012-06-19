@@ -485,6 +485,9 @@ namespace galsim {
          *
          * @param[in] img Image to draw on.
          * @param[in] N Total number of photons to produce.
+         *            N is input as a double so that very large values of N don't have to
+         *            worry about overflowing int on systems with a small MAX_INT.
+         *            Internally it will be rounded to the nearest integer.
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          */
         template <typename T>

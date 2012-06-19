@@ -2493,10 +2493,11 @@ namespace galsim {
         }
         xdbg<<"shoot "<<N<<std::endl;
         assert(_pimpl.get());
-        PhotonArray pa = _pimpl->shoot(int(N), u);
+        int finalN = int(floor(N+0.5));
+        PhotonArray pa = _pimpl->shoot(finalN, u);
         xdbg<<"pa.flux = "<<pa.getTotalFlux()<<std::endl;
-        xdbg<<"scaleFlux by "<<(N/origN)<<std::endl;
-        pa.scaleFlux(N / origN);
+        xdbg<<"scaleFlux by "<<(finalN/origN)<<std::endl;
+        pa.scaleFlux(finalN / origN);
         xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
         pa.addTo(img);
         realizedFlux += pa.getTotalFlux();
