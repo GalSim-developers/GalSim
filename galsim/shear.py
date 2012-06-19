@@ -10,16 +10,16 @@ The python Shear class can be initialized in a variety of ways to represent shap
 arguments must be named.  Given semi-major and semi-minor axes a and b, we can define multiple shape
 measurements:
 
-reduced shear g = (a - b)/(a + b)
-distortion e = (a^2 - b^2)/(a^2 + b^2)
+reduced shear |g| = (a - b)/(a + b)
+distortion |e| = (a^2 - b^2)/(a^2 + b^2)
 conformal shear eta, with a/b = exp(eta)
 minor-to-major axis ratio q = b/a
 
 These can be thought of as a magnitude and a real-space position angle beta, or as two components
 e.g., g1 and g2, with
 
-g1 = g cos(2*beta)
-g2 = g sin(2*beta)
+g1 = |g| cos(2*beta)
+g2 = |g| sin(2*beta)
 
 Note: beta is _not_ the phase of a complex valued shear.
 Rather, the complex shear is g1 + i g2 = g exp(2 i beta).

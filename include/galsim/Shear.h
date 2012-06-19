@@ -37,10 +37,10 @@ namespace galsim {
      *
      * e   = "distortion", |e| = (a^2-b^2)/(a^2+b^2)
      *
-     * q   = "axis ratio", |q|=b/a
+     * q   = "axis ratio", q=b/a
      * 
      * To specify both components, we have a value Beta that is the real-space position angle of 
-     * the major axis, i.e. e1 = e cos(2*Beta) and e2 = e sin(2*Beta).
+     * the major axis, i.e. e1 = |e| cos(2*Beta) and e2 = |e| sin(2*Beta).
      *
      * Shears are represented internally by e1 and e2, which relate to second moments via
      * e1 = (Mxx - Myy) / (Mxx + Myy),
@@ -231,7 +231,7 @@ namespace galsim {
         bool operator!=(const Shear& rhs) const 
         { return e1!=rhs.e1 || e2!=rhs.e2; }
 
-        // Classes thattreat shear as a point-set map:
+        // Classes that treat shear as a point-set map:
         /**
          * @brief Forward transformation from image to source plane coordinates under shear.
          *
