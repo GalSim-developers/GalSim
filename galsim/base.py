@@ -266,11 +266,11 @@ class GSObject:
         @param wmult  A factor by which to make the intermediate images larger than 
                       they are normally made.  (Default = 1.)
         @param normalization  Two options for the normalization:
-                              "flux" means the the sum of the output pixels are normalized
+                              "flux" means that the sum of the output pixels is normalized
                                      to be equal to the total flux.  (Modulo any flux that
                                      falls off the edge of the image of course.)
                               "surface brightness" means that the output pixels sample
-                                     the surfact brightness distribution at each location.
+                                     the surface brightness distribution at each location.
                               (Default = "flux")
         @returns      The drawn image
         """
@@ -303,11 +303,11 @@ class GSObject:
                       If ud=None, one will be automatically created, using the time as a seed.
                       (Default = None)
         @param normalization  Two options for the normalization:
-                              "flux" means the the sum of the output pixels are normalized
+                              "flux" means that the sum of the output pixels is normalized
                                      to be equal to the total flux.  (Modulo any flux that
                                      falls off the edge of the image of course.)
                               "surface brightness" means that the output pixels sample
-                                     the surfact brightness distribution at each location.
+                                     the surface brightness distribution at each location.
                               (Default = "flux")
         @returns      (TODO!) The fraction of photons that fell off the edge of the image.
         """
