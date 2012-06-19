@@ -151,6 +151,7 @@ def test_shear_initialization():
     np.testing.assert_raises(ValueError,galsim.Shear,q=1.3,beta=0.*galsim.degrees)
     np.testing.assert_raises(ValueError,galsim.Shear,g1=0.9,g2=0.6)
     np.testing.assert_raises(ValueError,galsim.Shear,e=-1.3,beta=0.*galsim.radians)
+    np.testing.assert_raises(ValueError,galsim.Shear,e=1.3,beta=0.*galsim.radians)
     np.testing.assert_raises(TypeError,galsim.Shear,randomkwarg=0.1)
     np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,randomkwarg=0.1)
     np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,e1=0.1)

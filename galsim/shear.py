@@ -104,8 +104,8 @@ class Shear:
                     raise TypeError(
                         "The position angle that was supplied is not an Angle instance!")
                 g = kwargs.pop('g')
-                if abs(g) > 1:
-                    raise ValueError("Requested shear exceeds 1: %f"%g)
+                if g > 1 or g < 0:
+                    raise ValueError("Requested |shear| is outside [0,1]: %f"%g)
                 g1 = np.cos(2.*beta.rad())*g
                 g2 = np.sin(2.*beta.rad())*g
                 use_shear = _galsim._Shear(g1, g2)
@@ -118,8 +118,8 @@ class Shear:
                     raise TypeError(
                         "The position angle that was supplied is not an Angle instance!")
                 e = kwargs.pop('e')
-                if abs(e) > 1:
-                    raise ValueError("Requested distortion exceeds 1: %f"%e)
+                if e > 1 or e < 0:
+                    raise ValueError("Requested distortion is outside [0,1]: %f"%e)
                 use_shear = _galsim._Shear()
                 use_shear.setEBeta(e, beta)
             elif 'eta' in kwargs:
@@ -131,6 +131,8 @@ class Shear:
                     raise TypeError(
                         "The position angle that was supplied is not an Angle instance!")
                 eta = kwargs.pop('eta')
+                if eta < 0:
+                    raise ValueError("Requested eta is below 0: %f"%e)
                 use_shear = _galsim._Shear()
                 use_shear.setEtaBeta(eta, beta)
             elif 'q' in kwargs:
