@@ -138,6 +138,9 @@ def do_shoot(prof, img, name):
     scale = test_flux / flux_tot # from above
     nphot *= scale * scale
     print 'nphot -> ',nphot
+    if 'InterpolatedImage' in name:
+        nphot *= 10
+        print 'nphot -> ',nphot
     prof.drawShoot(img, nphot, normalization="surface brightness")
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
     np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, photon_decimal_test,
@@ -1425,7 +1428,7 @@ def test_sbprofile_sbinterpolatedimage():
     #xinterp = galsim.Lanczos(3, True, 1.0E-4)
     # Lanczos doesn't quite get the flux right.  Wrong at the 5th decimal place.
     # Maybe worth investigating at some point...
-    xinterp = galsim.Cubic(1.0E-4)
+    xinterp = galsim.Quintic(1.0E-4)
     xinterp2d = galsim.InterpolantXY(xinterp)
 
     ftypes = [np.float32, np.float64]
