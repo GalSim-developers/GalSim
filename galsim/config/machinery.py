@@ -14,10 +14,12 @@ class Field(object):
     a dictionary called "_data" in the instance.
     """
 
-    def __init__(self, type, default=True, required=False, doc=None):
+    def __init__(self, type, default=True, doc=None, aliases=None):
         self.type = type
-        self.default = default
-        self.required = required
+        if aliases is None:
+            aliases = {}
+        self.aliases = aliases
+        self.default = self.aliases.get(default, default)
         if doc is None:
             doc = self.type.__doc__
         self.__doc__ = doc
@@ -35,10 +37,7 @@ class Field(object):
         return self
 
     def __set__(self, instance, value):
-        if value is None:
-            if self.required:
-                raise TypeError("Cannot set required field '%s' to None." 
-                                % self._get_full_name(instance))
+        value = self.aliases.get(value, value)
         if issubclass(self.type, NodeBase):
             if issubclass(value, NodeBase):
                 # setting 'outer.inner = Foo' is treated like 'outer.inner = Foo()'; the former
@@ -47,7 +46,7 @@ class Field(object):
                 value = value()
             if not isinstance(value, self.type):
                 raise TypeError("Cannot set field '%s' of type '%s' to an instance of type '%s'."
-                                % (self._get_full_name(instance), self.type.__name__, 
+                                % (self._get_full_name(instance), self.type.__name__,
                                    type(value).__name__))
             self._update_node_path(instance, value, self.name)
             instance._data[self.name] = value
@@ -158,7 +157,10 @@ class NodeBase(object):
         if issubclass(self, NodeBase):
             # we're calling this on a class not an instance, so we default-construct
             self = self()
-        execfile(filename, globals={}, locals={"config":self})
+        d = self._get_load_context()
+        d["config"] = self
+        d.update((cls.__name__, cls) for cls in generators.load_context)
+        execfile(filename, globals={}, locals=d)
 
     def reset(self):
         """
@@ -187,12 +189,30 @@ class NodeBase(object):
             if isinstance(value, NodeBase):
                 value.finish(**kwds)
 
+    @classmethod
+    def _get_load_context(cls, output=None):
+        """
+        Construct a dictionary of all nested aliases.  This allows names to be used in config
+        files without imports.
+        """
+        if output is None:
+            output = {}
+        for name, field in cls.fields.iteritems():
+            for k, v in field.aliases.iteritems():
+                if isinstance(k, basestring):
+                    if output.setdefault(k, v) is not v:
+                        raise RuntimeError("Duplicate alias in config load context: %r" % k)
+            if field.type is not None:
+                field.type._get_load_context(output)
+        return output
+
 class ListNodeBase(NodeBase):
     """
     A base class for config nodes that are lists (including lists of nodes).
     """
 
-    choices = None  # valid types for list elements, to be set by derived classes; ignored if None.
+    types = None  # valid types for list elements, to be set by derived classes; ignored if None.
+    aliases = {}  # dictionary used to lookup aliases for field values
 
     __slots__ = ("_elements",)
 
@@ -201,21 +221,10 @@ class ListNodeBase(NodeBase):
         self._elements = list()
         return self
 
-    def _get_types(self):
-        return tuple(type(e) for e in self._elements)
-
-    def _set_types(self, types):
-        values = []
-        for index, cls in enumerate(types):
-            element = cls()
-            self._prep_insert(index, element)
-            self._elements.append(element)
-        self._elements = tuple(values)
-
-    types = property(_get_types, _set_types, "sequence containing the types of elements")
-
     def _prep_insert(self, index, element):
-        if self.choices is not None and not isinstance(element, self.choices):
+        if issubclass(element, NodeBase):
+            element = element()
+        if self.types is not None and not isinstance(element, self.types):
             raise TypeError("Cannot set element %d of field '%s' to value '%s'"
                             % (index, self.name, element))
         if isinstance(element, NodeBase):
@@ -227,11 +236,21 @@ class ListNodeBase(NodeBase):
         return self._elements[index]
 
     def __setitem__(self, index, value):
-        self._prep_insert(value)
-        if index == len(self._elements): # implicit append by assigning to the next item
-            self._elements.append(value)
+        if type(index) is slice:
+            if index.start is not None or index.stop is not None or index.step is not None:
+                raise TypeError("Advanced slice set operations are not supported on list nodes")
+            # If we didn't throw, we know we're just replacing the entire list; that's the only
+            # slice set syntax we support.
+            self._elements = []
+            for n, element in enumerate(value):
+                self._prep_insert(start + step * n, element)
+                self._elements.append(element)
         else:
-            self._elements[index] = value
+            self._prep_insert(value)
+            if index == len(self._elements): # implicit append by assigning to the next item
+                self._elements.append(value)
+            else:
+                self._elements[index] = value
 
     def __iter__(self):
         return iter(self._elements)
@@ -255,6 +274,20 @@ class ListNodeBase(NodeBase):
         for element in self:
             if isinstance(element, NodeBase):
                 element.finish(**kwds)
+
+    @classmethod
+    def _get_load_context(cls, output=None):
+        """
+        Construct a dictionary of all nested aliases.  This allows names to be used in config
+        files without imports.
+        """
+        if output is None:
+            output = {}
+        NodeBase._get_load_context(output)
+        if self.types is not None:
+            for cls in self.types:
+                cls._get_load_context(output)
+        return output
 
 def nested(*args, **kwds):
     """

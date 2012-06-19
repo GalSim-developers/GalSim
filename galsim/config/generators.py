@@ -102,7 +102,7 @@ class FromCatalog(GeneratorBase):
 
         The keywords arguments must include a "columns" key that contains a dict that
         maps column names to column indices (starting from zero).
-        
+
         See NodeBase.finish() for additional documentation.
         """
         GeneratorBase.finish(self, **kwds)
@@ -119,3 +119,6 @@ class FromCatalog(GeneratorBase):
         return row[self.index]
 
 # TODO: add other random distributions
+
+# This contains objects included in the config file evaluation context.
+load_context = GaussianRandom, FromCatalog
