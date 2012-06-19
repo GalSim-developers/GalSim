@@ -863,6 +863,14 @@ namespace galsim {
         if (sbd) {
             dbg<<"wrapping another transformation.\n";
             // We are transforming something that's already a transformation.
+            dbg<<"this transformation = "<<
+                _mA<<','<<_mB<<','<<_mC<<','<<_mD<<','<<
+                _cen<<','<<_fluxScaling<<std::endl;
+            dbg<<"adaptee transformation = "<<
+                sbd->_mA<<','<<sbd->_mB<<','<<sbd->_mC<<','<<sbd->_mD<<','<<
+                sbd->_cen<<','<<sbd->_fluxScaling<<std::endl;
+            dbg<<"adaptee getFlux = "<<_adaptee.getFlux()<<std::endl;
+            // We are distorting something that's already a distortion.
             // So just compound the affine transformaions
             // New matrix is product (M_this) * (M_old)
             double mA = _mA; double mB=_mB; double mC=_mC; double mD=_mD;
@@ -873,11 +881,15 @@ namespace galsim {
             _mC = mC*sbd->_mA + mD*sbd->_mC;
             _mD = mC*sbd->_mB + mD*sbd->_mD;
             _fluxScaling *= sbd->_fluxScaling;
-            dbg<<"before set adaptee"<<std::endl;
+            dbg<<"this distortion => "<<
+                _mA<<','<<_mB<<','<<_mC<<','<<_mD<<','<<
+                _cen<<','<<_fluxScaling<<std::endl;
             _adaptee = sbd->_adaptee;
-            dbg<<"after set adaptee"<<std::endl;
         } else {
             dbg<<"wrapping a non-transformation.\n";
+            dbg<<"this transformation = "<<
+                _mA<<','<<_mB<<','<<_mC<<','<<_mD<<','<<
+                _cen<<','<<_fluxScaling<<std::endl;
         }
 
         // It will be reasonably common to have an identity matrix (for just
@@ -1253,8 +1265,16 @@ namespace galsim {
 #else
         // A faster version that pulls out all the if statements
         // and keeps track of fwdT(k) as we go
-        kt.clearCache();
 
+        if (_mA == 1. && _mB == 0. && _mC == 0. && _mD == 1. && 
+            _cen.x == 0. && _cen.y == 0.) {
+            // Then only a fluxScaling.  Call the adaptee's fillKGrid directly and rescale:
+            _adaptee._pimpl->fillKGrid(kt);
+            kt *= _fluxScaling;
+            return;
+        } 
+
+        kt.clearCache();
         double dkA = dk*_mA;
         double dkB = dk*_mB;
         if (_cen.x==0. && _cen.y==0.) {
@@ -1621,7 +1641,8 @@ namespace galsim {
         _D(1. / lam_over_D), 
         _obscuration(obscuration), 
         _flux(flux), 
-        _norm(flux / (lam_over_D*lam_over_D)), _radial(_obscuration) {}
+        _Dsq(_D*_D), _obssq(_obscuration*_obscuration), _norm(flux*_Dsq),
+        _radial(_obscuration,_obssq) {}
 
     // This is a scale-free version of the Airy radial function.
     // Input radius is in units of lambda/D.  Output normalized
@@ -1629,21 +1650,22 @@ namespace galsim {
     double SBAiry::AiryRadialFunction::operator()(double radius) const 
     {
         double nu = radius*M_PI;
+        // Taylor expansion of j1(u)/u = 1/2 - 1/16 x^2 + ...
+        // We can truncate this to 1/2 when neglected term is less than xvalue_accuracy
+        // (relative error, so divide by 1/2)
+        // xvalue_accurace = 1/8 x^2
+        const double thresh = sqrt(8.*sbp::xvalue_accuracy);
         double xval;
-        // TODO: Check this limit.  Should use kvalue_accuracy?  
-        // (Not in k space, though, so maybe need a new xvalue_accuracy...)
-        if (nu<0.01) {
+        if (nu < thresh) {
             // lim j1(u)/u = 1/2
-            xval =  (1.-_obscuration*_obscuration);
+            xval =  (1.-_obssq);
         } else {
             // See Schroeder eq (10.1.10)
             xval = 2.*( j1(nu) - _obscuration*j1(_obscuration*nu)) / nu ; 
         }
         xval*=xval;
         // Normalize to give unit flux integrated over area.
-        // TODO: Save this as _norm, so this can become xval *= _norm;
-        // i.e. _norm = M_PI / (4.*(1.-_obscuration*_obscuration))
-        xval /= (1-_obscuration*_obscuration)*4./M_PI;
+        xval *= _norm;
         return xval;
     }
 
@@ -1655,15 +1677,9 @@ namespace galsim {
 
     std::complex<double> SBAiry::SBAiryImpl::kValue(const Position<double>& k) const
     {
-        // TODO: I think the sqrt can be skipped, but need to follow through 
-        //       some of the other functions here to use ksq, rather than K
-        //       (which is called t in e.g. circle_intersection and annuli_intersect.
-        //       However, I haven't gone through this yet, because we don't have
-        //       any unit tests currently that would test this, and I didn't 
-        //       feel like making them just now.
-        double kk = sqrt(k.x*k.x+k.y*k.y);
+        double ksq = k.x*k.x+k.y*k.y;
         // calculate circular FT(PSF) on p'=(x',y')
-        return _flux * annuli_autocorrelation(kk);
+        return _flux * annuli_autocorrelation(ksq);
     }
 
     // Set maxK to hard limit for Airy disk.
@@ -1682,63 +1698,72 @@ namespace galsim {
         return M_PI * _D / R;
     }
 
-    double SBAiry::SBAiryImpl::chord(const double r, const double h) const 
+    double SBAiry::SBAiryImpl::chord(double r, double h, double rsq, double hsq) const 
     {
-        if (r<h) throw SBError("Airy calculation r<h");
-        else if (r==0.) return 0.;
-        else if (r<0. || h<0.) throw SBError("Airy calculation (r||h)<0");
-        return r*r*std::asin(h/r) -h*sqrt(r*r-h*h);
+        if (r==0.) 
+            return 0.;
+        else if (r >= h && h >= 0.) 
+            return rsq*std::asin(h/r) -h*sqrt(rsq-hsq);
+        else if (r<h) 
+            throw SBError("Airy calculation r<h");
+        else 
+            throw SBError("Airy calculation (r||h)<0");
     }
 
     /* area inside intersection of 2 circles radii r & s, seperated by t*/
-    double SBAiry::SBAiryImpl::circle_intersection(double r, double s, double t) const 
+    double SBAiry::SBAiryImpl::circle_intersection(
+        double r, double s, double rsq, double ssq, double tsq) const 
     {
-        double h;
-        if (r<0. || s<0.) throw SBError("Airy calculation negative radius");
-        t = fabs(t);
-        if (t>= r+s) return 0.;
-        if (r<s) {
-            double temp;
-            temp = s;
-            s = r;
-            r = temp;
-        }
-        if (t<= r-s) return M_PI*s*s;
+        assert(r >= s);
+        assert(s >= 0.);
+        double rps_sq = (r+s)*(r+s);
+        if (tsq >= rps_sq) return 0.;
+        double rms_sq = (r-s)*(r-s);
+        if (tsq <= rms_sq) return M_PI*ssq;
 
         /* in between we calculate half-height at intersection */
-        h = 0.5*(r*r + s*s) - (std::pow(t,4.) + (r*r-s*s)*(r*r-s*s))/(4.*t*t);
-        if (h<0.) {
-            throw SBError("Airy calculation half-height invalid");
-        }
-        h = sqrt(h);
+        double hsq = 0.5*(rsq + ssq) - (tsq*tsq + rps_sq*rms_sq)/(4.*tsq);
+        if (hsq<0.) throw SBError("Airy calculation half-height invalid");
+        double h = sqrt(hsq);
 
-        if (t*t < r*r - s*s) 
-            return M_PI*s*s - chord(s,h) + chord(r,h);
+        if (tsq < rsq - ssq) 
+            return M_PI*ssq - chord(s,h,ssq,hsq) + chord(r,h,rsq,hsq);
         else
-            return chord(s,h) + chord(r,h);
+            return chord(s,h,ssq,hsq) + chord(r,h,rsq,hsq);
+    }
+
+    /* area inside intersection of 2 circles both with radius r, seperated by t*/
+    double SBAiry::SBAiryImpl::circle_intersection(double r, double rsq, double tsq) const 
+    {
+        assert(r >= 0.);
+        if (tsq >= 4.*rsq) return 0.;
+        if (tsq == 0.) return M_PI*rsq;
+
+        /* in between we calculate half-height at intersection */
+        double hsq = rsq - tsq/4.;
+        if (hsq<0.) throw SBError("Airy calculation half-height invalid");
+        double h = sqrt(hsq);
+
+        return 2.*chord(r,h,rsq,hsq);
     }
 
     /* area of two intersecting identical annuli */
-    double SBAiry::SBAiryImpl::annuli_intersect(double r1, double r2, double t) const 
+    double SBAiry::SBAiryImpl::annuli_intersect(
+        double r1, double r2, double r1sq, double r2sq, double tsq) const 
     {
-        if (r1<r2) {
-            double temp;
-            temp = r2;
-            r2 = r1;
-            r1 = temp;
-        }
-        return circle_intersection(r1,r1,t)
-            - 2. * circle_intersection(r1,r2,t)
-            +  circle_intersection(r2,r2,t);
+        assert(r1 >= r2);
+        return circle_intersection(r1,r1sq,tsq)
+            - 2. * circle_intersection(r1,r2,r1sq,r2sq,tsq)
+            +  circle_intersection(r2,r2sq,tsq);
     }
 
     /* Beam pattern of annular aperture, in k space, which is just the
      * autocorrelation of two annuli.  Normalize to unity at k=0 for now */
-    double SBAiry::SBAiryImpl::annuli_autocorrelation(const double k) const 
+    double SBAiry::SBAiryImpl::annuli_autocorrelation(double ksq) const 
     {
-        double k_scaled = k / (M_PI*_D);
-        double norm = M_PI*(1. - _obscuration*_obscuration);
-        return annuli_intersect(1.,_obscuration,k_scaled)/norm;
+        double ksq_scaled = ksq / (M_PI*M_PI*_Dsq);
+        double norm = M_PI*(1. - _obssq);
+        return annuli_intersect(1.,_obscuration,1.,_obssq,ksq_scaled)/norm;
     }
 
 
@@ -1752,7 +1777,7 @@ namespace galsim {
         else return 0.;  // do not use this function for fillXGrid()!
     }
 
-    double SBBox::SBBoxImpl::sinc(const double u) const 
+    double SBBox::SBBoxImpl::sinc(double u) const 
     {
         if (std::abs(u) < 1.e-3)
             return 1.-u*u/6.;
@@ -2154,14 +2179,17 @@ namespace galsim {
         // Next, set up the classes for photon shooting
         _radial.reset(new SersicRadialFunction(_n, _b));
         std::vector<double> range(2,0.);
-        range[1] = R;
+        range[1] = findMaxR(sbp::shoot_flux_accuracy,gamma2n);
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
     }
 
     PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate& ud) const
     {
+        dbg<<"SersicInfo shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = 1.0\n";
         PhotonArray result = _sampler->shoot(N,ud);
         result.scaleFlux(_norm);
+        dbg<<"SersicInfo Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
@@ -2454,24 +2482,40 @@ namespace galsim {
         // Clear image before adding photons, for consistency with draw() methods.
         img.fill(0.);  
         double origN = N;
-        xdbg<<"origN = "<<origN<<std::endl;
+        dbg<<"Start drawShoot.\n";
+        dbg<<"N = "<<N<<std::endl;
+        double targetFlux = getFlux();
+        dbg<<"target flux = "<<targetFlux<<std::endl;
+        double realizedFlux = 0.;
         while (N > maxN) {
             xdbg<<"shoot "<<maxN<<std::endl;
             assert(_pimpl.get());
             PhotonArray pa = _pimpl->shoot(maxN, u);
+            xdbg<<"pa.flux = "<<pa.getTotalFlux()<<std::endl;
+            xdbg<<"scaleFlux by "<<(maxN/origN)<<std::endl;
             pa.scaleFlux(maxN / origN);
+            xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
             pa.addTo(img);
             N -= maxN;
+            realizedFlux += pa.getTotalFlux();
         }
         xdbg<<"shoot "<<N<<std::endl;
         assert(_pimpl.get());
-        PhotonArray pa = _pimpl->shoot(int(N), u);
-        pa.scaleFlux(N / origN);
+        int finalN = int(floor(N+0.5));
+        PhotonArray pa = _pimpl->shoot(finalN, u);
+        xdbg<<"pa.flux = "<<pa.getTotalFlux()<<std::endl;
+        xdbg<<"scaleFlux by "<<(finalN/origN)<<std::endl;
+        pa.scaleFlux(finalN / origN);
+        xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
         pa.addTo(img);
+        realizedFlux += pa.getTotalFlux();
+        dbg<<"Done drawShoot.  Realized flux = "<<realizedFlux<<std::endl;
     }
 
     PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate& u) const 
     {
+        dbg<<"Add shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
         double fluxPerPhoton = totalAbsoluteFlux / N;
 
@@ -2509,12 +2553,15 @@ namespace galsim {
             if (remainingN <=0) break;
             if (remainingAbsoluteFlux <= 0.) break;
         }
-
+        
+        dbg<<"Add Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
     PhotonArray SBConvolve::SBConvolveImpl::shoot(int N, UniformDeviate& u) const 
     {
+        dbg<<"Convolve shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
         std::list<SBProfile>::const_iterator pptr = _plist.begin();
         if (pptr==_plist.end())
             throw SBError("Cannot shoot() for empty SBConvolve");
@@ -2525,11 +2572,14 @@ namespace galsim {
         // at the end.
         for (++pptr; pptr != _plist.end(); ++pptr)
             result.convolveShuffle( pptr->shoot(N, u), u);
+        dbg<<"Convolve Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
     PhotonArray SBTransform::SBTransformImpl::shoot(int N, UniformDeviate& u) const 
     {
+        dbg<<"Distort shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Simple job here: just remap coords of each photon, then change flux
         // If there is overall magnification in the transform
         PhotonArray result = _adaptee.shoot(N,u);
@@ -2537,11 +2587,14 @@ namespace galsim {
             Position<double> xy = fwd(Position<double>(result.getX(i), result.getY(i))+_cen);
             result.setPhoton(i,xy.x, xy.y, result.getFlux(i)*_absdet);
         }
+        dbg<<"Distort Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
     PhotonArray SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate& u) const 
     {
+        dbg<<"Gaussian shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
         PhotonArray result(N);
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
@@ -2557,20 +2610,26 @@ namespace galsim {
             double factor = _sigma*sqrt( -2.*std::log(rsq)/rsq);
             result.setPhoton(i,factor*xu, factor*yu, fluxPerPhoton);
         }
+        dbg<<"Gaussian Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
     PhotonArray SBSersic::SBSersicImpl::shoot(int N, UniformDeviate& ud) const
     {
+        dbg<<"Sersic shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Get photons from the SersicInfo structure, rescale flux and size for this instance
         PhotonArray result = _info->shoot(N,ud);
         result.scaleFlux(_flux);
         result.scaleXY(_re);
+        dbg<<"Sersic Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
     PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate& u) const
     {
+        dbg<<"Exponential shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Accuracy to which to solve for (log of) cumulative flux distribution:
         const double Y_TOLERANCE=1.e-6;
 
@@ -2599,18 +2658,22 @@ namespace galsim {
             double theta = 2.*M_PI*u();
             result.setPhoton(i,_r0*r*std::cos(theta), _r0*r*std::sin(theta), fluxPerPhoton);
         }
+        dbg<<"Exponential Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
     PhotonArray SBAiry::SBAiryImpl::shoot(int N, UniformDeviate& u) const
     {
+        dbg<<"Airy shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Use the OneDimensionalDeviate to sample from scale-free distribution
         checkSampler();
-        PhotonArray pa=_sampler->shoot(N, u);
+        PhotonArray result=_sampler->shoot(N, u);
         // Then rescale for this flux & size
-        pa.scaleFlux(_flux);
-        pa.scaleXY(1./_D);
-        return pa;
+        result.scaleFlux(_flux);
+        result.scaleXY(1./_D);
+        dbg<<"Airy Realized flux = "<<result.getTotalFlux()<<std::endl;
+        return result;
     }
 
     void SBAiry::SBAiryImpl::flushSampler() const 
@@ -2619,34 +2682,39 @@ namespace galsim {
     void SBAiry::SBAiryImpl::checkSampler() const 
     {
         if (_sampler.get()) return;
+        // TODO: If this gets to be a significant fraction of the running time, 
+        // can use the same trick as for Sersic to just do this once for each 
+        // value of _obscuration.
         std::vector<double> ranges(1,0.);
         // Break Airy function into ranges that will not have >1 extremum:
-        double xmin = (1.1 - 0.5*_obscuration);
+        double rmin = 1.1 - 0.5*_obscuration;
         // Use Schroeder (10.1.18) limit of EE at large radius.
-        // to stop sampler at radius with EE>(1-alias_threshold).
-        // TODO: Is alias_threshold appropriate for photon shooting?  
-        //       Should we introduce another parameter that might work similarly
-        //       and try to be consistent across all profiles?
-        //       Or maybe the same new xvalue_accuracy I proposed above.
-        double maximumRadius = 2./(sbp::alias_threshold * M_PI*M_PI * (1-_obscuration));
-        while (xmin < maximumRadius) {
-            ranges.push_back(xmin);
-            xmin += 0.5;
-        }
-        ranges.push_back(xmin);
+        // to stop sampler at radius with EE>(1-shoot_flux_accuracy)
+        double rmax = 2./(sbp::shoot_flux_accuracy * M_PI*M_PI * (1.-_obscuration));
+        dbg<<"Airy sampler\n";
+        dbg<<"_D = "<<_D<<", obsc = "<<_obscuration<<std::endl;
+        dbg<<"rmin = "<<rmin<<std::endl;
+        dbg<<"rmax = "<<rmax<<std::endl;
+        ranges.reserve(int(floor((rmax-rmin+2)/0.5+0.5)));
+        for(double r=rmin; r<=rmax; r+=0.5) ranges.push_back(r);
         _sampler.reset(new OneDimensionalDeviate(_radial, ranges, true));
     }
 
     PhotonArray SBBox::SBBoxImpl::shoot(int N, UniformDeviate& u) const
     {
+        dbg<<"Box shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
         PhotonArray result(N);
         for (int i=0; i<result.size(); i++)
             result.setPhoton(i, _xw*(u()-0.5), _yw*(u()-0.5), _flux/N);
+        dbg<<"Box Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
     PhotonArray SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate& u) const
     {
+        dbg<<"Moffat shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Moffat has analytic inverse-cumulative-flux function.
         PhotonArray result(N);
         double fluxPerPhoton = _flux/N;
@@ -2664,6 +2732,7 @@ namespace galsim {
             double rFactor = _rD*sqrt(newRsq / rsq);
             result.setPhoton(i,rFactor*xu, rFactor*yu, fluxPerPhoton);
         }
+        dbg<<"Moffat Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 

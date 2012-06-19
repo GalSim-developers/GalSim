@@ -28,7 +28,8 @@ namespace galsim {
      * The `find()` method will now return random draws with near-optimal speed.
      */
     template <class T>
-    class ProbabilityTree: private std::list<T> {
+    class ProbabilityTree: private std::list<T> 
+    {
     public:
         using std::list<T>::begin;
         using std::list<T>::end;
@@ -39,8 +40,10 @@ namespace galsim {
 
         /// @brief Constructor - nothing to do.
         ProbabilityTree(): root(0) {};
+
         /// @brief Destructor - kill the `Element`s that have been stored away
-        ~ProbabilityTree() {flushElements();}
+        ~ProbabilityTree() { flushElements(); }
+
         /**
          * @brief Choose a member of the tree based on a uniform deviate
          *
@@ -55,16 +58,19 @@ namespace galsim {
          *               holds a new uniform deviate.
          * @returns Pointer to the selected tree member.
          */
-        T* find(double& unitRandom) const {
+        T* find(double& unitRandom) const 
+        {
             if (!root) throw std::runtime_error("ProbabilityTree::find() before buildTree();");
             unitRandom *= totalAbsoluteFlux;
             return root->find(unitRandom);
         }
+
         /** 
          * @brief Construct the tree from current list elements.
          * @param[in] threshold that have flux <= this value are not included in the tree.
          */
-        void buildTree(double threshold=0.) {
+        void buildTree(double threshold=0.) 
+        {
             if (std::list<T>::empty()) return;
             flushElements();
 
@@ -78,7 +84,7 @@ namespace galsim {
             elementStorage.push_back(root);
             ++nextChild;
             // nextParent points to the first Element that has room for another child.
-            typename std::list<Element*>::iterator nextParent = elementStorage.begin();
+            ListIter nextParent = elementStorage.begin();
             while (nextChild != std::list<T>::end()) {
                 if ( std::abs(nextChild->getFlux()) <= threshold) {
                     // Skip this member if it does not have enough flux
@@ -102,9 +108,11 @@ namespace galsim {
             totalAbsoluteFlux = 0.;
             accumulateFlux(root);
         }
+
     private:
         /// @brief A private class that wraps the members in their tree information
-        class Element {
+        class Element 
+        {
         public:
             Element(T& data): dataPtr(&data), left(0), right(0) {}
             T* dataPtr; ///< Pointer to the member for this element
@@ -115,6 +123,7 @@ namespace galsim {
             double leftCumulativeFlux;
             /// Total unnorm. probability of all elements before & including this one
             double rightCumulativeFlux;
+
             /**
              * Recursive routine to find Element that contains a given value
              * in the cumulative flux (unnormalized probability) distribution.
@@ -123,7 +132,8 @@ namespace galsim {
              *  below the input value on cumulative flux distribution.
              * @returns pointer to member that contains input cumulative flux point.
              */
-            T* find(double& cumulativeFlux) const {
+            T* find(double& cumulativeFlux) const 
+            {
                 if (left && (cumulativeFlux < leftCumulativeFlux)) 
                     return left->find(cumulativeFlux);
                 else if (right && (cumulativeFlux > rightCumulativeFlux))
@@ -133,22 +143,24 @@ namespace galsim {
                 return dataPtr;
             }
         };
+
+        typedef typename std::list<Element*>::iterator ListIter;
         std::list<Element*> elementStorage; ///< Container for all Elements created.
         Element* root;  ///< root of the tree;
         double totalAbsoluteFlux; ///< Stored total unnormalized probability
 
         /// @brief Cleanup created objects
-        void flushElements() {
-            for (typename std::list<Element*>::iterator i=elementStorage.begin();
-                 i != elementStorage.end();
-                 ++i)
+        void flushElements() 
+        {
+            for (ListIter i=elementStorage.begin(); i != elementStorage.end(); ++i)
                 delete *i;
             elementStorage.clear();
             root = 0;
         }
 
         /// @brief Recursive routine to walk the tree and assign cumulative fluxes to Elements
-        void accumulateFlux(Element* el) {
+        void accumulateFlux(Element* el) 
+        {
             // Accumulate any flux in objects at/below left node
             if (el->left) accumulateFlux(el->left);
             // Note cumulative flux before/after this node, increment totalAbsoluteFlux
@@ -161,11 +173,11 @@ namespace galsim {
         }
 
         /// @brief Comparison class to sort inputs in *descending* flux order.
-        class FluxCompare {
+        class FluxCompare 
+        {
         public:
-            bool operator()(const T& lhs, const T& rhs) const {
-                return std::abs(lhs.getFlux()) > std::abs(rhs.getFlux());
-            }
+            bool operator()(const T& lhs, const T& rhs) const 
+            { return std::abs(lhs.getFlux()) > std::abs(rhs.getFlux()); }
         } compare;
     };
 } // end namespace galsim

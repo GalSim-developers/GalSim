@@ -653,7 +653,10 @@ namespace galsim {
          *  @brief Make a view of this image
          */
         ImageView<T> view() 
-            { return ImageView<T>(this->_data, this->_owner, this->_stride, this->_bounds, this->_scale); }
+        {
+            return ImageView<T>(this->_data, this->_owner, this->_stride,
+                                this->_bounds, this->_scale); 
+        }
         ConstImageView<T> view() const { return ConstImageView<T>(*this); }
         //@}
 
