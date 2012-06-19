@@ -263,16 +263,18 @@ class GSObject:
                       If dx <= 0. and image != None, then take the provided image's pixel scale.
                       If dx <= 0. and image == None, then use pi/maxK()
                       (Default = 0.)
-        @param wmult  A factor by which to make the intermediate images larger than 
-                      they are normally made.  (Default = 1.)
         @param normalization  Two options for the normalization:
-                              "flux" means that the sum of the output pixels is normalized
+                              "flux" or "f" means that the sum of the output pixels is normalized
                                      to be equal to the total flux.  (Modulo any flux that
                                      falls off the edge of the image of course.)
-                              "surface brightness" means that the output pixels sample
+                              "surface brightness" or "sb" means that the output pixels sample
                                      the surface brightness distribution at each location.
                               (Default = "flux")
-        @returns      The drawn image
+        @param wmult  A factor by which to make the intermediate images larger than 
+                      they are normally made.  Using wmult > 1 will take longer of course,
+                      but will produce more accurate images.  
+                      (Default = 1.)
+        @returns      The drawn image.
         """
         # Raise an exception here since C++ is picky about the input types
         if type(wmult) != int:
@@ -286,10 +288,11 @@ class GSObject:
             if dx <= 0.:
                 dx = image.getScale()
             self.SBProfile.draw(image, dx=dx, wmult=wmult)
-        if normalization == "flux":
+
+        if normalization.lower() == "flux" or normalization.lower() == "f":
             dx = image.getScale()
             image *= dx*dx
-        elif normalization != "surface brightness":
+        elif normalization.lower() != "surface brightness" and normalization.lower() != "sb":
             raise ValueError("Invalid normalization requested: %s"%normalization)
         return image
 
@@ -297,16 +300,17 @@ class GSObject:
         """@brief Returns an Image of the object, with bounds optionally set by an input Image.
 
         @param image  The image on which to draw the profile.
-                      Note: Unlike for the regular draw command, this is 
+                      Note: Unlike for the regular draw command, image is a required
+                      parameter.  drawShoot will not make the image for you.
         @param N      The number of photons to use.
         @param ud     If provided, a UniformDeviate to use for the random numbers
                       If ud=None, one will be automatically created, using the time as a seed.
                       (Default = None)
         @param normalization  Two options for the normalization:
-                              "flux" means that the sum of the output pixels is normalized
+                              "flux" or "f" means that the sum of the output pixels is normalized
                                      to be equal to the total flux.  (Modulo any flux that
                                      falls off the edge of the image of course.)
-                              "surface brightness" means that the output pixels sample
+                              "surface brightness" or "sb" means that the output pixels sample
                                      the surface brightness distribution at each location.
                               (Default = "flux")
         @returns      (TODO!) The fraction of photons that fell off the edge of the image.
@@ -320,10 +324,11 @@ class GSObject:
         if ud == None:
             ud = galsim.UniformDeviate()
         self.SBProfile.drawShoot(image, N, ud)
-        if normalization == "flux":
+
+        if normalization.lower() == "flux" or normalization.lower() == "f":
             dx = image.getScale()
             image *= dx*dx
-        elif normalization != "surface brightness":
+        elif normalization.lower() != "surface brightness" and normalization.lower() != "sb":
             raise ValueError("Invalid normalization requested: %s"%normalization)
 
 
