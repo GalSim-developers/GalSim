@@ -56,11 +56,11 @@ def make_default_input():
     moffat_fwhm = np.zeros(NOBJECTS) + MOFFAT_FWHM
     moffat_g1 = np.zeros(NOBJECTS) + MOFFAT_G1
     moffat_g2 = np.zeros(NOBJECTS) + MOFFAT_G2
-    moffat_truncationfwhm = np.zeros(NOBJECTS) + MOFFAT_TRUNCATIONFWHM
+    moffat_trunc = np.zeros(NOBJECTS) + MOFFAT_TRUNCATIONFWHM * MOFFAT_FWHM
     # Then set the exponential disc catalogue fixed values
-    exponential_hlr = np.zeros(NOBJECTS) + EXPONENTIAL_RE
+    exponential_hlr = np.zeros(NOBJECTS) + EXPONENTIAL_HLR
     # Then set the dVc bulge catalogue fixed values
-    devaucouleurs_hlr = np.zeros(NOBJECTS) + DEVAUCOULEURS_RE
+    devaucouleurs_hlr = np.zeros(NOBJECTS) + DEVAUCOULEURS_HLR
     # Then set up the Gaussian RNG for making the ellipticity values
     urng = galsim.UniformDeviate(RNG_SEED)
     gdist = galsim.GaussianDeviate(urng, sigma=EXPONENTIAL_DEVAUCOULEURS_SIGMA_G)
@@ -95,7 +95,7 @@ def make_default_input():
     outfile = os.path.join(path, "galsim_default_input.asc")
     # Make a nice header with the default fields described
     header = ("#  boundsi.xmin  boundsi.ymin  boundsi.xmax  boundsi.ymax"+
-              "  psf.beta  psf.fwhm  psf.g1  psf.g2  psf.truncationFWHM"+
+              "  psf.beta  psf.fwhm  psf.g1  psf.g2  psf.trunc"+
               "  gal.Exponential.half_light_radius  gal.Exponential.g1  gal.Exponential.g2"+
               "  gal.DeVaucouleurs.half_light_radius  gal.DeVaucouleurs.g1  gal.DeVaucouleurs.g2"+
               "  gal.shift.dx  gal.shift.dy \n")
@@ -108,7 +108,7 @@ def make_default_input():
         outline = ("%4d  %4d  %4d  %4d  %6.2f  %6.2f  %7.3f  %7.3f  %6.2f  %6.2f  %14.7f  %14.7f "+
                    "%6.2f  %14.7f  %14.7f  %14.7f  %14.7f\n") % \
             (bounds_xmin[i], bounds_ymin[i], bounds_xmax[i], bounds_ymax[i],
-             moffat_beta[i], moffat_fwhm[i], moffat_g1[i], moffat_g2[i], moffat_truncationfwhm[i],
+             moffat_beta[i], moffat_fwhm[i], moffat_g1[i], moffat_g2[i], moffat_trunc[i],
              exponential_hlr[i], exponential_g1[i], exponential_g2[i],
              devaucouleurs_hlr[i], devaucouleurs_g1[i], devaucouleurs_g2[i], dx[i], dy[i])
         output.write(outline)
