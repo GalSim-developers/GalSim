@@ -78,24 +78,38 @@ elif sys.platform == 'linux2':
     # we need to include it explicitly in the linking step for libgalsim.so. 
     # This may fail if the static libraries were not compiled if -fPIC, but I 
     # don't currently know a way to check for this.  
+    # Update: Some linux systems do require the shared libraries to be linked here,
+    # and it doesn't seem to be a problem for the ones that don't require it.
+    # Still need the static libraries to be special though.
 
     libs = env1['LIBS']
     lib_path = ['/usr/local/lib']
     lib_path += env1['LIBPATH']
-    static_libs = []
+    new_libs = []
+    #print 'libs = ',libs
     for lib in libs:
-	for dir in lib_path:
-	    fpath = os.path.join(dir,'lib' + lib + '.so')
-            if os.path.isfile(fpath) and os.access(fpath, os.R_OK):
-	    	break
-	    fpath = os.path.join(dir,'lib' + lib + '.a')
-            if os.path.isfile(fpath) and os.access(fpath, os.R_OK):
-	    	print 'Found static library: ',fpath
-		static_libs += [ File(fpath) ]
-	    	break
+        #print 'Looking for lib = ',lib
+        found = False
+        for dir in lib_path:
+            shared_lib_name = os.path.join(dir,'lib' + lib + '.so')
+            if os.path.isfile(shared_lib_name) and os.access(shared_lib_name, os.R_OK):
+                #print 'Found shared library: ',shared_lib_name
+                new_libs += [ lib ]
+                found = True
+                break
+
+            static_lib_name = os.path.join(dir,'lib' + lib + '.a')
+            if os.path.isfile(static_lib_name) and os.access(static_lib_name, os.R_OK):
+                print 'Found static library: ',static_lib_name
+                new_libs += [ File(static_lib_name) ]
+                found = True
+                break
+        if not found:
+            #print lib,'does not match either shared or static name.  Assuming shared.'
+            new_libs += [ lib ]
 
     # Removes all -l lib flags, and add the explicit static library files.
-    env1.Replace(LIBS=static_libs)
+    env1.Replace(LIBS=new_libs)
 
     lib_final_name = os.path.join(lib_final_dir,'libgalsim.so.%s'%version[0])
     #lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s.%s'%version)
