@@ -203,6 +203,7 @@ namespace galsim {
     template <typename T>
     double SBProfile::fourierDraw(ImageView<T>& I, double dx, int wmult) const 
     {
+        dbg<<"Start fourierDraw ImageView"<<std::endl;
         Bounds<int> imgBounds; // Bounds for output image
         if (wmult<1) throw SBError("Requested wmult<1 in fourierDraw()");
         // First choose desired dx if we were not given one:
@@ -293,6 +294,7 @@ namespace galsim {
     template <typename T>
     double SBProfile::fourierDraw(Image<T>& I, double dx, int wmult) const 
     {
+        dbg<<"Start fourierDraw Image"<<std::endl;
         Bounds<int> imgBounds; // Bounds for output image
         bool sizeIsFree = !I.getBounds().isDefined();
         if (wmult<1) throw SBError("Requested wmult<1 in fourierDraw()");
@@ -1266,11 +1268,22 @@ namespace galsim {
         // A faster version that pulls out all the if statements
         // and keeps track of fwdT(k) as we go
 
+        dbg<<"Start Transformation fillKGrid\n";
+        dbg<<"N = "<<N<<", dk = "<<dk<<std::endl;
+        dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
+        dbg<<"_cen = "<<_cen<<std::endl;
+        dbg<<"_invdet = "<<_invdet<<std::endl;
+        dbg<<"_absdet = "<<_absdet<<std::endl;
+        dbg<<"_fluxScaling = "<<_fluxScaling<<std::endl;
+
         if (_mA == 1. && _mB == 0. && _mC == 0. && _mD == 1. && 
             _cen.x == 0. && _cen.y == 0.) {
+            dbg<<"Simple transformation.  Only flux scaling required.\n";
+            dbg<<"Passing onto the adapteed.\n";
             // Then only a fluxScaling.  Call the adaptee's fillKGrid directly and rescale:
             _adaptee._pimpl->fillKGrid(kt);
-            kt *= _fluxScaling;
+            dbg<<"And now scale flux by "<<_absdet<<std::endl;
+            kt *= _absdet;
             return;
         } 
 
@@ -1278,6 +1291,7 @@ namespace galsim {
         double dkA = dk*_mA;
         double dkB = dk*_mB;
         if (_cen.x==0. && _cen.y==0.) {
+            dbg<<"No centroid shift, so no need to deal with phases.\n";
             // Branch to faster calculation if there is no centroid shift:
             Position<double> k1(0.,0.);
             Position<double> fwdTk1(0.,0.);
@@ -1302,6 +1316,7 @@ namespace galsim {
                 kt.kSet2(ix,N/2,_kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen));
             }
         } else {
+            dbg<<"Has centroid shift, so use phases.\n";
             std::complex<double> dxphase = std::polar(1.,-dk*_cen.x);
             std::complex<double> dyphase = std::polar(1.,-dk*_cen.y);
             // xphase, yphase: current phase value
