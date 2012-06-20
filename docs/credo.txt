@@ -44,11 +44,8 @@ Biggish things to highlight/add/modify are...
 
  Python unit testing modules will be placed in tests/, and called test_<Module>.py
 
- For executables we will tend to use descriptive underscores, such as exec_name*.  CamelCase or 
- camelCase is optional, but not systematically encouraged unless for good reasons (e.g. SBDraw.py* 
- does make it more immediately obvious what the exectuable does than sbdraw.py*).  For executables 
- that perform tests (e.g. in non-Python code units) these will be called test_<function>* to match
- the naming conventions of Python test modules.
+ For executables that perform tests (e.g. in non-Python code units) these will be called 
+ test_<function>* to match the naming conventions of Python test modules.
 
 
 For vim users, Mike Jarvis has put the c.vim file in the devutils/ directory.  If you put that 
