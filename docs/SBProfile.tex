@@ -25,7 +25,7 @@ The \sbp\ software allows you to create real and Fourier-domain models of a wide
 \end{itemize}
 A very broad range of behaviors can be modelled with this set.  All \sbp\ objects can return exact analytic expressions for the Fourier-domain values.\footnote{Almost: the {\tt SBInterpolatedImage} objects require some approximation to efficiently interpolate their Fourier-domain values.}  The use of \cpp\ virtual functions allows us to use exact analytic formulations of the real-space behavior of the models when they are available, and to otherwise produce real-space images sampled on regular grids via FFTs from Fourier domain.  
 
-The \sbp\ code also includes an {\tt SBParse} function which builds an \sbp\ object from a string argument using an easy-to-understand syntax.  This permits the user to write code that allows the characteristics of galaxies and/or PSFs to be set via command-line or parameter-file entries.  The wrapper program {\tt SBDraw.cpp} produces a FITS image of an \sbp\ that is parsed from a command-line string.  
+The \sbp\ code also includes an {\tt SBParse} function which builds an \sbp\ object from a string argument using an easy-to-understand syntax.  This permits the user to write code that allows the characteristics of galaxies and/or PSFs to be set via command-line or parameter-file entries.  The wrapper program {\tt SBDraw.cpp} produces a FITS image of an \sbp\ that is parsed from a command-line string.   \emph{Note that the {\tt SBParse} function has been removed from the GalSim repository in favour of the Python constructors.  Please see https://github.com/GalSim-developers/GalSim/issues/190}.
 
 The principal method of the \sbp\ class is {\tt draw()} which produces a 2d {\tt Image} of the intensity pattern $I(x,y)$ represented by the \sbp\ instance.  The image is sampled on a grid of spacing $dx$, which is stored in the image header under keyword {\tt DX}.  Each \sbp\ is aware of the sampling $dx$ and the total extent $N\,dx$ of the image that is necessary to render the object to some (not very rigorously defined) accuracy.  One can therefore call {\tt draw()} with no arguments and let each \sbp\ choose its own image pitch and size.  Or one can specify a value of $dx$ and/or an image size to {\tt draw} onto, and the \sbp\ will insure that the FFTs are done on a grid with sufficient resolution and range to avoid aliasing or wrapping, then subsample the image onto your requested grid if necessary.  Hence the code should be fairly robust at producing reliable rendering of the exact analytic results, although it is still possible for a {\tt draw} request to fail (throw an {\tt SBError} exception) if the required FFT would be too large.\footnote{As specified by the compiled-in parameter {\tt MAXIMUM\_FFT\_SIZE}.}
 
@@ -122,6 +122,9 @@ You can also construct an {\tt SBDistort} using the {\tt Ellipse} class to repre
 \end{itemize}
 
 \section{Parser syntax}
+
+\emph{Note that the {\tt SBParse} function has been removed from the GalSim repository in favour of the Python constructors.  Please see https://github.com/GalSim-developers/GalSim/issues/190}.
+
 The {\tt SBParse} function (declared in {\tt SBParse.h}) takes a string argument and returns a pointer to an \sbp\ described by the string.  Remember to delete the \sbp\ when you are done with it.  Parsing errors will throw an exception of class {\tt SBError}.  The input string has a very simple syntax composed of the following elements:
 \begin{itemize}
 \item Words identifying an atomic \sbp\ type, followed by whitespace-separated arguments.  All primitives are set to unit flux (see below for flux modification.) Optional arguments and their defaults are listed in brackets in this list of implemented atomic types:
