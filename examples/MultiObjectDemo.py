@@ -192,8 +192,8 @@ def Script1():
             if first_in_pair:
                 # Determine the ellipticity to use for this galaxy.
                 ellip = 1
-                while (math.fabs(ellip) > gal_ellip_max):
-                    ellip = gd()
+                while (ellip > gal_ellip_max):
+                    ellip = math.fabs(gd())
 
                 # Apply a random orientation:
                 theta = rng() * 2. * math.pi
@@ -438,7 +438,7 @@ def Script3():
       - The number of images in the cube matches the number of rows in the catalog.
       - Each image size is computed automatically by GalSim based on the Nyquist size.
       - Both galaxies and stars.
-      - PSF is Kolmogorov, the same for each galaxy.
+      - PSF is DoubleGaussian, the same for each galaxy.
       - Galaxies are randomly rotated to remove the imprint of any lensing shears in the COSMOS
         data.
       - The same shear is applied to each galaxy.
@@ -451,10 +451,8 @@ def Script3():
 
     cat_file_name = os.path.join('data','real_galaxy_catalog_example.fits')
     image_dir = os.path.join('data')
-    multi_fft_file_name = os.path.join('output','multi_real_fft.fits')
-    multi_phot_file_name = os.path.join('output','multi_real_phot.fits')
-    cube_fft_file_name = os.path.join('output','cube_real_fft.fits')
-    cube_phot_file_name = os.path.join('output','cube_real_phot.fits')
+    multi_file_name = os.path.join('output','multi_real.fits')
+    cube_file_name = os.path.join('output','cube_real.fits')
     psf_file_name = os.path.join('output','psf_script3.fits')
 
     random_seed = 1512413
@@ -463,15 +461,17 @@ def Script3():
     gal_flux = 1.e5         # arbitrary choice, makes nice (not too) noisy images
     gal_g1 = -0.027         #
     gal_g2 = 0.031          #
-    psf_fwhm = 0.65         # arcsec
+    psf_inner_fwhm = 0.6    # arcsec
+    psf_outer_fwhm = 2.3    # arcsec
+    psf_inner_fraction = 0.8  # fraction of total PSF flux in the inner Gaussian
 
     logger.info('Starting multi-object script 3 using:')
     logger.info('    - real galaxies from catalog %r',cat_file_name)
-    logger.info('    - Kolmogorov PSF, FWHM = %.2f',psf_fwhm)
+    logger.info('    - double Gaussian PSF')
     logger.info('    - pixel scale = %.2f',pixel_scale)
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
-
+    
     # Initialize the random number generator we will be using.
     rng = galsim.UniformDeviate(random_seed)
 
@@ -483,7 +483,9 @@ def Script3():
 
     ## Make the ePSF
     # first make the double Gaussian PSF
-    psf = galsim.AtmosphericPSF(fwhm = psf_fwhm)
+    psf = galsim.atmosphere.DoubleGaussian(
+            fwhm1 = psf_inner_fwhm, flux1 = psf_inner_fraction,
+            fwhm2 = psf_outer_fwhm, flux2 = 1.-psf_inner_fraction)
     # make the pixel response
     pix = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)
     # convolve PSF and pixel response function to get the effective PSF (ePSF)
@@ -495,8 +497,7 @@ def Script3():
     logger.info('Created ePSF and wrote to file %r',psf_file_name)
 
     # Build the images
-    fft_images = []
-    phot_images = []
+    all_images = []
     for i in range(n_gal):
         #logger.info('Start work on image %d',i)
         t1 = time.time()
@@ -515,56 +516,36 @@ def Script3():
         final = galsim.Convolve([gal,psf,pix])
 
         # Draw the profile
-        fft_image = galsim.ImageF(128,128)
-        final.draw(fft_image, dx=pixel_scale)
+        im = galsim.ImageF(128,128)
+        final.draw(im, dx=pixel_scale)
+        xsize, ysize = im.array.shape
 
-        #logger.info('   Drew fft image')
+        #logger.info('   Drew image')
         t3 = time.time()
 
-        # Repeat for photon shooting image.
-        # Photon shooting automatically convolves by the pixel, so make sure not
-        # to include it in the profile!
-        final_without_pix = galsim.Convolve([gal,psf])
-        phot_image = galsim.ImageF(128,128)
-        phot_image.setScale(pixel_scale)
-
-        final_without_pix.drawShoot(phot_image, N = gal_flux)
-        #logger.info('   Drew photon shoot image')
-        t4 = time.time()
-
         # Add Poisson noise
-        fft_image += sky_level
-        fft_image.addNoise(galsim.CCDNoise(rng))
-        fft_image -= sky_level
-
-        # For photon shooting, galaxy already has poisson noise, so just add sky noise
-        phot_image.addNoise(galsim.PoissonDeviate(rng, mean=sky_level))
-        phot_image -= sky_level
+        im += sky_level
+        im.addNoise(galsim.CCDNoise(rng))
+        im -= sky_level
 
         #logger.info('   Added Poisson noise')
-        t5 = time.time()
+        t4 = time.time()
 
         # Store that into the list of all images
-        all_images += [sim_image]
-        t6 = time.time()
+        all_images += [im]
+        t5 = time.time()
 
-        logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
-        logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t6-t1)
+        #logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
+        logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t5-t1)
 
     logger.info('Done making images of galaxies')
 
     # Now write the image to disk.
-    galsim.fits.writeMulti(fft_images, multi_file_name, clobber=True)
-    logger.info('Wrote fft images to multi-extension fits file %r',multi_fft_file_name)
+    galsim.fits.writeMulti(all_images, multi_file_name, clobber=True)
+    logger.info('Wrote images to multi-extension fits file %r',multi_file_name)
 
-    galsim.fits.writeMulti(fft_images, multi_file_name, clobber=True)
-    logger.info('Wrote phot images to multi-extension fits file %r',multi_phot_file_name)
-
-    galsim.fits.writeCube(fft_images, cube_file_name, clobber=True)
-    logger.info('Wrote fft image to fits data cube %r',cube_fft_file_name)
-
-    galsim.fits.writeCube(fft_images, cube_file_name, clobber=True)
-    logger.info('Wrote phot image to fits data cube %r',cube_phot_file_name)
+    galsim.fits.writeCube(all_images, cube_file_name, clobber=True)
+    logger.info('Wrote image to fits data cube %r',cube_file_name)
 
     print
 
