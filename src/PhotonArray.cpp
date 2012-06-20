@@ -143,7 +143,7 @@ namespace galsim {
     }
 
     template <class T>
-    void PhotonArray::addTo(ImageView<T>& target) const 
+    double PhotonArray::addTo(ImageView<T>& target) const 
     {
         double dx = target.getScale();
         Bounds<int> b = target.getBounds();
