@@ -106,17 +106,25 @@ struct PySBProfile {
         // but it's easier to do that than write out the full class_ type.
         wrapper
             .def("drawShoot", 
-                 (double (SBProfile::*)(Image<U> &, double, UniformDeviate ) 
+                 (double (SBProfile::*)(Image<U> &, double, UniformDeviate, int) 
                   const)&SBProfile::drawShoot,
-                 (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
-                 "Draw object into existing image using photon shooting. Returns number of photons"
-                 " that land outside image.")
+                 (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1, bp::arg("poissonFlux")=0),
+                 "Draw object into existing image using photon shooting.\n"
+                 "\n"
+                 "Setting optional integer arg possionFlux != 0 allows profile flux to vary \n"
+                 "according to Poisson statistics for N samples.\n"
+                 "\n"
+                 "Returns number of photons that land outside image.")
             .def("drawShoot", 
-                 (double (SBProfile::*)(ImageView<U>, double, UniformDeviate ) 
+                 (double (SBProfile::*)(ImageView<U>, double, UniformDeviate, int) 
                   const)&SBProfile::drawShoot,
-                 (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
-                 "Draw object into existing image using photon shooting. Returns number of photons"
-                 " that land outside image.")
+                 (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1, bp::arg("poissonFlux")=0),
+                 "Draw object into existing image using photon shooting.\n"
+                 "\n"
+                 "Setting optional integer arg possionFlux != 0 allows profile flux to vary \n"
+                 "according to Poisson statistics for N samples.\n"
+                 "\n"
+                 "Returns number of photons that land outside image.")
             .def("draw", 
                  (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::draw,
                  (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),

@@ -2448,7 +2448,7 @@ namespace galsim {
      *************************************************************/
 
     template <class T>
-    double SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate u) const 
+    double SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate u, int poissonFlux) const 
     {
         const int maxN = 100000;
         double outsideN = 0.; // number photons falling outside image, returned, type matches N
@@ -2457,20 +2457,28 @@ namespace galsim {
         img.fill(0.);  
         double origN = N;
         xdbg<<"origN = "<<origN<<std::endl;
+
+        double poissonScaleFlux = 1.; // Allow optional Poisson flux variation according to N
+        if (poissonFlux != 0){
+            PoissonDeviate pd(u, N);
+            poissonScaleFlux *= double(pd()) / N;
+            xdbg<<"Poisson scaling flux by factor "<<poissonScaleFlux<<std::endl;
+        }
+
         while (N > maxN) {
             xdbg<<"shoot "<<maxN<<std::endl;
             assert(_pimpl.get());
             PhotonArray pa = _pimpl->shoot(maxN, u);
-            pa.scaleFlux(maxN / origN);
+            pa.scaleFlux(poissonScaleFlux * maxN / origN);
             outsideN += pa.addTo(img);
             N -= maxN;
         }
         xdbg<<"shoot "<<N<<std::endl;
         assert(_pimpl.get());
         PhotonArray pa = _pimpl->shoot(int(N), u);
-        pa.scaleFlux(N / origN);
+        pa.scaleFlux(poissonScaleFlux * N / origN);
         outsideN += pa.addTo(img);
-        xdbg<<"outsideN "<<ousideN<<std::endl;
+        xdbg<<"outsideN = "<<outsideN<<std::endl;
         return outsideN;
     }
 
@@ -2679,10 +2687,14 @@ namespace galsim {
     template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<float>& img,double dx) const;
     template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<double>& img,double dx) const;
 
-    template double SBProfile::drawShoot(ImageView<float> image,double N, UniformDeviate ud) const;
-    template double SBProfile::drawShoot(ImageView<double> image,double N, UniformDeviate ud) const;
-    template double SBProfile::drawShoot(Image<float>& image,double N, UniformDeviate ud) const;
-    template double SBProfile::drawShoot(Image<double>& image,double N, UniformDeviate ud) const;
+    template double SBProfile::drawShoot(ImageView<float> image, double N, UniformDeviate ud,
+                                         int poissonFlux) const;
+    template double SBProfile::drawShoot(ImageView<double> image, double N, UniformDeviate ud,
+                                         int poissonFlux) const;
+    template double SBProfile::drawShoot(Image<float>& image,double N, UniformDeviate ud,
+                                         int poissonFlux) const;
+    template double SBProfile::drawShoot(Image<double>& image,double N, UniformDeviate ud,
+                                         int poissonFlux) const;
 
     template double SBProfile::draw(Image<float>& img, double dx, int wmult) const;
     template double SBProfile::draw(Image<double>& img, double dx, int wmult) const;
