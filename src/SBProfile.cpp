@@ -1274,12 +1274,12 @@ namespace galsim {
                 for (int ix = 0; ix <= N/2; ++ix,
                      fwdTk1.x += dkA, fwdTk1.y += dkB, fwdTk2.x += dkA, fwdTk2.y += dkB) {
                     kt.kSet2(ix,iy, _kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen));
-                    kt.kSet2(ix,N-iy, _kValueNoPhase(_adaptee,fwdTk2,_absdet,k2,_cen));
+                    kt.kSet2(ix,int(N)-iy, _kValueNoPhase(_adaptee,fwdTk2,_absdet,k2,_cen));
                 }
             }
             fwdTk1 = fwdT(k1);
             for (int ix = 0; ix <= N/2; ix++, fwdTk1.x += dkA, fwdTk1.y += dkB) {
-                kt.kSet2(ix,N/2,_kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen));
+                kt.kSet2(ix,int(N/2),_kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen));
             }
         } else {
             std::complex<double> dxphase = std::polar(1.,-dk*_cen.x);
@@ -1304,13 +1304,13 @@ namespace galsim {
                      fwdTk1.x += dkA, fwdTk1.y += dkB, fwdTk2.x += dkA, fwdTk2.y += dkB,
                      phase *= dxphase, phase2 *= dxphase) {
                     kt.kSet2(ix,iy, _kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen) * phase);
-                    kt.kSet2(ix,N-iy, _kValueNoPhase(_adaptee,fwdTk2,_absdet,k1,_cen) * phase2);
+                    kt.kSet2(ix,int(N)-iy, _kValueNoPhase(_adaptee,fwdTk2,_absdet,k1,_cen)*phase2);
                 }
             }
             fwdTk1 = fwdT(k1);
             phase = yphase; 
             for (int ix = 0; ix <= N/2; ++ix, fwdTk1.x += dkA, fwdTk1.y += dkB, phase *= dxphase) {
-                kt.kSet2(ix,N/2, _kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen) * phase);
+                kt.kSet2(ix,int(N)/2, _kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen) * phase);
             }
         }
 #endif
@@ -1834,8 +1834,8 @@ namespace galsim {
 
             for (int j = I.getYMin(); j <= I.getYMax(); j++) {
                 if (xfac==0. || std::abs(j)>yedge) I(i,j)=T(0);
-                else if (std::abs(j)==yedge) I(i,j)=xfac*yfrac;
-                else I(i,j)=xfac;
+                else if (std::abs(j)==yedge) I(i,j)= static_cast<T>(xfac*yfrac);
+                else I(i,j)= static_cast<T>(xfac);
                 totalflux += I(i,j);
             }
         }
