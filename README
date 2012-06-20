@@ -57,14 +57,6 @@ examples/ without any arguments, the remaining scripts are auxiliary utilities
 that take various command-line arguments, which are always explained in comments
 at the top of the file.
 
-* SBDraw.py can be used to generate individual images of single galaxies from
-parametric models using the DFT approach.  The key information about the galaxy
-to be simulated must be encoded in a string with a specific format that is
-documented on pages 8-9 of docs/SBProfile.pdf.
-
-* SBDrawShoot.py is parallel to SBDraw.py, but generates the images via
-photon-shooting rather than the DFT approach.
-
 * ShootInterpolated.py is a script that takes as input a filename for a FITS
 image, which it will simulate (optionally sheared and/or resampled) via
 photon-shooting.
