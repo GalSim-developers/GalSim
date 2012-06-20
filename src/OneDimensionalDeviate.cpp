@@ -134,7 +134,7 @@ namespace galsim {
     // Select a photon from within the interval.  unitRandom
     // as an initial random value, more from ud if needed for rejections.
     void Interval::drawWithin(double unitRandom, double& x, double& flux,
-                              UniformDeviate& ud) const 
+                              UniformDeviate ud) const 
     {
         //dbg<<"drawWithin interval\n";
         //dbg<<"_flux = "<<_flux<<std::endl;
@@ -285,7 +285,7 @@ namespace galsim {
         _pt.buildTree();
     }
 
-    PhotonArray OneDimensionalDeviate::shoot(int N, UniformDeviate& ud) const 
+    PhotonArray OneDimensionalDeviate::shoot(int N, UniformDeviate ud) const 
     {
         dbg<<"OneDimentionalDeviate shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";

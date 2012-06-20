@@ -23,7 +23,7 @@ namespace galsim {
     double InterpolantXY::getNegativeFlux() const 
     { return 2.*_i1d->getPositiveFlux()*_i1d->getNegativeFlux(); }
 
-    PhotonArray InterpolantXY::shoot(int N, UniformDeviate& ud) const 
+    PhotonArray InterpolantXY::shoot(int N, UniformDeviate ud) const 
     {
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
@@ -34,7 +34,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray Delta::shoot(int N, UniformDeviate& ud) const 
+    PhotonArray Delta::shoot(int N, UniformDeviate ud) const 
     {
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
@@ -47,7 +47,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray Nearest::shoot(int N, UniformDeviate& ud) const 
+    PhotonArray Nearest::shoot(int N, UniformDeviate ud) const 
     {
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
@@ -60,7 +60,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray Linear::shoot(int N, UniformDeviate& ud) const 
+    PhotonArray Linear::shoot(int N, UniformDeviate ud) const 
     {
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";

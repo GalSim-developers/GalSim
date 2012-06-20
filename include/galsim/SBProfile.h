@@ -525,10 +525,10 @@ namespace galsim {
          *       Internally it will be rounded to the nearest integer.
          */
         template <typename T>
-        double drawShoot(ImageView<T> img, double N, double noise, UniformDeviate& ud,
+        double drawShoot(ImageView<T> img, double N, double noise, UniformDeviate ud,
                        int poissonFlux=0) const;
         template <typename T>
-        double drawShoot(Image<T>& img, double N, double noise, UniformDeviate& ud,
+        double drawShoot(Image<T>& img, double N, double noise, UniformDeviate ud,
                        int poissonFlux=0) const;
         { return drawShoot(img.view(), N, noise, ud, poissonFlux); }
         //@}
