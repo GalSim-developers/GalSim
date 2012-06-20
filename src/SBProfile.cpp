@@ -1279,7 +1279,7 @@ namespace galsim {
             }
             fwdTk1 = fwdT(k1);
             for (int ix = 0; ix <= N/2; ix++, fwdTk1.x += dkA, fwdTk1.y += dkB) {
-                kt.kSet2(ix,int(N/2),_kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen));
+                kt.kSet2(ix,int(N)/2,_kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen));
             }
         } else {
             std::complex<double> dxphase = std::polar(1.,-dk*_cen.x);
