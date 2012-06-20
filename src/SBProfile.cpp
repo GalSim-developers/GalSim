@@ -2159,7 +2159,7 @@ namespace galsim {
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
     }
 
-    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate& ud) const
+    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate ud) const
     {
         PhotonArray result = _sampler->shoot(N,ud);
         result.scaleFlux(_norm);
@@ -2448,7 +2448,7 @@ namespace galsim {
      *************************************************************/
 
     template <class T>
-    void SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate& u) const 
+    void SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate u) const 
     {
         const int maxN = 100000;
 
@@ -2471,7 +2471,7 @@ namespace galsim {
         pa.addTo(img);
     }
 
-    PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate& u) const 
+    PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate u) const 
     {
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
         double fluxPerPhoton = totalAbsoluteFlux / N;
@@ -2517,7 +2517,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBConvolve::SBConvolveImpl::shoot(int N, UniformDeviate& u) const 
+    PhotonArray SBConvolve::SBConvolveImpl::shoot(int N, UniformDeviate u) const 
     {
         std::list<SBProfile>::const_iterator pptr = _plist.begin();
         if (pptr==_plist.end())
@@ -2533,7 +2533,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBTransform::SBTransformImpl::shoot(int N, UniformDeviate& u) const 
+    PhotonArray SBTransform::SBTransformImpl::shoot(int N, UniformDeviate u) const 
     {
         // Simple job here: just remap coords of each photon, then change flux
         // If there is overall magnification in the transform
@@ -2545,7 +2545,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate& u) const 
+    PhotonArray SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate u) const 
     {
         PhotonArray result(N);
         double fluxPerPhoton = _flux/N;
@@ -2565,7 +2565,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBSersic::SBSersicImpl::shoot(int N, UniformDeviate& ud) const
+    PhotonArray SBSersic::SBSersicImpl::shoot(int N, UniformDeviate ud) const
     {
         // Get photons from the SersicInfo structure, rescale flux and size for this instance
         PhotonArray result = _info->shoot(N,ud);
@@ -2574,7 +2574,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate& u) const
+    PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate u) const
     {
         // Accuracy to which to solve for (log of) cumulative flux distribution:
         const double Y_TOLERANCE=1.e-6;
@@ -2607,7 +2607,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBAiry::SBAiryImpl::shoot(int N, UniformDeviate& u) const
+    PhotonArray SBAiry::SBAiryImpl::shoot(int N, UniformDeviate u) const
     {
         // Use the OneDimensionalDeviate to sample from scale-free distribution
         checkSampler();
@@ -2642,7 +2642,7 @@ namespace galsim {
         _sampler.reset(new OneDimensionalDeviate(_radial, ranges, true));
     }
 
-    PhotonArray SBBox::SBBoxImpl::shoot(int N, UniformDeviate& u) const
+    PhotonArray SBBox::SBBoxImpl::shoot(int N, UniformDeviate u) const
     {
         PhotonArray result(N);
         for (int i=0; i<result.size(); i++)
@@ -2650,7 +2650,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate& u) const
+    PhotonArray SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u) const
     {
         // Moffat has analytic inverse-cumulative-flux function.
         PhotonArray result(N);
@@ -2676,10 +2676,10 @@ namespace galsim {
     template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<float>& img, double dx) const;
     template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<double>& img, double dx) const;
 
-    template void SBProfile::drawShoot(ImageView<float> image, double N, UniformDeviate& ud) const;
-    template void SBProfile::drawShoot(ImageView<double> image, double N, UniformDeviate& ud) const;
-    template void SBProfile::drawShoot(Image<float>& image, double N, UniformDeviate& ud) const;
-    template void SBProfile::drawShoot(Image<double>& image, double N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(ImageView<float> image, double N, UniformDeviate ud) const;
+    template void SBProfile::drawShoot(ImageView<double> image, double N, UniformDeviate ud) const;
+    template void SBProfile::drawShoot(Image<float>& image, double N, UniformDeviate ud) const;
+    template void SBProfile::drawShoot(Image<double>& image, double N, UniformDeviate ud) const;
 
     template double SBProfile::draw(Image<float>& img, double dx, int wmult) const;
     template double SBProfile::draw(Image<double>& img, double dx, int wmult) const;
