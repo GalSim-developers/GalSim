@@ -1554,11 +1554,8 @@ def test_sbprofile_sbinterpolatedimage():
     t1 = time.time()
     # for each type, try to make an SBInterpolatedImage, and check that when we draw an image from
     # that SBInterpolatedImage that it is the same as the original
-    #xinterp = galsim.Lanczos(3, True, 1.0E-4)
-    # Lanczos doesn't quite get the flux right.  Wrong at the 5th decimal place.
-    # Maybe worth investigating at some point...
-    xinterp = galsim.Quintic(1.0E-4)
-    xinterp2d = galsim.InterpolantXY(xinterp)
+    lan3 = galsim.Lanczos(3, True, 1.E-4)
+    lan3_2d = galsim.InterpolantXY(lan3)
 
     ftypes = [np.float32, np.float64]
     ref_array = np.array([
@@ -1573,7 +1570,7 @@ def test_sbprofile_sbinterpolatedimage():
                 ref_array.astype(array_type),image_in.array,
                 err_msg="Array from input Image differs from reference array for type %s"%
                         array_type)
-        sbinterp = galsim.SBInterpolatedImage(image_in, xinterp2d, dx=1.0)
+        sbinterp = galsim.SBInterpolatedImage(image_in, lan3_2d, dx=1.0)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
         image_out = galsim.ImageView[array_type](test_array)
         sbinterp.draw(image_out, dx=1.0)
@@ -1582,6 +1579,14 @@ def test_sbprofile_sbinterpolatedimage():
                 err_msg="Array from output Image differs from reference array for type %s"%
                         array_type)
  
+        # Lanczos doesn't quite get the flux right.  Wrong at the 5th decimal place.
+        # Gary says that's expected -- Lanczos isn't technically flux conserving.  
+        # He applied the 1st order correction to the flux, but expect to be wrong at around
+        # the 10^-5 leve.
+        # Anyway, Quintic seems to be accurate enough.
+        quint = galsim.Quintic(1.e-4)
+        quint_2d = galsim.InterpolantXY(quint)
+        sbinterp = galsim.SBInterpolatedImage(image_in, quint_2d, dx=1.0)
         sbinterp.setFlux(1.)
         do_shoot(galsim.GSObject(sbinterp),image_out,"InterpolatedImage")
 
