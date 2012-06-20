@@ -1879,6 +1879,7 @@ namespace galsim {
             /**
              * @brief Constructor
              * @param[in] obscuration Fractional linear size of central obscuration of pupil.
+             * @param[in] obssq       Pre-computed obscuration^2 supplied as input for speed.
              */
             AiryRadialFunction(double obscuration, double obssq) : 
                 _obscuration(obscuration), _obssq(obssq),

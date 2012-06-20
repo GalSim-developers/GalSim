@@ -159,20 +159,17 @@ class GSObject:
     def applyTransformation(self, ellipse):
         """@brief Apply a galsim.Ellipse distortion to this object.
            
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
-        are no longer available.
-
-        For calling, galsim.Ellipse instances can be generated via:
-
-        ellipse = galsim.Ellipse(e1, e2)
-
-        where the ellipticities follow the convention |e| = (a^2 - b^2)/(a^2 + b^2).
+        Ellipse objects can be initialized in a variety of ways (see documentation of this
+        class for details).
 
         Note: if the ellipse includes a dilation, then this transformation will 
         not be flux-conserving.  It conserves surface brightness instead.
         Thus, the flux will increase by the increase in area = dilation^2.
+
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
         """
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
@@ -275,17 +272,26 @@ class GSObject:
                       If dx <= 0. and image != None, then take the provided image's pixel scale.
                       If dx <= 0. and image == None, then use pi/maxK()
                       (Default = 0.)
-        @param wmult  A factor by which to make the intermediate images larger than 
-                      they are normally made.  (Default = 1.)
         @param normalization  Two options for the normalization:
-                              "flux" means the the sum of the output pixels are normalized
+                              "flux" or "f" means that the sum of the output pixels is normalized
                                      to be equal to the total flux.  (Modulo any flux that
                                      falls off the edge of the image of course.)
-                              "surface brightness" means that the output pixels sample
-                                     the surfact brightness distribution at each location.
+                              "surface brightness" or "sb" means that the output pixels sample
+                                     the surface brightness distribution at each location.
                               (Default = "flux")
-        @returns      The drawn image
+        @param wmult  A factor by which to make the intermediate images larger than 
+                      they are normally made.  The size is normally automatically chosen 
+                      to reach some preset accuracy targets (see include/galsim/SBProfile.h); 
+                      however, if you see strange artifacts in the image, you might try using 
+                      wmult > 1.  This will take longer of course, but it will produce more 
+                      accurate images, since they will have less "folding" in Fourier space.
+                      (Default = 1.)
+        @returns      The drawn image.
         """
+        # Raise an exception immediately if the normalization type is not recognized
+        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
+            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                              "'f', 'surface brightness' or 'sb'.") % normalization)
         # Raise an exception here since C++ is picky about the input types
         if type(wmult) != int:
             raise TypeError("Input wmult should be an int")
@@ -298,31 +304,35 @@ class GSObject:
             if dx <= 0.:
                 dx = image.getScale()
             self.SBProfile.draw(image, dx=dx, wmult=wmult)
-        if normalization == "flux":
+
+        if normalization.lower() == "flux" or normalization.lower() == "f":
             dx = image.getScale()
             image *= dx*dx
-        elif normalization != "surface brightness":
-            raise ValueError("Invalid normalization requested: %s"%normalization)
         return image
 
     def drawShoot(self, image, N, ud=None, normalization="flux"):
         """@brief Returns an Image of the object, with bounds optionally set by an input Image.
 
         @param image  The image on which to draw the profile.
-                      Note: Unlike for the regular draw command, this is 
+                      Note: Unlike for the regular draw command, image is a required
+                      parameter.  drawShoot will not make the image for you.
         @param N      The number of photons to use.
         @param ud     If provided, a UniformDeviate to use for the random numbers
                       If ud=None, one will be automatically created, using the time as a seed.
                       (Default = None)
         @param normalization  Two options for the normalization:
-                              "flux" means the the sum of the output pixels are normalized
+                              "flux" or "f" means that the sum of the output pixels is normalized
                                      to be equal to the total flux.  (Modulo any flux that
                                      falls off the edge of the image of course.)
-                              "surface brightness" means that the output pixels sample
-                                     the surfact brightness distribution at each location.
+                              "surface brightness" or "sb" means that the output pixels sample
+                                     the surface brightness distribution at each location.
                               (Default = "flux")
         @returns      (TODO!) The fraction of photons that fell off the edge of the image.
         """
+        # Raise an exception immediately if the normalization type is not recognized
+        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
+            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                              "'f', 'surface brightness' or 'sb'.") % normalization)
         # Raise an exception here since C++ is picky about the input types
         if image is None:
             raise TypeError("drawShoot requires the image to be provided.")
@@ -332,11 +342,10 @@ class GSObject:
         if ud == None:
             ud = galsim.UniformDeviate()
         self.SBProfile.drawShoot(image, N, ud)
-        if normalization == "flux":
+
+        if normalization.lower() == "flux" or normalization.lower() == "f":
             dx = image.getScale()
             image *= dx*dx
-        elif normalization != "surface brightness":
-            raise ValueError("Invalid normalization requested: %s"%normalization)
 
 
 # Now define some of the simplest derived classes, those which are otherwise empty containers for

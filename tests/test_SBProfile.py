@@ -1116,11 +1116,11 @@ def test_sbprofile_shearconvolve():
     psf.applyShear(e1=e1, e2=e2)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.Convolve([psf,pixel])
-    conv2 = galsim.Convolve([psf2,pixel])
     conv.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
+    conv2 = galsim.Convolve([psf2,pixel])
     conv2.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1488,7 +1488,7 @@ def test_sbprofile_shift():
             err_msg="Using GSObject applyShift disagrees with expected result")
     pixel = galsim.Pixel(xw=0.2, yw=0.2)
     pixel.applyTransformation(galsim.Ellipse(galsim.PositionD(0.2, -0.2)))
-    pixel.draw(myImg,dx=0.2)
+    pixel.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyTransformation disagrees with expected result")

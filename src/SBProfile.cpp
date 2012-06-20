@@ -873,7 +873,7 @@ namespace galsim {
                 sbd->_mA<<','<<sbd->_mB<<','<<sbd->_mC<<','<<sbd->_mD<<','<<
                 sbd->_cen<<','<<sbd->_fluxScaling<<std::endl;
             dbg<<"adaptee getFlux = "<<_adaptee.getFlux()<<std::endl;
-            // We are distorting something that's already a distortion.
+            // We are transforming something that's already a transformation.
             // So just compound the affine transformaions
             // New matrix is product (M_this) * (M_old)
             double mA = _mA; double mB=_mB; double mC=_mC; double mD=_mD;
@@ -884,7 +884,7 @@ namespace galsim {
             _mC = mC*sbd->_mA + mD*sbd->_mC;
             _mD = mC*sbd->_mB + mD*sbd->_mD;
             _fluxScaling *= sbd->_fluxScaling;
-            dbg<<"this distortion => "<<
+            dbg<<"this transformation => "<<
                 _mA<<','<<_mB<<','<<_mC<<','<<_mD<<','<<
                 _cen<<','<<_fluxScaling<<std::endl;
             _adaptee = sbd->_adaptee;
@@ -1282,7 +1282,7 @@ namespace galsim {
             dbg<<"Simple transformation.  Only flux scaling required.\n";
             dbg<<"Passing onto the adapteed.\n";
             // Then only a fluxScaling.  Call the adaptee's fillKGrid directly and rescale:
-            _adaptee._pimpl->fillKGrid(kt);
+            SBProfile::GetImpl(_adaptee)->fillKGrid(kt);
             dbg<<"And now scale flux by "<<_absdet<<std::endl;
             kt *= _absdet;
             return;
