@@ -79,11 +79,11 @@ namespace galsim {
         // Override for better efficiency if adaptee has it:
         void fillKGrid(KTable& kt) const 
         {
-            assert(_adaptee._pimpl.get());
-            _adaptee._pimpl->fillKGrid(kt);
+            assert(SBProfile::GetImpl(_adaptee));
+            SBProfile::GetImpl(_adaptee)->fillKGrid(kt);
             // Flip or clip:
             int N = kt.getN();
-            int maxiksq = _maxksq / (kt.getDk()*kt.getDk());
+            int maxiksq = int(floor(_maxksq / (kt.getDk()*kt.getDk())));
             // Only need ix>=0 because it's Hermitian, but also
             // don't want to repeat the ix=0, N/2 twice:
             for (int iy = -N/2; iy < N/2; iy++) {

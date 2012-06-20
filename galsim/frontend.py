@@ -134,6 +134,9 @@ def _BuildEllipObject(gsobject, config, input_cat=None):
     """@brief Applies ellipticity to a supplied GSObject from user input, also used for
     gravitational shearing.
 
+    Note that E1E2 must be "distortions", which for q=b/a (minor-to-major axis ratio), has |e| =
+    (1-q^2)/(1+q^2).  G1G2 are reduced shears, |g| = (1-q)/(1+q).
+
     @returns transformed GSObject.
     """
     config = _Parse(config)
@@ -142,11 +145,11 @@ def _BuildEllipObject(gsobject, config, input_cat=None):
     if config.type == "E1E2":
         e1 = _GetParamValue(config, "e1", input_cat)
         e2 = _GetParamValue(config, "e2", input_cat)
-        gsobject.applyDistortion(galsim.Ellipse(e1, e2))
+        gsobject.applyShear(e1=e1, e2=e2)
     elif config.type == "G1G2":
         g1 = _GetParamValue(config, "g1", input_cat)
         g2 = _GetParamValue(config, "g2", input_cat)
-        gsobject.applyShear(g1, g2)
+        gsobject.applyShear(g1=g1, g2=g2)
     else:
         raise NotImplementedError("Sorry only ellip.type = 'E1E2', 'G1G2' currently supported.")
     return gsobject

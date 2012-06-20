@@ -36,11 +36,9 @@ def kxky(array_shape=(256, 256)):
     return np.meshgrid(k_xaxis, k_yaxis)
 
 def g1g2_to_e1e2(g1, g2):
-    """@brief Convenience function for going from (g1, g2) -> (e1, e2), used by two methods in the 
-    GSObject class and one function in real.py.
+    """@brief Convenience function for going from (g1, g2) -> (e1, e2).
     """
-    # SBProfile expects an e1,e2 distortion, rather than a shear,
-    # so we need to convert:
+    # Conversion:
     # e = (a^2-b^2) / (a^2+b^2)
     # g = (a-b) / (a+b)
     # b/a = (1-g)/(1+g)

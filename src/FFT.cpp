@@ -878,6 +878,10 @@ namespace galsim {
 
         XTable xt( _N, 2*M_PI/(_N*_dk) );
 
+        // Note: The fftw_execute function is the only thread-safe FFTW routine.
+        // So if we decide to go with some kind of multi-threading (rather than multi-process
+        // parallelism) all of the plan creation and destruction calls in this file 
+        // will need to be placed in critical blocks or the equivalent (mutex locks, etc.).
         fftw_plan plan = fftw_plan_dft_c2r_2d(
             _N, _N, t_array.get_fftw(), xt._array.get_fftw(), FFTW_MEASURE);
 #ifdef FFT_DEBUG

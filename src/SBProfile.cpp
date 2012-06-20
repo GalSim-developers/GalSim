@@ -45,33 +45,40 @@ namespace galsim {
 
     void SBProfile::scaleFlux(double fluxRatio)
     { 
-        SBDistort d(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); 
+        SBTransform d(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); 
         _pimpl = d._pimpl;
     }
 
     void SBProfile::setFlux(double flux)
     { 
-        SBDistort d(*this,1.,0.,0.,1.,Position<double>(0.,0.),flux/getFlux());
+        SBTransform d(*this,1.,0.,0.,1.,Position<double>(0.,0.),flux/getFlux());
         _pimpl = d._pimpl;
     }
 
-    void SBProfile::applyDistortion(const Ellipse& e)
+    void SBProfile::applyTransformation(const Ellipse& e)
     {
-        SBDistort d(*this,e);
+        SBTransform d(*this,e);
         _pimpl = d._pimpl;
     }
 
     void SBProfile::applyShear(double g1, double g2)
     {
-        Shear s;
-        s.setG1G2(g1,g2);
-        SBDistort d(*this,Ellipse(s.getE1(),s.getE2()));
+        Shear s(g1, g2);
+        Ellipse e(s);
+        SBTransform d(*this,e);
+        _pimpl = d._pimpl;
+    }
+
+    void SBProfile::applyShear(Shear s)
+    {
+        Ellipse e(s);
+        SBTransform d(*this,e);
         _pimpl = d._pimpl;
     }
 
     void SBProfile::applyRotation(const Angle& theta)
     {
-        SBDistort d(*this,
+        SBTransform d(*this,
                     std::cos(theta.rad()),-std::sin(theta.rad()),
                     std::sin(theta.rad()),std::cos(theta.rad()));
         _pimpl = d._pimpl;
@@ -79,7 +86,7 @@ namespace galsim {
 
     void SBProfile::applyShift(double dx, double dy)
     { 
-        SBDistort d(*this,1.,0.,0.,1., Position<double>(dx,dy));
+        SBTransform d(*this,1.,0.,0.,1., Position<double>(dx,dy));
         _pimpl = d._pimpl;
     }
 
@@ -168,7 +175,7 @@ namespace galsim {
         dbg<<"scale => "<<I.getScale()<<std::endl;
         return ret;
     }
- 
+
     template <typename T>
     double SBProfile::SBProfileImpl::doFillXImage2(ImageView<T>& I, double dx) const 
     {
@@ -705,8 +712,8 @@ namespace galsim {
     {
         xdbg<<"Start SBAdd::add.  Adding item # "<<_plist.size()+1<<std::endl;
         // Add new summand(s) to the _plist:
-        assert(rhs._pimpl.get());
-        const SBAddImpl *sba = dynamic_cast<const SBAddImpl*>(rhs._pimpl.get());
+        assert(SBProfile::GetImpl(rhs));
+        const SBAddImpl *sba = dynamic_cast<const SBAddImpl*>(SBProfile::GetImpl(rhs));
         if (sba) {
             // If rhs is an SBAdd, copy its full list here
             _plist.insert(_plist.end(),sba->_plist.begin(),sba->_plist.end());
@@ -765,13 +772,13 @@ namespace galsim {
     {
         if (_plist.empty()) kt.clear();
         ConstIter pptr = _plist.begin();
-        assert(pptr->_pimpl.get());
-        pptr->_pimpl->fillKGrid(kt);
+        assert(SBProfile::GetImpl(*pptr));
+        SBProfile::GetImpl(*pptr)->fillKGrid(kt);
         if (++pptr != _plist.end()) {
             KTable k2(kt.getN(),kt.getDk());
             for ( ; pptr!= _plist.end(); ++pptr) {
-                assert(pptr->_pimpl.get());
-                pptr->_pimpl->fillKGrid(k2);
+                assert(SBProfile::GetImpl(*pptr));
+                SBProfile::GetImpl(*pptr)->fillKGrid(k2);
                 kt.accumulate(k2);
             }
         }
@@ -781,13 +788,13 @@ namespace galsim {
     {
         if (_plist.empty()) xt.clear();
         ConstIter pptr = _plist.begin();
-        assert(pptr->_pimpl.get());
-        pptr->_pimpl->fillXGrid(xt);
+        assert(SBProfile::GetImpl(*pptr));
+        SBProfile::GetImpl(*pptr)->fillXGrid(xt);
         if (++pptr != _plist.end()) {
             XTable x2(xt.getN(),xt.getDx());
             for ( ; pptr!= _plist.end(); ++pptr) {
-                assert(pptr->_pimpl.get());
-                pptr->_pimpl->fillXGrid(x2);
+                assert(SBProfile::GetImpl(*pptr));
+                SBProfile::GetImpl(*pptr)->fillXGrid(x2);
                 xt.accumulate(x2);
             }
         }
@@ -810,17 +817,17 @@ namespace galsim {
         }
         return result;
     }
-        
+
 
     //
-    // "SBDistort" Class 
+    // "SBTransform" Class
     //
-    SBDistort::SBDistortImpl::SBDistortImpl(
+    SBTransform::SBTransformImpl::SBTransformImpl(
         const SBProfile& sbin, double mA, double mB, double mC, double mD,
         const Position<double>& cen, double fluxScaling) :
         _adaptee(sbin), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _fluxScaling(fluxScaling)
     {
-        dbg<<"Start DistortImpl (1)\n";
+        dbg<<"Start TransformImpl (1)\n";
         dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", fluxScaling = "<<_fluxScaling<<std::endl;
 
@@ -829,11 +836,11 @@ namespace galsim {
         initialize();
     }
 
-    SBDistort::SBDistortImpl::SBDistortImpl(
+    SBTransform::SBTransformImpl::SBTransformImpl(
         const SBProfile& sbin, const Ellipse& e, double fluxScaling) :
         _adaptee(sbin), _cen(e.getX0()), _fluxScaling(fluxScaling)
     {
-        dbg<<"Start DistortImpl (2)\n";
+        dbg<<"Start TransformImpl (2)\n";
         dbg<<"e = "<<e<<", fluxScaling = "<<_fluxScaling<<std::endl;
         // First get what we need from the Ellipse:
         tmv::Matrix<double> m = e.getMatrix();
@@ -846,16 +853,17 @@ namespace galsim {
         initialize();
     }
 
-    void SBDistort::SBDistortImpl::initialize() 
+    void SBTransform::SBTransformImpl::initialize()
     {
-        dbg<<"Start SBDistortImpl initialize\n";
-        // First check if our adaptee is really another SBDistort:
-        assert(_adaptee._pimpl.get());
-        const SBDistortImpl* sbd = dynamic_cast<const SBDistortImpl*>(_adaptee._pimpl.get());
+        dbg<<"Start SBTransformImpl initialize\n";
+        // First check if our adaptee is really another SBTransform:
+        assert(SBProfile::GetImpl(_adaptee));
+        const SBTransformImpl* sbd = dynamic_cast<const SBTransformImpl*>(
+            SBProfile::GetImpl(_adaptee));
         dbg<<"sbd = "<<sbd<<std::endl;
         if (sbd) {
-            dbg<<"wrapping another distortion.\n";
-            // We are distorting something that's already a distortion.
+            dbg<<"wrapping another transformation.\n";
+            // We are transforming something that's already a transformation.
             // So just compound the affine transformaions
             // New matrix is product (M_this) * (M_old)
             double mA = _mA; double mB=_mB; double mC=_mC; double mD=_mD;
@@ -870,25 +878,25 @@ namespace galsim {
             _adaptee = sbd->_adaptee;
             dbg<<"after set adaptee"<<std::endl;
         } else {
-            dbg<<"wrapping a non-distortion.\n";
+            dbg<<"wrapping a non-transformation.\n";
         }
-   
+
         // It will be reasonably common to have an identity matrix (for just
         // a flux scaling and/or shift) for (A,B,C,D).  If so, we can use simpler
         // versions of fwd and inv:
         if (_mA == 1. && _mB == 0. && _mC == 0. && _mD == 1.) {
             dbg<<"Using identity functions for fwd and inv\n";
-            _fwd = &SBDistort::_ident;
-            _inv = &SBDistort::_ident;
+            _fwd = &SBTransform::_ident;
+            _inv = &SBTransform::_ident;
         } else {
             dbg<<"Using normal fwd and inv\n";
-            _fwd = &SBDistort::_fwd_normal;
-            _inv = &SBDistort::_inv_normal;
+            _fwd = &SBTransform::_fwd_normal;
+            _inv = &SBTransform::_inv_normal;
         }
 
         // Calculate some derived quantities:
         double det = _mA*_mD-_mB*_mC;
-        if (det==0.) throw SBError("Attempt to SBDistort with degenerate matrix");
+        if (det==0.) throw SBError("Attempt to SBTransform with degenerate matrix");
         _absdet = std::abs(det);
         _invdet = 1./det;
 
@@ -902,7 +910,7 @@ namespace galsim {
             && (_mA==_mD)
             && (_cen.x==0.) && (_cen.y==0.); // Need pure rotation
 
-        xdbg<<"Distortion init\n";
+        xdbg<<"Transformation init\n";
         xdbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         xdbg<<"_cen = "<<_cen<<std::endl;
         xdbg<<"_invdet = "<<_invdet<<std::endl;
@@ -922,7 +930,7 @@ namespace galsim {
                 _ymax = integ::MOCK_INF;
             } else {
                 double R = _xmax;
-                // The distortion takes each point on the circle to the following new coordinates:
+                // The transformation takes each point on the circle to the following new coordinates:
                 // (x,y) -> (A*x + B*y + x0 , C*x + D*y + y0)
                 // Using x = R cos(t) and y = R sin(t), we can find the minimum wrt t as:
                 // xmax = R sqrt(A^2 + B^2) + x0
@@ -959,7 +967,7 @@ namespace galsim {
                 xxdbg<<"ymin..ymax = "<<_ymin<<" ... "<<_ymax<<std::endl;
             }
         } else {
-            // Apply the distortion to each of the four corners of the original
+            // Apply the transformation to each of the four corners of the original
             // and find the minimum and maximum.
             double xmin_1, xmax_1;
             std::vector<double> xsplits0;
@@ -1072,33 +1080,33 @@ namespace galsim {
         // Figure out which function we need for kValue and kValueNoPhase
         if (std::abs(_absdet-1.) < sbp::kvalue_accuracy) {
             xdbg<<"absdet = "<<_absdet*_fluxScaling<<" = 1, so use NoDet version.\n";
-            _kValueNoPhase = &SBDistort::_kValueNoPhaseNoDet;
+            _kValueNoPhase = &SBTransform::_kValueNoPhaseNoDet;
         } else {
             xdbg<<"absdet = "<<_absdet*_fluxScaling<<" != 1, so use WithDet version.\n";
-            _kValueNoPhase = &SBDistort::_kValueNoPhaseWithDet;
+            _kValueNoPhase = &SBTransform::_kValueNoPhaseWithDet;
         }
         if (_cen.x == 0. && _cen.y == 0.) _kValue = _kValueNoPhase;
-        else _kValue = &SBDistort::_kValueWithPhase;
+        else _kValue = &SBTransform::_kValueWithPhase;
     }
 
-    void SBDistort::SBDistortImpl::getXRange(
+    void SBTransform::SBTransformImpl::getXRange(
         double& xmin, double& xmax, std::vector<double>& splits) const
     {
         xmin = _xmin; xmax = _xmax;
         splits.insert(splits.end(),_xsplits.begin(),_xsplits.end());
     }
 
-    void SBDistort::SBDistortImpl::getYRange(
+    void SBTransform::SBTransformImpl::getYRange(
         double& ymin, double& ymax, std::vector<double>& splits) const
     {
         ymin = _ymin; ymax = _ymax;
         splits.insert(splits.end(),_ysplits.begin(),_ysplits.end());
     }
 
-    void SBDistort::SBDistortImpl::getYRangeX(
+    void SBTransform::SBTransformImpl::getYRangeX(
         double x, double& ymin, double& ymax, std::vector<double>& splits) const
     {
-        xxdbg<<"Distortion getYRangeX for x = "<<x<<std::endl;
+        xxdbg<<"Transformation getYRangeX for x = "<<x<<std::endl;
         if (_adaptee.isAxisymmetric()) {
             std::vector<double> splits0;
             _adaptee.getYRange(ymin,ymax,splits0);
@@ -1134,14 +1142,14 @@ namespace galsim {
         } else {
             // There are 4 lines to check for where they intersect the given x.
             // Start with the adaptee's given ymin.
-            // This line is distorted onto the line:
+            // This line is transformed onto the line:
             // (x',ymin) -> ( A x' + B ymin + x0 , C x' + D ymin + y0 )
             // x' = (x - x0 - B ymin) / A
             // y = C x' + D ymin + y0 
             //   = C (x - x0 - B ymin) / A + D ymin + y0
             // The top line is analagous for ymax instead of ymin.
             // 
-            // The left line is distorted as:
+            // The left line is transformed as:
             // (xmin,y) -> ( A xmin + B y' + x0 , C xmin + D y' + y0 )
             // y' = (x - x0 - A xmin) / B
             // y = C xmin + D (x - x0 - A xmin) / B + y0
@@ -1211,9 +1219,9 @@ namespace galsim {
 
     // Specialization of fillKGrid is desired since the phase terms from shift 
     // are factorizable:
-    void SBDistort::SBDistortImpl::fillKGrid(KTable& kt) const 
+    void SBTransform::SBTransformImpl::fillKGrid(KTable& kt) const
     {
-        double N = (double) kt.getN();
+        int N = kt.getN();
         double dk = kt.getDk();
 
 #if 0
@@ -1309,23 +1317,23 @@ namespace galsim {
 #endif
     }
 
-    std::complex<double> SBDistort::SBDistortImpl::kValue(const Position<double>& k) const
+    std::complex<double> SBTransform::SBTransformImpl::kValue(const Position<double>& k) const
     { return _kValue(_adaptee,fwdT(k),_absdet,k,_cen); }
 
-    std::complex<double> SBDistort::SBDistortImpl::kValueNoPhase(const Position<double>& k) const
+    std::complex<double> SBTransform::SBTransformImpl::kValueNoPhase(const Position<double>& k) const
     { return _kValueNoPhase(_adaptee,fwdT(k),_absdet,k,_cen); }
 
-    std::complex<double> SBDistort::_kValueNoPhaseNoDet(
+    std::complex<double> SBTransform::_kValueNoPhaseNoDet(
         const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
         const Position<double>& , const Position<double>& )
     { return adaptee.kValue(fwdTk); }
 
-    std::complex<double> SBDistort::_kValueNoPhaseWithDet(
+    std::complex<double> SBTransform::_kValueNoPhaseWithDet(
         const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
         const Position<double>& , const Position<double>& )
     { return absdet * adaptee.kValue(fwdTk); }
 
-    std::complex<double> SBDistort::_kValueWithPhase(
+    std::complex<double> SBTransform::_kValueWithPhase(
         const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
         const Position<double>& k, const Position<double>& cen)
     { return adaptee.kValue(fwdTk) * std::polar(absdet , -k.x*cen.x-k.y*cen.y); }
@@ -1339,8 +1347,8 @@ namespace galsim {
         dbg<<"Start SBConvolveImpl::add.  Adding item # "<<_plist.size()+1<<std::endl;
 
         // Add new terms(s) to the _plist:
-        assert(rhs._pimpl.get());
-        const SBConvolveImpl *sbc = dynamic_cast<const SBConvolveImpl*>(rhs._pimpl.get());
+        assert(SBProfile::GetImpl(rhs));
+        const SBConvolveImpl *sbc = dynamic_cast<const SBConvolveImpl*>(SBProfile::GetImpl(rhs));
         if (sbc) {  
             // If rhs is an SBConvolve, copy its list here
             for (ConstIter pptr = sbc->_plist.begin(); pptr!=sbc->_plist.end(); ++pptr) {
@@ -1386,13 +1394,13 @@ namespace galsim {
     {
         if (_plist.empty()) kt.clear();
         ConstIter pptr = _plist.begin();
-        assert(pptr->_pimpl.get());
-        pptr->_pimpl->fillKGrid(kt);
+        assert(SBProfile::GetImpl(*pptr));
+        SBProfile::GetImpl(*pptr)->fillKGrid(kt);
         if (++pptr != _plist.end()) {
             KTable k2(kt.getN(),kt.getDk());
             for ( ; pptr!= _plist.end(); ++pptr) {
-                assert(pptr->_pimpl.get());
-                pptr->_pimpl->fillKGrid(k2);
+                assert(SBProfile::GetImpl(*pptr));
+                SBProfile::GetImpl(*pptr)->fillKGrid(k2);
                 kt *= k2;
             }
         }
@@ -1405,7 +1413,7 @@ namespace galsim {
         // Note: This can only really be done one pair at a time, so it is 
         // probably rare that this will be more efficient if N > 2.
         // For now, we don't bother implementing this for N > 2.
-        
+
         if (_plist.size() == 2) {
             const SBProfile& p1 = _plist.front();
             const SBProfile& p2 = _plist.back();
@@ -1469,7 +1477,7 @@ namespace galsim {
     // "SBGaussian" Class 
     //
 
-    SBGaussian::SBGaussianImpl::SBGaussianImpl(double flux, double sigma) :
+    SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux) :
         _flux(flux), _sigma(sigma), _sigma_sq(sigma*sigma)
     {
         // For large k, we clip the result of kValue to 0.
@@ -1536,7 +1544,7 @@ namespace galsim {
     // SBExponential Class
     //
 
-    SBExponential::SBExponentialImpl::SBExponentialImpl(double flux, double r0) :
+    SBExponential::SBExponentialImpl::SBExponentialImpl(double r0, double flux) :
         _flux(flux), _r0(r0), _r0_sq(r0*r0)
     {
         // For large k, we clip the result of kValue to 0.
@@ -1609,9 +1617,12 @@ namespace galsim {
     // SBAiry Class
     //
 
-    SBAiry::SBAiryImpl::SBAiryImpl(double D, double obscuration, double flux) :
-        _D(D), _obscuration(obscuration), _flux(flux), _norm(flux*D*D),
-        _radial(_obscuration) {}
+    SBAiry::SBAiryImpl::SBAiryImpl(double lam_over_D, double obscuration, double flux) :
+        _lam_over_D(lam_over_D), 
+        _D(1. / lam_over_D), 
+        _obscuration(obscuration), 
+        _flux(flux), 
+        _norm(flux / (lam_over_D*lam_over_D)), _radial(_obscuration) {}
 
     // This is a scale-free version of the Airy radial function.
     // Input radius is in units of lambda/D.  Output normalized
@@ -1824,8 +1835,8 @@ namespace galsim {
 
             for (int j = I.getYMin(); j <= I.getYMax(); j++) {
                 if (xfac==0. || std::abs(j)>yedge) I(i,j)=T(0);
-                else if (std::abs(j)==yedge) I(i,j)=xfac*yfrac;
-                else I(i,j)=xfac;
+                else if (std::abs(j)==yedge) I(i,j)=T(xfac*yfrac);
+                else I(i,j)=T(xfac);
                 totalflux += I(i,j);
             }
         }
@@ -1855,7 +1866,7 @@ namespace galsim {
         // A faster version that pulls out all the if statements and store the 
         // relevant sinc functions in two arrays, so we don't need to keep calling 
         // sinc on the same values over and over.
-        
+
         kt.clearCache();
         std::vector<double> sinc_x(N/2+1);
         std::vector<double> sinc_y(N/2+1);
@@ -1965,7 +1976,7 @@ namespace galsim {
     // First need to define the static member that holds info on all the Sersic n's
     SBSersic::InfoBarn SBSersic::nmap;
 
-    SBSersic::SBSersicImpl::SBSersicImpl(double n, double flux, double re) :
+    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux) :
         _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _norm(_flux/_re_sq),
         _info(nmap.get(_n))
     {
@@ -2108,7 +2119,7 @@ namespace galsim {
         dbg<<"stepK = "<<_stepK<<std::endl;
 
         // Now start building the lookup table for FT of the profile.
-        
+
         // Normalization for integral at k=0:
         double hankel_norm = _n*gamma2n/b2n;
         dbg<<"hankel_norm = "<<hankel_norm<<std::endl;
@@ -2148,27 +2159,128 @@ namespace galsim {
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
     }
 
-    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate ud) const 
+    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate& ud) const
     {
         PhotonArray result = _sampler->shoot(N,ud);
         result.scaleFlux(_norm);
         return result;
     }
 
-    SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double truncationFWHM, double flux,
-                       double size, RadiusType rType) : 
-        _beta(beta), _flux(flux), _ft(Table<double,double>::spline)
+    class MoffatScaleRadiusFunc 
+    {
+    public:
+        MoffatScaleRadiusFunc(double re, double rm, double beta) :
+            _re(re), _rm(rm), _beta(beta) {}
+        double operator()(double rd) const
+        {
+            double fre = 1.-std::pow(1.+(_re*_re)/(rd*rd), 1.-_beta);
+            double frm = 1.-std::pow(1.+(_rm*_rm)/(rd*rd), 1.-_beta);
+            xdbg<<"func("<<rd<<") = 2*"<<fre<<" - "<<frm<<" = "<<2.*fre-frm<<std::endl;
+            return 2.*fre-frm;
+        }
+    private:
+        double _re,_rm,_beta;
+    };
+
+    double MoffatCalculateScaleRadiusFromHLR(double re, double rm, double beta)
+    {
+        dbg<<"Start MoffatCalculateScaleRadiusFromHLR\n";
+        // The basic equation that is relevant here is the flux of a Moffat profile
+        // out to some radius.
+        // flux(R) = int( (1+r^2/rd^2 )^(-beta) 2pi r dr, r=0..R )
+        //         = (pi rd^2 / (beta-1)) (1 - (1+R^2/rd^2)^(1-beta) )
+        // For now, we can ignore the first factor.  We call the second factor fluxfactor below,
+        // or in this function f(R).
+        // 
+        // We are given two values of R for which we know that the ratio of their fluxes is 1/2:
+        // f(re) = 0.5 * f(rm)
+        //
+        if (rm == 0.) {
+            // If rm = infinity (which we actually indicate with rm=0), then we can solve for 
+            // rd analytically:
+            //
+            // f(rm) = 1
+            // f(re) = 0.5 = 1 - (1+re^2/rd^2)^(1-beta)
+            // re^2/rd^2 = 0.5^(1/(1-beta)) - 1
+            double rerd = sqrt( std::pow(0.5, 1./(1.-beta)) - 1.);
+            dbg<<"rm = 0, so analytic.\n";
+            xdbg<<"rd = re/rerd = "<<re<<" / "<<rerd<<" = "<<re/rerd<<std::endl;
+            return re / rerd;
+        } else {
+            // If trunc < infinity, then the equations are slightly circular:
+            // f(rm) = 1 - (1 + rm^2/rd^2)^(1-beta)
+            // 2*f(re) = 2 - 2*(1 + re^2/rd^2)^(1-beta)
+            // 2*(1+re^2/rd^2)^(1-beta) = 1 + (1+rm^2/rd^2)^(1-beta)
+            // 
+            // As rm decreases, rd increases.  
+            // Eventually rd increases to infinity.  When does that happen:
+            // Take the limit as rd->infinity in the above equation:
+            // 2 + 2*(1-beta) re^2/rd^2) = 1 + 1 + (1-beta) rm^2/rd^2
+            // 2 re^2 = rm^2
+            // rm = sqrt(2) * re
+            // So this is the limit for how low rm is allowed to be for a given re
+            if (rm <= sqrt(2.) * re)
+                throw SBError("Moffat truncation radius must be > sqrt(2) * half_light_radius.");
+
+            dbg<<"rm != 0, so not analytic.\n";
+            MoffatScaleRadiusFunc func(re,rm,beta);
+            // For the lower bound of rd, we can use the untruncated value:
+            double r1 = re / sqrt( std::pow(0.5, 1./(1.-beta)) - 1.);
+            xdbg<<"r1 = "<<r1<<std::endl;
+            // For the upper bound, we don't really have a good choice, so start with 2*r1
+            // and we'll expand it if necessary.
+            double r2 = 2. * r1;
+            xdbg<<"r2 = "<<r2<<std::endl;
+            Solve<MoffatScaleRadiusFunc> solver(func,r1,r2);
+            solver.setMethod(Brent);
+            solver.bracketUpper();
+            xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
+                solver.getUpperBound()<<std::endl;
+            double rd = solver.root();
+            xdbg<<"Root is "<<rd<<std::endl;
+            return rd;
+        }
+    }
+
+    SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double size, RadiusType rType,
+                                         double trunc, double flux) : 
+        _beta(beta), _flux(flux), _trunc(trunc), _ft(Table<double,double>::spline),
+        _re(0.) // initially set to zero, may be updated by size or getHalfLightRadius()
     {
         xdbg<<"Start SBMoffat constructor: \n";
         xdbg<<"beta = "<<_beta<<"\n";
         xdbg<<"flux = "<<_flux<<"\n";
+        xdbg<<"trunc = "<<_trunc<<"\n";
+
+        if (_trunc == 0. && beta <= 1.) 
+            throw SBError("Moffat profiles with beta <= 1 must be truncated.");
 
         // First, relation between FWHM and rD:
         double FWHMrD = 2.* sqrt(std::pow(2., 1./_beta)-1.);
         xdbg<<"FWHMrD = "<<FWHMrD<<"\n";
+
+        // Set size of this instance according to type of size given in constructor:
+        switch (rType) {
+          case FWHM:
+               _rD = size / FWHMrD;
+               break;
+          case HALF_LIGHT_RADIUS: 
+               {
+                   _re = size;
+                   // This is a bit complicated, so break it out into its own function.
+                   _rD = MoffatCalculateScaleRadiusFromHLR(_re,trunc,_beta);
+               }
+               break;
+          case SCALE_RADIUS:
+               _rD = size;
+               break;
+          default:
+               throw SBError("Unknown SBMoffat::RadiusType");
+        }
+
         double maxRrD;
-        if (truncationFWHM > 0.) {
-            maxRrD = FWHMrD * truncationFWHM;
+        if (trunc > 0.) {
+            maxRrD = trunc / _rD;  // note new usage of trunc in physical units requires _rD here
             xdbg<<"maxRrD = "<<maxRrD<<"\n";
 
             // Analytic integration of total flux:
@@ -2185,24 +2297,6 @@ namespace galsim {
             xdbg<<"Not truncate.  Calculated maxRrD = "<<maxRrD<<"\n";
         }
 
-        // Set size of this instance according to type of size given in constructor:
-        switch (rType) {
-          case FWHM:
-               _rD = size / FWHMrD;
-               break;
-          case HALF_LIGHT_RADIUS: 
-               {
-                   // Get half-light radius in units of rD:
-                   double rerD = sqrt( std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
-                   _rD = size / rerD;
-               }
-               break;
-          case SCALE_RADIUS:
-               _rD = size;
-               break;
-          default:
-               throw SBError("Unknown SBMoffat::RadiusType");
-        }
         _FWHM = FWHMrD * _rD;
         _maxR = maxRrD * _rD;
         _maxR_sq = _maxR * _maxR;
@@ -2220,6 +2314,17 @@ namespace galsim {
         else pow_beta = &SBMoffat::pow_gen;
 
         setupFT();
+    }
+
+    double SBMoffat::SBMoffatImpl::getHalfLightRadius() const 
+    {
+        // Done here since _re depends on _fluxFactor and thus requires _rD in advance, so this 
+        // needs to happen largely post setup. Doesn't seem efficient to ALWAYS calculate it above,
+        // so we'll just calculate it once if requested and store it.
+        if (_re == 0.) {
+            _re = _rD * sqrt(std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
+        }
+        return _re;
     }
 
     double SBMoffat::SBMoffatImpl::xValue(const Position<double>& p) const 
@@ -2302,7 +2407,7 @@ namespace galsim {
         if (_ft.size() > 0) return;
 
         // Do a Hankel transform and store the results in a lookup table.
-        
+
         double nn = _norm * 2.*M_PI * _rD_sq;
         //double maxR = _fluxFactor == 1. ? integ::MOCK_INF : _maxR / _rD;
         double maxR = _maxR / _rD;
@@ -2343,7 +2448,7 @@ namespace galsim {
      *************************************************************/
 
     template <class T>
-    void SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate u) const 
+    void SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate& u) const 
     {
         const int maxN = 100000;
 
@@ -2365,8 +2470,8 @@ namespace galsim {
         pa.scaleFlux(N / origN);
         pa.addTo(img);
     }
-    
-    PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate u) const 
+
+    PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate& u) const 
     {
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
         double fluxPerPhoton = totalAbsoluteFlux / N;
@@ -2412,7 +2517,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBConvolve::SBConvolveImpl::shoot(int N, UniformDeviate u) const 
+    PhotonArray SBConvolve::SBConvolveImpl::shoot(int N, UniformDeviate& u) const 
     {
         std::list<SBProfile>::const_iterator pptr = _plist.begin();
         if (pptr==_plist.end())
@@ -2428,7 +2533,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBDistort::SBDistortImpl::shoot(int N, UniformDeviate u) const 
+    PhotonArray SBTransform::SBTransformImpl::shoot(int N, UniformDeviate& u) const 
     {
         // Simple job here: just remap coords of each photon, then change flux
         // If there is overall magnification in the transform
@@ -2440,7 +2545,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate u) const 
+    PhotonArray SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate& u) const 
     {
         PhotonArray result(N);
         double fluxPerPhoton = _flux/N;
@@ -2452,7 +2557,7 @@ namespace galsim {
                 yu = 2.*u()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
-            
+
             // Then map it to desired Gaussian with analytic transformation
             double factor = _sigma*sqrt( -2.*std::log(rsq)/rsq);
             result.setPhoton(i,factor*xu, factor*yu, fluxPerPhoton);
@@ -2460,7 +2565,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBSersic::SBSersicImpl::shoot(int N, UniformDeviate ud) const
+    PhotonArray SBSersic::SBSersicImpl::shoot(int N, UniformDeviate& ud) const
     {
         // Get photons from the SersicInfo structure, rescale flux and size for this instance
         PhotonArray result = _info->shoot(N,ud);
@@ -2469,10 +2574,10 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate u) const
+    PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate& u) const
     {
         // Accuracy to which to solve for (log of) cumulative flux distribution:
-        const double Y_TOLERANCE=1e-6;
+        const double Y_TOLERANCE=1.e-6;
 
         double fluxPerPhoton = getFlux() / N;
         PhotonArray result(N);
@@ -2489,20 +2594,20 @@ namespace galsim {
             }
             // Initial guess
             y = -std::log(y);
-            double r = y>2 ? y : sqrt(2*y);
-            double dy = y - r + std::log(1+r);
+            double r = y>2. ? y : sqrt(2.*y);
+            double dy = y - r + std::log(1.+r);
             while ( std::abs(dy) > Y_TOLERANCE) {
-                r = r + (1+r)*dy/r;
-                dy = y - r + std::log(1+r);
+                r = r + (1.+r)*dy/r;
+                dy = y - r + std::log(1.+r);
             }
             // Draw another random for azimuthal angle (could use the unit-circle trick here...)
-            double theta = 2*M_PI*u();
+            double theta = 2.*M_PI*u();
             result.setPhoton(i,_r0*r*std::cos(theta), _r0*r*std::sin(theta), fluxPerPhoton);
         }
         return result;
     }
 
-    PhotonArray SBAiry::SBAiryImpl::shoot(int N, UniformDeviate u) const
+    PhotonArray SBAiry::SBAiryImpl::shoot(int N, UniformDeviate& u) const
     {
         // Use the OneDimensionalDeviate to sample from scale-free distribution
         checkSampler();
@@ -2537,7 +2642,7 @@ namespace galsim {
         _sampler.reset(new OneDimensionalDeviate(_radial, ranges, true));
     }
 
-    PhotonArray SBBox::SBBoxImpl::shoot(int N, UniformDeviate u) const
+    PhotonArray SBBox::SBBoxImpl::shoot(int N, UniformDeviate& u) const
     {
         PhotonArray result(N);
         for (int i=0; i<result.size(); i++)
@@ -2545,7 +2650,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u) const
+    PhotonArray SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate& u) const
     {
         // Moffat has analytic inverse-cumulative-flux function.
         PhotonArray result(N);
@@ -2558,7 +2663,7 @@ namespace galsim {
                 yu = 2.*u()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
-            
+
             // Then map it to the Moffat flux distribution
             double newRsq = std::pow( 1.-rsq*_fluxFactor , 1./(1.-_beta)) - 1.;
             double rFactor = _rD*sqrt(newRsq / rsq);
@@ -2571,10 +2676,10 @@ namespace galsim {
     template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<float>& img, double dx) const;
     template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<double>& img, double dx) const;
 
-    template void SBProfile::drawShoot(ImageView<float> image, double N, UniformDeviate ud) const;
-    template void SBProfile::drawShoot(ImageView<double> image, double N, UniformDeviate ud) const;
-    template void SBProfile::drawShoot(Image<float>& image, double N, UniformDeviate ud) const;
-    template void SBProfile::drawShoot(Image<double>& image, double N, UniformDeviate ud) const;
+    template void SBProfile::drawShoot(ImageView<float> image, double N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(ImageView<double> image, double N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(Image<float>& image, double N, UniformDeviate& ud) const;
+    template void SBProfile::drawShoot(Image<double>& image, double N, UniformDeviate& ud) const;
 
     template double SBProfile::draw(Image<float>& img, double dx, int wmult) const;
     template double SBProfile::draw(Image<double>& img, double dx, int wmult) const;

@@ -280,13 +280,13 @@ namespace galsim {
                 Phrase::iterator ia=args.begin();
                 if (ShearOp::test(i)) {
                     delete i;
-                    double e1, e2;
+                    double g1, g2;
                     if (args.size()!=2 
-                        || !isNumber((*(ia++))->print(),e1) 
-                        || !isNumber((*ia)->print(),e2))
+                        || !isNumber((*(ia++))->print(),g1)
+                        || !isNumber((*ia)->print(),g2))
                         throw SBError("SBParse: bad arguments for shear: " + args.print());
-                    dbg << "** Leaving SBParse after shearing by " << e1 << " " << e2 << std::endl;
-                    base.applyShear(e1,e2);
+                    dbg << "** Leaving SBParse after shearing by " << g1 << " " << g2 << std::endl;
+                    base.applyShear(g1, g2);
                     return base;
                 } else if (DilateOp::test(i)) {
                     delete i;
@@ -294,9 +294,9 @@ namespace galsim {
                     if (args.size()!=1
                         || !isNumber((*ia)->print(),f))
                         throw SBError("SBParse: bad arguments for dilation: " + args.print());
-                    Ellipse e(0., 0., std::log(f));
+                    Ellipse e(Shear(), std::log(f), Position<double>());
                     dbg << "** Leaving SBParse after dilating by " << f << std::endl;
-                    base.applyDistortion(e);
+                    base.applyTransformation(e);
                     return base;
                 } else if (TranslateOp::test(i)) {
                     delete i;
@@ -336,7 +336,10 @@ namespace galsim {
             }
         }
 
-        // else: should be a primitive, specified by first word and rest are arguments. Build and return
+        /* 
+         * else: should be a primitive, specified by first word and rest are arguments. Build and 
+         * return
+         */
         int nargs = args.size()-1;
         // Translate arguments into doubles since that's what most primitives want.
         bool allNumbers=true;
@@ -355,7 +358,7 @@ namespace galsim {
             double flux=1.;
             double sigma = (nargs>0) ? dargs[0] : 1.;
             dbg << "**Returning gaussian with flux, sigma " << flux << " " << sigma << std::endl;
-            return SBGaussian(flux, sigma);
+            return SBGaussian(sigma, flux);
 
         } else if (nocaseEqual(sbtype, "exp")) {
             // Exponential Disk: args [re=1.]
@@ -364,7 +367,7 @@ namespace galsim {
             double flux=1.;
             double re = (nargs>0) ? dargs[0] : 1.;
             dbg << "**Returning exp with flux, re " << flux << " " << re << std::endl;
-            return SBExponential(flux, re/1.67839);
+            return SBExponential(re / 1.6783469900166605, flux);
 
         } else if (nocaseEqual(sbtype, "sersic")) {
             // Sersic: args are [n] [re=1]
@@ -375,7 +378,7 @@ namespace galsim {
             double re = (nargs>1) ? dargs[1] : 1.;
             dbg << "**Returning sersic with n, flux, re " << n 
                 << " " << flux << " " << re << std::endl;
-            return SBSersic(n, flux, re);
+            return SBSersic(n, re, flux);
 
         } else if (nocaseEqual(sbtype, "box")) {
             // Sersic: args are [xw=1] [yw=xw]
@@ -400,16 +403,17 @@ namespace galsim {
             return SBAiry(D,obs,flux);
 
         } else if (nocaseEqual(sbtype, "moffat")) {
-            // Airy: args are [beta] [truncationFWHM] [re=1]
+            // Moffat: args are [beta] [trunc] [fwhm=1]
             if (nargs<2 || nargs>3 || !allNumbers)
                 throw SBError("SBParse: Bad arguments for SBMoffat: " + args.print());
             double flux=1.;
             double beta = dargs[0];
-            double truncationFWHM = dargs[1];
-            double re = (nargs>2) ? dargs[2] : 1.;
-            dbg << "**Returning moffat with beta, truncation, flux, re " << beta
-                << " " << truncationFWHM << " " << flux << " " << re << std::endl;
-            return SBMoffat(beta, truncationFWHM, flux, re);
+            double trunc = dargs[1];
+            double fwhm = (nargs>2) ? dargs[2] : 1.;
+            SBMoffat::RadiusType rType = SBMoffat::FWHM;
+            dbg << "**Returning moffat with beta, trunc, flux, fwhm " << beta
+                << " " << trunc << " " << flux << " " << fwhm << std::endl;
+            return SBMoffat(beta, fwhm, rType, trunc, flux);
 
         } else if (nocaseEqual(sbtype, "laguerre")) {
             // Laguerre: args are [filename]
@@ -423,14 +427,14 @@ namespace galsim {
             std::string buffer;
             getlineNoComment(cpsf, buffer);
             std::istringstream iss(buffer);
-            double e1, e2, mu;
-            if (!(iss >> e1 >> e2 >> mu))
+            double g1, g2, mu;
+            if (!(iss >> g1 >> g2 >> mu))
                 throw SBError("SBParse error on Laguerre basis ellipse: " + buffer);
             if (!(cpsf >> bPSF))
                 throw SBError("SBParse error reading Laguerre PSF file " + psfName);
 
             SBLaguerre sbl(bPSF, std::exp(mu));
-            sbl.applyShear(e1, e2);
+            sbl.applyShear(g1, g2);
             return sbl;
         } else {
             throw SBError("SBParse: unrecognized primitive type: " + sbtype);
