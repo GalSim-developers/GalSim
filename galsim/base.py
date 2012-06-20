@@ -159,13 +159,17 @@ class GSObject:
     def applyTransformation(self, ellipse):
         """@brief Apply a galsim.Ellipse distortion to this object.
            
+        Ellipse objects can be initialized in a variety of ways (see documentation of this
+        class for details).
+
+        Note: if the ellipse includes a dilation, then this transformation will 
+        not be flux-conserving.  It conserves surface brightness instead.
+        Thus, the flux will increase by the increase in area = dilation^2.
+
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
-
-        Note that Ellipse objects can be initialized in a variety of ways (see documentation of this
-        class for details).
         """
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
@@ -258,34 +262,75 @@ class GSObject:
         ret.applyShift(dx, dy)
         return ret
 
-    def draw(self, image=None, dx=0., wmult=1):
-        """@brief Returns an Image of the object, with bounds optionally set by an input Image.
+    def draw(self, image=None, dx=0., wmult=1, normalization="flux"):
+        """@brief Draws an Image of the object, with bounds optionally set by an input Image.
 
-        TODO: describe dx, wmult.
+        @param image  If provided, this will be the image on which to draw the profile.
+                      If image=None, then an automatically-sized image will be created.
+                      (Default = None)
+        @param dx     If provided, use this as the pixel scale for the image.
+                      If dx <= 0. and image != None, then take the provided image's pixel scale.
+                      If dx <= 0. and image == None, then use pi/maxK()
+                      (Default = 0.)
+        @param normalization  Two options for the normalization:
+                              "flux" or "f" means that the sum of the output pixels is normalized
+                                     to be equal to the total flux.  (Modulo any flux that
+                                     falls off the edge of the image of course.)
+                              "surface brightness" or "sb" means that the output pixels sample
+                                     the surface brightness distribution at each location.
+                              (Default = "flux")
+        @param wmult  A factor by which to make the intermediate images larger than 
+                      they are normally made.  The size is normally automatically chosen 
+                      to reach some preset accuracy targets (see include/galsim/SBProfile.h); 
+                      however, if you see strange artifacts in the image, you might try using 
+                      wmult > 1.  This will take longer of course, but it will produce more 
+                      accurate images, since they will have less "folding" in Fourier space.
+                      (Default = 1.)
+        @returns      The drawn image.
         """
-    # Raise an exception here since C++ is picky about the input types
+        # Raise an exception immediately if the normalization type is not recognized
+        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
+            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                              "'f', 'surface brightness' or 'sb'.") % normalization)
+        # Raise an exception here since C++ is picky about the input types
         if type(wmult) != int:
             raise TypeError("Input wmult should be an int")
         if type(dx) != float:
             raise Warning("Input dx not a float, converting...")
             dx = float(dx)
         if image == None:
-            return self.SBProfile.draw(dx=dx, wmult=wmult)
+            image = self.SBProfile.draw(dx=dx, wmult=wmult)
         else :
+            if dx <= 0.:
+                dx = image.getScale()
             self.SBProfile.draw(image, dx=dx, wmult=wmult)
-            return image
 
-    def drawShoot(self, image, N, ud=None, poisson_flux=False):
-        """@brief Draw into an input image using photon shooting.
+        if normalization.lower() == "flux" or normalization.lower() == "f":
+            dx = image.getScale()
+            image *= dx*dx
+        return image
 
-        Params
-        ------
-        @param  image         Image instance to draw on.
-        @param  N             Total number of photons to produce.
-        @param  ud            UniformDeviate to be used to draw photons from distribution.  If None,
-                              one will be initialized.
+    def drawShoot(self, image, N, ud=None, normalization="flux", poisson_flux=False):
+        """@brief Returns an Image of the object, with bounds optionally set by an input Image.
+
+        @param image  The image on which to draw the profile.
+                      Note: Unlike for the regular draw command, image is a required
+                      parameter.  drawShoot will not make the image for you.
+        @param N      The number of photons to use.
+        @param ud     If provided, a UniformDeviate to use for the random numbers
+                      If ud=None, one will be automatically created, using the time as a seed.
+                      (Default = None)
+        @param normalization  Two options for the normalization:
+                              "flux" or "f" means that the sum of the output pixels is normalized
+                                     to be equal to the total flux.  (Modulo any flux that
+                                     falls off the edge of the image of course.)
+                              "surface brightness" or "sb" means that the output pixels sample
+                                     the surface brightness distribution at each location.
+                              (Default = "flux")
         @param  poisson_flux  Set True to allow total object flux scaling to vary according to 
                               Poisson statistics for N samples.
+        @returns  The tuple (image, outsideN), where image is the input with drawn photons 
+                  added and outsideN is the number of photons that landed outside the image bounds.
 
         The input image must have defined boundaries and pixel scale.  The photons generated by
         the shoot() method will be binned into the target image.  The input image will be cleared 
@@ -297,20 +342,27 @@ class GSObject:
 
         You should convolve the object with a Pixel(xw=dx) instance in order for draw() to match 
         what will be produced by a drawShoot() onto an image with pixel scale dx.
-
-        Returns the tuple (image, outsideN), where image is the input with drawn photons added and
-        outsideN is the number of photons that landed outside the image bounds.
-
-        Note that outsideN is a float to avoid integer overflow on systems with short ints. 
         """
+        # Raise an exception immediately if the normalization type is not recognized
+        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
+            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                              "'f', 'surface brightness' or 'sb'.") % normalization)
+        # Raise an exception here since C++ is picky about the input types
+        if image is None:
+            raise TypeError("drawShoot requires the image to be provided.")
         if type(N) != float:
             # if given an int, just convert it to a float
             N = float(N)
         if ud == None:
             ud = galsim.UniformDeviate()
+
         outsideN = self.SBProfile.drawShoot(image, N, ud, int(poisson_flux))
-        return image, outsideN
          
+        if normalization.lower() == "flux" or normalization.lower() == "f":
+            dx = image.getScale()
+            image *= dx*dx
+
+        return image, outsideN
 
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
 # SBPs...

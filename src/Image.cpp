@@ -215,7 +215,7 @@ class ConstReturn
 {
 public: 
     ConstReturn(const T v): val(v) {}
-    T operator()(const T dummy) const { return val; }
+    T operator()(const T ) const { return val; }
 private:
     T val;
 };
