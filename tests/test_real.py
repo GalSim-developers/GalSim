@@ -113,9 +113,10 @@ def test_real_galaxy_ideal():
                     targ_PSF = galsim.Gaussian(fwhm = tpf)
                     targ_PSF.applyShear(g1=tps1, g2=tps2)
                     # simulate image
-                    sim_image = galsim.simReal(rg, targ_PSF, tps, g1 = targ_applied_shear1, g2 =
-                                               targ_applied_shear2, rand_rotate = False, target_flux
-                                               = fake_gal_flux)
+                    sim_image = galsim.simReal(
+                            rg, targ_PSF, tps, 
+                            g1 = targ_applied_shear1, g2 = targ_applied_shear2,
+                            rand_rotate = False, target_flux = fake_gal_flux)
                     # galaxy sigma, in units of pixels on the final image
                     sigma_ideal = (fake_gal_fwhm/tps)*fwhm_to_sigma
                     # compute analytically the expected galaxy moments:
@@ -123,19 +124,23 @@ def test_real_galaxy_ideal():
                     # compute analytically the expected PSF moments:
                     targ_PSF_e1, targ_PSF_e2 = galsim.utilities.g1g2_to_e1e2(tps1, tps2)
                     targ_PSF_sigma = (tpf/tps)*fwhm_to_sigma
-                    mxx_PSF, myy_PSF, mxy_PSF = ellip_to_moments(targ_PSF_e1, targ_PSF_e2,
-                                                                 targ_PSF_sigma)
+                    mxx_PSF, myy_PSF, mxy_PSF = ellip_to_moments(
+                            targ_PSF_e1, targ_PSF_e2, targ_PSF_sigma)
                     # get expected e1, e2, sigma for the PSF-convolved image
-                    tot_e1, tot_e2, tot_sigma = moments_to_ellip(mxx_gal+mxx_PSF, myy_gal+myy_PSF,
-                                                                 mxy_gal+mxy_PSF)
+                    tot_e1, tot_e2, tot_sigma = moments_to_ellip(
+                            mxx_gal+mxx_PSF, myy_gal+myy_PSF, mxy_gal+mxy_PSF)
 
                     # compare with images that are expected
-                    expected_gaussian = galsim.SBGaussian(flux = fake_gal_flux, sigma = tps*tot_sigma)
-                    expected_gaussian.applyTransformation(galsim.Ellipse(e1 = tot_e1, e2 = tot_e2)._ellipse)
-                    expected_image = galsim.ImageD(sim_image.array.shape[0], sim_image.array.shape[1])
+                    expected_gaussian = galsim.Gaussian(
+                            flux = fake_gal_flux, sigma = tps*tot_sigma)
+                    expected_gaussian.applyTransformation(
+                            galsim.Ellipse(e1 = tot_e1, e2 = tot_e2))
+                    expected_image = galsim.ImageD(
+                            sim_image.array.shape[0], sim_image.array.shape[1])
                     expected_gaussian.draw(expected_image, dx = tps)
                     printval(expected_image,sim_image)
-                    np.testing.assert_array_almost_equal(sim_image.array, expected_image.array, decimal = 3,
+                    np.testing.assert_array_almost_equal(
+                        sim_image.array, expected_image.array, decimal = 3,
                         err_msg = "Error in comparison of ideal Gaussian RealGalaxy calculations")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
