@@ -69,13 +69,15 @@ struct PyPhotonArray {
             .def("append", &PhotonArray::append)
             .def("convolve", &PhotonArray::convolve)
             .def("addTo", 
-                 (void(PhotonArray::*)(ImageView<float> &) const)&PhotonArray::addTo,
+                 (double(PhotonArray::*)(ImageView<float> &) const)&PhotonArray::addTo,
                  bp::arg("image"),
-                 "Add photons' fluxes into image")
+                 "Add photons' fluxes into image. Returns number of photons falling outside image "
+                 "bounds as a float to avoid possible overflow on systems with short ints.")
             .def("addTo", 
-                 (void(PhotonArray::*)(ImageView<double> &) const)&PhotonArray::addTo,
+                 (double(PhotonArray::*)(ImageView<double> &) const)&PhotonArray::addTo,
                  bp::arg("image"),
-                 "Add photons' fluxes into image")
+                 "Add photons' fluxes into image. Returns number of photons falling outside image "
+                 "bounds as a float to avoid possible overflow on systems with short ints.")
             ;
     }
 
@@ -104,15 +106,17 @@ struct PySBProfile {
         // but it's easier to do that than write out the full class_ type.
         wrapper
             .def("drawShoot", 
-                 (void (SBProfile::*)(Image<U> &, double, UniformDeviate ) 
+                 (double (SBProfile::*)(Image<U> &, double, UniformDeviate ) 
                   const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
-                 "Draw object into existing image using photon shooting.")
+                 "Draw object into existing image using photon shooting. Returns number of photons"
+                 " that land outside image.")
             .def("drawShoot", 
-                 (void (SBProfile::*)(ImageView<U>, double, UniformDeviate ) 
+                 (double (SBProfile::*)(ImageView<U>, double, UniformDeviate ) 
                   const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
-                 "Draw object into existing image using photon shooting.")
+                 "Draw object into existing image using photon shooting. Returns number of photons"
+                 " that land outside image.")
             .def("draw", 
                  (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::draw,
                  (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),

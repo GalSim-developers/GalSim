@@ -276,12 +276,20 @@ class GSObject:
             return image
 
     def drawShoot(self, image, N, ud=None):
+        """@brief Draw into an input image using photon shooting.
+
+        Returns the tuple (image, outsideN), where image is the input with drawn photons added and
+        outsideN is the number of photons that landed outside the image bounds.
+
+        outsideN is a float to avoid integer overflow on systems with short ints. 
+        """
         if type(N) != float:
             # if given an int, just convert it to a float
             N = float(N)
         if ud == None:
             ud = galsim.UniformDeviate()
-        self.SBProfile.drawShoot(image, N, ud)
+        outsideN = self.SBProfile.drawShoot(image, N, ud)
+        return image, outsideN
          
 
 # Now define some of the simplest derived classes, those which are otherwise empty containers for

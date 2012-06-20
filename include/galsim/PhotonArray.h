@@ -137,10 +137,10 @@ namespace galsim {
         /**
          * @brief Convolve this array with another.
          *
-         * Convolution of two arrays is defined as adding the coordinates on a photon-by-photon basis
-         * and multiplying the fluxes on a photon-by-photon basis. Output photons' flux is renormalized
-         * so that the expectation value of output total flux is product of two input totals, if
-         * the two photon streams are uncorrelated.
+         * Convolution of two arrays is defined as adding the coordinates on a photon-by-photon 
+         * basis and multiplying the fluxes on a photon-by-photon basis. Output photons' flux is 
+         * renormalized so that the expectation value of output total flux is product of two input 
+         * totals, if the two photon streams are uncorrelated.
          *
          * @param[in] rhs PhotonArray to convolve with this one.  Must be same size.
          * @param[in] ud  A UniformDeviate in case we need to shuffle.
@@ -148,7 +148,8 @@ namespace galsim {
         void convolve(const PhotonArray& rhs, UniformDeviate ud);
 
         /**
-         * @brief Convolve this array with another, shuffling the order in which photons are combined.
+         * @brief Convolve this array with another, shuffling the order in which photons are 
+         * combined.
          *
          * Same convolution behavior as convolve(), but the order in which the photons are
          * multiplied into the array is randomized to destroy any flux or position correlations.
@@ -175,9 +176,10 @@ namespace galsim {
          * Photons past the edges of the image are discarded.
          *
          * @param[in] target the Image to which the photons' flux will be added.
+         * @returns The number of photons that fell outside the Image bounds.
          */
         template <class T>
-        void addTo(ImageView<T>& target) const;
+        double addTo(ImageView<T>& target) const;
 
         /**
          * @brief Declare the the photons in this array are correlated.

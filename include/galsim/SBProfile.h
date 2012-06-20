@@ -478,12 +478,13 @@ namespace galsim {
          * @param[in] img Image to draw on.
          * @param[in] N Total number of photons to produce.
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @returns The number of photons that fell outside the Image bounds.
          */
         template <typename T>
-        void drawShoot(ImageView<T> img, double N, UniformDeviate ud) const;
+        double drawShoot(ImageView<T> img, double N, UniformDeviate ud) const;
         template <typename T>
-        void drawShoot(Image<T>& img, double N, UniformDeviate ud) const 
-        { drawShoot(img.view(), N, ud); }
+        double drawShoot(Image<T>& img, double N, UniformDeviate ud) const
+        { return drawShoot(img.view(), N, ud); }
         //@}
 
         /** 

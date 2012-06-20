@@ -131,25 +131,31 @@ namespace galsim {
     }
 
     template <class T>
-    void PhotonArray::addTo(ImageView<T>& target) const {
+    double PhotonArray::addTo(ImageView<T>& target) const {
         double dx = target.getScale();
         Bounds<int> b = target.getBounds();
+        double outsideN = 0.; // stores the number of photons that land outside the image, returned
 
         if (dx==0. || !b.isDefined()) 
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
                                      " zero pixel scale or undefined Bounds");
-
-        double fluxScale = 1./(dx*dx);  // Factor to turn flux into surface brightness in an Image pixel
+        // Factor to turn flux into surface brightness in an Image pixel
+        double fluxScale = 1./(dx*dx);
 
         for (int i=0; i<size(); i++) {
             int ix = int(floor(_x[i]/dx + 0.5));
             int iy = int(floor(_y[i]/dx + 0.5));
-            if (b.includes(ix,iy)) target(ix,iy) += _flux[i]*fluxScale;
+            if (b.includes(ix,iy)){
+                target(ix,iy) += _flux[i]*fluxScale;
+            } else {
+                outsideN++;
+            }
         }
+        return outsideN;
     }
 
     // instantiate template functions for expected image types
-    template void PhotonArray::addTo(ImageView<float>& image) const;
-    template void PhotonArray::addTo(ImageView<double>& image) const;
+    template double PhotonArray::addTo(ImageView<float>& image) const;
+    template double PhotonArray::addTo(ImageView<double>& image) const;
 
 }
