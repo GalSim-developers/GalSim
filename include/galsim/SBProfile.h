@@ -763,15 +763,20 @@ namespace galsim {
         void operator=(const SBProfileImpl& rhs);
     };
 
+#if 0
         // Classes that need to be able to access _pimpl object of other SBProfiles
         // are made friends.
         friend class SBAdd;
         friend class SBTransform;
         friend class SBConvolve;
         friend class SBDeconvolve;
+#endif
 
         // Regular constructor only available to derived classes
         SBProfile(SBProfileImpl* pimpl) : _pimpl(pimpl) {}
+
+        // Protected static class to access pimpl of one SBProfile object from another one.
+        static SBProfileImpl* GetImpl(const SBProfile& rhs) { return rhs._pimpl.get(); }
 
         boost::shared_ptr<SBProfileImpl> _pimpl;
     };
