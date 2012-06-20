@@ -5,6 +5,7 @@ import sys
 import SCons
 import platform
 import distutils.sysconfig
+
 from sys import stdout,stderr
 
 print 'SCons is version',SCons.__version__,'using python version',platform.python_version()

@@ -10,16 +10,16 @@ The python Shear class can be initialized in a variety of ways to represent shap
 arguments must be named.  Given semi-major and semi-minor axes a and b, we can define multiple shape
 measurements:
 
-reduced shear g = (a - b)/(a + b)
-distortion e = (a^2 - b^2)/(a^2 + b^2)
+reduced shear |g| = (a - b)/(a + b)
+distortion |e| = (a^2 - b^2)/(a^2 + b^2)
 conformal shear eta, with a/b = exp(eta)
 minor-to-major axis ratio q = b/a
 
 These can be thought of as a magnitude and a real-space position angle beta, or as two components
 e.g., g1 and g2, with
 
-g1 = g cos(2*beta)
-g2 = g sin(2*beta)
+g1 = |g| cos(2*beta)
+g2 = |g| sin(2*beta)
 
 Note: beta is _not_ the phase of a complex valued shear.
 Rather, the complex shear is g1 + i g2 = g exp(2 i beta).
@@ -104,8 +104,8 @@ class Shear:
                     raise TypeError(
                         "The position angle that was supplied is not an Angle instance!")
                 g = kwargs.pop('g')
-                if abs(g) > 1:
-                    raise ValueError("Requested shear exceeds 1: %f"%g)
+                if g > 1 or g < 0:
+                    raise ValueError("Requested |shear| is outside [0,1]: %f"%g)
                 g1 = np.cos(2.*beta.rad())*g
                 g2 = np.sin(2.*beta.rad())*g
                 use_shear = _galsim._Shear(g1, g2)
@@ -118,8 +118,8 @@ class Shear:
                     raise TypeError(
                         "The position angle that was supplied is not an Angle instance!")
                 e = kwargs.pop('e')
-                if abs(e) > 1:
-                    raise ValueError("Requested distortion exceeds 1: %f"%e)
+                if e > 1 or e < 0:
+                    raise ValueError("Requested distortion is outside [0,1]: %f"%e)
                 use_shear = _galsim._Shear()
                 use_shear.setEBeta(e, beta)
             elif 'eta' in kwargs:
@@ -131,6 +131,8 @@ class Shear:
                     raise TypeError(
                         "The position angle that was supplied is not an Angle instance!")
                 eta = kwargs.pop('eta')
+                if eta < 0:
+                    raise ValueError("Requested eta is below 0: %f"%e)
                 use_shear = _galsim._Shear()
                 use_shear.setEtaBeta(eta, beta)
             elif 'q' in kwargs:
@@ -187,7 +189,9 @@ class Shear:
     g2 = property(getG2)
     # define all the various operators on Shear objects
     def __neg__(self): return Shear(-self._shear)
+    # order of operations: shear by other._shear, then by self._shear
     def __add__(self, other): return Shear(self._shear + other._shear)
+    # order of operations: shear by -other._shear, then by self._shear
     def __sub__(self, other): return Shear(self._shear - other._shear)
     def __iadd__(self, other): return Shear(self._shear + other._shear)
     def __isub__(self, other): return Shear(self._shear - other._shear)

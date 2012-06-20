@@ -364,8 +364,7 @@ namespace galsim {
         /**
          * @brief Apply a given shear.
          *
-         * @param[in] g1 Reduced shear g1 by which to shear the SBProfile.
-         * @param[in] g2 Reduced shear g2 by which to shear the SBProfile.
+         * @param[in] s Shear object by which to shear the SBProfile.
          * This shears the object by the given shear.  As with scaleFlux, it does not
          * invalidate any previous uses of this object.
          */
@@ -785,15 +784,20 @@ namespace galsim {
         void operator=(const SBProfileImpl& rhs);
     };
 
+#if 0
         // Classes that need to be able to access _pimpl object of other SBProfiles
         // are made friends.
         friend class SBAdd;
         friend class SBTransform;
         friend class SBConvolve;
         friend class SBDeconvolve;
+#endif
 
         // Regular constructor only available to derived classes
         SBProfile(SBProfileImpl* pimpl) : _pimpl(pimpl) {}
+
+        // Protected static class to access pimpl of one SBProfile object from another one.
+        static SBProfileImpl* GetImpl(const SBProfile& rhs) { return rhs._pimpl.get(); }
 
         boost::shared_ptr<SBProfileImpl> _pimpl;
     };
