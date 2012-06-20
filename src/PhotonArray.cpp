@@ -16,8 +16,9 @@
 
 namespace galsim {
 
-    PhotonArray::PhotonArray(std::vector<double>& vx, std::vector<double>& vy,
-                             std::vector<double>& vflux)
+    PhotonArray::PhotonArray(
+        std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vflux) :
+        _is_correlated(false)
     {
         if (vx.size() != vy.size() || vx.size() != vflux.size())
             throw std::runtime_error("Size mismatch of input vectors to PhotonArray");
@@ -72,8 +73,13 @@ namespace galsim {
         std::copy(rhs._flux.begin(), rhs._flux.end(), destination);
     }
 
-    void PhotonArray::convolve(const PhotonArray& rhs) 
+    void PhotonArray::convolve(const PhotonArray& rhs, UniformDeviate ud) 
     {
+        // If both arrays have corrlated photons, then we need to shuffle the photons
+        // as we convolve them.
+        if (_is_correlated && rhs._is_correlated) return convolveShuffle(rhs,ud);
+
+        // If neither or only one is correlated, we are ok to just use them in order.
         int N = size();
         if (rhs.size() != N) 
             throw std::runtime_error("PhotonArray::convolve with unequal size arrays");
@@ -89,9 +95,13 @@ namespace galsim {
         lIter = _flux.begin();
         rIter = rhs._flux.begin();
         for ( ; lIter!=_flux.end(); ++lIter, ++rIter) *lIter *= *rIter*N;
+
+        // If rhs was correlated, then the output will be correlated.
+        // This is ok, but we need to mark it as such.
+        if (rhs._is_correlated) _is_correlated = true;
     }
 
-    void PhotonArray::convolveShuffle(const PhotonArray& rhs, UniformDeviate& ud) 
+    void PhotonArray::convolveShuffle(const PhotonArray& rhs, UniformDeviate ud) 
     {
         int N = size();
         if (rhs.size() != N) 
@@ -133,10 +143,11 @@ namespace galsim {
     }
 
     template <class T>
-    void PhotonArray::addTo(ImageView<T>& target) const 
+    double PhotonArray::addTo(ImageView<T>& target) const 
     {
         double dx = target.getScale();
         Bounds<int> b = target.getBounds();
+        double outsideN = 0.; // stores the number of photons that land outside the image, returned
 
         if (dx==0. || !b.isDefined()) 
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
@@ -153,7 +164,7 @@ namespace galsim {
         double addedFlux = 0.;
         double lostFlux = 0.;
 #endif
-        for (int i=0; i<size(); i++) {
+        for (int i=0; i<int(size()); i++) {
             int ix = int(floor(_x[i]/dx + 0.5));
             int iy = int(floor(_y[i]/dx + 0.5));
 #ifdef DEBUGLOGGING
@@ -165,6 +176,7 @@ namespace galsim {
                 addedFlux += _flux[i];
 #endif
             } else {
+                outsideN++;
 #ifdef DEBUGLOGGING
                 xdbg<<"lost flux at ix = "<<ix<<", iy = "<<iy<<" with flux = "<<_flux[i]<<std::endl;
                 lostFlux += _flux[i];
@@ -175,11 +187,14 @@ namespace galsim {
         dbg<<"totalFlux = "<<totalFlux<<std::endl;
         dbg<<"addedlFlux = "<<addedFlux<<std::endl;
         dbg<<"lostFlux = "<<lostFlux<<std::endl;
+        dbg<<"outsideN = "<<outsideN<<std::endl;
 #endif
+
+        return outsideN;
     }
 
     // instantiate template functions for expected image types
-    template void PhotonArray::addTo(ImageView<float>& image) const;
-    template void PhotonArray::addTo(ImageView<double>& image) const;
+    template double PhotonArray::addTo(ImageView<float>& image) const;
+    template double PhotonArray::addTo(ImageView<double>& image) const;
 
 }

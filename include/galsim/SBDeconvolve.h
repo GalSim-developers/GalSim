@@ -68,7 +68,7 @@ namespace galsim {
 
         double getFlux() const { return 1./_adaptee.getFlux(); }
 
-        PhotonArray shoot(int N, UniformDeviate& u) const 
+        PhotonArray shoot(int N, UniformDeviate u) const 
         {
             throw SBError("SBDeconvolve::shoot() not implemented");
             return PhotonArray(N);

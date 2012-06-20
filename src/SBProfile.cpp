@@ -2199,7 +2199,7 @@ namespace galsim {
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
     }
 
-    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate& ud) const
+    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"SersicInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";
@@ -2491,27 +2491,42 @@ namespace galsim {
      *************************************************************/
 
     template <class T>
-    void SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate& u) const 
+    double SBProfile::drawShoot(ImageView<T> img, double N, double noise, UniformDeviate u, 
+                                int poissonFlux) const 
     {
         const int maxN = 100000;
+        double outsideN = 0.; // number photons falling outside image, returned, type matches N
 
         // Clear image before adding photons, for consistency with draw() methods.
         img.fill(0.);  
         double origN = N;
+        xdbg<<"origN = "<<origN<<std::endl;
+
         dbg<<"Start drawShoot.\n";
-        dbg<<"N = "<<N<<std::endl;
+
+        if (N == 0.) { N = getFlux(); poissonFlux = true; }
+
+        double poissonScaleFlux = 1.; // Allow optional Poisson flux variation according to N
+        if (poissonFlux != 0){
+            PoissonDeviate pd(u, N);
+            poissonScaleFlux *= double(pd()) / N;
+            xdbg<<"Poisson scaling flux by factor "<<poissonScaleFlux<<std::endl;
+        }
+
         double targetFlux = getFlux();
         dbg<<"target flux = "<<targetFlux<<std::endl;
         double realizedFlux = 0.;
+
         while (N > maxN) {
             xdbg<<"shoot "<<maxN<<std::endl;
             assert(_pimpl.get());
             PhotonArray pa = _pimpl->shoot(maxN, u);
             xdbg<<"pa.flux = "<<pa.getTotalFlux()<<std::endl;
             xdbg<<"scaleFlux by "<<(maxN/origN)<<std::endl;
-            pa.scaleFlux(maxN / origN);
+            pa.scaleFlux(poissonScaleFlux * maxN / origN);
             xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
             pa.addTo(img);
+            outsideN += pa.addTo(img);
             N -= maxN;
             realizedFlux += pa.getTotalFlux();
         }
@@ -2521,14 +2536,16 @@ namespace galsim {
         PhotonArray pa = _pimpl->shoot(finalN, u);
         xdbg<<"pa.flux = "<<pa.getTotalFlux()<<std::endl;
         xdbg<<"scaleFlux by "<<(finalN/origN)<<std::endl;
-        pa.scaleFlux(finalN / origN);
+        pa.scaleFlux(poissonScaleFlux * N / origN);
         xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
-        pa.addTo(img);
+        outsideN += pa.addTo(img);
         realizedFlux += pa.getTotalFlux();
         dbg<<"Done drawShoot.  Realized flux = "<<realizedFlux<<std::endl;
+        xdbg<<"outsideN = "<<outsideN<<std::endl;
+        return outsideN;
     }
 
-    PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate& u) const 
+    PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate u) const 
     {
         dbg<<"Add shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2571,10 +2588,14 @@ namespace galsim {
         }
         
         dbg<<"Add Realized flux = "<<result.getTotalFlux()<<std::endl;
+
+        // This process produces correlated photons, so mark the resulting array as such.
+        if (_plist.size() > 1) result.setCorrelated();
+        
         return result;
     }
 
-    PhotonArray SBConvolve::SBConvolveImpl::shoot(int N, UniformDeviate& u) const 
+    PhotonArray SBConvolve::SBConvolveImpl::shoot(int N, UniformDeviate u) const 
     {
         dbg<<"Convolve shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2582,17 +2603,18 @@ namespace galsim {
         if (pptr==_plist.end())
             throw SBError("Cannot shoot() for empty SBConvolve");
         PhotonArray result = pptr->shoot(N, u);
-        // It is necessary to shuffle when convolving because we do
+        // It may be necessary to shuffle when convolving because we do
         // do not have a gaurantee that the convolvee's photons are
         // uncorrelated, e.g. they might both have their negative ones
         // at the end.
+        // However, this decision is now made by the convolve method.
         for (++pptr; pptr != _plist.end(); ++pptr)
-            result.convolveShuffle( pptr->shoot(N, u), u);
+            result.convolve( pptr->shoot(N, u), u);
         dbg<<"Convolve Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
-    PhotonArray SBTransform::SBTransformImpl::shoot(int N, UniformDeviate& u) const 
+    PhotonArray SBTransform::SBTransformImpl::shoot(int N, UniformDeviate u) const 
     {
         dbg<<"Distort shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2607,7 +2629,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate& u) const 
+    PhotonArray SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate u) const 
     {
         dbg<<"Gaussian shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2630,7 +2652,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBSersic::SBSersicImpl::shoot(int N, UniformDeviate& ud) const
+    PhotonArray SBSersic::SBSersicImpl::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"Sersic shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2642,7 +2664,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate& u) const
+    PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate u) const
     {
         dbg<<"Exponential shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2678,7 +2700,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBAiry::SBAiryImpl::shoot(int N, UniformDeviate& u) const
+    PhotonArray SBAiry::SBAiryImpl::shoot(int N, UniformDeviate u) const
     {
         dbg<<"Airy shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2716,7 +2738,7 @@ namespace galsim {
         _sampler.reset(new OneDimensionalDeviate(_radial, ranges, true));
     }
 
-    PhotonArray SBBox::SBBoxImpl::shoot(int N, UniformDeviate& u) const
+    PhotonArray SBBox::SBBoxImpl::shoot(int N, UniformDeviate u) const
     {
         dbg<<"Box shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2727,7 +2749,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate& u) const
+    PhotonArray SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u) const
     {
         dbg<<"Moffat shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2753,13 +2775,17 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<float>& img, double dx) const;
-    template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<double>& img, double dx) const;
+    template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<float>& img,double dx) const;
+    template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<double>& img,double dx) const;
 
-    template void SBProfile::drawShoot(ImageView<float> image, double N, UniformDeviate& ud) const;
-    template void SBProfile::drawShoot(ImageView<double> image, double N, UniformDeviate& ud) const;
-    template void SBProfile::drawShoot(Image<float>& image, double N, UniformDeviate& ud) const;
-    template void SBProfile::drawShoot(Image<double>& image, double N, UniformDeviate& ud) const;
+    template double SBProfile::drawShoot(ImageView<float> image, double N, UniformDeviate ud,
+                                         int poissonFlux) const;
+    template double SBProfile::drawShoot(ImageView<double> image, double N, UniformDeviate ud,
+                                         int poissonFlux) const;
+    template double SBProfile::drawShoot(Image<float>& image,double N, UniformDeviate ud,
+                                         int poissonFlux) const;
+    template double SBProfile::drawShoot(Image<double>& image,double N, UniformDeviate ud,
+                                         int poissonFlux) const;
 
     template double SBProfile::draw(Image<float>& img, double dx, int wmult) const;
     template double SBProfile::draw(Image<double>& img, double dx, int wmult) const;
