@@ -2673,8 +2673,8 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<float>& img, double dx) const;
-    template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<double>& img, double dx) const;
+    template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<float>& img,double dx) const;
+    template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<double>& img,double dx) const;
 
     template void SBProfile::drawShoot(ImageView<float> image, double N, UniformDeviate ud) const;
     template void SBProfile::drawShoot(ImageView<double> image, double N, UniformDeviate ud) const;
