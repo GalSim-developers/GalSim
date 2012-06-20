@@ -585,125 +585,127 @@ def Script4():
     psf1 = galsim.Gaussian(fwhm = psf_fwhm)
     psf2 = galsim.Moffat(fwhm = psf_fwhm, beta = 2.4)
     psf3 = galsim.DoubleGaussian(
-                    fwhm1 = psf_fwhm, flux1 = 0.8,
-                    fwhm2 = 2*psf_fwhm, flux2 = 0.2)
-    psf4 = galsim.Convolve([
-            galsim.Gaussian(fwhm = psf_fwhm),
-            galsim.OpticalPSF(
-                    lam_over_D = 0.4,
-                    defocus = 0.1,
-                    astig1 = 0.3, astig2 = -0.2,
-                    coma1 = 0.2, coma2 = 0.1,
-                    spher = -0.3) 
-            ])
-    psf5 = galsim.Convolve([
-            galsim.Kolmogorov(fwhm = psf_fwhm),
-            galsim.Airy(lam_over_D = 0.4) 
-            ])
+            fwhm1 = psf_fwhm, flux1 = 0.8,
+            fwhm2 = 2*psf_fwhm, flux2 = 0.2)
+    atmos = galsim.Gaussian(fwhm = psf_fwhm)
+    optics = galsim.OpticalPSF(
+            lam_over_D = 0.4,
+            defocus = 0.1,
+            astig1 = 0.3, astig2 = -0.2,
+            coma1 = 0.2, coma2 = 0.1,
+            spher = -0.3) 
+    psf4 = galsim.Convolve([atmos,optics])
+    atmos = galsim.AtmosphericPSF(fwhm = psf_fwhm)
+    optics = galsim.Airy(lam_over_D = 0.4) 
+    psf5 = galsim.Convolve([atmos,optics])
     psfs = [psf1, psf2, psf3, psf4, psf5]
-    psf_names = ["Gaussian", "Moffat -- beta=2.4", 
+    psf_names = ["Gaussian", "Moffat", "DoubleGaussian", "OpticalPSF", "Kolmogorov * Airy"]
+    psf_times = [0,0,0,0,0]
+
+    gal1 = galsim.Gaussian(half_light_radius = 1)
+    gal2 = galsim.Exponential(half_light_radius = 1)
+    gal3 = galsim.Devaucouleurs(half_light_radius = 1)
+    gal4 = galsim.Sersic(half_light_radius = 1, n = 2.5)
+    bulge = galsim.Sersic(half_light_radius = 0.7, n = 3.2)
+    disk = galsim.Sersic(half_light_radius = 1.2, n = 1.5)
+    gal5 = 0.4*bulge = 0.6*disk  # Net half-light radius is only approximate for this one.
 
     # Make the galaxy profiles:
     gals = [gal1, gal2, gal3, gal4, gal5]
+    gal_names = ["Gaussian", "Exponential", "Devaucouleurs", "n=2.5 Sersic", "Bulge+Disk"]
+    gal_times = [0,0,0,0,0]
 
     # Loop over combinations of psf, gal, and make 4 random choices for flux, size, shape.
     images = []
-    for ipsf in psfs:
-        for gal in gals:
+    for ipsf in range(len(psfs)):
+        psf = psfs[ipsf]
+        psf_name = psf_names[ipsf]
+        for igal in range(len(gals)):
+            gal = gals[igal]
+            gal_name = gal_names[igal]
             for i in range(4):
-                x = rng()
-                flux = x * (gal_flux_max-gal_flux_min) + gal_flux_min
-                x = rng()
-                hlr = x * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
-                x = rng()
-                e = x * (gal_e_max-gal_e_min) + gal_e_min
-                x = rng()
-                beta = (x * 2*math.pi) * galsim.radians
-                x = rng()
-                theta = (x * 2*math.pi) * galsim.radians
+                #logger.info('Start work on image %d',i)
+                t1 = time.time()
+
+                # Generate random variates:
+                flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
+                hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
+                e = rng() * (gal_e_max-gal_e_min) + gal_e_min
+                beta = rng() * 2*math.pi * galsim.radians
 
                 # Use create rather than apply for the first one to get a new copy.
-                # Could also do gal1 = gal.copy() and then applyDilation(hlr)
+                # Could also do gal1 = gal.copy() and then gal1.applyDilation(hlr)
                 gal1 = gal.createDilated(hlr)
-                gal1.applyShear(e=e,beta=beta)
+                gal_shape = galsim.Shear(e=e,beta=beta)
+                gal1.applyShear(gal_shape)
                 gal1.setFlux(flux)
-
-                psf1 = psf.createRotated(
 
                 final = galsim.Convolve([ga1,psf,pix])
                 final_nopix = galsim.Convolve([ga1,psf])
 
                 image = galsim.ImageF(2*nx,ny)
-                image1 = image[galsim.BoundsI(0,nx-1,0,nx-1)]
-                image2 = image[galsim.BoundsI(nx,2*nx-1,0,nx-1)]
+                image.setScale(pixel_scale)
+                fft_image = image[galsim.BoundsI(0,nx-1,0,nx-1)]
+                phot_image = image[galsim.BoundsI(nx,2*nx-1,0,nx-1)]
 
-        #logger.info('Start work on image %d',i)
-        t1 = time.time()
+                #logger.info('   Read in training sample galaxy and PSF from file')
+                t2 = time.time()
 
-        gal = galsim.RealGalaxy(real_galaxy_catalog, index = i)
-        #logger.info('   Read in training sample galaxy and PSF from file')
-        t2 = time.time()
+                # Draw the profile
+                final.draw(fft_image)
 
-        # Set the flux
-        gal.setFlux(gal_flux)
+                #logger.info('   Drew fft image')
+                t3 = time.time()
 
-        # Apply the desired shear
-        gal.applyShear(g1=gal_g1, g2=gal_g2)
-        
-        # Make the combined profile
-        final = galsim.Convolve([gal,psf,pix])
+                # Repeat for photon shooting image.
+                # Photon shooting automatically convolves by the pixel, so make sure not
+                # to include it in the profile!
 
-        # Draw the profile
-        fft_image = galsim.ImageF(128,128)
-        final.draw(fft_image, dx=pixel_scale)
+                final_nopix.drawShoot(phot_image, noise = sky_level / 10)
+                #logger.info('   Drew photon shoot image')
+                t4 = time.time()
 
-        #logger.info('   Drew fft image')
-        t3 = time.time()
+                # Add Poisson noise
+                fft_image += sky_level
+                fft_image.addNoise(galsim.CCDNoise(rng))
+                fft_image -= sky_level
 
-        # Repeat for photon shooting image.
-        # Photon shooting automatically convolves by the pixel, so make sure not
-        # to include it in the profile!
-        final_without_pix = galsim.Convolve([gal,psf])
-        phot_image = galsim.ImageF(128,128)
-        phot_image.setScale(pixel_scale)
+                # For photon shooting, galaxy already has poisson noise, so just add sky noise
+                phot_image.addNoise(galsim.PoissonDeviate(rng, mean=sky_level))
+                phot_image -= sky_level
 
-        final_without_pix.drawShoot(phot_image, N = gal_flux)
-        #logger.info('   Drew photon shoot image')
-        t4 = time.time()
+                #logger.info('   Added Poisson noise')
+                t5 = time.time()
 
-        # Add Poisson noise
-        fft_image += sky_level
-        fft_image.addNoise(galsim.CCDNoise(rng))
-        fft_image -= sky_level
+                # Store that into the list of all images
+                all_images += [image]
 
-        # For photon shooting, galaxy already has poisson noise, so just add sky noise
-        phot_image.addNoise(galsim.PoissonDeviate(rng, mean=sky_level))
-        phot_image -= sky_level
-
-        #logger.info('   Added Poisson noise')
-        t5 = time.time()
-
-        # Store that into the list of all images
-        all_images += [sim_image]
-        t6 = time.time()
-
-        logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
-        logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t6-t1)
+                logger.info('%s * %s, flux = %.2f, hlr = %.2f, ellip = (%.2f,%.2f)',
+                        gal_name, psf_name, flux, hlr, gal_shape.getE1(), gal_shape.getE2())
+                logger.info('   Times: %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
+                psf_times[ipsf] += t5-t1
+                gal_times[igal] += t5-t1
+                setup_times += t2-t1
+                fft_times += t3-t2
+                phot_times += t4-t3
+                noise_times += t5-t4
 
     logger.info('Done making images of galaxies')
+    logger.info('Some timing statistics:')
+    logger.info('   Total time for setup steps = %f',setup_times)
+    logger.info('   Total time for regular fft drawing = %f',fft_times)
+    logger.info('   Total time for photon shooting = %f',phot_times)
+    logger.info('   Total time for adding noise = %f',noise_times)
+    logger.info('Breakdown by PSF type:')
+    for ipsf in range(len(psfs)):
+        logger.info('   %s: Total time = %f',psf_name[ipsf],psf_times[ipsf])
+    logger.info('Breakdown by Galaxy type:')
+    for igal in range(len(gals)):
+        logger.info('   %s: Total time = %f',gal_name[igal],gal_times[igal])
 
     # Now write the image to disk.
-    galsim.fits.writeMulti(fft_images, multi_file_name, clobber=True)
-    logger.info('Wrote fft images to multi-extension fits file %r',multi_fft_file_name)
-
-    galsim.fits.writeMulti(fft_images, multi_file_name, clobber=True)
-    logger.info('Wrote phot images to multi-extension fits file %r',multi_phot_file_name)
-
-    galsim.fits.writeCube(fft_images, cube_file_name, clobber=True)
-    logger.info('Wrote fft image to fits data cube %r',cube_fft_file_name)
-
-    galsim.fits.writeCube(fft_images, cube_file_name, clobber=True)
-    logger.info('Wrote phot image to fits data cube %r',cube_phot_file_name)
+    galsim.fits.writeCube(all_images, cube_file_name, clobber=True)
+    logger.info('Wrote fft image to fits data cube %r',cube_file_name)
 
     print
 
@@ -739,8 +741,13 @@ def main(argv):
     if scriptNum == 0 or scriptNum == 2:
         Script2()
 
+    # Script 3: Real galaxies
     if scriptNum == 0 or scriptNum == 3:
         Script3()
+
+    # Script 4: Photon shooting
+    if scriptNum == 0 or scriptNum == 4:
+        Script4()
 
 if __name__ == "__main__":
     main(sys.argv)
