@@ -494,17 +494,36 @@ namespace galsim {
          * produced by `drawShoot` onto an image with pixel scale `dx`.
          *
          * @param[in] img Image to draw on.
+         *            Note: Unlike for the regular draw command, image is a required
+         *            parameter.  drawShoot will not make the image for you.
          * @param[in] N Total number of photons to produce.
          *            N is input as a double so that very large values of N don't have to
          *            worry about overflowing int on systems with a small MAX_INT.
          *            Internally it will be rounded to the nearest integer.
+         *            If N=0, use as many photons as necessary to end up with
+         *            an image with the correct poisson shot noise for the object's flux.
+         *            For positive definite profiles, this is equivalent to N = flux.
+         *            However, some profiles need more than this because some of the shot
+         *            photons are negative (usually due to interpolants).
+         * @param[in] noise If provided, the allowed extra noise in each pixel.
+         *            This is only relevant if N=0, so the number of photons is being 
+         *            automatically calculated.  In that case, if the image noise is 
+         *            dominated by the sky background, you can get away with using fewer
+         *            shot photons than the full N = flux.  Essentially each shot photon
+         *            can have a flux > 1.  Then extra poisson noise is added after the fact.
+         *            The noise parameter specifies how much extra noise per pixel is allowed 
+         *            because of this approximation.  A typical value for this would be
+         *            noise = sky_level / 100 where sky_level is the flux per pixel 
+         *            due to the sky.  Note that this uses a "variance" definition of noise,
+         *            not a "sigma" definition.
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         */
+         */ 
+
         template <typename T>
-        void drawShoot(ImageView<T> img, double N, UniformDeviate& ud) const;
+        void drawShoot(ImageView<T> img, double N, double noise, UniformDeviate& ud) const;
         template <typename T>
-        void drawShoot(Image<T>& img, double N, UniformDeviate& ud) const 
-        { drawShoot(img.view(), N, ud); }
+        void drawShoot(Image<T>& img, double N, double noise, UniformDeviate& ud) const 
+        { drawShoot(img.view(), N, noise, ud); }
         //@}
 
         /** 

@@ -310,13 +310,31 @@ class GSObject:
             image *= dx*dx
         return image
 
-    def drawShoot(self, image, N, ud=None, normalization="flux"):
+    def drawShoot(self, image, N=0., SN=0., ud=None, normalization="flux"):
         """@brief Returns an Image of the object, with bounds optionally set by an input Image.
 
         @param image  The image on which to draw the profile.
                       Note: Unlike for the regular draw command, image is a required
                       parameter.  drawShoot will not make the image for you.
-        @param N      The number of photons to use.
+        @param N      If provided, the number of photons to use.
+                      If not provided, use as many photons as necessary to end up with
+                      an image with the correct poisson shot noise for the object's flux.
+                      For positive definite profiles, this is equivalent to N = flux.
+                      However, some profiles need more than this because some of the shot
+                      photons are negative (usually due to interpolants).
+                      (Default = 0.)
+        @param noise  If provided, the allowed extra noise in each pixel.
+                      This is only relevant if N=0, so the number of photons is being 
+                      automatically calculated.  In that case, if the image noise is 
+                      dominated by the sky background, you can get away with using fewer
+                      shot photons than the full N = flux.  Essentially each shot photon
+                      can have a flux > 1.  Then extra poisson noise is added after the fact.
+                      The noise parameter specifies how much extra noise per pixel is allowed 
+                      because of this approximation.  A typical value for this would be
+                      noise = sky_level / 100 where sky_level is the flux per pixel 
+                      due to the sky.  Note that this uses a "variance" definition of noise,
+                      not a "sigma" definition.
+                      (Default = 0.)
         @param ud     If provided, a UniformDeviate to use for the random numbers
                       If ud=None, one will be automatically created, using the time as a seed.
                       (Default = None)
@@ -341,7 +359,7 @@ class GSObject:
             N = float(N)
         if ud == None:
             ud = galsim.UniformDeviate()
-        self.SBProfile.drawShoot(image, N, ud)
+        self.SBProfile.drawShoot(image, N, noise, ud)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":
             dx = image.getScale()
@@ -952,7 +970,7 @@ object_param_dict = {"Gaussian":       { "required" : (),
                                          "size"     : ("sigma1, sigma2, fwhm1, fwhm2",), 
                                          "optional" : () },
                      "AtmosphericPSF": { "required" : (),
-                                         "size"     : ("lam_over_r0",),
+                                         "size"     : ("fwhm", "lam_over_r0",),
                                          "optional" : ("dx", "oversampling") } }
 
 
