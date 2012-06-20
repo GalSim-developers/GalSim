@@ -519,8 +519,11 @@ namespace galsim {
          * @param[in] poissonFlux Set != 0 to allow total object flux scaling to vary according to 
          *                        Poisson statistics for `N` samples (default `poissonFlux = 0`).
          * @returns The number of photons that fell outside the Image bounds.
-         */ 
-
+         *
+         * Note: N is input as a double so that very large values of N don't have to
+         *       worry about overflowing int on systems with a small MAX_INT.
+         *       Internally it will be rounded to the nearest integer.
+         */
         template <typename T>
         double drawShoot(ImageView<T> img, double N, double noise, UniformDeviate& ud,
                        int poissonFlux=0) const;

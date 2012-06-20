@@ -2500,7 +2500,8 @@ namespace galsim {
         // Clear image before adding photons, for consistency with draw() methods.
         img.fill(0.);  
         double origN = N;
-        xdbg<<"origN = "<<origN<<std::endl;
+        dbg<<"Start drawShoot.\n";
+        dbg<<"origN = "<<origN<<std::endl;
 
         dbg<<"Start drawShoot.\n";
 
@@ -2513,7 +2514,7 @@ namespace galsim {
             xdbg<<"Poisson scaling flux by factor "<<poissonScaleFlux<<std::endl;
         }
 
-        double targetFlux = getFlux();
+        double targetFlux = poissonScaleFlux * getFlux();
         dbg<<"target flux = "<<targetFlux<<std::endl;
         double realizedFlux = 0.;
 
@@ -2525,7 +2526,6 @@ namespace galsim {
             xdbg<<"scaleFlux by "<<(maxN/origN)<<std::endl;
             pa.scaleFlux(poissonScaleFlux * maxN / origN);
             xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
-            pa.addTo(img);
             outsideN += pa.addTo(img);
             N -= maxN;
             realizedFlux += pa.getTotalFlux();
@@ -2536,7 +2536,7 @@ namespace galsim {
         PhotonArray pa = _pimpl->shoot(finalN, u);
         xdbg<<"pa.flux = "<<pa.getTotalFlux()<<std::endl;
         xdbg<<"scaleFlux by "<<(finalN/origN)<<std::endl;
-        pa.scaleFlux(poissonScaleFlux * N / origN);
+        pa.scaleFlux(poissonScaleFlux * finalN / origN);
         xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
         outsideN += pa.addTo(img);
         realizedFlux += pa.getTotalFlux();
