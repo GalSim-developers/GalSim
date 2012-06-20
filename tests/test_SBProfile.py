@@ -954,7 +954,7 @@ def test_sbprofile_smallshear():
             err_msg="Using GSObject applyTransformation disagrees with expected result")
     gauss = galsim.Gaussian(flux=1, sigma=1)
     gauss2 = gauss.createTransformed(myEllipse)
-    gauss2.draw(myImg,dx=0.2)
+    gauss2.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject createTransformed disagrees with expected result")
@@ -1007,6 +1007,7 @@ def test_sbprofile_largeshear():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject createSheared disagrees with expected result")
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
+    devauc.applyTransformation(myEllipse)
     devauc.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1487,7 +1488,7 @@ def test_sbprofile_shift():
             err_msg="Using GSObject applyShift disagrees with expected result")
     pixel = galsim.Pixel(xw=0.2, yw=0.2)
     pixel.applyTransformation(galsim.Ellipse(galsim.PositionD(0.2, -0.2)))
-    pixel.draw(myImg,dx=0.2)
+    pixel.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyTransformation disagrees with expected result")

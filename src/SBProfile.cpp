@@ -1269,7 +1269,7 @@ namespace galsim {
         if (_mA == 1. && _mB == 0. && _mC == 0. && _mD == 1. && 
             _cen.x == 0. && _cen.y == 0.) {
             // Then only a fluxScaling.  Call the adaptee's fillKGrid directly and rescale:
-            _adaptee._pimpl->fillKGrid(kt);
+            SBProfile::GetImpl(_adaptee)->fillKGrid(kt);
             kt *= _fluxScaling;
             return;
         } 
