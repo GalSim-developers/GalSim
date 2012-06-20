@@ -171,9 +171,8 @@ def ErrorExit(*args, **kwargs):
                 else:
                     out.write('Expected at least %s conftest executables, but only found %s.\n'\
                         % (n,len(conftest_list)))
-        except Exception as err:
-            out.write("Error trying to get output of last conftest executable:")
-            our.write(str(err))
+        except:
+            out.write("Error trying to get output of last conftest executable.")
 
     print
     print 'Please fix the above error(s) and re-run scons'
