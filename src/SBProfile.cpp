@@ -712,8 +712,8 @@ namespace galsim {
     {
         xdbg<<"Start SBAdd::add.  Adding item # "<<_plist.size()+1<<std::endl;
         // Add new summand(s) to the _plist:
-        assert(rhs._pimpl.get());
-        const SBAddImpl *sba = dynamic_cast<const SBAddImpl*>(rhs._pimpl.get());
+        assert(SBProfile::GetImpl(rhs));
+        const SBAddImpl *sba = dynamic_cast<const SBAddImpl*>(SBProfile::GetImpl(rhs));
         if (sba) {
             // If rhs is an SBAdd, copy its full list here
             _plist.insert(_plist.end(),sba->_plist.begin(),sba->_plist.end());
@@ -772,13 +772,13 @@ namespace galsim {
     {
         if (_plist.empty()) kt.clear();
         ConstIter pptr = _plist.begin();
-        assert(pptr->_pimpl.get());
-        pptr->_pimpl->fillKGrid(kt);
+        assert(SBProfile::GetImpl(*pptr));
+        SBProfile::GetImpl(*pptr)->fillKGrid(kt);
         if (++pptr != _plist.end()) {
             KTable k2(kt.getN(),kt.getDk());
             for ( ; pptr!= _plist.end(); ++pptr) {
-                assert(pptr->_pimpl.get());
-                pptr->_pimpl->fillKGrid(k2);
+                assert(SBProfile::GetImpl(*pptr));
+                SBProfile::GetImpl(*pptr)->fillKGrid(k2);
                 kt.accumulate(k2);
             }
         }
@@ -788,13 +788,13 @@ namespace galsim {
     {
         if (_plist.empty()) xt.clear();
         ConstIter pptr = _plist.begin();
-        assert(pptr->_pimpl.get());
-        pptr->_pimpl->fillXGrid(xt);
+        assert(SBProfile::GetImpl(*pptr));
+        SBProfile::GetImpl(*pptr)->fillXGrid(xt);
         if (++pptr != _plist.end()) {
             XTable x2(xt.getN(),xt.getDx());
             for ( ; pptr!= _plist.end(); ++pptr) {
-                assert(pptr->_pimpl.get());
-                pptr->_pimpl->fillXGrid(x2);
+                assert(SBProfile::GetImpl(*pptr));
+                SBProfile::GetImpl(*pptr)->fillXGrid(x2);
                 xt.accumulate(x2);
             }
         }
@@ -857,8 +857,9 @@ namespace galsim {
     {
         dbg<<"Start SBTransformImpl initialize\n";
         // First check if our adaptee is really another SBTransform:
-        assert(_adaptee._pimpl.get());
-        const SBTransformImpl* sbd = dynamic_cast<const SBTransformImpl*>(_adaptee._pimpl.get());
+        assert(SBProfile::GetImpl(_adaptee));
+        const SBTransformImpl* sbd = dynamic_cast<const SBTransformImpl*>(
+            SBProfile::GetImpl(_adaptee));
         dbg<<"sbd = "<<sbd<<std::endl;
         if (sbd) {
             dbg<<"wrapping another transformation.\n";
@@ -1220,7 +1221,7 @@ namespace galsim {
     // are factorizable:
     void SBTransform::SBTransformImpl::fillKGrid(KTable& kt) const
     {
-        double N = (double) kt.getN();
+        int N = kt.getN();
         double dk = kt.getDk();
 
 #if 0
@@ -1346,8 +1347,8 @@ namespace galsim {
         dbg<<"Start SBConvolveImpl::add.  Adding item # "<<_plist.size()+1<<std::endl;
 
         // Add new terms(s) to the _plist:
-        assert(rhs._pimpl.get());
-        const SBConvolveImpl *sbc = dynamic_cast<const SBConvolveImpl*>(rhs._pimpl.get());
+        assert(SBProfile::GetImpl(rhs));
+        const SBConvolveImpl *sbc = dynamic_cast<const SBConvolveImpl*>(SBProfile::GetImpl(rhs));
         if (sbc) {  
             // If rhs is an SBConvolve, copy its list here
             for (ConstIter pptr = sbc->_plist.begin(); pptr!=sbc->_plist.end(); ++pptr) {
@@ -1393,13 +1394,13 @@ namespace galsim {
     {
         if (_plist.empty()) kt.clear();
         ConstIter pptr = _plist.begin();
-        assert(pptr->_pimpl.get());
-        pptr->_pimpl->fillKGrid(kt);
+        assert(SBProfile::GetImpl(*pptr));
+        SBProfile::GetImpl(*pptr)->fillKGrid(kt);
         if (++pptr != _plist.end()) {
             KTable k2(kt.getN(),kt.getDk());
             for ( ; pptr!= _plist.end(); ++pptr) {
-                assert(pptr->_pimpl.get());
-                pptr->_pimpl->fillKGrid(k2);
+                assert(SBProfile::GetImpl(*pptr));
+                SBProfile::GetImpl(*pptr)->fillKGrid(k2);
                 kt *= k2;
             }
         }
@@ -1834,8 +1835,8 @@ namespace galsim {
 
             for (int j = I.getYMin(); j <= I.getYMax(); j++) {
                 if (xfac==0. || std::abs(j)>yedge) I(i,j)=T(0);
-                else if (std::abs(j)==yedge) I(i,j)=xfac*yfrac;
-                else I(i,j)=xfac;
+                else if (std::abs(j)==yedge) I(i,j)=T(xfac*yfrac);
+                else I(i,j)=T(xfac);
                 totalflux += I(i,j);
             }
         }
