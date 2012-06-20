@@ -205,7 +205,7 @@ struct PySBProfile {
                  " DFT.")
             .def("centroid", &SBProfile::centroid)
             .def("getFlux", &SBProfile::getFlux)
-            .def("scaleFlux", &SBProfile::setFlux, bp::args("fluxRatio"))
+            .def("scaleFlux", &SBProfile::scaleFlux, bp::args("fluxRatio"))
             .def("setFlux", &SBProfile::setFlux, bp::args("flux"))
             .def("applyTransformation", &SBProfile::applyTransformation, bp::args("e"))
             .def("applyShear",
