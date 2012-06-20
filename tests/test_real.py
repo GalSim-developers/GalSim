@@ -111,7 +111,7 @@ def test_real_galaxy_ideal():
                     print 'tps,tpf,tps1,tps2 = ',tps,tpf,tps1,tps2
                     # make target PSF
                     targ_PSF = galsim.Gaussian(fwhm = tpf)
-                    targ_PSF.applyShear(tps1, tps2)
+                    targ_PSF.applyShear(g1=tps1, g2=tps2)
                     # simulate image
                     sim_image = galsim.simReal(
                             rg, targ_PSF, tps, 
@@ -133,7 +133,8 @@ def test_real_galaxy_ideal():
                     # compare with images that are expected
                     expected_gaussian = galsim.Gaussian(
                             flux = fake_gal_flux, sigma = tps*tot_sigma)
-                    expected_gaussian.applyDistortion(galsim.Ellipse(tot_e1, tot_e2))
+                    expected_gaussian.applyTransformation(
+                            galsim.Ellipse(e1 = tot_e1, e2 = tot_e2)._ellipse)
                     expected_image = galsim.ImageD(
                             sim_image.array.shape[0], sim_image.array.shape[1])
                     expected_gaussian.draw(expected_image, dx = tps)

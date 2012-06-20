@@ -53,7 +53,7 @@ def Script1():
     psf_file_name = os.path.join('output','g08_psf.fits')
     psf_beta = 3                    #
     psf_fwhm = 2.85                 # arcsec (=pixels)
-    psf_trunc = 2.                  # FWHM
+    psf_trunc = 2.*psf_fwhm         # arcsec (=pixels)
     psf_g1 = -0.019                 #
     psf_g2 = -0.007                 #
     psf_centroid_shift = 1.0        # arcsec (=pixels)
@@ -89,8 +89,9 @@ def Script1():
     rng = galsim.UniformDeviate(random_seed)
 
     # Define the PSF profile
-    psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm, truncationFWHM=psf_trunc)
-    psf.applyShear(psf_g1,psf_g2)
+    psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm, trunc=psf_trunc)
+    psf_re = psf.getHalfLightRadius()  # Need this later...
+    psf.applyShear(g1=psf_g1,g2=psf_g2)
     logger.info('Made PSF profile')
 
     pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
@@ -144,13 +145,10 @@ def Script1():
 
     # Define the galaxy profile
 
-    # TODO: This is a hack. We should have a getHalfLightRadius() method.
-    psf_re = psf_fwhm / 2
-
     # First figure out the size we need from the resolution
-    # great08 resolution was defined as Rgp / Rp where Rp is the FWHM of the PSF
-    # and Rgp is the FWHM of the convolved galaxy.
-    # We make the approximation here that the FWHM adds in quadrature during the
+    # great08 resolution was defined as Rgp / Rp where Rp is the hlr of the PSF
+    # and Rgp is the hlr of the convolved galaxy.
+    # We make the approximation here that the hlr adds in quadrature during the
     # convolution, so we can get the unconvolved size as:
     # Rg^2 = Rgp^2 - Rp^2 = Rp^2 * (resolution^2 - 1)
     gal_re = psf_re * math.sqrt( gal_resolution**2 - 1)
@@ -198,7 +196,6 @@ def Script1():
                     ellip = gd()
 
                 # Apply a random orientation:
-                #theta = rng() * 2. * math.pi * galsim.radians
                 theta = rng() * 2. * math.pi
                 first_in_pair = False
             else:
@@ -206,11 +203,12 @@ def Script1():
                 theta += math.pi/2
                 first_in_pair = True
 
-            this_gal = gal.createSheared(ellip,0)
-            this_gal.applyRotation(theta * galsim.radians)
+            # apply an e1/e2-type distortion by specifying e=ellip and beta=real-space position
+            # angle
+            this_gal = gal.createSheared(e=ellip, beta=theta*galsim.radians)
 
-            # Apply the gravitational shear
-            this_gal.applyShear(gal_g1,gal_g2)
+            # Apply the gravitational reduced shear by specifying g1/g2
+            this_gal.applyShear(g1=gal_g1, g2=gal_g2)
 
             # Apply a random centroid shift:
             rsq = 2 * gal_centroid_shift_sq
@@ -327,7 +325,7 @@ def Script2():
     config.psf.fwhm.col = 6
 
     # You can also specify both of these on the same line as a single string:
-    config.psf.truncationFWHM = 'InputCatalog col=9'
+    config.psf.trunc = 'InputCatalog col=9'
 
     # You can even nest string values using angle brackets:
     config.psf.ellip = 'E1E2 e1=<InputCatalog col=7> e2=<InputCatalog col=8>'
@@ -485,8 +483,9 @@ def Script3():
 
     ## Make the ePSF
     # first make the double Gaussian PSF
-    psf = galsim.atmosphere.DoubleGaussian(psf_inner_fraction, 1.0-psf_inner_fraction, fwhm1 =
-                                           psf_inner_fwhm, fwhm2 = psf_outer_fwhm)
+    psf = galsim.atmosphere.DoubleGaussian(
+            fwhm1 = psf_inner_fwhm, flux1 = psf_inner_fraction,
+            fwhm2 = psf_outer_fwhm, flux2 = 1.-psf_inner_fraction)
     # make the pixel response
     pix = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)
     # convolve PSF and pixel response function to get the effective PSF (ePSF)
