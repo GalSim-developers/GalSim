@@ -2470,6 +2470,7 @@ namespace galsim {
         PhotonArray pa = _pimpl->shoot(int(N), u);
         pa.scaleFlux(N / origN);
         outsideN += pa.addTo(img);
+        xdbg<<"outsideN "<<ousideN<<std::endl;
         return outsideN;
     }
 
