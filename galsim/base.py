@@ -175,7 +175,45 @@ class GSObject:
             raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
         self.SBProfile.applyTransformation(ellipse._ellipse)
         self.__class__ = GSObject
+ 
+    def applyDilation(self, scale):
+        """@brief Apply a dilation of the size by the given scale.
+
+        This operation preserves flux.
+        See applyMagnification for a version that preserves surface brightness, and thus 
+        changes the flux.
+
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
+        """
+        import math
+        ret = self.copy()
+        flux = self.getFlux()
+        ret.applyTransformation(galsim.Ellipse(math.log(scale)))
+        ret.setFlux(flux)
+        return ret
+
+    def applyMagnification(self, scale):
+        """@brief Apply a magnification by the given scale, scaling the size by scale
+        and the flux by scale^2.  
         
+        This operation preserves surface brightness, which means that the flux is scales 
+        with the change in area.  
+        See applyDilation for a version that preserves flux.
+
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
+        """
+        import math
+        ret = self.copy()
+        ret.applyTransformation(galsim.Ellipse(math.log(scale)))
+        return ret
+
+       
     def applyShear(self, *args, **kwargs):
         """@brief Apply a shear to this object, where arguments are either a galsim.Shear, or
         arguments that will be used to initialize one.
@@ -225,11 +263,11 @@ class GSObject:
     # Also add methods which create a new GSObject with the transformations applied...
     #
     def createTransformed(self, ellipse):
-        """@brief Returns a new GSObject by applying a galsim.Ellipse transformation (shear, dilate,
-        and/or shift).
+        """@brief Returns a new GSObject by applying a galsim.Ellipse transformation 
+        (shear, dilate, and/or shift).
 
-        Note that Ellipse objects can be initialized in a variety of ways (see documentation of this
-        class for details).
+        Note that Ellipse objects can be initialized in a variety of ways (see documentation 
+        of this class for details).
         """
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to createTransformed must be a galsim.Ellipse!")
@@ -237,8 +275,43 @@ class GSObject:
         ret.applyTransformation(ellipse)
         return ret
 
+    def createDilated(self, scale):
+        """@brief Returns a new GSObject by applying a dilation of the size by the given scale.
+        
+        This operation preserves flux.  
+        See createMagnified for a version that preserves surface brightness, and thus 
+        changes the flux.
+        """
+        import math
+        ret = self.copy()
+        flux = self.getFlux()
+        ret.applyTransformation(galsim.Ellipse(math.log(scale)))
+        ret.setFlux(flux)
+        return ret
+
+    def createMagnified(self, scale):
+        """@brief Returns a new GSObject by applying a magnification by the given scale,
+        scaling the size by scale and the flux by scale^2.  
+
+        This operation preserves surface brightness, which means that the flux
+        is also scaled by a factor of scale^2.
+        See createDilated for a version that preserves flux.
+        """
+        import math
+        ret = self.copy()
+        ret.applyTransformation(galsim.Ellipse(math.log(scale)))
+        return ret
+
     def createSheared(self, *args, **kwargs):
-        """@brief Returns A new GSObject by applying a shear, where arguments are either a
+        """@brief Returns a new GSObject by applying a shear, where arguments are either a
+        galsim.Shear or keyword arguments that can be used to create one.
+        """
+        ret = self.copy()
+        ret.applyShear(*args, **kwargs)
+        return ret
+
+    def createSheared(self, *args, **kwargs):
+        """@brief Returns a new GSObject by applying a shear, where arguments are either a
         galsim.Shear or keyword arguments that can be used to create one.
         """
         ret = self.copy()
