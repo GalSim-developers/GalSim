@@ -6,7 +6,6 @@
 // The basic SBProfile stuff:
 #include "galsim/SBProfile.h"
 #include "galsim/SBDeconvolve.h"
-#include "galsim/SBParse.h"
 #include "galsim/SBInterpolatedImage.h"
 
 // An interface for dealing with images

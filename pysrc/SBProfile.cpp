@@ -2,7 +2,6 @@
 #include "boost/python/stl_iterator.hpp"
 #include "SBProfile.h"
 #include "SBDeconvolve.h"
-#include "SBParse.h"
 
 namespace bp = boost::python;
 
@@ -564,8 +563,6 @@ void pyExportSBProfile() {
     PySBMoffat::wrap();
     PySBDeVaucouleurs::wrap();
     PyPhotonArray::wrap();
-
-    bp::def("SBParse", &galsim::SBParse);
 }
 
 } // namespace galsim
