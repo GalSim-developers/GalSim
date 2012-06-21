@@ -2491,57 +2491,147 @@ namespace galsim {
      *************************************************************/
 
     template <class T>
-    double SBProfile::drawShoot(ImageView<T> img, double N, double noise, UniformDeviate u, 
-                                int poissonFlux) const 
+    double SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate u, 
+                                double noise, bool poisson_flux) const 
     {
-        const int maxN = 100000;
+        // If N = 0, this routine will try to end up with an image with the number of real 
+        // photons = flux that has the corresponding Poisson noise. For profiles that are 
+        // positive definite, then N = flux. Easy.
+        //
+        // However, some profiles shoot some of their photons with negative flux. This means that 
+        // we need a few more photons to get the right S/N = sqrt(flux). Take eta to be the 
+        // fraction of shot photons that have negative flux.
+        //
+        // S^2 = (N+ - N-)^2 = (N+ + N- - 2N-)^2 = (Ntot - 2N-)^2 = Ntot^2(1 - 2 eta)^2
+        // N^2 = Var(S) = (N+ + N-) = Ntot
+        //
+        // So flux = (S/N)^2 = Ntot (1-2eta)^2
+        // Ntot = flux / (1-2eta)^2
+        //
+        // That's all the easy case. The trickier case is when we are sky-background dominated.
+        // Then we can usually get away with fewer shot photons than the above.  In particular,
+        // if the noise from the photon shooting is much less than the sky noise, then we can 
+        // use fewer shot photons and essentially have each photon have a flux > 1. This is ok 
+        // as long as the additional noise due to this approximation is "much less than" the 
+        // noise we'll be adding to the image for the sky noise.
+        //
+        // Let's still have Ntot photons, but now each with a flux of g. And let's look at the 
+        // noise we get in the brightest pixel that has a nominal total flux of fmax.
+        //
+        // The number of photons hitting this pixel will be fmax/flux * Ntot.
+        // The variance of this number is the same thing (Poisson counting). 
+        // So the noise in that pixel is:
+        //
+        // N^2 = fmax/flux * Ntot * g^2
+        //
+        // And the signal in that pixel will be:
+        //
+        // S = fmax/flux * (N+ - N-) * g which has to equal fmax, so
+        // g = flux / Ntot(1-2eta)
+        // N^2 = fmax/Ntot * flux / (1-2eta)^2
+        //
+        // As expected, we see that lowering Ntot will increase the noise in that (and every 
+        // other) pixel.
+        // The input noise parameter is the maximum value of spurious noise we want to allow.
+        // So setting N^2 = noise, we get
+        //
+        // Ntot = fmax * flux / (1-2eta)^2 / noise
+        //
+        // One wrinkle about this calculation is that we don't know fmax a priori.
+        // So we start with a plausible number of photons to get going.  Then we keep adding 
+        // more photons until we either hit N = flux / (1-2eta)^2 or the noise in the brightest
+        // pixel is < noise.
+        // 
+        
+        dbg<<"Start drawShoot.\n";
+        dbg<<"N = "<<N<<std::endl;
+
+        const int maxN = 100000; // Don't do more than this at a time to keep the 
+                                 // memory usage reasonable.
         double outsideN = 0.; // number photons falling outside image, returned, type matches N
 
         // Clear image before adding photons, for consistency with draw() methods.
         img.fill(0.);  
+
+        double eta = getNegativeFlux() / getAbsoluteFlux();
+        double mod_flux = getFlux() / std::pow(1.-2.*eta,2);
+        if (N == 0.) N = mod_flux;
         double origN = N;
-        dbg<<"Start drawShoot.\n";
-        dbg<<"origN = "<<origN<<std::endl;
 
-        dbg<<"Start drawShoot.\n";
+        double scale_flux = 1.; // Amount by which to scale the flux at the end.
 
-        if (N == 0.) { N = getFlux(); poissonFlux = true; }
-
-        double poissonScaleFlux = 1.; // Allow optional Poisson flux variation according to N
-        if (poissonFlux != 0){
+        if (poisson_flux) {
             PoissonDeviate pd(u, N);
-            poissonScaleFlux *= double(pd()) / N;
-            xdbg<<"Poisson scaling flux by factor "<<poissonScaleFlux<<std::endl;
+            scale_flux *= pd() / N;
+            xdbg<<"Poisson scaling flux by factor "<<scale_flux<<std::endl;
         }
 
-        double targetFlux = poissonScaleFlux * getFlux();
-        dbg<<"target flux = "<<targetFlux<<std::endl;
-        double realizedFlux = 0.;
+        double target_flux = scale_flux * getFlux();
+        double realized_flux = 0.;
 
-        while (N > maxN) {
-            xdbg<<"shoot "<<maxN<<std::endl;
+        // If we're automatically figuring out N based on the noise, start with 100 photons
+        // Otherwise we'll do a maximum of maxN at a time until we go through all N.
+        int thisN = noise > 0. ? 100 : maxN;
+        while (true) {
+            // We break out of the loop when either N drops to 0 (if autoN = false) or 
+            // we find that all pixels have a noise level < noise (if autoN = true)
+            
+            if (thisN > maxN) thisN = maxN;
+            if (thisN > N) thisN = int(floor(N+0.5));
+
+            xdbg<<"shoot "<<thisN<<std::endl;
             assert(_pimpl.get());
-            PhotonArray pa = _pimpl->shoot(maxN, u);
+            PhotonArray pa = _pimpl->shoot(thisN, u);
             xdbg<<"pa.flux = "<<pa.getTotalFlux()<<std::endl;
-            xdbg<<"scaleFlux by "<<(maxN/origN)<<std::endl;
-            pa.scaleFlux(poissonScaleFlux * maxN / origN);
+            xdbg<<"scale flux by "<<(thisN/origN)<<std::endl;
+            pa.scaleFlux(scale_flux * thisN / origN);
             xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
             outsideN += pa.addTo(img);
-            N -= maxN;
-            realizedFlux += pa.getTotalFlux();
+            N -= thisN;
+            realized_flux += pa.getTotalFlux();
+            xdbg<<"N -> "<<N<<std::endl;
+
+            // This is always a reason to break out.
+            if (N < 1.) break;
+
+            if (noise > 0.) {
+                xdbg<<"Check the noise leve\n";
+                // First need to find what the current fmax is.
+                T fmax = 0.;
+                for(int x=img.getXMin(); x<=img.getXMax(); ++x)
+                    for(int y=img.getYMin(); y<=img.getYMax(); ++y) 
+                        if (img(x,y) > fmax) fmax = img(x,y);
+                xdbg<<"fmax = "<<fmax<<std::endl;
+                // Estimate a good value of Ntot based on what we know now
+                // Ntot = fmax * flux / (1-2eta)^2 / noise
+                double Ntot = fmax * mod_flux / noise;
+                xdbg<<"Calculated Ntot = "<<Ntot<<std::endl;
+                // So far we've done (origN-N)
+                // Set thisN to do the rest on the next pass.
+                thisN = int(Ntot - (origN-N));
+                xdbg<<"Next value of thisN = "<<thisN<<std::endl;
+                // If we've already done enough, break out of the loop.
+                if (thisN <= 0) break;
+            }
         }
-        xdbg<<"shoot "<<N<<std::endl;
-        assert(_pimpl.get());
-        int finalN = int(floor(N+0.5));
-        PhotonArray pa = _pimpl->shoot(finalN, u);
-        xdbg<<"pa.flux = "<<pa.getTotalFlux()<<std::endl;
-        xdbg<<"scaleFlux by "<<(finalN/origN)<<std::endl;
-        pa.scaleFlux(poissonScaleFlux * finalN / origN);
-        xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
-        outsideN += pa.addTo(img);
-        realizedFlux += pa.getTotalFlux();
-        dbg<<"Done drawShoot.  Realized flux = "<<realizedFlux<<std::endl;
+
+        // If we didn't shoot all the original number of photons, then our flux isn't right.
+        // Need to rescale the image by facto of origN / (origN-N)
+        if (N > 0.1) {
+            dbg<<"Flux scalings were set according to origN = "<<origN<<std::endl;
+            dbg<<"But only shot N = "<<origN-N<<std::endl;
+            double factor = origN / (origN-N);
+            dbg<<"Rescale pixels by factor ("<<factor<<")\n";
+            img *= T(factor);
+            realized_flux *= factor;
+        }
+
+        dbg<<"Done drawShoot.  Realized flux = "<<realized_flux<<std::endl;
+        dbg<<"c.f. target flux = "<<target_flux<<std::endl;
         xdbg<<"outsideN = "<<outsideN<<std::endl;
+
+        // Now scale the image by the appropriate amount.
+
         return outsideN;
     }
 

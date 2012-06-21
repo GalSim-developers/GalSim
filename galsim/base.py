@@ -310,7 +310,7 @@ class GSObject:
             image *= dx*dx
         return image
 
-    def drawShoot(self, image, N=0., noise=0., ud=None, normalization="flux", poisson_flux=False):
+    def drawShoot(self, image, N=0., ud=None, normalization="flux", noise=0., poisson_flux=True):
         """@brief Returns an Image of the object, with bounds optionally set by an input Image.
 
         @param image  The image on which to draw the profile.
@@ -323,18 +323,6 @@ class GSObject:
                       However, some profiles need more than this because some of the shot
                       photons are negative (usually due to interpolants).
                       (Default = 0.)
-        @param noise  If provided, the allowed extra noise in each pixel.
-                      This is only relevant if N=0, so the number of photons is being 
-                      automatically calculated.  In that case, if the image noise is 
-                      dominated by the sky background, you can get away with using fewer
-                      shot photons than the full N = flux.  Essentially each shot photon
-                      can have a flux > 1.  Then extra poisson noise is added after the fact.
-                      The noise parameter specifies how much extra noise per pixel is allowed 
-                      because of this approximation.  A typical value for this would be
-                      noise = sky_level / 100 where sky_level is the flux per pixel 
-                      due to the sky.  Note that this uses a "variance" definition of noise,
-                      not a "sigma" definition.
-                      (Default = 0.)
         @param ud     If provided, a UniformDeviate to use for the random numbers
                       If ud=None, one will be automatically created, using the time as a seed.
                       (Default = None)
@@ -345,8 +333,26 @@ class GSObject:
                               "surface brightness" or "sb" means that the output pixels sample
                                      the surface brightness distribution at each location.
                               (Default = "flux")
-        @param  poisson_flux  Set True to allow total object flux scaling to vary according to 
+        @param noise  If provided, the allowed extra noise in each pixel.
+                      This is only relevant if N=0, so the number of photons is being 
+                      automatically calculated.  In that case, if the image noise is 
+                      dominated by the sky background, you can get away with using fewer
+                      shot photons than the full N = flux.  Essentially each shot photon
+                      can have a flux > 1, which increases the noise in each pixel.
+                      The noise parameter specifies how much extra noise per pixel is allowed 
+                      because of this approximation.  A typical value for this might be
+                      noise = sky_level / 100 where sky_level is the flux per pixel 
+                      due to the sky.  If the natural number of photons produces less noise 
+                      than this value for all pixels, we lower the number of photons to bring 
+                      the resultant noise up to this value.  If the natural value produces 
+                      more noise than this, we accept it and just use the natural value.
+                      Note that this uses a "variance" definition of noise, not a "sigma" 
+                      definition.
+                      (Default = 0.)
+        @param  poisson_flux  Whether to allow total object flux scaling to vary according to 
                               Poisson statistics for N samples.
+                              (Default = True)
+                              
         @returns  The tuple (image, outsideN), where image is the input with drawn photons 
                   added and outsideN is the number of photons that landed outside the image bounds.
 
@@ -372,10 +378,12 @@ class GSObject:
         if type(N) != float:
             # if given an int, just convert it to a float
             N = float(N)
+        if type(noise) != float:
+            noise = float(noise)
         if ud == None:
             ud = galsim.UniformDeviate()
 
-        outsideN = self.SBProfile.drawShoot(image, N, noise, ud, int(poisson_flux))
+        outsideN = self.SBProfile.drawShoot(image, N, ud, noise, poisson_flux)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":
             dx = image.getScale()

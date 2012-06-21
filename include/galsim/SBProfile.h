@@ -515,9 +515,11 @@ namespace galsim {
          *            noise = sky_level / 100 where sky_level is the flux per pixel 
          *            due to the sky.  Note that this uses a "variance" definition of noise,
          *            not a "sigma" definition.
+         *            (default `noise = 0.`)
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @param[in] poissonFlux Set != 0 to allow total object flux scaling to vary according to 
-         *                        Poisson statistics for `N` samples (default `poissonFlux = 0`).
+         * @param[in] poisson_flux Whether to allow total object flux scaling to vary according to 
+         *                         Poisson statistics for `N` samples 
+         *                         (default `poisson_flux = true`).
          * @returns The number of photons that fell outside the Image bounds.
          *
          * Note: N is input as a double so that very large values of N don't have to
@@ -525,12 +527,12 @@ namespace galsim {
          *       Internally it will be rounded to the nearest integer.
          */
         template <typename T>
-        double drawShoot(ImageView<T> img, double N, double noise, UniformDeviate ud,
-                       int poissonFlux=0) const;
+        double drawShoot(ImageView<T> img, double N, UniformDeviate ud,
+                         double noise=0., bool poissonFlux=true) const;
         template <typename T>
-        double drawShoot(Image<T>& img, double N, double noise, UniformDeviate ud,
-                       int poissonFlux=0) const;
-        { return drawShoot(img.view(), N, noise, ud, poissonFlux); }
+        double drawShoot(Image<T>& img, double N, UniformDeviate ud,
+                         double noise=0., bool poissonFlux=true) const;
+        { return drawShoot(img.view(), N, ud, noise, poissonFlux); }
         //@}
 
         /** 
