@@ -528,10 +528,10 @@ namespace galsim {
          */
         template <typename T>
         double drawShoot(ImageView<T> img, double N, UniformDeviate ud,
-                         double noise=0., bool poissonFlux=true) const;
+                         double noise=0., bool poisson_flux=true) const;
         template <typename T>
         double drawShoot(Image<T>& img, double N, UniformDeviate ud,
-                         double noise=0., bool poissonFlux=true) const
+                         double noise=0., bool poisson_flux=true) const
         { return drawShoot(img.view(), N, ud, noise, poissonFlux); }
         //@}
 
