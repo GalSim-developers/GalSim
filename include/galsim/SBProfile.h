@@ -531,7 +531,7 @@ namespace galsim {
                          double noise=0., bool poissonFlux=true) const;
         template <typename T>
         double drawShoot(Image<T>& img, double N, UniformDeviate ud,
-                         double noise=0., bool poissonFlux=true) const;
+                         double noise=0., bool poissonFlux=true) const
         { return drawShoot(img.view(), N, ud, noise, poissonFlux); }
         //@}
 
