@@ -2,7 +2,7 @@
 // Functions for the Surface Brightness Profile Class
 //
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "integ/Int.h"
@@ -2618,7 +2618,9 @@ namespace galsim {
         double posflux = getPositiveFlux();
         double negflux = getNegativeFlux();
         double eta = negflux / (posflux + negflux);
+        dbg<<"N+ = "<<posflux<<", N- = "<<negflux<<" -> eta = "<<eta<<std::endl;
         double mod_flux = getFlux() / std::pow(1.-2.*eta,2);
+        dbg<<"mod_flux = "<<mod_flux<<std::endl;
         if (N == 0.) N = mod_flux;
         double origN = N;
 
@@ -2632,6 +2634,9 @@ namespace galsim {
 
         double target_flux = scale_flux * getFlux();
         double realized_flux = 0.;
+
+        // Center the image at 0,0:
+        img.setCenter(0,0);
 
         // If we're automatically figuring out N based on the noise, start with 100 photons
         // Otherwise we'll do a maximum of maxN at a time until we go through all N.
@@ -2647,7 +2652,7 @@ namespace galsim {
             assert(_pimpl.get());
             PhotonArray pa = _pimpl->shoot(thisN, u);
             xdbg<<"pa.flux = "<<pa.getTotalFlux()<<std::endl;
-            xdbg<<"scale flux by "<<(thisN/origN)<<std::endl;
+            xdbg<<"scale flux by "<<(scale_flux*thisN/origN)<<std::endl;
             pa.scaleFlux(scale_flux * thisN / origN);
             xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
             added_flux += pa.addTo(img);
