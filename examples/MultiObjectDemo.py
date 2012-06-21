@@ -621,7 +621,7 @@ def Script4():
 
     # Make the galaxy profiles:
     gals = [gal1, gal2, gal3, gal4, gal5]
-    gal_names = ["Gaussian", "Exponential", "Devaucouleurs", "n=2.5 Sersic", "Bulge+Disk"]
+    gal_names = ["Gaussian", "Exponential", "Devaucouleurs", "n=2.5 Sersic", "Bulge + Disk"]
     gal_times = [0,0,0,0,0]
 
     # Other times to keep track of:
@@ -677,7 +677,7 @@ def Script4():
                 # to include it in the profile!
 
                 sky_level_pixel = sky_level * pixel_scale**2
-                final_nopix.drawShoot(phot_image, noise = sky_level_pixel / 10)
+                final_nopix.drawShoot(phot_image, noise = sky_level_pixel / 100)
                 #logger.info('   Drew photon shoot image')
                 t4 = time.time()
 
@@ -698,7 +698,7 @@ def Script4():
 
                 logger.info('%s * %s, flux = %.2f, hlr = %.2f, ellip = (%.2f,%.2f)',
                         gal_name, psf_name, flux, hlr, gal_shape.getE1(), gal_shape.getE2())
-                logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
+                #logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
                 psf_times[ipsf] += t5-t1
                 gal_times[igal] += t5-t1
                 setup_times += t2-t1
@@ -707,17 +707,21 @@ def Script4():
                 noise_times += t5-t4
 
     logger.info('Done making images of galaxies')
+    logger.info('')
     logger.info('Some timing statistics:')
     logger.info('   Total time for setup steps = %f',setup_times)
     logger.info('   Total time for regular fft drawing = %f',fft_times)
     logger.info('   Total time for photon shooting = %f',phot_times)
     logger.info('   Total time for adding noise = %f',noise_times)
+    logger.info('')
     logger.info('Breakdown by PSF type:')
     for ipsf in range(len(psfs)):
         logger.info('   %s: Total time = %f',psf_names[ipsf],psf_times[ipsf])
+    logger.info('')
     logger.info('Breakdown by Galaxy type:')
     for igal in range(len(gals)):
         logger.info('   %s: Total time = %f',gal_names[igal],gal_times[igal])
+    logger.info('')
 
     # Now write the image to disk.
     galsim.fits.writeCube(all_images, file_name, clobber=True)
