@@ -356,6 +356,8 @@ namespace galsim {
     PhotonArray SBInterpolatedImage::SBInterpolatedImageImpl::shoot(
         int N, UniformDeviate& ud) const
     {
+        dbg<<"InterpolatedImage shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
         assert(N>=0);
         checkReadyToShoot();
         /* The pixel coordinates are stored by cumulative absolute flux in 
@@ -370,12 +372,16 @@ namespace galsim {
         if (N<=0 || _pt.empty()) return result;
         double totalAbsFlux = _positiveFlux + _negativeFlux;
         double fluxPerPhoton = totalAbsFlux / N;
+        dbg<<"posFlux = "<<_positiveFlux<<", negFlux = "<<_negativeFlux<<std::endl;
+        dbg<<"totFlux = "<<_positiveFlux-_negativeFlux<<", totAbsFlux = "<<totalAbsFlux<<std::endl;
+        dbg<<"fluxPerPhoton = "<<fluxPerPhoton<<std::endl;
         for (int i=0; i<N; i++) {
             double unitRandom = ud();
             Pixel* p = _pt.find(unitRandom);
             result.setPhoton(i, p->x, p->y, 
                              p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }
+        dbg<<"result.getTotalFlux = "<<result.getTotalFlux()<<std::endl;
 
         // Last step is to convolve with the interpolation kernel. 
         // Can skip if using a 2d delta function
@@ -383,6 +389,7 @@ namespace galsim {
         if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d())))
              result.convolve(_xInterp->shoot(N, ud));
 
+        dbg<<"InterpolatedImage Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
