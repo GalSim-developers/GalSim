@@ -2,7 +2,7 @@
 // Functions for the Surface Brightness Profile Class
 //
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "integ/Int.h"
