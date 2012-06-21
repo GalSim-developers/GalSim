@@ -310,14 +310,6 @@ class GSObject:
         ret.applyShear(*args, **kwargs)
         return ret
 
-    def createSheared(self, *args, **kwargs):
-        """@brief Returns a new GSObject by applying a shear, where arguments are either a
-        galsim.Shear or keyword arguments that can be used to create one.
-        """
-        ret = self.copy()
-        ret.applyShear(*args, **kwargs)
-        return ret
-
     def createRotated(self, theta):
         """@brief Returns a new GSObject by applying a rotation theta (Angle object, +ve
         anticlockwise).
