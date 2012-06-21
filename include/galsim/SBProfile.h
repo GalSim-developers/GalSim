@@ -1459,7 +1459,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        PhotonArray shoot(int N, UniformDeviate ud, int unitCircle) const;
 
         double getSigma() const { return _sigma; }
 
@@ -1800,7 +1800,7 @@ namespace galsim {
         double getFlux() const { return _flux; }
         double getScaleRadius() const { return _r0; }
 
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        PhotonArray shoot(int N, UniformDeviate ud, int unitCircle) const;
 
     private:
         double _flux; ///< Flux.
@@ -2269,7 +2269,7 @@ namespace galsim {
          *
          * Will require 2 uniform deviates per photon, plus analytic function (pow and sqrt)
          */
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        PhotonArray shoot(int N, UniformDeviate ud, int unitCircle) const;
 
         double getBeta() const { return _beta; }
         double getScaleRadius() const { return _rD; }

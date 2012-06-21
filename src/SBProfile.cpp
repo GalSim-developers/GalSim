@@ -2615,7 +2615,7 @@ namespace galsim {
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
-            double xu, yu;
+            double xu, yu, factor;
             if (unitCircle == 0){  // use unit circle rejection method by default
                 double rsq;
                 do {
@@ -2624,7 +2624,7 @@ namespace galsim {
                     rsq = xu*xu+yu*yu;
                 } while (rsq>=1. || rsq==0.);
                 // Then map radius to the desired Gaussian with analytic transformation
-                double factor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
+                factor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
             } else {  // else use std library sin and cosines
                 double theta = 2.*M_PI*u();
                 double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
@@ -2632,7 +2632,7 @@ namespace galsim {
                 xu = r * std::cos(theta);
                 yu = r * std::sin(theta);
                 // Then map radius to the Moffat flux distribution
-                double factor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
+                factor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
             }
             result.setPhoton(i, factor*xu, factor*yu, fluxPerPhoton);
         }
@@ -2682,6 +2682,7 @@ namespace galsim {
                 dy = y - r + std::log(1.+r);
             }
             // Draw another (or multiple) randoms for azimuthal angle 
+            double cost, sint;
             if (unitCircle == 0){  // use unit circle rejection method if input switch == 0
                 double xu, yu, rsq;
                 do {
@@ -2690,12 +2691,12 @@ namespace galsim {
                     rsq = xu*xu+yu*yu;
                 } while (rsq >= 1. || rsq == 0.);
                 double hypot = std::sqrt(rsq);
-                double cost = xu / hypot;
-                double sint = yu / hypot;
+                cost = xu / hypot;
+                sint = yu / hypot;
             } else {  // else use std library sin and cosines
                 double theta = 2. * M_PI * u();
-                double cost = std::cos(theta);
-                double sint = std::sin(theta);
+                cost = std::cos(theta);
+                sint = std::sin(theta);
             }
             result.setPhoton(i, _r0 * r * cost, _r0 * r * sint, fluxPerPhoton);
         }
@@ -2761,7 +2762,7 @@ namespace galsim {
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
-            double xu, yu;
+            double rFactor, xu, yu;
             if (unitCircle == 0){  // use unit circle rejection method by default
                 double rsq;
                 do {
@@ -2771,7 +2772,7 @@ namespace galsim {
                 } while (rsq>=1. || rsq==0.);
                 // Then map radius to the Moffat flux distribution
                 double newRsq = std::pow( 1.-rsq*_fluxFactor , 1./(1.-_beta)) - 1.;
-                double rFactor = _rD*std::sqrt(newRsq / rsq);
+                rFactor = _rD*std::sqrt(newRsq / rsq);
             } else {  // else use std library sin and cosines
                 double theta = 2.*M_PI*u();
                 double r = std::sqrt(u()); // cumulative dist function P(<r) = r^2 for unit circle
@@ -2779,7 +2780,7 @@ namespace galsim {
                 yu = r * std::sin(theta);
                 // Then map radius to the Moffat flux distribution
                 double newR = std::pow( 1.-r*r*_fluxFactor , .5/(1.-_beta)) - .5;
-                double rFactor = _rD * newR / r;
+                rFactor = _rD * newR / r;
             }
             result.setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
         }
