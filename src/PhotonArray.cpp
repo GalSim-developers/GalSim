@@ -189,10 +189,7 @@ namespace galsim {
         dbg<<"lostFlux = "<<lostFlux<<std::endl;
         dbg<<"outsideN = "<<outsideN<<std::endl;
 #endif
-<<<<<<< HEAD
 
-=======
->>>>>>> #163
         return outsideN;
     }
 

@@ -107,7 +107,7 @@ def do_shoot(prof, img, name):
     print 'img.max => ',img.array.max()
     print 'nphot = ',nphot
     img2 = img.copy()
-    prof.drawShoot(img2,nphot)
+    prof.drawShoot(img2,N=nphot,poisson_flux = False)
     print 'img2.sum => ',img2.array.sum()
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
@@ -141,11 +141,11 @@ def do_shoot(prof, img, name):
     if 'InterpolatedImage' in name:
         nphot *= 10
         print 'nphot -> ',nphot
-    prof.drawShoot(img, nphot, normalization="surface brightness")
+    prof.drawShoot(img, nphot, normalization="surface brightness", poisson_flux=False)
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
     np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, photon_decimal_test,
             err_msg="Photon shooting SB normalization for %s disagrees with expected result"%name)
-    prof.drawShoot(img, nphot, normalization="flux")
+    prof.drawShoot(img, nphot, normalization="flux", poisson_flux=False)
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
     np.testing.assert_almost_equal(img.array.sum(), test_flux, photon_decimal_test,
             err_msg="Photon shooting flux normalization for %s disagrees with expected result"%name)

@@ -2,7 +2,7 @@
 // Functions for the Surface Brightness Profile Class
 //
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "integ/Int.h"
@@ -2553,7 +2553,9 @@ namespace galsim {
         // Clear image before adding photons, for consistency with draw() methods.
         img.fill(0.);  
 
-        double eta = getNegativeFlux() / getAbsoluteFlux();
+        double posflux = getPositiveFlux();
+        double negflux = getNegativeFlux();
+        double eta = negflux / (posflux + negflux);
         double mod_flux = getFlux() / std::pow(1.-2.*eta,2);
         if (N == 0.) N = mod_flux;
         double origN = N;
@@ -2869,13 +2871,13 @@ namespace galsim {
     template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<double>& img,double dx) const;
 
     template double SBProfile::drawShoot(ImageView<float> image, double N, UniformDeviate ud,
-                                         int poissonFlux) const;
+                                         double noise, bool poisson_flux) const;
     template double SBProfile::drawShoot(ImageView<double> image, double N, UniformDeviate ud,
-                                         int poissonFlux) const;
+                                         double noise, bool poisson_flux) const;
     template double SBProfile::drawShoot(Image<float>& image,double N, UniformDeviate ud,
-                                         int poissonFlux) const;
+                                         double noise, bool poisson_flux) const;
     template double SBProfile::drawShoot(Image<double>& image,double N, UniformDeviate ud,
-                                         int poissonFlux) const;
+                                         double noise, bool poisson_flux) const;
 
     template double SBProfile::draw(Image<float>& img, double dx, int wmult) const;
     template double SBProfile::draw(Image<double>& img, double dx, int wmult) const;

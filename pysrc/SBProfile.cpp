@@ -106,7 +106,7 @@ struct PySBProfile {
         // but it's easier to do that than write out the full class_ type.
         wrapper
             .def("drawShoot", 
-                 (void (SBProfile::*)(Image<U> &, double, UniformDeviate , double, bool) 
+                 (double (SBProfile::*)(Image<U> &, double, UniformDeviate , double, bool) 
                   const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N"), bp::arg("ud"),
                   bp::arg("noise")=0., bp::arg("poissonFlux")=true),
@@ -117,7 +117,7 @@ struct PySBProfile {
                  "\n"
                  "Returns number of photons that land outside image.")
             .def("drawShoot", 
-                 (void (SBProfile::*)(ImageView<U>, double, UniformDeviate , double, bool)
+                 (double (SBProfile::*)(ImageView<U>, double, UniformDeviate , double, bool)
                   const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N"), bp::arg("ud"),
                   bp::arg("noise")=0., bp::arg("poissonFlux")=true),
