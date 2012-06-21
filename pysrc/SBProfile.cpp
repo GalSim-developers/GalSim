@@ -108,7 +108,7 @@ struct PySBProfile {
                  (double (SBProfile::*)(Image<U> &, double, UniformDeviate , double, bool) 
                   const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N"), bp::arg("ud"),
-                  bp::arg("noise")=0., bp::arg("poissonFlux")=true),
+                  bp::arg("noise")=0., bp::arg("poisson_flux")=true),
                  "Draw object into existing image using photon shooting.\n"
                  "\n"
                  "Setting optional integer arg possionFlux != 0 allows profile flux to vary \n"
@@ -119,7 +119,7 @@ struct PySBProfile {
                  (double (SBProfile::*)(ImageView<U>, double, UniformDeviate , double, bool)
                   const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N"), bp::arg("ud"),
-                  bp::arg("noise")=0., bp::arg("poissonFlux")=true),
+                  bp::arg("noise")=0., bp::arg("poisson_flux")=true),
                  "Draw object into existing image using photon shooting.\n"
                  "\n"
                  "Setting optional integer arg possionFlux != 0 allows profile flux to vary \n"
