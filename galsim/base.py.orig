@@ -310,12 +310,19 @@ class GSObject:
             image *= dx*dx
         return image
 
+<<<<<<< HEAD
+    def drawShoot(self, image, N, ud=None, normalization="flux", poisson_flux=False):
+=======
     def drawShoot(self, image, N=0., ud=None, normalization="flux", noise=0., poisson_flux=True):
+>>>>>>> 6b06f6e... Implement auto-N calculation in drawShoot
         """@brief Returns an Image of the object, with bounds optionally set by an input Image.
 
         @param image  The image on which to draw the profile.
                       Note: Unlike for the regular draw command, image is a required
                       parameter.  drawShoot will not make the image for you.
+<<<<<<< HEAD
+        @param N      The number of photons to use.
+=======
         @param N      If provided, the number of photons to use.
                       If not provided, use as many photons as necessary to end up with
                       an image with the correct poisson shot noise for the object's flux.
@@ -323,6 +330,7 @@ class GSObject:
                       However, some profiles need more than this because some of the shot
                       photons are negative (usually due to interpolants).
                       (Default = 0.)
+>>>>>>> 6b06f6e... Implement auto-N calculation in drawShoot
         @param ud     If provided, a UniformDeviate to use for the random numbers
                       If ud=None, one will be automatically created, using the time as a seed.
                       (Default = None)
@@ -374,7 +382,6 @@ class GSObject:
         # Raise an exception here since C++ is picky about the input types
         if image is None:
             raise TypeError("drawShoot requires the image to be provided.")
-
         if type(N) != float:
             # if given an int, just convert it to a float
             N = float(N)
@@ -383,14 +390,18 @@ class GSObject:
         if ud == None:
             ud = galsim.UniformDeviate()
 
+<<<<<<< HEAD
+        outsideN = self.SBProfile.drawShoot(image, N, ud, int(poisson_flux))
+         
+=======
         outsideN = self.SBProfile.drawShoot(image, N, ud, noise, poisson_flux)
 
+>>>>>>> 6b06f6e... Implement auto-N calculation in drawShoot
         if normalization.lower() == "flux" or normalization.lower() == "f":
             dx = image.getScale()
             image *= dx*dx
 
         return image, outsideN
-         
 
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
 # SBPs...

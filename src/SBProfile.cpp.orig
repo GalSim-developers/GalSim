@@ -865,7 +865,6 @@ namespace galsim {
         dbg<<"sbd = "<<sbd<<std::endl;
         if (sbd) {
             dbg<<"wrapping another transformation.\n";
-            // We are transforming something that's already a transformation.
             dbg<<"this transformation = "<<
                 _mA<<','<<_mB<<','<<_mC<<','<<_mD<<','<<
                 _cen<<','<<_fluxScaling<<std::endl;
@@ -2491,8 +2490,12 @@ namespace galsim {
      *************************************************************/
 
     template <class T>
+<<<<<<< HEAD
+    double SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate u, int poissonFlux) const 
+=======
     double SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate u, 
                                 double noise, bool poisson_flux) const 
+>>>>>>> 6b06f6e... Implement auto-N calculation in drawShoot
     {
         // If N = 0, this routine will try to end up with an image with the number of real 
         // photons = flux that has the corresponding Poisson noise. For profiles that are 
@@ -2553,6 +2556,10 @@ namespace galsim {
         // Clear image before adding photons, for consistency with draw() methods.
         img.fill(0.);  
 
+<<<<<<< HEAD
+        double poissonScaleFlux = 1.; // Allow optional Poisson flux variation according to N
+        if (poissonFlux != 0){
+=======
         double eta = getNegativeFlux() / getAbsoluteFlux();
         double mod_flux = getFlux() / std::pow(1.-2.*eta,2);
         if (N == 0.) N = mod_flux;
@@ -2561,6 +2568,7 @@ namespace galsim {
         double scale_flux = 1.; // Amount by which to scale the flux at the end.
 
         if (poisson_flux) {
+>>>>>>> 6b06f6e... Implement auto-N calculation in drawShoot
             PoissonDeviate pd(u, N);
             scale_flux *= pd() / N;
             xdbg<<"Poisson scaling flux by factor "<<scale_flux<<std::endl;
@@ -2676,12 +2684,11 @@ namespace galsim {
             if (remainingN <=0) break;
             if (remainingAbsoluteFlux <= 0.) break;
         }
-        
-        dbg<<"Add Realized flux = "<<result.getTotalFlux()<<std::endl;
 
         // This process produces correlated photons, so mark the resulting array as such.
         if (_plist.size() > 1) result.setCorrelated();
         
+        dbg<<"Add Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
@@ -2719,7 +2726,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate u) const 
+    PhotonArray SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate u, int unitCircle) const 
     {
         dbg<<"Gaussian shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2764,7 +2771,8 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate u) const
+    PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate u, 
+                                                        int unitCircle) const
     {
         dbg<<"Exponential shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2864,7 +2872,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u) const
+    PhotonArray SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u, int unitCircle) const
     {
         dbg<<"Moffat shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
