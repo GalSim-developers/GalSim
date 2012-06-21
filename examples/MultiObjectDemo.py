@@ -659,10 +659,10 @@ def Script4():
                 final = galsim.Convolve([gal1,psf,pix])
                 final_nopix = galsim.Convolve([gal1,psf])
 
-                image = galsim.ImageF(2*nx,ny)
+                image = galsim.ImageF(2*nx+2,ny)
                 image.setScale(pixel_scale)
                 fft_image = image[galsim.BoundsI(1,nx,1,nx)]
-                phot_image = image[galsim.BoundsI(nx+1,2*nx,1,nx)]
+                phot_image = image[galsim.BoundsI(nx+3,2*nx+2,1,nx)]
 
                 #logger.info('   Read in training sample galaxy and PSF from file')
                 t2 = time.time()
