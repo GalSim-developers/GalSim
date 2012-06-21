@@ -2546,6 +2546,8 @@ namespace galsim {
         // So we start with a plausible number of photons to get going.  Then we keep adding 
         // more photons until we either hit N = flux / (1-2eta)^2 or the noise in the brightest
         // pixel is < noise.
+        //
+        // Returns the total flux placed inside the image bounds by photon shooting.
         // 
         
         dbg<<"Start drawShoot.\n";
@@ -2553,7 +2555,7 @@ namespace galsim {
 
         const int maxN = 100000; // Don't do more than this at a time to keep the 
                                  // memory usage reasonable.
-        double outsideN = 0.; // number photons falling outside image, returned, type matches N
+        double added_flux = 0.; // total flux falling inside image bounds, returned
 
         // Clear image before adding photons, for consistency with draw() methods.
         img.fill(0.);  
@@ -2593,7 +2595,7 @@ namespace galsim {
             xdbg<<"scale flux by "<<(thisN/origN)<<std::endl;
             pa.scaleFlux(scale_flux * thisN / origN);
             xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
-            outsideN += pa.addTo(img);
+            added_flux += pa.addTo(img);
             N -= thisN;
             realized_flux += pa.getTotalFlux();
             xdbg<<"N -> "<<N<<std::endl;
@@ -2602,7 +2604,7 @@ namespace galsim {
             if (N < 1.) break;
 
             if (noise > 0.) {
-                xdbg<<"Check the noise leve\n";
+                xdbg<<"Check the noise level\n";
                 // First need to find what the current fmax is.
                 T fmax = 0.;
                 for(int x=img.getXMin(); x<=img.getXMax(); ++x)
@@ -2623,23 +2625,22 @@ namespace galsim {
         }
 
         // If we didn't shoot all the original number of photons, then our flux isn't right.
-        // Need to rescale the image by facto of origN / (origN-N)
+        // Need to rescale the image by factor of origN / (origN-N)
         if (N > 0.1) {
             dbg<<"Flux scalings were set according to origN = "<<origN<<std::endl;
             dbg<<"But only shot N = "<<origN-N<<std::endl;
             double factor = origN / (origN-N);
             dbg<<"Rescale pixels by factor ("<<factor<<")\n";
             img *= T(factor);
+            added_flux *= factor;
             realized_flux *= factor;
         }
 
         dbg<<"Done drawShoot.  Realized flux = "<<realized_flux<<std::endl;
         dbg<<"c.f. target flux = "<<target_flux<<std::endl;
-        xdbg<<"outsideN = "<<outsideN<<std::endl;
+        xdbg<<"Added flux (falling within image bounds) = "<<added_flux<<std::endl;
 
-        // Now scale the image by the appropriate amount.
-
-        return outsideN;
+        return added_flux;
     }
 
     PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate u) const 
