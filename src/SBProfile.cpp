@@ -1282,8 +1282,6 @@ namespace galsim {
             dbg<<"Passing onto the adapteed.\n";
             // Then only a fluxScaling.  Call the adaptee's fillKGrid directly and rescale:
             SBProfile::GetImpl(_adaptee)->fillKGrid(kt);
-            kt *= _fluxScaling;
-            _adaptee._pimpl->fillKGrid(kt);
             dbg<<"And now scale flux by "<<_absdet<<std::endl;
             kt *= _absdet;
             return;
