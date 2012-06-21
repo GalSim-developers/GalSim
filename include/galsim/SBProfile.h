@@ -492,9 +492,30 @@ namespace galsim {
          * You should convolve the `SBProfile` with an `SBBox(dx)` in order to match what will be
          * produced by `drawShoot` onto an image with pixel scale `dx`.
          *
-         * @param[in] img         Image to draw on.
-         * @param[in] N           Total number of photons to produce.
-         * @param[in] ud          UniformDeviate to be used to draw photons from distribution.
+         * @param[in] img Image to draw on.
+         *            Note: Unlike for the regular draw command, image is a required
+         *            parameter.  drawShoot will not make the image for you.
+         * @param[in] N Total number of photons to produce.
+         *            N is input as a double so that very large values of N don't have to
+         *            worry about overflowing int on systems with a small MAX_INT.
+         *            Internally it will be rounded to the nearest integer.
+         *            If N=0, use as many photons as necessary to end up with
+         *            an image with the correct poisson shot noise for the object's flux.
+         *            For positive definite profiles, this is equivalent to N = flux.
+         *            However, some profiles need more than this because some of the shot
+         *            photons are negative (usually due to interpolants).
+         * @param[in] noise If provided, the allowed extra noise in each pixel.
+         *            This is only relevant if N=0, so the number of photons is being 
+         *            automatically calculated.  In that case, if the image noise is 
+         *            dominated by the sky background, you can get away with using fewer
+         *            shot photons than the full N = flux.  Essentially each shot photon
+         *            can have a flux > 1.  Then extra poisson noise is added after the fact.
+         *            The noise parameter specifies how much extra noise per pixel is allowed 
+         *            because of this approximation.  A typical value for this would be
+         *            noise = sky_level / 100 where sky_level is the flux per pixel 
+         *            due to the sky.  Note that this uses a "variance" definition of noise,
+         *            not a "sigma" definition.
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @param[in] poissonFlux Set != 0 to allow total object flux scaling to vary according to 
          *                        Poisson statistics for `N` samples (default `poissonFlux = 0`).
          * @returns The number of photons that fell outside the Image bounds.
@@ -504,10 +525,12 @@ namespace galsim {
          *       Internally it will be rounded to the nearest integer.
          */
         template <typename T>
-        double drawShoot(ImageView<T> img, double N, UniformDeviate ud, int poissonFlux=0) const;
+        double drawShoot(ImageView<T> img, double N, double noise, UniformDeviate ud,
+                       int poissonFlux=0) const;
         template <typename T>
-        double drawShoot(Image<T>& img, double N, UniformDeviate ud, int poissonFlux=0) const
-        { return drawShoot(img.view(), N, ud, poissonFlux); }
+        double drawShoot(Image<T>& img, double N, double noise, UniformDeviate ud,
+                       int poissonFlux=0) const;
+        { return drawShoot(img.view(), N, noise, ud, poissonFlux); }
         //@}
 
         /** 
