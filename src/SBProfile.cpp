@@ -2607,7 +2607,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate u) const 
+    PhotonArray SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate u, int unitCircle) const 
     {
         dbg<<"Gaussian shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2615,16 +2615,26 @@ namespace galsim {
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
-            double xu, yu, rsq;
-            do {
-                xu = 2.*u()-1.;
-                yu = 2.*u()-1.;
-                rsq = xu*xu+yu*yu;
-            } while (rsq>=1. || rsq==0.);
-
-            // Then map it to desired Gaussian with analytic transformation
-            double factor = _sigma*sqrt( -2.*std::log(rsq)/rsq);
-            result.setPhoton(i,factor*xu, factor*yu, fluxPerPhoton);
+            double xu, yu;
+            if (unitCircle == 0){  // use unit circle rejection method by default
+                double rsq;
+                do {
+                    xu = 2.*u()-1.;
+                    yu = 2.*u()-1.;
+                    rsq = xu*xu+yu*yu;
+                } while (rsq>=1. || rsq==0.);
+                // Then map radius to the desired Gaussian with analytic transformation
+                double factor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
+            } else {  // else use std library sin and cosines
+                double theta = 2.*M_PI*u();
+                double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
+                double r = std::sqrt(rsq);
+                xu = r * std::cos(theta);
+                yu = r * std::sin(theta);
+                // Then map radius to the Moffat flux distribution
+                double factor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
+            }
+            result.setPhoton(i, factor*xu, factor*yu, fluxPerPhoton);
         }
         dbg<<"Gaussian Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
@@ -2642,7 +2652,8 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate u) const
+    PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate u, 
+                                                        int unitCircle) const
     {
         dbg<<"Exponential shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2670,9 +2681,23 @@ namespace galsim {
                 r = r + (1.+r)*dy/r;
                 dy = y - r + std::log(1.+r);
             }
-            // Draw another random for azimuthal angle (could use the unit-circle trick here...)
-            double theta = 2.*M_PI*u();
-            result.setPhoton(i,_r0*r*std::cos(theta), _r0*r*std::sin(theta), fluxPerPhoton);
+            // Draw another (or multiple) randoms for azimuthal angle 
+            if (unitCircle == 0){  // use unit circle rejection method if input switch == 0
+                double xu, yu, rsq;
+                do {
+                    xu = 2. * u() - 1.;
+                    yu = 2. * u() - 1.;
+                    rsq = xu*xu+yu*yu;
+                } while (rsq >= 1. || rsq == 0.);
+                double hypot = std::sqrt(rsq);
+                double cost = xu / hypot;
+                double sint = yu / hypot;
+            } else {  // else use std library sin and cosines
+                double theta = 2. * M_PI * u();
+                double cost = std::cos(theta);
+                double sint = std::sin(theta);
+            }
+            result.setPhoton(i, _r0 * r * cost, _r0 * r * sint, fluxPerPhoton);
         }
         dbg<<"Exponential Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
@@ -2727,7 +2752,7 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u) const
+    PhotonArray SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u, int unitCircle) const
     {
         dbg<<"Moffat shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2736,17 +2761,27 @@ namespace galsim {
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
-            double xu, yu, rsq;
-            do {
-                xu = 2.*u()-1.;
-                yu = 2.*u()-1.;
-                rsq = xu*xu+yu*yu;
-            } while (rsq>=1. || rsq==0.);
-
-            // Then map it to the Moffat flux distribution
-            double newRsq = std::pow( 1.-rsq*_fluxFactor , 1./(1.-_beta)) - 1.;
-            double rFactor = _rD*sqrt(newRsq / rsq);
-            result.setPhoton(i,rFactor*xu, rFactor*yu, fluxPerPhoton);
+            double xu, yu;
+            if (unitCircle == 0){  // use unit circle rejection method by default
+                double rsq;
+                do {
+                    xu = 2.*u()-1.;
+                    yu = 2.*u()-1.;
+                    rsq = xu*xu+yu*yu;
+                } while (rsq>=1. || rsq==0.);
+                // Then map radius to the Moffat flux distribution
+                double newRsq = std::pow( 1.-rsq*_fluxFactor , 1./(1.-_beta)) - 1.;
+                double rFactor = _rD*std::sqrt(newRsq / rsq);
+            } else {  // else use std library sin and cosines
+                double theta = 2.*M_PI*u();
+                double r = std::sqrt(u()); // cumulative dist function P(<r) = r^2 for unit circle
+                xu = r * std::cos(theta);
+                yu = r * std::sin(theta);
+                // Then map radius to the Moffat flux distribution
+                double newR = std::pow( 1.-r*r*_fluxFactor , .5/(1.-_beta)) - .5;
+                double rFactor = _rD * newR / r;
+            }
+            result.setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
         }
         dbg<<"Moffat Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
