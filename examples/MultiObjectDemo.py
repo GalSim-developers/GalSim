@@ -598,7 +598,8 @@ def Script4():
             fwhm2 = 2*psf_fwhm, flux2 = 0.2)
     atmos = galsim.Gaussian(fwhm = psf_fwhm)
     optics = galsim.OpticalPSF(
-            lam_over_D = 0.4,
+            lam_over_D = 0.5,
+            obscuration = 0.4,
             defocus = 0.1,
             astig1 = 0.3, astig2 = -0.2,
             coma1 = 0.2, coma2 = 0.1,
