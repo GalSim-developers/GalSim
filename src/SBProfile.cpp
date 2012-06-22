@@ -2,7 +2,7 @@
 // Functions for the Surface Brightness Profile Class
 //
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "integ/Int.h"
@@ -14,10 +14,6 @@
 // drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit 
 // circle and rejecting corner photons.
 //#define USE_COS_SIN
-
-// Switch used to see whether the Newton-Raphson method of SBExponential is really faster than the
-// OneDimensionalDeviate routine that you get when you request SBSersic with n=1.
-//#define USE_1D_DEVIATE_EXPONENTIAL
 
 #ifdef DEBUGLOGGING
 #include <fstream>
