@@ -63,6 +63,7 @@ the averaged pattern, and the impact this variability has on survey
 data analysis is not yet fuly quantified.
 
 \section{Physical picture}
+\subsection{Phase screens}
 Photons passing through the atmosphere encounter a complex, dynamic
 system of variable refractive index in three dimensions.  A simplified
 approximate model that has given good results in simulations of adaptive
@@ -84,7 +85,7 @@ expressed, the units of $P_{\phi}(\nu)$ are (radians of
 wavefront phase distortion)$^2$/(cycles metre$^{-1}$)$^2$ [Barney note: I think... Should
 check this carefully as different conventions abound!] 
 
-Generating images of phase screen realizations with a power spectrum such as
+Generating images of phase screen realizations $\phi(x, y)$ with a power spectrum such as
 $P_{\phi}(\nu)$ is relatively straightforward using the discrete
 Fourier transform (DFT):
 \begin{itemize}
@@ -94,23 +95,71 @@ locations with spatial frequencies $[\nu_x, \nu_y]$.
 \item Multiply this image by the square
 root of the power spectrum corresponding to $\nu^2 = {\nu_x^2 + \nu_y^2}$ at each location.
 \item The DFT of the result provides in its
-real and imaginary parts two independent phase
-screens with the appropriate statistical properties.  
+real and imaginary parts two independent images of phase
+screens $\phi(x, y)$ with the appropriate statistical properties.  
 \end{itemize}
 
 Some care must be taken in ensuring that
 all scales are sufficiently well-represented in this model. The
 smallest physical scales (the phase screen image pixel scale) should be chosen to
 correspond to the Nyquist frequency for the eventual
-angular bandlimit of the telescope PSF, which is therefore also altitude dependent.
+angular bandlimit of the telescope PSF, meaning this choice may
+therefore also be dependent on the phase screen altitude.
 The largest scales (the image extent in metres) should be large
 compared to $L_0$ to ensure that the lowest frequency modes are not
 heavily folded.  Mitigating strategies for efficiently overcoming this
 latter requirement are discussed in Lane, Glindemann \& Dainty (1992),
 but it is not clear whether this will be an issue given advances in
-computing resources over the last two decades.
+computing resources over the last two decades.  However, phase screen
+motion due to wind (see next Section) also increases the required
+image extent.
+
+***MORE TO ADD HERE JOERG? PLEASE ADD/EDIT IF DESIRED***
+
+\subsection{Propagation between multiple phase screens}
+An approximate model of the phase distortion effects of atmopshere can
+then be constructed by combining multiple phase screens at different
+altitudes.  The simplest approximation to this process is simply to
+take a weighted average of multple phase screens.
+
+A more accurate approach is to model the propagation of light between
+screens using the Fresnel approximation to the Huygens' integral for a
+complex wavefront propagating paraxially from a plane at $z=0$ to a
+plane at $z=L$.  If an infinite uniform plane wave has a field
+distribution $\mathcal{E}(x, y, 0)$ at $z=0$, then its Fourier
+transform in the plane at $z=L$ is given by
+\begin{equation}
+\tilde{\mathcal{E}}(\nu_x, \nu_y, L) = \tilde{\mathcal{E}}(\nu_x,
+\nu_y, 0) \times \exp{\left[-2{\rm i} \pi^2 \nu^2 / L \right]},
+\end{equation}
+omitting the amplitude distortions (***ADD REFS***).
+
+To simulate time variation in the patterns, phase screens can be
+`rolled' using assumed wind velocities for each layer of the
+atmosphere.  As the power spectrum $P_{\phi}(\nu)$ due to turbulence
+is isotropic in general it may be possible to approximate independent
+wind velocities at multiple layers using rectangular strips of phase screen
+realizations rather than large square images.  This may be a useful
+computational saving as the need to roll phase screens might add
+significantly to their extent.
 
 
+\subsection{A non-DFT approach?}
+It is tantalisingly hinted in documents describing the Large Synoptic
+Survey Telescope (LSST) \imsim\ data
+simulator\footnote{http://lsst.astro.washington.edu/docs/overview/}
+that these authors use a different approach:
+\begin{quote}
+\emph{``The single
+photon history is traced through each layer of the
+atmosphere via a newly invented technique that
+avoids the need to do Fourier transforms of the
+wavefront perturbations. The approach is only
+valid for large aperture telescopes with exposure
+times of at least 10-20 seconds.''}
+\end{quote}
+It would, of course, be very interesting to learn more about this
+technique if it is available in the public domain.
 
 \section{Existing codes}
 
