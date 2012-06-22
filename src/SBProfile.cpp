@@ -2948,8 +2948,8 @@ namespace galsim {
             xu = r * std::cos(theta);
             yu = r * std::sin(theta);
             // Then map radius to the Moffat flux distribution
-            double newR = std::pow( 1.-r*r*_fluxFactor , .5/(1.-_beta)) - .5;
-            rFactor = _rD * newR / r;
+            double newRsq = std::pow(1. - r * r * _fluxFactor, 1. / (1. - _beta)) - 1.;
+            rFactor = _rD * std::sqrt(newRsq) / r;
 #else
             double rsq;
             do {
@@ -2958,7 +2958,7 @@ namespace galsim {
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
             // Then map radius to the Moffat flux distribution
-            double newRsq = std::pow( 1.-rsq*_fluxFactor , 1./(1.-_beta)) - 1.;
+            double newRsq = std::pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             rFactor = _rD*std::sqrt(newRsq / rsq);
 #endif
             result.setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
