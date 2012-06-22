@@ -60,7 +60,7 @@ interest when modelling short-exposure survey imaging from the ground,
 as is being seriously contemplated by a several upcoming surveys.
 These PSFs may look instantaneously much `better' or `worse' than
 the averaged pattern, and the impact this variability has on survey
-data analysis is not yet fuly quantified.
+data analysis is not yet fully quantified.
 
 \section{Physical picture}
 \subsection{Phase screens}
@@ -120,13 +120,13 @@ image extent.
 An approximate model of the phase distortion effects of atmopshere can
 then be constructed by combining multiple phase screens at different
 altitudes.  The simplest approximation to this process is simply to
-take a weighted average of multple phase screens.
+take a weighted average of multiple phase screens.
 
 A more accurate approach is to model the propagation of light between
 screens using the Fresnel approximation to the Huygens' integral for a
 complex wavefront propagating paraxially from a plane at $z=0$ to a
 plane at $z=H$.  If an infinite uniform plane wavefront has a field
-distribution $\mathcal{E}(x, y, 0)$ at $z=0$, then its Fourier
+distribution $\mathcal{E}(x, y, z=0)$, then its Fourier
 transform in the plane at $z=H$ is given by
 \begin{equation}\label{eq:fresnel}
 \tilde{\mathcal{E}}(\nu_x, \nu_y, H) = {\rm e}^{-{\rm i} \pi \nu^2  H
@@ -152,7 +152,10 @@ whether this step can be safely omitted to speed things up.
 
 To simulate time variation in the patterns, phase screens can be
 `rolled' using assumed wind velocities for each layer of the
-atmosphere, summing to generate an exposure time-dependent average pattern.  
+atmosphere, summing to generate an exposure time-dependent average pattern.  The time step between
+these summations depends on the wind velocity and the pixel scale of the phase screens, which in
+turn is governed by the resolution of the telescope, as explained in the previous section. Time
+steps should be short enough that the pixel shift between summations is $\sim 0.5$\,pixels.
 As the power spectrum $P_{\phi}(\nu)$ due to turbulence
 is isotropic in general it may be possible to approximate independent
 wind velocities at multiple layers using rectangular strips of phase screen
@@ -182,18 +185,34 @@ It would, of course, be very interesting to learn more about this
 technique if it is available in the public domain.
 
 \section{Some existing codes}
-A non-exhaustive list!
+The adaptive optics community has created a large variety of codes, most of which are private and
+were never intended for public release. Two code that are publically available are
 
 \begin{itemize}
 
 \item \arroyo\ -- http://cfao.ucolick.org/software/arroyo.php
 
+  A C++ class library for time domain studies of electromagnetic waves. A very large and exhaustive
+  library, which goes well beyond what we need in \galsim.
+
 
 \item \laopack\ --
   http://lao.ucolick.org/data/Pyramid/MTF\%20Data/Code/LAOPack/LAO/pro/...
-simulationAnalysisTools.html
+  simulationAnalysisTools.html
+
+  A collection of IDL routines for adapative optics, including the generation of Kolmogorov/von
+  K\`arm\`an phase screens and the propagation of photons.
+  
+\end{itemize}
+
+Also known to exist is,
+
+\begin{itemize}
 
 \item \imsim\ -- http://lsst.astro.washington.edu/
+
+  The image simulation software for the LSST, which apparently implements an entirely new method
+  mentioned above.
 
 \end{itemize}
 
@@ -204,7 +223,8 @@ simulationAnalysisTools.html
   extra dependencies (e.g.\ \arroyo, \imsim) or used a non-supported language
   (IDL in the case of \laopack).
 \item Should be feasible to write a home-grown turbulence code using
-  similar DFT techniques to those used in the Optical and Atmospheric modules.
+  similar DFT techniques to those used in the Optical and Atmospheric modules. 
+\item It would interesting to learn more about the new method developed by LSST.
 \end{itemize}
 
 \end{document}
