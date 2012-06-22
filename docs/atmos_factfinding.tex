@@ -41,7 +41,8 @@ collaboration stated one of the basic requirements for the software to be:
   a physically-motivated model combining both an atmospheric component
   and a specifiable telescope component, as well as simple
   parameterized PSF models.}\footnote{Full plan document available on
-  the Wiki page: \newline http://great3.pbworks.com/w/page/49339085/Plan\%20documents\%20for\%20the\%20GREAT3\%20Code\%20and\%20Challenge}
+  the Wiki page: \newline 
+http://great3.pbworks.com/w/page/49339085/Plan\%20documents\%20for\%20the\%20GREAT3\%20Code\%20and\%20Challenge}
 \end{enumerate}
 One of the primary initial goals of the \galsim\ project is addressing the
 software needs of GREAT3, so there is interest in tackling this
@@ -62,28 +63,31 @@ These PSFs may look instantaneously much `better' or `worse' than
 the averaged pattern, and the impact this variability has on survey
 data analysis is not yet fully quantified.
 
-\section{Physical picture}
-\subsection{Phase screens}
+\section{Simplified physical model}
+\subsection{Phase screens}\label{sect:phasescreens}
 Photons passing through the atmosphere encounter a complex, dynamic
-system of variable refractive index in three dimensions.  A simplified
+system of variable refractive index in three dimensions.  An
 approximate model that has given good results in simulations of adaptive
 optics is to consider the propagation of a plane wavefront through
 multiple, discrete, planar \emph{phase screens} to mimic the dominant phase
-distortion effects of the atmosphere.  These phase screens are
+distortion effects of the atmosphere. This model is seemingly used
+in most codes, although see also Section \ref{sect:lsst}. 
+
+These phase screens are
 typically modelled as independent realizations of a random field with
-a physically-motivated power spectrum, such as the von K\`{a}rm\`{a}n:
+a theoretically-motivated power spectrum, such as the von K\`{a}rm\`{a}n:
 \begin{equation}\label{eq:ps}
 P_{\phi}(\nu) = 0.023 r_0^2 \left(\nu^2 + 1/L_0^2\right)^{-11/6},
 \end{equation}
 where $r_0$ is the wavelength-dependent \emph{Fried parameter} in metres, $\nu$
 is a 2D spatial frequency in the plane of the phase screen in units of cycles metre$^{-1}$, and $L_0$ is
-the \emph{outer scale} of turbulence in metres.  Physically $L_0$
-correpsonds to the largest size of turbulent cells in the atmosphere,
+the \emph{outer scale} of turbulence in metres.  Physically, $L_0$
+corresponds to the largest size of turbulent cells in the atmosphere,
 the scale on which progenitor eddies are created, measured to be $L_0
-\sim$ 1-100m depending on altitude and atmopsheric conditions.  As
+\sim$ 1-100m depending on altitude and atmospheric conditions.  For
+$\nu \gg 1/L_0$, the scale-free Kolmogorov turbulence spectrum is recovered.  As
 expressed, the units of $P_{\phi}(\nu)$ are (radians of
-wavefront phase distortion)$^2$/(cycles metre$^{-1}$)$^2$ [Barney note: I think... Should
-check this carefully as different conventions abound!] 
+wavefront phase)$^2$/(cycles metre$^{-1}$)$^2$.
 
 Generating images of phase screen realizations $\phi(x, y)$ with a power spectrum such as
 $P_{\phi}(\nu)$ is relatively straightforward using the discrete
@@ -111,14 +115,13 @@ heavily folded.  Mitigating strategies for efficiently overcoming this
 latter requirement are discussed in Lane, Glindemann \& Dainty (1992),
 but it is not clear whether this will be an issue given advances in
 computing resources over the last two decades.  However, phase screen
-motion due to wind (see next Section) also increases the required
+motion due to wind (see Section \ref{sect:wind}) also increases the required
 image extent.
 
-***MORE TO ADD HERE JOERG? PLEASE ADD/EDIT IF DESIRED***
 
 \subsection{Propagation between multiple phase screens}
-An approximate model of the phase distortion effects of atmopshere can
-then be constructed by combining multiple phase screens at different
+An approximate model of the phase distortion effects of a finite depth
+atmosphere can then be constructed by combining multiple phase screens at different
 altitudes.  The simplest approximation to this process is simply to
 take a weighted average of multiple phase screens.
 
@@ -132,14 +135,15 @@ transform in the plane at $z=H$ is given by
 \tilde{\mathcal{E}}(\nu_x, \nu_y, H) = {\rm e}^{-{\rm i} \pi \nu^2  H
   \lambda} \times \tilde{\mathcal{E}}(\nu_x, \nu_y, 0),
 \end{equation}
-omitting the wavefront amplitude distortions in this approximate treatment (***BARNEY MUST CHECK THIS
-THOROUGHLY AND ADD REFS!***).   Considering phase distortions only, we will
+omitting the wavefront amplitude distortions in this approximate
+treatment (***BARNEY TODO: Must check this calculation thoroughly and
+will add refs.***).   Considering phase only, we will
 set $\mathcal{E}(x, y, 0) = {\rm e}^{{\rm i}\phi(x, y, 0)}$ and
 $\mathcal{E}(x, y, H) = {\rm e}^{{\rm i}\phi(x, y, H)}$ when using
-equation \eqref{eq:fresnel} to propagate phase distortions from one
+equation \eqref{eq:fresnel} to propagate distortions from one
 screen to the next.
 For separations $H$ between phase screens
-of order kilometres, it can be seen that the modifications of the phase pattern
+of order kilometres at optical wavelengths, it can be seen that the modifications of the phase pattern
 caused by Fresnel diffraction will be small, particularly for the
 lowest $\nu \sim 1/L_0$ modes which contain the greatest power in $P_{\phi}(\nu)$.
 
@@ -147,14 +151,21 @@ To propagate through multiple phase screens using the Fresnel
 approximation will therefore multiple DFT calculations at each layer,
 one for generating the initial screens as described in the previous
 Section, and another two (forward and inverse) for propagating light
-according to equation \eqref{eq:fresnel}.  It remains to be seen
-whether this step can be safely omitted to speed things up.
+according to equation \eqref{eq:fresnel}.  It remains to be tested
+whether the Fresnel diffraction step can be safely omitted to speed
+things up while retaining sufficent accuracy.
 
+It should finally be noted that the atmospheric PSF incident across
+the telescope field of view needs to be given in angular units, requiring
+appropriate conversion for each phase screen and further approximation if using Fresnel diffraction.
+
+\subsection{Screen motion due to wind}\label{sect:wind}
 To simulate time variation in the patterns, phase screens can be
 `rolled' using assumed wind velocities for each layer of the
 atmosphere, summing to generate an exposure time-dependent average pattern.  The time step between
 these summations depends on the wind velocity and the pixel scale of the phase screens, which in
-turn is governed by the resolution of the telescope, as explained in the previous section. Time
+turn is governed by the resolution of the telescope, as discussed in
+Section \ref{sect:phasescreens}. Time
 steps should be short enough that the pixel shift between summations is $\sim 0.5$\,pixels.
 As the power spectrum $P_{\phi}(\nu)$ due to turbulence
 is isotropic in general it may be possible to approximate independent
@@ -163,11 +174,9 @@ realizations rather than large square images.  This may be a useful
 computational saving as the need to roll phase screens might add
 significantly to their extent.
 
-It should finally be stated that the atmospheric PSF incident across
-the telescope FOV needs to be given in angular units, requiring
-appropriate conversion and further approximation if using Fresnel diffraction.
 
-\subsection{A non-DFT approach?}
+
+\subsection{A non-DFT approach?}\label{sect:lsst}
 It is tantalisingly hinted in documents describing the Large Synoptic
 Survey Telescope (LSST) \imsim\ data
 simulator\footnote{http://lsst.astro.washington.edu/docs/overview/}
@@ -186,26 +195,26 @@ technique if it is available in the public domain.
 
 \section{Some existing codes}
 The adaptive optics community has created a large variety of codes, most of which are private and
-were never intended for public release. Two code that are publically available are
+were never intended for public release. Two codes that are publicly available are
 
 \begin{itemize}
 
 \item \arroyo\ -- http://cfao.ucolick.org/software/arroyo.php
 
   A C++ class library for time domain studies of electromagnetic waves. A very large and exhaustive
-  library, which goes well beyond what we need in \galsim.
+  library, which goes well beyond what we believe we need in \galsim.
 
 
 \item \laopack\ --
   http://lao.ucolick.org/data/Pyramid/MTF\%20Data/Code/LAOPack/LAO/pro/...
   simulationAnalysisTools.html
 
-  A collection of IDL routines for adapative optics, including the generation of Kolmogorov/von
+  A collection of IDL routines for adaptive optics, including the generation of Kolmogorov/von
   K\`arm\`an phase screens and the propagation of photons.
   
 \end{itemize}
 
-Also known to exist is,
+Also known to exist is
 
 \begin{itemize}
 
@@ -216,15 +225,31 @@ Also known to exist is,
 
 \end{itemize}
 
-\section{Preliminary conclusions}
 
-\begin{itemize}
-\item Existing codes explored either added significant, overly-heavy
-  extra dependencies (e.g.\ \arroyo, \imsim) or used a non-supported language
-  (IDL in the case of \laopack).
-\item Should be feasible to write a home-grown turbulence code using
-  similar DFT techniques to those used in the Optical and Atmospheric modules. 
-\item It would interesting to learn more about the new method developed by LSST.
-\end{itemize}
+
+\section{Preliminary conclusions}
+None of the existing codes explored appeared to represent an ideal fit
+for \galsim.  They were found to add a significant extra dependency (e.g.\
+\arroyo, \imsim) and are perhaps over-powered (\arroyo) or
+specifically tailored to a single instrument (\imsim).  Or they were
+found to use a  non-supported language (IDL in the case of \laopack).
+
+However, given the relative simplicity of the commonly-adopted
+physical model described above, it should be feasible to write a
+home-grown turbulence code that is a better match to \galsim\
+requirements.   Much of the computation would proceed using
+similar DFT techniques to those used in the \texttt{galsim/optics.py} and \texttt{galsim/atmopshere.py}
+modules already.   There is freedom in the
+construction of a multiple phase screen atmosphere model, including
+choice of power spectra, number of screens, screen altitudes, wind
+velocities etc., and so some thought will need to go into the user
+interface to make this powerful and while being as clean as possible.
+ 
+It would be interesting to learn more about the new method developed
+by LSST, and so J\"{o}rg and Barney would welcome any additional
+information from those more closely connected with the LSST team, or some
+more thorough documentation of the photon shooting method adopted.  It
+may be possible to implement both approaches, DFT and photon shooting,
+mirroring the twin implementations of object rendering in \galsim.
 
 \end{document}
