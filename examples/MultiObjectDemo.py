@@ -701,7 +701,7 @@ def Script4():
                 # Store that into the list of all images
                 all_images += [image]
 
-                logger.info('%s * %s, flux = %.2f, hlr = %.2f, ellip = (%.2f,%.2f)',
+                logger.info('%s * %s, flux = %.2e, hlr = %.2f, ellip = (%.2f,%.2f)',
                         gal_name, psf_name, flux, hlr, gal_shape.getE1(), gal_shape.getE2())
                 #logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
                 psf_times[ipsf] += t5-t1
