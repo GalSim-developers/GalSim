@@ -15,6 +15,10 @@
 // circle and rejecting corner photons.
 //#define USE_COS_SIN
 
+// Switch used to see whether the Newton-Raphson method of SBExponential is really faster than the
+// OneDimensionalDeviate routine that you get when you request SBSersic with n=1.
+#define USE_1D_DEVIATE_EXPONENTIAL
+
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
@@ -1653,6 +1657,28 @@ namespace galsim {
         }
     }
 
+#ifdef USE_1D_DEVIATE_EXPONENTIAL
+    // Constructor to initialize Exponential functions for 1D deviate photon shooting
+    SBExponential::ExponentialInfo::ExponentialInfo()
+    {
+        // Next, set up the classes for photon shooting
+        _radial.reset(new ExponentialRadialFunction());
+        std::vector<double> range(2,0.);
+        range[1] = M_PI / SBExponentialImpl::stepK();
+        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
+    }
+
+    PhotonArray SBExponential::ExponentialInfo::shoot(int N, UniformDeviate ud) const
+    {
+        dbg<<"ExponentialInfo shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = 1.0\n";
+        PhotonArray result = _sampler->shoot(N,ud);
+        result.scaleFlux(_norm);
+        dbg<<"ExponentialInfo Realized flux = "<<result.getTotalFlux()<<std::endl;
+        return result;
+    }
+#endif
+
     //
     // SBAiry Class
     //
@@ -2776,15 +2802,23 @@ namespace galsim {
     {
         dbg<<"Exponential shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
+#ifdef USE_1D_DEVIATE_EXPONENTIAL
+        // Get photons from the SersicInfo structure, rescale flux and size for this instance
+        PhotonArray result = _info->shoot(N,u);
+        result.scaleFlux(_flux);
+        result.scaleXY(_re);
+#else
+        // The cumulative distribution of flux is 1-(1+r)exp(-r).
+        // Here is a way to solve for r by an initial guess followed
+        // by Newton-Raphson iterations.  Probably not
+        // the most efficient thing since there are logs in the iteration.
+
         // Accuracy to which to solve for (log of) cumulative flux distribution:
         const double Y_TOLERANCE=1.e-6;
 
         double fluxPerPhoton = getFlux() / N;
         PhotonArray result(N);
-        // The cumulative distribution of flux is 1-(1+r)exp(-r).
-        // Here is a way to solve for r by an initial guess followed
-        // by Newton-Raphson iterations.  Probably not
-        // the most efficient thing since there are logs in the iteration.
+
         for (int i=0; i<N; i++) {
             double y = u();
             if (y==0.) {
@@ -2819,6 +2853,7 @@ namespace galsim {
 #endif
             result.setPhoton(i, _r0 * r * cost, _r0 * r * sint, fluxPerPhoton);
         }
+#endif
         dbg<<"Exponential Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
