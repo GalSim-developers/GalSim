@@ -28,15 +28,88 @@
 
 \begin{abstract}
 This document describes the results of a fact-finding exercise undertaken by J\"{o}rg Dietrich and 
-Barney Rowe for adding stochastic modelling of PSFs due to turbulent atmospheres to 
+Barney Rowe for adding the stochastic modelling of PSFs due to turbulent atmospheres to 
 \galsim.  This investigation included making a preliminary judgement as to what might be used or 
 borrowed from existing codes that are publicly available and suitably licensed.
 \end{abstract}
 
 \section{Motivation}
+The Code Plan document drawn up with the help of the full GREAT3
+collaboration stated one of the basic requirements for the software to be:
+\begin{enumerate}
+\item[] \emph{2. The ability to generate realistic PSF models, by which we mean
+  a physically-motivated model combining both an atmospheric component
+  and a specifiable telescope component, as well as simple
+  parameterized PSF models.}\footnote{Full plan document available on
+  the Wiki page: \newline http://great3.pbworks.com/w/page/49339085/Plan\%20documents\%20for\%20the\%20GREAT3\%20Code\%20and\%20Challenge}
+\end{enumerate}
+One of the primary initial goals of the \galsim\ project is addressing the
+software needs of GREAT3, so there is interest in tackling this
+problem from the lensing community.  The code is already capable of
+generating PSFs due to aberrated telescope optics and combining these
+with physically well-motivated approximations to an ensemble average atmospheric seeing
+kernel, broadly equivalent to long duration
+exposures.  These models take the form of the Double Gaussian and
+Kolmogorov PSFs currently implemented in \galsim.
 
+However, the code cannot currently generate a PSF that encompasses a
+model of \emph{instantaneous} atmospheric turbulence in order to
+create a more
+realistic, exposure time-dependent PSF model.  This is a regime of
+interest when modelling short-exposure survey imaging from the ground,
+as is being seriously contemplated by a several upcoming surveys.
+These PSFs may look instantaneously much `better' or `worse' than
+the averaged pattern, and the impact this variability has on survey
+data analysis is not yet fuly quantified.
 
 \section{Physical picture}
+Photons passing through the atmosphere encounter a complex, dynamic
+system of variable refractive index in three dimensions.  A simplified
+approximate model that has given good results in simulations of adaptive
+optics is to consider the propagation of a plane wavefront through
+multiple, discrete, planar \emph{phase screens} to mimic the dominant phase
+distortion effects of the atmosphere.  These phase screens are
+typically modelled as independent realizations of a random field with
+a physically-motivated power spectrum, such as the von K\`{a}rm\`{a}n:
+\begin{equation}\label{eq:ps}
+P_{\phi}(\nu) = 0.023 r_0^2 \left(\nu^2 + 1/L_0^2\right)^{-11/6},
+\end{equation}
+where $r_0$ is the wavelength-dependent \emph{Fried parameter} in metres, $\nu$
+is a 2D spatial frequency in the plane of the phase screen in units of cycles metre$^{-1}$, and $L_0$ is
+the \emph{outer scale} of turbulence in metres.  Physically $L_0$
+correpsonds to the largest size of turbulent cells in the atmosphere,
+the scale on which progenitor eddies are created, measured to be $L_0
+\sim$ 1-100m depending on altitude and atmopsheric conditions.  As
+expressed, the units of $P_{\phi}(\nu)$ are (radians of
+wavefront phase distortion)$^2$/(cycles metre$^{-1}$)$^2$ [Barney note: I think... Should
+check this carefully as different conventions abound!] 
+
+Generating images of phase screen realizations with a power spectrum such as
+$P_{\phi}(\nu)$ is relatively straightforward using the discrete
+Fourier transform (DFT):
+\begin{itemize}
+\item Generate an image of a circular complex Gaussian random field with real and imaginary
+parts having unit variance and zero mean, and associate $[i, j]$ pixel
+locations with spatial frequencies $[\nu_x, \nu_y]$.
+\item Multiply this image by the square
+root of the power spectrum corresponding to $\nu^2 = {\nu_x^2 + \nu_y^2}$ at each location.
+\item The DFT of the result provides in its
+real and imaginary parts two independent phase
+screens with the appropriate statistical properties.  
+\end{itemize}
+
+Some care must be taken in ensuring that
+all scales are sufficiently well-represented in this model. The
+smallest physical scales (the phase screen image pixel scale) should be chosen to
+correspond to the Nyquist frequency for the eventual
+angular bandlimit of the telescope PSF, which is therefore also altitude dependent.
+The largest scales (the image extent in metres) should be large
+compared to $L_0$ to ensure that the lowest frequency modes are not
+heavily folded.  Mitigating strategies for efficiently overcoming this
+latter requirement are discussed in Lane, Glindemann \& Dainty (1992),
+but it is not clear whether this will be an issue given advances in
+computing resources over the last two decades.
+
 
 
 \section{Existing codes}
