@@ -9,6 +9,11 @@
  * The SBProfiles include common star, galaxy, and PSF shapes.
  */
 
+// Switch used to see whether the Newton-Raphson method of SBExponential is really faster than the
+// OneDimensionalDeviate routine that you get when you request SBSersic with n=1.
+#define USE_1D_DEVIATE_EXPONENTIAL
+
+
 #include <cmath>
 #include <list>
 #include <map>
@@ -528,11 +533,11 @@ namespace galsim {
          */
         template <typename T>
         double drawShoot(ImageView<T> img, double N, UniformDeviate ud,
-                         double noise=0., bool poissonFlux=true) const;
+                         double noise=0., bool poisson_flux=true) const;
         template <typename T>
         double drawShoot(Image<T>& img, double N, UniformDeviate ud,
-                         double noise=0., bool poissonFlux=true) const
-        { return drawShoot(img.view(), N, ud, noise, poissonFlux); }
+                         double noise=0., bool poisson_flux=true) const
+        { return drawShoot(img.view(), N, ud, noise, poisson_flux); }
         //@}
 
         /** 
@@ -1771,7 +1776,7 @@ namespace galsim {
          *                  half-light radius `re`.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-         SBExponential(double r0, double flux=1.) :
+        SBExponential(double r0, double flux=1.) :
              SBProfile(new SBExponentialImpl(r0, flux)) {}
 
         /// @brief Copy constructor.
@@ -1787,7 +1792,72 @@ namespace galsim {
             return dynamic_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
         }
 
+
     protected:
+
+#ifdef USE_1D_DEVIATE_EXPONENTIAL
+        /** 
+         * @brief Subclass of `SBExponential` which provides the un-normalized radial function.
+         *
+         * Serves as interface to `OneDimensionalDeviate` used for sampling from this 
+         * distribution.
+         */
+        class ExponentialRadialFunction : 
+            public FluxDensity 
+        {
+        public:
+            /**
+             * @brief Constructor
+             */
+            ExponentialRadialFunction() {};
+            /**
+             * @brief The un-normalized Exponential function
+             * @param[in] r radius, in units of scale radius.
+             * @returns Exponential function, normalized to unity at origin
+             */
+            double operator()(double r) const { return std::exp(-r); } 
+        };
+
+        /// @brief A private class that stores photon shooting functions for the Exponential profile
+        class ExponentialInfo
+        {
+        public:
+            /** 
+             * @brief Constructor
+             */
+            ExponentialInfo(); 
+
+            /// @brief Destructor: deletes photon-shooting classes if necessary
+            ~ExponentialInfo() {}
+
+            /**
+             * @brief Shoot photons through unit-size, unnormalized profile
+             * Sersic profiles are sampled with a numerical method, using class
+             * `OneDimensionalDeviate`.
+             *
+             * @param[in] N Total number of photons to produce.
+             * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+             * @returns PhotonArray containing all the photons' info.
+             */
+            PhotonArray shoot(int N, UniformDeviate ud) const;
+
+            double maxK() const;
+            double stepK() const;
+
+        private:
+            ExponentialInfo(const ExponentialInfo& rhs); ///< Hides the copy constructor.
+            void operator=(const ExponentialInfo& rhs); ///<Hide assignment operator.
+
+            double _norm;
+
+            /// Function class used for photon shooting
+            boost::shared_ptr<ExponentialRadialFunction> _radial;  
+
+            /// Class that does numerical photon shooting
+            boost::shared_ptr<OneDimensionalDeviate> _sampler;   
+        };
+#endif
+
     class SBExponentialImpl : public SBProfileImpl
     {
     public:
@@ -1838,7 +1908,14 @@ namespace galsim {
         // Copy constructor and op= are undefined.
         SBExponentialImpl(const SBExponentialImpl& rhs);
         void operator=(const SBExponentialImpl& rhs);
+
     };
+
+#ifdef USE_1D_DEVIATE_EXPONENTIAL
+        // Static class-wide object that does some calculations applicable to all 
+        // SBExponential instantiations.
+        static ExponentialInfo _info; 
+#endif
 
     private:
         // op= is undefined

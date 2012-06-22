@@ -2,13 +2,18 @@
 // Functions for the Surface Brightness Profile Class
 //
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "integ/Int.h"
 #include "TMV.h"
 #include "Solve.h"
 #include "integ/Int.h"
+
+// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by 
+// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit 
+// circle and rejecting corner photons.
+//#define USE_COS_SIN
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -1605,6 +1610,12 @@ namespace galsim {
         dbg<<"stepK() = "<<stepK()<<std::endl;
     }
 
+#ifdef USE_1D_DEVIATE_EXPONENTIAL
+    double SBExponential::SBExponentialImpl::maxK() const 
+    { return SBExponential::_info.maxK() / _r0; }
+    double SBExponential::SBExponentialImpl::stepK() const 
+    { return SBExponential::_info.stepK() / _r0; }
+#else
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBExponential::SBExponentialImpl::maxK() const 
     { return std::pow(sbp::maxk_threshold, -1./3.)/_r0; }
@@ -1625,6 +1636,7 @@ namespace galsim {
         R = std::max(6., R);
         return M_PI / (R*_r0);
     }
+#endif
 
     double SBExponential::SBExponentialImpl::xValue(const Position<double>& p) const
     {
@@ -1647,6 +1659,54 @@ namespace galsim {
             // NB: flux*std::pow(temp,-1.5) is slower.
         }
     }
+
+#ifdef USE_1D_DEVIATE_EXPONENTIAL
+    // Constructor to initialize Exponential functions for 1D deviate photon shooting
+    SBExponential::ExponentialInfo::ExponentialInfo()
+    {
+        // The normalization factor to give unity flux integral:
+        _norm = 0.5 / M_PI;
+
+        // Next, set up the classes for photon shooting
+        _radial.reset(new ExponentialRadialFunction());
+        std::vector<double> range(2,0.);
+        range[1] = -std::log(sbp::shoot_flux_accuracy);
+        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
+    }
+
+    // Set maxK to the value where the FT is down to maxk_threshold
+    double SBExponential::ExponentialInfo::maxK() const 
+    { return std::pow(sbp::maxk_threshold, -1./3.); }
+
+    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // most alias_threshold of the flux.
+    double SBExponential::ExponentialInfo::stepK() const
+    {
+        // int( exp(-r) r, r=0..R) = (1 - exp(-R) - Rexp(-R))
+        // Fraction excluded is thus (1+R) exp(-R)
+        // A fast solution to (1+R)exp(-R) = x:
+        // log(1+R) - R = log(x)
+        // R = log(1+R) - log(x)
+        double logx = std::log(sbp::alias_threshold);
+        double R = -logx;
+        for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
+        // Make sure it is at least 6 scale radii.
+        R = std::max(6., R);
+        return M_PI / (R);
+    }
+
+    PhotonArray SBExponential::ExponentialInfo::shoot(int N, UniformDeviate ud) const
+    {
+        dbg<<"ExponentialInfo shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = 1.0\n";
+        PhotonArray result = _sampler->shoot(N,ud);
+        result.scaleFlux(_norm);
+        dbg<<"ExponentialInfo Realized flux = "<<result.getTotalFlux()<<std::endl;
+        return result;
+    }
+
+    SBExponential::ExponentialInfo SBExponential::_info;
+#endif
 
     //
     // SBAiry Class
@@ -2541,6 +2601,8 @@ namespace galsim {
         // So we start with a plausible number of photons to get going.  Then we keep adding 
         // more photons until we either hit N = flux / (1-2eta)^2 or the noise in the brightest
         // pixel is < noise.
+        //
+        // Returns the total flux placed inside the image bounds by photon shooting.
         // 
         
         dbg<<"Start drawShoot.\n";
@@ -2548,7 +2610,7 @@ namespace galsim {
 
         const int maxN = 100000; // Don't do more than this at a time to keep the 
                                  // memory usage reasonable.
-        double outsideN = 0.; // number photons falling outside image, returned, type matches N
+        double added_flux = 0.; // total flux falling inside image bounds, returned
 
         // Clear image before adding photons, for consistency with draw() methods.
         img.fill(0.);  
@@ -2593,7 +2655,7 @@ namespace galsim {
             xdbg<<"scale flux by "<<(scale_flux*thisN/origN)<<std::endl;
             pa.scaleFlux(scale_flux * thisN / origN);
             xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
-            outsideN += pa.addTo(img);
+            added_flux += pa.addTo(img);
             N -= thisN;
             realized_flux += pa.getTotalFlux();
             xdbg<<"N -> "<<N<<std::endl;
@@ -2623,23 +2685,22 @@ namespace galsim {
         }
 
         // If we didn't shoot all the original number of photons, then our flux isn't right.
-        // Need to rescale the image by facto of origN / (origN-N)
+        // Need to rescale the image by factor of origN / (origN-N)
         if (N > 0.1) {
             dbg<<"Flux scalings were set according to origN = "<<origN<<std::endl;
             dbg<<"But only shot N = "<<origN-N<<std::endl;
             double factor = origN / (origN-N);
             dbg<<"Rescale pixels by factor ("<<factor<<")\n";
             img *= T(factor);
+            added_flux *= factor;
             realized_flux *= factor;
         }
 
         dbg<<"Done drawShoot.  Realized flux = "<<realized_flux<<std::endl;
         dbg<<"c.f. target flux = "<<target_flux<<std::endl;
-        xdbg<<"outsideN = "<<outsideN<<std::endl;
+        xdbg<<"Added flux (falling within image bounds) = "<<added_flux<<std::endl;
 
-        // Now scale the image by the appropriate amount.
-
-        return outsideN;
+        return added_flux;
     }
 
     PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate u) const 
@@ -2734,16 +2795,26 @@ namespace galsim {
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
-            double xu, yu, rsq;
+            double xu, yu, factor;
+#ifdef USE_COS_SIN
+            double theta = 2.*M_PI*u();
+            double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
+            double r = std::sqrt(rsq);
+            xu = r * std::cos(theta);
+            yu = r * std::sin(theta);
+            // Then map radius to the desired Gaussian with analytic transformation
+            factor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
+#else
+            double rsq;
             do {
-                xu = 2.*u()-1.;
-                yu = 2.*u()-1.;
+                 xu = 2.*u()-1.;
+                 yu = 2.*u()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
-
-            // Then map it to desired Gaussian with analytic transformation
-            double factor = _sigma*sqrt( -2.*std::log(rsq)/rsq);
-            result.setPhoton(i,factor*xu, factor*yu, fluxPerPhoton);
+            // Then map radius to the desired Gaussian with analytic transformation
+            factor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
+#endif
+            result.setPhoton(i, factor*xu, factor*yu, fluxPerPhoton);
         }
         dbg<<"Gaussian Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
@@ -2765,15 +2836,23 @@ namespace galsim {
     {
         dbg<<"Exponential shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
+#ifdef USE_1D_DEVIATE_EXPONENTIAL
+        // Get photons from the SersicInfo structure, rescale flux and size for this instance
+        PhotonArray result = SBExponential::_info.shoot(N,u);
+        result.scaleFlux(_flux);
+        result.scaleXY(_r0);
+#else
+        // The cumulative distribution of flux is 1-(1+r)exp(-r).
+        // Here is a way to solve for r by an initial guess followed
+        // by Newton-Raphson iterations.  Probably not
+        // the most efficient thing since there are logs in the iteration.
+
         // Accuracy to which to solve for (log of) cumulative flux distribution:
         const double Y_TOLERANCE=1.e-6;
 
         double fluxPerPhoton = getFlux() / N;
         PhotonArray result(N);
-        // The cumulative distribution of flux is 1-(1+r)exp(-r).
-        // Here is a way to solve for r by an initial guess followed
-        // by Newton-Raphson iterations.  Probably not
-        // the most efficient thing since there are logs in the iteration.
+
         for (int i=0; i<N; i++) {
             double y = u();
             if (y==0.) {
@@ -2789,10 +2868,26 @@ namespace galsim {
                 r = r + (1.+r)*dy/r;
                 dy = y - r + std::log(1.+r);
             }
-            // Draw another random for azimuthal angle (could use the unit-circle trick here...)
-            double theta = 2.*M_PI*u();
-            result.setPhoton(i,_r0*r*std::cos(theta), _r0*r*std::sin(theta), fluxPerPhoton);
+            // Draw another (or multiple) randoms for azimuthal angle 
+            double cost, sint;
+#ifdef USE_COS_SIN
+            double theta = 2. * M_PI * u();
+            cost = std::cos(theta);
+            sint = std::sin(theta);
+#else
+            double xu, yu, rsq;
+            do {
+                xu = 2. * u() - 1.;
+                yu = 2. * u() - 1.;
+                rsq = xu*xu+yu*yu;
+             } while (rsq >= 1. || rsq == 0.);
+            double hypot = std::sqrt(rsq);
+            cost = xu / hypot;
+            sint = yu / hypot;
+#endif
+            result.setPhoton(i, _r0 * r * cost, _r0 * r * sint, fluxPerPhoton);
         }
+#endif
         dbg<<"Exponential Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
@@ -2855,17 +2950,27 @@ namespace galsim {
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
-            double xu, yu, rsq;
+            double rFactor, xu, yu;
+#ifdef USE_COS_SIN
+            double theta = 2.*M_PI*u();
+            double r = std::sqrt(u()); // cumulative dist function P(<r) = r^2 for unit circle
+            xu = r * std::cos(theta);
+            yu = r * std::sin(theta);
+            // Then map radius to the Moffat flux distribution
+            double newRsq = std::pow(1. - r * r * _fluxFactor, 1. / (1. - _beta)) - 1.;
+            rFactor = _rD * std::sqrt(newRsq) / r;
+#else
+            double rsq;
             do {
                 xu = 2.*u()-1.;
                 yu = 2.*u()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
-
-            // Then map it to the Moffat flux distribution
-            double newRsq = std::pow( 1.-rsq*_fluxFactor , 1./(1.-_beta)) - 1.;
-            double rFactor = _rD*sqrt(newRsq / rsq);
-            result.setPhoton(i,rFactor*xu, rFactor*yu, fluxPerPhoton);
+            // Then map radius to the Moffat flux distribution
+            double newRsq = std::pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
+            rFactor = _rD*std::sqrt(newRsq / rsq);
+#endif
+            result.setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
         }
         dbg<<"Moffat Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;

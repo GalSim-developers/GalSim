@@ -147,7 +147,6 @@ namespace galsim {
     {
         double dx = target.getScale();
         Bounds<int> b = target.getBounds();
-        double outsideN = 0.; // stores the number of photons that land outside the image, returned
 
         if (dx==0. || !b.isDefined()) 
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
@@ -159,9 +158,9 @@ namespace galsim {
         dbg<<"fluxScale = "<<fluxScale<<std::endl;
         dbg<<"bounds = "<<b<<std::endl;
 
+        double addedFlux = 0.;
 #ifdef DEBUGLOGGING
         double totalFlux = 0.;
-        double addedFlux = 0.;
         double lostFlux = 0.;
 #endif
         for (int i=0; i<int(size()); i++) {
@@ -172,11 +171,8 @@ namespace galsim {
 #endif
             if (b.includes(ix,iy)) {
                 target(ix,iy) += _flux[i]*fluxScale;
-#ifdef DEBUGLOGGING
                 addedFlux += _flux[i];
-#endif
             } else {
-                outsideN++;
 #ifdef DEBUGLOGGING
                 xdbg<<"lost flux at ix = "<<ix<<", iy = "<<iy<<" with flux = "<<_flux[i]<<std::endl;
                 lostFlux += _flux[i];
@@ -190,7 +186,7 @@ namespace galsim {
         dbg<<"outsideN = "<<outsideN<<std::endl;
 #endif
 
-        return outsideN;
+        return addedFlux;
     }
 
     // instantiate template functions for expected image types

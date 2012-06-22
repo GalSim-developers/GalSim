@@ -2,7 +2,6 @@
 #include "boost/python/stl_iterator.hpp"
 #include "SBProfile.h"
 #include "SBDeconvolve.h"
-#include "SBParse.h"
 
 namespace bp = boost::python;
 
@@ -71,13 +70,13 @@ struct PyPhotonArray {
             .def("addTo", 
                  (double(PhotonArray::*)(ImageView<float> &) const)&PhotonArray::addTo,
                  bp::arg("image"),
-                 "Add photons' fluxes into image. Returns number of photons falling outside image "
-                 "bounds as a float to avoid possible overflow on systems with short ints.")
+                 "Add photons' fluxes into image. Returns total flux of photons falling inside "
+                 "image bounds.")
             .def("addTo", 
                  (double(PhotonArray::*)(ImageView<double> &) const)&PhotonArray::addTo,
                  bp::arg("image"),
-                 "Add photons' fluxes into image. Returns number of photons falling outside image "
-                 "bounds as a float to avoid possible overflow on systems with short ints.")
+                 "Add photons' fluxes into image. Returns total flux of photons falling inside "
+                 "image bounds.")
             ;
     }
 
@@ -109,24 +108,24 @@ struct PySBProfile {
                  (double (SBProfile::*)(Image<U> &, double, UniformDeviate , double, bool) 
                   const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N"), bp::arg("ud"),
-                  bp::arg("noise")=0., bp::arg("poissonFlux")=true),
+                  bp::arg("noise")=0., bp::arg("poisson_flux")=true),
                  "Draw object into existing image using photon shooting.\n"
                  "\n"
                  "Setting optional integer arg possionFlux != 0 allows profile flux to vary \n"
                  "according to Poisson statistics for N samples.\n"
                  "\n"
-                 "Returns number of photons that land outside image.")
+                 "Returns total flux of photons that landed inside image bounds.")
             .def("drawShoot", 
                  (double (SBProfile::*)(ImageView<U>, double, UniformDeviate , double, bool)
                   const)&SBProfile::drawShoot,
                  (bp::arg("image"), bp::arg("N"), bp::arg("ud"),
-                  bp::arg("noise")=0., bp::arg("poissonFlux")=true),
+                  bp::arg("noise")=0., bp::arg("poisson_flux")=true),
                  "Draw object into existing image using photon shooting.\n"
                  "\n"
                  "Setting optional integer arg possionFlux != 0 allows profile flux to vary \n"
                  "according to Poisson statistics for N samples.\n"
                  "\n"
-                 "Returns number of photons that land outside image.")
+                 "Returns total flux of photons that landed inside image bounds.")
             .def("draw", 
                  (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::draw,
                  (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
@@ -566,8 +565,6 @@ void pyExportSBProfile() {
     PySBMoffat::wrap();
     PySBDeVaucouleurs::wrap();
     PyPhotonArray::wrap();
-
-    bp::def("SBParse", &galsim::SBParse);
 }
 
 } // namespace galsim

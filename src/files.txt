@@ -6,7 +6,6 @@ Laguerre.cpp
 OneDimensionalDeviate.cpp
 PhotonArray.cpp
 Pset.cpp
-SBParse.cpp
 SBInterpolatedImage.cpp
 SBProfile.cpp
 Shear.cpp
