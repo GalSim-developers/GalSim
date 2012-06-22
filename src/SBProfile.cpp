@@ -1614,6 +1614,10 @@ namespace galsim {
         dbg<<"stepK() = "<<stepK()<<std::endl;
     }
 
+#ifdef USE_1D_DEVIATE_EXPONENTIAL
+    double SBExponential::SBExponentialImpl::maxK() const { return _info->maxK() / _r0; }
+    double SBExponential::SBExponentialImpl::stepK() const { return _info->stepK() / _r0; }
+#else
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBExponential::SBExponentialImpl::maxK() const 
     { return std::pow(sbp::maxk_threshold, -1./3.)/_r0; }
@@ -1634,6 +1638,7 @@ namespace galsim {
         R = std::max(6., R);
         return M_PI / (R*_r0);
     }
+#endif
 
     double SBExponential::SBExponentialImpl::xValue(const Position<double>& p) const
     {
@@ -1661,11 +1666,35 @@ namespace galsim {
     // Constructor to initialize Exponential functions for 1D deviate photon shooting
     SBExponential::ExponentialInfo::ExponentialInfo()
     {
+        // The normalization factor to give unity flux integral:
+        _norm = 0.5 / M_PI;
+
         // Next, set up the classes for photon shooting
         _radial.reset(new ExponentialRadialFunction());
         std::vector<double> range(2,0.);
-        range[1] = M_PI / SBExponentialImpl::stepK();
+        range[1] = M_PI / stepK();
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
+    }
+
+    // Set maxK to the value where the FT is down to maxk_threshold
+    double SBExponential::ExponentialInfo::maxK() const 
+    { return std::pow(sbp::maxk_threshold, -1./3.); }
+
+    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // most alias_threshold of the flux.
+    double SBExponential::ExponentialInfo::stepK() const
+    {
+        // int( exp(-r) r, r=0..R) = (1 - exp(-R) - Rexp(-R))
+        // Fraction excluded is thus (1+R) exp(-R)
+        // A fast solution to (1+R)exp(-R) = x:
+        // log(1+R) - R = log(x)
+        // R = log(1+R) - log(x)
+        double logx = std::log(sbp::alias_threshold);
+        double R = -logx;
+        for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
+        // Make sure it is at least 6 scale radii.
+        R = std::max(6., R);
+        return M_PI / (R);
     }
 
     PhotonArray SBExponential::ExponentialInfo::shoot(int N, UniformDeviate ud) const
@@ -2806,7 +2835,7 @@ namespace galsim {
         // Get photons from the SersicInfo structure, rescale flux and size for this instance
         PhotonArray result = _info->shoot(N,u);
         result.scaleFlux(_flux);
-        result.scaleXY(_re);
+        result.scaleXY(_r0);
 #else
         // The cumulative distribution of flux is 1-(1+r)exp(-r).
         // Here is a way to solve for r by an initial guess followed

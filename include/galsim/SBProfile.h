@@ -1776,7 +1776,7 @@ namespace galsim {
          *                  half-light radius `re`.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-         SBExponential(double r0, double flux=1.) :
+        SBExponential(double r0, double flux=1.) :
              SBProfile(new SBExponentialImpl(r0, flux)) {}
 
         /// @brief Copy constructor.
@@ -1864,7 +1864,7 @@ namespace galsim {
             /**
              * @brief Constructor
              */
-            ExponentialRadialFunction();
+            ExponentialRadialFunction() {};
             /**
              * @brief The un-normalized Exponential function
              * @param[in] r radius, in units of scale radius.
@@ -1896,9 +1896,14 @@ namespace galsim {
              */
             PhotonArray shoot(int N, UniformDeviate ud) const;
 
+            double maxK() const;
+            double stepK() const;
+
         private:
             ExponentialInfo(const ExponentialInfo& rhs); ///< Hides the copy constructor.
             void operator=(const ExponentialInfo& rhs); ///<Hide assignment operator.
+
+            double _norm;
 
             /// Function class used for photon shooting
             boost::shared_ptr<ExponentialRadialFunction> _radial;  
