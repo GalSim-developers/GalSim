@@ -1794,71 +1794,16 @@ namespace galsim {
 
 
     protected:
-        class ExponentialInfo;
-
-
-    class SBExponentialImpl : public SBProfileImpl
-    {
-    public:
-
-        SBExponentialImpl(double r0, double flux);
-
-        ~SBExponentialImpl() {}
-
-        double xValue(const Position<double>& p) const;
-        std::complex<double> kValue(const Position<double>& k) const;
-
-        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
-        { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; splits.push_back(0.); }
-
-        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
-        { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; splits.push_back(0.); }
-
-        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
-        { 
-            ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; 
-            if (std::abs(x/_r0) < 1.e-2) splits.push_back(0.); 
-        }
-
-        bool isAxisymmetric() const { return true; } 
-        bool hasHardEdges() const { return false; }
-        bool isAnalyticX() const { return true; }
-        bool isAnalyticK() const { return true; }
-
-        double maxK() const;
-        double stepK() const;
-
-        Position<double> centroid() const 
-        { return Position<double>(0., 0.); }
-
-        double getFlux() const { return _flux; }
-        double getScaleRadius() const { return _r0; }
-
-        PhotonArray shoot(int N, UniformDeviate ud) const;
-
-    private:
-        double _flux; ///< Flux.
-        double _r0;   ///< Characteristic size of profile `exp[-(r / r0)]`.
-        double _r0_sq; ///< Calculated value: r0*r0
-        double _ksq_min; ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
-        double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
-        double _norm; ///< flux / r0^2 / 2pi
-
-        // Copy constructor and op= are undefined.
-        SBExponentialImpl(const SBExponentialImpl& rhs);
-        void operator=(const SBExponentialImpl& rhs);
 
 #ifdef USE_1D_DEVIATE_EXPONENTIAL
-        const ExponentialInfo* _info; ///< Points to info structure for this n=1 Sersic.
-    };
-
         /** 
          * @brief Subclass of `SBExponential` which provides the un-normalized radial function.
          *
          * Serves as interface to `OneDimensionalDeviate` used for sampling from this 
          * distribution.
          */
-        class ExponentialRadialFunction: public FluxDensity 
+        class ExponentialRadialFunction : 
+            public FluxDensity 
         {
         public:
             /**
@@ -1911,8 +1856,65 @@ namespace galsim {
             /// Class that does numerical photon shooting
             boost::shared_ptr<OneDimensionalDeviate> _sampler;   
         };
-#else
+#endif
+
+    class SBExponentialImpl : public SBProfileImpl
+    {
+    public:
+
+        SBExponentialImpl(double r0, double flux);
+
+        ~SBExponentialImpl() {}
+
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
+
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
+        { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; splits.push_back(0.); }
+
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; splits.push_back(0.); }
+
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        { 
+            ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; 
+            if (std::abs(x/_r0) < 1.e-2) splits.push_back(0.); 
+        }
+
+        bool isAxisymmetric() const { return true; } 
+        bool hasHardEdges() const { return false; }
+        bool isAnalyticX() const { return true; }
+        bool isAnalyticK() const { return true; }
+
+        double maxK() const;
+        double stepK() const;
+
+        Position<double> centroid() const 
+        { return Position<double>(0., 0.); }
+
+        double getFlux() const { return _flux; }
+        double getScaleRadius() const { return _r0; }
+
+        PhotonArray shoot(int N, UniformDeviate ud) const;
+
+    private:
+        double _flux; ///< Flux.
+        double _r0;   ///< Characteristic size of profile `exp[-(r / r0)]`.
+        double _r0_sq; ///< Calculated value: r0*r0
+        double _ksq_min; ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
+        double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
+        double _norm; ///< flux / r0^2 / 2pi
+
+        // Copy constructor and op= are undefined.
+        SBExponentialImpl(const SBExponentialImpl& rhs);
+        void operator=(const SBExponentialImpl& rhs);
+
     };
+
+#ifdef USE_1D_DEVIATE_EXPONENTIAL
+        // Static class-wide object that does some calculations applicable to all 
+        // SBExponential instantiations.
+        static ExponentialInfo _info; 
 #endif
 
     private:
