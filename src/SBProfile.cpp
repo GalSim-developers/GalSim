@@ -1611,8 +1611,10 @@ namespace galsim {
     }
 
 #ifdef USE_1D_DEVIATE_EXPONENTIAL
-    double SBExponential::SBExponentialImpl::maxK() const { return _info->maxK() / _r0; }
-    double SBExponential::SBExponentialImpl::stepK() const { return _info->stepK() / _r0; }
+    double SBExponential::SBExponentialImpl::maxK() const 
+    { return SBExponential::_info.maxK() / _r0; }
+    double SBExponential::SBExponentialImpl::stepK() const 
+    { return SBExponential::_info.stepK() / _r0; }
 #else
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBExponential::SBExponentialImpl::maxK() const 
@@ -1668,7 +1670,7 @@ namespace galsim {
         // Next, set up the classes for photon shooting
         _radial.reset(new ExponentialRadialFunction());
         std::vector<double> range(2,0.);
-        range[1] = M_PI / stepK();
+        range[1] = -std::log(sbp::shoot_flux_accuracy);
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
     }
 
@@ -1702,6 +1704,8 @@ namespace galsim {
         dbg<<"ExponentialInfo Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
+
+    SBExponential::ExponentialInfo SBExponential::_info;
 #endif
 
     //
@@ -2829,7 +2833,7 @@ namespace galsim {
         dbg<<"Target flux = "<<getFlux()<<std::endl;
 #ifdef USE_1D_DEVIATE_EXPONENTIAL
         // Get photons from the SersicInfo structure, rescale flux and size for this instance
-        PhotonArray result = _info->shoot(N,u);
+        PhotonArray result = SBExponential::_info.shoot(N,u);
         result.scaleFlux(_flux);
         result.scaleXY(_r0);
 #else
