@@ -125,30 +125,50 @@ take a weighted average of multple phase screens.
 A more accurate approach is to model the propagation of light between
 screens using the Fresnel approximation to the Huygens' integral for a
 complex wavefront propagating paraxially from a plane at $z=0$ to a
-plane at $z=L$.  If an infinite uniform plane wave has a field
+plane at $z=H$.  If an infinite uniform plane wavefront has a field
 distribution $\mathcal{E}(x, y, 0)$ at $z=0$, then its Fourier
-transform in the plane at $z=L$ is given by
-\begin{equation}
-\tilde{\mathcal{E}}(\nu_x, \nu_y, L) = \tilde{\mathcal{E}}(\nu_x,
-\nu_y, 0) \times \exp{\left[-2{\rm i} \pi^2 \nu^2 / L \right]},
+transform in the plane at $z=H$ is given by
+\begin{equation}\label{eq:fresnel}
+\tilde{\mathcal{E}}(\nu_x, \nu_y, H) = {\rm e}^{-{\rm i} \pi \nu^2  H
+  \lambda} \times \tilde{\mathcal{E}}(\nu_x, \nu_y, 0),
 \end{equation}
-omitting the amplitude distortions (***ADD REFS***).
+omitting the wavefront amplitude distortions in this approximate treatment (***BARNEY MUST CHECK THIS
+THOROUGHLY AND ADD REFS!***).   Considering phase distortions only, we will
+set $\mathcal{E}(x, y, 0) = {\rm e}^{{\rm i}\phi(x, y, 0)}$ and
+$\mathcal{E}(x, y, H) = {\rm e}^{{\rm i}\phi(x, y, H)}$ when using
+equation \eqref{eq:fresnel} to propagate phase distortions from one
+screen to the next.
+For separations $H$ between phase screens
+of order kilometres, it can be seen that the modifications of the phase pattern
+caused by Fresnel diffraction will be small, particularly for the
+lowest $\nu \sim 1/L_0$ modes which contain the greatest power in $P_{\phi}(\nu)$.
+
+To propagate through multiple phase screens using the Fresnel
+approximation will therefore multiple DFT calculations at each layer,
+one for generating the initial screens as described in the previous
+Section, and another two (forward and inverse) for propagating light
+according to equation \eqref{eq:fresnel}.  It remains to be seen
+whether this step can be omitted.
 
 To simulate time variation in the patterns, phase screens can be
 `rolled' using assumed wind velocities for each layer of the
-atmosphere.  As the power spectrum $P_{\phi}(\nu)$ due to turbulence
+atmosphere, summing to generate an exposure time-dependent average pattern.  
+As the power spectrum $P_{\phi}(\nu)$ due to turbulence
 is isotropic in general it may be possible to approximate independent
 wind velocities at multiple layers using rectangular strips of phase screen
 realizations rather than large square images.  This may be a useful
 computational saving as the need to roll phase screens might add
 significantly to their extent.
 
+It should finally be stated that the atmospheric PSF incident across
+the telescope FOV needs to be given in angular units, requiring
+appropriate conversion and further approximation if using Fresnel diffraction.
 
 \subsection{A non-DFT approach?}
 It is tantalisingly hinted in documents describing the Large Synoptic
 Survey Telescope (LSST) \imsim\ data
 simulator\footnote{http://lsst.astro.washington.edu/docs/overview/}
-that these authors use a different approach:
+that these authors use a different method:
 \begin{quote}
 \emph{``The single
 photon history is traced through each layer of the
