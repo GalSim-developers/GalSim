@@ -17,7 +17,7 @@
 
 // Switch used to see whether the Newton-Raphson method of SBExponential is really faster than the
 // OneDimensionalDeviate routine that you get when you request SBSersic with n=1.
-#define USE_1D_DEVIATE_EXPONENTIAL
+//#define USE_1D_DEVIATE_EXPONENTIAL
 
 #ifdef DEBUGLOGGING
 #include <fstream>
