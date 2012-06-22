@@ -611,6 +611,8 @@ def Script4():
     psfs = [psf1, psf2, psf3, psf4, psf5]
     psf_names = ["Gaussian", "Moffat", "DoubleGaussian", "OpticalPSF", "Kolmogorov * Airy"]
     psf_times = [0,0,0,0,0]
+    psf_fft_times = [0,0,0,0,0]
+    psf_phot_times = [0,0,0,0,0]
 
     gal1 = galsim.Gaussian(half_light_radius = 1)
     gal2 = galsim.Exponential(half_light_radius = 1)
@@ -624,6 +626,8 @@ def Script4():
     gals = [gal1, gal2, gal3, gal4, gal5]
     gal_names = ["Gaussian", "Exponential", "Devaucouleurs", "n=2.5 Sersic", "Bulge + Disk"]
     gal_times = [0,0,0,0,0]
+    gal_fft_times = [0,0,0,0,0]
+    gal_phot_times = [0,0,0,0,0]
 
     # Other times to keep track of:
     setup_times = 0
@@ -701,7 +705,11 @@ def Script4():
                         gal_name, psf_name, flux, hlr, gal_shape.getE1(), gal_shape.getE2())
                 #logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
                 psf_times[ipsf] += t5-t1
+                psf_fft_times[ipsf] += t3-t2
+                psf_phot_times[ipsf] += t4-t3
                 gal_times[igal] += t5-t1
+                gal_fft_times[igal] += t3-t2
+                gal_phot_times[igal] += t4-t3
                 setup_times += t2-t1
                 fft_times += t3-t2
                 phot_times += t4-t3
@@ -717,11 +725,13 @@ def Script4():
     logger.info('')
     logger.info('Breakdown by PSF type:')
     for ipsf in range(len(psfs)):
-        logger.info('   %s: Total time = %f',psf_names[ipsf],psf_times[ipsf])
+        logger.info('   %s: Total time = %f  (fft: %f, phot: %f)',
+            psf_names[ipsf],psf_times[ipsf],psf_fft_times[ipsf],psf_phot_times[ipsf])
     logger.info('')
     logger.info('Breakdown by Galaxy type:')
     for igal in range(len(gals)):
-        logger.info('   %s: Total time = %f',gal_names[igal],gal_times[igal])
+        logger.info('   %s: Total time = %f  (fft: %f, phot: %f)',
+            gal_names[igal],gal_times[igal],gal_fft_times[igal],gal_phot_times[igal])
     logger.info('')
 
     # Now write the image to disk.
