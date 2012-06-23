@@ -1,0 +1,307 @@
+Results of photon shooting timing tests for GalSim Issue #163
+(see https://github.com/GalSim-developers/GalSim/issues/163)
+
+Excecuted using the code at the repository commit: 1d8627904508c6727eac389e03dcf9072dbff18f
+
+Testing scripts:
+devutils/external/time_photon_shooting/time_gaussian.py
+devutils/external/time_photon_shooting/time_moffat.py
+devutils/external/time_photon_shooting/time_exponential.py
+
+Test system info:
+MacbookPro8,2: 4 core 2.2 GHz Intel Core i7, 8GB RAM
+OSX 10.7.4, Darwin Kernel Version 11.4.0
+gcc 4.2.1 (i686-apple-darwin11 build)
+
+--Gaussian results--
+
+USE_COS_SIN: on
+time_gaussian_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 43.769228 sec
+time_gaussian_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 43.845985 sec
+time_gaussian_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 43.759112 sec
+
+USE_COS_SIN: off
+time_gaussian_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 41.460453 sec
+time_gaussian_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 41.458574 sec
+time_gaussian_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 41.389149 sec
+
+
+--Moffat results--
+
+USE_COS_SIN: on
+time_moffat_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 81.330360 sec
+time_moffat_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 81.366816 sec
+time_moffat_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 81.526213 sec
+
+USE_COS_SIN: off
+time_moffat_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 70.426707 sec
+time_moffat_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 70.504782 sec
+time_moffat_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 70.456211 sec
+
+
+--Exponential results--
+
+USE_COS_SIN: on
+USE_1D_DEVIATE_EXPONENTIAL: on
+time_exponential_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 69.313235 sec
+time_exponential_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 69.781120 sec
+time_exponential_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 69.329941 sec
+
+USE_COS_SIN: off
+USE_1D_DEVIATE_EXPONENTIAL: on
+time_exponential_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 69.009877 sec
+time_exponential_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 69.070312 sec
+time_exponential_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 69.083846 sec
+
+USE_COS_SIN: on
+USE_1D_DEVIATE_EXPONENTIAL: off
+time_exponential_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 114.169648 sec
+time_exponential_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 114.104397 sec
+time_exponential_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 114.024346 sec
+
+USE_COS_SIN: off
+USE_1D_DEVIATE_EXPONENTIAL: off
+time_exponential_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 118.740515 sec
+time_exponential_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 118.716056 sec
+time_exponential_shoot: NIMAGES = 1000, NPHOTONS = 500000, total time = 118.701256 sec
+
+=======================================================================================
+
+Test system info:
+Intel Xeon 2.83 GHz Quad Core  16GB RAM
+Linux 2.6.32-131.21.1.el6.x86_64  (Red Hat 4.4.5-6) (GCC) 
+icpc 12.0.4
+commit: bd38b86768f782eea513282bc791cc1c418189a2
+
+--Gaussian results--
+
+USE_COS_SIN: on
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 6.710515 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 6.855211 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 6.647547 sec
+
+USE_COS_SIN: off
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.350070 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.353679 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.458136 sec
+
+
+--Moffat results--
+
+USE_COS_SIN: on
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 9.327304 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 9.319357 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 9.324794 sec
+
+USE_COS_SIN: off
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 9.597688 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 9.646634 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 9.598184 sec
+
+
+--Exponential results--
+
+USE_COS_SIN: on
+USE_1D_DEVIATE_EXPONENTIAL: on
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 10.637303 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 10.627779 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 10.581377 sec
+
+USE_COS_SIN: off
+USE_1D_DEVIATE_EXPONENTIAL: on
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 10.666693 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 10.676347 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 10.939316 sec
+
+USE_COS_SIN: on
+USE_1D_DEVIATE_EXPONENTIAL: off
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 20.332897 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 20.276559 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 20.230411 sec
+
+USE_COS_SIN: off
+USE_1D_DEVIATE_EXPONENTIAL: off
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 21.086794 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 21.406800 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 20.961567 sec
+
+=======================================================================================
+
+Test system info:
+Intel Xeon 2.83 GHz Quad Core  16GB RAM
+Linux 2.6.32-131.21.1.el6.x86_64  (Red Hat 4.4.5-6) (GCC) 
+g++ 4.4.5
+commit: bd38b86768f782eea513282bc791cc1c418189a2
+
+--Gaussian results--
+
+USE_COS_SIN: on
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 9.012683 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 8.966573 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 9.029839 sec
+
+USE_COS_SIN: off
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.947256 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.926175 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.845458 sec
+
+
+--Moffat results--
+
+USE_COS_SIN: on
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 11.743774 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 11.696343 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 11.717588 sec
+
+USE_COS_SIN: off
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 10.655662 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 10.609573 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 10.856328 sec
+
+
+--Exponential results--
+
+USE_COS_SIN: on
+USE_1D_DEVIATE_EXPONENTIAL: on
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 12.515020 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 12.544539 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 12.574942 sec
+
+USE_COS_SIN: off
+USE_1D_DEVIATE_EXPONENTIAL: on
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 11.121059 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 11.204602 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 11.193495 sec
+
+USE_COS_SIN: on
+USE_1D_DEVIATE_EXPONENTIAL: off
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 22.043446 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 22.110831 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 22.034417 sec
+
+USE_COS_SIN: off
+USE_1D_DEVIATE_EXPONENTIAL: off
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 21.503022 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 21.530631 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 21.514593 sec
+
+=======================================================================================
+
+Test system info:
+MacbookPro: 4 core 2.66 GHz Intel Core i7, 8GB RAM
+OSX 10.6.8, Darwin Kernel Version 10.8.0
+g++ 4.6.3
+commit: bd38b86768f782eea513282bc791cc1c418189a2
+
+--Gaussian results--
+
+USE_COS_SIN: on
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 5.535992 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 5.486462 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 5.496176 sec
+
+USE_COS_SIN: off
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 4.465817 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 4.445412 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 4.474340 sec
+
+
+--Moffat results--
+
+USE_COS_SIN: on
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 9.400531 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 9.247162 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 9.328951 sec
+
+USE_COS_SIN: off
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.656172 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.601440 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.631136 sec
+
+
+--Exponential results--
+
+USE_COS_SIN: on
+USE_1D_DEVIATE_EXPONENTIAL: on
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 8.557821 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 8.511913 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 8.480157 sec
+
+USE_COS_SIN: off
+USE_1D_DEVIATE_EXPONENTIAL: on
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.384988 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.348460 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.296558 sec
+
+USE_COS_SIN: on
+USE_1D_DEVIATE_EXPONENTIAL: off
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 12.864769 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 12.748960 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 12.987844 sec
+
+USE_COS_SIN: off
+USE_1D_DEVIATE_EXPONENTIAL: off
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 11.472037 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 11.369557 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 11.473747 sec
+
+=======================================================================================
+
+Test system info:
+MacbookPro: 4 core 2.66 GHz Intel Core i7, 8GB RAM
+OSX 10.6.8, Darwin Kernel Version 10.8.0
+clang++ 3.1
+commit: bd38b86768f782eea513282bc791cc1c418189a2
+
+--Gaussian results--
+
+USE_COS_SIN: on
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 4.787150 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 4.745613 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 4.792895 sec
+
+USE_COS_SIN: off
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 4.505355 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 4.320827 sec
+time_gaussian_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 4.350163 sec
+
+
+--Moffat results--
+
+USE_COS_SIN: on
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.711779 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.651809 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.696358 sec
+
+USE_COS_SIN: off
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.791214 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.686687 sec
+time_moffat_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.674233 sec
+
+
+--Exponential results--
+
+USE_COS_SIN: on
+USE_1D_DEVIATE_EXPONENTIAL: on
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.932506 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.819772 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.785984 sec
+
+USE_COS_SIN: off
+USE_1D_DEVIATE_EXPONENTIAL: on
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.300807 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.196407 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 7.199118 sec
+
+USE_COS_SIN: on
+USE_1D_DEVIATE_EXPONENTIAL: off
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 12.075953 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 12.034189 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 12.221536 sec
+
+USE_COS_SIN: off
+USE_1D_DEVIATE_EXPONENTIAL: off
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 11.315147 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 11.358627 sec
+time_exponential_shoot: NIMAGES = 100, NPHOTONS = 500000, total time = 11.258170 sec
+
