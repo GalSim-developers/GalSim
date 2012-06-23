@@ -8,6 +8,8 @@ devutils/external/time_photon_shooting/time_gaussian.py
 devutils/external/time_photon_shooting/time_moffat.py
 devutils/external/time_photon_shooting/time_exponential.py
 
+Test system info:
+Macbook Pro OSX 10.7.3, Darwin Kernel Version 11.3.0, gcc 4.2.1 (i686-apple-darwin11 build)
 
 --Gaussian results--
 
