@@ -17,7 +17,7 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-NIMAGES = 1000
+NIMAGES = 100
 NPHOTONS = 500000        # Number of photons per draw
 PIXEL_SCALE = 1.0        # arcsec  (size units in input catalog are pixels)
 IMAGE_XMAX = 64          # pixels
