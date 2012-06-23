@@ -32,7 +32,7 @@ def time_exponential_shoot():
     the customized radius sampling method against the use of the OneDimensionalDeviate with a
     Sersic(n=1) profile.
     """
-    logger = logging.getiLogger("time_exponential")
+    logger = logging.getLogger("time_exponential")
 
     # Initialize the random number generator we will be using.
     rng = galsim.UniformDeviate(RANDOM_SEED)
