@@ -2843,7 +2843,7 @@ namespace galsim {
         // the most efficient thing since there are logs in the iteration.
 
         // Accuracy to which to solve for (log of) cumulative flux distribution:
-        const double Y_TOLERANCE=1.e-6;
+        const double Y_TOLERANCE=sbp::shoot_flux_accuracy;
 
         double fluxPerPhoton = getFlux() / N;
         PhotonArray result(N);
