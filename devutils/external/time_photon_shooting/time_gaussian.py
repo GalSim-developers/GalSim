@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-"""Some example scripts to evaluate timing for shooting photons through a Gaussian distribution 
-with the GalSim library.
+"""An example script to evaluate timing for shooting photons through a Gaussian distribution with 
+the GalSim library.
 """
 
 import sys
