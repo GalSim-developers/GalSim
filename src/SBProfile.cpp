@@ -2790,26 +2790,25 @@ namespace galsim {
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
-            double xu, yu, factor;
 #ifdef USE_COS_SIN
             double theta = 2.*M_PI*u();
             double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
-            double r = std::sqrt(rsq);
-            xu = r * std::cos(theta);
-            yu = r * std::sin(theta);
+            double cost = std::cos(theta);
+            double sint = std::sin(theta);
             // Then map radius to the desired Gaussian with analytic transformation
-            factor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
+            double rFactor = _sigma * std::sqrt( -2. * std::log(rsq));
+            result.setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
 #else
-            double rsq;
+            double xu, yu, rsq;
             do {
-                 xu = 2.*u()-1.;
-                 yu = 2.*u()-1.;
+                xu = 2.*u()-1.;
+                yu = 2.*u()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
             // Then map radius to the desired Gaussian with analytic transformation
-            factor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
+            double rFactor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
+            result.setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
 #endif
-            result.setPhoton(i, factor*xu, factor*yu, fluxPerPhoton);
         }
         dbg<<"Gaussian Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
@@ -2864,11 +2863,12 @@ namespace galsim {
                 dy = y - r + std::log(1.+r);
             }
             // Draw another (or multiple) randoms for azimuthal angle 
-            double cost, sint;
 #ifdef USE_COS_SIN
             double theta = 2. * M_PI * u();
-            cost = std::cos(theta);
-            sint = std::sin(theta);
+            double cost = std::cos(theta);
+            double sint = std::sin(theta);
+            double rFactor = r * _r0;
+            result.setPhoton(i, rFactor * cost, rFactor * sint, fluxPerPhoton);
 #else
             double xu, yu, rsq;
             do {
@@ -2876,11 +2876,9 @@ namespace galsim {
                 yu = 2. * u() - 1.;
                 rsq = xu*xu+yu*yu;
              } while (rsq >= 1. || rsq == 0.);
-            double hypot = std::sqrt(rsq);
-            cost = xu / hypot;
-            sint = yu / hypot;
+            double rFactor = r * _r0 / std::sqrt(rsq);
+            result.setPhoton(i, rFactor * xu, rFactor * yu, fluxPerPhoton);
 #endif
-            result.setPhoton(i, _r0 * r * cost, _r0 * r * sint, fluxPerPhoton);
         }
 #endif
         dbg<<"Exponential Realized flux = "<<result.getTotalFlux()<<std::endl;
@@ -2944,18 +2942,20 @@ namespace galsim {
         PhotonArray result(N);
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
-            // First get a point uniformly distributed on unit circle
-            double rFactor, xu, yu;
 #ifdef USE_COS_SIN
+            // First get a point uniformly distributed on unit circle
             double theta = 2.*M_PI*u();
-            double r = std::sqrt(u()); // cumulative dist function P(<r) = r^2 for unit circle
-            xu = r * std::cos(theta);
-            yu = r * std::sin(theta);
+            double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
+            double r = std::sqrt(rsq);
+            double cost = std::cos(theta);
+            double sint = std::sin(theta);
             // Then map radius to the Moffat flux distribution
-            double newRsq = std::pow(1. - r * r * _fluxFactor, 1. / (1. - _beta)) - 1.;
-            rFactor = _rD * std::sqrt(newRsq) / r;
+            double newRsq = std::pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
+            double rFactor = _rD * std::sqrt(newRsq);
+            result.setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
 #else
-            double rsq;
+            // First get a point uniformly distributed on unit circle
+            double xu, yu, rsq;
             do {
                 xu = 2.*u()-1.;
                 yu = 2.*u()-1.;
@@ -2963,9 +2963,9 @@ namespace galsim {
             } while (rsq>=1. || rsq==0.);
             // Then map radius to the Moffat flux distribution
             double newRsq = std::pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
-            rFactor = _rD*std::sqrt(newRsq / rsq);
-#endif
+            double rFactor = _rD * std::sqrt(newRsq / rsq);
             result.setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
+#endif
         }
         dbg<<"Moffat Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
