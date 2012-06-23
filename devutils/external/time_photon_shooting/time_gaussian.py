@@ -5,9 +5,6 @@ with the GalSim library.
 """
 
 import sys
-import os
-import math
-import numpy
 import logging
 import time
 
