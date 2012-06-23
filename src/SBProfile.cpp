@@ -10,11 +10,6 @@
 #include "Solve.h"
 #include "integ/Int.h"
 
-// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by 
-// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit 
-// circle and rejecting corner photons.
-//#define USE_COS_SIN
-
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
