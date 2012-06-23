@@ -78,9 +78,15 @@ namespace galsim {
 
     void SBProfile::applyRotation(const Angle& theta)
     {
-        SBTransform d(*this,
-                    std::cos(theta.rad()),-std::sin(theta.rad()),
-                    std::sin(theta.rad()),std::cos(theta.rad()));
+#ifdef _GLIBCXX_HAVE_SINCOS
+        // Most optimizing compilers will do this automatically, but just in case...
+        double sint,cost;
+        sincos(theta.rad(),&sint,&cost);
+#else
+        double cost = std::cos(theta.rad());
+        double sint = std::sin(theta.rad());
+#endif
+        SBTransform d(*this,cost,-sint,sint,cost);
         _pimpl = d._pimpl;
     }
 
@@ -2793,8 +2799,14 @@ namespace galsim {
 #ifdef USE_COS_SIN
             double theta = 2.*M_PI*u();
             double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
+#ifdef _GLIBCXX_HAVE_SINCOS
+            // Most optimizing compilers will do this automatically, but just in case...
+            double sint,cost;
+            sincos(theta,&sint,&cost);
+#else
             double cost = std::cos(theta);
             double sint = std::sin(theta);
+#endif
             // Then map radius to the desired Gaussian with analytic transformation
             double rFactor = _sigma * std::sqrt( -2. * std::log(rsq));
             result.setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
@@ -2865,8 +2877,14 @@ namespace galsim {
             // Draw another (or multiple) randoms for azimuthal angle 
 #ifdef USE_COS_SIN
             double theta = 2. * M_PI * u();
+#ifdef _GLIBCXX_HAVE_SINCOS
+            // Most optimizing compilers will do this automatically, but just in case...
+            double sint,cost;
+            sincos(theta,&sint,&cost);
+#else
             double cost = std::cos(theta);
             double sint = std::sin(theta);
+#endif
             double rFactor = r * _r0;
             result.setPhoton(i, rFactor * cost, rFactor * sint, fluxPerPhoton);
 #else
@@ -2946,8 +2964,14 @@ namespace galsim {
             // First get a point uniformly distributed on unit circle
             double theta = 2.*M_PI*u();
             double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
+#ifdef _GLIBCXX_HAVE_SINCOS
+            // Most optimizing compilers will do this automatically, but just in case...
+            double sint,cost;
+            sincos(theta,&sint,&cost);
+#else
             double cost = std::cos(theta);
             double sint = std::sin(theta);
+#endif
             // Then map radius to the Moffat flux distribution
             double newRsq = std::pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq);
