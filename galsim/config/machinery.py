@@ -3,6 +3,29 @@ Machinery (base classes, metaclasses, fields, etc.) used to
 define a hierarchy of configuration options.
 """
 
+def _set_node_impl(container, key, types, aliases, value, path):
+    value = aliases.get(value, value)
+    if value is None:
+        container[key] = value
+        return value
+    isNode = False
+    if issubclass(NodeBase, value):
+        try:
+            value = value()
+        except:
+            raise TypeError("could not default-construct instance")
+        isNode = True
+    elif isinstance(NodeBase, value):
+        isNode = True
+    if types is not None and not isinstance(value, types):
+        raise TypeError("invalid type for this field")
+    if isNode:
+        if value.path:
+            raise TypeError("moving/copying nodes is not currently supported")
+        value.path = path
+    container[key] = value
+    return value
+
 class Field(object):
     """
     A class for custom Python "descriptors" (i.e. custom properties) used in configuration classes.
@@ -14,54 +37,45 @@ class Field(object):
     a dictionary called "_data" in the instance.
     """
 
-    def __init__(self, type, default=True, doc=None, aliases=None):
-        self.type = type
+    def __init__(self, types=(), default=True, doc=None, aliases=None, type=None):
+        if types is None:
+            types = ()
+        types = tuple(types)
+        if type is not None:
+            types += (type,)
+        self.types = types
         if aliases is None:
             aliases = {}
         self.aliases = aliases
         self.default = self.aliases.get(default, default)
         if doc is None:
-            doc = self.type.__doc__
+            try:
+                doc = self.types[0].__doc__
+            except:
+                pass
         self.__doc__ = doc
 
-    def __get__(self, instance, type):
+    def __get__(self, instance, cls):
         if isinstance(instance, NodeBase):
-            value = instance._data.setdefault(self.name, self.default)
-            if value is True and self.type is not bool:
-                # This combination is interpreted as "default construct on first access"
-                value = self.type()
-                instance._data[self.name] = value
-            if issubclass(self.type, NodeBase) and not value.path:
-                value.path = instance.path + (self.name,)
+            try:
+                value = instance._data[self.name]
+            except KeyError:
+                try:
+                    value = _set_node_impl(instance._data, self.name, self.types, self.aliases, value,
+                                           path=instance.path + (self.name,))
+                except Exception, err:
+                    raise TypeError("Error constructing default value for field '%s': %s"
+                                    % (self._get_full_name(instance), err))
             return value
         return self
 
     def __set__(self, instance, value):
-        value = self.aliases.get(value, value)
-        if issubclass(self.type, NodeBase):
-            if issubclass(value, NodeBase):
-                # setting 'outer.inner = Foo' is treated like 'outer.inner = Foo()'; the former
-                # might be considered a nicer config syntax, even though it's weird if you
-                # think of it like Python.
-                value = value()
-            if not isinstance(value, self.type):
-                raise TypeError("Cannot set field '%s' of type '%s' to an instance of type '%s'."
-                                % (self._get_full_name(instance), self.type.__name__,
-                                   type(value).__name__))
-            self._update_node_path(instance, value, self.name)
-            instance._data[self.name] = value
-        else:
-            try:
-                instance._data[self.name] = self.type(value)
-            except Exception as err:
-                raise TypeError("Cannot set field '%s' of type '%s' to value '%s'"
-                                % (self._get_full_name(instance), self.type.__name__, value))
-
-    @staticmethod
-    def _update_node_path(instance, value, name):
-        if value.path:
-            raise NotImplementedError("Relocating/copying nodes is not currently supported.")
-        value.path = instance.path + (name,)
+        try:
+            _set_node_impl(instance._data, self.name, self.types, self.aliases, value,
+                           path=instance.path + (self.name,))
+        except Exception, err:
+            raise TypeError("Error setting value of field '%s': %s"
+                            % (self._get_full_name(instance), err))
 
     def _get_full_name(self, instance):
         return ".".join(instance.path + (self.name,))
@@ -201,9 +215,12 @@ class NodeBase(object):
             for k, v in field.aliases.iteritems():
                 if isinstance(k, basestring):
                     if output.setdefault(k, v) is not v:
-                        raise RuntimeError("Duplicate alias in config load context: %r" % k)
-            if field.type is not None:
-                field.type._get_load_context(output)
+                        raise RuntimeError("Alias conflict in config load context: %r" % k)
+            for cls in field.types:
+                try:
+                    cls._get_load_context(output)
+                except AttributeError:
+                    pass
         return output
 
 class ListNodeBase(NodeBase):
@@ -221,17 +238,6 @@ class ListNodeBase(NodeBase):
         self._elements = list()
         return self
 
-    def _prep_insert(self, index, element):
-        if issubclass(element, NodeBase):
-            element = element()
-        if self.types is not None and not isinstance(element, self.types):
-            raise TypeError("Cannot set element %d of field '%s' to value '%s'"
-                            % (index, self.name, element))
-        if isinstance(element, NodeBase):
-            if element.path:
-                raise NotImplementedError("Relocating/copying nodes is not currently supported.")
-            element.path = self.path[:-1] + ("%s[%d]" % (self.path[-1], index),)
-
     def __getitem__(self, index):
         return self._elements[index]
 
@@ -241,16 +247,24 @@ class ListNodeBase(NodeBase):
                 raise TypeError("Advanced slice set operations are not supported on list nodes")
             # If we didn't throw, we know we're just replacing the entire list; that's the only
             # slice set syntax we support.
-            self._elements = []
+            newList = [None] * len(value)    # operate on temporary for better exception recovery
             for n, element in enumerate(value):
-                self._prep_insert(start + step * n, element)
-                self._elements.append(element)
+                try:
+                    _set_node_impl(newList, n, self.types, self.aliases, element,
+                                   path=self.path[:-1] + ("%s[%d]" % (self.path[-1], index),))
+                except Exception, err:
+                    raise TypeError("Error setting element %d of field '%s': %s"
+                                    % (n, self.name, err))
+            self._elements = newList
         else:
-            self._prep_insert(value)
             if index == len(self._elements): # implicit append by assigning to the next item
-                self._elements.append(value)
-            else:
-                self._elements[index] = value
+                self._elements.append(None)
+            try:
+                _set_node_impl(self._elements, index, self.types, self.aliases, element,
+                               path=self.path[:-1] + ("%s[%d]" % (self.path[-1], index),))
+            except Exception, err:
+                raise TypeError("Error setting element %d of field '%s': %s"
+                                % (index, self.name, err))
 
     def __iter__(self):
         return iter(self._elements)
@@ -259,8 +273,13 @@ class ListNodeBase(NodeBase):
         return len(self._elements)
 
     def append(self, value):
-        self._prep_insert(value)
-        self._elements.append(value)
+        self._elements.append(None)
+        try:
+            _set_node_impl(self._elements, -1, self.types, self.aliases, element,
+                           path=self.path[:-1] + ("%s[%d]" % (self.path[-1], index),))
+        except Exception, err:
+            raise TypeError("Error setting element %d of field '%s': %s"
+                            % (index, self.name, err))
 
     def finish(self, **kwds):
         """
@@ -286,8 +305,16 @@ class ListNodeBase(NodeBase):
         NodeBase._get_load_context(output)
         if self.types is not None:
             for cls in self.types:
-                cls._get_load_context(output)
+                try:
+                    cls._get_load_context(output)
+                except AttributeError:
+                    pass
         return output
+
+class ListField(Field):
+
+    def __init__(self, types=(), default=True, doc=None, aliases=None, type=None, node_cls=None):
+        pass #TODO
 
 def nested(*args, **kwds):
     """
