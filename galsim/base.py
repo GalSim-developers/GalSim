@@ -377,20 +377,31 @@ class GSObject:
             dx = float(dx)
 
         if image == None:
+            if add_to_image:
+                raise ValueError("Cannot add_to_image if image is None")
             image = self.SBProfile.draw(dx=dx, wmult=wmult)
+            if normalization.lower() == "flux" or normalization.lower() == "f":
+                # In this case, the draw command may set dx automatically, so we need to 
+                # adjust the flux after the fact.  But this is ok, since add_to_image is
+                # invalid in this case.
+                dx = image.getScale()
+                image *= dx*dx
         else :
             if dx <= 0.:
                 dx = image.getScale()
             if not add_to_image:
                 image.setZero()
-            self.SBProfile.draw(image, dx=dx, wmult=wmult)
-
-        if normalization.lower() == "flux" or normalization.lower() == "f":
-            dx = image.getScale()
-            image *= dx*dx
+            if normalization.lower() == "flux" or normalization.lower() == "f":
+                # SBProfile draw command uses surface brightness normalization.  So if we
+                # want flux normalization, we need to scale the flux by dx^2
+                scaled = self * (dx*dx)
+            else:
+                scaled = self
+            scaled.SBProfile.draw(image, dx=dx, wmult=wmult)
+         
         return image
 
-    def drawShoot(self, image, N=0., ud=None, normalization="flux", noise=0.,
+    def drawShoot(self, image, n_photons=0., uniform_deviate=None, normalization="flux", noise=0.,
                   poisson_flux=True, add_to_image=False):
         """@brief Draw an image of the object by shooting individual photons drawn from the 
         surface brightness profile of the object.
@@ -398,16 +409,17 @@ class GSObject:
         @param image  The image on which to draw the profile.
                       Note: Unlike for the regular draw command, image is a required
                       parameter.  drawShoot will not make the image for you.
-        @param N      If provided, the number of photons to use.
-                      If not provided, use as many photons as necessary to end up with
-                      an image with the correct poisson shot noise for the object's flux.
-                      For positive definite profiles, this is equivalent to N = flux.
-                      However, some profiles need more than this because some of the shot
-                      photons are negative (usually due to interpolants).
-                      (Default = 0.)
-        @param ud     If provided, a UniformDeviate to use for the random numbers
-                      If ud=None, one will be automatically created, using the time as a seed.
-                      (Default = None)
+        @param n_photons    If provided, the number of photons to use.
+                            If not provided, use as many photons as necessary to end up with
+                            an image with the correct poisson shot noise for the object's flux.
+                            For positive definite profiles, this is equivalent to n_photons = flux.
+                            However, some profiles need more than this because some of the shot
+                            photons are negative (usually due to interpolants).
+                            (Default = 0)
+        @param uniform_deviate  If provided, a UniformDeviate to use for the random numbers
+                                If uniform_deviate=None, one will be automatically created, 
+                                using the time as a seed.
+                                (Default = None)
         @param normalization  Two options for the normalization:
                               "flux" or "f" means that the sum of the output pixels is normalized
                                      to be equal to the total flux.  (Modulo any flux that
@@ -416,10 +428,10 @@ class GSObject:
                                      the surface brightness distribution at each location.
                               (Default = "flux")
         @param noise  If provided, the allowed extra noise in each pixel.
-                      This is only relevant if N=0, so the number of photons is being 
+                      This is only relevant if n_photons=0, so the number of photons is being 
                       automatically calculated.  In that case, if the image noise is 
                       dominated by the sky background, you can get away with using fewer
-                      shot photons than the full N = flux.  Essentially each shot photon
+                      shot photons than the full n_photons = flux.  Essentially each shot photon
                       can have a flux > 1, which increases the noise in each pixel.
                       The noise parameter specifies how much extra noise per pixel is allowed 
                       because of this approximation.  A typical value for this might be
@@ -432,7 +444,7 @@ class GSObject:
                       definition.
                       (Default = 0.)
         @param poisson_flux  Whether to allow total object flux scaling to vary according to 
-                             Poisson statistics for N samples.
+                             Poisson statistics for n_photons samples.
                              (Default = True)
         @param add_to_image  Whether to add flux to the existing image rather than clear out
                              anything in the image before shooting.
@@ -444,14 +456,14 @@ class GSObject:
 
         The input image must have defined boundaries and pixel scale.  The photons generated by
         the drawShoot() method will be binned into the target image.  The input image will be 
-        cleared before drawing in the photons.  Scale and location of the image pixels will not 
-        be altered. 
+        cleared before drawing in the photons by default, unless the keyword add_to_image is 
+        set to True.  Scale and location of the image pixels will not be altered. 
 
         It is important to remember that the image produced by drawShoot() represents the object
         as convolved with the square image pixel.  So when using drawShoot() instead of draw(),
         you should not convolve with a Pixel.  This will produce the equivalent image (for very 
-        large N) as draw() produces when the same object is convolved with Pixel(xw=dx) when 
-        drawing onto an image with pixel scale dx.
+        large n_photons) as draw() produces when the same object is convolved with Pixel(xw=dx) 
+        when drawing onto an image with pixel scale dx.
         """
         # Raise an exception immediately if the normalization type is not recognized
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
@@ -461,28 +473,38 @@ class GSObject:
         if image is None:
             raise TypeError("drawShoot requires the image to be provided.")
 
-        if type(N) != float:
+        if type(n_photons) != float:
             # if given an int, just convert it to a float
-            N = float(N)
+            n_photons = float(n_photons)
         if type(noise) != float:
             noise = float(noise)
-        if ud == None:
-            ud = galsim.UniformDeviate()
-        # Check that either N is set to something or flux is set to something
-        if N == 0. and self.getFlux() == 1.:
+        if uniform_deviate == None:
+            uniform_deviate = galsim.UniformDeviate()
+        # Check that either n_photons is set to something or flux is set to something
+        if n_photons == 0. and self.getFlux() == 1.:
             import warnings
-            msg = "Warning: drawShoot for object with flux == 1, but N == 0.\n"
+            msg = "Warning: drawShoot for object with flux == 1, but n_photons == 0.\n"
             msg += "This will only shoot a single photon."
             warnings.warn(msg)
 
         if not add_to_image:
             image.setZero()
 
-        added_flux = self.SBProfile.drawShoot(image, N, ud, noise, poisson_flux)
+        if normalization.lower() == "flux" or normalization.lower() == "f":
+            # SBProfile draw command uses surface brightness normalization.  So if we
+            # want flux normalization, we need to scale the flux by dx^2
+            dx = image.getScale()
+            scaled = self * (dx*dx)
+        else:
+            scaled = self
+            
+        added_flux = scaled.SBProfile.drawShoot(image, n_photons, uniform_deviate, noise,
+                                                poisson_flux)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":
+            # added_flux came out wrong.  Need to remove the scaling.
             dx = image.getScale()
-            image *= dx*dx
+            added_flux /= dx*dx
 
         return image, added_flux
          

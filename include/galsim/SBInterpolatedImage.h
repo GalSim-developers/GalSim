@@ -285,7 +285,7 @@ namespace galsim {
          * @param[in] u UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate u) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
 
         double getFlux() const;
 
@@ -296,8 +296,8 @@ namespace galsim {
         double fillXImage(ImageView<T>& I, double dx) const;
 
         // Overrides for better efficiency with separable kernels:
-        virtual void fillKGrid(KTable& kt) const;
-        virtual void fillXGrid(XTable& xt) const;
+        void fillKGrid(KTable& kt) const;
+        void fillXGrid(XTable& xt) const;
 
         // These are the virtual functions, but we don't want to have to duplicate the
         // code implement these.  So each one just calls the template version.  The
@@ -315,9 +315,9 @@ namespace galsim {
         //    SBProfile.  Then these functions immediately call the template version
         //    of fillXImage defined above.
         //
-        virtual double doFillXImage(ImageView<float>& I, double dx) const
+        double doFillXImage(ImageView<float>& I, double dx) const
         { return fillXImage(I,dx); }
-        virtual double doFillXImage(ImageView<double>& I, double dx) const
+        double doFillXImage(ImageView<double>& I, double dx) const
         { return fillXImage(I,dx); }
 
     private:

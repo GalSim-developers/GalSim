@@ -209,8 +209,8 @@ namespace galsim {
          */
         void setCenter(int x0, int y0) 
         { 
-            shift(x0 - (this->getXMax()+this->getXMin())/2 ,
-                  y0 - (this->getYMax()+this->getYMin())/2 ); 
+            shift(x0 - (this->getXMax()+this->getXMin()+1)/2 ,
+                  y0 - (this->getYMax()+this->getYMin()+1)/2 ); 
         }
 
         /**

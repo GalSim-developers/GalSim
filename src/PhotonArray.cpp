@@ -155,6 +155,7 @@ namespace galsim {
         // Factor to turn flux into surface brightness in an Image pixel
         double fluxScale = 1./(dx*dx);  
         dbg<<"In PhotonArray::addTo\n";
+        dbg<<"dx = "<<dx<<std::endl;
         dbg<<"fluxScale = "<<fluxScale<<std::endl;
         dbg<<"bounds = "<<b<<std::endl;
 
@@ -183,7 +184,6 @@ namespace galsim {
         dbg<<"totalFlux = "<<totalFlux<<std::endl;
         dbg<<"addedlFlux = "<<addedFlux<<std::endl;
         dbg<<"lostFlux = "<<lostFlux<<std::endl;
-        dbg<<"outsideN = "<<outsideN<<std::endl;
 #endif
 
         return addedFlux;

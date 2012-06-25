@@ -143,7 +143,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate used to generate random values
          * @returns a PhotonArray containing the vector of displacements for interpolation kernel.
          */
-        virtual PhotonArray shoot(int N, UniformDeviate ud) const 
+        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
         { checkSampler(); return _sampler->shoot(N, ud); }
 
     protected:
@@ -205,10 +205,10 @@ namespace galsim {
          *
          * Default is to throw an runtime_error
          */
-        virtual PhotonArray shoot(int N, UniformDeviate ud) const 
+        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
         {
             throw std::runtime_error("Interpolant2d::shoot() not implemented for this kernel");
-            return PhotonArray(0);
+            return boost::shared_ptr<PhotonArray>();
         }
     };
 
@@ -242,7 +242,7 @@ namespace galsim {
         // Photon-shooting routines:
         double getPositiveFlux() const;
         double getNegativeFlux() const;
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         /**
          * @brief Access the 1d interpolant functions for more efficient 2d interps:
@@ -361,7 +361,7 @@ namespace galsim {
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
     private:
         double _width;
     };
@@ -397,7 +397,7 @@ namespace galsim {
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
         /// @brief Nearest-neighbor interpolant photon shooting is a simple UniformDeviate call.
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
     private:
         double _tolerance;
     };
@@ -441,10 +441,10 @@ namespace galsim {
          * @brief Photon-shooting will be disabled for sinc function since wiggles will 
          * make it crazy
          */
-        PhotonArray shoot(int N, UniformDeviate ud) const 
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
         {
             throw std::runtime_error("Photon shooting is not practical with sinc Interpolant");
-            return PhotonArray(N);
+            return boost::shared_ptr<PhotonArray>();
         }
     private:
         double _tolerance;
@@ -481,7 +481,7 @@ namespace galsim {
          * @brief Linear interpolant has fast photon-shooting by adding two uniform deviates 
          * per axis.
          */
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
     private:
         double _tolerance;
     };

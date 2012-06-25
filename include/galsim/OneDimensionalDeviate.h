@@ -237,7 +237,7 @@ namespace galsim {
          * @param[in] N number of photons to draw
          * @param[in] ud UniformDeviate used to produce random selections.
          */
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
     private:
 
