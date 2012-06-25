@@ -2,7 +2,7 @@
 // Functions for the Surface Brightness Profile Class
 //
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "integ/Int.h"
@@ -119,37 +119,37 @@ namespace galsim {
     // Common methods of Base Class "SBProfile"
     //
 
-    ImageView<float> SBProfile::draw(double dx, int wmult) const 
+    ImageView<float> SBProfile::draw(double dx, double gain, int wmult) const 
     {
         dbg<<"Start draw that returns ImageView"<<std::endl;
         Image<float> img;
-        draw(img, dx, wmult);
+        draw(img, dx, gain, wmult);
         return img.view();
     }
 
     template <typename T>
-    double SBProfile::draw(ImageView<T>& img, double dx, int wmult) const 
+    double SBProfile::draw(ImageView<T>& img, double dx, double gain, int wmult) const 
     {
         dbg<<"Start draw ImageView"<<std::endl;
         if (isAnalyticX())
-            return plainDraw(img, dx, wmult);
+            return plainDraw(img, dx, gain, wmult);
         else
-            return fourierDraw(img, dx, wmult);
+            return fourierDraw(img, dx, gain, wmult);
     }
 
     template <typename T>
-    double SBProfile::draw(Image<T>& img, double dx, int wmult) const 
+    double SBProfile::draw(Image<T>& img, double dx, double gain, int wmult) const 
     {
         dbg<<"Start draw Image"<<std::endl;
         if (isAnalyticX())
-            return plainDraw(img, dx, wmult);
+            return plainDraw(img, dx, gain, wmult);
         else
-            return fourierDraw(img, dx, wmult);
+            return fourierDraw(img, dx, gain, wmult);
     }
 
     // First is a simple case wherein we have a formula for x values:
     template <typename T>
-    double SBProfile::plainDraw(ImageView<T>& I, double dx, int wmult) const 
+    double SBProfile::plainDraw(ImageView<T>& I, double dx, double gain, int wmult) const 
     {
         dbg<<"Start plainDraw ImageView"<<std::endl;
         // Determine desired dx:
@@ -160,11 +160,11 @@ namespace galsim {
         I.setCenter(0,0);
 
         assert(_pimpl.get());
-        return _pimpl->fillXImage(I, dx);
+        return _pimpl->fillXImage(I, dx, gain);
     }
 
     template <typename T>
-    double SBProfile::plainDraw(Image<T>& I, double dx, int wmult) const 
+    double SBProfile::plainDraw(Image<T>& I, double dx, double gain, int wmult) const 
     {
         dbg<<"Start plainDraw Image"<<std::endl;
         // Determine desired dx:
@@ -192,16 +192,17 @@ namespace galsim {
 
         ImageView<T> Iv = I.view();
         assert(_pimpl.get());
-        double ret = _pimpl->fillXImage(Iv, dx);
+        double ret = _pimpl->fillXImage(Iv, dx, gain);
         I.setScale(Iv.getScale());
         dbg<<"scale => "<<I.getScale()<<std::endl;
         return ret;
     }
 
     template <typename T>
-    double SBProfile::SBProfileImpl::doFillXImage2(ImageView<T>& I, double dx) const 
+    double SBProfile::SBProfileImpl::doFillXImage2(ImageView<T>& I, double dx, double gain) const 
     {
         xdbg<<"Start doFillXImage2"<<std::endl;
+        xdbg<<"dx = "<<dx<<", gain = "<<gain<<std::endl;
         double totalflux=0;
         for (int y = I.getYMin(); y <= I.getYMax(); y++) {
             int x = I.getXMin(); 
@@ -209,8 +210,9 @@ namespace galsim {
             ImIter ee=I.rowEnd(y);
             for (ImIter it=I.rowBegin(y); it!=ee; ++it, ++x) {
                 Position<double> p(x*dx,y*dx); // since x,y are pixel indices
-                *it += xValue(p);
-                totalflux += *it;
+                double temp = gain * xValue(p);
+                *it += T(temp);
+                totalflux += temp;
             } 
         }
         I.setScale(dx);
@@ -223,7 +225,7 @@ namespace galsim {
     // Aliasing will be handled by folding the k values before transforming
     // And enforce no image folding
     template <typename T>
-    double SBProfile::fourierDraw(ImageView<T>& I, double dx, int wmult) const 
+    double SBProfile::fourierDraw(ImageView<T>& I, double dx, double gain, int wmult) const 
     {
         dbg<<"Start fourierDraw ImageView"<<std::endl;
         Bounds<int> imgBounds; // Bounds for output image
@@ -299,8 +301,8 @@ namespace galsim {
         double sum=0.;
         for (int y = I.getYMin(); y <= I.getYMax(); y++) {
             for (int x = I.getXMin(); x <= I.getXMax(); x++) {
-                double temp = xtmp->xval(x,y);
-                I(x,y) += temp;
+                double temp = gain * xtmp->xval(x,y);
+                I(x,y) += T(temp);
                 sum += temp;
             }
         }
@@ -316,7 +318,7 @@ namespace galsim {
     // In fact, if we could have a single resizer, than that could be called from draw()
     // and both plainDraw and fourierDraw could drop to only having the ImageView argument.
     template <typename T>
-    double SBProfile::fourierDraw(Image<T>& I, double dx, int wmult) const 
+    double SBProfile::fourierDraw(Image<T>& I, double dx, double gain, int wmult) const 
     {
         dbg<<"Start fourierDraw Image"<<std::endl;
         Bounds<int> imgBounds; // Bounds for output image
@@ -406,8 +408,8 @@ namespace galsim {
         double sum=0.;
         for (int y = I.getYMin(); y <= I.getYMax(); y++) {
             for (int x = I.getXMin(); x <= I.getXMax(); x++) {
-                double temp = xtmp->xval(x,y);
-                I(x,y) += temp;
+                double temp = gain * xtmp->xval(x,y);
+                I(x,y) += T(temp);
                 sum += temp;
             }
         }
@@ -418,25 +420,28 @@ namespace galsim {
     }
 
     template <typename T>
-    void SBProfile::drawK(ImageView<T>& Re, ImageView<T>& Im, double dk, int wmult) const 
+    void SBProfile::drawK(
+        ImageView<T>& Re, ImageView<T>& Im, double dk, double gain, int wmult) const 
     {
         if (isAnalyticK()) 
-            plainDrawK(Re, Im, dk, wmult);   // calculate in k space
+            plainDrawK(Re, Im, dk, gain, wmult);   // calculate in k space
         else               
-            fourierDrawK(Re, Im, dk, wmult); // calculate via FT from real space
+            fourierDrawK(Re, Im, dk, gain, wmult); // calculate via FT from real space
     }
 
     template <typename T>
-    void SBProfile::drawK(Image<T>& Re, Image<T>& Im, double dk, int wmult) const 
+    void SBProfile::drawK(
+        Image<T>& Re, Image<T>& Im, double dk, double gain, int wmult) const 
     {
         if (isAnalyticK()) 
-            plainDrawK(Re, Im, dk, wmult);   // calculate in k space
+            plainDrawK(Re, Im, dk, gain, wmult);   // calculate in k space
         else               
-            fourierDrawK(Re, Im, dk, wmult); // calculate via FT from real space
+            fourierDrawK(Re, Im, dk, gain, wmult); // calculate via FT from real space
     }
 
     template <typename T>
-    void SBProfile::plainDrawK(ImageView<T>& Re, ImageView<T>& Im, double dk, int wmult) const 
+    void SBProfile::plainDrawK(
+        ImageView<T>& Re, ImageView<T>& Im, double dk, double gain, int wmult) const 
     {
         // Make sure input images match or are both null
         assert(Re.getBounds() == Im.getBounds());
@@ -453,7 +458,7 @@ namespace galsim {
             ImIter ee=Re.rowEnd(y);
             for (ImIter it=Re.rowBegin(y), it2=Im.rowBegin(y); it!=ee; ++it, ++it2, ++x) {
                 Position<double> p(x*dk,y*dk); // since x,y are pixel indicies
-                std::complex<double> c = this->kValue(p);  
+                std::complex<double> c = gain * this->kValue(p);  
                 *it = c.real(); 
                 *it2 = c.imag(); 
             } 
@@ -464,7 +469,8 @@ namespace galsim {
     }
 
     template <typename T>
-    void SBProfile::plainDrawK(Image<T>& Re, Image<T>& Im, double dk, int wmult) const 
+    void SBProfile::plainDrawK(
+        Image<T>& Re, Image<T>& Im, double dk, double gain, int wmult) const 
     {
         // Make sure input images match or are both null
         assert(!(Re.getBounds().isDefined() || Im.getBounds().isDefined()) 
@@ -496,7 +502,7 @@ namespace galsim {
             ImIter ee=Re.rowEnd(y);
             for (ImIter it=Re.rowBegin(y), it2=Im.rowBegin(y); it!=ee; ++it, ++it2, ++x) {
                 Position<double> p(x*dk,y*dk); // since x,y are pixel indicies
-                std::complex<double> c = this->kValue(p);  
+                std::complex<double> c = gain * this->kValue(p);  
                 *it = c.real(); 
                 *it2 = c.imag(); 
             } 
@@ -512,7 +518,8 @@ namespace galsim {
     // power of 2 for transform
 
     template <typename T>
-    void SBProfile::fourierDrawK(ImageView<T>& Re, ImageView<T>& Im, double dk, int wmult) const 
+    void SBProfile::fourierDrawK(
+        ImageView<T>& Re, ImageView<T>& Im, double dk, double gain, int wmult) const 
     {
         assert(Re.getBounds() == Im.getBounds());
 
@@ -574,8 +581,9 @@ namespace galsim {
 
         for (int y = Re.getYMin(); y <= Re.getYMax(); y++)
             for (int x = Re.getXMin(); x <= Re.getXMax(); x++) {
-                Re(x,y) = ktmp->kval(x*oversamp,y*oversamp).real();
-                Im(x,y) = ktmp->kval(x*oversamp,y*oversamp).imag();
+                std::complex<double> c = gain * ktmp->kval(x*oversamp,y*oversamp);
+                Re(x,y) = c.real();
+                Im(x,y) = c.imag();
             }
 
         Re.setScale(dk);
@@ -583,7 +591,8 @@ namespace galsim {
     }
 
     template <typename T>
-    void SBProfile::fourierDrawK(Image<T>& Re, Image<T>& Im, double dk, int wmult) const 
+    void SBProfile::fourierDrawK(
+        Image<T>& Re, Image<T>& Im, double dk, double gain, int wmult) const 
     {
         assert(!(Re.getBounds().isDefined() || Im.getBounds().isDefined()) 
                || (Re.getBounds() == Im.getBounds()));
@@ -671,8 +680,9 @@ namespace galsim {
 
         for (int y = Re.getYMin(); y <= Re.getYMax(); y++)
             for (int x = Re.getXMin(); x <= Re.getXMax(); x++) {
-                Re(x,y) = ktmp->kval(x*oversamp,y*oversamp).real();
-                Im(x,y) = ktmp->kval(x*oversamp,y*oversamp).imag();
+                std::complex<double> c = gain * ktmp->kval(x*oversamp,y*oversamp);
+                Re(x,y) = c.real();
+                Im(x,y) = c.imag();
             }
 
         Re.setScale(dk);
@@ -1927,7 +1937,7 @@ namespace galsim {
 
     // Override x-domain writing so we can partially fill pixels at edge of box.
     template <typename T>
-    double SBBox::SBBoxImpl::fillXImage(ImageView<T>& I, double dx) const 
+    double SBBox::SBBoxImpl::fillXImage(ImageView<T>& I, double dx, double gain) const 
     {
         // Pixel index where edge of box falls:
         int xedge = int( std::ceil(_xw / (2*dx) - 0.5) );
@@ -1941,17 +1951,15 @@ namespace galsim {
         if (yedge==0) yfrac = _yw/dx;
 
         double totalflux = 0.;
-        double xfac;
-        for (int i = I.getXMin(); i <= I.getXMax(); i++) {
-            if ( std::abs(i) > xedge ) xfac = 0.;
-            else if (std::abs(i)==xedge) xfac = _norm*xfrac;
-            else xfac = _norm;
+        gain *= _norm; // gain is now total normalization.
+        for (int i=I.getXMin(); i<=I.getXMax(); ++i) if (std::abs(i) <= xedge) {
+            double xfac = std::abs(i)==xedge ? gain*xfrac : gain;
 
-            for (int j = I.getYMin(); j <= I.getYMax(); j++) {
-                if (xfac==0. || std::abs(j)>yedge) I(i,j)=T(0);
-                else if (std::abs(j)==yedge) I(i,j) += T(xfac*yfrac);
-                else I(i,j) += T(xfac);
-                totalflux += I(i,j);
+            for (int j=I.getYMin(); j<=I.getYMax(); ++j) if (std::abs(j) <= yedge) {
+                double temp = std::abs(j)==yedge ? xfac*yfrac : xfac;
+                temp *= gain;
+                I(i,j) += T(temp);
+                totalflux += temp;
             }
         }
         I.setScale(dx);
@@ -2566,8 +2574,8 @@ namespace galsim {
      *************************************************************/
 
     template <class T>
-    double SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate u, 
-                                double noise, bool poisson_flux) const 
+    double SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate u, double dx,
+                                double gain, double noise, bool poisson_flux) const 
     {
         // If N = 0, this routine will try to end up with an image with the number of real 
         // photons = flux that has the corresponding Poisson noise. For profiles that are 
@@ -2622,6 +2630,12 @@ namespace galsim {
         
         dbg<<"Start drawShoot.\n";
         dbg<<"N = "<<N<<std::endl;
+        dbg<<"dx = "<<dx<<std::endl;
+        dbg<<"gain = "<<gain<<std::endl;
+        dbg<<"noise = "<<noise<<std::endl;
+        dbg<<"poisson = "<<poisson_flux<<std::endl;
+
+        if (dx > 0.) img.setScale(dx);
 
         const int maxN = 100000; // Don't do more than this at a time to keep the 
                                  // memory usage reasonable.
@@ -2635,7 +2649,7 @@ namespace galsim {
         if (N == 0.) N = mod_flux;
         double origN = N;
 
-        double scale_flux = 1.; // Amount by which to scale the flux at the end.
+        double scale_flux = gain; // Amount by which to scale the flux at the end.
 
         if (poisson_flux) {
             PoissonDeviate pd(u, N);
@@ -2721,7 +2735,9 @@ namespace galsim {
         dbg<<"c.f. target flux = "<<target_flux<<std::endl;
         xdbg<<"Added flux (falling within image bounds) = "<<added_flux<<std::endl;
 
-        return added_flux;
+        // The "added_flux" above really counts ADU's.  So divide by gain to get the 
+        // actual flux that was added.
+        return added_flux / gain;
     }
 
     boost::shared_ptr<PhotonArray> SBAdd::SBAddImpl::shoot(int N, UniformDeviate u) const 
@@ -2732,7 +2748,7 @@ namespace galsim {
         double fluxPerPhoton = totalAbsoluteFlux / N;
 
         // Initialize the output array
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(0));
 
         double remainingAbsoluteFlux = totalAbsoluteFlux;
         int remainingN = N;
@@ -3014,58 +3030,76 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<float>& img,double dx) const;
-    template double SBProfile::SBProfileImpl::doFillXImage2(ImageView<double>& img,double dx) const;
+    template double SBProfile::SBProfileImpl::doFillXImage2(
+        ImageView<float>& img, double dx, double gain) const;
+    template double SBProfile::SBProfileImpl::doFillXImage2(
+        ImageView<double>& img, double dx, double gain) const;
 
-    template double SBProfile::drawShoot(ImageView<float> image, double N, UniformDeviate ud,
-                                         double noise, bool poisson_flux) const;
-    template double SBProfile::drawShoot(ImageView<double> image, double N, UniformDeviate ud,
-                                         double noise, bool poisson_flux) const;
-    template double SBProfile::drawShoot(Image<float>& image,double N, UniformDeviate ud,
-                                         double noise, bool poisson_flux) const;
-    template double SBProfile::drawShoot(Image<double>& image,double N, UniformDeviate ud,
-                                         double noise, bool poisson_flux) const;
+    template double SBProfile::drawShoot(
+        ImageView<float> image, double N, UniformDeviate ud, double dx, double gain,
+        double noise, bool poisson_flux) const;
+    template double SBProfile::drawShoot(
+        ImageView<double> image, double N, UniformDeviate ud, double dx, double gain,
+        double noise, bool poisson_flux) const;
+    template double SBProfile::drawShoot(
+        Image<float>& image,double N, UniformDeviate ud, double dx, double gain,
+        double noise, bool poisson_flux) const;
+    template double SBProfile::drawShoot(
+        Image<double>& image,double N, UniformDeviate ud, double dx, double gain,
+        double noise, bool poisson_flux) const;
 
-    template double SBProfile::draw(Image<float>& img, double dx, int wmult) const;
-    template double SBProfile::draw(Image<double>& img, double dx, int wmult) const;
-    template double SBProfile::draw(ImageView<float>& img, double dx, int wmult) const;
-    template double SBProfile::draw(ImageView<double>& img, double dx, int wmult) const;
+    template double SBProfile::draw(
+        Image<float>& img, double dx, double gain, int wmult) const;
+    template double SBProfile::draw(
+        Image<double>& img, double dx, double gain, int wmult) const;
+    template double SBProfile::draw(
+        ImageView<float>& img, double dx, double gain, int wmult) const;
+    template double SBProfile::draw(
+        ImageView<double>& img, double dx, double gain, int wmult) const;
 
-    template double SBProfile::plainDraw(Image<float>& I, double dx, int wmult) const;
-    template double SBProfile::plainDraw(Image<double>& I, double dx, int wmult) const;
-    template double SBProfile::plainDraw(ImageView<float>& I, double dx, int wmult) const;
-    template double SBProfile::plainDraw(ImageView<double>& I, double dx, int wmult) const;
+    template double SBProfile::plainDraw(
+        Image<float>& I, double dx, double gain, int wmult) const;
+    template double SBProfile::plainDraw(
+        Image<double>& I, double dx, double gain, int wmult) const;
+    template double SBProfile::plainDraw(
+        ImageView<float>& I, double dx, double gain, int wmult) const;
+    template double SBProfile::plainDraw(
+        ImageView<double>& I, double dx, double gain, int wmult) const;
 
-    template double SBProfile::fourierDraw(Image<float>& I, double dx, int wmult) const;
-    template double SBProfile::fourierDraw(Image<double>& I, double dx, int wmult) const;
-    template double SBProfile::fourierDraw(ImageView<float>& I, double dx, int wmult) const;
-    template double SBProfile::fourierDraw(ImageView<double>& I, double dx, int wmult) const;
+    template double SBProfile::fourierDraw(
+        Image<float>& I, double dx, double gain, int wmult) const;
+    template double SBProfile::fourierDraw(
+        Image<double>& I, double dx, double gain, int wmult) const;
+    template double SBProfile::fourierDraw(
+        ImageView<float>& I, double dx, double gain, int wmult) const;
+    template double SBProfile::fourierDraw(
+        ImageView<double>& I, double dx, double gain, int wmult) const;
 
     template void SBProfile::drawK(
-        Image<float>& Re, Image<float>& Im, double dk, int wmult) const;
+        Image<float>& Re, Image<float>& Im, double dk, double gain, int wmult) const;
     template void SBProfile::drawK(
-        Image<double>& Re, Image<double>& Im, double dk, int wmult) const;
+        Image<double>& Re, Image<double>& Im, double dk, double gain, int wmult) const;
     template void SBProfile::drawK(
-        ImageView<float>& Re, ImageView<float>& Im, double dk, int wmult) const;
+        ImageView<float>& Re, ImageView<float>& Im, double dk, double gain, int wmult) const;
     template void SBProfile::drawK(
-        ImageView<double>& Re, ImageView<double>& Im, double dk, int wmult) const;
+        ImageView<double>& Re, ImageView<double>& Im, double dk, double gain, int wmult) const;
 
     template void SBProfile::plainDrawK(
-        Image<float>& Re, Image<float>& Im, double dk, int wmult) const;
+        Image<float>& Re, Image<float>& Im, double dk, double gain, int wmult) const;
     template void SBProfile::plainDrawK(
-        Image<double>& Re, Image<double>& Im, double dk, int wmult) const;
+        Image<double>& Re, Image<double>& Im, double dk, double gain, int wmult) const;
     template void SBProfile::plainDrawK(
-        ImageView<float>& Re, ImageView<float>& Im, double dk, int wmult) const;
+        ImageView<float>& Re, ImageView<float>& Im, double dk, double gain, int wmult) const;
     template void SBProfile::plainDrawK(
-        ImageView<double>& Re, ImageView<double>& Im, double dk, int wmult) const;
+        ImageView<double>& Re, ImageView<double>& Im, double dk, double gain, int wmult) const;
 
     template void SBProfile::fourierDrawK(
-        Image<float>& Re, Image<float>& Im, double dk, int wmult) const;
+        Image<float>& Re, Image<float>& Im, double dk, double gain, int wmult) const;
     template void SBProfile::fourierDrawK(
-        Image<double>& Re, Image<double>& Im, double dk, int wmult) const;
+        Image<double>& Re, Image<double>& Im, double dk, double gain, int wmult) const;
     template void SBProfile::fourierDrawK(
-        ImageView<float>& Re, ImageView<float>& Im, double dk, int wmult) const;
+        ImageView<float>& Re, ImageView<float>& Im, double dk, double gain, int wmult) const;
     template void SBProfile::fourierDrawK(
-        ImageView<double>& Re, ImageView<double>& Im, double dk, int wmult) const;
+        ImageView<double>& Re, ImageView<double>& Im, double dk, double gain, int wmult) const;
 
 }

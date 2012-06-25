@@ -336,7 +336,7 @@ class GSObject:
         ret.applyShift(dx, dy)
         return ret
 
-    def draw(self, image=None, dx=0., wmult=1, normalization="flux", add_to_image=False):
+    def draw(self, image=None, dx=0., gain=1., wmult=1, normalization="flux", add_to_image=False):
         """@brief Draws an Image of the object, with bounds optionally set by an input Image.
 
         @param image  If provided, this will be the image on which to draw the profile.
@@ -346,6 +346,7 @@ class GSObject:
                       If dx <= 0. and image != None, then take the provided image's pixel scale.
                       If dx <= 0. and image == None, then use pi/maxK()
                       (Default = 0.)
+        @param gain   The number of ADU to place on the image per photon.  (Default = 1)
         @param wmult  A factor by which to make the intermediate images larger than 
                       they are normally made.  The size is normally automatically chosen 
                       to reach some preset accuracy targets (see include/galsim/SBProfile.h); 
@@ -372,37 +373,46 @@ class GSObject:
         # Raise an exception here since C++ is picky about the input types
         if type(wmult) != int:
             raise TypeError("Input wmult should be an int")
+        if type(gain) != float:
+            gain = float(gain)
         if type(dx) != float:
-            raise Warning("Input dx not a float, converting...")
             dx = float(dx)
 
         if image == None:
+            # Can't add to image if none is provided.
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image is None")
-            image = self.SBProfile.draw(dx=dx, wmult=wmult)
+
+            image = self.SBProfile.draw(dx, gain, wmult)
+
+            # In this case, the draw command may set dx automatically, so we need to 
+            # adjust the flux after the fact.  But this is ok, since add_to_image is
+            # invalid in this case.
             if normalization.lower() == "flux" or normalization.lower() == "f":
-                # In this case, the draw command may set dx automatically, so we need to 
-                # adjust the flux after the fact.  But this is ok, since add_to_image is
-                # invalid in this case.
                 dx = image.getScale()
                 image *= dx*dx
+
         else :
+            
+            # Set dx based on the image if not provided something else.
             if dx <= 0.:
                 dx = image.getScale()
+
+            # Clear the image if we are not adding to it.
             if not add_to_image:
                 image.setZero()
+
+            # SBProfile draw command uses surface brightness normalization.  So if we
+            # want flux normalization, we need to scale the flux by dx^2
             if normalization.lower() == "flux" or normalization.lower() == "f":
-                # SBProfile draw command uses surface brightness normalization.  So if we
-                # want flux normalization, we need to scale the flux by dx^2
-                scaled = self * (dx*dx)
-            else:
-                scaled = self
-            scaled.SBProfile.draw(image, dx=dx, wmult=wmult)
+                gain *= dx**2
+
+            self.SBProfile.draw(image, dx, gain, wmult)
          
         return image
 
-    def drawShoot(self, image, n_photons=0., uniform_deviate=None, normalization="flux", noise=0.,
-                  poisson_flux=True, add_to_image=False):
+    def drawShoot(self, image, n_photons=0., dx=0., gain=1., uniform_deviate=None,
+                  normalization="flux", noise=0., poisson_flux=True, add_to_image=False):
         """@brief Draw an image of the object by shooting individual photons drawn from the 
         surface brightness profile of the object.
 
@@ -416,6 +426,10 @@ class GSObject:
                             However, some profiles need more than this because some of the shot
                             photons are negative (usually due to interpolants).
                             (Default = 0)
+        @param dx     If provided, use this as the pixel scale for the image.
+                      If dx <= 0. then use the provided image's pixel scale.
+                      (Default = 0.)
+        @param gain  The number of ADU to place on the image per photon.  (Default = 1)
         @param uniform_deviate  If provided, a UniformDeviate to use for the random numbers
                                 If uniform_deviate=None, one will be automatically created, 
                                 using the time as a seed.
@@ -486,10 +500,15 @@ class GSObject:
         if type(n_photons) != float:
             # if given an int, just convert it to a float
             n_photons = float(n_photons)
+        if type(dx) != float:
+            dx = float(dx)
+        if type(gain) != float:
+            gain = float(gain)
         if type(noise) != float:
             noise = float(noise)
         if uniform_deviate == None:
             uniform_deviate = galsim.UniformDeviate()
+
         # Check that either n_photons is set to something or flux is set to something
         if n_photons == 0. and self.getFlux() == 1.:
             import warnings
@@ -497,24 +516,21 @@ class GSObject:
             msg += "This will only shoot a single photon."
             warnings.warn(msg)
 
+        # Clear the image if we are not adding to it.
         if not add_to_image:
             image.setZero()
 
-        if normalization.lower() == "flux" or normalization.lower() == "f":
-            # SBProfile draw command uses surface brightness normalization.  So if we
-            # want flux normalization, we need to scale the flux by dx^2
+        # Set dx based on the image if not provided something else.
+        if dx <= 0.:
             dx = image.getScale()
-            scaled = self * (dx*dx)
-        else:
-            scaled = self
-            
-        added_flux = scaled.SBProfile.drawShoot(image, n_photons, uniform_deviate, noise,
-                                                poisson_flux)
 
+        # SBProfile draw command uses surface brightness normalization.  So if we
+        # want flux normalization, we need to scale the flux by dx^2
         if normalization.lower() == "flux" or normalization.lower() == "f":
-            # added_flux came out wrong.  Need to remove the scaling.
-            dx = image.getScale()
-            added_flux /= dx*dx
+            gain *= image.getScale()**2
+            
+        added_flux = self.SBProfile.drawShoot(
+                image, n_photons, uniform_deviate, dx, gain, noise, poisson_flux)
 
         return image, added_flux
          

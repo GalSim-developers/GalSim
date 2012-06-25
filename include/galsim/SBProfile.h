@@ -507,6 +507,10 @@ namespace galsim {
          *            For positive definite profiles, this is equivalent to N = flux.
          *            However, some profiles need more than this because some of the shot
          *            photons are negative (usually due to interpolants).
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @param[in] dx  grid on which SBProfile is drawn has pitch `dx`
+         *            Given `dx=0.` default, routine will take dx from the image scale.
+         * @param[in] gain  Number of ADU to draw per photon. (default `gain` = 1.)
          * @param[in] noise If provided, the allowed extra noise in each pixel.
          *            This is only relevant if N=0, so the number of photons is being 
          *            automatically calculated.  In that case, if the image noise is 
@@ -519,7 +523,6 @@ namespace galsim {
          *            due to the sky.  Note that this uses a "variance" definition of noise,
          *            not a "sigma" definition.
          *            (default `noise = 0.`)
-         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @param[in] poisson_flux Whether to allow total object flux scaling to vary according to 
          *                         Poisson statistics for `N` samples 
          *                         (default `poisson_flux = true`).
@@ -530,12 +533,12 @@ namespace galsim {
          *       Internally it will be rounded to the nearest integer.
          */
         template <typename T>
-        double drawShoot(ImageView<T> img, double N, UniformDeviate ud,
-                         double noise=0., bool poisson_flux=true) const;
+        double drawShoot(ImageView<T> img, double N, UniformDeviate ud, double dx=0., 
+                         double gain=1., double noise=0., bool poisson_flux=true) const;
         template <typename T>
-        double drawShoot(Image<T>& img, double N, UniformDeviate ud,
-                         double noise=0., bool poisson_flux=true) const
-        { return drawShoot(img.view(), N, ud, noise, poisson_flux); }
+        double drawShoot(Image<T>& img, double N, UniformDeviate ud, double dx=0.,
+                         double gain=1., double noise=0., bool poisson_flux=true) const
+        { return drawShoot(img.view(), N, ud, dx, gain, noise, poisson_flux); }
         //@}
 
         /** 
@@ -555,13 +558,14 @@ namespace galsim {
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
          *                  you will receive an image with the aliased frequencies included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
          *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
          * @returns image (as ImageViewF; if another type is preferred, then use the draw 
          *                 method that takes an image as argument)
          */
-        ImageView<float> draw(double dx=0., int wmult=1) const;
+        ImageView<float> draw(double dx=0., double gain=1., int wmult=1) const;
 
         //@{
         /** 
@@ -585,15 +589,16 @@ namespace galsim {
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
          *                  you will receive an image with the aliased frequencies included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
          *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
          * @returns summed flux.
          */
         template <typename T>
-        double draw(Image<T>& image, double dx=0., int wmult=1) const; 
+        double draw(Image<T>& image, double dx=0., double gain=1., int wmult=1) const; 
         template <typename T>
-        double draw(ImageView<T>& image, double dx=0., int wmult=1) const; 
+        double draw(ImageView<T>& image, double dx=0., double gain=1., int wmult=1) const; 
         //@}
 
         //@{
@@ -613,15 +618,16 @@ namespace galsim {
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
          *                  you will receive an image with the aliased frequencies included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
          *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
          * @returns summed flux.
          */
         template <typename T>
-        double plainDraw(ImageView<T>& image, double dx=0., int wmult=1) const; 
+        double plainDraw(ImageView<T>& image, double dx=0., double gain=1., int wmult=1) const; 
         template <typename T>
-        double plainDraw(Image<T>& image, double dx=0., int wmult=1) const; 
+        double plainDraw(Image<T>& image, double dx=0., double gain=1., int wmult=1) const; 
         //@}
 
         //@{
@@ -642,15 +648,16 @@ namespace galsim {
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
          *                  you will receive an image with the aliased frequencies included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
          *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
          * @returns summed flux.
          */
         template <typename T>
-        double fourierDraw(ImageView<T>& image, double dx=0., int wmult=1) const; 
+        double fourierDraw(ImageView<T>& image, double dx=0., double gain=1., int wmult=1) const; 
         template <typename T>
-        double fourierDraw(Image<T>& image, double dx=0., int wmult=1) const; 
+        double fourierDraw(Image<T>& image, double dx=0., double gain=1., int wmult=1) const; 
         //@}
 
         //@{
@@ -675,12 +682,15 @@ namespace galsim {
          *                  routine will choose `dk` necessary to avoid folding of image in real 
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
          *                  you will receive an image with folding artifacts included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
          */
         template <typename T>
-        void drawK(ImageView<T>& re, ImageView<T>& im, double dk=0., int wmult=1) const; 
+        void drawK(
+            ImageView<T>& re, ImageView<T>& im, double dk=0., double gain=1., int wmult=1) const; 
         template <typename T>
-        void drawK(Image<T>& re, Image<T>& im, double dk=0., int wmult=1) const; 
+        void drawK(
+            Image<T>& re, Image<T>& im, double dk=0., double gain=1., int wmult=1) const; 
         //@}
 
         //@{
@@ -703,12 +713,15 @@ namespace galsim {
          *                  routine will choose `dk` necessary to avoid folding of image in real 
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
          *                  you will receive an image with folding artifacts included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
          */
         template <typename T>
-        void plainDrawK(ImageView<T>& re, ImageView<T>& im, double dk=0., int wmult=1) const; 
+        void plainDrawK(
+            ImageView<T>& re, ImageView<T>& im, double dk=0., double gain=1., int wmult=1) const; 
         template <typename T>
-        void plainDrawK(Image<T>& re, Image<T>& im, double dk=0., int wmult=1) const; 
+        void plainDrawK(
+            Image<T>& re, Image<T>& im, double dk=0., double gain=1., int wmult=1) const; 
         //@}
 
         //@{
@@ -734,12 +747,15 @@ namespace galsim {
          *                  routine will choose `dk` necessary to avoid folding of image in real 
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
          *                  you will receive an image with folding artifacts included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
          */
         template <typename T>
-        void fourierDrawK(ImageView<T>& re, ImageView<T>& im, double dk=0., int wmult=1) const; 
+        void fourierDrawK(
+            ImageView<T>& re, ImageView<T>& im, double dk=0., double gain=1., int wmult=1) const; 
         template <typename T>
-        void fourierDrawK(Image<T>& re, Image<T>& im, double dk=0., int wmult=1) const; 
+        void fourierDrawK(
+            Image<T>& re, Image<T>& im, double dk=0., double gain=1., int wmult=1) const; 
         //@}
 
     protected:
@@ -785,9 +801,10 @@ namespace galsim {
         virtual double getNegativeFlux() const { return getFlux()>0. ? 0. : -getFlux(); }
 
         // Utility for drawing into Image data structures.
+        // returns flux integral
         template <typename T>
-        double fillXImage(ImageView<T>& image, double dx) const  // return flux integral
-        { return doFillXImage(image, dx); }
+        double fillXImage(ImageView<T>& image, double dx, double gain) const  
+        { return doFillXImage(image, dx, gain); }
 
         // Utility for drawing a k grid into FFT data structures 
         virtual void fillKGrid(KTable& kt) const;
@@ -801,15 +818,15 @@ namespace galsim {
         //
         // Then in the derived class, these functions should call a template version of 
         // fillXImage in that derived class that implements the functionality you want.
-        virtual double doFillXImage(ImageView<float>& image, double dx) const
-        { return doFillXImage2(image,dx); }
-        virtual double doFillXImage(ImageView<double>& image, double dx) const
-        { return doFillXImage2(image,dx); }
+        virtual double doFillXImage(ImageView<float>& image, double dx, double gain) const
+        { return doFillXImage2(image,dx,gain); }
+        virtual double doFillXImage(ImageView<double>& image, double dx, double gain) const
+        { return doFillXImage2(image,dx,gain); }
 
         // Here in the base class, we need yet another name for the version that actually
         // implements this as a template:
         template <typename T>
-        double doFillXImage2(ImageView<T>& image, double dx) const;
+        double doFillXImage2(ImageView<T>& image, double dx, double gain) const;
 
     private:
         // Copy constructor and op= are undefined.
@@ -2287,16 +2304,16 @@ namespace galsim {
         void fillXGrid(XTable& xt) const;
 
         template <typename T>
-        double fillXImage(ImageView<T>& I, double dx) const;
+        double fillXImage(ImageView<T>& I, double dx, double gain) const;
 
-        double doFillXImage(ImageView<float>& I, double dx) const
-        { return fillXImage(I,dx); }
-        double doFillXImage(ImageView<double>& I, double dx) const
-        { return fillXImage(I,dx); }
-        double doFillXImage(ImageView<short>& I, double dx) const
-        { return fillXImage(I,dx); }
-        double doFillXImage(ImageView<int>& I, double dx) const
-        { return fillXImage(I,dx); }
+        double doFillXImage(ImageView<float>& I, double dx, double gain) const
+        { return fillXImage(I,dx,gain); }
+        double doFillXImage(ImageView<double>& I, double dx, double gain) const
+        { return fillXImage(I,dx,gain); }
+        double doFillXImage(ImageView<short>& I, double dx, double gain) const
+        { return fillXImage(I,dx,gain); }
+        double doFillXImage(ImageView<int>& I, double dx, double gain) const
+        { return fillXImage(I,dx,gain); }
 
     private:
         double _xw;   ///< Boxcar function is `xw` x `yw` across.
