@@ -2703,14 +2703,14 @@ namespace galsim {
             dbg<<"But only shot N = "<<origN-N<<std::endl;
             double factor = origN / (origN-N);
             dbg<<"Rescale arrays by factor ("<<factor<<")\n";
-            for (int k=0; k<arrays.size(); ++k) arrays[k]->scaleFlux(factor);
+            for (size_t k=0; k<arrays.size(); ++k) arrays[k]->scaleFlux(factor);
         }
 
         // Now we can go ahead and add all the arrays to the image:
         double target_flux = scale_flux * getFlux();
         double added_flux = 0.; // total flux falling inside image bounds, returned
         double realized_flux = 0.;
-        for (int k=0; k<arrays.size(); ++k) {
+        for (size_t k=0; k<arrays.size(); ++k) {
             PhotonArray* pa = arrays[k].get();
             added_flux += pa->addTo(img);
             realized_flux += pa->getTotalFlux();
