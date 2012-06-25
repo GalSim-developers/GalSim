@@ -4,21 +4,25 @@ define a hierarchy of configuration options.
 """
 
 def _set_node_impl(container, key, types, aliases, value, path):
-    value = aliases.get(value, value)
+    if aliases:
+        try:
+            value = aliases.get(value, value)
+        except TypeError:  # in case value is unhashable
+            pass
     if value is None:
         container[key] = value
         return value
     isNode = False
-    if issubclass(NodeBase, value):
+    if isinstance(value, type) and issubclass(value, NodeBase):
         try:
             value = value()
         except:
             raise TypeError("could not default-construct instance")
         isNode = True
-    elif isinstance(NodeBase, value):
+    elif isinstance(value, NodeBase):
         isNode = True
-    if types is not None and not isinstance(value, types):
-        raise TypeError("invalid type for this field")
+    if types and not isinstance(value, types):
+        raise TypeError("invalid type for this field: %s" % type(value).__name__)
     if isNode:
         if value.path:
             raise TypeError("moving/copying nodes is not currently supported")
@@ -26,7 +30,35 @@ def _set_node_impl(container, key, types, aliases, value, path):
     container[key] = value
     return value
 
-class Field(object):
+class FieldBase(object):
+    
+    def __init__(self, doc=None, aliases=None):
+        if aliases is None:
+            aliases = {}
+        self.aliases = aliases
+        if doc is None:
+            try:
+                doc = self.types[0].__doc__
+            except:
+                pass
+        self.__doc__ = doc
+
+    @staticmethod
+    def _process_types(type, types):
+        """Utility function to handle single/multi type arguments to constructor; refactored
+        here for reuse in ListField.
+        """
+        if types is None:
+            types = ()
+        types = tuple(types)
+        if type is not None:
+            types += (type,)
+        return types
+
+    def _get_full_name(self, instance):
+        return ".".join(instance.path + (self.name,))
+
+class Field(FieldBase):
     """
     A class for custom Python "descriptors" (i.e. custom properties) used in configuration classes.
 
@@ -37,36 +69,27 @@ class Field(object):
     a dictionary called "_data" in the instance.
     """
 
-    def __init__(self, types=(), default=True, doc=None, aliases=None, type=None):
-        if types is None:
-            types = ()
-        types = tuple(types)
-        if type is not None:
-            types += (type,)
-        self.types = types
-        if aliases is None:
-            aliases = {}
-        self.aliases = aliases
-        self.default = self.aliases.get(default, default)
-        if doc is None:
-            try:
-                doc = self.types[0].__doc__
-            except:
-                pass
-        self.__doc__ = doc
+    def __init__(self, type=None, default=True, doc=None, aliases=None, types=None):
+        FieldBase.__init__(self, aliases=aliases, doc=doc)
+        self.types = self._process_types(type, types)
+        if default is True and bool not in self.types:
+            default = self.types[0]
+        try:
+            self.default = self.aliases.get(default, default)
+        except TypeError:  # in case default is unhashable
+            self.default = default
 
     def __get__(self, instance, cls):
         if isinstance(instance, NodeBase):
             try:
-                value = instance._data[self.name]
+                return instance._data[self.name]
             except KeyError:
                 try:
-                    value = _set_node_impl(instance._data, self.name, self.types, self.aliases, value,
-                                           path=instance.path + (self.name,))
+                    return _set_node_impl(instance._data, self.name, self.types, self.aliases, self.default,
+                                          path=instance.path + (self.name,))
                 except Exception, err:
                     raise TypeError("Error constructing default value for field '%s': %s"
                                     % (self._get_full_name(instance), err))
-            return value
         return self
 
     def __set__(self, instance, value):
@@ -76,9 +99,6 @@ class Field(object):
         except Exception, err:
             raise TypeError("Error setting value of field '%s': %s"
                             % (self._get_full_name(instance), err))
-
-    def _get_full_name(self, instance):
-        return ".".join(instance.path + (self.name,))
 
 class NodeMeta(type):
     """
@@ -223,15 +243,12 @@ class NodeBase(object):
                     pass
         return output
 
-class ListNodeBase(NodeBase):
+class ListNode(NodeBase):
     """
     A base class for config nodes that are lists (including lists of nodes).
     """
 
-    types = None  # valid types for list elements, to be set by derived classes; ignored if None.
-    aliases = {}  # dictionary used to lookup aliases for field values
-
-    __slots__ = ("_elements",)
+    __slots__ = ("_elements", "types", "aliases")
 
     def __new__(cls, *args, **kwds):
         self = NodeBase.__new__(cls, *args, **kwds)
@@ -251,7 +268,7 @@ class ListNodeBase(NodeBase):
             for n, element in enumerate(value):
                 try:
                     _set_node_impl(newList, n, self.types, self.aliases, element,
-                                   path=self.path[:-1] + ("%s[%d]" % (self.path[-1], index),))
+                                   path=self.path[:-1] + ("%s[%d]" % (self.path[-1], n),))
                 except Exception, err:
                     raise TypeError("Error setting element %d of field '%s': %s"
                                     % (n, self.name, err))
@@ -260,7 +277,7 @@ class ListNodeBase(NodeBase):
             if index == len(self._elements): # implicit append by assigning to the next item
                 self._elements.append(None)
             try:
-                _set_node_impl(self._elements, index, self.types, self.aliases, element,
+                _set_node_impl(self._elements, index, self.types, self.aliases, value,
                                path=self.path[:-1] + ("%s[%d]" % (self.path[-1], index),))
             except Exception, err:
                 raise TypeError("Error setting element %d of field '%s': %s"
@@ -275,11 +292,14 @@ class ListNodeBase(NodeBase):
     def append(self, value):
         self._elements.append(None)
         try:
-            _set_node_impl(self._elements, -1, self.types, self.aliases, element,
-                           path=self.path[:-1] + ("%s[%d]" % (self.path[-1], index),))
+            _set_node_impl(self._elements, -1, self.types, self.aliases, value,
+                           path=self.path[:-1] + ("%s[%d]" % (self.path[-1], len(self._elements)),))
         except Exception, err:
-            raise TypeError("Error setting element %d of field '%s': %s"
-                            % (index, self.name, err))
+            raise TypeError("Error appending to field '%s': %s" % (self.name, err))
+
+    def extend(self, values):
+        for item in values:
+            self.append(item)
 
     def finish(self, **kwds):
         """
@@ -293,7 +313,7 @@ class ListNodeBase(NodeBase):
         for element in self:
             if isinstance(element, NodeBase):
                 element.finish(**kwds)
-
+    
     @classmethod
     def _get_load_context(cls, output=None):
         """
@@ -311,10 +331,42 @@ class ListNodeBase(NodeBase):
                     pass
         return output
 
-class ListField(Field):
+class ListField(FieldBase):
 
-    def __init__(self, types=(), default=True, doc=None, aliases=None, type=None, node_cls=None):
-        pass #TODO
+    def __init__(self, type=None, doc=None, aliases=None, types=(), node_cls=ListNode):
+        FieldBase.__init__(self, doc=doc, aliases=aliases)
+        types = FieldBase._process_types(type, types)
+        self.node_cls = node_cls
+        self.types = types
+
+    def __get__(self, instance, cls):        
+        if isinstance(instance, NodeBase):
+            try:
+                return instance._data[self.name]
+            except KeyError:
+                if True:
+                #try:
+                    value = self.node_cls()
+                    value.types = self.types
+                    value.aliases = self.aliases
+                    return _set_node_impl(instance._data, self.name, types=(self.node_cls,), aliases=None,
+                                          value=value, path=instance.path + (self.name,))
+                 #except Exception, err:
+                 #   raise TypeError("Error constructing default value for list field '%s': %s"
+                 #                   % (self._get_full_name(instance), err))
+        return self
+
+    def __set__(self, instance, value):
+        if not isinstance(value, self.node_cls):
+            node = self.__get__(instance, None)
+            node[:] = value
+        else:
+            try:
+                _set_node_impl(instance._data, self.name, types=(self.node_cls,), aliases=None,
+                               value=value, path=instance.path + (self.name,))
+            except Exception, err:
+                raise TypeError("Error setting value of field '%s': %s"
+                                % (self._get_full_name(instance), err))
 
 def nested(*args, **kwds):
     """
@@ -347,10 +399,14 @@ def nested(*args, **kwds):
     documentation unless a 'doc' keyword argument is passed to the decorator.
     """
     if kwds or len(args) != 1 or not issubclass(args[0], NodeBase):
-        kwds.setdefault("doc", cls.__doc__)
         def decorate(cls):
-            return Field(cls, *args, **kwds)
+            kwds.setdefault("doc", cls.__doc__)
+            if isinstance(cls, ListNode):
+                return ListField(node_base=cls, *args, **kwds)
+            return Field(type=cls, *args, **kwds)
         return decorate
     else:
         cls = args[0]
-        return Field(cls, doc=cls.__doc__)
+        if isinstance(cls, ListNode):
+            return ListField(node_base=cls)
+        return Field(type=cls, doc=cls.__doc__)

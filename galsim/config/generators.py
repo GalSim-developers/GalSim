@@ -3,6 +3,7 @@ Field and node classes that generate scalars or extract them from catalogs.
 """
 
 from .._galsim import GaussianDeviate
+from . import machinery
 
 def makeDict(node, row, keys):
     """
@@ -26,13 +27,13 @@ def makeDict(node, row, keys):
         value = getattr(node, key)
         if value is None:
             pass
-        elif isinstance(value, GeneratorNode):
+        elif isinstance(value, GeneratorBase):
             d[key] = field.type(value.apply(row))
         else:
             d[key] = value
     return d
 
-class GeneratorBase(NodeBase):
+class GeneratorBase(machinery.NodeBase):
     """
     A base class for nodes that can generate a scalar value.
     """
@@ -45,17 +46,17 @@ class GeneratorBase(NodeBase):
         """
         raise NotImplementedError()
 
-class GeneratableField(Field):
+class GeneratableField(machinery.Field):
 
-    def __init__(self, type=float, default=None, required=False, doc=None):
-        Field.__init__(self, type=type, default=default, required=required, doc=doc)
+    def __init__(self, type=float, default=None, doc=None):
+        machinery.Field.__init__(self, type=type, default=default, doc=doc)
 
     def __set__(self, instance, value):
         if isinstance(value, GeneratorBase):
             self._update_node_path(instance, value, self.name)
             instance._data[self.name] = value
         else:
-            Field.__set__(self, instance, value)
+            machinery.Field.__set__(self, instance, value)
 
 class GaussianRandom(GeneratorBase):
     """
@@ -64,8 +65,8 @@ class GaussianRandom(GeneratorBase):
 
     __slots__ = ("generator",)
 
-    mean = Field(float, default=0., required=True, doc="mean of Gaussian distribution")
-    sigma = Field(float, default=1., required=True, doc="sigma of Gaussian distribution")
+    mean = machinery.Field(type=float, default=0., doc="mean of Gaussian distribution")
+    sigma = machinery.Field(type=float, default=1., doc="sigma of Gaussian distribution")
 
     def finish(self, **kwds):
         """
@@ -94,7 +95,7 @@ class FromCatalog(GeneratorBase):
     Generator that indicates that a value should be extracted from the input catalog.
     """
 
-    name = Field(str, default=None, required=True, doc="name of the catalog column to use")
+    name = machinery.Field(type=str, default=None, doc="name of the catalog column to use")
 
     def finish(self, **kwds):
         """

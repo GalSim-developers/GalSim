@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import sys
+import unittest
 
 try:
     import galsim
@@ -31,7 +32,7 @@ class TestConfigRoot(galsim.config.machinery.NodeBase):
     Root of the test config tree.
     """
 
-    r1 = galsim.config.machinery.Field(int, default=0.)
+    r1 = galsim.config.machinery.Field(int, default=0)
     r2 = galsim.config.machinery.Field(float, default=None)
 
     @galsim.config.machinery.nested
@@ -41,12 +42,7 @@ class TestConfigRoot(galsim.config.machinery.NodeBase):
         """
         a1 = galsim.config.machinery.Field(str, default="")
     
-    @galsim.config.machinery.nested
-    class r4(galsim.config.machinery.ListNodeBase):
-        """
-        A test subnode that's a list of floats.
-        """
-        types = (float,)
+    r4 = galsim.config.machinery.ListField(float, doc="A test subnode that's a list of floats.")
 
     r5 = galsim.config.machinery.Field(
         TestPluggableBase, default=None,
@@ -58,25 +54,59 @@ class TestConfigRoot(galsim.config.machinery.NodeBase):
         doc="A single-element pluggable node field"
         )
 
-    @galsim.config.machinery.nested
-    class r6(galsim.config.machinery.ListNodeBase):
-        """
-        A test subnode that's a list of pluggables.
-        """
-        types = (TestPluggableA, TestPluggableB)   # don't allow base class here
+    r6 = galsim.config.machinery.ListField(
+        types=(TestPluggableA, TestPluggableB),   # don't allow base class here
         aliases={
             "A": TestPluggableA,
             "B": TestPluggableB,
-            }
+            },
+        doc="A test subnode that's a list of pluggables."
+        )        
 
     def __init__(self, *args, **kwds):
-        self.a1.default = "bar"  # change default for field in nested node
         galsim.config.machinery.NodeBase.__init__(self, *args, **kwds)
+        self.r3.a1 = "bar"  # change default for field in nested node
 
+class ConfigMachineryTestCase(unittest.TestCase):
 
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
+    def setUp(self):
+        self.root = TestConfigRoot()
+
+    def testDefaults(self):
+        self.assertEqual(self.root.r1, 0)
+        self.assertEqual(self.root.r2, None)
+        self.assertEqual(self.root.r3.a1, "bar")
+        self.assertEqual(len(self.root.r4), 0)
+        self.assertEqual(list(self.root.r4), [])
+        self.assertEqual(type(self.root.r5), TestPluggableBase)
+        self.assertEqual(len(self.root.r6), 0)
+        self.assertEqual(list(self.root.r6), [])
+
+    def testScalars(self):
+        self.root.r1 = 5
+        self.assertEqual(self.root.r1, 5)
+        self.assertRaises(TypeError, setattr, self.root, "r1", 4.3)
+        self.root.r2 = 3.14
+        self.assertEqual(self.root.r2, 3.14)
+        self.assertRaises(TypeError, setattr, self.root, "r2", 2)
+        self.assertRaises(TypeError, setattr, self.root, "r2", "fifty")
+        self.root.r3.a1 = "foo"
+        self.assertEqual(self.root.r3.a1, "foo")
+
+    def testList(self):
+        self.assertEqual(len(self.root.r4), 0)
+        self.root.r4[0] = 0.0
+        self.root.r4[1] = 1.0
+        self.assertEqual(len(self.root.r4), 2)
+        self.assertEqual(self.root.r4[0], 0.0)
+        self.assertEqual(self.root.r4[1], 1.0)
+        self.root.r4.append(2.0)
+        self.assertEqual(self.root.r4[-1], 2.0)
+        self.root.r4.extend([3.0, 4.0])
+        self.assertEqual(list(self.root.r4), [0.0, 1.0, 2.0, 3.0, 4.0])
+        self.root.r4 = [2.1, 2.2]
+        self.assertEqual(list(self.root.r4), [2.1, 2.2])
+        
 
 if __name__ == "__main__":
-        pass
+    unittest.main()

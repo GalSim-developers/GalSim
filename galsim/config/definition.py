@@ -74,7 +74,7 @@ class PixelNode(GSObjectNode):
 #-------------------------------------------------------------------------------------------------
 # Config nodes for pixel noise generators
 
-class NoiseNodeBase(NodeBase):
+class NoiseNodeBase(machinery.NodeBase):
     """
     Base class for nodes that set the pixel noise to add to simulated images.
     """
@@ -106,7 +106,7 @@ class PoissonNoiseNode(NoiseNodeBase):
 #-------------------------------------------------------------------------------------------------
 # Config nodes to specify input catalog types and their properties
 
-class InputCatNodeBase(NodeBase):
+class InputCatNodeBase(machinery.NodeBase):
 
     def read(self):
         """
@@ -149,7 +149,6 @@ class ASCIIInputCatNode(InputCatNodeBase):
 
 class PostageStampRootNode(machinery.NodeBase):
     dx = machinery.Field(float, default=1.)
-    shear = machinery.Field(ShearNode)
 
     def finish(self):
         for element in self.psf:
@@ -159,7 +158,7 @@ class PostageStampRootNode(machinery.NodeBase):
         machinery.NodeBase.finish(self)
 
     @machinery.nested
-    class psf(machinery.ListNodeBase):
+    class psf(machinery.ListNode):
         types = (MoffatNode, PixelNode)
         aliases = {"Moffat": MoffatNode, "Pixel": PixelNode}
 
@@ -168,7 +167,7 @@ class PostageStampRootNode(machinery.NodeBase):
             return base.Convolve(components)
 
     @machinery.nested
-    class galaxy(machinery.ListNodeBase):
+    class galaxy(machinery.ListNode):
         types = (GaussianNode, ExponentialNode, DeVaucouleursNode, SersicNode)
         aliases = {"Gaussian": GaussianNode, "Exponential": ExponentialNode,
                    "DeVaucouleurs": DeVaucouleursNode, "Sersic": SersicNode}
@@ -200,7 +199,7 @@ class PostageStampRootNode(machinery.NodeBase):
         InputCatNodeBase, default=None,
         aliases={
             None: DummyInputCatNode,
-            "ASCII": AsciiInputCatNode,
+            "ASCII": ASCIIInputCatNode,
             }
         )
 
