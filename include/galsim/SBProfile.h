@@ -428,7 +428,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        PhotonArray shoot(int N, UniformDeviate ud) const 
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
         { 
             assert(_pimpl.get());
             return _pimpl->shoot(N,ud); 
@@ -765,7 +765,7 @@ namespace galsim {
         virtual bool isAnalyticK() const =0; 
         virtual Position<double> centroid() const = 0;
         virtual double getFlux() const =0; 
-        virtual PhotonArray shoot(int N, UniformDeviate ud) const=0;
+        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const=0;
 
         // Functions with default implementations:
         virtual void getXRange(double& xmin, double& xmax,
@@ -943,7 +943,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         /**
          * @brief Give total positive flux of all summands
@@ -1107,7 +1107,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         // Override for better efficiency:
         void fillKGrid(KTable& kt) const; 
@@ -1382,7 +1382,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         void fillKGrid(KTable& kt) const;
 
@@ -1489,7 +1489,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         double getSigma() const { return _sigma; }
 
@@ -1591,7 +1591,7 @@ namespace galsim {
         double getFlux() const { return _flux; }
 
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         double getN() const { return _n; }
         double getHalfLightRadius() const { return _re; }
@@ -1677,7 +1677,7 @@ namespace galsim {
              * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
              * @returns PhotonArray containing all the photons' info.
              */
-            PhotonArray shoot(int N, UniformDeviate ud) const;
+            boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         private:
             SersicInfo(const SersicInfo& rhs); ///< Hides the copy constructor.
@@ -1838,7 +1838,7 @@ namespace galsim {
              * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
              * @returns PhotonArray containing all the photons' info.
              */
-            PhotonArray shoot(int N, UniformDeviate ud) const;
+            boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
             double maxK() const;
             double stepK() const;
@@ -1894,7 +1894,7 @@ namespace galsim {
         double getFlux() const { return _flux; }
         double getScaleRadius() const { return _r0; }
 
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
     private:
         double _flux; ///< Flux.
@@ -2033,7 +2033,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
     private:
         
@@ -2163,7 +2163,7 @@ namespace galsim {
         double getYWidth() const { return _yw; }
 
         /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         // Override for better efficiency:
         void fillKGrid(KTable& kt) const;
@@ -2246,7 +2246,7 @@ namespace galsim {
         double getFlux() const;
 
         /// @brief Photon-shooting is not implemented for SBLaguerre, will throw an exception.
-        PhotonArray shoot(int N, UniformDeviate ud) const 
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
         { throw SBError("SBLaguerre::shoot() is not implemented"); }
 
     private:
@@ -2369,7 +2369,7 @@ namespace galsim {
          *
          * Will require 2 uniform deviates per photon, plus analytic function (pow and sqrt)
          */
-        PhotonArray shoot(int N, UniformDeviate ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         double getBeta() const { return _beta; }
         double getScaleRadius() const { return _rD; }

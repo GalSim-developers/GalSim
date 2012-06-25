@@ -1701,13 +1701,14 @@ namespace galsim {
     double SBExponential::ExponentialInfo::stepK() const
     { return _stepk; }
 
-    PhotonArray SBExponential::ExponentialInfo::shoot(int N, UniformDeviate ud) const
+    boost::shared_ptr<PhotonArray> SBExponential::ExponentialInfo::shoot(
+        int N, UniformDeviate ud) const
     {
         dbg<<"ExponentialInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";
         assert(_sampler.get());
-        PhotonArray result = _sampler->shoot(N,ud);
-        dbg<<"ExponentialInfo Realized flux = "<<result.getTotalFlux()<<std::endl;
+        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
+        dbg<<"ExponentialInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
@@ -2264,14 +2265,14 @@ namespace galsim {
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
     }
 
-    PhotonArray SBSersic::SersicInfo::shoot(int N, UniformDeviate ud) const
+    boost::shared_ptr<PhotonArray> SBSersic::SersicInfo::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"SersicInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";
         assert(_sampler.get());
-        PhotonArray result = _sampler->shoot(N,ud);
-        result.scaleFlux(_norm);
-        dbg<<"SersicInfo Realized flux = "<<result.getTotalFlux()<<std::endl;
+        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
+        result->scaleFlux(_norm);
+        dbg<<"SersicInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
@@ -2653,14 +2654,14 @@ namespace galsim {
 
             xdbg<<"shoot "<<thisN<<std::endl;
             assert(_pimpl.get());
-            PhotonArray pa = _pimpl->shoot(thisN, u);
-            xdbg<<"pa.flux = "<<pa.getTotalFlux()<<std::endl;
+            boost::shared_ptr<PhotonArray> pa = _pimpl->shoot(thisN, u);
+            xdbg<<"pa.flux = "<<pa->getTotalFlux()<<std::endl;
             xdbg<<"scale flux by "<<(scale_flux*thisN/origN)<<std::endl;
-            pa.scaleFlux(scale_flux * thisN / origN);
-            xdbg<<"pa.flux => "<<pa.getTotalFlux()<<std::endl;
-            added_flux += pa.addTo(img);
+            pa->scaleFlux(scale_flux * thisN / origN);
+            xdbg<<"pa.flux => "<<pa->getTotalFlux()<<std::endl;
+            added_flux += pa->addTo(img);
             N -= thisN;
-            realized_flux += pa.getTotalFlux();
+            realized_flux += pa->getTotalFlux();
             xdbg<<"N -> "<<N<<std::endl;
 
             // This is always a reason to break out.
@@ -2706,7 +2707,7 @@ namespace galsim {
         return added_flux;
     }
 
-    PhotonArray SBAdd::SBAddImpl::shoot(int N, UniformDeviate u) const 
+    boost::shared_ptr<PhotonArray> SBAdd::SBAddImpl::shoot(int N, UniformDeviate u) const 
     {
         dbg<<"Add shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2714,8 +2715,7 @@ namespace galsim {
         double fluxPerPhoton = totalAbsoluteFlux / N;
 
         // Initialize the output array
-        PhotonArray result(0);
-        result.reserve(N);
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
 
         double remainingAbsoluteFlux = totalAbsoluteFlux;
         int remainingN = N;
@@ -2735,12 +2735,12 @@ namespace galsim {
                 thisN = bd();
             }
             if (thisN > 0) {
-                PhotonArray thisPA = pptr->shoot(thisN, u);
+                boost::shared_ptr<PhotonArray> thisPA = pptr->shoot(thisN, u);
                 // Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
                 // whereas the shoot() routine would have made them each nominally 
                 // thisAbsoluteFlux/thisN
-                thisPA.scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux);
-                result.append(thisPA);
+                thisPA->scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux);
+                result->append(*thisPA);
             }
             remainingN -= thisN;
             remainingAbsoluteFlux -= thisAbsoluteFlux;
@@ -2748,53 +2748,53 @@ namespace galsim {
             if (remainingAbsoluteFlux <= 0.) break;
         }
         
-        dbg<<"Add Realized flux = "<<result.getTotalFlux()<<std::endl;
+        dbg<<"Add Realized flux = "<<result->getTotalFlux()<<std::endl;
 
         // This process produces correlated photons, so mark the resulting array as such.
-        if (_plist.size() > 1) result.setCorrelated();
+        if (_plist.size() > 1) result->setCorrelated();
         
         return result;
     }
 
-    PhotonArray SBConvolve::SBConvolveImpl::shoot(int N, UniformDeviate u) const 
+    boost::shared_ptr<PhotonArray> SBConvolve::SBConvolveImpl::shoot(int N, UniformDeviate u) const 
     {
         dbg<<"Convolve shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         std::list<SBProfile>::const_iterator pptr = _plist.begin();
         if (pptr==_plist.end())
             throw SBError("Cannot shoot() for empty SBConvolve");
-        PhotonArray result = pptr->shoot(N, u);
+        boost::shared_ptr<PhotonArray> result = pptr->shoot(N, u);
         // It may be necessary to shuffle when convolving because we do
         // do not have a gaurantee that the convolvee's photons are
         // uncorrelated, e.g. they might both have their negative ones
         // at the end.
         // However, this decision is now made by the convolve method.
         for (++pptr; pptr != _plist.end(); ++pptr)
-            result.convolve( pptr->shoot(N, u), u);
-        dbg<<"Convolve Realized flux = "<<result.getTotalFlux()<<std::endl;
+            result->convolve(*pptr->shoot(N, u), u);
+        dbg<<"Convolve Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
-    PhotonArray SBTransform::SBTransformImpl::shoot(int N, UniformDeviate u) const 
+    boost::shared_ptr<PhotonArray> SBTransform::SBTransformImpl::shoot(int N, UniformDeviate u) const 
     {
         dbg<<"Distort shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Simple job here: just remap coords of each photon, then change flux
         // If there is overall magnification in the transform
-        PhotonArray result = _adaptee.shoot(N,u);
-        for (int i=0; i<result.size(); i++) {
-            Position<double> xy = fwd(Position<double>(result.getX(i), result.getY(i))+_cen);
-            result.setPhoton(i,xy.x, xy.y, result.getFlux(i)*_absdet);
+        boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N,u);
+        for (int i=0; i<result->size(); i++) {
+            Position<double> xy = fwd(Position<double>(result->getX(i), result->getY(i))+_cen);
+            result->setPhoton(i,xy.x, xy.y, result->getFlux(i)*_absdet);
         }
-        dbg<<"Distort Realized flux = "<<result.getTotalFlux()<<std::endl;
+        dbg<<"Distort Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
-    PhotonArray SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate u) const 
+    boost::shared_ptr<PhotonArray> SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate u) const 
     {
         dbg<<"Gaussian shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        PhotonArray result(N);
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
@@ -2811,7 +2811,7 @@ namespace galsim {
 #endif
             // Then map radius to the desired Gaussian with analytic transformation
             double rFactor = _sigma * std::sqrt( -2. * std::log(rsq));
-            result.setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
+            result->setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
 #else
             double xu, yu, rsq;
             do {
@@ -2821,26 +2821,26 @@ namespace galsim {
             } while (rsq>=1. || rsq==0.);
             // Then map radius to the desired Gaussian with analytic transformation
             double rFactor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
-            result.setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
+            result->setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
 #endif
         }
-        dbg<<"Gaussian Realized flux = "<<result.getTotalFlux()<<std::endl;
+        dbg<<"Gaussian Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
-    PhotonArray SBSersic::SBSersicImpl::shoot(int N, UniformDeviate ud) const
+    boost::shared_ptr<PhotonArray> SBSersic::SBSersicImpl::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"Sersic shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Get photons from the SersicInfo structure, rescale flux and size for this instance
-        PhotonArray result = _info->shoot(N,ud);
-        result.scaleFlux(_flux);
-        result.scaleXY(_re);
-        dbg<<"Sersic Realized flux = "<<result.getTotalFlux()<<std::endl;
+        boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
+        result->scaleFlux(_flux);
+        result->scaleXY(_re);
+        dbg<<"Sersic Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
-    PhotonArray SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate u) const
+    boost::shared_ptr<PhotonArray> SBExponential::SBExponentialImpl::shoot(int N, UniformDeviate u) const
     {
         dbg<<"Exponential shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -2854,13 +2854,13 @@ namespace galsim {
         const double Y_TOLERANCE=sbp::shoot_flux_accuracy;
 
         double fluxPerPhoton = _flux / N;
-        PhotonArray result(N);
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
 
         for (int i=0; i<N; i++) {
             double y = u();
             if (y==0.) {
                 // In case of infinite radius - just set to origin:
-                result.setPhoton(i,0.,0.,fluxPerPhoton);
+                result->setPhoton(i,0.,0.,fluxPerPhoton);
                 continue;
             }
             // Initial guess
@@ -2883,7 +2883,7 @@ namespace galsim {
             double sint = std::sin(theta);
 #endif
             double rFactor = r * _r0;
-            result.setPhoton(i, rFactor * cost, rFactor * sint, fluxPerPhoton);
+            result->setPhoton(i, rFactor * cost, rFactor * sint, fluxPerPhoton);
 #else
             double xu, yu, rsq;
             do {
@@ -2892,31 +2892,31 @@ namespace galsim {
                 rsq = xu*xu+yu*yu;
              } while (rsq >= 1. || rsq == 0.);
             double rFactor = r * _r0 / std::sqrt(rsq);
-            result.setPhoton(i, rFactor * xu, rFactor * yu, fluxPerPhoton);
+            result->setPhoton(i, rFactor * xu, rFactor * yu, fluxPerPhoton);
 #endif
         }
 #else
         // Get photons from the SersicInfo structure, rescale flux and size for this instance
-        PhotonArray result = SBExponential::_info.shoot(N,u);
-        result.scaleFlux(_flux_over_2pi);
-        result.scaleXY(_r0);
+        boost::shared_ptr<PhotonArray> result = SBExponential::_info.shoot(N,u);
+        result->scaleFlux(_flux_over_2pi);
+        result->scaleXY(_r0);
 #endif
-        dbg<<"Exponential Realized flux = "<<result.getTotalFlux()<<std::endl;
+        dbg<<"Exponential Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
-    PhotonArray SBAiry::SBAiryImpl::shoot(int N, UniformDeviate u) const
+    boost::shared_ptr<PhotonArray> SBAiry::SBAiryImpl::shoot(int N, UniformDeviate u) const
     {
         dbg<<"Airy shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Use the OneDimensionalDeviate to sample from scale-free distribution
         checkSampler();
         assert(_sampler.get());
-        PhotonArray result=_sampler->shoot(N, u);
+        boost::shared_ptr<PhotonArray> result=_sampler->shoot(N, u);
         // Then rescale for this flux & size
-        result.scaleFlux(_flux);
-        result.scaleXY(1./_D);
-        dbg<<"Airy Realized flux = "<<result.getTotalFlux()<<std::endl;
+        result->scaleFlux(_flux);
+        result->scaleXY(1./_D);
+        dbg<<"Airy Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
@@ -2944,23 +2944,23 @@ namespace galsim {
         _sampler.reset(new OneDimensionalDeviate(_radial, ranges, true));
     }
 
-    PhotonArray SBBox::SBBoxImpl::shoot(int N, UniformDeviate u) const
+    boost::shared_ptr<PhotonArray> SBBox::SBBoxImpl::shoot(int N, UniformDeviate u) const
     {
         dbg<<"Box shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        PhotonArray result(N);
-        for (int i=0; i<result.size(); i++)
-            result.setPhoton(i, _xw*(u()-0.5), _yw*(u()-0.5), _flux/N);
-        dbg<<"Box Realized flux = "<<result.getTotalFlux()<<std::endl;
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
+        for (int i=0; i<result->size(); i++)
+            result->setPhoton(i, _xw*(u()-0.5), _yw*(u()-0.5), _flux/N);
+        dbg<<"Box Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
-    PhotonArray SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u) const
+    boost::shared_ptr<PhotonArray> SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u) const
     {
         dbg<<"Moffat shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Moffat has analytic inverse-cumulative-flux function.
-        PhotonArray result(N);
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
 #ifdef USE_COS_SIN
@@ -2978,7 +2978,7 @@ namespace galsim {
             // Then map radius to the Moffat flux distribution
             double newRsq = std::pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq);
-            result.setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
+            result->setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
 #else
             // First get a point uniformly distributed on unit circle
             double xu, yu, rsq;
@@ -2990,10 +2990,10 @@ namespace galsim {
             // Then map radius to the Moffat flux distribution
             double newRsq = std::pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq / rsq);
-            result.setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
+            result->setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
 #endif
         }
-        dbg<<"Moffat Realized flux = "<<result.getTotalFlux()<<std::endl;
+        dbg<<"Moffat Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 

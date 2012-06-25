@@ -19,8 +19,9 @@ namespace galsim {
     /** @brief Class to hold a list of "photon" arrival positions
      * 
      * Class holds a vector of information about photon arrivals: x and y positions, and a flux
-     * carried by each photon.  It is the intention that fluxes of photons be nearly equal in absolute 
-     * value so that noise statistics can be estimated by counting number of positive and negative photons.
+     * carried by each photon.  It is the intention that fluxes of photons be nearly equal in 
+     * absolute value so that noise statistics can be estimated by counting number of positive 
+     * and negative photons.
      * This class holds the code that allows its flux to be added to a surface-brightness Image.
      */
     class PhotonArray 

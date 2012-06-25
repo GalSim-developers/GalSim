@@ -292,14 +292,14 @@ namespace galsim {
         _pt.buildTree();
     }
 
-    PhotonArray OneDimensionalDeviate::shoot(int N, UniformDeviate ud) const 
+    boost::shared_ptr<PhotonArray> OneDimensionalDeviate::shoot(int N, UniformDeviate ud) const 
     {
         dbg<<"OneDimentionalDeviate shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
         dbg<<"isradial? "<<_isRadial<<std::endl;
         dbg<<"N = "<<N<<std::endl;
         assert(N>=0);
-        PhotonArray result(N);
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         if (N==0) return result;
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
         dbg<<"totalAbsFlux = "<<totalAbsoluteFlux<<std::endl;
@@ -317,9 +317,9 @@ namespace galsim {
                 chosen->drawWithin(unitRandom, radius, flux, ud);
                 // Draw second ud to get azimuth 
                 double theta = 2.*M_PI*ud();
-                result.setPhoton(i,
-                                 radius*std::cos(theta), radius*std::sin(theta),
-                                 flux*fluxPerPhoton);
+                result->setPhoton(i,
+                                  radius*std::cos(theta), radius*std::sin(theta),
+                                  flux*fluxPerPhoton);
 #else
                 // Alternate method: doesn't need sin & cos but needs sqrt
                 // First get a point uniformly distributed in unit circle
@@ -337,7 +337,7 @@ namespace galsim {
                 chosen->drawWithin(unitRandom, radius, flux, ud);
                 // Rescale x & y:
                 double rScale = radius / std::sqrt(rsq);
-                result.setPhoton(i,xu*rScale, yu*rScale, flux*fluxPerPhoton);
+                result->setPhoton(i,xu*rScale, yu*rScale, flux*fluxPerPhoton);
 #endif            
             } else {
                 // Simple 1d interpolation
@@ -346,10 +346,10 @@ namespace galsim {
                 // Now draw an x from within selected interval
                 double x, flux;
                 chosen->drawWithin(unitRandom, x, flux, ud);
-                result.setPhoton(i, x, 0., flux*fluxPerPhoton);
+                result->setPhoton(i, x, 0., flux*fluxPerPhoton);
             }
         }
-        dbg<<"OneDimentionalDeviate Realized flux = "<<result.getTotalFlux()<<std::endl;
+        dbg<<"OneDimentionalDeviate Realized flux = "<<result->getTotalFlux()<<std::endl;
 
         // This next bit is probably a bad idea, especially for profiles that have some 
         // negative flux.  It is possible for the random photons to end up totalling a 
@@ -364,12 +364,12 @@ namespace galsim {
         // stochastic way.
         // So rescale the image to get the correct flux.
         double targetFlux = getPositiveFlux() - getNegativeFlux();
-        double realizedFlux = result.getTotalFlux();
+        double realizedFlux = result->getTotalFlux();
         dbg<<"targetFlux = "<<targetFlux<<std::endl;
         dbg<<"realizedFlux = "<<realizedFlux<<std::endl;
         double scale = targetFlux / realizedFlux;
         dbg<<"Rescale result by "<<scale<<std::endl;
-        result.scaleFlux(scale);
+        result->scaleFlux(scale);
 #endif
         return result;
     }
