@@ -311,6 +311,7 @@ struct PyImage {
             .def("setValue", &Image<T>::setValue, bp::args("x","y","value"))
             .def("copyFrom", &Image<T>::copyFrom)
             .def("fill", &Image<T>::fill)
+            .def("setZero", &Image<T>::setZero)
             ;
         
         return pyImage;
@@ -372,7 +373,8 @@ struct PyImage {
             .def("at", at)
             .def("setValue", &ImageView<T>::setValue, bp::args("x","y","value"))
             .def("copyFrom", &ImageView<T>::copyFrom)
-            .def("fill", &Image<T>::fill)
+            .def("fill", &ImageView<T>::fill)
+            .def("setZero", &ImageView<T>::setZero)
             ;
         
         return pyImageView;

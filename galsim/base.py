@@ -323,7 +323,7 @@ class GSObject:
         ret.applyShift(dx, dy)
         return ret
 
-    def draw(self, image=None, dx=0., wmult=1, normalization="flux"):
+    def draw(self, image=None, dx=0., wmult=1, normalization="flux", add_to_image=False):
         """@brief Draws an Image of the object, with bounds optionally set by an input Image.
 
         @param image  If provided, this will be the image on which to draw the profile.
@@ -333,13 +333,6 @@ class GSObject:
                       If dx <= 0. and image != None, then take the provided image's pixel scale.
                       If dx <= 0. and image == None, then use pi/maxK()
                       (Default = 0.)
-        @param normalization  Two options for the normalization:
-                              "flux" or "f" means that the sum of the output pixels is normalized
-                                     to be equal to the total flux.  (Modulo any flux that
-                                     falls off the edge of the image of course.)
-                              "surface brightness" or "sb" means that the output pixels sample
-                                     the surface brightness distribution at each location.
-                              (Default = "flux")
         @param wmult  A factor by which to make the intermediate images larger than 
                       they are normally made.  The size is normally automatically chosen 
                       to reach some preset accuracy targets (see include/galsim/SBProfile.h); 
@@ -347,6 +340,16 @@ class GSObject:
                       wmult > 1.  This will take longer of course, but it will produce more 
                       accurate images, since they will have less "folding" in Fourier space.
                       (Default = 1.)
+        @param normalization  Two options for the normalization:
+                              "flux" or "f" means that the sum of the output pixels is normalized
+                                     to be equal to the total flux.  (Modulo any flux that
+                                     falls off the edge of the image of course.)
+                              "surface brightness" or "sb" means that the output pixels sample
+                                     the surface brightness distribution at each location.
+                              (Default = "flux")
+        @param add_to_image  Whether to add flux to the existing image rather than clear out
+                             anything in the image before shooting.
+                             (Default = False)
         @returns      The drawn image.
         """
         # Raise an exception immediately if the normalization type is not recognized
@@ -359,11 +362,14 @@ class GSObject:
         if type(dx) != float:
             raise Warning("Input dx not a float, converting...")
             dx = float(dx)
+
         if image == None:
             image = self.SBProfile.draw(dx=dx, wmult=wmult)
         else :
             if dx <= 0.:
                 dx = image.getScale()
+            if not add_to_image:
+                image.setZero()
             self.SBProfile.draw(image, dx=dx, wmult=wmult)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":
@@ -371,7 +377,8 @@ class GSObject:
             image *= dx*dx
         return image
 
-    def drawShoot(self, image, N=0., ud=None, normalization="flux", noise=0., poisson_flux=True):
+    def drawShoot(self, image, N=0., ud=None, normalization="flux", noise=0.,
+                  poisson_flux=True, add_to_image=False):
         """@brief Draw an image of the object by shooting individual photons drawn from the 
         surface brightness profile of the object.
 
@@ -411,9 +418,12 @@ class GSObject:
                       Note that this uses a "variance" definition of noise, not a "sigma" 
                       definition.
                       (Default = 0.)
-        @param  poisson_flux  Whether to allow total object flux scaling to vary according to 
-                              Poisson statistics for N samples.
-                              (Default = True)
+        @param poisson_flux  Whether to allow total object flux scaling to vary according to 
+                             Poisson statistics for N samples.
+                             (Default = True)
+        @param add_to_image  Whether to add flux to the existing image rather than clear out
+                             anything in the image before shooting.
+                             (Default = False)
                               
         @returns  The tuple (image, added_flux), where image is the input with drawn photons 
                   added and added_flux is the total flux of photons that landed inside the image 
@@ -445,12 +455,15 @@ class GSObject:
             noise = float(noise)
         if ud == None:
             ud = galsim.UniformDeviate()
-        # Check that Either N is set to something or flux is set to something
+        # Check that either N is set to something or flux is set to something
         if N == 0. and self.getFlux() == 1.:
             import warnings
             msg = "Warning: drawShoot for object with flux == 1, but N == 0.\n"
             msg += "This will only shoot a single photon."
             warnings.warn(msg)
+
+        if not add_to_image:
+            image.setZero()
 
         added_flux = self.SBProfile.drawShoot(image, N, ud, noise, poisson_flux)
 

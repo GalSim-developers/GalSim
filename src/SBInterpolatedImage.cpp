@@ -270,7 +270,7 @@ namespace galsim {
                     Position<double> x(ix*dx,iy*dx);
                     T val = xValue(x);
                     sum += val;
-                    I(ix,iy) = val;
+                    I(ix,iy) += val;
                 }
             }
             I.setScale(dx);
