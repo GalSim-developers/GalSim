@@ -1548,7 +1548,7 @@ def test_sbprofile_rescale():
     sersic.draw(myImg,dx=0.2, normalization="surface brightness",add_to_image=True)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject *= 2 disagrees with expected result")
+            err_msg="Drawing with add_to_image=True disagrees with expected result")
  
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
