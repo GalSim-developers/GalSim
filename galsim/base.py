@@ -189,11 +189,9 @@ class GSObject:
         are no longer available.
         """
         import math
-        ret = self.copy()
         flux = self.getFlux()
-        ret.applyTransformation(galsim.Ellipse(math.log(scale)))
-        ret.setFlux(flux)
-        return ret
+        self.applyTransformation(galsim.Ellipse(math.log(scale)))
+        self.setFlux(flux)
 
     def applyMagnification(self, scale):
         """@brief Apply a magnification by the given scale, scaling the size by scale
@@ -209,9 +207,7 @@ class GSObject:
         are no longer available.
         """
         import math
-        ret = self.copy()
-        ret.applyTransformation(galsim.Ellipse(math.log(scale)))
-        return ret
+        self.applyTransformation(galsim.Ellipse(math.log(scale)))
 
        
     def applyShear(self, *args, **kwargs):
@@ -1063,7 +1059,7 @@ object_param_dict = {"Gaussian":       { "required" : (),
                                          "size"     : ("sigma1, sigma2, fwhm1, fwhm2",), 
                                          "optional" : () },
                      "AtmosphericPSF": { "required" : (),
-                                         "size"     : ("fwhm", "lam_over_r0",),
+                                         "size"     : ("fwhm", "lam_over_r0"),
                                          "optional" : ("dx", "oversampling") } }
 
 

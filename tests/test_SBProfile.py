@@ -1386,11 +1386,54 @@ def test_sbprofile_mag():
     gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal.applyTransformation(myEll)
     gal.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyDistortion disagrees with expected result")
+            err_msg="Using GSObject applyTransformation disagrees with expected result")
+
+    # Use applyDilation
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
+    gal.applyDilation(1.5)
+    gal.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
+    gal.scaleFlux(1.5**2) # Apply the flux magnification.
+    gal.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject applyDilation disagrees with expected result")
+ 
+    # Use applyMagnification
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
+    gal.applyMagnification(1.5)
+    gal.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject applyMagnification disagrees with expected result")
+
+    # Use createDilated
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
+    gal2 = gal.createDilated(1.5)
+    gal2.scaleFlux(1.5**2) # Apply the flux magnification.
+    gal2.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject createDilated disagrees with expected result")
+ 
+    # Use createMagnified
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
+    gal2 = gal.createMagnified(1.5)
+    gal2.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject createMagnified disagrees with expected result")
  
     # Test photon shooting.
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
+    gal.applyMagnification(1.5)
     do_shoot(gal,myImg,"dilated Exponential")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1582,7 +1625,7 @@ def test_sbprofile_sbinterpolatedimage():
         # Lanczos doesn't quite get the flux right.  Wrong at the 5th decimal place.
         # Gary says that's expected -- Lanczos isn't technically flux conserving.  
         # He applied the 1st order correction to the flux, but expect to be wrong at around
-        # the 10^-5 leve.
+        # the 10^-5 level.
         # Anyway, Quintic seems to be accurate enough.
         quint = galsim.Quintic(1.e-4)
         quint_2d = galsim.InterpolantXY(quint)
