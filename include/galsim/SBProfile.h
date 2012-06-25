@@ -2114,7 +2114,7 @@ namespace galsim {
              * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
              * @returns PhotonArray containing all the photons' info.
              */
-            PhotonArray shoot(int N, UniformDeviate ud) const;
+            boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         private:
             AiryInfo(const AiryInfo& rhs); ///< Hides the copy constructor.

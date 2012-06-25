@@ -2934,13 +2934,12 @@ namespace galsim {
         return result;
     }
 
-    PhotonArray SBAiry::AiryInfo::shoot(int N, UniformDeviate u) const
+    boost::shared_ptr<PhotonArray> SBAiry::AiryInfo::shoot(int N, UniformDeviate u) const
     {
         // Use the OneDimensionalDeviate to sample from scale-free distribution
         checkSampler();
         assert(_sampler.get());
-        PhotonArray result=_sampler->shoot(N, u);
-        return result;
+        return _sampler->shoot(N, u);
     }
 
     void SBAiry::AiryInfo::checkSampler() const 
