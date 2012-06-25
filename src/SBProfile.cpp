@@ -186,6 +186,7 @@ namespace galsim {
             Bounds<int> imgsize(-N/2, N/2-1, -N/2, N/2-1);
             dbg<<"imgsize => "<<imgsize<<std::endl;
             I.resize(imgsize);
+            I.setZero();
         } else {
             // recenter an existing image, to be consistent with fourierDraw:
             int xSize = I.getXMax()-I.getXMin()+1, ySize = I.getYMax()-I.getYMin()+1;
@@ -212,7 +213,7 @@ namespace galsim {
             ImIter ee=I.rowEnd(y);
             for (ImIter it=I.rowBegin(y); it!=ee; ++it, ++x) {
                 Position<double> p(x*dx,y*dx); // since x,y are pixel indices
-                *it = xValue(p);
+                *it += xValue(p);
                 totalflux += *it;
             } 
         }
@@ -363,6 +364,7 @@ namespace galsim {
             Nimg = 2*(Nimg/2);
             imgBounds = Bounds<int>(-Nimg/2, Nimg/2-1, -Nimg/2, Nimg/2-1);
             I.resize(imgBounds);
+            I.setZero();
         } else {
             // Going to move the output image to be centered near zero
             int xSize, ySize;
@@ -483,6 +485,8 @@ namespace galsim {
             Bounds<int> imgsize(-N/2, N/2-1, -N/2, N/2-1);
             Re.resize(imgsize);
             Im.resize(imgsize);
+            Re.setZero();
+            Im.setZero();
         } else {
             // recenter an existing image, to be consistent with fourierDrawK:
             int xSize = Re.getXMax()-Re.getXMin()+1, ySize = Re.getYMax()-Re.getYMin()+1;
@@ -640,6 +644,8 @@ namespace galsim {
             imgBounds = Bounds<int>(-Nimg/2, Nimg/2-1, -Nimg/2, Nimg/2-1);
             Re.resize(imgBounds);
             Im.resize(imgBounds);
+            Re.setZero();
+            Im.setZero();
             // Reduce dk if 2^N made left room to do so.
             if (canReduceDk) {
                 dk = kRange / Nimg; 
@@ -1934,8 +1940,8 @@ namespace galsim {
 
             for (int j = I.getYMin(); j <= I.getYMax(); j++) {
                 if (xfac==0. || std::abs(j)>yedge) I(i,j)=T(0);
-                else if (std::abs(j)==yedge) I(i,j)=T(xfac*yfrac);
-                else I(i,j)=T(xfac);
+                else if (std::abs(j)==yedge) I(i,j) += T(xfac*yfrac);
+                else I(i,j) += T(xfac);
                 totalflux += I(i,j);
             }
         }
@@ -2611,9 +2617,6 @@ namespace galsim {
         const int maxN = 100000; // Don't do more than this at a time to keep the 
                                  // memory usage reasonable.
         double added_flux = 0.; // total flux falling inside image bounds, returned
-
-        // Clear image before adding photons, for consistency with draw() methods.
-        img.fill(0.);  
 
         double posflux = getPositiveFlux();
         double negflux = getNegativeFlux();

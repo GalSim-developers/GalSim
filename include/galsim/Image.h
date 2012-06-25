@@ -458,6 +458,7 @@ namespace galsim {
          */
         void fill(T x) const;
         const ImageView<T>& operator=(T x) const { fill(x); return *this; }
+        void setZero() const { fill(T(0)); }
         //@}
 
         /**
@@ -626,6 +627,7 @@ namespace galsim {
          */
         void fill(T x) { view().fill(x); }
         Image<T>& operator=(T x) { fill(x); return *this; }
+        void setZero() { fill(T(0)); }
         //@}
 
         /**
