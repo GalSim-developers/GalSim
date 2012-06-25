@@ -9,15 +9,6 @@
  * The SBProfiles include common star, galaxy, and PSF shapes.
  */
 
-// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by 
-// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit 
-// circle and rejecting corner photons.
-//#define USE_COS_SIN
-
-// Switch used to see whether the Newton-Raphson method of SBExponential is really faster than the
-// OneDimensionalDeviate routine that you get when you request SBSersic with n=1.
-#define USE_1D_DEVIATE_EXPONENTIAL
-
 
 #include <cmath>
 #include <list>
@@ -530,7 +521,7 @@ namespace galsim {
          * @param[in] poisson_flux Whether to allow total object flux scaling to vary according to 
          *                         Poisson statistics for `N` samples 
          *                         (default `poisson_flux = true`).
-         * @returns The number of photons that fell outside the Image bounds.
+         * @returns The total flux of photons the landed inside the image bounds.
          *
          * Note: N is input as a double so that very large values of N don't have to
          *       worry about overflowing int on systems with a small MAX_INT.
@@ -1156,7 +1147,7 @@ namespace galsim {
         Position<double> inv(const Position<double>& p) const 
         { return _inv(_mA,_mB,_mC,_mD,p.x,p.y,_invdet); }
 
-        /// @brief Returns the the k value (no phase).
+        /// @brief Returns the k value (no phase).
         std::complex<double> kValueNoPhase(const Position<double>& k) const;
 
         std::complex<double> (*_kValue)(
@@ -1800,7 +1791,6 @@ namespace galsim {
 
     protected:
 
-#ifdef USE_1D_DEVIATE_EXPONENTIAL
         /** 
          * @brief Subclass of `SBExponential` which provides the un-normalized radial function.
          *
@@ -1853,15 +1843,15 @@ namespace galsim {
             ExponentialInfo(const ExponentialInfo& rhs); ///< Hides the copy constructor.
             void operator=(const ExponentialInfo& rhs); ///<Hide assignment operator.
 
-            double _norm;
-
             /// Function class used for photon shooting
             boost::shared_ptr<ExponentialRadialFunction> _radial;  
 
             /// Class that does numerical photon shooting
             boost::shared_ptr<OneDimensionalDeviate> _sampler;   
+
+            double _maxk; ///< Calculated maxK * r0
+            double _stepk; ///< Calculated stepK * r0
         };
-#endif
 
     class SBExponentialImpl : public SBProfileImpl
     {
@@ -1909,6 +1899,7 @@ namespace galsim {
         double _ksq_min; ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
         double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
         double _norm; ///< flux / r0^2 / 2pi
+        double _flux_over_2pi; ///< Flux / 2pi
 
         // Copy constructor and op= are undefined.
         SBExponentialImpl(const SBExponentialImpl& rhs);
@@ -1916,11 +1907,9 @@ namespace galsim {
 
     };
 
-#ifdef USE_1D_DEVIATE_EXPONENTIAL
         // Static class-wide object that does some calculations applicable to all 
         // SBExponential instantiations.
         static ExponentialInfo _info; 
-#endif
 
     private:
         // op= is undefined

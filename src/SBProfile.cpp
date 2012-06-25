@@ -10,6 +10,25 @@
 #include "Solve.h"
 #include "integ/Int.h"
 
+// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by 
+// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit 
+// circle and rejecting corner photons.
+// The relative speed of the two methods was tested as part of issue #163, and the results
+// are collated in devutils/external/time_photon_shooting.
+// The conclusion was that using sin/cos was faster for icpc, but not g++ or clang++.
+#ifdef _INTEL_COMPILER
+#define USE_COS_SIN
+#endif
+
+// Define this use the Newton-Raphson method for solving the radial value in SBExponential::shoot
+// rather than using OneDimensionalDeviate.
+// The relative speed of the two methods was tested as part of issue #163, and the results
+// are collated in devutils/external/time_photon_shooting.
+// The conclusion was that using OneDimensionalDeviate was universally quite a bit faster.
+// However, we leave this option here in case someone has an idea for massively speeding up
+// the solution that might be faster than the table lookup.
+//#define USE_NEWTON_RAPHSON_EXPONENTIAL
+
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
@@ -1598,7 +1617,8 @@ namespace galsim {
         // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
         _ksq_min = std::pow(sbp::kvalue_accuracy * 16./35., 1./3.) / _r0_sq;
 
-        _norm = _flux / (_r0_sq * 2. * M_PI);
+        _flux_over_2pi = _flux / (2. * M_PI);
+        _norm = _flux_over_2pi / _r0_sq;
 
         dbg<<"Exponential:\n";
         dbg<<"_flux = "<<_flux<<std::endl;
@@ -1611,33 +1631,10 @@ namespace galsim {
         dbg<<"stepK() = "<<stepK()<<std::endl;
     }
 
-#ifdef USE_1D_DEVIATE_EXPONENTIAL
     double SBExponential::SBExponentialImpl::maxK() const 
     { return SBExponential::_info.maxK() / _r0; }
     double SBExponential::SBExponentialImpl::stepK() const 
     { return SBExponential::_info.stepK() / _r0; }
-#else
-    // Set maxK to the value where the FT is down to maxk_threshold
-    double SBExponential::SBExponentialImpl::maxK() const 
-    { return std::pow(sbp::maxk_threshold, -1./3.)/_r0; }
-
-    // The amount of flux missed in a circle of radius pi/stepk should miss at 
-    // most alias_threshold of the flux.
-    double SBExponential::SBExponentialImpl::stepK() const
-    {
-        // int( exp(-r) r, r=0..R) = (1 - exp(-R) - Rexp(-R))
-        // Fraction excluded is thus (1+R) exp(-R)
-        // A fast solution to (1+R)exp(-R) = x:
-        // log(1+R) - R = log(x)
-        // R = log(1+R) - log(x)
-        double logx = std::log(sbp::alias_threshold);
-        double R = -logx;
-        for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
-        // Make sure it is at least 6 scale radii.
-        R = std::max(6., R);
-        return M_PI / (R*_r0);
-    }
-#endif
 
     double SBExponential::SBExponentialImpl::xValue(const Position<double>& p) const
     {
@@ -1661,28 +1658,21 @@ namespace galsim {
         }
     }
 
-#ifdef USE_1D_DEVIATE_EXPONENTIAL
     // Constructor to initialize Exponential functions for 1D deviate photon shooting
     SBExponential::ExponentialInfo::ExponentialInfo()
     {
-        // The normalization factor to give unity flux integral:
-        _norm = 0.5 / M_PI;
-
+#ifndef USE_NEWTON_RAPHSON_EXPONENTIAL
         // Next, set up the classes for photon shooting
         _radial.reset(new ExponentialRadialFunction());
         std::vector<double> range(2,0.);
         range[1] = -std::log(sbp::shoot_flux_accuracy);
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
-    }
+#endif
 
-    // Set maxK to the value where the FT is down to maxk_threshold
-    double SBExponential::ExponentialInfo::maxK() const 
-    { return std::pow(sbp::maxk_threshold, -1./3.); }
+        // Calculate maxk:
+        _maxk = std::pow(sbp::maxk_threshold, -1./3.);
 
-    // The amount of flux missed in a circle of radius pi/stepk should miss at 
-    // most alias_threshold of the flux.
-    double SBExponential::ExponentialInfo::stepK() const
-    {
+        // Calculate stepk:
         // int( exp(-r) r, r=0..R) = (1 - exp(-R) - Rexp(-R))
         // Fraction excluded is thus (1+R) exp(-R)
         // A fast solution to (1+R)exp(-R) = x:
@@ -1693,21 +1683,29 @@ namespace galsim {
         for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
         // Make sure it is at least 6 scale radii.
         R = std::max(6., R);
-        return M_PI / (R);
+        _stepk = M_PI / R;
     }
+
+    // Set maxK to the value where the FT is down to maxk_threshold
+    double SBExponential::ExponentialInfo::maxK() const 
+    { return _maxk; }
+
+    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // most alias_threshold of the flux.
+    double SBExponential::ExponentialInfo::stepK() const
+    { return _stepk; }
 
     PhotonArray SBExponential::ExponentialInfo::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"ExponentialInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";
+        assert(_sampler.get());
         PhotonArray result = _sampler->shoot(N,ud);
-        result.scaleFlux(_norm);
         dbg<<"ExponentialInfo Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
     }
 
     SBExponential::ExponentialInfo SBExponential::_info;
-#endif
 
     //
     // SBAiry Class
@@ -2264,6 +2262,7 @@ namespace galsim {
     {
         dbg<<"SersicInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";
+        assert(_sampler.get());
         PhotonArray result = _sampler->shoot(N,ud);
         result.scaleFlux(_norm);
         dbg<<"SersicInfo Realized flux = "<<result.getTotalFlux()<<std::endl;
@@ -2643,8 +2642,8 @@ namespace galsim {
         // Otherwise we'll do a maximum of maxN at a time until we go through all N.
         int thisN = noise > 0. ? 100 : maxN;
         while (true) {
-            // We break out of the loop when either N drops to 0 (if autoN = false) or 
-            // we find that all pixels have a noise level < noise (if autoN = true)
+            // We break out of the loop when either N drops to 0 (if noise = 0) or 
+            // we find that all pixels have a noise level < noise (if noise > 0)
             
             if (thisN > maxN) thisN = maxN;
             if (thisN > N) thisN = int(floor(N+0.5));
@@ -2842,12 +2841,7 @@ namespace galsim {
     {
         dbg<<"Exponential shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-#ifdef USE_1D_DEVIATE_EXPONENTIAL
-        // Get photons from the SersicInfo structure, rescale flux and size for this instance
-        PhotonArray result = SBExponential::_info.shoot(N,u);
-        result.scaleFlux(_flux);
-        result.scaleXY(_r0);
-#else
+#ifdef USE_NEWTON_RAPHSON_EXPONENTIAL
         // The cumulative distribution of flux is 1-(1+r)exp(-r).
         // Here is a way to solve for r by an initial guess followed
         // by Newton-Raphson iterations.  Probably not
@@ -2856,7 +2850,7 @@ namespace galsim {
         // Accuracy to which to solve for (log of) cumulative flux distribution:
         const double Y_TOLERANCE=sbp::shoot_flux_accuracy;
 
-        double fluxPerPhoton = getFlux() / N;
+        double fluxPerPhoton = _flux / N;
         PhotonArray result(N);
 
         for (int i=0; i<N; i++) {
@@ -2898,6 +2892,11 @@ namespace galsim {
             result.setPhoton(i, rFactor * xu, rFactor * yu, fluxPerPhoton);
 #endif
         }
+#else
+        // Get photons from the SersicInfo structure, rescale flux and size for this instance
+        PhotonArray result = SBExponential::_info.shoot(N,u);
+        result.scaleFlux(_flux_over_2pi);
+        result.scaleXY(_r0);
 #endif
         dbg<<"Exponential Realized flux = "<<result.getTotalFlux()<<std::endl;
         return result;
@@ -2909,6 +2908,7 @@ namespace galsim {
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Use the OneDimensionalDeviate to sample from scale-free distribution
         checkSampler();
+        assert(_sampler.get());
         PhotonArray result=_sampler->shoot(N, u);
         // Then rescale for this flux & size
         result.scaleFlux(_flux);
