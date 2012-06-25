@@ -205,7 +205,7 @@ def Script1():
 
             # apply an e1/e2-type distortion by specifying e=ellip and beta=real-space position
             # angle
-            this_gal = gal.createSheared(e=ellip, beta=theta*galsim.radians)
+            this_gal = gal.createSheared(e=math.fabs(ellip), beta=theta*galsim.radians)
 
             # Apply the gravitational reduced shear by specifying g1/g2
             this_gal.applyShear(g1=gal_g1, g2=gal_g2)
