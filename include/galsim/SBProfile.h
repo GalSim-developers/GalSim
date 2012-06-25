@@ -2048,7 +2048,9 @@ namespace galsim {
 
         double _Dsq; ///< Calculated value: D*D
         double _obssq; ///< Calculated value: _obscuration * _obscuration
-        double _norm; ///< Calculated value: flux*D*D
+        double _inv_Dsq_pisq; ///< Calculated value: 1/(D^2 pi^2)
+        double _xnorm; ///< Calculated value: flux*D*D
+        double _knorm; ///< Calculated value: flux / (pi (1-obs^2))
 
         ///< Class that can sample radial distribution
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler; 

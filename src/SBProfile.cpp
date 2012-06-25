@@ -1722,7 +1722,10 @@ namespace galsim {
         _D(1. / lam_over_D), 
         _obscuration(obscuration), 
         _flux(flux), 
-        _Dsq(_D*_D), _obssq(_obscuration*_obscuration), _norm(flux*_Dsq),
+        _Dsq(_D*_D), _obssq(_obscuration*_obscuration),
+        _inv_Dsq_pisq(1. / (_Dsq * M_PI * M_PI)),
+        _xnorm(flux * _Dsq),
+        _knorm(flux / (M_PI * (1.-_obssq))),
         _radial(_obscuration,_obssq) {}
 
     // This is a scale-free version of the Airy radial function.
@@ -1753,14 +1756,14 @@ namespace galsim {
     double SBAiry::SBAiryImpl::xValue(const Position<double>& p) const 
     {
         double radius = sqrt(p.x*p.x+p.y*p.y) * _D;
-        return _norm * _radial(radius);
+        return _xnorm * _radial(radius);
     }
 
     std::complex<double> SBAiry::SBAiryImpl::kValue(const Position<double>& k) const
     {
         double ksq = k.x*k.x+k.y*k.y;
         // calculate circular FT(PSF) on p'=(x',y')
-        return _flux * annuli_autocorrelation(ksq);
+        return _knorm * annuli_autocorrelation(ksq);
     }
 
     // Set maxK to hard limit for Airy disk.
@@ -1838,13 +1841,13 @@ namespace galsim {
             +  circle_intersection(r2,r2sq,tsq);
     }
 
-    /* Beam pattern of annular aperture, in k space, which is just the
-     * autocorrelation of two annuli.  Normalize to unity at k=0 for now */
+    // Beam pattern of annular aperture, in k space, which is just the
+    // autocorrelation of two annuli.
+    // Unnormalized -- value at k=0 is Pi * (1-obs^2)
     double SBAiry::SBAiryImpl::annuli_autocorrelation(double ksq) const 
     {
-        double ksq_scaled = ksq / (M_PI*M_PI*_Dsq);
-        double norm = M_PI*(1. - _obssq);
-        return annuli_intersect(1.,_obscuration,1.,_obssq,ksq_scaled)/norm;
+        double ksq_scaled = ksq * _inv_Dsq_pisq;
+        return annuli_intersect(1.,_obscuration,1.,_obssq,ksq_scaled);
     }
 
 
