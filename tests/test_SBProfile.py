@@ -107,7 +107,7 @@ def do_shoot(prof, img, name):
     print 'img.max => ',img.array.max()
     print 'nphot = ',nphot
     img2 = img.copy()
-    prof.drawShoot(img2,N=nphot,poisson_flux = False)
+    prof.drawShoot(img2,n_photons=nphot,poisson_flux = False)
     print 'img2.sum => ',img2.array.sum()
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
