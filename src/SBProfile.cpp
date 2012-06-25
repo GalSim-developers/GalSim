@@ -297,11 +297,13 @@ namespace galsim {
             throw SBError("fourierDraw() FT bounds do not cover target image");
         }
         double sum=0.;
-        for (int y = I.getYMin(); y <= I.getYMax(); y++)
+        for (int y = I.getYMin(); y <= I.getYMax(); y++) {
             for (int x = I.getXMin(); x <= I.getXMax(); x++) {
-                I(x,y) = xtmp->xval(x,y);
-                sum += I(x,y);
+                double temp = xtmp->xval(x,y);
+                I(x,y) += temp;
+                sum += temp;
             }
+        }
 
         I.setScale(dx);
 
@@ -402,11 +404,13 @@ namespace galsim {
             throw SBError("fourierDraw() FT bounds do not cover target image");
         }
         double sum=0.;
-        for (int y = I.getYMin(); y <= I.getYMax(); y++)
+        for (int y = I.getYMin(); y <= I.getYMax(); y++) {
             for (int x = I.getXMin(); x <= I.getXMax(); x++) {
-                I(x,y) = xtmp->xval(x,y);
-                sum += I(x,y);
+                double temp = xtmp->xval(x,y);
+                I(x,y) += temp;
+                sum += temp;
             }
+        }
 
         I.setScale(dx);
 

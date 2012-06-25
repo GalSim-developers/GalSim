@@ -315,11 +315,8 @@ class GSObject:
         else :
             if dx <= 0.:
                 dx = image.getScale()
-            print 'image.scale = ',dx
-            print 'image.sum = ',image.array.sum()
             if not add_to_image:
                 image.setZero()
-            print 'after setZero: image.sum = ',image.array.sum()
             if normalization.lower() == "flux" or normalization.lower() == "f":
                 # SBProfile draw command uses surface brightness normalization.  So if we
                 # want flux normalization, we need to scale the flux by dx^2
@@ -327,7 +324,6 @@ class GSObject:
             else:
                 scaled = self
             scaled.SBProfile.draw(image, dx=dx, wmult=wmult)
-            print 'after draw: image.sum = ',image.array.sum()
          
         return image
 
