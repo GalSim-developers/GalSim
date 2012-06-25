@@ -157,9 +157,7 @@ namespace galsim {
         if (dx<=0.) dx = M_PI / maxK();
         dbg<<"dx = "<<dx<<std::endl;
         // recenter an existing image, to be consistent with fourierDraw:
-        int xSize = I.getXMax()-I.getXMin()+1, ySize = I.getYMax()-I.getYMin()+1;
-        dbg<<"xSize = "<<xSize<<std::endl;
-        I.setOrigin(-xSize/2, -ySize/2);
+        I.setCenter(0,0);
 
         assert(_pimpl.get());
         return _pimpl->fillXImage(I, dx);
@@ -189,9 +187,7 @@ namespace galsim {
             I.setZero();
         } else {
             // recenter an existing image, to be consistent with fourierDraw:
-            int xSize = I.getXMax()-I.getXMin()+1, ySize = I.getYMax()-I.getYMin()+1;
-            dbg<<"xSize = "<<xSize<<std::endl;
-            I.setOrigin(-xSize/2, -ySize/2);
+            I.setCenter(0,0);
         }
 
         ImageView<T> Iv = I.view();
@@ -263,7 +259,7 @@ namespace galsim {
                 "fourierDraw() requires an FFT that is too large, " << NFT;
 
         // Move the output image to be centered near zero
-        I.setOrigin(-xSize/2, -ySize/2);
+        I.setCenter(0,0);
         double dk = 2.*M_PI/(NFT*dx);
         dbg << 
             " After adjustments: dx " << dx << " dk " << dk << 
@@ -366,11 +362,8 @@ namespace galsim {
             I.resize(imgBounds);
             I.setZero();
         } else {
-            // Going to move the output image to be centered near zero
-            int xSize, ySize;
-            xSize = I.getXMax()-I.getXMin()+1;
-            ySize = I.getYMax()-I.getYMin()+1;
-            I.setOrigin(-xSize/2, -ySize/2);
+            // Move the output image to be centered near zero
+            I.setCenter(0,0);
         }
         double dk = 2.*M_PI/(NFT*dx);
         dbg << 
@@ -446,9 +439,8 @@ namespace galsim {
         if (dk<=0.) dk = stepK();
 
         // recenter an existing image, to be consistent with fourierDrawK:
-        int xSize = Re.getXMax()-Re.getXMin()+1, ySize = Re.getYMax()-Re.getYMin()+1;
-        Re.setOrigin(-xSize/2, -ySize/2);
-        Im.setOrigin(-xSize/2, -ySize/2);
+        Re.setCenter(0,0);
+        Im.setCenter(0,0);
 
         // ??? Make this into a virtual function to allow pipelining?
         for (int y = Re.getYMin(); y <= Re.getYMax(); y++) {
@@ -489,9 +481,8 @@ namespace galsim {
             Im.setZero();
         } else {
             // recenter an existing image, to be consistent with fourierDrawK:
-            int xSize = Re.getXMax()-Re.getXMin()+1, ySize = Re.getYMax()-Re.getYMin()+1;
-            Re.setOrigin(-xSize/2, -ySize/2);
-            Im.setOrigin(-xSize/2, -ySize/2);
+            Re.setCenter(0,0);
+            Im.setCenter(0,0);
         }
 
         // ??? Make this into a virtual function to allow pipelining?
@@ -556,8 +547,8 @@ namespace galsim {
             throw SBError("fourierDrawK() requires an FFT that is too large");
 
         // Move the output image to be centered near zero
-        Re.setOrigin(-xSize/2, -ySize/2);
-        Im.setOrigin(-xSize/2, -ySize/2);
+        Re.setCenter(0,0);
+        Im.setCenter(0,0);
 
         double dx = 2.*M_PI*oversamp/(NFT*dk);
         XTable xt(NFT,dx);
@@ -651,12 +642,9 @@ namespace galsim {
                 dk = kRange / Nimg; 
             }
         } else {
-            // Going to move the output image to be centered near zero
-            int xSize, ySize;
-            xSize = Re.getXMax()-Re.getXMin()+1;
-            ySize = Re.getYMax()-Re.getYMin()+1;
-            Re.setOrigin(-xSize/2, -ySize/2);
-            Im.setOrigin(-xSize/2, -ySize/2);
+            // Move the output image to be centered near zero
+            Re.setCenter(0,0);
+            Im.setCenter(0,0);
         }
 
         double dx = 2.*M_PI*oversamp/(NFT*dk);
@@ -2617,7 +2605,6 @@ namespace galsim {
 
         const int maxN = 100000; // Don't do more than this at a time to keep the 
                                  // memory usage reasonable.
-        double added_flux = 0.; // total flux falling inside image bounds, returned
 
         double posflux = getPositiveFlux();
         double negflux = getNegativeFlux();
@@ -2636,15 +2623,18 @@ namespace galsim {
             xdbg<<"Poisson scaling flux by factor "<<scale_flux<<std::endl;
         }
 
-        double target_flux = scale_flux * getFlux();
-        double realized_flux = 0.;
-
         // Center the image at 0,0:
         img.setCenter(0,0);
+        dbg<<"On input, image has central value = "<<img(0,0)<<std::endl;
+
+        // Stor the PhotonArrays to be added here rather than add them as we go,
+        // since we might need to rescale them all before adding.
+        std::vector<boost::shared_ptr<PhotonArray> > arrays;
 
         // If we're automatically figuring out N based on the noise, start with 100 photons
         // Otherwise we'll do a maximum of maxN at a time until we go through all N.
         int thisN = noise > 0. ? 100 : maxN;
+        T fmax = 0.;
         while (true) {
             // We break out of the loop when either N drops to 0 (if noise = 0) or 
             // we find that all pixels have a noise level < noise (if noise > 0)
@@ -2659,9 +2649,8 @@ namespace galsim {
             xdbg<<"scale flux by "<<(scale_flux*thisN/origN)<<std::endl;
             pa->scaleFlux(scale_flux * thisN / origN);
             xdbg<<"pa.flux => "<<pa->getTotalFlux()<<std::endl;
-            added_flux += pa->addTo(img);
+            arrays.push_back(pa);
             N -= thisN;
-            realized_flux += pa->getTotalFlux();
             xdbg<<"N -> "<<N<<std::endl;
 
             // This is always a reason to break out.
@@ -2670,10 +2659,9 @@ namespace galsim {
             if (noise > 0.) {
                 xdbg<<"Check the noise level\n";
                 // First need to find what the current fmax is.
-                T fmax = 0.;
-                for(int x=img.getXMin(); x<=img.getXMax(); ++x)
-                    for(int y=img.getYMin(); y<=img.getYMax(); ++y) 
-                        if (img(x,y) > fmax) fmax = img(x,y);
+                // (Only need to update based on the latest pa.)
+                for(int i=0; i<pa->size(); ++i) 
+                    if (pa->getFlux(i) > fmax) fmax = pa->getFlux(i);
                 xdbg<<"fmax = "<<fmax<<std::endl;
                 // Estimate a good value of Ntot based on what we know now
                 // Ntot = fmax * flux / (1-2eta)^2 / noise
@@ -2689,18 +2677,27 @@ namespace galsim {
         }
 
         // If we didn't shoot all the original number of photons, then our flux isn't right.
-        // Need to rescale the image by factor of origN / (origN-N)
+        // Need to rescale the arrays by factor of origN / (origN-N)
         if (N > 0.1) {
             dbg<<"Flux scalings were set according to origN = "<<origN<<std::endl;
             dbg<<"But only shot N = "<<origN-N<<std::endl;
             double factor = origN / (origN-N);
-            dbg<<"Rescale pixels by factor ("<<factor<<")\n";
-            img *= T(factor);
-            added_flux *= factor;
-            realized_flux *= factor;
+            dbg<<"Rescale arrays by factor ("<<factor<<")\n";
+            for (int k=0; k<arrays.size(); ++k) arrays[k]->scaleFlux(factor);
+        }
+
+        // Now we can go ahead and add all the arrays to the image:
+        double target_flux = scale_flux * getFlux();
+        double added_flux = 0.; // total flux falling inside image bounds, returned
+        double realized_flux = 0.;
+        for (int k=0; k<arrays.size(); ++k) {
+            PhotonArray* pa = arrays[k].get();
+            added_flux += pa->addTo(img);
+            realized_flux += pa->getTotalFlux();
         }
 
         dbg<<"Done drawShoot.  Realized flux = "<<realized_flux<<std::endl;
+        dbg<<"Now image has central value = "<<img(0,0)<<std::endl;
         dbg<<"c.f. target flux = "<<target_flux<<std::endl;
         xdbg<<"Added flux (falling within image bounds) = "<<added_flux<<std::endl;
 

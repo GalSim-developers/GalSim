@@ -48,7 +48,7 @@ namespace galsim {
          *
          * @returns Array size
          */
-        int size() const {return _x.size();}
+        int size() const { return _x.size(); }
 
         /** @brief reserve space in arrays for future elements
          *
@@ -82,7 +82,7 @@ namespace galsim {
          * @param[in] i Index of desired photon (no bounds checking)
          * @returns x coordinate of photon
          */
-        double getX(int i) const {return _x[i];}
+        double getX(int i) const { return _x[i]; }
 
         /**
          * @brief Access y coordinate of a photon
@@ -90,7 +90,7 @@ namespace galsim {
          * @param[in] i Index of desired photon (no bounds checking)
          * @returns y coordinate of photon
          */
-        double getY(int i) const {return _y[i];}
+        double getY(int i) const { return _y[i]; }
 
         /**
          * @brief Access flux of a photon
@@ -98,7 +98,7 @@ namespace galsim {
          * @param[in] i Index of desired photon (no bounds checking)
          * @returns flux of photon
          */
-        double getFlux(int i) const {return _flux[i];}
+        double getFlux(int i) const { return _flux[i]; }
 
         /**
          * @brief Return sum of all photons' fluxes

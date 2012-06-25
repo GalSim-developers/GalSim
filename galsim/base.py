@@ -303,17 +303,32 @@ class GSObject:
             dx = float(dx)
 
         if image == None:
+            if add_to_image:
+                raise ValueError("Cannot add_to_image if image is None")
             image = self.SBProfile.draw(dx=dx, wmult=wmult)
+            if normalization.lower() == "flux" or normalization.lower() == "f":
+                # In this case, the draw command may set dx automatically, so we need to 
+                # adjust the flux after the fact.  But this is ok, since add_to_image is
+                # invalid in this case.
+                dx = image.getScale()
+                image *= dx*dx
         else :
             if dx <= 0.:
                 dx = image.getScale()
+            print 'image.scale = ',dx
+            print 'image.sum = ',image.array.sum()
             if not add_to_image:
                 image.setZero()
-            self.SBProfile.draw(image, dx=dx, wmult=wmult)
-
-        if normalization.lower() == "flux" or normalization.lower() == "f":
-            dx = image.getScale()
-            image *= dx*dx
+            print 'after setZero: image.sum = ',image.array.sum()
+            if normalization.lower() == "flux" or normalization.lower() == "f":
+                # SBProfile draw command uses surface brightness normalization.  So if we
+                # want flux normalization, we need to scale the flux by dx^2
+                scaled = self * (dx*dx)
+            else:
+                scaled = self
+            scaled.SBProfile.draw(image, dx=dx, wmult=wmult)
+            print 'after draw: image.sum = ',image.array.sum()
+         
         return image
 
     def drawShoot(self, image, N=0., ud=None, normalization="flux", noise=0.,
@@ -404,11 +419,20 @@ class GSObject:
         if not add_to_image:
             image.setZero()
 
-        added_flux = self.SBProfile.drawShoot(image, N, ud, noise, poisson_flux)
+        if normalization.lower() == "flux" or normalization.lower() == "f":
+            # SBProfile draw command uses surface brightness normalization.  So if we
+            # want flux normalization, we need to scale the flux by dx^2
+            dx = image.getScale()
+            scaled = self * (dx*dx)
+        else:
+            scaled = self
+            
+        added_flux = scaled.SBProfile.drawShoot(image, N, ud, noise, poisson_flux)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":
+            # added_flux came out wrong.  Need to remove the scaling.
             dx = image.getScale()
-            image *= dx*dx
+            added_flux /= dx*dx
 
         return image, added_flux
          
