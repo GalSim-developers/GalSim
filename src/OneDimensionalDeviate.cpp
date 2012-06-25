@@ -6,6 +6,16 @@
 #include "integ/Int.h"
 #include "SBProfile.h"
 
+// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by 
+// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit 
+// circle and rejecting corner photons.
+// The relative speed of the two methods was tested as part of issue #163, and the results
+// are collated in devutils/external/time_photon_shooting.
+// The conclusion was that using sin/cos was faster for icpc, but not g++ or clang++.
+#ifdef _INTEL_COMPILER
+#define USE_COS_SIN
+#endif
+
 #ifdef DEBUGLOGGING
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");

@@ -178,13 +178,13 @@ namespace galsim {
          * Photons past the edges of the image are discarded.
          *
          * @param[in] target the Image to which the photons' flux will be added.
-         * @returns The number of photons that fell outside the Image bounds.
+         * @returns The total flux of photons the landed inside the image bounds.
          */
         template <class T>
         double addTo(ImageView<T>& target) const;
 
         /**
-         * @brief Declare the the photons in this array are correlated.
+         * @brief Declare that the photons in this array are correlated.
          */
         void setCorrelated(bool new_val=true) { _is_correlated = new_val; }
 
