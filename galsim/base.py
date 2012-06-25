@@ -384,6 +384,12 @@ class GSObject:
             noise = float(noise)
         if ud == None:
             ud = galsim.UniformDeviate()
+        # Check that Either N is set to something or flux is set to something
+        if N == 0. and self.getFlux() == 1.:
+            import warnings
+            msg = "Warning: drawShoot for object with flux == 1, but N == 0.\n"
+            msg += "This will only shoot a single photon."
+            warnings.warn(msg)
 
         added_flux = self.SBProfile.drawShoot(image, N, ud, noise, poisson_flux)
 
