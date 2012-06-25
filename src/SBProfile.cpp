@@ -1726,7 +1726,10 @@ namespace galsim {
         _inv_Dsq_pisq(1. / (_Dsq * M_PI * M_PI)),
         _xnorm(flux * _Dsq),
         _knorm(flux / (M_PI * (1.-_obssq))),
-        _radial(_obscuration,_obssq) {}
+        _info(nmap.get(_obscuration,_obssq))
+    {}
+
+    SBAiry::InfoBarn SBAiry::nmap;
 
     // This is a scale-free version of the Airy radial function.
     // Input radius is in units of lambda/D.  Output normalized
@@ -1755,15 +1758,18 @@ namespace galsim {
 
     double SBAiry::SBAiryImpl::xValue(const Position<double>& p) const 
     {
-        double radius = sqrt(p.x*p.x+p.y*p.y) * _D;
-        return _xnorm * _radial(radius);
+        double r = sqrt(p.x*p.x+p.y*p.y) * _D;
+        return _xnorm * _info->xValue(r);
     }
+
+    double SBAiry::AiryInfo::xValue(double r) const 
+    { return _radial(r); }
 
     std::complex<double> SBAiry::SBAiryImpl::kValue(const Position<double>& k) const
     {
-        double ksq = k.x*k.x+k.y*k.y;
+        double ksq_over_pisq = (k.x*k.x+k.y*k.y) * _inv_Dsq_pisq;
         // calculate circular FT(PSF) on p'=(x',y')
-        return _knorm * annuli_autocorrelation(ksq);
+        return _knorm * _info->kValue(ksq_over_pisq);
     }
 
     // Set maxK to hard limit for Airy disk.
@@ -1773,16 +1779,9 @@ namespace galsim {
     // The amount of flux missed in a circle of radius pi/stepk should miss at 
     // most alias_threshold of the flux.
     double SBAiry::SBAiryImpl::stepK() const
-    {
-        // Schroeder (10.1.18) gives limit of EE at large radius.
-        // This stepK could probably be relaxed, it makes overly accurate FFTs.
-        double R = 1. / (sbp::alias_threshold * 0.5 * M_PI * M_PI * (1.-_obscuration));
-        // Use at least 5 lam/D
-        R = std::max(R,5.);
-        return M_PI * _D / R;
-    }
+    { return _info->stepK() * _D; }
 
-    double SBAiry::SBAiryImpl::chord(double r, double h, double rsq, double hsq) const 
+    double SBAiry::AiryInfo::chord(double r, double h, double rsq, double hsq) const 
     {
         if (r==0.) 
             return 0.;
@@ -1795,7 +1794,7 @@ namespace galsim {
     }
 
     /* area inside intersection of 2 circles radii r & s, seperated by t*/
-    double SBAiry::SBAiryImpl::circle_intersection(
+    double SBAiry::AiryInfo::circle_intersection(
         double r, double s, double rsq, double ssq, double tsq) const 
     {
         assert(r >= s);
@@ -1817,7 +1816,7 @@ namespace galsim {
     }
 
     /* area inside intersection of 2 circles both with radius r, seperated by t*/
-    double SBAiry::SBAiryImpl::circle_intersection(double r, double rsq, double tsq) const 
+    double SBAiry::AiryInfo::circle_intersection(double r, double rsq, double tsq) const 
     {
         assert(r >= 0.);
         if (tsq >= 4.*rsq) return 0.;
@@ -1832,7 +1831,7 @@ namespace galsim {
     }
 
     /* area of two intersecting identical annuli */
-    double SBAiry::SBAiryImpl::annuli_intersect(
+    double SBAiry::AiryInfo::annuli_intersect(
         double r1, double r2, double r1sq, double r2sq, double tsq) const 
     {
         assert(r1 >= r2);
@@ -1844,11 +1843,25 @@ namespace galsim {
     // Beam pattern of annular aperture, in k space, which is just the
     // autocorrelation of two annuli.
     // Unnormalized -- value at k=0 is Pi * (1-obs^2)
-    double SBAiry::SBAiryImpl::annuli_autocorrelation(double ksq) const 
+    double SBAiry::AiryInfo::kValue(double ksq_over_pisq) const 
+    { return annuli_intersect(1.,_obscuration,1.,_obssq,ksq_over_pisq); }
+
+    // Constructor to initialize Airy constants and k lookup table
+    SBAiry::AiryInfo::AiryInfo(double obscuration, double obssq) : 
+        _obscuration(obscuration), 
+        _obssq(obssq),
+        _radial(_obscuration,_obssq)
     {
-        double ksq_scaled = ksq * _inv_Dsq_pisq;
-        return annuli_intersect(1.,_obscuration,1.,_obssq,ksq_scaled);
+        dbg<<"Initializing AiryInfo for obs = "<<obscuration<<", obssq = "<<obssq<<std::endl;
+        // Calculate stepK:
+        // Schroeder (10.1.18) gives limit of EE at large radius.
+        // This stepK could probably be relaxed, it makes overly accurate FFTs.
+        double R = 1. / (sbp::alias_threshold * 0.5 * M_PI * M_PI * (1.-_obscuration));
+        // Use at least 5 lam/D
+        R = std::max(R,5.);
+        _stepk = M_PI / R;
     }
+
 
 
     //
@@ -2912,10 +2925,7 @@ namespace galsim {
     {
         dbg<<"Airy shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        // Use the OneDimensionalDeviate to sample from scale-free distribution
-        checkSampler();
-        assert(_sampler.get());
-        PhotonArray result=_sampler->shoot(N, u);
+        PhotonArray result=_info->shoot(N, u);
         // Then rescale for this flux & size
         result.scaleFlux(_flux);
         result.scaleXY(1./_D);
@@ -2923,15 +2933,18 @@ namespace galsim {
         return result;
     }
 
-    void SBAiry::SBAiryImpl::flushSampler() const 
-    { _sampler.reset(); }
+    PhotonArray SBAiry::AiryInfo::shoot(int N, UniformDeviate u) const
+    {
+        // Use the OneDimensionalDeviate to sample from scale-free distribution
+        checkSampler();
+        assert(_sampler.get());
+        PhotonArray result=_sampler->shoot(N, u);
+        return result;
+    }
 
-    void SBAiry::SBAiryImpl::checkSampler() const 
+    void SBAiry::AiryInfo::checkSampler() const 
     {
         if (_sampler.get()) return;
-        // TODO: If this gets to be a significant fraction of the running time, 
-        // can use the same trick as for Sersic to just do this once for each 
-        // value of _obscuration.
         std::vector<double> ranges(1,0.);
         // Break Airy function into ranges that will not have >1 extremum:
         double rmin = 1.1 - 0.5*_obscuration;
@@ -2939,7 +2952,7 @@ namespace galsim {
         // to stop sampler at radius with EE>(1-shoot_flux_accuracy)
         double rmax = 2./(sbp::shoot_flux_accuracy * M_PI*M_PI * (1.-_obscuration));
         dbg<<"Airy sampler\n";
-        dbg<<"_D = "<<_D<<", obsc = "<<_obscuration<<std::endl;
+        dbg<<"obsc = "<<_obscuration<<std::endl;
         dbg<<"rmin = "<<rmin<<std::endl;
         dbg<<"rmax = "<<rmax<<std::endl;
         ranges.reserve(int(floor((rmax-rmin+2)/0.5+0.5)));
