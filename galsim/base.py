@@ -177,7 +177,10 @@ class GSObject:
         self.__class__ = GSObject
  
     def applyDilation(self, scale):
-        """@brief Apply a dilation of the size by the given scale.
+        """@brief Apply a dilation of the linear size by the given scale.
+
+        Scales the linear dimensions of the image by the factor scale.
+        e.g. half_light_radius <-- half_light_radius * scale
 
         This operation preserves flux.
         See applyMagnification for a version that preserves surface brightness, and thus 
@@ -194,9 +197,12 @@ class GSObject:
         self.setFlux(flux)
 
     def applyMagnification(self, scale):
-        """@brief Apply a magnification by the given scale, scaling the size by scale
+        """@brief Apply a magnification by the given scale, scaling the linear size by scale
         and the flux by scale^2.  
         
+        Scales the linear dimensions of the image by the factor scale.
+        e.g. half_light_radius <-- half_light_radius * scale
+
         This operation preserves surface brightness, which means that the flux is scales 
         with the change in area.  
         See applyDilation for a version that preserves flux.
@@ -272,8 +278,12 @@ class GSObject:
         return ret
 
     def createDilated(self, scale):
-        """@brief Returns a new GSObject by applying a dilation of the size by the given scale.
+        """@brief Returns a new GSObject by applying a dilation of the linear size by the 
+        given scale.
         
+        Scales the linear dimensions of the image by the factor scale.
+        e.g. half_light_radius <-- half_light_radius * scale
+
         This operation preserves flux.  
         See createMagnified for a version that preserves surface brightness, and thus 
         changes the flux.
@@ -287,7 +297,10 @@ class GSObject:
 
     def createMagnified(self, scale):
         """@brief Returns a new GSObject by applying a magnification by the given scale,
-        scaling the size by scale and the flux by scale^2.  
+        scaling the linear size by scale and the flux by scale^2.  
+
+        Scales the linear dimensions of the image by the factor scale.
+        e.g. half_light_radius <-- half_light_radius * scale
 
         This operation preserves surface brightness, which means that the flux
         is also scaled by a factor of scale^2.
