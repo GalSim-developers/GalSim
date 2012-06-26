@@ -579,7 +579,7 @@ def Script4():
     gal_e_min = 0.          # Range for ellipticity
     gal_e_max = 0.8
 
-    psf_fwhm = 0.65         # arcsec
+    psf_fwhm = 0.35         # arcsec
 
     logger.info('Starting multi-object script 4')
 
@@ -597,16 +597,18 @@ def Script4():
             fwhm2 = 2*psf_fwhm, flux2 = 0.2)
     atmos = galsim.Gaussian(fwhm = psf_fwhm)
     optics = galsim.OpticalPSF(
-            lam_over_D = 0.5,
+            lam_over_D = 0.6 * psf_fwhm,
             obscuration = 0.4,
             defocus = 0.1,
             astig1 = 0.3, astig2 = -0.2,
             coma1 = 0.2, coma2 = 0.1,
             spher = -0.3) 
-    psf4 = galsim.Convolve([atmos,optics])
+    #psf4 = galsim.Convolve([atmos,optics])
+    psf4 = optics
     atmos = galsim.AtmosphericPSF(fwhm = psf_fwhm)
-    optics = galsim.Airy(lam_over_D = 0.4) 
-    psf5 = galsim.Convolve([atmos,optics])
+    optics = galsim.Airy(lam_over_D = 0.3 * psf_fwhm) 
+    #psf5 = galsim.Convolve([atmos,optics])
+    psf5 = atmos
     psfs = [psf1, psf2, psf3, psf4, psf5]
     psf_names = ["Gaussian", "Moffat", "DoubleGaussian", "OpticalPSF", "Kolmogorov * Airy"]
     psf_times = [0,0,0,0,0]
@@ -638,9 +640,11 @@ def Script4():
     all_images = []
     k = 0
     for ipsf in range(len(psfs)):
+        ipsf = 4
         psf = psfs[ipsf]
         psf_name = psf_names[ipsf]
         for igal in range(len(gals)):
+            igal = 0
             gal = gals[igal]
             gal_name = gal_names[igal]
             for i in range(4):
