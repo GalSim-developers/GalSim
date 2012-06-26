@@ -1097,6 +1097,18 @@ class Deconvolve(GSObject):
         # the single argument should be one of our base classes
         GSObject.__init__(self, galsim.SBDeconvolve(farg.SBProfile))
 
+class DoubleGaussian(Add):
+    """Double Gaussian, which is the sum of two Gaussian profiles
+    """
+    def __init__(self, sigma1=None, sigma2=None, fwhm1=None, fwhm2=None, flux1=1., flux2=1.):
+        sblist = []
+        # Note: we do not have to check for improper args (0 or 2 radii specified) because this is
+        # done in the C++
+        sblist.append(galsim.Gaussian(sigma=sigma1, fwhm=fwhm1, flux=flux1))
+        sblist.append(galsim.Gaussian(sigma=sigma2, fwhm=fwhm2, flux=flux2))
+        galsim.Add.__init__(self, sblist)
+
+
 
 # Now we define a dictionary containing all the GSobject subclass names as keys, referencing a
 # nested dictionary containing the names of their required parameters (not including size), size
