@@ -592,8 +592,7 @@ def Script4():
     # Make the PSF profiles:
     psf1 = galsim.Gaussian(fwhm = psf_fwhm)
     psf2 = galsim.Moffat(fwhm = psf_fwhm, beta = 2.4)
-    # TODO: Should DoubleGaussian be in galsim namespace, rather than atmosphere?
-    psf3 = galsim.atmosphere.DoubleGaussian(
+    psf3 = galsim.DoubleGaussian(
             fwhm1 = psf_fwhm, flux1 = 0.8,
             fwhm2 = 2*psf_fwhm, flux2 = 0.2)
     atmos = galsim.Gaussian(fwhm = psf_fwhm)
@@ -685,7 +684,7 @@ def Script4():
 
                 sky_level_pixel = sky_level * pixel_scale**2
                 final_nopix.drawShoot(phot_image, noise=sky_level_pixel/100, 
-                                      uniform_deviate=rng)
+                                      uniform_deviate=rng, poisson_flux=False)
                 logger.info('   Drew phot image.  Total drawn flux = %f.  getFlux() = %f',
                         phot_image.array.sum(),final.getFlux())
                 t4 = time.time()
