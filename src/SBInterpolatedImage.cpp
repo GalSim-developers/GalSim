@@ -386,8 +386,11 @@ namespace galsim {
         // Last step is to convolve with the interpolation kernel. 
         // Can skip if using a 2d delta function
         const InterpolantXY* xyPtr = dynamic_cast<const InterpolantXY*> (_xInterp.get());
-        if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d())))
-             result->convolve(*_xInterp->shoot(N, ud), ud);
+        if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d()))) {
+            boost::shared_ptr<PhotonArray> pa_interp = _xInterp->shoot(N, ud);
+            pa_interp->scaleXY(_xtab->getDx());
+            result->convolve(*pa_interp, ud);
+        }
 
         dbg<<"InterpolatedImage Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
