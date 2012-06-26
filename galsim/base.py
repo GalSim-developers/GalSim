@@ -830,6 +830,8 @@ class AtmosphericPSF(GSObject):
         if interpolantxy == None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1e-4)
             self.Interpolant2D = galsim.InterpolantXY(lan5)
+        else:
+            self.Interpolant2D = interpolantxy
         GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, 
                                                            dx=dx_lookup))
     def getHalfLightRadius(self):
