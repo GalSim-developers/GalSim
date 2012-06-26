@@ -579,7 +579,7 @@ def Script4():
     gal_e_min = 0.          # Range for ellipticity
     gal_e_max = 0.8
 
-    psf_fwhm = 0.35         # arcsec
+    psf_fwhm = 0.65         # arcsec
 
     logger.info('Starting multi-object script 4')
 
@@ -603,12 +603,10 @@ def Script4():
             astig1 = 0.3, astig2 = -0.2,
             coma1 = 0.2, coma2 = 0.1,
             spher = -0.3) 
-    #psf4 = galsim.Convolve([atmos,optics])
-    psf4 = optics
+    psf4 = galsim.Convolve([atmos,optics])
     atmos = galsim.AtmosphericPSF(fwhm = psf_fwhm)
     optics = galsim.Airy(lam_over_D = 0.3 * psf_fwhm) 
-    #psf5 = galsim.Convolve([atmos,optics])
-    psf5 = atmos
+    psf5 = galsim.Convolve([atmos,optics])
     psfs = [psf1, psf2, psf3, psf4, psf5]
     psf_names = ["Gaussian", "Moffat", "DoubleGaussian", "OpticalPSF", "Kolmogorov * Airy"]
     psf_times = [0,0,0,0,0]
@@ -640,11 +638,9 @@ def Script4():
     all_images = []
     k = 0
     for ipsf in range(len(psfs)):
-        ipsf = 4
         psf = psfs[ipsf]
         psf_name = psf_names[ipsf]
         for igal in range(len(gals)):
-            igal = 0
             gal = gals[igal]
             gal_name = gal_names[igal]
             for i in range(4):
@@ -678,19 +674,18 @@ def Script4():
                 # Draw the profile
                 final.draw(fft_image)
 
-                logger.info('   Drew fft image.  Total drawn flux = %f.  getFlux() = %f',
-                        fft_image.array.sum(),final.getFlux())
+                #logger.info('   Drew fft image.  Total drawn flux = %f.  getFlux() = %f',
+                        #fft_image.array.sum(),final.getFlux())
                 t3 = time.time()
 
                 # Repeat for photon shooting image.
                 # Photon shooting automatically convolves by the pixel, so make sure not
                 # to include it in the profile!
-
                 sky_level_pixel = sky_level * pixel_scale**2
                 final_nopix.drawShoot(phot_image, noise=sky_level_pixel/100, 
                                       uniform_deviate=rng, poisson_flux=False)
-                logger.info('   Drew phot image.  Total drawn flux = %f.  getFlux() = %f',
-                        phot_image.array.sum(),final.getFlux())
+                #logger.info('   Drew phot image.  Total drawn flux = %f.  getFlux() = %f',
+                        #phot_image.array.sum(),final.getFlux())
                 t4 = time.time()
 
                 # Add Poisson noise
@@ -702,8 +697,8 @@ def Script4():
                 phot_image.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
                 phot_image -= sky_level_pixel
 
-                logger.info('   Added Poisson noise.  Image fluxes are now %f and %f',
-                        fft_image.array.sum(),phot_image.array.sum())
+                #logger.info('   Added Poisson noise.  Image fluxes are now %f and %f',
+                        #fft_image.array.sum(),phot_image.array.sum())
                 t5 = time.time()
 
                 # Store that into the list of all images
