@@ -567,15 +567,15 @@ def Script4():
     file_name = os.path.join('output','cube_phot.fits')
 
     random_seed = 1512413
-    sky_level = 1.e6        # ADU / arcsec^2
+    sky_level = 1.e4        # ADU / arcsec^2
     pixel_scale = 0.28      # arcsec
     nx = 64
     ny = 64
 
     gal_flux_min = 1.e4     # Range for galaxy flux
-    gal_flux_max = 3.e5  
+    gal_flux_max = 1.e5  
     gal_hlr_min = 0.3       # arcsec
-    gal_hlr_max = 3.        # arcsec
+    gal_hlr_max = 1.3       # arcsec
     gal_e_min = 0.          # Range for ellipticity
     gal_e_max = 0.8
 
@@ -675,7 +675,8 @@ def Script4():
                 # Draw the profile
                 final.draw(fft_image)
 
-                #logger.info('   Drew fft image')
+                logger.info('   Drew fft image.  Total drawn flux = %f.  getFlux() = %f',
+                        fft_image.array.sum(),final.getFlux())
                 t3 = time.time()
 
                 # Repeat for photon shooting image.
@@ -683,8 +684,10 @@ def Script4():
                 # to include it in the profile!
 
                 sky_level_pixel = sky_level * pixel_scale**2
-                final_nopix.drawShoot(phot_image, noise = sky_level_pixel / 100)
-                #logger.info('   Drew photon shoot image')
+                final_nopix.drawShoot(phot_image, noise=sky_level_pixel/100, 
+                                      uniform_deviate=rng)
+                logger.info('   Drew phot image.  Total drawn flux = %f.  getFlux() = %f',
+                        phot_image.array.sum(),final.getFlux())
                 t4 = time.time()
 
                 # Add Poisson noise
@@ -696,7 +699,8 @@ def Script4():
                 phot_image.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
                 phot_image -= sky_level_pixel
 
-                #logger.info('   Added Poisson noise')
+                logger.info('   Added Poisson noise.  Image fluxes are now %f and %f',
+                        fft_image.array.sum(),phot_image.array.sum())
                 t5 = time.time()
 
                 # Store that into the list of all images

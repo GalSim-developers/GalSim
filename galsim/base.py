@@ -489,6 +489,7 @@ class GSObject:
         large n_photons) as draw() produces when the same object is convolved with Pixel(xw=dx) 
         when drawing onto an image with pixel scale dx.
         """
+
         # Raise an exception immediately if the normalization type is not recognized
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
@@ -527,7 +528,7 @@ class GSObject:
         # SBProfile draw command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
         if normalization.lower() == "flux" or normalization.lower() == "f":
-            gain *= image.getScale()**2
+            gain *= dx**2
             
         added_flux = self.SBProfile.drawShoot(
                 image, n_photons, uniform_deviate, dx, gain, noise, poisson_flux)

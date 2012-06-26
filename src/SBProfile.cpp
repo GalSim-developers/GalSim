@@ -2,7 +2,7 @@
 // Functions for the Surface Brightness Profile Class
 //
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "integ/Int.h"
@@ -2625,6 +2625,8 @@ namespace galsim {
         // more photons until we either hit N = flux / (1-2eta)^2 or the noise in the brightest
         // pixel is < noise.
         //
+        // We also make the assumption that the pixel to look at for fmax is at the centroid.
+        //
         // Returns the total flux placed inside the image bounds by photon shooting.
         // 
         
@@ -2649,7 +2651,7 @@ namespace galsim {
         if (N == 0.) N = mod_flux;
         double origN = N;
 
-        double scale_flux = gain; // Amount by which to scale the flux at the end.
+        double scale_flux = 1.; // Amount by which to scale the flux at the end.
 
         if (poisson_flux) {
             PoissonDeviate pd(u, N);
@@ -2668,7 +2670,12 @@ namespace galsim {
         // If we're automatically figuring out N based on the noise, start with 100 photons
         // Otherwise we'll do a maximum of maxN at a time until we go through all N.
         int thisN = noise > 0. ? 100 : maxN;
-        T fmax = 0.;
+        Position<double> cen = centroid();
+        Bounds<double> b(cen);
+        b.addBorder(0.5);
+        dbg<<"Bounds for fmax = "<<b<<std::endl;
+        T raw_fmax = 0.;
+        int fmax_count = 0;
         while (true) {
             // We break out of the loop when either N drops to 0 (if noise = 0) or 
             // we find that all pixels have a noise level < noise (if noise > 0)
@@ -2694,8 +2701,18 @@ namespace galsim {
                 xdbg<<"Check the noise level\n";
                 // First need to find what the current fmax is.
                 // (Only need to update based on the latest pa.)
-                for(int i=0; i<pa->size(); ++i) 
-                    if (pa->getFlux(i) > fmax) fmax = pa->getFlux(i);
+
+                for(int i=0; i<pa->size(); ++i) {
+                    if (b.includes(pa->getX(i),pa->getY(i))) {
+                        ++fmax_count;
+                        raw_fmax += pa->getFlux(i);
+                    }
+                }
+                // Make sure we've got at least 25 photons for our fmax estimate.
+                if (fmax_count < 25) continue;  // Keep the same initial value of thisN = 100
+
+                xdbg<<"raw_fmax = "<<raw_fmax<<std::endl;
+                double fmax = raw_fmax * origN / (origN-N);
                 xdbg<<"fmax = "<<fmax<<std::endl;
                 // Estimate a good value of Ntot based on what we know now
                 // Ntot = fmax * flux / (1-2eta)^2 / noise
@@ -2703,21 +2720,27 @@ namespace galsim {
                 xdbg<<"Calculated Ntot = "<<Ntot<<std::endl;
                 // So far we've done (origN-N)
                 // Set thisN to do the rest on the next pass.
-                thisN = int(Ntot - (origN-N));
+                Ntot -= (origN-N);
+                if (Ntot > maxN) thisN = maxN; // Make sure we don't overflow thisN.
+                else thisN = int(Ntot);
                 xdbg<<"Next value of thisN = "<<thisN<<std::endl;
                 // If we've already done enough, break out of the loop.
                 if (thisN <= 0) break;
             }
         }
 
-        // If we didn't shoot all the original number of photons, then our flux isn't right.
-        // Need to rescale the arrays by factor of origN / (origN-N)
         if (N > 0.1) {
+            // If we didn't shoot all the original number of photons, then our flux isn't right.
+            // Need to rescale the arrays by factor of origN / (origN-N)
             dbg<<"Flux scalings were set according to origN = "<<origN<<std::endl;
             dbg<<"But only shot N = "<<origN-N<<std::endl;
-            double factor = origN / (origN-N);
-            dbg<<"Rescale arrays by factor ("<<factor<<")\n";
+            double factor = origN / (origN-N) * gain;
+            dbg<<"Rescale arrays by factor = "<<factor<<std::endl;
             for (size_t k=0; k<arrays.size(); ++k) arrays[k]->scaleFlux(factor);
+        } else if (gain != 1.0) {
+            // Also need to rescale if the gain != 1
+            dbg<<"Rescale arrays by gain = "<<gain<<std::endl;
+            for (size_t k=0; k<arrays.size(); ++k) arrays[k]->scaleFlux(gain);
         }
 
         // Now we can go ahead and add all the arrays to the image:
