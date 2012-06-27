@@ -483,7 +483,7 @@ def Script3():
 
     ## Make the ePSF
     # first make the double Gaussian PSF
-    psf = galsim.atmosphere.DoubleGaussian(
+    psf = galsim.DoubleGaussian(
             fwhm1 = psf_inner_fwhm, flux1 = psf_inner_fraction,
             fwhm2 = psf_outer_fwhm, flux2 = 1.-psf_inner_fraction)
     # make the pixel response

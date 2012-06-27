@@ -20,7 +20,7 @@ def funcname():
     return inspect.stack()[1][3]
 
 def test_doublegaussian_vs_sbadd():
-    """Test that profiles from galsim.atmosphere.DoubleGaussian equal those from SBGaussian/SBAdd.
+    """Test that profiles from galsim.DoubleGaussian equal those from SBGaussian/SBAdd.
     """
     import time
     t1 = time.time()
