@@ -9,11 +9,11 @@ import galsim
 
 The Ellipse class represents a shear (shape distortion), dilation, and/or centroid shift.
 
-The python Ellipse class can be initialized in a variety of ways.  Unnamed arguments must be a Shear
-object for shape distortion, a float for dilation, and/or a Position for centroid shift.  Keyword
-arguments can be used to set parameters of the shape distortion the same as for the Shear class; or
-the parameter "dilation" can be used for re-sizing; or the parameters "x_shift" and "y_shift" can be
-used for centroid shifts.
+The python Ellipse class can be initialized in a variety of ways.  Unnamed arguments must be a
+galsim.shear.Shear object for shape distortion, a float for dilation, and/or a Position for centroid
+shift.  Keyword arguments can be used to set parameters of the shape distortion the same as for the
+Shear class; or the parameter "dilation" can be used for re-sizing; or the parameters "x_shift" and
+"y_shift" can be used for centroid shifts.
 
 The following are all examples of valid calls to initialize a Ellipse object:
 @code
@@ -79,7 +79,7 @@ class Ellipse:
                     use_shear = galsim.Shear()
             else:
                 if not isinstance(use_shear, galsim.Shear):
-                    raise TypeError("Shear passed to Ellipse constructor was not a galsim.Shear!")
+                    raise TypeError("Shear passed to Ellipse constructor was not a Shear!")
                 # if shear was passed using the 'shear' keyword, then we should not allow any other args
                 if kwargs:
                     raise TypeError("Keyword arguments to Ellipse not permitted: %s"%kwargs.keys())

@@ -1,4 +1,4 @@
-"""\file shear.py Redefinition of the Shear and Ellipse classes at the Python layer.
+"""\file shear.py Redefinition of the Shear class at the Python layer.
 """
 
 from . import _galsim
