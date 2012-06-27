@@ -157,7 +157,7 @@ class GSObject:
         self.__class__ = GSObject
 
     def applyTransformation(self, ellipse):
-        """@brief Apply a galsim.Ellipse distortion to this object.
+        """@brief Apply a galsim.ellipse.Ellipse distortion to this object.
            
         Ellipse objects can be initialized in a variety of ways (see documentation of this
         class for details).
@@ -177,7 +177,7 @@ class GSObject:
         self.__class__ = GSObject
         
     def applyShear(self, *args, **kwargs):
-        """@brief Apply a shear to this object, where arguments are either a galsim.Shear, or
+        """@brief Apply a shear to this object, where arguments are either a galsim.shear.Shear, or
         arguments that will be used to initialize one.
 
         After this call, the caller's type will be a GSObject.
@@ -189,7 +189,7 @@ class GSObject:
             if kwargs:
                 raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
             if not isinstance(args[0], galsim.Shear):
-                raise TypeError("Error, unnamed argument to applyShear is not a galsim.Shear!")
+                raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
             self.SBProfile.applyShear(args[0]._shear)
         elif len(args) > 1:
             raise TypeError("Error, too many unnamed arguments to applyShear!")
@@ -225,21 +225,21 @@ class GSObject:
     # Also add methods which create a new GSObject with the transformations applied...
     #
     def createTransformed(self, ellipse):
-        """@brief Returns a new GSObject by applying a galsim.Ellipse transformation (shear, dilate,
-        and/or shift).
+        """@brief Returns a new GSObject by applying a galsim.ellipse.Ellipse transformation (shear,
+        dilate, and/or shift).
 
         Note that Ellipse objects can be initialized in a variety of ways (see documentation of this
         class for details).
         """
         if not isinstance(ellipse, galsim.Ellipse):
-            raise TypeError("Argument to createTransformed must be a galsim.Ellipse!")
+            raise TypeError("Argument to createTransformed must be a galsim.ellipse.Ellipse!")
         ret = self.copy()
         ret.applyTransformation(ellipse)
         return ret
 
     def createSheared(self, *args, **kwargs):
         """@brief Returns A new GSObject by applying a shear, where arguments are either a
-        galsim.Shear or keyword arguments that can be used to create one.
+        galsim.shear.Shear or keyword arguments that can be used to create one.
         """
         ret = self.copy()
         ret.applyShear(*args, **kwargs)
