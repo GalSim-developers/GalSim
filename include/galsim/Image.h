@@ -209,8 +209,8 @@ namespace galsim {
          */
         void setCenter(int x0, int y0) 
         { 
-            shift(x0 - (this->getXMax()+this->getXMin())/2 ,
-                  y0 - (this->getYMax()+this->getYMin())/2 ); 
+            shift(x0 - (this->getXMax()+this->getXMin()+1)/2 ,
+                  y0 - (this->getYMax()+this->getYMin()+1)/2 ); 
         }
 
         /**
@@ -458,6 +458,7 @@ namespace galsim {
          */
         void fill(T x) const;
         const ImageView<T>& operator=(T x) const { fill(x); return *this; }
+        void setZero() const { fill(T(0)); }
         //@}
 
         /**
@@ -626,6 +627,7 @@ namespace galsim {
          */
         void fill(T x) { view().fill(x); }
         Image<T>& operator=(T x) { fill(x); return *this; }
+        void setZero() { fill(T(0)); }
         //@}
 
         /**
