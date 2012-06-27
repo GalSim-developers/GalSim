@@ -117,7 +117,7 @@ namespace galsim {
          * @param[out] ud UniformDeviate used for rejection sampling, if needed.
          */
         void drawWithin(double unitRandom, double& x, double& flux,
-                        UniformDeviate& ud) const;
+                        UniformDeviate ud) const;
 
         /**
          * @brief Get integrated flux over this interval or annulus.
@@ -237,7 +237,7 @@ namespace galsim {
          * @param[in] N number of photons to draw
          * @param[in] ud UniformDeviate used to produce random selections.
          */
-        PhotonArray shoot(int N, UniformDeviate& ud) const;
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
     private:
 

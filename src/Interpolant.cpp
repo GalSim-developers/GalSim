@@ -23,54 +23,54 @@ namespace galsim {
     double InterpolantXY::getNegativeFlux() const 
     { return 2.*_i1d->getPositiveFlux()*_i1d->getNegativeFlux(); }
 
-    PhotonArray InterpolantXY::shoot(int N, UniformDeviate& ud) const 
+    boost::shared_ptr<PhotonArray> InterpolantXY::shoot(int N, UniformDeviate ud) const 
     {
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
         // Going to assume here that there is not a need to randomize any Interpolant
-        PhotonArray result = _i1d->shoot(N, ud);   // get X coordinates
-        result.takeYFrom(_i1d->shoot(N, ud));
-        dbg<<"InterpolantXY Realized flux = "<<result.getTotalFlux()<<std::endl;
+        boost::shared_ptr<PhotonArray> result = _i1d->shoot(N, ud);   // get X coordinates
+        result->takeYFrom(*_i1d->shoot(N, ud));
+        dbg<<"InterpolantXY Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
-    PhotonArray Delta::shoot(int N, UniformDeviate& ud) const 
+    boost::shared_ptr<PhotonArray> Delta::shoot(int N, UniformDeviate ud) const 
     {
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
-        PhotonArray result(N);
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++)  {
-            result.setPhoton(i, 0., 0., fluxPerPhoton);
+            result->setPhoton(i, 0., 0., fluxPerPhoton);
         }
-        dbg<<"Delta Realized flux = "<<result.getTotalFlux()<<std::endl;
+        dbg<<"Delta Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
-    PhotonArray Nearest::shoot(int N, UniformDeviate& ud) const 
+    boost::shared_ptr<PhotonArray> Nearest::shoot(int N, UniformDeviate ud) const 
     {
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
-        PhotonArray result(N);
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++)  {
-            result.setPhoton(i, ud()-0.5, 0., fluxPerPhoton);
+            result->setPhoton(i, ud()-0.5, 0., fluxPerPhoton);
         }
-        dbg<<"Nearest Realized flux = "<<result.getTotalFlux()<<std::endl;
+        dbg<<"Nearest Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
-    PhotonArray Linear::shoot(int N, UniformDeviate& ud) const 
+    boost::shared_ptr<PhotonArray> Linear::shoot(int N, UniformDeviate ud) const 
     {
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
-        PhotonArray result(N);
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++) {
             // *** Guessing here that 2 random draws is faster than a sqrt:
-            result.setPhoton(i, ud() + ud() - 1., 0., fluxPerPhoton);
+            result->setPhoton(i, ud() + ud() - 1., 0., fluxPerPhoton);
         }
-        dbg<<"Linear Realized flux = "<<result.getTotalFlux()<<std::endl;
+        dbg<<"Linear Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 

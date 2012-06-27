@@ -68,13 +68,15 @@ struct PyPhotonArray {
             .def("append", &PhotonArray::append)
             .def("convolve", &PhotonArray::convolve)
             .def("addTo", 
-                 (void(PhotonArray::*)(ImageView<float> &) const)&PhotonArray::addTo,
+                 (double(PhotonArray::*)(ImageView<float> &) const)&PhotonArray::addTo,
                  bp::arg("image"),
-                 "Add photons' fluxes into image")
+                 "Add photons' fluxes into image. Returns total flux of photons falling inside "
+                 "image bounds.")
             .def("addTo", 
-                 (void(PhotonArray::*)(ImageView<double> &) const)&PhotonArray::addTo,
+                 (double(PhotonArray::*)(ImageView<double> &) const)&PhotonArray::addTo,
                  bp::arg("image"),
-                 "Add photons' fluxes into image")
+                 "Add photons' fluxes into image. Returns total flux of photons falling inside "
+                 "image bounds.")
             ;
     }
 
@@ -103,15 +105,27 @@ struct PySBProfile {
         // but it's easier to do that than write out the full class_ type.
         wrapper
             .def("drawShoot", 
-                 (void (SBProfile::*)(Image<U> &, double, UniformDeviate& ) 
+                 (double (SBProfile::*)(Image<U> &, double, UniformDeviate , double, bool) 
                   const)&SBProfile::drawShoot,
-                 (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
-                 "Draw object into existing image using photon shooting.")
+                 (bp::arg("image"), bp::arg("N"), bp::arg("ud"),
+                  bp::arg("noise")=0., bp::arg("poisson_flux")=true),
+                 "Draw object into existing image using photon shooting.\n"
+                 "\n"
+                 "Setting optional integer arg possionFlux != 0 allows profile flux to vary \n"
+                 "according to Poisson statistics for N samples.\n"
+                 "\n"
+                 "Returns total flux of photons that landed inside image bounds.")
             .def("drawShoot", 
-                 (void (SBProfile::*)(ImageView<U>, double, UniformDeviate& ) 
+                 (double (SBProfile::*)(ImageView<U>, double, UniformDeviate , double, bool)
                   const)&SBProfile::drawShoot,
-                 (bp::arg("image"), bp::arg("N")=0., bp::arg("ud")=1),
-                 "Draw object into existing image using photon shooting.")
+                 (bp::arg("image"), bp::arg("N"), bp::arg("ud"),
+                  bp::arg("noise")=0., bp::arg("poisson_flux")=true),
+                 "Draw object into existing image using photon shooting.\n"
+                 "\n"
+                 "Setting optional integer arg possionFlux != 0 allows profile flux to vary \n"
+                 "according to Poisson statistics for N samples.\n"
+                 "\n"
+                 "Returns total flux of photons that landed inside image bounds.")
             .def("draw", 
                  (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::draw,
                  (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),

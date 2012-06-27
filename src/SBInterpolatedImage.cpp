@@ -270,7 +270,7 @@ namespace galsim {
                     Position<double> x(ix*dx,iy*dx);
                     T val = xValue(x);
                     sum += val;
-                    I(ix,iy) = val;
+                    I(ix,iy) += val;
                 }
             }
             I.setScale(dx);
@@ -353,8 +353,8 @@ namespace galsim {
     }
 
     // Photon-shooting 
-    PhotonArray SBInterpolatedImage::SBInterpolatedImageImpl::shoot(
-        int N, UniformDeviate& ud) const
+    boost::shared_ptr<PhotonArray> SBInterpolatedImage::SBInterpolatedImageImpl::shoot(
+        int N, UniformDeviate ud) const
     {
         dbg<<"InterpolatedImage shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -368,7 +368,7 @@ namespace galsim {
          */
         assert(N>=0);
 
-        PhotonArray result(N);
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         if (N<=0 || _pt.empty()) return result;
         double totalAbsFlux = _positiveFlux + _negativeFlux;
         double fluxPerPhoton = totalAbsFlux / N;
@@ -378,18 +378,18 @@ namespace galsim {
         for (int i=0; i<N; i++) {
             double unitRandom = ud();
             Pixel* p = _pt.find(unitRandom);
-            result.setPhoton(i, p->x, p->y, 
+            result->setPhoton(i, p->x, p->y, 
                              p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }
-        dbg<<"result.getTotalFlux = "<<result.getTotalFlux()<<std::endl;
+        dbg<<"result->getTotalFlux = "<<result->getTotalFlux()<<std::endl;
 
         // Last step is to convolve with the interpolation kernel. 
         // Can skip if using a 2d delta function
         const InterpolantXY* xyPtr = dynamic_cast<const InterpolantXY*> (_xInterp.get());
         if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d())))
-             result.convolve(_xInterp->shoot(N, ud));
+             result->convolve(*_xInterp->shoot(N, ud), ud);
 
-        dbg<<"InterpolatedImage Realized flux = "<<result.getTotalFlux()<<std::endl;
+        dbg<<"InterpolatedImage Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
