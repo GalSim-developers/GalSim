@@ -664,10 +664,15 @@ def Script4():
                 final = galsim.Convolve([gal1,psf,pix])
                 final_nopix = galsim.Convolve([gal1,psf])
 
+                # Create the large, double width output image
                 image = galsim.ImageF(2*nx+2,ny)
                 image.setScale(pixel_scale)
-                fft_image = image[galsim.BoundsI(1,nx,1,nx)]
-                phot_image = image[galsim.BoundsI(nx+3,2*nx+2,1,nx)]
+                # Then assign the following two "ImageViews", fft_image and phot_image.
+                # Using the syntax below, these are views into the larger image.  Changes/additions
+                # to the sub-images referenced by the LHS are automatically reflected in the RHS
+                # image.
+                fft_image = image[galsim.BoundsI(1, nx, 1, nx)]
+                phot_image = image[galsim.BoundsI(nx + 3, 2*nx + 2, 1, nx)]
 
                 #logger.info('   Read in training sample galaxy and PSF from file')
                 t2 = time.time()
