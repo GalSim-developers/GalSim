@@ -526,7 +526,9 @@ def Script3():
         # Add Poisson noise
         sky_level_pixel = sky_level * pixel_scale**2
         im += sky_level_pixel
-        im.addNoise(galsim.CCDNoise(rng))
+        im.addNoise(galsim.CCDNoise(rng)) # The default CCDNoise has gain=1 and read_noise=0 if
+                                          # these keyword args are not set, giving Poisson noise
+                                          # according to the image pixel count values.
         im -= sky_level_pixel
 
         #logger.info('   Added Poisson noise')
