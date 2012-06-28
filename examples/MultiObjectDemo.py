@@ -661,8 +661,11 @@ def Script4():
                 gal1.applyShear(gal_shape)
                 gal1.setFlux(flux)
 
-                final = galsim.Convolve([gal1,psf,pix])
-                final_nopix = galsim.Convolve([gal1,psf])
+                # Build the final object by convolving the galaxy, PSF and pixel response.
+                final = galsim.Convolve([gal1, psf, pix])
+                # Photon shooting automatically convolves by the pixel, so make sure not
+                # to include it in the profile for photon shooting images!
+                final_nopix = galsim.Convolve([gal1, psf])
 
                 # Create the large, double width output image
                 image = galsim.ImageF(2*nx+2,ny)
@@ -685,7 +688,7 @@ def Script4():
                 t3 = time.time()
 
                 # Repeat for photon shooting image.
-                # Photon shooting automatically convolves by the pixel, so make sure not
+                # Photon shooting automatically convolves by the pixel, so we've made sure not
                 # to include it in the profile!
                 sky_level_pixel = sky_level * pixel_scale**2
                 final_nopix.drawShoot(phot_image, noise=sky_level_pixel/100, 
