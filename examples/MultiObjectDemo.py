@@ -652,12 +652,12 @@ def Script4():
                 flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
                 hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
                 e = rng() * (gal_e_max-gal_e_min) + gal_e_min
-                beta = rng() * 2*math.pi * galsim.radians
+                beta_ellip = rng() * 2*math.pi * galsim.radians
 
                 # Use create rather than apply for the first one to get a new copy.
                 # Could also do gal1 = gal.copy() and then gal1.applyDilation(hlr)
                 gal1 = gal.createDilated(hlr)
-                gal_shape = galsim.Shear(e=e,beta=beta)
+                gal_shape = galsim.Shear(e=e,beta=beta_ellip)
                 gal1.applyShear(gal_shape)
                 gal1.setFlux(flux)
 
