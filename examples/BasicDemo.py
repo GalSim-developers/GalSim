@@ -213,13 +213,13 @@ def Script3():
     gal_re = 3.7           # arcsec
     gal_q = 0.73           # (axis ratio 0 < q < 1)
     gal_beta = 23          # degrees (position angle on the sky)
-    atmos_a_sigma=2.1      # arcsec
-    atmos_a_e = 0.13       # (ellipticity of "a")
-    atmos_a_beta = 0.81    # radians
-    atmos_fa=0.2           # (fraction of flux in "a")
-    atmos_b_sigma=0.9      # arcsec
-    atmos_b_e = 0.04       # (ellipticity of "b")
-    atmos_b_beta = -0.17   # radians
+    atmos_outer_sigma=2.1      # arcsec
+    atmos_outer_e = 0.13       # (ellipticity of "outer" Gaussian)
+    atmos_outer_beta = 0.81    # radians
+    atmos_fouter=0.2           # (fraction of flux in "outer" Gaussian)
+    atmos_inner_sigma=0.9      # arcsec
+    atmos_inner_e = 0.04       # (ellipticity of "inner" Gaussian)
+    atmos_inner_beta = -0.17   # radians
     opt_defocus=0.53       # wavelengths
     opt_a1=-0.29           # wavelengths
     opt_a2=0.12            # wavelengths
@@ -240,10 +240,10 @@ def Script3():
     logger.info('    - q,beta (%.2f,%.2f) Sersic galaxy (flux = %.1e, n = %.1f, re = %.2f),', 
             gal_q, gal_beta, gal_flux, gal_n, gal_re)
     logger.info('    - elliptical double-Gaussian atmospheric PSF')
-    logger.info('          First component: sigma = %.2f, e,beta = (%.2f,%.2f), frac = %.2f',
-            atmos_a_sigma, atmos_a_e, atmos_a_beta, atmos_fa)
-    logger.info('          Second component: sigma = %.2f, e,beta = (%.2f,%.2f), frac = %.2f',
-            atmos_b_sigma, atmos_b_e, atmos_b_beta, 1-atmos_fa)
+    logger.info('          Outer component: sigma = %.2f, e,beta = (%.2f,%.2f), frac = %.2f',
+            atmos_outer_sigma, atmos_outer_e, atmos_outer_beta, atmos_fouter)
+    logger.info('          Inner component: sigma = %.2f, e,beta = (%.2f,%.2f), frac = %.2f',
+            atmos_inner_sigma, atmos_inner_e, atmos_inner_beta, 1-atmos_fouter)
     logger.info('    - optical PSF with defocus = %.2f, astigmatism = (%.2f,%.2f),',
             opt_defocus, opt_a1, opt_a2)
     logger.info('          coma = (%.2f,%.2f), lambda = %.0f nm, D = %.1f m', 
@@ -264,16 +264,16 @@ def Script3():
     logger.info('Made galaxy profile')
 
     # Define the atmospheric part of the PSF.
-    atmos_a = galsim.Gaussian(sigma=atmos_a_sigma)
+    atmos_outer = galsim.Gaussian(sigma=atmos_outer_sigma)
     # For the PSF shape here, we use ellipticity rather than axis ratio.
     # And the position angle can be either degrees or radians.  Here we chose radians.
-    atmos_a.applyShear(e=atmos_a_e , beta=atmos_a_beta*galsim.radians)
-    atmos_b = galsim.Gaussian(sigma=atmos_b_sigma)
-    atmos_b.applyShear(e=atmos_b_e , beta=atmos_b_beta*galsim.radians)
-    atmos = atmos_fa * atmos_a + (1-atmos_fa) * atmos_b
+    atmos_outer.applyShear(e=atmos_outer_e , beta=atmos_outer_beta*galsim.radians)
+    atmos_inner = galsim.Gaussian(sigma=atmos_inner_sigma)
+    atmos_inner.applyShear(e=atmos_inner_e , beta=atmos_inner_beta*galsim.radians)
+    atmos = atmos_fouter * atmos_outer + (1. - atmos_fouter) * atmos_inner
     # Could also have written either of the following, which do the same thing:
-    # atmos = galsim.Add(atmos_a, atmos_b)
-    # atmos = galsim.Add([atmos_a, atmos_b])
+    # atmos = galsim.Add(atmos_outer.setFlux(fouter), atmos_inner.setFlux(1. - fouter))
+    # atmos = galsim.Add([atmos_outer.setFlux(fouter), atmos_inner.setFlux(1. - fouter)])
     # For more than two summands, you can either string together +'s or use the list version.
     logger.info('Made atmospheric PSF profile')
 
@@ -353,8 +353,9 @@ def Script3():
     logger.info('    e1, e2 = %.3f, %.3f',
             results.corrected_shape.getE1(), results.corrected_shape.getE2())
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
-    # Convention for shear addition is to apply the second term and then the first.
-    # So wcs needs to be first and galaxy shape second.
+    # Convention for shear addition is to apply the second (RHS) term initially followed by the
+    # first (LHS).
+    # So wcs needs to be LHS and galaxy shape RHS.
     total_shape = galsim.Shear(g1=wcs_g1, g2=wcs_g2) + gal_shape
     logger.info('    e1, e2 = %.3f, %.3f', total_shape.getE1(), total_shape.getE2())
     print
