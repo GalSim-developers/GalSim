@@ -615,6 +615,7 @@ def Script4():
     psf_fft_times = [0,0,0,0,0]
     psf_phot_times = [0,0,0,0,0]
 
+    # Make the galaxy profiles:
     gal1 = galsim.Gaussian(half_light_radius = 1)
     gal2 = galsim.Exponential(half_light_radius = 1)
     gal3 = galsim.DeVaucouleurs(half_light_radius = 1)
@@ -622,8 +623,6 @@ def Script4():
     bulge = galsim.Sersic(half_light_radius = 0.7, n = 3.2)
     disk = galsim.Sersic(half_light_radius = 1.2, n = 1.5)
     gal5 = 0.4*bulge + 0.6*disk  # Net half-light radius is only approximate for this one.
-
-    # Make the galaxy profiles:
     gals = [gal1, gal2, gal3, gal4, gal5]
     gal_names = ["Gaussian", "Exponential", "Devaucouleurs", "n=2.5 Sersic", "Bulge + Disk"]
     gal_times = [0,0,0,0,0]
