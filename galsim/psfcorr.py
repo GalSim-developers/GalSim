@@ -15,7 +15,7 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     @code
     galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
     galaxy.applyShear(g1=0.05, g2=0.0)  # shear it by (0.05, 0) using the g=(a-b)/(a+b) definition
-    psf = galsim.atmosphere.DoubleGaussian(flux1 = 0.7, sigma1 = 0.7, flux2 = 0.3, sigma2 = 1.5)
+    psf = galsim.DoubleGaussian(flux1 = 0.7, sigma1 = 0.7, flux2 = 0.3, sigma2 = 1.5)
     pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
     final = galsim.Convolve([galaxy, psf, pixel])
     final_epsf = galsim.Convolve([psf, pixel])

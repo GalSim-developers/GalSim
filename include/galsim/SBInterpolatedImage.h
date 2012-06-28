@@ -293,7 +293,7 @@ namespace galsim {
         double getNegativeFlux() const { checkReadyToShoot(); return _negativeFlux; }
 
         template <typename T>
-        double fillXImage(ImageView<T>& I, double dx) const;
+        double fillXImage(ImageView<T>& I, double dx, double gain) const;
 
         // Overrides for better efficiency with separable kernels:
         void fillKGrid(KTable& kt) const;
@@ -315,10 +315,10 @@ namespace galsim {
         //    SBProfile.  Then these functions immediately call the template version
         //    of fillXImage defined above.
         //
-        double doFillXImage(ImageView<float>& I, double dx) const
-        { return fillXImage(I,dx); }
-        double doFillXImage(ImageView<double>& I, double dx) const
-        { return fillXImage(I,dx); }
+        double doFillXImage(ImageView<float>& I, double dx, double gain) const
+        { return fillXImage(I,dx,gain); }
+        double doFillXImage(ImageView<double>& I, double dx, double gain) const
+        { return fillXImage(I,dx,gain); }
 
     private:
 

@@ -261,14 +261,14 @@ namespace galsim {
     // Returns total flux
     template <typename T>
     double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<T>& I, double dx) const 
+        ImageView<T>& I, double dx, double gain) const 
     {
         if ( dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
             double sum=0.;
             for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
                 for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {
                     Position<double> x(ix*dx,iy*dx);
-                    T val = xValue(x);
+                    T val = gain * xValue(x);
                     sum += val;
                     I(ix,iy) += val;
                 }
@@ -279,7 +279,7 @@ namespace galsim {
             // Otherwise just use the normal routine to fill the grid:
             // Note that we need to call doFillXImage, not fillXImage here,
             // to avoid the virtual function resolution.
-            return SBProfileImpl::doFillXImage(I,dx);
+            return SBProfileImpl::doFillXImage(I,dx,gain);
         }
     }
 
@@ -386,8 +386,11 @@ namespace galsim {
         // Last step is to convolve with the interpolation kernel. 
         // Can skip if using a 2d delta function
         const InterpolantXY* xyPtr = dynamic_cast<const InterpolantXY*> (_xInterp.get());
-        if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d())))
-             result->convolve(*_xInterp->shoot(N, ud), ud);
+        if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d()))) {
+            boost::shared_ptr<PhotonArray> pa_interp = _xInterp->shoot(N, ud);
+            pa_interp->scaleXY(_xtab->getDx());
+            result->convolve(*pa_interp, ud);
+        }
 
         dbg<<"InterpolatedImage Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
@@ -430,8 +433,8 @@ namespace galsim {
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
 
     template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<float>& I, double dx) const;
+        ImageView<float>& I, double dx, double gain) const;
     template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<double>& I, double dx) const;
+        ImageView<double>& I, double dx, double gain) const;
 }
 

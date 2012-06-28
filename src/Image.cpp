@@ -91,7 +91,7 @@ void BaseImage<T>::allocateMem()
 }
 
 template <typename T>
-Image<T>::Image(int ncol, int nrow, T init_value) : BaseImage<T>(Bounds<int>(1,ncol,1,nrow)) 
+Image<T>::Image(int ncol, int nrow, T init_value) : BaseImage<T>(Bounds<int>(1,ncol,1,nrow),1.) 
 {
     if (ncol <= 0 || nrow <= 0) {
         std::ostringstream oss;
@@ -113,7 +113,7 @@ Image<T>::Image(int ncol, int nrow, T init_value) : BaseImage<T>(Bounds<int>(1,n
 }
 
 template <typename T>
-Image<T>::Image(const Bounds<int>& bounds, const T init_value) : BaseImage<T>(bounds)
+Image<T>::Image(const Bounds<int>& bounds, const T init_value) : BaseImage<T>(bounds,1.)
 {
     fill(init_value);
 }
@@ -189,7 +189,7 @@ ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const
     T* newdata = _data
         + (bounds.getYMin() - this->_bounds.getYMin()) * _stride
         + (bounds.getXMin() - this->_bounds.getXMin());
-    return ConstImageView<T>(newdata,_owner,_stride,bounds);
+    return ConstImageView<T>(newdata,_owner,_stride,bounds,this->_scale);
 }
 
 template <typename T>
@@ -205,7 +205,7 @@ ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds) const
     T* newdata = this->_data
         + (bounds.getYMin() - this->_bounds.getYMin()) * this->_stride
         + (bounds.getXMin() - this->_bounds.getXMin());
-    return ImageView<T>(newdata,this->_owner,this->_stride,bounds);
+    return ImageView<T>(newdata,this->_owner,this->_stride,bounds,this->_scale);
 }
 
 namespace {

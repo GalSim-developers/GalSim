@@ -34,6 +34,10 @@ test_sersic_n = [1.5, 2.5]
 # for flux normalization tests
 test_flux = 1.8
 
+# Use a deterministic random number generator so we don't fail tests becaus of rare flukes
+# in the random numbers.
+glob_ud = galsim.UniformDeviate(12345)
+
 # define some functions to carry out computations that are carried out by several of the tests
 
 def printval(image1, image2):
@@ -107,7 +111,7 @@ def do_shoot(prof, img, name):
     print 'img.max => ',img.array.max()
     print 'nphot = ',nphot
     img2 = img.copy()
-    prof.drawShoot(img2,n_photons=nphot,poisson_flux = False)
+    prof.drawShoot(img2, n_photons=nphot, poisson_flux=False, uniform_deviate=glob_ud)
     print 'img2.sum => ',img2.array.sum()
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
@@ -141,11 +145,13 @@ def do_shoot(prof, img, name):
     if 'InterpolatedImage' in name:
         nphot *= 10
         print 'nphot -> ',nphot
-    prof.drawShoot(img, nphot, normalization="surface brightness", poisson_flux=False)
+    prof.drawShoot(img, n_photons=nphot, normalization="surface brightness", poisson_flux=False,
+                   uniform_deviate=glob_ud)
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
     np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, photon_decimal_test,
             err_msg="Photon shooting SB normalization for %s disagrees with expected result"%name)
-    prof.drawShoot(img, nphot, normalization="flux", poisson_flux=False)
+    prof.drawShoot(img, n_photons=nphot, normalization="flux", poisson_flux=False,
+                   uniform_deviate=glob_ud)
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
     np.testing.assert_almost_equal(img.array.sum(), test_flux, photon_decimal_test,
             err_msg="Photon shooting flux normalization for %s disagrees with expected result"%name)
@@ -1389,11 +1395,54 @@ def test_sbprofile_mag():
     gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal.applyTransformation(myEll)
     gal.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyDistortion disagrees with expected result")
+            err_msg="Using GSObject applyTransformation disagrees with expected result")
+
+    # Use applyDilation
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
+    gal.applyDilation(1.5)
+    gal.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
+    gal.scaleFlux(1.5**2) # Apply the flux magnification.
+    gal.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject applyDilation disagrees with expected result")
+ 
+    # Use applyMagnification
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
+    gal.applyMagnification(1.5)
+    gal.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject applyMagnification disagrees with expected result")
+
+    # Use createDilated
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
+    gal2 = gal.createDilated(1.5)
+    gal2.scaleFlux(1.5**2) # Apply the flux magnification.
+    gal2.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject createDilated disagrees with expected result")
+ 
+    # Use createMagnified
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
+    gal2 = gal.createMagnified(1.5)
+    gal2.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject createMagnified disagrees with expected result")
  
     # Test photon shooting.
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
+    gal.applyMagnification(1.5)
     do_shoot(gal,myImg,"dilated Exponential")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1563,7 +1612,8 @@ def test_sbprofile_rescale():
     print myImg2.array.sum()
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 2., 4,
             err_msg="Drawing Gaussian with add_to_image=True results in wrong flux")
-    myImg2, tot = gauss.drawShoot(myImg2, add_to_image=True, poisson_flux=False)
+    myImg2, tot = gauss.drawShoot(myImg2, add_to_image=True, poisson_flux=False,
+                                  uniform_deviate=glob_ud)
     print myImg2.array.sum(), tot
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3., 4,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=False "+
@@ -1571,7 +1621,7 @@ def test_sbprofile_rescale():
     np.testing.assert_almost_equal(tot/1.e5, 1., 4,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=False "+
                     "returned wrong tot")
-    myImg2, tot = gauss.drawShoot(myImg2, add_to_image=True)
+    myImg2, tot = gauss.drawShoot(myImg2, add_to_image=True, uniform_deviate=glob_ud)
     print myImg2.array.sum(), tot
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 4., 1,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True results in wrong flux")
@@ -1597,11 +1647,8 @@ def test_sbprofile_sbinterpolatedimage():
     t1 = time.time()
     # for each type, try to make an SBInterpolatedImage, and check that when we draw an image from
     # that SBInterpolatedImage that it is the same as the original
-    #xinterp = galsim.Lanczos(3, True, 1.0E-4)
-    # Lanczos doesn't quite get the flux right.  Wrong at the 5th decimal place.
-    # Maybe worth investigating at some point...
-    xinterp = galsim.Quintic(1.0E-4)
-    xinterp2d = galsim.InterpolantXY(xinterp)
+    lan3 = galsim.Lanczos(3, True, 1.E-4)
+    lan3_2d = galsim.InterpolantXY(lan3)
 
     ftypes = [np.float32, np.float64]
     ref_array = np.array([
@@ -1616,7 +1663,7 @@ def test_sbprofile_sbinterpolatedimage():
                 ref_array.astype(array_type),image_in.array,
                 err_msg="Array from input Image differs from reference array for type %s"%
                         array_type)
-        sbinterp = galsim.SBInterpolatedImage(image_in, xinterp2d, dx=1.0)
+        sbinterp = galsim.SBInterpolatedImage(image_in, lan3_2d, dx=1.0)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
         image_out = galsim.ImageView[array_type](test_array)
         sbinterp.draw(image_out, dx=1.0)
@@ -1625,6 +1672,14 @@ def test_sbprofile_sbinterpolatedimage():
                 err_msg="Array from output Image differs from reference array for type %s"%
                         array_type)
  
+        # Lanczos doesn't quite get the flux right.  Wrong at the 5th decimal place.
+        # Gary says that's expected -- Lanczos isn't technically flux conserving.  
+        # He applied the 1st order correction to the flux, but expect to be wrong at around
+        # the 10^-5 level.
+        # Anyway, Quintic seems to be accurate enough.
+        quint = galsim.Quintic(1.e-4)
+        quint_2d = galsim.InterpolantXY(quint)
+        sbinterp = galsim.SBInterpolatedImage(image_in, quint_2d, dx=1.0)
         sbinterp.setFlux(1.)
         do_shoot(galsim.GSObject(sbinterp),image_out,"InterpolatedImage")
 

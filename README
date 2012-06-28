@@ -37,7 +37,7 @@ BasicDemo.py', or you can run them one at a time using `python BasicDemo.py 1'
 and so on.  These scripts are heavily commented, and demonstrate GalSim commands
 for simulating single objects of various types and checking their properties.
 
-b) MultiObjectDemo.py also contains 3 demo scripts and is heavily commented to
+b) MultiObjectDemo.py also contains 4 demo scripts and is heavily commented to
 serve as an example for new users.  It demonstrates functionality for handling
 multi-object simulations, e.g., galaxy grids in the style of GREAT08/GREAT10,
 and also simulations based on real galaxy training data from HST.
