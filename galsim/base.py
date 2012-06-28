@@ -336,16 +336,16 @@ class GSObject:
         ret.applyShift(dx, dy)
         return ret
 
-    def draw(self, image=None, dx=0., gain=1., wmult=1, normalization="flux", add_to_image=False):
+    def draw(self, image=None, dx=None, gain=1., wmult=1, normalization="flux", add_to_image=False):
         """@brief Draws an Image of the object, with bounds optionally set by an input Image.
 
         @param image  If provided, this will be the image on which to draw the profile.
                       If image=None, then an automatically-sized image will be created.
                       (Default = None)
         @param dx     If provided, use this as the pixel scale for the image.
-                      If dx <= 0. and image != None, then take the provided image's pixel scale.
-                      If dx <= 0. and image == None, then use pi/maxK()
-                      (Default = 0.)
+                      If dx is None and image != None, then take the provided image's pixel scale.
+                      If dx is None and image == None, then use pi/maxK()
+                      (Default = None)
         @param gain   The number of ADU to place on the image per photon.  (Default = 1)
         @param wmult  A factor by which to make the intermediate images larger than 
                       they are normally made.  The size is normally automatically chosen 
@@ -375,6 +375,8 @@ class GSObject:
             raise TypeError("Input wmult should be an int")
         if type(gain) != float:
             gain = float(gain)
+        if dx is None: 
+            dx = 0.
         if type(dx) != float:
             dx = float(dx)
 
@@ -411,7 +413,7 @@ class GSObject:
          
         return image
 
-    def drawShoot(self, image, n_photons=0., dx=0., gain=1., uniform_deviate=None,
+    def drawShoot(self, image, n_photons=0., dx=None, gain=1., uniform_deviate=None,
                   normalization="flux", noise=0., poisson_flux=True, add_to_image=False):
         """@brief Draw an image of the object by shooting individual photons drawn from the 
         surface brightness profile of the object.
@@ -427,8 +429,8 @@ class GSObject:
                             photons are negative (usually due to interpolants).
                             (Default = 0)
         @param dx     If provided, use this as the pixel scale for the image.
-                      If dx <= 0. then use the provided image's pixel scale.
-                      (Default = 0.)
+                      If dx is None then use the provided image's pixel scale.
+                      (Default = None)
         @param gain  The number of ADU to place on the image per photon.  (Default = 1)
         @param uniform_deviate  If provided, a UniformDeviate to use for the random numbers
                                 If uniform_deviate=None, one will be automatically created, 
@@ -501,6 +503,8 @@ class GSObject:
         if type(n_photons) != float:
             # if given an int, just convert it to a float
             n_photons = float(n_photons)
+        if dx is None: 
+            dx = 0.
         if type(dx) != float:
             dx = float(dx)
         if type(gain) != float:
