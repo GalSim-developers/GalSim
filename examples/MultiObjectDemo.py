@@ -227,6 +227,9 @@ def Script1():
 
             # Add Poisson noise
             sub_image += sky_level
+            # The default CCDNoise has gain=1 and read_noise=0 if
+            # these keyword args are not set, giving Poisson noise
+            # according to the image pixel count values.
             sub_image.addNoise(galsim.CCDNoise(rng))
             sub_image -= sky_level
 
@@ -526,7 +529,9 @@ def Script3():
         # Add Poisson noise
         sky_level_pixel = sky_level * pixel_scale**2
         im += sky_level_pixel
-        im.addNoise(galsim.CCDNoise(rng))
+        # Again, default is gain=1, read_noise=0
+        # So this is just poisson noise with the current image flux values.
+        im.addNoise(galsim.CCDNoise(rng)) 
         im -= sky_level_pixel
 
         #logger.info('   Added Poisson noise')
@@ -613,6 +618,7 @@ def Script4():
     psf_fft_times = [0,0,0,0,0]
     psf_phot_times = [0,0,0,0,0]
 
+    # Make the galaxy profiles:
     gal1 = galsim.Gaussian(half_light_radius = 1)
     gal2 = galsim.Exponential(half_light_radius = 1)
     gal3 = galsim.DeVaucouleurs(half_light_radius = 1)
@@ -620,8 +626,6 @@ def Script4():
     bulge = galsim.Sersic(half_light_radius = 0.7, n = 3.2)
     disk = galsim.Sersic(half_light_radius = 1.2, n = 1.5)
     gal5 = 0.4*bulge + 0.6*disk  # Net half-light radius is only approximate for this one.
-
-    # Make the galaxy profiles:
     gals = [gal1, gal2, gal3, gal4, gal5]
     gal_names = ["Gaussian", "Exponential", "Devaucouleurs", "n=2.5 Sersic", "Bulge + Disk"]
     gal_times = [0,0,0,0,0]
@@ -650,23 +654,30 @@ def Script4():
                 # Generate random variates:
                 flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
                 hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
-                e = rng() * (gal_e_max-gal_e_min) + gal_e_min
-                beta = rng() * 2*math.pi * galsim.radians
+                ellip = rng() * (gal_e_max-gal_e_min) + gal_e_min
+                beta_ellip = rng() * 2*math.pi * galsim.radians
 
                 # Use create rather than apply for the first one to get a new copy.
                 # Could also do gal1 = gal.copy() and then gal1.applyDilation(hlr)
                 gal1 = gal.createDilated(hlr)
-                gal_shape = galsim.Shear(e=e,beta=beta)
+                gal_shape = galsim.Shear(e=ellip, beta=beta_ellip)
                 gal1.applyShear(gal_shape)
                 gal1.setFlux(flux)
 
-                final = galsim.Convolve([gal1,psf,pix])
-                final_nopix = galsim.Convolve([gal1,psf])
+                # Build the final object by convolving the galaxy, PSF and pixel response.
+                final = galsim.Convolve([gal1, psf, pix])
+                # For photon shooting, need a version without the pixel (see below).
+                final_nopix = galsim.Convolve([gal1, psf])
 
+                # Create the large, double width output image
                 image = galsim.ImageF(2*nx+2,ny)
                 image.setScale(pixel_scale)
-                fft_image = image[galsim.BoundsI(1,nx,1,nx)]
-                phot_image = image[galsim.BoundsI(nx+3,2*nx+2,1,nx)]
+                # Then assign the following two "ImageViews", fft_image and phot_image.
+                # Using the syntax below, these are views into the larger image.  
+                # Changes/additions to the sub-images referenced by the views are automatically 
+                # reflected in the original image.
+                fft_image = image[galsim.BoundsI(1, nx, 1, nx)]
+                phot_image = image[galsim.BoundsI(nx+3, 2*nx+2, 1, nx)]
 
                 #logger.info('   Read in training sample galaxy and PSF from file')
                 t2 = time.time()
@@ -679,7 +690,7 @@ def Script4():
                 t3 = time.time()
 
                 # Repeat for photon shooting image.
-                # Photon shooting automatically convolves by the pixel, so make sure not
+                # Photon shooting automatically convolves by the pixel, so we've made sure not
                 # to include it in the profile!
                 sky_level_pixel = sky_level * pixel_scale**2
                 final_nopix.drawShoot(phot_image, noise=sky_level_pixel/100, 
@@ -690,11 +701,17 @@ def Script4():
 
                 # Add Poisson noise
                 fft_image += sky_level_pixel
+                # Again, default is gain=1, read_noise=0
+                # So this is just poisson noise with the current image flux values.
                 fft_image.addNoise(galsim.CCDNoise(rng))
                 fft_image -= sky_level_pixel
 
-                # For photon shooting, galaxy already has poisson noise, so just add sky noise
+                # For photon shooting, galaxy already has poisson noise, so we want to make 
+                # sure not to add that noise again!  Thus, we just add sky noise, which 
+                # is Poisson with the mean = sky_level_pixel
                 phot_image.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
+                # PoissonDeviate adds values with a mean equal to the given mean, not 0.
+                # So we need to subtract off the mean now.
                 phot_image -= sky_level_pixel
 
                 #logger.info('   Added Poisson noise.  Image fluxes are now %f and %f',
