@@ -1,9 +1,9 @@
 
-#include <algorithm>
-
 //#define DEBUGLOGGING
 
+#include <algorithm>
 #include "SBInterpolatedImage.h"
+#include "SBInterpolatedImageImpl.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -11,10 +11,23 @@ std::ostream* dbgout = new std::ofstream("debug.out");
 int verbose_level = 2;
 #endif
 
-
 namespace galsim {
 
-    const double TWOPI = 2.*M_PI;
+    template <typename T> 
+    SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<T>& image,
+        boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
+        double dx, double padFactor) :
+        SBProfile(new SBInterpolatedImageImpl(image,xInterp,kInterp,dx,padFactor)) {}
+
+    SBInterpolatedImage::SBInterpolatedImage(
+        const MultipleImageHelper& multi, const std::vector<double>& weights,
+        boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp) :
+        SBProfile(new SBInterpolatedImageImpl(multi,weights,xInterp,kInterp)) {}
+
+    SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs) : SBProfile(rhs) {}
+
+    SBInterpolatedImage::~SBInterpolatedImage() {}
 
     template <class T>
     MultipleImageHelper::MultipleImageHelper(
@@ -289,6 +302,8 @@ namespace galsim {
     std::complex<double> SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
         const Position<double>& p) const 
     {
+        const double TWOPI = 2.*M_PI;
+
         // Don't bother if the desired k value is cut off by the x interpolant:
         double ux = p.x*_multi.getScale()/TWOPI;
         if (std::abs(ux) > _xInterp->urange()) return std::complex<double>(0.,0.);
@@ -305,7 +320,7 @@ namespace galsim {
     {
         // Notice that interpolant other than sinc may make max frequency higher than
         // the Nyquist frequency of the initial image
-        
+
         // Also, since we used kvalue_accuracy for the threshold of _xInterp
         // (at least for the default quintic interpolant) rather than maxk_threshold,
         // this will probably be larger than we really need.
@@ -379,7 +394,7 @@ namespace galsim {
             double unitRandom = ud();
             Pixel* p = _pt.find(unitRandom);
             result->setPhoton(i, p->x, p->y, 
-                             p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
+                              p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }
         dbg<<"result->getTotalFlux = "<<result->getTotalFlux()<<std::endl;
 
@@ -397,6 +412,19 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
+
     template MultipleImageHelper::MultipleImageHelper(
         const std::vector<boost::shared_ptr<BaseImage<float> > >& images,
         double dx, double padFactor);
