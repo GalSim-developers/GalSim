@@ -63,10 +63,10 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] r0    Half-light radius.
+         * @param[in] re    Half-light radius.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-      SBDeVaucouleurs(double r0, double flux=1.) : SBSersic(4., r0, flux) {}
+        SBDeVaucouleurs(double re, double flux=1.) : SBSersic(4., re, flux) {}
     };
 
 }
