@@ -296,7 +296,7 @@ namespace galsim {
          *  @brief Constructor is protected since a BaseImage is a virtual base class.
          */
         BaseImage(T* data, boost::shared_ptr<T> owner, int stride, const Bounds<int>& b, 
-                  double scale=1.) :
+                  double scale) :
             AssignableToImage<T>(b), _owner(owner), _data(data), _stride(stride), _scale(scale) {}
 
         /**
@@ -320,7 +320,7 @@ namespace galsim {
          *  Most often, this is used for default-constructing an Image which is then
          *  resized later.
          */
-        BaseImage(const Bounds<int>& b, double scale=1.);
+        BaseImage(const Bounds<int>& b, double scale);
 
         /**
          *  @brief Allocate new memory for the image
@@ -353,7 +353,7 @@ namespace galsim {
          *  @brief Direct constructor given all the necessary information
          */
         ConstImageView(T* data, const boost::shared_ptr<T>& owner, int stride,
-                       const Bounds<int>& b, double scale=1.) :
+                       const Bounds<int>& b, double scale) :
             BaseImage<T>(data,owner,stride,b,scale) {}
 
         /**
@@ -416,7 +416,7 @@ namespace galsim {
          *  @brief Direct constructor given all the necessary information
          */
         ImageView(T* data, const boost::shared_ptr<T>& owner, int stride, const Bounds<int>& b,
-                  double scale=1.) :
+                  double scale) :
             BaseImage<T>(data, owner, stride, b, scale) {}
 
         /**
@@ -585,8 +585,7 @@ namespace galsim {
          *  If !bounds.isDefined(), the image's data pointer will be null.
          *  Note: This is also effectively the default constructor Image().
          */
-        explicit Image(const Bounds<int>& bounds = Bounds<int>(),
-                       T init_value = T(0));
+        explicit Image(const Bounds<int>& bounds = Bounds<int>(), T init_value = T(0));
 
         /**
          *  @brief Deep copy constructor.
@@ -597,7 +596,7 @@ namespace galsim {
         /**
          *  @brief Can construct from any AssignableToImage
          */
-        Image(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds()) 
+        Image(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds(),1.) 
         { rhs.assignTo(view()); }
 
         /**

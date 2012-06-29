@@ -37,11 +37,11 @@ real_galaxy = galsim.RealGalaxy(rgc, random = True)
 print 'Made real galaxy from catalog index ',real_galaxy.index
 
 # make a target PSF object
-good_psf = galsim.atmosphere.DoubleGaussian(flux1 = central_psf_amp, flux2 = 1.0-central_psf_amp,
+good_psf = galsim.DoubleGaussian(flux1 = central_psf_amp, flux2 = 1.0-central_psf_amp,
                                             fwhm1 = good_psf_central_fwhm, fwhm2 =
                                             outer_fwhm_mult*good_psf_central_fwhm)
 
-bad_psf = galsim.atmosphere.DoubleGaussian(flux1 = central_psf_amp, flux2 = 1.0-central_psf_amp,
+bad_psf = galsim.DoubleGaussian(flux1 = central_psf_amp, flux2 = 1.0-central_psf_amp,
                                            fwhm1 = bad_psf_central_fwhm, fwhm2 =
                                            outer_fwhm_mult*bad_psf_central_fwhm)
 pixel = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)

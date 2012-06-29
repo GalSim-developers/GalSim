@@ -105,10 +105,11 @@ struct PySBProfile {
         // but it's easier to do that than write out the full class_ type.
         wrapper
             .def("drawShoot", 
-                 (double (SBProfile::*)(Image<U> &, double, UniformDeviate , double, bool) 
+                 (double (SBProfile::*)(Image<U> &, double, UniformDeviate, 
+                                        double, double, double, bool) 
                   const)&SBProfile::drawShoot,
-                 (bp::arg("image"), bp::arg("N"), bp::arg("ud"),
-                  bp::arg("noise")=0., bp::arg("poisson_flux")=true),
+                 (bp::arg("image"), bp::arg("N")=0., bp::arg("ud"), bp::arg("dx")=0.,
+                  bp::arg("gain")=1., bp::arg("noise")=0., bp::arg("poisson_flux")=true),
                  "Draw object into existing image using photon shooting.\n"
                  "\n"
                  "Setting optional integer arg possionFlux != 0 allows profile flux to vary \n"
@@ -116,10 +117,11 @@ struct PySBProfile {
                  "\n"
                  "Returns total flux of photons that landed inside image bounds.")
             .def("drawShoot", 
-                 (double (SBProfile::*)(ImageView<U>, double, UniformDeviate , double, bool)
+                 (double (SBProfile::*)(ImageView<U>, double, UniformDeviate,
+                                        double, double, double, bool)
                   const)&SBProfile::drawShoot,
-                 (bp::arg("image"), bp::arg("N"), bp::arg("ud"),
-                  bp::arg("noise")=0., bp::arg("poisson_flux")=true),
+                 (bp::arg("image"), bp::arg("N")=0., bp::arg("ud"), bp::arg("dx")=0.,
+                  bp::arg("gain")=1., bp::arg("noise")=0., bp::arg("poisson_flux")=true),
                  "Draw object into existing image using photon shooting.\n"
                  "\n"
                  "Setting optional integer arg possionFlux != 0 allows profile flux to vary \n"
@@ -127,36 +129,13 @@ struct PySBProfile {
                  "\n"
                  "Returns total flux of photons that landed inside image bounds.")
             .def("draw", 
-                 (double (SBProfile::*)(Image<U> &, double, int) const)&SBProfile::draw,
-                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 (double (SBProfile::*)(Image<U> &, double, double, int) const)&SBProfile::draw,
+                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("gain")=1., bp::arg("wmult")=1),
                  "Draw in-place, resizing if necessary, and return the summed flux.")
             .def("draw", 
-                 (double (SBProfile::*)(ImageView<U> &, double, int) const)&SBProfile::draw,
-                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
+                 (double (SBProfile::*)(ImageView<U> &, double, double, int) const)&SBProfile::draw,
+                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("gain")=1., bp::arg("wmult")=1),
                  "Draw in-place and return the summed flux.")
-            .def("plainDraw",
-                 (double (SBProfile::*)(ImageView<U> &, double, int) const)&SBProfile::plainDraw,
-                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
-                 "Draw in place using only real methods")
-            .def("fourierDraw",
-                 (double (SBProfile::*)(ImageView<U> &, double, int) const)&SBProfile::fourierDraw,
-                 (bp::arg("image"), bp::arg("dx")=0., bp::arg("wmult")=1),
-                 "Draw in place using only Fourier methods")
-            .def("drawK",
-                 (void (SBProfile::*)(ImageView<U> &, ImageView<U> &, double, int) 
-                  const)&SBProfile::drawK,
-                 (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
-                 "Draw in k-space automatically")
-            .def("plainDrawK",
-                 (void (SBProfile::*)(ImageView<U> &, ImageView<U> &, double, int) 
-                  const)&SBProfile::plainDrawK,
-                 (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
-                 "evaluate in k-space automatically")
-            .def("fourierDrawK",
-                 (void (SBProfile::*)(ImageView<U> &, ImageView<U> &, double, int) 
-                  const)&SBProfile::fourierDrawK,
-                 (bp::arg("re"), bp::arg("im"), bp::arg("dx")=0., bp::arg("wmult")=1),
-                 "FT from x-space")
             ;
     }
 
@@ -227,8 +206,8 @@ struct PySBProfile {
             .def("applyRotation", &SBProfile::applyRotation, bp::args("theta"))
             .def("applyShift", &SBProfile::applyShift, bp::args("dx", "dy"))
             .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
-            .def("draw", (ImageView<float> (SBProfile::*)(double, int) const)&SBProfile::draw,
-                 (bp::arg("dx")=0., bp::arg("wmult")=1), "default draw routine")
+            .def("draw", (ImageView<float> (SBProfile::*)(double, double, int) const)&SBProfile::draw,
+                 (bp::arg("dx")=0., bp::arg("gain")=1., bp::arg("wmult")=1), "default draw routine")
             ;
         wrapTemplates<float>(pySBProfile);
         wrapTemplates<double>(pySBProfile);

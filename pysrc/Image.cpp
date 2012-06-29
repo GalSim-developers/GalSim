@@ -206,8 +206,9 @@ struct PyImage {
         int stride = 0;
         T * data = 0;
         boost::shared_ptr<T> owner;
+        double scale = 1.;
         buildConstructorArgs(array, xMin, yMin, false, data, owner, stride, bounds);
-        return new ImageView<T>(data, owner, stride, bounds);
+        return new ImageView<T>(data, owner, stride, bounds, scale);
     }
 
     static ConstImageView<T> * makeConstFromArray(bp::object const & array, int xMin, int yMin) {
@@ -215,8 +216,9 @@ struct PyImage {
         int stride = 0;
         T * data = 0;
         boost::shared_ptr<T> owner;
+        double scale = 1.;
         buildConstructorArgs(array, xMin, yMin, true, data, owner, stride, bounds);
-        return new ConstImageView<T>(data, owner, stride, bounds);
+        return new ConstImageView<T>(data, owner, stride, bounds, scale);
     }
 
     static bp::object wrapImage(std::string const & suffix) {

@@ -507,6 +507,10 @@ namespace galsim {
          *            For positive definite profiles, this is equivalent to N = flux.
          *            However, some profiles need more than this because some of the shot
          *            photons are negative (usually due to interpolants).
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @param[in] dx  grid on which SBProfile is drawn has pitch `dx`
+         *            Given `dx=0.` default, routine will take dx from the image scale.
+         * @param[in] gain  Number of ADU to draw per photon. (default `gain` = 1.)
          * @param[in] noise If provided, the allowed extra noise in each pixel.
          *            This is only relevant if N=0, so the number of photons is being 
          *            automatically calculated.  In that case, if the image noise is 
@@ -519,7 +523,6 @@ namespace galsim {
          *            due to the sky.  Note that this uses a "variance" definition of noise,
          *            not a "sigma" definition.
          *            (default `noise = 0.`)
-         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @param[in] poisson_flux Whether to allow total object flux scaling to vary according to 
          *                         Poisson statistics for `N` samples 
          *                         (default `poisson_flux = true`).
@@ -530,12 +533,12 @@ namespace galsim {
          *       Internally it will be rounded to the nearest integer.
          */
         template <typename T>
-        double drawShoot(ImageView<T> img, double N, UniformDeviate ud,
-                         double noise=0., bool poisson_flux=true) const;
+        double drawShoot(ImageView<T> img, double N, UniformDeviate ud, double dx=0., 
+                         double gain=1., double noise=0., bool poisson_flux=true) const;
         template <typename T>
-        double drawShoot(Image<T>& img, double N, UniformDeviate ud,
-                         double noise=0., bool poisson_flux=true) const
-        { return drawShoot(img.view(), N, ud, noise, poisson_flux); }
+        double drawShoot(Image<T>& img, double N, UniformDeviate ud, double dx=0.,
+                         double gain=1., double noise=0., bool poisson_flux=true) const
+        { return drawShoot(img.view(), N, ud, dx, gain, noise, poisson_flux); }
         //@}
 
         /** 
@@ -555,13 +558,14 @@ namespace galsim {
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
          *                  you will receive an image with the aliased frequencies included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
          *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
          * @returns image (as ImageViewF; if another type is preferred, then use the draw 
          *                 method that takes an image as argument)
          */
-        ImageView<float> draw(double dx=0., int wmult=1) const;
+        ImageView<float> draw(double dx=0., double gain=1., int wmult=1) const;
 
         //@{
         /** 
@@ -585,15 +589,16 @@ namespace galsim {
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
          *                  you will receive an image with the aliased frequencies included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
          *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
          * @returns summed flux.
          */
         template <typename T>
-        double draw(Image<T>& image, double dx=0., int wmult=1) const; 
+        double draw(Image<T>& image, double dx=0., double gain=1., int wmult=1) const; 
         template <typename T>
-        double draw(ImageView<T>& image, double dx=0., int wmult=1) const; 
+        double draw(ImageView<T>& image, double dx=0., double gain=1., int wmult=1) const; 
         //@}
 
         //@{
@@ -613,15 +618,16 @@ namespace galsim {
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
          *                  you will receive an image with the aliased frequencies included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
          *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
          * @returns summed flux.
          */
         template <typename T>
-        double plainDraw(ImageView<T>& image, double dx=0., int wmult=1) const; 
+        double plainDraw(ImageView<T>& image, double dx=0., double gain=1., int wmult=1) const; 
         template <typename T>
-        double plainDraw(Image<T>& image, double dx=0., int wmult=1) const; 
+        double plainDraw(Image<T>& image, double dx=0., double gain=1., int wmult=1) const; 
         //@}
 
         //@{
@@ -642,15 +648,16 @@ namespace galsim {
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
          *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
          *                  you will receive an image with the aliased frequencies included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
          *                  than the default choice, i.e. it will have finer sampling in k space 
          *                  and have less folding.
          * @returns summed flux.
          */
         template <typename T>
-        double fourierDraw(ImageView<T>& image, double dx=0., int wmult=1) const; 
+        double fourierDraw(ImageView<T>& image, double dx=0., double gain=1., int wmult=1) const; 
         template <typename T>
-        double fourierDraw(Image<T>& image, double dx=0., int wmult=1) const; 
+        double fourierDraw(Image<T>& image, double dx=0., double gain=1., int wmult=1) const; 
         //@}
 
         //@{
@@ -675,12 +682,15 @@ namespace galsim {
          *                  routine will choose `dk` necessary to avoid folding of image in real 
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
          *                  you will receive an image with folding artifacts included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
          */
         template <typename T>
-        void drawK(ImageView<T>& re, ImageView<T>& im, double dk=0., int wmult=1) const; 
+        void drawK(
+            ImageView<T>& re, ImageView<T>& im, double dk=0., double gain=1., int wmult=1) const; 
         template <typename T>
-        void drawK(Image<T>& re, Image<T>& im, double dk=0., int wmult=1) const; 
+        void drawK(
+            Image<T>& re, Image<T>& im, double dk=0., double gain=1., int wmult=1) const; 
         //@}
 
         //@{
@@ -703,12 +713,15 @@ namespace galsim {
          *                  routine will choose `dk` necessary to avoid folding of image in real 
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
          *                  you will receive an image with folding artifacts included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
          */
         template <typename T>
-        void plainDrawK(ImageView<T>& re, ImageView<T>& im, double dk=0., int wmult=1) const; 
+        void plainDrawK(
+            ImageView<T>& re, ImageView<T>& im, double dk=0., double gain=1., int wmult=1) const; 
         template <typename T>
-        void plainDrawK(Image<T>& re, Image<T>& im, double dk=0., int wmult=1) const; 
+        void plainDrawK(
+            Image<T>& re, Image<T>& im, double dk=0., double gain=1., int wmult=1) const; 
         //@}
 
         //@{
@@ -734,12 +747,15 @@ namespace galsim {
          *                  routine will choose `dk` necessary to avoid folding of image in real 
          *                  space.  If you specify `dk`, image will be drawn with this `dk` and
          *                  you will receive an image with folding artifacts included.
+         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
          * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
          */
         template <typename T>
-        void fourierDrawK(ImageView<T>& re, ImageView<T>& im, double dk=0., int wmult=1) const; 
+        void fourierDrawK(
+            ImageView<T>& re, ImageView<T>& im, double dk=0., double gain=1., int wmult=1) const; 
         template <typename T>
-        void fourierDrawK(Image<T>& re, Image<T>& im, double dk=0., int wmult=1) const; 
+        void fourierDrawK(
+            Image<T>& re, Image<T>& im, double dk=0., double gain=1., int wmult=1) const; 
         //@}
 
     protected:
@@ -785,9 +801,10 @@ namespace galsim {
         virtual double getNegativeFlux() const { return getFlux()>0. ? 0. : -getFlux(); }
 
         // Utility for drawing into Image data structures.
+        // returns flux integral
         template <typename T>
-        double fillXImage(ImageView<T>& image, double dx) const  // return flux integral
-        { return doFillXImage(image, dx); }
+        double fillXImage(ImageView<T>& image, double dx, double gain) const  
+        { return doFillXImage(image, dx, gain); }
 
         // Utility for drawing a k grid into FFT data structures 
         virtual void fillKGrid(KTable& kt) const;
@@ -801,15 +818,15 @@ namespace galsim {
         //
         // Then in the derived class, these functions should call a template version of 
         // fillXImage in that derived class that implements the functionality you want.
-        virtual double doFillXImage(ImageView<float>& image, double dx) const
-        { return doFillXImage2(image,dx); }
-        virtual double doFillXImage(ImageView<double>& image, double dx) const
-        { return doFillXImage2(image,dx); }
+        virtual double doFillXImage(ImageView<float>& image, double dx, double gain) const
+        { return doFillXImage2(image,dx,gain); }
+        virtual double doFillXImage(ImageView<double>& image, double dx, double gain) const
+        { return doFillXImage2(image,dx,gain); }
 
         // Here in the base class, we need yet another name for the version that actually
         // implements this as a template:
         template <typename T>
-        double doFillXImage2(ImageView<T>& image, double dx) const;
+        double doFillXImage2(ImageView<T>& image, double dx, double gain) const;
 
     private:
         // Copy constructor and op= are undefined.
@@ -1967,46 +1984,14 @@ namespace galsim {
         }
 
     protected:
-
-        /**
-         * @brief Subclass is a scale-free version of the Airy radial function.
-         *
-         * Serves as interface to numerical photon-shooting class `OneDimensionalDeviate`.
-         *
-         * Input radius is in units of lambda/D.  Output normalized
-         * to integrate to unity over input units.
-         */
-        class AiryRadialFunction: public FluxDensity 
-        {
-        public:
-            /**
-             * @brief Constructor
-             * @param[in] obscuration Fractional linear size of central obscuration of pupil.
-             * @param[in] obssq       Pre-computed obscuration^2 supplied as input for speed.
-             */
-            AiryRadialFunction(double obscuration, double obssq) : 
-                _obscuration(obscuration), _obssq(obssq),
-                _norm(M_PI / (4.*(1.-_obssq))) {}
-
-            /**
-             * @brief Return the Airy function
-             * @param[in] radius Radius in units of (lambda / D)
-             * @returns Airy function, normalized to integrate to unity.
-             */
-            double operator()(double radius) const;
-
-        private:
-            double _obscuration; ///< Central obstruction size
-            double _obssq; ///< _obscuration*_obscuration
-            double _norm; ///< Calculated value M_PI / (4.*(1-obs^2))
-        };
+        class AiryInfo;
 
     class SBAiryImpl : public SBProfileImpl 
     {
     public:
         SBAiryImpl(double lam_over_D, double obs, double flux);
 
-        ~SBAiryImpl() { flushSampler(); }
+        ~SBAiryImpl() {}
 
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
@@ -2048,36 +2033,184 @@ namespace galsim {
 
         double _Dsq; ///< Calculated value: D*D
         double _obssq; ///< Calculated value: _obscuration * _obscuration
-        double _norm; ///< Calculated value: flux*D*D
+        double _inv_Dsq_pisq; ///< Calculated value: 1/(D^2 pi^2)
+        double _xnorm; ///< Calculated value: flux * D^2
+        double _knorm; ///< Calculated value: flux / (pi (1-obs^2))
 
-        ///< Class that can sample radial distribution
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler; 
-
-        AiryRadialFunction _radial;  ///< Class that embodies the radial Airy function.
-
-        /// Circle chord length at `h < r`.
-        double chord(double r, double h, double rsq, double hsq) const; 
-
-        /// @brief Area inside intersection of 2 circles radii `r` & `s`, seperated by `t`.
-        double circle_intersection(double r, double s, double rsq, double ssq, double tsq) const; 
-        double circle_intersection(double r, double rsq, double tsq) const; 
-
-        /// @brief Area of two intersecting identical annuli.
-        double annuli_intersect(double r1, double r2, double r1sq, double r2sq, double tsq) const; 
-
-        /** 
-         * @brief Beam pattern of annular aperture, in k space, which is just the autocorrelation 
-         * of two annuli.  Normalized to unity at `k=0` for now.
-         */
-        double annuli_autocorrelation(double ksq) const; 
-
-        void checkSampler() const; ///< Check if `OneDimensionalDeviate` is configured.
-        void flushSampler() const; ///< Discard the photon-shooting sampler class.
+        /// Info object that stores things that are common to all Airy functions with this 
+        /// obscuration value.
+        const AiryInfo* _info; 
 
         // Copy constructor and op= are undefined.
         SBAiryImpl(const SBAiryImpl& rhs);
         void operator=(const SBAiryImpl& rhs);
     };
+
+        /**
+         * @brief Subclass is a scale-free version of the Airy radial function.
+         *
+         * Serves as interface to numerical photon-shooting class `OneDimensionalDeviate`.
+         *
+         * Input radius is in units of lambda/D.  Output normalized
+         * to integrate to unity over input units.
+         */
+        class AiryRadialFunction: public FluxDensity 
+        {
+        public:
+            /**
+             * @brief Constructor
+             * @param[in] obscuration Fractional linear size of central obscuration of pupil.
+             * @param[in] obssq       Pre-computed obscuration^2 supplied as input for speed.
+             */
+            AiryRadialFunction(double obscuration, double obssq) : 
+                _obscuration(obscuration), _obssq(obssq),
+                _norm(M_PI / (4.*(1.-_obssq))) {}
+
+            /**
+             * @brief Return the Airy function
+             * @param[in] radius Radius in units of (lambda / D)
+             * @returns Airy function, normalized to integrate to unity.
+             */
+            double operator()(double radius) const;
+
+        private:
+            double _obscuration; ///< Central obstruction size
+            double _obssq; ///< _obscuration*_obscuration
+            double _norm; ///< Calculated value M_PI / (4.*(1-obs^2))
+        };
+
+
+        /**
+         * @brief A private class that caches the photon shooting objects for a given
+         *         obscuration value, so they don't have to be set up again each time.
+         * 
+         * This is helpful if people use only 1 or a small number of obscuration values.
+         */
+        class AiryInfo 
+        {
+        public:
+            /** 
+             * @brief Constructor
+             * @param[in] obscuration Fractional linear size of central obscuration of pupil.
+             * @param[in] obssq       Pre-computed obscuration^2 supplied as input for speed.
+             */
+            AiryInfo(double obscuration, double obssq); 
+
+            /// @brief Destructor: deletes photon-shooting classes if necessary
+            ~AiryInfo() {}
+
+            /** 
+             * @brief Returns the real space value of the Airy function,
+             * normalized to unit flux (see private attributes).
+             * @param[in] r should be given in units of lam_over_D  (i.e. r_true*D)
+             *
+             * This is used to calculate the real xValue, but it comes back unnormalized.
+             * The value needs to be multiplied by flux * D^2.
+             */
+            double xValue(double r) const;
+
+            /**
+             * @brief Returns the k-space value of the Airy function.
+             * @param[in] ksq_over_pisq should be given in units of lam_over_D  
+             * (i.e. k_true^2 / (pi^2 * D^2))
+             *
+             * This is used to calculate the real kValue, but it comes back unnormalized.
+             * The value at k=0 is Pi * (1-obs^2), so the value needs to be multiplied
+             * by flux / (Pi * (1-obs^2)).
+             */
+            double kValue(double ksq_over_pisq) const;
+
+            double stepK() const { return _stepk; }
+
+            /**
+             * @brief Shoot photons through unit-size, unnormalized profile
+             * Airy profiles are sampled with a numerical method, using class
+             * `OneDimensionalDeviate`.
+             *
+             * @param[in] N Total number of photons to produce.
+             * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+             * @returns PhotonArray containing all the photons' info.
+             */
+            boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
+        private:
+            AiryInfo(const AiryInfo& rhs); ///< Hides the copy constructor.
+            void operator=(const AiryInfo& rhs); ///<Hide assignment operator.
+
+            double _obscuration; ///< Radius ratio of central obscuration.
+            double _obssq; ///< _obscuration*_obscuration
+
+            double _stepk; ///< Sampling in k space necessary to avoid folding 
+
+            ///< Class that can sample radial distribution
+            mutable boost::shared_ptr<OneDimensionalDeviate> _sampler; 
+
+            AiryRadialFunction _radial;  ///< Class that embodies the radial Airy function.
+
+            /// Circle chord length at `h < r`.
+            double chord(double r, double h, double rsq, double hsq) const; 
+
+            /// @brief Area inside intersection of 2 circles radii `r` & `s`, seperated by `t`.
+            double circle_intersection(
+                double r, double s, double rsq, double ssq, double tsq) const; 
+            double circle_intersection(double r, double rsq, double tsq) const; 
+
+            /// @brief Area of two intersecting identical annuli.
+            double annuli_intersect(
+                double r1, double r2, double r1sq, double r2sq, double tsq) const; 
+
+            void checkSampler() const; ///< Check if `OneDimensionalDeviate` is configured.
+        };
+
+        /** 
+         * @brief A map to hold one copy of the AiryInfo for each obscuration value ever used 
+         * during the program run.  Make one static copy of this map.  
+         * *Be careful of this when multithreading:*
+         * Should build one `SBAiry` with each `obscuration` value before dispatching 
+         * multiple threads.
+         */
+        class InfoBarn : public std::map<double, boost::shared_ptr<AiryInfo> > 
+        {
+        public:
+
+            /**
+             * @brief Get the AiryInfo table for a specified `obscuration`.
+             *
+             * @param[in] obscuration Fractional linear size of central obscuration of pupil.
+             * @param[in] obssq       Pre-computed obscuration^2 supplied as input for speed.
+             */
+            const AiryInfo* get(double obscuration, double obssq) 
+            {
+                /** 
+                 * @brief The currently hardwired max number of Airy `obscuration` values
+                 * that can be stored.  Should be plenty.
+                 * TODO: What if it's not?  People could conceivably be running with obscuration
+                 * as a random variate.  Should we clear out the InfoBarn if MAX_AIRY_TABLES is 
+                 * exceeded?  Or remove the limit?  Or allow an option to not store the Info 
+                 * objects, but create them fresh each time?
+                 */
+                const int MAX_AIRY_TABLES = 100; 
+
+                MapIter it = _map.find(obscuration);
+                if (it == _map.end()) {
+                    boost::shared_ptr<AiryInfo> info(new AiryInfo(obscuration,obssq));
+                    _map[obscuration] = info;
+                    if (int(_map.size()) > MAX_AIRY_TABLES)
+                        throw SBError("Storing Airy info for too many obscuration values");
+                    return info.get();
+                } else {
+                    return it->second.get();
+                }
+            }
+
+        private:
+            typedef std::map<double, boost::shared_ptr<AiryInfo> >::iterator MapIter;
+            std::map<double, boost::shared_ptr<AiryInfo> > _map;
+        };
+
+        /// One static map of all `AiryInfo` structures for whole program.
+        static InfoBarn nmap; 
+
 
     private:
         // op= is undefined
@@ -2171,16 +2304,16 @@ namespace galsim {
         void fillXGrid(XTable& xt) const;
 
         template <typename T>
-        double fillXImage(ImageView<T>& I, double dx) const;
+        double fillXImage(ImageView<T>& I, double dx, double gain) const;
 
-        double doFillXImage(ImageView<float>& I, double dx) const
-        { return fillXImage(I,dx); }
-        double doFillXImage(ImageView<double>& I, double dx) const
-        { return fillXImage(I,dx); }
-        double doFillXImage(ImageView<short>& I, double dx) const
-        { return fillXImage(I,dx); }
-        double doFillXImage(ImageView<int>& I, double dx) const
-        { return fillXImage(I,dx); }
+        double doFillXImage(ImageView<float>& I, double dx, double gain) const
+        { return fillXImage(I,dx,gain); }
+        double doFillXImage(ImageView<double>& I, double dx, double gain) const
+        { return fillXImage(I,dx,gain); }
+        double doFillXImage(ImageView<short>& I, double dx, double gain) const
+        { return fillXImage(I,dx,gain); }
+        double doFillXImage(ImageView<int>& I, double dx, double gain) const
+        { return fillXImage(I,dx,gain); }
 
     private:
         double _xw;   ///< Boxcar function is `xw` x `yw` across.
