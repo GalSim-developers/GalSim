@@ -1106,7 +1106,7 @@ class Deconvolve(GSObject):
 class DoubleGaussian(Add):
     """Double Gaussian, which is the sum of two Gaussian profiles
     """
-    def __init__(self, sigma1=None, sigma2=None, fwhm1=None, fwhm2=None, flux1=1., flux2=1.):
+    def __init__(self, flux1, flux2, sigma1=None, sigma2=None, fwhm1=None, fwhm2=None):
         sblist = []
         # Note: we do not have to check for improper args (0 or 2 radii specified) because this is
         # done in the C++

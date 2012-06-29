@@ -957,10 +957,14 @@ namespace galsim {
                         raw_fmax += pa->getFlux(i);
                     }
                 }
-                // Make sure we've got at least 25 photons for our fmax estimate.
-                if (fmax_count < 25) continue;  // Keep the same initial value of thisN = 100
-
+                xdbg<<"fmax_count = "<<fmax_count<<std::endl;
                 xdbg<<"raw_fmax = "<<raw_fmax<<std::endl;
+
+                // Make sure we've got at least 25 photons for our fmax estimate and that
+                // the fmax value is positive.
+                // Otherwise keep the same initial value of thisN = 100 and try again.
+                if (fmax_count < 25 || raw_fmax < 0.) continue;  
+
                 double fmax = raw_fmax * origN / (origN-N);
                 xdbg<<"fmax = "<<fmax<<std::endl;
                 // Estimate a good value of Ntot based on what we know now
