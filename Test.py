@@ -32,6 +32,7 @@ for i in range(500):
     # Make the profiles:
     pix = galsim.Pixel(xw=pixel_scale)
     psf = galsim.AtmosphericPSF(fwhm = psf_fwhm)
+    #psf = galsim.Moffat(fwhm = psf_fwhm, beta = 3)
     gal = galsim.Gaussian(flux=gal_flux, half_light_radius=gal_hlr)
     gal.applyShear(e1=gal_e1, e2=gal_e2)
 
