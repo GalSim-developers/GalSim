@@ -840,6 +840,10 @@ namespace galsim {
         // So flux = (S/N)^2 = Ntot (1-2eta)^2
         // Ntot = flux / (1-2eta)^2
         //
+        // However, if each photon has a flux of 1, then S = (1-2eta) Ntot = flux / (1-2eta).
+        // So in fact, each photon needs to carry a flux of g = 1-2eta to get the right 
+        // total flux.
+        //
         // That's all the easy case. The trickier case is when we are sky-background dominated.
         // Then we can usually get away with fewer shot photons than the above.  In particular,
         // if the noise from the photon shooting is much less than the sky noise, then we can 
@@ -888,31 +892,33 @@ namespace galsim {
 
         if (dx > 0.) img.setScale(dx);
 
-        const int maxN = 100000; // Don't do more than this at a time to keep the 
-                                 // memory usage reasonable.
+        // Don't do more than this at a time to keep the  memory usage reasonable.
+        const int maxN = 100000; 
+
+        double flux = getFlux();
+        dbg<<"flux = "<<flux<<std::endl;
+        if (poisson_flux) {
+            PoissonDeviate pd(u, flux);
+            flux = pd();
+            xdbg<<"Poisson flux = "<<mod_flux<<std::endl;
+        }
 
         double posflux = getPositiveFlux();
         double negflux = getNegativeFlux();
         double eta = negflux / (posflux + negflux);
         dbg<<"N+ = "<<posflux<<", N- = "<<negflux<<" -> eta = "<<eta<<std::endl;
-        double mod_flux = getFlux() / std::pow(1.-2.*eta,2);
+        double eta_factor = 1.-2.*eta; // This is also the amount to scale each photon.
+        double mod_flux = flux/(eta_factor*eta_factor);
         dbg<<"mod_flux = "<<mod_flux<<std::endl;
+
         if (N == 0.) N = mod_flux;
         double origN = N;
-
-        double scale_flux = 1.; // Amount by which to scale the flux at the end.
-
-        if (poisson_flux) {
-            PoissonDeviate pd(u, N);
-            scale_flux *= pd() / N;
-            xdbg<<"Poisson scaling flux by factor "<<scale_flux<<std::endl;
-        }
 
         // Center the image at 0,0:
         img.setCenter(0,0);
         dbg<<"On input, image has central value = "<<img(0,0)<<std::endl;
 
-        // Stor the PhotonArrays to be added here rather than add them as we go,
+        // Store the PhotonArrays to be added here rather than add them as we go,
         // since we might need to rescale them all before adding.
         std::vector<boost::shared_ptr<PhotonArray> > arrays;
 
@@ -927,7 +933,7 @@ namespace galsim {
         int fmax_count = 0;
         while (true) {
             // We break out of the loop when either N drops to 0 (if noise = 0) or 
-            // we find that all pixels have a noise level < noise (if noise > 0)
+            // we find that the max pixel has a noise level < noise (if noise > 0)
             
             if (thisN > maxN) thisN = maxN;
             if (thisN > N) thisN = int(floor(N+0.5));
@@ -936,8 +942,8 @@ namespace galsim {
             assert(_pimpl.get());
             boost::shared_ptr<PhotonArray> pa = _pimpl->shoot(thisN, u);
             xdbg<<"pa.flux = "<<pa->getTotalFlux()<<std::endl;
-            xdbg<<"scale flux by "<<(scale_flux*thisN/origN)<<std::endl;
-            pa->scaleFlux(scale_flux * thisN / origN);
+            xdbg<<"scale flux by "<<(eta_factor*thisN/origN)<<std::endl;
+            pa->scaleFlux(eta_factor * thisN / origN);
             xdbg<<"pa.flux => "<<pa->getTotalFlux()<<std::endl;
             arrays.push_back(pa);
             N -= thisN;
@@ -997,19 +1003,35 @@ namespace galsim {
         }
 
         // Now we can go ahead and add all the arrays to the image:
-        double target_flux = scale_flux * getFlux();
         double added_flux = 0.; // total flux falling inside image bounds, returned
+#ifdef DEBUGLOGGING
         double realized_flux = 0.;
+        double positive_flux = 0.;
+        double negative_flux = 0.;
+#endif
         for (size_t k=0; k<arrays.size(); ++k) {
             PhotonArray* pa = arrays[k].get();
             added_flux += pa->addTo(img);
+#ifdef DEBUGLOGGING
             realized_flux += pa->getTotalFlux();
+            for(int i=0; i<pa->size(); ++i) {
+                double f = pa->getFlux(i);
+                if (f >= 0.) positive_flux += f;
+                else negative_flux += -f;
+            }
+#endif
         }
 
+#ifdef DEBUGLOGGING
         dbg<<"Done drawShoot.  Realized flux = "<<realized_flux<<std::endl;
+        dbg<<"c.f. target flux = "<<flux<<std::endl;
         dbg<<"Now image has central value = "<<img(0,0)<<std::endl;
-        dbg<<"c.f. target flux = "<<target_flux<<std::endl;
-        xdbg<<"Added flux (falling within image bounds) = "<<added_flux<<std::endl;
+        dbg<<"Realized positive flux = "<<positive_flux<<std::endl;
+        dbg<<"Realized negative flux = "<<negative_flux<<std::endl;
+        dbg<<"Actual eta = "<<negative_flux / (positive_flux + negative_flux)<<std::endl;
+        dbg<<"c.f. predicted eta = "<<eta<<std::endl;
+#endif
+        dbg<<"Added flux (falling within image bounds) = "<<added_flux<<std::endl;
 
         // The "added_flux" above really counts ADU's.  So divide by gain to get the 
         // actual flux that was added.

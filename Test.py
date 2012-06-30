@@ -15,7 +15,7 @@ pixel_scale = 0.28      # arcsec
 nx = 64
 ny = 64
 
-gal_flux = 1.26e4
+gal_flux = 1.26e5
 gal_hlr = 0.59          # arcsec
 gal_e1 = 0.01
 gal_e2 = -0.01
@@ -25,19 +25,33 @@ psf_fwhm = 0.65         # arcsec
 # Initialize the random number generator we will be using.
 rng = galsim.UniformDeviate(random_seed)
 
+#interp1d = galsim.Linear(1.e-4)
+#interp1d = galsim.Nearest(1.e-4)
+#interp1d = galsim.Cubic(1.e-4)
+interp1d = galsim.Lanczos(5,True,1.e-4)
+interp2d = galsim.InterpolantXY(interp1d)
+
+# Make the profiles:
+pix = galsim.Pixel(xw=pixel_scale)
+psf = galsim.AtmosphericPSF(fwhm = psf_fwhm, interpolantxy=interp2d)
+#psf = galsim.Moffat(fwhm = psf_fwhm, beta = 3)
+gal = galsim.Gaussian(flux=gal_flux, half_light_radius=gal_hlr)
+gal.applyShear(e1=gal_e1, e2=gal_e2)
+
+final = galsim.Convolve([gal,psf,pix])
+final_nopix = galsim.Convolve([gal,psf])
+#final = galsim.Convolve([psf,pix])
+#final_nopix = psf
+#final.setFlux(gal_flux)
+#final_nopix.setFlux(gal_flux)
+
+# Draw the profile using FFT
+noiseless_fft_image = galsim.ImageF(nx,ny)
+final.draw(noiseless_fft_image, dx=pixel_scale)
+
 all_images = []
-for i in range(500):
+for i in range(5000):
     print 'i = ',i
-
-    # Make the profiles:
-    pix = galsim.Pixel(xw=pixel_scale)
-    psf = galsim.AtmosphericPSF(fwhm = psf_fwhm)
-    #psf = galsim.Moffat(fwhm = psf_fwhm, beta = 3)
-    gal = galsim.Gaussian(flux=gal_flux, half_light_radius=gal_hlr)
-    gal.applyShear(e1=gal_e1, e2=gal_e2)
-
-    final = galsim.Convolve([gal,psf,pix])
-    final_nopix = galsim.Convolve([gal,psf])
 
     # Setup the image: left half is FFT, right half is Photon Shooting
     image = galsim.ImageF(2*nx+2,ny)
@@ -45,14 +59,14 @@ for i in range(500):
     fft_image = image[galsim.BoundsI(1,nx,1,nx)]
     phot_image = image[galsim.BoundsI(nx+3,2*nx+2,1,nx)]
 
-    # Draw the profile using FFT
-    final.draw(fft_image, dx=pixel_scale)
-
-    # Repeat for photon shooting image.
-    final_nopix.drawShoot(phot_image, uniform_deviate=rng, poisson_flux=False)
+    # Draw photon shooting image.
+    final_nopix.drawShoot(phot_image, uniform_deviate=rng, poisson_flux=True)
 
     # Add Poisson noise
+    fft_image[galsim.BoundsI(1,nx,1,nx)] = noiseless_fft_image
     fft_image.addNoise(galsim.CCDNoise(rng))
+
+    print '  flux in images = ',fft_image.array.sum(), phot_image.array.sum()
     
     # For photon shooting, galaxy already has poisson noise, and not adding sky_noise here.
 
@@ -67,7 +81,7 @@ n = len(all_images)
 # I had been looking at a range like -3,4, but for now just do the central pixel.
 # (Similar behavior happens in all of them.)
 for x in range(0,1):  
-    for y in range(0,1):
+    for y in range(-10,11):
         fft_ar = numpy.zeros(n)
         phot_ar = numpy.zeros(n)
         for i in range(len(all_images)):
@@ -84,13 +98,14 @@ for x in range(0,1):
         #print 'phot flux values for %d,%d = '%(x,y), phot_ar
         mean = fft_ar.sum()/n
         var = ((fft_ar-mean)**2).sum()/(n-1)
+        print 'pixel %d,%d:'%(x,y)
         print 'fft mean = %f, variance = %f'%(mean, var)
-        print '    range = %f, %f'%(fft_ar.min(),fft_ar.max())
-        print '    quartiles = %f, %f'%(fft_ar[n/4],fft_ar[3*n/4])
+        #print '    range = %f, %f'%(fft_ar.min(),fft_ar.max())
+        #print '    quartiles = %f, %f'%(fft_ar[n/4],fft_ar[3*n/4])
         mean = phot_ar.sum()/n
         var = ((phot_ar-mean)**2).sum()/(n-1)
         print 'phot mean = %f, variance = %f'%(mean, var)
-        print '     range = %f, %f'%(phot_ar.min(),phot_ar.max())
-        print '     quartiles = %f, %f'%(phot_ar[n/4],phot_ar[3*n/4])
+        #print '     range = %f, %f'%(phot_ar.min(),phot_ar.max())
+        #print '     quartiles = %f, %f'%(phot_ar[n/4],phot_ar[3*n/4])
 
 
