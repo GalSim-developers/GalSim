@@ -60,10 +60,10 @@ for i in range(5000):
     phot_image = image[galsim.BoundsI(nx+3,2*nx+2,1,nx)]
 
     # Draw photon shooting image.
-    final_nopix.drawShoot(phot_image, uniform_deviate=rng, poisson_flux=True)
+    final_nopix.drawShoot(phot_image, uniform_deviate=rng)
 
     # Add Poisson noise
-    fft_image[galsim.BoundsI(1,nx,1,nx)] = noiseless_fft_image
+    fft_image.copyFrom(noiseless_fft_image)
     fft_image.addNoise(galsim.CCDNoise(rng))
 
     print '  flux in images = ',fft_image.array.sum(), phot_image.array.sum()
@@ -78,13 +78,11 @@ for i in range(5000):
 
 # Check some statistics for some of the pixels near the middle:
 n = len(all_images)
-# I had been looking at a range like -3,4, but for now just do the central pixel.
-# (Similar behavior happens in all of them.)
 for x in range(0,1):  
     for y in range(-10,11):
         fft_ar = numpy.zeros(n)
         phot_ar = numpy.zeros(n)
-        for i in range(len(all_images)):
+        for i in range(n):
             image = all_images[i]
             fft_image = image[galsim.BoundsI(1,nx,1,nx)]
             phot_image = image[galsim.BoundsI(nx+3,2*nx+2,1,nx)]
@@ -108,4 +106,23 @@ for x in range(0,1):
         #print '     range = %f, %f'%(phot_ar.min(),phot_ar.max())
         #print '     quartiles = %f, %f'%(phot_ar[n/4],phot_ar[3*n/4])
 
-
+fft_mean = 0
+fft_var = 0
+phot_mean = 0
+phot_var = 0
+for i in range(n):
+    image = all_images[i]
+    fft_flux = image[galsim.BoundsI(1,nx,1,nx)].array.sum()
+    phot_flux = image[galsim.BoundsI(nx+3,2*nx+2,1,nx)].array.sum()
+    fft_mean += fft_flux
+    fft_var += fft_flux*fft_flux
+    phot_mean += phot_flux
+    phot_var += phot_flux*phot_flux
+fft_mean /= n
+phot_mean /= n
+fft_var -= n*(fft_mean**2)
+fft_var /= (n-1)
+phot_var -= n*(phot_mean**2)
+phot_var /= (n-1)
+print 'fft flux mean = %f, variance = %f'%(fft_mean, fft_var)
+print 'phot flux mean = %f, variance = %f'%(phot_mean, phot_var)

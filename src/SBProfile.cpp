@@ -897,12 +897,6 @@ namespace galsim {
 
         double flux = getFlux();
         dbg<<"flux = "<<flux<<std::endl;
-        if (poisson_flux) {
-            PoissonDeviate pd(u, flux);
-            flux = pd();
-            xdbg<<"Poisson flux = "<<mod_flux<<std::endl;
-        }
-
         double posflux = getPositiveFlux();
         double negflux = getNegativeFlux();
         double eta = negflux / (posflux + negflux);
@@ -910,6 +904,38 @@ namespace galsim {
         double eta_factor = 1.-2.*eta; // This is also the amount to scale each photon.
         double mod_flux = flux/(eta_factor*eta_factor);
         dbg<<"mod_flux = "<<mod_flux<<std::endl;
+
+        // Use this for the factor by which to scale photon arrays.
+        double flux_scaling = eta_factor;
+
+        // If requested, let the target flux value vary as a Poisson deviate
+        if (poisson_flux) {
+            // If we have both positive and negative photons, then the mix of these
+            // already gives us some variation in the flux value from the variance
+            // of how many are positive and how many are negative.
+            // The number of negative photons varies as a binomial distribution.
+            // <F-> = eta * N * flux_scaling
+            // <F+> = (1-eta) * N * flux_scaling
+            // <F+ - F-> = (1-2eta) * N * flux_scaling = flux
+            // Var(F-) = eta * (1-eta) * N * flux_scaling^2
+            // F+ = N * flux_scaling - F- is not an independent variable, so 
+            // Var(F+ - F-) = Var(N*flux_scaling - 2*F-)
+            //              = 4 * Var(F-) 
+            //              = 4 * eta * (1-eta) * N * flux_scaling^2
+            //              = 4 * eta * (1-eta) * flux
+            // We want the variance to be equal to flux, so we need an extra:
+            // delta Var = (1 - 4*eta + 4*eta^2) * flux
+            //           = (1-2eta)^2 * flux
+            double mean = eta_factor*eta_factor * flux;
+            PoissonDeviate pd(u, mean);
+            double pd_val = pd() - mean + flux;
+            dbg<<"Poisson flux = "<<pd_val<<", c.f. flux = "<<flux<<std::endl;
+            double ratio = pd_val / flux;
+            flux_scaling *= ratio;
+            mod_flux *= ratio;
+            dbg<<"flux_scaling => "<<flux_scaling<<std::endl;
+            dbg<<"mod_flux => "<<mod_flux<<std::endl;
+        }
 
         if (N == 0.) N = mod_flux;
         double origN = N;
@@ -942,8 +968,8 @@ namespace galsim {
             assert(_pimpl.get());
             boost::shared_ptr<PhotonArray> pa = _pimpl->shoot(thisN, u);
             xdbg<<"pa.flux = "<<pa->getTotalFlux()<<std::endl;
-            xdbg<<"scale flux by "<<(eta_factor*thisN/origN)<<std::endl;
-            pa->scaleFlux(eta_factor * thisN / origN);
+            xdbg<<"scale flux by "<<(flux_scaling*thisN/origN)<<std::endl;
+            pa->scaleFlux(flux_scaling * thisN / origN);
             xdbg<<"pa.flux => "<<pa->getTotalFlux()<<std::endl;
             arrays.push_back(pa);
             N -= thisN;
@@ -1023,15 +1049,15 @@ namespace galsim {
         }
 
 #ifdef DEBUGLOGGING
-        dbg<<"Done drawShoot.  Realized flux = "<<realized_flux<<std::endl;
+        dbg<<"Done drawShoot.  Realized flux = "<<realized_flux/gain<<std::endl;
         dbg<<"c.f. target flux = "<<flux<<std::endl;
-        dbg<<"Now image has central value = "<<img(0,0)<<std::endl;
-        dbg<<"Realized positive flux = "<<positive_flux<<std::endl;
-        dbg<<"Realized negative flux = "<<negative_flux<<std::endl;
+        dbg<<"Now image has central value = "<<img(0,0)/gain<<std::endl;
+        dbg<<"Realized positive flux = "<<positive_flux/gain<<std::endl;
+        dbg<<"Realized negative flux = "<<negative_flux/gain<<std::endl;
         dbg<<"Actual eta = "<<negative_flux / (positive_flux + negative_flux)<<std::endl;
         dbg<<"c.f. predicted eta = "<<eta<<std::endl;
 #endif
-        dbg<<"Added flux (falling within image bounds) = "<<added_flux<<std::endl;
+        dbg<<"Added flux (falling within image bounds) = "<<added_flux/gain<<std::endl;
 
         // The "added_flux" above really counts ADU's.  So divide by gain to get the 
         // actual flux that was added.
