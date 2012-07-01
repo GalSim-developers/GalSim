@@ -15,7 +15,7 @@ pixel_scale = 0.28      # arcsec
 nx = 64
 ny = 64
 
-gal_flux = 1.26e5
+gal_flux = 1.26e4
 gal_hlr = 0.59          # arcsec
 gal_e1 = 0.01
 gal_e2 = -0.01
@@ -50,7 +50,7 @@ noiseless_fft_image = galsim.ImageF(nx,ny)
 final.draw(noiseless_fft_image, dx=pixel_scale)
 
 all_images = []
-for i in range(5000):
+for i in range(500):
     print 'i = ',i
 
     # Setup the image: left half is FFT, right half is Photon Shooting
