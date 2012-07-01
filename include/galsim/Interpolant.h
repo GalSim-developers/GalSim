@@ -497,7 +497,8 @@ namespace galsim {
          *
          * Note that pure Lanczos, when interpolating a set of constant-valued samples, does
          * not return this constant.  Setting fluxConserve tweaks the function so that it
-         * conserves value of constant (DC) input data.
+         * approximately conserves value of constant (DC) input data.
+         * Gary says this correction is good to ~1.e-5.
          * @param[in] n  Filter order; must be given on input and cannot be changed.  
          * @param[in] fluxConserve  Set true to adjust filter to be exact for constant inputs.
          * @param[in] tol  Sets accuracy and extent of Fourier transform.

@@ -25,10 +25,16 @@ psf_fwhm = 0.65         # arcsec
 # Initialize the random number generator we will be using.
 rng = galsim.UniformDeviate(random_seed)
 
-#interp1d = galsim.Linear(1.e-4)
+#interp1d = galsim.Delta(1.e-4)
 #interp1d = galsim.Nearest(1.e-4)
+#interp1d = galsim.Linear(1.e-4)
 #interp1d = galsim.Cubic(1.e-4)
+#interp1d = galsim.Quintic(1.e-4)
+#interp1d = galsim.Lanczos(1,True,1.e-4)
+#interp1d = galsim.Lanczos(3,True,1.e-4)
 interp1d = galsim.Lanczos(5,True,1.e-4)
+#interp1d = galsim.Lanczos(7,True,1.e-4)
+#interp1d = galsim.Lanczos(15,True,1.e-4)
 interp2d = galsim.InterpolantXY(interp1d)
 
 # Make the profiles:
@@ -50,7 +56,7 @@ noiseless_fft_image = galsim.ImageF(nx,ny)
 final.draw(noiseless_fft_image, dx=pixel_scale)
 
 all_images = []
-for i in range(500):
+for i in range(5000):
     print 'i = ',i
 
     # Setup the image: left half is FFT, right half is Photon Shooting
@@ -66,7 +72,7 @@ for i in range(500):
     fft_image.copyFrom(noiseless_fft_image)
     fft_image.addNoise(galsim.CCDNoise(rng))
 
-    print '  flux in images = ',fft_image.array.sum(), phot_image.array.sum()
+    #print '  flux in images = ',fft_image.array.sum(), phot_image.array.sum()
     
     # For photon shooting, galaxy already has poisson noise, and not adding sky_noise here.
 
