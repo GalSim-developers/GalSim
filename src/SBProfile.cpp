@@ -4,6 +4,7 @@
 #include "SBProfile.h"
 #include "SBTransform.h"
 #include "SBProfileImpl.h"
+#include "FFT.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
