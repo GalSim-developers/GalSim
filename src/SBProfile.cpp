@@ -902,7 +902,6 @@ namespace galsim {
         double negflux = getNegativeFlux();
         double eta = negflux / (posflux + negflux);
         dbg<<"N+ = "<<posflux<<", N- = "<<negflux<<" -> eta = "<<eta<<std::endl;
-        std::cout<<"N+ = "<<posflux<<", N- = "<<negflux<<" -> eta = "<<eta<<std::endl;
         double eta_factor = 1.-2.*eta; // This is also the amount to scale each photon.
         double mod_flux = flux/(eta_factor*eta_factor);
         dbg<<"mod_flux = "<<mod_flux<<std::endl;
@@ -1058,7 +1057,6 @@ namespace galsim {
         dbg<<"Realized negative flux = "<<negative_flux/gain<<std::endl;
         dbg<<"Actual eta = "<<negative_flux / (positive_flux + negative_flux)<<std::endl;
         dbg<<"c.f. predicted eta = "<<eta<<std::endl;
-        std::cout<<"Actual eta = "<<negative_flux / (positive_flux + negative_flux)<<std::endl;
 #endif
         dbg<<"Added flux (falling within image bounds) = "<<added_flux/gain<<std::endl;
 
