@@ -1,5 +1,5 @@
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "SBTransform.h"
