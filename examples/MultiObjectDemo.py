@@ -694,7 +694,7 @@ def Script4():
                 # to include it in the profile!
                 sky_level_pixel = sky_level * pixel_scale**2
                 final_nopix.drawShoot(phot_image, noise=sky_level_pixel/100, 
-                                      uniform_deviate=rng, poisson_flux=False)
+                                      uniform_deviate=rng)
                 #logger.info('   Drew phot image.  Total drawn flux = %f.  getFlux() = %f',
                         #phot_image.array.sum(),final.getFlux())
                 t4 = time.time()
