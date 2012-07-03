@@ -763,6 +763,197 @@ def Script4():
     print
 
 
+# Script 5: Use multiple processes to draw image in parallel
+def Script5():
+    """
+    Make an image containing 10 x 10 postage stamps.
+    The galaxies are bulge + disk with parameters drawn from random variates
+    Each galaxy is drawn using photon shooting.
+    """
+    from multiprocessing import Process, Queue, current_process, cpu_count
+
+    logger = logging.getLogger("Script5")
+
+    # Define some parameters we'll use below.
+
+    single_file_name = os.path.join('output','bpd_single.fits')
+    multi_file_name = os.path.join('output','bpd_multi.fits')
+
+    random_seed = 1512413
+    sky_level = 1.e4        # ADU / arcsec^2
+    pixel_scale = 0.28      # arcsec
+    nx_pixels = 64          # size of each postage stamp in pixels
+    ny_pixels = 64
+    nx_stamps = 10          # number of postage stamps in each direction
+    ny_stamps = 10
+
+    gal_flux_min = 1.e4     # Range for galaxy flux
+    gal_flux_max = 1.e5  
+    bulge_hlr_min = 0.3     # Range for bulge's half-light radius (arcsec)
+    bulge_hlr_max = 0.9
+    bulge_e_min = 0.        # Range for bulge's ellipticity
+    bulge_e_max = 0.3
+    bulge_frac_min = 0.1    # Range for bulge fraction
+    bulge_frac_max = 0.5
+    disk_hlr_min = 0.5      # Range for disk's half-light radius (arcsec)
+    disk_hlr_max = 1.5
+    disk_e_min = 0.2        # Range for disk's ellipticity
+    disk_e_max = 0.8
+
+    psf_fwhm = 0.65         # arcsec
+
+    logger.info('Starting multi-object script 5')
+
+    all_images = []
+
+    def draw_stamp(ix, iy, n, seed):
+        """A function that draws a single postage stamp at (ix,iy) on image n 
+           using seed for the random number generator.
+           Returns the total time taken.
+        """
+        t1 = time.time()
+        # Initialize the random number generator we will be using.
+        rng = galsim.UniformDeviate(seed)
+
+        # Make the pixel:
+        pix = galsim.Pixel(xw = pixel_scale)
+
+        # Make the PSF profile:
+        psf = galsim.Moffat(fwhm = psf_fwhm, beta = 2.4)
+
+        # Make the galaxy profile:
+        hlr = rng() * (bulge_hlr_max-bulge_hlr_min) + bulge_hlr_min
+        ellip = rng() * (bulge_e_max-bulge_e_min) + bulge_e_min
+        beta_ellip = rng() * 2*math.pi * galsim.radians
+        bulge = galsim.Sersic(n=3.6, half_light_radius=hlr)
+        bulge.applyShear(e=ellip, beta=beta_ellip)
+
+        hlr = rng() * (disk_hlr_max-disk_hlr_min) + disk_hlr_min
+        ellip = rng() * (disk_e_max-disk_e_min) + disk_e_min
+        beta_ellip = rng() * 2*math.pi * galsim.radians
+        disk = galsim.Sersic(n=1.5, half_light_radius=hlr)
+        disk.applyShear(e=ellip, beta=beta_ellip)
+
+        f = rng() * (bulge_frac_max-bulge_frac_min) + bulge_frac_min
+        gal = f * bulge + (1-f) * disk
+
+        flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
+        gal.setFlux(flux)
+
+        # Build the final object by convolving the galaxy and PSF 
+        # Not including the pixel -- since we are using drawShoot
+        final_nopix = galsim.Convolve([gal, psf])
+
+        # Get the stamp as a subimage of the larger image
+        bounds = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels, 
+                                iy*ny_pixels+1 , (iy+1)*ny_pixels)
+        image = all_images[n]
+        stamp = image[bounds]
+
+        # Photon shooting automatically convolves by the pixel, so we've made sure not
+        # to include it in the profile!
+        sky_level_pixel = sky_level * pixel_scale**2
+        final_nopix.drawShoot(stamp, noise=sky_level_pixel/100, 
+                              uniform_deviate=rng)
+
+        # For photon shooting, galaxy already has poisson noise, so we want to make 
+        # sure not to add that noise again!  Thus, we just add sky noise, which 
+        # is Poisson with the mean = sky_level_pixel
+        stamp.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
+        # PoissonDeviate adds values with a mean equal to the given mean, not 0.
+        # So we need to subtract off the mean now.
+        stamp -= sky_level_pixel
+
+        t2 = time.time()
+        return t2-t1
+
+    def worker(input, output):
+        """input is a queue with (ix,iy,seed) values
+           output is a queue storing the results of the tasks along with the process name,
+           and which args this result is for.
+        """
+        for args in iter(input.get, 'STOP'):
+            result = draw_stamp(*args)
+            output.put( (result, current_process().name, args) )
+    
+    ntot = nx_stamps * ny_stamps
+
+    # Take seeds to be sequential after the given seed value. 
+    # This way different galaxies are deterministic, but uncorrelated.
+    seeds = [ random_seed + k for k in range(ntot) ]
+
+    # First draw the image using just a single process:
+    t1 = time.time()
+    image_single = galsim.ImageF(nx_stamps * nx_pixels , ny_stamps * ny_pixels)
+    image_single.setScale(pixel_scale)
+    all_images.append(image_single)
+    k = 0
+    for ix in range(nx_stamps):
+        for iy in range(ny_stamps):
+            t = draw_stamp(ix,iy,0,seeds[k])
+            proc = current_process().name
+            logger.info('%s: Time for stamp (%d,%d) was %f',proc,ix,iy,t)
+            k = k+1
+    t2 = time.time()
+    
+    # Now do the same thing, but use multiple processes
+    image_multi = galsim.ImageF(nx_stamps * nx_pixels , ny_stamps * ny_pixels)
+    image_multi.setScale(pixel_scale)
+    all_images.append(image_multi)
+
+    # Try to figure out a good number of processes to use
+    try:
+        nproc = cpu_count()
+        logger.info('Using ncpu = %d processes',nproc)
+    except:
+        nproc = 4
+        logger.info('Unable to determine number of cpus.  Using %d processes',nproc)
+
+    # Set up the task list
+    task_queue = Queue()
+    k = 0
+    for ix in range(nx_stamps):
+        for iy in range(ny_stamps):
+            task_queue.put( [ix,iy,1,seeds[k]] )
+            k = k+1
+    
+    # Run the tasks
+    done_queue = Queue()
+    for k in range(nproc):
+        Process(target=worker, args=(task_queue, done_queue)).start()
+
+    # Stop the processes
+    for k in range(nproc):
+        task_queue.put('STOP')
+
+    # Report the results
+    for i in range(ntot):
+        t, proc, args = done_queue.get()
+        ix = args[0]
+        iy = args[1]
+        logger.info('%s: Time for stamp (%d,%d) was %f',proc,ix,iy,t)
+    # Note: This also effectively waits on the main process until the workers are done.
+    # So if you don't want to report anything, you should still get all the items 
+    # that are put into done_queue before going on.
+
+    t3 = time.time()
+
+    logger.info('Total time taken using a single process = %f',t2-t1)
+    logger.info('Total time taken using %d prcesses = %f',nproc,t3-t2)
+
+    # Now write the images to disk.
+    image_single.write(single_file_name, clobber=True)
+    image_multi.write(multi_file_name, clobber=True)
+    logger.info('Wrote images to %r and %r',single_file_name, multi_file_name)
+
+    #numpy.testing.assert_array_equal(image_single.array, image_multi.array,
+                                  #err_msg="Images are not equal")
+    #logger.info('Images created using single and multiple processes are equal.')
+    #logger.info('')
+
+    print
+
+
 def main(argv):
     try:
         # If no argument, run all scripts (indicated by scriptNum = 0)
@@ -801,6 +992,10 @@ def main(argv):
     # Script 4: Photon shooting
     if scriptNum == 0 or scriptNum == 4:
         Script4()
+
+    # Script 5: Use multiple processes
+    if scriptNum == 0 or scriptNum == 5:
+        Script5()
 
 if __name__ == "__main__":
     main(sys.argv)
