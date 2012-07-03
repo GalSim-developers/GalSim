@@ -804,14 +804,13 @@ def Script5():
 
     logger.info('Starting multi-object script 5')
 
-    all_images = []
-
     def draw_stamp(ix, iy, n, seed):
-        """A function that draws a single postage stamp at (ix,iy) on image n 
+        """A function that draws a single postage stamp (ix,iy) on image n 
            using seed for the random number generator.
            Returns the total time taken.
         """
         t1 = time.time()
+
         # Initialize the random number generator we will be using.
         rng = galsim.UniformDeviate(seed)
 
@@ -844,11 +843,8 @@ def Script5():
         # Not including the pixel -- since we are using drawShoot
         final_nopix = galsim.Convolve([gal, psf])
 
-        # Get the stamp as a subimage of the larger image
-        bounds = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels, 
-                                iy*ny_pixels+1 , (iy+1)*ny_pixels)
-        image = all_images[n]
-        stamp = image[bounds]
+        # Define the stamp image
+        stamp = galsim.ImageF(nx_pixels, ny_pixels)
 
         # Photon shooting automatically convolves by the pixel, so we've made sure not
         # to include it in the profile!
@@ -865,7 +861,7 @@ def Script5():
         stamp -= sky_level_pixel
 
         t2 = time.time()
-        return t2-t1
+        return stamp.array, t2-t1
 
     def worker(input, output):
         """input is a queue with (ix,iy,seed) values
@@ -886,11 +882,14 @@ def Script5():
     t1 = time.time()
     image_single = galsim.ImageF(nx_stamps * nx_pixels , ny_stamps * ny_pixels)
     image_single.setScale(pixel_scale)
-    all_images.append(image_single)
+
     k = 0
     for ix in range(nx_stamps):
         for iy in range(ny_stamps):
-            t = draw_stamp(ix,iy,0,seeds[k])
+            bounds = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels, 
+                                    iy*ny_pixels+1 , (iy+1)*ny_pixels)
+            im_ar, t = draw_stamp(ix,iy,0,seeds[k])
+            image_single[bounds] = galsim.ImageViewF(im_ar)
             proc = current_process().name
             logger.info('%s: Time for stamp (%d,%d) was %f',proc,ix,iy,t)
             k = k+1
@@ -899,7 +898,6 @@ def Script5():
     # Now do the same thing, but use multiple processes
     image_multi = galsim.ImageF(nx_stamps * nx_pixels , ny_stamps * ny_pixels)
     image_multi.setScale(pixel_scale)
-    all_images.append(image_multi)
 
     # Try to figure out a good number of processes to use
     try:
@@ -926,15 +924,17 @@ def Script5():
     for k in range(nproc):
         task_queue.put('STOP')
 
-    # Report the results
+    # Copy the built images onto the main image
     for i in range(ntot):
-        t, proc, args = done_queue.get()
+        result, proc, args = done_queue.get()
         ix = args[0]
         iy = args[1]
+        bounds = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels, 
+                                iy*ny_pixels+1 , (iy+1)*ny_pixels)
+        im_ar = result[0]
+        image_multi[bounds] = galsim.ImageViewF(im_ar)
+        t = result[1]
         logger.info('%s: Time for stamp (%d,%d) was %f',proc,ix,iy,t)
-    # Note: This also effectively waits on the main process until the workers are done.
-    # So if you don't want to report anything, you should still get all the items 
-    # that are put into done_queue before going on.
 
     t3 = time.time()
 
@@ -946,10 +946,10 @@ def Script5():
     image_multi.write(multi_file_name, clobber=True)
     logger.info('Wrote images to %r and %r',single_file_name, multi_file_name)
 
-    #numpy.testing.assert_array_equal(image_single.array, image_multi.array,
-                                  #err_msg="Images are not equal")
-    #logger.info('Images created using single and multiple processes are equal.')
-    #logger.info('')
+    numpy.testing.assert_array_equal(image_single.array, image_multi.array,
+                                     err_msg="Images are not equal")
+    logger.info('Images created using single and multiple processes are exactly equal.')
+    logger.info('')
 
     print
 
@@ -993,7 +993,7 @@ def main(argv):
     if scriptNum == 0 or scriptNum == 4:
         Script4()
 
-    # Script 5: Use multiple processes
+    # Script 5: Multiple processes
     if scriptNum == 0 or scriptNum == 5:
         Script5()
 
