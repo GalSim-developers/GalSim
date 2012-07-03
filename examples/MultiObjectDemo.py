@@ -861,7 +861,7 @@ def Script5():
         stamp -= sky_level_pixel
 
         t2 = time.time()
-        return stamp.array, t2-t1
+        return stamp, t2-t1
 
     def worker(input, output):
         """input is a queue with (ix,iy,seed) values
@@ -888,8 +888,8 @@ def Script5():
         for iy in range(ny_stamps):
             bounds = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels, 
                                     iy*ny_pixels+1 , (iy+1)*ny_pixels)
-            im_ar, t = draw_stamp(ix,iy,0,seeds[k])
-            image_single[bounds] = galsim.ImageViewF(im_ar)
+            im, t = draw_stamp(ix,iy,0,seeds[k])
+            image_single[bounds] = im
             proc = current_process().name
             logger.info('%s: Time for stamp (%d,%d) was %f',proc,ix,iy,t)
             k = k+1
@@ -931,8 +931,8 @@ def Script5():
         iy = args[1]
         bounds = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels, 
                                 iy*ny_pixels+1 , (iy+1)*ny_pixels)
-        im_ar = result[0]
-        image_multi[bounds] = galsim.ImageViewF(im_ar)
+        im = result[0]
+        image_multi[bounds] = im
         t = result[1]
         logger.info('%s: Time for stamp (%d,%d) was %f',proc,ix,iy,t)
 
