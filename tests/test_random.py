@@ -338,6 +338,68 @@ def test_chi2_image():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_multiprocess():
+    """Test that the same random numbers are generated in single-process and multi-process modes.
+    """
+    from multiprocessing import Process, Queue, current_process
+    import time
+    t1 = time.time()
+
+    def generate_list(seed):
+        """Given a particular seed value, generate a list of random numbers.
+           Should be deterministic given the input seed value.
+        """
+        rng = galsim.UniformDeviate(seed)
+        out = []
+        for i in range(20):
+            out.append(rng())
+        return out, current_process().name, seed
+
+    def worker(input, output):
+        """input is a queue with seed values
+           output is a queue storing the results of the tasks
+        """
+        for seed in iter(input.get, 'STOP'):
+            result = generate_list(seed)
+            output.put(result)
+
+    # Use sequential numbers.  
+    # On inspection, can see that even the first value in each list is random with 
+    # respect to the other lists.  i.e. "nearby" inputs do not produce nearby outputs.
+    # I don't know of an actual assert to do for this, but it is clearly true.
+    seeds = [ 1532424 + i for i in range(16) ]
+
+    nproc = 4  # Each process will do 4 lists (typically)
+    
+    # First make lists in the single process:
+    ref_lists = dict()
+    for seed in seeds:
+        list, proc, seed2 = generate_list(seed)
+        ref_lists[seed] = list
+        #print 'list for %d was calculated by process %s to be %s'%(seed, proc, list)
+
+    # Now do this with multiprocessing
+    # Put the seeds in a queue
+    task_queue = Queue()
+    for seed in seeds:
+        task_queue.put(seed)
+
+    # Run the tasks:
+    done_queue = Queue()
+    for k in range(nproc):
+        Process(target=worker, args=(task_queue, done_queue)).start()
+
+    # Check the results in the order they finished
+    for i in range(len(seeds)):
+        list, proc, seed = done_queue.get()
+        print 'list for %d was calculated by process %s to be %s'%(seed, proc, list)
+        np.testing.assert_array_equal(
+                list, ref_lists[seed], 
+                err_msg="Random numbers are different when using multiprocessing")
+
+    # Stop the processes:
+    for k in range(nproc):
+        task_queue.put('STOP')
 
 if __name__ == "__main__":
     test_uniform_rand()
@@ -357,4 +419,5 @@ if __name__ == "__main__":
     test_gamma_image()
     test_chi2_rand()
     test_chi2_image()
+    test_multiprocess()
 
