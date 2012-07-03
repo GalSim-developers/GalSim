@@ -676,8 +676,8 @@ def Script4():
                 # Using the syntax below, these are views into the larger image.  
                 # Changes/additions to the sub-images referenced by the views are automatically 
                 # reflected in the original image.
-                fft_image = image[galsim.BoundsI(1, nx, 1, nx)]
-                phot_image = image[galsim.BoundsI(nx+3, 2*nx+2, 1, nx)]
+                fft_image = image[galsim.BoundsI(1, nx, 1, ny)]
+                phot_image = image[galsim.BoundsI(nx+3, 2*nx+2, 1, ny)]
 
                 #logger.info('   Read in training sample galaxy and PSF from file')
                 t2 = time.time()
