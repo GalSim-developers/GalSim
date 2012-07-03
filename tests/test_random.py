@@ -353,15 +353,16 @@ def test_multiprocess():
         out = []
         for i in range(20):
             out.append(rng())
-        return out, current_process().name, seed
+        return out
 
     def worker(input, output):
         """input is a queue with seed values
-           output is a queue storing the results of the tasks
+           output is a queue storing the results of the tasks along with the process name,
+           and which args the result is for.
         """
-        for seed in iter(input.get, 'STOP'):
-            result = generate_list(seed)
-            output.put(result)
+        for args in iter(input.get, 'STOP'):
+            result = generate_list(*args)
+            output.put( (result, current_process().name, args) )
 
     # Use sequential numbers.  
     # On inspection, can see that even the first value in each list is random with 
@@ -374,15 +375,15 @@ def test_multiprocess():
     # First make lists in the single process:
     ref_lists = dict()
     for seed in seeds:
-        list, proc, seed2 = generate_list(seed)
+        list = generate_list(seed)
         ref_lists[seed] = list
-        #print 'list for %d was calculated by process %s to be %s'%(seed, proc, list)
+        #print 'list for %d was calculated to be %s'%(seed, list)
 
     # Now do this with multiprocessing
     # Put the seeds in a queue
     task_queue = Queue()
     for seed in seeds:
-        task_queue.put(seed)
+        task_queue.put( [seed] )
 
     # Run the tasks:
     done_queue = Queue()
@@ -391,7 +392,8 @@ def test_multiprocess():
 
     # Check the results in the order they finished
     for i in range(len(seeds)):
-        list, proc, seed = done_queue.get()
+        list, proc, args = done_queue.get()
+        seed = args[0]
         print 'list for %d was calculated by process %s to be %s'%(seed, proc, list)
         np.testing.assert_array_equal(
                 list, ref_lists[seed], 
