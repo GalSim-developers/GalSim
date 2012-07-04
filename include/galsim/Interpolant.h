@@ -214,8 +214,8 @@ namespace galsim {
     /**
      * @brief An interpolant that is product of same 1d `Interpolant` in x and y
      *
-     * Note that it only refers to the 1d function, does *not* own it, so the 1d must be kept in
-     * existence.  Typically will create a given `Interpolant` once and use for the whole program.
+     * The 1d interpolant gets passed in by shared_ptr, so there is no need to worry about keeping
+     * the 1d interpolant in existence elsewhere.
      */
     class InterpolantXY : public Interpolant2d 
     {
