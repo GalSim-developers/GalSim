@@ -224,10 +224,10 @@ namespace galsim {
         /// @brief Value of k beyond which aliasing can be neglected.
         double maxK() const;
 
-        /// @brief Image pixel spacing that does not alias maxK.
+        /// @brief Real-space image pixel spacing that does not alias maxK.
         double nyquistDx() const { return M_PI / maxK(); }
 
-        /// @brief Sampling in k space necessary to avoid folding too much of image in x space.
+        /// @brief Sampling in k-space necessary to avoid folding too much of image in x space.
         double stepK() const;
 
         /**
