@@ -365,7 +365,10 @@ namespace galsim {
      * @brief Nearest-neighbor interpolation: boxcar 
      *
      * The nearest-neighbor interpolant performs poorly as a k-space or x-space interpolant for
-     * SBInterpolatedImage.  (See Bernstein & Gruen 2012 for details.)
+     * SBInterpolatedImage.  (See Bernstein & Gruen 2012 for details.)  The objection to its use in
+     * Fourier space does not apply when shooting photons to generate in image; in that case, the
+     * nearest-neighbor interpolant is quite efficient (but not necessarily the best choice in terms
+     * of accuracy).
      *
      * Tolerance determines how far onto sinc wiggles the uval will go.  Very far, by default!
      */
@@ -406,7 +409,8 @@ namespace galsim {
      * data, introducing no spurious frequency content beyond kmax = pi/dx for input data with pixel
      * scale dx.  However, it is formally infinite in extent and, even with reasonable trunction, is
      * still quite large.  It will give exact results in SBInterpolatedImage::kValue() when it is
-     * used as a k-space interpolant, but is extremely slow.
+     * used as a k-space interpolant, but is extremely slow.  The usual compromise between sinc
+     * accuracy vs. speed is the Lanczos interpolant (see its documentation for details).
      */
     class SincInterpolant : public Interpolant 
     {
@@ -456,8 +460,10 @@ namespace galsim {
     /**
      * @brief Linear interpolant
      *
-     * The linear interpolant is a poor choice for SBInterpolatedImage, as it rings to high
-     * frequencies.  (See Bernstein & Gruen 2012 for details.)
+     * The linear interpolant is a poor choice for FFT-based operations on SBInterpolatedImage, as
+     * it rings to high frequencies.  (See Bernstein & Gruen 2012 for details.)  This objection does
+     * not apply when shooting photons, in which case the linear interpolant is quite efficient (but
+     * not necessarily the best choice in terms of accuracy).
      */
     class Linear : public Interpolant 
     {
@@ -494,8 +500,9 @@ namespace galsim {
     /**
      * @brief The Lanczos interpolation filter, nominally sinc(x)*sinc(x/n), truncated at +-n.
      *
-     * The Lanczos filter is an approximation to the band-limiting sinc filter.  Order n Lanczos has
-     * a range of +/- n pixels.  It typically is a good compromise between kernel size and accuracy.
+     * The Lanczos filter is an approximation to the band-limiting sinc filter with a smooth cutoff
+     * at high x.  Order n Lanczos has a range of +/- n pixels.  It typically is a good compromise
+     * between kernel size and accuracy.
      *
      * Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return
      * this constant.  Setting fluxConserve in the constructor tweaks the function so that it
