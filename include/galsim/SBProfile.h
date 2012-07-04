@@ -230,28 +230,35 @@ namespace galsim {
         /// @brief Sampling in k space necessary to avoid folding too much of image in x space.
         double stepK() const;
 
-        /// @brief Characteristic that can affect efficiency of evaluation.
+        /**
+         * @brief Check whether the SBProfile is known to have rotational symmetry about x=y=0
+         *
+         * If the SBProfile has rotational symmetry, certain calculations can be simplified.
+         */
         bool isAxisymmetric() const;
 
         /**
-         *  @brief The presence of hard edges help determine whether real space 
-         *  convolution might be a better choice.
+         *  @brief The presence of hard edges help determine whether real space convolution might be
+         *  a better choice.
          */
         bool hasHardEdges() const;
 
         /** 
-         * @brief Characteristic that can affect efficiency of evaluation.
+         * @brief Check whether the SBProfile is analytic in the real domain.
          *
-         * SBProfile is "analytic" in the real domain if values can be determined immediately at 
-         * any position through formula or a stored table (no DFT).
+         *
+         * An SBProfile is "analytic" in the real domain if values can be determined immediately at
+         * any position through formula or a stored table (no DFT); this makes certain calculations
+         * more efficient.
          */
         bool isAnalyticX() const;
 
         /**
-         * @brief Characteristic that can affect efficiency of evaluation.
+         * @brief Check whether the SBProfile is analytic in the Fourier domain.
          * 
-         * SBProfile is "analytic" in the k domain if values can be determined immediately at any 
-         * position through formula or a stored table (no DFT).
+         * An SBProfile is "analytic" in the k domain if values can be determined immediately at any 
+         * position through formula or a stored table (no DFT); this makes certain calculations
+         * more efficient.
          */
         bool isAnalyticK() const;
 
