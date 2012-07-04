@@ -21,15 +21,16 @@ namespace galsim {
      * The profiles to be convolved may be provided either as the first 1, 2, or 3
      * parameters in the constructor, or as a std::list<SBProfile*>.
      *
-     * The convolution will normally be done using discrete Fourier transforms of 
-     * each of the component profiles, multiplying them together, and then transforming
-     * back to real space.
+     * The convolution will normally be done using discrete Fourier transforms of each of the
+     * component profiles, multiplying them together, and then transforming back to real space.
+     * Note that when using the SBConvolve to convolve a galaxy of some flux with a PSF, it is
+     * important to normalize the flux in the PSF to 1 beforehand.
      *
      * The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2)
      * where the sum is over all teh components being convolved.  Since the size of 
      * the convolved image scales roughly as the quadrature sum of the components,
      * this should be close to Pi/Rmax where Rmax is the radius that encloses
-     * all but (1-alias_threshold) of the flux in the final convolved image..
+     * all but (1-alias_threshold) of the flux in the final convolved image.
      *
      * The maxK used for the k-space image will be the minimum of the maxK() calculated for
      * each component.  Since the k-space images are multiplied, if one of them is 

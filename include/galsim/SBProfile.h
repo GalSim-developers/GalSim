@@ -120,20 +120,24 @@ namespace galsim {
      * @brief A base class representing all of the 2D surface brightness profiles that 
      * we know how to draw.
      *
+     * The SBProfile class is a representation of a surface brightness distribution across a
+     * 2-dimensional image plane, with real and/or Fourier-domain models of a wide variety of galaxy
+     * shapes, point-spread functions (PSFs), and their convolutions.  There are several
+     * realizations of the SBProfile classes: There are the "atomic" classes that represent specific
+     * analytic profiles: (SBGaussian, SBSersic, SBAiry, SBExponential, SBBox, SBDeVaucouleurs and
+     * SBMoffat). SBInterpolatedImage represents a pattern defined by a grid of pixel values and a
+     * chosen interpolation scheme between pixel centers.  SBTransform represents any affine
+     * transformation (shear, magnification, rotation, translation, and/or flux rescaling) of any
+     * other SBProfile. SBAdd represents the sum of any number of SBProfiles.  SBConvolve represents
+     * the convolution of any number of SBProfiles, and SBDeconvolve is the deconvolution of one
+     * SBProfile with another.
+     *
      * Every SBProfile knows how to draw an Image<float> of itself in real and k space.  Each also
-     * knows what is needed to prevent aliasing or truncation of itself when drawn.
-     * **Note** that when you use the SBProfile::draw() routines you will get an image of 
-     * **surface brightness** values in each pixel, not the flux that fell into the pixel.  To get
-     * flux, you must multiply the image by (dx*dx).
-     * drawK() routines are normalized such that I(0,0) is the total flux.
-     * Currently we have the following possible implementations of SBProfile:
-     * Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic
-     * SBLaguerre: Gauss-Laguerre expansion
-     * SBTransform: affine transformation of another SBProfile
-     * SBAdd: sum of SBProfiles
-     * SBConvolve: convolution of other SBProfiles
-     * SBInterpolatedImage: surface brightness profiles defined by an image and interpolant.
-     * SBDeconvolve: deconvolve one SBProfile with another
+     * knows what is needed to prevent aliasing or truncation of itself when drawn.  **Note** that
+     * when you use the SBProfile::draw() routines you will get an image of **surface brightness**
+     * values in each pixel, not the flux that fell into the pixel.  To get flux, you must multiply
+     * the image by (dx*dx).  Likewise, the xValue routine returns the value of the surface
+     * brightness. drawK() routines are normalized such that I(0,0) is the total flux.
      *
      * This isn't an abstract base class.  An SBProfile is a concrete object
      * which internally has a pointer to the implementation details (which _is_ an abstract
