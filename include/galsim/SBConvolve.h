@@ -16,10 +16,10 @@ namespace galsim {
     /**
      * @brief Convolve SBProfiles.
      *
-     * Convolve one, two, three or more SBProfiles together.
+     * Convolve two, three or more SBProfiles together.
      *
-     * The profiles to be convolved may be provided either as the first 1, 2, or 3 parameters in the
-     * constructor, or as a std::list<SBProfile*>.
+     * The profiles to be convolved may be provided either as the first 2 or 3 parameters in the
+     * constructor, or as a std::list<SBProfile>.
      *
      * The convolution will normally be done using discrete Fourier transforms of each of the
      * component profiles, multiplying them together, and then transforming back to real space.  The
@@ -39,8 +39,7 @@ namespace galsim {
      * There is also an option to do the convolution as integrals in real space.  Each constructor
      * has an optional boolean parameter, real_space, that comes immediately after the list of
      * profiles to convolve.  Currently, the real-space integration is only enabled for 2 profiles.
-     * (Aside from the trivial implementaion for 1 profile.)  If you try to use it for more than 2
-     * profiles, an exception will be thrown.
+     * If you try to use it for more than 2 profiles, an exception will be thrown.
      *
      * The real-space convolution is normally slower than the DFT convolution.  The exception is if
      * both component profiles have hard edges (e.g. a truncated Moffat with a Box).  In that case,
