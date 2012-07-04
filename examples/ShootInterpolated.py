@@ -48,7 +48,7 @@ def main(argv):
         raise err
 
     galaxyImg = galsim.fits.read(inname)
-    galaxy = galsim.SBInterpolatedImage(galaxyImg, interp2d, dx=1., padFactor=1.0)
+    galaxy = galsim.SBInterpolatedImage(galaxyImg, interp2d, dx=1., pad_factor=1.0)
     galaxy.applyShear(galsim.Shear(g1=g1,g2=g2)._shear)
 
     rng = galsim.UniformDeviate(1534225)

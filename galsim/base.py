@@ -749,7 +749,7 @@ class OpticalPSF(GSObject):
                            PSF (not good).
     @param pad_factor      additional multiple by which to zero-pad the PSF image to avoid folding
                            compared to what would be required for a simple Airy [default = 1.5].
-                           Note that padFactor may need to be increased for stronger aberrations,
+                           Note that pad_factor may need to be increased for stronger aberrations,
                            i.e. those larger than order unity. 
     """
     def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
@@ -779,7 +779,13 @@ class OpticalPSF(GSObject):
         else:
             self.Interpolant2D = interpolantxy
         GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D,
-                                                           dx=dx_lookup))
+                                                           dx=dx_lookup, pad_factor=1))
+        # The above procedure ends up with a larger image than we really need, which
+        # means that the default stepK value will be smaller than we need.  
+        # Thus, we call the function calculateStepK() to refine the value.
+        self.SBProfile.calculateStepK()
+        self.SBProfile.calculateMaxK()
+
     def getHalfLightRadius(self):
         # The half light radius is a complex function for aberrated optical PSFs, so just give
         # up gracelessly...
@@ -838,6 +844,12 @@ class AtmosphericPSF(GSObject):
             self.Interpolant2D = interpolantxy
         GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, 
                                                            dx=dx_lookup))
+        # The above procedure ends up with a larger image than we really need, which
+        # means that the default stepK value will be smaller than we need.  
+        # Thus, we call the function calculateStepK() to refine the value.
+        self.SBProfile.calculateStepK()
+        self.SBProfile.calculateMaxK()
+
     def getHalfLightRadius(self):
         # TODO: This seems like it would not be impossible to calculate
         raise NotImplementedError("Half light radius calculation not yet implemented for "+

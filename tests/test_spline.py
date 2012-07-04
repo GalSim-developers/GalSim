@@ -106,7 +106,7 @@ def test_Lanczos5_spline():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
     
 def test_Lanczos7_spline():
-    """Test the spline tabulation of the k space Lanczos-5 interpolant.
+    """Test the spline tabulation of the k space Lanczos-7 interpolant.
     """
     import time
     t1 = time.time()
