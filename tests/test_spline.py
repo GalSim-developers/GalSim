@@ -2,8 +2,8 @@
 """@brief Tests for the numerical spline routines used to tabulate some of the k space interpolators
 for which an analytic result is not available (Cubic, Quintic, Lanczos).
 
-Compares kValue outputs from an SBInterpolatedImage (an OpticalPSF in this case) that were created
-using a previous version of the code (commit: ffeb22583894bd1c2254dbbd75449996f13a04a2), using the
+Compares kValue outputs from an SBInterpolatedImage (sum of Guassians) that were created
+using a previous version of the code (commit: 4d71631d7379f76bb0e3ee582b5a1fbdc0def666), using the
 script devutils/external/test_spline/make_spline_arrays.py.
 """
 import os
@@ -21,19 +21,26 @@ TESTDIR=os.path.join(path, "spline_comparison_files")
 
 DECIMAL = 14 # Make sure output agrees at 14 decimal places or better
 
-# Some values used to make the OpticalPSF (uses an SBInterpolatedImage table) interesting and 
-# non-symmetric:
-COMA1 = 0.17
-ASTIG2 = -0.44
-DEFOCUS = -0.3
-SPHER = 0.027
-LAM_OVER_D = 5.
-OVERSAMPLING = 2.
-PAD_FACTOR=2.
-
 # Some arbitrary kx, ky k space values to test
 KXVALS = np.array((1.3, 0.71, -4.3)) * np.pi / 2.
 KYVALS = np.array((.8, -2., -.31,)) * np.pi / 2.
+
+absoutk = np.zeros(len(KXVALS)) # result storage arrays
+
+# First make an image that we'll use for interpolation:
+g1 = galsim.Gaussian(sigma = 3.1, flux=2.4)
+g1.applyShear(0.2,0.1)
+g2 = galsim.Gaussian(sigma = 1.9, flux=3.1)
+g2.applyShear(-0.4,0.3)
+g2.applyShift(-0.3,0.5)
+g3 = galsim.Gaussian(sigma = 4.1, flux=1.6)
+g3.applyShear(0.1,-0.1)
+g3.applyShift(0.7,-0.2)
+
+final = g1 + g2 + g3
+image = galsim.ImageD(128,128)
+dx = 0.4
+final.draw(image=image, dx=dx)
 
 def funcname():
     import inspect
@@ -45,9 +52,7 @@ def test_Cubic_spline():
     import time
     t1 = time.time()
     interp = galsim.InterpolantXY(galsim.Cubic(tol=1.e-4))
-    testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
-                                spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING,
-                                pad_factor=PAD_FACTOR)
+    testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
     for i in xrange(len(KXVALS)):
@@ -67,9 +72,7 @@ def test_Quintic_spline():
     import time
     t1 = time.time()
     interp = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))
-    testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
-                                spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING,
-                                pad_factor=PAD_FACTOR)
+    testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
     for i in xrange(len(KXVALS)):
@@ -89,9 +92,7 @@ def test_Lanczos5_spline():
     import time
     t1 = time.time()
     interp = galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))
-    testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
-                                spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING,
-                                pad_factor=PAD_FACTOR)
+    testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
     for i in xrange(len(KXVALS)):
@@ -111,9 +112,7 @@ def test_Lanczos7_spline():
     import time
     t1 = time.time()
     interp = galsim.InterpolantXY(galsim.Lanczos(7, conserve_flux=True, tol=1.e-4))
-    testobj = galsim.OpticalPSF(lam_over_D=LAM_OVER_D, defocus=DEFOCUS, astig2=ASTIG2, coma1=COMA1,
-                                spher=SPHER, interpolantxy=interp, oversampling=OVERSAMPLING,
-                                pad_factor=PAD_FACTOR)
+    testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
     for i in xrange(len(KXVALS)):
