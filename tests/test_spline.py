@@ -29,18 +29,18 @@ absoutk = np.zeros(len(KXVALS)) # result storage arrays
 
 # First make an image that we'll use for interpolation:
 g1 = galsim.Gaussian(sigma = 3.1, flux=2.4)
-g1.applyShear(0.2,0.1)
+g1.applyShear(g1=0.2,g2=0.1)
 g2 = galsim.Gaussian(sigma = 1.9, flux=3.1)
-g2.applyShear(-0.4,0.3)
+g2.applyShear(g1=-0.4,g2=0.3)
 g2.applyShift(-0.3,0.5)
 g3 = galsim.Gaussian(sigma = 4.1, flux=1.6)
-g3.applyShear(0.1,-0.1)
+g3.applyShear(g1=0.1,g2=-0.1)
 g3.applyShift(0.7,-0.2)
 
 final = g1 + g2 + g3
 image = galsim.ImageD(128,128)
 dx = 0.4
-final.draw(image=image, dx=dx)
+final.draw(image=image, dx=dx, normalization='sb')
 
 def funcname():
     import inspect
