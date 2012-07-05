@@ -19,7 +19,7 @@ except ImportError:
 
 TESTDIR=os.path.join(path, "spline_comparison_files")
 
-DECIMAL = 14 # Make sure output agrees at 14 decimal places or better
+DECIMAL = 16 # Make sure output agrees at 16 decimal places or better
 
 # Some arbitrary kx, ky k space values to test
 KXVALS = np.array((1.3, 0.71, -4.3)) * np.pi / 2.
