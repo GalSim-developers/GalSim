@@ -7,8 +7,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
+std::ostream* dbgout = new std::ofstream("debug.out");
+int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -251,6 +251,8 @@ namespace galsim {
         // be convolved by a PSF that will have a smaller maxK.
         _maxk = _xInterp->urange() * 2.*M_PI / _multi.getScale(); 
         dbg<<"maxk = "<<_maxk<<std::endl;
+
+        dbg<<"flux = "<<getFlux()<<std::endl;
     }
 
     SBInterpolatedImage::SBInterpolatedImageImpl::~SBInterpolatedImageImpl() {}
@@ -259,6 +261,7 @@ namespace galsim {
     {
         double flux = 0.;
         for (size_t i=0; i<_multi.size(); ++i) flux += _wts[i] * _multi.getFlux(i);
+        dbg<<"flux = "<<flux<<std::endl;
         return flux;
     }
 
