@@ -939,7 +939,7 @@ def Script5():
     t3 = time.time()
 
     logger.info('Total time taken using a single process = %f',t2-t1)
-    logger.info('Total time taken using %d prcesses = %f',nproc,t3-t2)
+    logger.info('Total time taken using %d processes = %f',nproc,t3-t2)
 
     # Now write the images to disk.
     image_single.write(single_file_name, clobber=True)
