@@ -804,9 +804,8 @@ def Script5():
 
     logger.info('Starting multi-object script 5')
 
-    def draw_stamp(ix, iy, n, seed):
-        """A function that draws a single postage stamp (ix,iy) on image n 
-           using seed for the random number generator.
+    def draw_stamp(seed):
+        """A function that draws a single postage stamp using seed for the random number generator.
            Returns the total time taken.
         """
         t1 = time.time()
@@ -869,7 +868,7 @@ def Script5():
            and which args this result is for.
         """
         for args in iter(input.get, 'STOP'):
-            result = draw_stamp(*args)
+            result = draw_stamp(args[3])
             output.put( (result, current_process().name, args) )
     
     ntot = nx_stamps * ny_stamps
@@ -888,7 +887,7 @@ def Script5():
         for iy in range(ny_stamps):
             bounds = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels, 
                                     iy*ny_pixels+1 , (iy+1)*ny_pixels)
-            im, t = draw_stamp(ix,iy,0,seeds[k])
+            im, t = draw_stamp(seeds[k])
             image_single[bounds] = im
             proc = current_process().name
             logger.info('%s: Time for stamp (%d,%d) was %f',proc,ix,iy,t)
