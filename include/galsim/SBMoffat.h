@@ -12,6 +12,10 @@ namespace galsim {
     /**
      * @brief Surface Brightness for the Moffat Profile (an approximate description of ground-based
      * PSFs).
+     *
+     * The Moffat surface brightness profile is I(R) propto [1 + (r/r_scale)^2]^(-beta).  The
+     * SBProfile representation of a Moffat profile also includes an optional truncation beyond a
+     * given radius.
      */
     class SBMoffat : public SBProfile 
     {
