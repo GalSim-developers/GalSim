@@ -63,6 +63,19 @@ def Image_copy(self):
     # which in turn can be used to index our Image dictionary:
     return _galsim.Image[self.array.dtype.type](self)
 
+# Some function to enable pickling of images
+def ImageView_getinitargs(self):
+    return self.array, self.xMin, self.yMin
+
+# An image is really pickled as an ImageView
+def Image_getstate(self):
+    return self.array, self.xMin, self.yMin
+
+def Image_setstate(self, args):
+    type = self.array.dtype.type
+    self.__class__ = _galsim.ImageView[type]
+    self.__init__(*args)
+
 # inject these as methods of Image classes
 for Class in _galsim.Image.itervalues():
     Class.__setitem__ = Image_setitem
@@ -80,6 +93,9 @@ for Class in _galsim.Image.itervalues():
     Class.__idiv__ = Image_idiv
     Class.__itruediv__ = Image_idiv
     Class.copy = Image_copy
+    Class.__getstate_manages_dict__ = 1
+    Class.__getstate__ = Image_getstate
+    Class.__setstate__ = Image_setstate
 
 for Class in _galsim.ImageView.itervalues():
     Class.__setitem__ = Image_setitem
@@ -97,6 +113,7 @@ for Class in _galsim.ImageView.itervalues():
     Class.__idiv__ = Image_idiv
     Class.__itruediv__ = Image_idiv
     Class.copy = Image_copy
+    Class.__getinitargs__ = ImageView_getinitargs
 
 for Class in _galsim.ConstImageView.itervalues():
     Class.__getitem__ = Image_getitem
@@ -108,5 +125,6 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__div__ = Image_div
     Class.__truediv__ = Image_div
     Class.copy = Image_copy
+    Class.__getinitargs__ = ImageView_getinitargs
 
 del Class    # cleanup public namespace
