@@ -241,12 +241,15 @@ namespace galsim {
         _negativeFlux(0.),
         _isRadial(isRadial)
     {
+        dbg<<"Start ODD constructor\n";
+        dbg<<"radial? = "<<isRadial<<std::endl;
 
         // Typedef for indices of standard containers, which don't like int values
         typedef std::vector<double>::size_type Index;
 
         // First calculate total flux so we know when an interval is a small amt of flux
         for (Index iRange = 0; iRange < range.size()-1; iRange++) {
+            xdbg<<"range "<<iRange<<" = "<<range[iRange]<<" ... "<<range[iRange+1]<<std::endl;
             // Integrate total flux (and sign) in each range
             Interval segment(fluxDensity,   
                              range[iRange],
@@ -256,7 +259,10 @@ namespace galsim {
             if (rangeFlux >= 0.) _positiveFlux += rangeFlux;
             else _negativeFlux += std::abs(rangeFlux);
         }
+        dbg<<"posFlux = "<<_positiveFlux<<std::endl;
+        dbg<<"negFlux = "<<_negativeFlux<<std::endl;
         double totalAbsoluteFlux = _positiveFlux + _negativeFlux;
+        dbg<<"totFlux = "<<totalAbsoluteFlux<<std::endl;
 
         // Now break each range into Intervals
         for (Index iRange = 0; iRange < range.size()-1; iRange++) {
@@ -267,6 +273,8 @@ namespace galsim {
                              range[iRange+1],
                              extremum,
                              odd::RANGE_DIVISION_FOR_EXTREMA)) {
+                xdbg<<"range "<<iRange<<" = "<<range[iRange]<<" ... "<<range[iRange+1]<<
+                    "  has an extremum at "<<extremum<<std::endl;
                 // Do 2 ranges
                 {
                     Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial);
@@ -288,6 +296,7 @@ namespace galsim {
                 _pt.splice(_pt.end(), leftList);
             }
         }
+        dbg<<"Total of "<<_pt.size()<<" intervals\n";
         // Build the ProbabilityTree
         _pt.buildTree();
     }

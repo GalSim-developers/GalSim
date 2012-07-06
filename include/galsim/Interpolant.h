@@ -505,8 +505,9 @@ namespace galsim {
      * between kernel size and accuracy.
      *
      * Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return
-     * this constant.  Setting fluxConserve in the constructor tweaks the function so that it
-     * conserves value of constant (DC) input data.
+     * this constant.  Setting fluxConserve in the constructor tweaks the function so that it 
+     * approximately conserves the value of constant (DC) input data.
+     * Only the first order correction is applied, which should be accurate to about 1.e-5.
      */
     class Lanczos : public Interpolant 
     {
@@ -515,7 +516,8 @@ namespace galsim {
          * @brief Constructor
          *
          * @param[in] n  Filter order; must be given on input and cannot be changed.  
-         * @param[in] fluxConserve  Set true to adjust filter to be exact for constant inputs.
+         * @param[in] fluxConserve  Set true to adjust filter to be more nearly correct for 
+         *                          constant inputs.
          * @param[in] tol  Sets accuracy and extent of Fourier transform.
          */
         Lanczos(int n, bool fluxConserve=false, double tol=1.e-3) :  
