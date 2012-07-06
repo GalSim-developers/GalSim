@@ -144,6 +144,10 @@ namespace galsim {
      * @brief Surface Brightness Profile represented by interpolation over one or more data 
      * tables/images.
      *
+     * The SBInterpolatedImage class represents an arbitrary surface brightness profile (supplied as
+     * an image), including rules for how to interpolate the profile between the supplied pixel
+     * values.
+     *
      * It is assumed that input images oversample the profiles they represent.  maxK() is set at 
      * the Nyquist frequency of the input image, although it should be noted that interpolants 
      * other than the ideal sinc function may make the max frequency higher than this.  The output
@@ -157,8 +161,17 @@ namespace galsim {
      * You can provide different interpolation schemes for real and fourier space
      * (passed as xInterp and kInterp respectively).  If either one is omitted, the 
      * defaults are:
+     *
      * xInterp = Lanczos(5, fluxConserve=true, tol=kvalue_accuracy)
+     *
      * kInterp = Quintic(tol=kvalue_accuracy)
+     *
+     * The ideal k-space interpolant is a sinc function; however, the quintic interpolant is the
+     * default, based on detailed investigations on the tradeoffs between accuracy and speed.  Note
+     * that, as in Bernstein & Gruen (2012), the accuracy achieved by this interpolant is dependent
+     * on our choice of 4x pad factor.  Users who do not wish to pad the arrays to this degree may
+     * need to use a higher-order Lanczos interpolant instead, but this is not the recommended
+     * usage.
      *
      * There are also optional arguments for the pixel size (default is to get it from
      * the image), and a factor by which to pad the image (default = 4).
