@@ -779,7 +779,7 @@ class OpticalPSF(GSObject):
         else:
             self.Interpolant2D = interpolantxy
         GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D,
-                                                           dx=dx_lookup, pad_factor=1))
+                                                           dx=dx_lookup))
         # The above procedure ends up with a larger image than we really need, which
         # means that the default stepK value will be smaller than we need.  
         # Thus, we call the function calculateStepK() to refine the value.
