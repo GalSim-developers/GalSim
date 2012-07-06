@@ -869,8 +869,8 @@ def Script5():
                info is passed along to the output queue.
            output is a queue storing (result, info, proc) tuples:
                result is the returned tuple from draw_stamp: (image, time).
-               proc is the process name.
                info is passed through from the input queue.
+               proc is the process name.
         """
         for (seed, info) in iter(input.get, 'STOP'):
             result = draw_stamp(seed)
