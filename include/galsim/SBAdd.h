@@ -11,6 +11,8 @@ namespace galsim {
 
     /** 
      * @brief Sums SBProfiles. 
+     *
+     * The SBAdd class can be used to add arbitrary numbers of SBProfiles together.
      */
     class SBAdd : public SBProfile 
     {

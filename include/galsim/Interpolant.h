@@ -34,13 +34,12 @@ namespace galsim {
     };
 
     /** 
-     * @brief One-dimensional interpolant base function
+     * @brief Base class representing one-dimensional interpolant functions
      *
-     * One-dimensional interpolant function.  X units are in pixels
-     * and the frequency-domain u values are in cycles per pixel.
+     * One-dimensional interpolant function.  X units are in pixels and the frequency-domain u
+     * values are in cycles per pixel.
      *
-     * All Interpolants are assumed symmetric so that frequency-domain
-     * values are real.
+     * All Interpolants are assumed symmetric so that frequency-domain values are real.
      */
     class Interpolant 
     {
@@ -86,8 +85,8 @@ namespace galsim {
         /**
          * @brief Value of interpolant in frequency space
          * @param[in] u Frequency for evaluation (cycles per pixel)
-         * @returns Value of interpolant, normalized so uval(0) = 1 for 
-         *          flux-conserving interpolation.
+         * @returns Value of interpolant, normalized so uval(0) = 1 for flux-conserving
+         * interpolation.
          */
         virtual double uval(double u) const =0;
 
@@ -100,9 +99,9 @@ namespace galsim {
         /**
          * @brief Report whether interpolation will reproduce values at samples
          *
-         * This will return true if the interpolant is exact at nodes, meaning
-         * that F(0)=1 and F(n)=0 for non-zero integer n.  Right now this is true for
-         * every implementation.
+         * This will return true if the interpolant is exact at nodes, meaning that F(0)=1 and
+         * F(n)=0 for non-zero integer n.  Right now this is true for every implementation.
+         *
          * @returns True if samples are returned exactly.
          */
         virtual bool isExactAtNodes() const { return true; }
@@ -111,8 +110,8 @@ namespace galsim {
         /**
          * @brief Return the integral of the positive portions of the kernel
          *
-         * Should return 1 unless the kernel has negative portions.  Default is to ask
-         * the numerical sampler for its stored value.
+         * Should return 1 unless the kernel has negative portions.  Default is to ask the numerical
+         * sampler for its stored value.
          *
          * @returns Integral of positive portions of kernel
          */
@@ -122,8 +121,8 @@ namespace galsim {
         /**
          * @brief Return the (absolute value of) integral of the negative portions of the kernel
          *
-         * Should return 0 unless the kernel has negative portions.   Default is to ask
-         * the numerical sampler for its stored value.
+         * Should return 0 unless the kernel has negative portions.  Default is to ask the numerical
+         * sampler for its stored value.
          *
          * @returns Integral of abs value of negative portions of kernel
          */
@@ -133,11 +132,11 @@ namespace galsim {
         /**
          * @brief Return array of displacements drawn from this kernel.  
          *
-         * Since Interpolant is 1d, will use only x array of PhotonArray.  It will be assumed
-         * that photons returned are randomly ordered (no need to shuffle them).  Also assumed
-         * that all photons will have nearly equal absolute value of flux.  Total flux returned
-         * may not equal 1 due to shot noise in negative/positive photons, and small fluctuations
-         * in photon weights.
+         * Since Interpolant is 1d, will use only x array of PhotonArray.  It will be assumed that
+         * photons returned are randomly ordered (no need to shuffle them).  Also assumed that all
+         * photons will have nearly equal absolute value of flux.  Total flux returned may not equal
+         * 1 due to shot noise in negative/positive photons, and small fluctuations in photon
+         * weights.
          *
          * @param[in] N number of photons to shoot
          * @param[in] ud UniformDeviate used to generate random values
@@ -172,7 +171,7 @@ namespace galsim {
     /**
      * @brief Two-dimensional version of the `Interpolant` interface.
      *
-     * Methods have same meaning as in 1d
+     * Methods have same meaning as in 1d.
      */
     class Interpolant2d 
     {
@@ -215,9 +214,8 @@ namespace galsim {
     /**
      * @brief An interpolant that is product of same 1d `Interpolant` in x and y
      *
-     * Note that it only refers to the 1d function, does *not* own it, so the 1d must
-     * be kept in existence.  Typically will create a given `Interpolant` once and use
-     * for the whole program.
+     * The 1d interpolant gets passed in by shared_ptr, so there is no need to worry about keeping
+     * the 1d interpolant in existence elsewhere.
      */
     class InterpolantXY : public Interpolant2d 
     {
@@ -291,8 +289,8 @@ namespace galsim {
     /**
      * @brief Function returning integral of sinc function.
      *
-     * Clever things from Daniel: integral of sin(t)/t from 0 to x.
-     * Note the official definition does not have pi multiplying t.
+     * Utility for calculating the integral of sin(t)/t from 0 to x.  Note the official definition
+     * does not have pi multiplying t.
      * @param[in] x Upper limit of integral
      * @returns Integral of sin(t)/t from 0 to x (no pi factors)
      */
@@ -328,15 +326,12 @@ namespace galsim {
     /** 
      * @brief Delta-function interpolant in 1d
      *
-     * The interpolant for when you do not want to interpolate
-     * between samples.  Not really intended to be used for 
-     * any analytic drawing because it's infinite in the x domain
-     * at location of samples, and it extends to infinity in
-     * the u domain.  But it could be useful for photon-shooting,
-     * where it is trivially implemented as no displacements.
-     * The argument in constructor is used to make a crude box
-     * approximation to the x-space delta function and to give a
-     * large but finite urange.
+     * The interpolant for when you do not want to interpolate between samples.  It is not really
+     * intended to be used for any analytic drawing because it is infinite in the x domain at
+     * location of samples, and it extends to infinity in the u domain.  But it could be useful for
+     * photon-shooting, where it is trivially implemented as no displacements.  The argument in the
+     * constructor is used to make a crude box approximation to the x-space delta function and to
+     * give a large but finite urange.
      *
      */
     class Delta : public Interpolant 
@@ -369,8 +364,13 @@ namespace galsim {
     /**
      * @brief Nearest-neighbor interpolation: boxcar 
      *
-     * Tolerance determines how far onto sinc wiggles the uval will go.
-     * Very far, by default!
+     * The nearest-neighbor interpolant performs poorly as a k-space or x-space interpolant for
+     * SBInterpolatedImage.  (See Bernstein & Gruen 2012 for details.)  The objection to its use in
+     * Fourier space does not apply when shooting photons to generate in image; in that case, the
+     * nearest-neighbor interpolant is quite efficient (but not necessarily the best choice in terms
+     * of accuracy).
+     *
+     * Tolerance determines how far onto sinc wiggles the uval will go.  Very far, by default!
      */
     class Nearest : public Interpolant 
     {
@@ -404,6 +404,13 @@ namespace galsim {
 
     /** 
      *@brief Sinc interpolation: inverse of Nearest-neighbor
+     *
+     * The Sinc interpolant (K(x) = sin(pi x)/(pi x)) is mathematically perfect for band-limited
+     * data, introducing no spurious frequency content beyond kmax = pi/dx for input data with pixel
+     * scale dx.  However, it is formally infinite in extent and, even with reasonable trunction, is
+     * still quite large.  It will give exact results in SBInterpolatedImage::kValue() when it is
+     * used as a k-space interpolant, but is extremely slow.  The usual compromise between sinc
+     * accuracy vs. speed is the Lanczos interpolant (see its documentation for details).
      */
     class SincInterpolant : public Interpolant 
     {
@@ -438,8 +445,8 @@ namespace galsim {
             }
         }
         /**
-         * @brief Photon-shooting will be disabled for sinc function since wiggles will 
-         * make it crazy
+         * @brief Photon-shooting will be disabled for sinc function since wiggles will make it
+         * crazy
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
         {
@@ -453,6 +460,10 @@ namespace galsim {
     /**
      * @brief Linear interpolant
      *
+     * The linear interpolant is a poor choice for FFT-based operations on SBInterpolatedImage, as
+     * it rings to high frequencies.  (See Bernstein & Gruen 2012 for details.)  This objection does
+     * not apply when shooting photons, in which case the linear interpolant is quite efficient (but
+     * not necessarily the best choice in terms of accuracy).
      */
     class Linear : public Interpolant 
     {
@@ -478,8 +489,8 @@ namespace galsim {
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
         /**
-         * @brief Linear interpolant has fast photon-shooting by adding two uniform deviates 
-         * per axis.
+         * @brief Linear interpolant has fast photon-shooting by adding two uniform deviates per
+         * axis.
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
     private:
@@ -488,6 +499,14 @@ namespace galsim {
 
     /**
      * @brief The Lanczos interpolation filter, nominally sinc(x)*sinc(x/n), truncated at +-n.
+     *
+     * The Lanczos filter is an approximation to the band-limiting sinc filter with a smooth cutoff
+     * at high x.  Order n Lanczos has a range of +/- n pixels.  It typically is a good compromise
+     * between kernel size and accuracy.
+     *
+     * Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return
+     * this constant.  Setting fluxConserve in the constructor tweaks the function so that it
+     * conserves value of constant (DC) input data.
      */
     class Lanczos : public Interpolant 
     {
@@ -495,9 +514,6 @@ namespace galsim {
         /**
          * @brief Constructor
          *
-         * Note that pure Lanczos, when interpolating a set of constant-valued samples, does
-         * not return this constant.  Setting fluxConserve tweaks the function so that it
-         * conserves value of constant (DC) input data.
          * @param[in] n  Filter order; must be given on input and cannot be changed.  
          * @param[in] fluxConserve  Set true to adjust filter to be exact for constant inputs.
          * @param[in] tol  Sets accuracy and extent of Fourier transform.
@@ -545,7 +561,10 @@ namespace galsim {
     /**
      * @brief  Cubic interpolator exact to 3rd order Taylor expansion
      *
-     * From R. G. Keys , IEEE Trans. Acoustics, Speech, & Signal Proc 29, p 1153, 1981
+     * From R. G. Keys, IEEE Trans. Acoustics, Speech, & Signal Proc 29, p 1153, 1981
+     *
+     * The cubic interpolant is a reasonable choice for a four-point interpolant for
+     * SBInterpolatedImage.   (See Bernstein & Gruen 2012 for details.)
      */
     class Cubic : public Interpolant 
     {
@@ -635,8 +654,8 @@ namespace galsim {
 
     protected:
         /**
-         * @brief Override default sampler configuration because Quintic filter has sign 
-         * change in outer interval
+         * @brief Override default sampler configuration because Quintic filter has sign change in
+         * outer interval
          */
         virtual void checkSampler() const 
         {

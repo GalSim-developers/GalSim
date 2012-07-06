@@ -12,9 +12,10 @@ namespace galsim {
     /** 
      * @brief Surface Brightness Profile for the Boxcar function.
      *
-     * Convolution with a Boxcar function of dimensions `xw` x `yw` and sampling at pixel centres
-     * is equivalent to pixelation (i.e. Surface Brightness integration) across rectangular pixels
-     * of the same dimensions.  This class is therefore useful for pixelating SBProfiles.
+     * The boxcar function is a rectangular box.  Convolution with a Boxcar function of dimensions
+     * `xw` x `yw` and sampling at pixel centres is equivalent to pixelation (i.e. Surface
+     * Brightness integration) across rectangular pixels of the same dimensions.  This class is
+     * therefore useful for pixelating SBProfiles.
      */ 
     class SBBox : public SBProfile 
     {

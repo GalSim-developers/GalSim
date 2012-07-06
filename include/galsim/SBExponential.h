@@ -12,8 +12,9 @@ namespace galsim {
     /** 
      * @brief Exponential Surface Brightness Profile.  
      *
-     * This is a special case of the Sersic profile, but is given a separate class since the 
-     * Fourier transform has closed form and can be generated without lookup tables.
+     * Surface brightness profile with I(r) propto exp[-r/r_0] for some scale-length r_0.  This is a
+     * special case of the Sersic profile, but is given a separate class since the Fourier transform
+     * has closed form and can be generated without lookup tables.
      */
     class SBExponential : public SBProfile 
     {
