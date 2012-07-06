@@ -18,11 +18,8 @@
 
 #include "Std.h"
 #include "Shear.h"
-#include "FFT.h"
-#include "Table.h"
 #include "Random.h"
 #include "Angle.h"
-#include "integ/Int.h"
 
 #include "Image.h"
 

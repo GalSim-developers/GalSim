@@ -314,6 +314,7 @@ struct PyImage {
             .def("copyFrom", &Image<T>::copyFrom)
             .def("fill", &Image<T>::fill)
             .def("setZero", &Image<T>::setZero)
+            .enable_pickling()
             ;
         
         return pyImage;
@@ -377,6 +378,7 @@ struct PyImage {
             .def("copyFrom", &ImageView<T>::copyFrom)
             .def("fill", &ImageView<T>::fill)
             .def("setZero", &ImageView<T>::setZero)
+            .enable_pickling()
             ;
         
         return pyImageView;
@@ -418,6 +420,7 @@ struct PyImage {
             .def("view", &ConstImageView<T>::view, bp::return_self<>())
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
+            .enable_pickling()
             ;
 
         return pyConstImageView;

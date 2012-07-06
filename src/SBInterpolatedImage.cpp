@@ -7,8 +7,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -547,6 +547,8 @@ namespace galsim {
     {
         if (_readyToShoot) return;
 
+        dbg<<"SBInterpolatedImage not ready to shoot.  Build _pt:\n";
+
         // Build the sets holding cumulative fluxes of all Pixels
         _positiveFlux = 0.;
         _negativeFlux = 0.;
@@ -566,6 +568,21 @@ namespace galsim {
             }
         }
         _pt.buildTree();
+        dbg<<"Built tree\n";
+
+        // The above just computes the positive and negative flux for the main image.
+        // This is convolved by the interpolant, so we need to correct these values
+        // in the same way that SBConvolve does:
+        double p1 = _positiveFlux;
+        double n1 = _negativeFlux;
+        dbg<<"positiveFlux = "<<p1<<", negativeFlux = "<<n1<<std::endl;
+        double p2 = _xInterp->getPositiveFlux();
+        double n2 = _xInterp->getNegativeFlux();
+        dbg<<"Interpolant has positiveFlux = "<<p2<<", negativeFlux = "<<n2<<std::endl;
+        _positiveFlux = p1*p2 + n1*n2;
+        _negativeFlux = p1*n2 + n1*p2;
+        dbg<<"positiveFlux => "<<_positiveFlux<<", negativeFlux => "<<_negativeFlux<<std::endl;
+
         _readyToShoot = true;
     }
 

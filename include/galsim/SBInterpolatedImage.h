@@ -7,6 +7,7 @@
 
 #include "SBProfile.h"
 #include "Interpolant.h"
+#include "FFT.h"
 
 namespace galsim {
 
