@@ -3,6 +3,8 @@
 #define SBPROFILE_IMPL_H
 
 #include "SBProfile.h"
+#include "FFT.h"
+#include "integ/Int.h"
 
 namespace galsim {
 
