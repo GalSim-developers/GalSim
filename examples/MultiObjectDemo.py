@@ -805,8 +805,9 @@ def Script5():
     logger.info('Starting multi-object script 5')
 
     def draw_stamp(seed):
-        """A function that draws a single postage stamp using seed for the random number generator.
-           Returns the total time taken.
+        """A function that draws a single postage stamp using a given seed for the 
+           random number generator.
+           Returns the image and the total time taken.
         """
         t1 = time.time()
 
@@ -863,13 +864,17 @@ def Script5():
         return stamp, t2-t1
 
     def worker(input, output):
-        """input is a queue with (ix,iy,seed) values
-           output is a queue storing the results of the tasks along with the process name,
-           and which args this result is for.
+        """input is a queue with (seed, info) tuples:
+               seed is the argement to pass to draw_stamp
+               info is passed along to the output queue.
+           output is a queue storing (result, info, proc) tuples:
+               result is the returned tuple from draw_stamp: (image, time).
+               proc is the process name.
+               info is passed through from the input queue.
         """
-        for args in iter(input.get, 'STOP'):
-            result = draw_stamp(args[3])
-            output.put( (result, current_process().name, args) )
+        for (seed, info) in iter(input.get, 'STOP'):
+            result = draw_stamp(seed)
+            output.put( (result, info, current_process().name) )
     
     ntot = nx_stamps * ny_stamps
 
@@ -911,23 +916,26 @@ def Script5():
     k = 0
     for ix in range(nx_stamps):
         for iy in range(ny_stamps):
-            task_queue.put( [ix,iy,1,seeds[k]] )
+            task_queue.put( (seeds[k], [ix,iy]) ) 
             k = k+1
     
     # Run the tasks
+    # Each Process command starts up a parallel process that will keep checking the queue 
+    # for a new task. If there is one there, it grabs it and does it. If not, it waits 
+    # until there is one to grab. When it finds a 'STOP', it shuts down. 
     done_queue = Queue()
     for k in range(nproc):
         Process(target=worker, args=(task_queue, done_queue)).start()
 
-    # Stop the processes
-    for k in range(nproc):
-        task_queue.put('STOP')
-
-    # Copy the built images onto the main image
+    # In the meanwhile, the main process keeps going.  We pull each image off of the 
+    # done_queue and put it in the appropriate place on the main image.  
+    # This loop is happening while the other processes are still working on their tasks.
+    # You'll see that these logging statements get print out as the stamp images are still 
+    # being drawn.  
     for i in range(ntot):
-        result, proc, args = done_queue.get()
-        ix = args[0]
-        iy = args[1]
+        result, info, proc = done_queue.get()
+        ix = info[0]
+        iy = info[1]
         bounds = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels, 
                                 iy*ny_pixels+1 , (iy+1)*ny_pixels)
         im = result[0]
@@ -936,6 +944,17 @@ def Script5():
         logger.info('%s: Time for stamp (%d,%d) was %f',proc,ix,iy,t)
 
     t3 = time.time()
+
+    # Stop the processes
+    # The 'STOP's could have been put on the task list before starting the processes, or you
+    # can wait.  In some cases it can be useful to clear out the done_queue (as we just did)
+    # and then add on some more tasks.  We don't need that here, but it's perfectly fine to do.
+    # Once you are done with the processes, putting nproc 'STOP's will stop them all.
+    # This is important, because the program will keep running as long as there are running
+    # processes, even if the main process gets to the end.  So you do want to make sure to 
+    # add those 'STOP's at some point!
+    for k in range(nproc):
+        task_queue.put('STOP')
 
     logger.info('Total time taken using a single process = %f',t2-t1)
     logger.info('Total time taken using %d processes = %f',nproc,t3-t2)
