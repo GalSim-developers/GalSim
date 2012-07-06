@@ -120,20 +120,24 @@ namespace galsim {
      * @brief A base class representing all of the 2D surface brightness profiles that 
      * we know how to draw.
      *
+     * The SBProfile class is a representation of a surface brightness distribution across a
+     * 2-dimensional image plane, with real and/or Fourier-domain models of a wide variety of galaxy
+     * shapes, point-spread functions (PSFs), and their convolutions.  There are several
+     * realizations of the SBProfile classes: There are the "atomic" classes that represent specific
+     * analytic profiles: (SBGaussian, SBSersic, SBAiry, SBExponential, SBBox, SBDeVaucouleurs and
+     * SBMoffat). SBInterpolatedImage represents a pattern defined by a grid of pixel values and a
+     * chosen interpolation scheme between pixel centers.  SBTransform represents any affine
+     * transformation (shear, magnification, rotation, translation, and/or flux rescaling) of any
+     * other SBProfile. SBAdd represents the sum of any number of SBProfiles.  SBConvolve represents
+     * the convolution of any number of SBProfiles, and SBDeconvolve is the deconvolution of one
+     * SBProfile with another.
+     *
      * Every SBProfile knows how to draw an Image<float> of itself in real and k space.  Each also
-     * knows what is needed to prevent aliasing or truncation of itself when drawn.
-     * **Note** that when you use the SBProfile::draw() routines you will get an image of 
-     * **surface brightness** values in each pixel, not the flux that fell into the pixel.  To get
-     * flux, you must multiply the image by (dx*dx).
-     * drawK() routines are normalized such that I(0,0) is the total flux.
-     * Currently we have the following possible implementations of SBProfile:
-     * Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic
-     * SBLaguerre: Gauss-Laguerre expansion
-     * SBTransform: affine transformation of another SBProfile
-     * SBAdd: sum of SBProfiles
-     * SBConvolve: convolution of other SBProfiles
-     * SBInterpolatedImage: surface brightness profiles defined by an image and interpolant.
-     * SBDeconvolve: deconvolve one SBProfile with another
+     * knows what is needed to prevent aliasing or truncation of itself when drawn.  **Note** that
+     * when you use the SBProfile::draw() routines you will get an image of **surface brightness**
+     * values in each pixel, not the flux that fell into the pixel.  To get flux, you must multiply
+     * the image by (dx*dx).  Likewise, the xValue routine returns the value of the surface
+     * brightness. drawK() routines are normalized such that I(0,0) is the total flux.
      *
      * This isn't an abstract base class.  An SBProfile is a concrete object
      * which internally has a pointer to the implementation details (which _is_ an abstract
@@ -220,34 +224,41 @@ namespace galsim {
         /// @brief Value of k beyond which aliasing can be neglected.
         double maxK() const;
 
-        /// @brief Image pixel spacing that does not alias maxK.
+        /// @brief Real-space image pixel spacing that does not alias maxK.
         double nyquistDx() const { return M_PI / maxK(); }
 
-        /// @brief Sampling in k space necessary to avoid folding too much of image in x space.
+        /// @brief Sampling in k-space necessary to avoid folding too much of image in x space.
         double stepK() const;
 
-        /// @brief Characteristic that can affect efficiency of evaluation.
+        /**
+         * @brief Check whether the SBProfile is known to have rotational symmetry about x=y=0
+         *
+         * If the SBProfile has rotational symmetry, certain calculations can be simplified.
+         */
         bool isAxisymmetric() const;
 
         /**
-         *  @brief The presence of hard edges help determine whether real space 
-         *  convolution might be a better choice.
+         *  @brief The presence of hard edges help determine whether real space convolution might be
+         *  a better choice.
          */
         bool hasHardEdges() const;
 
         /** 
-         * @brief Characteristic that can affect efficiency of evaluation.
+         * @brief Check whether the SBProfile is analytic in the real domain.
          *
-         * SBProfile is "analytic" in the real domain if values can be determined immediately at 
-         * any position through formula or a stored table (no DFT).
+         *
+         * An SBProfile is "analytic" in the real domain if values can be determined immediately at
+         * any position through formula or a stored table (no DFT); this makes certain calculations
+         * more efficient.
          */
         bool isAnalyticX() const;
 
         /**
-         * @brief Characteristic that can affect efficiency of evaluation.
+         * @brief Check whether the SBProfile is analytic in the Fourier domain.
          * 
-         * SBProfile is "analytic" in the k domain if values can be determined immediately at any 
-         * position through formula or a stored table (no DFT).
+         * An SBProfile is "analytic" in the k domain if values can be determined immediately at any 
+         * position through formula or a stored table (no DFT); this makes certain calculations
+         * more efficient.
          */
         bool isAnalyticK() const;
 
@@ -301,15 +312,16 @@ namespace galsim {
          * @brief Apply a given shear.
          *
          * @param[in] s Shear object by which to shear the SBProfile.
-         * This shears the object by the given shear.  As with scaleFlux, it does not
-         * invalidate any previous uses of this object.
+         * This shears the object by the given shear (see class description for Shear for more
+         * information about shearing conventions).  As with scaleFlux, it does not invalidate any
+         * previous uses of this object.
          */
         void applyShear(Shear s);
 
         /**
          * @brief Apply a given rotation.
          *
-         * This rotates the object by the given angle.  As with scaleFlux, it does not 
+         * This rotates the object by the given angle.  As with scaleFlux, it does not
          * invalidate any previous uses of this object.
          */
         void applyRotation(const Angle& theta);
@@ -317,7 +329,7 @@ namespace galsim {
         /**
          * @brief Apply a translation.
          *
-         * This shears the object by the given amount.  As with scaleFlux, it does not 
+         * This shifts the object by the given amount.  As with scaleFlux, it does not
          * invalidate any previous uses of this object.
          */
         void applyShift(double dx, double dy);
@@ -405,9 +417,10 @@ namespace galsim {
         /**
          * @brief Draw this SBProfile into Image by shooting photons.
          *
-         * The input image must have defined boundaries and pixel scale.  The photons generated by
-         * the shoot() method will be binned into the target Image.  See caveats in `shoot()`
-         * docstring.  Scale and location of the `Image` pixels will not be altered.
+         * The drawShoot method produces a 2d sampled rendering of a given SBProfile using the Image
+         * class.  The input image must have defined boundaries and pixel scale.  The photons
+         * generated by the shoot() method will be binned into the target Image.  See caveats in
+         * `shoot()` docstring.  Scale and location of the `Image` pixels will not be altered.
          *
          * The image is not cleared out before drawing.  So this profile will be added
          * to anything already on the input image.
@@ -467,15 +480,15 @@ namespace galsim {
         /** 
          * @brief Draw an image of the SBProfile in real space.
          *
-         * A square image will be
-         * drawn which is big enough to avoid "folding."  If drawing is done using FFT,
-         * it will be scaled up to a power of 2, or 3x2^n, whichever fits.
-         * If input image has finite dimensions then these will be used, although in an FFT the 
-         * image  may be calculated internally on a larger grid to avoid folding.
-         * The default draw() routines decide internally whether image can be drawn directly
-         * in real space or needs to be done via FFT from k space.
-         * Note that if you give an input image, its origin may be redefined by the time it comes 
-         * back.
+         * The draw method produces a 2d sampled rendering of a given SBProfile using the Image
+         * class.  A square image will be drawn which is big enough to avoid "folding."  If drawing
+         * is done using FFT, as is the case for SBProfiles for which isAnalyticX is false, then the
+         * image size will be scaled up to a power of 2, or 3x2^n, whichever fits.  If
+         * input image has finite dimensions then these will be used, although in an FFT the image
+         * may be calculated internally on a larger grid to avoid folding.  The default draw()
+         * routines decide internally whether image can be drawn directly in real space or needs to
+         * be done via FFT from k space.  Note that if you give an input image, its origin may be
+         * redefined by the time it comes back.
          *
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
          *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
@@ -534,7 +547,8 @@ namespace galsim {
          * If input image has finite dimensions then these will be used, although in an FFT the 
          * image may be calculated internally on a larger grid to avoid folding.
          * Note that if you give an input image, its origin may be redefined by the time it comes 
-         * back.
+         * back.  For SBProfiles without an analytic real-space representation, an exception will be
+         * thrown.
          *
          * @param[in,out]   image (any of ImageF, ImageD, ImageS, ImageI or views)
          * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
