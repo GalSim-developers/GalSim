@@ -163,14 +163,23 @@ namespace galsim {
 #ifdef DEBUGLOGGING
         double totalFlux = 0.;
         double lostFlux = 0.;
+        int nx = target.getXMax()-target.getXMin()+1;
+        int ny = target.getYMax()-target.getYMin()+1;
+        std::vector<std::vector<double> > posFlux(nx,std::vector<double>(ny,0.));
+        std::vector<std::vector<double> > negFlux(nx,std::vector<double>(ny,0.));
 #endif
         for (int i=0; i<int(size()); i++) {
             int ix = int(floor(_x[i]/dx + 0.5));
             int iy = int(floor(_y[i]/dx + 0.5));
 #ifdef DEBUGLOGGING
             totalFlux += _flux[i];
+            xdbg<<"  photon: ("<<_x[i]<<','<<_y[i]<<")  f = "<<_flux[i]<<std::endl;
 #endif
             if (b.includes(ix,iy)) {
+#ifdef DEBUGLOGGING
+                if (_flux[i] > 0.) posFlux[ix-target.getXMin()][iy-target.getXMin()] += _flux[i];
+                else negFlux[ix-target.getXMin()][iy-target.getXMin()] -= _flux[i];
+#endif
                 target(ix,iy) += _flux[i]*fluxScale;
                 addedFlux += _flux[i];
             } else {
@@ -184,6 +193,17 @@ namespace galsim {
         dbg<<"totalFlux = "<<totalFlux<<std::endl;
         dbg<<"addedlFlux = "<<addedFlux<<std::endl;
         dbg<<"lostFlux = "<<lostFlux<<std::endl;
+        for(int ix=0;ix<nx;++ix) {
+            for(int iy=0;iy<ny;++iy) {
+                double pos = posFlux[ix][iy];
+                double neg = negFlux[ix][iy];
+                double tot = pos + neg;
+                if (tot > 0.) {
+                    xdbg<<"eta("<<ix+target.getXMin()<<','<<iy+target.getXMin()<<") = "<<
+                        neg<<" / "<<tot<<" = "<<neg/tot<<std::endl;
+                }
+            }
+        }
 #endif
 
         return addedFlux;

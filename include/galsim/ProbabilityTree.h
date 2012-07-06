@@ -31,6 +31,7 @@ namespace galsim {
     class ProbabilityTree: private std::list<T> 
     {
     public:
+        using std::list<T>::size;
         using std::list<T>::begin;
         using std::list<T>::end;
         using std::list<T>::push_back;

@@ -676,8 +676,8 @@ def Script4():
                 # Using the syntax below, these are views into the larger image.  
                 # Changes/additions to the sub-images referenced by the views are automatically 
                 # reflected in the original image.
-                fft_image = image[galsim.BoundsI(1, nx, 1, nx)]
-                phot_image = image[galsim.BoundsI(nx+3, 2*nx+2, 1, nx)]
+                fft_image = image[galsim.BoundsI(1, nx, 1, ny)]
+                phot_image = image[galsim.BoundsI(nx+3, 2*nx+2, 1, ny)]
 
                 #logger.info('   Read in training sample galaxy and PSF from file')
                 t2 = time.time()
@@ -694,7 +694,7 @@ def Script4():
                 # to include it in the profile!
                 sky_level_pixel = sky_level * pixel_scale**2
                 final_nopix.drawShoot(phot_image, noise=sky_level_pixel/100, 
-                                      uniform_deviate=rng, poisson_flux=False)
+                                      uniform_deviate=rng)
                 #logger.info('   Drew phot image.  Total drawn flux = %f.  getFlux() = %f',
                         #phot_image.array.sum(),final.getFlux())
                 t4 = time.time()

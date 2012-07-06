@@ -3,6 +3,7 @@
 
 #include "SBBox.h"
 #include "SBBoxImpl.h"
+#include "FFT.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
