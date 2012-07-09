@@ -143,26 +143,26 @@ namespace galsim {
     void Interval::drawWithin(double unitRandom, double& x, double& flux,
                               UniformDeviate ud) const 
     {
-        //dbg<<"drawWithin interval\n";
-        //dbg<<"_flux = "<<_flux<<std::endl;
+        xdbg<<"drawWithin interval\n";
+        xdbg<<"_flux = "<<_flux<<std::endl;
         double fractionOfInterval = std::min(unitRandom, 1.);
-        //dbg<<"fractionOfInterval = "<<fractionOfInterval<<std::endl;
+        xdbg<<"fractionOfInterval = "<<fractionOfInterval<<std::endl;
         fractionOfInterval = std::max(0., fractionOfInterval);
-        //dbg<<"fractionOfInterval => "<<fractionOfInterval<<std::endl;
+        xdbg<<"fractionOfInterval => "<<fractionOfInterval<<std::endl;
         x = interpolateFlux(fractionOfInterval);
-        //dbg<<"x = "<<x<<std::endl;
+        xdbg<<"x = "<<x<<std::endl;
         flux = 1.;
         if (_useRejectionMethod) {
-            //dbg<<"use rejection\n";
+            xdbg<<"use rejection\n";
             while ( ud() > std::abs((*_fluxDensityPtr)(x)) * _invMaxAbsDensity) {
                 x = interpolateFlux(ud());
             }
-            //dbg<<"x => "<<x<<std::endl;
+            xdbg<<"x => "<<x<<std::endl;
             if (_flux < 0) flux = -1.;
         } else {
             flux = (*_fluxDensityPtr)(x) * _invMeanAbsDensity;
         }
-        //dbg<<"flux = "<<flux<<std::endl;
+        xdbg<<"flux = "<<flux<<std::endl;
     }
 
     void Interval::checkFlux() const 

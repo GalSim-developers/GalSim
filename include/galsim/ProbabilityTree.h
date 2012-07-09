@@ -245,6 +245,9 @@ namespace galsim {
   
         void buildShortcut(const Element* element, int i1, int i2)
         {
+            // If i1 == i2, then we've already assigned everything, so stop recursing.
+            if (i1 == i2) return;
+
             xdbg<<"Start buildShortcut for i1,i2 = "<<i1<<','<<i2<<std::endl;
             xdbg<<"Corresponds to flux "<<i1*_totalAbsFlux/_shortcut.size()<<" .. "<<
                 i2*_totalAbsFlux/_shortcut.size()<<std::endl;
@@ -256,9 +259,6 @@ namespace galsim {
             xassert(i1*_totalAbsFlux/_shortcut.size() >= element->getLeftAbsFlux()-1.e-8);
             xassert(i2*_totalAbsFlux/_shortcut.size() <= 
                     element->getLeftAbsFlux()+element->getAbsFlux()+1.e-8);
-
-            // If i1 == i2, then we've already assigned everything, so stop recursing.
-            if (i1 == i2) return;
 
             // If this is a node, then the only one we should assign is the shortcut
             // bin that include both left and right.  In other words the bin corresponding
@@ -284,7 +284,7 @@ namespace galsim {
                     buildShortcut(element->getRight(), imid+1, i2);
                 }
             } else {
-                xdbg<<"Left element\n";
+                xdbg<<"Leaf element\n";
                 // If we are at a leaf, then this leaf encompasses all the bins in the range.
                 // Assigne them all to this element.
                 for(int i=i1; i<i2; ++i) _shortcut[i] = element; 
