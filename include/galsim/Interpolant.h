@@ -160,7 +160,7 @@ namespace galsim {
             int nKnots = int(ceil(xrange()));
             std::vector<double> ranges(2*nKnots);
             for (int i=1; i<=nKnots; i++) {
-                double knot = std::min(1.*i, xrange());
+                double knot = std::min(double(i), xrange());
                 ranges[nKnots-i] = -knot;
                 ranges[nKnots+i-1] = knot;
             }

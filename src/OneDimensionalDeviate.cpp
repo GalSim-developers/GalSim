@@ -240,6 +240,7 @@ namespace galsim {
         _isRadial(isRadial)
     {
         dbg<<"Start ODD constructor\n";
+        dbg<<"Input range has "<<range.size()<<" entries\n";
         dbg<<"radial? = "<<isRadial<<std::endl;
 
         // Typedef for indices of standard containers, which don't like int values
@@ -278,12 +279,14 @@ namespace galsim {
                     Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial);
                     std::list<Interval> leftList = splitit.split(
                         odd::SMALL_FRACTION_OF_FLUX * totalAbsoluteFlux);
+                    xdbg<<"Add "<<leftList.size()<<" intervals on left of extremem\n";
                     _pt.insert(_pt.end(), leftList.begin(), leftList.end());
                 }
                 {
                     Interval splitit(_fluxDensity, extremum, range[iRange+1], _isRadial);
                     std::list<Interval> rightList = splitit.split(
                         odd::SMALL_FRACTION_OF_FLUX * totalAbsoluteFlux);
+                    xdbg<<"Add "<<rightList.size()<<" intervals on right of extremem\n";
                     _pt.insert(_pt.end(), rightList.begin(), rightList.end());
                 }
             } else {
@@ -291,6 +294,7 @@ namespace galsim {
                 Interval splitit(_fluxDensity, range[iRange], range[iRange+1], _isRadial);
                 std::list<Interval> leftList = splitit.split(
                     odd::SMALL_FRACTION_OF_FLUX * totalAbsoluteFlux);
+                xdbg<<"Add "<<leftList.size()<<" intervals\n";
                 _pt.insert(_pt.end(), leftList.begin(), leftList.end());
             }
         }

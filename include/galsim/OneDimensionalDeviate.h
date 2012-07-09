@@ -29,7 +29,7 @@ namespace galsim {
 
         /** Intervals with less than this fraction of probability are ok to use dominant-sampling
             method. **/
-        const double SMALL_FRACTION_OF_FLUX = 1e-4;
+        const double SMALL_FRACTION_OF_FLUX = 1.e-4;
 
     }
 
