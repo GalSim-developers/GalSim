@@ -23,32 +23,32 @@ namespace galsim {
             while (a < v[index-1].arg) --index;
             return index;
         } else {
-            //assert(lastIndex >= 1);
-            //assert(lastIndex < int(v.size()));
+            xassert(lastIndex >= 1);
+            xassert(lastIndex < int(v.size()));
 
             if ( a < v[lastIndex-1].arg ) {
-                //assert(lastIndex-2 >= 0);
+                xassert(lastIndex-2 >= 0);
                 // Check to see if the previous one is it.
                 if (a >= v[lastIndex-2].arg) return --lastIndex; 
                 else {
                     // Look for the entry from 0..lastIndex-1:
                     Entry e(a,0); 
                     iter p = std::upper_bound(v.begin(), v.begin()+lastIndex-1, e);
-                    //assert(p != v.begin());
-                    //assert(p != v.begin()+lastIndex-1);
+                    xassert(p != v.begin());
+                    xassert(p != v.begin()+lastIndex-1);
                     lastIndex = p-v.begin();
                     return lastIndex;
                 }
             } else if (a > v[lastIndex].arg) {
-                //assert(lastIndex+1 < int(v.size()));
+                xassert(lastIndex+1 < int(v.size()));
                 // Check to see if the next one is it.
                 if (a <= v[lastIndex+1].arg) return ++lastIndex;
                 else {
                     // Look for the entry from lastIndex..end
                     Entry e(a,0); 
                     iter p = std::lower_bound(v.begin()+lastIndex+1, v.end(), e);
-                    //assert(p != v.begin()+lastIndex+1);
-                    //assert(p != v.end());
+                    xassert(p != v.begin()+lastIndex+1);
+                    xassert(p != v.end());
                     lastIndex = p-v.begin();
                     return lastIndex;
                 }
