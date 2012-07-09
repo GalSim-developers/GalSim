@@ -74,7 +74,8 @@ namespace galsim {
         }
 
         if (pad_factor <= 0.) pad_factor = sbp::oversample_x;
-        _pimpl->Nk = goodFFTSize(int(std::floor(pad_factor*_pimpl->Ninitial)));
+        // NB: don't need floor, since rhs is positive, so floor is superfluous.
+        _pimpl->Nk = goodFFTSize(int(pad_factor*_pimpl->Ninitial));
 
         double dx2 = _pimpl->dx*_pimpl->dx;
         double dx3 = _pimpl->dx*dx2;
@@ -137,7 +138,8 @@ namespace galsim {
         dbg<<"pad_factor = "<<pad_factor<<std::endl;
         if (pad_factor <= 0.) pad_factor = sbp::oversample_x;
         dbg<<"pad_factor => "<<pad_factor<<std::endl;
-        _pimpl->Nk = goodFFTSize(int(std::floor(pad_factor*_pimpl->Ninitial)));
+        // NB: don't need floor, since rhs is positive, so floor is superfluous.
+        _pimpl->Nk = goodFFTSize(int(pad_factor*_pimpl->Ninitial));
         dbg<<"Nk = "<<_pimpl->Nk<<std::endl;
 
         double dx2 = _pimpl->dx*_pimpl->dx;
@@ -611,7 +613,7 @@ namespace galsim {
         dbg<<"fluxPerPhoton = "<<fluxPerPhoton<<std::endl;
         for (int i=0; i<N; i++) {
             double unitRandom = ud();
-            Pixel* p = _pt.find(unitRandom);
+            const Pixel* p = _pt.find(unitRandom);
             result->setPhoton(i, p->x, p->y, 
                               p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }

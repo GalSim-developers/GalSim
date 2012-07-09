@@ -182,6 +182,7 @@ namespace galsim {
     {
         dbg<<"Start KTable interpolate at "<<kx<<','<<ky<<std::endl;
         dbg<<"N = "<<_N<<std::endl;
+        const int No2 = _N>>1;  // == _N/2
         dbg<<"interp xrage = "<<interp.xrange()<<std::endl;
         kx /= _dk;
         ky /= _dk;
@@ -190,42 +191,42 @@ namespace galsim {
              && std::abs(kx - std::floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // x coord lies right on integer value, no interpolation in x direction
             ixMin = int(std::floor(kx+0.01)) % _N;
-            if (ixMin < -_N/2) ixMin += _N;
-            if (ixMin >= _N/2) ixMin -= _N;
+            if (ixMin < -No2) ixMin += _N;
+            if (ixMin >= No2) ixMin -= _N;
             ixMax = ixMin;
-        } else if (interp.xrange() >= _N/2) {
+        } else if (interp.xrange() >= No2) {
             // use all the elements in row:
-            ixMin = -_N/2;
-            ixMax = _N/2-1;
+            ixMin = -No2;
+            ixMax = No2-1;
         } else {
             // Put both bounds of kernel footprint in range [-N/2,N/2-1]
             ixMin = int(std::ceil(kx-interp.xrange())) % _N;
-            if (ixMin < -_N/2) ixMin += _N;
-            if (ixMin >= _N/2) ixMin -= _N;
+            if (ixMin < -No2) ixMin += _N;
+            if (ixMin >= No2) ixMin -= _N;
             ixMax = int(std::floor(kx+interp.xrange())) % _N;
-            if (ixMax < -_N/2) ixMax += _N;
-            if (ixMax >= _N/2) ixMax -= _N;
+            if (ixMax < -No2) ixMax += _N;
+            if (ixMax >= No2) ixMax -= _N;
         }
 
         if ( interp.isExactAtNodes() 
              && std::abs(ky - std::floor(ky+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // y coord lies right on integer value, no interpolation in y direction
             iyMin = int(std::floor(ky+0.01)) % _N;
-            if (iyMin < -_N/2) iyMin += _N;
-            if (iyMin >= _N/2) iyMin -= _N;
+            if (iyMin < -No2) iyMin += _N;
+            if (iyMin >= No2) iyMin -= _N;
             iyMax = iyMin;
-        } else if (interp.xrange() >= _N/2) {
+        } else if (interp.xrange() >= No2) {
             // use all the elements in row:
-            iyMin = -_N/2;
-            iyMax = _N/2-1;
+            iyMin = -No2;
+            iyMax = No2-1;
         } else {
             // Put both bounds of kernel footprint in range [-N/2,N/2-1]
             iyMin = int(std::ceil(ky-interp.xrange())) % _N;
-            if (iyMin < -_N/2) iyMin += _N;
-            if (iyMin >= _N/2) iyMin -= _N;
+            if (iyMin < -No2) iyMin += _N;
+            if (iyMin >= No2) iyMin -= _N;
             iyMax = int(std::floor(ky+interp.xrange())) % _N;
-            if (iyMax < -_N/2) iyMax += _N;
-            if (iyMax >= _N/2) iyMax -= _N;
+            if (iyMax < -No2) iyMax += _N;
+            if (iyMax >= No2) iyMax -= _N;
         }
         dbg<<"ix range = "<<ixMin<<"..."<<ixMax<<std::endl;
         dbg<<"iy range = "<<iyMin<<"..."<<iyMax<<std::endl;
@@ -278,7 +279,7 @@ namespace galsim {
             while (nextSaved != _cache.end() && _cacheStartY != iyMin) {
                 _cache.pop_front();
                 _cacheStartY++;
-                if (_cacheStartY >= _N/2) _cacheStartY-= _N;
+                if (_cacheStartY >= No2) _cacheStartY-= _N;
                 nextSaved = _cache.begin();
             }
 
@@ -293,7 +294,7 @@ namespace galsim {
             if (ny<=0) ny+=_N;
             int iy = iyMin;
             for (int j = 0; j<ny; j++, iy++) {
-                if (iy >= _N/2) iy-=_N;   // wrap iy if needed
+                if (iy >= No2) iy-=_N;   // wrap iy if needed
                 dbg<<"j = "<<j<<", iy = "<<iy<<std::endl;
                 std::complex<double> sumy = 0.;
                 if (nextSaved != _cache.end()) {
@@ -332,7 +333,7 @@ namespace galsim {
                     if (count) {
                         dbg<<"Positive ix: ix = "<<ix<<std::endl;
                         const std::complex<double>* ptr = _array.get() + index(ix,iy);
-                        int count1 = std::min(count, _N/2+1-ix);
+                        int count1 = std::min(count, No2+1-ix);
                         dbg<<"count1 = "<<count1<<std::endl;
                         count -= count1;
                         for(; count1; --count1) sumy += (*xwt_it++) * (*ptr++);
@@ -341,9 +342,9 @@ namespace galsim {
                         if (count) {
                             dbg<<"More negative ix: ix = "<<ix<<std::endl;
                             dbg<<"count = "<<count<<std::endl;
-                            ix = -_N/2 + 1;
+                            ix = -No2 + 1;
                             const std::complex<double>* ptr = _array.get() + index(ix,iy);
-                            assert(count < _N/2-1);
+                            assert(count < No2-1);
                             for(; count; --count) sumy += (*xwt_it++) * conj(*ptr--);
                         }
                     }
@@ -367,10 +368,10 @@ namespace galsim {
             if (nx<=0) nx+=_N;
             int iy = iyMin;
             for (int j = 0; j<ny; j++, iy++) {
-                if (iy >= _N/2) iy-=_N;   // wrap iy if needed
+                if (iy >= No2) iy-=_N;   // wrap iy if needed
                 int ix = ixMin;
                 for (int i=0; i<nx; i++, ix++) {
-                    if (ix > _N/2) ix-=_N; //check for wrap
+                    if (ix > No2) ix-=_N; //check for wrap
                     // use kval to keep track of conjugations
                     sum += interp.xvalWrapped(ix-kx, iy-ky, _N)*kval(ix,iy);
                 }

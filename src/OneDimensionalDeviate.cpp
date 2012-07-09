@@ -18,8 +18,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
+std::ostream* dbgout = new std::ofstream("debug.out");
+int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -29,7 +29,7 @@ namespace galsim {
     class RTimesF: public std::unary_function<double,double> {
     public:
         RTimesF(const F& function): _function(function) {}
-        double operator()(double r) const {return 2.*M_PI*r*_function(r);}
+        double operator()(double r) const { return 2.*M_PI*r*_function(r); }
     private:
         const F& _function;
     };
@@ -154,13 +154,13 @@ namespace galsim {
         flux = 1.;
         if (_useRejectionMethod) {
             //dbg<<"use rejection\n";
-            while ( ud() > std::abs((*_fluxDensityPtr)(x)) / _maxAbsDensity) {
+            while ( ud() > std::abs((*_fluxDensityPtr)(x)) * _invMaxAbsDensity) {
                 x = interpolateFlux(ud());
             }
             //dbg<<"x => "<<x<<std::endl;
             if (_flux < 0) flux = -1.;
         } else {
-            flux = (*_fluxDensityPtr)(x) / _meanAbsDensity;
+            flux = (*_fluxDensityPtr)(x) * _invMeanAbsDensity;
         }
         //dbg<<"flux = "<<flux<<std::endl;
     }
@@ -196,15 +196,13 @@ namespace galsim {
         // Get the flux in this interval 
         checkFlux();
         if (_isRadial) {
-            _meanAbsDensity = std::abs(_flux / 
-                                       ( M_PI*(_xUpper*_xUpper - _xLower*_xLower)));
+            _invMeanAbsDensity = std::abs( (M_PI*(_xUpper*_xUpper - _xLower*_xLower)) / _flux );
         } else {
-            _meanAbsDensity = std::abs(_flux / (_xUpper - _xLower));
+            _invMeanAbsDensity = std::abs( (_xUpper - _xLower) / _flux );
         }
         double densityLower = (*_fluxDensityPtr)(_xLower);
         double densityUpper = (*_fluxDensityPtr)(_xUpper);
-        _maxAbsDensity = std::max(std::abs(densityLower),
-                                  std::abs(densityUpper));
+        _invMaxAbsDensity = 1. / std::max(std::abs(densityLower),std::abs(densityUpper));
 
         std::list<Interval> result;
         double densityVariation = 0.;
@@ -280,20 +278,20 @@ namespace galsim {
                     Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial);
                     std::list<Interval> leftList = splitit.split(
                         odd::SMALL_FRACTION_OF_FLUX * totalAbsoluteFlux);
-                    _pt.splice(_pt.end(), leftList);
+                    _pt.insert(_pt.end(), leftList.begin(), leftList.end());
                 }
                 {
                     Interval splitit(_fluxDensity, extremum, range[iRange+1], _isRadial);
                     std::list<Interval> rightList = splitit.split(
                         odd::SMALL_FRACTION_OF_FLUX * totalAbsoluteFlux);
-                    _pt.splice(_pt.end(), rightList);
+                    _pt.insert(_pt.end(), rightList.begin(), rightList.end());
                 }
             } else {
                 // Just single Interval in this range, no extremum:
                 Interval splitit(_fluxDensity, range[iRange], range[iRange+1], _isRadial);
                 std::list<Interval> leftList = splitit.split(
                     odd::SMALL_FRACTION_OF_FLUX * totalAbsoluteFlux);
-                _pt.splice(_pt.end(), leftList);
+                _pt.insert(_pt.end(), leftList.begin(), leftList.end());
             }
         }
         dbg<<"Total of "<<_pt.size()<<" intervals\n";
@@ -340,7 +338,7 @@ namespace galsim {
                 } while (rsq>=1. || rsq==0.);
                 // Now rsq is unit deviate from 0 to 1
                 double unitRandom = rsq;
-                Interval* chosen = _pt.find(unitRandom);
+                const Interval* chosen = _pt.find(unitRandom);
                 // Now draw a radius from within selected interval
                 double radius, flux;
                 chosen->drawWithin(unitRandom, radius, flux, ud);
@@ -351,7 +349,7 @@ namespace galsim {
             } else {
                 // Simple 1d interpolation
                 double unitRandom = ud();
-                Interval* chosen = _pt.find(unitRandom);
+                const Interval* chosen = _pt.find(unitRandom);
                 // Now draw an x from within selected interval
                 double x, flux;
                 chosen->drawWithin(unitRandom, x, flux, ud);

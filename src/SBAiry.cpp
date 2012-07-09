@@ -209,7 +209,8 @@ namespace galsim {
         dbg<<"obsc = "<<_obscuration<<std::endl;
         dbg<<"rmin = "<<rmin<<std::endl;
         dbg<<"rmax = "<<rmax<<std::endl;
-        ranges.reserve(int(floor((rmax-rmin+2)/0.5+0.5)));
+        // NB: don't need floor, since rhs is positive, so floor is superfluous.
+        ranges.reserve(int((rmax-rmin+2)/0.5+0.5));
         for(double r=rmin; r<=rmax; r+=0.5) ranges.push_back(r);
         _sampler.reset(new OneDimensionalDeviate(_radial, ranges, true));
     }
