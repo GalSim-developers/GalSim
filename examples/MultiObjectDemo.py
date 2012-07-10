@@ -642,7 +642,7 @@ def Script4():
     all_images = []
     k = 0
     for ipsf in range(len(psfs)):
-        ipsf = 3
+        ipsf = 4
         psf = psfs[ipsf]
         psf_name = psf_names[ipsf]
         for igal in range(len(gals)):
