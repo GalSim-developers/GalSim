@@ -10,8 +10,10 @@ import os
 # Uses the NR spline code as preserved in the repo, at commit:
 # 8a9b04085b873f63be4fb56ae4fa5a0ca78a0387
 #
-# Revert to the commit 4d71631d7379f76bb0e3ee582b5a1fbdc0def666
-# and `scons install` to re-run this script.
+# To re-run this script:
+# - Firt type `git checkout c601a85034f89bba5d608ab6b2944f4f5f168491`
+# - Type `scons install` in the main GalSim directory.
+# - Then type `python make_spline_testarrays.py` in this directory.
 
 # Some arbitrary kx, ky k space values to test
 kxvals = np.array((1.30, 0.71, -4.30)) * np.pi / 2.
