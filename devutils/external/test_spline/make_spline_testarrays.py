@@ -14,8 +14,8 @@ import os
 # and `scons install` to re-run this script.
 
 # Some arbitrary kx, ky k space values to test
-kxvals = np.array((1.3, 0.71, -4.3)) * np.pi / 2.
-kyvals = np.array((.8, -2., -.31,)) * np.pi / 2.
+kxvals = np.array((1.30, 0.71, -4.30)) * np.pi / 2.
+kyvals = np.array((0.80, -0.02, -0.31)) * np.pi / 2.
 
 absoutk = np.zeros(len(kxvals)) # result storage arrays
 
