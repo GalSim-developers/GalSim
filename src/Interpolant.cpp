@@ -1,5 +1,6 @@
 #include "Interpolant.h"
 #include "integ/Int.h"
+#include "SBProfile.h"
 
 namespace galsim {
 
@@ -37,16 +38,22 @@ namespace galsim {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
         range = n*(1-0.1*std::sqrt(tolerance));
-        const double uStep = 0.01/n;
+        // NB: The 1.e-5 in the next line is sbp::kvalue_accuracy in future versions.
+        const double uStep = std::pow(1.e-5,0.25) / n;
+        u1 = uCalc(1.);
         uMax = 0.;
         double u = tab.size()>0 ? tab.argMax() + uStep : 0.;
         while ( u - uMax < 1./n || u<1.1) {
-            double ft = uCalc(u);
-            tab.addEntry(u, ft);
-            if (std::abs(ft) > tolerance) uMax = u;
+            double uval = uCalc(u);
+            if (fluxConserve) {
+                uval *= 1.+2.*u1;
+                uval -= u1*uCalc(u+1.);
+                uval -= u1*uCalc(u-1.);
+            }
+            tab.addEntry(u, uval);
+            if (std::abs(uval) > tolerance) uMax = u;
             u += uStep;
         }
-        u1 = uCalc(1.);
     }
 
     class CubicIntegrand : public std::unary_function<double,double>

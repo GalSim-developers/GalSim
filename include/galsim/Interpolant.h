@@ -219,12 +219,7 @@ namespace galsim {
         double uval(double u) const 
         {
             u = std::abs(u);
-            double retval = u>uMax ? 0. : tab(u);
-            if (!fluxConserve) return retval;
-            retval *= 1+2*u1;
-            if (u+1 < uMax) retval -= u1*tab(u+1);
-            if (std::abs(u-1) < uMax) retval -= u1*tab(std::abs(u-1));
-            return retval;
+            return u>uMax ? 0. : tab(u);
         }
         double uCalc(double u) const;
     private:
