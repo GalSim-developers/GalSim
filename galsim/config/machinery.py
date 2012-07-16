@@ -188,13 +188,13 @@ class NodeBase(object):
         that modify a configuration root node named 'config' that has been mapped
         to self.
         """
-        if issubclass(self, NodeBase):
+        if type(self) is type and issubclass(self, NodeBase):
             # we're calling this on a class not an instance, so we default-construct
             self = self()
         d = self._get_load_context()
         d["config"] = self
-        d.update((cls.__name__, cls) for cls in generators.load_context)
-        execfile(filename, globals={}, locals=d)
+        #d.update((cls.__name__, cls) for cls in generators.load_context)
+        execfile(filename, {}, d)
 
     def reset(self):
         """

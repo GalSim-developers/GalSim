@@ -106,7 +106,15 @@ class ConfigMachineryTestCase(unittest.TestCase):
         self.assertEqual(list(self.root.r4), [0.0, 1.0, 2.0, 3.0, 4.0])
         self.root.r4 = [2.1, 2.2]
         self.assertEqual(list(self.root.r4), [2.1, 2.2])
-        
+
+    def testLoad(self):
+        self.root.load("tests/config_files/machinery1.py")
+        self.assertEqual(self.root.r1, 53)
+        self.assertEqual(self.root.r2, 3.14159)
+        self.assertEqual(self.root.r3.a1, "huzzah!")
+        self.assertEqual(len(self.root.r4), 5)
+        self.assertEqual(type(self.root.r5), TestPluggableB)
+        self.assertEqual(len(self.root.r6), 5)
 
 if __name__ == "__main__":
     unittest.main()
