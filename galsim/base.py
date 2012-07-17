@@ -6,7 +6,7 @@ import utilities
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
-class GSObject:
+class GSObject(object):
     """@brief Base class for defining the interface with which all GalSim Objects access their
     shared methods and attributes, particularly those from the C++ SBProfile classes.
     """

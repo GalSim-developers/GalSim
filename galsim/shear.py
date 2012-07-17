@@ -46,7 +46,7 @@ one of two components, with the other assumed to be zero.  If a magnitude such a
 specified, then beta is also required to be specified.  It is possible to initialize a Shear with
 zero reduced shear by specifying no args or kwargs, i.e. galsim.Shear().
 """
-class Shear:
+class Shear(object):
     def __init__(self, *args, **kwargs):
         import numpy as np
 

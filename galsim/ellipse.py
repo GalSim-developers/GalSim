@@ -30,7 +30,7 @@ ell = galsim.Ellipse(shift, g1=0.05, g2=0.05) # arguments can be used to specify
 ell = galsim.Ellipse(dilation=0.5, g=0.5, beta=45.0*galsim.degrees) # dilation, shear via keyword argument
 @endcode
 """
-class Ellipse:
+class Ellipse(object):
     def __init__(self, *args, **kwargs):
         use_dil = None
         use_shear = None

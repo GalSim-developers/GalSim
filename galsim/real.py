@@ -4,7 +4,7 @@ import utilities
 """@file real.py @brief Necessary functions for dealing with real galaxies and their catalogs.
 """
 
-class RealGalaxyCatalog:
+class RealGalaxyCatalog(object):
     """@brief Class containing a catalog with information about real galaxy training data.
 
     The RealGalaxyCatalog class reads in and stores information about a specific training sample of
