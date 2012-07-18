@@ -540,6 +540,146 @@ class GSObject(object):
         return image, added_flux
          
 
+# SimpleParam attempt at writing a descriptor for the basic parameters that describe GSObjects,
+# including prescription for regenerating the GSObject if these params are changed.
+#
+class SimpleParam(object):
+    def __init__(self, name):
+        self.name = name
+
+    def __get__(self, instance, owner):  # totally vanilla getting...
+        if self.name not in instance.__dict__:
+            raise AttributeError, self.name
+        return instance.__dict__[self.name]   # using the dict is taken from an online example, is
+                                              # this OK?
+
+    def __set__(self, instance, value):  # If a new value is set, we need to re-initialize the
+                                         # GSObject (simple first attempt, will "lazily" do later
+                                         # only as needed after I learn this stuff...)
+        instance.__dict__[self.name] = value
+        # Then re-initialized the GSObject using all the SimpleParams, including this one
+        init_kwargs = {}
+        for k, v in instance.__dict__:
+            if isinstance(v, SimpleParam):  # Really not sure if this will work...
+                init_kwargs.update(k, v)
+        instance.__init__(init_kwargs)
+
+
+#
+# Stuff below here is "complex" descriptor stuff, lifted from Jim's machinery.py, that I am still
+# trying to get my head around!
+def _set_param_impl(container, key, types, aliases, value, path):
+    if aliases:
+        try:
+            value = aliases.get(value, value)
+        except TypeError: # in case value is unhashable
+            pass
+    if value is None:
+        container[key] = value
+        return value
+    isNode = False
+    if isinstance(value, type) and issubclass(value, NodeBase):
+        try:
+            value = value()
+        except:
+            raise TypeError("could not default-construct instance")
+        isNode = True
+    elif isinstance(value, NodeBase):
+        isNode = True
+    if types and not isinstance(value, types):
+        raise TypeError("invalid type for this field: %s" % type(value).__name__)
+    if isNode:
+        if value.path:
+            raise TypeError("moving/copying nodes is not currently supported")
+        value.path = path
+    container[key] = value
+    return value
+
+
+class ParamBase(object):
+    def __init__(self, doc=None, aliases=None):
+        if aliases is None:
+            aliases = {}
+        self.aliases = aliases
+        if doc is None:
+            try:
+                doc = self.types[0].__doc__
+            except:
+                pass
+        self.__doc__ = doc
+
+    @staticmethod
+    def _process_types(type, types):
+        """Utility function to handle single/multi type arguments to constructor.
+        """
+        if types is None:
+            types = ()
+        types = tuple(types)
+        if type is not None:
+            types += (type,)
+        return types
+
+    def _get_full_name(self, instance):
+        return ".".join(instance.path + (self.name,))
+
+
+class Param(ParamBase):
+    """A class for custom Python "descriptors" (i.e. custom properties) used to store parameters
+    in our GSObject classes.
+
+    A descriptor is an attribute of a class (NOT an attribute of an instance of a class);
+    its __get__ and __set__ methods are called when the user tries to get or set an attribute of
+    the same name in an instance of the class. Because it is an attribute of the class, it can't
+    store its data within itself, and instead stores it within a dictionary called "_data" in the
+    instance.
+    """
+
+    def __init__(self, type=None, default=True, doc=None, aliases=None, types=None):
+        ParamBase.__init__(self, aliases=aliases, doc=doc)
+        self.types = self._process_types(type, types)
+        if default is True and bool not in self.types:
+            default = self.types[0]
+        try:
+            self.default = self.aliases.get(default, default)
+        except TypeError: # in case default is unhashable
+            self.default = default
+
+    def __get__(self, instance, cls):
+        if isinstance(instance, GSObject):
+            try:
+                return instance._data[self.name]
+            except KeyError:
+                try:
+                    return _set_node_impl(instance._data, self.name, self.types, self.aliases,
+                                          self.default, path=instance.path + (self.name,))
+                except Exception, err:
+                    raise TypeError("Error constructing default value for field '%s': %s"
+                                    % (self._get_full_name(instance), err))
+        return self
+
+    def __set__(self, instance, value):
+        try:
+            _set_node_impl(instance._data, self.name, self.types, self.aliases, value,
+                           path=instance.path + (self.name,))
+        except Exception, err:
+            raise TypeError("Error setting value of field '%s': %s"
+                            % (self._get_full_name(instance), err))
+
+#
+# Here is an attempt to define a radial profile intermediate base class
+#
+class RadialProfile(GSObject):
+    """@brief A class defining the pattern of parameter storage for radial profile GSObjects.
+
+    These are objects that can be described by:
+    - a size parameter (which must be any one, and only one, of a variety of optional size params)
+    - a flux parameter
+    - any number of additional parameters that vary between profiles
+    """
+    def __init__(self,   .... #)
+
+
+
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
 # SBPs...
 #
