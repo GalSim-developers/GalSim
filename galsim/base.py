@@ -544,14 +544,16 @@ class GSObject(object):
 # including prescription for regenerating the GSObject if these params are changed.
 #
 class SimpleParam(object):
-    def __init__(self, name):
+    def __init__(self, instance, name, value):
         self.name = name
+        print "setting *something* = "+str(value)
+        instance.__dict__[self.name] = value
 
     def __get__(self, instance, owner):  # totally vanilla getting...
         if self.name not in instance.__dict__:
             raise AttributeError, self.name
-        return instance.__dict__[self.name]   # using the dict is taken from an online example, is
-                                              # this OK?
+        return instance.__dict__[self.name] # using the dict is taken from an online example, is
+                                            # this OK?
 
     def __set__(self, instance, value):  # If a new value is set, we need to re-initialize the
                                          # GSObject (simple first attempt, will "lazily" do later
@@ -563,6 +565,26 @@ class SimpleParam(object):
             if isinstance(v, SimpleParam):  # Really not sure if this will work...
                 init_kwargs.update(k, v)
         instance.__init__(init_kwargs)
+
+#class SizeParam(object)
+
+
+#
+# Here is an attempt to define a radial profile intermediate base class
+#
+class RadialProfile(GSObject):
+    """@brief A class defining the pattern of parameter storage for radial profile GSObjects.
+
+    These are objects that can be described by:
+    - a size parameter (which must be any one, and only one, of a variety of optional size params)
+    - a flux parameter
+    - any number of additional parameters that vary between profiles
+    """
+    def __init__(self, size, **kwargs):
+        # SizeParam(self, "size", size)
+        for key in kwargs:
+            SimpleParam(self, key, kwargs[key])
+
 
 
 #
@@ -664,20 +686,6 @@ class Param(ParamBase):
         except Exception, err:
             raise TypeError("Error setting value of field '%s': %s"
                             % (self._get_full_name(instance), err))
-
-#
-# Here is an attempt to define a radial profile intermediate base class
-#
-class RadialProfile(GSObject):
-    """@brief A class defining the pattern of parameter storage for radial profile GSObjects.
-
-    These are objects that can be described by:
-    - a size parameter (which must be any one, and only one, of a variety of optional size params)
-    - a flux parameter
-    - any number of additional parameters that vary between profiles
-    """
-    def __init__(self,   .... #)
-
 
 
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
