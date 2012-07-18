@@ -199,7 +199,7 @@ def Script3():
     Getting reasonably close to including all the principle features of a 
     ground-based telescope:
       - Use a sheared, Sersic profile for the galaxy 
-        (n = 3., half_light_radius=4.).
+        (n = 3.5, half_light_radius=3.7).
       - Let the PSF have both atmospheric and optical components.
       - The atmospheric component is the sum of two non-circular Gaussians.
       - The optical component has some defocus, coma, and astigmatism.
