@@ -553,6 +553,7 @@ class SimpleParam(object):
     def __init__(self, name, default=0.0):
         self.name = name
         self.default = default
+        self.group = group
 
     def __get__(self, instance, cls):
         if instance is not None:
@@ -668,24 +669,65 @@ class Gaussian0(GSObject):
 
 class Gaussian1(GSObject):
 
-    params = {}
-    
-    # Immediate problem: if I __init__ a SimpleParam descriptor in this class scope, it is unaware
-    # of the Gaussian1 class that I wish to hand to it as an input
+    # --- Initialization of the size parameter descriptors ---
+    # (slightly involved since we typically support multiple ways of specifying object sizes) 
+    #
+    # First of all we do the half light radius, which is a SimpleParam descriptor. This is chosen as
+    # the default underlying size parameter since it is the common currency for all radial profile
+    # sizes in GalSim.
+    half_light_radius = SimpleParam("half_light_radius", default=None)
 
-    # i.e. sigma = SimpleParam(Gaussian1, "sigma") 
-    #      flux = SimpleParam(Gaussian1, "flux")
-    
+    # Then we define the FWHM and Gaussian sigma by reference to this half light radius.  This is
+    # done conveniently by defining conversion functions from the half light radius, and using a
+    # GetSetParam
+    def _get_sigma(self):
+        """Get the sigma from the stored half light radius.
+        """
+        return self.half_light_radius * 1.1774100225154747   # Factor = sqrt[2ln(2)]
+    def _set_sigma(self, value):
+        """Set the FWHM by modifying the stored half light radius appropriately.
+        """
+        self.half_light_radius = value / 1.1774100225154747
+    sigma = GetSetParam(_get_sigma, _set_sigma)
+
+    def _get_fwhm(self):
+        """Get the FWHM from the stored half light radius.
+        """
+        return self.half_light_radius * 2.
+    def _set_fwhm(self, value):
+        """Set the FWHM by modifying the stored half light radius appropriately.
+        """
+        self.half_light_radius = value / 2.
+    fwhm = GetSetParam(_get_fwhm, _set_fwhm)
+
+    # --- Initialization of the other parameter descriptors ---
+    flux = SimpleParam("flux", default=1.)
+
+    # --- Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
-        self._data = {}
-        
-        # How to initialize even a SimpleParam?  Tried many things, all seem unsuccessful... :(
-        self.sigma1 = SimpleParam(Gaussian1, "sigma1")   # this doesn't seem to work for getting/settting
-        SimpleParam(Gaussian1, "sigma2")
 
-        # Both of the above are added to params, and I can see why.  But why can I not get at them
-        # properly via the get and set on that attribute in the normal way.
-        # And self._data is never updated.  I'm lost!!
+        size_set = False
+        if half_light_radius != None:
+            self.half_light_radius = half_light_radius
+            size_set = True
+            
+        if sigma != None:
+            if size_set is True:
+                raise TypeError("Cannot specify more than one size parameter")
+            self.sigma = sigma
+            size_set = True
+            
+        if fwhm != None:
+            if size_set is True:
+                raise TypeError("Cannot specify more than one size parameter")
+            self.fwhm = fwhm
+            size_set = True
+
+        self.flux = flux
+        
+                
+                
+
 
 
 
