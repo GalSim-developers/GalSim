@@ -545,7 +545,7 @@ class GSObject(object):
 #
 
 class SimpleParam(object):
-    def __init__(self, name):
+    def __init__(self, cls, name):
         self.name = name
         cls.params[self.name] = self
 
@@ -558,35 +558,6 @@ class SimpleParam(object):
         print "Setting"
         instance._data[self.name] = value
 
-
-#
-# thisclass = type(instance)  then iterate over thisclass.params
-#
-
-#
-# Here is an attempt to define a radial profile intermediate base class
-#
-class RadialProfile(GSObject):
-    """@brief A class defining the pattern of parameter storage for radial profile GSObjects.
-
-    These are objects that can be described by:
-    - a size parameter (which must be any one, and only one, of a variety of optional size params)
-    - a flux parameter
-    - any number of additional parameters that vary between profiles.
-
-
-    Derived classes must define a _data dict, a params dict and a sizeparam attrbute in their scope.
-    """
-    
-    def __new__(self, cls, size_key, size_val):
-        a = SimpleParam(cls, sizekey)
-   #     for param_key in kwargs:
-   #         SimpleParam(class, param_key)
-
-    def __init__(self, cls, size_key, size_val):
-        sizekey.__set__(self, size_val)
-    #    for param_key in kwargs:
-     #       SimpleParam(class, param_key)
 
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
 # SBPs...
@@ -603,11 +574,13 @@ class Gaussian(GSObject):
     """
     _data = {}
     params = {}
-    sizeparam = None
-    sigma = SimpleParam("sigma")
+    #    sigma = SimpleParam("sigma", Gaussian)  # Can't put these here as Gaussian not yet defined!
+    #    flux = SimpleParam("flux", Gaussian)
 
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
-        self.params["sigma"].__set__(self, sigma)
+        # How to initialize even a SimpleParam?  Tried many things, all seem unsuccessful... :(
+        self.sigma = SimpleParam("sigma", Gaussian)
+
 
     def getSigma(self):
         """@brief Return the sigma scale length for this Gaussian profile.
