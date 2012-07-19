@@ -14,3 +14,5 @@ from psfcorr import *
 from real import *
 from . import io
 from frontend import *
+
+from . import _picklesupport
