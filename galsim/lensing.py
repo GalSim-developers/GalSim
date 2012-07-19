@@ -1,6 +1,5 @@
+import galsim
 import numpy as np
-
-print "%s is not properly tested!" % __file__
 
 ISQRT2 = np.sqrt(1.0/2.0)
 
@@ -14,15 +13,20 @@ class PowerSpectrumRealizer(object):
         """@brief Create a Realizer object from image dimensions and power spectrum functions
         
         The initializer sets up the grids in k-space and computes the power on them.
-        It also computes spin weighting terms.  You can alter any of the setup properties later
+        It also computes spin weighting terms.  You can alter any of the setup properties later.
         
         @param[in] nx The x-dimension of the desired image
         @param[in] ny The y-dimension of the desired image
-        @param[in] pixel_size The size of the pixel sides, in units consistent with the units expected by the power spectrum functions
-        @param[in] E_power_function A function or other callable that can take an array of k values and return a power.  It should cope happily with k=0.  The function should return the power spectrum desired in the E (gradient) mode of the image 
-        @param[in] B_power_function A function or other callable that can take an array of k values and return a power.  It should cope happily with k=0.  The function should return the power spectrum desired in the B (curl) mode of the image 
+        @param[in] pixel_size The size of the pixel sides, in units consistent with the units
+        expected by the power spectrum functions
+        @param[in] E_power_function A function or other callable that can take an array of k values
+        and return a power.  It should cope happily with k=0.  The function should return the power
+        spectrum desired in the E (gradient) mode of the image
+        @param[in] B_power_function A function or other callable that can take an array of k values
+        and return a power.  It should cope happily with k=0.  The function should return the power
+        spectrum desired in the B (curl) mode of the image
         """
-        self.set_size(nx,ny,pixel_size, False)
+        self.set_size(nx, ny, pixel_size, False)
         self.set_power(E_power_function, B_power_function)
         
     def set_size(self, nx, ny, size, remake_power=True):
@@ -30,8 +34,10 @@ class PowerSpectrumRealizer(object):
         
         @param[in] nx The x-dimension of the desired image
         @param[in] ny The y-dimension of the desired image
-        @param[in] pixel_size The size of the pixel sides, in units consistent with the units expected by the power spectrum functions
-        @param[in] remake_power Whether to re-build the power spectra on the new grids.  Set this to False if you are about to change the power spectrum functions too.
+        @param[in] pixel_size The size of the pixel sides, in units consistent with the units
+        expected by the power spectrum functions
+        @param[in] remake_power Whether to re-build the power spectra on the new grids.  Set this to
+        False if you are about to change the power spectrum functions too
         
         """
         # Set up the k grids in x and y, and the instance variables
@@ -48,8 +54,8 @@ class PowerSpectrumRealizer(object):
         #Compute the spin weightings
         self._cos, self._sin = self._generate_spin_weightings()
         
-        #Optionally (because this may be the first time we run this, or we may be about to change these functions)
-        #re-build the power grids for the new sizes
+        #Optionally (because this may be the first time we run this, or we may be about to change
+        #these functions), re-build the power grids for the new sizes
         if remake_power: self.set_power(self.p_E, self.p_B)
         
     def set_power(self, p_E, p_B):
@@ -57,9 +63,10 @@ class PowerSpectrumRealizer(object):
         
         This function re-generates the grids that the power spectrum is computed over.
         
-        @param[in] p_E A function or other callable that accepts a 2D numpy grid of |k| and returns the E-mode power spectrum of the same shape.  Set to None for there to be no E-mode power
-        @param[in] p_B A function or other callable that accepts a 2D numpy grid of |k| and returns the B-mode power spectrum of the same shape.  Set to None for there to be no B-mode power
-        
+        @param[in] p_E A function or other callable that accepts a 2D numpy grid of |k| and returns
+        the E-mode power spectrum of the same shape.  Set to None for there to be no E-mode power
+        @param[in] p_B A function or other callable that accepts a 2D numpy grid of |k| and returns
+        the B-mode power spectrum of the same shape.  Set to None for there to be no B-mode power
         
         """
         self.p_E = p_E
@@ -71,10 +78,16 @@ class PowerSpectrumRealizer(object):
         else:            self.amplitude_B = np.sqrt(self._generate_power_array(p_B))
 
 
-    def __call__(self, new_power=False):
+    def __call__(self, new_power=False, gaussian_deviate=None, seed=None):
         """@brief Generate a realization of the current power spectrum.
         
-        @param[in] new_power If the power-spectrum functions that you specified are not deterministic then you care set this value to True to call them again to get new values.  For example, you could include a cosmic variance term in your power spectrum and get a new spectrum realization each time.
+        @param[in] new_power If the power-spectrum functions that you specified are not
+        deterministic then you can set this value to True to call them again to get new values.
+        For example, you could include a cosmic variance term in your power spectrum and get a new
+        spectrum realization each time.
+        @param[in] gaussian_deviate (Optional) gaussian deviate to use when generating the shear
+        fields
+        @param[in] seed (Optional) random seed to use when generating the Gaussian random shear fields
         
         @return g1,g2 Two image arrays for the two shear components g_1 and g_2
         """
@@ -82,6 +95,15 @@ class PowerSpectrumRealizer(object):
         if new_power:
             self.set_power(self.p_E, self.p_B)
         
+        if gaussian_deviate is None:
+            if seed is None:
+                gd = galsim.GaussianDeviate()
+            else:
+                gd = galsim.GaussianDeviate(seed)
+        else:
+            if seed:
+                raise ValueError("Cannot provide both a Gaussian deviate and a random seed!")
+
         #Generate a random complex realization for the E-mode, if there is one
         if self.amplitude_E is not None:
             r1 = np.random.randn(*self.amplitude_E.shape)
