@@ -106,16 +106,16 @@ class PowerSpectrumRealizer(object):
 
         #Generate a random complex realization for the E-mode, if there is one
         if self.amplitude_E is not None:
-            r1 = np.random.randn(*self.amplitude_E.shape)
-            r2 = np.random.randn(*self.amplitude_E.shape)
+            r1 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
+            r2 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
             E_k = self.amplitude_E * (r1 + 1j*r2) * ISQRT2  
             #Do we need to multiply one of the rows by two to account for the reality?
         else: E_k = 0
 
         #Generate a random complex realization for the B-mode, if there is one
         if self.amplitude_B is not None:
-            r1 = np.random.randn(*self.amplitude_B.shape)
-            r2 = np.random.randn(*self.amplitude_B.shape)
+            r1 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
+            r2 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
             B_k = self.amplitude_B * (r1 + 1j*r2) * ISQRT2
         else:
             B_k = 0
