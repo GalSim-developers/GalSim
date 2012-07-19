@@ -3,11 +3,86 @@ import numpy as np
 
 ISQRT2 = np.sqrt(1.0/2.0)
 
+class ShearField(object):
+    """@brief Class to represent a lensing shear field
+
+    A ShearField represents a random Gaussian realization of some (flat-sky) shear power spectrum,
+    at arbitary positions (not just on a grid).  This class is originally initialized with a list of
+    positions for which we would like to generate g1 and g2 values.   It uses a
+    PowerSpectrumRealizer to generate shears on an appropriately-spaced grid, and then interpolates
+    on that grid to the requested positions.  Finally, it carries around some information about the
+    underlying shear power spectrum used to generate the field.
+    """
+    def __init__(self, ra, dec, E_power_function=None, B_power_function=None, units=None):
+        """@brief Create a ShearField object for a list of positions
+
+        We can optionally set the power spectra that will be used for E and B modes now, or this can
+        be done later using set_p_E and set_p_B.
+
+        @param[in] ra List of right ascensions (units should be consistent with P(k) function)
+        @param[in] dec List of declinations (units should be consistent with P(k) function)
+        @param[in] E_power_function A function or other callable that can take an array of k values
+        and return a power.  It should cope happily with k=0.  The function should return the power
+        spectrum desired in the E (gradient) mode of the image
+        @param[in] B_power_function A function or other callable that can take an array of k values
+        and return a power.  It should cope happily with k=0.  The function should return the power
+        spectrum desired in the B (curl) mode of the image
+        """
+        self.ra = ra
+        self.dec = dec
+        if E_power_function is not None:
+            self.p_E = E_power_function
+        if B_power_function is not None:
+            self.p_B = B_power_function
+        if units is not None:
+            self.units = units
+
+    def set_power_functions(self, E_power_function=None, B_power_function=None):
+        """@brief Set / change the functions that compute the E and B mode power spectra.
+
+        @param[in] E_power_function A function or other callable that accepts a 2D numpy grid of |k| and returns
+        the E-mode power spectrum of the same shape.  Set to None for there to be no E-mode power
+        @param[in] B_power_function A function or other callable that accepts a 2D numpy grid of |k| and returns
+        the B-mode power spectrum of the same shape.  Set to None for there to be no B-mode power
+        """
+        self.p_E = E_power_function
+        self.p_B = B_power_function
+
+    def __call__(self, E_power_function=None, B_power_function=None, gaussian_deviate=None,
+                 seed=None, interpolantxy=None):
+        """@brief Generate a realization of the current power spectrum at the specified positions.
+
+        Generate a Gaussian random realization of some specified shear power spectrum (E and B
+        mode), given the (ra, dec) positions.  This code stores information about the quantities
+        used to generate the random shear field, generates shears using a PowerSpectrumRealizer on a
+        grid, and interpolates to get g1 and g2 at the specified positions.
+
+        @param[in] E_power_function A function or other callable that can take an array of k values
+        and return a power.  It should cope happily with k=0.  The function should return the power
+        spectrum desired in the E (gradient) mode of the image
+        @param[in] B_power_function A function or other callable that can take an array of k values
+        and return a power.  It should cope happily with k=0.  The function should return the power
+        spectrum desired in the B (curl) mode of the image
+        @param[in] gaussian_deviate A galsim.GaussianDeviate object for drawing the random numbers
+        @param[in] seed A seed to use when initializing a new galsim.GaussianDeviate for drawing the
+        random numbers
+        @param[in] interpolantxy (Optional) Interpolant to use for interpolating the shears on a
+        grid to the requested positions [default =galsim.InterpolantXY(galsim.Linear())].
+        """
+
+## put params, returns
+## units?
+## passing through RNG
+
+## shear generator function should (a) store information about the power spectrum and random seed,
+## and (b) generate shears using PowerSpectrumRealizer and (c) interpolate and store results at the
+## requested positions
+## TODO later: get convergences that are consistent with this shear field
+
 class PowerSpectrumRealizer(object):
     """@brief Class for generating realizations of power spectra with any area and pixel size.
     
-    Designed to quickly generate many realizations of the same spectra.
-    
+    Designed to quickly generate many realizations of the same shear power spectra on a grid.
     """
     def __init__(self, nx, ny, pixel_size, E_power_function, B_power_function):
         """@brief Create a Realizer object from image dimensions and power spectrum functions
