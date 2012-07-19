@@ -10,6 +10,8 @@ class GSObject(object):
     """@brief Base class for defining the interface with which all GalSim Objects access their
     shared methods and attributes, particularly those from the C++ SBProfile classes.
     """
+    _data = {}
+    
     def __init__(self, SBProfile):
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
 
@@ -553,7 +555,6 @@ class SimpleParam(object):
     def __init__(self, name, default=0.0):
         self.name = name
         self.default = default
-        self.group = group
 
     def __get__(self, instance, cls):
         if instance is not None:
@@ -564,6 +565,7 @@ class SimpleParam(object):
 
     def __set__(self, instance, value):
         instance._data[self.name] = value
+        instance._SBInitialize()
 
 class GetSetParam(object):
     """
@@ -703,10 +705,15 @@ class Gaussian1(GSObject):
     # --- Initialization of the other parameter descriptors ---
     flux = SimpleParam("flux", default=1.)
 
-    # --- Class methods ---
+    # --- Function used to (re)-initialize the contained SBProfile ---
+    def _SBInitialize(self):
+        GSObject.__init__(self, galsim.SBGaussian(half_light_radius=self.half_light_radius,
+                                                  flux=self.flux))
+
+    # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
 
-        size_set = False
+        size_set = False   # can do the below more succinctly!!
         if half_light_radius != None:
             self.half_light_radius = half_light_radius
             size_set = True
@@ -724,9 +731,9 @@ class Gaussian1(GSObject):
             size_set = True
 
         self.flux = flux
-        
-                
-                
+
+        # Then build the SBProfile
+        self._SBInitialize()
 
 
 
