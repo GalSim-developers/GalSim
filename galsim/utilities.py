@@ -57,9 +57,11 @@ def g1g2_to_e1e2(g1, g2):
     else:
         raise ValueError("Input |g|^2 < 0, cannot convert.")
 
-def rand_arr(nx, ny, deviate):
-    """@brief Function to make an array of random deviates (of any sort)
+def rand_arr(shape, deviate):
+    """@brief Function to make a 2d array of random deviates (of any sort)
     """
-    tmp_img = galsim.ImageD(nx, ny)
+    if len(shape) is not 2:
+        raise ValueError("Can only make a 2d array from this function!")
+    tmp_img = galsim.ImageD(shape[0], shape[1])
     deviate.applyTo(tmp_img.view())
     return tmp_img.array
