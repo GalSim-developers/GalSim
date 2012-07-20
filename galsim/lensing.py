@@ -16,14 +16,14 @@ class ShearField(object):
     on that grid to the requested positions.  Finally, it carries around some information about the
     underlying shear power spectrum used to generate the field.
     """
-    def __init__(self, ra, dec, E_power_function=None, B_power_function=None, units=None):
+    def __init__(self, x, y, E_power_function=None, B_power_function=None, units=None):
         """@brief Create a ShearField object for a list of positions
 
         We can optionally set the power spectra that will be used for E and B modes now, or this can
         be done later using set_p_E and set_p_B.
 
-        @param[in] ra List of right ascensions (units should be consistent with P(k) function)
-        @param[in] dec List of declinations (units should be consistent with P(k) function)
+        @param[in] x List of x positions (units should be consistent with P(k) function)
+        @param[in] y List of y positions (units should be consistent with P(k) function)
         @param[in] E_power_function A function or other callable that can take an array of k values
         and return a power.  It should cope happily with k=0.  The function should return the power
         spectrum desired in the E (gradient) mode of the image
@@ -31,8 +31,8 @@ class ShearField(object):
         and return a power.  It should cope happily with k=0.  The function should return the power
         spectrum desired in the B (curl) mode of the image
         """
-        self.ra = ra
-        self.dec = dec
+        self.x = x
+        self.y = y
         if E_power_function is not None:
             self.p_E = E_power_function
         if B_power_function is not None:
@@ -56,7 +56,7 @@ class ShearField(object):
         """@brief Generate a realization of the current power spectrum at the specified positions.
 
         Generate a Gaussian random realization of some specified shear power spectrum (E and B
-        mode), given the (ra, dec) positions.  This code stores information about the quantities
+        mode), given the (x, y) positions.  This code stores information about the quantities
         used to generate the random shear field, generates shears using a PowerSpectrumRealizer on a
         grid, and interpolates to get g1 and g2 at the specified positions.
 
@@ -103,10 +103,14 @@ class ShearField(object):
         self.interpolantxy = interpolantxy
 
         # generate shears on a grid: choose set of input parameters for PowerSpectrumRealizer
-        ## get total range in RA, dec
-        tot_dra  = np.max(self.ra)  - np.min(self.ra)
-        tot_ddec = np.max(self.dec) - np.min(self.dec)
-        ## TODO: choose an appropriate delta(ra) and delta(dec) which results in setting pixel_size
+        ## get total range in x, y
+        tot_dx = np.max(self.x) - np.min(self.x)
+        tot_dy = np.max(self.y) - np.min(self.y)
+        ## TODO: choose an appropriate delta(x) and delta(y) which results in setting pixel_size
+        ## could simply decide that at some large value of k, that the Fourier representation of the
+        ## interpolant should not cause more than X% deviation from the desired input power
+        ## spectrum.  And then we might also wish to return some error message if the required arrays
+        ## are too large.
 
         ## TODO: find grid size to cover the whole range at that resolution; or perhaps we should
         ## cover a wider range to allow for large-scale modes?
@@ -131,8 +135,8 @@ class ShearField(object):
         g1_sbimg = galsim.SBInterpolatedImage(g1_grid_img, xInterp = interpolantxy, dx = pixel_size)
         g2_sbimg = galsim.SBInterpolatedImage(g2_grid_img, xInterp = interpolantxy, dx = pixel_size)
 
-        # interpolate from the grid points to the desired RA, dec values
-        # TODO: watch out for constant shift between ra/dec values and image bounds
+        # interpolate from the grid points to the desired x, y values
+        # TODO: watch out for constant shift between x/y values and image bounds
         # TODO: figure out how to do this for a vector all at once
 
 class PowerSpectrumRealizer(object):
@@ -285,3 +289,12 @@ class PowerSpectrumRealizer(object):
         C[-kx,ky]=-np.cos(TwoPsi)
         S[-kx,ky]=np.sin(TwoPsi)
         return C,S
+
+# for simple demonstration purposes, a very simple power-law power spectrum that doesn't crash and
+# burn at k=0
+def pk(k):
+    min_k = 1.0e-3
+    if k > min_k:
+        return k**(-2.)
+    else:
+        return min_k**(-2.)
