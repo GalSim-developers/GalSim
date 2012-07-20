@@ -649,7 +649,7 @@ class Gaussian1(GSObject):
         _get_fwhm, _set_fwhm, doc="FWHM, kept consistent with the other size attributes.")
 
     # --- Initialization of the other parameter descriptors ---
-    flux = SimpleParam("flux", default=1., doc="flux of this Gaussian profile")
+    flux = SimpleParam("flux", default=1., doc="flux of this object")
 
     # --- Function used to (re)-initialize the contained SBProfile as necessary ---
     #
@@ -661,7 +661,7 @@ class Gaussian1(GSObject):
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
 
-        size_set = False   # can do the below more succinctly!!
+        size_set = False   # can do the below more succinctly, needs a little thought / work
         if half_light_radius != None:
             self.half_light_radius = half_light_radius
             size_set = True
