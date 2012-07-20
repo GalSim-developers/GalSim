@@ -13,6 +13,8 @@
  * Wraps Boost.Random classes in a way that lets us swap Boost RNG's without affecting client code.
  */
 
+#include <iostream>
+
 // Variable defined to use a private copy of Boost.Random, modified
 // to avoid any reference to Boost.Random elements that might be on
 // the local machine.
@@ -103,7 +105,7 @@ namespace galsim {
          *
          * @param[in] lseed A long-integer seed for the RNG.
          */
-        BaseDeviate(long lseed) : _rng(new rng_type(lseed)) {} 
+        explicit BaseDeviate(long lseed) : _rng(new rng_type(lseed)) {} 
 
         /**
          * @brief Construct a new BaseDeviate, sharing the random number generator with rhs.
@@ -155,6 +157,22 @@ namespace galsim {
          * It discards whatever rng it had been using and starts sharing the one held by dev.
          */
         void reset(const BaseDeviate& dev) { _rng = dev._rng; }
+
+        /**
+         * @brief Save the generator state to a stream.
+         *
+         * This is not a virtual member function; it does not save parameters associated
+         * with derived generators, which must be saved some other way.
+         */
+        void writeState(std::ostream & os) const { os << (*_rng); }
+
+        /**
+         * @brief Load the generator state from a stream.
+         *
+         * This is not a virtual member function; it does not restore parameters associated
+         * with derived generators, which must be loaded some other way.
+         */
+        void readState(std::istream & os) { os >> (*_rng); }
 
    protected:
 

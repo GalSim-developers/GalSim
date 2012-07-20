@@ -2,6 +2,7 @@
 #include "Random.h"
 #include "CCDNoise.h"
 #include "Image.h"
+#include <sstream>
 
 #define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
 #define NO_IMPORT_ARRAY
@@ -13,6 +14,17 @@ namespace galsim {
 namespace {
 
 struct PyBaseDeviate {
+
+    static std::string writeState(BaseDeviate const & self) {
+        std::ostringstream os;
+        self.writeState(os);
+        return os.str();
+    }
+
+    static void readState(BaseDeviate & self, std::string const & state) {
+        std::istringstream is(state);
+        self.readState(is);
+    }
 
     static void wrap() {
         static char const * doc = 
@@ -61,6 +73,8 @@ struct PyBaseDeviate {
             .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
                  (bp::arg("dev")),
                  "Re-connect this Deviate with the rng in another one")
+            .def("readState", readState)
+            .def("writeState", writeState)
             ;
     }
 
