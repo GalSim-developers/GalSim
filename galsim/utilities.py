@@ -65,3 +65,13 @@ def rand_arr(shape, deviate):
     tmp_img = galsim.ImageD(shape[0], shape[1])
     deviate.applyTo(tmp_img.view())
     return tmp_img.array
+
+def eval_sbinterpolatedimage(sbi, x_list, y_list):
+    """@brief Function to get the value of some SBInterpolatedImage at a list of positions.
+    """
+    if len(x_list) != len(y_list):
+        raise RuntimeError("x and y list lengths must match!")
+    vals = []
+    for x_ind in range(len(x_list)):
+        vals.append(sbi.xValue(galsim.PositionD(x_list[x_ind], y_list[x_ind])))
+    return vals

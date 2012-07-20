@@ -106,6 +106,8 @@ class ShearField(object):
         ## get total range in x, y
         tot_dx = np.max(self.x) - np.min(self.x)
         tot_dy = np.max(self.y) - np.min(self.y)
+        med_x = 0.5*(np.min(self.x) + np.max(self.x))
+        med_y = 0.5*(np.min(self.y) + np.max(self.y))
         ## TODO: choose an appropriate delta(x) and delta(y) which results in setting pixel_size
         ## could simply decide that at some large value of k, that the Fourier representation of the
         ## interpolant should not cause more than X% deviation from the desired input power
@@ -135,9 +137,10 @@ class ShearField(object):
         g1_sbimg = galsim.SBInterpolatedImage(g1_grid_img, xInterp = interpolantxy, dx = pixel_size)
         g2_sbimg = galsim.SBInterpolatedImage(g2_grid_img, xInterp = interpolantxy, dx = pixel_size)
 
-        # interpolate from the grid points to the desired x, y values
-        # TODO: watch out for constant shift between x/y values and image bounds
-        # TODO: figure out how to do this for a vector all at once
+        # interpolate from the grid points to the desired x, y values; note, typically images and
+        # SBInterpolatedImages assume image center has coords (0, 0)
+        self.g1 = galsim.utilities.eval_sbinterpolatedimage(g1_sbimg, self.x - med_x, self.y - med_y)
+        self.g2 = galsim.utilities.eval_sbinterpolatedimage(g2_sbimg, self.x - med_x, self.y - med_y)
 
 class PowerSpectrumRealizer(object):
     """@brief Class for generating realizations of power spectra with any area and pixel size.
