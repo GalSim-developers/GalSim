@@ -1,8 +1,11 @@
+"""\file lensing.py The "lensing engine" for drawing random shears from some power spectrum.
+"""
 import galsim
 import numpy as np
 
 ISQRT2 = np.sqrt(1.0/2.0)
 
+## TODO later: get convergences that are consistent with this shear field
 class ShearField(object):
     """@brief Class to represent a lensing shear field
 
@@ -49,7 +52,7 @@ class ShearField(object):
         self.p_B = B_power_function
 
     def __call__(self, E_power_function=None, B_power_function=None, gaussian_deviate=None,
-                 seed=None, interpolantxy=None):
+                 seed=None, interpolantxy=None, psrealizer=None, new_realization=False):
         """@brief Generate a realization of the current power spectrum at the specified positions.
 
         Generate a Gaussian random realization of some specified shear power spectrum (E and B
@@ -68,16 +71,69 @@ class ShearField(object):
         random numbers
         @param[in] interpolantxy (Optional) Interpolant to use for interpolating the shears on a
         grid to the requested positions [default =galsim.InterpolantXY(galsim.Linear())].
+        @param[in] psrealizer (Optional) A PowerSpectrumRealizer object to use, rather than
+        generating a new one given E_power_function/B_power_function
+        @param[in] new_realization If True, then the ShearField should already contain a
+        PowerSpectrumRealizer in psrealizer that can be used to generate another set of random
+        shears
         """
 
-## put params, returns
-## units?
-## passing through RNG
+        # check input values
+        if gaussian_deviate is None:
+            if seed is None:
+                gd = galsim.GaussianDeviate()
+            else:
+                gd = galsim.GaussianDeviate(seed)
+                self.seed = seed
+        else:
+            if seed:
+                raise ValueError("Cannot provide both a Gaussian deviate and a random seed!")
+            if isinstance(gaussian_deviate, galsim.GaussianDeviate) == False:
+                raise TypeError("The requested gaussian_deviate is not a Gaussian deviate!")
+        if interpolantxy is None:
+            interpolantxy = galsim.InterpolantXY(galsim.Linear())
+        if E_power_function is not None:
+            if psrealizer is not None and new_realization is False:
+                self.p_E = E_power_function
+        if B_power_function is not None:
+            if psrealizer is not None and new_realization is False:
+                self.p_B = B_power_function
 
-## shear generator function should (a) store information about the power spectrum and random seed,
-## and (b) generate shears using PowerSpectrumRealizer and (c) interpolate and store results at the
-## requested positions
-## TODO later: get convergences that are consistent with this shear field
+        # store some more information
+        self.interpolantxy = interpolantxy
+
+        # generate shears on a grid: choose set of input parameters for PowerSpectrumRealizer
+        ## get total range in RA, dec
+        tot_dra  = np.max(self.ra)  - np.min(self.ra)
+        tot_ddec = np.max(self.dec) - np.min(self.dec)
+        ## TODO: choose an appropriate delta(ra) and delta(dec) which results in setting pixel_size
+
+        ## TODO: find grid size to cover the whole range at that resolution; or perhaps we should
+        ## cover a wider range to allow for large-scale modes?
+
+        if new_realization is False:
+            if psrealizer is None:
+                ### make the PowerSpectrumRealizer, and store
+                psr = PowerSpectrumRealizer(nx, ny, pixel_size, self.p_E, self.p_B)
+                self.psrealizer = psr
+            else:
+                self.psrealizer = psrealizer
+            ### make a single realization
+            g1_grid, g2_grid = self.psrealizer(gaussian_deviate=gd)
+        else:
+            g1_grid, g2_grid = self.psrealizer(gaussian_deviate=gd)
+
+        # make the gridded shears from a numpy array into an Image
+        g1_grid_img = galsim.ImageViewD(np.ascontiguousarray(g1_grid.astype(np.float64)))
+        g2_grid_img = galsim.ImageViewD(np.ascontiguousarray(g2_grid.astype(np.float64)))
+
+        # make the Image into an SBInterpolatedImage
+        g1_sbimg = galsim.SBInterpolatedImage(g1_grid_img, xInterp = interpolantxy, dx = pixel_size)
+        g2_sbimg = galsim.SBInterpolatedImage(g2_grid_img, xInterp = interpolantxy, dx = pixel_size)
+
+        # interpolate from the grid points to the desired RA, dec values
+        # TODO: watch out for constant shift between ra/dec values and image bounds
+        # TODO: figure out how to do this for a vector all at once
 
 class PowerSpectrumRealizer(object):
     """@brief Class for generating realizations of power spectra with any area and pixel size.
