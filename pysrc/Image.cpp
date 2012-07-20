@@ -221,6 +221,10 @@ struct PyImage {
         return new ConstImageView<T>(data, owner, stride, bounds, scale);
     }
 
+    static std::size_t getDataAddress(BaseImage<T> const & self) {
+        return reinterpret_cast<std::size_t>(self.getData());
+    }
+
     static bp::object wrapImage(std::string const & suffix) {
         
         char const * doc = \
@@ -283,6 +287,10 @@ struct PyImage {
             .def("setOrigin", &BaseImage<T>::setOrigin, bp::args("x0", "y0"))
             .def("setCenter", &BaseImage<T>::setCenter, bp::args("x0", "y0"))
             .def("getBounds", getBounds)
+            .def("getDataAddress", getDataAddress,
+                 "Return the address of the pixel of the image as an integer (useful for checking "
+                 "whether images share data)."
+            )
             .add_property("bounds", getBounds)
             ;
         ADD_CORNER(pyBaseImage, getXMin, xMin);
@@ -314,7 +322,6 @@ struct PyImage {
             .def("copyFrom", &Image<T>::copyFrom)
             .def("fill", &Image<T>::fill)
             .def("setZero", &Image<T>::setZero)
-            .enable_pickling()
             ;
         
         return pyImage;
@@ -378,7 +385,6 @@ struct PyImage {
             .def("copyFrom", &ImageView<T>::copyFrom)
             .def("fill", &ImageView<T>::fill)
             .def("setZero", &ImageView<T>::setZero)
-            .enable_pickling()
             ;
         
         return pyImageView;
@@ -420,7 +426,6 @@ struct PyImage {
             .def("view", &ConstImageView<T>::view, bp::return_self<>())
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
-            .enable_pickling()
             ;
 
         return pyConstImageView;

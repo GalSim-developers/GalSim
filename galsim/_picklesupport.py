@@ -4,22 +4,23 @@ Inject pickle and copy support into Boost.Python classes where appropriate.
 
 from . import _galsim
 
-def memberof(cls):
+def memberof(*classes):
     def closure(func):
-        setattr(cls, func.func_name, func)
-        return getattr(cls, func.func_name)
+        for cls in classes:
+            setattr(cls, func.func_name, func)
+            getattr(cls, func.func_name)
     return closure
 
-def constructAngleFromRadians(value):
+def unpickleAngle(value):
     """
     Named constructor for Angle needed for unpickling.
     """
     return _galsim.Angle(value * _galsim.radians)
-constructAngleFromRadians.__safe_for_unpickling__ = True
+unpickleAngle.__safe_for_unpickling__ = True
 
 @memberof(_galsim.Angle)
 def __reduce__(self):
-    return (constructAngleFromRadians, (self / _galsim.radians,))
+    return (unpickleAngle, (self / _galsim.radians,))
 
 @memberof(_galsim.PositionD)
 def __reduce__(self):
@@ -36,3 +37,11 @@ def __reduce__(self):
 @memberof(_galsim.BoundsI)
 def __reduce__(self):
     return (_galsim.BoundsI, (self.xMin, self.xMax, self.yMin, self.yMax))
+
+@memberof(*(_galsim.ImageView.values() + _galsim.ConstImageView.values()))
+def __reduce__(self):
+    return (type(self), (self.array, self.xMin, self.xMax))
+
+@memberof(*_galsim.Image.values())
+def __reduce__(self):
+    return (type(self), (self.view(),))
