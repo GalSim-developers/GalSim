@@ -10,8 +10,24 @@ class GSObject(object):
     """@brief Base class for defining the interface with which all GalSim Objects access their
     shared methods and attributes, particularly those from the C++ SBProfile classes.
     """
-    _data = {}
-    
+    _data = {} # Used for storing GalSim object parameter data, accessed by their descriptors
+    _SBProfile = None  # Private attribute used by the SBProfile property to store (and rebuild if
+                       # necessary) the C++ layer SBProfile object for which GSObjects are a container
+
+    # Then we define the .SBProfile attribute to actually be a property, with getter and setter
+    # functions that provide access to the data stored in _SBProfile.  If the latter is None, for
+    # example after a change in the object parameters (see, e.g., the SimpleParam descriptor), then
+    # the SBProfile is re-initialized.
+    #
+    # Note that this requires ALL classes derived from GSObject to define a _SBInitialize() method. 
+    def _get_SBProfile(self):
+        if self._SBProfile is None:
+            self._SBInitialize()
+        return self._SBProfile
+    def _set_SBProfile(self, value):
+        self._SBProfile = value
+    SBProfile = property(_get_SBProfile, _set_SBProfile)
+
     def __init__(self, SBProfile):
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
 
@@ -552,9 +568,10 @@ class SimpleParam(object):
         flux = SimpleParam("flux")
     """
 
-    def __init__(self, name, default=0.0):
+    def __init__(self, name, default=None, doc=None):
         self.name = name
         self.default = default
+        self.__doc__ = doc
 
     def __get__(self, instance, cls):
         if instance is not None:
@@ -565,7 +582,7 @@ class SimpleParam(object):
 
     def __set__(self, instance, value):
         instance._data[self.name] = value
-        instance._SBInitialize()
+        instance._SBProfile = None
 
 class GetSetParam(object):
     """
@@ -585,9 +602,10 @@ class GetSetParam(object):
         fwhm = GetSetParam(_get_fwhm, _set_fwhm)
     """
 
-    def __init__(self, getter, setter=None):
+    def __init__(self, getter, setter=None, doc=None):
         self.getter = getter
         self.setter = setter
+        self.__doc__ = doc
     
     def __get__(self, instance, cls):
         if instance is not None:
@@ -598,114 +616,44 @@ class GetSetParam(object):
         if not self.setter:
             raise TypeError("Cannot set parameter")
         self.setter(instance, value)
-
-
-class Gaussian0(GSObject):
-    """@brief GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
-    """
-
-    # Very clunky longhand implementation of some of the introspectable functionality that I had
-    # imagined we would need.
-
-    sizeparam = {"half_light_radius": None, "sigma": None, "fwhm": None}
-    reqparams = {}
-    optparams = {"flux": None}
-    #^^Setting up this stuff will eventually go in an intermedate base class for radial profile-
-    # specified objects, although it seems like populating these with keys would need to happen here
-    # in a way that is obvious to developers.
-
-    # This approach is very clunky, at v. least would be better to define customized dicts with
-    # immutable keys and useful behaviour (e.g. a method to output a standard dict() required
-    # params to use to __init__ GSObjects, while checking that params are not None...)
-
-    # An alternative would be a single dict of params, but these params would "know" what type they
-    # are.  This is possibly more elegant, but also possibly more obscure for future extension.
-
-    def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
-
-        # reset all params (write convenience function for this)
-        for key in self.sizeparam:
-            self.sizeparam[key] = None
-        for key in self.reqparams:
-            self.reqparams[key] = None
-        for key in self.optparams:
-            self.optparams[key] = None
-
-        # First update size parameter dict, raising Exception if multiple input sizes given
-        if half_light_radius != None:
-            self.sizeparam["half_light_radius"] = half_light_radius
-
-        if sigma != None:
-            if any(self.sizeparam.values()):
-                raise AttributeError("Cannot specify more than one size param")
-            self.sizeparam["sigma"] = sigma
-
-        if fwhm != None:
-            if any(self.sizeparam.values()):
-                raise AttributeError("Cannot specify more than one size param")
-            self.sizeparam["sigma"] = sigma
-
-        # Then update the simple parameter flux
-        self.optparams["flux"] = flux
-
-        # Combine param dictionaries and use as **kwargs to the GSObject init call
-        init_params = self.optparams.copy()
-        init_params.update(self.sizeparam)
-        init_params.update(self.reqparams)
-        GSObject.__init__(self, galsim.SBGaussian(**init_params))
-
-    def getSigma(self):
-        """@brief Return the sigma scale length for this Gaussian profile.
-        """
-        return self.SBProfile.getSigma()
-
-    def getFWHM(self):
-        """@brief Return the FWHM for this Gaussian profile.
-        """
-        return self.SBProfile.getSigma() * 2.3548200450309493 # factor = 2 sqrt[2ln(2)]
-
-    def getHalfLightRadius(self):
-        """@brief Return the half light radius for this Gaussian profile.
-        """
-        return self.SBProfile.getSigma() * 1.1774100225154747 # factor = sqrt[2ln(2)]
+        instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
 
 class Gaussian1(GSObject):
 
     # --- Initialization of the size parameter descriptors ---
     # (slightly involved since we typically support multiple ways of specifying object sizes) 
     #
-    # First of all we do the half light radius, which is a SimpleParam descriptor. This is chosen as
+    # First of all we do the half light radius, which is a SimpleParam() descriptor. This is chosen as
     # the default underlying size parameter since it is the common currency for all radial profile
     # sizes in GalSim.
-    half_light_radius = SimpleParam("half_light_radius", default=None)
+    half_light_radius = SimpleParam(
+        "half_light_radius", default=None,
+        doc="Half light radius, kept consistent with the other size attributes.")
 
     # Then we define the FWHM and Gaussian sigma by reference to this half light radius.  This is
     # done conveniently by defining conversion functions from the half light radius, and using a
-    # GetSetParam
+    # GetSetParam() descriptor.
     def _get_sigma(self):
-        """Get the sigma from the stored half light radius.
-        """
         return self.half_light_radius * 1.1774100225154747   # Factor = sqrt[2ln(2)]
     def _set_sigma(self, value):
-        """Set the FWHM by modifying the stored half light radius appropriately.
-        """
         self.half_light_radius = value / 1.1774100225154747
-    sigma = GetSetParam(_get_sigma, _set_sigma)
-
+    sigma = GetSetParam(
+        _get_sigma, _set_sigma,
+        doc="Scale radius sigma, kept consistent with the other size attributes.")
+    
     def _get_fwhm(self):
-        """Get the FWHM from the stored half light radius.
-        """
         return self.half_light_radius * 2.
     def _set_fwhm(self, value):
-        """Set the FWHM by modifying the stored half light radius appropriately.
-        """
         self.half_light_radius = value / 2.
-    fwhm = GetSetParam(_get_fwhm, _set_fwhm)
+    fwhm = GetSetParam(
+        _get_fwhm, _set_fwhm, doc="FWHM, kept consistent with the other size attributes.")
 
     # --- Initialization of the other parameter descriptors ---
-    flux = SimpleParam("flux", default=1.)
+    flux = SimpleParam("flux", default=1., doc="flux of this Gaussian profile")
 
-    # --- Function used to (re)-initialize the contained SBProfile ---
+    # --- Function used to (re)-initialize the contained SBProfile as necessary ---
+    #
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
         GSObject.__init__(self, galsim.SBGaussian(half_light_radius=self.half_light_radius,
                                                   flux=self.flux))
