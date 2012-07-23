@@ -23,6 +23,7 @@ namespace galsim {
     void pyExportSBAiry();
     void pyExportSBLaguerre();
     void pyExportSBInterpolatedImage();
+    void pyExportSBKolmogorov();
     void pyExportRandom();
 
     namespace hsm{
@@ -51,6 +52,7 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBAiry();
     galsim::pyExportSBLaguerre();
     galsim::pyExportSBInterpolatedImage();
+    galsim::pyExportSBKolmogorov();
     galsim::pyExportRandom();
     galsim::hsm::pyExportPSFCorr();
 }

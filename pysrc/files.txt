@@ -16,6 +16,7 @@ SBMoffat.cpp
 SBAiry.cpp
 SBLaguerre.cpp
 SBInterpolatedImage.cpp
+SBKolmogorov.cpp
 PhotonArray.cpp
 Random.cpp
 PSFCorr.cpp
