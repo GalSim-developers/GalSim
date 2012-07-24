@@ -28,7 +28,7 @@ class SimpleParam(object):
         instance._SBProfile = None
 
 
-class GetSetParam(object):
+class GetSetFuncParam(object):
     """
     Descriptor that uses user-supplied functions to get/set values, intended for
     defining "derived" quantities.
