@@ -18,14 +18,15 @@ class SimpleParam(object):
 
     def __get__(self, instance, cls):
         if instance is not None:
-            # dict.setdefault will return the item in the dict if present, or set and return the default
-            # otherwise
+            # dict.setdefault will return the item in the dict if present, or set and return the
+            # default otherwise
             return instance._data.setdefault(self.name, self.default)
         return self
 
     def __set__(self, instance, value):
         instance._data[self.name] = value
         instance._SBProfile = None
+
 
 class GetSetParam(object):
     """
@@ -64,7 +65,35 @@ class GetSetParam(object):
         self.setter(instance, value)
         instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
 
-class FluxParam(object)
 
+class FluxParam(object):
+    """
+    A descriptor for storing and updating the flux parameter of a GSObject.
 
-    
+    Unlike SimpleParam this does not cause the GSObject's stored SBProfile to become undefined
+    necessitating later re-initializtion, but rather calls the SBProfile's own setFlux() method
+    to update the flux.
+
+    This causes the SBProfile remain or become an SBTransform, and therefore not necessarily of the
+    same object type as might be expected from the container GSObject.  However, all of the original
+    GSObject params are available via their descriptors.
+    """
+
+    def __init__(self, default=1., doc="Total flux of this object."):
+        self.name = "flux"
+        self.default = default
+        self.__doc__ = doc
+
+    def __get__(self, instance, cls):
+        if instance is not None:
+            # dict.setdefault will return the item in the dict if present, or set and return the
+            # default otherwise
+            return instance._data.setdefault(self.name, self.default)
+        return self
+
+    def __set__(self, instance, value):
+        # update the stored flux value
+        instance._data["flux"] = value
+        # update the SBProfile (do not undefine for re-initialization as do, e.g., SimpleParams).
+        instance.SBProfile.setFlux(value)
+        
