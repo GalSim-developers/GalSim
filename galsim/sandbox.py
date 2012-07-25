@@ -584,26 +584,28 @@ class Gaussian1(RadialProfile):
 
     # --- Initialization of the extra size parameter descriptors ---
     sigma = descriptors.GetSetScaleParam(
-        "sigma", root_name="half_light_radius", factor=1.1774100225154747, # factor = sqrt[2ln(2)]
+        "sigma", root_name="half_light_radius",
+        factor=1 / 1.1774100225154747, # factor = 1 / sqrt[2ln(2)]
         doc="Scale radius sigma, kept consistent with the other size attributes.")
     
     fwhm = descriptors.GetSetScaleParam(
-        "fwhm", root_name="half_light_radius", factor=2.,                  # strange but true...
+        "fwhm", root_name="half_light_radius", factor=2., # strange but, it turns out, true...
         doc="FWHM, kept consistent with the other size attributes.")
 
-    # --- Function used to (re)-initialize the contained SBProfile as necessary ---
-    #
+    # --- Define the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
         GSObject.__init__(self, galsim.SBGaussian(half_light_radius=self.half_light_radius,
                                                   flux=self.flux))
-        
+    
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
 
+        # Use the RadialProfile._parse_sizes function to initialize size parameter
         RadialProfile._parse_sizes(
             self, half_light_radius=half_light_radius, sigma=sigma, fwhm=fwhm)
-        
+
+        # Set the flux
         self.flux = flux
 
         # Then build the SBProfile
