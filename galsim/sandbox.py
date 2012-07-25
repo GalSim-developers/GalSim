@@ -566,9 +566,9 @@ class RadialProfile(GSObject):
     The radial profile GSObjects are characterized by:
       * one or more size parameters, e.g. sigma (for the Gaussian), half_light_radius (all objects),
         from which one only must be chosen for initialization
-      * a flux
-      * optional parameters describing the radial profile, but not directly related to the object's
-        apparent size
+      * an optional flux parameter [default = 1]
+      * additional optional parameters describing the radial profile, but not directly related to
+        the object's apparent size
 
     Currently, the RadialProfile objects are:
     Airy, DeVaucouleurs, Exponential, Gaussian, Moffat, Sersic
