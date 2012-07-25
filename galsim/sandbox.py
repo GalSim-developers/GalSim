@@ -606,8 +606,40 @@ class RadialProfile(GSObject):
                     size_set = True
 
 class Gaussian1(RadialProfile):
+    """@brief GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
 
-    # --- Initialization of any additional size parameter descriptors ---
+    For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
+    documentation in doxygen.
+
+    Initialization
+    --------------
+    A Gaussian can be initialized using one (and only one) of three possible size parameters
+
+        half_light_radius
+        sigma
+        fwhm
+
+    and an optional flux parameter [default flux = 1].
+
+    Example:
+    >>> gauss_obj = Gaussian(flux=3., sigma=1.)
+    >>> gauss_obj.half_light_radius
+    1.1774100225154747
+    >>> gauss_obj.half_light_radius = 1.
+    >>> gauss_obj.sigma
+    0.8493218002880191
+
+    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
+    TypeError exception.
+
+    Methods
+    -------
+    The Gaussian is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
+    """
+
+    # Initialization of additional size parameter descriptors beyond the half_light_radius inherited
+    # by all RadialProfile GSObjects
     sigma = descriptors.GetSetScaleParam(
         name="sigma", root_name="half_light_radius",
         factor=1 / 1.1774100225154747, # factor = 1 / sqrt[2ln(2)]
@@ -617,7 +649,7 @@ class Gaussian1(RadialProfile):
         name="fwhm", root_name="half_light_radius", factor=2., # strange but, it turns out, true...
         doc="FWHM, kept consistent with the other size attributes.")
 
-    # --- Define the function used to (re)-initialize the contained SBProfile as necessary ---
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
         GSObject.__init__(self, galsim.SBGaussian(half_light_radius=self.half_light_radius,
@@ -635,7 +667,4 @@ class Gaussian1(RadialProfile):
 
         # Then build the SBProfile
         self._SBInitialize()
-
-
-
 
