@@ -3,6 +3,7 @@ import collections
 import numpy as np
 import galsim
 import utilities
+import descriptors
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
@@ -558,98 +559,37 @@ class GSObject(object):
         return image, added_flux
 
 
-class SimpleParam(object):
-    """
-    Descriptor that just gets/sets a value with no additional checking or logic.
 
-    Use it like this:
+class RadialProfile(GSObject):
 
-    class MyProfile(GSObject):
-        flux = SimpleParam("flux")
-    """
-
-    def __init__(self, name, default=None, doc=None):
-        self.name = name
-        self.default = default
-        self.__doc__ = doc
-
-    def __get__(self, instance, cls):
-        if instance is not None:
-            # dict.setdefault will return the item in the dict if present, or set and return the default
-            # otherwise
-            return instance._data.setdefault(self.name, self.default)
-        return self
-
-    def __set__(self, instance, value):
-        instance._data[self.name] = value
-        instance._SBProfile = None
-
-class GetSetParam(object):
-    """
-    Descriptor that uses user-supplied functions to get/set values, intended for
-    defining "derived" quantities.
-
-    Use it like this:
-
-    class MyProfile(GSObject):
+    flux = descriptors.FluxParam()
     
-        half_light_radius = SimpleParam("half_light_radius")
-
-        def _get_fwhm(self):
-            return self.half_light_radius * RADIUS_CONVERSION_FACTOR
-        def _set_fwhm(self, value):
-            self.half_light_radius = value / RADIUS_CONVERSION_FACTOR
-        fwhm = GetSetParam(_get_fwhm, _set_fwhm)
-    """
-
-    def __init__(self, getter, setter=None, doc=None):
-        self.getter = getter
-        self.setter = setter
-        self.__doc__ = doc
-    
-    def __get__(self, instance, cls):
-        if instance is not None:
-            return self.getter(instance)
-        return self
-
-    def __set__(self, instance, value):
-        if not self.setter:
-            raise TypeError("Cannot set parameter")
-        self.setter(instance, value)
-        instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
-
-class Gaussian1(GSObject):
-
-    # --- Initialization of the size parameter descriptors ---
-    # (slightly involved since we typically support multiple ways of specifying object sizes) 
-    #
-    # First of all we do the half light radius, which is a SimpleParam() descriptor. This is chosen as
-    # the default underlying size parameter since it is the common currency for all radial profile
-    # sizes in GalSim.
-    half_light_radius = SimpleParam(
+    half_light_radius = descriptors.SimpleParam(
         "half_light_radius", default=None,
         doc="Half light radius, kept consistent with the other size attributes.")
+    
+    def _parse_sizes(self, **kwargs):
+        size_set = False
+        for name, value in kwargs.iteritems():
+            if value != None:
+                if size_set is True:
+                    raise TypeError("Cannot specify more than one size parameter")
+                else:
+                    self.__setattr__(name, value)
+                    size_set = True
+            
 
-    # Then we define the FWHM and Gaussian sigma by reference to this half light radius.  This is
-    # done conveniently by defining conversion functions from the half light radius, and using a
-    # GetSetParam() descriptor.
-    def _get_sigma(self):
-        return self.half_light_radius * 1.1774100225154747   # Factor = sqrt[2ln(2)]
-    def _set_sigma(self, value):
-        self.half_light_radius = value / 1.1774100225154747
-    sigma = GetSetParam(
-        _get_sigma, _set_sigma,
+
+class Gaussian1(RadialProfile):
+
+    # --- Initialization of the extra size parameter descriptors ---
+    sigma = descriptors.GetSetScaleParam(
+        "sigma", root_name="half_light_radius", factor=1.1774100225154747, # factor = sqrt[2ln(2)]
         doc="Scale radius sigma, kept consistent with the other size attributes.")
     
-    def _get_fwhm(self):
-        return self.half_light_radius * 2.
-    def _set_fwhm(self, value):
-        self.half_light_radius = value / 2.
-    fwhm = GetSetParam(
-        _get_fwhm, _set_fwhm, doc="FWHM, kept consistent with the other size attributes.")
-
-    # --- Initialization of the other parameter descriptors ---
-    flux = SimpleParam("flux", default=1., doc="flux of this object")
+    fwhm = descriptors.GetSetScaleParam(
+        "fwhm", root_name="half_light_radius", factor=2.,                  # strange but true...
+        doc="FWHM, kept consistent with the other size attributes.")
 
     # --- Function used to (re)-initialize the contained SBProfile as necessary ---
     #
@@ -657,27 +597,13 @@ class Gaussian1(GSObject):
     def _SBInitialize(self):
         GSObject.__init__(self, galsim.SBGaussian(half_light_radius=self.half_light_radius,
                                                   flux=self.flux))
-
+        
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
 
-        size_set = False   # can do the below more succinctly, needs a little thought / work
-        if half_light_radius != None:
-            self.half_light_radius = half_light_radius
-            size_set = True
-            
-        if sigma != None:
-            if size_set is True:
-                raise TypeError("Cannot specify more than one size parameter")
-            self.sigma = sigma
-            size_set = True
-            
-        if fwhm != None:
-            if size_set is True:
-                raise TypeError("Cannot specify more than one size parameter")
-            self.fwhm = fwhm
-            size_set = True
-
+        RadialProfile._parse_sizes(
+            self, half_light_radius=half_light_radius, sigma=sigma, fwhm=fwhm)
+        
         self.flux = flux
 
         # Then build the SBProfile
