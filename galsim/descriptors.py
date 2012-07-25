@@ -25,18 +25,19 @@ class SimpleParam(object):
 
     def __set__(self, instance, value):
         instance._data[self.name] = value
-        instance._SBProfile = None
+        instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
 
 
 class GetSetFuncParam(object):
     """
-    Descriptor that uses user-supplied functions to get/set values, intended for
-    defining "derived" quantities.
+    Descriptor that uses user-supplied functions to get/set values, intended for defining "derived"
+    quantities.
 
     Like SimpleParam, on setting this descriptor causes the GSObject's stored SBProfile to be
     undefined, for later re-initialization with the updated parameter set.
 
-    Use it like this:
+    Use it like this, illustrating a reworking of the GetSetScaleParam functionality to define one
+    parameter as a rescaling of the other:
 
     class MyProfile(GSObject):
     
@@ -47,6 +48,9 @@ class GetSetFuncParam(object):
         def _set_fwhm(self, value):
             self.half_light_radius = value / RADIUS_CONVERSION_FACTOR
         fwhm = GetSetParam(_get_fwhm, _set_fwhm)
+
+    (N.B. There is not actual need to do this, since we have the GetSetScaleParam descriptor class,
+     but it does illustrate the functionality.)
     """
 
     def __init__(self, getter, setter=None, doc=None):
@@ -68,6 +72,29 @@ class GetSetFuncParam(object):
 
 class GetSetScaleParam(object):
     """
+    Descriptor that uses a user-supplied scaling factor to get/set values, intended for defining
+    "derived" quantities based on other parameters.
+
+    Initialized with a name, root_name and factor argument, the descriptor behaves as follows...
+
+    On get:
+    >>> self.name
+    ...returns self.root_name * factor
+
+    On set:
+    >>> self.name = value
+    ...performs self.root_name = value / factor
+
+    Use it like this in your classes:
+
+    class MyProfile(GSObject):
+
+        half_light_radius = SimpleParam("half_light_radius")
+	fwhm = GetSetScaleParam("fwhm", "half_light_radius", RADIUS_CONVERSION_FACTOR)
+
+    (N.B. The example above is functionally equivalent to the example given in the GetSetFuncParam
+     docstring, and illustrates the neater syntax of this descriptor for this specific task.)
+    
     """
 
     def __init__(self, name, root_name, factor, doc=None):
