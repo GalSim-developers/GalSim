@@ -559,37 +559,62 @@ class GSObject(object):
         return image, added_flux
 
 
-
 class RadialProfile(GSObject):
+    """@brief Intermediate base class that defines some parameters shared by all "radial profile"
+    GSObjects.
 
+    The radial profile GSObjects are characterized by:
+      * one or more size parameters, e.g. sigma (for the Gaussian), half_light_radius (all objects),
+        from which one only must be chosen for initialization
+      * a flux
+      * optional parameters describing the radial profile, but not directly related to the object's
+        apparent size
+
+    Currently, the RadialProfile objects are:
+    Airy, DeVaucouleurs, Exponential, Gaussian, Moffat, Sersic
+
+    Although only one size parameter must be chosen for initializing RadialProfile objects (giving
+    more than one will raise a TypeError exception), subsequently all the size parameters defined
+    for that object can be accessed as attributes.  If one of these size attributes is assigned to
+    a new value, all the other sizes and the underlying SBProfile description of the profile itself
+    will be updated to match.
+
+    All RadialProfile GSObject classes share the half_light_radius size specification.
+    """
+
+    # All RadialProfile objects have a flux
     flux = descriptors.FluxParam()
-    
+
+    # All RadialProfile objects share a half_light_radius, so we can define this in the intermediate
+    # base class
     half_light_radius = descriptors.SimpleParam(
         "half_light_radius", default=None,
         doc="Half light radius, kept consistent with the other size attributes.")
     
     def _parse_sizes(self, **kwargs):
+        """
+        Convenience function to parse input size parameters within the derived class __init__
+        method.  Raises an exception if more than one input parameter kwarg is set != None.
+        """
         size_set = False
         for name, value in kwargs.iteritems():
             if value != None:
                 if size_set is True:
-                    raise TypeError("Cannot specify more than one size parameter")
+                    raise TypeError("Cannot specify more than one size parameter for this object.")
                 else:
                     self.__setattr__(name, value)
                     size_set = True
-            
-
 
 class Gaussian1(RadialProfile):
 
-    # --- Initialization of the extra size parameter descriptors ---
+    # --- Initialization of any additional size parameter descriptors ---
     sigma = descriptors.GetSetScaleParam(
-        "sigma", root_name="half_light_radius",
+        name="sigma", root_name="half_light_radius",
         factor=1 / 1.1774100225154747, # factor = 1 / sqrt[2ln(2)]
         doc="Scale radius sigma, kept consistent with the other size attributes.")
     
     fwhm = descriptors.GetSetScaleParam(
-        "fwhm", root_name="half_light_radius", factor=2., # strange but, it turns out, true...
+        name="fwhm", root_name="half_light_radius", factor=2., # strange but, it turns out, true...
         doc="FWHM, kept consistent with the other size attributes.")
 
     # --- Define the function used to (re)-initialize the contained SBProfile as necessary ---
@@ -601,7 +626,7 @@ class Gaussian1(RadialProfile):
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
 
-        # Use the RadialProfile._parse_sizes function to initialize size parameter
+        # Use the RadialProfile._parse_sizes() method to initialize size parameters
         RadialProfile._parse_sizes(
             self, half_light_radius=half_light_radius, sigma=sigma, fwhm=fwhm)
 
