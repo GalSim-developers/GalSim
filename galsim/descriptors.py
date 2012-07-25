@@ -66,6 +66,26 @@ class GetSetFuncParam(object):
         instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
 
 
+class GetSetScaleParam(object):
+    """
+    """
+
+    def __init__(self, name, root_name, factor, doc=None):
+        self.name = name
+        self.root_name = root_name
+        self.factor = factor
+        self.__doc__ = doc
+    
+    def __get__(self, instance, cls):
+        if instance is not None:
+            return instance._data[self.root_name] * self.factor
+        return self
+
+    def __set__(self, instance, value):
+        instance._data[self.root_name] = value / self.factor
+        instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
+        
+
 class FluxParam(object):
     """
     A descriptor for storing and updating the flux parameter of a GSObject.
