@@ -567,8 +567,12 @@ class RadialProfile(GSObject):
       * one or more size parameters, e.g. sigma (for the Gaussian), half_light_radius (all objects),
         from which one only must be chosen for initialization
       * an optional flux parameter [default = 1]
-      * additional optional parameters describing the radial profile, but not directly related to
-        the object's apparent size
+      * zero or more additional parameters describing the radial profile, but not directly** related
+        to the object's apparent size
+
+    This intermediate base class sets up the parameter descriptors for the half_light_radius and
+    flux params common to all derived objects.  Additional parameters should be defined in the
+    class scopes for the derived RadialProfile objects.
 
     Currently, the RadialProfile objects are:
     Airy, DeVaucouleurs, Exponential, Gaussian, Moffat, Sersic
