@@ -7,7 +7,8 @@ import galsim
 """
 @brief A class to represent ellipses in a variety of ways.
 
-The Ellipse class represents a shear (shape distortion), dilation, and/or centroid shift.
+The galsim Ellipse class (galsim.Ellipse) represents a shear (shape distortion), dilation, and/or
+centroid shift.
 
 The python Ellipse class can be initialized in a variety of ways.  Unnamed arguments must be a
 galsim.shear.Shear object for shape distortion, a float for dilation, and/or a Position for centroid

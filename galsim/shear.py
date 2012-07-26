@@ -6,9 +6,9 @@ from . import _galsim
 """
 @brief A class to represent shears in a variety of ways.
 
-The python Shear class can be initialized in a variety of ways to represent shape distortions. All
-arguments must be named.  Given semi-major and semi-minor axes a and b, we can define multiple shape
-measurements:
+The python Shear class (galsim.Shear) can be initialized in a variety of ways to represent shape
+distortions. All arguments must be named.  Given semi-major and semi-minor axes a and b, we can
+define multiple shape measurements:
 
 reduced shear |g| = (a - b)/(a + b)
 distortion |e| = (a^2 - b^2)/(a^2 + b^2)
