@@ -863,6 +863,8 @@ class AtmosphericPSF(GSObject):
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1e-4)
             self.Interpolant2D = galsim.InterpolantXY(lan5)
         else:
+            if isinstance(interpolant, galsim.InterpolantXY) == False:
+                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
             self.Interpolant2D = interpolantxy
         GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, 
                                                            dx=dx_lookup))
