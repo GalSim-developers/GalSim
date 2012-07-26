@@ -44,7 +44,8 @@ s = galsim.Shear(e=0.3, beta=galsim.Angle(30.0*galsim.degrees))
 There can be no mixing and matching, e.g., specifying g1 and e2.  It is permissible to only specify
 one of two components, with the other assumed to be zero.  If a magnitude such as e, g, eta, or q is
 specified, then beta is also required to be specified.  It is possible to initialize a Shear with
-zero reduced shear by specifying no args or kwargs, i.e. galsim.Shear().
+zero reduced shear by specifying no args or kwargs, i.e. galsim.Shear().  The galsim.Shear contains
+a C++ CppShear object, and operations on Shear rely on wrapped methods of the CppShear.
 """
 class Shear:
     def __init__(self, *args, **kwargs):
@@ -160,7 +161,8 @@ class Shear:
 
             self._shear = use_shear
 
-    #### propagate through all the methods from C++
+    # below, we propagate through all the methods from C++
+
     # define all the methods for setting shear values
     def setE1E2(self, e1=0.0, e2=0.0): self._shear.setE1E2(e1, e2)
     def setEBeta(self, e=0.0, beta=None): self._shear.setEBeta(e, beta)

@@ -14,7 +14,8 @@ The python Ellipse class can be initialized in a variety of ways.  Unnamed argum
 galsim.shear.Shear object for shape distortion, a float for dilation, and/or a Position for centroid
 shift.  Keyword arguments can be used to set parameters of the shape distortion the same as for the
 Shear class; or the parameter "dilation" can be used for re-sizing; or the parameters "x_shift" and
-"y_shift" can be used for centroid shifts.
+"y_shift" can be used for centroid shifts.  The galsim.Ellipse contains a C++ CppEllipse object, and
+operations on Ellipse rely on wrapped methods of the CppEllipse.
 
 The following are all examples of valid calls to initialize a Ellipse object:
 @code
@@ -92,7 +93,8 @@ class Ellipse:
 
         self._ellipse = _galsim._CppEllipse(s = use_shear._shear, mu = use_dil, p = use_shift)
 
-    #### propagate through all the methods from C++
+    # below, we propagate through all the methods from C++ #
+
     # define all the various operators on Ellipse objects
     def __neg__(self): return Ellipse(-self._ellipse)
     def __add__(self, other): return Ellipse(self._ellipse + other._ellipse)
