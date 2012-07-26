@@ -575,7 +575,7 @@ class RadialProfile(GSObject):
     class scopes for the derived RadialProfile objects.
 
     Currently, the RadialProfile objects are:
-    Airy, DeVaucouleurs, Exponential, Gaussian, Moffat, Sersic
+    Airy, AtmosphericPSF, DeVaucouleurs, Exponential, Gaussian, Moffat, OpticalPSF, Sersic
 
     Although only one size parameter must be chosen for initializing RadialProfile objects (giving
     more than one will raise a TypeError exception), subsequently all the size parameters defined
@@ -608,6 +608,8 @@ class RadialProfile(GSObject):
                 else:
                     self.__setattr__(name, value)
                     size_set = True
+        if size_set is False:
+            raise TypeError("Must specify at least one size parameter for this object.")
 
 class Gaussian(RadialProfile):
     """@brief GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
@@ -671,4 +673,7 @@ class Gaussian(RadialProfile):
 
         # Then build the SBProfile
         self._SBInitialize()
+
+
+
 
