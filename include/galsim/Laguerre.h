@@ -12,7 +12,7 @@
 #include "TMV.h"
 
 #include "Std.h"
-#include "Shear.h"
+#include "CppShear.h"
 
 namespace galsim {
 
@@ -503,7 +503,7 @@ namespace galsim {
 
     // Shear:
     LTransform MakeLTransform(
-        Shear eta, int orderOut, int orderIn, bool coordShift=false);
+        CppShear eta, int orderOut, int orderIn, bool coordShift=false);
 
     // Dilation:
     LTransform MakeLTransform(

@@ -2,10 +2,12 @@
 #ifndef SHEAR_H
 #define SHEAR_H
 /**
- * @file Shear.h Contains a class definition for Shear and Ellipse.
+ * @file CppShear.h Contains a class definition for CppShear and CppEllipse.
  *
- * Shear is used to represent shape distortions; Ellipse includes shear, translation and
- * magnification.
+ * CppShear is used to represent shape distortions; CppEllipse includes shear, translation and
+ * magnification.  The class names include "Cpp" in front because the C++ definition of Shear and
+ * Ellipse is more restricted than the python version, so we use Cpp as a way of distinguishing
+ * easily between the definitions.
 */
 
 #include <cmath>
@@ -49,13 +51,13 @@ namespace galsim {
      * However, given that lensing specialists most commonly think in terms of reduced shear, the
      * constructor that takes two numbers expects (g1, g2).  A user who wishes to specify another
      * type of shape should use methods, i.e.
-     *     s = Shear();
+     *     s = CppShear();
      *     s.setE1E2(my_e1, my_e2);
      */
 
-    class Shear 
+    class CppShear 
     {
-        friend Shear operator*(const double, const Shear& );
+        friend CppShear operator*(const double, const CppShear& );
 
     public:
         /** 
@@ -64,18 +66,18 @@ namespace galsim {
          * @param[in] g1 first component (reduced shear definition).
          * @param[in] g2 second shear component (reduced shear definition).
          */
-        explicit Shear(double g1=0., double g2=0.) :
+        explicit CppShear(double g1=0., double g2=0.) :
             hasMatrix(false), matrixA(0), matrixB(0), matrixC(0)
                 { setG1G2(g1, g2); }
 
         /// @brief Copy constructor.
-        Shear(const Shear& rhs) :
+        CppShear(const CppShear& rhs) :
             e1(rhs.e1), e2(rhs.e2), hasMatrix(rhs.hasMatrix),
             matrixA(rhs.matrixA), matrixB(rhs.matrixB), matrixC(rhs.matrixC) 
         {}
 
         /// @brief Copy assignment.
-        const Shear& operator=(const Shear& s)
+        const CppShear& operator=(const CppShear& s)
         {
             e1 = s.e1; e2=s.e2;
             matrixA=s.matrixA; matrixB=s.matrixB; matrixC=s.matrixC;
@@ -84,22 +86,22 @@ namespace galsim {
         }
 
         /// @brief Set (e1, e2) using distortion definition.
-        Shear& setE1E2(double e1in=0., double e2in=0.);
+        CppShear& setE1E2(double e1in=0., double e2in=0.);
 
         /** 
          * @brief Set (|e|, beta) polar ellipticity representation using distortion definition.
          * beta must be an Angle.
          */
-        Shear& setEBeta(double etain=0., Angle betain=Angle());
+        CppShear& setEBeta(double etain=0., Angle betain=Angle());
 
         /// @brief Set (eta1, eta2) using conformal shear definition.
-        Shear& setEta1Eta2(double eta1in=0., double eta2in=0.);
+        CppShear& setEta1Eta2(double eta1in=0., double eta2in=0.);
 
         /// @brief Set (|eta|, beta) using conformal shear definition. beta must be an Angle.
-        Shear& setEtaBeta(double =0., Angle betain=Angle());
+        CppShear& setEtaBeta(double =0., Angle betain=Angle());
 
         /// @brief set (g1, g2) using reduced shear |g| = (a-b)/(a+b) definition.
-        Shear& setG1G2(double g1in=0., double g2in=0.);
+        CppShear& setG1G2(double g1in=0., double g2in=0.);
 
         /// @brief Get e1 using distortion definition.
         double getE1() const { return e1; }
@@ -161,11 +163,11 @@ namespace galsim {
         void getG1G2(double& g1, double& g2) const;
 
         /// @brief Unary negation (both components negated).
-        Shear operator-() const 
+        CppShear operator-() const 
         {
             double esq = getESq();
             double scale = (esq>1.e-6) ? (1.-std::sqrt(1.-esq))/esq : 0.5;
-            return esq>0. ? Shear(-e1*scale, -e2*scale) : Shear(0.0, 0.0);
+            return esq>0. ? CppShear(-e1*scale, -e2*scale) : CppShear(0.0, 0.0);
         }
 
         /**
@@ -174,9 +176,9 @@ namespace galsim {
          * Note that this 'addition' is ***not commutative***!
          *
          * @returns Ellipticity of circle that is sheared first by RHS and then by
-         * LHS Shear.  
+         * LHS CppShear.  
          */
-        Shear operator+(const Shear& ) const;
+        CppShear operator+(const CppShear& ) const;
 
         /**
          * @brief Composition (with RHS negation) operation.
@@ -184,9 +186,9 @@ namespace galsim {
          * Note that this 'subtraction' is ***not commutative***!
          *
          * @returns Ellipticity of circle that is sheared first by the negative RHS and then by
-         * LHS Shear.
+         * LHS CppShear.
          */ 
-        Shear operator-(const Shear& ) const;
+        CppShear operator-(const CppShear& ) const;
         
         // In the += and -= operations, this is LHS
         // and the operand is RHS of + or - .
@@ -199,9 +201,9 @@ namespace galsim {
          * In the += operation, this is LHS and the operand is RHS of +.
          *
          * @returns Ellipticity of circle that is sheared first by RHS and then by
-         * LHS Shear. 
+         * LHS CppShear. 
          */
-        Shear& operator+=(const Shear& );
+        CppShear& operator+=(const CppShear& );
         
         /**
          * @brief Inplace composition (with RHS negation) operation.
@@ -211,9 +213,9 @@ namespace galsim {
          * In the -= operation, this is LHS and the operand is RHS of -.
          *
          * @returns Ellipticity of circle that is sheared first by the negative RHS and then by
-         * LHS Shear.
+         * LHS CppShear.
          */
-        Shear& operator-=(const Shear& );
+        CppShear& operator-=(const CppShear& );
 
         /** @brief Give the rotation angle for this+rhs.
          *
@@ -221,14 +223,14 @@ namespace galsim {
          * the plane induces a rotation as well as a shear.
          * Above method tells you what the rotation was for LHS+RHS.
          */
-        Angle rotationWith(const Shear& rhs) const; 
+        Angle rotationWith(const CppShear& rhs) const; 
 
         ///@brief Test equivalence by comparing e1 and e2.
-        bool operator==(const Shear& rhs) const 
+        bool operator==(const CppShear& rhs) const 
         { return e1==rhs.e1 && e2==rhs.e2; }
 
         ///@brief Test non-equivalence by comparing e1 and e2.
-        bool operator!=(const Shear& rhs) const 
+        bool operator!=(const CppShear& rhs) const 
         { return e1!=rhs.e1 || e2!=rhs.e2; }
 
         // Classes that treat shear as a point-set map:
@@ -275,10 +277,10 @@ namespace galsim {
         { calcMatrix(); a=matrixA; b=matrixB; c=matrixC; }
 
         void write(std::ostream& fout) const;
-        friend std::ostream& operator<<(std::ostream& os, const Shear& s);
+        friend std::ostream& operator<<(std::ostream& os, const CppShear& s);
 
         void read(std::istream& fin);
-        friend std::istream& operator>>(std::istream& is, Shear& s);
+        friend std::istream& operator>>(std::istream& is, CppShear& s);
 
     private:
 
@@ -289,8 +291,8 @@ namespace galsim {
         mutable double matrixA, matrixB, matrixC;
     };
 
-    std::ostream& operator<<(std::ostream& os, const Shear& s);
-    std::istream& operator>>(std::istream& is, Shear& s);
+    std::ostream& operator<<(std::ostream& os, const CppShear& s);
+    std::istream& operator>>(std::istream& is, CppShear& s);
 
     /**
      * @brief A base class representing transformation from an ellipse to the unit circle.
@@ -298,12 +300,12 @@ namespace galsim {
      * The purpose of this C++ class is to represent transformation from an ellipse with center x0,
      * size exp(mu), and shape s to the unit circle.  The map from source plane to image plane is
      * defined as E(x) = T(D(S(x))), where S=shear, D=dilation, T=translation.  Conventions for
-     * order of compounding, etc., are same as for Shear.
+     * order of compounding, etc., are same as for CppShear.
      */
     class Ellipse 
     {
     public:
-        explicit Ellipse(const Shear& _s = Shear(), double _mu = 0., 
+        explicit Ellipse(const CppShear& _s = CppShear(), double _mu = 0., 
                          const Position<double> _p = Position<double>()) :
             s(_s), mu(_mu), x0(_p) 
         { expmu=std::exp(mu); }
@@ -330,7 +332,7 @@ namespace galsim {
         bool operator!=(const Ellipse& rhs) const 
         { return (mu!=rhs.mu || x0!=rhs.x0 || s != rhs.s); }
 
-        void reset(const Shear& _s, double _mu, const Position<double> _p) 
+        void reset(const CppShear& _s, double _mu, const Position<double> _p) 
         { s=_s; mu=_mu; expmu=std::exp(mu); x0=_p; }
 
         Position<double> fwd(const Position<double> x) const 
@@ -339,11 +341,11 @@ namespace galsim {
         Position<double> inv(const Position<double> x) const 
         { return s.inv((x-x0)/expmu); }
 
-        Ellipse& setS(const Shear& _s) { s=_s; return *this; }
+        Ellipse& setS(const CppShear& _s) { s=_s; return *this; }
         Ellipse& setMu(const double& _m) { mu=_m; expmu=std::exp(mu); return *this; }
         Ellipse& setX0(const Position<double>& _x) { x0=_x; return *this; }
 
-        Shear getS() const { return s; }
+        CppShear getS() const { return s; }
         double getMu() const { return mu; }
         Position<double> getX0() const { return x0; }
 
@@ -377,7 +379,7 @@ namespace galsim {
         void read(std::istream& fin);
 
     private:
-        Shear s;
+        CppShear s;
         double mu;
         Position<double> x0;
         mutable double expmu; //exp(mu).

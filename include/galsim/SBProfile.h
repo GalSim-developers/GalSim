@@ -17,7 +17,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Std.h"
-#include "Shear.h"
+#include "CppShear.h"
 #include "Random.h"
 #include "Angle.h"
 
@@ -308,12 +308,12 @@ namespace galsim {
         /**
          * @brief Apply a given shear.
          *
-         * @param[in] s Shear object by which to shear the SBProfile.
-         * This shears the object by the given shear (see class description for Shear for more
+         * @param[in] s CppShear object by which to shear the SBProfile.
+         * This shears the object by the given shear (see class description for CppShear for more
          * information about shearing conventions).  As with scaleFlux, it does not invalidate any
          * previous uses of this object.
          */
-        void applyShear(Shear s);
+        void applyShear(CppShear s);
 
         /**
          * @brief Apply a given rotation.
