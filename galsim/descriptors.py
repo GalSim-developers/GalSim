@@ -15,10 +15,10 @@ class SimpleParam(object):
         self.name = name
         self.default = default
         self.__doc__ = doc
-	if not group in ("required", "size", "optional"):
-	    raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
-	else:
-	    self.group = group
+        if not group in ("required", "size", "optional"):
+            raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
+        else:
+            self.group = group
         self.update_on_set = update_on_set
 	
     def __get__(self, instance, cls):
@@ -63,10 +63,10 @@ class GetSetFuncParam(object):
         self.getter = getter
         self.setter = setter
         self.__doc__ = doc
-	if not group in ("required", "size", "optional"):
-	    raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
-	else:
-	    self.group = group
+        if not group in ("required", "size", "optional"):
+            raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
+        else:
+            self.group = group
         self.update_on_set = update_on_set
     
     def __get__(self, instance, cls):
@@ -114,10 +114,10 @@ class GetSetScaleParam(object):
         self.root_name = root_name
         self.factor = factor
         self.__doc__ = doc
-	if not group in ("required", "size", "optional"):
-	    raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
-	else:
-	    self.group = group
+        if not group in ("required", "size", "optional"):
+            raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
+        else:
+            self.group = group
         self.update_on_set = update_on_set
     
     def __get__(self, instance, cls):
@@ -148,10 +148,10 @@ class FluxParam(object):
         self.name = "flux"
         self.default = default
         self.__doc__ = doc
-	if not group in ("required", "size", "optional"):
-	    raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
-	else:
-	    self.group = group
+        if not group in ("required", "size", "optional"):
+            raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
+        else:
+            self.group = group
 
     def __get__(self, instance, cls):
         if instance is not None:
