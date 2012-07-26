@@ -216,7 +216,7 @@ namespace galsim {
                 .def("setFlux", &SBProfile::setFlux, bp::args("flux"))
                 .def("applyTransformation", &SBProfile::applyTransformation, bp::args("e"))
                 .def("applyShear",
-                     (void (SBProfile::*)(Shear))&SBProfile::applyShear,
+                     (void (SBProfile::*)(CppShear))&SBProfile::applyShear,
                      (bp::arg("s")))
                 .def("applyRotation", &SBProfile::applyRotation, bp::args("theta"))
                 .def("applyShift", &SBProfile::applyShift, bp::args("dx", "dy"))
