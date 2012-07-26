@@ -1,11 +1,11 @@
-// Functions for the Shear class
+// Functions for the CppShear class
 
 #include <limits>
 #include <algorithm>
 
 //#define DEBUGLOGGING
 
-#include "Shear.h"
+#include "CppShear.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -13,33 +13,33 @@ std::ostream* dbgout = new std::ofstream("debug.out");
 int verbose_level = 2;
 #endif
 
-// Convention for Shear addition is that s1 + s2 is shear by s1
+// Convention for CppShear addition is that s1 + s2 is shear by s1
 // followed by shear of s2.  Note that this differs from the
 // notation in the methods paper.
 
 namespace galsim {
 
-    Shear& Shear::setE1E2(double e1in, double e2in) 
+    CppShear& CppShear::setE1E2(double e1in, double e2in) 
     {
-        dbg<<"Shear setE1E2 "<<e1in<<','<<e2in<<'\n';
+        dbg<<"CppShear setE1E2 "<<e1in<<','<<e2in<<'\n';
         hasMatrix = false;
         e1 = e1in;
         e2 = e2in;
         return *this;
     }
 
-    Shear& Shear::setEBeta(double ein, Angle betain) 
+    CppShear& CppShear::setEBeta(double ein, Angle betain) 
     {
-        dbg<<"Shear setEBeta "<<ein<<','<<betain<<'\n';
+        dbg<<"CppShear setEBeta "<<ein<<','<<betain<<'\n';
         hasMatrix = false;
         e1 = ein*std::cos(2.*betain.rad());
         e2 = ein*std::sin(2.*betain.rad());
         return *this;
     }
 
-    Shear& Shear::setEta1Eta2(double eta1in, double eta2in) 
+    CppShear& CppShear::setEta1Eta2(double eta1in, double eta2in) 
     {
-        dbg<<"Shear setEta1Eta2 "<<eta1in<<','<<eta2in<<'\n';
+        dbg<<"CppShear setEta1Eta2 "<<eta1in<<','<<eta2in<<'\n';
         double scale;
         hasMatrix = false;
         // get ratio of e amplitude to eta amplitude:
@@ -51,9 +51,9 @@ namespace galsim {
         return *this;
     }
 
-    Shear& Shear::setEtaBeta(double etain, Angle betain) 
+    CppShear& CppShear::setEtaBeta(double etain, Angle betain) 
     {
-        dbg<<"Shear setEtaBeta "<<etain<<','<<betain<<'\n';
+        dbg<<"CppShear setEtaBeta "<<etain<<','<<betain<<'\n';
         double e;
         hasMatrix = false;
         e = std::tanh(etain);
@@ -62,7 +62,7 @@ namespace galsim {
         return *this;
     }
 
-    void Shear::getEta1Eta2(double& eta1, double& eta2) const 
+    void CppShear::getEta1Eta2(double& eta1, double& eta2) const 
     {
         double scale;
         // get ratio of eta amplitude to e amplitude:
@@ -73,7 +73,7 @@ namespace galsim {
         eta2 = e2*scale;
     }
 
-    void Shear::getG1G2(double& g1, double& g2) const 
+    void CppShear::getG1G2(double& g1, double& g2) const 
     {
         // get ratio of eta amplitude to e amplitude:
         double esq = getESq();
@@ -82,9 +82,9 @@ namespace galsim {
         g2 = e2*scale;
     }
 
-    Shear& Shear::setG1G2(double g1, double g2) 
+    CppShear& CppShear::setG1G2(double g1, double g2) 
     {
-        dbg<<"Shear setG1G2 "<<g1<<','<<g2<<'\n';
+        dbg<<"CppShear setG1G2 "<<g1<<','<<g2<<'\n';
         // get ratio of eta amplitude to e amplitude:
         double scale = 2./(1.+g1*g1+g2*g2);
         e1 = g1*scale;
@@ -92,9 +92,9 @@ namespace galsim {
         return *this;
     }
 
-    Shear& Shear::operator+=(const Shear& s2) 
+    CppShear& CppShear::operator+=(const CppShear& s2) 
     {
-        dbg<<"Shear op+=\n";
+        dbg<<"CppShear op+=\n";
         double s1sq = e1*e1+e2*e2;
         if (s1sq==0.) { (*this)=s2; return *this;}
 
@@ -117,31 +117,31 @@ namespace galsim {
         return *this;
     }
 
-    Shear& Shear::operator-=(const Shear& s2) 
+    CppShear& CppShear::operator-=(const CppShear& s2) 
     {
-        dbg<<"Shear op-=\n";
+        dbg<<"CppShear op-=\n";
         //NOTE that s1 -= s2 will produce s1 + (-s2) according to 
         // the local convention.
-        return Shear::operator+=(-s2);
+        return CppShear::operator+=(-s2);
     }
 
-    Shear Shear::operator+(const Shear& s2) const 
+    CppShear CppShear::operator+(const CppShear& s2) const 
     {
         //returns s1 + s2 
-        Shear out=*this;
+        CppShear out=*this;
         out += s2;
         return out;
     }
 
-    Shear Shear::operator-(const Shear& s2) const 
+    CppShear CppShear::operator-(const CppShear& s2) const 
     {
         //returns s1 - s2 
-        Shear out=*this;
+        CppShear out=*this;
         out += -s2;
         return out;
     }
 
-    Angle Shear::rotationWith(const Shear& rhs) const 
+    Angle CppShear::rotationWith(const CppShear& rhs) const 
     {
         double a, b, c;
         double ra, rb, rc;
@@ -150,33 +150,33 @@ namespace galsim {
         rhs.getMatrix(ra, rb, rc);
         tot11 = a*ra + c*rc;
         tot21 = c*ra + b*rc;
-        Shear sum = -(*this + rhs);
+        CppShear sum = -(*this + rhs);
         sum.getMatrix(ra, rb, rc);
         double cc = ra * tot11 + rc * tot21;
         double ss = rc * tot11 + rb * tot21;
         return std::atan2(ss, cc) * radians;
     }
 
-    void Shear::write(std::ostream& fout) const 
+    void CppShear::write(std::ostream& fout) const 
     { fout << "(" << e1 << "," << e2 << ")" ; }
 
-    std::ostream& operator<<(std::ostream& os, const Shear& s) 
+    std::ostream& operator<<(std::ostream& os, const CppShear& s) 
     { s.write(os); return os; }
 
-    void Shear::read(std::istream& fin) 
+    void CppShear::read(std::istream& fin) 
     {
         char ch;
         hasMatrix = false;
         fin >> ch >> e1 >> ch >> e2 >> ch ;
     }
 
-    std::istream& operator<<(std::istream& is, Shear& s) 
+    std::istream& operator<<(std::istream& is, CppShear& s) 
     { s.read(is); return is; }
 
-    void Shear::calcMatrix() const 
+    void CppShear::calcMatrix() const 
     {
         if (hasMatrix) return;
-        dbg<<"Shear calcMatrix\n";
+        dbg<<"CppShear calcMatrix\n";
         dbg<<"e1,e2 = "<<e1<<','<<e2<<'\n';
 
         //  Matrix is defined here to be for forward point map, source plane
@@ -228,7 +228,7 @@ namespace galsim {
             scale = -det;
         } else if (det==0.) {
             // Degenerate transformation.  Return some junk
-            return Ellipse(Shear(0.0, 0.0), -std::numeric_limits<double>::max());
+            return Ellipse(CppShear(0.0, 0.0), -std::numeric_limits<double>::max());
         } else {
             scale = det;
         }
@@ -243,7 +243,7 @@ namespace galsim {
 
         double eta = acosh(std::max(1.,0.5*(a+b)/scale));
         Angle beta = 0.5*std::atan2(2.*c, a-b) * radians;
-        Shear s;
+        CppShear s;
         s.setEtaBeta(eta,beta);
         s.getMatrix(a,b,c);
 

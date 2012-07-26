@@ -19,7 +19,7 @@ SBConvolve.cpp
 SBTransform.cpp
 SBInterpolatedImage.cpp
 SBDeconvolve.cpp
-Shear.cpp
+CppShear.cpp
 StringStuff.cpp
 Table.cpp
 RealSpaceConvolve.cpp

@@ -166,13 +166,13 @@ namespace galsim {
 
     void SBProfile::applyShear(double g1, double g2)
     {
-        Shear s(g1, g2);
+        CppShear s(g1, g2);
         Ellipse e(s);
         SBTransform d(*this,e);
         _pimpl = d._pimpl;
     }
 
-    void SBProfile::applyShear(Shear s)
+    void SBProfile::applyShear(CppShear s)
     {
         Ellipse e(s);
         SBTransform d(*this,e);
