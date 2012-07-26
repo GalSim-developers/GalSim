@@ -275,8 +275,8 @@ namespace galsim {
                          bp::arg("x0")=Position<double>(0.,0.),
                          bp::arg("fluxScaling")=1.)
                 ))
-                .def(bp::init<const SBProfile &, const Ellipse &, double>(
-                        (bp::arg("sbin"), bp::arg("e")=Ellipse(), bp::arg("fluxScaling")=1.)
+                .def(bp::init<const SBProfile &, const CppEllipse &, double>(
+                        (bp::arg("sbin"), bp::arg("e")=CppEllipse(), bp::arg("fluxScaling")=1.)
                 ))
                 .def(bp::init<const SBTransform &>())
                 ;
