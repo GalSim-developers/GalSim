@@ -592,7 +592,7 @@ class RadialProfile(GSObject):
     # All RadialProfile objects share a half_light_radius, so we can define this in the intermediate
     # base class
     half_light_radius = descriptors.SimpleParam(
-        "half_light_radius", default=None,
+        "half_light_radius", default=None, group="size",
         doc="Half light radius, kept consistent with the other size attributes.")
     
     def _parse_sizes(self, **kwargs):
@@ -611,11 +611,12 @@ class RadialProfile(GSObject):
         if size_set is False:
             raise TypeError("Must specify at least one size parameter for this object.")
 
+
 class Gaussian(RadialProfile):
     """@brief GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
 
     For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
-    documentation in doxygen.
+    documentation produced by doxygen.
 
     Initialization
     --------------
@@ -647,13 +648,13 @@ class Gaussian(RadialProfile):
     # Initialization of additional size parameter descriptors beyond the half_light_radius inherited
     # by all RadialProfile GSObjects
     sigma = descriptors.GetSetScaleParam(
-        name="sigma", root_name="half_light_radius",
+        name="sigma", root_name="half_light_radius", group="size",
         factor=1 / 1.1774100225154747, # factor = 1 / sqrt[2ln(2)]
         doc="Scale radius sigma, kept consistent with the other size attributes.")
     
     fwhm = descriptors.GetSetScaleParam(
         name="fwhm", root_name="half_light_radius", factor=2., # strange but, it turns out, true...
-        doc="FWHM, kept consistent with the other size attributes.")
+        group="size", doc="FWHM, kept consistent with the other size attributes.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
@@ -675,5 +676,51 @@ class Gaussian(RadialProfile):
         self._SBInitialize()
 
 
+class Sersic(RadialProfile):
+    """@brief GalSim Sersic, which has an SBSersic in the SBProfile attribute.
 
+    For more details of the Sersic Surface Brightness profile, please see the SBSersic documentation
+    produced by doxygen.
 
+    Initialization
+    --------------
+    A Sersic is initialized with n, the Sersic index of the profile, and the half light radius size
+    parameter half_light_radius.  A flux parameter is optional [default flux = 1].
+
+    Example:
+    >>> sersic_obj = Sersic(n=3.5, half_light_radius=2.5, flux=40.)
+    >>> sersic_obj.half_light_radius
+    2.5
+    >>> sersic_obj.n
+    3.5
+
+    Methods
+    -------
+    The Sersic is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
+    """
+
+    # Define the descriptor for the sersic index n
+    n = descriptors.SimpleParam(
+        "n", group="required", default=None, doc="Sersic index for this object.")
+
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
+    def _SBInitialize(self):
+        GSObject.__init__(self, galsim.SBSersic(self.n, half_light_radius=self.half_light_radius,
+                                                flux=self.flux))
+
+    # --- Public Class methods ---
+    def __init__(self, n, half_light_radius, flux=1.):
+
+        # Set the Sersic index
+        self.n = n
+
+        # Use the RadialProfile._parse_sizes() method to initialize size parameters
+        RadialProfile._parse_sizes(self, half_light_radius=half_light_radius)
+
+        # Set the flux
+        self.flux = flux
+
+        # Then build the SBProfile
+        self._SBInitialize()
