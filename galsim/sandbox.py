@@ -609,7 +609,7 @@ class RadialProfile(GSObject):
                     self.__setattr__(name, value)
                     size_set = True
 
-class Gaussian1(RadialProfile):
+class Gaussian(RadialProfile):
     """@brief GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
 
     For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
