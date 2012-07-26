@@ -216,7 +216,7 @@ namespace galsim {
                 .def("setFlux", &SBProfile::setFlux, bp::args("flux"))
                 .def("applyTransformation", &SBProfile::applyTransformation, bp::args("e"))
                 .def("applyShear",
-                     (void (SBProfile::*)(Shear))&SBProfile::applyShear,
+                     (void (SBProfile::*)(CppShear))&SBProfile::applyShear,
                      (bp::arg("s")))
                 .def("applyRotation", &SBProfile::applyRotation, bp::args("theta"))
                 .def("applyShift", &SBProfile::applyShift, bp::args("dx", "dy"))
@@ -275,8 +275,8 @@ namespace galsim {
                          bp::arg("x0")=Position<double>(0.,0.),
                          bp::arg("fluxScaling")=1.)
                 ))
-                .def(bp::init<const SBProfile &, const Ellipse &, double>(
-                        (bp::arg("sbin"), bp::arg("e")=Ellipse(), bp::arg("fluxScaling")=1.)
+                .def(bp::init<const SBProfile &, const CppEllipse &, double>(
+                        (bp::arg("sbin"), bp::arg("e")=CppEllipse(), bp::arg("fluxScaling")=1.)
                 ))
                 .def(bp::init<const SBTransform &>())
                 ;

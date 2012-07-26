@@ -19,7 +19,7 @@ namespace galsim {
         SBProfile(new SBTransformImpl(sbin,mA,mB,mC,mD,cen,fluxScaling)) {}
 
     SBTransform::SBTransform(const SBProfile& sbin,
-                const Ellipse& e, double fluxScaling) :
+                const CppEllipse& e, double fluxScaling) :
         SBProfile(new SBTransformImpl(sbin,e,fluxScaling)) {}
 
     SBTransform::SBTransform(const SBTransform& rhs) : SBProfile(rhs) {}
@@ -41,12 +41,12 @@ namespace galsim {
     }
 
     SBTransform::SBTransformImpl::SBTransformImpl(
-        const SBProfile& sbin, const Ellipse& e, double fluxScaling) :
+        const SBProfile& sbin, const CppEllipse& e, double fluxScaling) :
         _adaptee(sbin), _cen(e.getX0()), _fluxScaling(fluxScaling)
     {
         dbg<<"Start TransformImpl (2)\n";
         dbg<<"e = "<<e<<", fluxScaling = "<<_fluxScaling<<std::endl;
-        // First get what we need from the Ellipse:
+        // First get what we need from the CppEllipse:
         tmv::Matrix<double> m = e.getMatrix();
         _mA = m(0,0);
         _mB = m(0,1);
