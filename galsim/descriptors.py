@@ -11,7 +11,7 @@ class SimpleParam(object):
         flux = SimpleParam("flux")
     """
 
-    def __init__(self, name, default=None, group="required", doc=None):
+    def __init__(self, name, default=None, group="required", doc=None, update_on_set=True):
         self.name = name
         self.default = default
         self.__doc__ = doc
@@ -19,8 +19,8 @@ class SimpleParam(object):
 	    raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
 	else:
 	    self.group = group
+        self.update_on_set = update_on_set
 	
-
     def __get__(self, instance, cls):
         if instance is not None:
             # dict.setdefault will return the item in the dict if present, or set and return the
@@ -30,7 +30,8 @@ class SimpleParam(object):
 
     def __set__(self, instance, value):
         instance._data[self.name] = value
-        instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
+        if self.update_on_set:
+            instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
 
 
 class GetSetFuncParam(object):
@@ -58,7 +59,7 @@ class GetSetFuncParam(object):
      but it does illustrate the functionality.)
     """
 
-    def __init__(self, getter, setter=None, group="required", doc=None):
+    def __init__(self, getter, setter=None, group="required", doc=None, update_on_set=True):
         self.getter = getter
         self.setter = setter
         self.__doc__ = doc
@@ -66,6 +67,7 @@ class GetSetFuncParam(object):
 	    raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
 	else:
 	    self.group = group
+        self.update_on_set = update_on_set
     
     def __get__(self, instance, cls):
         if instance is not None:
@@ -76,7 +78,8 @@ class GetSetFuncParam(object):
         if not self.setter:
             raise TypeError("Cannot set parameter")
         self.setter(instance, value)
-        instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
+        if self.update_on_set:
+            instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
 
 
 class GetSetScaleParam(object):
@@ -106,7 +109,7 @@ class GetSetScaleParam(object):
     
     """
 
-    def __init__(self, name, root_name, factor, group="required", doc=None):
+    def __init__(self, name, root_name, factor, group="required", doc=None, update_on_set=True):
         self.name = name
         self.root_name = root_name
         self.factor = factor
@@ -115,6 +118,7 @@ class GetSetScaleParam(object):
 	    raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
 	else:
 	    self.group = group
+        self.update_on_set = update_on_set
     
     def __get__(self, instance, cls):
         if instance is not None:
@@ -123,7 +127,8 @@ class GetSetScaleParam(object):
 
     def __set__(self, instance, value):
         instance._data[self.root_name] = value / self.factor
-        instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
+        if self.update_on_set:
+            instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
         
 
 class FluxParam(object):
