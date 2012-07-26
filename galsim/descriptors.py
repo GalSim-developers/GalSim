@@ -102,7 +102,7 @@ class GetSetScaleParam(object):
     class MyProfile(GSObject):
 
         half_light_radius = SimpleParam("half_light_radius")
-	fwhm = GetSetScaleParam("fwhm", "half_light_radius", RADIUS_CONVERSION_FACTOR)
+        fwhm = GetSetScaleParam("fwhm", "half_light_radius", RADIUS_CONVERSION_FACTOR)
 
     (N.B. The example above is functionally equivalent to the example given in the GetSetFuncParam
      docstring, and illustrates the neater syntax of this descriptor for this specific task.)
