@@ -702,7 +702,7 @@ class Sersic(RadialProfile):
 
     # Define the descriptor for the sersic index n
     n = descriptors.SimpleParam(
-        "n", group="required", default=None, doc="Sersic index for this object.")
+        "n", group="required", default=None, doc="Sersic index.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
@@ -724,3 +724,126 @@ class Sersic(RadialProfile):
 
         # Then build the SBProfile
         self._SBInitialize()
+        
+
+class RealGalaxy(GSObject):
+    """@brief Class describing real galaxies from some training dataset.
+
+    This class uses a catalog describing galaxies in some training data to read in data about
+    realistic galaxies that can be used for simulations based on those galaxies.  Also included in
+    the class is additional information that might be needed to make or interpret the simulations,
+    e.g., the noise properties of the training data.
+
+    Initialization
+    --------------
+    @code
+    real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string = None,
+                                    random = False, uniform_deviate = None, interpolant = None)
+    @endcode
+
+    This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
+    galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
+    keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
+    options, e.g., to choose at random but accounting for the non-constant weight factors
+    (probabilities for objects to make it into the training sample).
+
+    @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
+                                find the data, etc.
+    @param index                Index of the desired galaxy in the catalog.
+    @param ID                   Object ID for the desired galaxy in the catalog.
+    @param random               If true, then just select a completely random galaxy from the
+                                catalog.
+    @param uniform_deviate      A uniform deviate to use for selecting a random galaxy (optional)
+    @param interpolant          optional keyword for specifying the
+                                real-space interpolation scheme
+                                [default = galsim.InterpolantXY(galsim.Lanczos(5, 
+                                           conserve_flux=True, tol=1.e-4))].
+    """
+
+    # Define the parameters that need to be set as SimpleParams to define the RealGalaxy
+    real_galaxy_catalog = descriptors.SimpleParam(
+        "real_galaxy_catalog", default=None, group="required",
+        doc="RealGalaxyCatalog object with basic information about where to find data for each "+
+        "RealGalaxy instance.")
+    index = descriptors.SimpleParam(
+        "index", default=None, group="optional", doc="Index of the desired galaxy in the catalog.")
+    ID = descriptors.SimpleParam(
+        "ID", default=None, group="optional",
+        doc="Object ID for the desired galaxy in the catalog.")
+    random = descriptors.SimpleParam(
+        "random", default=False, group="optional", doc="Whether galaxy selected at random.")
+    uniform_deviate = descriptors.SimpleParam(
+        "uniform_deviate", default=None, group="optional",
+        doc="Uniform deviate to use for random galaxy selection.")
+    interpolant = descriptors.SimpleParam(
+        "interpolant", default=None, group="optional", doc="Real space interpolant instance (2D).")
+
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
+    def _SBInitialize(self):
+
+        import pyfits
+        # Code block below will be for galaxy selection; not all are currently implemented.  Each
+        # option must return an index within the real_galaxy_catalog.
+        if self.index != None:
+            if (self.ID != None or self.random == True):
+                raise RuntimeError('Too many methods for selecting a galaxy!')
+        elif self.ID != None:
+            if (self.random == True):
+                raise RuntimeError('Too many methods for selecting a galaxy!')
+            self.index = real_galaxy_catalog.get_index_for_id(ID)
+        elif self.random == True:
+            if self.uniform_deviate == None:
+                self.uniform_deviate = galsim.UniformDeviate()
+            self.index = int(real_galaxy_catalog.n * self.uniform_deviate()) 
+            # this will round down, to get index in range [0, n-1]
+        else:
+            raise RuntimeError('No method specified for selecting a galaxy!')
+        if self.random == False and self.uniform_deviate != None:
+            import warnings
+            msg = "Warning: uniform_deviate supplied, but random selection method was not chosen!"
+            warnings.warn(msg)
+
+        # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
+        # consider exporting this code into fits.py in some function that takes a filename and HDU,
+        # and returns an ImageView
+        gal_image = self.real_galaxy_catalog.getGal(self.index)
+        PSF_image = self.real_galaxy_catalog.getPSF(self.index)
+
+        # choose proper interpolant
+        if self.interpolant != None and isinstance(self.interpolant, galsim.InterpolantXY) == False:
+            raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+        elif self.interpolant == None:
+            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
+            self.interpolant = galsim.InterpolantXY(lan5)
+
+        # read in data about galaxy from FITS binary table; store as normal attributes of RealGalaxy
+        # and save any other relevant information
+        self.catalog_file = self.real_galaxy_catalog.filename
+        self.pixel_scale = float(self.real_galaxy_catalog.pixel_scale[self.index])
+        # note: will be adding more parameters here about noise properties etc., but let's be basic
+        # for now
+
+        self.original_image = galsim.SBInterpolatedImage(
+            gal_image, self.interpolant, dx=self.pixel_scale)
+        self.original_PSF = galsim.SBInterpolatedImage(
+            PSF_image, self.interpolant, dx=self.pixel_scale)
+        self.original_PSF.setFlux(1.0)
+        psf_inv = galsim.SBDeconvolve(self.original_PSF)
+        GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
+
+    # --- Public Class methods ---
+    def __init__(self, real_galaxy_catalog, index=None, ID=None, random=False,
+                 uniform_deviate=None, interpolant=None):
+
+        # Set the values of the defining params based on the inputs
+        self.real_galaxy_catalog = real_galaxy_catalog
+        self.index = index
+        self.ID = ID
+        self.random = random
+        self.uniform_deviate = uniform_deviate
+        self.interpolant = interpolant
+
+        # Then build the SBProfile
+        self._SBInitialize()
+     
