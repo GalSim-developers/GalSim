@@ -11,10 +11,15 @@ class SimpleParam(object):
         flux = SimpleParam("flux")
     """
 
-    def __init__(self, name, default=None, doc=None):
+    def __init__(self, name, default=None, group="required", doc=None):
         self.name = name
         self.default = default
         self.__doc__ = doc
+	if not group in ("required", "size", "optional"):
+	    raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
+	else:
+	    self.group = group
+	
 
     def __get__(self, instance, cls):
         if instance is not None:
@@ -53,10 +58,14 @@ class GetSetFuncParam(object):
      but it does illustrate the functionality.)
     """
 
-    def __init__(self, getter, setter=None, doc=None):
+    def __init__(self, getter, setter=None, group="required", doc=None):
         self.getter = getter
         self.setter = setter
         self.__doc__ = doc
+	if not group in ("required", "size", "optional"):
+	    raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
+	else:
+	    self.group = group
     
     def __get__(self, instance, cls):
         if instance is not None:
@@ -97,11 +106,15 @@ class GetSetScaleParam(object):
     
     """
 
-    def __init__(self, name, root_name, factor, doc=None):
+    def __init__(self, name, root_name, factor, group="required", doc=None):
         self.name = name
         self.root_name = root_name
         self.factor = factor
         self.__doc__ = doc
+	if not group in ("required", "size", "optional"):
+	    raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
+	else:
+	    self.group = group
     
     def __get__(self, instance, cls):
         if instance is not None:
@@ -126,10 +139,14 @@ class FluxParam(object):
     GSObject params are available via their descriptors.
     """
 
-    def __init__(self, default=1., doc="Total flux of this object."):
+    def __init__(self, default=1., group="optional", doc="Total flux of this object."):
         self.name = "flux"
         self.default = default
         self.__doc__ = doc
+	if not group in ("required", "size", "optional"):
+	    raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
+	else:
+	    self.group = group
 
     def __get__(self, instance, cls):
         if instance is not None:
