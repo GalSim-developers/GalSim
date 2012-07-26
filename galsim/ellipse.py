@@ -40,7 +40,7 @@ class Ellipse:
         # check unnamed args: can have a Shear, float, and/or Position
         if len(args) > 0:
             # very special case: if it is given a wrapped C++ Ellipse
-            if len(args) == 1 and isinstance(args[0], _galsim._Ellipse):
+            if len(args) == 1 and isinstance(args[0], _galsim._CppEllipse):
                 self._ellipse = args[0]
             # there are args that are not a C++ Ellipse, so we have to process them by checking for
             # one of the allowed types
@@ -90,7 +90,7 @@ class Ellipse:
             if kwargs:
                 raise TypeError("Keyword arguments to Ellipse not permitted: %s"%kwargs.keys())     
 
-        self._ellipse = _galsim._Ellipse(s = use_shear._shear, mu = use_dil, p = use_shift)
+        self._ellipse = _galsim._CppEllipse(s = use_shear._shear, mu = use_dil, p = use_shift)
 
     #### propagate through all the methods from C++
     # define all the various operators on Ellipse objects
