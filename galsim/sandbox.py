@@ -575,7 +575,7 @@ class RadialProfile(GSObject):
     class scopes for the derived RadialProfile objects.
 
     Currently, the RadialProfile objects are:
-    Airy, AtmosphericPSF, DeVaucouleurs, Exponential, Gaussian, Moffat, OpticalPSF, Sersic
+    Airy, DeVaucouleurs, Exponential, Gaussian, Moffat, Sersic
 
     Although only one size parameter must be chosen for initializing RadialProfile objects (giving
     more than one will raise a TypeError exception), subsequently all the size parameters defined
