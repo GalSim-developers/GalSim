@@ -203,7 +203,7 @@ namespace galsim {
         hasMatrix = true;
     }
 
-    tmv::Matrix<double> Ellipse::getMatrix() const 
+    tmv::Matrix<double> CppEllipse::getMatrix() const 
     {
         double a, b, c;
         double scale=std::exp(mu);
@@ -216,7 +216,7 @@ namespace galsim {
         return m;
     }
 
-    Ellipse Ellipse::fromMatrix(const tmv::Matrix<double>& m, Angle& rotation, bool& parityFlip) 
+    CppEllipse CppEllipse::fromMatrix(const tmv::Matrix<double>& m, Angle& rotation, bool& parityFlip) 
     {
         dbg<<"ellipse from matrix "<<m<<'\n';
         assert(m.nrows()==2 && m.ncols()==2);
@@ -228,7 +228,7 @@ namespace galsim {
             scale = -det;
         } else if (det==0.) {
             // Degenerate transformation.  Return some junk
-            return Ellipse(CppShear(0.0, 0.0), -std::numeric_limits<double>::max());
+            return CppEllipse(CppShear(0.0, 0.0), -std::numeric_limits<double>::max());
         } else {
             scale = det;
         }
@@ -249,20 +249,20 @@ namespace galsim {
 
         // Now look for the rotation
         rotation = std::atan2(-c*m(0,0)+a*m(1,0), b*m(0,0)-c*m(1,0)) * radians;
-        return Ellipse(s,mu, Position<double>(0.,0.));
+        return CppEllipse(s,mu, Position<double>(0.,0.));
     }
 
-    // Ellipses share the ordering conventions:  e1 + e2 is transform
+    // CppEllipses share the ordering conventions:  e1 + e2 is transform
     // e1 followed by transform e2.  Transform objects, not coords.
-    Ellipse Ellipse::operator-() const 
+    CppEllipse CppEllipse::operator-() const 
     {
         Position<double> x3(-x0);
         x3 /= expmu;
-        Ellipse* temp = new Ellipse(-s, -mu, s.inv(x3));
+        CppEllipse* temp = new CppEllipse(-s, -mu, s.inv(x3));
         return *temp;
     }
 
-    Ellipse& Ellipse::operator+=(const Ellipse& e2) 
+    CppEllipse& CppEllipse::operator+=(const CppEllipse& e2) 
     {
         dbg<<"ellipse +=\n";
         Position<double> x3 = fwd(e2.getX0());
@@ -273,30 +273,30 @@ namespace galsim {
         return *this;
     }
 
-    Ellipse& Ellipse::operator-=(const Ellipse& e2) 
+    CppEllipse& CppEllipse::operator-=(const CppEllipse& e2) 
     { return operator+=(-e2); }
 
-    Ellipse Ellipse::operator+(const Ellipse& rhs) const 
+    CppEllipse CppEllipse::operator+(const CppEllipse& rhs) const 
     {
-        Ellipse out(*this);
+        CppEllipse out(*this);
         out += rhs;
         return out;
     }
 
-    Ellipse Ellipse::operator-(const Ellipse& rhs) const 
+    CppEllipse CppEllipse::operator-(const CppEllipse& rhs) const 
     {
-        Ellipse out(*this);
+        CppEllipse out(*this);
         out -= rhs;
         return out;
     }
 
-    void Ellipse::write(std::ostream& fout) const 
+    void CppEllipse::write(std::ostream& fout) const 
     { s.write(fout); fout << " " << mu << " " ; x0.write(fout); }
 
-    void Ellipse::read(std::istream& fin) 
+    void CppEllipse::read(std::istream& fin) 
     { s.read(fin); fin >> mu; x0.read(fin); }
 
-    Bounds<double> Ellipse::range(double sig) const 
+    Bounds<double> CppEllipse::range(double sig) const 
     {
         double a,b,c;
         s.getMatrix(a,b,c);

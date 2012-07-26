@@ -158,7 +158,7 @@ namespace galsim {
         _pimpl = d._pimpl;
     }
 
-    void SBProfile::applyTransformation(const Ellipse& e)
+    void SBProfile::applyTransformation(const CppEllipse& e)
     {
         SBTransform d(*this,e);
         _pimpl = d._pimpl;
@@ -167,14 +167,14 @@ namespace galsim {
     void SBProfile::applyShear(double g1, double g2)
     {
         CppShear s(g1, g2);
-        Ellipse e(s);
+        CppEllipse e(s);
         SBTransform d(*this,e);
         _pimpl = d._pimpl;
     }
 
     void SBProfile::applyShear(CppShear s)
     {
-        Ellipse e(s);
+        CppEllipse e(s);
         SBTransform d(*this,e);
         _pimpl = d._pimpl;
     }
