@@ -538,25 +538,6 @@ class GSObject(object):
                 image, n_photons, uniform_deviate, dx, gain, noise, poisson_flux)
 
         return image, added_flux
-         
-
-# SimpleParam attempt at writing a descriptor for the basic parameters that describe GSObjects,
-# including prescription for regenerating the GSObject if these params are changed.
-#
-
-class SimpleParam(object):
-    def __init__(self, cls, name):
-        self.name = name
-        cls.params[self.name] = self
-
-    def __get__(self, instance, owner):  # totally vanilla getting...
-        if self.name not in owner.params:
-            raise AttributeError, self.name
-        return instance._data[self.name]
-
-    def __set__(self, instance, value):
-        print "Setting"
-        instance._data[self.name] = value
 
 
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
