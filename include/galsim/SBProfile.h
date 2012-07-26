@@ -288,12 +288,12 @@ namespace galsim {
         void setFlux(double flux);
 
         /**
-         * @brief Apply a given Ellipse distortion (affine without rotation).
+         * @brief Apply a given ellipse distortion (affine without rotation).
          *
          * This transforms the object by the given transformation.  As with scaleFlux,
          * it does not invalidate any previous uses of this object.
          */
-        void applyTransformation(const Ellipse& e);
+        void applyTransformation(const CppEllipse& e);
 
         /** 
          * @brief Apply a given shear.

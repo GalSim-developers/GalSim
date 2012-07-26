@@ -302,34 +302,34 @@ namespace galsim {
      * defined as E(x) = T(D(S(x))), where S=shear, D=dilation, T=translation.  Conventions for
      * order of compounding, etc., are same as for CppShear.
      */
-    class Ellipse 
+    class CppEllipse 
     {
     public:
-        explicit Ellipse(const CppShear& _s = CppShear(), double _mu = 0., 
+        explicit CppEllipse(const CppShear& _s = CppShear(), double _mu = 0., 
                          const Position<double> _p = Position<double>()) :
             s(_s), mu(_mu), x0(_p) 
         { expmu=std::exp(mu); }
 
-        Ellipse(const Ellipse& rhs) : 
+        CppEllipse(const CppEllipse& rhs) : 
             s(rhs.s), mu(rhs.mu), x0(rhs.x0) 
         { expmu=std::exp(mu); }
 
-        const Ellipse& operator=(const Ellipse& rhs) 
+        const CppEllipse& operator=(const CppEllipse& rhs) 
         {
             if (&rhs==this) return *this;
             s = rhs.s; mu = rhs.mu; expmu=rhs.expmu; x0=rhs.x0; return *this;
         }
 
-        Ellipse operator+(const Ellipse& rhs) const; //composition
-        Ellipse operator-() const; //negation
-        Ellipse& operator+=(const Ellipse& rhs); //composition
-        Ellipse& operator-=(const Ellipse& rhs); 
-        Ellipse operator-(const Ellipse& rhs) const; //composition
+        CppEllipse operator+(const CppEllipse& rhs) const; //composition
+        CppEllipse operator-() const; //negation
+        CppEllipse& operator+=(const CppEllipse& rhs); //composition
+        CppEllipse& operator-=(const CppEllipse& rhs); 
+        CppEllipse operator-(const CppEllipse& rhs) const; //composition
 
-        bool operator==(const Ellipse& rhs) const 
+        bool operator==(const CppEllipse& rhs) const 
         { return (mu==rhs.mu && x0==rhs.x0 && s == rhs.s); }
 
-        bool operator!=(const Ellipse& rhs) const 
+        bool operator!=(const CppEllipse& rhs) const 
         { return (mu!=rhs.mu || x0!=rhs.x0 || s != rhs.s); }
 
         void reset(const CppShear& _s, double _mu, const Position<double> _p) 
@@ -341,9 +341,9 @@ namespace galsim {
         Position<double> inv(const Position<double> x) const 
         { return s.inv((x-x0)/expmu); }
 
-        Ellipse& setS(const CppShear& _s) { s=_s; return *this; }
-        Ellipse& setMu(const double& _m) { mu=_m; expmu=std::exp(mu); return *this; }
-        Ellipse& setX0(const Position<double>& _x) { x0=_x; return *this; }
+        CppEllipse& setS(const CppShear& _s) { s=_s; return *this; }
+        CppEllipse& setMu(const double& _m) { mu=_m; expmu=std::exp(mu); return *this; }
+        CppEllipse& setX0(const Position<double>& _x) { x0=_x; return *this; }
 
         CppShear getS() const { return s; }
         double getMu() const { return mu; }
@@ -362,13 +362,13 @@ namespace galsim {
         // of this ellipse (apart from the translation)
         tmv::Matrix<double> getMatrix() const;
 
-        // Utility to return the Ellipse that corresponds to an arbitrary 2x2
+        // Utility to return the CppEllipse that corresponds to an arbitrary 2x2
         // matrix.  One version returns the rotation that must precede the
-        // Ellipse in the transform, if matrix is asymmetric.
-        static Ellipse fromMatrix(
+        // CppEllipse in the transform, if matrix is asymmetric.
+        static CppEllipse fromMatrix(
             const tmv::Matrix<double>& m, Angle& rotation, bool& parity);
 
-        static Ellipse fromMatrix(const tmv::Matrix<double>& m) 
+        static CppEllipse fromMatrix(const tmv::Matrix<double>& m) 
         {
             Angle junk; 
             bool p;
@@ -385,10 +385,10 @@ namespace galsim {
         mutable double expmu; //exp(mu).
     };
 
-    inline std::ostream& operator<<(std::ostream& os, const Ellipse& e) 
+    inline std::ostream& operator<<(std::ostream& os, const CppEllipse& e) 
     { e.write(os); return os; }
 
-    inline std::istream& operator>>(std::istream& is, Ellipse& e) 
+    inline std::istream& operator>>(std::istream& is, CppEllipse& e) 
     { e.read(is); return is; }
 
 }
