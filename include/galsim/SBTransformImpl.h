@@ -14,7 +14,7 @@ namespace galsim {
         SBTransformImpl(const SBProfile& sbin, double mA, double mB, double mC, double mD,
                         const Position<double>& cen, double fluxScaling);
 
-        SBTransformImpl(const SBProfile& sbin, const Ellipse& e, double fluxScaling);
+        SBTransformImpl(const SBProfile& sbin, const CppEllipse& e, double fluxScaling);
 
         ~SBTransformImpl() {}
 

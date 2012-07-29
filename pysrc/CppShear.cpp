@@ -1,5 +1,5 @@
 #include "boost/python.hpp"
-#include "Shear.h"
+#include "CppShear.h"
 
 #define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
 #define NO_IMPORT_ARRAY
@@ -10,9 +10,9 @@ namespace bp = boost::python;
 namespace galsim {
 namespace {
 
-struct PyShear {
+struct PyCppShear {
 
-    static bp::handle<> getMatrix(Shear const & self) {
+    static bp::handle<> getMatrix(CppShear const & self) {
         static npy_intp dim[2] = {2, 2};
         // Because the C++ version sets references that are passed in, and that's not possible in
         // Python, we wrap this instead, which returns a numpy array.
@@ -28,7 +28,7 @@ struct PyShear {
 
     static void wrap() {
         static char const * doc = 
-            "Shear is represented internally by e1 and e2, which are the second-moment\n"
+            "CppShear is represented internally by e1 and e2, which are the second-moment\n"
             "definitions: ellipse with axes a & b has e=(a^2-b^2)/(a^2+b^2).\n"
             "But can get/set the ellipticity by other measures:\n"
             "g (default constructor) is \"reduced shear\" such that g=(a-b)/(a+b)\n"
@@ -37,44 +37,44 @@ struct PyShear {
             "Beta is always the real-space position angle of major axis.\n"
             "e.g., g1 = g cos(2*Beta), g2 = g sin(2*Beta).\n"
             "\n"
-            "The + and - operators for Shear are overloaded to do\n"
+            "The + and - operators for CppShear are overloaded to do\n"
             "Composition: returns ellipticity of\n"
             "circle that is sheared first by RHS and then by\n"
-            "LHS Shear.  Note that this addition is\n"
+            "LHS CppShear.  Note that this addition is\n"
             "***not commutative***!\n"
             "In the += and -= operations, self is LHS\n"
             "and the operand is RHS of + or - .\n"
             ;
             
 
-        bp::class_<Shear>("_Shear", doc, bp::init<const Shear &>())
+        bp::class_<CppShear>("_CppShear", doc, bp::init<const CppShear &>())
             .def(bp::init<double,double>((bp::arg("g1")=0.,bp::arg("g2")=0.)))
-            .def("setE1E2", &Shear::setE1E2, (bp::arg("e1")=0.,bp::arg("e2")=0.),
+            .def("setE1E2", &CppShear::setE1E2, (bp::arg("e1")=0.,bp::arg("e2")=0.),
                  bp::return_self<>())
-            .def("setEBeta", &Shear::setEBeta, (bp::arg("e")=0.,bp::arg("beta")=0.),
+            .def("setEBeta", &CppShear::setEBeta, (bp::arg("e")=0.,bp::arg("beta")=0.),
                  bp::return_self<>())
-            .def("setEta1Eta2", &Shear::setEta1Eta2, (bp::arg("eta1")=0.,bp::arg("eta2")=0.),
+            .def("setEta1Eta2", &CppShear::setEta1Eta2, (bp::arg("eta1")=0.,bp::arg("eta2")=0.),
                  bp::return_self<>())
-            .def("setEtaBeta", &Shear::setEtaBeta, (bp::arg("eta")=0.,bp::arg("beta")=0.),
+            .def("setEtaBeta", &CppShear::setEtaBeta, (bp::arg("eta")=0.,bp::arg("beta")=0.),
                  bp::return_self<>())
-            .def("setG1G2", &Shear::setG1G2, (bp::arg("g1")=0.,bp::arg("g2")=0.),
+            .def("setG1G2", &CppShear::setG1G2, (bp::arg("g1")=0.,bp::arg("g2")=0.),
                  bp::return_self<>())
-            .def("getE1", &Shear::getE1)
-            .def("getE2", &Shear::getE2)
-            .def("getE", &Shear::getE)
-            .def("getESq", &Shear::getESq)
-            .def("getBeta", &Shear::getBeta)
-            .def("getEta", &Shear::getEta)
-            .def("getG", &Shear::getG)
-            .def("getG1", &Shear::getG1)
-            .def("getG2", &Shear::getG2)
+            .def("getE1", &CppShear::getE1)
+            .def("getE2", &CppShear::getE2)
+            .def("getE", &CppShear::getE)
+            .def("getESq", &CppShear::getESq)
+            .def("getBeta", &CppShear::getBeta)
+            .def("getEta", &CppShear::getEta)
+            .def("getG", &CppShear::getG)
+            .def("getG1", &CppShear::getG1)
+            .def("getG2", &CppShear::getG2)
             .def(-bp::self)
             .def(bp::self + bp::self)
             .def(bp::self - bp::self)
             .def(bp::self += bp::self)
             .def(bp::self -= bp::self)
             .def(
-                "rotationWith", &Shear::rotationWith, bp::args("rhs"),
+                "rotationWith", &CppShear::rotationWith, bp::args("rhs"),
                 "Give the rotation angle for self+rhs;\n"
                 "the s1 + s2 operation on points in\n"
                 "the plane induces a rotation as well as a shear.\n"
@@ -82,19 +82,19 @@ struct PyShear {
             )
             .def(bp::self == bp::self)
             .def(bp::self != bp::self)
-            .def("fwd", &Shear::fwd<double>, "FIXME: needs documentation!")
-            .def("inv", &Shear::inv<double>, "FIXME: needs documentation!")
+            .def("fwd", &CppShear::fwd<double>, "FIXME: needs documentation!")
+            .def("inv", &CppShear::inv<double>, "FIXME: needs documentation!")
             .def("getMatrix", &getMatrix)
             .def(str(bp::self))
-            .def("assign", &Shear::operator=, bp::return_self<>())
+            .def("assign", &CppShear::operator=, bp::return_self<>())
             ;
     }
 
 };
 
-struct PyEllipse {
+struct PyCppEllipse {
 
-    static bp::handle<> getMatrix(Ellipse const & self) {
+    static bp::handle<> getMatrix(CppEllipse const & self) {
         static npy_intp dim[2] = {2, 2};
         // Because the C++ version sets references that are passed in, and that's not possible in
         // Python, we wrap this instead, which returns a numpy array.
@@ -113,12 +113,12 @@ struct PyEllipse {
             "with center x0, size exp(mu), and shape s to the unit circle.\n"
             "Map from source plane to image plane is defined as\n"
             "E(x) = T(D(S(x))), where S=shear, D=dilation, T=translation.\n"
-            "Conventions for order of compounding, etc., are same as for Shear.\n"
+            "Conventions for order of compounding, etc., are same as for CppShear.\n"
             ;
-        bp::class_<Ellipse>("_Ellipse", doc, bp::init<const Ellipse &>())
+        bp::class_<CppEllipse>("_CppEllipse", doc, bp::init<const CppEllipse &>())
             .def(
-                 bp::init<const Shear &, double, const Position<double> &>(
-                     (bp::arg("s")=Shear(), bp::arg("mu")=0., 
+                 bp::init<const CppShear &, double, const Position<double> &>(
+                     (bp::arg("s")=CppShear(), bp::arg("mu")=0., 
                       bp::arg("p")=Position<double>())
                      )
             )
@@ -129,23 +129,23 @@ struct PyEllipse {
             .def(bp::self -= bp::self)
             .def(bp::self == bp::self)
             .def(bp::self != bp::self)
-            .def("reset", (void (Ellipse::*)(const Shear &, double, const Position<double>))&Ellipse::reset,
+            .def("reset", (void (CppEllipse::*)(const CppShear &, double, const Position<double>))&CppEllipse::reset,
                  bp::args("s", "mu", "p"))
-            .def("fwd", &Ellipse::fwd, "FIXME: needs documentation!")
-            .def("inv", &Ellipse::inv, "FIXME: needs documentation!")
-            .def("setS", &Ellipse::setS, bp::return_self<>())
-            .def("setMu", &Ellipse::setMu, bp::return_self<>())
-            .def("setX0", &Ellipse::setX0, bp::return_self<>())
-            .def("getS", &Ellipse::getS)
-            .def("getMu", &Ellipse::getMu)
-            .def("getX0", &Ellipse::getX0)
-            .def("getMajor", &Ellipse::getMajor, "FIXME: is this semi-major or full major axis?")
-            .def("getMinor", &Ellipse::getMinor, "FIXME: is this semi-minor or full minor axis?")
-            .def("getBeta", &Ellipse::getMinor, "position angle FIXME: which convention?")
-            .def("range", &Ellipse::range, (bp::arg("nSigma")=1.))
+            .def("fwd", &CppEllipse::fwd, "FIXME: needs documentation!")
+            .def("inv", &CppEllipse::inv, "FIXME: needs documentation!")
+            .def("setS", &CppEllipse::setS, bp::return_self<>())
+            .def("setMu", &CppEllipse::setMu, bp::return_self<>())
+            .def("setX0", &CppEllipse::setX0, bp::return_self<>())
+            .def("getS", &CppEllipse::getS)
+            .def("getMu", &CppEllipse::getMu)
+            .def("getX0", &CppEllipse::getX0)
+            .def("getMajor", &CppEllipse::getMajor, "FIXME: is this semi-major or full major axis?")
+            .def("getMinor", &CppEllipse::getMinor, "FIXME: is this semi-minor or full minor axis?")
+            .def("getBeta", &CppEllipse::getMinor, "position angle FIXME: which convention?")
+            .def("range", &CppEllipse::range, (bp::arg("nSigma")=1.))
             .def("getMatrix", &getMatrix)
             .def(str(bp::self))
-            .def("assign", &Ellipse::operator=, bp::return_self<>())
+            .def("assign", &CppEllipse::operator=, bp::return_self<>())
             ;
     }
 
@@ -153,9 +153,9 @@ struct PyEllipse {
 
 } // anonymous
 
-void pyExportShear() {
-    PyShear::wrap();
-    PyEllipse::wrap();
+void pyExportCppShear() {
+    PyCppShear::wrap();
+    PyCppEllipse::wrap();
 }
 
 } // namespace galsim
