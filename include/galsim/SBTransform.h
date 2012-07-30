@@ -39,14 +39,14 @@ namespace galsim {
                     const Position<double>& cen=Position<double>(0.,0.), double fluxScaling=1.);
 
         /** 
-         * @brief Construct from an input Ellipse 
+         * @brief Construct from an input CppEllipse 
          *
          * @param[in] sbin SBProfile being transformed
-         * @param[in] e  Ellipse.
+         * @param[in] e  CppEllipse.
          * @param[in] fluxScaling Amount by which the flux should be multiplied.
          */
         SBTransform(const SBProfile& sbin,
-                    const Ellipse& e=Ellipse(),
+                    const CppEllipse& e=CppEllipse(),
                     double fluxScaling=1.);
 
         /// @brief Copy constructor
