@@ -13,7 +13,8 @@ class GSObject(object):
     """
     _data = {} # Used for storing GalSim object parameter data, accessed by their descriptors
     _SBProfile = None  # Private attribute used by the SBProfile property to store (and rebuild if
-                       # necessary) the C++ layer SBProfile object for which GSObjects are a container
+                       # necessary) the C++ layer SBProfile object for which GSObjects are a
+                       # container
 
     # Then we define the .SBProfile attribute to actually be a property, with getter and setter
     # functions that provide access to the data stored in _SBProfile.  If the latter is None, for
@@ -724,7 +725,89 @@ class Sersic(RadialProfile):
 
         # Then build the SBProfile
         self._SBInitialize()
-        
+
+class Moffat(RadialProfile):
+    """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
+
+    
+    """
+    beta = descriptors.SimpleParam(
+        "beta", group="required", default=None, doc="Moffat profile slope parameter beta.")
+
+    trunc = descriptors.SimpleParam(
+        "trunc", group="optional", default=0.,
+        doc="Truncation radius for Moffat in physical units.")
+
+    _last_size_set_was_half_light_radius = False
+
+    def _get_scale_radius(self):
+        if self._last_size_set_was_half_light_radius is True:
+            return self.SBProfile.getScaleRadius()
+        else:
+            return self._data["scale_radius"]
+
+    def _set_scale_radius(self, value):
+        self._data["scale_radius"] = value
+        self._data["half_light_radius"] = None
+        self._last_size_set_was_half_light_radius = False
+        self._SBProfile = None
+
+    scale_radius = descriptors.GetSetFuncParam(
+        getter=_get_scale_radius, setter=_set_scale_radius, group="size",
+        doc="Moffat scale radius parameter, kept updated with the other size attributes.")
+
+    def _get_half_light_radius(self):
+        if self._last_size_set_was_half_light_radius is True:
+            return self._data["half_light_radius"]
+        else:
+            return self.SBProfile.getHalfLightRadius()
+
+    def _set_half_light_radius(self, value):
+        self._data["half_light_radius"] = value
+        self._data["scale_radius"] = None
+        self._last_size_set_was_half_light_radius = True
+        self._SBProfile = None
+    
+    half_light_radius = descriptors.GetSetFuncParam(
+        getter=_get_half_light_radius, setter=_set_half_light_radius, group="size",
+        doc="Half light radius, kept updated with the other size attributes.")
+
+    def _get_fwhm(self):
+        return self.scale_radius * 2. * np.sqrt(2.**(1. / self.beta) - 1.)
+
+    def _set_fwhm(self, value):
+        self.scale_radius = 0.5 * value / np.sqrt(2.**(1. / self.beta) - 1.)
+    
+    fwhm = descriptors.GetSetFuncParam(
+        getter=_get_fwhm, setter=_set_fwhm,
+        doc="FWHM, kept updated with the other size attributes.")
+
+    def _SBInitialize(self):
+        if self._last_size_set_was_half_light_radius is True:
+            GSObject.__init__(self, galsim.SBMoffat(self.beta,
+                                                    half_light_radius=self.half_light_radius,
+                                                    trunc=self.trunc, flux=self.flux))
+        else:
+            GSObject.__init__(self, galsim.SBMoffat(self.beta, scale_radius=self.scale_radius,
+                                                    trunc=self.trunc, flux=self.flux))
+
+    def __init__(self, beta, fwhm=None, scale_radius=None, half_light_radius=None, trunc=0.,
+                 flux=1.):
+        # Set the beta and truncation parameters
+        self.beta = beta
+        self.trunc = trunc
+
+        # Use the RadialProfile._parse_sizes() method to initialize size parameters
+        RadialProfile._parse_sizes(
+            self, scale_radius=scale_radius, fwhm=fwhm, half_light_radius=half_light_radius)
+
+        # Set the flux
+        self.flux = flux
+
+        # Then build the SBProfile
+        self._SBInitialize()
+                                                    
+      
 
 class RealGalaxy(GSObject):
     """@brief Class describing real galaxies from some training dataset.
