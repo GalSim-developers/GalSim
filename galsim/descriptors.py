@@ -76,7 +76,7 @@ class GetSetFuncParam(object):
 
     def __set__(self, instance, value):
         if not self.setter:
-            raise TypeError("Cannot set parameter")
+            raise TypeError("Cannot set parameter, no setter function given.")
         self.setter(instance, value)
         if self.update_on_set:
             instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
