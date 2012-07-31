@@ -660,8 +660,8 @@ class Gaussian(RadialProfile):
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
-        GSObject.__init__(self, galsim.SBGaussian(half_light_radius=self.half_light_radius,
-                                                  flux=self.flux))
+        GSObject.__init__(
+            self, galsim.SBGaussian(half_light_radius=self.half_light_radius, flux=self.flux))
     
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
@@ -708,8 +708,8 @@ class Sersic(RadialProfile):
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
-        GSObject.__init__(self, galsim.SBSersic(self.n, half_light_radius=self.half_light_radius,
-                                                flux=self.flux))
+        GSObject.__init__(
+            self, galsim.SBSersic(self.n, half_light_radius=self.half_light_radius, flux=self.flux))
 
     # --- Public Class methods ---
     def __init__(self, n, half_light_radius, flux=1.):
@@ -784,12 +784,14 @@ class Moffat(RadialProfile):
 
     def _SBInitialize(self):
         if self._last_size_set_was_half_light_radius is True:
-            GSObject.__init__(self, galsim.SBMoffat(self.beta,
-                                                    half_light_radius=self.half_light_radius,
-                                                    trunc=self.trunc, flux=self.flux))
+            GSObject.__init__(
+                self, galsim.SBMoffat(
+                    self.beta, half_light_radius=self.half_light_radius,trunc=self.trunc,
+                    flux=self.flux))
         else:
-            GSObject.__init__(self, galsim.SBMoffat(self.beta, scale_radius=self.scale_radius,
-                                                    trunc=self.trunc, flux=self.flux))
+            GSObject.__init__(
+                self, galsim.SBMoffat(
+                    self.beta, scale_radius=self.scale_radius, trunc=self.trunc, flux=self.flux))
 
     def __init__(self, beta, fwhm=None, scale_radius=None, half_light_radius=None, trunc=0.,
                  flux=1.):
