@@ -34,7 +34,7 @@
 
 /* object data type */
 
-#include "../Shear.h"
+#include "../CppShear.h"
 #include "../Image.h"
 #include "../Bounds.h"
 
@@ -58,7 +58,8 @@ namespace hsm {
      * PSF correction.  All ellipticities are defined as (1-q^2)/(1+q^2), with the 1st component
      * aligned with the pixel grid and the 2nd aligned at 45 degrees with respect to it.  There are
      * two choices for measurement type: 'e' = Bernstein & Jarvis (2002) ellipticity, 'g' = shear
-     * estimator = shear*responsivity 
+     * estimator = shear*responsivity.  The sigma is defined based on the observed moments M_xx,
+     * M_xy, and M_yy as sigma = (Mxx Myy - M_xy^2)^(1/4) = [ det(M) ]^(1/4)
      */
     struct ObjectData 
     {
@@ -97,10 +98,10 @@ namespace hsm {
     /**
      * @brief Struct containing information about the shape of an object.
      *
-     * This hsm representation of an object shape contains two Shear objects, one for the observed
-     * shape and one after PSF correction.  It also contains information about what PSF correction
-     * was used; if no PSF correction was carried out and only the observed moments were measured,
-     * the PSF correction method will be 'None'.
+     * This hsm representation of an object shape contains two CppShear objects, one for the
+     * observed shape and one after PSF correction.  It also contains information about what PSF
+     * correction was used; if no PSF correction was carried out and only the observed moments were
+     * measured, the PSF correction method will be 'None'.
      */
     struct HSMShapeData
     {
@@ -112,8 +113,8 @@ namespace hsm {
         /// @brief Status after measuring adaptive moments; -1 indicates no attempt to measure them
         int moments_status;
 
-        /// @brief galsim::Shear object representing the observed shape
-        Shear observed_shape;
+        /// @brief galsim::CppShear object representing the observed shape
+        CppShear observed_shape;
 
         /// @brief Size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
         /// not measured
@@ -137,8 +138,8 @@ namespace hsm {
         /// @brief Status after carrying out PSF correction; -1 indicates no attempt to do so
         int correction_status;
 
-        /// @brief galsim::Shear object representing the PSF-corrected shape
-        Shear corrected_shape;
+        /// @brief galsim::CppShear object representing the PSF-corrected shape
+        CppShear corrected_shape;
 
         /// @brief Shape measurement uncertainty sigma_gamma (not sigma_e) per component
         float corrected_shape_err;
@@ -156,9 +157,9 @@ namespace hsm {
 
         /// @brief Constructor, setting defaults
         HSMShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
-            observed_shape(galsim::Shear()), moments_sigma(-1.), moments_amp(-1.),
+            observed_shape(galsim::CppShear()), moments_sigma(-1.), moments_amp(-1.),
             moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
-            correction_status(-1), corrected_shape(galsim::Shear()), corrected_shape_err(-1.),
+            correction_status(-1), corrected_shape(galsim::CppShear()), corrected_shape_err(-1.),
             correction_method("None"), resolution_factor(-1.), error_message("")
         {}
     };
