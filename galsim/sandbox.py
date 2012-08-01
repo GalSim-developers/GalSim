@@ -726,6 +726,7 @@ class Sersic(RadialProfile):
         # Then build the SBProfile
         self._SBInitialize()
 
+
 class Moffat(RadialProfile):
     """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
 
@@ -772,7 +773,7 @@ class Moffat(RadialProfile):
     # Then we set up the size descriptors.  These need to be a little more complex in their
     # execution than a typical RadialProfile, and involve a redefinition of the default
     # half_light_radius descriptor provided by this intermediate base class.  Details below.
-    #
+
     # First we define a hidden storage variable to recall how the size parameter was last set: 
     _last_size_set_was_half_light_radius = False
 
@@ -833,7 +834,6 @@ class Moffat(RadialProfile):
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
-
         # Initialize the GSObject differently depending on whether the HLR was set last.
         if self._last_size_set_was_half_light_radius is True:
             GSObject.__init__(
@@ -862,8 +862,106 @@ class Moffat(RadialProfile):
 
         # Then build the SBProfile
         self._SBInitialize()
-                                                    
-      
+
+
+class AtmosphericPSF(RadialProfile):
+    """Base class for long exposure Kolmogorov PSF.
+
+    Initialization
+    --------------
+    @code
+    atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolantxy=None, oversampling=1.5)
+    @endcode
+
+    Initialized atmospheric_psf as a galsim.AtmosphericPSF() instance.
+
+    @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
+                           consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
+                           PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
+                           values for the Fried parameter are on the order of 10 cm for most 
+                           observatories and up to 20 cm for excellent sites. The values are 
+                           usually quoted at lambda = 500 nm and r0 depends on wavelength as
+                           [r0 ~ lambda^(-6/5)].
+    @param fwhm            FWHM of the Kolmogorov PSF.
+                           Either fwhm or lam_over_r0 (and only one) must be specified.
+    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
+                           [default = 1.5], setting oversampling < 1 will produce aliasing in the 
+                           PSF (not good).
+    """
+
+    # First we define the size parameters for the AtmosphericPSF:
+    # The basic, underlying size parameter lambda / r0
+    lam_over_r0 = descriptors.SimpleParam(
+        "lam_over_r0", group="size", default=None,
+        doc="lam_over_r0, kept consistent with the other size attributes.")
+
+    # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108)
+    fwhm = descriptors.GetSetScaleParam(
+        "fwhm", root_name="lam_over_r0", factor=0.976, group="size",
+        doc="FWHM, kept consistent with the other size attributes.")
+
+    # Getter and setter functions for the half_light_radius descriptor (raising a
+    # NotImplementedError exception for this not-yet-implemented).  Note this overrides the
+    # half_light_radius inherited from the RadialProfile base class 
+    def _get_half_light_radius(self):
+        raise NotImplementedError(
+            "Half light radius calculation not yet implemented for AtmosphericPSF objects.")
+    def _set_half_light_radius(self, value):
+        raise NotImplementedError(
+            "Half light radius support not yet implemented for AtmosphericPSF objects.")
+    
+    # Then we define the half_light_radius descriptor with ref. to these getter/setter functions
+    half_light_radius = descriptors.GetSetFuncParam(
+        getter=_get_half_light_radius, setter=_set_half_light_radius, group="size",
+        doc="Half light radius, access will raise a NotImplementedError exception!")
+
+    # Then the optional parameters interpolant and oversampling
+    interpolant = descriptors.SimpleParam(
+        "interpolant", default=None, group="optional", doc="Real space interpolant instance (2D).")
+    oversampling = descriptors.SimpleParam(
+        "oversampling", default=1.5, group="optional",
+        doc="Oversampling factor for the creation of the SBInterpolatedImage lookup table.")
+
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
+    def _SBInitialize(self):
+        
+        # Set the lookup table sample rate via FWHM / 2 / oversampling (BARNEY: is this enough??)
+        dx_lookup = .5 * self.fwhm / self.oversampling
+
+        # Fold at 10 times the FWHM
+        stepk_kolmogorov = np.pi / (10. * self.fwhm)
+
+        # Odd array to center the interpolant on the centroid. Might want to pad this later to
+        # make a nice size array for FFT, but for typical seeing, arrays will be very small.
+        npix = 1 + 2 * (np.ceil(np.pi / stepk_kolmogorov)).astype(int)
+        atmoimage = galsim.atmosphere.kolmogorov_psf_image(array_shape=(npix, npix), dx=dx_lookup, 
+                                                           lam_over_r0=self.lam_over_r0)
+        # Run checks on the interpolant and build default if None
+        if self.interpolant is None:
+            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1e-4)
+            self.interpolant = galsim.InterpolantXY(lan5)
+        else:
+            if isinstance(self.interpolant, galsim.InterpolantXY) is False:
+                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+
+        # Then initialize the SBProfile
+        GSObject.__init__(
+            self, galsim.SBInterpolatedImage(atmoimage, self.interpolant, dx=dx_lookup))
+
+    # --- Public Class methods ---
+    def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5):
+
+        # Initialize the interpolant and oversampling parameters
+        self.interpolant = interpolant
+        self.oversampling = oversampling
+        
+        # Use the RadialProfile._parse_sizes() method to initialize size parameters
+        RadialProfile._parse_sizes(self, lam_over_r0=lam_over_r0, fwhm=fwhm)
+
+        # Then build the SBProfile
+        self._SBInitialize()
+        
 
 class RealGalaxy(GSObject):
     """@brief Class describing real galaxies from some training dataset.
