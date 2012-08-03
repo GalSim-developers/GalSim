@@ -561,7 +561,7 @@ class GSObject(object):
 
 
 class RadialProfile(GSObject):
-    """@brief Intermediate base class that defines some parameters shared by all "radial profile"
+    """Intermediate base class that defines some parameters shared by all "radial profile"
     GSObjects.
 
     The radial profile GSObjects are characterized by:
@@ -614,7 +614,7 @@ class RadialProfile(GSObject):
 
 
 class Gaussian(RadialProfile):
-    """@brief GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
+    """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
 
     For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
     documentation produced by doxygen.
@@ -678,7 +678,7 @@ class Gaussian(RadialProfile):
 
 
 class Sersic(RadialProfile):
-    """@brief GalSim Sersic, which has an SBSersic in the SBProfile attribute.
+    """GalSim Sersic, which has an SBSersic in the SBProfile attribute.
 
     For more details of the Sersic Surface Brightness profile, please see the SBSersic documentation
     produced by doxygen.
@@ -725,6 +725,105 @@ class Sersic(RadialProfile):
 
         # Then build the SBProfile
         self._SBInitialize()
+
+
+class Exponential(RadialProfile):
+    """GalSim Exponential, which has an SBExponential in the SBProfile attribute.
+
+    For more details of the Exponential Surface Brightness profile, please see the SBExponential
+    documentation produced by doxygen.
+
+    Initialization
+    --------------
+    An Exponential can be initialized using one (and only one) of two possible size parameters
+
+        half_light_radius
+        scale_radius
+
+    and an optional flux parameter [default flux = 1].
+
+    Example:
+    >>> exp_obj = Exponential(flux=3., scale_radius=5.)
+    >>> exp_obj.half_light_radius
+    8.391734950083302
+    >>> exp_obj.half_light_radius = 1.
+    >>> exp_obj.scale_radius
+    0.5958243473776976
+
+    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
+    TypeError exception.
+
+    Methods
+    -------
+    The Exponential is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
+    """
+    
+    # Beyond the half light radius, the additional size parameter for Exponential objects is the
+    # scale_radius
+    #
+    # Constant scaling factor not analytic, but can be calculated by iterative solution of:
+    #  (re / r0) = ln[(re / r0) + 1] + ln(2)
+    scale_radius=descriptors.GetSetScaleParam(
+        "scale_radius", root_name="half_light_radius", factor=1./1.6783469900166605,
+        doc="scale_radius, kept consistent with the other size attributes.")
+
+    def _SBInitialize(self):
+        GSObject.__init__(
+            self, galsim.SBExponential(half_light_radius=self.half_light_radius, flux=self.flux))
+
+    def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
+
+        # Use the RadialProfile._parse_sizes() method to initialize size parameters
+        RadialProfile._parse_sizes(
+            self, half_light_radius=half_light_radius, scale_radius=scale_radius)
+
+        # Set the flux
+        self.flux = flux
+
+        # Then build the SBProfile
+        self._SBInitialize()
+
+
+class DeVaucouleurs(RadialProfile):
+    """GalSim DeVaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
+
+    For more details of the DeVaucouleurs Surface Brightness profile, please see the
+    SBDeVaucouleurs documentation produced by doxygen.
+
+    Initialization
+    --------------
+    A DeVaucouleurs is initialized with the half light radius size parameter half_light_radius and
+    an optional flux parameter [default flux = 1].
+
+    Example:
+    >>> dvc_obj = DeVaucouleurs(half_light_radius=2.5, flux=40.)
+    >>> dvc_obj.half_light_radius
+    2.5
+    >>> dvc_obj.flux
+    40.0
+
+    Methods
+    -------
+    The DeVaucouleurs is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
+    """
+
+    def _SBInitialize(self):
+        GSObject.__init__(
+            self, galsim.SBDeVaucouleurs(
+                half_light_radius=self.half_light_radius, flux=self.flux))
+
+    def __init__(self, half_light_radius=None, flux=1.):
+
+        # Use the RadialProfile._parse_sizes() method to initialize size parameters
+        RadialProfile._parse_sizes(self, half_light_radius=half_light_radius)
+
+        # Set the flux
+        self.flux = flux
+
+        # Then build the SBProfile
+        self._SBInitialize() 
 
 
 class Moffat(RadialProfile):
