@@ -22,7 +22,10 @@ Table of Contents:
 Important note: before building and installing the software below, make sure that python is built
 with shared libraries.  On some systems, the default is *not* to build python with shared libraries,
 which will result in mysterious issues when trying to compile GalSim (apparent numpy-related
-failures).  To check this, you can identify the executable for the python you are using, e.g., using
+failures).  In the few cases where this issue was identified, python had been compiled from source
+directly; developers who used python from distributions did not encounter this problem.
+
+To check this, you can identify the executable for the python you are using, e.g., using
 
 which python
 
