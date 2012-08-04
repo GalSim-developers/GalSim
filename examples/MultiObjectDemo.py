@@ -90,7 +90,7 @@ def Script1():
 
     # Define the PSF profile
     psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm, trunc=psf_trunc)
-    psf_re = psf.getHalfLightRadius()  # Need this for later...
+    psf_re = psf.half_light_radius  # Need this for later...
     psf.applyShear(e1=psf_e1,e2=psf_e2)
     logger.info('Made PSF profile')
 
