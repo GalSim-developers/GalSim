@@ -257,16 +257,16 @@ struct PyBinomialDeviate {
             "must both be > 0.\n"
             ;
         bp::class_<BinomialDeviate, bp::bases<BaseDeviate> > pyBinomialDeviate(
-            "BinomialDeviate", doc, bp::init<double, double >(
-                (bp::arg("N")=1., bp::arg("p")=0.5)
+            "BinomialDeviate", doc, bp::init<int, double >(
+                (bp::arg("N")=1, bp::arg("p")=0.5)
             )
         );
         pyBinomialDeviate
-            .def(bp::init<long, double, double>(
-                (bp::arg("lseed"), bp::arg("N")=1., bp::arg("p")=0.5)
+            .def(bp::init<long, int, double>(
+                (bp::arg("lseed"), bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
-            .def(bp::init<const BaseDeviate&, double, double>(
-                (bp::arg("dev"), bp::arg("N")=1., bp::arg("p")=0.5)
+            .def(bp::init<const BaseDeviate&, int, double>(
+                (bp::arg("dev"), bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
             .def("__call__", &BinomialDeviate::operator(),
                  "Draw a new random number from the distribution.\n"

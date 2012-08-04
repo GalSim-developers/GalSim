@@ -259,7 +259,7 @@ namespace galsim {
 
     template <class T>
     Position<T> Bounds<T>::center() const
-    { return Position<T>((xmin + xmax)/2.,(ymin + ymax)/2.); }
+    { return Position<T>((xmin + xmax)/T(2),(ymin + ymax)/T(2)); }
 
     // & operator finds intersection, if any
     template <class T>
@@ -303,8 +303,8 @@ namespace galsim {
     {
         T dx = xmax-xmin;
         T dy = ymax-ymin;
-        dx = dx*0.5*(m-1); 
-        dy = dy*0.5*(m-1);
+        dx = T(dx*0.5*(m-1.)); 
+        dy = T(dy*0.5*(m-1.));
         xmax += dx;  xmin -= dx;
         ymax += dy;  ymin -= dy;
     }

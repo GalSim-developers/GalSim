@@ -146,11 +146,11 @@ namespace galsim {
                         if (electrons <= 0.) continue;
                         if (electrons < MAX_POISSON) {
                             _pd.setMean(electrons);
-                            *it = _pd() / _gain;
+                            *it = T(_pd() / _gain);
                         } else {
                             // ??? This might be even slower than large-N Poisson...
                             _gd.setSigma(sqrt(electrons)/_gain);
-                            *it += _gd();
+                            *it = T(*it + _gd());
                         }
                     } 
                 }
@@ -161,7 +161,7 @@ namespace galsim {
             if (_readNoise > 0.) {
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                     ImIter ee = data.rowEnd(y);
-                    for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += _gd(); }
+                    for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it = T(*it + _gd()); }
                 } 
             }
         }
