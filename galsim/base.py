@@ -1466,11 +1466,11 @@ class RealGalaxy(GSObject):
         elif self.ID != None:
             if (self.random == True):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
-            self.index = real_galaxy_catalog.get_index_for_id(ID)
+            self.index = self.real_galaxy_catalog.get_index_for_id(ID)
         elif self.random == True:
             if self.uniform_deviate == None:
                 self.uniform_deviate = galsim.UniformDeviate()
-            self.index = int(real_galaxy_catalog.n * self.uniform_deviate()) 
+            self.index = int(self.real_galaxy_catalog.n * self.uniform_deviate()) 
             # this will round down, to get index in range [0, n-1]
         else:
             raise RuntimeError('No method specified for selecting a galaxy!')
