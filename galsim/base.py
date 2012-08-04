@@ -3,6 +3,7 @@ import collections
 import numpy as np
 import galsim
 import utilities
+import descriptors
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
@@ -10,9 +11,28 @@ class GSObject(object):
     """@brief Base class for defining the interface with which all GalSim Objects access their
     shared methods and attributes, particularly those from the C++ SBProfile classes.
     """
+    _data = {} # Used for storing GalSim object parameter data, accessed by their descriptors
+    _SBProfile = None  # Private attribute used by the SBProfile property to store (and rebuild if
+                       # necessary) the C++ layer SBProfile object for which GSObjects are a
+                       # container
+
+    # Then we define the .SBProfile attribute to actually be a property, with getter and setter
+    # functions that provide access to the data stored in _SBProfile.  If the latter is None, for
+    # example after a change in the object parameters (see, e.g., the SimpleParam descriptor), then
+    # the SBProfile is re-initialized.
+    #
+    # Note that this requires ALL classes derived from GSObject to define a _SBInitialize() method. 
+    def _get_SBProfile(self):
+        if self._SBProfile is None:
+            self._SBInitialize()
+        return self._SBProfile
+    def _set_SBProfile(self, value):
+        self._SBProfile = value
+    SBProfile = property(_get_SBProfile, _set_SBProfile)
+
     def __init__(self, SBProfile):
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
-
+    
     # Make op+ of two GSObjects work to return an Add object
     def __add__(self, other):
         return Add(self,other)
@@ -540,6 +560,58 @@ class GSObject(object):
         return image, added_flux
 
 
+class RadialProfile(GSObject):
+    """Intermediate base class that defines some parameters shared by all "radial profile"
+    GSObjects.
+
+    The radial profile GSObjects are characterized by:
+      * one or more size parameters, e.g. sigma (for the Gaussian), half_light_radius (all objects),
+        from which one only must be chosen for initialization
+      * an optional flux parameter [default = 1]
+      * zero or more additional parameters describing the radial profile, but not directly** related
+        to the object's apparent size
+
+    This intermediate base class sets up the parameter descriptors for the half_light_radius and
+    flux params common to all derived objects.  Additional parameters should be defined in the
+    class scopes for the derived RadialProfile objects.
+
+    Currently, the RadialProfile objects are:
+    Airy, DeVaucouleurs, Exponential, Gaussian, Moffat, Sersic
+
+    Although only one size parameter must be chosen for initializing RadialProfile objects (giving
+    more than one will raise a TypeError exception), subsequently all the size parameters defined
+    for that object can be accessed as attributes.  If one of these size attributes is assigned to
+    a new value, all the other sizes and the underlying SBProfile description of the profile itself
+    will be updated to match.
+
+    All RadialProfile GSObject classes share the half_light_radius size specification.
+    """
+
+    # All RadialProfile objects have a flux
+    flux = descriptors.FluxParam()
+
+    # All RadialProfile objects share a half_light_radius, so we can define this in the intermediate
+    # base class
+    half_light_radius = descriptors.SimpleParam(
+        "half_light_radius", default=None, group="size",
+        doc="Half light radius, kept consistent with the other size attributes.")
+    
+    def _parse_sizes(self, **kwargs):
+        """
+        Convenience function to parse input size parameters within the derived class __init__
+        method.  Raises an exception if more than one input parameter kwarg is set != None.
+        """
+        size_set = False
+        for name, value in kwargs.iteritems():
+            if value != None:
+                if size_set is True:
+                    raise TypeError("Cannot specify more than one size parameter for this object.")
+                else:
+                    self.__setattr__(name, value)
+                    size_set = True
+        if size_set is False:
+            raise TypeError("Must specify at least one size parameter for this object.")
+
 # Now define some of the simplest derived classes, those which are otherwise empty containers for
 # SBPs...
 #
@@ -550,36 +622,68 @@ class GSObject(object):
 # In particular, the SBGaussian is now an attribute of the Gaussian, an attribute named 
 # "SBProfile", which can be queried for type as desired.
 #
-class Gaussian(GSObject):
-    """@brief GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
+class Gaussian(RadialProfile):
+    """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
+
+    For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
+    documentation produced by doxygen.
+
+    Initialization
+    --------------
+    A Gaussian can be initialized using one (and only one) of three possible size parameters
+
+        half_light_radius
+        sigma
+        fwhm
+
+    and an optional flux parameter [default flux = 1].
+
+    Example:
+    >>> gauss_obj = Gaussian(flux=3., sigma=1.)
+    >>> gauss_obj.half_light_radius
+    1.1774100225154747
+    >>> gauss_obj.half_light_radius = 1.
+    >>> gauss_obj.sigma
+    0.8493218002880191
+
+    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
+    TypeError exception.
+
+    Methods
+    -------
+    The Gaussian is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
     """
-    _data = {}
-    params = {}
-    #    sigma = SimpleParam("sigma", Gaussian)  # Can't put these here as Gaussian not yet defined!
-    #    flux = SimpleParam("flux", Gaussian)
 
+    # Initialization of additional size parameter descriptors beyond the half_light_radius inherited
+    # by all RadialProfile GSObjects
+    sigma = descriptors.GetSetScaleParam(
+        name="sigma", root_name="half_light_radius", group="size",
+        factor=1./1.1774100225154747, # factor = 1 / sqrt[2ln(2)]
+        doc="Scale radius sigma, kept consistent with the other size attributes.")
+
+    fwhm = descriptors.GetSetScaleParam(
+        name="fwhm", root_name="half_light_radius", factor=2., # strange but, it turns out, true...
+        group="size", doc="FWHM, kept consistent with the other size attributes.")
+
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
+    def _SBInitialize(self):
+        GSObject.__init__(
+            self, galsim.SBGaussian(half_light_radius=self.half_light_radius, flux=self.flux))
+    
+    # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
-        # How to initialize even a SimpleParam?  Tried many things, all seem unsuccessful... :(
-        self.sigma = SimpleParam("sigma", Gaussian)
 
+        # Use the RadialProfile._parse_sizes() method to initialize size parameters
+        RadialProfile._parse_sizes(
+            self, half_light_radius=half_light_radius, sigma=sigma, fwhm=fwhm)
 
-    def getSigma(self):
-        """@brief Return the sigma scale length for this Gaussian profile.
-        """
-        GSObject.__init__(self, galsim.SBGaussian(half_light_radius=half_light_radius, 
-                                                  fwhm=fwhm, sigma=self.sigma,
-                                                  flux=self.flux))
-        return self.SBProfile.getSigma()
+        # Set the flux
+        self.flux = flux
 
-    def getFWHM(self):
-        """@brief Return the FWHM for this Gaussian profile.
-        """
-        return self.SBProfile.getSigma() * 2.3548200450309493 # factor = 2 sqrt[2ln(2)]
-
-    def getHalfLightRadius(self):
-        """@brief Return the half light radius for this Gaussian profile.
-        """
-        return self.SBProfile.getSigma() * 1.1774100225154747 # factor = sqrt[2ln(2)]
+        # Then build the SBProfile
+        self._SBInitialize()
 
 
 class Moffat(GSObject):
@@ -689,7 +793,7 @@ class Airy(GSObject):
         """
         # As above, likewise, FWHM only easy to define for unobscured Airy
         if self.SBProfile.getObscuration() == 0.:
-            return self.SBProfile.getLamOverD() * 1.028993969962188;
+            return self.SBProfile.getLamOverD() * 1.028993969962188
         else:
             # In principle can find the FWHM as a function of lam_over_D and obscuration too,
             # but it will be much more involved...!
