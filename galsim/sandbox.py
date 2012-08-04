@@ -1096,6 +1096,46 @@ class Moffat(RadialProfile):
         self._SBInitialize()
 
 
+class Pixel(GSObject):
+    """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
+
+    Initialization
+    --------------
+    A Pixel is initialized with an x dimension width xw, an optional y dimension width (if
+    unspecifed yw=xw is assumed) and an optional flux parameter [default flux = 1].
+
+    Methods
+    -------
+    The Pixel is a GSObject, and inherits all of the GSObject methods (draw, drawShoot, applyShear
+    etc.) and operator bindings.
+    """
+
+    # Defining the parameter descriptors
+    xw = descriptors.SimpleParam(
+        "xw", group="required", doc="Width of the pixel in the x dimension.")
+
+    yw = descriptors.SimpleParam(
+        "yw", group="required", doc="Width of the pixel in the y dimension.")
+
+    flux = descriptors.FluxParam()
+
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
+    def _SBInitialize(self):
+        if self.yw is None:
+            self.yw = self.xw
+        GSObject.__init__(self, galsim.SBBox(xw=self.xw, yw=self.yw, flux=self.flux))
+
+    # --- Public Class methods ---
+    def __init__(self, xw, yw=None, flux=1.):
+
+        self.xw = xw
+        self.yw = yw
+        self.flux = flux
+
+        self._SBInitialize()
+
+
 class DoubleGaussian(GSObject):
     """Double Gaussian, which is the sum of two Gaussian profiles and has an SBAdd in the SBProfile
     attribute.
