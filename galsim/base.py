@@ -659,20 +659,21 @@ class Gaussian(RadialProfile):
 
     # Initialization of additional size parameter descriptors beyond the half_light_radius inherited
     # by all RadialProfile GSObjects
+    
     sigma = descriptors.GetSetScaleParam(
         name="sigma", root_name="half_light_radius", group="size",
-        factor=1./1.1774100225154747, # factor = 1 / sqrt[2ln(2)]
+        factor=0.8493218002880191, # factor = 1 / sqrt[2ln(2)]
         doc="Scale radius sigma, kept consistent with the other size attributes.")
 
     fwhm = descriptors.GetSetScaleParam(
-        name="fwhm", root_name="half_light_radius", factor=2., # strange but, it turns out, true...
+        name="fwhm", root_name="half_light_radius", factor=2., # true!
         group="size", doc="FWHM, kept consistent with the other size attributes.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
         GSObject.__init__(
-            self, galsim.SBGaussian(half_light_radius=self.half_light_radius, flux=self.flux))
+            self, galsim.SBGaussian(sigma=self.sigma, flux=self.flux))
     
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
@@ -1602,40 +1603,38 @@ class DoubleGaussian(Add):
         doc="Flux for the first of the two Gaussian components of the DoubleGaussian.")
 
     flux2 = descriptors.SimpleParam(
-        "flux1", group="optional", default=None,
+        "flux2", group="optional", default=None,
         doc="Flux for the second of the two Gaussian components of the DoubleGaussian.")
 
-    half_light_radius1 = descriptors.SimpleParam(
-        "half_light_radius1", group="optional",
-        doc="Half light radius for the first of the two Gaussian components of the "+
-        "DoubleGaussian, kept updated with the other size attributes.")
-
-    half_light_radius2 = descriptors.SimpleParam(
-        "half_light_radius2", group="optional",
-        doc="Half light radius for the second of the two Gaussian components of the "+
-        "DoubleGaussian, kept updated with the other size attributes.")
-
-    sigma1 = descriptors.GetSetScaleParam(
-        "sigma1", root_name="half_light_radius1", group="optional",
-        factor=1./1.1774100225154747, # factor = 1 / sqrt[2ln(2)]
+    sigma1 = descriptors.SimpleParam(
+        "sigma1", group="optional", default=None,
         doc="Scale radius sigma for the first of the two Gaussian components of the "+
         "DoubleGaussian, kept updated with the other size attributes.")
 
-    sigma2 = descriptors.GetSetScaleParam(
-        "sigma2", root_name="half_light_radius2", group="optional",
-        factor=1./1.1774100225154747, # factor = 1 / sqrt[2ln(2)]d v
+    sigma2 = descriptors.SimpleParam(
+        "sigma2", group="optional", default=None,
         doc="Scale radius sigma for the second of the two Gaussian components of the "+
         "DoubleGaussian, kept updated with the other size attributes.")
 
     fwhm1 = descriptors.GetSetScaleParam(
-        name="fwhm1", root_name="half_light_radius1", factor=2., # strange but true...
+        name="fwhm1", root_name="sigma1", factor=2.3548200450309493, # factor = 2 sqrt[2ln(2)]
         group="optional", doc="FWHM for the first of the two Gaussian components of the "+
         "DoubleGaussian, kept consistent with the other size attributes.")
 
     fwhm2 = descriptors.GetSetScaleParam(
-        name="fwhm2", root_name="half_light_radius2", factor=2., # strange but true...
+        name="fwhm2", root_name="sigma2", factor=2.3548200450309493, # factor = 2 sqrt[2ln(2)]
         group="optional", doc="FWHM for the second of the two Gaussian components of the "+
         "DoubleGaussian, kept consistent with the other size attributes.")
+
+    half_light_radius1 = descriptors.GetSetScaleParam(
+        "half_light_radius1", root_name="sigma1", factor=1.1774100225154747, # factor = sqrt[2ln(2)]
+        group="optional", doc="Half light radius for the second of the two Gaussian components of "+
+        "the DoubleGaussian, kept consistent with the other size attributes.")
+
+    half_light_radius2 = descriptors.GetSetScaleParam(
+        "half_light_radius2", root_name="sigma2", factor=1.1774100225154747, # factor = sqrt[2ln(2)]
+        group="optional", doc="Half light radius for the second of the two Gaussian components of "+
+        "the DoubleGaussian, kept consistent with the other size attributes.")
 
     def _parse_sizes(self, **kwargs):
         """
@@ -1668,8 +1667,12 @@ class DoubleGaussian(Add):
                  half_light_radius1=None, half_light_radius2=None):
 
         # Parse both sets of size parameters using the DoubleGaussian's modified _parse_sizes method
-        self._parse_sizes(half_light_radius1=half_light_radius1, sigma1=sigma1, fwhm1=fwhm1)
-        self._parse_sizes(half_light_radius2=half_light_radius2, sigma2=sigma2, fwhm2=fwhm2)
+        self._parse_sizes(
+            sigma1=sigma1, fwhm1=fwhm1, half_light_radius1=half_light_radius1,
+            half_light_radius2=half_light_radius2)
+        self._parse_sizes(
+            sigma2=sigma2, fwhm2=fwhm2, half_light_radius1=half_light_radius1,
+            half_light_radius2=half_light_radius2)
 
         # Set the fluxes
         self.flux1 = flux1
