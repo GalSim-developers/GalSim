@@ -869,7 +869,7 @@ class Airy(RadialProfile):
     # Define the descriptor for the obscuration parameter
     obscuration = descriptors.SimpleParam(
         "obscuration", group="optional", default=0.,
-        doc="Linear radial central obscuration for the obscured Airy.")
+        doc="Linear dimension of central obscuration as fraction of pupil linear dimension.")
 
     # Then define the descriptor for the basic, underlying size parameter for the Airy, Lambda / D
     lam_over_D = descriptors.SimpleParam(
@@ -1136,7 +1136,8 @@ class DoubleGaussian(GSObject):
     The DoubleGaussian is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
     applyShear etc.) and operator bindings.
     """
-
+    
+    # Defining the descriptors for storing object parameters
     flux1 = descriptors.SimpleParam(
         "flux1", group="optional", default=None,
         doc="Flux for the first of the two Gaussian components of the DoubleGaussian.")
@@ -1225,7 +1226,7 @@ class AtmosphericPSF(RadialProfile):
     Initialization
     --------------
     @code
-    atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolantxy=None, oversampling=1.5)
+    atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolant=None, oversampling=1.5)
     @endcode
 
     Initialized atmospheric_psf as a galsim.AtmosphericPSF() instance.
@@ -1239,12 +1240,14 @@ class AtmosphericPSF(RadialProfile):
                            [r0 ~ lambda^(-6/5)].
     @param fwhm            FWHM of the Kolmogorov PSF.
                            Either fwhm or lam_over_r0 (and only one) must be specified.
+    @param interpolant     optional keyword for specifying the interpolation scheme [default =
+                           galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))]
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
                            [default = 1.5], setting oversampling < 1 will produce aliasing in the 
                            PSF (not good).
     """
 
-    # First we define the size parameters for the AtmosphericPSF:
+    # Defining the size parameters for the AtmosphericPSF:
     # The basic, underlying size parameter lambda / r0
     lam_over_r0 = descriptors.SimpleParam(
         "lam_over_r0", group="size", default=None,
@@ -1265,12 +1268,12 @@ class AtmosphericPSF(RadialProfile):
         raise NotImplementedError(
             "Half light radius support not yet implemented for AtmosphericPSF objects.")
     
-    # Then we define the half_light_radius descriptor with ref. to these getter/setter functions
+    # Defining the half_light_radius descriptor with ref. to these getter/setter functions
     half_light_radius = descriptors.GetSetFuncParam(
         getter=_get_half_light_radius, setter=_set_half_light_radius, group="size",
         doc="Half light radius, access will raise a NotImplementedError exception!")
 
-    # Then the optional parameters interpolant and oversampling
+    # Defining the optional parameters interpolant and oversampling
     interpolant = descriptors.SimpleParam(
         "interpolant", default=None, group="optional", doc="Real space interpolant instance (2D).")
     oversampling = descriptors.SimpleParam(
@@ -1313,6 +1316,158 @@ class AtmosphericPSF(RadialProfile):
         
         # Use the RadialProfile._parse_sizes() method to initialize size parameters
         RadialProfile._parse_sizes(self, lam_over_r0=lam_over_r0, fwhm=fwhm)
+
+        # Then build the SBProfile
+        self._SBInitialize()
+
+
+class OpticalPSF(GSObject):
+    """@brief Class describing aberrated PSFs due to telescope optics, which has an
+    SBInterpolatedImage in the SBProfile attribute.
+
+    Input aberration coefficients are assumed to be supplied in units of incident light wavelength,
+    and correspond to the conventions adopted here:
+    http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
+
+    Initialization
+    --------------
+    @code
+    optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0.,
+                                        coma2=0., spher=0., circular_pupil=True, obscuration=0.,
+                                        interpolant=None, oversampling=1.5, pad_factor=1.5)
+    @endcode
+
+    Initializes optical_psf as a galsim.OpticalPSF() instance.
+
+    @param lam_over_D      lambda / D in the physical units adopted (user responsible for 
+                           consistency).
+    @param defocus         defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param circular_pupil  adopt a circular pupil? Alternative is square
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear 
+                           dimension, [0., 1.) [default = 0.]
+    @param interpolant     optional keyword for specifying the interpolation scheme [default =
+                           galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))].
+    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
+                           [default = 1.5], setting oversampling < 1 will produce aliasing in the 
+                           PSF (not good).
+    @param pad_factor      additional multiple by which to zero-pad the PSF image to avoid folding
+                           compared to what would be required for a simple Airy [default = 1.5].
+                           Note that padFactor may need to be increased for stronger aberrations,
+                           i.e. those larger than order unity. 
+    """
+    # Define the descriptors for storing the parameters
+    lam_over_D = descriptors.SimpleParam(
+        "lam_over_D", group="size", default=None, doc="Lambda / D.")
+
+    defocus = descriptors.SimpleParam(
+        "defocus", group="optional", default=0.,
+        doc="Defocus in units of incident light wavelength.")
+
+    astig1 = descriptors.SimpleParam(
+        "astig1", group="optional", default=0.,
+        doc="First component of astigmatism (like e1) in units of incident light wavelength.")
+
+    astig2 = descriptors.SimpleParam(
+        "astig2", group="optional", default=0.,
+        doc="Second component of astigmatism (like e2) in units of incident light wavelength.")
+
+    coma1 = descriptors.SimpleParam(
+        "coma1", group="optional", default=0.,
+        doc="Coma along x in units of incident light wavelength.")
+
+    coma2 = descriptors.SimpleParam(
+        "coma2", group="optional", default=0.,
+        doc="Coma along y in units of incident light wavelength.")
+
+    spher = descriptors.SimpleParam(
+        "spher", group="optional", default=0.,
+        doc="Spherical aberration in units of incident light wavelength.")
+
+    circular_pupil = descriptors.SimpleParam(
+        "circular_pupil", group="optional", default=True,
+        doc="Adopting a circular pupil? Alternative is square.")
+
+    obscuration = descriptors.SimpleParam(
+        "obscuration", group="optional", default=True,
+        doc="Linear dimension of central obscuration as fraction of pupil linear dimension.")
+
+    interpolant = descriptors.SimpleParam(
+        "interpolant", group="optional", default=None, doc="The specified 2D interpolation scheme.")
+
+    oversampling = descriptors.SimpleParam(
+        "oversampling", group="optional", default=1.5,
+        doc="Oversampling factor for the SBInterpolatedImage table.")
+
+    pad_factor = descriptors.SimpleParam(
+        "pad_factor", group="optional", default=1.5,
+        doc="Additional multiple by which to zero-pad the PSF image to avoid folding compared "+
+            "to what would be required for a simple Airy.")
+
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
+    def _SBInitialize(self):
+        
+        # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
+        import galsim.optics
+        
+        # Choose dx for lookup table using Nyquist for optical aperture and the specified
+        # oversampling factor
+        dx_lookup = .5 * self.lam_over_D / self.oversampling
+        
+        # Use a similar prescription as SBAiry to set Airy stepK and thus reference unpadded image
+        # size in physical units
+        stepk_airy = min(
+            ALIAS_THRESHOLD * .5 * np.pi**3 * (1. - self.obscuration) / self.lam_over_D,
+            np.pi / 5. / self.lam_over_D)
+        
+        # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
+        # also make npix always *odd* so that opticalPSF lookup table array is correctly centred:
+        npix = 1 + 2 * (np.ceil(self.pad_factor * (np.pi / stepk_airy) / dx_lookup)).astype(int)
+        
+        # Make the psf image using this dx and array shape
+        optimage = galsim.optics.psf_image(
+            lam_over_D=self.lam_over_D, dx=dx_lookup, array_shape=(npix, npix),
+            defocus=self.defocus, astig1=self.astig1, astig2=self.astig2, coma1=self.coma1,
+            coma2=self.coma2, spher=self.spher, circular_pupil=self.circular_pupil,
+            obscuration=self.obscuration)
+        
+        # If interpolant not specified on input, use a high-ish n lanczos
+        if self.interpolant == None:
+            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
+            self.interpolant = galsim.InterpolantXY(lan5)
+        else:
+            if isinstance(self.interpolant, galsim.InterpolantXY) is False:
+                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+            
+        # Initialize the SBProfile
+        GSObject.__init__(
+            self, galsim.SBInterpolatedImage(optimage, self.interpolant, dx=dx_lookup))
+
+    # --- Public Class methods ---
+    def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+                 circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
+                 pad_factor=1.5):
+
+        # Setting the parameters
+        self.lam_over_D = lam_over_D
+        self.defocus = defocus
+        self.astig1 = astig1
+        self.astig2 = astig2
+        self.coma1 = coma1
+        self.coma2 = coma2
+        self.spher = spher
+        self.circular_pupil = circular_pupil
+        self.obscuration = obscuration
+        self.interpolant = interpolant
+        self.oversampling = oversampling
+        self.pad_factor = pad_factor
 
         # Then build the SBProfile
         self._SBInitialize()
