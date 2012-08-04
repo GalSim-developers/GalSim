@@ -768,10 +768,13 @@ class Exponential(RadialProfile):
         "scale_radius", root_name="half_light_radius", factor=1./1.6783469900166605,
         doc="scale_radius, kept consistent with the other size attributes.")
 
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
         GSObject.__init__(
             self, galsim.SBExponential(half_light_radius=self.half_light_radius, flux=self.flux))
-
+ 
+    # --- Public Class methods ---
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
 
         # Use the RadialProfile._parse_sizes() method to initialize size parameters
@@ -809,11 +812,14 @@ class DeVaucouleurs(RadialProfile):
     applyShear etc.) and operator bindings.
     """
 
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
         GSObject.__init__(
             self, galsim.SBDeVaucouleurs(
                 half_light_radius=self.half_light_radius, flux=self.flux))
 
+    # --- Public Class methods ---
     def __init__(self, half_light_radius=None, flux=1.):
 
         # Use the RadialProfile._parse_sizes() method to initialize size parameters
@@ -824,6 +830,133 @@ class DeVaucouleurs(RadialProfile):
 
         # Then build the SBProfile
         self._SBInitialize() 
+
+
+class Airy(RadialProfile):
+    """GalSim Airy, which has an SBAiry in the SBProfile attribute.
+
+    For more details of the Airy Surface Brightness profile, please see the SBAiry documentation
+    produced by doxygen.
+
+    Initialization
+    --------------
+    An Airy can be initialized using one (and only one) of two possible size parameters
+
+        lam_over_D
+        half_light_radius
+
+    an optional obscuration parameter [default obscuration=0.] and an optional flux parameter
+    [default flux = 1].  However, the half_light_radius size parameter can currently only be used
+    if obscuration = 0.
+
+    Example:
+    >>> airy_obj = Airy(flux=3., lam_over_D=2.)
+    >>> airy_obj.half_light_radius
+    1.0696642954485294
+    >>> airy_obj.half_light_radius = 1.
+    >>> airy_obj.lam_over_D
+    1.8697454972649754
+
+    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
+    TypeError exception.
+
+    Methods
+    -------
+    The Airy is a GSObject, and inherits all of the GSObject methods (draw, drawShoot, applyShear
+    etc.) and operator bindings.
+    """
+
+    # Define the descriptor for the obscuration parameter
+    obscuration = descriptors.SimpleParam(
+        "obscuration", group="optional", default=0.,
+        doc="Linear radial central obscuration for the obscured Airy.")
+
+    # Then define the descriptor for the basic, underlying size parameter for the Airy, Lambda / D
+    lam_over_D = descriptors.SimpleParam(
+        "lam_over_D", group="size", default=None, doc="Lambda / D.")
+
+    # Then we set up the other size descriptors.  These need to be a little more complex in their
+    # execution than a typical RadialProfile, and involve a redefinition of the default
+    # half_light_radius descriptor it provides
+
+    # First we do the half_light_radius, for which we only have an easy scaling if obscuration=0.
+    def _get_half_light_radius(self):
+        if self.obscuration == 0.:
+            # For an unobscured Airy, we have the following factor which can be derived using the
+            # integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),
+            # solved for half total flux using the free online tool Wolfram Alpha.
+            # At www.wolframalpha.com:
+            # Type "Solve[BesselJ0(x)^2+BesselJ1(x)^2=1/2]" ... and divide the result by pi
+            return self.lam_over_D * 0.5348321477242647
+        else:
+            # In principle can find the half light radius as a function of lam_over_D and
+            # obscuration too, but it will be much more involved
+            raise NotImplementedError(
+                "Half light radius calculation not implemented for Airy objects with non-zero "+
+                "obscuration.")
+
+    def _set_half_light_radius(self, value):
+        if self.obscuration == 0.:
+            # See _get_half_light_radius above for provenance of scaling factor
+            self.lam_over_D = value / 0.5348321477242647
+        else:
+            raise NotImplementedError(
+                "Half light radius support not implemented for Airy objects with non-zero "+
+                "obscuration.")
+
+    # Then we define the half_light_radius descriptor with ref. to these getter/setter functions
+    half_light_radius = descriptors.GetSetFuncParam(
+        getter=_get_half_light_radius, setter=_set_half_light_radius,
+        doc="Half light radius, implemented for Airy function objects with obscuration=0.")
+
+    # Now FWHM...
+    def _get_fwhm(self):
+        if self.obscuration == 0.:
+            # As above, FWHM only easy to calculate for unobscured Airy
+            return self.lam_over_D * 1.028993969962188
+        else:
+            # In principle can find the half light radius as a function of lam_over_D and
+            # obscuration too, but it will be much more involved
+            raise NotImplementedError(
+                "FWHM calculation not implemented for Airy objects with non-zero obscuration.")
+
+    def _set_fwhm(self, value):
+        if self.obscuration == 0.:
+            # As above, FWHM only easy to calculate for unobscured Airy
+            self.lam_over_D = value / 1.028993969962188
+        else:
+            # In principle can find the half light radius as a function of lam_over_D and
+            # obscuration too, but it will be much more involved
+            raise NotImplementedError(
+                "FWHM support not implemented for Airy objects with non-zero obscuration.")
+
+    # Then we define the fwhm descriptor with reference to these getter/setter functions
+    fwhm = descriptors.GetSetFuncParam(
+        getter=_get_fwhm, setter=_set_fwhm,
+        doc="FWHM, implemented for Airy function objects with obscuration=0.")
+
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
+    def _SBInitialize(self):
+        GSObject.__init__(
+            self, galsim.SBAiry(
+                lam_over_D=self.lam_over_D, obscuration=self.obscuration, flux=self.flux))
+
+    # --- Public Class methods ---
+    def __init__(self, lam_over_D=lam_over_D, half_light_radius=None, obscuration=0., flux=1.):
+
+        # Set obscuration. The latter must be set before the sizes to raise NotImplementedError
+        # expections if half_light_radius is used with obscuration!=0.
+        self.obscuration = obscuration
+
+        # Use the RadialProfile._parse_sizes() method to initialize size parameters
+        RadialProfile._parse_sizes(self, lam_over_D=lam_over_D, half_light_radius=half_light_radius)
+
+        # Set the flux
+        self.flux = flux
+
+        # Then build the SBProfile
+        self._SBInitialize()
 
 
 class Moffat(RadialProfile):
@@ -871,7 +1004,7 @@ class Moffat(RadialProfile):
 
     # Then we set up the size descriptors.  These need to be a little more complex in their
     # execution than a typical RadialProfile, and involve a redefinition of the default
-    # half_light_radius descriptor provided by this intermediate base class.  Details below.
+    # half_light_radius descriptor it provides.  Details below.
 
     # First we define a hidden storage variable to recall how the size parameter was last set: 
     _last_size_set_was_half_light_radius = False
