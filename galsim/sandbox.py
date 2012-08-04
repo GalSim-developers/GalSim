@@ -650,9 +650,9 @@ class Gaussian(RadialProfile):
     # by all RadialProfile GSObjects
     sigma = descriptors.GetSetScaleParam(
         name="sigma", root_name="half_light_radius", group="size",
-        factor=1 / 1.1774100225154747, # factor = 1 / sqrt[2ln(2)]
+        factor=1./1.1774100225154747, # factor = 1 / sqrt[2ln(2)]
         doc="Scale radius sigma, kept consistent with the other size attributes.")
-    
+
     fwhm = descriptors.GetSetScaleParam(
         name="fwhm", root_name="half_light_radius", factor=2., # strange but, it turns out, true...
         group="size", doc="FWHM, kept consistent with the other size attributes.")
@@ -1091,6 +1091,129 @@ class Moffat(RadialProfile):
 
         # Set the flux
         self.flux = flux
+
+        # Then build the SBProfile
+        self._SBInitialize()
+
+
+class DoubleGaussian(GSObject):
+    """Double Gaussian, which is the sum of two Gaussian profiles and has an SBAdd in the SBProfile
+    attribute.
+
+    For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
+    documentation produced by doxygen.
+
+    Initialization
+    --------------
+    Each component of the DoubleGaussian is initialized using a flux parameter (flux1 and flux2),
+    and one of three possible size parameters
+
+        half_light_radius1
+        sigma1
+        fwhm1
+
+    (for the first component) and
+  
+        half_light_radius2
+        sigma2
+        fwhm2
+
+    (for the second component).
+
+    Example:
+    >>> dgauss_obj = Gaussian(flux1=3., flux2=1., sigma1=1., sigma2=0.5)
+    >>> dgauss_obj.half_light_radius1
+    1.1774100225154747
+    >>> dgauss_obj.half_light_radius1 = 1.
+    >>> dgauss_obj.sigma1
+    0.8493218002880191
+
+    Attempting to initialize with more than one size parameter for each component is ambiguous,
+    and will raise a TypeError exception.
+
+    Methods
+    -------
+    The DoubleGaussian is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
+    """
+
+    flux1 = descriptors.SimpleParam(
+        "flux1", group="optional", default=None,
+        doc="Flux for the first of the two Gaussian components of the DoubleGaussian.")
+
+    flux2 = descriptors.SimpleParam(
+        "flux1", group="optional", default=None,
+        doc="Flux for the second of the two Gaussian components of the DoubleGaussian.")
+
+    half_light_radius1 = descriptors.SimpleParam(
+        "half_light_radius1", group="optional",
+        doc="Half light radius for the first of the two Gaussian components of the "+
+        "DoubleGaussian, kept updated with the other size attributes.")
+
+    half_light_radius2 = descriptors.SimpleParam(
+        "half_light_radius2", group="optional",
+        doc="Half light radius for the second of the two Gaussian components of the "+
+        "DoubleGaussian, kept updated with the other size attributes.")
+
+    sigma1 = descriptors.GetSetScaleParam(
+        "sigma1", root_name="half_light_radius1", group="optional",
+        factor=1./1.1774100225154747, # factor = 1 / sqrt[2ln(2)]
+        doc="Scale radius sigma for the first of the two Gaussian components of the "+
+        "DoubleGaussian, kept updated with the other size attributes.")
+
+    sigma2 = descriptors.GetSetScaleParam(
+        "sigma2", root_name="half_light_radius2", group="optional",
+        factor=1./1.1774100225154747, # factor = 1 / sqrt[2ln(2)]d v
+        doc="Scale radius sigma for the second of the two Gaussian components of the "+
+        "DoubleGaussian, kept updated with the other size attributes.")
+
+    fwhm1 = descriptors.GetSetScaleParam(
+        name="fwhm1", root_name="half_light_radius1", factor=2., # strange but true...
+        group="optional", doc="FWHM for the first of the two Gaussian components of the "+
+        "DoubleGaussian, kept consistent with the other size attributes.")
+
+    fwhm2 = descriptors.GetSetScaleParam(
+        name="fwhm2", root_name="half_light_radius2", factor=2., # strange but true...
+        group="optional", doc="FWHM for the second of the two Gaussian components of the "+
+        "DoubleGaussian, kept consistent with the other size attributes.")
+
+    def _parse_sizes(self, **kwargs):
+        """
+        Convenience function to parse input size parameters within the derived class __init__
+        method.  Raises an exception if more than one input parameter kwarg is set != None.
+        """
+        size_set = False
+        for name, value in kwargs.iteritems():
+            if value != None:
+                if size_set is True:
+                    raise TypeError(
+                        "Cannot specify more than one size parameter for each component of the "+
+                        "DoubleGaussian.")
+                else:
+                    self.__setattr__(name, value)
+                    size_set = True
+        if size_set is False:
+            raise TypeError("Must specify at least one size parameter for each component of the "+
+                            "DoubleGaussian.")
+
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
+    def _SBInitialize(self):
+        sblist = [galsim.Gaussian(sigma=self.sigma1, flux=self.flux1),
+                  galsim.Gaussian(sigma=self.sigma2, flux=self.flux2)]
+        GSObject.__init__(self, galsim.Add(sblist))
+
+    # --- Public Class methods ---
+    def __init__(self, flux1, flux2, sigma1=None, sigma2=None, fwhm1=None, fwhm2=None,
+                 half_light_radius1=None, half_light_radius2=None):
+
+        # Parse both sets of size parameters using the DoubleGaussian's modified _parse_sizes method
+        self._parse_sizes(half_light_radius1=half_light_radius1, sigma1=sigma1, fwhm1=fwhm1)
+        self._parse_sizes(half_light_radius2=half_light_radius2, sigma2=sigma2, fwhm2=fwhm2)
+
+        # Set the fluxes
+        self.flux1 = flux1
+        self.flux2 = flux2
 
         # Then build the SBProfile
         self._SBInitialize()
