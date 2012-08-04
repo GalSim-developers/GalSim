@@ -139,9 +139,9 @@ class FluxParam(object):
     necessitating later re-initializtion, but rather calls the SBProfile's own setFlux() method
     to update the flux.
 
-    This causes the SBProfile remain or become an SBTransform, and therefore not necessarily of the
-    same object type as might be expected from the container GSObject.  However, all of the original
-    GSObject params are available via their descriptors.
+    This causes the SBProfile to remain or become an SBTransform, and therefore not necessarily of
+    the same object type as might be expected from the container GSObject.  However, all of the
+    original GSObject params are available via their descriptors.
     """
 
     def __init__(self, default=1., group="optional", doc="Total flux of this object."):
@@ -164,5 +164,8 @@ class FluxParam(object):
         # update the stored flux value
         instance._data["flux"] = value
         # update the SBProfile (do not undefine for re-initialization as do, e.g., SimpleParams).
-        instance.SBProfile.setFlux(value)
+        if instance._SBProfile is None:
+            pass # No need to change status if _SBProfile is already undefined
+        else:
+            instance.SBProfile.setFlux(value)
         
