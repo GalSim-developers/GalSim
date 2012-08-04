@@ -688,130 +688,6 @@ class Gaussian(RadialProfile):
         self._SBInitialize()
 
 
-class DoubleGaussian(GSObject):
-    """Double Gaussian, which is the sum of two Gaussian profiles and has an SBAdd in the SBProfile
-    attribute.
-
-    For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
-    documentation produced by doxygen.
-
-    Initialization
-    --------------
-    Each component of the DoubleGaussian is initialized using a flux parameter (flux1 and flux2),
-    and one of three possible size parameters
-
-        half_light_radius1
-        sigma1
-        fwhm1
-
-    (for the first component) and
-  
-        half_light_radius2
-        sigma2
-        fwhm2
-
-    (for the second component).
-
-    Example:
-    >>> dgauss_obj = Gaussian(flux1=3., flux2=1., sigma1=1., sigma2=0.5)
-    >>> dgauss_obj.half_light_radius1
-    1.1774100225154747
-    >>> dgauss_obj.half_light_radius1 = 1.
-    >>> dgauss_obj.sigma1
-    0.8493218002880191
-
-    Attempting to initialize with more than one size parameter for each component is ambiguous,
-    and will raise a TypeError exception.
-
-    Methods
-    -------
-    The DoubleGaussian is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
-    applyShear etc.) and operator bindings.
-    """
-    
-    # Defining the descriptors for storing object parameters
-    flux1 = descriptors.SimpleParam(
-        "flux1", group="optional", default=None,
-        doc="Flux for the first of the two Gaussian components of the DoubleGaussian.")
-
-    flux2 = descriptors.SimpleParam(
-        "flux1", group="optional", default=None,
-        doc="Flux for the second of the two Gaussian components of the DoubleGaussian.")
-
-    half_light_radius1 = descriptors.SimpleParam(
-        "half_light_radius1", group="optional",
-        doc="Half light radius for the first of the two Gaussian components of the "+
-        "DoubleGaussian, kept updated with the other size attributes.")
-
-    half_light_radius2 = descriptors.SimpleParam(
-        "half_light_radius2", group="optional",
-        doc="Half light radius for the second of the two Gaussian components of the "+
-        "DoubleGaussian, kept updated with the other size attributes.")
-
-    sigma1 = descriptors.GetSetScaleParam(
-        "sigma1", root_name="half_light_radius1", group="optional",
-        factor=1./1.1774100225154747, # factor = 1 / sqrt[2ln(2)]
-        doc="Scale radius sigma for the first of the two Gaussian components of the "+
-        "DoubleGaussian, kept updated with the other size attributes.")
-
-    sigma2 = descriptors.GetSetScaleParam(
-        "sigma2", root_name="half_light_radius2", group="optional",
-        factor=1./1.1774100225154747, # factor = 1 / sqrt[2ln(2)]d v
-        doc="Scale radius sigma for the second of the two Gaussian components of the "+
-        "DoubleGaussian, kept updated with the other size attributes.")
-
-    fwhm1 = descriptors.GetSetScaleParam(
-        name="fwhm1", root_name="half_light_radius1", factor=2., # strange but true...
-        group="optional", doc="FWHM for the first of the two Gaussian components of the "+
-        "DoubleGaussian, kept consistent with the other size attributes.")
-
-    fwhm2 = descriptors.GetSetScaleParam(
-        name="fwhm2", root_name="half_light_radius2", factor=2., # strange but true...
-        group="optional", doc="FWHM for the second of the two Gaussian components of the "+
-        "DoubleGaussian, kept consistent with the other size attributes.")
-
-    def _parse_sizes(self, **kwargs):
-        """
-        Convenience function to parse input size parameters within the derived class __init__
-        method.  Raises an exception if more than one input parameter kwarg is set != None.
-        """
-        size_set = False
-        for name, value in kwargs.iteritems():
-            if value != None:
-                if size_set is True:
-                    raise TypeError(
-                        "Cannot specify more than one size parameter for each component of the "+
-                        "DoubleGaussian.")
-                else:
-                    self.__setattr__(name, value)
-                    size_set = True
-        if size_set is False:
-            raise TypeError("Must specify at least one size parameter for each component of the "+
-                            "DoubleGaussian.")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-        sblist = [galsim.Gaussian(sigma=self.sigma1, flux=self.flux1),
-                  galsim.Gaussian(sigma=self.sigma2, flux=self.flux2)]
-        GSObject.__init__(self, galsim.Add(sblist))
-
-    # --- Public Class methods ---
-    def __init__(self, flux1, flux2, sigma1=None, sigma2=None, fwhm1=None, fwhm2=None,
-                 half_light_radius1=None, half_light_radius2=None):
-
-        # Parse both sets of size parameters using the DoubleGaussian's modified _parse_sizes method
-        self._parse_sizes(half_light_radius1=half_light_radius1, sigma1=sigma1, fwhm1=fwhm1)
-        self._parse_sizes(half_light_radius2=half_light_radius2, sigma2=sigma2, fwhm2=fwhm2)
-
-        # Set the fluxes
-        self.flux1 = flux1
-        self.flux2 = flux2
-
-        # Then build the SBProfile
-        self._SBInitialize()
-
-
 class Moffat(RadialProfile):
     """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
 
@@ -1045,6 +921,133 @@ class AtmosphericPSF(RadialProfile):
         
         # Use the RadialProfile._parse_sizes() method to initialize size parameters
         RadialProfile._parse_sizes(self, lam_over_r0=lam_over_r0, fwhm=fwhm)
+
+        # Then build the SBProfile
+        self._SBInitialize()
+
+
+class Airy(RadialProfile):
+    """GalSim Airy, which has an SBAiry in the SBProfile attribute.
+
+    For more details of the Airy Surface Brightness profile, please see the SBAiry documentation
+    produced by doxygen.
+
+    Initialization
+    --------------
+    An Airy can be initialized using one (and only one) of two possible size parameters
+
+        lam_over_D
+        half_light_radius
+
+    an optional obscuration parameter [default obscuration=0.] and an optional flux parameter
+    [default flux = 1].  However, the half_light_radius size parameter can currently only be used
+    if obscuration = 0.
+
+    Example:
+    >>> airy_obj = Airy(flux=3., lam_over_D=2.)
+    >>> airy_obj.half_light_radius
+    1.0696642954485294
+    >>> airy_obj.half_light_radius = 1.
+    >>> airy_obj.lam_over_D
+    1.8697454972649754
+
+    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
+    TypeError exception.
+
+    Methods
+    -------
+    The Airy is a GSObject, and inherits all of the GSObject methods (draw, drawShoot, applyShear
+    etc.) and operator bindings.
+    """
+
+    # Define the descriptor for the obscuration parameter
+    obscuration = descriptors.SimpleParam(
+        "obscuration", group="optional", default=0.,
+        doc="Linear dimension of central obscuration as fraction of pupil linear dimension.")
+
+    # Then define the descriptor for the basic, underlying size parameter for the Airy, Lambda / D
+    lam_over_D = descriptors.SimpleParam(
+        "lam_over_D", group="size", default=None, doc="Lambda / D.")
+
+    # Then we set up the other size descriptors.  These need to be a little more complex in their
+    # execution than a typical RadialProfile, and involve a redefinition of the default
+    # half_light_radius descriptor it provides
+
+    # First we do the half_light_radius, for which we only have an easy scaling if obscuration=0.
+    def _get_half_light_radius(self):
+        if self.obscuration == 0.:
+            # For an unobscured Airy, we have the following factor which can be derived using the
+            # integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),
+            # solved for half total flux using the free online tool Wolfram Alpha.
+            # At www.wolframalpha.com:
+            # Type "Solve[BesselJ0(x)^2+BesselJ1(x)^2=1/2]" ... and divide the result by pi
+            return self.lam_over_D * 0.5348321477242647
+        else:
+            # In principle can find the half light radius as a function of lam_over_D and
+            # obscuration too, but it will be much more involved
+            raise NotImplementedError(
+                "Half light radius calculation not implemented for Airy objects with non-zero "+
+                "obscuration.")
+
+    def _set_half_light_radius(self, value):
+        if self.obscuration == 0.:
+            # See _get_half_light_radius above for provenance of scaling factor
+            self.lam_over_D = value / 0.5348321477242647
+        else:
+            raise NotImplementedError(
+                "Half light radius support not implemented for Airy objects with non-zero "+
+                "obscuration.")
+
+    # Then we define the half_light_radius descriptor with ref. to these getter/setter functions
+    half_light_radius = descriptors.GetSetFuncParam(
+        getter=_get_half_light_radius, setter=_set_half_light_radius,
+        doc="Half light radius, implemented for Airy function objects with obscuration=0.")
+
+    # Now FWHM...
+    def _get_fwhm(self):
+        if self.obscuration == 0.:
+            # As above, FWHM only easy to calculate for unobscured Airy
+            return self.lam_over_D * 1.028993969962188
+        else:
+            # In principle can find the half light radius as a function of lam_over_D and
+            # obscuration too, but it will be much more involved
+            raise NotImplementedError(
+                "FWHM calculation not implemented for Airy objects with non-zero obscuration.")
+
+    def _set_fwhm(self, value):
+        if self.obscuration == 0.:
+            # As above, FWHM only easy to calculate for unobscured Airy
+            self.lam_over_D = value / 1.028993969962188
+        else:
+            # In principle can find the half light radius as a function of lam_over_D and
+            # obscuration too, but it will be much more involved
+            raise NotImplementedError(
+                "FWHM support not implemented for Airy objects with non-zero obscuration.")
+
+    # Then we define the fwhm descriptor with reference to these getter/setter functions
+    fwhm = descriptors.GetSetFuncParam(
+        getter=_get_fwhm, setter=_set_fwhm,
+        doc="FWHM, implemented for Airy function objects with obscuration=0.")
+
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
+    def _SBInitialize(self):
+        GSObject.__init__(
+            self, galsim.SBAiry(
+                lam_over_D=self.lam_over_D, obscuration=self.obscuration, flux=self.flux))
+
+    # --- Public Class methods ---
+    def __init__(self, lam_over_D=lam_over_D, half_light_radius=None, obscuration=0., flux=1.):
+
+        # Set obscuration. The latter must be set before the sizes to raise NotImplementedError
+        # expections if half_light_radius is used with obscuration!=0.
+        self.obscuration = obscuration
+
+        # Use the RadialProfile._parse_sizes() method to initialize size parameters
+        RadialProfile._parse_sizes(self, lam_over_D=lam_over_D, half_light_radius=half_light_radius)
+
+        # Set the flux
+        self.flux = flux
 
         # Then build the SBProfile
         self._SBInitialize()
@@ -1552,6 +1555,130 @@ class Add(GSObject):
         self.SBProfile.add(obj.SBProfile, scale)
 
 
+class DoubleGaussian(Add):
+    """Double Gaussian, which is the sum of two Gaussian profiles and has an SBAdd in the SBProfile
+    attribute.
+
+    For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
+    documentation produced by doxygen.
+
+    Initialization
+    --------------
+    Each component of the DoubleGaussian is initialized using a flux parameter (flux1 and flux2),
+    and one of three possible size parameters
+
+        half_light_radius1
+        sigma1
+        fwhm1
+
+    (for the first component) and
+  
+        half_light_radius2
+        sigma2
+        fwhm2
+
+    (for the second component).
+
+    Example:
+    >>> dgauss_obj = Gaussian(flux1=3., flux2=1., sigma1=1., sigma2=0.5)
+    >>> dgauss_obj.half_light_radius1
+    1.1774100225154747
+    >>> dgauss_obj.half_light_radius1 = 1.
+    >>> dgauss_obj.sigma1
+    0.8493218002880191
+
+    Attempting to initialize with more than one size parameter for each component is ambiguous,
+    and will raise a TypeError exception.
+
+    Methods
+    -------
+    The DoubleGaussian is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
+    """
+    
+    # Defining the descriptors for storing object parameters
+    flux1 = descriptors.SimpleParam(
+        "flux1", group="optional", default=None,
+        doc="Flux for the first of the two Gaussian components of the DoubleGaussian.")
+
+    flux2 = descriptors.SimpleParam(
+        "flux1", group="optional", default=None,
+        doc="Flux for the second of the two Gaussian components of the DoubleGaussian.")
+
+    half_light_radius1 = descriptors.SimpleParam(
+        "half_light_radius1", group="optional",
+        doc="Half light radius for the first of the two Gaussian components of the "+
+        "DoubleGaussian, kept updated with the other size attributes.")
+
+    half_light_radius2 = descriptors.SimpleParam(
+        "half_light_radius2", group="optional",
+        doc="Half light radius for the second of the two Gaussian components of the "+
+        "DoubleGaussian, kept updated with the other size attributes.")
+
+    sigma1 = descriptors.GetSetScaleParam(
+        "sigma1", root_name="half_light_radius1", group="optional",
+        factor=1./1.1774100225154747, # factor = 1 / sqrt[2ln(2)]
+        doc="Scale radius sigma for the first of the two Gaussian components of the "+
+        "DoubleGaussian, kept updated with the other size attributes.")
+
+    sigma2 = descriptors.GetSetScaleParam(
+        "sigma2", root_name="half_light_radius2", group="optional",
+        factor=1./1.1774100225154747, # factor = 1 / sqrt[2ln(2)]d v
+        doc="Scale radius sigma for the second of the two Gaussian components of the "+
+        "DoubleGaussian, kept updated with the other size attributes.")
+
+    fwhm1 = descriptors.GetSetScaleParam(
+        name="fwhm1", root_name="half_light_radius1", factor=2., # strange but true...
+        group="optional", doc="FWHM for the first of the two Gaussian components of the "+
+        "DoubleGaussian, kept consistent with the other size attributes.")
+
+    fwhm2 = descriptors.GetSetScaleParam(
+        name="fwhm2", root_name="half_light_radius2", factor=2., # strange but true...
+        group="optional", doc="FWHM for the second of the two Gaussian components of the "+
+        "DoubleGaussian, kept consistent with the other size attributes.")
+
+    def _parse_sizes(self, **kwargs):
+        """
+        Convenience function to parse input size parameters within the derived class __init__
+        method.  Raises an exception if more than one input parameter kwarg is set != None.
+        """
+        size_set = False
+        for name, value in kwargs.iteritems():
+            if value != None:
+                if size_set is True:
+                    raise TypeError(
+                        "Cannot specify more than one size parameter for each component of the "+
+                        "DoubleGaussian.")
+                else:
+                    self.__setattr__(name, value)
+                    size_set = True
+        if size_set is False:
+            raise TypeError("Must specify at least one size parameter for each component of the "+
+                            "DoubleGaussian.")
+
+    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
+    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
+    def _SBInitialize(self):
+        sblist = [galsim.Gaussian(sigma=self.sigma1, flux=self.flux1),
+                  galsim.Gaussian(sigma=self.sigma2, flux=self.flux2)]
+        Add.__init__(self, sblist)
+
+    # --- Public Class methods ---
+    def __init__(self, flux1, flux2, sigma1=None, sigma2=None, fwhm1=None, fwhm2=None,
+                 half_light_radius1=None, half_light_radius2=None):
+
+        # Parse both sets of size parameters using the DoubleGaussian's modified _parse_sizes method
+        self._parse_sizes(half_light_radius1=half_light_radius1, sigma1=sigma1, fwhm1=fwhm1)
+        self._parse_sizes(half_light_radius2=half_light_radius2, sigma2=sigma2, fwhm2=fwhm2)
+
+        # Set the fluxes
+        self.flux1 = flux1
+        self.flux2 = flux2
+
+        # Then build the SBProfile
+        self._SBInitialize()
+
+
 class Convolve(GSObject):
     """@brief A class for convolving 2 or more GSObjects.
 
@@ -1666,8 +1793,9 @@ class Convolve(GSObject):
         elif len(args) == 1:
             GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile,real_space=real_space))
         elif len(args) == 2:
-            GSObject.__init__(self, galsim.SBConvolve(
-                    args[0].SBProfile,args[1].SBProfile,real_space=real_space))
+            sb1 = args[0].SBProfile
+            sb2 = args[1].SBProfile
+            GSObject.__init__(self, galsim.SBConvolve(sb1, sb2, real_space=real_space))
         else:
             # > 2 arguments.  Convert to a list of SBProfiles
             SBList = [obj.SBProfile for obj in args]
