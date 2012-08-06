@@ -89,7 +89,9 @@ struct PyImage {
             image.getYMax() - image.getYMin() + 1,
             image.getXMax() - image.getXMin() + 1
         };
-        npy_intp strides[2] = { image.getStride() * sizeof(T), sizeof(T), };
+        npy_intp strides[2];
+        strides[0] = image.getStride() * sizeof(T);
+        strides[1] = sizeof(T);
         bp::object result(
             bp::handle<>(
                 PyArray_New(

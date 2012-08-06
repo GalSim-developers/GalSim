@@ -109,7 +109,7 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
 
     Assuming a successful measurement, the most relevant pieces of information are
     my_moments.moments_sigma, which is |det(M)|^(1/4) [=sigma for a circular Gaussian] and
-    my_moments.observed_shape, which is a C++ Shear.  Methods of the Shear class can be used to
+    my_moments.observed_shape, which is a C++ CppShear.  Methods of the Shear class can be used to
     get the distortion (e1, e2) = (a^2-b^2)/(a^2+b^2), i.e. my_moments.observed_shape.getE1() -- or,
     to get the shear g, the conformal shear eta, and so on.
 

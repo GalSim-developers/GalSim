@@ -12,7 +12,7 @@
 #include "TMV.h"
 
 #include "Std.h"
-#include "Shear.h"
+#include "CppShear.h"
 
 namespace galsim {
 
@@ -503,7 +503,7 @@ namespace galsim {
 
     // Shear:
     LTransform MakeLTransform(
-        Shear eta, int orderOut, int orderIn, bool coordShift=false);
+        CppShear eta, int orderOut, int orderIn, bool coordShift=false);
 
     // Dilation:
     LTransform MakeLTransform(
@@ -520,7 +520,7 @@ namespace galsim {
     // Combination of above 3 (specify intermediate precision if 
     //     the default of max(out,in) is not wanted):
     LTransform MakeLTransform(
-        const Ellipse& e, int orderOut, int orderIn,
+        const CppEllipse& e, int orderOut, int orderIn,
         bool coordShift=false, int orderIntermediate=-1);
 
     // Convolution with PSF:

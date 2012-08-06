@@ -21,6 +21,7 @@ SBInterpolatedImage.cpp
 SBDeconvolve.cpp
 SBKolmogorov.cpp
 Shear.cpp
+CppShear.cpp
 StringStuff.cpp
 Table.cpp
 RealSpaceConvolve.cpp

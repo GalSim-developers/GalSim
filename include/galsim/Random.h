@@ -51,7 +51,7 @@ namespace galsim {
 
         for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
             ImIter ee = data.rowEnd(y);
-            for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += dev(); }
+            for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += T(dev()); }
         }
     }
 

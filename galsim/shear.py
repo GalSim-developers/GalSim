@@ -6,9 +6,9 @@ from . import _galsim
 """
 @brief A class to represent shears in a variety of ways.
 
-The python Shear class can be initialized in a variety of ways to represent shape distortions. All
-arguments must be named.  Given semi-major and semi-minor axes a and b, we can define multiple shape
-measurements:
+The python Shear class (galsim.Shear) can be initialized in a variety of ways to represent shape
+distortions. All arguments must be named.  Given semi-major and semi-minor axes a and b, we can
+define multiple shape measurements:
 
 reduced shear |g| = (a - b)/(a + b)
 distortion |e| = (a^2 - b^2)/(a^2 + b^2)
@@ -44,18 +44,19 @@ s = galsim.Shear(e=0.3, beta=galsim.Angle(30.0*galsim.degrees))
 There can be no mixing and matching, e.g., specifying g1 and e2.  It is permissible to only specify
 one of two components, with the other assumed to be zero.  If a magnitude such as e, g, eta, or q is
 specified, then beta is also required to be specified.  It is possible to initialize a Shear with
-zero reduced shear by specifying no args or kwargs, i.e. galsim.Shear().
+zero reduced shear by specifying no args or kwargs, i.e. galsim.Shear().  The galsim.Shear contains
+a C++ CppShear object, and operations on Shear rely on wrapped methods of the CppShear.
 """
 class Shear:
     def __init__(self, *args, **kwargs):
         import numpy as np
 
-        # unnamed arg has to be a _Shear
+        # unnamed arg has to be a _CppShear
         if len(args) == 1:
-            if isinstance(args[0], _galsim._Shear):
+            if isinstance(args[0], _galsim._CppShear):
                 self._shear = args[0]
             else:
-                raise TypeError("Unnamed argument to initialize Shear must be a _Shear!")
+                raise TypeError("Unnamed argument to initialize Shear must be a _CppShear!")
         elif len(args) > 1:
             raise TypeError("Too many unnamed arguments to initialize Shear: %d"%len(args))
         else:
@@ -72,13 +73,13 @@ class Shear:
 
             # first case: an empty constructor (no args/kwargs)
             if not kwargs:
-                use_shear = _galsim._Shear(0.0, 0.0)
+                use_shear = _galsim._CppShear(0.0, 0.0)
             elif 'g1' in kwargs or 'g2' in kwargs:
                 g1 = kwargs.pop('g1', 0.)
                 g2 = kwargs.pop('g2', 0.)
                 g = np.sqrt(g1**2 + g2**2)
                 if g < 1:
-                    use_shear = _galsim._Shear(g1, g2)
+                    use_shear = _galsim._CppShear(g1, g2)
                 else:
                     raise ValueError("Requested shear exceeds 1: %f"%g)
             elif 'e1' in kwargs or 'e2' in kwargs:
@@ -86,14 +87,14 @@ class Shear:
                 e2 = kwargs.pop('e2', 0.)
                 e = np.sqrt(e1**2 + e2**2)
                 if e < 1:
-                    use_shear = _galsim._Shear()
+                    use_shear = _galsim._CppShear()
                     use_shear.setE1E2(e1, e2)
                 else:
                     raise ValueError("Requested distortion exceeds 1: %s"%e)
             elif 'eta1' in kwargs or 'eta2' in kwargs:
                 eta1 = kwargs.pop('eta1', 0.)
                 eta2 = kwargs.pop('eta2', 0.)
-                use_shear = _galsim._Shear()
+                use_shear = _galsim._CppShear()
                 use_shear.setEta1Eta2(eta1, eta2)
             elif 'g' in kwargs:
                 if 'beta' not in kwargs:
@@ -108,7 +109,7 @@ class Shear:
                     raise ValueError("Requested |shear| is outside [0,1]: %f"%g)
                 g1 = np.cos(2.*beta.rad())*g
                 g2 = np.sin(2.*beta.rad())*g
-                use_shear = _galsim._Shear(g1, g2)
+                use_shear = _galsim._CppShear(g1, g2)
             elif 'e' in kwargs:
                 if 'beta' not in kwargs:
                     raise TypeError(
@@ -120,7 +121,7 @@ class Shear:
                 e = kwargs.pop('e')
                 if e > 1 or e < 0:
                     raise ValueError("Requested distortion is outside [0,1]: %f"%e)
-                use_shear = _galsim._Shear()
+                use_shear = _galsim._CppShear()
                 use_shear.setEBeta(e, beta)
             elif 'eta' in kwargs:
                 if 'beta' not in kwargs:
@@ -133,7 +134,7 @@ class Shear:
                 eta = kwargs.pop('eta')
                 if eta < 0:
                     raise ValueError("Requested eta is below 0: %f"%e)
-                use_shear = _galsim._Shear()
+                use_shear = _galsim._CppShear()
                 use_shear.setEtaBeta(eta, beta)
             elif 'q' in kwargs:
                 if 'beta' not in kwargs:
@@ -146,7 +147,7 @@ class Shear:
                 q = kwargs.pop('q')
                 if q <= 0 or q > 1:
                     raise ValueError("Cannot use requested axis ratio of %f!"%q)
-                use_shear = _galsim._Shear()
+                use_shear = _galsim._CppShear()
                 eta = -np.log(q)
                 use_shear.setEtaBeta(eta, beta)
             elif 'beta' in kwargs:
@@ -160,7 +161,8 @@ class Shear:
 
             self._shear = use_shear
 
-    #### propagate through all the methods from C++
+    # below, we propagate through all the methods from C++
+
     # define all the methods for setting shear values
     def setE1E2(self, e1=0.0, e2=0.0): self._shear.setE1E2(e1, e2)
     def setEBeta(self, e=0.0, beta=None): self._shear.setEBeta(e, beta)
@@ -193,8 +195,12 @@ class Shear:
     def __add__(self, other): return Shear(self._shear + other._shear)
     # order of operations: shear by -other._shear, then by self._shear
     def __sub__(self, other): return Shear(self._shear - other._shear)
-    def __iadd__(self, other): return Shear(self._shear + other._shear)
-    def __isub__(self, other): return Shear(self._shear - other._shear)
+    def __iadd__(self, other):
+        self._shear += other._shear
+        return self
+    def __isub__(self, other):
+        self._shear -= other._shear
+        return self
     def rotationWith(self, other): return self._shear.rotationWith(other)
     def __eq__(self, other): return self._shear == other._shear
     def __ne__(self, other): return self._shear != other._shear
