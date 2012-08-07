@@ -109,11 +109,10 @@ namespace galsim {
         
         double _lam_over_r0; ///< lambda / r0
         double _k0; ///< Derived value so MTF is exp(-(k/k0)^5/3)
-        double _flux; ///< Flux.
-
         double _k0sq; ///< Calculated value: k0*k0
         double _inv_k0sq; ///< Calculated value: 1/k0^2
 
+        double _flux; ///< Flux.
         double _xnorm; ///< Calculated value for normalizing xValues returned from Info class.
 
         /// One static `KolmogorovInfo` object for whole program.

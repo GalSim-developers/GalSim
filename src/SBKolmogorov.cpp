@@ -49,26 +49,30 @@ namespace galsim {
     SBKolmogorov::SBKolmogorovImpl::SBKolmogorovImpl(double lam_over_r0, double flux) :
         _lam_over_r0(lam_over_r0), 
         _k0(2.992934 / lam_over_r0), 
-        _flux(flux), 
         _k0sq(_k0*_k0),
-        _inv_k0sq(1./_k0sq)
+        _inv_k0sq(1./_k0sq),
+        _flux(flux), 
+        _xnorm(_flux * _k0sq)
     {
         dbg<<"SBKolmogorov:\n";
         dbg<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;
         dbg<<"k0 = "<<_k0<<std::endl;
-        dbg<<"flux = "<<_flux<<std::endl;
         dbg<<"k0sq = "<<_k0sq<<std::endl;
         dbg<<"inv_k0sq = "<<_inv_k0sq<<std::endl;
+        dbg<<"flux = "<<_flux<<std::endl;
+        dbg<<"xnorm = "<<_xnorm<<std::endl;
     }
 
     double SBKolmogorov::SBKolmogorovImpl::xValue(const Position<double>& p) const 
     {
-        dbg<<"xValue: p = "<<p<<std::endl;
         double r = sqrt(p.x*p.x+p.y*p.y) * _k0;
-        dbg<<"r = "<<sqrt(p.x*p.x+p.y*p.y)<<" * "<<_k0<<" = "<<r<<std::endl;
-        dbg<<"return "<<_flux<<" * "<<_k0sq<<" * "<<_info.xValue(r)<<" = "<<
-            (_flux * _k0sq * _info.xValue(r))<<std::endl;
-        return _flux * _k0sq * _info.xValue(r);
+#ifdef DEBUGLOGGING
+        xdbg<<"xValue: p = "<<p<<std::endl;
+        xdbg<<"r = "<<sqrt(p.x*p.x+p.y*p.y)<<" * "<<_k0<<" = "<<r<<std::endl;
+        xdbg<<"return "<<_flux<<" * "<<_k0sq<<" * "<<_info.xValue(r)<<" = "<<
+            (_xnorm * _info.xValue(r))<<std::endl;
+#endif
+        return _xnorm * _info.xValue(r);
     }
 
     double KolmogorovInfo::xValue(double r) const 
@@ -77,14 +81,16 @@ namespace galsim {
     std::complex<double> SBKolmogorov::SBKolmogorovImpl::kValue(const Position<double>& k) const
     {
         double ksq = (k.x*k.x+k.y*k.y) * _inv_k0sq;
-        dbg<<"Kolmogorov kValue: ksq = "<<(k.x*k.x + k.y*k.y)<<" * "<<_inv_k0sq<<" = "<<ksq<<std::endl;
-        dbg<<"flux = "<<_flux<<std::endl;
-        dbg<<"info.kval = "<<_info.kValue(ksq)<<std::endl;
-        dbg<<"return "<<_flux * _info.kValue(ksq)<<std::endl;
+#ifdef DEBUGLOGGING
+        xdbg<<"Kolmogorov kValue: ksq = "<<(k.x*k.x + k.y*k.y)<<" * "<<_inv_k0sq<<" = "<<ksq<<std::endl;
+        xdbg<<"flux = "<<_flux<<std::endl;
+        xdbg<<"info.kval = "<<_info.kValue(ksq)<<std::endl;
+        xdbg<<"return "<<_flux * _info.kValue(ksq)<<std::endl;
         double k1 = sqrt(k.x*k.x+k.y*k.y);
         double dk = 6.8839 * std::pow(_lam_over_r0 * k1 / (2.*M_PI),5./3.);
         double tk = exp(-0.5*dk);
-        dbg<<"k = "<<k1<<", D(k) = "<<dk<<", T(k) = "<<tk<<std::endl;
+        xdbg<<"k = "<<k1<<", D(k) = "<<dk<<", T(k) = "<<tk<<std::endl;
+#endif
         return _flux * _info.kValue(ksq);
     }
 
@@ -181,7 +187,7 @@ namespace galsim {
         dbg<<"maxK = "<<_maxk<<std::endl;
 
         // Build the table for the radial function.
-        double dr = 0.1/_maxk;
+        double dr = 0.5/_maxk;
         // Start with f(0), which is analytic:
         // According to Wolfram Alpha:
         // Integrate[k*exp(-k^5/3),{k,0,infinity}] = 3/5 Gamma(6/5)

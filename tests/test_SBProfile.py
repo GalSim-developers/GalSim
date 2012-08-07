@@ -921,6 +921,9 @@ def test_kolmogorov():
     # This savedImg was created from the SBKolmogorov implementation in
     # commit
     # It would be nice to get an independent calculation here...
+    #savedImg = galsim.ImageF(128,128)
+    #mySBP.draw(image=savedImg, dx=0.2)
+    #savedImg.write(os.path.join(imgdir, "kolmogorov.fits"))
     savedImg = galsim.fits.read(os.path.join(imgdir, "kolmogorov.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
@@ -964,7 +967,7 @@ def test_kolmogorov_properties():
     np.testing.assert_equal(psf.centroid(), cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(psf.maxK(), 8.6440505245909858, 9)
-    np.testing.assert_almost_equal(psf.stepK(), 0.37098477630210625, 9)
+    np.testing.assert_almost_equal(psf.stepK(), 0.3437479193077736, 9)
     np.testing.assert_almost_equal(psf.kValue(cen), flux+0j)
     np.testing.assert_almost_equal(psf.getLamOverR0(), lor)
     np.testing.assert_almost_equal(psf.getHalfLightRadius(), lor * 0.554811)

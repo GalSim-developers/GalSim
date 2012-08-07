@@ -609,7 +609,8 @@ def Script4():
             coma1 = 0.2, coma2 = 0.1,
             spher = -0.3) 
     psf4 = galsim.Convolve([atmos,optics])
-    atmos = galsim.AtmosphericPSF(fwhm = psf_fwhm)
+    #atmos = galsim.AtmosphericPSF(fwhm = psf_fwhm)
+    atmos = galsim.Kolmogorov(fwhm = psf_fwhm)
     optics = galsim.Airy(lam_over_D = 0.3 * psf_fwhm) 
     psf5 = galsim.Convolve([atmos,optics])
     psfs = [psf1, psf2, psf3, psf4, psf5]
@@ -642,7 +643,6 @@ def Script4():
     all_images = []
     k = 0
     for ipsf in range(len(psfs)):
-        ipsf = 4
         psf = psfs[ipsf]
         psf_name = psf_names[ipsf]
         for igal in range(len(gals)):
