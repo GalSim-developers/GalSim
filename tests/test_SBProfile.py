@@ -919,7 +919,7 @@ def test_kolmogorov():
     t1 = time.time()
     mySBP = galsim.SBKolmogorov(lam_over_r0=1.5, flux=1.8)
     # This savedImg was created from the SBKolmogorov implementation in
-    # commit
+    # commit c8efd74d1930157b1b1ffc0bfcfb5e1bf6fe3201
     # It would be nice to get an independent calculation here...
     #savedImg = galsim.ImageF(128,128)
     #mySBP.draw(image=savedImg, dx=0.2)
