@@ -10,6 +10,15 @@ std::ostream* dbgout = new std::ofstream("debug.out");
 int verbose_level = 2;
 #endif
 
+// Uncomment this to do the calculation that solves for the conversion between lam_over_r0
+// and fwhm and hlr.
+// (Solved values are put into Kolmogorov class in galsim/base.py = 0.975865, 0.554811)
+//#define SOLVE_FWHM_HLR
+
+#ifdef SOLVE_FWHM_HLR
+#include "Solve.h"
+#endif
+
 namespace galsim {
 
     // A static variable for the SBKolmogorov class:
@@ -42,14 +51,24 @@ namespace galsim {
         _k0(2.992934 / lam_over_r0), 
         _flux(flux), 
         _k0sq(_k0*_k0),
-        _inv_k0sq(1./_k0sq),
-        _xnorm(1.)  // TODO: This isn't right need to figure out what the right norm is.
-    {}
+        _inv_k0sq(1./_k0sq)
+    {
+        dbg<<"SBKolmogorov:\n";
+        dbg<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;
+        dbg<<"k0 = "<<_k0<<std::endl;
+        dbg<<"flux = "<<_flux<<std::endl;
+        dbg<<"k0sq = "<<_k0sq<<std::endl;
+        dbg<<"inv_k0sq = "<<_inv_k0sq<<std::endl;
+    }
 
     double SBKolmogorov::SBKolmogorovImpl::xValue(const Position<double>& p) const 
     {
+        dbg<<"xValue: p = "<<p<<std::endl;
         double r = sqrt(p.x*p.x+p.y*p.y) * _k0;
-        return _xnorm * _info.xValue(r);
+        dbg<<"r = "<<sqrt(p.x*p.x+p.y*p.y)<<" * "<<_k0<<" = "<<r<<std::endl;
+        dbg<<"return "<<_flux<<" * "<<_k0sq<<" * "<<_info.xValue(r)<<" = "<<
+            (_flux * _k0sq * _info.xValue(r))<<std::endl;
+        return _flux * _k0sq * _info.xValue(r);
     }
 
     double KolmogorovInfo::xValue(double r) const 
@@ -58,6 +77,14 @@ namespace galsim {
     std::complex<double> SBKolmogorov::SBKolmogorovImpl::kValue(const Position<double>& k) const
     {
         double ksq = (k.x*k.x+k.y*k.y) * _inv_k0sq;
+        dbg<<"Kolmogorov kValue: ksq = "<<(k.x*k.x + k.y*k.y)<<" * "<<_inv_k0sq<<" = "<<ksq<<std::endl;
+        dbg<<"flux = "<<_flux<<std::endl;
+        dbg<<"info.kval = "<<_info.kValue(ksq)<<std::endl;
+        dbg<<"return "<<_flux * _info.kValue(ksq)<<std::endl;
+        double k1 = sqrt(k.x*k.x+k.y*k.y);
+        double dk = 6.8839 * std::pow(_lam_over_r0 * k1 / (2.*M_PI),5./3.);
+        double tk = exp(-0.5*dk);
+        dbg<<"k = "<<k1<<", D(k) = "<<dk<<", T(k) = "<<tk<<std::endl;
         return _flux * _info.kValue(ksq);
     }
 
@@ -76,16 +103,72 @@ namespace galsim {
     { return exp(-std::pow(ksq,5./6.)); }
 
     // Integrand class for the Hankel transform of Kolmogorov
-    class KolmogorovIntegrand : public std::unary_function<double,double>
+    class KolmIntegrand : public std::unary_function<double,double>
     {
     public:
-        KolmogorovIntegrand(double r) : _r(r) {}
+        KolmIntegrand(double r) : _r(r) {}
         double operator()(double k) const
         { return k*std::exp(-std::pow(k, 5./3.))*j0(k*_r); }
 
     private:
         double _r;
     };
+
+    // Perform the integral
+    class KolmXValue : public std::unary_function<double,double>
+    {
+    public:
+        double operator()(double r) const
+        { 
+            const double integ_maxK = integ::MOCK_INF;
+            KolmIntegrand I(r);
+            return integ::int1d(I, 0., integ_maxK,
+                                sbp::integration_relerr, sbp::integration_abserr);
+        }
+    };
+
+#ifdef SOLVE_FWHM_HLR
+    // XValue - target  (used for solving for fwhm)
+    class KolmTargetValue : public std::unary_function<double,double>
+    {
+    public:
+        KolmTargetValue(double target) : _target(target) {}
+        double operator()(double r) const { return f(r) - _target; }
+    private:
+        KolmXValue f;
+        double _target;
+    };
+
+    class KolmXValueTimes2piR : public std::unary_function<double,double>
+    {
+    public:
+        double operator()(double r) const
+        { return f(r) * r; }
+    private:
+        KolmXValue f;
+    };
+
+    class KolmEnclosedFlux : public std::unary_function<double,double>
+    {
+    public:
+        double operator()(double r) const 
+        {
+            return integ::int1d(f, 0., r, sbp::integration_relerr, sbp::integration_abserr);
+        }
+    private:
+        KolmXValueTimes2piR f;
+    };
+
+    class KolmTargetFlux : public std::unary_function<double,double>
+    {
+    public:
+        KolmTargetFlux(double target) : _target(target) {}
+        double operator()(double r) const { return f(r) - _target; }
+    private:
+        KolmEnclosedFlux f;
+        double _target;
+    };
+#endif
      
     // Constructor to initialize Kolmogorov constants and xvalue lookup table
     KolmogorovInfo::KolmogorovInfo() : _radial(TableDD::spline)
@@ -97,50 +180,76 @@ namespace galsim {
         _maxk = std::pow(-std::log(sbp::kvalue_accuracy),3./5.);
         dbg<<"maxK = "<<_maxk<<std::endl;
 
-        double integ_maxR = integ::MOCK_INF;
         // Build the table for the radial function.
-        double dr = 0.1;
+        double dr = 0.1/_maxk;
         // Start with f(0), which is analytic:
         // According to Wolfram Alpha:
-        // Integrate[k*exp(-k^5/3),{k,0,infinity}] = 1/5 3^(2/5) Gamma(2/5)
-        //    = 0.68844821404369641022575576988...
-        double prev = 0.68844821404369641022575576988;
-        _radial.addEntry(0.,prev);
+        // Integrate[k*exp(-k^5/3),{k,0,infinity}] = 3/5 Gamma(6/5)
+        //    = 0.55090124543985636638457099311149824;
+        double val = 0.55090124543985636638457099311149824 / (2.*M_PI);
+        _radial.addEntry(0.,val);
+        xdbg<<"f(0) = "<<val<<std::endl;
         // Along the way accumulate the flux integral to determine the radius
         // that encloses (1-alias_threshold) of the flux.
         double sum = 0.;
-        double thresh = (1.-sbp::alias_threshold) / (2.*M_PI*dr);
+        double thresh1 = (1.-sbp::alias_threshold) / (2.*M_PI*dr);
+        double thresh2 = 0.999 / (2.*M_PI*dr);
         double R = 0.;
-        // Continue until at least 5 in a row with f(r) < xvalue_threshold
-        int n_below_thresh = 0;
-        for (double r = dr; ; r += dr) {
-            KolmogorovIntegrand I(r);
-            double val = integ::int1d(
-                I, 0., integ_maxR, sbp::integration_relerr, sbp::integration_abserr);
+        // Continue until accumulate 0.999 of the flux
+        KolmXValue xval_func;
+        for (double r = dr; sum < thresh2; r += dr) {
+            val = xval_func(r) / (2.*M_PI);
             xdbg<<"f("<<r<<") = "<<val<<std::endl;
             _radial.addEntry(r,val);
 
-            // Accumulate int(r*f(r)) / dr  (i.e. don't include 2*pi*dr factors as part of sum)
+            // Accumulate int(r*f(r)) / dr  (i.e. don't include 2*pi*dr factor as part of sum)
             sum += r * val;
-            xdbg<<"sum -> "<<sum<<std::endl;
-            if (R == 0. && sum > thresh) R = r;
-
-            if (std::abs(val) > sbp::xvalue_accuracy) n_below_thresh = 0;
-            else ++n_below_thresh;
-            if (n_below_thresh == 5) break;
-            prev = val;
+            xdbg<<"sum = "<<sum<<"  thresh1 = "<<thresh1<<"  thesh2 = "<<thresh2<<std::endl;
+            xdbg<<"sum*2*pi*dr "<<sum*2.*M_PI*dr<<std::endl;
+            if (R == 0. && sum > thresh1) R = r;
         }
         dbg<<"Done loop to build radial function.\n";
         dbg<<"R = "<<R<<std::endl;
         _stepk = M_PI/R;
-        dbg<<"stepK = "<<_stepk<<std::endl;
-        dbg<<"sum = "<<sum<<std::endl;
-        dbg<<"sum * 2pi * dr = "<<sum*2.*M_PI*dr<<std::endl;
+        dbg<<"stepk = "<<_stepk<<std::endl;
+        dbg<<"sum*2*pi*dr = "<<sum*2.*M_PI*dr<<"   (should ~= 0.999)\n";
 
         // Next, set up the sampler for photon shooting
         std::vector<double> range(2,0.);
         range[1] = _radial.argMax();
         _sampler.reset(new OneDimensionalDeviate(_radial, range, true));
+
+#ifdef SOLVE_FWHM_HLR
+        // Improve upon the conversion between lam_over_r0 and fwhm:
+        KolmTargetValue fwhm_func(0.55090124543985636638457099311149824 / 2.);
+        double r1 = 1.4;
+        double r2 = 1.5;
+        Solve<KolmTargetValue> fwhm_solver(fwhm_func,r1,r2);
+        fwhm_solver.setMethod(Brent);
+        double rd = fwhm_solver.root();
+        xdbg<<"Root is "<<rd<<std::endl;
+        // This is in units of 1/k0.  k0 = 2.992934 / lam_over_r0
+        // It's also the half-width hal-max, so * 2 to get fwhm.
+        xdbg<<"fwhm = "<<rd * 2. / 2.992934<<" * lam_over_r0\n";
+
+        // Confirm that flux function gets unit flux when integrated to infinity:
+        KolmEnclosedFlux enc_flux;
+        for(double rmax = 0.; rmax < 20.; rmax += 1.) {
+            dbg<<"Flux enclosed by r="<<rmax<<" = "<<enc_flux(rmax)<<std::endl;
+        }
+
+        // Next find the conversion between lam_over_r0 and hlr:
+        KolmTargetFlux hlr_func(0.5);
+        r1 = 1.6;
+        r2 = 1.7;
+        Solve<KolmTargetFlux> hlr_solver(hlr_func,r1,r2);
+        hlr_solver.setMethod(Brent);
+        rd = hlr_solver.root();
+        xdbg<<"Root is "<<rd<<std::endl;
+        dbg<<"Flux enclosed by r="<<rd<<" = "<<enc_flux(rd)<<std::endl;
+        // This is in units of 1/k0.  k0 = 2.992934 / lam_over_r0
+        xdbg<<"hlr = "<<rd / 2.992934<<" * lam_over_r0\n";
+#endif
     }
 
     boost::shared_ptr<PhotonArray> KolmogorovInfo::shoot(int N, UniformDeviate ud) const

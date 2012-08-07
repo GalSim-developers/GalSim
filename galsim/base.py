@@ -693,6 +693,75 @@ class Airy(GSObject):
         return self.SBProfile.getLamOverD()
 
 
+
+class Kolmogorov(GSObject):
+    """@brief GalSim Kolmogorov, which has an SBKolmogorov in the SBProfile attribute.
+       
+    Represents a long exposure Kolmogorov PSF.
+
+    Initialization
+    --------------
+    @code
+    psf = galsim.Kolmogorov(lam_over_r0)
+    @endcode
+
+    Initialized psf as a galsim.Kolmogorov() instance.
+
+    @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
+                           consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
+                           PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
+                           values for the Fried parameter are on the order of 10 cm for most 
+                           observatories and up to 20 cm for excellent sites. The values are 
+                           usually quoted at lambda = 500 nm and r0 depends on wavelength as
+                           [r0 ~ lambda^(-6/5)].
+    @param fwhm            FWHM of the Kolmogorov PSF.
+                           Either fwhm or lam_over_r0 (and only one) must be specified.
+    @param flux            optional flux value [default = 1]
+    """
+    # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
+    # In SBKolmogorov.cpp we refine this factor to 0.975865
+    _fwhm_factor = 0.975865
+    # Similarly, SBKolmogorov calculates the relation between lambda/r0 and half-light radius
+    _hlr_factor = 0.554811
+ 
+    def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.):
+        if fwhm is not None :
+            if lam_over_r0 is not None or half_light_radius is not None:
+                raise TypeError(
+                        "Only one of lam_over_r0, fwhm, and half_light_radius may be " +
+                        "specified for Kolmogorov")
+            else:
+                lam_over_r0 = fwhm / Kolmogorov._fwhm_factor
+        elif half_light_radius is not None:
+            if lam_over_r0 is not None:
+                raise TypeError(
+                        "Only one of lam_over_r0, fwhm, and half_light_radius may be " +
+                        "specified for Kolmogorov")
+            else:
+                lam_over_r0 = half_light_radius / Kolmogorov._hlr_factor
+        elif lam_over_r0 is None:
+                raise TypeError(
+                        "One of lam_over_r0, fwhm, or half_light_radius must be " +
+                        "specified for Kolmogorov")
+
+        GSObject.__init__(self, galsim.SBKolmogorov(lam_over_r0=lam_over_r0, flux=flux))
+ 
+    def getLamOverR0(self):
+        """Return the lam_over_r0 parameter of this Kolmogorov profile.
+        """
+        return self.SBProfile.getLamOverR0()
+    
+    def getFWHM(self):
+        """Return the FWHM of this Kolmogorov profile
+        """
+        return self.SBProfile.getLamOverR0() * Kolmogorov._fwhm_factor
+
+    def getHalfLightRadius(self):
+        """Return the half light radius of this Kolmogorov profile
+        """
+        return self.SBProfile.getLamOverR0() * Kolmogorov._hlr_factor
+
+
 class Pixel(GSObject):
     """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
     """
@@ -1157,6 +1226,9 @@ object_param_dict = {"Gaussian":       { "required" : (),
                      "Airy":           { "required" : () ,
                                          "size"     : ("D",) ,
                                          "optional" : ("obs", "flux",)},
+                     "Kolmogorov":     { "required" : () ,
+                                         "size"     : ("lam_over_r0", "fwhm",) ,
+                                         "optional" : ("flux",)},
                      "Pixel":          { "required" : ("xw", "yw",),
                                          "size"     : (),
                                          "optional" : ("flux",) },
