@@ -1042,14 +1042,15 @@ class Airy(RadialProfile):
                 lam_over_D=self.lam_over_D, obscuration=self.obscuration, flux=self.flux))
 
     # --- Public Class methods ---
-    def __init__(self, lam_over_D=None, half_light_radius=None, obscuration=0., flux=1.):
+    def __init__(self, lam_over_D=None, half_light_radius=None, fwhm=None, obscuration=0., flux=1.):
 
         # Set obscuration. The latter must be set before the sizes to raise NotImplementedError
         # expections if half_light_radius is used with obscuration!=0.
         self.obscuration = obscuration
 
         # Use the RadialProfile._parse_sizes() method to initialize size parameters
-        RadialProfile._parse_sizes(self, lam_over_D=lam_over_D, half_light_radius=half_light_radius)
+        RadialProfile._parse_sizes(
+            self, lam_over_D=lam_over_D, half_light_radius=half_light_radius, fwhm=fwhm)
 
         # Set the flux
         self.flux = flux
