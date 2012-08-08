@@ -68,16 +68,16 @@ namespace galsim {
         double _fluxFactor; ///< Integral of total flux in terms of 'rD' units.
         double _rD_sq; ///< Calculated value: rD*rD;
         double _maxR_sq; ///< Calculated value: maxR * maxR
-        double _maxK; ///< Maximum k with kValue > 1.e-3
+        mutable double _maxK; ///< Maximum k with kValue > 1.e-3
 
-        Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
+        mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
 
         mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
 
         double (*pow_beta)(double x, double beta);
 
         /// Setup the FT Table.
-        void setupFT();
+        void setupFT() const;
 
         // Copy constructor and op= are undefined.
         SBMoffatImpl(const SBMoffatImpl& rhs);

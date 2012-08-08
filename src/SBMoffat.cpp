@@ -201,8 +201,6 @@ namespace galsim {
         else if (_beta == 4) pow_beta = &SBMoffat::pow_4;
         else if (_beta == int(_beta)) pow_beta = &SBMoffat::pow_int;
         else pow_beta = &SBMoffat::pow_gen;
-
-        setupFT();
     }
 
     double SBMoffat::SBMoffatImpl::getHalfLightRadius() const 
@@ -225,6 +223,7 @@ namespace galsim {
 
     std::complex<double> SBMoffat::SBMoffatImpl::kValue(const Position<double>& k) const 
     {
+        setupFT();
         double ksq = k.x*k.x + k.y*k.y;
         if (ksq > _ft.argMax()) return 0.;
         else return _ft(ksq);
@@ -234,13 +233,8 @@ namespace galsim {
     double SBMoffat::SBMoffatImpl::maxK() const 
     {
         // _maxK is determined during setupFT() as the last k value to have a  kValue > 1.e-3.
-#if 1
+        setupFT();
         return _maxK;
-#else
-        // Old version from Gary:
-        // Require at least 16 points across FWHM when drawing:
-        return 16.*M_PI / _FWHM;
-#endif
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should miss at 
@@ -249,7 +243,7 @@ namespace galsim {
     {
         dbg<<"Find Moffat stepK\n";
         dbg<<"beta = "<<_beta<<std::endl;
-#if 1
+        
         // The fractional flux out to radius R is (if not truncated)
         // 1 - (1+R^2)^(1-beta)
         // So solve (1+R^2)^(1-beta) = alias_threshold
@@ -267,13 +261,6 @@ namespace galsim {
             dbg<<"stepk = "<<(M_PI/R)<<std::endl;
             return M_PI / R;
         }
-#else
-        // Old version from Gary:
-        // Make FFT's periodic at 4x truncation radius or 1.5x diam at alias_threshold,
-        // whichever is smaller
-        return 2.*M_PI / std::min(4.*_maxR, 
-                                  3.*std::sqrt(std::pow(sbp::alias_threshold, -1./_beta)-1.)*_rD);
-#endif
     }
 
     // Integrand class for the Hankel transform of Moffat
@@ -291,7 +278,7 @@ namespace galsim {
         double (*pow_beta)(double x, double beta);
     };
 
-    void SBMoffat::SBMoffatImpl::setupFT()
+    void SBMoffat::SBMoffatImpl::setupFT() const
     {
         if (_ft.size() > 0) return;
 
