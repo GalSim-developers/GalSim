@@ -45,10 +45,10 @@ def kolmogorov_mtf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
                            usually quoted at lambda = 500 nm and r0 depends weakly on wavelength
                            [r0 ~ lambda^(-6/5)].
     """
-    amtf = kolmogorov_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
+    amtf = kolmogorov_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0, flux=flux)
     return galsim.ImageViewD(amtf.astype(np.float64))
 
-def kolmogorov_psf(array_shape=(256,256), dx=1., lam_over_r0=1.):
+def kolmogorov_psf(array_shape=(256,256), dx=1., lam_over_r0=1., flux=1.):
     """@brief Return numpy array containing long exposure Kolmogorov PSF.
     
     Parameters
@@ -62,14 +62,15 @@ def kolmogorov_psf(array_shape=(256,256), dx=1., lam_over_r0=1.):
                            observatories and up to 20 cm for excellent sites. The values are 
                            usually quoted at lambda = 500 nm and r0 depends on wavelength
                            [r0 ~ lambda^(-6/5)].
+    @param flux            total flux of the profile [default flux=1.]
     """
     amtf = kolmogorov_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
     ftmtf = np.fft.fft2(amtf)
     im = galsim.utilities.roll2d((ftmtf * ftmtf.conj()).real, (array_shape[0] / 2,
                                                                array_shape[1] / 2))
-    return im / (im.sum() * dx**2)
+    return im * (flux / (im.sum() * dx**2))
     
-def kolmogorov_psf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
+def kolmogorov_psf_image(array_shape=(256, 256), dx=1., lam_over_r0=1., flux=1.):
     """@brief Return long exposure Kolmogorov PSF as an ImageViewD.
 
     Parameters
@@ -79,6 +80,7 @@ def kolmogorov_psf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
     @param lam_over_r0     lambda / r0 in the physical units adopted for dx (user responsible for 
                            consistency). r0 is the Fried parameter. Typical values for the 
                            Fried parameter are on the order of 10 cm for most observatories.
+    @param flux            total flux of the profile [default flux=1.]
     """
-    array = kolmogorov_psf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
+    array = kolmogorov_psf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0, flux=flux)
     return galsim.ImageViewD(array.astype(np.float64))
