@@ -851,6 +851,7 @@ class AtmosphericPSF(RadialProfile):
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
                            [default = 1.5], setting oversampling < 1 will produce aliasing in the 
                            PSF (not good).
+    @param flux            total flux of the profile [default flux=1.]
     """
 
     # Defining the size parameters for the AtmosphericPSF:
@@ -899,8 +900,8 @@ class AtmosphericPSF(RadialProfile):
         # Odd array to center the interpolant on the centroid. Might want to pad this later to
         # make a nice size array for FFT, but for typical seeing, arrays will be very small.
         npix = 1 + 2 * (np.ceil(np.pi / stepk_kolmogorov)).astype(int)
-        atmoimage = galsim.atmosphere.kolmogorov_psf_image(array_shape=(npix, npix), dx=dx_lookup, 
-                                                           lam_over_r0=self.lam_over_r0)
+        atmoimage = galsim.atmosphere.kolmogorov_psf_image(
+            array_shape=(npix, npix), dx=dx_lookup, lam_over_r0=self.lam_over_r0, flux=self.flux)
         # Run checks on the interpolant and build default if None
         if self.interpolant is None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1e-4)
@@ -914,7 +915,7 @@ class AtmosphericPSF(RadialProfile):
             self, galsim.SBInterpolatedImage(atmoimage, self.interpolant, dx=dx_lookup))
 
     # --- Public Class methods ---
-    def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5):
+    def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5, flux=1.):
 
         # Initialize the interpolant and oversampling parameters
         self.interpolant = interpolant
@@ -922,6 +923,9 @@ class AtmosphericPSF(RadialProfile):
         
         # Use the RadialProfile._parse_sizes() method to initialize size parameters
         RadialProfile._parse_sizes(self, lam_over_r0=lam_over_r0, fwhm=fwhm)
+
+        # Set the flux
+        self.flux = flux
 
         # Then build the SBProfile
         self._SBInitialize()
@@ -1038,7 +1042,7 @@ class Airy(RadialProfile):
                 lam_over_D=self.lam_over_D, obscuration=self.obscuration, flux=self.flux))
 
     # --- Public Class methods ---
-    def __init__(self, lam_over_D=lam_over_D, half_light_radius=None, obscuration=0., flux=1.):
+    def __init__(self, lam_over_D=None, half_light_radius=None, obscuration=0., flux=1.):
 
         # Set obscuration. The latter must be set before the sizes to raise NotImplementedError
         # expections if half_light_radius is used with obscuration!=0.
