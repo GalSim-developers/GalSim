@@ -21,7 +21,7 @@ test_scale = 1.9
 test_sersic_n = [1.4, 2.6]
 test_lor0 = 1.9
 
-# moffat params and reference values
+# Moffat params and reference values
 test_beta = 2.5
 test_trunc = 13.
 
@@ -34,12 +34,24 @@ moffat_ref_hlr_from_fwhm = 1.285657994217926   # calculated from SBProfile (regr
 moffat_ref_scale_from_hlr = 2.494044174293422  # calculated from SBProfile (regression test only)
 moffat_ref_fwhm_from_hlr = 2.8195184757176097 # calculated from SBProfile (regression test only)
 
-# atmospheric params and reference values
+# AtmosphericPSF params and reference values
 test_oversampling = 1.7
 
 atmos_ref_fwhm_from_lor0 = test_lor0 * 0.976
 atmos_ref_lor0_from_fwhm = test_fwhm / 0.976
 
+# Airy params and reference values
+test_loD = 1.9
+test_obscuration = 0.32
+
+airy_ref_hlr_from_loD = test_loD * 0.5348321477242647
+airy_ref_fwhm_from_loD = test_loD * 1.028993969962188
+
+airy_ref_loD_from_hlr = test_hlr / 0.5348321477242647
+airy_ref_fwhm_from_hlr = test_hlr * 1.028993969962188 / 0.5348321477242647
+
+airy_ref_hlr_from_fwhm = test_fwhm * 0.5348321477242647 / 1.028993969962188
+airy_ref_loD_from_fwhm = test_fwhm / 1.028993969962188
  
 # for flux normalization tests
 test_flux = 1.9
@@ -192,6 +204,61 @@ def test_atmos_param_consistency():
         obj.fwhm, test_fwhm, decimal=param_decimal,
         err_msg="FWHM param and attribute inconsistent.")
 
-    
-    
+def test_airy_param_consistency():
+    # init with lam_over_D and flux with obs = 0.
+    obj = galsim.Airy(lam_over_D=test_loD, flux=test_flux)
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.lam_over_D, test_loD, decimal=param_decimal,
+        err_msg="Lambda / D param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius, airy_ref_hlr_from_loD, decimal=param_decimal,
+        err_msg="Starting Lambda / D param and derived half_light_radius attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm, airy_ref_fwhm_from_loD, decimal=param_decimal,
+        err_msg="Starting Lambda / D param and derived FWHM attribute inconsistent.")
 
+    # init with HLR and flux with obs = 0.
+    obj = galsim.Airy(half_light_radius=test_hlr, flux=test_flux)
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius, test_hlr, decimal=param_decimal,
+        err_msg="Half light radius param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.lam_over_D, airy_ref_loD_from_hlr, decimal=param_decimal,
+        err_msg="Starting half_light_radius param and derived Lambda / D attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm, airy_ref_fwhm_from_hlr, decimal=param_decimal,
+        err_msg="Starting half_light_radius param and derived FWHM attribute inconsistent.")
+
+    # init with FWHM and flux with obs = 0.
+    obj = galsim.Airy(fwhm=test_fwhm, flux=test_flux)
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm, test_fwhm, decimal=param_decimal,
+        err_msg="FWHM param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.lam_over_D, airy_ref_loD_from_fwhm, decimal=param_decimal,
+        err_msg="Starting FWHM param and derived Lambda / D attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius, airy_ref_hlr_from_fwhm, decimal=param_decimal,
+        err_msg="Starting FWHM param and derived half_light_radius attribute inconsistent.")
+
+    # Now test with obscuration !=0, only basic tests possible at present
+    # init with lam_over_D and flux with obs = test_obscuration
+    obj = galsim.Airy(lam_over_D=test_loD, flux=test_flux, obscuration=test_obscuration)
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.lam_over_D, test_loD, decimal=param_decimal,
+        err_msg="Lambda / D param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.obscuration, test_obscuration, decimal=param_decimal,
+        err_msg="Obscuration param and attribute inconsistent.")
