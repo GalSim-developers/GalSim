@@ -37,7 +37,7 @@ moffat_ref_fwhm_from_hlr = 2.8195184757176097 # calculated from SBProfile (regre
 # atmospheric params and reference values
 test_oversampling = 1.7
 
-atmos_ref_fwhm_from_lor0 = test_lor0 * 0.967
+atmos_ref_fwhm_from_lor0 = test_lor0 * 0.976
 atmos_ref_lor0_from_fwhm = test_fwhm / 0.976
 
  
@@ -174,8 +174,23 @@ def test_atmos_param_consistency():
         obj.lam_over_r0, test_lor0, decimal=param_decimal,
         err_msg="Lambda / r0 param and attribute inconsistent.")
     np.testing.assert_almost_equal(
-        obj.fwhm, atmos_ref_lor0_from_hlr, decimal=param_decimal,
-        err_msg="Starting half_light_radius param and derived lambda / r0 attribute inconsistent.")
+        obj.fwhm, atmos_ref_fwhm_from_lor0, decimal=param_decimal,
+        err_msg="Starting lambda / r0 param and derived fwhm attribute inconsistent.")
+
+    # init with FWHM and flux
+    obj = galsim.AtmosphericPSF(fwhm=test_fwhm, flux=test_flux, oversampling=test_oversampling)
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.oversampling, test_oversampling, decimal=param_decimal,
+        err_msg="Oversampling param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.lam_over_r0, atmos_ref_lor0_from_fwhm, decimal=param_decimal,
+        err_msg="Starting FWHM param and derived lambda / r0 attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm, test_fwhm, decimal=param_decimal,
+        err_msg="FWHM param and attribute inconsistent.")
 
     
     
