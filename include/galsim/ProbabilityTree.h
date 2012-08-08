@@ -63,9 +63,10 @@ namespace galsim {
          */
         const FluxData* find(double& unitRandom) const 
         {
-            assert(_root);
             // Note: Don't need floor here, since rhs is positive, so floor is superfluous.
             int i = int(unitRandom * _shortcut.size());
+            assert(i < int(_shortcut.size()));
+            assert(_shortcut[i]);
             unitRandom *= _totalAbsFlux;
             return _shortcut[i]->find(unitRandom);
         }
