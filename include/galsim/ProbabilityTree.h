@@ -215,7 +215,7 @@ namespace galsim {
             const FluxData* getData() const { return _dataPtr; }
 
             bool isNode() const { return bool(_left); }
-            bool isLeft() const { return !isNode(); }
+            bool isLeaf() const { return !isNode(); }
 
         private:
 
