@@ -21,6 +21,9 @@ test_scale = 1.9
 test_sersic_n = [1.4, 2.6]
 test_lor0 = 1.9
 
+# for flux normalization tests
+test_flux = 1.9
+
 # Moffat params and reference values
 test_beta = 2.5
 test_trunc = 13.
@@ -62,11 +65,19 @@ test_astig2 = -0.04
 exponential_ref_hlr_from_scale = test_scale * 1.6783469900166605
 exponential_ref_scale_from_hlr = test_hlr / 1.6783469900166605
 
-# for flux normalization tests
-test_flux = 1.9
+# DoubleGaussian test params
+test_sigma1 = test_sigma
+test_sigma2 = test_sigma * 1.3
+test_fwhm1 = test_fwhm
+test_fwhm2 = test_fwhm * 1.3
+test_hlr1 = test_hlr
+test_hlr2 = test_hlr * 1.3
+test_flux1 = test_flux
+test_flux2 = 0.7 * test_flux
 
 # decimal point to go to for parameter value comparisons
 param_decimal = 15
+
 
 def test_gaussian_param_consistency():
     # init with sigma and flux
@@ -346,3 +357,89 @@ def test_devaucouleurs_param_consistency():
     np.testing.assert_almost_equal(
         obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param and attribute inconsistent.")
+
+def test_doublegaussian_param_consistency():
+    # init with sigma1, sigma2 and flux1, flux2
+    obj = galsim.DoubleGaussian(
+        sigma1=test_sigma1, sigma2=test_sigma2, flux1=test_flux1, flux2=test_flux2)
+    np.testing.assert_almost_equal(
+        obj.flux1, test_flux1, decimal=param_decimal,
+        err_msg="Flux1 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.flux2, test_flux2, decimal=param_decimal,
+        err_msg="Flux2 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.sigma1, test_sigma1, decimal=param_decimal,
+        err_msg="Starting sigma1 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.sigma2, test_sigma2, decimal=param_decimal,
+        err_msg="Starting sigma2 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm1, test_sigma1 * 2. * np.sqrt(2. * np.log(2.)), decimal=param_decimal,
+        err_msg="Starting sigma1 param and derived fwhm1 attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm2, test_sigma2 * 2. * np.sqrt(2. * np.log(2.)), decimal=param_decimal,
+        err_msg="Starting sigma2 param and derived fwhm2 attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius1, test_sigma1 * np.sqrt(2. * np.log(2.)), decimal=param_decimal,
+        err_msg="Starting sigma1 param and derived half_light_radius1 attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius2, test_sigma2 * np.sqrt(2. * np.log(2.)), decimal=param_decimal,
+        err_msg="Starting sigma2 param and derived half_light_radius2 attribute inconsistent.")
+
+    # init with fwhm1, fwhm2 and flux1, flux2
+    obj = galsim.DoubleGaussian(
+        fwhm1=test_fwhm1, fwhm2=test_fwhm2, flux1=test_flux1, flux2=test_flux2)
+    np.testing.assert_almost_equal(
+        obj.flux1, test_flux1, decimal=param_decimal,
+        err_msg="Flux1 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.flux2, test_flux2, decimal=param_decimal,
+        err_msg="Flux2 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.sigma1, test_fwhm1 / (2. * np.sqrt(2. * np.log(2.))), decimal=param_decimal,
+        err_msg="Starting fwhm1 param and derived sigma1 attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.sigma2, test_fwhm2 / (2. * np.sqrt(2. * np.log(2.))), decimal=param_decimal,
+        err_msg="Starting fwhm2 param and derived sigma 2attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm1, test_fwhm1, decimal=param_decimal,
+        err_msg="Starting fwhm1 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm2, test_fwhm2, decimal=param_decimal,
+        err_msg="Starting fwhm2 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius1, test_fwhm1 / 2., decimal=param_decimal,
+        err_msg="Starting fwhm1 param and derived half_light_radius1 attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius2, test_fwhm2 / 2., decimal=param_decimal,
+        err_msg="Starting fwhm2 param and derived half_light_radius2 attribute inconsistent.")
+
+        # init with fwhm1, fwhm2 and flux1, flux2
+    obj = galsim.DoubleGaussian(
+        half_light_radius1=test_hlr1, half_light_radius2=test_hlr2, flux1=test_flux1,
+        flux2=test_flux2)
+    np.testing.assert_almost_equal(
+        obj.flux1, test_flux1, decimal=param_decimal,
+        err_msg="Flux1 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.flux2, test_flux2, decimal=param_decimal,
+        err_msg="Flux2 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.sigma1, test_hlr1 / (np.sqrt(2. * np.log(2.))), decimal=param_decimal,
+        err_msg="Starting half_light_radius1 param and derived sigma1 attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.sigma2, test_hlr2 / (np.sqrt(2. * np.log(2.))), decimal=param_decimal,
+        err_msg="Starting half_light_radius2 param and derived sigma2 attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius1, test_hlr1, decimal=param_decimal,
+        err_msg="Starting half_light_radius1 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius2, test_hlr2, decimal=param_decimal,
+        err_msg="Starting half_light_radius2 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm1, test_hlr1 * 2., decimal=param_decimal,
+        err_msg="Starting half_light_radius1 param and derived fwhm1 attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm2, test_hlr2 * 2., decimal=param_decimal,
+        err_msg="Starting half_light_radius2 param and derived fwhm2 attribute inconsistent.")
