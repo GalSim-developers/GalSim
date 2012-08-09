@@ -870,6 +870,9 @@ class AtmosphericPSF(RadialProfile):
     @param flux            total flux of the profile [default flux=1.]
     """
 
+    # Defining flux parameter descriptor
+    flux = descriptors.FluxParam()
+
     # Defining the size parameters for the AtmosphericPSF:
     # The basic, underlying size parameter lambda / r0
     lam_over_r0 = descriptors.SimpleParam(
@@ -980,6 +983,9 @@ class Airy(RadialProfile):
     The Airy is a GSObject, and inherits all of the GSObject methods (draw, drawShoot, applyShear
     etc.) and operator bindings.
     """
+
+    # Defining flux parameter descriptor
+    flux = descriptors.FluxParam()
 
     # Define the descriptor for the obscuration parameter
     obscuration = descriptors.SimpleParam(
@@ -1118,7 +1124,12 @@ class OpticalPSF(GSObject):
                            i.e. those larger than order unity.
     @param flux            total flux of the profile [default flux=1.]
     """
+
+
+
     # Define the descriptors for storing the parameters
+    flux = descriptors.FluxParam()
+
     lam_over_D = descriptors.SimpleParam(
         "lam_over_D", group="size", default=None, doc="Lambda / D.")
 
@@ -1297,9 +1308,16 @@ class Sersic(RadialProfile):
     applyShear etc.) and operator bindings.
     """
 
-    # Define the descriptor for the sersic index n
+    # Defining flux parameter descriptor
+    flux = descriptors.FluxParam()
+
+    # Defining the descriptor for the sersic index n
     n = descriptors.SimpleParam(
         "n", group="required", default=None, doc="Sersic index.")
+
+    # Defining the size parameter HLR
+    half_light_radius = descriptors.SimpleParam(
+        name="half_light_radius", default=None, group="size", doc="Half light radius.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
