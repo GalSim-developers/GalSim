@@ -1539,7 +1539,7 @@ class RealGalaxy(GSObject):
         self.original_PSF = galsim.SBInterpolatedImage(
             PSF_image, self.interpolant, dx=self.pixel_scale)
         if self.flux != None:
-            self.original_image.setFlux(flux)
+            self.original_image.setFlux(self.flux)
         self.original_PSF.setFlux(1.0)
         psf_inv = galsim.SBDeconvolve(self.original_PSF)
         GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
