@@ -1098,7 +1098,8 @@ class OpticalPSF(GSObject):
     @param pad_factor      additional multiple by which to zero-pad the PSF image to avoid folding
                            compared to what would be required for a simple Airy [default = 1.5].
                            Note that padFactor may need to be increased for stronger aberrations,
-                           i.e. those larger than order unity. 
+                           i.e. those larger than order unity.
+    @param flux            total flux of the profile [default flux=1.]
     """
     # Define the descriptors for storing the parameters
     lam_over_D = descriptors.SimpleParam(
@@ -1148,6 +1149,8 @@ class OpticalPSF(GSObject):
         doc="Additional multiple by which to zero-pad the PSF image to avoid folding compared "+
             "to what would be required for a simple Airy.")
 
+    flux = descriptors.FluxParam()
+
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
@@ -1174,7 +1177,7 @@ class OpticalPSF(GSObject):
             lam_over_D=self.lam_over_D, dx=dx_lookup, array_shape=(npix, npix),
             defocus=self.defocus, astig1=self.astig1, astig2=self.astig2, coma1=self.coma1,
             coma2=self.coma2, spher=self.spher, circular_pupil=self.circular_pupil,
-            obscuration=self.obscuration)
+            obscuration=self.obscuration, flux=self.flux)
         
         # If interpolant not specified on input, use a high-ish n lanczos
         if self.interpolant == None:
@@ -1191,7 +1194,7 @@ class OpticalPSF(GSObject):
     # --- Public Class methods ---
     def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
-                 pad_factor=1.5):
+                 pad_factor=1.5, flux=1.):
 
         # Setting the parameters
         self.lam_over_D = lam_over_D
@@ -1206,6 +1209,7 @@ class OpticalPSF(GSObject):
         self.interpolant = interpolant
         self.oversampling = oversampling
         self.pad_factor = pad_factor
+        self.flux = flux
 
         # Then build the SBProfile
         self._SBInitialize()
