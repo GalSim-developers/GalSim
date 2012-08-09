@@ -737,6 +737,9 @@ class Moffat(RadialProfile):
     applyShear etc.) and operator bindings.
     """
 
+    # Defining flux parameter descriptor
+    flux = descriptors.FluxParam()
+
     # Define the descriptors for the Moffat slope parameter beta, and the truncation radius trunc
     beta = descriptors.SimpleParam(
         "beta", group="required", default=None, doc="Moffat profile slope parameter beta.")
@@ -746,8 +749,7 @@ class Moffat(RadialProfile):
         doc="Truncation radius for Moffat in physical units.")
 
     # Then we set up the size descriptors.  These need to be a little more complex in their
-    # execution than a typical RadialProfile, and involve a redefinition of the default
-    # half_light_radius descriptor it provides.  Details below.
+    # execution than a typical GSObject.
 
     # First we define a hidden storage variable to recall how the size parameter was last set: 
     _last_size_set_was_half_light_radius = False
