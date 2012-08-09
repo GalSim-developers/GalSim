@@ -32,6 +32,15 @@ class GSObject(object):
 
     SBProfile = property(_get_SBProfile, _set_SBProfile)
 
+    # Default flux parameter descriptor, will be overridden by some GSObjects
+    flux = descriptors.FluxParam()
+
+    # --- Ordered list for storing all transformations applied to the GSObject ---
+    # Currently all items in .transformations must either be a galsim.Ellipse (for stretches and
+    # shifts), a galsim.Angle (for rotations), or a float (for flux scaling).
+    transformations = []
+
+    # --- Initialization ---
     def __init__(self, SBProfile):
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
     
@@ -164,6 +173,7 @@ class GSObject(object):
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
         """
+        self.flux = fluxRatio * self.flux
         self.SBProfile.scaleFlux(fluxRatio)
         self.__class__ = GSObject
 
@@ -175,6 +185,7 @@ class GSObject(object):
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
         """
+        self.flux = flux
         self.SBProfile.setFlux(flux)
         self.__class__ = GSObject
 
@@ -196,7 +207,8 @@ class GSObject(object):
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
         self.SBProfile.applyTransformation(ellipse._ellipse)
-        self.__class__ = GSObject
+        self.transformations.append(ellipse)
+        #        self.__class__ = GSObject
  
     def applyDilation(self, scale):
         """@brief Apply a dilation of the linear size by the given scale.
@@ -215,6 +227,7 @@ class GSObject(object):
         """
         import math
         flux = self.getFlux()
+        
         self.applyTransformation(galsim.Ellipse(math.log(scale)))
         self.setFlux(flux)
 
@@ -627,9 +640,6 @@ class Gaussian(GSObject):
     The Gaussian is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
     applyShear etc.) and operator bindings.
     """
-    
-    # Defining flux parameter descriptor
-    flux = descriptors.FluxParam()
 
     # Initialization of size parameter descriptors
     sigma = descriptors.SimpleParam(
@@ -1705,6 +1715,22 @@ class DoubleGaussian(Add):
         group="optional", doc="Half light radius for the second of the two Gaussian components of "+
         "the DoubleGaussian, kept consistent with the other size attributes.")
 
+
+    # Defining total flux parameter descriptor, not using the default pattern but getting from the
+    # SBProfile directly, and setting by rescaling the flux1 and flux2 to match the new total
+    def _get_flux(self):
+        return self.SBProfile.getFlux()
+    
+    def _set_flux(self, value):
+        old_flux = self.flux
+        # Then rescale both fluxes in each componenent to the new value, ensuring both are updated
+        # in equal proportion
+        self.flux1 *= value / old_flux
+        self.flux2 *= value / old_flux
+
+    flux = descriptors.GetSetFuncParam(
+        getter=_get_flux, setter=_set_flux, doc="Total flux of the DoubleGaussian object.")
+    
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
