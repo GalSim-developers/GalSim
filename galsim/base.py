@@ -573,16 +573,16 @@ def _parse_sizes(self, label="object", **kwargs):
     
     'Must specify at least one size parameter for '+label
     """
-        size_set = False
-        for name, value in kwargs.iteritems():
-            if value != None:
-                if size_set is True:
-                    raise TypeError("Cannot specify more than one size parameter for "+label)
-                else:
-                    self.__setattr__(name, value)
-                    size_set = True
-        if size_set is False:
-            raise TypeError("Must specify at least one size parameter for "+label)
+    size_set = False
+    for name, value in kwargs.iteritems():
+        if value != None:
+            if size_set is True:
+                raise TypeError("Cannot specify more than one size parameter for "+label)
+            else:
+                self.__setattr__(name, value)
+                size_set = True
+    if size_set is False:
+        raise TypeError("Must specify at least one size parameter for "+label)
     
 
 # --- Now defining the derived classes ---
