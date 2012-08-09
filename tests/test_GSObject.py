@@ -291,3 +291,19 @@ def test_opticalpsf_param_consistency():
     np.testing.assert_almost_equal(
         obj.oversampling, test_oversampling, decimal=param_decimal,
         err_msg="Oversampling param and attribute inconsistent.")
+
+def test_sersic_param_consistency():
+    # loop through sersic n
+    for test_n in test_sersic_n:
+        # init with n, scale_radius and flux
+        obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux)
+        np.testing.assert_almost_equal(
+            obj.n, test_n, decimal=param_decimal,
+            err_msg="Sersic n param and attribute inconsistent.")
+        np.testing.assert_almost_equal(
+            obj.half_light_radius, test_hlr, decimal=param_decimal,
+            err_msg="Sersic half_light_radius param and attribute inconsistent.")
+        np.testing.assert_almost_equal(
+            obj.flux, test_flux, decimal=param_decimal,
+            err_msg="Flux param and attribute inconsistent.")
+        
