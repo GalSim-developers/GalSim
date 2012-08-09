@@ -1550,7 +1550,7 @@ class RealGalaxy(GSObject):
         self._SBInitialize()
 
 #
-# --- Compound GSObect classes: Add and Convolve ---
+# --- Compound GSObect classes: Add, DoubleGaussian and Convolve ---
 
 class Add(GSObject):
     """@brief Base class for defining the python interface to the SBAdd C++ class.
