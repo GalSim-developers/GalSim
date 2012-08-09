@@ -710,9 +710,6 @@ class Moffat(GSObject):
     applyShear etc.) and operator bindings.
     """
 
-    # Defining flux parameter descriptor
-    flux = descriptors.FluxParam()
-
     # Define the descriptors for the Moffat slope parameter beta, and the truncation radius trunc
     beta = descriptors.SimpleParam(
         "beta", group="required", default=None, doc="Moffat profile slope parameter beta.")
@@ -843,9 +840,6 @@ class AtmosphericPSF(GSObject):
     @param flux            total flux of the profile [default flux=1.]
     """
 
-    # Defining flux parameter descriptor
-    flux = descriptors.FluxParam()
-
     # Defining the size parameters for the AtmosphericPSF:
     # The basic, underlying size parameter lambda / r0
     lam_over_r0 = descriptors.SimpleParam(
@@ -956,9 +950,6 @@ class Airy(GSObject):
     The Airy is a GSObject, and inherits all of the GSObject methods (draw, drawShoot, applyShear
     etc.) and operator bindings.
     """
-
-    # Defining flux parameter descriptor
-    flux = descriptors.FluxParam()
 
     # Define the descriptor for the obscuration parameter
     obscuration = descriptors.SimpleParam(
@@ -1098,11 +1089,6 @@ class OpticalPSF(GSObject):
     @param flux            total flux of the profile [default flux=1.]
     """
 
-
-
-    # Define the descriptors for storing the parameters
-    flux = descriptors.FluxParam()
-
     lam_over_D = descriptors.SimpleParam(
         "lam_over_D", group="size", default=None, doc="Lambda / D.")
 
@@ -1149,8 +1135,6 @@ class OpticalPSF(GSObject):
         "pad_factor", group="optional", default=1.5,
         doc="Additional multiple by which to zero-pad the PSF image to avoid folding compared "+
             "to what would be required for a simple Airy.")
-
-    flux = descriptors.FluxParam()
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
@@ -1237,8 +1221,6 @@ class Pixel(GSObject):
     yw = descriptors.SimpleParam(
         "yw", group="required", doc="Width of the pixel in the y dimension.")
 
-    flux = descriptors.FluxParam()
-
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
@@ -1280,9 +1262,6 @@ class Sersic(GSObject):
     The Sersic is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
     applyShear etc.) and operator bindings.
     """
-
-    # Defining flux parameter descriptor
-    flux = descriptors.FluxParam()
 
     # Defining the descriptor for the sersic index n
     n = descriptors.SimpleParam(
@@ -1347,9 +1326,6 @@ class Exponential(GSObject):
     applyShear etc.) and operator bindings.
     """
 
-    # Defining flux parameter descriptor
-    flux = descriptors.FluxParam()
-
     # Defining the natural basic size parameter scale_radius 
     scale_radius = descriptors.SimpleParam(
         name="scale_radius", default=None, group="size",
@@ -1406,9 +1382,6 @@ class DeVaucouleurs(GSObject):
     The DeVaucouleurs is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
     applyShear etc.) and operator bindings.
     """
-
-    # Defining flux parameter descriptor
-    flux = descriptors.FluxParam()
 
     # Defining the size parameter HLR
     half_light_radius = descriptors.SimpleParam(
@@ -1470,6 +1443,11 @@ class RealGalaxy(GSObject):
                                 change [default flux = None].
     """
 
+    # Defining flux parameter descriptor slightly differently to the default
+    flux = descriptors.FluxParam(
+        default=None,
+        doc="Total flux of this RealGalaxy, if None then original flux in galaxy image is adopted.")
+
     # Define the parameters that need to be set as SimpleParams to define the RealGalaxy
     real_galaxy_catalog = descriptors.SimpleParam(
         "real_galaxy_catalog", default=None, group="required",
@@ -1492,11 +1470,6 @@ class RealGalaxy(GSObject):
     
     interpolant = descriptors.SimpleParam(
         "interpolant", default=None, group="optional", doc="Real space interpolant instance (2D).")
-
-    # Defining flux parameter descriptor slightly differently to the default
-    flux = descriptors.FluxParam(
-        default=None,
-        doc="Total flux of this RealGalaxy, if None then original flux in galaxy image is adopted.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
@@ -1629,7 +1602,6 @@ class Add(GSObject):
         # (note the specific use of the Add._SBInitialize method - this is to prevent recursion in
         #  in derived classes such as DoubleGaussian)
         Add._SBInitialize(self)
-
 
     def add(self, obj, scale=1.):
         self.SBProfile.add(obj.SBProfile, scale)
@@ -1924,6 +1896,17 @@ class Convolve(GSObject):
 class Deconvolve(GSObject):
     """@brief Base class for defining the python interface to the SBDeconvolve C++ class.
     """
+    # Defining flux parameter descriptor, not using the default pattern but getting/setting from the
+    # SBProfile directly
+    def _get_flux(self):
+        return self.SBProfile.getFlux()
+
+    def _set_flux(self, value):
+        self.SBProfile.setFlux(value)
+
+    flux = descriptors.GetSetFuncParam(
+        getter=_get_flux, setter=_set_flux, doc="Total flux of the Deconvolve object.")
+
     def __init__(self, farg):
         # the single argument should be one of our base classes
         GSObject.__init__(self, galsim.SBDeconvolve(farg.SBProfile))
