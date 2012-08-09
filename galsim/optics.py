@@ -163,7 +163,7 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., as
             galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64))))
 
 def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0., coma1=0.,
-        coma2=0., spher=0., circular_pupil=True, obscuration=0.):
+        coma2=0., spher=0., circular_pupil=True, obscuration=0., flux=1.):
     """@brief Return numpy array containing circular (default) or square pupil PSF with low-order
     aberrations.
 
@@ -191,6 +191,7 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
+    @param flux            total flux of the profile [default flux=1.]
     """
     wf = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                    astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
@@ -198,10 +199,10 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
     im = utilities.roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
-    return im / (im.sum() * dx**2)
+    return im * (flux / (im.sum() * dx**2))
 
 def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
-              coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
+              coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0., flux=1.):
     """@brief Return circular (default) or square pupil PSF with low-order aberrations as an
     ImageViewD.
 
@@ -227,10 +228,11 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
+    @param flux            total flux of the profile [default flux=1.]
     """
     array = psf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                circular_pupil=circular_pupil, obscuration=obscuration)
+                circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
     return galsim.ImageViewD(array.astype(np.float64))
 
 def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0., coma1=0.,
