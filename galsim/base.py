@@ -94,9 +94,12 @@ class GSObject(object):
            Gaussian (for example), the copy will also be a Gaussian, and can thus call
            the methods that are not in GSObject, but are in Gaussian (e.g. getSigma).
         """
-        sbp = self.SBProfile.__class__(self.SBProfile)
-        ret = GSObject(sbp)
+        import copy
+        new_sbp = self.SBProfile.__class__(self.SBProfile)
+        new_data = copy.copy(self._data)
+        ret = GSObject(new_sbp)
         ret.__class__ = self.__class__
+        ret._data = new_data
         return ret
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
