@@ -58,6 +58,10 @@ test_defocus = -0.7
 test_astig1 = 0.03
 test_astig2 = -0.04
 
+# Exponential reference values
+exponential_ref_hlr_from_scale = test_scale * 1.6783469900166605
+exponential_ref_scale_from_hlr = test_hlr / 1.6783469900166605
+
 # for flux normalization tests
 test_flux = 1.9
 
@@ -306,4 +310,30 @@ def test_sersic_param_consistency():
         np.testing.assert_almost_equal(
             obj.flux, test_flux, decimal=param_decimal,
             err_msg="Flux param and attribute inconsistent.")
-        
+
+def test_exponential_param_consistency():
+    # init with scale_radius and flux
+    obj = galsim.Exponential(scale_radius=test_scale, flux=test_flux)
+    np.testing.assert_almost_equal(
+        obj.scale_radius, test_scale, decimal=param_decimal,
+        err_msg="Exponential scale_radius param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius, exponential_ref_hlr_from_scale, decimal=param_decimal,
+        err_msg="Exponential scale_radius param and derived half_light_radius attribute "+
+        "inconsistent.")
+    # init with half_light_radius and flux
+    obj = galsim.Exponential(half_light_radius=test_hlr, flux=test_flux)
+    np.testing.assert_almost_equal(
+        obj.half_light_radius, test_hlr, decimal=param_decimal,
+        err_msg="Exponential half_light_radius param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.scale_radius, exponential_ref_scale_from_hlr, decimal=param_decimal,
+        err_msg="Exponential half_light_radius param and derived scale_radius attribute "+
+        "inconsistent.")
+    
