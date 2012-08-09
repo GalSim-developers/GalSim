@@ -45,7 +45,7 @@ def kolmogorov_mtf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
                            usually quoted at lambda = 500 nm and r0 depends weakly on wavelength
                            [r0 ~ lambda^(-6/5)].
     """
-    amtf = kolmogorov_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0, flux=flux)
+    amtf = kolmogorov_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
     return galsim.ImageViewD(amtf.astype(np.float64))
 
 def kolmogorov_psf(array_shape=(256,256), dx=1., lam_over_r0=1., flux=1.):
