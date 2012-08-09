@@ -76,11 +76,11 @@ def do_shoot(prof, img, name):
     # Since shooting implicitly convolves with the pixel, we need to compare it to 
     # the given profile convolved with a pixel.
     pix = galsim.Pixel(xw=img.getScale())
-    compar = galsim.Convolve(prof,pix)
+    compar = galsim.Convolve(prof, pix)
     compar.draw(img)
     flux_max = img.array.max()
-    print 'prof.getFlux = ',prof.getFlux()
-    print 'compar.getFlux = ',compar.getFlux()
+    print 'prof.flux = ',prof.flux
+    print 'compar.flux = ',compar.flux
     print 'flux_max = ',flux_max
     flux_tot = img.array.sum()
     print 'flux_tot = ',flux_tot
@@ -105,8 +105,8 @@ def do_shoot(prof, img, name):
         nphot = flux_max * flux_tot * scale * scale / photon_shoot_accuracy**2
     else:
         nphot = flux_max * flux_tot / photon_shoot_accuracy**2
-    print 'prof.getFlux => ',prof.getFlux()
-    print 'compar.getFlux => ',compar.getFlux()
+    print 'prof.flux => ',prof.flux
+    print 'compar.flux => ',compar.flux
     print 'img.sum => ',img.array.sum()
     print 'img.max => ',img.array.max()
     print 'nphot = ',nphot
@@ -128,7 +128,7 @@ def do_shoot(prof, img, name):
     else:
         img = galsim.ImageD(128,128)
     img.setScale(dx)
-    compar.setFlux(test_flux)
+    compar.flux = test_flux
     compar.draw(img, normalization="surface brightness")
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
     np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, 5,
@@ -138,7 +138,7 @@ def do_shoot(prof, img, name):
     np.testing.assert_almost_equal(img.array.sum(), test_flux, 5,
             err_msg="Flux normalization for %s disagrees with expected result"%name)
 
-    prof.setFlux(test_flux)
+    prof.flux = test_flux
     scale = test_flux / flux_tot # from above
     nphot *= scale * scale
     print 'nphot -> ',nphot
@@ -719,7 +719,7 @@ def test_sbprofile_moffat_properties():
     for inFlux in np.logspace(-2, 2, 10):
         psfFlux = galsim.SBMoffat(2.0, fwhm=fwhm_backwards_compatible,
                                   trunc=2*fwhm_backwards_compatible, flux=inFlux)
-        outFlux = psfFlux.getFlux()
+        outFlux = psfFlux.flux
         np.testing.assert_almost_equal(outFlux, inFlux)
 
     t2 = time.time()
@@ -1568,11 +1568,11 @@ def test_sbprofile_rescale():
 
     # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
-    sersic.setFlux(2)
+    sersic.flux = 2
     sersic.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject setFlux disagrees with expected result")
+            err_msg="Using GSObject flux parameter disagrees with expected result")
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic *= 2
     sersic.draw(myImg,dx=0.2, normalization="surface brightness")
