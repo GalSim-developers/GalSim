@@ -562,6 +562,29 @@ class GSObject(object):
         return image, added_flux
 
 
+def _parse_sizes(self, label="object", **kwargs):
+        """
+        Convenience function to parse input size parameters within the derived class __init__
+        method.
+
+        Raises a TypeError exception if more than one input parameter kwarg is set != None,
+        or if none are, with the following messages:
+
+        'Cannot specify more than one size parameter for '+label
+        'Must specify at least one size parameter for '+label
+        """
+        size_set = False
+        for name, value in kwargs.iteritems():
+            if value != None:
+                if size_set is True:
+                    raise TypeError("Cannot specify more than one size parameter for "+label)
+                else:
+                    self.__setattr__(name, value)
+                    size_set = True
+        if size_set is False:
+            raise TypeError("Must specify at least one size parameter for "+label)
+
+
 class RadialProfile(GSObject):
     """Intermediate base class that defines some parameters shared by all "radial profile"
     GSObjects.
@@ -598,21 +621,6 @@ class RadialProfile(GSObject):
         "half_light_radius", default=None, group="size",
         doc="Half light radius, kept consistent with the other size attributes.")
     
-    def _parse_sizes(self, **kwargs):
-        """
-        Convenience function to parse input size parameters within the derived class __init__
-        method.  Raises an exception if more than one input parameter kwarg is set != None.
-        """
-        size_set = False
-        for name, value in kwargs.iteritems():
-            if value != None:
-                if size_set is True:
-                    raise TypeError("Cannot specify more than one size parameter for this object.")
-                else:
-                    self.__setattr__(name, value)
-                    size_set = True
-        if size_set is False:
-            raise TypeError("Must specify at least one size parameter for this object.")
 
 # --- Now defining the derived classes ---
 #
@@ -678,9 +686,9 @@ class Gaussian(RadialProfile):
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
 
-        # Use the RadialProfile._parse_sizes() method to initialize size parameters
-        RadialProfile._parse_sizes(
-            self, half_light_radius=half_light_radius, sigma=sigma, fwhm=fwhm)
+        # Use _parse_sizes() to initialize size parameters
+        _parse_sizes(
+            self, label="Gaussian", half_light_radius=half_light_radius, sigma=sigma, fwhm=fwhm)
 
         # Set the flux
         self.flux = flux
@@ -815,9 +823,10 @@ class Moffat(RadialProfile):
         self.beta = beta
         self.trunc = trunc
 
-        # Use the RadialProfile._parse_sizes() method to initialize size parameters
-        RadialProfile._parse_sizes(
-            self, scale_radius=scale_radius, fwhm=fwhm, half_light_radius=half_light_radius)
+        # Use _parse_sizes() to initialize size parameters
+        _parse_sizes(
+            self, label="Moffat", scale_radius=scale_radius, fwhm=fwhm,
+            half_light_radius=half_light_radius)
 
         # Set the flux
         self.flux = flux
@@ -921,8 +930,8 @@ class AtmosphericPSF(RadialProfile):
         self.interpolant = interpolant
         self.oversampling = oversampling
         
-        # Use the RadialProfile._parse_sizes() method to initialize size parameters
-        RadialProfile._parse_sizes(self, lam_over_r0=lam_over_r0, fwhm=fwhm)
+        # Use _parse_sizes() to initialize size parameters
+        _parse_sizes(self, label="AtmosphericPSF", lam_over_r0=lam_over_r0, fwhm=fwhm)
 
         # Set the flux
         self.flux = flux
@@ -1048,9 +1057,10 @@ class Airy(RadialProfile):
         # expections if half_light_radius is used with obscuration!=0.
         self.obscuration = obscuration
 
-        # Use the RadialProfile._parse_sizes() method to initialize size parameters
-        RadialProfile._parse_sizes(
-            self, lam_over_D=lam_over_D, half_light_radius=half_light_radius, fwhm=fwhm)
+        # Use _parse_sizes() to initialize size parameters
+        _parse_sizes(
+            self, label="Airy", lam_over_D=lam_over_D, half_light_radius=half_light_radius,
+            fwhm=fwhm)
 
         # Set the flux
         self.flux = flux
@@ -1296,8 +1306,8 @@ class Sersic(RadialProfile):
         # Set the Sersic index
         self.n = n
 
-        # Use the RadialProfile._parse_sizes() method to initialize size parameters
-        RadialProfile._parse_sizes(self, half_light_radius=half_light_radius)
+        # Use _parse_sizes() to initialize size parameters
+        _parse_sizes(self, label="Sersic", half_light_radius=half_light_radius)
 
         # Set the flux
         self.flux = flux
@@ -1356,9 +1366,10 @@ class Exponential(RadialProfile):
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
 
-        # Use the RadialProfile._parse_sizes() method to initialize size parameters
-        RadialProfile._parse_sizes(
-            self, half_light_radius=half_light_radius, scale_radius=scale_radius)
+        # Use _parse_sizes() to initialize size parameters
+        _parse_sizes(
+            self, label="Exponential", half_light_radius=half_light_radius,
+            scale_radius=scale_radius)
 
         # Set the flux
         self.flux = flux
@@ -1401,8 +1412,8 @@ class DeVaucouleurs(RadialProfile):
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, flux=1.):
 
-        # Use the RadialProfile._parse_sizes() method to initialize size parameters
-        RadialProfile._parse_sizes(self, half_light_radius=half_light_radius)
+        # Use _parse_sizes() to initialize size parameters
+        _parse_sizes(self, label="DeVaucouleurs", half_light_radius=half_light_radius)
 
         # Set the flux
         self.flux = flux
@@ -1645,25 +1656,6 @@ class DoubleGaussian(Add):
         group="optional", doc="Half light radius for the second of the two Gaussian components of "+
         "the DoubleGaussian, kept consistent with the other size attributes.")
 
-    def _parse_sizes(self, **kwargs):
-        """
-        Convenience function to parse input size parameters within the derived class __init__
-        method.  Raises an exception if more than one input parameter kwarg is set != None.
-        """
-        size_set = False
-        for name, value in kwargs.iteritems():
-            if value != None:
-                if size_set is True:
-                    raise TypeError(
-                        "Cannot specify more than one size parameter for each component of the "+
-                        "DoubleGaussian.")
-                else:
-                    self.__setattr__(name, value)
-                    size_set = True
-        if size_set is False:
-            raise TypeError("Must specify at least one size parameter for each component of the "+
-                            "DoubleGaussian.")
-
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
@@ -1675,9 +1667,13 @@ class DoubleGaussian(Add):
     def __init__(self, flux1, flux2, sigma1=None, sigma2=None, fwhm1=None, fwhm2=None,
                  half_light_radius1=None, half_light_radius2=None):
 
-        # Parse both sets of size parameters using the DoubleGaussian's modified _parse_sizes method
-        self._parse_sizes(sigma1=sigma1, fwhm1=fwhm1, half_light_radius1=half_light_radius1)
-        self._parse_sizes(sigma2=sigma2, fwhm2=fwhm2, half_light_radius2=half_light_radius2)
+        # Parse both sets of size parameters using the _parse_sizes method
+        _parse_sizes(
+            self, label="first component of the DoubleGaussian", sigma1=sigma1, fwhm1=fwhm1,
+            half_light_radius1=half_light_radius1)
+        _parse_sizes(
+            self, label="second component of the DoubleGaussian", sigma2=sigma2, fwhm2=fwhm2,
+            half_light_radius2=half_light_radius2)
 
         # Set the fluxes
         self.flux1 = flux1
