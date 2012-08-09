@@ -80,7 +80,7 @@ def all_ellipse_vals(test_ellipse, ind_shear, ind_dil, ind_shift, check_shear=1.
                      check_shift = 1.0):
     # this function tests that the various numbers stored in some Ellipse object are consistent with
     # the tabulated values that we expect, given indices against which to test
-    vec = [test_ellipse.getS().g1, test_ellipse.getS().g2, test_ellipse.getMu(),
+    vec = [test_ellipse.getS().g1, test_ellipse.getS().g2, test_ellipse.getDilation(),
            test_ellipse.getX0().x, test_ellipse.getX0().y]
     test_vec = [check_shear*g1[ind_shear], check_shear*g2[ind_shear], check_dil*dilation[ind_dil],
                 check_shift*x_shift[ind_shift], check_shift*y_shift[ind_shift]]
@@ -180,7 +180,7 @@ def test_ellipse_initialization():
     t1 = time.time()
     # make an empty Ellipse and make sure everything is zero
     e = galsim.Ellipse()
-    vec = [e.getS().g1, e.getS().g2, e.getMu(), e.getX0().x, e.getX0().y]
+    vec = [e.getS().g1, e.getS().g2, e.getDilation(), e.getX0().x, e.getX0().y]
     vec_ideal = [0.0, 0.0, 0.0, 0.0, 0.0]
     np.testing.assert_array_almost_equal(vec, vec_ideal, decimal = decimal,
                                          err_msg = "Incorrectly initialized empty ellipse")

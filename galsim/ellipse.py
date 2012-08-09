@@ -4,35 +4,38 @@
 from . import _galsim
 import galsim
 
-"""
-@brief A class to represent ellipses in a variety of ways.
 
-The galsim Ellipse class (galsim.Ellipse) represents a shear (shape distortion), dilation, and/or
-centroid shift.
 
-The python Ellipse class can be initialized in a variety of ways.  Unnamed arguments must be a
-galsim.shear.Shear object for shape distortion, a float for dilation, and/or a Position for centroid
-shift.  Keyword arguments can be used to set parameters of the shape distortion the same as for the
-Shear class; or the parameter "dilation" can be used for re-sizing; or the parameters "x_shift" and
-"y_shift" can be used for centroid shifts.  The galsim.Ellipse contains a C++ CppEllipse object, and
-operations on Ellipse rely on wrapped methods of the CppEllipse.
-
-The following are all examples of valid calls to initialize a Ellipse object:
-@code
-s = galsim.Shear(g1=0.05, g2=0.05)
-shift = galsim.PositionD(0.0, 0.2)
-ell = galsim.Ellipse() # an empty ellipse, i.e. no shearing, dilation, shifting
-ell = galsim.Ellipse(s) # represents shearing by s only
-ell = galsim.Ellipse(shear = s) # same as previous, but with keyword explicitly named
-ell = galsim.Ellipse(s, shift) # shear and shift
-ell = galsim.Ellipse(shift, s) # can specify the arguments in any order
-ell = galsim.Ellipse(s, y_shift = 0.2) # same as previous, specifying the y shift directly
-ell = galsim.Ellipse(dilation = 0.0, shear = s) # no dilation, but shear by s
-ell = galsim.Ellipse(shift, g1=0.05, g2=0.05) # arguments can be used to specify a shear
-ell = galsim.Ellipse(dilation=0.5, g=0.5, beta=45.0*galsim.degrees) # dilation, shear via keyword argument
-@endcode
-"""
 class Ellipse(object):
+    """@brief A class to represent ellipses in a variety of ways.
+
+    The galsim Ellipse class (galsim.Ellipse) represents a shear (shape distortion), dilation,
+    and/or centroid shift.
+
+    The python Ellipse class can be initialized in a variety of ways.  Unnamed arguments must be a
+    galsim.shear.Shear object for shape distortion, a float for dilation, and/or a Position for
+    centroid shift.  Keyword arguments can be used to set parameters of the shape distortion the
+    same as for the Shear class; or the parameter "dilation" can be used for re-sizing; or the
+    parameters "x_shift" and "y_shift" can be used for centroid shifts.  The galsim.Ellipse
+    contains a C++ CppEllipse object, and operations on Ellipse rely on wrapped methods of the
+    CppEllipse.
+
+    The following are all examples of valid calls to initialize a Ellipse object:
+    @code
+    s = galsim.Shear(g1=0.05, g2=0.05)
+    shift = galsim.PositionD(0.0, 0.2)
+    ell = galsim.Ellipse() # an empty ellipse, i.e. no shearing, dilation, shifting
+    ell = galsim.Ellipse(s) # represents shearing by s only
+    ell = galsim.Ellipse(shear = s) # same as previous, but with keyword explicitly named
+    ell = galsim.Ellipse(s, shift) # shear and shift
+    ell = galsim.Ellipse(shift, s) # can specify the arguments in any order
+    ell = galsim.Ellipse(s, y_shift = 0.2) # same as previous, specifying the y shift directly
+    ell = galsim.Ellipse(dilation = 0.0, shear = s) # no dilation, but shear by s
+    ell = galsim.Ellipse(shift, g1=0.05, g2=0.05) # arguments can be used to specify a shear
+    ell = galsim.Ellipse(dilation=0.5, g=0.5, beta=45.0*galsim.degrees) # dilation, shear via
+    keyword argument
+    @endcode
+"""
     def __init__(self, *args, **kwargs):
         use_dil = None
         use_shear = None
@@ -108,11 +111,11 @@ class Ellipse(object):
     def inv(self, p): return self._ellipse.inv(p)
     # methods for setting values
     def setS(self, s): self._ellipse.setS(s._shear)
-    def setMu(self, mu): self._ellipse.setMu(mu)
+    def setDilation(self, mu): self._ellipse.setMu(mu)
     def setX0(self, p): self._ellipse.setX0(p)
     # methods for getting values
     def getS(self): return galsim.Shear(self._ellipse.getS())
-    def getMu(self): return self._ellipse.getMu()
+    def getDilation(self): return self._ellipse.getMu()
     def getX0(self): return self._ellipse.getX0()
     def getMajor(self): return self._ellipse.getMajor()
     def getMinor(self): return self._ellipse.getMinor()
@@ -121,7 +124,7 @@ class Ellipse(object):
     def getMatrix(self): return self._ellipse.getMatrix()
     # or access values directly
     s = property(getS)
-    mu = property(getMu)
+    dilation = property(getDilation)
     x0 = property(getX0)
     major = property(getMajor)
     minor = property(getMinor)
@@ -131,12 +134,14 @@ class Ellipse(object):
     def __repr__(self):
         shear = self.getS()  # extract the e1 and e2 from the Shear instance
         x0 = self.getX0()    # extract the x0 and y0 from a Position instance
-        return (self.__class__.__name__+"(g1="+str(shear.getG1())+", g2="+str(shear.getG2())+
-                ", mu="+str(self.getMu())+", x="+str(x0.x)+", y="+str(x0.y)+")")
+        return (
+            self.__class__.__name__+"(g1="+str(shear.getG1())+", g2="+str(shear.getG2())+
+            ", dilation="+str(self.getDilation())+", x_shift="+str(x0.x)+", y_shift="+str(x0.y)+")")
 
     def __str__(self):
         shear = self.getS()  # extract the e1 and e2 from the Shear instance
         x0 = self.getX0()    # extract the x0 and y0 from a Position instance
-        return ("("+str(shear.getG1())+", "+str(shear.getG2())+", "+str(self.getMu())+", "
-                +str(x0.x)+", "+str(x0.y)+")")
+        return (
+            "("+str(shear.getG1())+", "+str(shear.getG2())+", "+str(self.getDilation())+", "
+            +str(x0.x)+", "+str(x0.y)+")")
 
