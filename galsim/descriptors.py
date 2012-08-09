@@ -157,7 +157,9 @@ class FluxParam(object):
         if instance is not None:
             # dict.setdefault will return the item in the dict if present, or set and return the
             # default otherwise
-            return instance._data.setdefault(self.name, self.default)
+            return instance._data["flux"]
+        else:
+            raise AttributeError("Flux parameter not set, error in initialization.")
         return self
 
     def __set__(self, instance, value):
