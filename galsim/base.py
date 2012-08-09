@@ -664,18 +664,23 @@ class Gaussian(RadialProfile):
     The Gaussian is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
     applyShear etc.) and operator bindings.
     """
-
-    # Initialization of additional size parameter descriptors beyond the half_light_radius inherited
-    # by all RadialProfile GSObjects
     
-    sigma = descriptors.GetSetScaleParam(
-        name="sigma", root_name="half_light_radius", group="size",
-        factor=0.8493218002880191, # factor = 1 / sqrt[2ln(2)]
+    # Defining flux parameter descriptor
+    flux = descriptors.FluxParam()
+
+    # Initialization of size parameter descriptors
+    sigma = descriptors.SimpleParam(
+        name="sigma", group="size", default=None,
         doc="Scale radius sigma, kept consistent with the other size attributes.")
 
+    half_light_radius = descriptors.GetSetScaleParam(
+        name="half_light_radius", root_name="sigma", factor=1.1774100225154747, # sqrt(2ln2)
+        group="size", doc="Half light radius, kept consistent with the other size attributes.")
+
     fwhm = descriptors.GetSetScaleParam(
-        name="fwhm", root_name="half_light_radius", factor=2., # true!
+        name="fwhm", root_name="sigma", factor=2.3548200450309493, # 2 sqrt(2ln2)
         group="size", doc="FWHM, kept consistent with the other size attributes.")
+
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
