@@ -52,7 +52,12 @@ airy_ref_fwhm_from_hlr = test_hlr * 1.028993969962188 / 0.5348321477242647
 
 airy_ref_hlr_from_fwhm = test_fwhm * 0.5348321477242647 / 1.028993969962188
 airy_ref_loD_from_fwhm = test_fwhm / 1.028993969962188
- 
+
+# OpticalPSF test params (only a selection)
+test_defocus = -0.7
+test_astig1 = 0.03
+test_astig2 = -0.04
+
 # for flux normalization tests
 test_flux = 1.9
 
@@ -262,3 +267,27 @@ def test_airy_param_consistency():
     np.testing.assert_almost_equal(
         obj.obscuration, test_obscuration, decimal=param_decimal,
         err_msg="Obscuration param and attribute inconsistent.")
+
+def test_opticalpsf_param_consistency():
+    # init with a few test params then do very simple tests
+    obj = galsim.OpticalPSF(
+        lam_over_D=test_loD, oversampling=test_oversampling, defocus=test_defocus,
+        astig1=test_astig1, astig2=test_astig2, flux=test_flux)
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.lam_over_D, test_loD, decimal=param_decimal,
+        err_msg="Lambda / D param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.defocus, test_defocus, decimal=param_decimal,
+        err_msg="Defocus param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.astig1, test_astig1, decimal=param_decimal,
+        err_msg="Astig1 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.astig2, test_astig2, decimal=param_decimal,
+        err_msg="Astig2 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.oversampling, test_oversampling, decimal=param_decimal,
+        err_msg="Oversampling param and attribute inconsistent.")
