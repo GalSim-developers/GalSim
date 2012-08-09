@@ -583,43 +583,6 @@ def _parse_sizes(self, label="object", **kwargs):
                     size_set = True
         if size_set is False:
             raise TypeError("Must specify at least one size parameter for "+label)
-
-
-class RadialProfile(GSObject):
-    """Intermediate base class that defines some parameters shared by all "radial profile"
-    GSObjects.
-
-    The radial profile GSObjects are characterized by:
-      * one or more size parameters, e.g. sigma (for the Gaussian), half_light_radius (all objects),
-        from which one only must be chosen for initialization
-      * an optional flux parameter [default = 1]
-      * zero or more additional parameters describing the radial profile, but not directly** related
-        to the object's apparent size
-
-    This intermediate base class sets up the parameter descriptors for the half_light_radius and
-    flux params common to all derived objects.  Additional parameters should be defined in the
-    class scopes for the derived RadialProfile objects.
-
-    Currently, the RadialProfile objects are:
-    Airy, DeVaucouleurs, Exponential, Gaussian, Moffat, Sersic
-
-    Although only one size parameter must be chosen for initializing RadialProfile objects (giving
-    more than one will raise a TypeError exception), subsequently all the size parameters defined
-    for that object can be accessed as attributes.  If one of these size attributes is assigned to
-    a new value, all the other sizes and the underlying SBProfile description of the profile itself
-    will be updated to match.
-
-    All RadialProfile GSObject classes share the half_light_radius size specification.
-    """
-
-    # All RadialProfile objects have a flux
-    flux = descriptors.FluxParam()
-
-    # All RadialProfile objects share a half_light_radius, so we can define this in the intermediate
-    # base class
-    half_light_radius = descriptors.SimpleParam(
-        "half_light_radius", default=None, group="size",
-        doc="Half light radius, kept consistent with the other size attributes.")
     
 
 # --- Now defining the derived classes ---
@@ -632,7 +595,7 @@ class RadialProfile(GSObject):
 # All GSObject derived classes now use descriptors to store parameter values, except for Add and
 # Convolve (TODO: look into storing params for compound GSObjects).
 #
-class Gaussian(RadialProfile):
+class Gaussian(GSObject):
     """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
 
     For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
@@ -702,7 +665,7 @@ class Gaussian(RadialProfile):
         self._SBInitialize()
 
 
-class Moffat(RadialProfile):
+class Moffat(GSObject):
     """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
 
     For more details of the Moffat Surface Brightness profile, please see the SBMoffat
@@ -842,7 +805,7 @@ class Moffat(RadialProfile):
         self._SBInitialize()
 
 
-class AtmosphericPSF(RadialProfile):
+class AtmosphericPSF(GSObject):
     """Base class for long exposure Kolmogorov PSF.
 
     Initialization
@@ -885,11 +848,11 @@ class AtmosphericPSF(RadialProfile):
         doc="FWHM, kept consistent with the other size attributes.")
 
     # Getter and setter functions for the half_light_radius descriptor (raising a
-    # NotImplementedError exception for this not-yet-implemented).  Note this overrides the
-    # half_light_radius inherited from the RadialProfile base class 
+    # NotImplementedError exception for this not-yet-implemented attribute)
     def _get_half_light_radius(self):
         raise NotImplementedError(
             "Half light radius calculation not yet implemented for AtmosphericPSF objects.")
+
     def _set_half_light_radius(self, value):
         raise NotImplementedError(
             "Half light radius support not yet implemented for AtmosphericPSF objects.")
@@ -950,7 +913,7 @@ class AtmosphericPSF(RadialProfile):
         self._SBInitialize()
 
 
-class Airy(RadialProfile):
+class Airy(GSObject):
     """GalSim Airy, which has an SBAiry in the SBProfile attribute.
 
     For more details of the Airy Surface Brightness profile, please see the SBAiry documentation
@@ -997,7 +960,7 @@ class Airy(RadialProfile):
         "lam_over_D", group="size", default=None, doc="Lambda / D.")
 
     # Then we set up the other size descriptors.  These need to be a little more complex in their
-    # execution than a typical RadialProfile, and involve a redefinition of the default
+    # execution than a typical GSObject, and involve a redefinition of the default
     # half_light_radius descriptor it provides
 
     # First we do the half_light_radius, for which we only have an easy scaling if obscuration=0.
@@ -1284,7 +1247,7 @@ class Pixel(GSObject):
         self._SBInitialize()
 
 
-class Sersic(RadialProfile):
+class Sersic(GSObject):
     """GalSim Sersic, which has an SBSersic in the SBProfile attribute.
 
     For more details of the Sersic Surface Brightness profile, please see the SBSersic documentation
@@ -1317,7 +1280,8 @@ class Sersic(RadialProfile):
 
     # Defining the size parameter HLR
     half_light_radius = descriptors.SimpleParam(
-        name="half_light_radius", default=None, group="size", doc="Half light radius.")
+        name="half_light_radius", default=None, group="size",
+        doc="half_light_radius, kept consistent with the other size attributes.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
@@ -1341,7 +1305,7 @@ class Sersic(RadialProfile):
         self._SBInitialize()
 
 
-class Exponential(RadialProfile):
+class Exponential(GSObject):
     """GalSim Exponential, which has an SBExponential in the SBProfile attribute.
 
     For more details of the Exponential Surface Brightness profile, please see the SBExponential
@@ -1372,15 +1336,21 @@ class Exponential(RadialProfile):
     The Exponential is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
     applyShear etc.) and operator bindings.
     """
-    
-    # Beyond the half light radius, the additional size parameter for Exponential objects is the
-    # scale_radius
-    #
+
+    # Defining flux parameter descriptor
+    flux = descriptors.FluxParam()
+
+    # Defining the natural basic size parameter scale_radius 
+    scale_radius = descriptors.SimpleParam(
+        name="scale_radius", default=None, group="size",
+        doc="Exponential scale radius, kept consistent with the other size attributes.")
+
+    # Half light radius
     # Constant scaling factor not analytic, but can be calculated by iterative solution of:
     #  (re / r0) = ln[(re / r0) + 1] + ln(2)
-    scale_radius=descriptors.GetSetScaleParam(
-        "scale_radius", root_name="half_light_radius", factor=1./1.6783469900166605,
-        doc="scale_radius, kept consistent with the other size attributes.")
+    half_light_radius=descriptors.GetSetScaleParam(
+        "half_light_radius", root_name="scale_radius", factor=1.6783469900166605,
+        doc="half_light_radius, kept consistent with the other size attributes.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
@@ -1403,7 +1373,7 @@ class Exponential(RadialProfile):
         self._SBInitialize()
 
 
-class DeVaucouleurs(RadialProfile):
+class DeVaucouleurs(GSObject):
     """GalSim DeVaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
 
     For more details of the DeVaucouleurs Surface Brightness profile, please see the
@@ -1426,6 +1396,13 @@ class DeVaucouleurs(RadialProfile):
     The DeVaucouleurs is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
     applyShear etc.) and operator bindings.
     """
+
+    # Defining flux parameter descriptor
+    flux = descriptors.FluxParam()
+
+    # Defining the size parameter HLR
+    half_light_radius = descriptors.SimpleParam(
+        name="half_light_radius", default=None, group="size", doc="Half light radius.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
@@ -1479,6 +1456,8 @@ class RealGalaxy(GSObject):
                                 real-space interpolation scheme
                                 [default = galsim.InterpolantXY(galsim.Lanczos(5, 
                                            conserve_flux=True, tol=1.e-4))].
+    @param flux                 Total flux, if None then original flux in galaxy is adopted without
+                                change [default flux = None].
     """
 
     # Define the parameters that need to be set as SimpleParams to define the RealGalaxy
@@ -1486,18 +1465,28 @@ class RealGalaxy(GSObject):
         "real_galaxy_catalog", default=None, group="required",
         doc="RealGalaxyCatalog object with basic information about where to find data for each "+
         "RealGalaxy instance.")
+    
     index = descriptors.SimpleParam(
         "index", default=None, group="optional", doc="Index of the desired galaxy in the catalog.")
+    
     ID = descriptors.SimpleParam(
         "ID", default=None, group="optional",
         doc="Object ID for the desired galaxy in the catalog.")
+    
     random = descriptors.SimpleParam(
         "random", default=False, group="optional", doc="Whether galaxy selected at random.")
+    
     uniform_deviate = descriptors.SimpleParam(
         "uniform_deviate", default=None, group="optional",
         doc="Uniform deviate to use for random galaxy selection.")
+    
     interpolant = descriptors.SimpleParam(
         "interpolant", default=None, group="optional", doc="Real space interpolant instance (2D).")
+
+    # Defining flux parameter descriptor
+    flux = descriptors.FluxParam(
+        default=None,
+        doc="Total flux of this RealGalaxy, if None then original flux in galaxy image is adopted.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
@@ -1549,13 +1538,15 @@ class RealGalaxy(GSObject):
             gal_image, self.interpolant, dx=self.pixel_scale)
         self.original_PSF = galsim.SBInterpolatedImage(
             PSF_image, self.interpolant, dx=self.pixel_scale)
+        if self.flux != None:
+            self.original_image.setFlux(flux)
         self.original_PSF.setFlux(1.0)
         psf_inv = galsim.SBDeconvolve(self.original_PSF)
         GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, ID=None, random=False,
-                 uniform_deviate=None, interpolant=None):
+                 uniform_deviate=None, interpolant=None, flux=None):
 
         # Set the values of the defining params based on the inputs
         self.real_galaxy_catalog = real_galaxy_catalog
@@ -1564,6 +1555,7 @@ class RealGalaxy(GSObject):
         self.random = random
         self.uniform_deviate = uniform_deviate
         self.interpolant = interpolant
+        self.flux = flux
 
         # Then build the SBProfile
         self._SBInitialize()
