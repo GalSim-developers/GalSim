@@ -510,7 +510,7 @@ def Script3():
         t2 = time.time()
 
         # Set the flux
-        gal.setFlux(gal_flux)
+        gal.flux = gal_flux
 
         # Apply the desired shear
         gal.applyShear(g1=gal_g1, g2=gal_g2)
@@ -662,7 +662,7 @@ def Script4():
                 gal1 = gal.createDilated(hlr)
                 gal_shape = galsim.Shear(e=ellip, beta=beta_ellip)
                 gal1.applyShear(gal_shape)
-                gal1.setFlux(flux)
+                gal1.flux = flux
 
                 # Build the final object by convolving the galaxy, PSF and pixel response.
                 final = galsim.Convolve([gal1, psf, pix])
@@ -685,8 +685,8 @@ def Script4():
                 # Draw the profile
                 final.draw(fft_image)
 
-                #logger.info('   Drew fft image.  Total drawn flux = %f.  getFlux() = %f',
-                        #fft_image.array.sum(),final.getFlux())
+                #logger.info('   Drew fft image.  Total drawn flux = %f.  .flux = %f',
+                        #fft_image.array.sum(),final.flux)
                 t3 = time.time()
 
                 # Repeat for photon shooting image.
@@ -695,8 +695,8 @@ def Script4():
                 sky_level_pixel = sky_level * pixel_scale**2
                 final_nopix.drawShoot(phot_image, noise=sky_level_pixel/100, 
                                       uniform_deviate=rng)
-                #logger.info('   Drew phot image.  Total drawn flux = %f.  getFlux() = %f',
-                        #phot_image.array.sum(),final.getFlux())
+                #logger.info('   Drew phot image.  Total drawn flux = %f.  .flux = %f',
+                        #phot_image.array.sum(),final.flux)
                 t4 = time.time()
 
                 # Add Poisson noise
@@ -837,7 +837,7 @@ def Script5():
         gal = f * bulge + (1-f) * disk
 
         flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
-        gal.setFlux(flux)
+        gal.flux = flux
 
         # Build the final object by convolving the galaxy and PSF 
         # Not including the pixel -- since we are using drawShoot
