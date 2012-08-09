@@ -336,4 +336,13 @@ def test_exponential_param_consistency():
         obj.scale_radius, exponential_ref_scale_from_hlr, decimal=param_decimal,
         err_msg="Exponential half_light_radius param and derived scale_radius attribute "+
         "inconsistent.")
-    
+
+def test_devaucouleurs_param_consistency():
+    # init with half_light_radius and flux
+    obj = galsim.Exponential(half_light_radius=test_hlr, flux=test_flux)
+    np.testing.assert_almost_equal(
+        obj.half_light_radius, test_hlr, decimal=param_decimal,
+        err_msg="DeVaucouleurs half_light_radius param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param and attribute inconsistent.")
