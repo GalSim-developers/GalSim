@@ -1677,7 +1677,7 @@ class DoubleGaussian(Add):
 
         # Parse both sets of size parameters using the DoubleGaussian's modified _parse_sizes method
         self._parse_sizes(sigma1=sigma1, fwhm1=fwhm1, half_light_radius1=half_light_radius1)
-        self._parse_sizes(sigma2=sigma2, fwhm2=fwhm2, half_light_radius1=half_light_radius1)
+        self._parse_sizes(sigma2=sigma2, fwhm2=fwhm2, half_light_radius2=half_light_radius2)
 
         # Set the fluxes
         self.flux1 = flux1
