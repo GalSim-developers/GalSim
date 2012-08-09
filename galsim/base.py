@@ -46,7 +46,7 @@ class GSObject(object):
     
     # Make op+ of two GSObjects work to return an Add object
     def __add__(self, other):
-        return Add(self,other)
+        return Add(self, other)
 
     # op+= converts this into the equivalent of an Add object
     def __iadd__(self, other):
@@ -56,7 +56,7 @@ class GSObject(object):
 
     # Make op* and op*= work to adjust the flux of an object
     def __imul__(self, other):
-        self.scaleFlux(other)
+        self.flux *= other
         return self
 
     def __mul__(self, other):
@@ -71,7 +71,7 @@ class GSObject(object):
 
     # Likewise for op/ and op/=
     def __idiv__(self, other):
-        self.scaleFlux(1. / other)
+        self.flux /= other
         return self
 
     def __div__(self, other):
@@ -143,8 +143,12 @@ class GSObject(object):
 
     def getFlux(self):
         """@brief Returns the flux of the object.
+
+        N.B. Using this method is now unnecessary due to the presence of the "flux" descriptor
+        attribute for all GSObjects. TODO: Remove?
         """
-        return self.SBProfile.getFlux()
+        return self.flux
+
 
     def xValue(self, position):
         """@brief Returns the value of the object at a chosen 2D position in real space.
@@ -172,10 +176,11 @@ class GSObject(object):
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
+
+        N.B. Using this method is now unnecessary due to the presence of the "flux" descriptor
+        attribute for all GSObjects. TODO: Remove?
         """
-        self.flux = fluxRatio * self.flux
-        self.SBProfile.scaleFlux(fluxRatio)
-        self.__class__ = GSObject
+        self.flux *= fluxRatio
 
     def setFlux(self, flux):
         """@brief Set the flux of the object.
@@ -184,10 +189,11 @@ class GSObject(object):
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
+
+        N.B. Using this method is now unnecessary due to the presence of the "flux" descriptor
+        attribute for all GSObjects. TODO: Remove?
         """
         self.flux = flux
-        self.SBProfile.setFlux(flux)
-        self.__class__ = GSObject
 
     def applyTransformation(self, ellipse):
         """@brief Apply a galsim.ellipse.Ellipse distortion to this object.
@@ -1333,7 +1339,7 @@ class Exponential(GSObject):
 
     # Half light radius
     # Constant scaling factor not analytic, but can be calculated by iterative solution of:
-    #  (re / r0) = ln[(re / r0) + 1] + ln(2)
+    # (re / r0) = ln[(re / r0) + 1] + ln(2)
     half_light_radius=descriptors.GetSetScaleParam(
         "half_light_radius", root_name="scale_radius", factor=1.6783469900166605,
         doc="half_light_radius, kept consistent with the other size attributes.")
@@ -1562,7 +1568,8 @@ class Add(GSObject):
         self.SBProfile.setFlux(value)
 
     flux = descriptors.GetSetFuncParam(
-        getter=_get_flux, setter=_set_flux, doc="Total flux of the Add object.")
+        getter=_get_flux, setter=_set_flux, update_on_set=False,
+        doc="Total flux of the Add object.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
@@ -1690,10 +1697,10 @@ class DoubleGaussian(Add):
 
     # Defining total flux parameter descriptor, not using the default pattern but getting from the
     # SBProfile directly, and setting by rescaling the flux1 and flux2 to match the new total
-    def _get_flux(self):
+    def _get_dg_flux(self):
         return self.SBProfile.getFlux()
     
-    def _set_flux(self, value):
+    def _set_dg_flux(self, value):
         old_flux = self.flux
         # Then rescale both fluxes in each componenent to the new value, ensuring both are updated
         # in equal proportion
@@ -1701,8 +1708,9 @@ class DoubleGaussian(Add):
         self.flux2 *= value / old_flux
 
     flux = descriptors.GetSetFuncParam(
-        getter=_get_flux, setter=_set_flux, doc="Total flux of the DoubleGaussian object.")
-    
+        getter=_get_dg_flux, setter=_set_dg_flux, update_on_set=False,
+        doc="Total flux of the DoubleGaussian object.")
+
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
@@ -1786,14 +1794,15 @@ class Convolve(GSObject):
 
     # Defining flux parameter descriptor, not using the default pattern but getting/setting from the
     # SBProfile directly
-    def _get_flux(self):
+    def _get_convolve_flux(self):
         return self.SBProfile.getFlux()
     
-    def _set_flux(self, value):
+    def _set_convolve_flux(self, value):
         self.SBProfile.setFlux(value)
 
     flux = descriptors.GetSetFuncParam(
-        getter=_get_flux, setter=_set_flux, doc="Total flux of the Convolve object.")
+        getter=_get_convolve_flux, setter=_set_convolve_flux, update_on_set=False,
+        doc="Total flux of the Convolve object.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
@@ -1898,14 +1907,15 @@ class Deconvolve(GSObject):
     """
     # Defining flux parameter descriptor, not using the default pattern but getting/setting from the
     # SBProfile directly
-    def _get_flux(self):
+    def _get_deconvolve_flux(self):
         return self.SBProfile.getFlux()
 
-    def _set_flux(self, value):
+    def _set_deconvolve_flux(self, value):
         self.SBProfile.setFlux(value)
 
     flux = descriptors.GetSetFuncParam(
-        getter=_get_flux, setter=_set_flux, doc="Total flux of the Deconvolve object.")
+        getter=_get_deconvolve_flux, setter=_set_deconvolve_flux, update_on_set=False,
+        doc="Total flux of the Deconvolve object.")
 
     def __init__(self, farg):
         # the single argument should be one of our base classes
@@ -1960,7 +1970,6 @@ object_param_dict = {
                         "optional" : ("real_galaxy_catalog", "index", "ID", "random", 
                                       "uniform_deviate", "interpolant")}
                     }
-
 
 
 class AttributeDict(object):
