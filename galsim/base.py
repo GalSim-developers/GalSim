@@ -1616,7 +1616,9 @@ class Add(GSObject):
             self.objects = list(args)
 
         # Then build the SBProfile
-        self._SBInitialize()
+        # (note the specific use of the Add._SBInitialize method - this is to prevent recursion in
+        #  in derived classes such as DoubleGaussian)
+        Add._SBInitialize(self)
 
 
     def add(self, obj, scale=1.):
