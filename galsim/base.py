@@ -563,16 +563,16 @@ class GSObject(object):
 
 
 def _parse_sizes(self, label="object", **kwargs):
-        """
-        Convenience function to parse input size parameters within the derived class __init__
-        method.
+    """
+    Convenience function to parse input size parameters within the derived class __init__ method.
 
-        Raises a TypeError exception if more than one input parameter kwarg is set != None,
-        or if none are, with the following messages:
+    Raises a TypeError exception if more than one input parameter kwarg is set != None, or if none
+    are, with the following messages in each case:
 
-        'Cannot specify more than one size parameter for '+label
-        'Must specify at least one size parameter for '+label
-        """
+    'Cannot specify more than one size parameter for '+label
+    
+    'Must specify at least one size parameter for '+label
+    """
         size_set = False
         for name, value in kwargs.iteritems():
             if value != None:
@@ -1483,7 +1483,7 @@ class RealGalaxy(GSObject):
     interpolant = descriptors.SimpleParam(
         "interpolant", default=None, group="optional", doc="Real space interpolant instance (2D).")
 
-    # Defining flux parameter descriptor
+    # Defining flux parameter descriptor slightly differently to the default
     flux = descriptors.FluxParam(
         default=None,
         doc="Total flux of this RealGalaxy, if None then original flux in galaxy image is adopted.")
@@ -1713,7 +1713,7 @@ class Convolve(GSObject):
     back to real space.
    
     The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2)
-    where the sum is over all teh components being convolved.  Since the size of 
+    where the sum is over all the components being convolved.  Since the size of 
     the convolved image scales roughly as the quadrature sum of the components,
     this should be close to Pi/Rmax where Rmax is the radius that encloses
     all but (1-alias_threshold) of the flux in the final convolved image..
@@ -1889,18 +1889,11 @@ class AttributeDict(object):
     """@brief Dictionary class that allows for easy initialization and refs to key values via
     attributes.
 
-    NOTE: Modified a little from Jim's bot.git AttributeDict class  (Jim, please review!) so that...
-
-    ...Tab completion now works in ipython (it didn't with the bot.git version on my build) since
-    attributes are actually added to __dict__.
+    NOTE: Modified a little from Jim's bot.git AttributeDict class so that tab completion now works
+    in ipython since attributes are actually added to __dict__.
     
-    HOWEVER this means I have redefined the __dict__ attribute to be a collections.defaultdict()
-    so that Jim's previous default attrbiute behaviour is also replicated.
-
-    I prefer this, as a newbie who uses ipython and the tab completion function to aid development,
-    but does it potentially break something down the line or add undesirable behaviour? (I guessed
-    not, since collections.defaultdict objects have all the usual dict() methods, but I cannot be
-    sure.)
+    HOWEVER this means the __dict__ attribute has been redefined to be a collections.defaultdict()
+    so that Jim's previous default attribute behaviour is also replicated.
     """
     def __init__(self):
         object.__setattr__(self, "__dict__", collections.defaultdict(AttributeDict))
