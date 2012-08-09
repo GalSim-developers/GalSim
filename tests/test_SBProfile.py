@@ -719,7 +719,7 @@ def test_sbprofile_moffat_properties():
     for inFlux in np.logspace(-2, 2, 10):
         psfFlux = galsim.SBMoffat(2.0, fwhm=fwhm_backwards_compatible,
                                   trunc=2*fwhm_backwards_compatible, flux=inFlux)
-        outFlux = psfFlux.flux
+        outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
 
     t2 = time.time()
