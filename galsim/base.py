@@ -1465,14 +1465,17 @@ class RealGalaxy(GSObject):
     real_galaxy_catalog = descriptors.SimpleParam(
         "real_galaxy_catalog", default=None, group="required",
         doc="RealGalaxyCatalog object with basic information about where to find data for each "+
-        "RealGalaxy instance.")
+        "RealGalaxy instance.",
+        ok_if_object_transformed=True) # still gettable/settable for object info/re-init if desired
     
     index = descriptors.SimpleParam(
-        "index", default=None, group="optional", doc="Index of the desired galaxy in the catalog.")
+        "index", default=None, group="optional", doc="Index of the desired galaxy in the catalog.",
+        ok_if_object_transformed=True) # still gettable/settable for object info/re-init if desired
     
     ID = descriptors.SimpleParam(
         "ID", default=None, group="optional",
-        doc="Object ID for the desired galaxy in the catalog.")
+        doc="Object ID for the desired galaxy in the catalog.",
+        ok_if_object_transformed=True) # still gettable/settable for object info/re-init if desired
     
     random = descriptors.SimpleParam(
         "random", default=False, group="optional", doc="Whether galaxy selected at random.")
