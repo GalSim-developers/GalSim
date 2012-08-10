@@ -9,6 +9,25 @@ class SimpleParam(object):
 
     class MyProfile(GSObject):
         flux = SimpleParam("flux")
+
+    Initialization
+    --------------
+    Most of the init params are very obvious in meaning, two of them less so:
+
+    @param update_SBProfile_on_set       Most params, if changed/set, require a later re-
+                                         initialization of the SBProfile contained by the object.
+                                         If a param does not, for example the flux which can be
+                                         efficiently changed on the SBProfile in situ, then this can
+                                         be indicated by setting update_SBProfile_on_set = False.
+    @param ok_if_object_transformed      Most params will become outdated/inaccurate for an object
+                                         after it undergoes a general affine transformation, and so
+                                         the default behaviour is to raise an AttributeError if
+                                         trying to get/set params for objects which have undergone
+                                         a transformation. Setting ok_if_object_transformed = True
+                                         disables this.  Again, this is handy if dealing with flux,
+                                         which can still be calculated/changed for transformed
+                                         objects.  It might also be handy for auxilliary data (e.g.
+                                         in the RealGalaxy).
     """
 
     def __init__(self, name, default=None, group="required", doc=None, update_SBProfile_on_set=True,
@@ -67,6 +86,25 @@ class GetSetFuncParam(object):
 
     (N.B. There is not actual need to do this, since we have the GetSetScaleParam descriptor class,
      but it does illustrate the functionality.)
+
+    Initialization
+    --------------
+    Most of the init params are very obvious in meaning, two of them less so:
+
+    @param update_SBProfile_on_set       Most params, if changed/set, require a later re-
+                                         initialization of the SBProfile contained by the object.
+                                         If a param does not, for example the flux which can be
+                                         efficiently changed on the SBProfile in situ, then this can
+                                         be indicated by setting update_SBProfile_on_set = False.
+    @param ok_if_object_transformed      Most params will become outdated/inaccurate for an object
+                                         after it undergoes a general affine transformation, and so
+                                         the default behaviour is to raise an AttributeError if
+                                         trying to get/set params for objects which have undergone
+                                         a transformation. Setting ok_if_object_transformed = True
+                                         disables this.  Again, this is handy if dealing with flux,
+                                         which can still be calculated/changed for transformed
+                                         objects.  It might also be handy for auxilliary data (e.g.
+                                         in the RealGalaxy).
     """
 
     def __init__(self, getter, setter=None, group="required", doc=None,
@@ -126,7 +164,25 @@ class GetSetScaleParam(object):
 
     (N.B. The example above is functionally equivalent to the example given in the GetSetFuncParam
      docstring, and illustrates the neater syntax of this descriptor for this specific task.)
-    
+
+    Initialization
+    --------------
+    Most of the init params are very obvious in meaning, two of them less so:
+
+    @param update_SBProfile_on_set       Most params, if changed/set, require a later re-
+                                         initialization of the SBProfile contained by the object.
+                                         If a param does not, for example the flux which can be
+                                         efficiently changed on the SBProfile in situ, then this can
+                                         be indicated by setting update_SBProfile_on_set = False.
+    @param ok_if_object_transformed      Most params will become outdated/inaccurate for an object
+                                         after it undergoes a general affine transformation, and so
+                                         the default behaviour is to raise an AttributeError if
+                                         trying to get/set params for objects which have undergone
+                                         a transformation. Setting ok_if_object_transformed = True
+                                         disables this.  Again, this is handy if dealing with flux,
+                                         which can still be calculated/changed for transformed
+                                         objects.  It might also be handy for auxilliary data (e.g.
+                                         in the RealGalaxy).
     """
 
     def __init__(self, name, root_name, factor, group="required", doc=None,
@@ -163,13 +219,13 @@ class GetSetScaleParam(object):
 
 class FluxParam(object):
     """
-    A descriptor for storing and updating the flux parameter of a GSObject.
+    A descriptor for storing and updating the most simply-implemented flux parameters of GSObjects.
 
     Unlike SimpleParam this does not cause the GSObject's stored SBProfile to become undefined
     necessitating later re-initializtion, but rather calls the SBProfile's own setFlux() method
-    to update the flux.
+    to update the flux.  It is also fine following a transformation, so does not check for this.
 
-    This causes the SBProfile to remain or become an SBTransform, and therefore not necessarily of
+    This does cause the SBProfile to remain or become an SBTransform, and therefore not necessarily
     the same object type as might be expected from the container GSObject.  However, all of the
     original GSObject params are available via their descriptors.
     """
