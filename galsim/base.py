@@ -742,13 +742,9 @@ class Moffat(GSObject):
     # will be None, so scale_radius needs to be got from self.SBProfile.getScaleRadius.
     def _get_scale_radius(self):
         if self._last_size_set_was_half_light_radius is True:
-            if self.SBProfile.__class__ is galsim.SBMoffat:
-                return self.SBProfile.getScaleRadius()
-            else:
-                # Raise an exception - this only happens after changes to the flux param
-                raise AttributeError(
-                    "Scale radius not accessible for half_light_radius-defined Moffat "+
-                    "instances after a change to the object flux.")
+            if not self.SBProfile.__class__ is galsim.SBMoffat: # can happen after flux set
+                self._SBInitialize()
+            return self.SBProfile.getScaleRadius()
         else:
             return self._data["scale_radius"]
         
@@ -771,13 +767,9 @@ class Moffat(GSObject):
         if self._last_size_set_was_half_light_radius is True:
             return self._data["half_light_radius"]
         else:
-            if self.SBProfile.__class__ is galsim.SBMoffat:
-                return self.SBProfile.getHalfLightRadius()
-            else:
-                # Raise an exception - this only happens after changes to the flux param
-                raise AttributeError(
-                    "Half light radius not accessible for scale_radius or fwhm-defined Moffat "+
-                    "instances after a change to the object flux.")
+            if not self.SBProfile.__class__ is galsim.SBMoffat: # can happen after flux set
+                self._SBInitialize()
+            return self.SBProfile.getHalfLightRadius()
 
     def _set_half_light_radius(self, value):
         self._data["half_light_radius"] = value
