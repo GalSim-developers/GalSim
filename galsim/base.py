@@ -338,9 +338,9 @@ class GSObject(object):
         """
         import math
         ret = self.copy()
-        flux = self.getFlux()
+        old_flux = self.flux
         ret.applyTransformation(galsim.Ellipse(math.log(scale)))
-        ret.setFlux(flux)
+        ret.flux = old_flux
         return ret
 
     def createMagnified(self, scale):
@@ -522,7 +522,7 @@ class GSObject(object):
         provided a large enough image to catch most of the flux.  For example:
         @code
         image, added_flux = obj.drawShoot(image)
-        assert added_flux > 0.99 * obj.getFlux()
+        assert added_flux > 0.99 * obj.flux
         @endcode
         However, the appropriate threshold will depend things like whether you are 
         keeping poisson_flux=True, how high the flux is, how big your images are relative to
@@ -563,7 +563,7 @@ class GSObject(object):
             uniform_deviate = galsim.UniformDeviate()
 
         # Check that either n_photons is set to something or flux is set to something
-        if n_photons == 0. and self.getFlux() == 1.:
+        if n_photons == 0. and self.flux == 1.:
             import warnings
             msg = "Warning: drawShoot for object with flux == 1, but n_photons == 0.\n"
             msg += "This will only shoot a single photon."
@@ -742,7 +742,13 @@ class Moffat(GSObject):
     # will be None, so scale_radius needs to be got from self.SBProfile.getScaleRadius.
     def _get_scale_radius(self):
         if self._last_size_set_was_half_light_radius is True:
-            return self.SBProfile.getScaleRadius()
+            if self.SBProfile.__class__ is galsim.SBMoffat:
+                return self.SBProfile.getScaleRadius()
+            else:
+                # Raise an exception - this only happens after changes to the flux param
+                raise AttributeError(
+                    "Scale radius not accessible for half_light_radius-defined Moffat "+
+                    "instances after a change to the object flux.")
         else:
             return self._data["scale_radius"]
         
@@ -765,7 +771,13 @@ class Moffat(GSObject):
         if self._last_size_set_was_half_light_radius is True:
             return self._data["half_light_radius"]
         else:
-            return self.SBProfile.getHalfLightRadius()
+            if self.SBProfile.__class__ is galsim.SBMoffat:
+                return self.SBProfile.getHalfLightRadius()
+            else:
+                # Raise an exception - this only happens after changes to the flux param
+                raise AttributeError(
+                    "Half light radius not accessible for scale_radius or fwhm-defined Moffat "+
+                    "instances after a change to the object flux.")
 
     def _set_half_light_radius(self, value):
         self._data["half_light_radius"] = value
@@ -1539,7 +1551,9 @@ class RealGalaxy(GSObject):
             PSF_image, self.interpolant, dx=self.pixel_scale)
         if self.flux != None:
             self.original_image.setFlux(self.flux)
+            self.original_image.__class__ = galsim.SBTransform # correctly reflect SBProfile change
         self.original_PSF.setFlux(1.0)
+        self.original_PSF.__class__ = galsim.SBTransform # correctly reflect SBProfile change
         psf_inv = galsim.SBDeconvolve(self.original_PSF)
         GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
 
@@ -1576,6 +1590,7 @@ class Add(GSObject):
     
     def _set_flux(self, value):
         self.SBProfile.setFlux(value)
+        self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
 
     flux = descriptors.GetSetFuncParam(
         getter=_get_flux, setter=_set_flux, update_SBProfile_on_set=False,
@@ -1722,6 +1737,7 @@ class DoubleGaussian(Add):
             # individual flux1 and flux2 no longer settable after a transformation, so simply
             # scale total flux accordingly in the SBProfile attribute itself
             self.SBProfile.setFlux(value)
+            self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
 
     flux = descriptors.GetSetFuncParam(
         getter=_get_dg_flux, setter=_set_dg_flux, update_SBProfile_on_set=False,
@@ -1816,6 +1832,7 @@ class Convolve(GSObject):
     
     def _set_convolve_flux(self, value):
         self.SBProfile.setFlux(value)
+        self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
 
     flux = descriptors.GetSetFuncParam(
         getter=_get_convolve_flux, setter=_set_convolve_flux, update_SBProfile_on_set=False,
@@ -1930,6 +1947,7 @@ class Deconvolve(GSObject):
 
     def _set_deconvolve_flux(self, value):
         self.SBProfile.setFlux(value)
+        self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
 
     flux = descriptors.GetSetFuncParam(
         getter=_get_deconvolve_flux, setter=_set_deconvolve_flux, update_SBProfile_on_set=False,
