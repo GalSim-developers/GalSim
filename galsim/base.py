@@ -224,7 +224,8 @@ class GSObject(object):
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
         self.SBProfile.applyTransformation(ellipse._ellipse)
-        self._add_transformation(ellipse)
+        self.SBProfile.__class__ = galsim.SBTransform # update for accuracy
+        self._add_transformation(ellipse) # store transform to ordered list
  
     def applyDilation(self, scale):
         """@brief Apply a dilation of the linear size by the given scale.
@@ -297,7 +298,8 @@ class GSObject(object):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         self.SBProfile.applyRotation(theta)
-        self._add_transformation(theta)
+        self.SBProfile.__class__ = galsim.SBTransform # update for accuracy
+        self._add_transformation(theta)   # store transform to ordered list
 
     def applyShift(self, dx, dy):
         """@brief Apply a (dx, dy) shift to this object.
