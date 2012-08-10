@@ -76,7 +76,7 @@ test_flux1 = test_flux
 test_flux2 = 0.7 * test_flux
 
 # decimal point to go to for parameter value comparisons
-param_decimal = 13
+param_decimal = 12
 
 
 def test_gaussian_param_consistency():
@@ -499,6 +499,59 @@ def test_add_param_consistency():
         err_msg="Add total flux for triple-entry list initialization inconsistent with OpticalPSF "+
         "and AtmosphericPSF and Moffat inputs.")
         
+def test_convolve_param_consistency():
+    # only really the flux param to test, but will do this with a couple of difference sorts of
+    # GSObjects in the Add just to check, and for list and dual argument initialization
+    # Sersic and Exp first
+    obj1 = galsim.Exponential(scale_radius=test_scale, flux=test_flux)
+    obj2 = galsim.Sersic(n=3.5, half_light_radius=test_hlr, flux=2. * test_flux)
+    # test dual argument initializtion
+    convolve = galsim.Convolve(obj1, obj2)
+    np.testing.assert_almost_equal(
+        convolve.flux, 2. * test_flux**2, decimal=param_decimal,
+        err_msg="Convolve total flux for dual argument initialization inconsistent with Sersic "+
+        "and Exp inputs.")
+    # test 2-entry list initialization
+    convolve = galsim.Convolve([obj1, obj2])
+    np.testing.assert_almost_equal(
+        convolve.flux, 2. * test_flux**2, decimal=param_decimal,
+        err_msg="Convolve total flux for double-entry list initialization inconsistent with "+
+        "Sersic and Exp inputs.")
+    # make a third object, dVc
+    obj3 = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux = 3. * test_flux)
+    # test 3-entry list initialization
+    convolve = galsim.Convolve([obj1, obj2, obj3])
+    np.testing.assert_almost_equal(
+        convolve.flux, 6. * test_flux**3, decimal=param_decimal,
+        err_msg="Convolve total flux for triple-entry list initialization inconsistent with "+
+        "Sersic and Exp and DeVauc inputs.")
 
+    # Then try a couple of SBInterpolatedImage-type classes
+    obj1 = galsim.OpticalPSF(
+        lam_over_D=test_loD, astig1=test_astig1, defocus=test_defocus, astig2=test_astig2,
+        flux=test_flux, oversampling=test_oversampling)
+    obj2 = galsim.AtmosphericPSF(
+        lam_over_r0=test_lor0, flux=2. * test_flux, oversampling=test_oversampling)
+    # test dual argument initializtion
+    convolve = galsim.Convolve(obj1, obj2)
+    np.testing.assert_almost_equal(
+        convolve.flux, 2. * test_flux**2, decimal=param_decimal,
+        err_msg="Convolve total flux for dual argument initialization inconsistent with OpticalPSF "
+        "and AtmosphericPSF inputs.")
+    # test 2-entry list initialization
+    add = galsim.Convolve([obj1, obj2])
+    np.testing.assert_almost_equal(
+        convolve.flux, 2. * test_flux**2, decimal=param_decimal,
+        err_msg="Convolve total flux for double-entry list initialization inconsistent with "+
+        "OpticalPSF and AtmosphericPSF inputs.")
+    # make a third object, a Moffat for something totally different
+    obj3 = galsim.Moffat(half_light_radius=test_hlr, flux = 3. * test_flux, beta=test_beta,
+                         trunc=test_trunc)
+    # test 3-entry list initialization
+    convolve = galsim.Convolve([obj1, obj2, obj3])
+    np.testing.assert_almost_equal(
+        convolve.flux, 6. * test_flux**3, decimal=param_decimal,
+        err_msg="Convolve total flux for triple-entry list initialization inconsistent with "+
+        "OpticalPSF and AtmosphericPSF and Moffat inputs.")
 
     
