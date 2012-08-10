@@ -1712,11 +1712,16 @@ class DoubleGaussian(Add):
         return self.SBProfile.getFlux()
     
     def _set_dg_flux(self, value):
-        old_flux = self.flux
-        # Then rescale both fluxes in each componenent to the new value, ensuring both are updated
-        # in equal proportion
-        self.flux1 *= value / old_flux
-        self.flux2 *= value / old_flux
+        if len(self.transformations) == 0:
+            old_flux = self.flux
+            # Rescale both fluxes in each componenent to the new value, ensuring both are updated
+            # in equal proportion
+            self.flux1 *= value / old_flux
+            self.flux2 *= value / old_flux
+        else:
+            # individual flux1 and flux2 no longer settable after a transformation, so simply
+            # scale total flux accordinly
+            self.SBProfile.setFlux(value)
 
     flux = descriptors.GetSetFuncParam(
         getter=_get_dg_flux, setter=_set_dg_flux, update_SBProfile_on_set=False,
