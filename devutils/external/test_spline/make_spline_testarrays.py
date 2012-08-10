@@ -11,7 +11,7 @@ import os
 # 8a9b04085b873f63be4fb56ae4fa5a0ca78a0387
 #
 # To re-run this script:
-# - Firt type `git checkout c601a85034f89bba5d608ab6b2944f4f5f168491`
+# - First type `git checkout c601a85034f89bba5d608ab6b2944f4f5f168491`
 # - Type `scons install` in the main GalSim directory.
 # - Then type `python make_spline_testarrays.py` in this directory.
 
