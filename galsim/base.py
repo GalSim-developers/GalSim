@@ -36,12 +36,21 @@ class GSObject(object):
     flux = descriptors.FluxParam()
 
     # --- Ordered list for storing all transformations applied to the GSObject ---
-    # Currently all items in .transformations must either be a galsim.Ellipse (for stretches and
-    # shifts), a galsim.Angle (for rotations), or a float (for flux scaling).
+    # Currently all items in .transformations will either be a galsim.Ellipse (for stretches and
+    # shifts), a galsim.Angle (for rotations).
     transformations = []
+
+    def _add_transformation(self, transformation):
+        if isinstance(transformation, galsim.Ellipse) or isinstance(transformation, galsim.Angle):
+            self.transformations.append(transformation)
+        else:
+            raise TypeError(
+                "Only Ellipse (for shear, dilation, shift) or Angle (for rotation) "+
+                "transformations supported.")
 
     # --- Initialization ---
     def __init__(self, SBProfile):
+        self.transformations = []
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
     
     # Make op+ of two GSObjects work to return an Add object
@@ -152,7 +161,6 @@ class GSObject(object):
         """
         return self.flux
 
-
     def xValue(self, position):
         """@brief Returns the value of the object at a chosen 2D position in real space.
         
@@ -216,8 +224,7 @@ class GSObject(object):
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
         self.SBProfile.applyTransformation(ellipse._ellipse)
-        self.transformations.append(ellipse)
-        #        self.__class__ = GSObject
+        self._add_transformation(ellipse)
  
     def applyDilation(self, scale):
         """@brief Apply a dilation of the linear size by the given scale.
@@ -235,10 +242,9 @@ class GSObject(object):
         are no longer available.
         """
         import math
-        flux = self.getFlux()
-        
+        old_flux = self.flux
         self.applyTransformation(galsim.Ellipse(math.log(scale)))
-        self.setFlux(flux)
+        self.flux = old_flux # conserve flux
 
     def applyMagnification(self, scale):
         """@brief Apply a magnification by the given scale, scaling the linear size by scale
@@ -258,7 +264,6 @@ class GSObject(object):
         """
         import math
         self.applyTransformation(galsim.Ellipse(math.log(scale)))
-
        
     def applyShear(self, *args, **kwargs):
         """@brief Apply a shear to this object, where arguments are either a galsim.shear.Shear, or
@@ -274,13 +279,12 @@ class GSObject(object):
                 raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
             if not isinstance(args[0], galsim.Shear):
                 raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
-            self.SBProfile.applyShear(args[0]._shear)
+            ellipse = galsim.Ellipse(args[0])
         elif len(args) > 1:
             raise TypeError("Error, too many unnamed arguments to applyShear!")
         else:
-            shear = galsim.Shear(**kwargs)
-            self.SBProfile.applyShear(shear._shear)
-        self.__class__ = GSObject
+            ellipse = galsim.Ellipse(galsim.Shear(**kwargs))
+        self.applyTransformation(ellipse)
 
     def applyRotation(self, theta):
         """@brief Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
@@ -293,8 +297,8 @@ class GSObject(object):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         self.SBProfile.applyRotation(theta)
-        self.__class__ = GSObject
-        
+        self._add_transformation(theta)
+
     def applyShift(self, dx, dy):
         """@brief Apply a (dx, dy) shift to this object.
            
@@ -303,8 +307,8 @@ class GSObject(object):
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
         """
-        self.SBProfile.applyShift(dx, dy)
-        self.__class__ = GSObject
+        ellipse = galsim.Ellipse(x_shift=dx, y_shift=dy)
+        self.applyTransformation(ellipse)
 
     # Also add methods which create a new GSObject with the transformations applied...
     #
@@ -1571,7 +1575,8 @@ class Add(GSObject):
         self.SBProfile.setFlux(value)
 
     flux = descriptors.GetSetFuncParam(
-        getter=_get_flux, setter=_set_flux, update_on_set=False,
+        getter=_get_flux, setter=_set_flux, update_SBProfile_on_set=False,
+        ok_if_object_transformed=True, # flux params can still be accessed after transformation
         doc="Total flux of the Add object.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
@@ -1711,7 +1716,8 @@ class DoubleGaussian(Add):
         self.flux2 *= value / old_flux
 
     flux = descriptors.GetSetFuncParam(
-        getter=_get_dg_flux, setter=_set_dg_flux, update_on_set=False,
+        getter=_get_dg_flux, setter=_set_dg_flux, update_SBProfile_on_set=False,
+        ok_if_object_transformed=True, # flux params can still be accessed after transformation
         doc="Total flux of the DoubleGaussian object.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
@@ -1804,7 +1810,8 @@ class Convolve(GSObject):
         self.SBProfile.setFlux(value)
 
     flux = descriptors.GetSetFuncParam(
-        getter=_get_convolve_flux, setter=_set_convolve_flux, update_on_set=False,
+        getter=_get_convolve_flux, setter=_set_convolve_flux, update_SBProfile_on_set=False,
+        ok_if_object_transformed=True, # flux params can still be accessed after transformation
         doc="Total flux of the Convolve object.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
@@ -1917,7 +1924,7 @@ class Deconvolve(GSObject):
         self.SBProfile.setFlux(value)
 
     flux = descriptors.GetSetFuncParam(
-        getter=_get_deconvolve_flux, setter=_set_deconvolve_flux, update_on_set=False,
+        getter=_get_deconvolve_flux, setter=_set_deconvolve_flux, update_SBProfile_on_set=False,
         doc="Total flux of the Deconvolve object.")
 
     def __init__(self, farg):

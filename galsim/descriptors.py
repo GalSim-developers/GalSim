@@ -11,7 +11,8 @@ class SimpleParam(object):
         flux = SimpleParam("flux")
     """
 
-    def __init__(self, name, default=None, group="required", doc=None, update_on_set=True):
+    def __init__(self, name, default=None, group="required", doc=None, update_SBProfile_on_set=True,
+                 ok_if_object_transformed=False):
         self.name = name
         self.default = default
         self.__doc__ = doc
@@ -19,18 +20,27 @@ class SimpleParam(object):
             raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
         else:
             self.group = group
-        self.update_on_set = update_on_set
+        self.update_SBProfile_on_set = update_SBProfile_on_set
+        self.ok_if_object_transformed = ok_if_object_transformed
 	
     def __get__(self, instance, cls):
         if instance is not None:
+            if not self.ok_if_object_transformed and len(instance.transformations) > 0:
+                raise AttributeError(
+                    "This object has been transformed, disabling all non-flux gettable/settable "+
+                    "parameters.")
             # dict.setdefault will return the item in the dict if present, or set and return the
             # default otherwise
             return instance._data.setdefault(self.name, self.default)
         return self
 
     def __set__(self, instance, value):
+        if not self.ok_if_object_transformed and len(instance.transformations) > 0:
+            raise AttributeError(
+                "This object has been transformed, disabling all non-flux gettable/settable "+
+                "parameters.")
         instance._data[self.name] = value
-        if self.update_on_set:
+        if self.update_SBProfile_on_set:
             instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
 
 
@@ -59,7 +69,8 @@ class GetSetFuncParam(object):
      but it does illustrate the functionality.)
     """
 
-    def __init__(self, getter, setter=None, group="required", doc=None, update_on_set=True):
+    def __init__(self, getter, setter=None, group="required", doc=None,
+                 update_SBProfile_on_set=True, ok_if_object_transformed=False):
         self.getter = getter
         self.setter = setter
         self.__doc__ = doc
@@ -67,18 +78,27 @@ class GetSetFuncParam(object):
             raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
         else:
             self.group = group
-        self.update_on_set = update_on_set
+        self.update_SBProfile_on_set = update_SBProfile_on_set
+        self.ok_if_object_transformed = ok_if_object_transformed
     
     def __get__(self, instance, cls):
         if instance is not None:
+            if not self.ok_if_object_transformed and len(instance.transformations) > 0:
+                raise AttributeError(
+                    "This object has been transformed, disabling all non-flux gettable/settable "+
+                    "parameters.")
             return self.getter(instance)
         return self
 
     def __set__(self, instance, value):
+        if not self.ok_if_object_transformed and len(instance.transformations) > 0:
+            raise AttributeError(
+                "This object has been transformed, disabling all non-flux gettable/settable "+
+                "parameters.")
         if not self.setter:
             raise TypeError("Cannot set parameter, no setter function given.")
         self.setter(instance, value)
-        if self.update_on_set:
+        if self.update_SBProfile_on_set:
             instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
 
 
@@ -109,7 +129,8 @@ class GetSetScaleParam(object):
     
     """
 
-    def __init__(self, name, root_name, factor, group="required", doc=None, update_on_set=True):
+    def __init__(self, name, root_name, factor, group="required", doc=None,
+                 update_SBProfile_on_set=True, ok_if_object_transformed=False):
         self.name = name
         self.root_name = root_name
         self.factor = factor
@@ -118,16 +139,25 @@ class GetSetScaleParam(object):
             raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
         else:
             self.group = group
-        self.update_on_set = update_on_set
+        self.update_SBProfile_on_set = update_SBProfile_on_set
+        self.ok_if_object_transformed = ok_if_object_transformed
     
     def __get__(self, instance, cls):
         if instance is not None:
+            if not self.ok_if_object_transformed and len(instance.transformations) > 0:
+                raise AttributeError(
+                    "This object has been transformed, disabling all non-flux gettable/settable "+
+                    "parameters.")
             return instance._data[self.root_name] * self.factor
         return self
 
     def __set__(self, instance, value):
+        if not self.ok_if_object_transformed and len(instance.transformations) > 0:
+            raise AttributeError(
+                "This object has been transformed, disabling all non-flux gettable/settable "+
+                "parameters.")
         instance._data[self.root_name] = value / self.factor
-        if self.update_on_set:
+        if self.update_SBProfile_on_set:
             instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
         
 
@@ -155,9 +185,12 @@ class FluxParam(object):
 
     def __get__(self, instance, cls):
         if instance is not None:
-            # dict.setdefault will return the item in the dict if present, or set and return the
-            # default otherwise
-            return instance._data["flux"]
+            # If transformation has been applied, the _data["flux"] may not be accurate but the
+            # SBProfile.getFlux() will be
+            if len(instance.transformations) == 0:
+                return instance._data["flux"]
+            else:
+                return instance.SBProfile.getFlux()
         else:
             raise AttributeError("Flux parameter not set, error in initialization.")
         return self
@@ -165,7 +198,8 @@ class FluxParam(object):
     def __set__(self, instance, value):
         # update the stored flux value
         instance._data["flux"] = value
-        # update the SBProfile (do not undefine for re-initialization as do, e.g., SimpleParams).
+        # update the SBProfile (do not need to undefine for re-initialization as do, e.g.,
+        # SimpleParams)
         if instance._SBProfile is None:
             pass # No need to change status if _SBProfile is already undefined
         else:
