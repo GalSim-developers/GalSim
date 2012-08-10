@@ -6,7 +6,6 @@ from shear import *
 from ellipse import *
 from . import fits
 from base import *
-from . import sandbox
 from . import noise
 from . import atmosphere
 from . import optics
