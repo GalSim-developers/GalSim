@@ -1715,12 +1715,12 @@ class DoubleGaussian(Add):
         if len(self.transformations) == 0:
             old_flux = self.flux
             # Rescale both fluxes in each componenent to the new value, ensuring both are updated
-            # in equal proportion
+            # in equal proportion (will re-init SBProfile if requested)
             self.flux1 *= value / old_flux
             self.flux2 *= value / old_flux
         else:
             # individual flux1 and flux2 no longer settable after a transformation, so simply
-            # scale total flux accordinly
+            # scale total flux accordingly in the SBProfile attribute itself
             self.SBProfile.setFlux(value)
 
     flux = descriptors.GetSetFuncParam(
