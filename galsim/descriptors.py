@@ -1,4 +1,4 @@
-
+import galsim
 
 class SimpleParam(object):
     """
@@ -263,4 +263,6 @@ class FluxParam(object):
             pass # No need to change status if _SBProfile is already undefined
         else:
             instance.SBProfile.setFlux(value)
+            instance.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
+
         
