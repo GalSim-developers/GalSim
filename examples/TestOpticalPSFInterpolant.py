@@ -26,39 +26,31 @@ except ImportError:
 
 def Script4():
 
-    random_seed = 1512413
-    sky_level = 1.e4        # ADU / arcsec^2
     pixel_scale = 0.28      # arcsec
     nx = 64
     ny = 64
 
-    gal_flux_min = 1.e4     # Range for galaxy flux
-    gal_flux_max = 1.e5  
-    gal_hlr_min = 0.3       # arcsec
-    gal_hlr_max = 1.3       # arcsec
-    gal_e_min = 0.          # Range for ellipticity
-    gal_e_max = 0.8
-
     psf_fwhm = 0.65         # arcsec
-
-    rng = galsim.UniformDeviate(random_seed)
 
     pix = galsim.Pixel(xw = pixel_scale)
 
     atmos = galsim.Gaussian(fwhm=psf_fwhm)
 
-    i1d_list = [ galsim.Linear(tol=1.e-4),
-                 galsim.Cubic(tol=1.e-4),
-                 galsim.Quintic(tol=1.e-4),
-                 galsim.Lanczos(3, conserve_flux=False, tol=1.e-4),
-                 galsim.Lanczos(5, conserve_flux=False, tol=1.e-4),
-                 galsim.Lanczos(7, conserve_flux=False, tol=1.e-4),
-                 galsim.Lanczos(3, conserve_flux=True, tol=1.e-4),
-                 galsim.Lanczos(5, conserve_flux=True, tol=1.e-4),
-                 galsim.Lanczos(7, conserve_flux=True, tol=1.e-4) ]
+    i1d_list = [ "galsim.Linear(tol=1.e-4)",
+                 "galsim.Cubic(tol=1.e-4)",
+                 "galsim.Quintic(tol=1.e-4)",
+                 "galsim.Lanczos(3, conserve_flux=False, tol=1.e-4)",
+                 "galsim.Lanczos(5, conserve_flux=False, tol=1.e-4)",
+                 "galsim.Lanczos(7, conserve_flux=False, tol=1.e-4)",
+                 "galsim.Lanczos(3, conserve_flux=True, tol=1.e-4)",
+                 "galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)",
+                 "galsim.Lanczos(7, conserve_flux=True, tol=1.e-4)" ]
 
-    for i1d in i1d_list:
-        print 'i1d = ',i1d
+    for i1d_name in i1d_list:
+        print 'i1d = ',i1d_name
+        # A workaround for the fact that the interpolants don't have good __repr__'s yet.
+        i1d = eval(i1d_name)
+        #print 'i1d = ',i1d
 
         # Make the PSF profile:
         i2d = galsim.InterpolantXY(i1d)
