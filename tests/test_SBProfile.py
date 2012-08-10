@@ -432,15 +432,15 @@ def test_exponential_radii():
             err_msg="Error in half light radius for Exponential initialized with scale_radius.")
 
     # Check that the getters don't work after modifying the original.
-    #test_gal_shear = test_gal.copy()
-    #print 'hlr = ',test_gal_shear.getHalfLightRadius()
-    #print 'scale = ',test_gal_shear.getScaleRadius()
-    #test_gal_shear.applyShear(g1=0.3, g2=0.1)
-    #try:
-    #    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-    #    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius")
-    #except ImportError:
-    #    pass
+    test_gal_shear = test_gal.copy()
+    print 'hlr = ',test_gal_shear.half_light_radius
+    print 'scale = ',test_gal_shear.scale_radius
+    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius")
+    except ImportError:
+        pass
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -490,15 +490,15 @@ def test_sersic_radii():
                 err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
 
         # Check that the getters don't work after modifying the original.
-        #test_gal_shear = test_gal.copy()
-        #print 'n = ',test_gal_shear.n
-        #print 'hlr = ',test_gal_shear.half_light_radius
-        #test_gal_shear.applyShear(g1=0.3, g2=0.1)
-        #try:
-        #    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN");
-        #    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-        #except ImportError:
-        #    pass
+        test_gal_shear = test_gal.copy()
+        print 'n = ',test_gal_shear.n
+        print 'hlr = ',test_gal_shear.half_light_radius
+        test_gal_shear.applyShear(g1=0.3, g2=0.1)
+        try:
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "n");
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+        except ImportError:
+            pass
 
     # Repeat the above for an explicit DeVaucouleurs.  (Same as n=4, but special name.)
     test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.)
@@ -509,13 +509,13 @@ def test_sersic_radii():
             err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
 
     # Check that the getters don't work after modifying the original.
-    #test_gal_shear = test_gal.copy()
-    #print 'hlr = ',test_gal_shear.half_light_radius
-    #test_gal_shear.applyShear(g1=0.3, g2=0.1)
-    #try:
-    #    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-    #except ImportError:
-    #    pass
+    test_gal_shear = test_gal.copy()
+    print 'hlr = ',test_gal_shear.half_light_radius
+    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+    except ImportError:
+        pass
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -574,17 +574,17 @@ def test_airy_radii():
             err_msg="Error in getFWHM() for Airy.")
 
     # Check that the getters don't work after modifying the original.
-    #test_gal_shear = test_gal.copy()
-    #print 'fwhm = ',test_gal_shear.fwhm
-    #print 'hlr = ',test_gal_shear.half_light_radius
-    #print 'lod = ',test_gal_shear.lam_over_D
-    #test_gal_shear.applyShear(g1=0.3, g2=0.1)
-    #try:
-    #    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
-    #    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-    #    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getLamOverD")
-    #except ImportError:
-    #    pass
+    test_gal_shear = test_gal.copy()
+    print 'fwhm = ',test_gal_shear.fwhm
+    print 'hlr = ',test_gal_shear.half_light_radius
+    print 'lod = ',test_gal_shear.lam_over_D
+    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "fwhm");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "lam_over_D")
+    except ImportError:
+        pass
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -873,22 +873,22 @@ def test_moffat_radii():
             err_msg="Error in scale radius for truncated Moffat initialized with scale radius")
 
     # Check that the getters don't work after modifying the original.
-    #test_gal_shear = test_gal.copy()
-    #print 'beta = ',test_gal_shear.beta
-    #print 'fwhm = ',test_gal_shear.fwhm
-    #print 'hlr = ',test_gal_shear.half_light_radius
-    #print 'scale = ',test_gal_shear.scale_radius
-    #test_gal_shear.applyShear(g1=0.3, g2=0.1)
-    #try:
-    #    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getBeta");
-    #    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
-    #    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-    #    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius");
-    #except ImportError:
-    #    pass
+    test_gal_shear = test_gal.copy()
+    print 'beta = ',test_gal_shear.beta
+    print 'fwhm = ',test_gal_shear.fwhm
+    print 'hlr = ',test_gal_shear.half_light_radius
+    print 'scale = ',test_gal_shear.scale_radius
+    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "beta");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "fwhm");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius");
+    except ImportError:
+        pass
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_sbprofile_smallshear():
     """Test the application of a small shear to a Gaussian SBProfile against a known result.
