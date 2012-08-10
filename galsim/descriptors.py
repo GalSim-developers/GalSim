@@ -19,6 +19,7 @@ class SimpleParam(object):
                                          If a param does not, for example the flux which can be
                                          efficiently changed on the SBProfile in situ, then this can
                                          be indicated by setting update_SBProfile_on_set = False.
+                                         
     @param ok_if_object_transformed      Most params will become outdated/inaccurate for an object
                                          after it undergoes a general affine transformation, and so
                                          the default behaviour is to raise an AttributeError if
@@ -96,6 +97,7 @@ class GetSetFuncParam(object):
                                          If a param does not, for example the flux which can be
                                          efficiently changed on the SBProfile in situ, then this can
                                          be indicated by setting update_SBProfile_on_set = False.
+                                         
     @param ok_if_object_transformed      Most params will become outdated/inaccurate for an object
                                          after it undergoes a general affine transformation, and so
                                          the default behaviour is to raise an AttributeError if
@@ -174,6 +176,7 @@ class GetSetScaleParam(object):
                                          If a param does not, for example the flux which can be
                                          efficiently changed on the SBProfile in situ, then this can
                                          be indicated by setting update_SBProfile_on_set = False.
+
     @param ok_if_object_transformed      Most params will become outdated/inaccurate for an object
                                          after it undergoes a general affine transformation, and so
                                          the default behaviour is to raise an AttributeError if
