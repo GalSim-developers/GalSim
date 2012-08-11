@@ -1058,5 +1058,58 @@ def test_convolve_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
-    
 
+def test_gaussian_data():
+    # As the data copying code is shared among all GSObjects, it's probably sufficient to simply
+    # test a few of the broadly different types.
+    # Gaussian, init with sigma and flux
+    obj = galsim.Gaussian(sigma=test_sigma, flux=test_flux)
+    cobj = obj.copy()
+    np.testing.assert_equal(
+        obj._data, cobj._data, err_msg="Object _data store not consistent after copy.")
+    for key, value in cobj._data.iteritems():
+        cobj._data[key] = "foo"
+    # Check that this systematic ruining of the _data store is not reflected in the original:
+    assert obj._data != cobj._data
+
+def test_moffat_data():
+    # As the data copying code is shared among all GSObjects, it's probably sufficient to simply
+    # test a few of the broadly different types.
+    obj = galsim.Moffat(scale_radius=test_scale, beta=test_beta, trunc=test_trunc, flux=test_flux)
+    cobj = obj.copy()
+    np.testing.assert_equal(
+        obj._data, cobj._data, err_msg="Object _data store not consistent after copy.")
+    for key, value in cobj._data.iteritems():
+        cobj._data[key] = "foo"
+    # Check that this systematic ruining of the _data store is not reflected in the original:
+    assert obj._data != cobj._data
+
+def test_opticalpsf_data():
+    # As the data copying code is shared among all GSObjects, it's probably sufficient to simply
+    # test a few of the broadly different types.
+    obj = galsim.OpticalPSF(
+        lam_over_D=test_loD, astig1=test_astig1, astig2=test_astig2, defocus=test_defocus,
+        oversampling=test_oversampling, flux=test_flux)
+    cobj = obj.copy()
+    np.testing.assert_equal(
+        obj._data, cobj._data, err_msg="Object _data store not consistent after copy.")
+    for key, value in cobj._data.iteritems():
+        cobj._data[key] = "foo"
+    # Check that this systematic ruining of the _data store is not reflected in the original:
+    assert obj._data != cobj._data
+
+def test_add_data():
+    # As the data copying code is shared among all GSObjects, it's probably sufficient to simply
+    # test a few of the broadly different types.
+    obj1 = galsim.OpticalPSF(
+        lam_over_D=test_loD, astig1=test_astig1, astig2=test_astig2, defocus=test_defocus,
+        oversampling=test_oversampling, flux=test_flux)
+    obj2 = galsim.Gaussian(sigma=test_sigma, flux=test_flux)
+    obj = galsim.Add(obj1, obj2)
+    cobj = obj.copy()
+    np.testing.assert_equal(
+        obj._data, cobj._data, err_msg="Object _data store not consistent after copy.")
+    for key, value in cobj._data.iteritems():
+        cobj._data[key] = "foo"
+    # Check that this systematic ruining of the _data store is not reflected in the original:
+    assert obj._data != cobj._data
