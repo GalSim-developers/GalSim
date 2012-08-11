@@ -686,9 +686,6 @@ class Gaussian(GSObject):
         # Set the flux
         self.flux = flux
 
-        # Then build the SBProfile
-        self._SBInitialize()
-
 
 class Moffat(GSObject):
     """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
@@ -827,9 +824,6 @@ class Moffat(GSObject):
         # Set the flux
         self.flux = flux
 
-        # Then build the SBProfile
-        self._SBInitialize()
-
 
 class AtmosphericPSF(GSObject):
     """Base class for long exposure Kolmogorov PSF.
@@ -931,9 +925,6 @@ class AtmosphericPSF(GSObject):
 
         # Set the flux
         self.flux = flux
-
-        # Then build the SBProfile
-        self._SBInitialize()
 
 
 class Airy(GSObject):
@@ -1060,9 +1051,6 @@ class Airy(GSObject):
 
         # Set the flux
         self.flux = flux
-
-        # Then build the SBProfile
-        self._SBInitialize()
 
 
 class OpticalPSF(GSObject):
@@ -1215,9 +1203,6 @@ class OpticalPSF(GSObject):
         self.pad_factor = pad_factor
         self.flux = flux
 
-        # Then build the SBProfile
-        self._SBInitialize()
-
 
 class Pixel(GSObject):
     """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
@@ -1253,9 +1238,6 @@ class Pixel(GSObject):
         self.xw = xw
         self.yw = yw
         self.flux = flux
-
-        # Then build the SBProfile
-        self._SBInitialize()
 
 
 class Sersic(GSObject):
@@ -1308,9 +1290,6 @@ class Sersic(GSObject):
 
         # Set the flux
         self.flux = flux
-
-        # Then build the SBProfile
-        self._SBInitialize()
 
 
 class Exponential(GSObject):
@@ -1374,9 +1353,6 @@ class Exponential(GSObject):
         # Set the flux
         self.flux = flux
 
-        # Then build the SBProfile
-        self._SBInitialize()
-
 
 class DeVaucouleurs(GSObject):
     """GalSim DeVaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
@@ -1421,9 +1397,6 @@ class DeVaucouleurs(GSObject):
 
         # Set the flux
         self.flux = flux
-
-        # Then build the SBProfile
-        self._SBInitialize()
 
 
 class RealGalaxy(GSObject):
@@ -1564,8 +1537,6 @@ class RealGalaxy(GSObject):
         self.interpolant = interpolant
         self.flux = flux
 
-        # Then build the SBProfile
-        self._SBInitialize()
 
 #
 # --- Compound GSObect classes: Add, DoubleGaussian and Convolve ---
@@ -1609,7 +1580,7 @@ class Add(GSObject):
         else:
             # > 2 arguments.  Convert to a list of SBProfiles
             SBList = [obj.SBProfile for obj in self.objects]
-            GSObject.__init__(self, galsim.SBAdd(SBList))       
+            GSObject.__init__(self, galsim.SBAdd(SBList))      
 
     # --- Public Class methods ---
     def __init__(self, *args):
@@ -1625,9 +1596,9 @@ class Add(GSObject):
         elif len(args) >= 2:
             self.objects = list(args)
 
-        # Then build the SBProfile
-        # (note the specific use of the Add._SBInitialize method - this is to prevent recursion in
-        #  in derived classes such as DoubleGaussian)
+        # Then build the SBProfile, needed in __init__ for derived classes such as DoubleGaussian.
+        # Note the specific use of the Add._SBInitialize method - this is to prevent recursion in
+        # in derived classes.
         Add._SBInitialize(self)
 
     def add(self, obj, scale=1.):
@@ -1761,7 +1732,6 @@ class DoubleGaussian(Add):
         self.flux1 = flux1
         self.flux2 = flux2
 
-        # Then build the SBProfile
         self._SBInitialize()
 
 
@@ -1923,9 +1893,6 @@ class Convolve(GSObject):
         else:
             self.objects = list(args)
 
-        # Then build the SBProfile
-        self._SBInitialize()
-
     def add(self, obj):
         self.objects.append(obj)
         self.SBProfile.add(obj.SBProfile)
@@ -2051,6 +2018,3 @@ class Config(AttributeDict):
     """
     def __init__(self):
         AttributeDict.__init__(self)
-
-
-
