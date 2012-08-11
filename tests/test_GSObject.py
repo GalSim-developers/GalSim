@@ -1113,3 +1113,32 @@ def test_add_data():
         cobj._data[key] = "foo"
     # Check that this systematic ruining of the _data store is not reflected in the original:
     assert obj._data != cobj._data
+
+
+if __name__ == "__main__":
+    test_gaussian_param_consistency()
+    test_gaussian_flux_scaling()
+    test_moffat_param_consistency()
+    test_moffat_flux_scaling()
+    test_atmos_param_consistency()
+    test_atmos_flux_scaling()
+    test_airy_param_consistency()
+    test_airy_flux_scaling()
+    test_opticalpsf_param_consistency()
+    test_opticalpsf_flux_scaling()
+    test_sersic_param_consistency()
+    test_sersic_flux_scaling()
+    test_exponential_param_consistency()
+    test_exponential_flux_scaling()
+    test_devaucouleurs_param_consistency()
+    test_devaucouleurs_flux_scaling()
+    test_doublegaussian_param_consistency()
+    test_doublegaussian_flux_scaling()
+    test_add_param_consistency()
+    test_add_flux_scaling()
+    test_convolve_param_consistency()
+    test_convolve_flux_scaling()
+    test_gaussian_data()
+    test_moffat_data()
+    test_opticalpsf_data()
+    test_add_data()
