@@ -812,7 +812,7 @@ class OpticalPSF(GSObject):
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear 
                            dimension, [0., 1.) [default = 0.]
     @param interpolantxy   optional keyword for specifying the interpolation scheme [default =
-                           galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))].
+                           galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))].
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
                            [default = 1.5], setting oversampling < 1 will produce aliasing in the 
                            PSF (not good).
@@ -843,7 +843,7 @@ class OpticalPSF(GSObject):
                                            circular_pupil=circular_pupil, obscuration=obscuration)
         # If interpolant not specified on input, use a high-ish n lanczos
         if interpolantxy == None:
-            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
+            lan5 = galsim.Quintic(tol=1.e-4)
             self.Interpolant2D = galsim.InterpolantXY(lan5)
         else:
             self.Interpolant2D = interpolantxy
@@ -907,7 +907,7 @@ class AtmosphericPSF(GSObject):
         atmoimage = galsim.atmosphere.kolmogorov_psf_image(array_shape=(npix, npix), dx=dx_lookup, 
                                                            lam_over_r0=lam_over_r0)
         if interpolantxy == None:
-            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1e-4)
+            lan5 = galsim.Quintic(tol=1e-4)
             self.Interpolant2D = galsim.InterpolantXY(lan5)
         else:
             self.Interpolant2D = interpolantxy

@@ -74,7 +74,7 @@ def test_AtmosphericPSF_properties():
     # Check Fourier properties
     np.testing.assert_almost_equal(apsf.maxK(), 5.7722607611575469, 9,
                                    err_msg="Atmospheric PSF .maxk() does not return known value.")
-    np.testing.assert_almost_equal(apsf.stepK(), 0.866483732233991, 9,
+    np.testing.assert_almost_equal(apsf.stepK(), 1.0275679547331542, 9,
                                    err_msg="Atmospheric PSF .stepk() does not return known value.")
     np.testing.assert_almost_equal(apsf.kValue(cen), 1+0j, 4,
                                    err_msg="Atmospheric PSF k value at (0, 0) is not 1+0j.")

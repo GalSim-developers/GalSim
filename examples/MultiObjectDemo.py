@@ -601,13 +601,7 @@ def Script4():
             fwhm1 = psf_fwhm, flux1 = 0.8,
             fwhm2 = 2*psf_fwhm, flux2 = 0.2)
     atmos = galsim.Gaussian(fwhm = psf_fwhm)
-    #i1d = galsim.Linear(tol=1.e-4)
-    i1d = galsim.Cubic(tol=1.e-4)
-    #i1d = galsim.Quintic(tol=1.e-4)
-    #i1d = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)  # This is the default if not explicit
-    i2d = galsim.InterpolantXY(i1d)
     optics = galsim.OpticalPSF(
-            interpolantxy = i2d,
             lam_over_D = 0.6 * psf_fwhm,
             obscuration = 0.4,
             defocus = 0.1,
