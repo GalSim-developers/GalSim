@@ -535,7 +535,7 @@ class NFWHalo(object):
         # convert to observable = reduced shear
         if reduced:
             kappa = self.__kappa(x, ks)
-            g /= 1 + kappa
+            g /= 1 - kappa
 
         # split into g1 and g2 component:
         # pure tangential shear, no cross component
