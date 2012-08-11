@@ -1109,8 +1109,8 @@ def test_add_data():
     cobj = obj.copy()
     np.testing.assert_equal(
         obj._data, cobj._data, err_msg="Object _data store not consistent after copy.")
-    for key, value in cobj._data.iteritems():
-        cobj._data[key] = "foo"
+    # As _data dict is empty for add, put in a new item by hand
+    cobj._data["foo"] = "bar"
     # Check that this systematic ruining of the _data store is not reflected in the original:
     assert obj._data != cobj._data
 
