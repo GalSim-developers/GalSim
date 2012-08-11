@@ -247,7 +247,14 @@ class FluxParam(object):
             # If transformation has been applied, the _data["flux"] may not be accurate but the
             # SBProfile.getFlux() will be
             if len(instance.transformations) == 0:
-                return instance._data["flux"]
+                try:
+                    return instance._data["flux"]
+                except KeyError:
+                    # this is to cover the flux access case where flux is not yet stored in the
+                    # _data store by an __init__ method or later setting... example:
+                    # >>> sbimage = GSObject(SBInterpolatedImage(image_in, interp, dx=1.0)
+                    # >>> sbimage.flux
+                    return instance.SBProfile.getFlux()
             else:
                 return instance.SBProfile.getFlux()
         else:
