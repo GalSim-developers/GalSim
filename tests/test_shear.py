@@ -41,8 +41,8 @@ eta2 = [0.0, 1.2039728, 0.0, 0.30888958]
 decimal = 5
 
 # some ellipse properties over which we will loop - use the shear values above, and:
-dilation = [0.0, 0.5, -0.1]
-n_dil = len(dilation)
+mu = [0.0, 0.5, -0.1]
+n_mu = len(mu)
 x_shift = [0.0, 1.7, -3.0]
 y_shift = [-1.3, 0.0, 9.1]
 n_shift = len(x_shift)
@@ -76,13 +76,13 @@ def all_shear_vals(test_shear, index, mult_val = 1.0):
     np.testing.assert_array_almost_equal(vec, test_vec, decimal=decimal,
                                          err_msg = "Incorrectly initialized Shear")
 
-def all_ellipse_vals(test_ellipse, ind_shear, ind_dil, ind_shift, check_shear=1.0, check_dil=1.0,
+def all_ellipse_vals(test_ellipse, ind_shear, ind_mu, ind_shift, check_shear=1.0, check_mu=1.0,
                      check_shift = 1.0):
     # this function tests that the various numbers stored in some Ellipse object are consistent with
     # the tabulated values that we expect, given indices against which to test
-    vec = [test_ellipse.getS().g1, test_ellipse.getS().g2, test_ellipse.getDilation(),
+    vec = [test_ellipse.getS().g1, test_ellipse.getS().g2, test_ellipse.getMu(),
            test_ellipse.getX0().x, test_ellipse.getX0().y]
-    test_vec = [check_shear*g1[ind_shear], check_shear*g2[ind_shear], check_dil*dilation[ind_dil],
+    test_vec = [check_shear*g1[ind_shear], check_shear*g2[ind_shear], check_mu*mu[ind_mu],
                 check_shift*x_shift[ind_shift], check_shift*y_shift[ind_shift]]
     np.testing.assert_array_almost_equal(vec, test_vec, decimal=decimal,
                                          err_msg = "Incorrectly initialized Ellipse")
@@ -180,7 +180,7 @@ def test_ellipse_initialization():
     t1 = time.time()
     # make an empty Ellipse and make sure everything is zero
     e = galsim.Ellipse()
-    vec = [e.getS().g1, e.getS().g2, e.getDilation(), e.getX0().x, e.getX0().y]
+    vec = [e.getS().g1, e.getS().g2, e.getMu(), e.getX0().x, e.getX0().y]
     vec_ideal = [0.0, 0.0, 0.0, 0.0, 0.0]
     np.testing.assert_array_almost_equal(vec, vec_ideal, decimal = decimal,
                                          err_msg = "Incorrectly initialized empty ellipse")
@@ -188,68 +188,68 @@ def test_ellipse_initialization():
     # then loop over the ways we can initialize, with all things initialized and with only those
     # that are non-zero initialized, using args, kwargs in various ways
     for ind_shear in range(n_shear):
-        for ind_dil in range(n_dil):
+        for ind_mu in range(n_mu):
             for ind_shift in range(n_shift):
-                # initialize with all of shear, dilation, shift
+                # initialize with all of shear, mu, shift
                 ## using a Shear, either as arg or kwarg
-                ## using a dilation, either as arg or kwarg
+                ## using a mu, either as arg or kwarg
                 ## using a shift, either as Position arg or kwargs
                 ## using the various ways of making a Shear passed through as kwargs
                 s = galsim.Shear(g1 = g1[ind_shear], g2 = g2[ind_shear])
                 p = galsim.PositionD(x_shift[ind_shift], y_shift[ind_shift])
-                e = galsim.Ellipse(s, dilation[ind_dil], p)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift)
-                e = galsim.Ellipse(p, shear=s, dilation=dilation[ind_dil])
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift)
-                e = galsim.Ellipse(s, dilation[ind_dil], x_shift=p.x, y_shift=p.y)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift)
-                e = galsim.Ellipse(shear=s, dilation=dilation[ind_dil], x_shift=p.x, y_shift=p.y)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift)
+                e = galsim.Ellipse(s, mu[ind_mu], p)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift)
+                e = galsim.Ellipse(p, shear=s, mu=mu[ind_mu])
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift)
+                e = galsim.Ellipse(s, mu[ind_mu], x_shift=p.x, y_shift=p.y)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift)
+                e = galsim.Ellipse(shear=s, mu=mu[ind_mu], x_shift=p.x, y_shift=p.y)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift)
                 e = galsim.Ellipse(q = q[ind_shear], beta = beta[ind_shear]*galsim.radians,
-                                   dilation=dilation[ind_dil], x_shift = p.x, y_shift = p.y)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift)
+                                   mu=mu[ind_mu], x_shift = p.x, y_shift = p.y)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift)
 
                 # now initialize with only 2 of the 3 and make sure the other is zero
-                e = galsim.Ellipse(dilation[ind_dil], p)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_shear=0.0)
-                e = galsim.Ellipse(p, dilation=dilation[ind_dil])
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_shear=0.0)
-                e = galsim.Ellipse(dilation[ind_dil], x_shift = p.x, y_shift = p.y)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_shear=0.0)
-                e = galsim.Ellipse(dilation = dilation[ind_dil], x_shift = p.x, y_shift = p.y)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_shear=0.0)
+                e = galsim.Ellipse(mu[ind_mu], p)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shear=0.0)
+                e = galsim.Ellipse(p, mu=mu[ind_mu])
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shear=0.0)
+                e = galsim.Ellipse(mu[ind_mu], x_shift = p.x, y_shift = p.y)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shear=0.0)
+                e = galsim.Ellipse(mu = mu[ind_mu], x_shift = p.x, y_shift = p.y)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shear=0.0)
                 e = galsim.Ellipse(s, p)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_dil=0.0)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0)
                 e = galsim.Ellipse(p, shear=s)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_dil=0.0)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0)
                 e = galsim.Ellipse(s, x_shift = p.x, y_shift = p.y)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_dil=0.0)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0)
                 e = galsim.Ellipse(shear=s, x_shift = p.x, y_shift = p.y)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_dil=0.0)
-                e = galsim.Ellipse(s, dilation[ind_dil])
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_shift=0.0)
-                e = galsim.Ellipse(s, dilation=dilation[ind_dil])
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_shift=0.0)
-                e = galsim.Ellipse(dilation[ind_dil], shear=s)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_shift=0.0)
-                e = galsim.Ellipse(shear=s, dilation=dilation[ind_dil])
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_shift=0.0)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0)
+                e = galsim.Ellipse(s, mu[ind_mu])
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shift=0.0)
+                e = galsim.Ellipse(s, mu=mu[ind_mu])
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shift=0.0)
+                e = galsim.Ellipse(mu[ind_mu], shear=s)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shift=0.0)
+                e = galsim.Ellipse(shear=s, mu=mu[ind_mu])
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shift=0.0)
 
                 # now initialize with only 1 of the 3 and make sure the other is zero
                 e = galsim.Ellipse(s)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_dil=0.0, check_shift=0.0)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0, check_shift=0.0)
                 e = galsim.Ellipse(shear=s)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_dil=0.0, check_shift=0.0)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0, check_shift=0.0)
                 e = galsim.Ellipse(eta1=eta1[ind_shear], eta2=eta2[ind_shear])
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_dil=0.0, check_shift=0.0)
-                e = galsim.Ellipse(dilation[ind_dil])
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_shear=0.0, check_shift=0.0)
-                e = galsim.Ellipse(dilation=dilation[ind_dil])
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_shear=0.0, check_shift=0.0)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0, check_shift=0.0)
+                e = galsim.Ellipse(mu[ind_mu])
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shear=0.0, check_shift=0.0)
+                e = galsim.Ellipse(mu=mu[ind_mu])
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shear=0.0, check_shift=0.0)
                 e = galsim.Ellipse(p)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_dil=0.0, check_shear=0.0)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0, check_shear=0.0)
                 e = galsim.Ellipse(x_shift = p.x, y_shift = p.y)
-                all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_dil=0.0, check_shear=0.0)
+                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0, check_shear=0.0)
     # check for some cases that should fail
     s = galsim.Shear()
     try:
