@@ -669,7 +669,6 @@ class Gaussian(GSObject):
         name="fwhm", root_name="sigma", factor=2.3548200450309493, # 2 sqrt(2ln2)
         group="size", doc="FWHM, kept consistent with the other size attributes.")
 
-
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
@@ -685,6 +684,9 @@ class Gaussian(GSObject):
 
         # Set the flux
         self.flux = flux
+
+        # Then build the SBProfile
+        self._SBInitialize()
 
 
 class Moffat(GSObject):
@@ -824,6 +826,9 @@ class Moffat(GSObject):
         # Set the flux
         self.flux = flux
 
+        # Then build the SBProfile
+        self._SBInitialize()
+
 
 class AtmosphericPSF(GSObject):
     """Base class for long exposure Kolmogorov PSF.
@@ -882,6 +887,7 @@ class AtmosphericPSF(GSObject):
     # Defining the optional parameters interpolant and oversampling
     interpolant = descriptors.SimpleParam(
         "interpolant", default=None, group="optional", doc="Real space interpolant instance (2D).")
+
     oversampling = descriptors.SimpleParam(
         "oversampling", default=1.5, group="optional",
         doc="Oversampling factor for the creation of the SBInterpolatedImage lookup table.")
@@ -925,6 +931,9 @@ class AtmosphericPSF(GSObject):
 
         # Set the flux
         self.flux = flux
+
+        # Then build the SBProfile
+        self._SBInitialize()
 
 
 class Airy(GSObject):
@@ -1051,6 +1060,9 @@ class Airy(GSObject):
 
         # Set the flux
         self.flux = flux
+
+        # Then build the SBProfile
+        self._SBInitialize()
 
 
 class OpticalPSF(GSObject):
@@ -1203,6 +1215,9 @@ class OpticalPSF(GSObject):
         self.pad_factor = pad_factor
         self.flux = flux
 
+        # Then build the SBProfile
+        self._SBInitialize()
+
 
 class Pixel(GSObject):
     """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
@@ -1238,6 +1253,9 @@ class Pixel(GSObject):
         self.xw = xw
         self.yw = yw
         self.flux = flux
+
+        # Then build the SBProfile
+        self._SBInitialize()
 
 
 class Sersic(GSObject):
@@ -1290,6 +1308,9 @@ class Sersic(GSObject):
 
         # Set the flux
         self.flux = flux
+
+        # Then build the SBProfile
+        self._SBInitialize()
 
 
 class Exponential(GSObject):
@@ -1353,6 +1374,9 @@ class Exponential(GSObject):
         # Set the flux
         self.flux = flux
 
+        # Then build the SBProfile
+        self._SBInitialize()
+
 
 class DeVaucouleurs(GSObject):
     """GalSim DeVaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
@@ -1397,6 +1421,9 @@ class DeVaucouleurs(GSObject):
 
         # Set the flux
         self.flux = flux
+
+        # Then build the SBProfile
+        self._SBInitialize()
 
 
 class RealGalaxy(GSObject):
@@ -1537,6 +1564,9 @@ class RealGalaxy(GSObject):
         self.interpolant = interpolant
         self.flux = flux
 
+        # Then build the SBProfile
+        self._SBInitialize()
+
 
 #
 # --- Compound GSObect classes: Add, DoubleGaussian and Convolve ---
@@ -1580,7 +1610,7 @@ class Add(GSObject):
         else:
             # > 2 arguments.  Convert to a list of SBProfiles
             SBList = [obj.SBProfile for obj in self.objects]
-            GSObject.__init__(self, galsim.SBAdd(SBList))      
+            GSObject.__init__(self, galsim.SBAdd(SBList))
 
     # --- Public Class methods ---
     def __init__(self, *args):
@@ -1732,6 +1762,7 @@ class DoubleGaussian(Add):
         self.flux1 = flux1
         self.flux2 = flux2
 
+        # Then build the SBProfile
         self._SBInitialize()
 
 
@@ -1893,6 +1924,9 @@ class Convolve(GSObject):
         else:
             self.objects = list(args)
 
+        # Then build the SBProfile
+        self._SBInitialize()
+
     def add(self, obj):
         self.objects.append(obj)
         self.SBProfile.add(obj.SBProfile)
@@ -1914,9 +1948,15 @@ class Deconvolve(GSObject):
         getter=_get_deconvolve_flux, setter=_set_deconvolve_flux, update_SBProfile_on_set=False,
         doc="Total flux of the Deconvolve object.")
 
+    def _SBInitialize(self):
+        GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile))
+
     def __init__(self, farg):
-        # the single argument should be one of our base classes
-        GSObject.__init__(self, galsim.SBDeconvolve(farg.SBProfile))
+        if isinstance(fargs, GSObject):
+            self.farg = farg
+        else:
+            raise TypeError("Argument farg must be a GSObject.")
+        self._SBInitialize()
 
 
 # Now we define a dictionary containing all the GSobject subclass names as keys, referencing a
