@@ -1,7 +1,8 @@
-"""\file lensing.py The "lensing engine" for drawing random shears from some power spectrum.
+"""\file lensing.py The "lensing engine" for drawing shears from some power spectrum or a NFW halo.
 """
 import galsim
 import numpy as np
+from math import log
 
 ISQRT2 = np.sqrt(1.0/2.0)
 
@@ -301,3 +302,261 @@ def pk(k):
         return k**(-2.)
     else:
         return min_k**(-2.)
+
+
+class Cosmology(object):
+    """@brief Basic cosmology calculations.
+
+    Cosmology calculates expansion function E(a) and angular diameter distances Da(z) for a 
+    LambdaCDM universe. 
+    Radiation is assumed to be zero and Dark Energy constant with w = -1, but curvature
+    is arbitrary.
+
+    Based on Matthias Bartelmann's libastro.
+    """
+    def __init__(self, Omega_m=0.3, Omega_l=0.7):
+        """@brief Create Cosmology with given energy densities.
+        
+        @param[in] Omega_m Energy density of matter
+        @param[in] Omega_l Density of Dark Energy
+        """
+        # no quintessence, no radiation in this universe!
+        self.omega_m = Omega_m
+        self.omega_l = Omega_l
+        self.omega_c = (1. - Omega_m - Omega_l)
+        self.omega_r = 0
+    
+    def a(self, z):
+        """@brief Compute scale factor
+
+        @param[in] z Redshift
+        """
+        return 1./(1+z)
+
+    def E(self, a):
+        """@brief Evalutes expansion function
+
+        @param[in] a Scale factor
+        """
+        return (self.omega_r*a**(-4) + self.omega_m*a**(-3) + self.omega_c*a**(-2) + self.omega_l)**0.5
+
+    def __angKernel(self, x):
+        """@brief Integration kernel for angular diameter distance computation
+        """
+        return self.E(x**-1)**-1
+
+    def Da(self, z, z_ref=0):
+        """@brief Compute angular diameter distance between two redshifts in units of c/H0.
+
+        In order to get the distance in Mpc, multiply by ~3000.
+
+        @param[in] z Redshift
+        @param[in] z_ref Reference redshift, with z_ref <= z.
+        """
+        if isinstance(z, np.ndarray):
+            da = np.zeros_like(z)
+            for i in range(len(da)):
+                da[i] = self.Da(z[i], z_ref)
+            return da
+        else:
+            if z < 0:
+                raise ValueError("Redshift z must not be negative")
+            if z < z_ref:
+                raise ValueError("Redshift z must not be smaller than the reference redshift")
+            # Todo: check for galsim integrator
+            try:
+                from scipy.integrate import quad
+                d = quad(self.__angKernel, z_ref+1, z+1)[0]
+                # check for curvature
+                rk = (abs(self.omega_c))**0.5
+                if (rk*d > 0.01):
+                    if self.omega_c > 0:
+                        d = sinh(rk*d)/rk
+                    if self.omega_c < 0:
+                        d = sin(rk*d)/rk
+                return d/(1+z)
+            except ImportError:
+                raise NotImplementedError("Integration required. scipy.integrate missing")
+
+
+class NFWHalo(object):
+    """@brief Class for NFW halos.
+
+    Compute the lensing fields shear and convergence of a NFW halo of given mass, concentration, 
+    redshift, assuming Cosmology. No mass-concentration relation is employed.
+
+    Based on Matthias Bartelmann's libastro.
+    """
+    def __init__(self, mass=1e15, conc=4, z=0.3, pos_x=0, pos_y=0, cosmo=Cosmology()):
+        """@brief Create NFW halo.
+
+        @param[in] mass Mass
+        @param[in] conc Concentration parameter
+        @param[in] z Redshift
+        @param[in] pos_x X-coordinate [arcsec]
+        @param[in] pos_y Y-coordinate [arcsec]
+        @param[in] cosmo A Comology instance
+        """
+        self.M = mass
+        self.c = conc
+        self.z = z
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+        self.cosmo = cosmo
+
+        # calculate scale radius
+        a = self.cosmo.a(z)
+        R200 = 1.63e-5/(1+self.z) * (self.M * self.__omega(a)/self.__omega(1))**0.3333 # in Mpc
+        self.rs = R200/self.c
+
+        # convert scale radius in arcsec
+        dl = self.cosmo.Da(self.z)*3000.; # in Mpc
+        scale = self.rs / dl
+        arcsec2rad = 1./206265;
+        self.rs_arcsec = scale/arcsec2rad;
+
+    def __omega(self, a):
+        """@brief Matter density at scale factor a
+        """
+        return self.cosmo.omega_m/(self.cosmo.E(a)**2 * a**3)
+
+    def __farcth (self, x, out=None):
+        """@brief Numerical implementation of integral functions of NFW profile
+        """
+        if out is None:
+            out = np.zeros_like(x)
+
+        # 3 cases: x > 1, x < 1, and |x-1| < 0.01
+        mask = (x < 0.99)
+        if mask.any():
+            a = ((1.-x[mask])/(x[mask]+1.))**0.5
+            out[mask] = 0.5*np.log((1.+a)/(1.-a))/(1-x[mask]**2)**0.5
+
+        mask = (x > 1.01)
+        if mask.any():
+            a = ((x[mask]-1.)/(x[mask]+1.))**0.5
+            out[mask] = np.arctan(a)/(x[mask]**2 - 1)**0.5
+
+        mask = (x >= 0.99) & (x <= 1.01)
+        if mask.any():
+            out[mask] = 5./6. - x[mask]/3.
+
+        return out
+
+    def __kappa(self, x, ks, out=None):
+        """@brief Calculate convergence of halo.
+
+        @param[in] x Radial coordinate in units of r/rs (normalized to scale radius of halo)
+        @param[in] ks Lensing strength prefactor
+        """
+        # convenience: call with single number
+        if isinstance(x, np.ndarray) == False:
+            return kappa(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
+
+        if out is None:
+            out = np.zeros_like(x)
+
+        # 3 cases: x > 1, x < 1, and |x-1| < 0.01
+        mask = (x < 0.99)
+        if mask.any():
+            a = ((1 - x[mask])/(x[mask] + 1))**0.5
+            out[mask] = 2*ks[mask]/(x[mask]**2 - 1)*(1 - np.log((1 + a)/(1 - a))/(1 - x[mask]**2)**0.5)
+
+        mask = (x > 1.01)
+        if mask.any():
+            a = ((x[mask] - 1)/(x[mask] + 1))**0.5
+            out[mask] = 2*ks[mask]/(x[mask]**2 - 1)*(1 - 2*np.arctan(a)/(x[mask]**2 - 1)**0.5)
+
+        mask = (x >= 0.99) & (x <= 1.01)
+        if mask.any():
+            out[mask] = ks[mask]*(22./15. - 0.8*x[mask])
+
+        return out
+
+    def __gamma(self, x, ks, out=None):
+        """@brief Calculate tangential shear of halo.
+
+        @param[in] x Radial coordinate in units of r/rs (normalized to scale radius of halo)
+        @param[in] ks Lensing strength prefactor
+        """
+        # convenience: call with single number
+        if isinstance(x, np.ndarray) == False:
+            return gamma(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
+        if out is None:
+            out = np.zeros_like(x)
+
+        mask = (x < 0.05)
+        if mask.any():
+            out[mask] = 4*ks[mask]*(0.25 + 0.125 * x[mask]**2 * (3.25 + 3.0*np.log(x[mask]/2)))
+
+        mask = (mask == False)
+        if mask.any():
+            out[mask] = 4*ks[mask]*(np.log(x[mask]/2) + 2*self.__farcth(x[mask])) * x[mask]**(-2) - self.__kappa(x[mask], ks[mask])
+        return out
+
+    def __ks(self, z_s):
+        """@brief Lensing strength of halo as function of source redshift
+        """
+        # critical density and surface density
+        rho_c = 2.7722e11
+        Sigma_c = 5.5444e14
+        # density contrast of halo at redshift z
+        a = self.cosmo.a(self.z)
+        ez = self.cosmo.E(a)
+        d0 = 200./3 * self.c**3/(log(1+self.c) - (1.*self.c)/(1+self.c))
+        rho_s = rho_c * ez**2 *d0
+
+        # lensing weights: the only thing that depends on z_s
+        # this does takes some time...
+        dl = self.cosmo.Da(z_s, self.z) * self.cosmo.Da(self.z) / self.cosmo.Da(z_s)
+        k_s = dl * self.rs * rho_s / Sigma_c
+        return k_s
+
+    def getShear(self, pos_x, pos_y, z_s, units='arcsec', reduced=True):
+        """@brief Calculate (reduced) shear of halo at specified positions
+
+        @param[in] pos_x X-coordinate(s) of the source. This is assumed to be post-lensing!
+        @param[in] pos_y Y-coordinate(s) of the source. This is assumed to be post-lensing!
+        @param[in] z_s Source redshift(s)
+        @param[in] units Units of coordinates (only arcsec implemented so far).
+        @param[in] reduced Whether reduced shears are returned
+        """
+        if units != 'arcsec':
+            raise NotImplementedError("Only arcsec units implemented!")
+
+        x = ((pos_x - self.pos_x)**2 + (pos_y - self.pos_y)**2)**0.5/self.rs_arcsec
+        # compute strength of lensing fields
+        ks = self.__ks(z_s)
+        if isinstance(z_s, np.ndarray) == False:
+            ks = ks*np.ones_like(pos_x)
+        g = self.__gamma(x, ks)
+
+        # convert to observable = reduced shear
+        if reduced:
+            kappa = self.__kappa(x, ks)
+            g /= 1 + kappa
+
+        # split into g1 and g2 component:
+        # pure tangential shear, no cross component
+        phi = np.arctan2(pos_y - self.pos_y, pos_x - self.pos_x)
+        g1 = -g / (np.cos(2*phi) + np.sin(2*phi)*np.tan(2*phi))
+        g2 = g1 * np.tan(2*phi)
+        return g1, g2
+
+    def getConvergence(self, pos_x, pos_y, z_s, units='arcsec'):
+        """@brief Calculate convergence of halo at specified positions
+
+        @param[in] pos_x X-coordinate(s) of the source. This is assumed to be post-lensing!
+        @param[in] pos_y Y-coordinate(s) of the source. This is assumed to be post-lensing!
+        @param[in] z_s Source redshift(s)
+        @param[in] units Units of coordinates (only arcsec implemented so far).
+        """
+        if units != 'arcsec':
+            raise NotImplementedError("Only arcsec units implemented!")
+
+        x = ((pos_x - self.pos_x)**2 + (pos_y - self.pos_y)**2)**0.5/self.rs_arcsec
+        # compute strength of lensing fields
+        ks = self.__ks(z_s)
+        if isinstance(z_s, np.ndarray) == False:
+            ks = ks*np.ones_like(pos_x)
+        return self.__kappa(x, ks)
