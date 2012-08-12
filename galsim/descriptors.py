@@ -244,21 +244,15 @@ class FluxParam(object):
 
     def __get__(self, instance, cls):
         if instance is not None:
-            # If transformation has been applied, the _data["flux"] may not be accurate but the
-            # SBProfile.getFlux() will be
-            if len(instance.transformations) == 0:
-                try:
-                    return instance._data["flux"]
-                except KeyError:
-                    # this is to cover the flux access case where flux is not yet stored in the
-                    # _data store by an __init__ method or later setting... example:
-                    # >>> sbimage = GSObject(SBInterpolatedImage(image_in, interp, dx=1.0)
-                    # >>> sbimage.flux
-                    return instance.SBProfile.getFlux()
+            # If transformation has been applied, or if the flux is not yet stored in the
+            # _data store, _data["flux"] may not exist / be accurate.  But the
+            # SBProfile.getFlux() will be food
+            if "flux" in instance._data and len(instance.transformations) == 0:
+                return instance._data["flux"]
             else:
                 return instance.SBProfile.getFlux()
         else:
-            raise AttributeError("Flux parameter not set, error in initialization.")
+            raise AttributeError("Flux parameter not setup, error in initialization.")
         return self
 
     def __set__(self, instance, value):
