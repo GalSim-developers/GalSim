@@ -797,7 +797,7 @@ class Moffat(GSObject):
 
     # Then define the fwhm descriptor with reference to these getter/setter functions
     fwhm = descriptors.GetSetFuncParam(
-        getter=_get_fwhm, setter=_set_fwhm,
+        getter=_get_fwhm, setter=_set_fwhm, group="size",
         doc="FWHM, kept updated with the other size attributes.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
@@ -1012,7 +1012,7 @@ class Airy(GSObject):
 
     # Then we define the half_light_radius descriptor with ref. to these getter/setter functions
     half_light_radius = descriptors.GetSetFuncParam(
-        getter=_get_half_light_radius, setter=_set_half_light_radius,
+        getter=_get_half_light_radius, setter=_set_half_light_radius, group="size",
         doc="Half light radius, implemented for Airy function objects with obscuration=0.")
 
     # Now FWHM...
@@ -1038,7 +1038,7 @@ class Airy(GSObject):
 
     # Then we define the fwhm descriptor with reference to these getter/setter functions
     fwhm = descriptors.GetSetFuncParam(
-        getter=_get_fwhm, setter=_set_fwhm,
+        getter=_get_fwhm, setter=_set_fwhm, group="size",
         doc="FWHM, implemented for Airy function objects with obscuration=0.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
@@ -1352,7 +1352,7 @@ class Exponential(GSObject):
     # Constant scaling factor not analytic, but can be calculated by iterative solution of:
     # (re / r0) = ln[(re / r0) + 1] + ln(2)
     half_light_radius=descriptors.GetSetScaleParam(
-        "half_light_radius", root_name="scale_radius", factor=1.6783469900166605,
+        "half_light_radius", root_name="scale_radius", factor=1.6783469900166605, group="size",
         doc="half_light_radius, kept consistent with the other size attributes.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
@@ -1583,7 +1583,7 @@ class Add(GSObject):
         self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
 
     flux = descriptors.GetSetFuncParam(
-        getter=_get_flux, setter=_set_flux, update_SBProfile_on_set=False,
+        getter=_get_flux, setter=_set_flux, update_SBProfile_on_set=False, group="optional",
         ok_if_object_transformed=True, # flux params can still be accessed after transformation
         doc="Total flux of the Add object.")
 
@@ -1732,7 +1732,7 @@ class DoubleGaussian(Add):
             self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
 
     flux = descriptors.GetSetFuncParam(
-        getter=_get_dg_flux, setter=_set_dg_flux, update_SBProfile_on_set=False,
+        getter=_get_dg_flux, setter=_set_dg_flux, update_SBProfile_on_set=False, group="optional",
         ok_if_object_transformed=True, # flux params can still be accessed after transformation
         doc="Total flux of the DoubleGaussian object.")
 
@@ -1809,9 +1809,6 @@ class Convolve(GSObject):
 
     # Descriptors for storing whether or not all objects are hard edged and if to use real-space
     # convolution
-    hard_edge = descriptors.SimpleParam(
-        "hard_edge", group="optional", default=False,
-        doc="Whether or not all objects have hard edges.")
     real_space = descriptors.SimpleParam(
         "real_space", group="optional", default=False,
         doc="Whether or not to use real-space convolution.")
@@ -1828,7 +1825,7 @@ class Convolve(GSObject):
     flux = descriptors.GetSetFuncParam(
         getter=_get_convolve_flux, setter=_set_convolve_flux, update_SBProfile_on_set=False,
         ok_if_object_transformed=True, # flux params can still be accessed after transformation
-        doc="Total flux of the Convolve object.")
+        group="optional", doc="Total flux of the Convolve object.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
@@ -1941,7 +1938,7 @@ class Deconvolve(GSObject):
 
     flux = descriptors.GetSetFuncParam(
         getter=_get_deconvolve_flux, setter=_set_deconvolve_flux, update_SBProfile_on_set=False,
-        doc="Total flux of the Deconvolve object.")
+        group="optional", doc="Total flux of the Deconvolve object.")
 
     def _SBInitialize(self):
         GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile))
