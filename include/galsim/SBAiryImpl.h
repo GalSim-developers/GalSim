@@ -169,7 +169,7 @@ namespace galsim {
              */
             RadialFunction(double obscuration, double obssq) : 
                 _obscuration(obscuration), _obssq(obssq),
-                _norm(M_PI / (4.*(1.-_obssq))) {}
+                _norm(M_PI / (1.-_obssq)) {}
 
             /**
              * @brief Return the Airy function
@@ -181,7 +181,7 @@ namespace galsim {
         private:
             double _obscuration; ///< Central obstruction size
             double _obssq; ///< _obscuration*_obscuration
-            double _norm; ///< Calculated value M_PI / (4.*(1-obs^2))
+            double _norm; ///< Calculated value M_PI / (1-obs^2)
         };
 
         double _obscuration; ///< Radius ratio of central obscuration.

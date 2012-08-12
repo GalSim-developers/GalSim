@@ -131,21 +131,28 @@ namespace galsim {
         // Make sure steps hit the integer values exactly.
         const double xStep = 1. / std::ceil(1./xStep1);
         for(double x = 0.; x<_n; x+=xStep) _xtab.addEntry(x, xCalc(x));
-        
+
         // Build utab = table of u values
         const double uStep = std::pow(sbp::kvalue_accuracy,0.25) / _n;
         _uMax = 0.;
         double u = _utab.size()>0 ? _utab.argMax() + uStep : 0.;
-        while ( u - _uMax < 1./_n || u<1.1) {
-            double uval = uCalc(u);
-            if (_fluxConserve) {
+        if (_fluxConserve) {
+            while ( u - _uMax < 1./_n || u<1.1) {
+                double uval = uCalc(u);
                 uval *= 1.+2.*_u1;
                 uval -= _u1*uCalc(u+1.);
                 uval -= _u1*uCalc(u-1.);
+                _utab.addEntry(u, uval);
+                if (std::abs(uval) > _tolerance) _uMax = u;
+                u += uStep;
             }
-            _utab.addEntry(u, uval);
-            if (std::abs(uval) > _tolerance) _uMax = u;
-            u += uStep;
+        } else {
+            while ( u - _uMax < 1./_n || u<1.1) {
+                double uval = uCalc(u);
+                _utab.addEntry(u, uval);
+                if (std::abs(uval) > _tolerance) _uMax = u;
+                u += uStep;
+            }
         }
     }
 

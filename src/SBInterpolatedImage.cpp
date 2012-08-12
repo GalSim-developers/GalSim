@@ -227,6 +227,8 @@ namespace galsim {
         // most alias_threshold of the flux.
         //
         // We add the size of the image and the size of the interpolant in quadrature.
+        // (Note: Since this isn't a radial profile, R isn't really a radius, but rather 
+        //        the size of the square box that is enclosing all the flux.)
         double R = _multi.getNin()/2. * _multi.getScale();
         // Add xInterp range in quadrature just like convolution:
         double R2 = _xInterp->xrange() * _multi.getScale();
@@ -387,7 +389,7 @@ namespace galsim {
     {
         dbg<<"Start SBInterpolatedImage calculateStepK()\n";
         dbg<<"Current value of stepk = "<<_stepk<<std::endl;
-        dbg<<"Find R that encloses "<<1.-sbp::alias_threshold<<" of the flux.\n";
+        dbg<<"Find box that encloses "<<1.-sbp::alias_threshold<<" of the flux.\n";
         dbg<<"xtab size = "<<_xtab->getN()<<", scale = "<<_xtab->getDx()<<std::endl;
         int N = _xtab->getN();
         double dx = _xtab->getDx();
@@ -460,6 +462,8 @@ namespace galsim {
             dbg<<"No smaller radius found.  Keep current value of stepk\n";
             return;
         }
+        // (Note: Since this isn't a radial profile, R isn't really a radius, but rather 
+        //        the size of the square box that is enclosing (1-alias_thresh) of the flux.)
         double R = (d1+0.5) * dx;
         dbg<<"d = "<<d1<<" => R = "<<R<<std::endl;
         // Add xInterp range in quadrature just like convolution:
