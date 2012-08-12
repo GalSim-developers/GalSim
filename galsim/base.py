@@ -715,7 +715,9 @@ class Kolmogorov(GSObject):
                            usually quoted at lambda = 500 nm and r0 depends on wavelength as
                            [r0 ~ lambda^(-6/5)].
     @param fwhm            FWHM of the Kolmogorov PSF.
-                           Either fwhm or lam_over_r0 (and only one) must be specified.
+    @param half_light_radius  Half-light radius of the Kolmogorov PSF.
+                           One of lam_over_r0, fwhm and half_light_radius (and only one) 
+                           must be specified.
     @param flux            optional flux value [default = 1]
     """
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
@@ -1227,7 +1229,7 @@ object_param_dict = {"Gaussian":       { "required" : (),
                                          "size"     : ("D",) ,
                                          "optional" : ("obs", "flux",)},
                      "Kolmogorov":     { "required" : () ,
-                                         "size"     : ("lam_over_r0", "fwhm",) ,
+                                         "size"     : ("lam_over_r0", "fwhm", "half_light_radius") ,
                                          "optional" : ("flux",)},
                      "Pixel":          { "required" : ("xw", "yw",),
                                          "size"     : (),

@@ -8,10 +8,8 @@
 namespace galsim {
 
     /**
-     * @brief A private class that caches the photon shooting objects for a given
-     *         obscuration value, so they don't have to be set up again each time.
-     * 
-     * This is helpful if people use only 1 or a small number of obscuration values.
+     * @brief A class that caches the photon shooting objects and real-space
+     *        lookup table, so they don't have to be set up again each time.
      */
     class KolmogorovInfo 
     {
