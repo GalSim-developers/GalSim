@@ -1238,7 +1238,7 @@ class Pixel(GSObject):
         "xw", group="required", doc="Width of the pixel in the x dimension.")
 
     yw = descriptors.SimpleParam(
-        "yw", group="required", doc="Width of the pixel in the y dimension.")
+        "yw", group="optional", doc="Width of the pixel in the y dimension.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
