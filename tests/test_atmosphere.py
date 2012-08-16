@@ -19,49 +19,6 @@ def funcname():
     import inspect
     return inspect.stack()[1][3]
 
-def test_doublegaussian_vs_sbadd():
-    """Test that profiles from galsim.DoubleGaussian equal those from SBGaussian/SBAdd.
-    """
-    import time
-    t1 = time.time()
-    for flux1 in np.linspace(0.2, 3, 3):
-        for sigma1 in np.linspace(0.2, 3, 3):
-            for flux2 in np.linspace(0.2, 3, 3):
-                for sigma2 in np.linspace(0.2, 3, 3):
-                    dbl1 = galsim.DoubleGaussian(sigma1=sigma1, sigma2=sigma2,
-                                                            flux1=flux1, flux2=flux2)
-                    g1 = galsim.SBGaussian(sigma=sigma1, flux=flux1)
-                    g2 = galsim.SBGaussian(sigma=sigma2, flux=flux2)
-                    dbl2 = galsim.SBAdd(g1, g2)
-                    np.testing.assert_almost_equal(
-                        dbl1.draw(normalization="surface brightness").array, dbl2.draw().array)
-    for flux1 in np.linspace(0.2, 3, 3):
-        for fwhm1 in np.linspace(0.2, 3, 3):
-            for flux2 in np.linspace(0.2, 3, 3):
-                for fwhm2 in np.linspace(0.2, 3, 3):
-                    dbl1 = galsim.DoubleGaussian(fwhm1=fwhm1, fwhm2=fwhm2,
-                                                            flux1=flux1, flux2=flux2) 
-                    g1 = galsim.SBGaussian(fwhm=fwhm1, flux=flux1)
-                    g2 = galsim.SBGaussian(fwhm=fwhm2, flux=flux2)
-                    dbl2 = galsim.SBAdd(g1, g2)
-                    np.testing.assert_almost_equal(
-                        dbl1.draw(normalization="surface brightness").array, dbl2.draw().array)
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-def test_doublegaussian_vs_refimg():
-    """Test a specific double Gaussian from galsim.DoubleGaussian against a saved result.
-    """
-    import time
-    t1 = time.time()
-    dblg = galsim.DoubleGaussian(sigma1=1., sigma2=3., flux1=0.75, flux2=0.25)
-    myImg = dblg.draw(dx=0.2,normalization="surface brightness")
-    savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Two Gaussian reference image disagrees with DoubleGaussian class")   
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 def test_AtmosphericPSF_properties():
     """Test some basic properties of a known Atmospheric PSF.
     """
@@ -126,8 +83,6 @@ def test_AtmosphericPSF_fwhm():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
         
 if __name__ == "__main__":
-    test_doublegaussian_vs_sbadd()
-    test_doublegaussian_vs_refimg()
     test_AtmosphericPSF_flux()
     test_AtmosphericPSF_properties()
     test_AtmosphericPSF_fwhm()

@@ -15,7 +15,7 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     @code
     galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
     galaxy.applyShear(g1=0.05, g2=0.0)  # shear it by (0.05, 0) using the g=(a-b)/(a+b) definition
-    psf = galsim.DoubleGaussian(flux1 = 0.7, sigma1 = 0.7, flux2 = 0.3, sigma2 = 1.5)
+    psf = galsim.AtmosphericPSF(flux = 1.0, fwhm = 0.7)
     pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
     final = galsim.Convolve([galaxy, psf, pixel])
     final_epsf = galsim.Convolve([psf, pixel])
@@ -24,11 +24,12 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     result = galsim.EstimateShearHSM(final_image, final_epsf_image)
     @endcode
 
-    After running the above code, result.observed_shape ["shape" = distortion, (a^2-b^2)/(a^2+b^2)] is
-    (0.0595676, 0), and result.corrected_shape is (0.0981158, 0), compared with the expected
-    (0.09975, 0) for a perfect PSF correction method.  Note that the method will fail if the PSF or
-    galaxy are too point-like to easily fit an elliptical Gaussian; when running on batches of many
-    galaxies, it may be preferable to set strict=False and catch errors explicitly, i.e.
+    After running the above code, result.observed_shape ["shape" = distortion, (a^2-b^2)/(a^2+b^2)]
+    is (0.088939,5.33012e-18) and result.corrected_shape is (0.0997273,-1.07985e-16), compared with
+    the expected (0.09975, 0) for a perfect PSF correction method.  Note that the method will fail
+    if the PSF or galaxy are too point-like to easily fit an elliptical Gaussian; when running on
+    batches of many galaxies, it may be preferable to set strict=False and catch errors explicitly,
+    i.e.
 
     @code
     n_image = 100

@@ -441,7 +441,7 @@ def Script3():
       - The number of images in the cube matches the number of rows in the catalog.
       - Each image size is computed automatically by GalSim based on the Nyquist size.
       - Both galaxies and stars.
-      - PSF is DoubleGaussian, the same for each galaxy.
+      - PSF is a double Gaussian, the same for each galaxy.
       - Galaxies are randomly rotated to remove the imprint of any lensing shears in the COSMOS
         data.
       - The same shear is applied to each galaxy.
@@ -486,9 +486,9 @@ def Script3():
 
     ## Make the ePSF
     # first make the double Gaussian PSF
-    psf = galsim.DoubleGaussian(
-            fwhm1 = psf_inner_fwhm, flux1 = psf_inner_fraction,
-            fwhm2 = psf_outer_fwhm, flux2 = 1.-psf_inner_fraction)
+    psf1 = galsim.Gaussian(fwhm = psf_inner_fwhm, flux = psf_inner_fraction)
+    psf2 = galsim.Gaussian(fwhm = psf_outer_fwhm, flux = 1.0-psf_inner_fraction)
+    psf = psf1+psf2
     # make the pixel response
     pix = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)
     # convolve PSF and pixel response function to get the effective PSF (ePSF)
@@ -597,9 +597,9 @@ def Script4():
     # Make the PSF profiles:
     psf1 = galsim.Gaussian(fwhm = psf_fwhm)
     psf2 = galsim.Moffat(fwhm = psf_fwhm, beta = 2.4)
-    psf3 = galsim.DoubleGaussian(
-            fwhm1 = psf_fwhm, flux1 = 0.8,
-            fwhm2 = 2*psf_fwhm, flux2 = 0.2)
+    psf3_inner = galsim.Gaussian(fwhm = psf_fwhm, flux = 0.8)
+    psf3_outer = galsim.Gaussian(fwhm = 2*psf_fwhm, flux = 0.2)
+    psf3 = psf3_inner + psf3_outer
     atmos = galsim.Gaussian(fwhm = psf_fwhm)
     optics = galsim.OpticalPSF(
             lam_over_D = 0.6 * psf_fwhm,
@@ -613,7 +613,7 @@ def Script4():
     optics = galsim.Airy(lam_over_D = 0.3 * psf_fwhm) 
     psf5 = galsim.Convolve([atmos,optics])
     psfs = [psf1, psf2, psf3, psf4, psf5]
-    psf_names = ["Gaussian", "Moffat", "DoubleGaussian", "OpticalPSF", "Kolmogorov * Airy"]
+    psf_names = ["Gaussian", "Moffat", "Double Gaussian", "OpticalPSF", "Kolmogorov * Airy"]
     psf_times = [0,0,0,0,0]
     psf_fft_times = [0,0,0,0,0]
     psf_phot_times = [0,0,0,0,0]
