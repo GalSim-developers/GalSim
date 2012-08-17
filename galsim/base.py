@@ -1564,7 +1564,7 @@ class RealGalaxy(GSObject):
 
 
 #
-# --- Compound GSObect classes: Add, DoubleGaussian and Convolve ---
+# --- Compound GSObect classes: Add and Convolve ---
 
 class Add(GSObject):
     """@brief Base class for defining the python interface to the SBAdd C++ class.
@@ -1623,143 +1623,13 @@ class Add(GSObject):
         elif len(args) >= 2:
             self.objects = list(args)
 
-        # Then build the SBProfile, needed in __init__ for derived classes such as DoubleGaussian.
-        # Note the specific use of the Add._SBInitialize method - this is to prevent recursion in
+        # Then build the SBProfile, needed in __init__ for derived classes.
+        # Note the specific use of the Add._SBInitialize method - this is to prevent recursion
         # in derived classes.
         Add._SBInitialize(self)
 
     def add(self, obj, scale=1.):
         self.SBProfile.add(obj.SBProfile, scale)
-
-
-class DoubleGaussian(Add):
-    """Double Gaussian, which is the sum of two Gaussian profiles and has an SBAdd in the SBProfile
-    attribute.
-
-    For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
-    documentation produced by doxygen.
-
-    Initialization
-    --------------
-    Each component of the DoubleGaussian is initialized using a flux parameter (flux1 and flux2),
-    and one of three possible size parameters
-
-        half_light_radius1
-        sigma1
-        fwhm1
-
-    (for the first component) and
-  
-        half_light_radius2
-        sigma2
-        fwhm2
-
-    (for the second component).
-
-    Example:
-    >>> dgauss_obj = Gaussian(flux1=3., flux2=1., sigma1=1., sigma2=0.5)
-    >>> dgauss_obj.half_light_radius1
-    1.1774100225154747
-    >>> dgauss_obj.half_light_radius1 = 1.
-    >>> dgauss_obj.sigma1
-    0.8493218002880191
-
-    Attempting to initialize with more than one size parameter for each component is ambiguous,
-    and will raise a TypeError exception.
-
-    Methods
-    -------
-    The DoubleGaussian is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
-    applyShear etc.) and operator bindings.
-    """
-    
-    # Defining the descriptors for storing object parameters
-    flux1 = descriptors.SimpleParam(
-        "flux1", group="optional", default=None,
-        doc="Flux for the first of the two Gaussian components of the DoubleGaussian.")
-
-    flux2 = descriptors.SimpleParam(
-        "flux2", group="optional", default=None,
-        doc="Flux for the second of the two Gaussian components of the DoubleGaussian.")
-
-    sigma1 = descriptors.SimpleParam(
-        "sigma1", group="optional", default=None,
-        doc="Scale radius sigma for the first of the two Gaussian components of the "+
-        "DoubleGaussian, kept updated with the other size attributes.")
-
-    sigma2 = descriptors.SimpleParam(
-        "sigma2", group="optional", default=None,
-        doc="Scale radius sigma for the second of the two Gaussian components of the "+
-        "DoubleGaussian, kept updated with the other size attributes.")
-
-    fwhm1 = descriptors.GetSetScaleParam(
-        name="fwhm1", root_name="sigma1", factor=2.3548200450309493, # factor = 2 sqrt[2ln(2)]
-        group="optional", doc="FWHM for the first of the two Gaussian components of the "+
-        "DoubleGaussian, kept consistent with the other size attributes.")
-
-    fwhm2 = descriptors.GetSetScaleParam(
-        name="fwhm2", root_name="sigma2", factor=2.3548200450309493, # factor = 2 sqrt[2ln(2)]
-        group="optional", doc="FWHM for the second of the two Gaussian components of the "+
-        "DoubleGaussian, kept consistent with the other size attributes.")
-
-    half_light_radius1 = descriptors.GetSetScaleParam(
-        "half_light_radius1", root_name="sigma1", factor=1.1774100225154747, # factor = sqrt[2ln(2)]
-        group="optional", doc="Half light radius for the second of the two Gaussian components of "+
-        "the DoubleGaussian, kept consistent with the other size attributes.")
-
-    half_light_radius2 = descriptors.GetSetScaleParam(
-        "half_light_radius2", root_name="sigma2", factor=1.1774100225154747, # factor = sqrt[2ln(2)]
-        group="optional", doc="Half light radius for the second of the two Gaussian components of "+
-        "the DoubleGaussian, kept consistent with the other size attributes.")
-
-
-    # Defining total flux parameter descriptor, not using the default pattern but getting from the
-    # SBProfile directly, and setting by rescaling the flux1 and flux2 to match the new total
-    def _get_dg_flux(self):
-        return self.SBProfile.getFlux()
-    
-    def _set_dg_flux(self, value):
-        if len(self.transformations) == 0:
-            old_flux = self.flux
-            # Rescale both fluxes in each componenent to the new value, ensuring both are updated
-            # in equal proportion (will re-init SBProfile if requested)
-            self.flux1 *= value / old_flux
-            self.flux2 *= value / old_flux
-        else:
-            # individual flux1 and flux2 no longer settable after a transformation, so simply
-            # scale total flux accordingly in the SBProfile attribute itself
-            self.SBProfile.setFlux(value)
-            self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
-
-    flux = descriptors.GetSetFuncParam(
-        getter=_get_dg_flux, setter=_set_dg_flux, update_SBProfile_on_set=False, group="optional",
-        ok_if_object_transformed=True, # flux params can still be accessed after transformation
-        doc="Total flux of the DoubleGaussian object.")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-        sblist = [galsim.Gaussian(sigma=self.sigma1, flux=self.flux1),
-                  galsim.Gaussian(sigma=self.sigma2, flux=self.flux2)]
-        Add.__init__(self, sblist)
-
-    # --- Public Class methods ---
-    def __init__(self, flux1, flux2, sigma1=None, sigma2=None, fwhm1=None, fwhm2=None,
-                 half_light_radius1=None, half_light_radius2=None):
-
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
-
-        # Parse both sets of size parameters using the _parse_sizes method
-        _parse_sizes(
-            self, label="first component of the DoubleGaussian", sigma1=sigma1, fwhm1=fwhm1,
-            half_light_radius1=half_light_radius1)
-        _parse_sizes(
-            self, label="second component of the DoubleGaussian", sigma2=sigma2, fwhm2=fwhm2,
-            half_light_radius2=half_light_radius2)
-
-        # Set the fluxes
-        self.flux1 = flux1
-        self.flux2 = flux2
 
 
 class Convolve(GSObject):
@@ -1990,9 +1860,6 @@ object_param_dict = {
                         "optional" : ("defocus", "astig1", "astig2", "coma1", "coma2", "spher", 
                                       "circular_pupil", "interpolant", "dx", "oversampling",
                                       "pad_factor") },
-    "DoubleGaussian": { "required" : (), 
-                        "size"     : (), 
-                        "optional" : ("sigma1", "sigma2", "fwhm1", "fwhm2") },
     "AtmosphericPSF": { "required" : (),
                         "size"     : ("fwhm", "lam_over_r0"),
                         "optional" : ("dx", "oversampling") },
