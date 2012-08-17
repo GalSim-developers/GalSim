@@ -37,7 +37,7 @@ class Ellipse(object):
     @endcode
 """
     def __init__(self, *args, **kwargs):
-        use_dil = None
+        use_mu = None
         use_shear = None
         use_shift = None
 
@@ -55,9 +55,9 @@ class Ellipse(object):
                             raise TypeError("Ellipse received >1 unnamed Shear arguments!")
                         use_shear = this_arg
                     elif isinstance(this_arg, float):
-                        if use_dil is not None:
+                        if use_mu is not None:
                             raise TypeError("Ellipse received >1 unnamed float/double arguments!")
-                        use_dil = this_arg
+                        use_mu = this_arg
                     elif isinstance(this_arg, _galsim.PositionD):
                         if use_shift is not None:
                             raise TypeError("Ellipse received >1 unnamed Position arguments!")
@@ -69,8 +69,8 @@ class Ellipse(object):
         # If no args, check kwargs: we start by checking for dilation or shifts, because there is a
         # limited set of allowed keyword arguments to specify those, whereas for shear there are
         # many allowed keyword arguments (see documentation for Shear)
-        if use_dil is None:
-            use_dil = kwargs.pop('dilation', 0.0)
+        if use_mu is None:
+            use_mu = kwargs.pop('mu', 0.0)
         if use_shift is None:
             x_shift = kwargs.pop('x_shift', 0.0)
             y_shift = kwargs.pop('y_shift', 0.0)
@@ -94,7 +94,7 @@ class Ellipse(object):
             if kwargs:
                 raise TypeError("Keyword arguments to Ellipse not permitted: %s"%kwargs.keys())     
 
-        self._ellipse = _galsim._CppEllipse(s = use_shear._shear, mu = use_dil, p = use_shift)
+        self._ellipse = _galsim._CppEllipse(s = use_shear._shear, mu = use_mu, p = use_shift)
 
     # below, we propagate through all the methods from C++ #
 
@@ -111,11 +111,11 @@ class Ellipse(object):
     def inv(self, p): return self._ellipse.inv(p)
     # methods for setting values
     def setS(self, s): self._ellipse.setS(s._shear)
-    def setDilation(self, mu): self._ellipse.setMu(mu)
+    def setMu(self, mu): self._ellipse.setMu(mu)
     def setX0(self, p): self._ellipse.setX0(p)
     # methods for getting values
     def getS(self): return galsim.Shear(self._ellipse.getS())
-    def getDilation(self): return self._ellipse.getMu()
+    def getMu(self): return self._ellipse.getMu()
     def getX0(self): return self._ellipse.getX0()
     def getMajor(self): return self._ellipse.getMajor()
     def getMinor(self): return self._ellipse.getMinor()
@@ -124,7 +124,7 @@ class Ellipse(object):
     def getMatrix(self): return self._ellipse.getMatrix()
     # or access values directly
     s = property(getS)
-    dilation = property(getDilation)
+    mu = property(getMu)
     x0 = property(getX0)
     major = property(getMajor)
     minor = property(getMinor)
@@ -136,12 +136,12 @@ class Ellipse(object):
         x0 = self.getX0()    # extract the x0 and y0 from a Position instance
         return (
             self.__class__.__name__+"(g1="+str(shear.getG1())+", g2="+str(shear.getG2())+
-            ", dilation="+str(self.getDilation())+", x_shift="+str(x0.x)+", y_shift="+str(x0.y)+")")
+            ", mu="+str(self.getMu())+", x_shift="+str(x0.x)+", y_shift="+str(x0.y)+")")
 
     def __str__(self):
         shear = self.getS()  # extract the e1 and e2 from the Shear instance
         x0 = self.getX0()    # extract the x0 and y0 from a Position instance
         return (
-            "("+str(shear.getG1())+", "+str(shear.getG2())+", "+str(self.getDilation())+", "
+            "("+str(shear.getG1())+", "+str(shear.getG2())+", "+str(self.getMu())+", "
             +str(x0.x)+", "+str(x0.y)+")")
 
