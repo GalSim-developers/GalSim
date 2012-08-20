@@ -198,11 +198,11 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
         real_galaxy_copy.applyRotation(rand_angle)
 
     # set fluxes
-    real_galaxy_copy.setFlux(target_flux)
+    real_galaxy_copy.flux = target_flux
 
     # shear
     if (g1 != 0.0 or g2 != 0.0):
-        real_galaxy_copy.applyShear(g1=g1,g2=g2)
+        real_galaxy_copy.applyShear(g1=g1, g2=g2)
 
     # convolve, resample
     out_gal = galsim.Convolve([real_galaxy_copy, galsim.GSObject(target_PSF)])
