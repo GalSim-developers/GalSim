@@ -19,8 +19,9 @@ namespace galsim {
     /** @brief Class to hold a list of "photon" arrival positions
      * 
      * Class holds a vector of information about photon arrivals: x and y positions, and a flux
-     * carried by each photon.  It is the intention that fluxes of photons be nearly equal in absolute 
-     * value so that noise statistics can be estimated by counting number of positive and negative photons.
+     * carried by each photon.  It is the intention that fluxes of photons be nearly equal in 
+     * absolute value so that noise statistics can be estimated by counting number of positive 
+     * and negative photons.
      * This class holds the code that allows its flux to be added to a surface-brightness Image.
      */
     class PhotonArray 
@@ -31,7 +32,7 @@ namespace galsim {
          *
          * @param[in] N Size of desired array.
          */
-        explicit PhotonArray(int N): _x(N,0.), _y(N,0.), _flux(N,0.) {}
+        explicit PhotonArray(int N): _x(N,0.), _y(N,0.), _flux(N,0.), _is_correlated(false) {}
 
         /** 
          * @brief Construct from three vectors.  Exception if vector sizes do not match.
@@ -47,13 +48,14 @@ namespace galsim {
          *
          * @returns Array size
          */
-        int size() const {return _x.size();}
+        int size() const { return _x.size(); }
 
         /** @brief reserve space in arrays for future elements
          *
          * @param[in] N number of elements to reserve space for.
          */
-        void reserve(int N) {
+        void reserve(int N) 
+        {
             _x.reserve(N);
             _y.reserve(N);
             _flux.reserve(N);
@@ -67,7 +69,8 @@ namespace galsim {
          * @param[in] y y coordinate of photon
          * @param[in] flux flux of photon
          */
-        void setPhoton(int i, double x, double y, double flux) {
+        void setPhoton(int i, double x, double y, double flux) 
+        {
             _x[i]=x; 
             _y[i]=y;
             _flux[i]=flux;
@@ -79,7 +82,7 @@ namespace galsim {
          * @param[in] i Index of desired photon (no bounds checking)
          * @returns x coordinate of photon
          */
-        double getX(int i) const {return _x[i];}
+        double getX(int i) const { return _x[i]; }
 
         /**
          * @brief Access y coordinate of a photon
@@ -87,7 +90,7 @@ namespace galsim {
          * @param[in] i Index of desired photon (no bounds checking)
          * @returns y coordinate of photon
          */
-        double getY(int i) const {return _y[i];}
+        double getY(int i) const { return _y[i]; }
 
         /**
          * @brief Access flux of a photon
@@ -95,7 +98,7 @@ namespace galsim {
          * @param[in] i Index of desired photon (no bounds checking)
          * @returns flux of photon
          */
-        double getFlux(int i) const {return _flux[i];}
+        double getFlux(int i) const { return _flux[i]; }
 
         /**
          * @brief Return sum of all photons' fluxes
@@ -137,17 +140,19 @@ namespace galsim {
         /**
          * @brief Convolve this array with another.
          *
-         * Convolution of two arrays is defined as adding the coordinates on a photon-by-photon basis
-         * and multiplying the fluxes on a photon-by-photon basis. Output photons' flux is renormalized
-         * so that the expectation value of output total flux is product of two input totals, if
-         * the two photon streams are uncorrelated.
+         * Convolution of two arrays is defined as adding the coordinates on a photon-by-photon 
+         * basis and multiplying the fluxes on a photon-by-photon basis. Output photons' flux is 
+         * renormalized so that the expectation value of output total flux is product of two input 
+         * totals, if the two photon streams are uncorrelated.
          *
          * @param[in] rhs PhotonArray to convolve with this one.  Must be same size.
+         * @param[in] ud  A UniformDeviate in case we need to shuffle.
          */
-        void convolve(const PhotonArray& rhs);
+        void convolve(const PhotonArray& rhs, UniformDeviate ud);
 
         /**
-         * @brief Convolve this array with another, shuffling the order in which photons are combined.
+         * @brief Convolve this array with another, shuffling the order in which photons are 
+         * combined.
          *
          * Same convolution behavior as convolve(), but the order in which the photons are
          * multiplied into the array is randomized to destroy any flux or position correlations.
@@ -155,7 +160,7 @@ namespace galsim {
          * @param[in] rhs PhotonArray to convolve with this one.  Must be same size.
          * @param[in] ud  A UniformDeviate used to shuffle the input photons.
          */
-        void convolveShuffle(const PhotonArray& rhs, UniformDeviate& ud);
+        void convolveShuffle(const PhotonArray& rhs, UniformDeviate ud);
 
         /**
          * @brief Take x displacement from this, and y displacement from x of another array, 
@@ -174,13 +179,26 @@ namespace galsim {
          * Photons past the edges of the image are discarded.
          *
          * @param[in] target the Image to which the photons' flux will be added.
+         * @returns The total flux of photons the landed inside the image bounds.
          */
         template <class T>
-        void addTo(ImageView<T>& target) const;
+        double addTo(ImageView<T>& target) const;
+
+        /**
+         * @brief Declare that the photons in this array are correlated.
+         */
+        void setCorrelated(bool new_val=true) { _is_correlated = new_val; }
+
+        /**
+         * @brief Check if the current array has correlated photons.
+         */
+        bool isCorrelated() const { return _is_correlated; }
+
     private:
         std::vector<double> _x;      // Vector holding x coords of photons
         std::vector<double> _y;      // Vector holding y coords of photons
         std::vector<double> _flux;   // Vector holding flux of photons
+        bool _is_correlated;          // Are the photons correlated?
     };
 
 } // end namespace galsim

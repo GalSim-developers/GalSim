@@ -37,7 +37,7 @@ BasicDemo.py', or you can run them one at a time using `python BasicDemo.py 1'
 and so on.  These scripts are heavily commented, and demonstrate GalSim commands
 for simulating single objects of various types and checking their properties.
 
-b) MultiObjectDemo.py also contains 3 demo scripts and is heavily commented to
+b) MultiObjectDemo.py also contains 4 demo scripts and is heavily commented to
 serve as an example for new users.  It demonstrates functionality for handling
 multi-object simulations, e.g., galaxy grids in the style of GREAT08/GREAT10,
 and also simulations based on real galaxy training data from HST.
@@ -56,14 +56,6 @@ While scripts (a)-(c) can be run from the command-line while sitting in
 examples/ without any arguments, the remaining scripts are auxiliary utilities
 that take various command-line arguments, which are always explained in comments
 at the top of the file.
-
-* SBDraw.py can be used to generate individual images of single galaxies from
-parametric models using the DFT approach.  The key information about the galaxy
-to be simulated must be encoded in a string with a specific format that is
-documented on pages 8-9 of docs/SBProfile.pdf.
-
-* SBDrawShoot.py is parallel to SBDraw.py, but generates the images via
-photon-shooting rather than the DFT approach.
 
 * ShootInterpolated.py is a script that takes as input a filename for a FITS
 image, which it will simulate (optionally sheared and/or resampled) via

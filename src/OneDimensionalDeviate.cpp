@@ -1,11 +1,26 @@
 // -*- c++ -*-
 
+//#define DEBUGLOGGING
+
 #include "OneDimensionalDeviate.h"
 #include "integ/Int.h"
+#include "SBProfile.h"
 
-// Define this variable to find azimuth of 2d photons by drawing a uniform deviate for theta,
-// instead of drawing 2 deviates for a point on the unit circle.
-//#define USE_COS_SIN
+// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by 
+// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit 
+// circle and rejecting corner photons.
+// The relative speed of the two methods was tested as part of issue #163, and the results
+// are collated in devutils/external/time_photon_shooting.
+// The conclusion was that using sin/cos was faster for icpc, but not g++ or clang++.
+#ifdef _INTEL_COMPILER
+#define USE_COS_SIN
+#endif
+
+#ifdef DEBUGLOGGING
+#include <fstream>
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
+#endif
 
 namespace galsim {
 
@@ -25,7 +40,8 @@ namespace galsim {
                        double xmax,
                        double& extremum, 
                        int divisionSteps,
-                       double xFractionalTolerance = 1e-4) {
+                       double xFractionalTolerance = 1e-4) 
+    {
         if (xmax < xmin) std::swap(xmax,xmin);
         const double xTolerance = xFractionalTolerance*(xmax-xmin);
         // First bracket extremum by division into fixed number of steps
@@ -107,7 +123,8 @@ namespace galsim {
     }
 
 
-    double Interval::interpolateFlux(double fraction) const {
+    double Interval::interpolateFlux(double fraction) const 
+    {
         // Find the x (or radius) value that encloses fraction
         // of the flux in this Interval if the function were constant
         // over the interval.
@@ -124,22 +141,32 @@ namespace galsim {
     // Select a photon from within the interval.  unitRandom
     // as an initial random value, more from ud if needed for rejections.
     void Interval::drawWithin(double unitRandom, double& x, double& flux,
-                              UniformDeviate& ud) const {
+                              UniformDeviate ud) const 
+    {
+        //dbg<<"drawWithin interval\n";
+        //dbg<<"_flux = "<<_flux<<std::endl;
         double fractionOfInterval = std::min(unitRandom, 1.);
+        //dbg<<"fractionOfInterval = "<<fractionOfInterval<<std::endl;
         fractionOfInterval = std::max(0., fractionOfInterval);
+        //dbg<<"fractionOfInterval => "<<fractionOfInterval<<std::endl;
         x = interpolateFlux(fractionOfInterval);
+        //dbg<<"x = "<<x<<std::endl;
         flux = 1.;
         if (_useRejectionMethod) {
+            //dbg<<"use rejection\n";
             while ( ud() > std::abs((*_fluxDensityPtr)(x)) / _maxAbsDensity) {
                 x = interpolateFlux(ud());
             }
+            //dbg<<"x => "<<x<<std::endl;
             if (_flux < 0) flux = -1.;
         } else {
             flux = (*_fluxDensityPtr)(x) / _meanAbsDensity;
         }
+        //dbg<<"flux = "<<flux<<std::endl;
     }
 
-    void Interval::checkFlux() const {
+    void Interval::checkFlux() const 
+    {
         if (_fluxIsReady) return;
         if (_isRadial) {
             // Integrate r*F
@@ -162,8 +189,10 @@ namespace galsim {
     // (a) The max/min FluxDensity ratio in the interval is small enough, i.e. close to constant, or
     // (b) The total flux in the interval is below smallFlux.
     // In the former case, photons will be selected by drawing from a uniform distribution and then
-    // adjusting weights by flux.  In latter case, rejection sampling will be used to select within interval.
-    std::list<Interval> Interval::split(double smallFlux) {
+    // adjusting weights by flux.  In latter case, rejection sampling will be used to select 
+    // within interval.
+    std::list<Interval> Interval::split(double smallFlux) 
+    {
         // Get the flux in this interval 
         checkFlux();
         if (_isRadial) {
@@ -212,12 +241,15 @@ namespace galsim {
         _negativeFlux(0.),
         _isRadial(isRadial)
     {
+        dbg<<"Start ODD constructor\n";
+        dbg<<"radial? = "<<isRadial<<std::endl;
 
         // Typedef for indices of standard containers, which don't like int values
         typedef std::vector<double>::size_type Index;
 
         // First calculate total flux so we know when an interval is a small amt of flux
         for (Index iRange = 0; iRange < range.size()-1; iRange++) {
+            xdbg<<"range "<<iRange<<" = "<<range[iRange]<<" ... "<<range[iRange+1]<<std::endl;
             // Integrate total flux (and sign) in each range
             Interval segment(fluxDensity,   
                              range[iRange],
@@ -227,7 +259,10 @@ namespace galsim {
             if (rangeFlux >= 0.) _positiveFlux += rangeFlux;
             else _negativeFlux += std::abs(rangeFlux);
         }
+        dbg<<"posFlux = "<<_positiveFlux<<std::endl;
+        dbg<<"negFlux = "<<_negativeFlux<<std::endl;
         double totalAbsoluteFlux = _positiveFlux + _negativeFlux;
+        dbg<<"totFlux = "<<totalAbsoluteFlux<<std::endl;
 
         // Now break each range into Intervals
         for (Index iRange = 0; iRange < range.size()-1; iRange++) {
@@ -238,6 +273,8 @@ namespace galsim {
                              range[iRange+1],
                              extremum,
                              odd::RANGE_DIVISION_FOR_EXTREMA)) {
+                xdbg<<"range "<<iRange<<" = "<<range[iRange]<<" ... "<<range[iRange+1]<<
+                    "  has an extremum at "<<extremum<<std::endl;
                 // Do 2 ranges
                 {
                     Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial);
@@ -259,16 +296,24 @@ namespace galsim {
                 _pt.splice(_pt.end(), leftList);
             }
         }
+        dbg<<"Total of "<<_pt.size()<<" intervals\n";
         // Build the ProbabilityTree
         _pt.buildTree();
     }
 
-    PhotonArray OneDimensionalDeviate::shoot(int N, UniformDeviate& ud) const {
+    boost::shared_ptr<PhotonArray> OneDimensionalDeviate::shoot(int N, UniformDeviate ud) const 
+    {
+        dbg<<"OneDimentionalDeviate shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = 1.\n";
+        dbg<<"isradial? "<<_isRadial<<std::endl;
+        dbg<<"N = "<<N<<std::endl;
         assert(N>=0);
-        PhotonArray result(N);
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         if (N==0) return result;
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
+        dbg<<"totalAbsFlux = "<<totalAbsoluteFlux<<std::endl;
         double fluxPerPhoton = totalAbsoluteFlux / N;
+        dbg<<"fluxPerPhoton = "<<fluxPerPhoton<<std::endl;
 
         // For each photon, first decide which Interval it's in, the drawWithin the interval.
         for (int i=0; i<N; i++) {
@@ -281,7 +326,9 @@ namespace galsim {
                 chosen->drawWithin(unitRandom, radius, flux, ud);
                 // Draw second ud to get azimuth 
                 double theta = 2.*M_PI*ud();
-                result.setPhoton(i, radius*std::cos(theta), radius*std::sin(theta), flux*fluxPerPhoton);
+                result->setPhoton(i,
+                                  radius*std::cos(theta), radius*std::sin(theta),
+                                  flux*fluxPerPhoton);
 #else
                 // Alternate method: doesn't need sin & cos but needs sqrt
                 // First get a point uniformly distributed in unit circle
@@ -299,7 +346,7 @@ namespace galsim {
                 chosen->drawWithin(unitRandom, radius, flux, ud);
                 // Rescale x & y:
                 double rScale = radius / std::sqrt(rsq);
-                result.setPhoton(i,xu*rScale, yu*rScale, flux*fluxPerPhoton);
+                result->setPhoton(i,xu*rScale, yu*rScale, flux*fluxPerPhoton);
 #endif            
             } else {
                 // Simple 1d interpolation
@@ -308,9 +355,31 @@ namespace galsim {
                 // Now draw an x from within selected interval
                 double x, flux;
                 chosen->drawWithin(unitRandom, x, flux, ud);
-                result.setPhoton(i, x, 0., flux*fluxPerPhoton);
+                result->setPhoton(i, x, 0., flux*fluxPerPhoton);
             }
         }
+        dbg<<"OneDimentionalDeviate Realized flux = "<<result->getTotalFlux()<<std::endl;
+
+        // This next bit is probably a bad idea, especially for profiles that have some 
+        // negative flux.  It is possible for the random photons to end up totalling a 
+        // negative value.  This should be allowed.  And certainly rescaling to get the 
+        // correct flux would be wrong (it would involve a sign flip).  Similarly, Gary
+        // pointed out that it is conceivable for someone to want to draw a profile with 
+        // zero total flux.  We don't want to rescale all the photons to 0.
+#if 0
+        // The flux realized from photon shooting a OneDimensionalDeviate won't necessarily 
+        // match exactly the target flux because of the possibility of variable flux for the 
+        // photons, and also positive and negative photons partially canceling out in a 
+        // stochastic way.
+        // So rescale the image to get the correct flux.
+        double targetFlux = getPositiveFlux() - getNegativeFlux();
+        double realizedFlux = result->getTotalFlux();
+        dbg<<"targetFlux = "<<targetFlux<<std::endl;
+        dbg<<"realizedFlux = "<<realizedFlux<<std::endl;
+        double scale = targetFlux / realizedFlux;
+        dbg<<"Rescale result by "<<scale<<std::endl;
+        result->scaleFlux(scale);
+#endif
         return result;
     }
 

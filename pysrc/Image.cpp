@@ -89,7 +89,9 @@ struct PyImage {
             image.getYMax() - image.getYMin() + 1,
             image.getXMax() - image.getXMin() + 1
         };
-        npy_intp strides[2] = { image.getStride() * sizeof(T), sizeof(T), };
+        npy_intp strides[2];
+        strides[0] = image.getStride() * sizeof(T);
+        strides[1] = sizeof(T);
         bp::object result(
             bp::handle<>(
                 PyArray_New(
@@ -206,8 +208,9 @@ struct PyImage {
         int stride = 0;
         T * data = 0;
         boost::shared_ptr<T> owner;
+        double scale = 1.;
         buildConstructorArgs(array, xMin, yMin, false, data, owner, stride, bounds);
-        return new ImageView<T>(data, owner, stride, bounds);
+        return new ImageView<T>(data, owner, stride, bounds, scale);
     }
 
     static ConstImageView<T> * makeConstFromArray(bp::object const & array, int xMin, int yMin) {
@@ -215,8 +218,9 @@ struct PyImage {
         int stride = 0;
         T * data = 0;
         boost::shared_ptr<T> owner;
+        double scale = 1.;
         buildConstructorArgs(array, xMin, yMin, true, data, owner, stride, bounds);
-        return new ConstImageView<T>(data, owner, stride, bounds);
+        return new ConstImageView<T>(data, owner, stride, bounds, scale);
     }
 
     static bp::object wrapImage(std::string const & suffix) {
@@ -311,6 +315,8 @@ struct PyImage {
             .def("setValue", &Image<T>::setValue, bp::args("x","y","value"))
             .def("copyFrom", &Image<T>::copyFrom)
             .def("fill", &Image<T>::fill)
+            .def("setZero", &Image<T>::setZero)
+            .enable_pickling()
             ;
         
         return pyImage;
@@ -372,7 +378,9 @@ struct PyImage {
             .def("at", at)
             .def("setValue", &ImageView<T>::setValue, bp::args("x","y","value"))
             .def("copyFrom", &ImageView<T>::copyFrom)
-            .def("fill", &Image<T>::fill)
+            .def("fill", &ImageView<T>::fill)
+            .def("setZero", &ImageView<T>::setZero)
+            .enable_pickling()
             ;
         
         return pyImageView;
@@ -414,6 +422,7 @@ struct PyImage {
             .def("view", &ConstImageView<T>::view, bp::return_self<>())
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
+            .enable_pickling()
             ;
 
         return pyConstImageView;

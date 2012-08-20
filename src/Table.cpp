@@ -1,3 +1,19 @@
+
+// icpc pretends to be GNUC, since it thinks it's compliant, but it's not.
+// It doesn't understand "pragma GCC"
+#ifndef __INTEL_COMPILER
+
+// For 32-bit machines, g++ -O2 optimization in the TMV stuff below uses an optimization
+// that is technically isn't known to not overflow 32 bit integers.  In fact, it is totally
+// fine to use, but we need to remove a warning about it in this file for gcc >= 4.5
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 5)
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
+
+#endif
+
+
+
 #include "TMV.h"
 #include "TMV_SymBand.h"
 #include "Table.h"

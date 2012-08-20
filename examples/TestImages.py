@@ -88,7 +88,7 @@ for bt in bulge2Total:
                 else:
                     bg1 = 0.0
                     bg2 = 0.0
-                bulge.applyShear(bg1, bg2)
+                bulge.applyShear(g1=bg1, g2=bg2)
 
                 # Make the disk
                 disk = galsim.Sersic(nDisk, flux=totFlux, half_light_radius=diskRe[dreind])
@@ -105,7 +105,7 @@ for bt in bulge2Total:
                 else:
                     dg1 = 0.0
                     dg2 = 0.0
-                disk.applyShear(dg1, dg2)
+                disk.applyShear(g1=dg1, g2=dg2)
   
                 # Rescale fluxes and add: use the overloaded multiplication and addition operators
                 galaxy = bt*bulge + (1.0-bt)*disk

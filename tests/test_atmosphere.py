@@ -20,7 +20,7 @@ def funcname():
     return inspect.stack()[1][3]
 
 def test_doublegaussian_vs_sbadd():
-    """Test that profiles from galsim.atmosphere.DoubleGaussian equal those from SBGaussian/SBAdd.
+    """Test that profiles from galsim.DoubleGaussian equal those from SBGaussian/SBAdd.
     """
     import time
     t1 = time.time()
@@ -28,32 +28,34 @@ def test_doublegaussian_vs_sbadd():
         for sigma1 in np.linspace(0.2, 3, 3):
             for flux2 in np.linspace(0.2, 3, 3):
                 for sigma2 in np.linspace(0.2, 3, 3):
-                    dbl1 = galsim.atmosphere.DoubleGaussian(sigma1=sigma1, sigma2=sigma2,
+                    dbl1 = galsim.DoubleGaussian(sigma1=sigma1, sigma2=sigma2,
                                                             flux1=flux1, flux2=flux2)
                     g1 = galsim.SBGaussian(sigma=sigma1, flux=flux1)
                     g2 = galsim.SBGaussian(sigma=sigma2, flux=flux2)
                     dbl2 = galsim.SBAdd(g1, g2)
-                    np.testing.assert_almost_equal(dbl1.draw().array, dbl2.draw().array)
+                    np.testing.assert_almost_equal(
+                        dbl1.draw(normalization="surface brightness").array, dbl2.draw().array)
     for flux1 in np.linspace(0.2, 3, 3):
         for fwhm1 in np.linspace(0.2, 3, 3):
             for flux2 in np.linspace(0.2, 3, 3):
                 for fwhm2 in np.linspace(0.2, 3, 3):
-                    dbl1 = galsim.atmosphere.DoubleGaussian(fwhm1=fwhm1, fwhm2=fwhm2,
+                    dbl1 = galsim.DoubleGaussian(fwhm1=fwhm1, fwhm2=fwhm2,
                                                             flux1=flux1, flux2=flux2) 
                     g1 = galsim.SBGaussian(fwhm=fwhm1, flux=flux1)
                     g2 = galsim.SBGaussian(fwhm=fwhm2, flux=flux2)
                     dbl2 = galsim.SBAdd(g1, g2)
-                    np.testing.assert_almost_equal(dbl1.draw().array, dbl2.draw().array)
+                    np.testing.assert_almost_equal(
+                        dbl1.draw(normalization="surface brightness").array, dbl2.draw().array)
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_doublegaussian_vs_refimg():
-    """Test a specific double Gaussian from galsim.atmosphere.DoubleGaussian against a saved result.
+    """Test a specific double Gaussian from galsim.DoubleGaussian against a saved result.
     """
     import time
     t1 = time.time()
-    dblg = galsim.atmosphere.DoubleGaussian(sigma1=1., sigma2=3., flux1=0.75, flux2=0.25)
-    myImg = dblg.draw(dx=0.2)
+    dblg = galsim.DoubleGaussian(sigma1=1., sigma2=3., flux1=0.75, flux2=0.25)
+    myImg = dblg.draw(dx=0.2,normalization="surface brightness")
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Two Gaussian reference image disagrees with DoubleGaussian class")   
@@ -94,7 +96,7 @@ def test_AtmosphericPSF_flux():
         # .draw() throws a warning if it doesn't get a float. This includes np.float64. Convert to
         # have the test pass.
         dx = float(lor / 10.)
-        img_array = apsf.draw(dx=dx).array
+        img_array = apsf.draw(dx=dx,normalization="surface brightness").array
         np.testing.assert_almost_equal(img_array.sum() * dx**2, 1., 3,
                                        err_msg="Flux of atmospheric PSF (image array) is not 1.")
     t2 = time.time()
@@ -112,7 +114,7 @@ def test_AtmosphericPSF_fwhm():
         # have the test pass.
         dx_scale = 10
         dx = float(lor / dx_scale)
-        psf_array = apsf.draw(dx=dx).array
+        psf_array = apsf.draw(dx=dx,normalization="surface brightness").array
         nx, ny = psf_array.shape
         profile = psf_array[nx / 2, ny / 2:]
         # Now get the last array index where the profile value exceeds half the peak value as a 

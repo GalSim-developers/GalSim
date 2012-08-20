@@ -1,20 +1,33 @@
 
-#include <algorithm>
-
 //#define DEBUGLOGGING
 
+#include <algorithm>
 #include "SBInterpolatedImage.h"
+#include "SBInterpolatedImageImpl.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
-
 
 namespace galsim {
 
-    const double TWOPI = 2.*M_PI;
+    template <typename T> 
+    SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<T>& image,
+        boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
+        double dx, double padFactor) :
+        SBProfile(new SBInterpolatedImageImpl(image,xInterp,kInterp,dx,padFactor)) {}
+
+    SBInterpolatedImage::SBInterpolatedImage(
+        const MultipleImageHelper& multi, const std::vector<double>& weights,
+        boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp) :
+        SBProfile(new SBInterpolatedImageImpl(multi,weights,xInterp,kInterp)) {}
+
+    SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs) : SBProfile(rhs) {}
+
+    SBInterpolatedImage::~SBInterpolatedImage() {}
 
     template <class T>
     MultipleImageHelper::MultipleImageHelper(
@@ -261,16 +274,16 @@ namespace galsim {
     // Returns total flux
     template <typename T>
     double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<T>& I, double dx) const 
+        ImageView<T>& I, double dx, double gain) const 
     {
         if ( dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
             double sum=0.;
             for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
                 for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {
                     Position<double> x(ix*dx,iy*dx);
-                    T val = xValue(x);
+                    T val = gain * xValue(x);
                     sum += val;
-                    I(ix,iy) = val;
+                    I(ix,iy) += val;
                 }
             }
             I.setScale(dx);
@@ -279,7 +292,7 @@ namespace galsim {
             // Otherwise just use the normal routine to fill the grid:
             // Note that we need to call doFillXImage, not fillXImage here,
             // to avoid the virtual function resolution.
-            return SBProfileImpl::doFillXImage(I,dx);
+            return SBProfileImpl::doFillXImage(I,dx,gain);
         }
     }
 
@@ -289,6 +302,8 @@ namespace galsim {
     std::complex<double> SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
         const Position<double>& p) const 
     {
+        const double TWOPI = 2.*M_PI;
+
         // Don't bother if the desired k value is cut off by the x interpolant:
         double ux = p.x*_multi.getScale()/TWOPI;
         if (std::abs(ux) > _xInterp->urange()) return std::complex<double>(0.,0.);
@@ -305,7 +320,7 @@ namespace galsim {
     {
         // Notice that interpolant other than sinc may make max frequency higher than
         // the Nyquist frequency of the initial image
-        
+
         // Also, since we used kvalue_accuracy for the threshold of _xInterp
         // (at least for the default quintic interpolant) rather than maxk_threshold,
         // this will probably be larger than we really need.
@@ -330,6 +345,8 @@ namespace galsim {
     {
         if (_readyToShoot) return;
 
+        dbg<<"SBInterpolatedImage not ready to shoot.  Build _pt:\n";
+
         // Build the sets holding cumulative fluxes of all Pixels
         _positiveFlux = 0.;
         _negativeFlux = 0.;
@@ -349,13 +366,30 @@ namespace galsim {
             }
         }
         _pt.buildTree();
+        dbg<<"Built tree\n";
+
+        // The above just computes the positive and negative flux for the main image.
+        // This is convolved by the interpolant, so we need to correct these values
+        // in the same way that SBConvolve does:
+        double p1 = _positiveFlux;
+        double n1 = _negativeFlux;
+        dbg<<"positiveFlux = "<<p1<<", negativeFlux = "<<n1<<std::endl;
+        double p2 = _xInterp->getPositiveFlux();
+        double n2 = _xInterp->getNegativeFlux();
+        dbg<<"Interpolant has positiveFlux = "<<p2<<", negativeFlux = "<<n2<<std::endl;
+        _positiveFlux = p1*p2 + n1*n2;
+        _negativeFlux = p1*n2 + n1*p2;
+        dbg<<"positiveFlux => "<<_positiveFlux<<", negativeFlux => "<<_negativeFlux<<std::endl;
+
         _readyToShoot = true;
     }
 
     // Photon-shooting 
-    PhotonArray SBInterpolatedImage::SBInterpolatedImageImpl::shoot(
-        int N, UniformDeviate& ud) const
+    boost::shared_ptr<PhotonArray> SBInterpolatedImage::SBInterpolatedImageImpl::shoot(
+        int N, UniformDeviate ud) const
     {
+        dbg<<"InterpolatedImage shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
         assert(N>=0);
         checkReadyToShoot();
         /* The pixel coordinates are stored by cumulative absolute flux in 
@@ -366,27 +400,48 @@ namespace galsim {
          */
         assert(N>=0);
 
-        PhotonArray result(N);
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         if (N<=0 || _pt.empty()) return result;
         double totalAbsFlux = _positiveFlux + _negativeFlux;
         double fluxPerPhoton = totalAbsFlux / N;
+        dbg<<"posFlux = "<<_positiveFlux<<", negFlux = "<<_negativeFlux<<std::endl;
+        dbg<<"totFlux = "<<_positiveFlux-_negativeFlux<<", totAbsFlux = "<<totalAbsFlux<<std::endl;
+        dbg<<"fluxPerPhoton = "<<fluxPerPhoton<<std::endl;
         for (int i=0; i<N; i++) {
             double unitRandom = ud();
             Pixel* p = _pt.find(unitRandom);
-            result.setPhoton(i, p->x, p->y, 
-                             p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
+            result->setPhoton(i, p->x, p->y, 
+                              p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }
+        dbg<<"result->getTotalFlux = "<<result->getTotalFlux()<<std::endl;
 
         // Last step is to convolve with the interpolation kernel. 
         // Can skip if using a 2d delta function
         const InterpolantXY* xyPtr = dynamic_cast<const InterpolantXY*> (_xInterp.get());
-        if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d())))
-             result.convolve(_xInterp->shoot(N, ud));
+        if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d()))) {
+            boost::shared_ptr<PhotonArray> pa_interp = _xInterp->shoot(N, ud);
+            pa_interp->scaleXY(_xtab->getDx());
+            result->convolve(*pa_interp, ud);
+        }
 
+        dbg<<"InterpolatedImage Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
     // instantiate template functions for expected image types
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
+
     template MultipleImageHelper::MultipleImageHelper(
         const std::vector<boost::shared_ptr<BaseImage<float> > >& images,
         double dx, double padFactor);
@@ -423,8 +478,8 @@ namespace galsim {
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double padFactor);
 
     template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<float>& I, double dx) const;
+        ImageView<float>& I, double dx, double gain) const;
     template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<double>& I, double dx) const;
+        ImageView<double>& I, double dx, double gain) const;
 }
 

@@ -11,8 +11,8 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-// Not sure when this was added.  Currently check for it for versions >= 4.4
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 4)
+// Not sure when this was added.  Currently check for it for versions >= 4.3
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 3)
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
 
