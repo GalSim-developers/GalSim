@@ -29,7 +29,7 @@ namespace galsim {
 
         /** Intervals with less than this fraction of probability are ok to use dominant-sampling
             method. **/
-        const double SMALL_FRACTION_OF_FLUX = 1e-4;
+        const double SMALL_FRACTION_OF_FLUX = 1.e-4;
 
     }
 
@@ -170,10 +170,10 @@ namespace galsim {
          */
         bool _useRejectionMethod;
 
-        /// Maximum absolute flux density in the interval (assumed to be at an endpoint)
-        double _maxAbsDensity; 
+        /// 1. / (Maximum absolute flux density in the interval (assumed to be at an endpoint))
+        double _invMaxAbsDensity; 
 
-        double _meanAbsDensity; ///< Mean absolute flux density in the interval.
+        double _invMeanAbsDensity; ///< 1. / (Mean absolute flux density in the interval)
     };
 
     /**

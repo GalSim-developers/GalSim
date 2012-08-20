@@ -1036,6 +1036,84 @@ class Airy(GSObject):
             raise NotImplementedError(
                 "FWHM support not implemented for Airy objects with non-zero obscuration.")
 
+class Kolmogorov(GSObject):
+    """@brief GalSim Kolmogorov, which has an SBKolmogorov in the SBProfile attribute.
+       
+    Represents a long exposure Kolmogorov PSF.
+
+    Initialization
+    --------------
+    @code
+    psf = galsim.Kolmogorov(lam_over_r0)
+    @endcode
+
+    Initialized psf as a galsim.Kolmogorov() instance.
+
+    @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
+                           consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
+                           PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
+                           values for the Fried parameter are on the order of 10 cm for most 
+                           observatories and up to 20 cm for excellent sites. The values are 
+                           usually quoted at lambda = 500 nm and r0 depends on wavelength as
+                           [r0 ~ lambda^(-6/5)].
+    @param fwhm            FWHM of the Kolmogorov PSF.
+    @param half_light_radius  Half-light radius of the Kolmogorov PSF.
+                           One of lam_over_r0, fwhm and half_light_radius (and only one) 
+                           must be specified.
+    @param flux            optional flux value [default = 1]
+    """
+    # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
+    # In SBKolmogorov.cpp we refine this factor to 0.975865
+    _fwhm_factor = 0.975865
+    # Similarly, SBKolmogorov calculates the relation between lambda/r0 and half-light radius
+    _hlr_factor = 0.554811
+ 
+    def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.):
+        if fwhm is not None :
+            if lam_over_r0 is not None or half_light_radius is not None:
+                raise TypeError(
+                        "Only one of lam_over_r0, fwhm, and half_light_radius may be " +
+                        "specified for Kolmogorov")
+            else:
+                lam_over_r0 = fwhm / Kolmogorov._fwhm_factor
+        elif half_light_radius is not None:
+            if lam_over_r0 is not None:
+                raise TypeError(
+                        "Only one of lam_over_r0, fwhm, and half_light_radius may be " +
+                        "specified for Kolmogorov")
+            else:
+                lam_over_r0 = half_light_radius / Kolmogorov._hlr_factor
+        elif lam_over_r0 is None:
+                raise TypeError(
+                        "One of lam_over_r0, fwhm, or half_light_radius must be " +
+                        "specified for Kolmogorov")
+
+        GSObject.__init__(self, galsim.SBKolmogorov(lam_over_r0=lam_over_r0, flux=flux))
+ 
+    def getLamOverR0(self):
+        """Return the lam_over_r0 parameter of this Kolmogorov profile.
+        """
+        return self.SBProfile.getLamOverR0()
+    
+    def getFWHM(self):
+        """Return the FWHM of this Kolmogorov profile
+        """
+        return self.SBProfile.getLamOverR0() * Kolmogorov._fwhm_factor
+
+    def getHalfLightRadius(self):
+        """Return the half light radius of this Kolmogorov profile
+        """
+        return self.SBProfile.getLamOverR0() * Kolmogorov._hlr_factor
+
+
+class Pixel(GSObject):
+    """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
+    """
+    def __init__(self, xw, yw=None, flux=1.):
+        if yw is None:
+            yw = xw
+        GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
+
     # Then we define the fwhm descriptor with reference to these getter/setter functions
     fwhm = descriptors.GetSetFuncParam(
         getter=_get_fwhm, setter=_set_fwhm, group="size",
@@ -1099,6 +1177,8 @@ class OpticalPSF(GSObject):
                            dimension, [0., 1.) [default = 0.]
     @param interpolant     optional keyword for specifying the interpolation scheme [default =
                            galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))].
+    @param interpolantxy   optional keyword for specifying the interpolation scheme [default =
+                           galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))].
     @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
                            [default = 1.5], setting oversampling < 1 will produce aliasing in the 
                            PSF (not good).
@@ -1107,6 +1187,8 @@ class OpticalPSF(GSObject):
                            Note that padFactor may need to be increased for stronger aberrations,
                            i.e. those larger than order unity.
     @param flux            total flux of the profile [default flux=1.]
+                           Note that pad_factor may need to be increased for stronger aberrations,
+                           i.e. those larger than order unity. 
     """
 
     lam_over_D = descriptors.SimpleParam(
@@ -1188,6 +1270,9 @@ class OpticalPSF(GSObject):
         if self.interpolant == None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
             self.interpolant = galsim.InterpolantXY(lan5)
+        if interpolantxy == None:
+            lan5 = galsim.Quintic(tol=1.e-4)
+            self.Interpolant2D = galsim.InterpolantXY(lan5)
         else:
             if isinstance(self.interpolant, galsim.InterpolantXY) is False:
                 raise RuntimeError('Specified interpolant is not an InterpolantXY!')
@@ -1195,6 +1280,20 @@ class OpticalPSF(GSObject):
         # Initialize the SBProfile
         GSObject.__init__(
             self, galsim.SBInterpolatedImage(optimage, self.interpolant, dx=dx_lookup))
+            self.Interpolant2D = interpolantxy
+        GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D,
+                                                           dx=dx_lookup))
+        # The above procedure ends up with a larger image than we really need, which
+        # means that the default stepK value will be smaller than we need.  
+        # Thus, we call the function calculateStepK() to refine the value.
+        self.SBProfile.calculateStepK()
+        self.SBProfile.calculateMaxK()
+
+    def getHalfLightRadius(self):
+        # The half light radius is a complex function for aberrated optical PSFs, so just give
+        # up gracelessly...
+        raise NotImplementedError("Half light radius calculation not implemented for OpticalPSF "
+                                   +"objects.")
 
     # --- Public Class methods ---
     def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
@@ -1422,6 +1521,45 @@ class DeVaucouleurs(GSObject):
         self.flux = flux
 
 
+    def __init__(self, lam_over_r0=None, fwhm=None, interpolantxy=None, oversampling=1.5):
+        # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
+        if lam_over_r0 is None :
+            if fwhm is not None :
+                lam_over_r0 = fwhm / 0.976
+            else:
+                raise TypeError("Either lam_over_r0 or fwhm must be specified for AtmosphericPSF")
+        else :
+            if fwhm is None:
+                fwhm = 0.976 * lam_over_r0
+            else:
+                raise TypeError(
+                        "Only one of lam_over_r0 and fwhm may be specified for AtmosphericPSF")
+        dx_lookup = .5 * fwhm / oversampling
+        # Fold at 10 times the FWHM
+        stepk_kolmogorov = np.pi / (10. * fwhm)
+        # Odd array to center the interpolant on the centroid. Might want to pad this later to
+        # make a nice size array for FFT, but for typical seeing, arrays will be very small.
+        npix = 1 + 2 * (np.ceil(np.pi / stepk_kolmogorov)).astype(int)
+        atmoimage = galsim.atmosphere.kolmogorov_psf_image(array_shape=(npix, npix), dx=dx_lookup, 
+                                                           lam_over_r0=lam_over_r0)
+        if interpolantxy == None:
+            lan5 = galsim.Quintic(tol=1e-4)
+            self.Interpolant2D = galsim.InterpolantXY(lan5)
+        else:
+            self.Interpolant2D = interpolantxy
+        GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, 
+                                                           dx=dx_lookup))
+        # The above procedure ends up with a larger image than we really need, which
+        # means that the default stepK value will be smaller than we need.  
+        # Thus, we call the function calculateStepK() to refine the value.
+        self.SBProfile.calculateStepK()
+        self.SBProfile.calculateMaxK()
+
+    def getHalfLightRadius(self):
+        # TODO: This seems like it would not be impossible to calculate
+        raise NotImplementedError("Half light radius calculation not yet implemented for "+
+                                  "Atmospheric PSF objects (could be though).")
+        
 class RealGalaxy(GSObject):
     """@brief Class describing real galaxies from some training dataset.
 
@@ -1868,6 +2006,43 @@ object_param_dict = {
                         "optional" : ("real_galaxy_catalog", "index", "ID", "random", 
                                       "uniform_deviate", "interpolant")}
                     }
+object_param_dict = {"Gaussian":       { "required" : (),
+                                         "size" :     ("half_light_radius", "sigma", "fwhm",),
+                                         "optional" : ("flux",) },
+                     "Moffat":         { "required" : ("beta",),
+                                         "size"     : ("half_light_radius", "scale_radius", 
+                                                       "fwhm",),
+                                         "optional" : ("trunc", "flux",) },
+                     "Sersic":         { "required" : ("n",) ,
+                                         "size"     : ("half_light_radius",),
+                                         "optional" : ("flux",) },
+                     "Exponential":    { "required" : (),
+                                         "size"     : ("half_light_radius", "scale_radius"),
+                                         "optional" : ("flux",) },
+                     "DeVaucouleurs":  { "required" : (),
+                                         "size"     : ("half_light_radius",),
+                                         "optional" : ("flux",) },
+                     "Airy":           { "required" : () ,
+                                         "size"     : ("D",) ,
+                                         "optional" : ("obs", "flux",)},
+                     "Kolmogorov":     { "required" : () ,
+                                         "size"     : ("lam_over_r0", "fwhm", "half_light_radius") ,
+                                         "optional" : ("flux",)},
+                     "Pixel":          { "required" : ("xw", "yw",),
+                                         "size"     : (),
+                                         "optional" : ("flux",) },
+                     "OpticalPSF":     { "required" : (),
+                                         "size"     : ("lam_over_D",),
+                                         "optional" : ("defocus", "astig1", "astig2", "coma1",
+                                                       "coma2", "spher", "circular_pupil",
+                                                       "interpolantxy", "dx", "oversampling",
+                                                       "pad_factor") },
+                     "DoubleGaussian": { "required" : (), 
+                                         "size"     : ("sigma1, sigma2, fwhm1, fwhm2",), 
+                                         "optional" : () },
+                     "AtmosphericPSF": { "required" : (),
+                                         "size"     : ("fwhm", "lam_over_r0"),
+                                         "optional" : ("dx", "oversampling") } }
 
 
 class AttributeDict(object):

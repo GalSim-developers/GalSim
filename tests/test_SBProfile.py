@@ -177,7 +177,7 @@ def funcname():
 
 # define a series of tests
 
-def test_sbprofile_gaussian():
+def test_gaussian():
     """Test the generation of a specific Gaussian profile using SBProfile against a known result.
     """
     import time
@@ -204,7 +204,7 @@ def test_sbprofile_gaussian():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_sbprofile_gaussian_properties():
+def test_gaussian_properties():
     """Test some basic properties of the SBGaussian profile.
     """
     import time
@@ -358,7 +358,7 @@ def test_gaussian_radii():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2-t1)
 
-def test_sbprofile_exponential():
+def test_exponential():
     """Test the generation of a specific exp profile using SBProfile against a known result. 
     """
     import time
@@ -445,7 +445,7 @@ def test_exponential_radii():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_sbprofile_sersic():
+def test_sersic():
     """Test the generation of a specific Sersic profile using SBProfile against a known result.
     """
     import time
@@ -520,7 +520,7 @@ def test_sersic_radii():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_sbprofile_airy():
+def test_airy():
     """Test the generation of a specific Airy profile using SBProfile against a known result.
     """
     import time
@@ -589,7 +589,7 @@ def test_airy_radii():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_sbprofile_box():
+def test_box():
     """Test the generation of a specific box profile using SBProfile against a known result.
     """
     import time
@@ -616,7 +616,7 @@ def test_sbprofile_box():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_sbprofile_moffat():
+def test_moffat():
     """Test the generation of a specific Moffat profile using SBProfile against a known result.
     """
     import time
@@ -657,7 +657,7 @@ def test_sbprofile_moffat():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_sbprofile_moffat_properties():
+def test_moffat_properties():
     """Test some basic properties of the SBMoffat profile.
     """
     import time
@@ -890,7 +890,179 @@ def test_moffat_radii():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
-def test_sbprofile_smallshear():
+
+def test_kolmogorov():
+    """Test the generation of a specific Kolmogorov profile using SBProfile against a known result.
+    """
+    import time
+    t1 = time.time()
+    mySBP = galsim.SBKolmogorov(lam_over_r0=1.5, flux=1.8)
+    # This savedImg was created from the SBKolmogorov implementation in
+    # commit c8efd74d1930157b1b1ffc0bfcfb5e1bf6fe3201
+    # It would be nice to get an independent calculation here...
+    #savedImg = galsim.ImageF(128,128)
+    #mySBP.draw(image=savedImg, dx=0.2)
+    #savedImg.write(os.path.join(imgdir, "kolmogorov.fits"))
+    savedImg = galsim.fits.read(os.path.join(imgdir, "kolmogorov.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    mySBP.draw(myImg,dx=0.2)
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Kolmogorov profile disagrees with expected result") 
+
+    # Repeat with the GSObject version of this:
+    kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=1.8)
+    kolm.draw(myImg,dx=0.2, normalization="surface brightness")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject Kolmogorov disagrees with expected result")
+
+    # Test equivalence when convolved by an effective delta function
+    # This tests the equivalence between xValue and kValue calculations.
+    delta = galsim.Gaussian(sigma=1.e-8)
+    conv = galsim.Convolve([kolm,delta])
+    conv.draw(myImg,dx=0.2, normalization="surface brightness")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 3,
+            err_msg="Kolmogorov * delta disagrees with expected result")
+
+    # Test photon shooting.
+    do_shoot(kolm,myImg,"Kolmogorov")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_kolmogorov_properties():
+    """Test some basic properties of the Kolmogorov profile.
+    """
+    import time
+    t1 = time.time()
+
+    lor = 1.5
+    flux = 1.8
+    psf = galsim.Kolmogorov(lam_over_r0=lor, flux=flux)
+    # Check that we are centered on (0, 0)
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(psf.centroid(), cen)
+    # Check Fourier properties
+    np.testing.assert_almost_equal(psf.maxK(), 8.6440505245909858, 9)
+    np.testing.assert_almost_equal(psf.stepK(), 0.3437479193077736, 9)
+    np.testing.assert_almost_equal(psf.kValue(cen), flux+0j)
+    np.testing.assert_almost_equal(psf.getLamOverR0(), lor)
+    np.testing.assert_almost_equal(psf.getHalfLightRadius(), lor * 0.554811)
+    np.testing.assert_almost_equal(psf.getFWHM(), lor * 0.975865)
+    np.testing.assert_almost_equal(psf.xValue(cen), 0.6283160485127478)
+
+    # Check input flux vs output flux
+    lors = [1, 0.5, 2, 5]
+    for lor in lors:
+        psf = galsim.Kolmogorov(lam_over_r0=lor, flux=flux)
+        out_flux = psf.getFlux()
+        np.testing.assert_almost_equal(out_flux, flux,
+                                       err_msg="Flux of Kolmogorov (getFlux) is incorrect.")
+
+        # Also check the realized flux in a drawn image
+        dx = lor / 10.
+        img = galsim.ImageF(256,256)
+        pix = galsim.Pixel(dx)
+        conv = galsim.Convolve([psf,pix])
+        conv.draw(image=img, dx=dx)
+        out_flux = img.array.sum()
+        np.testing.assert_almost_equal(out_flux, flux, 3,
+                                       err_msg="Flux of Kolmogorov (image array) is incorrect.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_kolmogorov_radii():
+    """Test initialization of Kolmogorov with different types of radius specification.
+    """
+    import time 
+    t1 = time.time()
+    import math
+    # Test constructor using lambda/r0
+    lors = [1, 0.5, 2, 5]
+    for lor in lors:
+        print 'lor = ',lor
+        test_gal = galsim.Kolmogorov(flux=1., lam_over_r0=lor)
+
+        np.testing.assert_almost_equal(
+                lor, test_gal.getLamOverR0(), decimal=9,
+                err_msg="Error in Kolmogorov, lor != getLamOverR0")
+
+        # test that getFWHM() method provides correct FWHM
+        got_fwhm = test_gal.getFWHM()
+        print 'got_fwhm = ',got_fwhm
+        test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+                        test_gal.xValue(galsim.PositionD(0., 0.)))
+        print 'fwhm ratio = ', test_fwhm_ratio
+        np.testing.assert_almost_equal(
+                test_fwhm_ratio, 0.5, decimal=4,
+                err_msg="Error in FWHM for Kolmogorov initialized with half-light radius")
+
+        # then test that image indeed has the correct HLR properties when radially integrated
+        got_hlr = test_gal.getHalfLightRadius()
+        print 'got_hlr = ',got_hlr
+        hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+        print 'hlr_sum = ',hlr_sum
+        np.testing.assert_almost_equal(
+                hlr_sum, 0.5, decimal=3,
+                err_msg="Error in half light radius for Kolmogorov initialized with lam_over_r0.")
+
+    # Test constructor using half-light-radius:
+    test_gal = galsim.Kolmogorov(flux=1., half_light_radius = test_hlr)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    print 'hlr_sum = ',hlr_sum
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=3,
+            err_msg="Error in Kolmogorov constructor with half-light radius")
+
+    # test that getFWHM() method provides correct FWHM
+    got_fwhm = test_gal.getFWHM()
+    print 'got_fwhm = ',got_fwhm
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+                    test_gal.xValue(galsim.PositionD(0., 0.)))
+    print 'fwhm ratio = ', test_fwhm_ratio
+    np.testing.assert_almost_equal(
+            test_fwhm_ratio, 0.5, decimal=4,
+            err_msg="Error in FWHM for Kolmogorov initialized with half-light radius")
+
+    # Test constructor using FWHM:
+    test_gal = galsim.Kolmogorov(flux=1., fwhm = test_fwhm)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
+    print 'fwhm ratio = ',ratio
+    np.testing.assert_almost_equal(
+            ratio, 0.5, decimal=4,
+            err_msg="Error in Kolmogorov constructor with fwhm")
+
+    # then test that image indeed has the correct HLR properties when radially integrated
+    got_hlr = test_gal.getHalfLightRadius()
+    print 'got_hlr = ',got_hlr
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    print 'hlr_sum (profile initialized with fwhm) = ',hlr_sum
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=3,
+            err_msg="Error in half light radius for Gaussian initialized with FWHM.")
+
+    # Check that the getters don't work after modifying the original.
+    test_gal_shear = test_gal.copy()
+    print 'fwhm = ',test_gal_shear.getFWHM()
+    print 'hlr = ',test_gal_shear.getHalfLightRadius()
+    print 'lor = ',test_gal_shear.getLamOverR0()
+    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getLamOverR0");
+    except ImportError:
+        pass
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_smallshear():
     """Test the application of a small shear to a Gaussian SBProfile against a known result.
     """
     import time
@@ -951,7 +1123,7 @@ def test_sbprofile_smallshear():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_sbprofile_largeshear():
+def test_largeshear():
     """Test the application of a large shear to a Sersic SBProfile against a known result.
     """
     import time
@@ -1014,7 +1186,7 @@ def test_sbprofile_largeshear():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
  
-def test_sbprofile_convolve():
+def test_convolve():
     """Test the convolution of a Moffat and a Box SBProfile against a known result.
     """
     import time
@@ -1064,7 +1236,7 @@ def test_sbprofile_convolve():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_sbprofile_shearconvolve():
+def test_shearconvolve():
     """Test the convolution of a sheared Gaussian and a Box SBProfile against a known result.
     """
     import time
@@ -1141,7 +1313,7 @@ def test_sbprofile_shearconvolve():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_sbprofile_realspace_convolve():
+def test_realspace_convolve():
     """Test the real-space convolution of a Moffat and a Box SBProfile against a known result.
     """
     import time
@@ -1201,7 +1373,7 @@ def test_sbprofile_realspace_convolve():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
  
 
-def test_sbprofile_realspace_distorted_convolve():
+def test_realspace_distorted_convolve():
     """
     The same as above, but both the Moffat and the Box are sheared, rotated and shifted
     to stress test the code that deals with this for real-space convolutions that wouldn't
@@ -1267,7 +1439,7 @@ def test_sbprofile_realspace_distorted_convolve():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
  
-def test_sbprofile_realspace_shearconvolve():
+def test_realspace_shearconvolve():
     """Test the real-space convolution of a sheared Gaussian and a Box SBProfile against a 
        known result.
     """
@@ -1317,7 +1489,7 @@ def test_sbprofile_realspace_shearconvolve():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_sbprofile_rotate():
+def test_rotate():
     """Test the 45 degree rotation of a sheared Sersic profile against a known result.
     """
     import time
@@ -1352,7 +1524,7 @@ def test_sbprofile_rotate():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_sbprofile_mag():
+def test_mag():
     """Test the magnification (size x 1.5) of an exponential profile against a known result.
     """
     import time
@@ -1427,7 +1599,7 @@ def test_sbprofile_mag():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_sbprofile_add():
+def test_add():
     """Test the addition of two rescaled Gaussian profiles against a known double Gaussian result.
     """
     import time
@@ -1495,7 +1667,7 @@ def test_sbprofile_add():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_sbprofile_shift():
+def test_shift():
     """Test the translation of a Box profile against a known result.
     """
     import time
@@ -1530,7 +1702,7 @@ def test_sbprofile_shift():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_sbprofile_rescale():
+def test_rescale():
     """Test the flux rescaling of a Sersic profile against a known result.
     """
     import time
@@ -1584,7 +1756,6 @@ def test_sbprofile_rescale():
     myImg2 = gauss2.draw(dx=0.2, wmult=2)
     print 'image size = ',myImg2.array.shape
     print myImg2.array.sum()
-    myImg2.write("junk.fits")
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 1., 4,
             err_msg="Drawing Gaussian results in wrong flux")
     myImg2 = gauss2.draw(myImg2, add_to_image=True)
@@ -1619,7 +1790,7 @@ def test_sbprofile_rescale():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_sbprofile_sbinterpolatedimage():
+def test_sbinterpolatedimage():
     """Test that we can make SBInterpolatedImages from Images of various types, and convert back.
     """
     import time
@@ -1668,29 +1839,32 @@ def test_sbprofile_sbinterpolatedimage():
 
 
 if __name__ == "__main__":
-    test_sbprofile_gaussian()
-    test_sbprofile_gaussian_properties()
+    test_gaussian()
+    test_gaussian_properties()
     test_gaussian_radii()
-    test_sbprofile_exponential()
+    test_exponential()
     test_exponential_radii()
-    test_sbprofile_sersic()
+    test_sersic()
     test_sersic_radii()
-    test_sbprofile_airy()
+    test_airy()
     test_airy_radii()
-    test_sbprofile_box()
-    test_sbprofile_moffat()
-    test_sbprofile_moffat_properties()
+    test_box()
+    test_moffat()
+    test_moffat_properties()
     test_moffat_radii()
-    test_sbprofile_smallshear()
-    test_sbprofile_largeshear()
-    test_sbprofile_convolve()
-    test_sbprofile_shearconvolve()
-    test_sbprofile_realspace_convolve()
-    test_sbprofile_realspace_distorted_convolve()
-    test_sbprofile_realspace_shearconvolve()
-    test_sbprofile_rotate()
-    test_sbprofile_mag()
-    test_sbprofile_add()
-    test_sbprofile_shift()
-    test_sbprofile_rescale()
-    test_sbprofile_sbinterpolatedimage()
+    test_kolmogorov()
+    test_kolmogorov_properties()
+    test_kolmogorov_radii()
+    test_smallshear()
+    test_largeshear()
+    test_convolve()
+    test_shearconvolve()
+    test_realspace_convolve()
+    test_realspace_distorted_convolve()
+    test_realspace_shearconvolve()
+    test_rotate()
+    test_mag()
+    test_add()
+    test_shift()
+    test_rescale()
+    test_sbinterpolatedimage()
