@@ -57,7 +57,8 @@ namespace galsim {
             SBProfile::GetImpl(_adaptee)->fillKGrid(kt);
             // Flip or clip:
             int N = kt.getN();
-            int maxiksq = int(floor(_maxksq / (kt.getDk()*kt.getDk())));
+            // NB: don't need floor, since rhs is positive, so floor is superfluous.
+            int maxiksq = int(_maxksq / (kt.getDk()*kt.getDk()));
             // Only need ix>=0 because it's Hermitian, but also
             // don't want to repeat the ix=0, N/2 twice:
             for (int iy = -N/2; iy < N/2; iy++) {

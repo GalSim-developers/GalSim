@@ -1,6 +1,7 @@
 from ._galsim import *
 from . import position
 from . import bounds
+from . import angle
 from shear import *
 from ellipse import *
 from . import fits

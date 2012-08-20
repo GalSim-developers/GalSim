@@ -15,11 +15,11 @@ namespace galsim {
                 .def(bp::init<const std::vector<boost::shared_ptr<BaseImage<U> > >&, 
                      double, double>(
                         (bp::arg("images"),
-                         bp::arg("dx")=0., bp::arg("padFactor")=0.)
+                         bp::arg("dx")=0., bp::arg("pad_factor")=0.)
                 ))
                 .def(bp::init<const BaseImage<U> &, double, double>(
                         (bp::arg("image"),
-                         bp::arg("dx")=0., bp::arg("padFactor")=0.)
+                         bp::arg("dx")=0., bp::arg("pad_factor")=0.)
                 ))
                 ;
         }
@@ -34,7 +34,7 @@ namespace galsim {
                          (bp::arg("image"),
                           bp::arg("xInterp")=bp::object(),
                           bp::arg("kInterp")=bp::object(),
-                          bp::arg("dx")=0., bp::arg("padFactor")=0.)
+                          bp::arg("dx")=0., bp::arg("pad_factor")=0.)
                      ))
                 ;
         }
@@ -59,6 +59,8 @@ namespace galsim {
                           bp::arg("xInterp")=bp::object(),
                           bp::arg("kInterp")=bp::object())
                      ))
+                .def("calculateStepK", &SBInterpolatedImage::calculateStepK)
+                .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK)
                 ;
             wrapTemplates<float>(pySBInterpolatedImage);
             wrapTemplates<double>(pySBInterpolatedImage);

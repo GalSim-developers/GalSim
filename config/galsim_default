@@ -19,8 +19,6 @@ config.dx = 1.
 # The currently available PSF types are:
 #
 # "Gaussian"         A Gaussian light distribution.
-# "DoubleGaussian"   A sum of two Gaussians found to provide a reasonable empirical fit to ground-
-#                    based PSFs.
 # "Moffat"           A Moffat (1969) parametric PSF model.
 # "Airy"             An Airy function describing ideal diffraction limited optics.
 # "OpticalPSF"       A PSF describing telescope optics with coma, astigmatism, defocus and spherical
