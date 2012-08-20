@@ -948,9 +948,9 @@ def test_kolmogorov_properties():
     np.testing.assert_almost_equal(psf.maxK(), 8.6440505245909858, 9)
     np.testing.assert_almost_equal(psf.stepK(), 0.3437479193077736, 9)
     np.testing.assert_almost_equal(psf.kValue(cen), flux+0j)
-    np.testing.assert_almost_equal(psf.getLamOverR0(), lor)
-    np.testing.assert_almost_equal(psf.getHalfLightRadius(), lor * 0.554811)
-    np.testing.assert_almost_equal(psf.getFWHM(), lor * 0.975865)
+    np.testing.assert_almost_equal(psf.lam_over_r0, lor)
+    np.testing.assert_almost_equal(psf.half_light_radius, lor * 0.554811)
+    np.testing.assert_almost_equal(psf.fwhm, lor * 0.975865)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.6283160485127478)
 
     # Check input flux vs output flux
@@ -988,11 +988,11 @@ def test_kolmogorov_radii():
         test_gal = galsim.Kolmogorov(flux=1., lam_over_r0=lor)
 
         np.testing.assert_almost_equal(
-                lor, test_gal.getLamOverR0(), decimal=9,
+                lor, test_gal.lam_over_r0, decimal=9,
                 err_msg="Error in Kolmogorov, lor != getLamOverR0")
 
-        # test that getFWHM() method provides correct FWHM
-        got_fwhm = test_gal.getFWHM()
+        # test that fwhm attribute provides correct FWHM
+        got_fwhm = test_gal.fwhm
         print 'got_fwhm = ',got_fwhm
         test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
                         test_gal.xValue(galsim.PositionD(0., 0.)))
@@ -1001,8 +1001,9 @@ def test_kolmogorov_radii():
                 test_fwhm_ratio, 0.5, decimal=4,
                 err_msg="Error in FWHM for Kolmogorov initialized with half-light radius")
 
-        # then test that image indeed has the correct HLR properties when radially integrated
-        got_hlr = test_gal.getHalfLightRadius()
+        # then test that image indeed has the correct half_light_radius properties when radially
+        # integrated
+        got_hlr = test_gal.half_light_radius
         print 'got_hlr = ',got_hlr
         hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
         print 'hlr_sum = ',hlr_sum
@@ -1019,7 +1020,7 @@ def test_kolmogorov_radii():
             err_msg="Error in Kolmogorov constructor with half-light radius")
 
     # test that getFWHM() method provides correct FWHM
-    got_fwhm = test_gal.getFWHM()
+    got_fwhm = test_gal.fwhm
     print 'got_fwhm = ',got_fwhm
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
                     test_gal.xValue(galsim.PositionD(0., 0.)))
@@ -1038,24 +1039,24 @@ def test_kolmogorov_radii():
             err_msg="Error in Kolmogorov constructor with fwhm")
 
     # then test that image indeed has the correct HLR properties when radially integrated
-    got_hlr = test_gal.getHalfLightRadius()
+    got_hlr = test_gal.half_light_radius
     print 'got_hlr = ',got_hlr
     hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
     print 'hlr_sum (profile initialized with fwhm) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=3,
-            err_msg="Error in half light radius for Gaussian initialized with FWHM.")
+            err_msg="Error in half light radius for Kolmogorov initialized with FWHM.")
 
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.copy()
-    print 'fwhm = ',test_gal_shear.getFWHM()
-    print 'hlr = ',test_gal_shear.getHalfLightRadius()
-    print 'lor = ',test_gal_shear.getLamOverR0()
+    print 'fwhm = ',test_gal_shear.fwhm
+    print 'hlr = ',test_gal_shear.half_light_radius
+    print 'lor = ',test_gal_shear.lam_over_r0
     test_gal_shear.applyShear(g1=0.3, g2=0.1)
     try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius");
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getLamOverR0");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "lam_over_r0");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "fwhm");
     except ImportError:
         pass
 
