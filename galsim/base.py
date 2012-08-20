@@ -1567,7 +1567,8 @@ class RealGalaxy(GSObject):
         doc="Uniform deviate to use for random galaxy selection.")
     
     interpolant = descriptors.SimpleParam(
-        "interpolant", default=None, group="optional", doc="Real space interpolant instance (2D).")
+        "interpolant", default=None, group="optional",
+        doc="Real space InterpolantXY instance (2D).")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
