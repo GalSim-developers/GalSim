@@ -36,12 +36,21 @@ moffat_ref_hlr_from_fwhm = 1.285657994217926   # calculated from SBProfile (regr
 moffat_ref_scale_from_hlr = 2.494044174293422  # calculated from SBProfile (regression test only)
 moffat_ref_fwhm_from_hlr = 2.8195184757176097 # calculated from SBProfile (regression test only)
 
-# AtmosphericPSF params and reference values
+# AtmosphericPSF / Kolmogorov params and reference values
 test_lor0 = 1.9
 test_oversampling = 1.7
 
 atmos_ref_fwhm_from_lor0 = test_lor0 * 0.976
 atmos_ref_lor0_from_fwhm = test_fwhm / 0.976
+
+kolmo_ref_fwhm_from_lor0 = test_lor0 * 0.975865
+kolmo_ref_lor0_from_fwhm = test_fwhm / 0.975865
+
+kolmo_ref_hlr_from_lor0 = test_lor0 * 0.554811
+kolmo_ref_lor0_from_hlr = test_hlr / 0.554811
+
+kolmo_ref_fwhm_from_hlr = test_hlr * 0.975865 / 0.554811
+kolmo_ref_hlr_from_fwhm = test_fwhm * 0.554811 / 0.975865
 
 # Airy params and reference values
 test_loD = 1.9
@@ -70,6 +79,8 @@ param_decimal = 12
 
 
 def test_gaussian_param_consistency():
+    """Test consistency of Gaussian parameters.
+    """
     # init with sigma and flux
     obj = galsim.Gaussian(sigma=test_sigma, flux=test_flux)
     np.testing.assert_almost_equal(
@@ -116,6 +127,8 @@ def test_gaussian_param_consistency():
         err_msg="Starting half_light_radius param and derived sigma attribute inconsistent.")
 
 def test_gaussian_flux_scaling():
+    """Test flux scaling for Gaussian.
+    """
     # init with sigma and flux only (should be ok given last tests)
     obj = galsim.Gaussian(sigma=test_sigma, flux=test_flux)
     obj *= 2.
@@ -159,6 +172,8 @@ def test_gaussian_flux_scaling():
         err_msg="Flux param inconsistent after __div__ (result).")
 
 def test_moffat_param_consistency():
+    """Test consistency of Moffat parameters.
+    """
     # init with scale_radius and flux
     obj = galsim.Moffat(
         scale_radius=test_scale, flux=test_flux, trunc=test_trunc, beta=test_beta)
@@ -226,6 +241,8 @@ def test_moffat_param_consistency():
         err_msg="Starting half_light_radius param and derived scale_radius attribute inconsistent.")
 
 def test_moffat_flux_scaling():
+    """Test flux scaling for Moffat.
+    """
     # init with scale_radius only (should be ok given last tests)
     obj = galsim.Moffat(scale_radius=test_scale, beta=test_beta, trunc=test_trunc, flux=test_flux)
     obj *= 2.
@@ -269,6 +286,8 @@ def test_moffat_flux_scaling():
         err_msg="Flux param inconsistent after __div__ (result).")
 
 def test_atmos_param_consistency():
+    """Test consistency of AtmosphericPSF parameters.
+    """
     # init with lam_over_r0 and flux
     obj = galsim.AtmosphericPSF(
         lam_over_r0=test_lor0, flux=test_flux, oversampling=test_oversampling)
@@ -301,6 +320,8 @@ def test_atmos_param_consistency():
         err_msg="FWHM param and attribute inconsistent.")
 
 def test_atmos_flux_scaling():
+    """Test flux scaling for AtmosphericPSF.
+    """
     # init with lam_over_r0 and flux only (should be ok given last tests)
     obj = galsim.AtmosphericPSF(lam_over_r0=test_lor0, flux=test_flux)
     obj *= 2.
@@ -343,7 +364,102 @@ def test_atmos_flux_scaling():
         obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
 
+def test_kolmo_param_consistency():
+    """Test consistency of Kolmogorov parameters.
+    """
+    # init with lam_over_r0 and flux
+    obj = galsim.Kolmogorov(lam_over_r0=test_lor0, flux=test_flux)
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.lam_over_r0, test_lor0, decimal=param_decimal,
+        err_msg="Lambda / r0 param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm, kolmo_ref_fwhm_from_lor0, decimal=param_decimal,
+        err_msg="Starting lambda / r0 param and derived fwhm attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius, kolmo_ref_hlr_from_lor0, decimal=param_decimal,
+        err_msg="Starting lambda / r0 param and derived half_light_radius attribute inconsistent.")
+
+    # init with FWHM and flux
+    obj = galsim.Kolmogorov(fwhm=test_fwhm, flux=test_flux)
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.lam_over_r0, kolmo_ref_lor0_from_fwhm, decimal=param_decimal,
+        err_msg="Starting FWHM param and derived lambda / r0 attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm, test_fwhm, decimal=param_decimal,
+        err_msg="FWHM param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius, kolmo_ref_hlr_from_fwhm, decimal=param_decimal,
+        err_msg="Starting FWHM param and derived half_light_radius attribute inconsistent.")
+
+    # init with HLR and flux
+    obj = galsim.Kolmogorov(half_light_radius=test_hlr, flux=test_flux)
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.lam_over_r0, kolmo_ref_lor0_from_hlr, decimal=param_decimal,
+        err_msg="Starting half light radius param and derived lambda / r0 attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.fwhm, kolmo_ref_fwhm_from_hlr, decimal=param_decimal,
+        err_msg="Starting half light radius param FWHM and attribute inconsistent.")
+    np.testing.assert_almost_equal(
+        obj.half_light_radius, test_hlr, decimal=param_decimal,
+        err_msg="Half light radius param and attribute inconsistent.")
+
+def test_kolmo_flux_scaling():
+    """Test flux scaling for Kolmogorov.
+    """
+    # init with lam_over_r0 and flux only (should be ok given last tests)
+    obj = galsim.Kolmogorov(lam_over_r0=test_lor0, flux=test_flux)
+    obj *= 2.
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __imul__.")
+    obj = galsim.Kolmogorov(lam_over_r0=test_lor0, flux=test_flux)
+    obj /= 2.
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux / 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __idiv__.")
+    obj = galsim.Kolmogorov(lam_over_r0=test_lor0, flux=test_flux)
+    obj2 = obj * 2.
+    # First test that original obj is unharmed... (also tests that .copy() is working)
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __rmul__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.flux, test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __rmul__ (result).")
+    obj = galsim.Kolmogorov(lam_over_r0=test_lor0, flux=test_flux)
+    obj2 = 2. * obj
+    # First test that original obj is unharmed... (also tests that .copy() is working)
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __mul__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.flux, test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __mul__ (result).")
+    obj = galsim.Kolmogorov(lam_over_r0=test_lor0, flux=test_flux)
+    obj2 = obj / 2.
+    # First test that original obj is unharmed... (also tests that .copy() is working)
+    np.testing.assert_almost_equal(
+        obj.flux, test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __div__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.flux, test_flux / 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __div__ (result).")
+
 def test_airy_param_consistency():
+    """Test consistency of Airy parameters.
+    """
     # init with lam_over_D and flux with obs = 0.
     obj = galsim.Airy(lam_over_D=test_loD, flux=test_flux)
     np.testing.assert_almost_equal(
@@ -403,6 +519,8 @@ def test_airy_param_consistency():
         err_msg="Obscuration param and attribute inconsistent.")
 
 def test_airy_flux_scaling():
+    """Test flux scaling for Airy.
+    """
     # init with lam_over_r0 and flux only (should be ok given last tests)
     obj = galsim.Airy(lam_over_D=test_loD, flux=test_flux, obscuration=test_obscuration)
     obj *= 2.
@@ -446,6 +564,8 @@ def test_airy_flux_scaling():
         err_msg="Flux param inconsistent after __div__ (result).")
 
 def test_opticalpsf_param_consistency():
+    """Test consistency of OpticalPSF parameters.
+    """
     # init with a few test params then do very simple tests
     obj = galsim.OpticalPSF(
         lam_over_D=test_loD, oversampling=test_oversampling, defocus=test_defocus,
@@ -470,6 +590,8 @@ def test_opticalpsf_param_consistency():
         err_msg="Oversampling param and attribute inconsistent.")
 
 def test_opticalpsf_flux_scaling():
+    """Test flux scaling for OpticalPSF.
+    """
     # init
     obj = galsim.OpticalPSF(
         lam_over_D=test_loD, oversampling=test_oversampling, defocus=test_defocus,
@@ -523,6 +645,8 @@ def test_opticalpsf_flux_scaling():
         err_msg="Flux param inconsistent after __div__ (result).")
 
 def test_sersic_param_consistency():
+    """Test consistency of Sersic parameters.
+    """
     # loop through sersic n
     for test_n in test_sersic_n:
         # init with n, scale_radius and flux
@@ -538,6 +662,8 @@ def test_sersic_param_consistency():
             err_msg="Flux param and attribute inconsistent.")
 
 def test_sersic_flux_scaling():
+    """Test flux scaling for Sersic.
+    """
     # loop through sersic n
     for test_n in test_sersic_n:
         # init with hlr and flux only (should be ok given last tests)
@@ -583,6 +709,8 @@ def test_sersic_flux_scaling():
             err_msg="Flux param inconsistent after __div__ (result).")
 
 def test_exponential_param_consistency():
+    """Test consistency of Exponential parameters.
+    """
     # init with scale_radius and flux
     obj = galsim.Exponential(scale_radius=test_scale, flux=test_flux)
     np.testing.assert_almost_equal(
@@ -609,6 +737,8 @@ def test_exponential_param_consistency():
         "inconsistent.")
 
 def test_exponential_flux_scaling():
+    """Test flux scaling for Exponential.
+    """
     # init with scale and flux only (should be ok given last tests)
     obj = galsim.Exponential(scale_radius=test_scale, flux=test_flux)
     obj *= 2.
@@ -652,6 +782,8 @@ def test_exponential_flux_scaling():
         err_msg="Flux param inconsistent after __div__ (result).")   
 
 def test_devaucouleurs_param_consistency():
+    """Test consistency of DeVaucouleurs parameters.
+    """
     # init with half_light_radius and flux
     obj = galsim.Exponential(half_light_radius=test_hlr, flux=test_flux)
     np.testing.assert_almost_equal(
@@ -662,6 +794,8 @@ def test_devaucouleurs_param_consistency():
         err_msg="Flux param and attribute inconsistent.")
 
 def test_devaucouleurs_flux_scaling():
+    """Test flux scaling for DeVaucouleurs.
+    """
     # init with half_light_radius and flux only (should be ok given last tests)
     obj = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=test_flux)
     obj *= 2.
@@ -705,6 +839,9 @@ def test_devaucouleurs_flux_scaling():
         err_msg="Flux param inconsistent after __div__ (result).")
 
 def test_add_param_consistency():
+    """Test consistency of Add parameters for a number of different different sorts of constituent
+    GSObjects.
+    """
     # only really the flux param to test, but will do this with a couple of difference sorts of
     # GSObjects in the Add just to check, and for list and dual argument initialization
     # Sersic and Exp first
@@ -760,6 +897,8 @@ def test_add_param_consistency():
         "and AtmosphericPSF and Moffat inputs.")
 
 def test_add_flux_scaling():
+    """Test flux scaling for Add.
+    """
     # init with Gaussian and Exponential only (should be ok given last tests)
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
@@ -808,6 +947,9 @@ def test_add_flux_scaling():
         err_msg="Flux param inconsistent after __div__ (result).")
         
 def test_convolve_param_consistency():
+    """Test consistency of Convolve parameters for a number of different different sorts of
+    constituent GSObjects.
+    """
     # only really the flux param to test, but will do this with a couple of difference sorts of
     # GSObjects in the Add just to check, and for list and dual argument initialization
     # Sersic and Exp first
@@ -863,6 +1005,8 @@ def test_convolve_param_consistency():
         "OpticalPSF and AtmosphericPSF and Moffat inputs.")
 
 def test_convolve_flux_scaling():
+    """Test flux scaling for Convolve.
+    """
     # init with Gaussian and DeVauc only (should be ok given last tests)
     obj = galsim.Convolve(
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
@@ -916,6 +1060,8 @@ def test_convolve_flux_scaling():
         err_msg="Flux param inconsistent after __div__ (result).")
 
 def test_gaussian_data():
+    """Test copying and sharing of parameter data store for Gaussian.
+    """
     # As the data copying code is shared among all GSObjects, it's probably sufficient to simply
     # test a few of the broadly different types.
     # Gaussian, init with sigma and flux
@@ -929,6 +1075,8 @@ def test_gaussian_data():
     assert obj._data != cobj._data
 
 def test_moffat_data():
+    """Test copying and sharing of parameter data store for Moffat.
+    """
     # As the data copying code is shared among all GSObjects, it's probably sufficient to simply
     # test a few of the broadly different types.
     obj = galsim.Moffat(scale_radius=test_scale, beta=test_beta, trunc=test_trunc, flux=test_flux)
@@ -941,6 +1089,8 @@ def test_moffat_data():
     assert obj._data != cobj._data
 
 def test_opticalpsf_data():
+    """Test copying and sharing of parameter data store for OpticalPSF.
+    """
     # As the data copying code is shared among all GSObjects, it's probably sufficient to simply
     # test a few of the broadly different types.
     obj = galsim.OpticalPSF(
@@ -955,6 +1105,8 @@ def test_opticalpsf_data():
     assert obj._data != cobj._data
 
 def test_add_data():
+    """Test copying and sharing of parameter data store for Data.
+    """
     # As the data copying code is shared among all GSObjects, it's probably sufficient to simply
     # test a few of the broadly different types.
     obj1 = galsim.OpticalPSF(
@@ -978,6 +1130,8 @@ if __name__ == "__main__":
     test_moffat_flux_scaling()
     test_atmos_param_consistency()
     test_atmos_flux_scaling()
+    test_kolmo_param_consistency()
+    test_kolmo_flux_scaling()
     test_airy_param_consistency()
     test_airy_flux_scaling()
     test_opticalpsf_param_consistency()
