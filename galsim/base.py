@@ -1180,9 +1180,7 @@ class OpticalPSF(GSObject):
                            compared to what would be required for a simple Airy [default = 1.5].
                            Note that pad_factor may need to be increased for stronger aberrations,
                            i.e. those larger than order unity.
-    @param flux            total flux of the profile [default flux=1.]
-                           Note that pad_factor may need to be increased for stronger aberrations,
-                           i.e. those larger than order unity. 
+    @param flux            total flux of the profile [default flux=1.].
     """
 
     lam_over_D = descriptors.SimpleParam(
