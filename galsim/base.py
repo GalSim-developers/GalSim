@@ -739,9 +739,6 @@ class Moffat(GSObject):
     # Then we set up the size descriptors.  These need to be a little more complex in their
     # execution than a typical GSObject.
 
-    # First we define a hidden storage variable to recall how the size parameter was last set: 
-    _last_size_set_was_half_light_radius = False
-
     # Getter and setter functions for the scale_radius descriptor.
     # If the half light radius was the last size set then the value in _data["half_light_radius"]
     # will be None, so scale_radius needs to be got from self.SBProfile.getScaleRadius.
@@ -817,6 +814,9 @@ class Moffat(GSObject):
     # --- Public Class methods ---
     def __init__(self, beta, scale_radius=None, half_light_radius=None,  fwhm=None, trunc=0.,
                  flux=1.):
+
+        # First we define a hidden storage variable to recall how the size parameter was last set: 
+        self._last_size_set_was_half_light_radius = False
 
         self._setup_data_store() # Used for storing parameter data, accessed by descriptors
         
