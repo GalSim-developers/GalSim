@@ -51,12 +51,12 @@ namespace galsim {
          * @param[in] dx        Stepsize between pixels in image data table (default value of 
          *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
          *                      to `1.` if none is found). 
-         * @param[in] padFactor Multiple by which to increase the image size when zero-padding for 
-         *                      the Fourier transform (default `padFactor = 4`)
+         * @param[in] pad_factor Multiple by which to increase the image size when zero-padding for 
+         *                      the Fourier transform (default `pad_factor = 4`)
          */
         template <typename T>
         MultipleImageHelper(const std::vector<boost::shared_ptr<BaseImage<T> > >& images,
-                            double dx=0., double padFactor=0.);
+                            double dx=0., double pad_factor=0.);
 
         /** 
          * @brief Convenience constructor that only takes a single image.
@@ -65,12 +65,12 @@ namespace galsim {
          * @param[in] dx        Stepsize between pixels in image data table (default value of 
          *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
          *                      to `1.` if none is found). 
-         * @param[in] padFactor Multiple by which to increase the image size when zero-padding for 
-         *                      the Fourier transform (default `padFactor = 4`)
+         * @param[in] pad_factor Multiple by which to increase the image size when zero-padding for 
+         *                      the Fourier transform (default `pad_factor = 4`)
          */
         template <typename T>
         MultipleImageHelper(const BaseImage<T>& image,
-                            double dx=0., double padFactor=0.);
+                            double dx=0., double pad_factor=0.);
 
         /// @brief Copies are shallow, so can pass by value without any copying.
         MultipleImageHelper(const MultipleImageHelper& rhs) : _pimpl(rhs._pimpl) {}
@@ -179,7 +179,7 @@ namespace galsim {
      * You can also make an SBInterpolatedImage as a weighted sum of several images
      * using MultipleImageHelper.  This helper object holds the images and their fourier
      * transforms, so it is efficient to make many SBInterpolatedImages with different
-     * weight vectors.  This version does not take the `dx` or `padFactor` parameters,
+     * weight vectors.  This version does not take the `dx` or `pad_factor` parameters,
      * since these are set in the MultipleImageHelper constructor.
      */
     class SBInterpolatedImage : public SBProfile 
@@ -195,15 +195,15 @@ namespace galsim {
          * @param[in] dx        Stepsize between pixels in image data table (default value of 
          *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
          *                      to `1.` if none is found). 
-         * @param[in] padFactor Multiple by which to increase the image size when zero-padding for 
-         *                      the Fourier transform (default `padFactor = 4`)
+         * @param[in] pad_factor Multiple by which to increase the image size when zero-padding for 
+         *                      the Fourier transform (default `pad_factor = 4`)
          */
         template <typename T> 
         SBInterpolatedImage(
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
             boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
-            double dx=0., double padFactor=0.);
+            double dx=0., double pad_factor=0.);
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
@@ -226,6 +226,12 @@ namespace galsim {
 
         /// @brief Destructor
         ~SBInterpolatedImage();
+
+        /// @brief Refine the value of stepK if the input image was larger than necessary.
+        void calculateStepK() const;
+
+        /// @brief Refine the value of stepK if the input image had a smaller scale than necessary.
+        void calculateMaxK() const;
 
     protected:
 

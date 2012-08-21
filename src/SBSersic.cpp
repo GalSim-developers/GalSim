@@ -111,7 +111,7 @@ namespace galsim {
         // Gamma(2n,z) ~= z^(2n-1) exp(-z) (1 + (2n-2)/z + (2n-2)(2n-3)/z^2 + ... )
         // ln(x Gamma(2n)) = (2n-1) ln(z) - z + 2(n-1)/z + 2(n-1)(n-2)/z^2
         // z = -ln(x Gamma(2n) + (2n-1) ln(z) + 2(n-1)/z + 2(n-1)(n-2)/z^2
-        // Iterate this until converge.  Should be quick.
+        // Iterate this until it converges.  Should be quick.
         dbg<<"Find maxR for missing_flux_frac = "<<missing_flux_frac<<std::endl;
         double z0 = -std::log(missing_flux_frac * gamma2n);
         // Successive approximation method:
@@ -154,7 +154,7 @@ namespace galsim {
         // 1 - Gamma(4n) / 4 b^2n Gamma(2n) + Gamma(6n) / 64 b^4n Gamma(2n)
         //   - Gamma(8n) / 2304 b^6n Gamma(2n)
         // The quadratic term of small-k expansion:
-        _kderiv2 = -tgamma(4.*_n) / (4.*b2n*gamma2n) ; 
+        _kderiv2 = -tgamma(4.*_n) / (4.*b2n*gamma2n); 
         // And a quartic term:
         _kderiv4 = tgamma(6.*_n) / (64.*b4n*gamma2n);
 
@@ -173,7 +173,7 @@ namespace galsim {
         // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
         double R = findMaxR(sbp::alias_threshold,gamma2n);
         // Go to at least 5 re
-        if (R < 5) R = 5;
+        if (R < 5.) R = 5.;
         dbg<<"R => "<<R<<std::endl;
         _stepK = M_PI / R;
         dbg<<"stepK = "<<_stepK<<std::endl;

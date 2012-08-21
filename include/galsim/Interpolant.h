@@ -160,7 +160,7 @@ namespace galsim {
             int nKnots = int(ceil(xrange()));
             std::vector<double> ranges(2*nKnots);
             for (int i=1; i<=nKnots; i++) {
-                double knot = std::min(1.*i, xrange());
+                double knot = std::min(double(i), xrange());
                 ranges[nKnots-i] = -knot;
                 ranges[nKnots+i-1] = knot;
             }
@@ -521,7 +521,8 @@ namespace galsim {
          * @param[in] tol  Sets accuracy and extent of Fourier transform.
          */
         Lanczos(int n, bool fluxConserve=false, double tol=1.e-3) :  
-            _n(n), _fluxConserve(fluxConserve), _tolerance(tol), _tab(Table<double,double>::spline) 
+            _n(n), _fluxConserve(fluxConserve), _tolerance(tol), 
+            _xtab(Table<double,double>::spline), _utab(Table<double,double>::spline) 
         { setup(); }
 
         ~Lanczos() {}
@@ -529,25 +530,8 @@ namespace galsim {
         double getTolerance() const { return _tolerance; }
         double xrange() const { return _range; }
         double urange() const { return _uMax; }
-        double xval(double x) const 
-        { 
-            x = std::abs(x);
-            if (x>=_n) return 0.;
-            double retval = sinc(x)*sinc(x/_n);
-            if (_fluxConserve) retval *= 1. + 2.*_u1*(1.-std::cos(2.*M_PI*x));
-            return retval;
-        }
-        double uval(double u) const 
-        {
-            u = std::abs(u);
-            double retval = u>_uMax ? 0. : _tab(u);
-            if (!_fluxConserve) return retval;
-            retval *= 1.+2.*_u1;
-            if (u+1. < _uMax) retval -= _u1*_tab(u+1.);
-            if (std::abs(u-1.) < _uMax) retval -= _u1*_tab(std::abs(u-1.));
-            return retval;
-        }
-        double uCalc(double u) const;
+        double xval(double x) const;
+        double uval(double u) const;
 
     private:
         double _n; ///< Actually storing 2n, since it's used mostly this way.
@@ -556,8 +540,11 @@ namespace galsim {
         double _tolerance;  ///< k-space accuracy parameter
         double _uMax;  ///< truncation point for Fourier transform
         double _u1; ///< coefficient for flux correction
-        Table<double,double> _tab; ///< Table for Fourier transform
+        Table<double,double> _xtab; ///< Table for x values
+        Table<double,double> _utab; ///< Table for Fourier transform
         void setup();
+        double xCalc(double x) const;
+        double uCalc(double u) const;
     };
 
     /**

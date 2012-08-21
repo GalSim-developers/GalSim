@@ -47,14 +47,7 @@ namespace galsim {
         double getObscuration() const;
 
     protected:
-        class AiryInfo;
-        class AiryRadialFunction;
         class SBAiryImpl;
-        class InfoBarn;
-
-        /// One static map of all `AiryInfo` structures for whole program.
-        static InfoBarn nmap; 
-
 
     private:
         // op= is undefined

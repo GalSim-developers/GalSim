@@ -3,6 +3,7 @@
 
 #include "Interpolant.h"
 #include "integ/Int.h"
+#include "SBProfile.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -98,6 +99,13 @@ namespace galsim {
         }
     }
 
+    double Lanczos::xCalc(double x) const
+    {
+        double retval = sinc(x)*sinc(x/_n);
+        if (_fluxConserve) retval *= 1. + 2.*_u1*(1.-std::cos(2.*M_PI*x));
+        return retval;
+    }
+
     double Lanczos::uCalc(double u) const 
     {
         double vp=_n*(2*u+1);
@@ -114,16 +122,50 @@ namespace galsim {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
         _range = _n*(1-0.1*std::sqrt(_tolerance));
-        const double uStep = 0.01/_n;
-        _uMax = 0.;
-        double u = _tab.size()>0 ? _tab.argMax() + uStep : 0.;
-        while ( u - _uMax < 1./_n || u<1.1) {
-            double ft = uCalc(u);
-            _tab.addEntry(u, ft);
-            if (std::abs(ft) > _tolerance) _uMax = u;
-            u += uStep;
-        }
+
         _u1 = uCalc(1.);
+
+        // Build utab = table of u values
+        // Spline is accurate to O(dx^3), so errors should be ~dx^4.
+        const double xStep1 = std::pow(sbp::xvalue_accuracy,0.25);
+        // Make sure steps hit the integer values exactly.
+        const double xStep = 1. / std::ceil(1./xStep1);
+        for(double x = 0.; x<_n; x+=xStep) _xtab.addEntry(x, xCalc(x));
+
+        // Build utab = table of u values
+        const double uStep = std::pow(sbp::kvalue_accuracy,0.25) / _n;
+        _uMax = 0.;
+        double u = _utab.size()>0 ? _utab.argMax() + uStep : 0.;
+        if (_fluxConserve) {
+            while ( u - _uMax < 1./_n || u<1.1) {
+                double uval = uCalc(u);
+                uval *= 1.+2.*_u1;
+                uval -= _u1*uCalc(u+1.);
+                uval -= _u1*uCalc(u-1.);
+                _utab.addEntry(u, uval);
+                if (std::abs(uval) > _tolerance) _uMax = u;
+                u += uStep;
+            }
+        } else {
+            while ( u - _uMax < 1./_n || u<1.1) {
+                double uval = uCalc(u);
+                _utab.addEntry(u, uval);
+                if (std::abs(uval) > _tolerance) _uMax = u;
+                u += uStep;
+            }
+        }
+    }
+
+    double Lanczos::xval(double x) const
+    {
+        x = std::abs(x);
+        return x>=_n ? 0. : _xtab(x);
+    }
+
+    double Lanczos::uval(double u) const
+    {
+        u = std::abs(u);
+        return u>_uMax ? 0. : _utab(u);
     }
 
     class CubicIntegrand : public std::unary_function<double,double>

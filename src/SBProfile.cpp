@@ -963,7 +963,8 @@ namespace galsim {
             // we find that the max pixel has a noise level < noise (if noise > 0)
             
             if (thisN > maxN) thisN = maxN;
-            if (thisN > N) thisN = int(floor(N+0.5));
+            // NB: don't need floor, since rhs is positive, so floor is superfluous.
+            if (thisN > N) thisN = int(N+0.5);
 
             xdbg<<"shoot "<<thisN<<std::endl;
             assert(_pimpl.get());

@@ -43,10 +43,12 @@ extern int verbose_level;
 #define dbg if(dbgout && verbose_level >= 1) (*dbgout)
 #define xdbg if(dbgout && verbose_level >= 2) (*dbgout)
 #define xxdbg if(dbgout && verbose_level >= 3) (*dbgout)
+#define xassert(x) assert(x)
 #else
 #define dbg if(false) (std::cerr)
 #define xdbg if(false) (std::cerr)
 #define xxdbg if(false) (std::cerr)
+#define xassert(x)
 #endif
 
 // A nice way to throw exceptions that take a string argument and have that string

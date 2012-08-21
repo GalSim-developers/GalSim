@@ -16,7 +16,7 @@ namespace galsim {
             const BaseImage<T>& image, 
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double dx, double padFactor);
+            double dx, double pad_factor);
 
         SBInterpolatedImageImpl(
             const MultipleImageHelper& multi, const std::vector<double>& weights,
@@ -27,8 +27,11 @@ namespace galsim {
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& p) const;
 
-        double maxK() const;
-        double stepK() const;
+        double maxK() const { return _maxk; }
+        double stepK() const { return _stepk; }
+
+        void calculateMaxK() const;
+        void calculateStepK() const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
         { xmin = -_max_size; xmax = _max_size; }
@@ -122,6 +125,8 @@ namespace galsim {
         void checkK() const;
 
         double _max_size; ///< Calculated value: Ninitial+2*xInterp->xrange())*dx
+        mutable double _stepk; ///< Stored value of stepK
+        mutable double _maxk; ///< Stored value of maxK
 
         void initialize(); ///< Put code common to both constructors here.
 
