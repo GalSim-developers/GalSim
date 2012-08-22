@@ -20,7 +20,13 @@ class GSObject(object):
     # Note that this requires ALL classes derived from GSObject to define a _SBInitialize() method. 
     def _get_SBProfile(self):
         if self._SBProfile is None:
-            self._SBInitialize()
+            # First cover the corner case of emtpy Add or Convolve objects
+            if isinstance(self, (Add, Convolve)) and len(self.objects) == 0:
+                raise AttributeError(
+                    "SBProfile attribute not accessible for empty Add or Convolve objects.")
+            # Otherwise call _SBInitialize to set the SBProfile based on instance parameters
+            else:
+                self._SBInitialize()
         return self._SBProfile
 
     def _set_SBProfile(self, value):
@@ -1679,11 +1685,14 @@ class Add(GSObject):
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
-        
-        # Initialize with a list of SBProfiles... If self.objects is empty, SBList is empty too and
-        # SBAdd will still accept it (but slight weirdness after flux setting for empty Adds)
-        SBList = [obj.SBProfile for obj in self.objects]
-        GSObject.__init__(self, galsim.SBAdd(SBList))
+
+        if len(self.objects) == 0:
+            # No arguments.  Start with none and add objects later with add(obj)
+            GSObject.__init__(self, None)
+        else:
+            # >= 1 arguments.  Convert to a list of SBProfiles
+            SBList = [obj.SBProfile for obj in self.objects]
+            GSObject.__init__(self, galsim.SBAdd(SBList))
 
     # --- Public Class methods ---
     def __init__(self, *args):
@@ -1833,9 +1842,14 @@ class Convolve(GSObject):
                         self.real_space = False
                         break
 
-        # > 2 arguments.  Convert to a list of SBProfiles
-        SBList = [obj.SBProfile for obj in self.objects]
-        GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=self.real_space))
+        # Then initialize the SBProfile using the objects' SBProfiles
+        if len(self.objects) == 0:
+            # No arguments.  Start with none and add objects later with add(obj)
+            GSObject.__init__(self, None)
+        else:
+            # >= 1 arguments.  Convert to a list of SBProfiles
+            SBList = [obj.SBProfile for obj in self.objects]
+            GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=self.real_space))
                     
     # --- Public Class methods ---
     def __init__(self, *args, **kwargs):
@@ -1870,10 +1884,6 @@ class Convolve(GSObject):
             else:
                 raise TypeError("Single input argument must be a GSObject or list of them.")
         elif len(args) >= 2:
-            self.objects = list(args)
-        if len(args) == 1 and isinstance(args[0], list):
-            self.objects = args[0]
-        else:
             self.objects = list(args)
 
     def add(self, obj, scale=1.):
