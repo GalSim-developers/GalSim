@@ -11,9 +11,6 @@ class GSObject(object):
     """@brief Base class for defining the interface with which all GalSim Objects access their
     shared methods and attributes, particularly those from the C++ SBProfile classes.
     """
-    _SBProfile = None  # Private attribute used by the SBProfile property to store (and rebuild if
-                       # necessary) the C++ layer SBProfile object for which GSObjects are a
-                       # container
 
     # Then we define the .SBProfile attribute to actually be a property, with getter and setter
     # functions that provide access to the data stored in _SBProfile.  If the latter is None, for
@@ -23,7 +20,13 @@ class GSObject(object):
     # Note that this requires ALL classes derived from GSObject to define a _SBInitialize() method. 
     def _get_SBProfile(self):
         if self._SBProfile is None:
-            self._SBInitialize()
+            # First cover the corner case of emtpy Add or Convolve objects
+            if isinstance(self, (Add, Convolve)) and len(self.objects) == 0:
+                raise AttributeError(
+                    "SBProfile attribute not accessible for empty Add or Convolve objects.")
+            # Otherwise call _SBInitialize to set the SBProfile based on instance parameters
+            else:
+                self._SBInitialize()
         return self._SBProfile
 
     def _set_SBProfile(self, value):
@@ -34,11 +37,6 @@ class GSObject(object):
     # Default flux parameter descriptor, will be overridden by some GSObjects
     flux = descriptors.FluxParam()
 
-    # --- Ordered list for storing all transformations applied to the GSObject ---
-    # Currently all items in .transformations will either be a galsim.Ellipse (for stretches and
-    # shifts), a galsim.Angle (for rotations).
-    transformations = []
-
     def _add_transformation(self, transformation):
         if isinstance(transformation, galsim.Ellipse) or isinstance(transformation, galsim.Angle):
             self.transformations.append(transformation)
@@ -47,15 +45,22 @@ class GSObject(object):
                 "Only Ellipse (for shear, dilation, shift) or Angle (for rotation) "+
                 "transformations supported.")
 
-    # --- Pre-initialization for the data store, must be done at the start of every __init__ ---
+    # Pre-initialization for the data store if needed, must be done at the start of every __init__
     def _setup_data_store(self):
+    
         if not hasattr(self, "_data"):
-            self._data = {} # Used for storing parameter data, accessed by descriptors
+            self._data = {}               # Used for storing parameter data accessed by descriptors
+        if not hasattr(self, "transformations"):
+            self.transformations = []     # Used for storing transformations
+        if not hasattr(self, "_SBProfile"):
+            self._SBProfile = None        # Private attribute used by the SBProfile property to
+                                          # store (and rebuild if necessary) the C++ layer SBProfile
+                                          # object for which GSObjects are a container
 
     # --- Initialization ---
     def __init__(self, SBProfile):
+        
         self._setup_data_store()
-        self.transformations = []
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
     
     # Make op+ of two GSObjects work to return an Add object
@@ -104,16 +109,28 @@ class GSObject(object):
     def copy(self):
         """@brief Returns a copy of an object
 
-           This preserves the original type of the object, so if the caller is a
-           Gaussian (for example), the copy will also be a Gaussian, and can thus call
-           the methods that are not in GSObject, but are in Gaussian (e.g. getSigma).
+        This preserves the original type of the object, so if the caller is a
+        Gaussian (for example), the copy will also be a Gaussian, and can thus call
+        the methods that are not in GSObject, but are in Gaussian (e.g. getSigma).
         """
         import copy
+
+        # First re-initialize a return GSObject with self's SBProfile
         new_sbp = self.SBProfile.__class__(self.SBProfile)
-        new_data = copy.copy(self._data)
         ret = GSObject(new_sbp)
+        # Set the new class to be the same as the original to retain class methods / descriptors
         ret.__class__ = self.__class__
-        ret._data = new_data
+        # Copy the data store and transformations
+        ret._data = copy.copy(self._data)
+        ret.transformations = copy.copy(self.transformations)
+
+        # Then test for some special cases which require extra instance variables to be copied
+        if isinstance(self, Moffat):
+            ret._last_size_set_was_half_light_radius = \
+                copy.copy(self._last_size_set_was_half_light_radius)
+        if isinstance(self, (Add, Convolve)):
+            ret.objects = copy.copy(self.objects)
+
         return ret
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
@@ -739,9 +756,6 @@ class Moffat(GSObject):
     # Then we set up the size descriptors.  These need to be a little more complex in their
     # execution than a typical GSObject.
 
-    # First we define a hidden storage variable to recall how the size parameter was last set: 
-    _last_size_set_was_half_light_radius = False
-
     # Getter and setter functions for the scale_radius descriptor.
     # If the half light radius was the last size set then the value in _data["half_light_radius"]
     # will be None, so scale_radius needs to be got from self.SBProfile.getScaleRadius.
@@ -817,6 +831,9 @@ class Moffat(GSObject):
     # --- Public Class methods ---
     def __init__(self, beta, scale_radius=None, half_light_radius=None,  fwhm=None, trunc=0.,
                  flux=1.):
+
+        # First we define a hidden storage variable to recall how the size parameter was last set: 
+        self._last_size_set_was_half_light_radius = False
 
         self._setup_data_store() # Used for storing parameter data, accessed by descriptors
         
@@ -1651,9 +1668,6 @@ class Add(GSObject):
     """@brief Base class for defining the python interface to the SBAdd C++ class.
     """
 
-    # Simple, empty list used for storing the individual elements in this compound GSObject
-    objects = []
-
     # Defining flux parameter descriptor, not using the default pattern but getting/setting from the
     # SBProfile directly
     def _get_flux(self):
@@ -1671,25 +1685,20 @@ class Add(GSObject):
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
-        
-        # This is a workaround for the fact that Python doesn't allow multiple constructors.
-        # So check the number and type of the arguments here in the single __init__ method.
+
         if len(self.objects) == 0:
             # No arguments.  Start with none and add objects later with add(obj)
-            GSObject.__init__(self, galsim.SBAdd())
-        elif len(self.objects) == 1:
-            GSObject.__init__(self, galsim.SBAdd(self.objects[0].SBProfile))
-        elif len(self.objects) == 2:
-            # 2 arguments.  Should both be GSObjects.
-            GSObject.__init__(
-                self, galsim.SBAdd(self.objects[0].SBProfile, self.objects[1].SBProfile))
+            GSObject.__init__(self, None)
         else:
-            # > 2 arguments.  Convert to a list of SBProfiles
+            # >= 1 arguments.  Convert to a list of SBProfiles
             SBList = [obj.SBProfile for obj in self.objects]
             GSObject.__init__(self, galsim.SBAdd(SBList))
 
     # --- Public Class methods ---
     def __init__(self, *args):
+
+        # Simple, empty list used for storing the individual elements in this compound GSObject
+        self.objects = []
 
         self._setup_data_store() # Used for storing parameter data, accessed by descriptors
         
@@ -1699,8 +1708,10 @@ class Add(GSObject):
             # 1 argment.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], GSObject):
                 self.objects.append(args[0])
-            else:
+            elif isinstance(args[0], list):
                 self.objects = list(args[0])
+            else:
+                raise TypeError("Single input argument must be a GSObject or list of them.")
         elif len(args) >= 2:
             self.objects = list(args)
 
@@ -1710,7 +1721,9 @@ class Add(GSObject):
         Add._SBInitialize(self)
 
     def add(self, obj, scale=1.):
-        self.SBProfile.add(obj.SBProfile, scale)
+        self.objects.append(obj * scale) # Note use of flux scaling via __mul__
+        self._SBProfile = None # Make sure that the ._SBProfile storage is emptied so that the new
+                               # Add will be re-initialized, including the new object, as required
 
 
 class Convolve(GSObject):
@@ -1754,9 +1767,6 @@ class Convolve(GSObject):
     automatically use real-space convolution.  In all other cases, the 
     default is to use the DFT algorithm.
     """
-
-    # Simple, empty list used for storing the individual elements in this compound GSObject
-    objects = []
 
     # Descriptors for storing whether or not all objects are hard edged and if to use real-space
     # convolution
@@ -1832,22 +1842,20 @@ class Convolve(GSObject):
                         self.real_space = False
                         break
 
+        # Then initialize the SBProfile using the objects' SBProfiles
         if len(self.objects) == 0:
-            GSObject.__init__(self, galsim.SBConvolve(real_space=self.real_space))
-        elif len(self.objects) == 1:
-            GSObject.__init__(
-                self, galsim.SBConvolve(self.objects[0].SBProfile, real_space=self.real_space))
-        elif len(self.objects) == 2:
-            sb1 = self.objects[0].SBProfile
-            sb2 = self.objects[1].SBProfile
-            GSObject.__init__(self, galsim.SBConvolve(sb1, sb2, real_space=self.real_space))
+            # No arguments.  Start with none and add objects later with add(obj)
+            GSObject.__init__(self, None)
         else:
-            # > 2 arguments.  Convert to a list of SBProfiles
+            # >= 1 arguments.  Convert to a list of SBProfiles
             SBList = [obj.SBProfile for obj in self.objects]
             GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=self.real_space))
                     
     # --- Public Class methods ---
     def __init__(self, *args, **kwargs):
+
+        # Simple, empty list used for storing the individual elements in this compound GSObject
+        self.objects = []
 
         self._setup_data_store() # Used for storing parameter data, accessed by descriptors
 
@@ -1865,14 +1873,23 @@ class Convolve(GSObject):
                 "Convolve constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
         # If 1 argument, check if it is a list, then parse:
-        if len(args) == 1 and isinstance(args[0], list):
-            self.objects = args[0]
-        else:
+        if len(args) == 0:
+            pass
+        elif len(args) == 1:
+            # 1 argment.  Should be either a GSObject or a list of GSObjects
+            if isinstance(args[0], GSObject):
+                self.objects.append(args[0])
+            elif isinstance(args[0], list):
+                self.objects = list(args[0])
+            else:
+                raise TypeError("Single input argument must be a GSObject or list of them.")
+        elif len(args) >= 2:
             self.objects = list(args)
 
-    def add(self, obj):
-        self.objects.append(obj)
-        self.SBProfile.add(obj.SBProfile)
+    def add(self, obj, scale=1.):
+        self.objects.append(obj * scale) # Note use of flux scaling via __mul__
+        self._SBProfile = None # Make sure that the ._SBProfile storage is emptied so that the new
+                               # Add will be re-initialized, including the new object, as required
 
 
 class Deconvolve(GSObject):
