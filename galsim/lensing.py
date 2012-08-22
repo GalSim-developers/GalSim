@@ -3,6 +3,7 @@
 import galsim
 import numpy as np
 from math import log
+import warnings
 
 ISQRT2 = np.sqrt(1.0/2.0)
 
@@ -364,7 +365,6 @@ class Cosmology(object):
                 raise ValueError("Redshift z must not be negative")
             if z < z_ref:
                 raise ValueError("Redshift z must not be smaller than the reference redshift")
-            # Todo: check for galsim integrator
             try:
                 from scipy.integrate import quad
                 d = quad(self.__angKernel, z_ref+1, z+1)[0]
@@ -377,7 +377,8 @@ class Cosmology(object):
                         d = sin(rk*d)/rk
                 return d/(1+z)
             except ImportError:
-                raise NotImplementedError("Integration required. scipy.integrate missing")
+                warnings.warn("scipy not found! Integrator required for angular diameter distances")
+                return z
 
 
 class NFWHalo(object):
