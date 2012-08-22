@@ -91,7 +91,7 @@ namespace galsim {
             // f(rm) = 1
             // f(re) = 0.5 = 1 - (1+re^2/rd^2)^(1-beta)
             // re^2/rd^2 = 0.5^(1/(1-beta)) - 1
-            double rerd = sqrt( std::pow(0.5, 1./(1.-beta)) - 1.);
+            double rerd = std::sqrt( std::pow(0.5, 1./(1.-beta)) - 1.);
             dbg<<"rm = 0, so analytic.\n";
             xdbg<<"rd = re/rerd = "<<re<<" / "<<rerd<<" = "<<re/rerd<<std::endl;
             return re / rerd;
@@ -108,13 +108,13 @@ namespace galsim {
             // 2 re^2 = rm^2
             // rm = sqrt(2) * re
             // So this is the limit for how low rm is allowed to be for a given re
-            if (rm <= sqrt(2.) * re)
+            if (rm <= std::sqrt(2.) * re)
                 throw SBError("Moffat truncation radius must be > sqrt(2) * half_light_radius.");
 
             dbg<<"rm != 0, so not analytic.\n";
             MoffatScaleRadiusFunc func(re,rm,beta);
             // For the lower bound of rd, we can use the untruncated value:
-            double r1 = re / sqrt( std::pow(0.5, 1./(1.-beta)) - 1.);
+            double r1 = re / std::sqrt( std::pow(0.5, 1./(1.-beta)) - 1.);
             xdbg<<"r1 = "<<r1<<std::endl;
             // For the upper bound, we don't really have a good choice, so start with 2*r1
             // and we'll expand it if necessary.
@@ -145,7 +145,7 @@ namespace galsim {
             throw SBError("Moffat profiles with beta <= 1 must be truncated.");
 
         // First, relation between FWHM and rD:
-        double FWHMrD = 2.* sqrt(std::pow(2., 1./_beta)-1.);
+        double FWHMrD = 2.* std::sqrt(std::pow(2., 1./_beta)-1.);
         xdbg<<"FWHMrD = "<<FWHMrD<<"\n";
 
         // Set size of this instance according to type of size given in constructor:
@@ -201,8 +201,6 @@ namespace galsim {
         else if (_beta == 4) pow_beta = &SBMoffat::pow_4;
         else if (_beta == int(_beta)) pow_beta = &SBMoffat::pow_int;
         else pow_beta = &SBMoffat::pow_gen;
-
-        setupFT();
     }
 
     double SBMoffat::SBMoffatImpl::getHalfLightRadius() const 
@@ -211,7 +209,7 @@ namespace galsim {
         // needs to happen largely post setup. Doesn't seem efficient to ALWAYS calculate it above,
         // so we'll just calculate it once if requested and store it.
         if (_re == 0.) {
-            _re = _rD * sqrt(std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
+            _re = _rD * std::sqrt(std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
         }
         return _re;
     }
@@ -225,6 +223,7 @@ namespace galsim {
 
     std::complex<double> SBMoffat::SBMoffatImpl::kValue(const Position<double>& k) const 
     {
+        setupFT();
         double ksq = k.x*k.x + k.y*k.y;
         if (ksq > _ft.argMax()) return 0.;
         else return _ft(ksq);
@@ -234,13 +233,8 @@ namespace galsim {
     double SBMoffat::SBMoffatImpl::maxK() const 
     {
         // _maxK is determined during setupFT() as the last k value to have a  kValue > 1.e-3.
-#if 1
+        setupFT();
         return _maxK;
-#else
-        // Old version from Gary:
-        // Require at least 16 points across FWHM when drawing:
-        return 16.*M_PI / _FWHM;
-#endif
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should miss at 
@@ -249,7 +243,7 @@ namespace galsim {
     {
         dbg<<"Find Moffat stepK\n";
         dbg<<"beta = "<<_beta<<std::endl;
-#if 1
+        
         // The fractional flux out to radius R is (if not truncated)
         // 1 - (1+R^2)^(1-beta)
         // So solve (1+R^2)^(1-beta) = alias_threshold
@@ -267,13 +261,6 @@ namespace galsim {
             dbg<<"stepk = "<<(M_PI/R)<<std::endl;
             return M_PI / R;
         }
-#else
-        // Old version from Gary:
-        // Make FFT's periodic at 4x truncation radius or 1.5x diam at alias_threshold,
-        // whichever is smaller
-        return 2.*M_PI / std::min(4.*_maxR, 
-                                  3.*sqrt(std::pow(sbp::alias_threshold, -1./_beta)-1.)*_rD);
-#endif
     }
 
     // Integrand class for the Hankel transform of Moffat
@@ -291,7 +278,7 @@ namespace galsim {
         double (*pow_beta)(double x, double beta);
     };
 
-    void SBMoffat::SBMoffatImpl::setupFT()
+    void SBMoffat::SBMoffatImpl::setupFT() const
     {
         if (_ft.size() > 0) return;
 

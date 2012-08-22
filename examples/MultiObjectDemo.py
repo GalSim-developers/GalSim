@@ -90,7 +90,7 @@ def Script1():
 
     # Define the PSF profile
     psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm, trunc=psf_trunc)
-    psf_re = psf.getHalfLightRadius()  # Need this for later...
+    psf_re = psf.half_light_radius  # Need this for later...
     psf.applyShear(e1=psf_e1,e2=psf_e2)
     logger.info('Made PSF profile')
 
@@ -441,7 +441,7 @@ def Script3():
       - The number of images in the cube matches the number of rows in the catalog.
       - Each image size is computed automatically by GalSim based on the Nyquist size.
       - Both galaxies and stars.
-      - PSF is DoubleGaussian, the same for each galaxy.
+      - PSF is a double Gaussian, the same for each galaxy.
       - Galaxies are randomly rotated to remove the imprint of any lensing shears in the COSMOS
         data.
       - The same shear is applied to each galaxy.
@@ -486,9 +486,9 @@ def Script3():
 
     ## Make the ePSF
     # first make the double Gaussian PSF
-    psf = galsim.DoubleGaussian(
-            fwhm1 = psf_inner_fwhm, flux1 = psf_inner_fraction,
-            fwhm2 = psf_outer_fwhm, flux2 = 1.-psf_inner_fraction)
+    psf1 = galsim.Gaussian(fwhm = psf_inner_fwhm, flux = psf_inner_fraction)
+    psf2 = galsim.Gaussian(fwhm = psf_outer_fwhm, flux = 1.0-psf_inner_fraction)
+    psf = psf1+psf2
     # make the pixel response
     pix = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)
     # convolve PSF and pixel response function to get the effective PSF (ePSF)
@@ -510,7 +510,7 @@ def Script3():
         t2 = time.time()
 
         # Set the flux
-        gal.setFlux(gal_flux)
+        gal.flux = gal_flux
 
         # Apply the desired shear
         gal.applyShear(g1=gal_g1, g2=gal_g2)
@@ -597,9 +597,9 @@ def Script4():
     # Make the PSF profiles:
     psf1 = galsim.Gaussian(fwhm = psf_fwhm)
     psf2 = galsim.Moffat(fwhm = psf_fwhm, beta = 2.4)
-    psf3 = galsim.DoubleGaussian(
-            fwhm1 = psf_fwhm, flux1 = 0.8,
-            fwhm2 = 2*psf_fwhm, flux2 = 0.2)
+    psf3_inner = galsim.Gaussian(fwhm = psf_fwhm, flux = 0.8)
+    psf3_outer = galsim.Gaussian(fwhm = 2*psf_fwhm, flux = 0.2)
+    psf3 = psf3_inner + psf3_outer
     atmos = galsim.Gaussian(fwhm = psf_fwhm)
     optics = galsim.OpticalPSF(
             lam_over_D = 0.6 * psf_fwhm,
@@ -614,7 +614,7 @@ def Script4():
     optics = galsim.Airy(lam_over_D = 0.3 * psf_fwhm) 
     psf5 = galsim.Convolve([atmos,optics])
     psfs = [psf1, psf2, psf3, psf4, psf5]
-    psf_names = ["Gaussian", "Moffat", "DoubleGaussian", "OpticalPSF", "Kolmogorov * Airy"]
+    psf_names = ["Gaussian", "Moffat", "Double Gaussian", "OpticalPSF", "Kolmogorov * Airy"]
     psf_times = [0,0,0,0,0]
     psf_fft_times = [0,0,0,0,0]
     psf_phot_times = [0,0,0,0,0]
@@ -663,7 +663,7 @@ def Script4():
                 gal1 = gal.createDilated(hlr)
                 gal_shape = galsim.Shear(e=ellip, beta=beta_ellip)
                 gal1.applyShear(gal_shape)
-                gal1.setFlux(flux)
+                gal1.flux = flux
 
                 # Build the final object by convolving the galaxy, PSF and pixel response.
                 final = galsim.Convolve([gal1, psf, pix])
@@ -686,8 +686,8 @@ def Script4():
                 # Draw the profile
                 final.draw(fft_image)
 
-                #logger.info('   Drew fft image.  Total drawn flux = %f.  getFlux() = %f',
-                        #fft_image.array.sum(),final.getFlux())
+                #logger.info('   Drew fft image.  Total drawn flux = %f.  .flux = %f',
+                        #fft_image.array.sum(),final.flux)
                 t3 = time.time()
 
                 # Repeat for photon shooting image.
@@ -696,8 +696,8 @@ def Script4():
                 sky_level_pixel = sky_level * pixel_scale**2
                 final_nopix.drawShoot(phot_image, noise=sky_level_pixel/100, 
                                       uniform_deviate=rng)
-                #logger.info('   Drew phot image.  Total drawn flux = %f.  getFlux() = %f',
-                        #phot_image.array.sum(),final.getFlux())
+                #logger.info('   Drew phot image.  Total drawn flux = %f.  .flux = %f',
+                        #phot_image.array.sum(),final.flux)
                 t4 = time.time()
 
                 # Add Poisson noise
@@ -838,7 +838,7 @@ def Script5():
         gal = f * bulge + (1-f) * disk
 
         flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
-        gal.setFlux(flux)
+        gal.flux = flux
 
         # Build the final object by convolving the galaxy and PSF 
         # Not including the pixel -- since we are using drawShoot
