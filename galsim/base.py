@@ -1651,9 +1651,6 @@ class Add(GSObject):
     """@brief Base class for defining the python interface to the SBAdd C++ class.
     """
 
-    # Simple, empty list used for storing the individual elements in this compound GSObject
-    objects = []
-
     # Defining flux parameter descriptor, not using the default pattern but getting/setting from the
     # SBProfile directly
     def _get_flux(self):
@@ -1690,6 +1687,9 @@ class Add(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, *args):
+
+        # Simple, empty list used for storing the individual elements in this compound GSObject
+        self.objects = []
 
         self._setup_data_store() # Used for storing parameter data, accessed by descriptors
         
@@ -1754,9 +1754,6 @@ class Convolve(GSObject):
     automatically use real-space convolution.  In all other cases, the 
     default is to use the DFT algorithm.
     """
-
-    # Simple, empty list used for storing the individual elements in this compound GSObject
-    objects = []
 
     # Descriptors for storing whether or not all objects are hard edged and if to use real-space
     # convolution
@@ -1848,6 +1845,9 @@ class Convolve(GSObject):
                     
     # --- Public Class methods ---
     def __init__(self, *args, **kwargs):
+
+        # Simple, empty list used for storing the individual elements in this compound GSObject
+        self.objects = []
 
         self._setup_data_store() # Used for storing parameter data, accessed by descriptors
 
