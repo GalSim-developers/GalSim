@@ -1669,21 +1669,10 @@ class Add(GSObject):
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
     def _SBInitialize(self):
         
-        # This is a workaround for the fact that Python doesn't allow multiple constructors.
-        # So check the number and type of the arguments here in the single __init__ method.
-        if len(self.objects) == 0:
-            # No arguments.  Start with none and add objects later with add(obj)
-            GSObject.__init__(self, galsim.SBAdd())
-        elif len(self.objects) == 1:
-            GSObject.__init__(self, galsim.SBAdd(self.objects[0].SBProfile))
-        elif len(self.objects) == 2:
-            # 2 arguments.  Should both be GSObjects.
-            GSObject.__init__(
-                self, galsim.SBAdd(self.objects[0].SBProfile, self.objects[1].SBProfile))
-        else:
-            # > 2 arguments.  Convert to a list of SBProfiles
-            SBList = [obj.SBProfile for obj in self.objects]
-            GSObject.__init__(self, galsim.SBAdd(SBList))
+        # Initialize with a list of SBProfiles... If self.objects is empty, SBList is empty too and
+        # SBAdd will still accept it (but slight weirdness after flux setting for empty Adds)
+        SBList = [obj.SBProfile for obj in self.objects]
+        GSObject.__init__(self, galsim.SBAdd(SBList))
 
     # --- Public Class methods ---
     def __init__(self, *args):
@@ -1701,6 +1690,8 @@ class Add(GSObject):
                 self.objects.append(args[0])
             elif isinstance(args[0], (list, tuple)):
                 self.objects = list(args[0])
+            else:
+                raise TypeError("Single input argument must be a list, tuple or GSObject.")
         elif len(args) >= 2:
             self.objects = list(args)
 
