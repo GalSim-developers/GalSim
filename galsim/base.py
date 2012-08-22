@@ -1699,7 +1699,7 @@ class Add(GSObject):
             # 1 argment.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], GSObject):
                 self.objects.append(args[0])
-            else:
+            elif isinstance(args[0], (list, tuple)):
                 self.objects = list(args[0])
         elif len(args) >= 2:
             self.objects = list(args)
@@ -1710,7 +1710,9 @@ class Add(GSObject):
         Add._SBInitialize(self)
 
     def add(self, obj, scale=1.):
-        self.SBProfile.add(obj.SBProfile, scale)
+        self.objects.append(obj * scale) # Note use of flux scaling via __mul__
+        self._SBProfile = None # Make sure that the ._SBProfile storage is emptied so that the new
+                               # Add will be re-initialized, including the new object, as required
 
 
 class Convolve(GSObject):
@@ -1870,9 +1872,10 @@ class Convolve(GSObject):
         else:
             self.objects = list(args)
 
-    def add(self, obj):
-        self.objects.append(obj)
-        self.SBProfile.add(obj.SBProfile)
+    def add(self, obj, scale=1.):
+        self.objects.append(obj * scale) # Note use of flux scaling via __mul__
+        self._SBProfile = None # Make sure that the ._SBProfile storage is emptied so that the new
+                               # Add will be re-initialized, including the new object, as required
 
 
 class Deconvolve(GSObject):
