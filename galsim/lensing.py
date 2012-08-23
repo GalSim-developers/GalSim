@@ -8,33 +8,31 @@ import warnings
 ISQRT2 = np.sqrt(1.0/2.0)
 
 ## TODO later: get convergences that are consistent with this shear field
-class ShearField(object):
-    """@brief Class to represent a lensing shear field
+class PowerSpectrum(object):
+    """@brief Class to represent a lensing shear field according to some specified power spectrum
 
-    A ShearField represents a random Gaussian realization of some (flat-sky) shear power spectrum,
-    at arbitary positions (not just on a grid).  This class is originally initialized with a list of
-    positions for which we would like to generate g1 and g2 values.   It uses a
-    PowerSpectrumRealizer to generate shears on an appropriately-spaced grid, and then interpolates
-    on that grid to the requested positions.  Finally, it carries around some information about the
-    underlying shear power spectrum used to generate the field.
+    A PowerSpectrum represents some (flat-sky) shear power spectrum, either for gridded points or at
+    arbitary positions.  This class is originally initialized with a power spectrum from which we
+    would like to generate g1 and g2 values.  When the getShear() method is called, it uses a
+    PowerSpectrumRealizer to generate shears on an appropriately-spaced grid, and if necessary,
+    interpolates on that grid to the requested positions.  Finally, it carries around some
+    information about the underlying shear power spectrum used to generate the field.
     """
-    def __init__(self, x, y, E_power_function=None, B_power_function=None, units=None):
-        """@brief Create a ShearField object for a list of positions
+    def __init__(self, E_power_function=None, B_power_function=None, units=None):
+        """@brief Create a PowerSpectrum object corresponding to specific P(k) for E, B modes
 
-        We can optionally set the power spectra that will be used for E and B modes now, or this can
-        be done later using set_p_E and set_p_B.
+        When creating a PowerSpectrum instance, the E and B mode power spectra can optionally be set
+        at initialization or later on with the method set_power_functions.
 
-        @param[in] x List of x positions (units should be consistent with P(k) function)
-        @param[in] y List of y positions (units should be consistent with P(k) function)
-        @param[in] E_power_function A function or other callable that can take an array of k values
-        and return a power.  It should cope happily with k=0.  The function should return the power
+        @param[in] E_power_function A function or other callable that accepts a 2D numpy grid of |k| and returns
+        the E-mode power spectrum of the same shape.  It should cope happily with k=0.  The function should return the power
         spectrum desired in the E (gradient) mode of the image
         @param[in] B_power_function A function or other callable that can take an array of k values
         and return a power.  It should cope happily with k=0.  The function should return the power
         spectrum desired in the B (curl) mode of the image
+        @param[in] units A string specifying the units for the power spectrum.  This string is not
+        used in any calculations, but is saved for later information.
         """
-        self.x = x
-        self.y = y
         if E_power_function is not None:
             self.p_E = E_power_function
         if B_power_function is not None:
@@ -42,45 +40,75 @@ class ShearField(object):
         if units is not None:
             self.units = units
 
-    def set_power_functions(self, E_power_function=None, B_power_function=None):
+    def set_power_functions(self, E_power_function=None, B_power_function=None, units=None):
         """@brief Set / change the functions that compute the E and B mode power spectra.
 
-        @param[in] E_power_function A function or other callable that accepts a 2D numpy grid of |k| and returns
-        the E-mode power spectrum of the same shape.  Set to None for there to be no E-mode power
-        @param[in] B_power_function A function or other callable that accepts a 2D numpy grid of |k| and returns
-        the B-mode power spectrum of the same shape.  Set to None for there to be no B-mode power
+        @param[in] E_power_function A function or other callable that accepts a 2D numpy grid of |k|
+        and returns the E-mode power spectrum of the same shape.  It should cope happily with k=0.
+        Set to None for there to be no E-mode power.
+        @param[in] B_power_function A function or other callable that accepts a 2D numpy grid of |k|
+        and returns the B-mode power spectrum of the same shape.  It should cope happily with k=0.
+        Set to None for there to be no B-mode power
+        @param[in] units A string specifying the units for the power spectrum.  This string is not
+        used in any calculations, but is saved for later information.
         """
         self.p_E = E_power_function
         self.p_B = B_power_function
+        if units is not None:
+            self.units = units
 
-    def __call__(self, E_power_function=None, B_power_function=None, gaussian_deviate=None,
-                 seed=None, interpolantxy=None, psrealizer=None, new_realization=False):
+    def getShear(self, x=None, y=None, grid_spacing=None, grid_nx=None, grid_ny=None,
+                 gaussian_deviate=None, seed=None, interpolantxy=None):
+
         """@brief Generate a realization of the current power spectrum at the specified positions.
 
-        Generate a Gaussian random realization of some specified shear power spectrum (E and B
-        mode), given the (x, y) positions.  This code stores information about the quantities
-        used to generate the random shear field, generates shears using a PowerSpectrumRealizer on a
-        grid, and interpolates to get g1 and g2 at the specified positions.
+        Generate a Gaussian random realization of the specified E and B mode shear power spectra at
+        some set of locations.  This can be done in two ways: first, given arbitrary (x, y)
+        positions; or second, using grid_spacing, grid_nx, and (optionally) grid_ny to specify the
+        grid spacing and grid size for a grid of positions.  This code stores information about the
+        quantities used to generate the random shear field, generates shears using a
+        PowerSpectrumRealizer on a grid, and if necessary, interpolates to get g1 and g2 at the
+        specified positions.
 
-        @param[in] E_power_function A function or other callable that can take an array of k values
-        and return a power.  It should cope happily with k=0.  The function should return the power
-        spectrum desired in the E (gradient) mode of the image
-        @param[in] B_power_function A function or other callable that can take an array of k values
-        and return a power.  It should cope happily with k=0.  The function should return the power
-        spectrum desired in the B (curl) mode of the image
-        @param[in] gaussian_deviate A galsim.GaussianDeviate object for drawing the random numbers
-        @param[in] seed A seed to use when initializing a new galsim.GaussianDeviate for drawing the
+        When using a non-gridded set of points, the code has to choose an appropriate spacing for a
+        grid and then interpolate the gridded shears to the specified set of points.  It does this
+        by requiring that the modification to the power spectrum due to a (bi)linear interpolant
+        should not be significant at the minimum separation between points.  The user should be
+        aware that use of an interpolant that is not linear does not change how this calculation is
+        done, and therefore it is necessary to test the fidelity of the recovered power spectrum for
+        any errors due to the chosen non-linear interpolant.
+
+        @param[in] x List of x positions (units should be consistent with P(k) function)
+        @param[in] y List of y positions (units should be consistent with P(k) function)
+        @param[in] grid_spacing Spacing for an evenly spaced grid of points (units should be
+        consistent with P(k) function)
+        @param[in] grid_nx Number of grid points in the x dimension
+        @param[in] grid_ny Number of grid points in the y dimension
+        @param[in] gaussian_deviate (Optional) A galsim.GaussianDeviate object for drawing the
         random numbers
+        @param[in] seed (Optional) A seed to use when initializing a new galsim.GaussianDeviate for
+        drawing the random numbers
         @param[in] interpolantxy (Optional) Interpolant to use for interpolating the shears on a
-        grid to the requested positions [default =galsim.InterpolantXY(galsim.Linear())].
-        @param[in] psrealizer (Optional) A PowerSpectrumRealizer object to use, rather than
-        generating a new one given E_power_function/B_power_function
-        @param[in] new_realization If True, then the ShearField should already contain a
-        PowerSpectrumRealizer in psrealizer that can be used to generate another set of random
-        shears
+        grid to the requested positions [default = galsim.InterpolantXY(galsim.Linear())].
         """
 
-        # check input values
+        # check input values for all keywords
+        # (1) check problem cases for irregularly spaced set of points
+        if x is not None or y is not None:
+            if x is None or y is None:
+                raise ValueError("When specifying points, must provide both x and y!")
+            if grid_spacing is not None or grid_nx is not None or grid_ny is not None:
+                raise ValueError("When specifying points, do not also provide grid information!")
+        # (2) check problem cases for regular grid of points
+        if grid_spacing is not None or grid_nx is not None or grid_ny is not None:
+            if grid_spacing is None or grid_nx is None:
+                raise ValueError("When specifying grid, we require at least a spacing and x size!")
+            if grid_ny is None:
+                grid_ny = grid_nx
+        # (3) make sure that we've specified some power spectrum
+        if self.p_E is None and self.p_B is None:
+            raise ValueError("Cannot generate shears when no E or B mode power spectrum are given!")
+        # (4) handle any specification of the Gaussian deviate and/or seed
         if gaussian_deviate is None:
             if seed is None:
                 gd = galsim.GaussianDeviate()
@@ -92,57 +120,53 @@ class ShearField(object):
                 raise ValueError("Cannot provide both a Gaussian deviate and a random seed!")
             if isinstance(gaussian_deviate, galsim.GaussianDeviate) == False:
                 raise TypeError("The requested gaussian_deviate is not a Gaussian deviate!")
+        # (5) set default interpolant if none given
         if interpolantxy is None:
             interpolantxy = galsim.InterpolantXY(galsim.Linear())
-        if E_power_function is not None:
-            if psrealizer is not None and new_realization is False:
-                self.p_E = E_power_function
-        if B_power_function is not None:
-            if psrealizer is not None and new_realization is False:
-                self.p_B = B_power_function
 
         # store some more information
         self.interpolantxy = interpolantxy
 
-        # generate shears on a grid: choose set of input parameters for PowerSpectrumRealizer
-        ## get total range in x, y
-        tot_dx = np.max(self.x) - np.min(self.x)
-        tot_dy = np.max(self.y) - np.min(self.y)
-        med_x = 0.5*(np.min(self.x) + np.max(self.x))
-        med_y = 0.5*(np.min(self.y) + np.max(self.y))
-        ## TODO: choose an appropriate delta(x) and delta(y) which results in setting pixel_size
-        ## could simply decide that at some large value of k, that the Fourier representation of the
-        ## interpolant should not cause more than X% deviation from the desired input power
-        ## spectrum.  And then we might also wish to return some error message if the required arrays
-        ## are too large.
+        if grid_dx is not None:
+            # do the calculation on a grid
+            psr = PowerSpectrumRealizer(grid_nx, grid_ny, grid_spacing, self.p_E, self.p_B)
+            g1_grid, g2_grid = psr(gaussian_deviate=gd)
+        else:
+            # for now, so we can test the gridded case
+            raise NotImplementedError("Have not finished implementing the non-gridded case!")
+            # first, generate shears on a grid: choose set of input parameters for PowerSpectrumRealizer
+            ## get total range in x, y
+            tot_dx = np.max(x) - np.min(x)
+            tot_dy = np.max(y) - np.min(y)
+            med_x = 0.5*(np.min(x) + np.max(x))
+            med_y = 0.5*(np.min(y) + np.max(y))
+            ## TODO: choose an appropriate delta(x) and delta(y) which results in setting pixel_size
+            ## could simply decide that at some large value of k, that the Fourier representation of the
+            ## interpolant should not cause more than X% deviation from the desired input power
+            ## spectrum.  And then we might also wish to return some error message if the required arrays
+            ## are too large.
 
-        ## TODO: find grid size to cover the whole range at that resolution; or perhaps we should
-        ## cover a wider range to allow for large-scale modes?
+            ## TODO: find grid size to cover the whole range at that resolution; or perhaps we should
+            ## cover a wider range to allow for large-scale modes?
 
-        if new_realization is False:
-            if psrealizer is None:
-                ### make the PowerSpectrumRealizer, and store
-                psr = PowerSpectrumRealizer(nx, ny, pixel_size, self.p_E, self.p_B)
-                self.psrealizer = psr
-            else:
-                self.psrealizer = psrealizer
+            # make a power spectrum realizer
+            psr = PowerSpectrumRealizer(nx, ny, pixel_size, self.p_E, self.p_B)
             ### make a single realization
             g1_grid, g2_grid = self.psrealizer(gaussian_deviate=gd)
-        else:
-            g1_grid, g2_grid = self.psrealizer(gaussian_deviate=gd)
 
-        # make the gridded shears from a numpy array into an Image
-        g1_grid_img = galsim.ImageViewD(np.ascontiguousarray(g1_grid.astype(np.float64)))
-        g2_grid_img = galsim.ImageViewD(np.ascontiguousarray(g2_grid.astype(np.float64)))
+            # make the gridded shears from a numpy array into an Image
+            g1_grid_img = galsim.ImageViewD(np.ascontiguousarray(g1_grid.astype(np.float64)))
+            g2_grid_img = galsim.ImageViewD(np.ascontiguousarray(g2_grid.astype(np.float64)))
 
-        # make the Image into an SBInterpolatedImage
-        g1_sbimg = galsim.SBInterpolatedImage(g1_grid_img, xInterp = interpolantxy, dx = pixel_size)
-        g2_sbimg = galsim.SBInterpolatedImage(g2_grid_img, xInterp = interpolantxy, dx = pixel_size)
+            # make the Image into an SBInterpolatedImage
+            g1_sbimg = galsim.SBInterpolatedImage(g1_grid_img, xInterp = interpolantxy, dx = pixel_size)
+            g2_sbimg = galsim.SBInterpolatedImage(g2_grid_img, xInterp = interpolantxy, dx = pixel_size)
 
-        # interpolate from the grid points to the desired x, y values; note, typically images and
-        # SBInterpolatedImages assume image center has coords (0, 0)
-        self.g1 = galsim.utilities.eval_sbinterpolatedimage(g1_sbimg, self.x - med_x, self.y - med_y)
-        self.g2 = galsim.utilities.eval_sbinterpolatedimage(g2_sbimg, self.x - med_x, self.y - med_y)
+            # interpolate from the grid points to the desired x, y values; note, typically images and
+            # SBInterpolatedImages assume image center has coords (0, 0)
+            g1 = galsim.utilities.eval_sbinterpolatedimage(g1_sbimg, x - med_x, y - med_y)
+            g2 = galsim.utilities.eval_sbinterpolatedimage(g2_sbimg, x - med_x, y - med_y)
+
 
 class PowerSpectrumRealizer(object):
     """@brief Class for generating realizations of power spectra with any area and pixel size.
