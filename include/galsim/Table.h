@@ -14,8 +14,10 @@
 #include <sstream>
 #include <stdexcept>
 #include <iostream>
+#include <functional>
 
 #include "Std.h"
+#include "OneDimensionalDeviate.h"
 
 namespace galsim {
 
@@ -63,10 +65,7 @@ namespace galsim {
     // The Table itself:
     // Derive from Function1d if that has been defined, otherwise not needed.
     template<class V, class A>
-    class Table
-#ifdef FUNCTION1D_H
-    : public Function1d<V,A> 
-#endif
+    class Table 
     {
     public:
         enum interpolant { linear, spline, floor, ceil };
@@ -165,6 +164,24 @@ namespace galsim {
         static V ceilInterpolate(A a, int i, const std::vector<Entry>& v,
                                  const std::vector<V>& y2);
 
+    };
+
+    // Table<double,double> works as a FluxDensity for OneDimensionalDeviate, so specialize:
+    class TableDD: 
+        public Table<double,double>,
+        public FluxDensity
+    {
+    public:
+        // Constructors just use Table constructors:
+        TableDD(interpolant i=linear) : Table<double,double>(i) {}
+        TableDD(const double* argvec, const double* valvec, int N, interpolant in=linear) :
+            Table<double,double>(argvec,valvec,N,in) {}
+        TableDD(const std::vector<double>& a, const std::vector<double>& v,
+                interpolant in=linear) : Table<double,double>(a,v,in) {}
+        TableDD(std::istream& is, interpolant in=linear) : Table<double,double>(is,in) {}
+
+        // Virtual function from FluxDensity just calls Table version.
+        double operator()(double a) const { return Table<double,double>::operator()(a); }
     };
 
 }

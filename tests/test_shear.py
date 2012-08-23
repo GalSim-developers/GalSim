@@ -47,6 +47,10 @@ x_shift = [0.0, 1.7, -3.0]
 y_shift = [-1.3, 0.0, 9.1]
 n_shift = len(x_shift)
 
+def funcname():
+    import inspect
+    return inspect.stack()[1][3]
+
 #### some helper functions
 def all_shear_vals(test_shear, index, mult_val = 1.0):
     # this function tests that all values of some Shear object are consistent with the tabulated
@@ -93,6 +97,8 @@ def add_distortions(d1, d2, d1app, d2app):
 
 def test_shear_initialization():
     """Test that Shears can be initialized in a variety of ways and get the expected results."""
+    import time
+    t1 = time.time()
     # first make an empty Shear and make sure that it has zeros in the right places
     s = galsim.Shear()
     vec = [s.g, s.g1, s.g2, s.e, s.e1, s.e2, s.eta, s.esq]
@@ -144,25 +150,34 @@ def test_shear_initialization():
         s2 = galsim.Shear(s._shear)
         all_shear_vals(s2, ind)
     # finally check some examples of invalid initializations for Shear
-    np.testing.assert_raises(TypeError,galsim.Shear,0.3)
-    np.testing.assert_raises(TypeError,galsim.Shear,g1=0.3,e2=0.2)
-    np.testing.assert_raises(TypeError,galsim.Shear,eta1=0.3,beta=0.*galsim.degrees)
-    np.testing.assert_raises(TypeError,galsim.Shear,q=0.3)
-    np.testing.assert_raises(ValueError,galsim.Shear,q=1.3,beta=0.*galsim.degrees)
-    np.testing.assert_raises(ValueError,galsim.Shear,g1=0.9,g2=0.6)
-    np.testing.assert_raises(ValueError,galsim.Shear,e=-1.3,beta=0.*galsim.radians)
-    np.testing.assert_raises(ValueError,galsim.Shear,e=1.3,beta=0.*galsim.radians)
-    np.testing.assert_raises(TypeError,galsim.Shear,randomkwarg=0.1)
-    np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,randomkwarg=0.1)
-    np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,e1=0.1)
-    np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,e=0.1)
-    np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,g=0.1)
-    np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0*galsim.degrees)
-    np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0*galsim.degrees,g=0.3,eta=0.1)
-    np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0,g=0.3)
+    try:
+        np.testing.assert_raises(TypeError,galsim.Shear,0.3)
+        np.testing.assert_raises(TypeError,galsim.Shear,g1=0.3,e2=0.2)
+        np.testing.assert_raises(TypeError,galsim.Shear,eta1=0.3,beta=0.*galsim.degrees)
+        np.testing.assert_raises(TypeError,galsim.Shear,q=0.3)
+        np.testing.assert_raises(ValueError,galsim.Shear,q=1.3,beta=0.*galsim.degrees)
+        np.testing.assert_raises(ValueError,galsim.Shear,g1=0.9,g2=0.6)
+        np.testing.assert_raises(ValueError,galsim.Shear,e=-1.3,beta=0.*galsim.radians)
+        np.testing.assert_raises(ValueError,galsim.Shear,e=1.3,beta=0.*galsim.radians)
+        np.testing.assert_raises(TypeError,galsim.Shear,randomkwarg=0.1)
+        np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,randomkwarg=0.1)
+        np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,e1=0.1)
+        np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,e=0.1)
+        np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,g=0.1)
+        np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0*galsim.degrees)
+        np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0*galsim.degrees,g=0.3,eta=0.1)
+        np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0,g=0.3)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_ellipse_initialization():
     """Test that Ellipses can be initialized in a variety of ways and get the expected results."""
+    import time
+    t1 = time.time()
     # make an empty Ellipse and make sure everything is zero
     e = galsim.Ellipse()
     vec = [e.getS().g1, e.getS().g2, e.getMu(), e.getX0().x, e.getX0().y]
@@ -237,15 +252,24 @@ def test_ellipse_initialization():
                 all_ellipse_vals(e, ind_shear, ind_dil, ind_shift, check_dil=0.0, check_shear=0.0)
     # check for some cases that should fail
     s = galsim.Shear()
-    np.testing.assert_raises(TypeError, galsim.Ellipse, s, g2=0.3)
-    np.testing.assert_raises(TypeError, galsim.Ellipse, shear=s, x_shift=1, g1=0.2)
-    np.testing.assert_raises(TypeError, galsim.Ellipse, s, shift=galsim.PositionD(), x_shift=0.1)
-    np.testing.assert_raises(TypeError, galsim.Ellipse, s, s)
-    np.testing.assert_raises(TypeError, galsim.Ellipse, g1=0.1, randomkwarg=0.7)
-    np.testing.assert_raises(TypeError, galsim.Ellipse, shear=0.1)
+    try:
+        np.testing.assert_raises(TypeError, galsim.Ellipse, s, g2=0.3)
+        np.testing.assert_raises(TypeError, galsim.Ellipse, shear=s, x_shift=1, g1=0.2)
+        np.testing.assert_raises(TypeError, galsim.Ellipse, s,
+                                 shift=galsim.PositionD(), x_shift=0.1)
+        np.testing.assert_raises(TypeError, galsim.Ellipse, s, s)
+        np.testing.assert_raises(TypeError, galsim.Ellipse, g1=0.1, randomkwarg=0.7)
+        np.testing.assert_raises(TypeError, galsim.Ellipse, shear=0.1)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_shear_methods():
     """Test that the most commonly-used methods of the Shear class give the expected results."""
+    import time
+    t1 = time.time()
     for ind in range(n_shear):
         # check setE1E2
         s = galsim.Shear()
@@ -304,6 +328,9 @@ def test_shear_methods():
 
     # note: we don't have to check all the getWhatever methods because they were implicitly checked
     # in test_shear_initialization, where we checked the values directly
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_shear_initialization()

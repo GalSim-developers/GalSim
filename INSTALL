@@ -19,6 +19,28 @@ Table of Contents:
 
 1. Libraries/software required before building
 
+Important note: before building and installing the software below, make sure that python is built
+with shared libraries.  On some systems, the default is *not* to build python with shared libraries,
+which will result in mysterious issues when trying to compile GalSim (apparent numpy-related
+failures).  In the few cases where this issue was identified, python had been compiled from source
+directly; developers who used python from distributions did not encounter this problem.
+
+To check this, you can identify the executable for the python you are using, e.g., using
+
+which python
+
+This tells you the location of the executable, something like
+/path/to/executable/bin/python
+Then you can look for the libraries in
+/path/to/executable/lib/libpython*.dylib [if you're on a Mac]
+or
+/path/to/executable/lib/libpython*.so [on Linux]
+
+If the libraries are not there, you may need to rebuild python with shared libraries using
+--enable-shared.  Note that if you discover this after installing all the dependencies below, then
+you'll have to rebuild the python-related dependencies after rebuilding python -- so it's better to
+check beforehand.
+
 i) SCons (http://www.scons.org)
 
 This build system manager needs to be installed, as it is used by the GalSim installation process.

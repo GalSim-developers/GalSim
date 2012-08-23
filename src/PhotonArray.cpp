@@ -112,7 +112,8 @@ namespace galsim {
 
         for (int iOut = N-1; iOut>=0; iOut--) {
             // Randomly select an input photon to use at this output
-            int iIn = int(floor( (iOut+1)*ud()));
+            // NB: don't need floor, since rhs is positive, so floor is superfluous.
+            int iIn = int((iOut+1)*ud());
             if (iIn > iOut) iIn=iOut;  // should not happen, but be safe
             if (iIn < iOut) {
                 // Save input information
