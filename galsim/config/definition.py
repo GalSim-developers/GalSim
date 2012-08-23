@@ -37,7 +37,7 @@ def _update_gsobject_node_fields(node, target):
     # Then introspect the class to find which parameter descriptors it uses, find out which ones are
     # GSObject parameter descriptors, and set these as appropriately-named attributes of the node:
     for keyname, entry in target.__dict__.iteritems():
-        if entry.__module__ is "galsim.decriptors":
+        if entry.__module__ is "galsim.descriptors":
             node.__setattr__(keyname, generators.GeneratableField(default=None))
 
     node.target = target
