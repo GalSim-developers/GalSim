@@ -62,7 +62,8 @@ def rand_arr(shape, deviate):
     """
     if len(shape) is not 2:
         raise ValueError("Can only make a 2d array from this function!")
-    tmp_img = galsim.ImageD(shape[0], shape[1])
+    # note reversed indices due to Numpy vs. Image array indexing conventions!
+    tmp_img = galsim.ImageD(shape[1], shape[0])
     deviate.applyTo(tmp_img.view())
     return tmp_img.array
 
