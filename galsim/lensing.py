@@ -33,10 +33,8 @@ class PowerSpectrum(object):
         @param[in] units A string specifying the units for the power spectrum.  This string is not
         used in any calculations, but is saved for later information.
         """
-        if E_power_function is not None:
-            self.p_E = E_power_function
-        if B_power_function is not None:
-            self.p_B = B_power_function
+        self.p_E = E_power_function
+        self.p_B = B_power_function
         if units is not None:
             self.units = units
 
@@ -68,7 +66,11 @@ class PowerSpectrum(object):
         grid spacing and grid size for a grid of positions.  This code stores information about the
         quantities used to generate the random shear field, generates shears using a
         PowerSpectrumRealizer on a grid, and if necessary, interpolates to get g1 and g2 at the
-        specified positions.
+        specified positions.  An example of how to use getShear is as follows, for the gridded case:
+        @code
+        my_ps = galsim.lensing.PowerSpectrum(galsim.lensing.pk2)
+        g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
+        @endcode
 
         When using a non-gridded set of points, the code has to choose an appropriate spacing for a
         grid and then interpolate the gridded shears to the specified set of points.  It does this
@@ -77,6 +79,15 @@ class PowerSpectrum(object):
         aware that use of an interpolant that is not linear does not change how this calculation is
         done, and therefore it is necessary to test the fidelity of the recovered power spectrum for
         any errors due to the chosen non-linear interpolant.
+
+        For a given value of grid_spacing, grid_nx, grid_ny, we could get the x and y values on the
+        grid using
+        @code
+        import numpy as np
+        x, y = np.meshgrid(np.arange(0., grid_nx*grid_spacing, grid_spacing),
+                           np.arange(0., grid_ny*grid_spacing, grid_spacing))
+        @endcode
+        where we assume a minimum x and y value of zero for the grid.
 
         @param[in] x List of x positions (units should be consistent with P(k) function)
         @param[in] y List of y positions (units should be consistent with P(k) function)
@@ -90,6 +101,7 @@ class PowerSpectrum(object):
         drawing the random numbers
         @param[in] interpolantxy (Optional) Interpolant to use for interpolating the shears on a
         grid to the requested positions [default = galsim.InterpolantXY(galsim.Linear())].
+        @return g1,g2 Two Numpy arrays for the two shear components g_1 and g_2
         """
 
         # check input values for all keywords
@@ -120,6 +132,7 @@ class PowerSpectrum(object):
                 raise ValueError("Cannot provide both a Gaussian deviate and a random seed!")
             if isinstance(gaussian_deviate, galsim.GaussianDeviate) == False:
                 raise TypeError("The requested gaussian_deviate is not a Gaussian deviate!")
+            gd = gaussian_deviate
         # (5) set default interpolant if none given
         if interpolantxy is None:
             interpolantxy = galsim.InterpolantXY(galsim.Linear())
@@ -127,10 +140,10 @@ class PowerSpectrum(object):
         # store some more information
         self.interpolantxy = interpolantxy
 
-        if grid_dx is not None:
+        if grid_spacing is not None:
             # do the calculation on a grid
             psr = PowerSpectrumRealizer(grid_nx, grid_ny, grid_spacing, self.p_E, self.p_B)
-            g1_grid, g2_grid = psr(gaussian_deviate=gd)
+            g1, g2 = psr(gaussian_deviate=gd)
         else:
             # for now, so we can test the gridded case
             raise NotImplementedError("Have not finished implementing the non-gridded case!")
@@ -167,6 +180,9 @@ class PowerSpectrum(object):
             g1 = galsim.utilities.eval_sbinterpolatedimage(g1_sbimg, x - med_x, y - med_y)
             g2 = galsim.utilities.eval_sbinterpolatedimage(g2_sbimg, x - med_x, y - med_y)
 
+        # after making either gridded shears or shears at specified x, y positions, return g1 and g2
+        # arrays
+        return g1, g2
 
 class PowerSpectrumRealizer(object):
     """@brief Class for generating realizations of power spectra with any area and pixel size.
@@ -267,6 +283,7 @@ class PowerSpectrumRealizer(object):
         else:
             if seed:
                 raise ValueError("Cannot provide both a Gaussian deviate and a random seed!")
+            gd = gaussian_deviate
 
         #Generate a random complex realization for the E-mode, if there is one
         if self.amplitude_E is not None:
@@ -321,12 +338,8 @@ class PowerSpectrumRealizer(object):
 
 # for simple demonstration purposes, a very simple power-law power spectrum that doesn't crash and
 # burn at k=0
-def pk(k):
-    min_k = 1.0e-3
-    if k > min_k:
-        return k**(-2.)
-    else:
-        return min_k**(-2.)
+def pk2(k):
+    return k**(2.0)
 
 
 
