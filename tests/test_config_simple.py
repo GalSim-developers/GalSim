@@ -7,11 +7,15 @@ except ImportError:
     import galsim
 import galsim.config
 
-def setup():
+class TestRootNode(galsim.config.machinery.NodeBase):
+    """
+    A simple test config hierarchy corresponding to the override file
+    in tests/config_files/machinery2.py.
+    """
+    psf = galsim.config.machinery.Field(GSObjectNode, default=None)
+    gal = galsim.config.machinery.Field(GSObjectNode, default=None)
 
-
-def test_psf_params():
-
-
-def test_gal_params():
-
+def test_load():
+    root = TestRootNode()
+    root.load("tests/config_files/machinery2.py")
+    # ... test that values were set properly when loading the config file
