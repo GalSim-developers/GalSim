@@ -7,3 +7,4 @@ python test_optics.py
 python test_random.py
 python test_real.py
 python test_spline.py
+python test_lensing.py
