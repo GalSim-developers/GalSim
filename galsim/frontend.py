@@ -75,6 +75,8 @@ def _BuildPixel(config, input_cat=None):
             "There might be weirdness....")
     if "flux" in config.__dict__:
         kwargs["flux"] = _GetParamValue(config, "flux", input_cat)
+    # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
+    init_kwargs = dict([(k.encode('utf-8'), v) for k,v in init_kwargs.iteritems()]) 
     return galsim.Pixel(**init_kwargs)
 
 
@@ -88,6 +90,8 @@ def _BuildSquarePixel(config, input_cat=None):
     init_kwargs["yw"] = init_kwargs["xw"]
     if "flux" in config.__dict__:
         init_kwargs["flux"] = _GetParamValue(config, "flux", input_cat)
+    # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
+    init_kwargs = dict([(k.encode('utf-8'), v) for k,v in init_kwargs.iteritems()]) 
     return galsim.Pixel(**init_kwargs)
 
     
@@ -104,6 +108,8 @@ def _BuildSimple(config, input_cat=None):
     init_kwargs.update(_GetOptionalKwargs(config, input_cat))
     # Finally, after pulling together all the params, try making the GSObject.
     init_func = eval("galsim."+config.type)
+    # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
+    init_kwargs = dict([(k.encode('utf-8'), v) for k,v in init_kwargs.iteritems()]) 
     try:
         gsobject = init_func(**init_kwargs)
     except Exception, err_msg:
@@ -349,6 +355,12 @@ def _Parse(config):
         config = galsim.Config()
         config.type = tokens[0]
         str = tokens[1]
+    elif isinstance(config, dict):
+        # If we are provided a regular dict rather than a Config object, convert it.
+        orig = config
+        config = galsim.Config()
+        config.__dict__.update(orig)
+        return _Parse(config)
     elif hasattr(config, "__dict__"):  
         if hasattr(config, "type"):  
             if isinstance(config.type, basestring):

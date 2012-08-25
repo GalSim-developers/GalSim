@@ -226,6 +226,7 @@ class GSObject(object):
         N.B. Using this method is now unnecessary due to the presence of the "flux" descriptor
         attribute for all GSObjects. TODO: Remove?
         """
+        flux = float(flux)
         self.flux = flux
 
     def applyTransformation(self, ellipse):
@@ -1674,6 +1675,7 @@ class Add(GSObject):
         return self.SBProfile.getFlux()
     
     def _set_flux(self, value):
+        value = float(value)
         self.SBProfile.setFlux(value)
         self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
 
@@ -1780,6 +1782,7 @@ class Convolve(GSObject):
         return self.SBProfile.getFlux()
     
     def _set_convolve_flux(self, value):
+        value = float(value)
         self.SBProfile.setFlux(value)
         self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
 
@@ -1901,6 +1904,7 @@ class Deconvolve(GSObject):
         return self.SBProfile.getFlux()
 
     def _set_deconvolve_flux(self, value):
+        value = float(value)
         self.SBProfile.setFlux(value)
         self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
 
