@@ -14,7 +14,7 @@
 #      - Each galaxy is bulge plus disk: deVaucouleurs + Exponential.
 #      - Parameters taken from the input catalog:
 #        - PSF beta
-#        - PSF FWHM
+#        - PSF fwhm
 #        - PSF e1
 #        - PSF e2
 #        - PSF trunc
@@ -159,7 +159,8 @@ image :
     xsize : *image_size
     ysize : *image_size
 
+    # Define what kind of noise to use
     noise : 
         type : Poisson
         sky_level : *sky_level
- 
+

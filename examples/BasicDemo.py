@@ -106,6 +106,9 @@ def Script2():
     sky_level = 1.e3   # ADU / pixel
     gain = 1.0         # ADU / e-
 
+    # This time use a particular seed, so the image is deterministic.
+    random_seed = 1534225
+
     logger.info('Starting script 2 using:')
     logger.info('    - sheared (%.2f,%.2f) exponential galaxy (flux = %.1e, scale radius = %.2f),',
             g1, g2, gal_flux, gal_r0)
@@ -152,10 +155,8 @@ def Script2():
     sky_image = galsim.ImageF(bounds=image.getBounds(), init_value=sky_level)
     image += sky_image
 
-    # This time use a particular seed, so it the image is deterministic.
-    rng = galsim.UniformDeviate(1534225)
     # Use this to add Poisson noise using the CCDNoise class.
-    image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=0.))
+    image.addNoise(galsim.CCDNoise(random_seed, gain=gain, read_noise=0.))
 
     # Subtract off the sky.
     image -= sky_image
@@ -222,15 +223,17 @@ def Script3():
     opt_c1=0.64            # wavelengths
     opt_c2=-0.33           # wavelengths
     opt_obscuration=0.3    # linear scale size of secondary mirror obscuration
-    opt_padfactor=2        # multiples of Airy padding required to avoid folding for aberrated PSFs
     lam = 800              # nm    NB: don't use lambda - that's a reserved word.
     tel_diam = 4.          # meters 
     pixel_scale = 0.23     # arcsec / pixel
+    image_size = 64        # n x n pixels
     wcs_g1 = -0.02         #
     wcs_g2 = 0.01          #
     sky_level = 1.e3       # ADU / pixel
     gain = 1.7             # ADU / e-
     read_noise = 0.3       # ADU / pixel
+
+    random_seed = 1314662  
 
     logger.info('Starting script 3 using:')
     logger.info('    - q,beta (%.2f,%.2f) Sersic galaxy (flux = %.1e, n = %.1f, re = %.2f),', 
@@ -277,17 +280,15 @@ def Script3():
     # The first argument of OpticalPSF below is lambda/D,
     # which needs to be in arcsec, so do the calculation:
     lam_over_D = lam * 1.e-9 / tel_diam # radians
-    lam_over_D *= 206265 # arcsec
+    lam_over_D *= 206265  # arcsec
     logger.info('Calculated lambda over D = %f arcsec', lam_over_D)
     # The rest of the values here should be given in units of the 
     # wavelength of the incident light.
-    # pad_factor is used to here to reduce 'folding' in the fourier transform.
     optics = galsim.OpticalPSF(lam_over_D, 
                                defocus = opt_defocus,
                                coma1 = opt_c1, coma2 = opt_c2,
                                astig1 = opt_a1, astig2 = opt_a2,
-                               obscuration = opt_obscuration,
-                               pad_factor = opt_padfactor)
+                               obscuration = opt_obscuration)
     logger.info('Made optical PSF profile')
 
     # Start with square pixels
@@ -307,10 +308,14 @@ def Script3():
     final_epsf.applyShear(g1=wcs_g1, g2=wcs_g2)
     logger.info('Applied WCS distortion')
 
+    # This time we specify a particular size for the image rather than let galsim 
+    # choose the size automatically.
+    image = galsim.ImageF(image_size,image_size)
     # Draw the image with a particular pixel scale.
-    image = final.draw(dx=pixel_scale)
+    final.draw(image=image, dx=pixel_scale)
+
+    # Also draw the effective PSF by itself and the optical PSF component alone.
     image_epsf = final_epsf.draw(dx=pixel_scale)
-    # Draw the optical PSF component at its Nyquist sample rate
     image_opticalpsf = optics.draw(dx=lam_over_D/2.)
     logger.info('Made image of the profile')
 
@@ -319,8 +324,7 @@ def Script3():
     image += sky_image
 
     # Add Poisson noise and Gaussian read noise to the image using the CCDNoise class.
-    rng = galsim.UniformDeviate(1314662)
-    image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
+    image.addNoise(galsim.CCDNoise(random_seed, gain=gain, read_noise=read_noise))
 
     # Subtract off the sky.
     image -= sky_image

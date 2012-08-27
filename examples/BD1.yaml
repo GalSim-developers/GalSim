@@ -1,7 +1,7 @@
 
 # YAML configuration file for use with the executable galsim
 # Type:
-#   galsim_yaml BD2.yaml
+#   galsim_yaml BD1.yaml
 #
 # This configuration file is designed to be equivalent to the example script called
 # Script1 in BasicDemo.py.
@@ -15,13 +15,14 @@ gal :
 
     # Gaussian profiles have a number of possible size parameters, but
     # sigma is the most basic one.  
-    # The others are FWHM and half_light_radius.  At least one of these must be specified.
-    sigma : 2.   # arcsec
+    # The others are fwhm and half_light_radius.  At least one of these must be specified.
+    sigma : 2.  # arcsec
 
     # The default flux would be 1, but you would typically want to define the flux 
     # to be something other than that.
-    flux : 1.e5
+    flux : 1.e5  # ADU
  
+
 # Technically, psf isn't required, but for astronomical images, we always have a psf,
 # so you'll usually want to define one.  (If it's omitted, the galaxy isn't convolved 
 # by anything, so effectively a delta function psf.)
@@ -31,8 +32,8 @@ psf :
     sigma : 1.0   # arcsec
     # No need to specify a flux, since flux=1 is the right thing for a psf.
 
+
 # The image field specifies some other information about the image to be drawn.
-# Again, it's not technically required, but these are pretty common things to want to specify.
 image :
     # If pixel_scale isn't specified, then pixel_scale = 1 is assumed.
     pixel_scale : 0.2   # arcsec / pixel
@@ -42,6 +43,10 @@ image :
     noise : 
         type : Gaussian
         sigma : 300.   # ADU / pixel
+
+    # You can also specify the size of the image if you want, but if you omit it
+    # (as we do here), then GalSim will automatically size the image appropriately.
+
 
 # Typically, you will want to specify the output format and file name.
 # If this is omitted, the output will be to a fits file with the same name as the 

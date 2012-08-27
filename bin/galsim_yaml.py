@@ -59,7 +59,7 @@ def main(argv) :
             nobjects = input_cat.nobjects
 
     # If specified, set the number of objects to draw (default = 1)
-    nobjects = config.get('nobjects',nobjects)
+    nobjects = int(config.get('nobjects',nobjects))
     logger.info('nobjects = %d',nobjects)
 
     # We'll be accessing things from the image field a lot.  So instead of constantly
@@ -128,6 +128,16 @@ def main(argv) :
         fft_list.append(pix)
         t3 = time.time()
 
+        # If the image has a WCS, we need to shear the pixel the reverse direction, so the
+        # resulting WCS shear later will bring the pixel back to square.
+        if 'wcs' in config['image']:
+            wcs = config['image']['wcs']
+            if 'shear' in wcs:
+                wcs_shear = galsim.BuildShear(wcs['shear'])
+                pix.applyShear(-wcs_shear)
+            else :
+                raise AttributeError("wcs must specify a shear")
+
         gal = galsim.BuildGSObject(config['gal'], input_cat, logger)
         #print 'gal = ',gal
         fft_list.append(gal)
@@ -137,7 +147,10 @@ def main(argv) :
         draw_method = config['image'].get('draw_method','fft')
         if draw_method == 'fft' :
             final = galsim.Convolve(fft_list)
+            if 'wcs' in config['image']:
+                final.applyShear(wcs_shear)
             #print 'final = ',final
+
             if image_xsize is None :
                 im = final.draw(dx=pixel_scale)
                 # If the output includes either data_cube or tiled_stamps then all images need
@@ -149,6 +162,10 @@ def main(argv) :
                 final.draw(im, dx=pixel_scale)
         elif draw_method == 'phot' :
             final = galsim.Convolve(phot_list)
+            if 'wcs' in config['image']:
+                final.applyShear(wcs_shear)
+            #print 'final = ',final
+
             if image_xsize is None :
                 # TODO: Change this once issue #82 is done.
                 raise AttributeError(
@@ -174,7 +191,7 @@ def main(argv) :
                 im += sky_level
                 im.addNoise(galsim.CCDNoise(rng))
                 im -= sky_level
-                #logger.info('   Added Poisson noise for sky_level = %f',sky_level)
+                logger.info('   Added Poisson noise with sky_level = %f',sky_level)
             elif noise['type'] == 'Gaussian' :
                 if 'sigma' in noise:
                     sigma = noise['sigma']
@@ -184,11 +201,20 @@ def main(argv) :
                     raise AttributeError(
                         "Either sigma or variance need to be specified for Gaussian noise")
                 im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
-                #logger.info('   Added Gaussian noise with sigma = %f',sigma)
+                logger.info('   Added Gaussian noise with sigma = %f',sigma)
+            elif noise['type'] == 'CCDNoise' :
+                sky_level = float(noise['sky_level'])
+                gain = float(noise.get("gain",1.0))
+                read_noise = float(noise.get("read_noise",0.0))
+                im += sky_level
+                im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
+                im -= sky_level
+                logger.info('   Added CCD noise with sky_level = %f, ' +
+                            'gain = %f, read_noise = %f',sky_level,gain,read_noise)
             else :
                 raise AttributeError(
-                    "Invalid type for noise \n" +
-                    "Valid values are Poisson or Gaussian.")
+                    "Invalid type %s for noise \n" +
+                    "Valid values are Poisson Gaussian.")
         t6 = time.time()
 
         # Store that into the list of all images
