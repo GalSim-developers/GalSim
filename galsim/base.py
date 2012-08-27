@@ -1964,7 +1964,7 @@ object_param_dict = {
                         "size"     : ("lam_over_D",),
                         "optional" : ("defocus", "astig1", "astig2", "coma1", "coma2", "spher", 
                                       "circular_pupil", "interpolant", "dx", "oversampling",
-                                      "pad_factor") },
+                                      "obscuration", "pad_factor") },
     "AtmosphericPSF": { "required" : (),
                         "size"     : ("fwhm", "lam_over_r0"),
                         "optional" : ("dx", "oversampling") },
