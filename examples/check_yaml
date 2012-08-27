@@ -1,16 +1,16 @@
 #!/bin/bash
 
-#BasicDemo.py 1
-#../bin/galsim_yaml.py BD1.yaml
+BasicDemo.py 1
+../bin/galsim_yaml.py BD1.yaml
 
-#BasicDemo.py 2
-#../bin/galsim_yaml.py BD2.yaml
+BasicDemo.py 2
+../bin/galsim_yaml.py BD2.yaml
 
 BasicDemo.py 3
 ../bin/galsim_yaml.py BD3.yaml
 
-#MultiObjectDemo.py 2
-#../bin/galsim_yaml.py MOD2.yaml
+MultiObjectDemo.py 2
+../bin/galsim_yaml.py MOD2.yaml
 
 echo 'Checking diffs: (No output means success)'
 
@@ -18,9 +18,9 @@ echo 'Checking diffs: (No output means success)'
 # If you add an initial seed in both places, then you can uncomment that line.
 
 #diff output/demo1.fits output_yaml/demo1.fits 
-#diff output/demo2.fits output_yaml/demo2.fits 
+diff output/demo2.fits output_yaml/demo2.fits 
 diff output/demo3.fits output_yaml/demo3.fits 
 
-#diff output/multi.fits output_yaml/multi.fits 
-#diff output/cube.fits output_yaml/cube.fits 
+diff output/multi.fits output_yaml/multi.fits 
+diff output/cube.fits output_yaml/cube.fits 
 

@@ -191,7 +191,7 @@ def main(argv) :
                 im += sky_level
                 im.addNoise(galsim.CCDNoise(rng))
                 im -= sky_level
-                logger.info('   Added Poisson noise with sky_level = %f',sky_level)
+                #logger.info('   Added Poisson noise with sky_level = %f',sky_level)
             elif noise['type'] == 'Gaussian' :
                 if 'sigma' in noise:
                     sigma = noise['sigma']
@@ -201,7 +201,7 @@ def main(argv) :
                     raise AttributeError(
                         "Either sigma or variance need to be specified for Gaussian noise")
                 im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
-                logger.info('   Added Gaussian noise with sigma = %f',sigma)
+                #logger.info('   Added Gaussian noise with sigma = %f',sigma)
             elif noise['type'] == 'CCDNoise' :
                 sky_level = float(noise['sky_level'])
                 gain = float(noise.get("gain",1.0))
@@ -209,8 +209,8 @@ def main(argv) :
                 im += sky_level
                 im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
                 im -= sky_level
-                logger.info('   Added CCD noise with sky_level = %f, ' +
-                            'gain = %f, read_noise = %f',sky_level,gain,read_noise)
+                #logger.info('   Added CCD noise with sky_level = %f, ' +
+                            #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
             else :
                 raise AttributeError(
                     "Invalid type %s for noise \n" +
