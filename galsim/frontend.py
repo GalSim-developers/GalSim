@@ -10,29 +10,35 @@ def BuildGSObject(config, input_cat=None, logger=None):
     @param logger     Output logging object (NOT USED IN THIS IMPLEMENTATION: RAISED ERRORS
                       AUTOMATICALLY PASSED TO LOGGER)
     """
+    #print 'Start BuildGSObject: config = ',config
     # Start by parsing the config object in case it is a config string
     config = _Parse(config)
+    #print 'After Parse: config = ',config
 
     # Check that the input config has a type to even begin with!
     if not "type" in config.__dict__:
         raise AttributeError("type attribute required in config.")
 
     # Then build the object depending on type, and shift/shear etc. if supported for that type
-    #
-    if config.type in ("Sum", "Convolution"):   # Compound object
+    #print 'config.type = ',config.type
+    if config.type in ("Sum", "Convolution", "Add", "Convolve"):   # Compound object
         gsobjects = []
         if "items" in config.__dict__:
             for i in range(len(config.items)):
                 gsobjects.append(BuildGSObject(config.items[i], input_cat))
-            if config.type == "Sum":
+            #print 'After built component items for ',config.type
+            if config.type in ("Sum", "Add"):
                 gsobject = galsim.Add(gsobjects)
-            elif config.type == "Convolve":
+            else:  # config.type in ("Convolution", "Convolve"):
                 gsobject = galsim.Convolve(gsobjects)
+            #print 'After built gsobject = ',gsobject
             # Allow the setting of the overall flux of the object. Individual component fluxes
             # retain the ratio of their own specified flux parameter settings.
             if "flux" in config.__dict__:
                 gsobject.setFlux(_GetParamValue(config, "flux", input_cat))
+            #print 'After set flux, gsobject = ',gsobject
             gsobject = _BuildEllipRotateShearShiftObject(gsobject, config, input_cat)
+            #print 'After BuildEllipRotateShearShiftObject, gsobject = ',gsobject
         else:
             raise AttributeError("items attribute required in for config."+type+" entry.")
 
@@ -111,6 +117,7 @@ def _BuildSimple(config, input_cat=None):
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
     init_kwargs = dict([(k.encode('utf-8'), v) for k,v in init_kwargs.iteritems()]) 
     try:
+        #print 'Construct ',config.type,' with kwargs: ',str(init_kwargs)
         gsobject = init_func(**init_kwargs)
     except Exception, err_msg:
         raise RuntimeError("Problem sending init_kwargs to galsim."+config.type+" object. "+
@@ -136,28 +143,64 @@ def _BuildEllipRotateShearShiftObject(gsobject, config, input_cat=None):
     return gsobject
 
 
-def _BuildEllipObject(gsobject, config, input_cat=None):
-    """@brief Applies ellipticity to a supplied GSObject from user input, also used for
-    gravitational shearing.
+def BuildShear(config, input_cat=None):
+    """@brief Build and return a Shear object from the configuration file
 
-    Note that E1E2 must be "distortions", which for q=b/a (minor-to-major axis ratio), has |e| =
-    (1-q^2)/(1+q^2).  G1G2 are reduced shears, |g| = (1-q)/(1+q).
+       Implemented types are:
+          - G1G2 = reduced shear 
+          - GBeta = polar reduced shear 
+          - E1E2 = distortion or ellipticity
+          - EBeta = polar reduced shear 
+          - QBeta = axis ratio and position angle
 
-    @returns transformed GSObject.
+       Note that in terms of the axis ratio q=b/a (minor-to-major axis ratio):
+       |e| = (1-q^2)/(1+q^2)
+       |g| = (1-q)/(1+q)
     """
+    #print 'Start BuildShear'
+    #print 'config = ',config
     config = _Parse(config)
+    #print 'After Parse: config = ',config
     if not "type" in config.__dict__:
         raise AttributeError("No type attribute in config!")
     if config.type == "E1E2":
         e1 = _GetParamValue(config, "e1", input_cat)
         e2 = _GetParamValue(config, "e2", input_cat)
-        gsobject.applyShear(e1=e1, e2=e2)
+        #print 'e1,e2 = ',e1,e2
+        return galsim.Shear(e1=e1, e2=e2)
     elif config.type == "G1G2":
         g1 = _GetParamValue(config, "g1", input_cat)
         g2 = _GetParamValue(config, "g2", input_cat)
-        gsobject.applyShear(g1=g1, g2=g2)
+        #print 'g1,g2 = ',g1,g2
+        return galsim.Shear(g1=g1, g2=g2)
+    elif config.type == "GBeta":
+        g = _GetParamValue(config, "g", input_cat)
+        beta = _GetParamValue(config, "beta", input_cat, type=galsim.Angle)
+        #print 'g,beta = ',g,beta
+        return galsim.Shear(g=g, beta=beta)
+    elif config.type == "EBeta":
+        e = _GetParamValue(config, "e", input_cat)
+        beta = _GetParamValue(config, "beta", input_cat, type=galsim.Angle)
+        #print 'e,beta = ',e,beta
+        return galsim.Shear(e=e, beta=beta)
+    elif config.type == "QBeta":
+        q = _GetParamValue(config, "q", input_cat)
+        beta = _GetParamValue(config, "beta", input_cat, type=galsim.Angle)
+        #print 'q,beta = ',q,beta
+        return galsim.Shear(q=q, beta=beta)
     else:
-        raise NotImplementedError("Sorry only ellip.type = 'E1E2', 'G1G2' currently supported.")
+        raise NotImplementedError("Unrecognised shear type %s."%config.type)
+
+def _BuildEllipObject(gsobject, config, input_cat=None):
+    """@brief Applies ellipticity to a supplied GSObject from user input, also used for
+    gravitational shearing.
+
+    @returns transformed GSObject.
+    """
+    shear = BuildShear(config, input_cat)
+    #print 'shear = ',shear
+    gsobject.applyShear(shear)
+    #print 'After applyShear, gsobject = ',gsobject
     return gsobject
 
 
@@ -184,7 +227,7 @@ def _BuildShiftObject(gsobject, config, input_cat=None):
         dy = _GetParamValue(config, "dy", input_cat)
         gsobject.applyShift(dx, dy)
     else:
-        raise NotImplementedError("Sorry only shift.type = 'DXDY' currently supported.")
+        raise NotImplementedError("Unrecognised shift type %s."%config.type)
     return gsobject
 
 
@@ -229,7 +272,7 @@ def _GetOptionalKwargs(config, input_cat=None):
             optional_kwargs[entry_name] = _GetParamValue(config, entry_name, input_cat=input_cat)
     return optional_kwargs
 
-def _GetParamValue(config, param_name, input_cat=None):
+def _GetParamValue(config, param_name, input_cat=None, type=float):
     """@brief Function to read parameter values from config.
     """
     # Assume that basic sanity checking done upstream for maximum efficiency 
@@ -240,25 +283,45 @@ def _GetParamValue(config, param_name, input_cat=None):
     
     # First see if we can assign by param by a direct constant value
     if not hasattr(param, "__dict__"):  # This already exists for Config instances, not for values
-        # TODO: This would benefit from introspection if we could know what type we are
-        # expectecting for each parameter.  For now though, we just need to make sure that
-        # strings are converted to float if necessary.  In particular things like 1.e6
-        # which aren't converted to float automatically by the yaml reader.
-        # (Although I think this is a bug -- I think these should be floats.)
-        # Anyway, we do this by trying float(param), and if it works, we keep it.
-        try : 
-            param_value = float(param)
-        except :
-            param_value = param
+        if type is galsim.Angle :
+            # Angle is a special case.  Angles are specified with a final string to 
+            # declare what unit to use.
+            try :
+                (value, unit) = param.rsplit(None,1)
+                value = float(value)
+                unit = unit.lower()
+                if unit.startswith('rad') :
+                    return galsim.Angle(value, galsim.radians)
+                elif unit.startswith('deg') :
+                    return galsim.Angle(value, galsim.degrees)
+                elif unit.startswith('hour') :
+                    return galsim.Angle(value, galsim.hours)
+                elif unit.startswith('arcmin') :
+                    return galsim.Angle(value, galsim.arcmin)
+                elif unit.startswith('arcsec') :
+                    return galsim.Angle(value, galsim.arcsec)
+                else :
+                    print 'Unknown Angle unit:',unit
+                    raise AttributeError()
+            except :
+                raise AttributeError("Unable to parse %s as an Angle."%param)
+        else :
+            # Make sure strings are converted to float (or other type) if necessary.
+            # In particular things like 1.e6 aren't converted to float automatically
+            # by the yaml reader. (Although I think this is a bug.)
+            try : 
+                param_value = type(param)
+            except :
+                raise AttributeError("Could not convert %s to %s."%(param,type))
     elif not "type" in param.__dict__: 
-        raise AttributeError(param_name+".type attribute required in config for non-constant "+
-                             "parameter "+param_name+".")
+        raise AttributeError(
+            "%s.type attribute required in config for non-constant parameter %s."
+                    %(param_name,param_name))
     else: # Use type to set param value. Currently catalog input supported only.
         if param.type == "InputCatalog":
             param_value = _GetInputCatParamValue(param, param_name, input_cat)
         else:
-            raise NotImplementedError("Sorry, only InputCatalog config types are currently "+
-                                      "implemented.")
+            raise NotImplementedError("Unrecognised parameter type %s."%param.type)
     return param_value
 
 
@@ -287,7 +350,7 @@ def _GetInputCatParamValue(param, param_name, input_cat=None):
     elif input_cat.type == "FITS":
         raise NotImplementedError("Sorry, FITS input not implemented.")
     else:
-        raise ValueError("input_cat.type must be either 'FITS' or 'ASCII' please.")
+        raise NotImplementedError("Unrecognised input_cat type %s."%param.type)
     return param_value
 
 def _MatchDelim(str,start,end):
@@ -353,42 +416,40 @@ def _Parse(config):
        gal.shear = 'G1G2 g1=0.3 g2=0'
        @endcode
     """
+    orig = config
     if isinstance(config, basestring):
-        orig = config
         tokens = config.split(None,1)
         if len(tokens) < 2:
             # Special case string only has one word.  So this isn't a string to
             # be parsed.  It's just a string value. 
             # e.g. config.catalog.file_name = 'in.cat'
-            return config
+            return orig
         config = galsim.Config()
         config.type = tokens[0]
         str = tokens[1]
     elif isinstance(config, dict):
         # If we are provided a regular dict rather than a Config object, convert it.
-        orig = config
         config = galsim.Config()
         config.__dict__.update(orig)
         return _Parse(config)
     elif hasattr(config, "__dict__"):  
         if hasattr(config, "type"):  
             if isinstance(config.type, basestring):
-                orig = config.type
                 tokens = config.type.split(None,1)
                 if len(tokens) == 1:
                     # Then this config is already parsed.
                     return config
                 elif len(tokens) == 0:
-                    raise AttributeError('Provided type is an empty string: %s',config.type)
+                    raise AttributeError('Provided type is an empty string: %s'%config.type)
                 config.type = tokens[0]
                 str = tokens[1]
             else:
-                raise AttributeError('Provided type is not a string: %s',config.type)
+                raise AttributeError('Provided type is not a string: %s'%config.type)
         else:
             raise AttributeError("type attribute required in config.")
     else:
         # This is just a value
-        return config
+        return orig
 
     # Now config.type is set correctly and str holds the rest of the string to be parsed.
     try :
@@ -413,7 +474,9 @@ def _Parse(config):
                 else:
                     str = tokens[1]
             config.__setattr__(attrib,value)
+        return config
     except:
-        raise ValueError("Error parsing configuration string " + orig)
-    return config
+        # If this didn't parse correctly, then this is probably just a string value
+        # with more than one token.  In this case, just return the original.
+        return orig
  
