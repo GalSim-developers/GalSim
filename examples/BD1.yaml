@@ -1,5 +1,5 @@
 
-# YAML configuration file for use with the executable galsim
+# YAML configuration file for use with the executable galsim_yaml
 # Type:
 #   galsim_yaml BD1.yaml
 #
@@ -8,7 +8,7 @@
 # It's pretty close to the minimal configuration file that you might want to use.
 #
 
-# The only absolutely required field is gal.  This defines what kind of galaxy profile to use.
+# The gal field defines what kind of galaxy profile to use.
 gal :
     # One of the simplest profiles is a Gaussian.
     type : Gaussian

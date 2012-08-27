@@ -315,7 +315,8 @@ def Script3():
     final.draw(image=image, dx=pixel_scale)
 
     # Also draw the effective PSF by itself and the optical PSF component alone.
-    image_epsf = final_epsf.draw(dx=pixel_scale)
+    image_epsf = galsim.ImageF(image_size,image_size)
+    final_epsf.draw(image_epsf, dx=pixel_scale)
     image_opticalpsf = optics.draw(dx=lam_over_D/2.)
     logger.info('Made image of the profile')
 
@@ -334,15 +335,15 @@ def Script3():
     if not os.path.isdir('output'):
         os.mkdir('output')
     file_name = os.path.join('output', 'demo3.fits')
-    file_name_opticalpsf = os.path.join('output','demo3_opticalpsf.fits')
     file_name_epsf = os.path.join('output','demo3_epsf.fits')
+    file_name_opticalpsf = os.path.join('output','demo3_opticalpsf.fits')
     
     image.write(file_name, clobber=True)
-    image_opticalpsf.write(file_name_opticalpsf, clobber=True)
     image_epsf.write(file_name_epsf, clobber=True)
+    image_opticalpsf.write(file_name_opticalpsf, clobber=True)
     logger.info('Wrote image to %r', file_name)
-    logger.info('Wrote optics-only PSF image (Nyquist sampled) to %r', file_name_opticalpsf)
     logger.info('Wrote effective PSF image to %r', file_name_epsf)
+    logger.info('Wrote optics-only PSF image (Nyquist sampled) to %r', file_name_opticalpsf)
 
     results = galsim.EstimateShearHSM(image, image_epsf)
 

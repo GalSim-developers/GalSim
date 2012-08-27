@@ -20,6 +20,7 @@ echo 'Checking diffs: (No output means success)'
 #diff output/demo1.fits output_yaml/demo1.fits 
 diff output/demo2.fits output_yaml/demo2.fits 
 diff output/demo3.fits output_yaml/demo3.fits 
+diff output/demo3_epsf.fits output_yaml/demo3_epsf.fits 
 
 diff output/multi.fits output_yaml/multi.fits 
 diff output/cube.fits output_yaml/cube.fits 

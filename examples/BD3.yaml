@@ -1,5 +1,5 @@
 
-# YAML configuration file for use with the executable galsim
+# YAML configuration file for use with the executable galsim_yaml
 # Type:
 #   galsim_yaml BD3.yaml
 #
@@ -93,7 +93,7 @@ image :
     # In this case, we simply have a constant telescope distortion over the image.
     wcs : 
         # TODO: This is nowhere near general enough.
-        # Plus the implementation of how we do this has not been tested for accuracy.
+        # Plus our implementation of how we handle this has not been tested for accuracy.
         shear : 
             type : G1G2
             g1 : -0.02
@@ -119,4 +119,14 @@ output :
     dir : output_yaml
     file_name : demo3.fits
     
+    # Sometimes it is useful to have the PSF image also written to a file.
+    # The PSF image will always have the same pixel centering as the galaxy, and if there 
+    # was any random component to the PSF generation, then this will be the exact same PSF
+    # that was used for the galaxy.  Plus, there is no noise in the PSF image.
+    psf :
+        # You may either specify a new file_name as we do here, or you can specify
+        # 'hdu' to put the PSF image in the same fits file, but in another HDU.
+        # TODO: The HDU feature is not implemented yet.
+        file_name : demo3_epsf.fits
     
+

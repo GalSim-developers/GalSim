@@ -1,5 +1,5 @@
 
-# YAML configuration file for use with the executable galsim
+# YAML configuration file for use with the executable galsim_yaml
 # Type:
 #   galsim_yaml MOD2.yaml
 #
@@ -44,30 +44,6 @@ some_variables :
     - &gal_g2  0.011                  #
     - &image_size  64                 # pixels
 
-# Define the input files
-input :
-    # In this case, we just have a catalog to read in.
-    catalog :
-        dir : input
-        file_name : galsim_default_input.asc
-
-# Define the output formats
-# TODO: This isn't really working yet.  Need to think about how best to specify output formats
-# in the config file.
-output :
-    # Each item should declare what kind of output we want to make and what the file is
-    - 
-        type : multi_fits
-        dir : output_yaml
-        file_name : multi.fits
-    - 
-        type : data_cube
-        dir : output_yaml
-        file_name : cube.fits
-    
-# Define the initial random number seed
-random_seed : 8241573
-
 # Define what kind of psf to use
 psf : 
     # Each type of profile is specified by a type.  e.g. Moffat:
@@ -103,11 +79,6 @@ psf :
     # will be used instead.  If there is no reasonable default, you will get an error.
     #flux : 1  # Unnecessary
 
-# If you want to use a variable defined above, you use a *
-pix : 
-    type : SquarePixel 
-    size : *pixel_scale
-
 # A profile can be the sum of several components, each with its own type and parameters:
 gal :
     type : Sum
@@ -133,6 +104,7 @@ gal :
     # components are taken to be relative fluxes, and the full object's value sets the
     # overall normalization.  If this is omitted, the overall flux is taken to be the
     # sum of the component fluxes.
+    # Note: If you want to use a variable defined above, you use a *
     flux : *gal_flux
 
     # An object may have an ellip and a shear, each of which can be specified in terms
@@ -164,3 +136,25 @@ image :
         type : Poisson
         sky_level : *sky_level
 
+# Define the initial random number seed
+random_seed : 8241573
+
+# Define the input files -- in this case the catalog file to use.
+input :
+    # In this case, we just have a catalog to read in.
+    catalog :
+        dir : input
+        file_name : galsim_default_input.asc
+
+# Define the output formats
+output :
+    # Each item should declare what kind of output we want to make and what the file is
+    - 
+        type : multi_fits
+        dir : output_yaml
+        file_name : multi.fits
+    - 
+        type : data_cube
+        dir : output_yaml
+        file_name : cube.fits
+    
