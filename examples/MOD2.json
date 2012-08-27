@@ -10,7 +10,7 @@
 
 "output" : [
     {
-        "type" : "tiled_stamps",
+        "type" : "multi_fits",
         "dir" : "output_json",
         "file_name" : "multi.fits"
         },
@@ -92,18 +92,17 @@
         "type" : "DXDY" ,
         "dx" : { "type" : "InputCatalog" , "col" : 16 },
         "dy" : { "type" : "InputCatalog" , "col" : 17 }
-        },
-
-    "noise" : {
-        "type" : "poisson",
-        "sky_level" : "1.e6"
         }
     },
  
 "image" : {
     "pixel_scale" : 1.0,
     "xsize" : 64,
-    "ysize" : 64
-    }
+    "ysize" : 64,
 
+    "noise" : {
+        "type" : "Poisson",
+        "sky_level" : "1.e6"
+        }
+    }
 }

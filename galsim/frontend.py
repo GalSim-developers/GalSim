@@ -240,7 +240,16 @@ def _GetParamValue(config, param_name, input_cat=None):
     
     # First see if we can assign by param by a direct constant value
     if not hasattr(param, "__dict__"):  # This already exists for Config instances, not for values
-        param_value = param
+        # TODO: This would benefit from introspection if we could know what type we are
+        # expectecting for each parameter.  For now though, we just need to make sure that
+        # strings are converted to float if necessary.  In particular things like 1.e6
+        # which aren't converted to float automatically by the yaml reader.
+        # (Although I think this is a bug -- I think these should be floats.)
+        # Anyway, we do this by trying float(param), and if it works, we keep it.
+        try : 
+            param_value = float(param)
+        except :
+            param_value = param
     elif not "type" in param.__dict__: 
         raise AttributeError(param_name+".type attribute required in config for non-constant "+
                              "parameter "+param_name+".")

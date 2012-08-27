@@ -64,12 +64,8 @@ def Script1():
     image = final.draw(dx=pixel_scale)
     logger.info('Made image of the profile')
 
-    # Add some noise to the image
-    # First we need to set up a random number generator:
-    # Defaut seed is set from the current time.
-    rng = galsim.UniformDeviate()
-    # Use this to add Gaussian noise with specified sigma
-    image.addNoise(galsim.GaussianDeviate(rng, sigma=noise))
+    # Add Gaussian noise to the image with specified sigma
+    image.addNoise(galsim.GaussianDeviate(sigma=noise))
     logger.info('Added Gaussian noise')
 
     # Write the image to a file

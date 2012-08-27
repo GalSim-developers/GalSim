@@ -57,7 +57,7 @@ input :
 output :
     # Each item should declare what kind of output we want to make and what the file is
     - 
-        type : tiled_stamps
+        type : multi_fits
         dir : output_yaml
         file_name : multi.fits
     - 
@@ -153,12 +153,13 @@ gal :
         dx : { type : InputCatalog , col : 16 } 
         dy : { type : InputCatalog , col : 17 }
 
-    noise : 
-        type : poisson
-        sky_level : *sky_level
- 
 # Define some other information about the images 
 image :
     pixel_scale : *pixel_scale
     xsize : *image_size
     ysize : *image_size
+
+    noise : 
+        type : Poisson
+        sky_level : *sky_level
+ 

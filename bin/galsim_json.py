@@ -85,9 +85,9 @@ def main(argv) :
         t5 = time.time()
 
         # Add Poisson noise
-        if 'noise' in config['gal'] : 
-            noise = config['gal']['noise']
-            if noise['type'] == 'poisson' :
+        if 'noise' in config['image'] : 
+            noise = config['image']['noise']
+            if noise['type'] == 'Poisson' :
                 sky_level = float(noise['sky_level'])
                 im += sky_level
                 im.addNoise(galsim.CCDNoise(rng))
@@ -108,7 +108,7 @@ def main(argv) :
 
     # Now write the image to disk.
     for out in config['output'] :
-        if out['type'] == 'tiled_stamps' :
+        if out['type'] == 'multi_fits' :
             if not os.path.isdir(out['dir']) :
                 os.mkdir(out['dir'])
             file_name = os.path.join(out['dir'],out['file_name'])
