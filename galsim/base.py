@@ -12,54 +12,19 @@ class GSObject(object):
     shared methods and attributes, particularly those from the C++ SBProfile classes.
     """
 
-    # Then we define the .SBProfile attribute to actually be a property, with getter and setter
-    # functions that provide access to the data stored in _SBProfile.  If the latter is None, for
-    # example after a change in the object parameters (see, e.g., the SimpleParam descriptor), then
-    # the SBProfile is re-initialized.
-    #
-    # Note that this requires ALL classes derived from GSObject to define a _SBInitialize() method. 
-    def _get_SBProfile(self):
-        if self._SBProfile is None:
-            # First cover the corner case of emtpy Add or Convolve objects
-            if isinstance(self, (Add, Convolve)) and len(self.objects) == 0:
-                raise AttributeError(
-                    "SBProfile attribute not accessible for empty Add or Convolve objects.")
-            # Otherwise call _SBInitialize to set the SBProfile based on instance parameters
-            else:
-                self._SBInitialize()
-        return self._SBProfile
+    flux = descriptors.SimpleParam(
+        name="flux", group="optional", default=1., doc="Total flux of the object.")
 
-    def _set_SBProfile(self, value):
-        self._SBProfile = value
-
-    SBProfile = property(_get_SBProfile, _set_SBProfile)
-
-    # Default flux parameter descriptor, will be overridden by some GSObjects
-    flux = descriptors.FluxParam()
-
-    def _add_transformation(self, transformation):
-        if isinstance(transformation, galsim.Ellipse) or isinstance(transformation, galsim.Angle):
-            self.transformations.append(transformation)
-        else:
-            raise TypeError(
-                "Only Ellipse (for shear, dilation, shift) or Angle (for rotation) "+
-                "transformations supported.")
-
-    # Pre-initialization for the data store if needed, must be done at the start of every __init__
+    # Pre-initialization for the parameter data store, must be done at the start of every __init__
     def _setup_data_store(self):
-    
         if not hasattr(self, "_data"):
-            self._data = {}               # Used for storing parameter data accessed by descriptors
-        if not hasattr(self, "transformations"):
-            self.transformations = []     # Used for storing transformations
-        if not hasattr(self, "_SBProfile"):
-            self._SBProfile = None        # Private attribute used by the SBProfile property to
-                                          # store (and rebuild if necessary) the C++ layer SBProfile
-                                          # object for which GSObjects are a container
+            self._data = {}        # Used for storing parameter data accessed by descriptors
+        if not hasattr(self, "SBProfile"):
+            self.SBProfile = None  # Attribute used to store the C++ layer SBProfile object for
+                                   # which GSObjects are a container
 
     # --- Initialization ---
     def __init__(self, SBProfile):
-        
         self._setup_data_store()
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
     
@@ -118,19 +83,8 @@ class GSObject(object):
         # First re-initialize a return GSObject with self's SBProfile
         new_sbp = self.SBProfile.__class__(self.SBProfile)
         ret = GSObject(new_sbp)
-        # Set the new class to be the same as the original to retain class methods / descriptors
-        ret.__class__ = self.__class__
         # Copy the data store and transformations
         ret._data = copy.copy(self._data)
-        ret.transformations = copy.copy(self.transformations)
-
-        # Then test for some special cases which require extra instance variables to be copied
-        if isinstance(self, Moffat):
-            ret._last_size_set_was_half_light_radius = \
-                copy.copy(self._last_size_set_was_half_light_radius)
-        if isinstance(self, (Add, Convolve)):
-            ret.objects = copy.copy(self.objects)
-
         return ret
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
@@ -177,11 +131,8 @@ class GSObject(object):
 
     def getFlux(self):
         """@brief Returns the flux of the object.
-
-        N.B. Using this method is now unnecessary due to the presence of the "flux" descriptor
-        attribute for all GSObjects. TODO: Remove?
         """
-        return self.flux
+        return self.SBProfile.getFlux()
 
     def xValue(self, position):
         """@brief Returns the value of the object at a chosen 2D position in real space.
@@ -202,18 +153,16 @@ class GSObject(object):
         """
         return self.SBProfile.kValue(position)
 
-    def scaleFlux(self, fluxRatio):
+    def scaleFlux(self, flux_ratio):
         """@brief Multiply the flux of the object by fluxRatio
            
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
-
-        N.B. Using this method is now unnecessary due to the presence of the "flux" descriptor
-        attribute for all GSObjects. TODO: Remove?
         """
-        self.flux *= fluxRatio
+        self.SBProfile.scaleFlux(flux_ratio)
+        self.__class__ = GSObject
 
     def setFlux(self, flux):
         """@brief Set the flux of the object.
@@ -222,11 +171,9 @@ class GSObject(object):
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
-
-        N.B. Using this method is now unnecessary due to the presence of the "flux" descriptor
-        attribute for all GSObjects. TODO: Remove?
         """
-        self.flux = flux
+        self.SBProfile.setFlux(flux)
+        self.__class__ = GSObject
 
     def applyTransformation(self, ellipse):
         """@brief Apply a galsim.ellipse.Ellipse distortion to this object.
@@ -246,8 +193,7 @@ class GSObject(object):
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
         self.SBProfile.applyTransformation(ellipse._ellipse)
-        self.SBProfile.__class__ = galsim.SBTransform # update for accuracy
-        self._add_transformation(ellipse) # store transform to ordered list
+        self.__class__ = GSObject
  
     def applyDilation(self, scale):
         """@brief Apply a dilation of the linear size by the given scale.
@@ -264,10 +210,9 @@ class GSObject(object):
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
         """
-        import math
-        old_flux = self.flux
-        self.applyTransformation(galsim.Ellipse(math.log(scale)))
-        self.flux = old_flux # conserve flux
+        old_flux = self.getFlux()
+        self.applyTransformation(galsim.Ellipse(np.log(scale)))
+        self.setFlux(old_flux) # conserve flux
 
     def applyMagnification(self, scale):
         """@brief Apply a magnification by the given scale, scaling the linear size by scale
@@ -285,8 +230,7 @@ class GSObject(object):
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
         """
-        import math
-        self.applyTransformation(galsim.Ellipse(math.log(scale)))
+        self.applyTransformation(galsim.Ellipse(np.log(scale)))
        
     def applyShear(self, *args, **kwargs):
         """@brief Apply a shear to this object, where arguments are either a galsim.shear.Shear, or
@@ -320,8 +264,7 @@ class GSObject(object):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         self.SBProfile.applyRotation(theta)
-        self.SBProfile.__class__ = galsim.SBTransform # update for accuracy
-        self._add_transformation(theta)   # store transform to ordered list
+        self.__class__ = GSObject
 
     def applyShift(self, dx, dy):
         """@brief Apply a (dx, dy) shift to this object.
@@ -360,11 +303,10 @@ class GSObject(object):
         See createMagnified for a version that preserves surface brightness, and thus 
         changes the flux.
         """
-        import math
         ret = self.copy()
-        old_flux = self.flux
-        ret.applyTransformation(galsim.Ellipse(math.log(scale)))
-        ret.flux = old_flux
+        old_flux = self.getFlux()
+        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
+        ret.setFlux(old_flux)
         return ret
 
     def createMagnified(self, scale):
@@ -378,9 +320,8 @@ class GSObject(object):
         is also scaled by a factor of scale^2.
         See createDilated for a version that preserves flux.
         """
-        import math
         ret = self.copy()
-        ret.applyTransformation(galsim.Ellipse(math.log(scale)))
+        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
         return ret
 
     def createSheared(self, *args, **kwargs):
@@ -587,7 +528,7 @@ class GSObject(object):
             uniform_deviate = galsim.UniformDeviate()
 
         # Check that either n_photons is set to something or flux is set to something
-        if n_photons == 0. and self.flux == 1.:
+        if n_photons == 0. and self.getFlux() == 1.:
             import warnings
             msg = "Warning: drawShoot for object with flux == 1, but n_photons == 0.\n"
             msg += "This will only shoot a single photon."
@@ -610,7 +551,6 @@ class GSObject(object):
                 image, n_photons, uniform_deviate, dx, gain, noise, poisson_flux)
 
         return image, added_flux
-
 
 def _parse_sizes(self, label="object", **kwargs):
     """
@@ -643,7 +583,7 @@ def _parse_sizes(self, label="object", **kwargs):
 # The __init__ method is usually simple and all the GSObject methods & attributes are inherited.
 # 
 # All GSObject derived classes now use descriptors to store parameter values, except for Add and
-# Convolve (TODO: look into storing params for compound GSObjects).
+# Convolve.
 #
 class Gaussian(GSObject):
     """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
@@ -663,10 +603,10 @@ class Gaussian(GSObject):
 
     Example:
     >>> gauss_obj = Gaussian(flux=3., sigma=1.)
-    >>> gauss_obj.half_light_radius
+    >>> gauss_obj.getHalfLightRadius
     1.1774100225154747
-    >>> gauss_obj.half_light_radius = 1.
-    >>> gauss_obj.sigma
+    >>> gauss_obj = Gaussian(flux=3, half_light_radius=1.)
+    >>> gauss_obj.getSigma()
     0.8493218002880191
 
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
@@ -681,33 +621,88 @@ class Gaussian(GSObject):
     # Initialization of size parameter descriptors
     sigma = descriptors.SimpleParam(
         name="sigma", group="size", default=None,
-        doc="Scale radius sigma, kept consistent with the other size attributes.")
+        doc="Scale radius sigma for the Gaussian.")
 
-    half_light_radius = descriptors.GetSetScaleParam(
-        name="half_light_radius", root_name="sigma", factor=1.1774100225154747, # sqrt(2ln2)
-        group="size", doc="Half light radius, kept consistent with the other size attributes.")
+    half_light_radius = descriptors.SimpleParam(
+        name="half_light_radius", group="size", default=None,
+        doc="Half light radius for the Gaussian.")
 
-    fwhm = descriptors.GetSetScaleParam(
-        name="fwhm", root_name="sigma", factor=2.3548200450309493, # 2 sqrt(2ln2)
-        group="size", doc="FWHM, kept consistent with the other size attributes.")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-        GSObject.__init__(
-            self, galsim.SBGaussian(sigma=self.sigma, flux=self.flux))
+    fwhm = descriptors.SimpleParam(
+        name="fwhm", group="size", default=None,
+        doc="FWHM for the Gaussian.")
     
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
 
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
+        self._setup_data_store() # Initializes _data dict for storing parameter data, accessed by
+                                 # descriptors defined above, and sets the instance SBProfile = None
 
-        # Use _parse_sizes() to initialize size parameters
+        # Then use _parse_sizes() to initialize size parameters
         _parse_sizes(
             self, label="Gaussian", half_light_radius=half_light_radius, sigma=sigma, fwhm=fwhm)
 
-        # Set the flux
+        # Set the flux descriptor
         self.flux = flux
+
+        # Then initialize the SBProfile
+        GSObject.__init__(
+            self, galsim.SBGaussian(
+                sigma=self.sigma, half_light_radius=self.half_light_radius, fwhm=self.fwhm,
+                flux=self.flux))
+ 
+    def getSigma(self):
+        """@brief Return the sigma scale length for this Gaussian profile.
+        """
+        return self.SBProfile.getSigma()
+    
+    def getFWHM(self):
+        """@brief Return the FWHM for this Gaussian profile.
+        """
+        return self.SBProfile.getSigma() * 2.3548200450309493 # factor = 2 sqrt[2ln(2)]
+ 
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this Gaussian profile.
+        """
+        return self.SBProfile.getSigma() * 1.1774100225154747 # factor = sqrt[2ln(2)]
+
+
+class Gaussian_nodescriptors(GSObject):
+    """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
+
+    For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
+    documentation produced by doxygen.
+
+    Methods
+    -------
+    The Gaussian is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
+    """
+    
+    # Initialization parameters of the object, with type information
+    _params={
+        "sigma": "size", "half_light_radius": "size", "fwhm": "size", "flux": "optional"}
+    
+    # --- Public Class methods ---
+    def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
+        # Initialize the SBProfile
+        GSObject.__init__(
+            self, galsim.SBGaussian(
+                sigma=sigma, half_light_radius=half_light_radius, fwhm=fwhm, flux=flux))
+ 
+    def getSigma(self):
+        """@brief Return the sigma scale length for this Gaussian profile.
+        """
+        return self.SBProfile.getSigma()
+    
+    def getFWHM(self):
+        """@brief Return the FWHM for this Gaussian profile.
+        """
+        return self.SBProfile.getSigma() * 2.3548200450309493 # factor = 2 sqrt[2ln(2)]
+ 
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this Gaussian profile.
+        """
+        return self.SBProfile.getSigma() * 1.1774100225154747 # factor = sqrt[2ln(2)]
 
 
 class Moffat(GSObject):
@@ -1564,17 +1559,14 @@ class RealGalaxy(GSObject):
     real_galaxy_catalog = descriptors.SimpleParam(
         "real_galaxy_catalog", default=None, group="required",
         doc="RealGalaxyCatalog object with basic information about where to find data for each "+
-        "RealGalaxy instance.",
-        ok_if_object_transformed=True) # still gettable/settable for object info/re-init if desired
+        "RealGalaxy instance.") # still gettable/settable for object info/re-init if desired
     
     index = descriptors.SimpleParam(
-        "index", default=None, group="optional", doc="Index of the desired galaxy in the catalog.",
-        ok_if_object_transformed=True) # still gettable/settable for object info/re-init if desired
+        "index", default=None, group="optional", doc="Index of the desired galaxy in the catalog.")
     
     ID = descriptors.SimpleParam(
         "ID", default=None, group="optional",
-        doc="Object ID for the desired galaxy in the catalog.",
-        ok_if_object_transformed=True) # still gettable/settable for object info/re-init if desired
+        doc="Object ID for the desired galaxy in the catalog.")
     
     random = descriptors.SimpleParam(
         "random", default=False, group="optional", doc="Whether galaxy selected at random.")

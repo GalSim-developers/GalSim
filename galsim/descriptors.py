@@ -31,8 +31,7 @@ class SimpleParam(object):
                                          in the RealGalaxy).
     """
 
-    def __init__(self, name, default=None, group="required", doc=None, update_SBProfile_on_set=True,
-                 ok_if_object_transformed=False):
+    def __init__(self, name, default=None, group="required", doc=None):
         self.name = name
         self.default = default
         self.__doc__ = doc
@@ -40,28 +39,20 @@ class SimpleParam(object):
             raise TypeError("group keyword must be one of 'required', 'size' or 'optional'")
         else:
             self.group = group
-        self.update_SBProfile_on_set = update_SBProfile_on_set
-        self.ok_if_object_transformed = ok_if_object_transformed
 	
     def __get__(self, instance, cls):
         if instance is not None:
-            if not self.ok_if_object_transformed and len(instance.transformations) > 0:
-                raise AttributeError(
-                    "This object has been transformed, disabling all non-flux gettable/settable "+
-                    "parameters.")
             # dict.setdefault will return the item in the dict if present, or set and return the
             # default otherwise
             return instance._data.setdefault(self.name, self.default)
         return self
 
     def __set__(self, instance, value):
-        if not self.ok_if_object_transformed and len(instance.transformations) > 0:
-            raise AttributeError(
-                "This object has been transformed, disabling all non-flux gettable/settable "+
-                "parameters.")
-        instance._data[self.name] = value
-        if self.update_SBProfile_on_set:
-            instance._SBProfile = None # Make sure that the ._SBProfile storage is emptied
+        if instance.SBProfile is None:
+            instance._data[self.name] = value
+        else:
+            raise NotImplementedError(
+                "GSObject parameter descriptors do not support reassignment after initialization.")
 
 
 class GetSetFuncParam(object):
