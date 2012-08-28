@@ -163,7 +163,7 @@ def main(argv) :
             psf_list = []
     
             if 'psf' in config :
-                psf = galsim.BuildGSObject(config['psf'], rng, input_cat)
+                psf = galsim.BuildGSObject(config, 'psf', rng, input_cat)
                 #print 'psf = ',psf
                 fft_list.append(psf)
                 phot_list.append(psf)
@@ -171,7 +171,7 @@ def main(argv) :
             t2 = time.time()
     
             if 'pix' in config :
-                pix = galsim.BuildGSObject(config['pix'], rng, input_cat)
+                pix = galsim.BuildGSObject(config, 'pix', rng, input_cat)
             else :
                 pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
             #print 'pix = ',pix
@@ -184,12 +184,13 @@ def main(argv) :
             if 'wcs' in config['image']:
                 wcs = config['image']['wcs']
                 if 'shear' in wcs:
-                    wcs_shear = galsim.BuildShear(wcs['shear'], rng)
+                    wcs_shear = galsim.BuildShear(wcs, 'shear', rng)
                     pix.applyShear(-wcs_shear)
                 else :
                     raise AttributeError("wcs must specify a shear")
     
-            gal = galsim.BuildGSObject(config['gal'], rng, input_cat)
+        
+            gal = galsim.BuildGSObject(config, 'gal', rng, input_cat)
             #print 'gal = ',gal
             fft_list.append(gal)
             phot_list.append(gal)
@@ -215,8 +216,7 @@ def main(argv) :
                 final = galsim.Convolve(phot_list)
                 if 'wcs' in config['image']:
                     final.applyShear(wcs_shear)
-                #print 'final = ',final
-    
+                    
                 if image_xsize is None :
                     # TODO: Change this once issue #82 is done.
                     raise AttributeError(
@@ -233,6 +233,9 @@ def main(argv) :
                 final_psf = galsim.Convolve(psf_list)
                 if 'wcs' in config['image']:
                     final_psf.applyShear(wcs_shear)
+                # Special: if the galaxy was shifted, then also shift the psf 
+                if 'shift' in config['gal']:
+                    final_psf.applyShift(*config['gal']['shift']['current'])
                 psf_im = galsim.ImageF(xsize,ysize)
                 final_psf.draw(psf_im, dx=pixel_scale)
                 all_psf_images += [psf_im]

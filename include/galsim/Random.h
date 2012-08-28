@@ -96,7 +96,7 @@ namespace galsim {
          * Note that microsecond counter is the seed, so BaseDeviates constructed in rapid
          * succession will not be independent. 
          */
-        BaseDeviate() : _rng(new rng_type()) { seedtime(); } 
+        BaseDeviate() : _rng(new rng_type()) { seedtime(); }
 
         /**
          * @brief Construct and seed a new BaseDeviate, using the provided value as seed.
@@ -108,7 +108,7 @@ namespace galsim {
         /**
          * @brief Construct a new BaseDeviate, sharing the random number generator with rhs.
          */
-        BaseDeviate(const BaseDeviate& rhs) : _rng(rhs._rng) {} 
+        BaseDeviate(const BaseDeviate& rhs) : _rng(rhs._rng) {}
 
         /**
          * @brief Destructor

@@ -345,7 +345,10 @@ def Script2():
                 # Determine the ellipticity to use for this galaxy.
                 ellip = 1
                 while (ellip > gal_ellip_max):
-                    ellip = math.fabs(gd())
+                    # Don't do `ellip = math.fabs(gd())`
+                    # Python basically implements this as a macro, so gd() is called twice!
+                    val = gd()
+                    ellip = math.fabs(val)
 
                 # Apply a random orientation:
                 beta = rng() * 2. * math.pi * galsim.radians
