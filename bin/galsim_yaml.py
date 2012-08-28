@@ -76,9 +76,48 @@ def main(argv) :
                 input_cat = galsim.io.ReadInputCat(config,full_name)
                 logger.info('Read %d objects from catalog',input_cat.nobjects)
                 nobjects = input_cat.nobjects
+ 
+        # We can handle not having an output field.  But it will be convenient
+        # if it exists and is empty.
+        if 'output' not in config :
+            config['output'] = {}
+        #print 'config[output] = ',config['output']
+    
+        # We're going to treat output as a list (for multiple file outputs if desired).
+        # If it isn't a list, make it one.
+        if not isinstance(config['output'],list):
+            config['output'] = [ config['output'] ]
+        #print 'config[output] => ',config['output']
+    
+        # If the output includes either data_cube or tiled_image then all images need
+        # to be the same size.  We will use the first image's size for all others.
+        # This just decides whether this is necessary or not.
+        same_sized_images = False
+        make_psf_images = False
+        for output in config['output'] :
+            if 'type' in output and (
+                    output['type'] == 'data_cube' or output['type'] == 'tiled_image') :
+                same_sized_images = True
+                logger.info('All images must be the same size, so will use the automatic' +
+                            'size of the first image')
+            if 'psf' in output:
+                make_psf_images = True
+    
+            # If the output is a tiled_image, then we can figure out nobjects from that:
+            if 'type' in output and output['type'] == 'tiled_image':
+                if not all (k in output for k in ['nx_tiles','ny_tiles']):
+                    raise AttributeError(
+                        "parameters nx_tiles and ny_tiles required for tiled_image output")
+                nx_tiles = output['nx_tiles']
+                ny_tiles = output['ny_tiles']
+                nobjects = nx_tiles * ny_tiles
 
-        # If specified, set the number of objects to draw (default = 1)
-        nobjects = int(config.get('nobjects',nobjects))
+        # If specified, set the number of objects to draw.
+        # Of course, nobjects might already be set above, in which case the
+        # explicit value here will supersede whatever calculation we may have done.
+        # And if nothing else sets nbojects, the default is nobjects=1.
+        if 'nobjects' in config:
+            nobjects = config['nobjects']
         logger.info('nobjects = %d',nobjects)
     
         # We'll be accessing things from the image field a lot.  So instead of constantly
@@ -109,33 +148,7 @@ def main(argv) :
         # Also, set the pixel scale if desired (Default is 1.0)
         pixel_scale = float(config['image'].get('pixel_scale',1.0))
         logger.info('Using pixelscale = %f',pixel_scale)
-    
-        # We can handle not having an output field.  But as with image, it will be convenient
-        # if it exists and is empty.
-        if 'output' not in config :
-            config['output'] = {}
-        #print 'config[output] = ',config['output']
-    
-        # We're going to treat output as a list (for multiple file outputs if desired).
-        # If it isn't a list, make it one.
-        if not isinstance(config['output'],list):
-            config['output'] = [ config['output'] ]
-        #print 'config[output] => ',config['output']
-    
-        # If the output includes either data_cube or tiled_stamps then all images need
-        # to be the same size.  We will use the first image's size for all others.
-        # This just decides whether this is necessary or not.
-        same_sized_images = False
-        make_psf_images = False
-        for output in config['output'] :
-            if 'type' in output and nobjects > 1 and (
-                    output['type'] == 'data_cube' or output['type'] == 'tiled_stamps') :
-                same_sized_images = True
-                logger.info('All images must be the same size, so will use the automatic' +
-                            'size of the first image')
-            if 'psf' in output:
-                make_psf_images = True
-    
+
         # Build the images
         all_images = []
         all_psf_images = []
@@ -150,7 +163,7 @@ def main(argv) :
             psf_list = []
     
             if 'psf' in config :
-                psf = galsim.BuildGSObject(config['psf'], input_cat, logger)
+                psf = galsim.BuildGSObject(config['psf'], rng, input_cat)
                 #print 'psf = ',psf
                 fft_list.append(psf)
                 phot_list.append(psf)
@@ -158,7 +171,7 @@ def main(argv) :
             t2 = time.time()
     
             if 'pix' in config :
-                pix = galsim.BuildGSObject(config['pix'], input_cat, logger)
+                pix = galsim.BuildGSObject(config['pix'], rng, input_cat)
             else :
                 pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
             #print 'pix = ',pix
@@ -171,12 +184,12 @@ def main(argv) :
             if 'wcs' in config['image']:
                 wcs = config['image']['wcs']
                 if 'shear' in wcs:
-                    wcs_shear = galsim.BuildShear(wcs['shear'])
+                    wcs_shear = galsim.BuildShear(wcs['shear'], rng)
                     pix.applyShear(-wcs_shear)
                 else :
                     raise AttributeError("wcs must specify a shear")
     
-            gal = galsim.BuildGSObject(config['gal'], input_cat, logger)
+            gal = galsim.BuildGSObject(config['gal'], rng, input_cat)
             #print 'gal = ',gal
             fft_list.append(gal)
             phot_list.append(gal)
@@ -191,7 +204,7 @@ def main(argv) :
     
                 if image_xsize is None :
                     im = final.draw(dx=pixel_scale)
-                    # If the output includes either data_cube or tiled_stamps then all images need
+                    # If the output includes either data_cube or tiled_image then all images need
                     # to be the same size.  Use the first image's size for all others.
                     if same_sized_images :
                         image_xsize, image_ysize = im.array.shape
@@ -308,7 +321,7 @@ def main(argv) :
                     if 'dir' in output:
                         psf_file_name = os.path.join(output['dir'],psf_file_name)
                 else:
-                    raise AttributeError(
+                    raise NotImplementedError(
                         "Only the file_name version of psf output is currently implemented.")
     
             # Each kind of output works slightly differently
@@ -326,9 +339,6 @@ def main(argv) :
                     if psf_file_name:
                         all_psf_images[0].write(psf_file_name, clobber=True)
                         logger.info('Wrote psf image to fits file %r',psf_file_name)
-                    else:
-                        raise AttributeError(
-                            "Only the file_name version of psf output is currently implemented.")
             elif output_type == 'multi_fits' :
                 galsim.fits.writeMulti(all_images, file_name, clobber=True)
                 logger.info('Wrote images to multi-extension fits file %r',file_name)
@@ -347,9 +357,41 @@ def main(argv) :
                     if psf_file_name:
                         galsim.fits.writeCube(all_psf_images, psf_file_name, clobber=True)
                         logger.info('Wrote psf images to fits data cube %r',psf_file_name)
-                    else:
-                        raise AttributeError(
-                            "Only the file_name version of psf output is currently implemented.")
+            elif output_type == 'tiled_image' :
+                if not all (k in output for k in ['nx_tiles','ny_tiles']):
+                    raise AttributeError(
+                        "parameters nx_tiles and ny_tiles required for tiled_image output")
+                nx_tiles = output['nx_tiles']
+                ny_tiles = output['ny_tiles']
+                border = output.get("border",0)
+                full_xsize = (image_xsize + border) * nx_tiles
+                full_ysize = (image_ysize + border) * ny_tiles
+                full_image = galsim.ImageF(full_xsize,full_ysize)
+                full_image.setOrigin(0,0) # For convenience, switch to C indexing convention.
+                if 'psf' in output:
+                    full_psf_image = galsim.ImageF(full_xsize,full_ysize)
+                    full_psf_image.setOrigin(0,0) 
+                k = 0
+                for ix in range(nx_tiles):
+                    for iy in range(ny_tiles):
+                        if k < len(all_images):
+                            xmin = ix * (image_xsize + border)
+                            xmax = xmin + image_xsize-1
+                            ymin = iy * (image_ysize + border)
+                            ymax = ymin + image_ysize-1
+                            b = galsim.BoundsI(xmin,xmax,ymin,ymax)
+                            full_image[b] = all_images[k]
+                            if 'psf' in output:
+                                full_psf_image[b] = all_psf_images[k]
+                            k = k+1
+                full_image.write(file_name, clobber=True)
+                logger.info('Wrote tiled image to fits file %r',file_name)
+                if 'psf' in output:
+                    if psf_file_name:
+                        full_psf_image.write(psf_file_name, clobber=True)
+                        logger.info('Wrote tled psf images to fits file %r',psf_file_name)
+
+
             else :
                 raise AttributeError(
                     "Invalid type for output \n" +

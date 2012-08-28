@@ -9,8 +9,8 @@ BasicDemo.py 2
 BasicDemo.py 3
 ../bin/galsim_yaml.py BD3.yaml
 
-MultiObjectDemo.py 2
-../bin/galsim_yaml.py MOD2.yaml
+MultiObjectDemo.py 1
+../bin/galsim_yaml.py MOD1.yaml
 
 echo 'Checking diffs: (No output means success)'
 

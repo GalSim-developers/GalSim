@@ -160,15 +160,15 @@ def Script1():
         t1 = time.time()
         #logger.info('Image %d',input_cat.current)
 
-        psf = galsim.BuildGSObject(config.psf, input_cat, logger)
+        psf = galsim.BuildGSObject(config.psf, rng=rng, input_cat=input_cat)
         #logger.info('   Made PSF profile')
         t2 = time.time()
 
-        pix = galsim.BuildGSObject(config.pix, input_cat, logger)
+        pix = galsim.BuildGSObject(config.pix, rng=rng, input_cat=input_cat)
         #logger.info('   Made pixel profile')
         t3 = time.time()
 
-        gal = galsim.BuildGSObject(config.gal, input_cat, logger)
+        gal = galsim.BuildGSObject(config.gal, rng=rng, input_cat=input_cat)
         #logger.info('   Made galaxy profile')
         t4 = time.time()
 
@@ -243,7 +243,6 @@ def Script2():
     psf_trunc = 2.*psf_fwhm         # arcsec (=pixels)
     psf_e1 = -0.019                 #
     psf_e2 = -0.007                 #
-    psf_centroid_shift = 1.0        # arcsec (=pixels)
 
     gal_file_name = os.path.join('output','g08_gal.fits')
     gal_signal_to_noise = 200       # Great08 "LowNoise" run
@@ -251,11 +250,12 @@ def Script2():
     # Great08 mixed pure bulge and pure disk for its LowNoise run.
     # We're just doing disks to make things simpler.
     gal_resolution = 1.4            # r_obs / r_psf (use r = half_light_radius)
-    gal_centroid_shift = 1.0        # arcsec (=pixels)
     gal_ellip_rms = 0.2             # using "shear" definition of ellipticity.
     gal_ellip_max = 0.6             #
     gal_g1 = 0.013                  #
     gal_g2 = -0.008                 #
+
+    centroid_shift = 1.0            # arcsec (=pixels)
 
     logger.info('Starting multi-object script 1 using:')
     logger.info('    - image with %d x %d postage stamps',nx_stamps,ny_stamps)
@@ -263,17 +263,18 @@ def Script2():
     logger.info('    - Moffat PSF (beta = %.1f, FWHM = %.2f, trunc = %.2f),',
             psf_beta,psf_fwhm,psf_trunc)
     logger.info('    - PSF ellip = (%.3f,%.3f)',psf_e1,psf_e2)
-    logger.info('    - PSF centroid shifts up to = %.2f pixels',psf_centroid_shift)
     logger.info('    - Sersic galaxies (n = %.1f)',gal_n)
     logger.info('    - Resolution (r_obs / r_psf) = %.2f',gal_resolution)
     logger.info('    - Ellipticities have rms = %.1f, max = %.1f',
             gal_ellip_rms, gal_ellip_max)
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
+    logger.info('    - Centroid shifts up to = %.2f pixels',centroid_shift)
 
 
     # Initialize the random number generator we will be using.
     rng = galsim.UniformDeviate(random_seed)
+
 
     # Define the PSF profile
     psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm, trunc=psf_trunc)
@@ -287,48 +288,6 @@ def Script2():
     final_psf = galsim.Convolve(psf,pix)
     logger.info('Made final_psf profile')
 
-    # This profile is placed with different noise realizations at each postage
-    # stamp in the psf image.
-    psf_image = galsim.ImageF(nx_pixels * nx_stamps , ny_pixels * ny_stamps)
-    psf_image.setOrigin(0,0) # For my convenience -- switch to C indexing convention.
-    psf_centroid_shift_sq = psf_centroid_shift**2
-    for ix in range(nx_stamps):
-        for iy in range(ny_stamps):
-            # The -2's in the next line rather than -1 are to provide a border of
-            # 1 pixel between postage stamps
-            b = galsim.BoundsI(ix*nx_pixels , (ix+1)*nx_pixels -2,
-                               iy*ny_pixels , (iy+1)*ny_pixels -2)
-            sub_image = psf_image[b]
-
-            # apply a random centroid shift:
-            rsq = 2 * psf_centroid_shift_sq
-            while (rsq > psf_centroid_shift_sq):
-                dx = (2*rng()-1) * psf_centroid_shift
-                dy = (2*rng()-1) * psf_centroid_shift
-                rsq = dx**2 + dy**2
-
-            this_psf = final_psf.createShifted(dx,dy)
-
-            # No noise on PSF images.  Just draw it as is.
-            this_psf.draw(sub_image, dx=pixel_scale)
-            if ix==0 and iy==0:
-                # for first instance, measure moments
-                psf_shape = sub_image.FindAdaptiveMom()
-                g_to_e = psf_shape.observed_shape.getG() / psf_shape.observed_shape.getE()
-                logger.info('Measured best-fit elliptical Gaussian for first PSF image: ')
-                logger.info('  g1, g2, sigma = %7.4f, %7.4f, %7.4f (pixels)',
-                            g_to_e*psf_shape.observed_shape.getE1(),
-                            g_to_e*psf_shape.observed_shape.getE2(), psf_shape.moments_sigma)
-
-            x = b.center().x
-            y = b.center().y
-            logger.info('PSF (%d,%d): center = (%.0f,%0.f)',ix,iy,x,y)
-
-    logger.info('Done making images of PSF postage stamps')
-
-    # Now write the image to disk.
-    psf_image.write(psf_file_name, clobber=True)
-    logger.info('Wrote PSF file %s',psf_file_name)
 
     # Define the galaxy profile
 
@@ -363,16 +322,22 @@ def Script2():
     # at each postage stamp in the gal image.
     gal_image = galsim.ImageF(nx_pixels * nx_stamps , ny_pixels * ny_stamps)
     gal_image.setOrigin(0,0) # For my convenience -- switch to C indexing convention.
-    gal_centroid_shift_sq = gal_centroid_shift**2
+    psf_image = galsim.ImageF(nx_pixels * nx_stamps , ny_pixels * ny_stamps)
+    psf_image.setOrigin(0,0) # For my convenience -- switch to C indexing convention.
+
+    centroid_shift_sq = centroid_shift**2
+
     first_in_pair = True  # Make pairs that are rotated by 45 degrees
     gd = galsim.GaussianDeviate(rng, sigma=gal_ellip_rms)
+
     for ix in range(nx_stamps):
         for iy in range(ny_stamps):
             # The -2's in the next line rather than -1 are to provide a border of
             # 1 pixel between postage stamps
             b = galsim.BoundsI(ix*nx_pixels , (ix+1)*nx_pixels -2,
                                iy*ny_pixels , (iy+1)*ny_pixels -2)
-            sub_image = gal_image[b]
+            sub_gal_image = gal_image[b]
+            sub_psf_image = psf_image[b]
 
             # Great08 randomized the locations of the two galaxies in each pair,
             # but for simplicity, we just do them in sequential postage stamps.
@@ -383,11 +348,11 @@ def Script2():
                     ellip = math.fabs(gd())
 
                 # Apply a random orientation:
-                theta = rng() * 2. * math.pi * galsim.radians
+                beta = rng() * 2. * math.pi * galsim.radians
                 first_in_pair = False
             else:
-                #theta += math.pi/2 * galsim.radians
-                theta += math.pi/2 * galsim.radians
+                #beta += math.pi/2 * galsim.radians
+                beta += math.pi/2 * galsim.radians
                 first_in_pair = True
 
             # Make a new copy of the galaxy with an applied e1/e2-type distortion 
@@ -398,36 +363,53 @@ def Script2():
             this_gal.applyShear(g1=gal_g1, g2=gal_g2)
 
             # Apply a random centroid shift:
-            rsq = 2 * gal_centroid_shift_sq
-            while (rsq > gal_centroid_shift_sq):
-                dx = (2*rng()-1) * gal_centroid_shift
-                dy = (2*rng()-1) * gal_centroid_shift
+            rsq = 2 * centroid_shift_sq
+            while (rsq > centroid_shift_sq):
+                dx = (2*rng()-1) * centroid_shift
+                dy = (2*rng()-1) * centroid_shift
                 rsq = dx**2 + dy**2
 
             this_gal.applyShift(dx,dy)
+            this_psf = final_psf.createShifted(dx,dy)
 
             # Make the final image, convolving with psf and pixel
             final_gal = galsim.Convolve(this_gal,psf,pix)
 
             # Draw the image
-            final_gal.draw(sub_image, dx=pixel_scale)
+            final_gal.draw(sub_gal_image, dx=pixel_scale)
 
             # Add Poisson noise
-            sub_image += sky_level
+            sub_gal_image += sky_level
             # The default CCDNoise has gain=1 and read_noise=0 if
             # these keyword args are not set, giving Poisson noise
             # according to the image pixel count values.
-            sub_image.addNoise(galsim.CCDNoise(rng))
-            sub_image -= sky_level
+            sub_gal_image.addNoise(galsim.CCDNoise(rng))
+            sub_gal_image -= sky_level
+
+            # Draw the PSF image
+            # No noise on PSF images.  Just draw it as is.
+            this_psf.draw(sub_psf_image, dx=pixel_scale)
+
+            # for first instance, measure moments
+            if ix==0 and iy==0:
+                psf_shape = sub_psf_image.FindAdaptiveMom()
+                g_to_e = psf_shape.observed_shape.getG() / psf_shape.observed_shape.getE()
+                logger.info('Measured best-fit elliptical Gaussian for first PSF image: ')
+                logger.info('  g1, g2, sigma = %7.4f, %7.4f, %7.4f (pixels)',
+                            g_to_e*psf_shape.observed_shape.getE1(),
+                            g_to_e*psf_shape.observed_shape.getE2(), psf_shape.moments_sigma)
 
             x = b.center().x
             y = b.center().y
-            logger.info('Galaxy (%d,%d): center = (%.0f,%0.f)  (e,theta) = (%.4f,%.3f)',
-                    ix,iy,x,y,ellip,theta)
+            logger.info('Galaxy (%d,%d): center = (%.0f,%0.f)  (e,beta) = (%.4f,%.3f)',
+                    ix,iy,x,y,ellip,beta/galsim.radians)
 
-    logger.info('Done making images of Galaxy postage stamps')
+    logger.info('Done making images of postage stamps')
 
-    # Now write the image to disk.
+    # Now write the images to disk.
+    psf_image.write(psf_file_name, clobber=True)
+    logger.info('Wrote PSF file %s',psf_file_name)
+
     gal_image.write(gal_file_name, clobber=True)
     logger.info('Wrote image to %r',gal_file_name)  # using %r adds quotes around filename for us
 
