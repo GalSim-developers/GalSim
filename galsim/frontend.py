@@ -73,6 +73,7 @@ def BuildGSObject(config, key, rng=None, input_cat=None):
         else:  # type in ("Convolution", "Convolve"):
             gsobject = galsim.Convolve(gsobjects)
         #print 'After built gsobject = ',gsobject
+
         # Allow the setting of the overall flux of the object. Individual component fluxes
         # retain the ratio of their own specified flux parameter settings.
         if "flux" in ck:
@@ -80,9 +81,6 @@ def BuildGSObject(config, key, rng=None, input_cat=None):
             gsobject.setFlux(flux)
             safe = safe and safe1
         #print 'After set flux, gsobject = ',gsobject
-        gsobject, safe1 = _BuildEllipRotateShearShiftObject(gsobject, ck, rng, input_cat)
-        safe = safe and safe1
-        #print 'After BuildEllipRotateShearShiftObject, gsobject = ',gsobject
 
     elif type == "Pixel": # BR: under duress ;)
         # Note we do not shear, shift, rotate etc. Pixels, such params raise an Exception.
@@ -100,25 +98,21 @@ def BuildGSObject(config, key, rng=None, input_cat=None):
                                      "SquarePixel objects.")
         gsobject, safe = _BuildSquarePixel(ck, rng, input_cat)
 
-    # Else Build object from primary GSObject keys in galsim.object_param_dict
     elif type in op_dict: 
+        # Build object from primary GSObject keys in galsim.object_param_dict
         gsobject, safe = _BuildSimple(ck, rng, input_cat)
-        gsobject, safe1 = _BuildEllipRotateShearShiftObject(gsobject, ck, rng, input_cat)
-        safe = safe and safe1
+
     else:
         raise NotImplementedError("Unrecognised type = "+str(type))
 
-    # TODO: For efficiency, I think we'll want to be able to return the same actual gsobject
-    # as previous times through this process when we know nothing is different.
-    # e.g. We'll want to not re-create an OpticalPSF object if all the parameters are 
-    # the same, since the first OpticalPSF is rather slow.  
-    # However, I'm currently just storing the current value in the config.  I haven't
-    # implemented a way to mark that it's safe to use next time.
-    # I'm envisioning the use of this as something like this at the beginning of this function:
-    #   if 'current' in ck and ck['safe']:
-    #       return ck['current']
-    # where a safe bool variable is returned with the gsobject from the various _Build
-    # functions, which is also stored as ck['safe'] when we set ck['current'].
+    try : 
+        ck['saved_re'] = gsobject.half_light_radius
+    except :
+        pass
+
+    gsobject, safe1 = _BuildEllipRotateShearShiftObject(gsobject, ck, rng, input_cat)
+    safe = safe and safe1
+
     ck['current'] = gsobject
     ck['safe'] = safe
     return gsobject, safe

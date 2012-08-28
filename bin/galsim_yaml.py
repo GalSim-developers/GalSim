@@ -11,7 +11,6 @@ import galsim
 import yaml
 import logging
 import time
-import json
 
 def main(argv) :
 
@@ -163,17 +162,20 @@ def main(argv) :
             psf_list = []
     
             if 'psf' in config :
-                psf = galsim.BuildGSObject(config, 'psf', rng, input_cat)[0]
+                psf, safe_psf = galsim.BuildGSObject(config, 'psf', rng, input_cat)
                 #print 'psf = ',psf
                 fft_list.append(psf)
                 phot_list.append(psf)
                 psf_list.append(psf)
+            else :
+                safe_psf = True
             t2 = time.time()
     
             if 'pix' in config :
-                pix = galsim.BuildGSObject(config, 'pix', rng, input_cat)[0]
+                pix, safe_pix = galsim.BuildGSObject(config, 'pix', rng, input_cat)
             else :
                 pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
+                safe_pix = True
             #print 'pix = ',pix
             fft_list.append(pix)
             psf_list.append(pix)
@@ -184,18 +186,38 @@ def main(argv) :
             if 'wcs' in config['image']:
                 wcs = config['image']['wcs']
                 if 'shear' in wcs:
-                    wcs_shear = galsim.BuildShear(wcs, 'shear', rng)[0]
+                    wcs_shear, safe_wcs = galsim.BuildShear(wcs, 'shear', rng)
                     pix.applyShear(-wcs_shear)
                 else :
                     raise AttributeError("wcs must specify a shear")
-    
         
-            gal = galsim.BuildGSObject(config, 'gal', rng, input_cat)[0]
-            #print 'gal = ',gal
-            fft_list.append(gal)
-            phot_list.append(gal)
+            if 'gal' in config:
+                # If we are specifying the size according to a resolution, then we 
+                # need to get the PSF's half_light_radius.
+                if 'resolution' in config['gal']:
+                    if not 'psf' in config:
+                        raise AttributeError(
+                            "Cannot use gal.resolution if no psf is set.")
+                    if not 'saved_re' in config['psf']:
+                        raise AttributeError(
+                            'Cannot use gal.resolution with psf.type = %s'%config['psf']['type'])
+                    psf_re = config['psf']['saved_re']
+                    resolution = config['gal']['resolution']
+                    gal_re = resolution * psf_re
+                    config['gal']['half_light_radius'] = gal_re
+
+                gal, safe_gal = galsim.BuildGSObject(config, 'gal', rng, input_cat)
+                #print 'gal = ',gal
+                fft_list.append(gal)
+                phot_list.append(gal)
+            else :
+                safe_gal = True
             t4 = time.time()
-    
+
+            # Check that we have at least gal or psf.
+            if len(phot_list) == 0:
+                raise AttributeError("At least one of gal or psf must be specified in config.")
+
             draw_method = config['image'].get('draw_method','fft')
             if draw_method == 'fft' :
                 final = galsim.Convolve(fft_list)
@@ -212,6 +234,68 @@ def main(argv) :
                 else:
                     im = galsim.ImageF(image_xsize, image_ysize)
                     final.draw(im, dx=pixel_scale)
+
+                if 'signal_to_noise' in config['gal']:
+                    import math
+                    import numpy
+                    if 'flux' in config['gal']:
+                        raise AttributeError(
+                            'Only one of signal_to_noise or flux may be specified for gal')
+                    if 'noise' not in config['image'] : 
+                        raise AttributeError(
+                            'Need to specify noise level when using gal.signal_to_noise')
+                        
+                    # Now determine what flux we need to get our desired S/N
+                    # There are lots of definitions of S/N, but here is the one used by Great08
+                    # We use a weighted integral of the flux:
+                    # S = sum W(x,y) I(x,y) / sum W(x,y)
+                    # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+                    # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
+                    # Var(I(x,y)) = var
+                    # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
+                    # Then a few things cancel and we find that
+                    # S/N = sqrt( sum I(x,y)^2 / var )
+
+                    # Get the variance from noise:
+                    noise = config['image']['noise']
+                    if not 'type' in noise :
+                        raise AttributeError("noise needs a type to be specified")
+                    if noise['type'] == 'Poisson' :
+                        var = float(noise['sky_level'])
+                    elif noise['type'] == 'Gaussian' :
+                        if 'sigma' in noise:
+                            sigma = noise['sigma']
+                            var = sigma * sigma
+                        elif 'variance' in noise :
+                            var = math.sqrt(noise['variance'])
+                        else :
+                            raise AttributeError(
+                                "Either sigma or variance need to be specified for Gaussian noise")
+                    elif noise['type'] == 'CCDNoise' :
+                        var = float(noise['sky_level'])
+                        gain = float(noise.get("gain",1.0))
+                        var /= gain
+                        read_noise = float(noise.get("read_noise",0.0))
+                        var += read_noise * read_noise
+                    else :
+                        raise AttributeError("Invalid type %s for noise",noise['type'])
+
+                    if var <= 0.:
+                        raise ValueError("gal.signal_to_noise requires var(noise) > 0.")
+ 
+                    sn_meas = math.sqrt( numpy.sum(im.array**2) / var )
+                    # Now we rescale the flux to get our desired S/N
+                    flux = float(config['gal']['signal_to_noise']) / sn_meas
+                    im *= flux
+                    #print 'sn_meas = ',sn_meas,' flux = ',flux
+
+                    if safe_gal and safe_psf and safe_pix:
+                        # If the profile won't be changing, then we can store this 
+                        # result for future passes.
+                        config['gal']['current'] *= flux
+                        config['gal']['flux'] = flux
+                        del config['gal']['signal_to_noise']
+
             elif draw_method == 'phot' :
                 final = galsim.Convolve(phot_list)
                 if 'wcs' in config['image']:
@@ -224,9 +308,13 @@ def main(argv) :
                 else:
                     im = galsim.ImageF(image_xsize, image_ysize)
                     final.drawShoot(im, dx=pixel_scale)
+
+                if 'signal_to_noise' in config['gal']:
+                    raise NotImplementedError(
+                        "gal.signal_to_noise not implemented for draw_method = phot")
+
             else :
-                raise AttributeError(
-                    "Unknown draw_method.  Valid values are fft or phot.")
+                raise AttributeError("Unknown draw_method.")
             xsize, ysize = im.array.shape
 
             if make_psf_images:
@@ -245,9 +333,7 @@ def main(argv) :
             if 'noise' in config['image'] : 
                 noise = config['image']['noise']
                 if not 'type' in noise :
-                    raise AttributeError(
-                        "noise needs a type to be specified \n" +
-                        "Valid values are Poisson or Gaussian.")
+                    raise AttributeError("noise needs a type to be specified")
                 if noise['type'] == 'Poisson' :
                     sky_level = float(noise['sky_level'])
                     im += sky_level
@@ -258,6 +344,7 @@ def main(argv) :
                     if 'sigma' in noise:
                         sigma = noise['sigma']
                     elif 'variance' in noise :
+                        import math
                         sigma = math.sqrt(noise['variance'])
                     else :
                         raise AttributeError(
@@ -274,9 +361,7 @@ def main(argv) :
                     #logger.info('   Added CCD noise with sky_level = %f, ' +
                                 #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
                 else :
-                    raise AttributeError(
-                        "Invalid type %s for noise \n" +
-                        "Valid values are Poisson Gaussian.")
+                    raise AttributeError("Invalid type %s for noise",noise['type'])
             t6 = time.time()
     
             # Store that into the list of all images
@@ -393,12 +478,8 @@ def main(argv) :
                     if psf_file_name:
                         full_psf_image.write(psf_file_name, clobber=True)
                         logger.info('Wrote tled psf images to fits file %r',psf_file_name)
-
-
             else :
-                raise AttributeError(
-                    "Invalid type for output \n" +
-                    "Valid values are multi_fits or data_cube")
+                raise AttributeError("Invalid type for output: %s",output_type)
 
     
 if __name__ == "__main__":

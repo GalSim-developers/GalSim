@@ -249,7 +249,9 @@ def Script2():
     gal_n = 1                       # Use n=1 for "disk" type
     # Great08 mixed pure bulge and pure disk for its LowNoise run.
     # We're just doing disks to make things simpler.
-    gal_resolution = 1.4            # r_obs / r_psf (use r = half_light_radius)
+    gal_resolution = 0.98           # r_gal / r_psf (use r = half_light_radius)
+                                    # This corresponds to a resolute = 1.4 in the Great08
+                                    # definition of r_obs / r_psf
     gal_ellip_rms = 0.2             # using "shear" definition of ellipticity.
     gal_ellip_max = 0.6             #
     gal_g1 = 0.013                  #
@@ -264,7 +266,7 @@ def Script2():
             psf_beta,psf_fwhm,psf_trunc)
     logger.info('    - PSF ellip = (%.3f,%.3f)',psf_e1,psf_e2)
     logger.info('    - Sersic galaxies (n = %.1f)',gal_n)
-    logger.info('    - Resolution (r_obs / r_psf) = %.2f',gal_resolution)
+    logger.info('    - Resolution (r_gal / r_psf) = %.2f',gal_resolution)
     logger.info('    - Ellipticities have rms = %.1f, max = %.1f',
             gal_ellip_rms, gal_ellip_max)
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
@@ -292,30 +294,10 @@ def Script2():
     # Define the galaxy profile
 
     # First figure out the size we need from the resolution
-    # great08 resolution was defined as Rgp / Rp where Rp is the hlr of the PSF
-    # and Rgp is the hlr of the convolved galaxy.
-    # We make the approximation here that the hlr adds in quadrature during the
-    # convolution, so we can get the unconvolved size as:
-    # Rg^2 = Rgp^2 - Rp^2 = Rp^2 * (resolution^2 - 1)
-    gal_re = psf_re * math.sqrt( gal_resolution**2 - 1)
+    gal_re = psf_re * gal_resolution
 
     # Make the galaxy profile starting with flux = 1.
     gal = galsim.Sersic(gal_n, flux=1., half_light_radius=gal_re)
-
-    # Now determine what flux we need to get our desired S/N
-    # There are lots of definitions of S/N, but here is the one used by Great08
-    # We use a weighted integral of the flux:
-    # S = sum W(x,y) I(x,y) / sum W(x,y)
-    # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
-    # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
-    # Var(I(x,y)) = sky_level
-    # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
-    # Then a few things cancel and we find that
-    # S/N = sqrt( sum I(x,y)^2 / sky_level )
-    tmp_gal_image = gal.draw(dx = pixel_scale)
-    sn_meas = math.sqrt( numpy.sum(tmp_gal_image.array**2) / sky_level )
-    # Now we rescale the flux to get our desired S/N
-    gal *= gal_signal_to_noise / sn_meas
     logger.info('Made galaxy profile')
 
     # This profile is placed with different orientations and noise realizations
@@ -380,6 +362,21 @@ def Script2():
 
             # Draw the image
             final_gal.draw(sub_gal_image, dx=pixel_scale)
+
+            # Now determine what we need to do to get our desired S/N
+            # There are lots of definitions of S/N, but here is the one used by Great08
+            # We use a weighted integral of the flux:
+            # S = sum W(x,y) I(x,y) / sum W(x,y)
+            # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+            # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
+            # Var(I(x,y)) = sky_level
+            # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
+            # Then a few things cancel and we find that
+            # S/N = sqrt( sum I(x,y)^2 / sky_level )
+            sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level )
+            flux = gal_signal_to_noise / sn_meas
+            # Now we rescale the flux to get our desired S/N
+            sub_gal_image *= flux
 
             # Add Poisson noise
             sub_gal_image += sky_level
