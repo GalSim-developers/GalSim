@@ -160,15 +160,15 @@ def Script1():
         t1 = time.time()
         #logger.info('Image %d',input_cat.current)
 
-        psf = galsim.BuildGSObject(config.psf, rng=rng, input_cat=input_cat)
+        psf = galsim.BuildGSObject(config.psf, rng=rng, input_cat=input_cat)[0]
         #logger.info('   Made PSF profile')
         t2 = time.time()
 
-        pix = galsim.BuildGSObject(config.pix, rng=rng, input_cat=input_cat)
+        pix = galsim.BuildGSObject(config.pix, rng=rng, input_cat=input_cat)[0]
         #logger.info('   Made pixel profile')
         t3 = time.time()
 
-        gal = galsim.BuildGSObject(config.gal, rng=rng, input_cat=input_cat)
+        gal = galsim.BuildGSObject(config.gal, rng=rng, input_cat=input_cat)[0]
         #logger.info('   Made galaxy profile')
         t4 = time.time()
 

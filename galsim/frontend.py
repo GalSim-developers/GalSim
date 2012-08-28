@@ -9,6 +9,10 @@ def BuildGSObject(config, key, rng=None, input_cat=None):
     @param key        A configuration galsim.Config instance read in using galsim.config.load().
     @param rng        A random number generator to use when required
     @param input_cat  An input catalog read in using galsim.io.ReadInputCat().
+
+    @returns gsobject, safe 
+        gsobject is the built object 
+        safe is a bool that says whether it is safe to use this object again next time
     """
     # For backwards compatibility:  If config is an AttributeDict, then use its __dict__
     if isinstance(config,galsim.AttributeDict):
@@ -36,7 +40,11 @@ def BuildGSObject(config, key, rng=None, input_cat=None):
         raise AttributeError("type attribute required in config.%s"%key)
     type = ck['type']
 
-    # Then build the object depending on type, and shift/shear etc. if supported for that type
+    # If we have previously saved an object and marked it as safe, then use it.
+    if 'current' in ck and ck['safe']:
+        return ck['current'], True
+
+    # Otherwise build the object depending on type, shift/shear, etc. if supported for that type
     #print 'config.%s.type = %s'%(key,ck['type'])
     if type in ("Sum", "Convolution", "Add", "Convolve"):   # Compound object
         gsobjects = []
@@ -45,6 +53,7 @@ def BuildGSObject(config, key, rng=None, input_cat=None):
         items = ck['items']
         if not isinstance(items,list):
             raise AttributeError("items entry for config."+type+" entry is not a list.")
+        safe = True
         for i in range(len(items)):
             # The way we parse the configuration items requires that we be able to 
             # update the config dictionary items with a line like config[key] = new_value
@@ -55,7 +64,9 @@ def BuildGSObject(config, key, rng=None, input_cat=None):
             # Anyway, the upshot of all this is that items[i] must have a key value
             # so we can do this.  But normally it doesn't.  So we have to add a level
             # to the dictionary here if we haven't done so yet.
-            gsobjects.append(BuildGSObject(items, i, rng, input_cat))
+            gsobject, safe1 = BuildGSObject(items, i, rng, input_cat)
+            safe = safe and safe1
+            gsobjects.append(gsobject)
         #print 'After built component items for ',type
         if type in ("Sum", "Add"):
             gsobject = galsim.Add(gsobjects)
@@ -65,9 +76,12 @@ def BuildGSObject(config, key, rng=None, input_cat=None):
         # Allow the setting of the overall flux of the object. Individual component fluxes
         # retain the ratio of their own specified flux parameter settings.
         if "flux" in ck:
-            gsobject.setFlux(_GetParamValue(ck, "flux", rng, input_cat))
+            flux, safe1 = _GetParamValue(ck, "flux", rng, input_cat)
+            gsobject.setFlux(flux)
+            safe = safe and safe1
         #print 'After set flux, gsobject = ',gsobject
-        gsobject = _BuildEllipRotateShearShiftObject(gsobject, ck, rng, input_cat)
+        gsobject, safe1 = _BuildEllipRotateShearShiftObject(gsobject, ck, rng, input_cat)
+        safe = safe and safe1
         #print 'After BuildEllipRotateShearShiftObject, gsobject = ',gsobject
 
     elif type == "Pixel": # BR: under duress ;)
@@ -76,7 +90,7 @@ def BuildGSObject(config, key, rng=None, input_cat=None):
             if transform in ck:
                 raise AttributeError(transform+" operation specified in ck not supported for "+
                                      "Pixel objects.")
-        gsobject = _BuildPixel(ck, rng, input_cat)
+        gsobject, safe = _BuildPixel(ck, rng, input_cat)
 
     elif type == "SquarePixel":
         # Note we do not shear, shift, rotate etc. SquarePixels, such params raise an Exception.
@@ -84,12 +98,13 @@ def BuildGSObject(config, key, rng=None, input_cat=None):
             if transform in ck:
                 raise AttributeError(transform+" operation specified in ck not supported for "+
                                      "SquarePixel objects.")
-        gsobject = _BuildSquarePixel(ck, rng, input_cat)
+        gsobject, safe = _BuildSquarePixel(ck, rng, input_cat)
 
     # Else Build object from primary GSObject keys in galsim.object_param_dict
     elif type in op_dict: 
-        gsobject = _BuildSimple(ck, rng, input_cat)
-        gsobject = _BuildEllipRotateShearShiftObject(gsobject, ck, rng, input_cat)
+        gsobject, safe = _BuildSimple(ck, rng, input_cat)
+        gsobject, safe1 = _BuildEllipRotateShearShiftObject(gsobject, ck, rng, input_cat)
+        safe = safe and safe1
     else:
         raise NotImplementedError("Unrecognised type = "+str(type))
 
@@ -105,7 +120,8 @@ def BuildGSObject(config, key, rng=None, input_cat=None):
     # where a safe bool variable is returned with the gsobject from the various _Build
     # functions, which is also stored as ck['safe'] when we set ck['current'].
     ck['current'] = gsobject
-    return gsobject
+    ck['safe'] = safe
+    return gsobject, safe
 
 
 def _BuildPixel(config, rng, input_cat):
@@ -114,18 +130,23 @@ def _BuildPixel(config, rng, input_cat):
     for key in ["xw", "yw"]:
         if not key in config:
             raise AttributeError("Pixel type requires attribute %s in input config."%key)
-    init_kwargs = {"xw": _GetParamValue(config, "xw", rng, input_cat),
-                   "yw": _GetParamValue(config, "yw", rng, input_cat)}
-    if (init_kwargs["xw"] != init_kwargs["yw"]):
+    xw, safe1 = _GetParamValue(config, "xw", rng, input_cat)
+    yw, safe2 = _GetParamValue(config, "yw", rng, input_cat)
+    safe = safe1 and safe2
+
+    init_kwargs = {"xw" : xw, "yw" : yw }
+    if (xw != yw):
         raise Warning(
             "xw != yw found (%f != %f) "%(init_kwargs["xw"], init_kwargs["yw"]) +
             "This is supported for the pixel, but not the draw routines. " +
             "There might be weirdness....")
     if "flux" in config:
-        kwargs["flux"] = _GetParamValue(config, "flux", rng, input_cat)
+        flux, safe3 = _GetParamValue(config, "flux", rng, input_cat)
+        init_kwargs["flux"] = flux
+        safe = safe and safe3
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
     init_kwargs = dict([(k.encode('utf-8'), v) for k,v in init_kwargs.iteritems()]) 
-    return galsim.Pixel(**init_kwargs)
+    return galsim.Pixel(**init_kwargs), safe
 
 
 def _BuildSquarePixel(config, rng, input_cat):
@@ -134,13 +155,15 @@ def _BuildSquarePixel(config, rng, input_cat):
     if not "size" in config:
         raise AttributeError(
             "size attribute required in config for initializing SquarePixel objects.")
-    init_kwargs = {"xw": _GetParamValue(config, "size", rng, input_cat)}
-    init_kwargs["yw"] = init_kwargs["xw"]
+    xw, safe = _GetParamValue(config, "size", rng, input_cat)
+    init_kwargs = {"xw": xw, "yw": xw}
     if "flux" in config:
-        init_kwargs["flux"] = _GetParamValue(config, "flux", rng, input_cat)
+        flux, safe1 = _GetParamValue(config, "flux", rng, input_cat)
+        init_kwargs["flux"] = flux
+        safe = safe and safe1
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
     init_kwargs = dict([(k.encode('utf-8'), v) for k,v in init_kwargs.iteritems()]) 
-    return galsim.Pixel(**init_kwargs)
+    return galsim.Pixel(**init_kwargs), safe
 
     
 def _BuildSimple(config, rng, input_cat):
@@ -152,9 +175,13 @@ def _BuildSimple(config, rng, input_cat):
         raise AttributeError("No type attribute in config!")
     type = config['type']
     init_kwargs = {}
-    init_kwargs.update(_GetRequiredKwargs(config, rng, input_cat))
-    init_kwargs.update(_GetSizeKwarg(config, rng, input_cat))
-    init_kwargs.update(_GetOptionalKwargs(config, rng, input_cat))
+    req_kwargs, safe1 = _GetRequiredKwargs(config, rng, input_cat)
+    size_kwargs, safe2 = _GetSizeKwarg(config, rng, input_cat)
+    opt_kwargs, safe3 = _GetOptionalKwargs(config, rng, input_cat)
+    init_kwargs.update(req_kwargs)
+    init_kwargs.update(size_kwargs)
+    init_kwargs.update(opt_kwargs)
+    safe = safe1 and safe2 and safe3
     # Finally, after pulling together all the params, try making the GSObject.
     init_func = eval("galsim."+type)
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
@@ -165,7 +192,7 @@ def _BuildSimple(config, rng, input_cat):
     except Exception, err_msg:
         raise RuntimeError("Problem sending init_kwargs to galsim."+type+" object. "+
                            "Original error message: %s"% err_msg)
-    return gsobject
+    return gsobject, safe
 
 # --- Now we define a function for "ellipsing", rotating, shifting, shearing, in that order.
 #
@@ -175,15 +202,20 @@ def _BuildEllipRotateShearShiftObject(gsobject, config, rng, input_cat):
 
     @returns transformed GSObject.
     """
+    safe = True
     if "ellip" in config:
-        gsobject = _BuildEllipObject(gsobject, config, "ellip", rng, input_cat)
+        gsobject, safe1 = _BuildEllipObject(gsobject, config, "ellip", rng, input_cat)
+        safe = safe and safe1
     if "rotate" in config:
-        gsobject = _BuildRotateObject(gsobject, config, "rotate", rng, input_cat)
+        gsobject, safe1 = _BuildRotateObject(gsobject, config, "rotate", rng, input_cat)
+        safe = safe and safe1
     if "shear" in config:
-        gsobject = _BuildEllipObject(gsobject, config, "shear", rng, input_cat)
+        gsobject, safe1 = _BuildEllipObject(gsobject, config, "shear", rng, input_cat)
+        safe = safe and safe1
     if "shift" in config:
-        gsobject = _BuildShiftObject(gsobject, config, "shift", rng, input_cat)
-    return gsobject
+        gsobject, safe1 = _BuildShiftObject(gsobject, config, "shift", rng, input_cat)
+        safe = safe and safe1
+    return gsobject, safe
 
 
 def BuildShear(config, key, rng=None, input_cat=None):
@@ -217,30 +249,35 @@ def BuildShear(config, key, rng=None, input_cat=None):
     type = ck['type']
 
     if type == "E1E2":
-        e1 = _GetParamValue(ck, "e1", rng, input_cat)
-        e2 = _GetParamValue(ck, "e2", rng, input_cat)
+        e1, safe1 = _GetParamValue(ck, "e1", rng, input_cat)
+        e2, safe2 = _GetParamValue(ck, "e2", rng, input_cat)
+        safe = safe1 and safe2
         #print 'e1,e2 = ',e1,e2
-        return galsim.Shear(e1=e1, e2=e2)
+        return galsim.Shear(e1=e1, e2=e2), safe
     elif type == "G1G2":
-        g1 = _GetParamValue(ck, "g1", rng, input_cat)
-        g2 = _GetParamValue(ck, "g2", rng, input_cat)
+        g1, safe1 = _GetParamValue(ck, "g1", rng, input_cat)
+        g2, safe2 = _GetParamValue(ck, "g2", rng, input_cat)
+        safe = safe1 and safe2
         #print 'g1,g2 = ',g1,g2
-        return galsim.Shear(g1=g1, g2=g2)
+        return galsim.Shear(g1=g1, g2=g2), safe
     elif type == "GBeta":
-        g = _GetParamValue(ck, "g", rng, input_cat)
-        beta = _GetParamValue(ck, "beta", rng, input_cat, type=galsim.Angle)
+        g, safe1 = _GetParamValue(ck, "g", rng, input_cat)
+        beta, safe2 = _GetParamValue(ck, "beta", rng, input_cat, type=galsim.Angle)
+        safe = safe1 and safe2
         #print 'g,beta = ',g,beta
-        return galsim.Shear(g=g, beta=beta)
+        return galsim.Shear(g=g, beta=beta), safe
     elif type == "EBeta":
-        e = _GetParamValue(ck, "e", rng, input_cat)
-        beta = _GetParamValue(ck, "beta", rng, input_cat, type=galsim.Angle)
+        e, safe1 = _GetParamValue(ck, "e", rng, input_cat)
+        beta, safe2 = _GetParamValue(ck, "beta", rng, input_cat, type=galsim.Angle)
+        safe = safe1 and safe2
         #print 'e,beta = ',e,beta
-        return galsim.Shear(e=e, beta=beta)
+        return galsim.Shear(e=e, beta=beta), safe
     elif type == "QBeta":
-        q = _GetParamValue(ck, "q", rng, input_cat)
-        beta = _GetParamValue(ck, "beta", rng, input_cat, type=galsim.Angle)
+        q, safe1 = _GetParamValue(ck, "q", rng, input_cat)
+        beta, safe2 = _GetParamValue(ck, "beta", rng, input_cat, type=galsim.Angle)
+        safe = safe1 and safe2
         #print 'q,beta = ',q,beta
-        return galsim.Shear(q=q, beta=beta)
+        return galsim.Shear(q=q, beta=beta), safe
     elif type == "Ring":
         if not all (k in ck for k in ('num', 'first')) :
             raise AttributeError(
@@ -254,7 +291,7 @@ def BuildShear(config, key, rng=None, input_cat=None):
         #print 'i = ',i
         if i == num:
             #print 'at i = num'
-            current = BuildShear(ck, 'first', rng, input_cat)
+            current, safe1 = BuildShear(ck, 'first', rng, input_cat)
             i = 1
         elif num == 2:  # Special easy case for only 2 in ring.
             #print 'i = ',i,' Simple case of n=2'
@@ -269,7 +306,7 @@ def BuildShear(config, key, rng=None, input_cat=None):
         ck['i'] = i
         ck['current'] = current
         #print 'return shear = ',current
-        return current
+        return current, False
     else:
         raise NotImplementedError("Unrecognised shear type %s."%type)
 
@@ -279,11 +316,11 @@ def _BuildEllipObject(gsobject, config, key, rng, input_cat):
 
     @returns transformed GSObject.
     """
-    shear = BuildShear(config, key, rng, input_cat)
+    shear, safe = BuildShear(config, key, rng, input_cat)
     #print 'shear = ',shear
     gsobject.applyShear(shear)
     #print 'After applyShear, gsobject = ',gsobject
-    return gsobject
+    return gsobject, safe
 
 
 def _BuildRotateObject(gsobject, config, key, rng, input_cat):
@@ -312,9 +349,10 @@ def BuildShift(config, key, rng=None, input_cat=None):
         raise AttributeError("No type attribute in config!")
     type = ck['type']
     if type == "DXDY":
-        dx = _GetParamValue(ck, "dx", rng, input_cat)
-        dy = _GetParamValue(ck, "dy", rng, input_cat)
-        return (dx,dy)
+        dx, safe1 = _GetParamValue(ck, "dx", rng, input_cat)
+        dy, safe2 = _GetParamValue(ck, "dy", rng, input_cat)
+        safe = safe1 and safe2
+        return (dx,dy), safe
     elif type == "RandomTopHat":
         return _GetTopHatParamValue(ck, "shift", rng)
     else:
@@ -326,9 +364,9 @@ def _BuildShiftObject(gsobject, config, key, rng, input_cat):
 
     @returns transformed GSObject.
     """
-    (dx,dy) = BuildShift(config, key, rng, input_cat)
+    (dx,dy), safe = BuildShift(config, key, rng, input_cat)
     gsobject.applyShift(dx, dy)
-    return gsobject
+    return gsobject, safe
 
 
 # --- Below this point are the functions for getting the required parameters from the user input ---
@@ -338,14 +376,16 @@ def _GetRequiredKwargs(config, rng, input_cat):
     """
     type = config['type']
     req_kwargs = {}
+    safe = True
     for req_name in op_dict[type]["required"]:
         # Sanity check here, as far upstream as possible
         if not req_name in config:
             raise AttributeError("No required attribute "+req_name+" within input config for type "+
                                  type+".")
         else:
-            req_kwargs[req_name] = _GetParamValue(config, req_name, rng, input_cat)
-    return req_kwargs
+            req_kwargs[req_name], safe1 = _GetParamValue(config, req_name, rng, input_cat)
+            safe = safe and safe1
+    return req_kwargs, safe
 
 def _GetSizeKwarg(config, rng, input_cat):
     """@brief Get the one, and one only, required size kwarg.
@@ -357,31 +397,33 @@ def _GetSizeKwarg(config, rng, input_cat):
         if size_name in config:
             counter += 1
             if counter == 1:
-                size_kwarg[size_name] = _GetParamValue(config, size_name, rng, input_cat)
+                size_kwarg[size_name], safe = _GetParamValue(config, size_name, rng, input_cat)
             elif counter > 1:
                 raise ValueError("More than one size attribute within input config for type "+
                                  type+".")
     if counter == 0:
         raise ValueError("No size attribute within input config for type "+type+".")
-    return size_kwarg
+    return size_kwarg, safe
 
 def _GetOptionalKwargs(config, rng, input_cat):
     """@brief Get the optional kwargs, if any present in the config.
     """
     type = config['type']
     optional_kwargs = {}
+    safe = True
     for entry_name in config:
         if entry_name in op_dict[type]["optional"]:
-            optional_kwargs[entry_name] = _GetParamValue(config, entry_name, rng, input_cat)
-    return optional_kwargs
+            optional_kwargs[entry_name], safe1 = _GetParamValue(config, entry_name, rng, input_cat)
+            safe = safe and safe1
+    return optional_kwargs, safe
 
-def _GetParamValue(config, key, rng, input_cat, type=float):
+def _GetParamValue(config, param_name, rng, input_cat, type=float):
     """@brief Function to read parameter values from config.
     """
     # Parse the param in case it is a configuration string
-    _Parse(config, key)
+    _Parse(config, param_name)
     
-    param = config[key]
+    param = config[param_name]
 
     # First see if we can assign by param by a direct constant value
     if not isinstance(param, dict):
@@ -393,15 +435,15 @@ def _GetParamValue(config, key, rng, input_cat, type=float):
                 value = float(value)
                 unit = unit.lower()
                 if unit.startswith('rad') :
-                    return galsim.Angle(value, galsim.radians)
+                    return galsim.Angle(value, galsim.radians), True
                 elif unit.startswith('deg') :
-                    return galsim.Angle(value, galsim.degrees)
+                    return galsim.Angle(value, galsim.degrees), True
                 elif unit.startswith('hour') :
-                    return galsim.Angle(value, galsim.hours)
+                    return galsim.Angle(value, galsim.hours), True
                 elif unit.startswith('arcmin') :
-                    return galsim.Angle(value, galsim.arcmin)
+                    return galsim.Angle(value, galsim.arcmin), True
                 elif unit.startswith('arcsec') :
-                    return galsim.Angle(value, galsim.arcsec)
+                    return galsim.Angle(value, galsim.arcsec), True
                 else :
                     print 'Unknown Angle unit:',unit
                     raise AttributeError()
@@ -413,8 +455,8 @@ def _GetParamValue(config, key, rng, input_cat, type=float):
             # by the yaml reader. (Although I think this is a bug.)
             try : 
                 val = type(param)
-                config[key] = val
-                return val
+                config[param_name] = val
+                return val, True
             except :
                 raise AttributeError("Could not convert %s to %s."%(param,type))
     elif not "type" in param:
@@ -424,13 +466,13 @@ def _GetParamValue(config, key, rng, input_cat, type=float):
     else: # Use type to set param value. Currently catalog input supported only.
         type = param['type']
         if type == "InputCatalog":
-            return _GetInputCatParamValue(param, param_name, rng, input_cat)
+            return _GetInputCatParamValue(param, param_name, input_cat)
         elif type == "RandomAngle":
             import math
             ud = galsim.UniformDeviate(rng)
             val = ud() * 2 * math.pi * galsim.radians
             param['current'] = val
-            return val
+            return val, False
         elif type == "Random":
             if not all (k in param for k in ("min","max")):
                 raise AttributeError(
@@ -441,7 +483,7 @@ def _GetParamValue(config, key, rng, input_cat, type=float):
             ud = galsim.UniformDeviate(rng)
             val = ud() * (max-min) + min
             param['current'] = val
-            return val
+            return val, False
         elif type == "RandomGaussian":
             if 'sigma' not in param:
                 raise AttributeError(
@@ -490,7 +532,7 @@ def _GetParamValue(config, key, rng, input_cat, type=float):
             if do_neg:
                 val = -val
             val += mean
-            return val
+            return val, False
         else:
             raise NotImplementedError("Unrecognised parameter type %s."%type)
 
@@ -523,7 +565,7 @@ def _GetInputCatParamValue(param, param_name, input_cat):
     else:
         raise NotImplementedError("Unrecognised input_cat type %s."%type)
     param['current'] = val
-    return val
+    return val, False
 
 def _GetTopHatParamValue(param, param_name, rng):
     """@brief Return an (x,y) pair drawn from a circular top hat distribution.
@@ -542,7 +584,7 @@ def _GetTopHatParamValue(param, param_name, rng):
         y = (2*rng()-1) * radius
         rsq = x**2 + y**2
     param['current'] = (x,y)
-    return (x,y)
+    return (x,y), False
 
 
 def _MatchDelim(str,start,end):

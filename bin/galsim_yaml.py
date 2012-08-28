@@ -163,7 +163,7 @@ def main(argv) :
             psf_list = []
     
             if 'psf' in config :
-                psf = galsim.BuildGSObject(config, 'psf', rng, input_cat)
+                psf = galsim.BuildGSObject(config, 'psf', rng, input_cat)[0]
                 #print 'psf = ',psf
                 fft_list.append(psf)
                 phot_list.append(psf)
@@ -171,7 +171,7 @@ def main(argv) :
             t2 = time.time()
     
             if 'pix' in config :
-                pix = galsim.BuildGSObject(config, 'pix', rng, input_cat)
+                pix = galsim.BuildGSObject(config, 'pix', rng, input_cat)[0]
             else :
                 pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
             #print 'pix = ',pix
@@ -184,13 +184,13 @@ def main(argv) :
             if 'wcs' in config['image']:
                 wcs = config['image']['wcs']
                 if 'shear' in wcs:
-                    wcs_shear = galsim.BuildShear(wcs, 'shear', rng)
+                    wcs_shear = galsim.BuildShear(wcs, 'shear', rng)[0]
                     pix.applyShear(-wcs_shear)
                 else :
                     raise AttributeError("wcs must specify a shear")
     
         
-            gal = galsim.BuildGSObject(config, 'gal', rng, input_cat)
+            gal = galsim.BuildGSObject(config, 'gal', rng, input_cat)[0]
             #print 'gal = ',gal
             fft_list.append(gal)
             phot_list.append(gal)
