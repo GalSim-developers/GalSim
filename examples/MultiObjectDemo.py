@@ -20,8 +20,195 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-# Script 1: Something along the lines of a Great08 image
+# Script 1: Make multiple galaxy images, reading in many of the relevant parameters
+# from an input catalog.
 def Script1():
+    """
+    Make a fits image cube using parameters from an input catalog
+      - The number of images in the cube matches the number of rows in the catalog.
+      - Each image size is computed automatically by GalSim based on the Nyquist size.
+      - Only galaxies.  No stars.
+      - PSF is Moffat
+      - Each galaxy is bulge plus disk: deVaucouleurs + Exponential.
+      - Parameters taken from the input catalog:
+        - PSF beta
+        - PSF FWHM
+        - PSF e1
+        - PSF e2
+        - PSF trunc
+        - Bulge half-light-radius
+        - Bulge e1
+        - Bulge e2
+        - Bulge flux
+        - Disc half-light-radius
+        - Disc e1
+        - Disc e2
+        - Disc flux
+        - Galaxy dx (two components have same center)
+        - Galaxy dy
+      - Applied shear is the same for each file
+      - Noise is poisson using a nominal sky value of 1.e6
+    """
+    logger = logging.getLogger("Script1")
+
+    # Define some parameters we'll use below.
+
+    cat_file_name = os.path.join('input','galsim_default_input.asc')
+    multi_file_name = os.path.join('output','multi.fits')
+    cube_file_name = os.path.join('output','cube.fits')
+
+    random_seed = 8241573
+    sky_level = 1.e6                # ADU
+    pixel_scale = 1.0               # arcsec  (size units in input catalog are pixels)
+    gal_flux = 1.e6                 # arbitrary choise, makes nice (not too) noisy images
+    gal_g1 = -0.009                 #
+    gal_g2 = 0.011                  #
+    image_xmax = 64                 # pixels
+    image_ymax = 64                 # pixels
+
+    logger.info('Starting multi-object script 2 using:')
+    logger.info('    - parameters taken from catalog %r',cat_file_name)
+    logger.info('    - Moffat PSF (parameters from catalog)')
+    logger.info('    - pixel scale = %.2f',pixel_scale)
+    logger.info('    - Bulge + Disc galaxies (parameters from catalog)')
+    logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
+    logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
+
+    # Initialize the random number generator we will be using.
+    rng = galsim.UniformDeviate(random_seed)
+
+    # Setup the config object
+    config = galsim.Config()
+
+    # The configuration should set up several top level things:
+    # config.psf defines the PSF
+    # config.pix defines the pixel response
+    # config.gal defines the galaxy
+    # They are all currently required, although eventually we will probably make it so
+    # they are each optional.
+
+    # Each type of profile is specified by a type.  e.g. Moffat:
+    config.psf.type = 'Moffat'
+
+    # The various parameters are typically specified as well
+    config.psf.beta = 3.5
+
+    # These parameters do not need to be constant.  There are a number of ways to
+    # specify variables that might change from object to object.
+    # In this case, the parameter specification also has a "type".
+    # For now we only have InputCatalog, which means read the value from a catalog:
+    config.psf.fwhm.type = 'InputCatalog'
+
+    # InputCatalog requires the extra value of which column to use in the catalog:
+    config.psf.fwhm.col = 6
+
+    # You can also specify both of these on the same line as a single string:
+    config.psf.trunc = 'InputCatalog col=9'
+
+    # You can even nest string values using angle brackets:
+    config.psf.ellip = 'E1E2 e1=<InputCatalog col=7> e2=<InputCatalog col=8>'
+
+    # If you don't specify a parameter, and there is a reasonable default, then it 
+    # will be used instead.  If there is no reasonable default, you will get an error.
+    #config.psf.flux = 1  # Unnecessary
+
+    # If you want to use a variable in your string, you can use Python's % notation:
+    config.pix = 'SquarePixel size=%f'%pixel_scale
+
+    # A profile can be the sum of several components, each with its own type and parameters:
+    config.gal.type = 'Sum'
+    # TODO: [galsim.Config()]*2 doesn't work, since shallow copies.
+    # I guess we need a nicer way to initialize this.
+    config.gal.items = [galsim.Config(), galsim.Config()]
+    config.gal.items[0].type = 'Exponential'
+    config.gal.items[0].half_light_radius = 'InputCatalog col=10'
+    config.gal.items[0].ellip = 'E1E2 e1=<InputCatalog col=11> e2=<InputCatalog col=12>'
+    config.gal.items[0].flux = 0.6
+    config.gal.items[1].type = 'DeVaucouleurs'
+    config.gal.items[1].half_light_radius = 'InputCatalog col=13'
+    config.gal.items[1].ellip = 'E1E2 e1=<InputCatalog col=14> e2=<InputCatalog col=15>'
+    config.gal.items[1].flux = 0.4
+
+    # When a composite object (like a Sum) has a flux specified, the "flux" values of the
+    # components are taken to be relative fluxes, and the full object's value sets the
+    # overall normalization.  If this is omitted, the overall flux is taken to be the
+    # sum of the component fluxes.
+    config.gal.flux = gal_flux
+
+    # An object may have an ellip and a shear, each of which can be specified in terms
+    # of either E1E2 (distortion) or G1G2 (reduced shear).
+    # The only difference between the two is if there is also a rotation specified.
+    # The order of the various modifications are:
+    # - ellip
+    # - rotation
+    # - shear
+    # - shift
+    config.gal.shear = 'G1G2 g1=%f g2=%f'%(gal_g1,gal_g2)
+    config.gal.shift = 'DXDY dx=<InputCatalog col=16> dy=<InputCatalog col=17>'
+
+
+    # Read the catalog
+    input_cat = galsim.io.ReadInputCat(config,cat_file_name)
+    logger.info('Read %d objects from catalog',input_cat.nobjects)
+
+    # Build the images
+    all_images = []
+    for i in range(input_cat.nobjects):
+        if i is not input_cat.current:
+            raise ValueError('i is out of sync with current.')
+
+        t1 = time.time()
+        #logger.info('Image %d',input_cat.current)
+
+        psf = galsim.BuildGSObject(config.psf, input_cat, logger)
+        #logger.info('   Made PSF profile')
+        t2 = time.time()
+
+        pix = galsim.BuildGSObject(config.pix, input_cat, logger)
+        #logger.info('   Made pixel profile')
+        t3 = time.time()
+
+        gal = galsim.BuildGSObject(config.gal, input_cat, logger)
+        #logger.info('   Made galaxy profile')
+        t4 = time.time()
+
+        final = galsim.Convolve(psf,pix,gal)
+        #im = final.draw(dx=pixel_scale)  # It makes these as 768 x 768 images.  A bit big.
+        im = galsim.ImageF(image_xmax, image_ymax)
+        final.draw(im, dx=pixel_scale)
+        xsize, ysize = im.array.shape
+        #logger.info('   Drew image: size = %d x %d',xsize,ysize)
+        t5 = time.time()
+
+        # Add Poisson noise
+        im += sky_level
+        im.addNoise(galsim.CCDNoise(rng))
+        im -= sky_level
+        #logger.info('   Added noise')
+        t6 = time.time()
+
+        # Store that into the list of all images
+        all_images += [im]
+        t7 = time.time()
+
+        # increment the row of the catalog that we should use for the next iteration
+        input_cat.current += 1
+        #logger.info('   Times: %f, %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5, t7-t6)
+        logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t7-t1)
+
+    logger.info('Done making images of galaxies')
+
+    # Now write the image to disk.
+    galsim.fits.writeMulti(all_images, multi_file_name, clobber=True)
+    logger.info('Wrote images to multi-extension fits file %r',multi_file_name)
+
+    galsim.fits.writeCube(all_images, cube_file_name, clobber=True)
+    logger.info('Wrote image to fits data cube %r',cube_file_name)
+
+    print
+
+# Script 2: Something along the lines of a Great08 image
+def Script2():
     """
     Make images similar to that done for the Great08 challenge:
       - Each fits file is 10 x 10 postage stamps.
@@ -35,7 +222,7 @@ def Script1():
       - Noise is poisson using a nominal sky value of 1.e6.
       - Galaxies are sersic profiles.
     """
-    logger = logging.getLogger("Script1")
+    logger = logging.getLogger("Script2")
 
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
@@ -196,16 +383,16 @@ def Script1():
                     ellip = math.fabs(gd())
 
                 # Apply a random orientation:
-                theta = rng() * 2. * math.pi
+                theta = rng() * 2. * math.pi * galsim.radians
                 first_in_pair = False
             else:
                 #theta += math.pi/2 * galsim.radians
-                theta += math.pi/2
+                theta += math.pi/2 * galsim.radians
                 first_in_pair = True
 
             # Make a new copy of the galaxy with an applied e1/e2-type distortion 
             # by specifying the ellipticity and a real-space position angle
-            this_gal = gal.createSheared(e=ellip, beta=theta*galsim.radians)
+            this_gal = gal.createSheared(e=ellip, beta=beta)
 
             # Apply the gravitational reduced shear by specifying g1/g2
             this_gal.applyShear(g1=gal_g1, g2=gal_g2)
@@ -246,191 +433,6 @@ def Script1():
 
     print
 
-# Script 2: Read many of the relevant parameters from an input catalog
-def Script2():
-    """
-    Make a fits image cube using parameters from an input catalog
-      - The number of images in the cube matches the number of rows in the catalog.
-      - Each image size is computed automatically by GalSim based on the Nyquist size.
-      - Only galaxies.  No stars.
-      - PSF is Moffat
-      - Each galaxy is bulge plus disk: deVaucouleurs + Exponential.
-      - Parameters taken from the input catalog:
-        - PSF beta
-        - PSF FWHM
-        - PSF e1
-        - PSF e2
-        - PSF trunc
-        - Bulge half-light-radius
-        - Bulge e1
-        - Bulge e2
-        - Bulge flux
-        - Disc half-light-radius
-        - Disc e1
-        - Disc e2
-        - Disc flux
-        - Galaxy dx (two components have same center)
-        - Galaxy dy
-      - Applied shear is the same for each file
-      - Noise is poisson using a nominal sky value of 1.e6
-    """
-    logger = logging.getLogger("Script2")
-
-    # Define some parameters we'll use below.
-
-    cat_file_name = os.path.join('input','galsim_default_input.asc')
-    multi_file_name = os.path.join('output','multi.fits')
-    cube_file_name = os.path.join('output','cube.fits')
-
-    random_seed = 8241573
-    sky_level = 1.e6                # ADU
-    pixel_scale = 1.0               # arcsec  (size units in input catalog are pixels)
-    gal_flux = 1.e6                 # arbitrary choise, makes nice (not too) noisy images
-    gal_g1 = -0.009                 #
-    gal_g2 = 0.011                  #
-    image_xmax = 64                 # pixels
-    image_ymax = 64                 # pixels
-
-    logger.info('Starting multi-object script 2 using:')
-    logger.info('    - parameters taken from catalog %r',cat_file_name)
-    logger.info('    - Moffat PSF (parameters from catalog)')
-    logger.info('    - pixel scale = %.2f',pixel_scale)
-    logger.info('    - Bulge + Disc galaxies (parameters from catalog)')
-    logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
-    logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
-
-    # Initialize the random number generator we will be using.
-    rng = galsim.UniformDeviate(random_seed)
-
-    # Setup the config object
-    config = galsim.Config()
-
-    # The configuration should set up several top level things:
-    # config.psf defines the PSF
-    # config.pix defines the pixel response
-    # config.gal defines the galaxy
-    # They are all currently required, although eventually we will probably make it so
-    # they are each optional.
-
-    # Each type of profile is specified by a type.  e.g. Moffat:
-    config.psf.type = 'Moffat'
-
-    # The various parameters are typically specified as well
-    config.psf.beta = 3.5
-
-    # These parameters do not need to be constant.  There are a number of ways to
-    # specify variables that might change from object to object.
-    # In this case, the parameter specification also has a "type".
-    # For now we only have InputCatalog, which means read the value from a catalog:
-    config.psf.fwhm.type = 'InputCatalog'
-
-    # InputCatalog requires the extra value of which column to use in the catalog:
-    config.psf.fwhm.col = 6
-
-    # You can also specify both of these on the same line as a single string:
-    config.psf.trunc = 'InputCatalog col=9'
-
-    # You can even nest string values using angle brackets:
-    config.psf.ellip = 'E1E2 e1=<InputCatalog col=7> e2=<InputCatalog col=8>'
-
-    # If you don't specify a parameter, and there is a reasonable default, then it 
-    # will be used instead.  If there is no reasonable default, you will get an error.
-    #config.psf.flux = 1  # Unnecessary
-
-    # If you want to use a variable in your string, you can use Python's % notation:
-    config.pix = 'SquarePixel size=%f'%pixel_scale
-
-    # A profile can be the sum of several components, each with its own type and parameters:
-    config.gal.type = 'Sum'
-    # TODO: [galsim.Config()]*2 doesn't work, since shallow copies.
-    # I guess we need a nicer way to initialize this.
-    config.gal.items = [galsim.Config(), galsim.Config()]
-    config.gal.items[0].type = 'Exponential'
-    config.gal.items[0].half_light_radius = 'InputCatalog col=10'
-    config.gal.items[0].ellip = 'E1E2 e1=<InputCatalog col=11> e2=<InputCatalog col=12>'
-    config.gal.items[0].flux = 0.6
-    config.gal.items[1].type = 'DeVaucouleurs'
-    config.gal.items[1].half_light_radius = 'InputCatalog col=13'
-    config.gal.items[1].ellip = 'E1E2 e1=<InputCatalog col=14> e2=<InputCatalog col=15>'
-    config.gal.items[1].flux = 0.4
-
-    # When a composite object (like a Sum) has a flux specified, the "flux" values of the
-    # components are taken to be relative fluxes, and the full object's value sets the
-    # overall normalization.  If this is omitted, the overall flux is taken to be the
-    # sum of the component fluxes.
-    config.gal.flux = gal_flux
-
-    # An object may have an ellip and a shear, each of which can be specified in terms
-    # of either E1E2 (distortion) or G1G2 (reduced shear).
-    # The only difference between the two is if there is also a rotation specified.
-    # The order of the various modifications are:
-    # - ellip
-    # - rotation
-    # - shear
-    # - shift
-    config.gal.shear = 'G1G2 g1=%f g2=%f'%(gal_g1,gal_g2)
-    config.gal.shift = 'DXDY dx=<InputCatalog col=16> dy=<InputCatalog col=17>'
-
-
-    # Read the catalog
-    input_cat = galsim.io.ReadInputCat(config,cat_file_name)
-    logger.info('Read %d objects from catalog',input_cat.nobjects)
-
-    # Build the images
-    all_images = []
-    for i in range(input_cat.nobjects):
-        if i is not input_cat.current:
-            raise ValueError('i is out of sync with current.')
-
-        t1 = time.time()
-        #logger.info('Image %d',input_cat.current)
-
-        psf = galsim.BuildGSObject(config.psf, input_cat, logger)
-        #logger.info('   Made PSF profile')
-        t2 = time.time()
-
-        pix = galsim.BuildGSObject(config.pix, input_cat, logger)
-        #logger.info('   Made pixel profile')
-        t3 = time.time()
-
-        gal = galsim.BuildGSObject(config.gal, input_cat, logger)
-        #logger.info('   Made galaxy profile')
-        t4 = time.time()
-
-        final = galsim.Convolve(psf,pix,gal)
-        #im = final.draw(dx=pixel_scale)  # It makes these as 768 x 768 images.  A bit big.
-        im = galsim.ImageF(image_xmax, image_ymax)
-        final.draw(im, dx=pixel_scale)
-        xsize, ysize = im.array.shape
-        #logger.info('   Drew image: size = %d x %d',xsize,ysize)
-        t5 = time.time()
-
-        # Add Poisson noise
-        im += sky_level
-        im.addNoise(galsim.CCDNoise(rng))
-        im -= sky_level
-        #logger.info('   Added noise')
-        t6 = time.time()
-
-        # Store that into the list of all images
-        all_images += [im]
-        t7 = time.time()
-
-        # increment the row of the catalog that we should use for the next iteration
-        input_cat.current += 1
-        #logger.info('   Times: %f, %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5, t7-t6)
-        logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t7-t1)
-
-    logger.info('Done making images of galaxies')
-
-    # Now write the image to disk.
-    galsim.fits.writeMulti(all_images, multi_file_name, clobber=True)
-    logger.info('Wrote images to multi-extension fits file %r',multi_file_name)
-
-    galsim.fits.writeCube(all_images, cube_file_name, clobber=True)
-    logger.info('Wrote image to fits data cube %r',cube_file_name)
-
-    print
 
 # Script 3: Simulations with real galaxies from a catalog
 def Script3():
