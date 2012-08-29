@@ -36,6 +36,8 @@
 # This can be useful since you can put things you want to change often near the top of the 
 # file so you don't have to scroll down to fine the right place to edit something each time 
 # you want to change it.
+# However, now that we've presented this option, so you can see how it works, we won't 
+# bother with it for out subsequent example config files.
 some_variables :
     - &sky_level  1.e6                # ADU / arcsec^2
     - &pixel_scale  1.0               # arcsec / pixel  (size units in input catalog are pixels)
@@ -60,20 +62,22 @@ psf :
         type : InputCatalog
 
         # InputCatalog requires the extra value of which column to use in the catalog:
-        col : 6
+        # Note: the first column is called 0, not 1, as per the usual python 
+        # 0-based indexing scheme.
+        col : 5
 
     # You can also specify both of these on the same line using {}
-    trunc : { type : InputCatalog , col : 9 }
+    trunc : { type : InputCatalog , col : 8 }
 
     # The nesting goes as deep as it needs to
     ellip :
         type : E1E2 
         e1 : 
             type : InputCatalog 
-            col : 7
+            col : 6
         e2 : 
             type : InputCatalog 
-            col : 8
+            col : 7
 
     # If you don't specify a parameter, and there is a reasonable default, then it 
     # will be used instead.  If there is no reasonable default, you will get an error.
@@ -85,19 +89,19 @@ gal :
     items :
         - 
             type : Exponential
-            half_light_radius : { type : InputCatalog , col : 10 }
+            half_light_radius : { type : InputCatalog , col : 9 }
             ellip : 
                 type : E1E2 
-                e1 : { type : InputCatalog , col : 11 }  
-                e2 : { type : InputCatalog , col : 12 }
+                e1 : { type : InputCatalog , col : 10 }  
+                e2 : { type : InputCatalog , col : 11 }
             flux : 0.6
         -
             type : DeVaucouleurs
-            half_light_radius : { type : InputCatalog , col : 13 }
+            half_light_radius : { type : InputCatalog , col : 12 }
             ellip : 
                 type : E1E2 
-                e1 : { type : InputCatalog , col : 14 }  
-                e2 : { type : InputCatalog , col : 15 }
+                e1 : { type : InputCatalog , col : 13 }  
+                e2 : { type : InputCatalog , col : 14 }
             flux : 0.4
 
     # When a composite object (like a Sum) has a flux specified, the "flux" values of the
@@ -122,8 +126,8 @@ gal :
 
     shift : 
         type : DXDY 
-        dx : { type : InputCatalog , col : 16 } 
-        dy : { type : InputCatalog , col : 17 }
+        dx : { type : InputCatalog , col : 15 } 
+        dy : { type : InputCatalog , col : 16 }
 
 # Define some other information about the images 
 image :

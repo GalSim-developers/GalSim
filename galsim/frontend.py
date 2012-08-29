@@ -360,6 +360,8 @@ def BuildShear(config, key, base):
         elif num == 2:  # Special easy case for only 2 in ring.
             #print 'i = ',i,' Simple case of n=2'
             current = -ck['current']
+            #print 'ellip = ',current.e
+            #print 'beta = ',current.beta
             i = i + 1
         else:
             import math
@@ -416,7 +418,7 @@ def BuildShift(config, key, base):
         dx, safe1 = _GetParamValue(ck, 'dx', base)
         dy, safe2 = _GetParamValue(ck, 'dy', base)
         safe = safe1 and safe2
-        #print 'DXDY = ',(dx,dy),safe
+        #print '(dx,dy) = ',(dx,dy)
         return (dx,dy), safe
     elif type == 'RandomTopHat':
         return _GetRandomTopHatParamValue(ck, 'shift', base)
@@ -576,23 +578,27 @@ def _GetInputCatParamValue(param, param_name, base):
         raise AttributeError(
             "%s.col attribute required %s.type = InputCatalog"%(param_name,param_name))
     col = int(param['col'])
+    if col >= input_cat.ncols:
+        raise IndexError("%s.col attribute (=%d) out of bounds"%(param_name,col))
 
-    if input_cat.type == 'ASCII':
-        index = param.get('current_index',-1)
-        index = index + 1
-        if index >= input_cat.nobjects:
-            raise IndexError(
-                "%s index has gone past the number of entries in the catalog"%param_name)
-        param['current_index'] = index
+    # Setup the indexing sequence if it hasn't been specified.
+    # The normal thing with an InputCat is to just use each object in order,
+    # so we don't require the user to specify that by hand.  We can do it for them.
+    if 'index' not in param:
+        param['index'] = { 'type' : 'Sequence' , 'min' : 0 , 'max' : input_cat.nobjects }
+    elif isinstance(param['index'],dict) and 'type' in param['index']:
+        index = param['index']
+        type = index['type']
+        if (type == 'Sequence' or type == 'RandomInt') and 'max' not in index:
+            index['max'] = input_cat.nobjects
 
-        try:    # Try setting the param value from the catalog
-            val = input_cat.data[index, col - 1]
-        except IndexError:
-            raise IndexError("%s.col attribute (=%d) out of bounds"%(param_name,col))
-    elif input_cat.type == 'FITS':
-        raise NotImplementedError("Sorry, FITS input not implemented.")
-    else:
-        raise NotImplementedError("Unrecognised input_cat type %s."%input_cat.type)
+    index, safe = _GetParamValue(param, 'index', base, type=int)
+    if index >= input_cat.nobjects:
+        raise IndexError(
+            "%s index has gone past the number of entries in the catalog"%param_name)
+
+    val = input_cat.data[index, col]
+
     param['current'] = val
     #print 'InputCat: ',val,False
     return val, False
@@ -626,6 +632,7 @@ def _GetRandomAngleParamValue(param, param_name, base):
     import math
     ud = galsim.UniformDeviate(rng)
     val = ud() * 2 * math.pi * galsim.radians
+    #print 'beta = ',val
     param['current'] = val
     #print 'RandomAngle: ',val,False
     return val, False
@@ -646,15 +653,16 @@ def _GetRandomGaussianParamValue(param, param_name, base):
     min = float(param.get('min',-float('inf')))
     max = float(param.get('max',float('inf')))
 
-    if 'gd' in param:
-        gd = param['gd']
-    else:
+    if 'gd' in base:
         # Minor subtlety here.  GaussianDeviate requires two random numbers to 
         # generate a single Gaussian deviate.  But then it gets a second 
-        # deviate for free.  So it's more efficient to store gd here to use
-        # the next time through.
-        gd = galsim.GaussianDeviate(rng, sigma=sigma)
-        param['gd'] = gd
+        # deviate for free.  So it's more efficient to store gd than to make
+        # a new one each time.  So check if we did that.
+        gd = base['gd']
+    else:
+        # Otherwise, just go ahead and make a new one.
+        gd = galsim.GaussianDeviate(rng,sigma=sigma)
+        base['gd'] = gd
 
     # Clip at min/max.
     # However, special cases if min == mean or max == mean
@@ -675,8 +683,10 @@ def _GetRandomGaussianParamValue(param, param_name, base):
         max -= mean
 
     # Emulate a do-while loop
+    #print 'sigma = ',sigma
     while True:
         val = gd()
+        #print 'val = ',val
         if do_abs:
             import math
             val = math.fabs(val)
@@ -685,6 +695,7 @@ def _GetRandomGaussianParamValue(param, param_name, base):
     if do_neg:
         val = -val
     val += mean
+    #print 'ellip = ',val
     param['current'] = val
     #print 'RandomGaussian: ',val,False
     return val, False

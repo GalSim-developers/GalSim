@@ -74,9 +74,6 @@ def Script1():
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
 
-    # Initialize the random number generator we will be using.
-    rng = galsim.UniformDeviate(random_seed)
-
     # Setup the config object
     config = galsim.Config()
 
@@ -100,13 +97,15 @@ def Script1():
     config.psf.fwhm.type = 'InputCatalog'
 
     # InputCatalog requires the extra value of which column to use in the catalog:
-    config.psf.fwhm.col = 6
+    # Note: the first column is called 0, not 1, as per the usual python 
+    # 0-based indexing scheme.
+    config.psf.fwhm.col = 5
 
     # You can also specify both of these on the same line as a single string:
-    config.psf.trunc = 'InputCatalog col=9'
+    config.psf.trunc = 'InputCatalog col=8'
 
     # You can even nest string values using angle brackets:
-    config.psf.ellip = 'E1E2 e1=<InputCatalog col=7> e2=<InputCatalog col=8>'
+    config.psf.ellip = 'E1E2 e1=<InputCatalog col=6> e2=<InputCatalog col=7>'
 
     # If you don't specify a parameter, and there is a reasonable default, then it 
     # will be used instead.  If there is no reasonable default, you will get an error.
@@ -121,12 +120,12 @@ def Script1():
     # I guess we need a nicer way to initialize this.
     config.gal.items = [galsim.Config(), galsim.Config()]
     config.gal.items[0].type = 'Exponential'
-    config.gal.items[0].half_light_radius = 'InputCatalog col=10'
-    config.gal.items[0].ellip = 'E1E2 e1=<InputCatalog col=11> e2=<InputCatalog col=12>'
+    config.gal.items[0].half_light_radius = 'InputCatalog col=9'
+    config.gal.items[0].ellip = 'E1E2 e1=<InputCatalog col=10> e2=<InputCatalog col=11>'
     config.gal.items[0].flux = 0.6
     config.gal.items[1].type = 'DeVaucouleurs'
-    config.gal.items[1].half_light_radius = 'InputCatalog col=13'
-    config.gal.items[1].ellip = 'E1E2 e1=<InputCatalog col=14> e2=<InputCatalog col=15>'
+    config.gal.items[1].half_light_radius = 'InputCatalog col=12'
+    config.gal.items[1].ellip = 'E1E2 e1=<InputCatalog col=13> e2=<InputCatalog col=14>'
     config.gal.items[1].flux = 0.4
 
     # When a composite object (like a Sum) has a flux specified, the "flux" values of the
@@ -144,7 +143,7 @@ def Script1():
     # - shear
     # - shift
     config.gal.shear = 'G1G2 g1=%f g2=%f'%(gal_g1,gal_g2)
-    config.gal.shift = 'DXDY dx=<InputCatalog col=16> dy=<InputCatalog col=17>'
+    config.gal.shift = 'DXDY dx=<InputCatalog col=15> dy=<InputCatalog col=16>'
 
 
     # Read the catalog
@@ -153,13 +152,18 @@ def Script1():
 
     # Store these in config for use by the BuildGSObject functions.
     config.input_cat = input_cat
-    config.rng = rng
 
     # Build the images
     all_images = []
-    for i in range(input_cat.nobjects):
-        if i is not input_cat.current:
-            raise ValueError('i is out of sync with current.')
+    for k in range(input_cat.nobjects):
+        # Initialize the random number generator we will be using.
+        # Note: This could be done once outside the loop.
+        #       However, this is the initialization that our config parser uses in
+        #       order to work when using multiple processes.
+        #       Since we want these demo scripts to have identical output to the 
+        #       versions using config files, we follow the same convention here.
+        rng = galsim.UniformDeviate(random_seed+k)
+        config.rng = rng
 
         t1 = time.time()
         #logger.info('Image %d',input_cat.current)
@@ -194,10 +198,8 @@ def Script1():
         all_images += [im]
         t7 = time.time()
 
-        # increment the row of the catalog that we should use for the next iteration
-        input_cat.current += 1
         #logger.info('   Times: %f, %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5, t7-t6)
-        logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t7-t1)
+        logger.info('Image %d: size = %d x %d, total time = %f sec', k, xsize, ysize, t7-t1)
 
     logger.info('Done making images of galaxies')
 
@@ -277,10 +279,6 @@ def Script2():
     logger.info('    - Centroid shifts up to = %.2f pixels',centroid_shift)
 
 
-    # Initialize the random number generator we will be using.
-    rng = galsim.UniformDeviate(random_seed)
-
-
     # Define the PSF profile
     psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm, trunc=psf_trunc)
     psf_re = psf.half_light_radius  # Need this for later...
@@ -311,10 +309,15 @@ def Script2():
     centroid_shift_sq = centroid_shift**2
 
     first_in_pair = True  # Make pairs that are rotated by 45 degrees
-    gd = galsim.GaussianDeviate(rng, sigma=gal_ellip_rms)
 
+    k = 0
     for ix in range(nx_stamps):
         for iy in range(ny_stamps):
+
+            # Initialize the random number generator we will be using.
+            rng = galsim.UniformDeviate(random_seed+k)
+            gd = galsim.GaussianDeviate(rng, sigma=gal_ellip_rms)
+
             # The -1's in the next line are to provide a border of
             # 1 pixel between postage stamps
             b = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels-1, 
@@ -337,7 +340,6 @@ def Script2():
                 beta = rng() * 2. * math.pi * galsim.radians
                 first_in_pair = False
             else:
-                #beta += math.pi/2 * galsim.radians
                 beta += math.pi/2 * galsim.radians
                 first_in_pair = True
 
@@ -405,6 +407,7 @@ def Script2():
             y = b.center().y
             logger.info('Galaxy (%d,%d): center = (%.0f,%0.f)  (e,beta) = (%.4f,%.3f)',
                     ix,iy,x,y,ellip,beta/galsim.radians)
+            k = k+1
 
     logger.info('Done making images of postage stamps')
 
@@ -463,9 +466,6 @@ def Script3():
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
     
-    # Initialize the random number generator we will be using.
-    rng = galsim.UniformDeviate(random_seed)
-
     # Read in galaxy catalog
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, image_dir)
     real_galaxy_catalog.preload()
@@ -488,11 +488,14 @@ def Script3():
 
     # Build the images
     all_images = []
-    for i in range(ngal):
+    for k in range(ngal):
         #logger.info('Start work on image %d',i)
         t1 = time.time()
 
-        gal = galsim.RealGalaxy(real_galaxy_catalog, index = i)
+        # Initialize the random number generator we will be using.
+        rng = galsim.UniformDeviate(random_seed+k)
+
+        gal = galsim.RealGalaxy(real_galaxy_catalog, index = k)
         #logger.info('   Read in training sample galaxy and PSF from file')
         t2 = time.time()
 
@@ -510,7 +513,7 @@ def Script3():
         final = galsim.Convolve([psf, pix, gal])
 
         # Draw the profile
-        if i == 0:
+        if k == 0:
             im = final.draw(dx=pixel_scale)
             xsize, ysize = im.array.shape
         else:
@@ -536,7 +539,7 @@ def Script3():
         t5 = time.time()
 
         #logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
-        logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t5-t1)
+        logger.info('Image %d: size = %d x %d, total time = %f sec', k, xsize, ysize, t5-t1)
 
     logger.info('Done making images of galaxies')
 
@@ -581,9 +584,6 @@ def Script4():
     psf_fwhm = 0.65         # arcsec
 
     logger.info('Starting multi-object script 4')
-
-    # Initialize the random number generator we will be using.
-    rng = galsim.UniformDeviate(random_seed)
 
     # Make the pixel:
     pix = galsim.Pixel(xw = pixel_scale)
@@ -645,6 +645,9 @@ def Script4():
             for i in range(4):
                 #logger.info('Start work on image %d',i)
                 t1 = time.time()
+
+                # Initialize the random number generator we will be using.
+                rng = galsim.UniformDeviate(random_seed+k)
 
                 # Generate random variates:
                 flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min

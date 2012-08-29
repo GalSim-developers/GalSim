@@ -94,9 +94,6 @@ gal :
         g1 : -0.027
         g2 : 0.031
 
-# Set the number of objects
-nobjects : 100
-
 # We add the noise information to the image field.
 # Note: since the output includes a data_cube output, which requires all the
 # images to be the same size, GalSim will choose the size of the first image
@@ -121,8 +118,10 @@ output :
         type : multi_fits
         dir : output_yaml
         file_name : multi_real.fits
+        nimages : 100
     - 
         type : data_cube
         dir : output_yaml
         file_name : cube_real.fits
+        nimages : 100
  
