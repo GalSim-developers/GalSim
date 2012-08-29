@@ -567,9 +567,6 @@ def _parse_sizes(self, label="object", **kwargs):
 #
 # The __init__ method is usually simple and all the GSObject methods & attributes are inherited.
 # 
-# All GSObject derived classes now use descriptors to store parameter values, except for Add and
-# Convolve.
-#
 class Gaussian(GSObject):
     """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
 
@@ -588,7 +585,7 @@ class Gaussian(GSObject):
 
     Example:
     >>> gauss_obj = Gaussian(flux=3., sigma=1.)
-    >>> gauss_obj.getHalfLightRadius
+    >>> gauss_obj.getHalfLightRadius()
     1.1774100225154747
     >>> gauss_obj = Gaussian(flux=3, half_light_radius=1.)
     >>> gauss_obj.getSigma()
@@ -596,66 +593,6 @@ class Gaussian(GSObject):
 
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
-
-    Methods
-    -------
-    The Gaussian is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
-    applyShear etc.) and operator bindings.
-    """
-
-    # Initialization of size parameter descriptors
-    sigma = descriptors.SimpleParam(
-        name="sigma", group="size", default=None,
-        doc="Scale radius sigma for the Gaussian.")
-
-    half_light_radius = descriptors.SimpleParam(
-        name="half_light_radius", group="size", default=None,
-        doc="Half light radius for the Gaussian.")
-
-    fwhm = descriptors.SimpleParam(
-        name="fwhm", group="size", default=None,
-        doc="FWHM for the Gaussian.")
-    
-    # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
-
-        self._setup_data_store() # Initializes _data dict for storing parameter data, accessed by
-                                 # descriptors defined above, and sets the instance SBProfile = None
-
-        # Then use _parse_sizes() to initialize size parameters
-        _parse_sizes(
-            self, label="Gaussian", half_light_radius=half_light_radius, sigma=sigma, fwhm=fwhm)
-
-        # Set the flux descriptor
-        self.flux = flux
-
-        # Then initialize the SBProfile
-        GSObject.__init__(
-            self, galsim.SBGaussian(
-                sigma=self.sigma, half_light_radius=self.half_light_radius, fwhm=self.fwhm,
-                flux=self.flux))
- 
-    def getSigma(self):
-        """@brief Return the sigma scale length for this Gaussian profile.
-        """
-        return self.SBProfile.getSigma()
-    
-    def getFWHM(self):
-        """@brief Return the FWHM for this Gaussian profile.
-        """
-        return self.SBProfile.getSigma() * 2.3548200450309493 # factor = 2 sqrt[2ln(2)]
- 
-    def getHalfLightRadius(self):
-        """@brief Return the half light radius for this Gaussian profile.
-        """
-        return self.SBProfile.getSigma() * 1.1774100225154747 # factor = sqrt[2ln(2)]
-
-
-class Gaussian(GSObject):
-    """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
-
-    For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
-    documentation produced by doxygen.
 
     Methods
     -------
@@ -710,10 +647,10 @@ class Moffat(GSObject):
 
     Example:
     >>> moffat_obj = Moffat(beta=3., scale_radius=3., flux=0.5)
-    >>> moffat_obj.half_light_radius
+    >>> moffat_obj.getHalfLightRadius()
     1.9307827587167474
-    >>> moffat_obj.half_light_radius = 1.
-    >>> moffat_obj.scale_radius
+    >>> moffat_obj = Moffat(beta=3., half_light_radius=1., flux=0.5)
+    >>> moffat_obj.getScaleRadius()
     1.5537739740300376
 
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
@@ -725,109 +662,18 @@ class Moffat(GSObject):
     applyShear etc.) and operator bindings.
     """
 
-    # Define the descriptors for the Moffat slope parameter beta, and the truncation radius trunc
-    beta = descriptors.SimpleParam(
-        "beta", group="required", default=None, doc="Moffat profile slope parameter beta.")
-    
-    trunc = descriptors.SimpleParam(
-        "trunc", group="optional", default=0.,
-        doc="Truncation radius for Moffat in physical units.")
-
-    # Then we set up the size descriptors.  These need to be a little more complex in their
-    # execution than a typical GSObject.
-
-    # Getter and setter functions for the scale_radius descriptor.
-    # If the half light radius was the last size set then the value in _data["half_light_radius"]
-    # will be None, so scale_radius needs to be got from self.SBProfile.getScaleRadius.
-    def _get_scale_radius(self):
-        if self._last_size_set_was_half_light_radius is True:
-            if not self.SBProfile.__class__ is galsim.SBMoffat: # can happen after flux set
-                self._SBInitialize()
-            return self.SBProfile.getScaleRadius()
-        else:
-            return self._data["scale_radius"]
-        
-    # Set the scale radius, then update the _last_size_set_was_half_light_radius switch AND the
-    # _SBProfile.  The latter is rebuilt as necessary on first access after changes in param values.
-    def _set_scale_radius(self, value):
-        self._data["scale_radius"] = value
-        self._data["half_light_radius"] = None
-        self._last_size_set_was_half_light_radius = False
-        self._SBProfile = None  # Make sure that the ._SBProfile storage is emptied too
-
-    # Then we define the scale_radius descriptor with reference to these getter/setter functions
-    scale_radius = descriptors.GetSetFuncParam(
-        getter=_get_scale_radius, setter=_set_scale_radius, group="size",
-        doc="Moffat scale radius parameter, kept updated with the other size attributes.")
-
-    # Getter and setter functions for the half_light_radius descriptor
-    # These are both defined in close analogy to the scale_radius, having mirror/inverse behaviour
-    def _get_half_light_radius(self):
-        if self._last_size_set_was_half_light_radius is True:
-            return self._data["half_light_radius"]
-        else:
-            if not self.SBProfile.__class__ is galsim.SBMoffat: # can happen after flux set
-                self._SBInitialize()
-            return self.SBProfile.getHalfLightRadius()
-
-    def _set_half_light_radius(self, value):
-        self._data["half_light_radius"] = value
-        self._data["scale_radius"] = None
-        self._last_size_set_was_half_light_radius = True
-        self._SBProfile = None
-
-    # Then we define the half_light_radius descriptor with ref. to these getter/setter functions
-    half_light_radius = descriptors.GetSetFuncParam(
-        getter=_get_half_light_radius, setter=_set_half_light_radius, group="size",
-        doc="Half light radius, kept updated with the other size attributes.")
-
-    # Getter and setter functions for the fwhm
-    # The FWHM can be expressed in terms of the scale_radius and beta
-    def _get_fwhm(self):
-        return self.scale_radius * 2. * np.sqrt(2.**(1. / self.beta) - 1.)
-
-    def _set_fwhm(self, value):
-        self.scale_radius = 0.5 * value / np.sqrt(2.**(1. / self.beta) - 1.)
-
-    # Then define the fwhm descriptor with reference to these getter/setter functions
-    fwhm = descriptors.GetSetFuncParam(
-        getter=_get_fwhm, setter=_set_fwhm, group="size",
-        doc="FWHM, kept updated with the other size attributes.")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-        # Initialize the GSObject differently depending on whether the HLR was set last.
-        if self._last_size_set_was_half_light_radius is True:
-            GSObject.__init__(
-                self, galsim.SBMoffat(
-                    self.beta, half_light_radius=self.half_light_radius, trunc=self.trunc,
-                    flux=self.flux))
-        else:
-            GSObject.__init__(
-                self, galsim.SBMoffat(
-                    self.beta, scale_radius=self.scale_radius, trunc=self.trunc, flux=self.flux))
+    # Initialization parameters of the object, with type information
+    _params={
+        "beta": "required",
+        "scale_radius": "size", "half_light_radius": "size", "fwhm": "size",
+        "trunc": "optional", "flux": "optional"}
 
     # --- Public Class methods ---
     def __init__(self, beta, scale_radius=None, half_light_radius=None,  fwhm=None, trunc=0.,
                  flux=1.):
-
-        # First we define a hidden storage variable to recall how the size parameter was last set: 
-        self._last_size_set_was_half_light_radius = False
-
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
-        
-        # Set the beta and truncation parameters
-        self.beta = beta
-        self.trunc = trunc
-
-        # Use _parse_sizes() to initialize size parameters
-        _parse_sizes(
-            self, label="Moffat", scale_radius=scale_radius, fwhm=fwhm,
-            half_light_radius=half_light_radius)
-
-        # Set the flux
-        self.flux = flux
+        GSObject.__init__(
+            self, galsim.SBMoffat(
+                beta, half_light_radius=half_light_radius, trunc=trunc, flux=flux))
 
 
 class AtmosphericPSF(GSObject):
