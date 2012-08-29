@@ -673,7 +673,28 @@ class Moffat(GSObject):
                  flux=1.):
         GSObject.__init__(
             self, galsim.SBMoffat(
-                beta, half_light_radius=half_light_radius, trunc=trunc, flux=flux))
+                beta, scale_radius=scale_radius, half_light_radius=half_light_radius, trunc=trunc,
+                flux=flux))
+
+    def getBeta(self):
+        """@brief Return the beta parameter for this Moffat profile.
+        """
+        return self.SBProfile.getBeta()
+
+    def getScaleRadius(self):
+        """@brief Return the scale radius for this Moffat profile.
+        """
+        return self.SBProfile.getScaleRadius()
+        
+    def getFWHM(self):
+        """@brief Return the FWHM for this Moffat profile.
+        """
+        return self.SBProfile.getFWHM()
+
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this Moffat profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
 
 
 class AtmosphericPSF(GSObject):
