@@ -884,8 +884,8 @@ class Kolmogorov(GSObject):
     _hlr_factor = 0.554811
 
     # Initialization parameters of the object, with type information
-    _params={"lam_over_r0": "size", "fwhm": "size", "half_light_radius": "size",
-             "flux": "optional"}
+    _params={
+        "lam_over_r0": "size", "fwhm": "size", "half_light_radius": "size", "flux": "optional"}
 
     # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.):
@@ -970,47 +970,50 @@ class OpticalPSF(GSObject):
     @param flux            total flux of the profile [default flux=1.].
     """
 
-    ("lam_over_D",),
-                        "optional" : ("defocus", "astig1", "astig2", "coma1", "coma2", "spher", 
-                                      "circular_pupil", "interpolant", "dx", "oversampling",
-                                      "pad_factor")
+    # Initialization parameters of the object, with type information
+    _params={
+        "lam_over_D": "size",
+        "defocus": "optional", "astig1": "optional", "astig2": "optional", "coma1": "optional",
+        "coma2": "optional", "spher": "optional", "circular_pupil": "optional",
+        "interpolant": "optional", "dx": "optional", "oversampling": "optional",
+        "pad_factor": "optional"}
 
+    # --- Public Class methods ---
+    def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+                 circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
+                 pad_factor=1.5, flux=1.):
 
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-        
         # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
         import galsim.optics
         
         # Choose dx for lookup table using Nyquist for optical aperture and the specified
         # oversampling factor
-        dx_lookup = .5 * self.lam_over_D / self.oversampling
+        dx_lookup = .5 * lam_over_D / oversampling
         
         # Use a similar prescription as SBAiry to set Airy stepK and thus reference unpadded image
         # size in physical units
         stepk_airy = min(
-            ALIAS_THRESHOLD * .5 * np.pi**3 * (1. - self.obscuration) / self.lam_over_D,
-            np.pi / 5. / self.lam_over_D)
+            ALIAS_THRESHOLD * .5 * np.pi**3 * (1. - obscuration) / lam_over_D,
+            np.pi / 5. / lam_over_D)
         
         # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
         # also make npix always *odd* so that opticalPSF lookup table array is correctly centred:
-        npix = 1 + 2 * (np.ceil(self.pad_factor * (np.pi / stepk_airy) / dx_lookup)).astype(int)
+        npix = 1 + 2 * (np.ceil(pad_factor * (np.pi / stepk_airy) / dx_lookup)).astype(int)
         
         # Make the psf image using this dx and array shape
         optimage = galsim.optics.psf_image(
-            lam_over_D=self.lam_over_D, dx=dx_lookup, array_shape=(npix, npix),
-            defocus=self.defocus, astig1=self.astig1, astig2=self.astig2, coma1=self.coma1,
-            coma2=self.coma2, spher=self.spher, circular_pupil=self.circular_pupil,
-            obscuration=self.obscuration, flux=self.flux)
+            lam_over_D=lam_over_D, dx=dx_lookup, array_shape=(npix, npix), defocus=defocus,
+            astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
+            circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
         
         # If interpolant not specified on input, use a high-ish n lanczos
-        if self.interpolant == None:
+        if interpolant == None:
             quintic = galsim.Quintic(tol=1.e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
             if isinstance(self.interpolant, galsim.InterpolantXY) is False:
                 raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+            self.interpolant = interpolant
             
         # Initialize the SBProfile
         GSObject.__init__(
@@ -1021,28 +1024,6 @@ class OpticalPSF(GSObject):
         # Thus, we call the function calculateStepK() to refine the value.
         self.SBProfile.calculateStepK()
         self.SBProfile.calculateMaxK()
-
-    # --- Public Class methods ---
-    def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-                 circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
-                 pad_factor=1.5, flux=1.):
-
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
-
-        # Setting the parameters
-        self.lam_over_D = lam_over_D
-        self.defocus = defocus
-        self.astig1 = astig1
-        self.astig2 = astig2
-        self.coma1 = coma1
-        self.coma2 = coma2
-        self.spher = spher
-        self.circular_pupil = circular_pupil
-        self.obscuration = obscuration
-        self.interpolant = interpolant
-        self.oversampling = oversampling
-        self.pad_factor = pad_factor
-        self.flux = flux
 
 
 class Pixel(GSObject):
