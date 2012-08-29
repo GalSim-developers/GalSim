@@ -12,20 +12,8 @@ class GSObject(object):
     shared methods and attributes, particularly those from the C++ SBProfile classes.
     """
 
-    flux = descriptors.SimpleParam(
-        name="flux", group="optional", default=1., doc="Total flux of the object.")
-
-    # Pre-initialization for the parameter data store, must be done at the start of every __init__
-    def _setup_data_store(self):
-        if not hasattr(self, "_data"):
-            self._data = {}        # Used for storing parameter data accessed by descriptors
-        if not hasattr(self, "SBProfile"):
-            self.SBProfile = None  # Attribute used to store the C++ layer SBProfile object for
-                                   # which GSObjects are a container
-
     # --- Initialization ---
     def __init__(self, SBProfile):
-        self._setup_data_store()
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
     
     # Make op+ of two GSObjects work to return an Add object
@@ -78,13 +66,10 @@ class GSObject(object):
         Gaussian (for example), the copy will also be a Gaussian, and can thus call
         the methods that are not in GSObject, but are in Gaussian (e.g. getSigma).
         """
-        import copy
-
-        # First re-initialize a return GSObject with self's SBProfile
-        new_sbp = self.SBProfile.__class__(self.SBProfile)
-        ret = GSObject(new_sbp)
-        # Copy the data store and transformations
-        ret._data = copy.copy(self._data)
+        # Re-initialize a return GSObject with self's SBProfile
+        sbp = self.SBProfile.__class__(self.SBProfile)
+        ret = GSObject(sbp)
+        ret.__class__ = self.__class__
         return ret
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
@@ -666,7 +651,7 @@ class Gaussian(GSObject):
         return self.SBProfile.getSigma() * 1.1774100225154747 # factor = sqrt[2ln(2)]
 
 
-class Gaussian_nodescriptors(GSObject):
+class Gaussian(GSObject):
     """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
 
     For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
