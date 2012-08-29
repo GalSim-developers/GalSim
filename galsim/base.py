@@ -673,8 +673,8 @@ class Moffat(GSObject):
                  flux=1.):
         GSObject.__init__(
             self, galsim.SBMoffat(
-                beta, scale_radius=scale_radius, half_light_radius=half_light_radius, trunc=trunc,
-                flux=flux))
+                beta, scale_radius=scale_radius, half_light_radius=half_light_radius, fwhm=fwhm,
+                trunc=trunc, flux=flux))
 
     def getBeta(self):
         """@brief Return the beta parameter for this Moffat profile.
@@ -1041,7 +1041,7 @@ class Pixel(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={"xw": "required", "yw": "optional", "flux": "optional"}
+    _params={"xw": "size", "yw": "optional", "flux": "optional"}
 
     # --- Public Class methods ---
     def __init__(self, xw, yw=None, flux=1.):
@@ -1073,9 +1073,9 @@ class Sersic(GSObject):
 
     Example:
     >>> sersic_obj = Sersic(n=3.5, half_light_radius=2.5, flux=40.)
-    >>> sersic_obj.half_light_radius
+    >>> sersic_obj.getHalfLightRadius()
     2.5
-    >>> sersic_obj.n
+    >>> sersic_obj.getN()
     3.5
 
     Methods
@@ -1084,34 +1084,23 @@ class Sersic(GSObject):
     applyShear etc.) and operator bindings.
     """
 
-    # Defining the descriptor for the sersic index n
-    n = descriptors.SimpleParam(
-        "n", group="required", default=None, doc="Sersic index.")
-
-    # Defining the size parameter HLR
-    half_light_radius = descriptors.SimpleParam(
-        name="half_light_radius", default=None, group="size",
-        doc="half_light_radius, kept consistent with the other size attributes.")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-        GSObject.__init__(
-            self, galsim.SBSersic(self.n, half_light_radius=self.half_light_radius, flux=self.flux))
+    # Initialization parameters of the object, with type information
+    _params={"n": "required", "half_light_radius": "size", "flux": "optional"}
 
     # --- Public Class methods ---
     def __init__(self, n, half_light_radius, flux=1.):
+        GSObject.__init__(
+            self, galsim.SBSersic(n, half_light_radius=half_light_radius, flux=flux))
 
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
+    def getN(self):
+        """@brief Return the Sersic index for this profile.
+        """
+        return self.SBProfile.getN()
 
-        # Set the Sersic index
-        self.n = n
-
-        # Use _parse_sizes() to initialize size parameters
-        _parse_sizes(self, label="Sersic", half_light_radius=half_light_radius)
-
-        # Set the flux
-        self.flux = flux
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this Sersic profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
 
 
 class Exponential(GSObject):
@@ -1131,10 +1120,10 @@ class Exponential(GSObject):
 
     Example:
     >>> exp_obj = Exponential(flux=3., scale_radius=5.)
-    >>> exp_obj.half_light_radius
+    >>> exp_obj.getHalfLightRadius()
     8.391734950083302
-    >>> exp_obj.half_light_radius = 1.
-    >>> exp_obj.scale_radius
+    >>> exp_obj = Exponential(flux=3., half_light_radius=1.)
+    >>> exp_obj.getScaleRadius()
     0.5958243473776976
 
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
@@ -1146,36 +1135,26 @@ class Exponential(GSObject):
     applyShear etc.) and operator bindings.
     """
 
-    # Defining the natural basic size parameter scale_radius 
-    scale_radius = descriptors.SimpleParam(
-        name="scale_radius", default=None, group="size",
-        doc="Exponential scale radius, kept consistent with the other size attributes.")
+    # Initialization parameters of the object, with type information
+    _params={"scale_radius": "size", "half_light_radius": "size", "flux": "optional"}
 
-    # Half light radius
-    # Constant scaling factor not analytic, but can be calculated by iterative solution of:
-    # (re / r0) = ln[(re / r0) + 1] + ln(2)
-    half_light_radius=descriptors.GetSetScaleParam(
-        "half_light_radius", root_name="scale_radius", factor=1.6783469900166605, group="size",
-        doc="half_light_radius, kept consistent with the other size attributes.")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-        GSObject.__init__(
-            self, galsim.SBExponential(half_light_radius=self.half_light_radius, flux=self.flux))
- 
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
+        GSObject.__init__(
+            self, galsim.SBExponential(
+                half_light_radius=half_light_radius, scale_radius=scale_radius, flux=flux))
 
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
+    def getScaleRadius(self):
+        """@brief Return the scale radius for this Exponential profile.
+        """
+        return self.SBProfile.getScaleRadius()
 
-        # Use _parse_sizes() to initialize size parameters
-        _parse_sizes(
-            self, label="Exponential", half_light_radius=half_light_radius,
-            scale_radius=scale_radius)
-
-        # Set the flux
-        self.flux = flux
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this Exponential profile.
+        """
+        # Factor not analytic, but can be calculated by iterative solution of equation:
+        #  (re / r0) = ln[(re / r0) + 1] + ln(2)
+        return self.SBProfile.getScaleRadius() * 1.6783469900166605
 
 
 class DeVaucouleurs(GSObject):
