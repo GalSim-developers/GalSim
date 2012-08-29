@@ -147,8 +147,9 @@ def BuildGSObject(config, key, base=None):
     gsobject, safe1 = _BuildEllipRotateShearShiftObject(gsobject, ck, base)
     safe = safe and safe1
 
-    ck['current'] = gsobject
-    ck['safe'] = safe
+    if 'no_save' not in base:
+        ck['current'] = gsobject
+        ck['safe'] = safe
     #print 'Done BuildGSObject: ',gsobject,safe
     return gsobject, safe
 
@@ -572,8 +573,6 @@ def _GetInputCatParamValue(param, param_name, base):
         raise ValueError("No input catalog available for %s.type = InputCatalog"%param_name)
     input_cat = base['input_cat']
 
-    # Set the val from the requisite [input_cat.current, col] entry in the
-    # input_cat.data... if this fails, try to work out why and give info.
     if 'col' not in param:
         raise AttributeError(
             "%s.col attribute required %s.type = InputCatalog"%(param_name,param_name))
@@ -749,16 +748,12 @@ def _GetRandomTopHatParamValue(param, param_name, base):
 def _GetSequenceParamValue(param, param_name, base):
     """@brief Specialized function for getting a sequence of integers
     """
-    if 'max' not in param:
-        raise AttributeError(
-            "%s.max attribute required %s.type = Sequence"%(param_name,param_name))
-    max = int(param['max'])
     min = int(param.get('min',0))
     step = int(param.get('step',1))
 
     index = param.get('current',min-step)
     index = index + step
-    if index > max:
+    if 'max' in param and index > param['max']:
         index = min
     param['current'] = index
     #print 'Sequence: ',index,False

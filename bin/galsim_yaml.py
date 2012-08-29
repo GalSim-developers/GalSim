@@ -13,7 +13,7 @@ import logging
 import time
 import copy
 
-def MergeConfig(config1, config2):
+def MergeConfig(config1, config2, logger=None):
     """
     Merge config2 into config1 sucth that it has all the information from either config1 or 
     config2 including places where both input dicts have some of a field defined.
@@ -24,18 +24,19 @@ def MergeConfig(config1, config2):
     for (key, value) in config2.items():
         if not key in config1:
             # If this key isn't in config1 yet, just add it
-            config1[key] = value
+            config1[key] = copy.deepcopy(value)
         elif isinstance(value,dict) and isinstance(config1[key],dict):
             # If they both have a key, first check if the values are dicts
             # If they are, just recurse this process and merge those dicts.
             MergeConfig(config1[key],value)
         else:
             # Otherwise config1 takes precedence
-            logger.info("Not merging key %s from the base config, since the later "
-                        "one takes precedence",key)
+            if logger:
+                logger.info("Not merging key %s from the base config, since the later "
+                            "one takes precedence",key)
             pass
 
-def ParseConfigInput(config, logger):
+def ParseConfigInput(config, logger=None):
     """
     Parse the field config['input'], storing the results into the top level of config:
 
@@ -56,7 +57,8 @@ def ParseConfigInput(config, logger):
             dir = catalog['dir']
             file_name = os.path.join(dir,file_name)
         input_cat = galsim.io.ReadInputCat(config,file_name)
-        logger.info('Read %d objects from catalog',input_cat.nobjects)
+        if logger:
+            logger.info('Read %d objects from catalog',input_cat.nobjects)
         # Store input_cat in the config for use by BuildGSObject function.
         config['input_cat'] = input_cat
 
@@ -71,14 +73,16 @@ def ParseConfigInput(config, logger):
         else:
             image_dir = catalog.get('image_dir','.')
         real_cat = galsim.RealGalaxyCatalog(file_name, image_dir)
-        logger.info('Read %d objects from catalog',real_cat.n)
+        if logger:
+            logger.info('Read %d objects from catalog',real_cat.n)
         if 'preload' in catalog and catalog['preload']:
             real_cat.preload()
-            logger.info('Preloaded the real galaxy catalog headers')
+            if logger:
+                logger.info('Preloaded the real galaxy catalog headers')
         # Store real_cat in the config for use by BuildGSObject function.
         config['real_cat'] = real_cat
 
-def ParseConfigOutput(config, logger):
+def ParseConfigOutput(config, logger=None):
     """
     Parse the field config['output'], storing some values into the top level of config:
 
@@ -116,7 +120,8 @@ def ParseConfigOutput(config, logger):
                 inspect.getfile(inspect.currentframe())) # script filename (usually with path)
             # Strip off a final suffix if present.
             file_name = os.path.splitext(script_name)[0]
-            logger.info('No output file name specified.  Using %s',file_name)
+            if logger:
+                logger.info('No output file name specified.  Using %s',file_name)
 
         # Prepend a dir to the beginning of the filename if requested.
         if 'dir' in output:
@@ -197,7 +202,7 @@ def ParseConfigOutput(config, logger):
             config['nobjects'] = nobjects
 
 
-def ParseConfigImage(config, logger):
+def ParseConfigImage(config, logger=None):
     """
     Parse the field config['image'], storing some values into the top level of config:
 
@@ -225,12 +230,15 @@ def ParseConfigImage(config, logger):
 
     if not config['image_xsize']:
         if config['same_sized_images']:
-            logger.info('All images must be the same size, so will use the automatic ' +
-                        'size of the first image only')
+            if logger:
+                logger.info('All images must be the same size, so will use the automatic ' +
+                            'size of the first image only')
         else:
-            logger.info('Automatically sizing images')
+            if logger:
+                logger.info('Automatically sizing images')
     else:
-        logger.info('Using image size = %d x %d',config['image_xsize'],config['image_ysize'])
+        if logger:
+            logger.info('Using image size = %d x %d',config['image_xsize'],config['image_ysize'])
 
     if 'wcs' in config['image']:
         wcs = config['image']['wcs']
@@ -245,7 +253,8 @@ def ParseConfigImage(config, logger):
     # Also, set the pixel scale (Default is 1.0)
     pixel_scale = float(config['image'].get('pixel_scale',1.0))
     config['pixel_scale'] = pixel_scale
-    logger.info('Using pixel scale = %f',pixel_scale)
+    if logger:
+        logger.info('Using pixel scale = %f',pixel_scale)
 
     # Get the target image variance from noise:
     if 'noise' in config['image']:
@@ -277,7 +286,7 @@ def ParseConfigImage(config, logger):
         config['noise_var'] = var
 
 
-def ParseConfigPSF(config, logger):
+def ParseConfigPSF(config, logger=None):
     """
     Parse the field config['psf'] returning the built psf object.
 
@@ -293,7 +302,7 @@ def ParseConfigPSF(config, logger):
     config['safe_psf'] = safe_psf
     return psf
 
-def ParseConfigPix(config, logger):
+def ParseConfigPix(config, logger=None):
     """
     Parse the field config['pix'] returning the built pix object.
 
@@ -319,7 +328,7 @@ def ParseConfigPix(config, logger):
     return pix
 
 
-def ParseConfigGal(config, logger):
+def ParseConfigGal(config, logger=None):
     """
     Parse the field config['gal'] returning the built gal object.
 
@@ -429,11 +438,13 @@ def DrawImageFFT(psf, pix, gal, config):
             im.addNoise(galsim.CCDNoise(rng))
             #print 'after CCDNoise: ',rng()
             im -= sky_level_pixel
-            #logger.info('   Added Poisson noise with sky_level = %f',sky_level)
+            #if logger:
+                #logger.info('   Added Poisson noise with sky_level = %f',sky_level)
         elif noise['type'] == 'Gaussian':
             sigma = noise['sigma']
             im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
-            #logger.info('   Added Gaussian noise with sigma = %f',sigma)
+            #if logger:
+                #logger.info('   Added Gaussian noise with sigma = %f',sigma)
         elif noise['type'] == 'CCDNoise':
             sky_level_pixel = float(noise['sky_level']) * pixel_scale**2
             gain = float(noise.get("gain",1.0))
@@ -441,8 +452,9 @@ def DrawImageFFT(psf, pix, gal, config):
             im += sky_level_pixel
             im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
             im -= sky_level_pixel
-            #logger.info('   Added CCD noise with sky_level = %f, ' +
-                    #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
+            #if logger:
+                #logger.info('   Added CCD noise with sky_level = %f, ' +
+                            #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
         else:
             raise AttributeError("Invalid type %s for noise"%noise['type'])
     return im
@@ -493,11 +505,13 @@ def DrawImagePhot(psf, gal, config):
             # to make sure not to add that again!  Just add Poisson with 
             # mean = sky_level_pixel
             im.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
-            #logger.info('   Added Poisson noise with sky_level = %f',sky_level)
+            #if logger:
+                #logger.info('   Added Poisson noise with sky_level = %f',sky_level)
         elif noise['type'] == 'Gaussian':
             sigma = noise['sigma']
             im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
-            #logger.info('   Added Gaussian noise with sigma = %f',sigma)
+            #if logger:
+                #logger.info('   Added Gaussian noise with sigma = %f',sigma)
         elif noise['type'] == 'CCDNoise':
             sky_level_pixel = float(noise['sky_level']) * pixel_scale**2
             gain = float(noise.get("gain",1.0))
@@ -508,8 +522,9 @@ def DrawImagePhot(psf, gal, config):
             im.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel*gain))
             im /= gain
             im.addNoise(galsim.GaussianDeviate(rng, sigma=read_noise))
-            #logger.info('   Added CCD noise with sky_level = %f, ' +
-                        #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
+            #if logger:
+                #logger.info('   Added CCD noise with sky_level = %f, ' +
+                            #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
         else:
             raise AttributeError("Invalid type %s for noise",noise['type'])
     return im
@@ -540,76 +555,176 @@ def DrawPSFImage(psf, pix, config):
 
     return psf_im
 
-def BuildConfigImages(config, logger):
+def BuildConfigSingleImage(seed, config, logger=None):
+    """
+    Build a single image using the given seed and config file
+
+    @return image, psf_image, time
+    """
+    t1 = time.time()
+
+    # Initialize the random number generator we will be using.
+    rng = galsim.UniformDeviate(seed)
+    # Store the rng in the config for use by BuildGSObject function.
+    config['rng'] = rng
+    if 'gd' in config:
+        del config['gd']  # In case it was set.
+
+    psf = ParseConfigPSF(config,logger)
+    t2 = time.time()
+
+    pix = ParseConfigPix(config,logger)
+    t3 = time.time()
+
+    gal = ParseConfigGal(config,logger)
+    t4 = time.time()
+
+    # Check that we have at least gal or psf.
+    if not (gal or psf):
+        raise AttributeError("At least one of gal or psf must be specified in config.")
+
+    draw_method = config['image'].get('draw_method','fft')
+    if draw_method == 'fft':
+        im = DrawImageFFT(psf,pix,gal,config)
+    elif draw_method == 'phot':
+        im = DrawImagePhot(psf,gal,config)
+    else:
+        raise AttributeError("Unknown draw_method.")
+    t5 = time.time()
+
+    # Note: These may be different from image_xsize and image_ysize
+    # since the latter may be None.
+    # In that case, xsize and ysize are the actual realized sized of the drawn image.
+    xsize, ysize = im.array.shape
+    config['xsize'] = xsize
+    config['ysize'] = ysize
+
+    if config['make_psf_images']:
+        psf_im = DrawPSFImage(psf,pix,config)
+    else:
+        psf_im = None
+
+    t6 = time.time()
+
+    #if logger:
+        #logger.info('   Times: %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
+    return im, psf_im, t6-t1
+
+
+def BuildConfigImages(config, logger=None):
     """
     Build the images specified by the config file
 
     @return images, psf_images  (Both are lists)
     """
+    def worker(input, output):
+        """
+        input is a queue with (args, info) tuples:
+            args are the arguments to pass to BuildConfigSingleImage
+            info is passed along to the output queue.
+        output is a queue storing (result, info, proc) tuples:
+            result is the returned tuple from BuildConfigSingleImage: 
+                (image, psf_image, time).
+            info is passed through from the input queue.
+            proc is the process name.
+        """
+        for (args, info) in iter(input.get, 'STOP'):
+            result = BuildConfigSingleImage(*args)
+            output.put( (result, info, current_process().name) )
+    
     images = []
     psf_images = []
-    nobjects = config.get('nobjects',1)
-    logger.info('nobjects = %d',nobjects)
-    
-    for i in range(nobjects):
-    
-        t1 = time.time()
+    nobjects = config['nobjects']
 
-        # Initialize the random number generator we will be using.
-        if 'random_seed' in config:
-            rng = galsim.UniformDeviate(int(config['random_seed']+i))
-        else:
-            rng = galsim.UniformDeviate()
-        # Store the rng in the config for use by BuildGSObject function.
-        config['rng'] = rng
-        if 'gd' in config:
-            del config['gd']  # In case it was set.
+    if 'nproc' not in config or config['nproc'] == 1:
+        for k in range(nobjects):
+            if 'random_seed' in config:
+                seed = int(config['random_seed']) + k
+            else:
+                seed = None
+            im, psf_im, t = BuildConfigSingleImage(seed, config, logger)
+            images += [im]
+            if psf_im:
+                psf_images += [psf_im]
+            if logger:
+                logger.info('Image %d: size = %d x %d, total time = %f sec', 
+                            k, im.array.shape[0], im.array.shape[1], t)
+    else:
+        from multiprocessing import Process, Queue, current_process, cpu_count
+        nproc = config['nproc']
+        if nproc <= 0:
+            # Try to figure out a good number of processes to use
+            try:
+                nproc = cpu_count()
+                if logger:
+                    logger.info('Using ncpu = %d processes',nproc)
+            except:
+                raise AttributeError(
+                    "config.nprof <= 0, but unable to determine number of cpus.")
 
-        psf = ParseConfigPSF(config,logger)
-        t2 = time.time()
+        # Don't save any 'current' results in the config, so we don't waste time sending
+        # pickled versions of things back and forth.
+        config['no_save'] = True
 
-        pix = ParseConfigPix(config,logger)
-        t3 = time.time()
-
-        gal = ParseConfigGal(config,logger)
-        t4 = time.time()
-
-        # Check that we have at least gal or psf.
-        if not (gal or psf):
-            raise AttributeError("At least one of gal or psf must be specified in config.")
-
-        draw_method = config['image'].get('draw_method','fft')
-        if draw_method == 'fft':
-            im = DrawImageFFT(psf,pix,gal,config)
-        elif draw_method == 'phot':
-            im = DrawImagePhot(psf,gal,config)
-        else:
-            raise AttributeError("Unknown draw_method.")
-        # Store that into the list of all images
-        images += [im]
-        t5 = time.time()
-
-        # Note: These may be different from image_xsize and image_ysize
-        # since the latter may be None.
-        # In that case, xsize and ysize are the actual realized sized of the drawn image.
-        xsize, ysize = im.array.shape
-        config['xsize'] = xsize
-        config['ysize'] = ysize
-
+        # Initialize the images list to have the correct size.
+        # This is important here, since we'll be getting back images in a random order,
+        # and we need them to go in the right places (in order to have deterministic
+        # output files).  So we initialize the list to be the right size.
+        images = [ None for i in range(nobjects) ]
         if config['make_psf_images']:
-            psf_im = DrawPSFImage(psf,pix,config)
-            psf_images += [psf_im]
-    
-        t6 = time.time()
-    
-        #logger.info('   Times: %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
-        logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t6-t1)
-    
-    logger.info('Done making images')
-    return images, psf_images
+            psf_images = [ None for i in range(nobjects) ]
 
- 
-def WriteConfigImages(images, psf_images, config, logger):
+        # Set up the task list
+        task_queue = Queue()
+        for k in range(nobjects):
+            if 'random_seed' in config:
+                seed = int(config['random_seed']) + k
+            else:
+                seed = None
+            task_queue.put( ( (seed, config), k) )
+
+        # Run the tasks
+        # Each Process command starts up a parallel process that will keep checking the queue 
+        # for a new task. If there is one there, it grabs it and does it. If not, it waits 
+        # until there is one to grab. When it finds a 'STOP', it shuts down. 
+        done_queue = Queue()
+        for j in range(nproc):
+            Process(target=worker, args=(task_queue, done_queue)).start()
+
+        # In the meanwhile, the main process keeps going.  We pull each image off of the 
+        # done_queue and put it in the appropriate place on the main image.  
+        # This loop is happening while the other processes are still working on their tasks.
+        # You'll see that these logging statements get print out as the stamp images are still 
+        # being drawn.  
+        for i in range(nobjects):
+            result, k, proc = done_queue.get()
+            im = result[0]
+            psf_im = result[1]
+            t = result[2]
+            images[k] = im
+            if psf_im:
+                psf_images[k] = psf_im
+            if logger:
+                logger.info('%s: Image %d: size = %d x %d, total time = %f sec', 
+                            proc, k, im.array.shape[0], im.array.shape[1], t)
+
+        # Stop the processes
+        # The 'STOP's could have been put on the task list before starting the processes, or you
+        # can wait.  In some cases it can be useful to clear out the done_queue (as we just did)
+        # and then add on some more tasks.  We don't need that here, but it's perfectly fine to do.
+        # Once you are done with the processes, putting nproc 'STOP's will stop them all.
+        # This is important, because the program will keep running as long as there are running
+        # processes, even if the main process gets to the end.  So you do want to make sure to 
+        # add those 'STOP's at some point!
+        for j in range(nproc):
+            task_queue.put('STOP')
+
+    if logger:
+        logger.info('Done making images')
+
+    return images, psf_images
+    
+def WriteConfigImages(images, psf_images, config, logger=None):
     """
     Write the provided images to the files specified in config['output']
     """
@@ -623,24 +738,30 @@ def WriteConfigImages(images, psf_images, config, logger):
 
         if output['type'] == 'single':
             images[0].write(file_name, clobber=True)
-            logger.info('Wrote image to fits file %r',file_name)
+            if logger:
+                logger.info('Wrote image to fits file %r',file_name)
             if 'psf' in output:
                 psf_images[0].write(psf_file_name, clobber=True)
-                logger.info('Wrote psf image to fits file %r',psf_file_name)
+                if logger:
+                    logger.info('Wrote psf image to fits file %r',psf_file_name)
 
         elif output['type'] == 'multi_fits':
             galsim.fits.writeMulti(images, file_name, clobber=True)
-            logger.info('Wrote images to multi-extension fits file %r',file_name)
+            if logger:
+                logger.info('Wrote images to multi-extension fits file %r',file_name)
             if 'psf' in output:
                 galsim.fits.writeMulti(psf_images, psf_file_name, clobber=True)
-                logger.info('Wrote psf images to multi-extension fits file %r',psf_file_name)
+                if logger:
+                    logger.info('Wrote psf images to multi-extension fits file %r',psf_file_name)
 
         elif output['type'] == 'data_cube':
             galsim.fits.writeCube(images, file_name, clobber=True)
-            logger.info('Wrote image to fits data cube %r',file_name)
+            if logger:
+                logger.info('Wrote image to fits data cube %r',file_name)
             if 'psf' in output:
                 galsim.fits.writeCube(psf_images, psf_file_name, clobber=True)
-                logger.info('Wrote psf images to fits data cube %r',psf_file_name)
+                if logger:
+                    logger.info('Wrote psf images to fits data cube %r',psf_file_name)
 
         elif output['type'] == 'tiled_image':
             nx_tiles = output['nx_tiles']
@@ -673,16 +794,18 @@ def WriteConfigImages(images, psf_images, config, logger):
                             full_psf_image[b] = psf_images[k]
                         k = k+1
             full_image.write(file_name, clobber=True)
-            logger.info('Wrote tiled image to fits file %r',file_name)
+            if logger:
+                logger.info('Wrote tiled image to fits file %r',file_name)
             if 'psf' in output:
                 full_psf_image.write(psf_file_name, clobber=True)
-                logger.info('Wrote tled psf images to fits file %r',psf_file_name)
+                if logger:
+                    logger.info('Wrote tled psf images to fits file %r',psf_file_name)
 
         else:
             raise AttributeError("Invalid type for output: %s",output['type'])
 
    
-def ProcessConfig(config, logger):
+def ProcessConfig(config, logger=None):
     """
     Do all processing of the provided configuration dict
     """
