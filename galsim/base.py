@@ -725,63 +725,46 @@ class AtmosphericPSF(GSObject):
     @param flux            total flux of the profile [default flux=1.]
     """
 
-    # Defining the size parameters for the AtmosphericPSF:
-    # The basic, underlying size parameter lambda / r0
-    lam_over_r0 = descriptors.SimpleParam(
-        "lam_over_r0", group="size", default=None,
-        doc="lam_over_r0, kept consistent with the other size attributes.")
+    # Initialization parameters of the object, with type information
+    _params={
+        "lam_over_r0": "size", "fwhm": "size",
+        "interpolant": "optional", "oversampling": "optional", "flux": "optional"}
 
-    # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108)
-    fwhm = descriptors.GetSetScaleParam(
-        "fwhm", root_name="lam_over_r0", factor=0.976, group="size",
-        doc="FWHM, kept consistent with the other size attributes.")
+    # --- Public Class methods ---
+    def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5, flux=1.):
 
-    # Getter and setter functions for the half_light_radius descriptor (raising a
-    # NotImplementedError exception for this not-yet-implemented attribute)
-    def _get_half_light_radius(self):
-        raise NotImplementedError(
-            "Half light radius calculation not yet implemented for AtmosphericPSF objects.")
-
-    def _set_half_light_radius(self, value):
-        raise NotImplementedError(
-            "Half light radius support not yet implemented for AtmosphericPSF objects.")
-    
-    # Defining the half_light_radius descriptor with ref. to these getter/setter functions
-    half_light_radius = descriptors.GetSetFuncParam(
-        getter=_get_half_light_radius, setter=_set_half_light_radius, group="size",
-        doc="Half light radius, access will raise a NotImplementedError exception!")
-
-    # Defining the optional parameters interpolant and oversampling
-    interpolant = descriptors.SimpleParam(
-        "interpolant", default=None, group="optional",
-        doc="Real space InterpolantXY instance (2D).")
-
-    oversampling = descriptors.SimpleParam(
-        "oversampling", default=1.5, group="optional",
-        doc="Oversampling factor for the creation of the SBInterpolatedImage lookup table.")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-        
+        # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
+        if lam_over_r0 is None :
+            if fwhm is not None :
+                lam_over_r0 = fwhm / 0.976
+            else:
+                raise TypeError("Either lam_over_r0 or fwhm must be specified for AtmosphericPSF")
+        else :
+            if fwhm is None:
+                fwhm = 0.976 * lam_over_r0
+            else:
+                raise TypeError(
+                        "Only one of lam_over_r0 and fwhm may be specified for AtmosphericPSF")
         # Set the lookup table sample rate via FWHM / 2 / oversampling (BARNEY: is this enough??)
-        dx_lookup = .5 * self.fwhm / self.oversampling
+        dx_lookup = .5 * fwhm / oversampling
 
         # Fold at 10 times the FWHM
-        stepk_kolmogorov = np.pi / (10. * self.fwhm)
+        stepk_kolmogorov = np.pi / (10. * fwhm)
 
         # Odd array to center the interpolant on the centroid. Might want to pad this later to
         # make a nice size array for FFT, but for typical seeing, arrays will be very small.
         npix = 1 + 2 * (np.ceil(np.pi / stepk_kolmogorov)).astype(int)
         atmoimage = galsim.atmosphere.kolmogorov_psf_image(
-            array_shape=(npix, npix), dx=dx_lookup, lam_over_r0=self.lam_over_r0, flux=self.flux)
+            array_shape=(npix, npix), dx=dx_lookup, lam_over_r0=lam_over_r0, flux=flux)
+        
         # Run checks on the interpolant and build default if None
-        if self.interpolant is None:
+        if interpolant is None:
             quintic = galsim.Quintic(tol=1e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(self.interpolant, galsim.InterpolantXY) is False:
+            if isinstance(interpolant, galsim.InterpolantXY) is False:
                 raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+            self.interpolant = interpolant
 
         # Then initialize the SBProfile
         GSObject.__init__(
@@ -793,20 +776,10 @@ class AtmosphericPSF(GSObject):
         self.SBProfile.calculateStepK()
         self.SBProfile.calculateMaxK()
 
-    # --- Public Class methods ---
-    def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5, flux=1.):
-
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
-
-        # Initialize the interpolant and oversampling parameters
-        self.interpolant = interpolant
-        self.oversampling = oversampling
-        
-        # Use _parse_sizes() to initialize size parameters
-        _parse_sizes(self, label="AtmosphericPSF", lam_over_r0=lam_over_r0, fwhm=fwhm)
-
-        # Set the flux
-        self.flux = flux
+    def getHalfLightRadius(self):
+        # TODO: This seems like it would not be impossible to calculate
+        raise NotImplementedError("Half light radius calculation not yet implemented for "+
+                                  "Atmospheric PSF objects (could be though).")
 
 
 class Airy(GSObject):
