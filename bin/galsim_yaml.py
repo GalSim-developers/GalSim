@@ -11,7 +11,33 @@ import galsim
 import yaml
 import logging
 import time
+import copy
 
+def merge_config(config1, config2):
+    """Merge config2 into config1 sucth that it has all the information from either config1 or 
+    config2 including places where both input dicts have some of a field defined.
+    e.g. config1 has image.pixel_scale, and config2 has image.noise.
+            Then the returned dict will have both.
+    For real comflicts (the same value in both cases), config1's value takes precedence
+    """
+    for (key, value) in config2.items():
+        if not key in config1:
+            # If this key isn't in config1 yet, just add it
+            config1[key] = value
+        elif isinstance(value,dict) and isinstance(config1[key],dict):
+            # If they both have a key, first check if the values are dicts
+            # If they are, just recurse this process and merge those dicts.
+            merge_config(config1[key],value)
+        else:
+            # Otherwise config1 takes precedence
+            logger.info("Not merging key %s from the base config, since the later "
+                        "one takes precedence",key)
+            pass
+
+
+# TODO: This is WAY too long for a single function.  Need to break it up into parts.
+# Probably even put most of it into galsim/frontend.py so in can be called from 
+# user python code.
 def main(argv) :
 
     if len(argv) < 2 : 
@@ -46,35 +72,69 @@ def main(argv) :
     #   all_cong[0] + allconfig[2]
     #   all_cong[0] + allconfig[3]
     #   ...
-    base_config = all_config[0]
 
     if len(all_config) == 1:
-        all_config.append({})
+        # If we only have 1, prepend an empty "base_config"
+        all_config = [{}] + all_config
 
-    for update_config in all_config[1:]:
-        config = base_config
-        config.update(update_config)
-        #print 'config = ',config
+    base_config = all_config[0]
 
-        # Initialize the random number generator we will be using.
+    # Initialize the random number generator we will be using.
+    if 'random_seed' in base_config:
+        base_rng = galsim.UniformDeviate(int(base_config['random_seed']))
+    elif not all('randome_seed' in config for config in all_config[1:]):
+        base_rng = galsim.UniformDeviate()
+
+    for config in all_config[1:]:
+
+        # If this config has a random_seed value specified, use that for this
+        # set.  Otherwise use the base rng.
         if 'random_seed' in config:
             rng = galsim.UniformDeviate(int(config['random_seed']))
         else:
-            rng = galsim.UniformDeviate()
+            rng = base_rng
+        # Store the rng in the config for use by BuildGSObject function.
+        config['rng'] = rng
 
-        # Read the catalog if we are using one.
-        input_cat = None
+        # Now it's safe to merge in the info from base_config
+        merge_config(config,base_config)
+        #print 'config = ',config
+
+        # Read any needed input files
         nobjects = 1
         if 'input' in config :
             input = config['input']
+
+            # Read the input catalog if provided
             if 'catalog' in input :
                 catalog = input['catalog']
-                dir = catalog['dir']
                 file_name = catalog['file_name']
-                full_name = os.path.join(catalog['dir'],catalog['file_name'])
-                input_cat = galsim.io.ReadInputCat(config,full_name)
+                if 'dir' in catalog:
+                    dir = catalog['dir']
+                    file_name = os.path.join(dir,file_name)
+                input_cat = galsim.io.ReadInputCat(config,file_name)
                 logger.info('Read %d objects from catalog',input_cat.nobjects)
                 nobjects = input_cat.nobjects
+                # Store input_cat in the config for use by BuildGSObject function.
+                config['input_cat'] = input_cat
+
+            # Read the RealGalaxy catalog if provided
+            if 'real_catalog' in input :
+                catalog = input['real_catalog']
+                file_name = catalog['file_name']
+                if 'dir' in catalog:
+                    dir = catalog['dir']
+                    file_name = os.path.join(dir,file_name)
+                    image_dir = catalog.get('image_dir',dir)
+                else:
+                    image_dir = catalog.get('image_dir','.')
+                real_cat = galsim.RealGalaxyCatalog(file_name, image_dir)
+                logger.info('Read %d objects from catalog',real_cat.n)
+                if 'preload' in catalog and catalog['preload']:
+                    real_cat.preload()
+                    logger.info('Preloaded the real galaxy catalog headers')
+                # Store real_cat in the config for use by BuildGSObject function.
+                config['real_cat'] = real_cat
  
         # We can handle not having an output field.  But it will be convenient
         # if it exists and is empty.
@@ -97,8 +157,7 @@ def main(argv) :
             if 'type' in output and (
                     output['type'] == 'data_cube' or output['type'] == 'tiled_image') :
                 same_sized_images = True
-                logger.info('All images must be the same size, so will use the automatic' +
-                            'size of the first image')
+
             if 'psf' in output:
                 make_psf_images = True
     
@@ -139,8 +198,13 @@ def main(argv) :
         else :
             image_xsize = None
             image_ysize = None
+
         if image_xsize is None:
-            logger.info('Automatically sizing images')
+            if same_sized_images:
+                logger.info('All images must be the same size, so will use the automatic ' +
+                            'size of the first image only')
+            else:
+                logger.info('Automatically sizing images')
         else:
             logger.info('Using image size = %d x %d',image_xsize,image_ysize)
     
@@ -148,12 +212,11 @@ def main(argv) :
         pixel_scale = float(config['image'].get('pixel_scale',1.0))
         logger.info('Using pixelscale = %f',pixel_scale)
 
+
         # Build the images
         all_images = []
         all_psf_images = []
         for i in range(nobjects):
-            if input_cat and i is not input_cat.current:
-                raise ValueError('i is out of sync with current.')
     
             t1 = time.time()
     
@@ -162,7 +225,7 @@ def main(argv) :
             psf_list = []
     
             if 'psf' in config :
-                psf, safe_psf = galsim.BuildGSObject(config, 'psf', rng, input_cat)
+                psf, safe_psf = galsim.BuildGSObject(config, 'psf')
                 #print 'psf = ',psf
                 fft_list.append(psf)
                 phot_list.append(psf)
@@ -172,7 +235,7 @@ def main(argv) :
             t2 = time.time()
     
             if 'pix' in config :
-                pix, safe_pix = galsim.BuildGSObject(config, 'pix', rng, input_cat)
+                pix, safe_pix = galsim.BuildGSObject(config, 'pix')
             else :
                 pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
                 safe_pix = True
@@ -206,7 +269,7 @@ def main(argv) :
                     gal_re = resolution * psf_re
                     config['gal']['half_light_radius'] = gal_re
 
-                gal, safe_gal = galsim.BuildGSObject(config, 'gal', rng, input_cat)
+                gal, safe_gal = galsim.BuildGSObject(config, 'gal')
                 #print 'gal = ',gal
                 fft_list.append(gal)
                 phot_list.append(gal)
@@ -235,7 +298,7 @@ def main(argv) :
                     im = galsim.ImageF(image_xsize, image_ysize)
                     final.draw(im, dx=pixel_scale)
 
-                if 'signal_to_noise' in config['gal']:
+                if 'gal' in config and 'signal_to_noise' in config['gal']:
                     import math
                     import numpy
                     if 'flux' in config['gal']:
@@ -261,7 +324,7 @@ def main(argv) :
                     if not 'type' in noise :
                         raise AttributeError("noise needs a type to be specified")
                     if noise['type'] == 'Poisson' :
-                        var = float(noise['sky_level'])
+                        var = float(noise['sky_level']) * pixel_scale**2
                     elif noise['type'] == 'Gaussian' :
                         if 'sigma' in noise:
                             sigma = noise['sigma']
@@ -272,7 +335,7 @@ def main(argv) :
                             raise AttributeError(
                                 "Either sigma or variance need to be specified for Gaussian noise")
                     elif noise['type'] == 'CCDNoise' :
-                        var = float(noise['sky_level'])
+                        var = float(noise['sky_level']) * pixel_scale**2
                         gain = float(noise.get("gain",1.0))
                         var /= gain
                         read_noise = float(noise.get("read_noise",0.0))
@@ -336,9 +399,9 @@ def main(argv) :
                     raise AttributeError("noise needs a type to be specified")
                 if noise['type'] == 'Poisson' :
                     sky_level = float(noise['sky_level'])
-                    im += sky_level
+                    im += sky_level * pixel_scale**2
                     im.addNoise(galsim.CCDNoise(rng))
-                    im -= sky_level
+                    im -= sky_level * pixel_scale**2
                     #logger.info('   Added Poisson noise with sky_level = %f',sky_level)
                 elif noise['type'] == 'Gaussian' :
                     if 'sigma' in noise:
@@ -355,9 +418,9 @@ def main(argv) :
                     sky_level = float(noise['sky_level'])
                     gain = float(noise.get("gain",1.0))
                     read_noise = float(noise.get("read_noise",0.0))
-                    im += sky_level
+                    im += sky_level * pixel_scale**2
                     im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
-                    im -= sky_level
+                    im -= sky_level * pixel_scale**2
                     #logger.info('   Added CCD noise with sky_level = %f, ' +
                                 #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
                 else :
@@ -368,9 +431,6 @@ def main(argv) :
             all_images += [im]
             t7 = time.time()
     
-            # increment the row of the catalog that we should use for the next iteration
-            if input_cat:
-                input_cat.current += 1
             #logger.info('   Times: %f, %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5, t7-t6)
             logger.info('Image %d: size = %d x %d, total time = %f sec', i, xsize, ysize, t7-t1)
     

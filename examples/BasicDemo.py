@@ -103,7 +103,7 @@ def Script2():
     psf_beta = 5       #
     psf_re = 1.0       # arcsec
     pixel_scale = 0.2  # arcsec / pixel
-    sky_level = 1.e3   # ADU / pixel
+    sky_level = 2.5e4  # ADU / arcsec^2
     gain = 1.0         # ADU / e-
 
     # This time use a particular seed, so the image is deterministic.
@@ -150,16 +150,13 @@ def Script2():
     logger.info('Made image of the profile')
 
     # Add a constant sky level to the image.
-    # Create an image with the same bounds as image, with a constant
-    # sky level.
-    sky_image = galsim.ImageF(bounds=image.getBounds(), init_value=sky_level)
-    image += sky_image
+    image += sky_level * pixel_scale**2
 
     # Use this to add Poisson noise using the CCDNoise class.
     image.addNoise(galsim.CCDNoise(random_seed, gain=gain, read_noise=0.))
 
     # Subtract off the sky.
-    image -= sky_image
+    image -= sky_level * pixel_scale**2
     logger.info('Added Poisson noise')
 
     # Write the image to a file.
@@ -229,8 +226,8 @@ def Script3():
     image_size = 64        # n x n pixels
     wcs_g1 = -0.02         #
     wcs_g2 = 0.01          #
-    sky_level = 1.e3       # ADU / pixel
-    gain = 1.7             # ADU / e-
+    sky_level = 2.5e4      # ADU / arcsec^2
+    gain = 1.7             # e- / ADU
     read_noise = 0.3       # ADU / pixel
 
     random_seed = 1314662  
@@ -321,14 +318,13 @@ def Script3():
     logger.info('Made image of the profile')
 
     # Add a constant sky level to the image.
-    sky_image = galsim.ImageF(bounds=image.getBounds(), init_value=sky_level)
-    image += sky_image
+    image += sky_level * pixel_scale**2
 
     # Add Poisson noise and Gaussian read noise to the image using the CCDNoise class.
     image.addNoise(galsim.CCDNoise(random_seed, gain=gain, read_noise=read_noise))
 
     # Subtract off the sky.
-    image -= sky_image
+    image -= sky_level * pixel_scale**2
     logger.info('Added Gaussian and Poisson noise')
 
     # Write the image to a file

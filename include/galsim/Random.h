@@ -454,12 +454,19 @@ namespace galsim {
         }
 
         /**
-         * @brief Add Poisson pseudo-random deviates to every element in a supplied Image.
+         * @brief Apply Poisson pseudo-random deviates to every element in a supplied Image.
+         *
+         * This adds Poisson noise with the given mean to the image, and then subtracts off
+         * that mean value again, so the expected value is 0.
          *
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+        void applyTo(ImageView<T> data) 
+        { 
+            ApplyDeviateToImage(*this, data); 
+            data -= T(getMean());
+        }
 
     private:
         boost::random::poisson_distribution<> _pd;

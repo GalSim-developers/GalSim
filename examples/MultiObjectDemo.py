@@ -58,13 +58,13 @@ def Script1():
     cube_file_name = os.path.join('output','cube.fits')
 
     random_seed = 8241573
-    sky_level = 1.e6                # ADU
-    pixel_scale = 1.0               # arcsec  (size units in input catalog are pixels)
+    sky_level = 1.e6                # ADU / arcsec^2
+    pixel_scale = 1.0               # arcsec / pixel  (size units in input catalog are pixels)
     gal_flux = 1.e6                 # arbitrary choise, makes nice (not too) noisy images
     gal_g1 = -0.009                 #
     gal_g2 = 0.011                  #
-    image_xmax = 64                 # pixels
-    image_ymax = 64                 # pixels
+    xsize = 64                      # pixels
+    ysize = 64                      # pixels
 
     logger.info('Starting multi-object script 2 using:')
     logger.info('    - parameters taken from catalog %r',cat_file_name)
@@ -151,6 +151,10 @@ def Script1():
     input_cat = galsim.io.ReadInputCat(config,cat_file_name)
     logger.info('Read %d objects from catalog',input_cat.nobjects)
 
+    # Store these in config for use by the BuildGSObject functions.
+    config.input_cat = input_cat
+    config.rng = rng
+
     # Build the images
     all_images = []
     for i in range(input_cat.nobjects):
@@ -160,30 +164,29 @@ def Script1():
         t1 = time.time()
         #logger.info('Image %d',input_cat.current)
 
-        psf = galsim.BuildGSObject(config.psf, rng=rng, input_cat=input_cat)[0]
+        psf = galsim.BuildGSObject(config,'psf')[0]
         #logger.info('   Made PSF profile')
         t2 = time.time()
 
-        pix = galsim.BuildGSObject(config.pix, rng=rng, input_cat=input_cat)[0]
+        pix = galsim.BuildGSObject(config,'pix')[0]
         #logger.info('   Made pixel profile')
         t3 = time.time()
 
-        gal = galsim.BuildGSObject(config.gal, rng=rng, input_cat=input_cat)[0]
+        gal = galsim.BuildGSObject(config,'gal')[0]
         #logger.info('   Made galaxy profile')
         t4 = time.time()
 
         final = galsim.Convolve(psf,pix,gal)
         #im = final.draw(dx=pixel_scale)  # It makes these as 768 x 768 images.  A bit big.
-        im = galsim.ImageF(image_xmax, image_ymax)
+        im = galsim.ImageF(xsize, ysize)
         final.draw(im, dx=pixel_scale)
-        xsize, ysize = im.array.shape
         #logger.info('   Drew image: size = %d x %d',xsize,ysize)
         t5 = time.time()
 
         # Add Poisson noise
-        im += sky_level
+        im += sky_level * pixel_scale**2
         im.addNoise(galsim.CCDNoise(rng))
-        im -= sky_level
+        im -= sky_level * pixel_scale**2
         #logger.info('   Added noise')
         t6 = time.time()
 
@@ -234,8 +237,8 @@ def Script2():
 
     random_seed = 6424512           #
 
-    pixel_scale = 1.0               # arcsec
-    sky_level = 1.e6                # ADU
+    pixel_scale = 1.0               # arcsec / pixel
+    sky_level = 1.e6                # ADU / arcsec^2
 
     psf_file_name = os.path.join('output','g08_psf.fits')
     psf_beta = 3                    #
@@ -373,18 +376,19 @@ def Script2():
             # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
             # Then a few things cancel and we find that
             # S/N = sqrt( sum I(x,y)^2 / sky_level )
-            sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level )
+            sky_level_pix = sky_level * pixel_scale**2
+            sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
             flux = gal_signal_to_noise / sn_meas
             # Now we rescale the flux to get our desired S/N
             sub_gal_image *= flux
 
             # Add Poisson noise
-            sub_gal_image += sky_level
+            sub_gal_image += sky_level_pix
             # The default CCDNoise has gain=1 and read_noise=0 if
             # these keyword args are not set, giving Poisson noise
             # according to the image pixel count values.
             sub_gal_image.addNoise(galsim.CCDNoise(rng))
-            sub_gal_image -= sky_level
+            sub_gal_image -= sky_level_pix
 
             # Draw the PSF image
             # No noise on PSF images.  Just draw it as is.
@@ -451,6 +455,8 @@ def Script3():
     psf_inner_fwhm = 0.6    # arcsec
     psf_outer_fwhm = 2.3    # arcsec
     psf_inner_fraction = 0.8  # fraction of total PSF flux in the inner Gaussian
+    psf_outer_fraction = 0.2  # fraction of total PSF flux in the inner Gaussian
+    ngal = 100  
 
     logger.info('Starting multi-object script 3 using:')
     logger.info('    - real galaxies from catalog %r',cat_file_name)
@@ -465,13 +471,12 @@ def Script3():
     # Read in galaxy catalog
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, image_dir)
     real_galaxy_catalog.preload()
-    n_gal = real_galaxy_catalog.n
-    logger.info('Read in %d real galaxies from catalog', n_gal)
+    logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.n)
 
     ## Make the ePSF
     # first make the double Gaussian PSF
     psf1 = galsim.Gaussian(fwhm = psf_inner_fwhm, flux = psf_inner_fraction)
-    psf2 = galsim.Gaussian(fwhm = psf_outer_fwhm, flux = 1.0-psf_inner_fraction)
+    psf2 = galsim.Gaussian(fwhm = psf_outer_fwhm, flux = psf_outer_fraction)
     psf = psf1+psf2
     # make the pixel response
     pix = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)
@@ -485,7 +490,7 @@ def Script3():
 
     # Build the images
     all_images = []
-    for i in range(n_gal):
+    for i in range(ngal):
         #logger.info('Start work on image %d',i)
         t1 = time.time()
 
@@ -503,9 +508,12 @@ def Script3():
         final = galsim.Convolve([gal,psf,pix])
 
         # Draw the profile
-        im = galsim.ImageF(128,128)
-        final.draw(im, dx=pixel_scale)
-        xsize, ysize = im.array.shape
+        if i == 0:
+            im = final.draw(dx=pixel_scale)
+            xsize, ysize = im.array.shape
+        else:
+            im = galsim.ImageF(xsize,ysize)
+            final.draw(im, dx=pixel_scale)
 
         #logger.info('   Drew image')
         t3 = time.time()
@@ -695,9 +703,6 @@ def Script4():
                 # sure not to add that noise again!  Thus, we just add sky noise, which 
                 # is Poisson with the mean = sky_level_pixel
                 phot_image.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
-                # PoissonDeviate adds values with a mean equal to the given mean, not 0.
-                # So we need to subtract off the mean now.
-                phot_image -= sky_level_pixel
 
                 #logger.info('   Added Poisson noise.  Image fluxes are now %f and %f',
                         #fft_image.array.sum(),phot_image.array.sum())
@@ -841,9 +846,6 @@ def Script5():
         # sure not to add that noise again!  Thus, we just add sky noise, which 
         # is Poisson with the mean = sky_level_pixel
         stamp.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
-        # PoissonDeviate adds values with a mean equal to the given mean, not 0.
-        # So we need to subtract off the mean now.
-        stamp -= sky_level_pixel
 
         t2 = time.time()
         return stamp, t2-t1

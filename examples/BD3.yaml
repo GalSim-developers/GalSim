@@ -105,7 +105,7 @@ image :
         # Poisson is equivalent to CCDNoise with gain = 1, read_noise = 0
         # Gaussian is equivalent to CCDNoise with gain = 0, read_noise = sigma
         type : CCDNoise
-        sky_level : 1.e3  # ADU / pixel
+        sky_level : 2.5e4  # ADU / arcsec^2
         gain : 1.7  # e- / ADU 
         read_noise : 0.3  # ADU / pixel
 

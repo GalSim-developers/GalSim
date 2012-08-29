@@ -43,7 +43,7 @@ image :
         # You may add the noise appropriate for a particular sky level even though the
         # final image (in this case) has a mean background of zero (i.e. it is 
         # sky subtracted).
-        sky_level : 1.e3  # ADU / pixel
+        sky_level : 2.5e4  # ADU / arcsec^2
 
 # If you want the random values used to be deterministic, you can provide an initial seed.
 # If this isn't set, then it will use the current time to create an initial seed.

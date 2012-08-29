@@ -1,10 +1,10 @@
 
 # YAML configuration file for use with the executable galsim_yaml
 # Type:
-#   galsim_yaml MOD2.yaml
+#   galsim_yaml MOD1.yaml
 #
 # This configuration file is designed to be equivalent to the example script called
-# Script2 in MultiObjectDemo.py
+# Script1 in MultiObjectDemo.py
 #
 #    Make a fits image cube using parameters from an input catalog
 #      - The number of images in the cube matches the number of rows in the catalog.
@@ -37,8 +37,8 @@
 # file so you don't have to scroll down to fine the right place to edit something each time 
 # you want to change it.
 some_variables :
-    - &sky_level  1.e6                # ADU
-    - &pixel_scale  1.0               # arcsec  (size units in input catalog are pixels)
+    - &sky_level  1.e6                # ADU / arcsec^2
+    - &pixel_scale  1.0               # arcsec / pixel  (size units in input catalog are pixels)
     - &gal_flux  1.e6                 # arbitrary choise, makes nice (not too) noisy images
     - &gal_g1  -0.009                 #
     - &gal_g2  0.011                  #

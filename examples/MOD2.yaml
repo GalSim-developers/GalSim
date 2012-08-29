@@ -1,10 +1,10 @@
 
 # YAML configuration file for use with the executable galsim_yaml
 # Type:
-#   galsim_yaml MOD1.yaml
+#   galsim_yaml MOD2.yaml
 #
 # This configuration file is designed to be equivalent to the example script called
-# Script1 in MultiObjectDemo.py
+# Script2 in MultiObjectDemo.py
 #
 #    Make images similar to that done for the Great08 challenge:
 #      - Each fits file is 10 x 10 postage stamps.
@@ -98,14 +98,14 @@ gal :
 
 # Define some other information about the images 
 image :
-    pixel_scale : 1.0  # arcsec
+    pixel_scale : 1.0  # arcsec / pixel
     xsize : 39
     ysize : 39
 
     # Define what kind of noise to use
     noise : 
         type : Poisson
-        sky_level : 1.e6
+        sky_level : 1.e6  # ADU / arcsec^2
 
 # Define the initial random number seed
 random_seed : 6424512

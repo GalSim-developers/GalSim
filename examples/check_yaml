@@ -15,6 +15,9 @@ MultiObjectDemo.py 1
 MultiObjectDemo.py 2
 ../bin/galsim_yaml.py MOD2.yaml
 
+MultiObjectDemo.py 3
+../bin/galsim_yaml.py MOD3.yaml
+
 echo 'Checking diffs: (No output means success)'
 
 # Don't check demo1, since it doesn't use a deterministic seed.
@@ -31,3 +34,7 @@ diff output/cube.fits output_yaml/cube.fits
 
 diff output/g08_psf.fits output_yaml/g08_psf.fits
 diff output/g08_gal.fits output_yaml/g08_gal.fits
+
+diff output/psf_script3.fits output_yaml/psf_script3.fits
+diff output/multi_real.fits output_yaml/multi_real.fits 
+diff output/cube_real.fits output_yaml/cube_real.fits 
