@@ -883,6 +883,10 @@ class Kolmogorov(GSObject):
     # Similarly, SBKolmogorov calculates the relation between lambda/r0 and half-light radius
     _hlr_factor = 0.554811
 
+    # Initialization parameters of the object, with type information
+    _params={"lam_over_r0": "size", "fwhm": "size", "half_light_radius": "size",
+             "flux": "optional"}
+
     # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.):
 
@@ -966,52 +970,11 @@ class OpticalPSF(GSObject):
     @param flux            total flux of the profile [default flux=1.].
     """
 
-    lam_over_D = descriptors.SimpleParam(
-        "lam_over_D", group="size", default=None, doc="Lambda / D.")
+    ("lam_over_D",),
+                        "optional" : ("defocus", "astig1", "astig2", "coma1", "coma2", "spher", 
+                                      "circular_pupil", "interpolant", "dx", "oversampling",
+                                      "pad_factor")
 
-    defocus = descriptors.SimpleParam(
-        "defocus", group="optional", default=0.,
-        doc="Defocus in units of incident light wavelength.")
-
-    astig1 = descriptors.SimpleParam(
-        "astig1", group="optional", default=0.,
-        doc="First component of astigmatism (like e1) in units of incident light wavelength.")
-
-    astig2 = descriptors.SimpleParam(
-        "astig2", group="optional", default=0.,
-        doc="Second component of astigmatism (like e2) in units of incident light wavelength.")
-
-    coma1 = descriptors.SimpleParam(
-        "coma1", group="optional", default=0.,
-        doc="Coma along x in units of incident light wavelength.")
-
-    coma2 = descriptors.SimpleParam(
-        "coma2", group="optional", default=0.,
-        doc="Coma along y in units of incident light wavelength.")
-
-    spher = descriptors.SimpleParam(
-        "spher", group="optional", default=0.,
-        doc="Spherical aberration in units of incident light wavelength.")
-
-    circular_pupil = descriptors.SimpleParam(
-        "circular_pupil", group="optional", default=True,
-        doc="Adopting a circular pupil? Alternative is square.")
-
-    obscuration = descriptors.SimpleParam(
-        "obscuration", group="optional", default=True,
-        doc="Linear dimension of central obscuration as fraction of pupil linear dimension.")
-
-    interpolant = descriptors.SimpleParam(
-        "interpolant", group="optional", default=None, doc="The specified 2D interpolation scheme.")
-
-    oversampling = descriptors.SimpleParam(
-        "oversampling", group="optional", default=1.5,
-        doc="Oversampling factor for the SBInterpolatedImage table.")
-
-    pad_factor = descriptors.SimpleParam(
-        "pad_factor", group="optional", default=1.5,
-        doc="Additional multiple by which to zero-pad the PSF image to avoid folding compared "+
-            "to what would be required for a simple Airy.")
 
     # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
     # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
