@@ -176,7 +176,7 @@ def Script1():
         #logger.info('   Made galaxy profile')
         t4 = time.time()
 
-        final = galsim.Convolve(psf,pix,gal)
+        final = galsim.Convolve([psf,pix,gal])
         #im = final.draw(dx=pixel_scale)  # It makes these as 768 x 768 images.  A bit big.
         im = galsim.ImageF(xsize, ysize)
         final.draw(im, dx=pixel_scale)
@@ -290,7 +290,7 @@ def Script2():
     pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
     logger.info('Made pixel profile')
 
-    final_psf = galsim.Convolve(psf,pix)
+    final_psf = galsim.Convolve([psf,pix])
     logger.info('Made final_psf profile')
 
 
@@ -305,10 +305,8 @@ def Script2():
 
     # This profile is placed with different orientations and noise realizations
     # at each postage stamp in the gal image.
-    gal_image = galsim.ImageF(nx_pixels * nx_stamps , ny_pixels * ny_stamps)
-    gal_image.setOrigin(0,0) # For my convenience -- switch to C indexing convention.
-    psf_image = galsim.ImageF(nx_pixels * nx_stamps , ny_pixels * ny_stamps)
-    psf_image.setOrigin(0,0) # For my convenience -- switch to C indexing convention.
+    gal_image = galsim.ImageF(nx_pixels * nx_stamps-1 , ny_pixels * ny_stamps-1)
+    psf_image = galsim.ImageF(nx_pixels * nx_stamps-1 , ny_pixels * ny_stamps-1)
 
     centroid_shift_sq = centroid_shift**2
 
@@ -317,10 +315,10 @@ def Script2():
 
     for ix in range(nx_stamps):
         for iy in range(ny_stamps):
-            # The -2's in the next line rather than -1 are to provide a border of
+            # The -1's in the next line are to provide a border of
             # 1 pixel between postage stamps
-            b = galsim.BoundsI(ix*nx_pixels , (ix+1)*nx_pixels -2,
-                               iy*ny_pixels , (iy+1)*ny_pixels -2)
+            b = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels-1, 
+                               iy*ny_pixels+1 , (iy+1)*ny_pixels-1)
             sub_gal_image = gal_image[b]
             sub_psf_image = psf_image[b]
 
@@ -361,7 +359,7 @@ def Script2():
             this_psf = final_psf.createShifted(dx,dy)
 
             # Make the final image, convolving with psf and pixel
-            final_gal = galsim.Convolve(this_gal,psf,pix)
+            final_gal = galsim.Convolve([psf,pix,this_gal])
 
             # Draw the image
             final_gal.draw(sub_gal_image, dx=pixel_scale)
@@ -481,7 +479,7 @@ def Script3():
     # make the pixel response
     pix = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)
     # convolve PSF and pixel response function to get the effective PSF (ePSF)
-    epsf = galsim.Convolve(psf, pix)
+    epsf = galsim.Convolve([psf, pix])
     # Draw this one with no noise.
     epsf_image = epsf.draw(dx = pixel_scale)
     # write to file
@@ -509,7 +507,7 @@ def Script3():
         gal.applyShear(g1=gal_g1, g2=gal_g2)
         
         # Make the combined profile
-        final = galsim.Convolve([gal,psf,pix])
+        final = galsim.Convolve([psf, pix, gal])
 
         # Draw the profile
         if i == 0:
@@ -662,9 +660,9 @@ def Script4():
                 gal1.flux = flux
 
                 # Build the final object by convolving the galaxy, PSF and pixel response.
-                final = galsim.Convolve([gal1, psf, pix])
+                final = galsim.Convolve([psf, pix, gal1])
                 # For photon shooting, need a version without the pixel (see below).
-                final_nopix = galsim.Convolve([gal1, psf])
+                final_nopix = galsim.Convolve([psf, gal1])
 
                 # Create the large, double width output image
                 image = galsim.ImageF(2*nx+2,ny)
@@ -816,35 +814,38 @@ def Script5():
 
         # Make the galaxy profile:
         hlr = rng() * (bulge_hlr_max-bulge_hlr_min) + bulge_hlr_min
+        f = rng() * (bulge_frac_max-bulge_frac_min) + bulge_frac_min
         ellip = rng() * (bulge_e_max-bulge_e_min) + bulge_e_min
         beta_ellip = rng() * 2*math.pi * galsim.radians
-        bulge = galsim.Sersic(n=3.6, half_light_radius=hlr)
+
+        bulge = galsim.Sersic(n=3.6, half_light_radius=hlr, flux=f)
         bulge.applyShear(e=ellip, beta=beta_ellip)
 
         hlr = rng() * (disk_hlr_max-disk_hlr_min) + disk_hlr_min
         ellip = rng() * (disk_e_max-disk_e_min) + disk_e_min
         beta_ellip = rng() * 2*math.pi * galsim.radians
+
         disk = galsim.Sersic(n=1.5, half_light_radius=hlr)
         disk.applyShear(e=ellip, beta=beta_ellip)
+        disk.setFlux(1.-f)
 
-        f = rng() * (bulge_frac_max-bulge_frac_min) + bulge_frac_min
-        gal = f * bulge + (1-f) * disk
+        gal = galsim.Add([bulge,disk])
 
         flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
-        gal.flux = flux
+        gal.setFlux(flux)
 
         # Build the final object by convolving the galaxy and PSF 
         # Not including the pixel -- since we are using drawShoot
-        final_nopix = galsim.Convolve([gal, psf])
+        final_nopix = galsim.Convolve([psf, gal])
 
         # Define the stamp image
         stamp = galsim.ImageF(nx_pixels, ny_pixels)
+        stamp.setScale(pixel_scale)
 
         # Photon shooting automatically convolves by the pixel, so we've made sure not
         # to include it in the profile!
         sky_level_pixel = sky_level * pixel_scale**2
-        final_nopix.drawShoot(stamp, noise=sky_level_pixel/100, 
-                              uniform_deviate=rng)
+        final_nopix.drawShoot(stamp, noise=sky_level_pixel/100, uniform_deviate=rng)
 
         # For photon shooting, galaxy already has poisson noise, so we want to make 
         # sure not to add that noise again!  Thus, we just add sky noise, which 
@@ -894,13 +895,8 @@ def Script5():
     image_multi = galsim.ImageF(nx_stamps * nx_pixels , ny_stamps * ny_pixels)
     image_multi.setScale(pixel_scale)
 
-    # Try to figure out a good number of processes to use
-    try:
-        nproc = cpu_count()
-        logger.info('Using ncpu = %d processes',nproc)
-    except:
-        nproc = 4
-        logger.info('Unable to determine number of cpus.  Using %d processes',nproc)
+    nproc = 4
+    logger.info('Using ncpu = %d processes',nproc)
 
     # Set up the task list
     task_queue = Queue()

@@ -79,22 +79,7 @@ def main(argv) :
 
     base_config = all_config[0]
 
-    # Initialize the random number generator we will be using.
-    if 'random_seed' in base_config:
-        base_rng = galsim.UniformDeviate(int(base_config['random_seed']))
-    elif not all('randome_seed' in config for config in all_config[1:]):
-        base_rng = galsim.UniformDeviate()
-
     for config in all_config[1:]:
-
-        # If this config has a random_seed value specified, use that for this
-        # set.  Otherwise use the base rng.
-        if 'random_seed' in config:
-            rng = galsim.UniformDeviate(int(config['random_seed']))
-        else:
-            rng = base_rng
-        # Store the rng in the config for use by BuildGSObject function.
-        config['rng'] = rng
 
         # Now it's safe to merge in the info from base_config
         merge_config(config,base_config)
@@ -186,20 +171,14 @@ def main(argv) :
 
         # Set the size of the postage stamps if desired
         # If not set, the size will be set appropriately to enclose most of the flux.
-        if 'xsize' in config['image'] :
-            image_xsize = int(config['image']['xsize'])
-            image_ysize = int(config['image'].get('ysize',image_xsize))
-        elif 'ysize' in config['image'] :
-            image_ysize = int(config['image']['ysize'])
-            image_xsize = image_ysize
-        elif 'size' in config['image'] :
-            image_xsize = int(config['image']['size'])
-            image_ysize = image_xsize
-        else :
-            image_xsize = None
-            image_ysize = None
+        image_size = int(config['image'].get('size',0))
+        image_xsize = int(config['image'].get('xsize',image_size))
+        image_ysize = int(config['image'].get('ysize',image_size))
+        if ( (image_xsize == 0) != (image_ysize == 0) ):
+            raise AttributeError(
+                "Both (or neither) of image.xsize and image.ysize need to be defined.")
 
-        if image_xsize is None:
+        if not image_xsize:
             if same_sized_images:
                 logger.info('All images must be the same size, so will use the automatic ' +
                             'size of the first image only')
@@ -219,7 +198,15 @@ def main(argv) :
         for i in range(nobjects):
     
             t1 = time.time()
-    
+
+            # Initialize the random number generator we will be using.
+            if 'random_seed' in config:
+                rng = galsim.UniformDeviate(int(config['random_seed']+i))
+            else:
+                rng = galsim.UniformDeviate()
+            # Store the rng in the config for use by BuildGSObject function.
+            config['rng'] = rng
+
             fft_list = []
             phot_list = []
             psf_list = []
@@ -288,7 +275,7 @@ def main(argv) :
                     final.applyShear(wcs_shear)
                 #print 'final = ',final
     
-                if image_xsize is None :
+                if not image_xsize:
                     im = final.draw(dx=pixel_scale)
                     # If the output includes either data_cube or tiled_image then all images need
                     # to be the same size.  Use the first image's size for all others.
@@ -296,6 +283,7 @@ def main(argv) :
                         image_xsize, image_ysize = im.array.shape
                 else:
                     im = galsim.ImageF(image_xsize, image_ysize)
+                    im.setScale(pixel_scale)
                     final.draw(im, dx=pixel_scale)
 
                 if 'gal' in config and 'signal_to_noise' in config['gal']:
@@ -364,18 +352,48 @@ def main(argv) :
                 if 'wcs' in config['image']:
                     final.applyShear(wcs_shear)
                     
-                if image_xsize is None :
-                    # TODO: Change this once issue #82 is done.
-                    raise AttributeError(
-                        "image size must be specified when doing photon shooting.")
-                else:
-                    im = galsim.ImageF(image_xsize, image_ysize)
-                    final.drawShoot(im, dx=pixel_scale)
-
                 if 'signal_to_noise' in config['gal']:
                     raise NotImplementedError(
                         "gal.signal_to_noise not implemented for draw_method = phot")
 
+                # Get the target image variance from noise:
+                noise = config['image']['noise']
+                if not 'type' in noise :
+                    raise AttributeError("noise needs a type to be specified")
+                if noise['type'] == 'Poisson' :
+                    var = float(noise['sky_level']) * pixel_scale**2
+                elif noise['type'] == 'Gaussian' :
+                    if 'sigma' in noise:
+                        sigma = noise['sigma']
+                        var = sigma * sigma
+                    elif 'variance' in noise :
+                        var = math.sqrt(noise['variance'])
+                    else :
+                        raise AttributeError(
+                            "Either sigma or variance need to be specified for Gaussian noise")
+                elif noise['type'] == 'CCDNoise' :
+                    var = float(noise['sky_level']) * pixel_scale**2
+                    gain = float(noise.get("gain",1.0))
+                    var /= gain
+                    read_noise = float(noise.get("read_noise",0.0))
+                    var += read_noise * read_noise
+                else :
+                    raise AttributeError("Invalid type %s for noise",noise['type'])
+
+                if not image_xsize :
+                    # TODO: Change this once issue #82 is done.
+                    raise AttributeError(
+                        "image size must be specified when doing photon shooting.")
+                else:
+                    #print 'image size = ',image_xsize,image_ysize
+                    im = galsim.ImageF(image_xsize, image_ysize)
+                    #print 'setScale ',pixel_scale
+                    im.setScale(pixel_scale)
+                    #print 'sky_level = ',var
+                    #print 'drawShoot(noise = ',var/100,')'
+                    #print 'before drawShoot rng() = ',rng()
+                    final.drawShoot(im, noise=var/100, uniform_deviate=rng)
+                    #print 'after drawShoot rng() = ',rng()
             else :
                 raise AttributeError("Unknown draw_method.")
             xsize, ysize = im.array.shape
@@ -388,6 +406,7 @@ def main(argv) :
                 if 'shift' in config['gal']:
                     final_psf.applyShift(*config['gal']['shift']['current'])
                 psf_im = galsim.ImageF(xsize,ysize)
+                psf_im.setScale(pixel_scale)
                 final_psf.draw(psf_im, dx=pixel_scale)
                 all_psf_images += [psf_im]
             t5 = time.time()
@@ -398,10 +417,16 @@ def main(argv) :
                 if not 'type' in noise :
                     raise AttributeError("noise needs a type to be specified")
                 if noise['type'] == 'Poisson' :
-                    sky_level = float(noise['sky_level'])
-                    im += sky_level * pixel_scale**2
-                    im.addNoise(galsim.CCDNoise(rng))
-                    im -= sky_level * pixel_scale**2
+                    sky_level_pixel = float(noise['sky_level']) * pixel_scale**2
+                    if draw_method == 'fft':
+                        im += sky_level_pixel
+                        im.addNoise(galsim.CCDNoise(rng))
+                        im -= sky_level_pixel
+                    else:
+                        # For photon shooting, galaxy already has poisson noise, so we want 
+                        # to make sure not to add that again!  Just add Poisson with 
+                        # mean = sky_level_pixel
+                        im.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
                     #logger.info('   Added Poisson noise with sky_level = %f',sky_level)
                 elif noise['type'] == 'Gaussian' :
                     if 'sigma' in noise:
@@ -415,12 +440,20 @@ def main(argv) :
                     im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
                     #logger.info('   Added Gaussian noise with sigma = %f',sigma)
                 elif noise['type'] == 'CCDNoise' :
-                    sky_level = float(noise['sky_level'])
+                    sky_level_pixel = float(noise['sky_level']) * pixel_scale**2
                     gain = float(noise.get("gain",1.0))
                     read_noise = float(noise.get("read_noise",0.0))
-                    im += sky_level * pixel_scale**2
-                    im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
-                    im -= sky_level * pixel_scale**2
+                    if draw_method == 'fft':
+                        im += sky_level_pixel
+                        im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
+                        im -= sky_level_pixel
+                    else:
+                        # For photon shooting, galaxy already has poisson noise, so we want 
+                        # to make sure not to add that again!
+                        im *= gain
+                        im.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel*gain))
+                        im /= gain
+                        im.addNoise(galsim.GaussianDeviate(rng, sigma=read_noise))
                     #logger.info('   Added CCD noise with sky_level = %f, ' +
                                 #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
                 else :
@@ -512,20 +545,22 @@ def main(argv) :
                 nx_tiles = output['nx_tiles']
                 ny_tiles = output['ny_tiles']
                 border = output.get("border",0)
-                full_xsize = (image_xsize + border) * nx_tiles
-                full_ysize = (image_ysize + border) * ny_tiles
+                xborder = output.get("xborder",border)
+                yborder = output.get("yborder",border)
+                full_xsize = (image_xsize + xborder) * nx_tiles - xborder
+                full_ysize = (image_ysize + yborder) * ny_tiles - yborder
                 full_image = galsim.ImageF(full_xsize,full_ysize)
-                full_image.setOrigin(0,0) # For convenience, switch to C indexing convention.
+                full_image.setScale(pixel_scale)
                 if 'psf' in output:
                     full_psf_image = galsim.ImageF(full_xsize,full_ysize)
-                    full_psf_image.setOrigin(0,0) 
+                    full_psf_image.setScale(pixel_scale)
                 k = 0
                 for ix in range(nx_tiles):
                     for iy in range(ny_tiles):
                         if k < len(all_images):
-                            xmin = ix * (image_xsize + border)
+                            xmin = ix * (image_xsize + xborder) + 1
                             xmax = xmin + image_xsize-1
-                            ymin = iy * (image_ysize + border)
+                            ymin = iy * (image_ysize + yborder) + 1
                             ymax = ymin + image_ysize-1
                             b = galsim.BoundsI(xmin,xmax,ymin,ymax)
                             full_image[b] = all_images[k]
