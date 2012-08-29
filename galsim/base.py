@@ -1170,9 +1170,9 @@ class DeVaucouleurs(GSObject):
 
     Example:
     >>> dvc_obj = DeVaucouleurs(half_light_radius=2.5, flux=40.)
-    >>> dvc_obj.half_light_radius
+    >>> dvc_obj.getHalfLightRadius()
     2.5
-    >>> dvc_obj.flux
+    >>> dvc_obj.getFlux()
     40.0
 
     Methods
@@ -1181,27 +1181,18 @@ class DeVaucouleurs(GSObject):
     applyShear etc.) and operator bindings.
     """
 
-    # Defining the size parameter HLR
-    half_light_radius = descriptors.SimpleParam(
-        name="half_light_radius", default=None, group="size", doc="Half light radius.")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-        GSObject.__init__(
-            self, galsim.SBDeVaucouleurs(
-                half_light_radius=self.half_light_radius, flux=self.flux))
+    # Initialization parameters of the object, with type information
+    _params={"half_light_radius": "size", "flux": "optional"}
 
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, flux=1.):
+        GSObject.__init__(
+            self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, flux=flux))
 
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
-
-        # Use _parse_sizes() to initialize size parameters
-        _parse_sizes(self, label="DeVaucouleurs", half_light_radius=half_light_radius)
-
-        # Set the flux
-        self.flux = flux
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this DeVaucouleurs profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
 
      
 class RealGalaxy(GSObject):
@@ -1240,57 +1231,35 @@ class RealGalaxy(GSObject):
                                 change [default flux = None].
     """
 
-    # Defining flux parameter descriptor slightly differently to the default
-    flux = descriptors.FluxParam(
-        default=None,
-        doc="Total flux of this RealGalaxy, if None then original flux in galaxy image is adopted.")
+    # Initialization parameters of the object, with type information
+    _params={"real_galaxy_catalog": "required",
+             "index": "optional", "ID": "optional", "random": "optional",
+             "uniform_deviate": "optional", "interpolant": "optional", "flux": "optional"}
 
-    # Define the parameters that need to be set as SimpleParams to define the RealGalaxy
-    real_galaxy_catalog = descriptors.SimpleParam(
-        "real_galaxy_catalog", default=None, group="required",
-        doc="RealGalaxyCatalog object with basic information about where to find data for each "+
-        "RealGalaxy instance.") # still gettable/settable for object info/re-init if desired
-    
-    index = descriptors.SimpleParam(
-        "index", default=None, group="optional", doc="Index of the desired galaxy in the catalog.")
-    
-    ID = descriptors.SimpleParam(
-        "ID", default=None, group="optional",
-        doc="Object ID for the desired galaxy in the catalog.")
-    
-    random = descriptors.SimpleParam(
-        "random", default=False, group="optional", doc="Whether galaxy selected at random.")
-    
-    uniform_deviate = descriptors.SimpleParam(
-        "uniform_deviate", default=None, group="optional",
-        doc="Uniform deviate to use for random galaxy selection.")
-    
-    interpolant = descriptors.SimpleParam(
-        "interpolant", default=None, group="optional",
-        doc="Real space InterpolantXY instance (2D).")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
+    # --- Public Class methods ---
+    def __init__(self, real_galaxy_catalog, index=None, ID=None, random=False,
+                 uniform_deviate=None, interpolant=None, flux=None):
 
         import pyfits
+        
         # Code block below will be for galaxy selection; not all are currently implemented.  Each
         # option must return an index within the real_galaxy_catalog.
-        if self.index != None:
-            if (self.ID != None or self.random == True):
+        use_index = -1
+        if index != None:
+            if (ID != None or random == True):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
-        elif self.ID != None:
-            if (self.random == True):
+        elif ID != None:
+            if (random == True):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
-            self.index = self.real_galaxy_catalog.get_index_for_id(ID)
-        elif self.random == True:
-            if self.uniform_deviate == None:
-                self.uniform_deviate = galsim.UniformDeviate()
-            self.index = int(self.real_galaxy_catalog.n * self.uniform_deviate()) 
+            use_index = real_galaxy_catalog.get_index_for_id(ID)
+        elif random == True:
+            if uniform_deviate == None:
+                uniform_deviate = galsim.UniformDeviate()
+            use_index = int(real_galaxy_catalog.n * uniform_deviate()) 
             # this will round down, to get index in range [0, n-1]
         else:
             raise RuntimeError('No method specified for selecting a galaxy!')
-        if self.random == False and self.uniform_deviate != None:
+        if random == False and uniform_deviate != None:
             import warnings
             msg = "Warning: uniform_deviate supplied, but random selection method was not chosen!"
             warnings.warn(msg)
@@ -1298,50 +1267,43 @@ class RealGalaxy(GSObject):
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
         # consider exporting this code into fits.py in some function that takes a filename and HDU,
         # and returns an ImageView
-        gal_image = self.real_galaxy_catalog.getGal(self.index)
-        PSF_image = self.real_galaxy_catalog.getPSF(self.index)
+        gal_image = real_galaxy_catalog.getGal(use_index)
+        PSF_image = real_galaxy_catalog.getPSF(use_index)
 
         # choose proper interpolant
-        if self.interpolant != None and isinstance(self.interpolant, galsim.InterpolantXY) == False:
-            raise RuntimeError('Specified interpolant is not an InterpolantXY!')
-        elif self.interpolant == None:
+        if interpolant == None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
             self.interpolant = galsim.InterpolantXY(lan5)
+        else:
+            if not isinstance(interpolant, galsim.InterpolantXY):
+                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+            self.interpolant = interpolant
+
+        # read in data about galaxy from FITS binary table; store as normal attributes of RealGalaxy
+
+        # save any other relevant information
+        self.catalog_file = real_galaxy_catalog.filename
+        self.index = use_index
+        self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
+        # note: will be adding more parameters here about noise properties etc., but let's be basic
+        # for now
 
         self.original_image = galsim.SBInterpolatedImage(
             gal_image, self.interpolant, dx=self.pixel_scale)
         self.original_PSF = galsim.SBInterpolatedImage(
             PSF_image, self.interpolant, dx=self.pixel_scale)
-        if self.flux != None:
-            self.original_image.setFlux(self.flux)
+        if flux != None:
+            self.original_image.setFlux(flux)
             self.original_image.__class__ = galsim.SBTransform # correctly reflect SBProfile change
         self.original_PSF.setFlux(1.0)
         self.original_PSF.__class__ = galsim.SBTransform # correctly reflect SBProfile change
         psf_inv = galsim.SBDeconvolve(self.original_PSF)
+        
         GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
 
-    # --- Public Class methods ---
-    def __init__(self, real_galaxy_catalog, index=None, ID=None, random=False,
-                 uniform_deviate=None, interpolant=None, flux=None):
-
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
-
-        # Set the values of the defining params based on the inputs
-        self.real_galaxy_catalog = real_galaxy_catalog
-        self.index = index
-        self.ID = ID
-        self.random = random
-        self.uniform_deviate = uniform_deviate
-        self.interpolant = interpolant
-        self.flux = flux
-
-        # read in data about galaxy from FITS binary table; store as normal attributes of RealGalaxy
-        # and save any other relevant information
-        self.catalog_file = self.real_galaxy_catalog.filename
-        self.pixel_scale = float(self.real_galaxy_catalog.pixel_scale[self.index])
-        # note: will be adding more parameters here about noise properties etc., but let's be basic
-        # for now
-
+    def getHalfLightRadius(self):
+        raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
+                                   +"objects.")
 
 #
 # --- Compound GSObect classes: Add and Convolve ---
