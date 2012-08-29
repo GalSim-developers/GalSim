@@ -86,6 +86,9 @@ gal :
         # If the sequential values get past max, they will repeat back at min, so it's
         # ok to have nobjects greater than the number of real galaxies in the catalog.
     
+    rotate :
+        type : RandomAngle
+
     shear : 
         type : G1G2 
         g1 : -0.027

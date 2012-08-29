@@ -501,6 +501,10 @@ def Script3():
         # Set the flux
         gal.flux = gal_flux
 
+        # Rotate by a random angle
+        theta = 2.*math.pi * rng() * galsim.radians
+        gal.applyRotation(theta)
+
         # Apply the desired shear
         gal.applyShear(g1=gal_g1, g2=gal_g2)
         

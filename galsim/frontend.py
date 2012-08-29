@@ -367,11 +367,10 @@ def _BuildRotateObject(gsobject, config, key, base):
     """@brief Applies rotation to a supplied GSObject based on user input.
 
     @returns transformed GSObject.
-
-    CURRENTLY NOT IMPLEMENTED WILL RAISE AN EXCEPTION IF CALLED.
     """
-    raise NotImplementedError("Sorry, rotation (with new angle class) not currently supported.")
-
+    theta, safe = _GetParamValue(config, key, base, type=galsim.Angle)
+    gsobject.applyRotation(theta)
+    return gsobject, safe
 
 def BuildShift(config, key, base):
     """@brief Construct and return the (dx,dy) tuple to be used for a shift
