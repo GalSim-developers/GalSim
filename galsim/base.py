@@ -1040,28 +1040,24 @@ class Pixel(GSObject):
     etc.) and operator bindings.
     """
 
-    # Defining the parameter descriptors
-    xw = descriptors.SimpleParam(
-        "xw", group="required", doc="Width of the pixel in the x dimension.")
-
-    yw = descriptors.SimpleParam(
-        "yw", group="optional", doc="Width of the pixel in the y dimension.")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-        if self.yw is None:
-            self.yw = self.xw
-        GSObject.__init__(self, galsim.SBBox(xw=self.xw, yw=self.yw, flux=self.flux))
+    # Initialization parameters of the object, with type information
+    _params={"xw": "required", "yw": "optional", "flux": "optional"}
 
     # --- Public Class methods ---
     def __init__(self, xw, yw=None, flux=1.):
+        if yw is None:
+            yw = xw
+        GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
 
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
+    def getXWidth(self):
+        """@brief Return the width of the pixel in the x dimension.
+        """
+        return self.SBProfile.getXWidth()
 
-        self.xw = xw
-        self.yw = yw
-        self.flux = flux
+    def getYWidth(self):
+        """@brief Return the width of the pixel in the y dimension.
+        """
+        return self.SBProfile.getYWidth()
 
 
 class Sersic(GSObject):
