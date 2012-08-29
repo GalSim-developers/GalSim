@@ -863,18 +863,18 @@ class Kolmogorov(GSObject):
 
     Initialized psf as a galsim.Kolmogorov() instance.
 
-    @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
-                           consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
-                           PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
-                           values for the Fried parameter are on the order of 10 cm for most 
-                           observatories and up to 20 cm for excellent sites. The values are 
-                           usually quoted at lambda = 500 nm and r0 depends on wavelength as
-                           [r0 ~ lambda^(-6/5)].
-    @param fwhm            FWHM of the Kolmogorov PSF.
+    @param lam_over_r0        lambda / r0 in the physical units adopted (user responsible for 
+                              consistency), where r0 is the Fried parameter. The FWHM of the
+                              Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
+                              Typical values for the Fried parameter are on the order of 10 cm for
+                              most observatories and up to 20 cm for excellent sites. The values are
+                              usually quoted at lambda = 500 nm and r0 depends on wavelength as
+                              [r0 ~ lambda^(-6/5)].
+    @param fwhm               FWHM of the Kolmogorov PSF.
     @param half_light_radius  Half-light radius of the Kolmogorov PSF.
-                           One of lam_over_r0, fwhm and half_light_radius (and only one) 
-                           must be specified.
-    @param flux            optional flux value [default = 1].
+                              One of lam_over_r0, fwhm and half_light_radius (and only one) 
+                              must be specified.
+    @param flux               Optional flux value [default = 1].
     """
     
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
@@ -883,38 +883,44 @@ class Kolmogorov(GSObject):
     # Similarly, SBKolmogorov calculates the relation between lambda/r0 and half-light radius
     _hlr_factor = 0.554811
 
-    # Defining the natural size parameter lam_over_r0
-    lam_over_r0 = descriptors.SimpleParam(
-        name="lam_over_r0", group="size", default=None,
-        doc="Lambda / r0, kept consistent with the other size atttributes.")
-
-    # Then define the fwhm and half light radius via calculated scaling factors from lam_over_r0
-    fwhm = descriptors.GetSetScaleParam(
-        name="fwhm", root_name="lam_over_r0", factor=_fwhm_factor, group="size",
-        doc="FWHM, kept consistent with the other size attributes.")
-
-    half_light_radius = descriptors.GetSetScaleParam(
-        name="half_light_radius", root_name="lam_over_r0", factor=_hlr_factor, group="size",
-        doc="Half light radius, kept consistent with the other size attributes.")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-
-        GSObject.__init__(self, galsim.SBKolmogorov(lam_over_r0=self.lam_over_r0, flux=self.flux))
-
     # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.):
 
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
+        if fwhm is not None :
+            if lam_over_r0 is not None or half_light_radius is not None:
+                raise TypeError(
+                        "Only one of lam_over_r0, fwhm, and half_light_radius may be " +
+                        "specified for Kolmogorov")
+            else:
+                lam_over_r0 = fwhm / Kolmogorov._fwhm_factor
+        elif half_light_radius is not None:
+            if lam_over_r0 is not None:
+                raise TypeError(
+                        "Only one of lam_over_r0, fwhm, and half_light_radius may be " +
+                        "specified for Kolmogorov")
+            else:
+                lam_over_r0 = half_light_radius / Kolmogorov._hlr_factor
+        elif lam_over_r0 is None:
+                raise TypeError(
+                        "One of lam_over_r0, fwhm, or half_light_radius must be " +
+                        "specified for Kolmogorov")
 
-        # Use _parse_sizes() to initialize size parameters
-        _parse_sizes(
-            self, label="Kolmogorov", lam_over_r0=lam_over_r0, fwhm=fwhm,
-            half_light_radius=half_light_radius)
+        GSObject.__init__(self, galsim.SBKolmogorov(lam_over_r0=lam_over_r0, flux=flux))
 
-        # Set the flux
-        self.flux = flux
+    def getLamOverR0(self):
+        """Return the lam_over_r0 parameter of this Kolmogorov profile.
+        """
+        return self.SBProfile.getLamOverR0()
+    
+    def getFWHM(self):
+        """Return the FWHM of this Kolmogorov profile
+        """
+        return self.SBProfile.getLamOverR0() * Kolmogorov._fwhm_factor
+
+    def getHalfLightRadius(self):
+        """Return the half light radius of this Kolmogorov profile
+        """
+        return self.SBProfile.getLamOverR0() * Kolmogorov._hlr_factor
 
 
 class OpticalPSF(GSObject):
