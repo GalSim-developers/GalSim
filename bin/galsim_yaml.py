@@ -564,7 +564,10 @@ def BuildConfigSingleImage(seed, config, logger=None):
     t1 = time.time()
 
     # Initialize the random number generator we will be using.
-    rng = galsim.UniformDeviate(seed)
+    if seed:
+        rng = galsim.UniformDeviate(seed)
+    else:
+        rng = galsim.UniformDeviate()
     # Store the rng in the config for use by BuildGSObject function.
     config['rng'] = rng
     if 'gd' in config:
@@ -681,6 +684,7 @@ def BuildConfigImages(config, logger=None):
                 seed = int(config['random_seed']) + k
             else:
                 seed = None
+            # Apparently the logger isn't picklable, so can't send that as an arg.
             task_queue.put( ( (seed, config), k) )
 
         # Run the tasks
