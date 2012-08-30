@@ -140,8 +140,8 @@ image :
         type : Poisson
         sky_level : *sky_level
 
-# Define the initial random number seed
-random_seed : 8241573
+    # Define the initial random number seed
+    random_seed : 8241573
 
 # Define the input files -- in this case the catalog file to use.
 input :
@@ -152,13 +152,14 @@ input :
 
 # Define the output formats
 output :
-    # Each item should declare what kind of output we want to make and what the file is
-    - 
-        type : multi_fits
-        dir : output_yaml
-        file_name : multi.fits
-    - 
-        type : data_cube
-        dir : output_yaml
-        file_name : cube.fits
+    dir : output_yaml
+    file_name : multi.fits
     
+    # type = multi_fits means to use a multi-extension fits file
+    type : multi_fits
+
+    # You can specify how many extensions to write to the file with nimages, 
+    # but in this case, since we are using an input catalog, the default 
+    # value is to do the number of entries in the catalog.
+    #nimages = 100
+

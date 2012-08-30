@@ -88,17 +88,15 @@ def ParseConfigOutput(config, logger=None):
 
     config['same_sized_images']   Must all the images be the same size?
     config['make_psf_images']     Should we make the psf images
-    config['nobjects']            If not already there, get this from n_tiles in tiled_image
+    config['nimages']             How many images are we creating
+    config['nobj_per_image']      How many objects are we drawing on each image
+    config['nobjects']            How many total objects are we drawing
     """
 
     # Make config['output'] exist if it doesn't yet.
     if 'output' not in config:
         config['output'] = {}
-
-    # We're going to treat output as a list (for multiple file outputs if desired).
-    # If it isn't a list, make it one.
-    if not isinstance(config['output'],list):
-        config['output'] = [ config['output'] ]
+    output = config['output']
 
     # If the output includes either data_cube or tiled_image then all images need
     # to be the same size.  We will use the first image's size for all others.
@@ -106,100 +104,96 @@ def ParseConfigOutput(config, logger=None):
     config['same_sized_images'] = False
     config['make_psf_images'] = False  
 
-    # Loop over all output formats:
-    for output in config['output']:
-    
-        # Get the file_name
-        if 'file_name' in output:
-            file_name = output['file_name']
+    # Get the file_name
+    if 'file_name' in output:
+        file_name = output['file_name']
+    else:
+        # If a file_name isn't specified, we use the name of the calling script to
+        # generate a fits file name.
+        import inspect
+        script_name = os.path.basiename(
+            inspect.getfile(inspect.currentframe())) # script filename (usually with path)
+        # Strip off a final suffix if present.
+        file_name = os.path.splitext(script_name)[0]
+        if logger:
+            logger.info('No output file name specified.  Using %s',file_name)
+
+    # Prepend a dir to the beginning of the filename if requested.
+    if 'dir' in output:
+        if not os.path.isdir(output['dir']):
+            os.mkdir(output['dir'])
+        file_name = os.path.join(output['dir'],file_name)
+
+    # Store the result back in the config:
+    output['file_name'] = file_name
+
+    if 'psf' in output:
+        config['make_psf_images'] = True
+        psf_file_name = None
+        output_psf = output['psf']
+        if 'file_name' in output_psf:
+            psf_file_name = output_psf['file_name']
+            if 'dir' in output:
+                psf_file_name = os.path.join(output['dir'],psf_file_name)
+                output_psf['file_name'] = psf_file_name
+        elif 'type' in output and output['type'] == 'multi_fits':
+            raise AttributeError(
+                    "Only the file_name version of psf output is possible with multi_fits")
         else:
-            # If a file_name isn't specified, we use the name of the calling script to
-            # generate a fits file name.
-            import inspect
-            script_name = os.path.basiename(
-                inspect.getfile(inspect.currentframe())) # script filename (usually with path)
-            # Strip off a final suffix if present.
-            file_name = os.path.splitext(script_name)[0]
-            if logger:
-                logger.info('No output file name specified.  Using %s',file_name)
+            raise NotImplementedError(
+                "Only the file_name version of psf output is currently implemented.")
 
-        # Prepend a dir to the beginning of the filename if requested.
-        if 'dir' in output:
-            if not os.path.isdir(output['dir']):
-                os.mkdir(output['dir'])
-            file_name = os.path.join(output['dir'],file_name)
+    # Parse the information in output['image']
+    # Accumulate nobj = how many objects per image.
+    if not 'image_type' in output:
+        output['image_type'] = 'single'
+        nobj = 1
+    elif output['image_type'] == 'single':
+        nobj = 1
+    elif output['image_type'] == 'tiled':
+        config['same_sized_images'] = True
+        if not all (k in output for k in ['nx_tiles','ny_tiles']):
+            raise AttributeError(
+                "parameters nx_tiles and ny_tiles required for image_type = tiledt")
+        nx_tiles = output['nx_tiles']
+        ny_tiles = output['ny_tiles']
+        nobj = nx_tiles * ny_tiles
+    else:
+        raise AttributeError("Invalid image_type for output: %s",output['image_type'])
 
-        # Store the result back in the config:
-        output['file_name'] = file_name
-    
-        if 'psf' in output:
-            config['make_psf_images'] = True
-            psf_file_name = None
-            output_psf = output['psf']
-            if 'file_name' in output_psf:
-                psf_file_name = output_psf['file_name']
-                if 'dir' in output:
-                    psf_file_name = os.path.join(output['dir'],psf_file_name)
-                    output_psf['file_name'] = psf_file_name
-            elif 'type' in output and output['type'] == 'multi_fits':
-                raise AttributeError(
-                        "Only the file_name version of psf output is possible with multi_fits")
-            else:
-                raise NotImplementedError(
-                    "Only the file_name version of psf output is currently implemented.")
-    
-        # Each kind of output works slightly differently
-        if not 'type' in output:
-            output['type'] = 'single'
-            nobjects = 1
-
-        elif output['type'] == 'single':
-            nobjects = 1
-
-        elif output['type'] == 'multi_fits':
-            if 'nimages' in output:
-                nobjects = output['nimages']
-            elif 'input_cat' in config:
-                nobjects = config['input_cat'].nobjects
-            else:
-                raise AttributeError(
-                    "nimages should be specified for output type = multi_fits")
-            
-        elif output['type'] == 'data_cube':
+    # Parse the information about the output file type
+    # Accumulate nimages = how many images to draw.
+    if not 'type' in output:
+        output['type'] = 'fits'
+        nimages = 1
+    elif output['type'] == 'fits':
+        nimages = 1
+    elif output['type'] == 'multi_fits':
+        if 'nimages' in output:
+            nimages = output['nimages']
+        elif 'input_cat' in config and output['image_type'] == 'single':
+            nimages = config['input_cat'].nobjects
+        else:
+            raise AttributeError(
+                "nimages should be specified for output type = multi_fits")
+    elif output['type'] == 'data_cube':
+        if output['image_type'] == 'single':
             config['same_sized_images'] = True
-            if 'nimages' in output:
-                nobjects = output['nimages']
-            elif 'input_cat' in config:
-                nobjects = config['input_cat'].nobjects
-            else:
-                raise AttributeError(
-                    "nimages should be specified for output type = data_cute")
-
-        elif output['type'] == 'tiled_image':
-            config['same_sized_images'] = True
-            if not all (k in output for k in ['nx_tiles','ny_tiles']):
-                raise AttributeError(
-                    "parameters nx_tiles and ny_tiles required for tiled_image output")
-
-            nx_tiles = output['nx_tiles']
-            ny_tiles = output['ny_tiles']
-            nobjects = nx_tiles * ny_tiles
-
-        # TODO: Another output format we'll want is a list of files
-        # Need some way to generate multiple filenames: foo_01.fits, foo_02.fits, etc.
-        # TODO: Also want some way to recurse the output method.  e.g.
-        # a list of files, each of which is a tiled_image.
-
+        if 'nimages' in output:
+            nimages = output['nimages']
+        elif 'input_cat' in config and output['image_type'] == 'single':
+            nimages = config['input_cat'].nobjects
         else:
-            raise AttributeError("Invalid type for output: %s",output['type'])
+            raise AttributeError(
+                "nimages should be specified for output type = data_cute")
+    # TODO: Another output format we'll want is a list of files
+    # Need some way to generate multiple filenames: foo_01.fits, foo_02.fits, etc.
+    else:
+        raise AttributeError("Invalid type for output: %s",output['type'])
 
-        if 'nobjects' in config:
-            if config['nobjects'] != nobjects:
-                raise AttributeError(
-                    "nobjects calculated for output type %s (%d)\n"%(output['type'],nobjects) +
-                    "                is inconsistent with previous value (%d)"%config['nobjects'])
-        else:
-            config['nobjects'] = nobjects
+    config['nobj_per_image'] = nobj
+    config['nimages'] = nimages
+    config['nobjects'] = nobj * nimages
 
 
 def ParseConfigImage(config, logger=None):
@@ -255,6 +249,17 @@ def ParseConfigImage(config, logger=None):
     config['pixel_scale'] = pixel_scale
     if logger:
         logger.info('Using pixel scale = %f',pixel_scale)
+
+    # Normally, random_seed is just a number, which really means to use that number
+    # for the first item and go up sequentially from there for each object.
+    # However, we allow for random_seed to be a gettable parameter, so for the 
+    # normal case, we just convert it into a Sequence.
+    if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
+        first_seed = int(config['image']['random_seed'])
+        config['image']['random_seed'] = { 'type' : 'Sequence' , 'min' : first_seed }
+
+    if 'draw_method' not in config['image']:
+        config['image']['draw_method'] = 'fft'
 
     # Get the target image variance from noise:
     if 'noise' in config['image']:
@@ -555,7 +560,7 @@ def DrawPSFImage(psf, pix, config):
 
     return psf_im
 
-def BuildConfigSingleImage(seed, config, logger=None):
+def BuildSingleImage(seed, config, logger=None):
     """
     Build a single image using the given seed and config file
 
@@ -586,13 +591,13 @@ def BuildConfigSingleImage(seed, config, logger=None):
     if not (gal or psf):
         raise AttributeError("At least one of gal or psf must be specified in config.")
 
-    draw_method = config['image'].get('draw_method','fft')
+    draw_method = galsim.GetParamValue(config['image'],'draw_method',config,type=str)[0]
     if draw_method == 'fft':
         im = DrawImageFFT(psf,pix,gal,config)
     elif draw_method == 'phot':
         im = DrawImagePhot(psf,gal,config)
     else:
-        raise AttributeError("Unknown draw_method.")
+        raise AttributeError("Unknown draw_method %s."%draw_method)
     t5 = time.time()
 
     # Note: These may be different from image_xsize and image_ysize
@@ -614,7 +619,7 @@ def BuildConfigSingleImage(seed, config, logger=None):
     return im, psf_im, t6-t1
 
 
-def BuildConfigImages(config, logger=None):
+def BuildImages(config, logger=None):
     """
     Build the images specified by the config file
 
@@ -623,38 +628,37 @@ def BuildConfigImages(config, logger=None):
     def worker(input, output):
         """
         input is a queue with (args, info) tuples:
-            args are the arguments to pass to BuildConfigSingleImage
+            args are the arguments to pass to BuildSingleImage
             info is passed along to the output queue.
         output is a queue storing (result, info, proc) tuples:
-            result is the returned tuple from BuildConfigSingleImage: 
+            result is the returned tuple from BuildSingleImage: 
                 (image, psf_image, time).
             info is passed through from the input queue.
             proc is the process name.
         """
         for (args, info) in iter(input.get, 'STOP'):
-            result = BuildConfigSingleImage(*args)
+            result = BuildSingleImage(*args)
             output.put( (result, info, current_process().name) )
     
     images = []
     psf_images = []
     nobjects = config['nobjects']
 
-    if 'nproc' not in config or config['nproc'] == 1:
+    if 'nproc' not in config['image'] or config['image']['nproc'] == 1:
         for k in range(nobjects):
-            if 'random_seed' in config:
-                seed = int(config['random_seed']) + k
+            if 'random_seed' in config['image']:
+                seed = galsim.GetParamValue(config['image'],'random_seed',config,type=int)[0]
             else:
                 seed = None
-            im, psf_im, t = BuildConfigSingleImage(seed, config, logger)
+            im, psf_im, t = BuildSingleImage(seed, config, logger)
             images += [im]
-            if psf_im:
-                psf_images += [psf_im]
+            psf_images += [psf_im]
             if logger:
                 logger.info('Image %d: size = %d x %d, total time = %f sec', 
                             k, im.array.shape[0], im.array.shape[1], t)
     else:
         from multiprocessing import Process, Queue, current_process, cpu_count
-        nproc = config['nproc']
+        nproc = config['image']['nproc']
         if nproc <= 0:
             # Try to figure out a good number of processes to use
             try:
@@ -674,14 +678,20 @@ def BuildConfigImages(config, logger=None):
         # and we need them to go in the right places (in order to have deterministic
         # output files).  So we initialize the list to be the right size.
         images = [ None for i in range(nobjects) ]
-        if config['make_psf_images']:
-            psf_images = [ None for i in range(nobjects) ]
+        psf_images = [ None for i in range(nobjects) ]
 
         # Set up the task list
         task_queue = Queue()
         for k in range(nobjects):
-            if 'random_seed' in config:
-                seed = int(config['random_seed']) + k
+            # Note: we currently pull out the seed from config, since that is always
+            # going to get clobbered by the multi-processing, since it involves a state
+            # variable.  However, there may be other items in config that have state 
+            # variables as well.  So the long term solution will be to construct the 
+            # full profile in the main processor, and then send that to each of the 
+            # parallel processors to draw the image.  But that will require our GSObjects
+            # to be picklable, which they aren't currently.
+            if 'random_seed' in config['image']:
+                seed = galsim.GetParamValue(config['image'],'random_seed',config,type=int)[0]
             else:
                 seed = None
             # Apparently the logger isn't picklable, so can't send that as an arg.
@@ -706,8 +716,7 @@ def BuildConfigImages(config, logger=None):
             psf_im = result[1]
             t = result[2]
             images[k] = im
-            if psf_im:
-                psf_images[k] = psf_im
+            psf_images[k] = psf_im
             if logger:
                 logger.info('%s: Image %d: size = %d x %d, total time = %f sec', 
                             proc, k, im.array.shape[0], im.array.shape[1], t)
@@ -727,88 +736,109 @@ def BuildConfigImages(config, logger=None):
         logger.info('Done making images')
 
     return images, psf_images
-    
-def WriteConfigImages(images, psf_images, config, logger=None):
+ 
+def BuildSingleFullImage(images, psf_images, config, logger=None):
+    """
+    Turn some postage stamp images into a single full images according to 
+    config['output']['image_type']
+    """
+    output = config['output']
+    if output['image_type'] == 'single':
+        return images, psf_images
+    elif output['image_type'] == 'tiled':
+        nx_tiles = output['nx_tiles']
+        ny_tiles = output['ny_tiles']
+        border = output.get("border",0)
+        xborder = output.get("xborder",border)
+        yborder = output.get("yborder",border)
+        image_xsize = config['image_xsize']
+        image_ysize = config['image_ysize']
+        pixel_scale = config['pixel_scale']
+
+        full_xsize = (image_xsize + xborder) * nx_tiles - xborder
+        full_ysize = (image_ysize + yborder) * ny_tiles - yborder
+        full_image = galsim.ImageF(full_xsize,full_ysize)
+        full_image.setScale(pixel_scale)
+        if 'psf' in output:
+            full_psf_image = galsim.ImageF(full_xsize,full_ysize)
+            full_psf_image.setScale(pixel_scale)
+        else:
+            full_psf_image = None
+        k = 0
+        for ix in range(nx_tiles):
+            for iy in range(ny_tiles):
+                if k < len(images):
+                    xmin = ix * (image_xsize + xborder) + 1
+                    xmax = xmin + image_xsize-1
+                    ymin = iy * (image_ysize + yborder) + 1
+                    ymax = ymin + image_ysize-1
+                    b = galsim.BoundsI(xmin,xmax,ymin,ymax)
+                    full_image[b] = images[k]
+                    if 'psf' in output:
+                        full_psf_image[b] = psf_images[k]
+                    k = k+1
+        return full_image, full_psf_image
+   
+def BuildFullImages(images, psf_images, config, logger=None):
+    """
+    Turn the postage stamp images into full images according to 
+    config['output']['image_type']
+    """
+    output = config['output']
+    if output['image_type'] == 'single':
+        return images, psf_images
+    else:
+        full_images = []
+        full_psf_images = []
+        k1 = 0
+        k2 = config['nobj_per_image']
+        for i in range(config['nimages']):
+            im, psf_im = BuildSingleFullImage(images[k1:k2], psf_images[k1:k2], config, logger)
+            full_images += [ im ]
+            full_psf_images += [ psf_im ]
+        return full_images, full_psf_images
+            
+   
+def WriteImages(images, psf_images, config, logger=None):
     """
     Write the provided images to the files specified in config['output']
     """
 
-    # Loop over all output formats:
-    for output in config['output']:
-    
-        file_name = output['file_name']
+    output = config['output']
+    file_name = output['file_name']
+    if 'psf' in output:
+        psf_file_name = output['psf']['file_name']
+
+    if output['type'] == 'fits':
+        images[0].write(file_name, clobber=True)
+        if logger:
+            logger.info('Wrote image to fits file %r',file_name)
         if 'psf' in output:
-            psf_file_name = output['psf']['file_name']
-
-        if output['type'] == 'single':
-            images[0].write(file_name, clobber=True)
+            psf_images[0].write(psf_file_name, clobber=True)
             if logger:
-                logger.info('Wrote image to fits file %r',file_name)
-            if 'psf' in output:
-                psf_images[0].write(psf_file_name, clobber=True)
-                if logger:
-                    logger.info('Wrote psf image to fits file %r',psf_file_name)
+                logger.info('Wrote psf image to fits file %r',psf_file_name)
 
-        elif output['type'] == 'multi_fits':
-            galsim.fits.writeMulti(images, file_name, clobber=True)
+    elif output['type'] == 'multi_fits':
+        galsim.fits.writeMulti(images, file_name, clobber=True)
+        if logger:
+            logger.info('Wrote images to multi-extension fits file %r',file_name)
+        if 'psf' in output:
+            galsim.fits.writeMulti(psf_images, psf_file_name, clobber=True)
             if logger:
-                logger.info('Wrote images to multi-extension fits file %r',file_name)
-            if 'psf' in output:
-                galsim.fits.writeMulti(psf_images, psf_file_name, clobber=True)
-                if logger:
-                    logger.info('Wrote psf images to multi-extension fits file %r',psf_file_name)
+                logger.info('Wrote psf images to multi-extension fits file %r',psf_file_name)
 
-        elif output['type'] == 'data_cube':
-            galsim.fits.writeCube(images, file_name, clobber=True)
+    elif output['type'] == 'data_cube':
+        galsim.fits.writeCube(images, file_name, clobber=True)
+        if logger:
+            logger.info('Wrote image to fits data cube %r',file_name)
+        if 'psf' in output:
+            galsim.fits.writeCube(psf_images, psf_file_name, clobber=True)
             if logger:
-                logger.info('Wrote image to fits data cube %r',file_name)
-            if 'psf' in output:
-                galsim.fits.writeCube(psf_images, psf_file_name, clobber=True)
-                if logger:
-                    logger.info('Wrote psf images to fits data cube %r',psf_file_name)
+                logger.info('Wrote psf images to fits data cube %r',psf_file_name)
 
-        elif output['type'] == 'tiled_image':
-            nx_tiles = output['nx_tiles']
-            ny_tiles = output['ny_tiles']
-            border = output.get("border",0)
-            xborder = output.get("xborder",border)
-            yborder = output.get("yborder",border)
-            image_xsize = config['image_xsize']
-            image_ysize = config['image_ysize']
-            pixel_scale = config['pixel_scale']
+    else:
+        raise AttributeError("Invalid type for output: %s",output['type'])
 
-            full_xsize = (image_xsize + xborder) * nx_tiles - xborder
-            full_ysize = (image_ysize + yborder) * ny_tiles - yborder
-            full_image = galsim.ImageF(full_xsize,full_ysize)
-            full_image.setScale(pixel_scale)
-            if 'psf' in output:
-                full_psf_image = galsim.ImageF(full_xsize,full_ysize)
-                full_psf_image.setScale(pixel_scale)
-            k = 0
-            for ix in range(nx_tiles):
-                for iy in range(ny_tiles):
-                    if k < len(images):
-                        xmin = ix * (image_xsize + xborder) + 1
-                        xmax = xmin + image_xsize-1
-                        ymin = iy * (image_ysize + yborder) + 1
-                        ymax = ymin + image_ysize-1
-                        b = galsim.BoundsI(xmin,xmax,ymin,ymax)
-                        full_image[b] = images[k]
-                        if 'psf' in output:
-                            full_psf_image[b] = psf_images[k]
-                        k = k+1
-            full_image.write(file_name, clobber=True)
-            if logger:
-                logger.info('Wrote tiled image to fits file %r',file_name)
-            if 'psf' in output:
-                full_psf_image.write(psf_file_name, clobber=True)
-                if logger:
-                    logger.info('Wrote tled psf images to fits file %r',psf_file_name)
-
-        else:
-            raise AttributeError("Invalid type for output: %s",output['type'])
-
-   
 def ProcessConfig(config, logger=None):
     """
     Do all processing of the provided configuration dict
@@ -823,11 +853,14 @@ def ProcessConfig(config, logger=None):
     # Parse the image field
     ParseConfigImage(config, logger)
 
-    # Build the images
-    images, psf_images = BuildConfigImages(config, logger)
+    # Build the postage-stamp images
+    images, psf_images = BuildImages(config, logger)
 
-    # Write the images to the appropriate files
-    WriteConfigImages(images, psf_images, config, logger)
+    # Build full images from the postage stamps (if appropriate)
+    images, psf_images = BuildFullImages(images, psf_images, config, logger)
+
+    # Write the full images to the appropriate files
+    WriteImages(images, psf_images, config, logger)
 
 
 def main(argv):

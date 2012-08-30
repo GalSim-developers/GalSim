@@ -45,13 +45,6 @@ psf :
         - { type : Gaussian, fwhm : 0.6, flux : 0.8 }
         - { type : Gaussian, fwhm : 2.3, flux : 0.2 }
 
-# Define the initial random number seed
-# Random numbers in multiple documents are a little bit special.
-# If one is defined in the initial document, then it is set at the beginning of 
-# the processing and not updated each time we begin processing another docuement.
-# However, if a subsequent document also defines the random_seed parameter,
-# then it will reset the seed for that document's processing.
-random_seed : 1512413
 
 # Define the pixel size
 # This time, we'll leave the size unspecified to let GalSim automatically choose 
@@ -59,13 +52,15 @@ random_seed : 1512413
 image :
     pixel_scale : 0.15  # arcsec / pixel
 
+    # Define the initial random number seed
+    random_seed : 1512413
 ---
 
 # The first specialization document is for the psf output.
 
 output :
     dir : output_yaml
-    file_name : psf_script3.fits
+    file_name : psf_real.fits
  
 ---
 
@@ -114,14 +109,8 @@ input :
 
 # Define the output formats
 output :
-    - 
-        type : multi_fits
-        dir : output_yaml
-        file_name : multi_real.fits
-        nimages : 100
-    - 
-        type : data_cube
-        dir : output_yaml
-        file_name : cube_real.fits
-        nimages : 100
+    type : data_cube
+    dir : output_yaml
+    file_name : cube_real.fits
+    nimages : 100
  

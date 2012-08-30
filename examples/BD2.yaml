@@ -45,9 +45,9 @@ image :
         # sky subtracted).
         sky_level : 2.5e4  # ADU / arcsec^2
 
-# If you want the random values used to be deterministic, you can provide an initial seed.
-# If this isn't set, then it will use the current time to create an initial seed.
-random_seed : 1534225
+    # If you want the random values used to be deterministic, you can provide an initial seed.
+    # If this isn't set, then it will use the current time to create an initial seed.
+    random_seed : 1534225
 
 output :
     dir : output_yaml

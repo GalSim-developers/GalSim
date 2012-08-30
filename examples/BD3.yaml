@@ -110,9 +110,9 @@ image :
         read_noise : 0.3  # ADU / pixel
 
 
-# If you want the random values used to be deterministic, you can provide an initial seed.
-# If this isn't set, then it will use the current time to create an initial seed.
-random_seed : 1314662
+    # If you want the random values used to be deterministic, you can provide an initial seed.
+    # If this isn't set, then it will use the current time to create an initial seed.
+    random_seed : 1314662
 
 
 output :

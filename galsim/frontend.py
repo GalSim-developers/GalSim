@@ -105,7 +105,7 @@ def BuildGSObject(config, key, base=None):
         # Allow the setting of the overall flux of the object. Individual component fluxes
         # retain the ratio of their own specified flux parameter settings.
         if 'flux' in ck:
-            flux, safe1 = _GetParamValue(ck, 'flux', base)
+            flux, safe1 = GetParamValue(ck, 'flux', base)
             #print 'flux = ',flux
             gsobject.setFlux(flux)
             safe = safe and safe1
@@ -160,8 +160,8 @@ def _BuildPixel(config, base):
     for key in ['xw', 'yw']:
         if not key in config:
             raise AttributeError("Pixel type requires attribute %s in input config."%key)
-    xw, safe1 = _GetParamValue(config, 'xw', base)
-    yw, safe2 = _GetParamValue(config, 'yw', base)
+    xw, safe1 = GetParamValue(config, 'xw', base)
+    yw, safe2 = GetParamValue(config, 'yw', base)
     safe = safe1 and safe2
 
     init_kwargs = {'xw' : xw, 'yw' : yw }
@@ -171,7 +171,7 @@ def _BuildPixel(config, base):
             "This is supported for the pixel, but not the draw routines. " +
             "There might be weirdness....")
     if 'flux' in config:
-        flux, safe3 = _GetParamValue(config, 'flux', base)
+        flux, safe3 = GetParamValue(config, 'flux', base)
         init_kwargs['flux'] = flux
         safe = safe and safe3
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
@@ -186,10 +186,10 @@ def _BuildSquarePixel(config, base):
     if not 'size' in config:
         raise AttributeError(
             "size attribute required in config for initializing SquarePixel objects.")
-    xw, safe = _GetParamValue(config, 'size', base)
+    xw, safe = GetParamValue(config, 'size', base)
     init_kwargs = {'xw': xw, 'yw': xw}
     if 'flux' in config:
-        flux, safe1 = _GetParamValue(config, 'flux', base)
+        flux, safe1 = GetParamValue(config, 'flux', base)
         init_kwargs['flux'] = flux
         safe = safe and safe1
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
@@ -246,11 +246,11 @@ def _BuildRealGalaxy(config, base):
         if (type == 'Sequence' or type == 'RandomInt') and 'max' not in index:
             index['max'] = real_cat.n
 
-    index, safe = _GetParamValue(config, 'index', base, type=int)
+    index, safe = GetParamValue(config, 'index', base, type=int)
     real_gal = galsim.RealGalaxy(real_cat, index=index)
 
     if 'flux' in config:
-        flux, safe1 = _GetParamValue(config, 'flux', base)
+        flux, safe1 = GetParamValue(config, 'flux', base)
         safe = safe and safe1
         real_gal.setFlux(flux)
 
@@ -314,32 +314,32 @@ def BuildShear(config, key, base):
     type = ck['type']
 
     if type == 'E1E2':
-        e1, safe1 = _GetParamValue(ck, 'e1', base)
-        e2, safe2 = _GetParamValue(ck, 'e2', base)
+        e1, safe1 = GetParamValue(ck, 'e1', base)
+        e2, safe2 = GetParamValue(ck, 'e2', base)
         safe = safe1 and safe2
         #print 'e1,e2 = ',e1,e2,safe
         return galsim.Shear(e1=e1, e2=e2), safe
     elif type == 'G1G2':
-        g1, safe1 = _GetParamValue(ck, 'g1', base)
-        g2, safe2 = _GetParamValue(ck, 'g2', base)
+        g1, safe1 = GetParamValue(ck, 'g1', base)
+        g2, safe2 = GetParamValue(ck, 'g2', base)
         safe = safe1 and safe2
         #print 'g1,g2 = ',g1,g2,safe
         return galsim.Shear(g1=g1, g2=g2), safe
     elif type == 'GBeta':
-        g, safe1 = _GetParamValue(ck, 'g', base)
-        beta, safe2 = _GetParamValue(ck, 'beta', base, type=galsim.Angle)
+        g, safe1 = GetParamValue(ck, 'g', base)
+        beta, safe2 = GetParamValue(ck, 'beta', base, type=galsim.Angle)
         safe = safe1 and safe2
         #print 'g,beta = ',g,beta,safe
         return galsim.Shear(g=g, beta=beta), safe
     elif type == 'EBeta':
-        e, safe1 = _GetParamValue(ck, 'e', base)
-        beta, safe2 = _GetParamValue(ck, 'beta', base, type=galsim.Angle)
+        e, safe1 = GetParamValue(ck, 'e', base)
+        beta, safe2 = GetParamValue(ck, 'beta', base, type=galsim.Angle)
         safe = safe1 and safe2
         #print 'e,beta = ',e,beta,safe
         return galsim.Shear(e=e, beta=beta), safe
     elif type == 'QBeta':
-        q, safe1 = _GetParamValue(ck, 'q', base)
-        beta, safe2 = _GetParamValue(ck, 'beta', base, type=galsim.Angle)
+        q, safe1 = GetParamValue(ck, 'q', base)
+        beta, safe2 = GetParamValue(ck, 'beta', base, type=galsim.Angle)
         safe = safe1 and safe2
         #print 'q,beta = ',q,beta,safe
         return galsim.Shear(q=q, beta=beta), safe
@@ -395,7 +395,7 @@ def _BuildRotateObject(gsobject, config, key, base):
 
     @returns transformed GSObject.
     """
-    theta, safe = _GetParamValue(config, key, base, type=galsim.Angle)
+    theta, safe = GetParamValue(config, key, base, type=galsim.Angle)
     gsobject.applyRotation(theta)
     #print 'After applyRotation, gsobject = ',gsobject, safe
     return gsobject, safe
@@ -416,8 +416,8 @@ def BuildShift(config, key, base):
         raise AttributeError("No type attribute in config!")
     type = ck['type']
     if type == 'DXDY':
-        dx, safe1 = _GetParamValue(ck, 'dx', base)
-        dy, safe2 = _GetParamValue(ck, 'dy', base)
+        dx, safe1 = GetParamValue(ck, 'dx', base)
+        dy, safe2 = GetParamValue(ck, 'dy', base)
         safe = safe1 and safe2
         #print '(dx,dy) = ',(dx,dy)
         return (dx,dy), safe
@@ -452,7 +452,7 @@ def _GetRequiredKwargs(config, base):
             raise AttributeError("No required attribute "+req_name+" within input config for type "+
                                  type+".")
         else:
-            req_kwargs[req_name], safe1 = _GetParamValue(config, req_name, base)
+            req_kwargs[req_name], safe1 = GetParamValue(config, req_name, base)
             safe = safe and safe1
     #print 'req ',req_kwargs,safe
     return req_kwargs, safe
@@ -468,7 +468,7 @@ def _GetSizeKwarg(config, base):
         if size_name in config:
             counter += 1
             if counter == 1:
-                size_kwarg[size_name], safe1 = _GetParamValue(config, size_name, base)
+                size_kwarg[size_name], safe1 = GetParamValue(config, size_name, base)
                 safe = safe and safe1
             elif counter > 1:
                 raise ValueError("More than one size attribute within input config for type "+
@@ -486,12 +486,12 @@ def _GetOptionalKwargs(config, base):
     safe = True
     for entry_name in config:
         if entry_name in op_dict[type]['optional']:
-            optional_kwargs[entry_name], safe1 = _GetParamValue(config, entry_name, base)
+            optional_kwargs[entry_name], safe1 = GetParamValue(config, entry_name, base)
             safe = safe and safe1
     #print 'opt ',optional_kwargs,safe
     return optional_kwargs, safe
 
-def _GetParamValue(config, param_name, base, type=float):
+def GetParamValue(config, param_name, base, type=float):
     """@brief Function to read parameter values from config.
     """
     # Parse the param in case it is a configuration string
@@ -591,7 +591,7 @@ def _GetInputCatParamValue(param, param_name, base):
         if (type == 'Sequence' or type == 'RandomInt') and 'max' not in index:
             index['max'] = input_cat.nobjects
 
-    index, safe = _GetParamValue(param, 'index', base, type=int)
+    index, safe = GetParamValue(param, 'index', base, type=int)
     if index >= input_cat.nobjects:
         raise IndexError(
             "%s index has gone past the number of entries in the catalog"%param_name)

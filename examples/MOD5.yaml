@@ -49,8 +49,6 @@ gal :
     flux : { type : Random , min : 1.0e4 , max : 1.0e5 }
     
 
-random_seed : 1512413
-
 image :
     pixel_scale : 0.28  # arcsec / pixel
     size : 64  # pixels
@@ -61,8 +59,11 @@ image :
         type : Poisson
         sky_level : 1.0e4  # ADU / arcsec^2
 
+    random_seed : 1512413
+
+
 output :
-    type : tiled_image
+    image_type : tiled
     dir : output_yaml
     nx_tiles : 10
     ny_tiles : 10
@@ -78,7 +79,9 @@ output :
 
 # The second version of this uses 4 processes
 
-nproc : 4
+image :
+    # If nproc <= 0, then this means to use nproc = ncpu.
+    nproc : 4
 
 output :
     file_name : bpd_multi.fits

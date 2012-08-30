@@ -35,13 +35,11 @@ diff output/demo3.fits output_yaml/demo3.fits
 diff output/demo3_epsf.fits output_yaml/demo3_epsf.fits 
 
 diff output/multi.fits output_yaml/multi.fits 
-diff output/cube.fits output_yaml/cube.fits 
 
 diff output/g08_psf.fits output_yaml/g08_psf.fits
 diff output/g08_gal.fits output_yaml/g08_gal.fits
 
-diff output/psf_script3.fits output_yaml/psf_script3.fits
-diff output/multi_real.fits output_yaml/multi_real.fits 
+diff output/psf_real.fits output_yaml/psf_real.fits
 diff output/cube_real.fits output_yaml/cube_real.fits 
 
 diff output/bpd_single.fits output_yaml/bpd_single.fits 

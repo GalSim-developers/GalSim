@@ -81,8 +81,10 @@ gal :
     # of either E1E2 (distortion) or G1G2 (reduced shear).
     # The only difference between the two is if there is also a rotation specified.
     # The order of the various modifications are:
+    # - dilate
     # - ellip
     # - rotation
+    # - magnify
     # - shear
     # - shift
     shear : 
@@ -99,6 +101,8 @@ gal :
 # Define some other information about the images 
 image :
     pixel_scale : 1.0  # arcsec / pixel
+
+    # This is the size of the postage stamps.
     xsize : 39
     ysize : 39
 
@@ -107,15 +111,25 @@ image :
         type : Poisson
         sky_level : 1.e6  # ADU / arcsec^2
 
-# Define the initial random number seed
-random_seed : 6424512
+    # Define the initial random number seed
+    random_seed : 6424512
 
-# Define the output formats
+# Define the output format
 output :
-    type : tiled_image
+    # type defines what kind of file.
+    # fits is actually the default if not specified, but we set it here anyway.
+    type : fits
+
+    # image_type defines what kind of image to build.
+    # The default is single, which means one postage stamp per image .
+    # tiled means to make an image with nx_tiles x ny_tiles of postage stamps
+    # on a single image.
+    image_type : tiled
     nx_tiles : 10
     ny_tiles : 10
-    border : 1  # 1 pixel border between tiles
+
+    # Put a 1 pixel border between tiles
+    border : 1  
 
     dir : output_yaml
     file_name : g08_gal.fits

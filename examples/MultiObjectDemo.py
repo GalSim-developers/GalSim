@@ -55,7 +55,6 @@ def Script1():
 
     cat_file_name = os.path.join('input','galsim_default_input.asc')
     multi_file_name = os.path.join('output','multi.fits')
-    cube_file_name = os.path.join('output','cube.fits')
 
     random_seed = 8241573
     sky_level = 1.e6                # ADU / arcsec^2
@@ -204,11 +203,9 @@ def Script1():
     logger.info('Done making images of galaxies')
 
     # Now write the image to disk.
+    # We write the images to a multi-extension fits file.
     galsim.fits.writeMulti(all_images, multi_file_name, clobber=True)
     logger.info('Wrote images to multi-extension fits file %r',multi_file_name)
-
-    galsim.fits.writeCube(all_images, cube_file_name, clobber=True)
-    logger.info('Wrote image to fits data cube %r',cube_file_name)
 
     print
 
@@ -443,9 +440,8 @@ def Script3():
 
     cat_file_name = os.path.join('data','real_galaxy_catalog_example.fits')
     image_dir = os.path.join('data')
-    multi_file_name = os.path.join('output','multi_real.fits')
     cube_file_name = os.path.join('output','cube_real.fits')
-    psf_file_name = os.path.join('output','psf_script3.fits')
+    psf_file_name = os.path.join('output','psf_real.fits')
 
     random_seed = 1512413
     sky_level = 1.e6        # ADU / arcsec^2
@@ -544,9 +540,7 @@ def Script3():
     logger.info('Done making images of galaxies')
 
     # Now write the image to disk.
-    galsim.fits.writeMulti(all_images, multi_file_name, clobber=True)
-    logger.info('Wrote images to multi-extension fits file %r',multi_file_name)
-
+    # We write the images to a fits data cube.
     galsim.fits.writeCube(all_images, cube_file_name, clobber=True)
     logger.info('Wrote image to fits data cube %r',cube_file_name)
 
