@@ -537,28 +537,6 @@ class GSObject(object):
 
         return image, added_flux
 
-def _parse_sizes(self, label="object", **kwargs):
-    """
-    Convenience function to parse input size parameters within the derived class __init__ method.
-
-    Raises a TypeError exception if more than one input parameter kwarg is set != None, or if none
-    are, with the following messages in each case:
-
-    'Cannot specify more than one size parameter for '+label
-    
-    'Must specify at least one size parameter for '+label
-    """
-    size_set = False
-    for name, value in kwargs.iteritems():
-        if value != None:
-            if size_set is True:
-                raise TypeError("Cannot specify more than one size parameter for "+label)
-            else:
-                self.__setattr__(name, value)
-                size_set = True
-    if size_set is False:
-        raise TypeError("Must specify at least one size parameter for "+label)
-    
 
 # --- Now defining the derived classes ---
 #
@@ -976,7 +954,7 @@ class OpticalPSF(GSObject):
         "defocus": "optional", "astig1": "optional", "astig2": "optional", "coma1": "optional",
         "coma2": "optional", "spher": "optional", "circular_pupil": "optional",
         "interpolant": "optional", "dx": "optional", "oversampling": "optional",
-        "pad_factor": "optional"}
+        "pad_factor": "optional", "flux": "optional"}
 
     # --- Public Class methods ---
     def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
@@ -1281,24 +1259,28 @@ class RealGalaxy(GSObject):
 
         # read in data about galaxy from FITS binary table; store as normal attributes of RealGalaxy
 
-        # save any other relevant information
+        # save any other relevant information as instance attributes
         self.catalog_file = real_galaxy_catalog.filename
         self.index = use_index
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
         # note: will be adding more parameters here about noise properties etc., but let's be basic
         # for now
 
+        # save the original image and PSF too
         self.original_image = galsim.SBInterpolatedImage(
             gal_image, self.interpolant, dx=self.pixel_scale)
         self.original_PSF = galsim.SBInterpolatedImage(
             PSF_image, self.interpolant, dx=self.pixel_scale)
+        
         if flux != None:
             self.original_image.setFlux(flux)
             self.original_image.__class__ = galsim.SBTransform # correctly reflect SBProfile change
         self.original_PSF.setFlux(1.0)
         self.original_PSF.__class__ = galsim.SBTransform # correctly reflect SBProfile change
+
+        # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.SBDeconvolve(self.original_PSF)
-        
+        # Initialize the SBProfile attribute
         GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
 
     def getHalfLightRadius(self):
@@ -1530,28 +1512,12 @@ class Convolve(GSObject):
 class Deconvolve(GSObject):
     """@brief Base class for defining the python interface to the SBDeconvolve C++ class.
     """
-    # Defining flux parameter descriptor, not using the default pattern but getting/setting from the
-    # SBProfile directly
-    def _get_deconvolve_flux(self):
-        return self.SBProfile.getFlux()
-
-    def _set_deconvolve_flux(self, value):
-        self.SBProfile.setFlux(value)
-        self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
-
-    flux = descriptors.GetSetFuncParam(
-        getter=_get_deconvolve_flux, setter=_set_deconvolve_flux, update_SBProfile_on_set=False,
-        group="optional", doc="Total flux of the Deconvolve object.")
-
-    def _SBInitialize(self):
-        GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile))
-
+            
+    # --- Public Class methods ---
     def __init__(self, farg):
-
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
-        
-        if isinstance(fargs, GSObject):
+        if isinstance(farg, GSObject):
             self.farg = farg
+            GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile))
         else:
             raise TypeError("Argument farg must be a GSObject.")
 
