@@ -206,13 +206,12 @@ def _GetSizeKwarg(config, input_cat=None):
     counter = 0  # start the counter
     for name, properties in galsim.__dict__[config.type]._params.iteritems():
         if name in config.__dict__ and properties[0] is "size":
-                counter += 1
-                if counter == 1:
-                    size_kwarg[name] = _GetParamValue(config, name, input_cat=input_cat)
-                elif counter > 1:
-                    raise ValueError(
-                        "More than one size attribute within input config for type "+
-                        config.type+".")
+            counter += 1
+            if counter == 1:
+                size_kwarg[name] = _GetParamValue(config, name, input_cat=input_cat)
+            elif counter > 1:
+                raise ValueError(
+                    "More than one size attribute within input config for type "+config.type+".")
     if counter == 0:
         raise ValueError("No size attribute within input config for type "+config.type+".")
     return size_kwarg
