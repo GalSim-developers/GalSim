@@ -3,7 +3,6 @@ import collections
 import numpy as np
 import galsim
 import utilities
-import descriptors
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
@@ -28,7 +27,7 @@ class GSObject(object):
 
     # Make op* and op*= work to adjust the flux of an object
     def __imul__(self, other):
-        self.flux *= other
+        self.scaleFlux(other)
         return self
 
     def __mul__(self, other):
@@ -43,7 +42,7 @@ class GSObject(object):
 
     # Likewise for op/ and op/=
     def __idiv__(self, other):
-        self.flux /= other
+        self.scaleFlux(1. / other)
         return self
 
     def __div__(self, other):
@@ -580,7 +579,10 @@ class Gaussian(GSObject):
     
     # Initialization parameters of the object, with type information
     _params={
-        "sigma": "size", "half_light_radius": "size", "fwhm": "size", "flux": "optional"}
+        "sigma": ("size", float),
+        "half_light_radius": ("size", float),
+        "fwhm": ("size", float),
+        "flux": ("optional", float)}
     
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
@@ -642,9 +644,12 @@ class Moffat(GSObject):
 
     # Initialization parameters of the object, with type information
     _params={
-        "beta": "required",
-        "scale_radius": "size", "half_light_radius": "size", "fwhm": "size",
-        "trunc": "optional", "flux": "optional"}
+        "beta": ("required", float),
+        "scale_radius": ("size", float),
+        "half_light_radius": ("size", float),
+        "fwhm": ("size", float),
+        "trunc": ("optional", float),
+        "flux": ("optional", float)}
 
     # --- Public Class methods ---
     def __init__(self, beta, scale_radius=None, half_light_radius=None,  fwhm=None, trunc=0.,
@@ -705,8 +710,11 @@ class AtmosphericPSF(GSObject):
 
     # Initialization parameters of the object, with type information
     _params={
-        "lam_over_r0": "size", "fwhm": "size",
-        "interpolant": "optional", "oversampling": "optional", "flux": "optional"}
+        "lam_over_r0": ("size", float),
+        "fwhm": ("size", float),
+        "interpolant": ("optional", galsim.InterpolantXY),
+        "oversampling": ("optional", float),
+        "flux": ("optional", float)}
 
     # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5, flux=1.):
@@ -786,8 +794,12 @@ class Airy(GSObject):
     The Airy is a GSObject, and inherits all of the GSObject methods (draw, drawShoot, applyShear
     etc.) and operator bindings.
     """
+    
     # Initialization parameters of the object, with type information
-    _params={"lam_over_D": "size", "obscuration": "optional", "flux": "optional"}
+    _params={
+        "lam_over_D": ("size", float),
+        "obscuration": ("optional", float),
+        "flux": ("optional", float)}
 
     # --- Public Class methods ---
     def __init__(self, lam_over_D, obscuration=0., flux=1.):
@@ -863,7 +875,10 @@ class Kolmogorov(GSObject):
 
     # Initialization parameters of the object, with type information
     _params={
-        "lam_over_r0": "size", "fwhm": "size", "half_light_radius": "size", "flux": "optional"}
+        "lam_over_r0": ("size", float),
+        "fwhm": ("size", float),
+        "half_light_radius": ("size", float),
+        "flux": ("optional", float)}
 
     # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.):
@@ -950,11 +965,19 @@ class OpticalPSF(GSObject):
 
     # Initialization parameters of the object, with type information
     _params={
-        "lam_over_D": "size",
-        "defocus": "optional", "astig1": "optional", "astig2": "optional", "coma1": "optional",
-        "coma2": "optional", "spher": "optional", "circular_pupil": "optional",
-        "interpolant": "optional", "dx": "optional", "oversampling": "optional",
-        "pad_factor": "optional", "flux": "optional"}
+        "lam_over_D": ("size", float),
+        "defocus": ("optional", float),
+        "astig1": ("optional", float),
+        "astig2": ("optional", float),
+        "coma1": ("optional", float),
+        "coma2": ("optional", float),
+        "spher": ("optional", float),
+        "circular_pupil": ("optional", bool),
+        "interpolant": ("optional", galsim.InterpolantXY),
+        "dx": ("optional", float),
+        "oversampling": ("optional", float),
+        "pad_factor": ("optional", float),
+        "flux": ("optional", float)}
 
     # --- Public Class methods ---
     def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
@@ -1019,7 +1042,10 @@ class Pixel(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={"xw": "size", "yw": "optional", "flux": "optional"}
+    _params={
+        "xw": ("size", float),
+        "yw": ("optional", float),
+        "flux": ("optional", float)}
 
     # --- Public Class methods ---
     def __init__(self, xw, yw=None, flux=1.):
@@ -1063,7 +1089,10 @@ class Sersic(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={"n": "required", "half_light_radius": "size", "flux": "optional"}
+    _params={
+        "n": ("required", float),
+        "half_light_radius": ("size", float),
+        "flux": ("optional", float)}
 
     # --- Public Class methods ---
     def __init__(self, n, half_light_radius, flux=1.):
@@ -1114,7 +1143,10 @@ class Exponential(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={"scale_radius": "size", "half_light_radius": "size", "flux": "optional"}
+    _params={
+        "scale_radius": ("size", float),
+        "half_light_radius": ("size", float),
+        "flux": ("optional", float)}
 
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
@@ -1160,7 +1192,9 @@ class DeVaucouleurs(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={"half_light_radius": "size", "flux": "optional"}
+    _params={
+        "half_light_radius": ("size", float),
+        "flux": ("optional", float)}
 
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, flux=1.):
@@ -1210,9 +1244,14 @@ class RealGalaxy(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={"real_galaxy_catalog": "required",
-             "index": "optional", "ID": "optional", "random": "optional",
-             "uniform_deviate": "optional", "interpolant": "optional", "flux": "optional"}
+    _params={
+        "real_galaxy_catalog": ("required", galsim.RealGalaxyCatalog),
+        "index": ("optional", int),
+        "ID": ("optional", str),
+        "random": ("optional", bool),
+        "uniform_deviate": ("optional", galsim.UniformDeviate),
+        "interpolant": ("optional", galsim.InterpolantXY),
+        "flux": ("optional", float)}
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, ID=None, random=False,
@@ -1293,7 +1332,7 @@ class RealGalaxy(GSObject):
 class Add(GSObject):
     """@brief Base class for defining the python interface to the SBAdd C++ class.
     """
-
+    
     # --- Public Class methods ---
     def __init__(self, *args):
 
@@ -1450,7 +1489,7 @@ class Convolve(GSObject):
         # Warn if doing DFT convolution for objects with hard edges.
         if not real_space and hard_edge:
             import warnings
-            if len(self.objects) == 2:
+            if len(args) == 2:
                 msg = """
                 Doing convolution of 2 objects, both with hard edges.
                 This might be more accurate and/or faster using real_space=True"""
@@ -1462,7 +1501,7 @@ class Convolve(GSObject):
 
         if real_space:
             # Can't do real space if nobj > 2
-            if len(self.objects) > 2:
+            if len(args) > 2:
                 import warnings
                 msg = """
                 Real-space convolution of more than 2 objects is not implemented.
