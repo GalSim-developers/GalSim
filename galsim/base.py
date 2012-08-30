@@ -1258,13 +1258,14 @@ class RealGalaxy(GSObject):
                  uniform_deviate=None, interpolant=None, flux=None):
 
         import pyfits
-        
+
         # Code block below will be for galaxy selection; not all are currently implemented.  Each
-        # option must return an index within the real_galaxy_catalog.
-        use_index = -1
+        # option must return an index within the real_galaxy_catalog.        
+        use_index = None # using -1 here for 'safety' actually indexes in Python without complaint
         if index != None:
             if (ID != None or random == True):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
+            use_index = index
         elif ID != None:
             if (random == True):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
@@ -1284,6 +1285,7 @@ class RealGalaxy(GSObject):
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
         # consider exporting this code into fits.py in some function that takes a filename and HDU,
         # and returns an ImageView
+
         gal_image = real_galaxy_catalog.getGal(use_index)
         PSF_image = real_galaxy_catalog.getPSF(use_index)
 
