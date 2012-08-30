@@ -5,6 +5,7 @@ from . import angle
 from shear import *
 from ellipse import *
 from . import fits
+from real import *
 from base import *
 from . import noise
 from . import atmosphere
@@ -12,6 +13,5 @@ from . import optics
 from . import image
 from . import config
 from psfcorr import *
-from real import *
 from . import io
 from frontend import *
