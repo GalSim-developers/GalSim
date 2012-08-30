@@ -90,7 +90,7 @@ def Script1():
 
     # Define the PSF profile
     psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm, trunc=psf_trunc)
-    psf_re = psf.half_light_radius  # Need this for later...
+    psf_re = psf.getHalfLightRadius()  # Need this for later...
     psf.applyShear(e1=psf_e1,e2=psf_e2)
     logger.info('Made PSF profile')
 
@@ -510,13 +510,13 @@ def Script3():
         t2 = time.time()
 
         # Set the flux
-        gal.flux = gal_flux
+        gal.setFlux(gal_flux)
 
         # Apply the desired shear
         gal.applyShear(g1=gal_g1, g2=gal_g2)
         
         # Make the combined profile
-        final = galsim.Convolve([gal,psf,pix])
+        final = galsim.Convolve([gal, psf, pix])
 
         # Draw the profile
         im = galsim.ImageF(128,128)
@@ -663,7 +663,7 @@ def Script4():
                 gal1 = gal.createDilated(hlr)
                 gal_shape = galsim.Shear(e=ellip, beta=beta_ellip)
                 gal1.applyShear(gal_shape)
-                gal1.flux = flux
+                gal1.setFlux(flux)
 
                 # Build the final object by convolving the galaxy, PSF and pixel response.
                 final = galsim.Convolve([gal1, psf, pix])
@@ -838,7 +838,7 @@ def Script5():
         gal = f * bulge + (1-f) * disk
 
         flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
-        gal.flux = flux
+        gal.setFlux(flux)
 
         # Build the final object by convolving the galaxy and PSF 
         # Not including the pixel -- since we are using drawShoot
