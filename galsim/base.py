@@ -1563,56 +1563,6 @@ class Deconvolve(GSObject):
             raise TypeError("Argument farg must be a GSObject.")
 
 
-# Now we define a dictionary containing all the GSobject subclass names as keys, referencing a
-# nested dictionary containing the names of their required parameters (not including size), size
-# specification parameters (one of which only must be set), and optional parameters, stored as a
-# tuple of string names in each case.
-#
-# This is useful for I/O, and as a reference.
-#
-# NOTE TO DEVELOPERS: This dict should be kept updated to reflect changes in parameter names or new
-#                     objects.
-#
-object_param_dict = {
-    "Gaussian":       { "required" : (),
-                        "size"     : ("half_light_radius", "sigma", "fwhm",),
-                        "optional" : ("flux",) },
-    "Moffat":         { "required" : ("beta",),
-                        "size"     : ("half_light_radius", "scale_radius", "fwhm",),
-                        "optional" : ("trunc", "flux",) },
-    "Sersic":         { "required" : ("n",) ,
-                        "size"     : ("half_light_radius",),
-                        "optional" : ("flux",) },
-    "Exponential":    { "required" : (),
-                        "size"     : ("half_light_radius", "scale_radius"),
-                        "optional" : ("flux",) },
-    "DeVaucouleurs":  { "required" : (),
-                        "size"     : ("half_light_radius",),
-                        "optional" : ("flux",) },
-    "Airy":           { "required" : () ,
-                        "size"     : ("lam_over_D",),
-                        "optional" : ("obscuration", "flux",)},
-    "Kolmogorov":     { "required" : () ,
-                        "size"     : ("lam_over_r0", "fwhm", "half_light_radius"),
-                        "optional" : ("flux",)},
-    "Pixel":          { "required" : ("xw", "yw",),
-                        "size"     : (),
-                        "optional" : ("flux",) },
-    "OpticalPSF":     { "required" : (),
-                        "size"     : ("lam_over_D",),
-                        "optional" : ("defocus", "astig1", "astig2", "coma1", "coma2", "spher", 
-                                      "circular_pupil", "interpolant", "dx", "oversampling",
-                                      "pad_factor") },
-    "AtmosphericPSF": { "required" : (),
-                        "size"     : ("fwhm", "lam_over_r0"),
-                        "optional" : ("dx", "oversampling") },
-    "RealGalaxy":     { "required" : (),
-                        "size"     : (),
-                        "optional" : ("real_galaxy_catalog", "index", "ID", "random", 
-                                      "uniform_deviate", "interpolant")}
-                    }
-
-
 class AttributeDict(object):
     """@brief Dictionary class that allows for easy initialization and refs to key values via
     attributes.

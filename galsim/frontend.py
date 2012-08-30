@@ -189,13 +189,14 @@ def _GetRequiredKwargs(config, input_cat=None):
     """@brief Get the required kwargs.
     """
     req_kwargs = {}
-    for req_name in op_dict[config.type]["required"]:
-        # Sanity check here, as far upstream as possible
-        if not req_name in config.__dict__:
-            raise AttributeError("No required attribute "+req_name+" within input config for type "+
-                                 config.type+".")
-        else:
-            req_kwargs[req_name] = _GetParamValue(config, req_name, input_cat=input_cat)
+    for name, properties in galsim.__dict__[config.type]._params.iteritems():
+        if properties[0] is "required":
+            # Sanity check here, as far upstream as possible
+            if not name in config.__dict__:
+                raise AttributeError(
+                    "No required attribute "+name+" within input config for type "+config.type+".")
+            else:
+                req_kwargs[name] = _GetParamValue(config, name, input_cat=input_cat)
     return req_kwargs
 
 def _GetSizeKwarg(config, input_cat=None):
@@ -203,14 +204,15 @@ def _GetSizeKwarg(config, input_cat=None):
     """
     size_kwarg = {}
     counter = 0  # start the counter
-    for size_name in op_dict[config.type]["size"]:
-        if size_name in config.__dict__:
-            counter += 1
-            if counter == 1:
-                size_kwarg[size_name] = _GetParamValue(config, size_name, input_cat=input_cat)
-            elif counter > 1:
-                raise ValueError("More than one size attribute within input config for type "+
-                                 config.type+".")
+    for name, properties in galsim.__dict__[config.type]._params.iteritems():
+        if name in config.__dict__ and properties[0] is "size":
+                counter += 1
+                if counter == 1:
+                    size_kwarg[name] = _GetParamValue(config, name, input_cat=input_cat)
+                elif counter > 1:
+                    raise ValueError(
+                        "More than one size attribute within input config for type "+
+                        config.type+".")
     if counter == 0:
         raise ValueError("No size attribute within input config for type "+config.type+".")
     return size_kwarg
@@ -219,9 +221,9 @@ def _GetOptionalKwargs(config, input_cat=None):
     """@brief Get the optional kwargs, if any present in the config.
     """
     optional_kwargs = {}
-    for entry_name in config.__dict__:
-        if entry_name in op_dict[config.type]["optional"]:
-            optional_kwargs[entry_name] = _GetParamValue(config, entry_name, input_cat=input_cat)
+    for name, properties in galsim.__dict__[config.type]._params.iteritems():
+        if name in config.__dict__ and properties[0] is "optional":
+            optional_kwargs[name] = _GetParamValue(config, name, input_cat=input_cat)
     return optional_kwargs
 
 def _GetParamValue(config, param_name, input_cat=None):
