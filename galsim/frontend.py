@@ -1,6 +1,4 @@
 import galsim
-op_dict = galsim.object_param_dict
-
 
 def BuildGSObject(config, input_cat=None, logger=None):
     """Build a GSObject using a config (Config instance) and possibly an input_cat.
@@ -52,12 +50,15 @@ def BuildGSObject(config, input_cat=None, logger=None):
                                      "SquarePixel objects.")
         gsobject = _BuildSquarePixel(config, input_cat)
 
-    # Else Build object from primary GSObject keys in galsim.object_param_dict
-    elif config.type in op_dict: 
-        gsobject = _BuildSimple(config, input_cat)
-        gsobject = _BuildEllipRotateShearShiftObject(gsobject, config, input_cat)
+    # Else Build object if it's a GSObject in galsim.__dict__
+    elif config.type in galsim.__dict__:
+        if issubclass(galsim.__dict__[config.type], galsim.GSObject):
+            gsobject = _BuildSimple(config, input_cat)
+            gsobject = _BuildEllipRotateShearShiftObject(gsobject, config, input_cat)
+        else:
+            TypeError("Input config.type = "+str(config.type)+" is not a GSObject.")
     else:
-        raise NotImplementedError("Unrecognised config.type = "+str(config.type))
+        raise TypeError("Unrecognised config.type = "+str(config.type))
     return gsobject
 
 
