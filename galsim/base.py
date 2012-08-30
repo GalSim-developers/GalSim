@@ -1312,62 +1312,46 @@ class Add(GSObject):
     """@brief Base class for defining the python interface to the SBAdd C++ class.
     """
 
-    # Defining flux parameter descriptor, not using the default pattern but getting/setting from the
-    # SBProfile directly
-    def _get_flux(self):
-        return self.SBProfile.getFlux()
-    
-    def _set_flux(self, value):
-        self.SBProfile.setFlux(value)
-        self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
-
-    flux = descriptors.GetSetFuncParam(
-        getter=_get_flux, setter=_set_flux, update_SBProfile_on_set=False, group="optional",
-        ok_if_object_transformed=True, # flux params can still be accessed after transformation
-        doc="Total flux of the Add object.")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-
-        if len(self.objects) == 0:
-            # No arguments.  Start with none and add objects later with add(obj)
-            GSObject.__init__(self, None)
-        else:
-            # >= 1 arguments.  Convert to a list of SBProfiles
-            SBList = [obj.SBProfile for obj in self.objects]
-            GSObject.__init__(self, galsim.SBAdd(SBList))
-
     # --- Public Class methods ---
     def __init__(self, *args):
 
-        # Simple, empty list used for storing the individual elements in this compound GSObject
-        self.objects = []
-
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
-        
         if len(args) == 0:
-            pass
+            # No arguments.  Start with none and add objects later with add(obj)
+            GSObject.__init__(self, None)
         elif len(args) == 1:
-            # 1 argment.  Should be either a GSObject or a list of GSObjects
+            # 1 argument.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], GSObject):
-                self.objects.append(args[0])
+                SBList = [args[0].SBProfile]
             elif isinstance(args[0], list):
-                self.objects = list(args[0])
+                SBList = [obj.SBProfile for obj in args[0]]
             else:
                 raise TypeError("Single input argument must be a GSObject or list of them.")
+            GSObject.__init__(self, galsim.SBAdd(SBList))
         elif len(args) >= 2:
-            self.objects = list(args)
+            # >= 2 arguments.  Convert to a list of SBProfiles
+            SBList = [obj.SBProfile for obj in args]
+            GSObject.__init__(self, galsim.SBAdd(SBList))
 
-        # Then build the SBProfile, needed in __init__ for derived classes.
-        # Note the specific use of the Add._SBInitialize method - this is to prevent recursion
-        # in derived classes.
-        Add._SBInitialize(self)
+    def add(self, addme, scale=1.):
+        """@brief Add another object or list of them to this Add object.
 
-    def add(self, obj, scale=1.):
-        self.objects.append(obj * scale) # Note use of flux scaling via __mul__
-        self._SBProfile = None # Make sure that the ._SBProfile storage is emptied so that the new
-                               # Add will be re-initialized, including the new object, as required
+        Usage
+        -----
+        >>> new_add_object = old_add_object.add(addme, scale=1.)
+
+        addme    a GSObject or list of GSObjects to add to this Add objects.
+        scale    a flux scaling to appy to addme when adding.
+        """
+        if isinstance(addme, GSObject):
+            self.SBProfile.add(addme.SBProfile, scale)
+        elif isinstance(addme, list):
+            for obj in addme:
+                if isinstance(obj, GSObject):
+                    self.SBProfile.add(obj.SBProfile, scale)
+                else:
+                    raise TypeError("Input list must contain only GSObjects for add() method.")
+        else:
+            raise TypeError("First argument must be a GSObject or list of GSObjects.")
 
 
 class Convolve(GSObject):
