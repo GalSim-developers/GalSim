@@ -1349,9 +1349,10 @@ class Add(GSObject):
                 if isinstance(obj, GSObject):
                     self.SBProfile.add(obj.SBProfile, scale)
                 else:
-                    raise TypeError("Input list must contain only GSObjects for add() method.")
+                    raise TypeError(
+                        "Input list for first argument of add() must contain only GSObjects.")
         else:
-            raise TypeError("First argument must be a GSObject or list of GSObjects.")
+            raise TypeError("First argument of add() must be a GSObject or list of GSObjects.")
 
 
 class Convolve(GSObject):
