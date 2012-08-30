@@ -1316,14 +1316,20 @@ class Add(GSObject):
     def __init__(self, *args):
 
         if len(args) == 0:
-            # No arguments.  Start with none and add objects later with add(obj)
-            GSObject.__init__(self, None)
+            # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
+            # exception instead.
+            raise ValueError("Add must be initialized with at least one GSObject.")
         elif len(args) == 1:
             # 1 argument.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], GSObject):
                 SBList = [args[0].SBProfile]
             elif isinstance(args[0], list):
-                SBList = [obj.SBProfile for obj in args[0]]
+                SBList = []
+                for obj in args[0]:
+                    if isinstance(obj, GSObject):
+                        SBList.append(obj.SBProfile)
+                    else:
+                        raise TypeError("Input list must contain only GSObjects.")
             else:
                 raise TypeError("Single input argument must be a GSObject or list of them.")
             GSObject.__init__(self, galsim.SBAdd(SBList))
@@ -1337,9 +1343,9 @@ class Add(GSObject):
 
         Usage
         -----
-        >>> new_add_object = old_add_object.add(addme, scale=1.)
+        >>> add_object.add(addme, scale=1.)
 
-        addme    a GSObject or list of GSObjects to add to this Add objects.
+        addme    a GSObject or list of GSObjects to add to this Add object.
         scale    a flux scaling to appy to addme when adding.
         """
         if isinstance(addme, GSObject):
@@ -1396,47 +1402,71 @@ class Convolve(GSObject):
     automatically use real-space convolution.  In all other cases, the 
     default is to use the DFT algorithm.
     """
+                    
+    # --- Public Class methods ---
+    def __init__(self, *args, **kwargs):
 
-    # Descriptors for storing whether or not all objects are hard edged and if to use real-space
-    # convolution
-    real_space = descriptors.SimpleParam(
-        "real_space", group="optional", default=False,
-        doc="Whether or not to use real-space convolution.")
-
-    # Defining flux parameter descriptor, not using the default pattern but getting/setting from the
-    # SBProfile directly
-    def _get_convolve_flux(self):
-        return self.SBProfile.getFlux()
-    
-    def _set_convolve_flux(self, value):
-        self.SBProfile.setFlux(value)
-        self.SBProfile.__class__ = galsim.SBTransform # correctly reflect SBProfile change
-
-    flux = descriptors.GetSetFuncParam(
-        getter=_get_convolve_flux, setter=_set_convolve_flux, update_SBProfile_on_set=False,
-        ok_if_object_transformed=True, # flux params can still be accessed after transformation
-        group="optional", doc="Total flux of the Convolve object.")
-
-    # --- Defining the function used to (re)-initialize the contained SBProfile as necessary ---
-    # *** Note a function of this name and similar content MUST be defined for all GSObjects! ***
-    def _SBInitialize(self):
-        
-        self.hard_edge = True
-        for obj in self.objects:
-            if not obj.hasHardEdges():
-                self.hard_edge = False
-
-        if self.real_space is None:
-            # Figure out if it makes more sense to use real-space convolution.
-            if len(self.objects) == 2:
-                self.real_space = self.hard_edge
-            elif len(self.objects) == 1:
-                self.real_space = obj.isAnalyticX()
+        # First check for number of arguments != 0
+        if len(args) == 0:
+            # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
+            # exception instead.
+            raise ValueError("Convolve must be initialized with at least one GSObject.")
+        elif len(args) == 1:
+            if isinstance(args[0], GSObject):
+                SBList = [args[0].SBProfile]
+            elif isinstance(args[0], list):
+                SBList=[]
+                for obj in args[0]:
+                    if isinstance(obj, GSObject):
+                        SBList.append(obj.SBProfile)
+                    else:
+                        raise TypeError("Input list must contain only GSObjects.")
             else:
-                self.real_space = False
+                raise TypeError("Single input argument must be a GSObject or list of them.")
+        elif len(args) >= 2:
+            # >= 2 arguments.  Convert to a list of SBProfiles
+            SBList = []
+            for obj in args:
+                if isinstance(obj, GSObject):
+                    SBList.append(obj.SBProfile)
+                else:
+                    raise TypeError("Input args must contain only GSObjects.")
+
+        # Having built the list of SBProfiles or thrown exceptions if necessary, see now whether
+        # to perform real space convolution...
+
+        # Check kwargs
+        # The only kwarg we're looking for is real_space, which can be True or False
+        # (default if omitted is None), which specifies whether to do the convolution
+        # as an integral in real space rather than as a product in fourier space.
+        # If the parameter is omitted (or explicitly given as None I guess), then
+        # we will usually do the fourier method.  However, if there are 2 components
+        # _and_ both of them have hard edges, then we use real-space convolution.
+        real_space = kwargs.pop("real_space", None)
+        if kwargs:
+            raise TypeError(
+                "Convolve constructor got unexpected keyword argument(s): %s"%kwargs.keys())
+
+        # If 1 argument, check if it is a list:
+        if len(args) == 1 and isinstance(args[0], list):
+            args = args[0]
+
+        hard_edge = True
+        for obj in args:
+            if not obj.hasHardEdges():
+                hard_edge = False
+
+        if real_space is None:
+            # Figure out if it makes more sense to use real-space convolution.
+            if len(args) == 2:
+                real_space = hard_edge
+            elif len(args) == 1:
+                real_space = obj.isAnalyticX()
+            else:
+                real_space = False
         
         # Warn if doing DFT convolution for objects with hard edges.
-        if not self.real_space and self.hard_edge:
+        if not real_space and hard_edge:
             import warnings
             if len(self.objects) == 2:
                 msg = """
@@ -1448,7 +1478,7 @@ class Convolve(GSObject):
                 There might be some inaccuracies due to ringing in k-space."""
             warnings.warn(msg)
 
-        if self.real_space:
+        if real_space:
             # Can't do real space if nobj > 2
             if len(self.objects) > 2:
                 import warnings
@@ -1456,11 +1486,11 @@ class Convolve(GSObject):
                 Real-space convolution of more than 2 objects is not implemented.
                 Switching to DFT method."""
                 warnings.warn(msg)
-                self.real_space = False
+                real_space = False
 
             # Also can't do real space if any object is not analytic, so check for that.
             else:
-                for obj in self.objects:
+                for obj in args:
                     if not obj.isAnalyticX():
                         import warnings
                         msg = """
@@ -1468,57 +1498,33 @@ class Convolve(GSObject):
                         Cannot use real space convolution.
                         Switching to DFT method."""
                         warnings.warn(msg)
-                        self.real_space = False
+                        real_space = False
                         break
 
-        # Then initialize the SBProfile using the objects' SBProfiles
-        if len(self.objects) == 0:
-            # No arguments.  Start with none and add objects later with add(obj)
-            GSObject.__init__(self, None)
+        # Then finally initialize the SBProfile using the objects' SBProfiles in SBList
+        GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=real_space))
+
+    def add(self, addme, scale=1.):
+        """@brief Add (in convolution) another object or list of them to this Convolution object.
+
+        Usage
+        -----
+        >>> convolve_object.add(addme, scale=1.)
+
+        addme    a GSObject or list of GSObjects to add to this Convolve object.
+        scale    a flux scaling to appy to addme when adding.
+        """
+        if isinstance(addme, GSObject):
+            self.SBProfile.add(addme.SBProfile, scale)
+        elif isinstance(addme, list):
+            for obj in addme:
+                if isinstance(obj, GSObject):
+                    self.SBProfile.add(obj.SBProfile, scale)
+                else:
+                    raise TypeError(
+                        "Input list for first argument of add() must contain only GSObjects.")
         else:
-            # >= 1 arguments.  Convert to a list of SBProfiles
-            SBList = [obj.SBProfile for obj in self.objects]
-            GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=self.real_space))
-                    
-    # --- Public Class methods ---
-    def __init__(self, *args, **kwargs):
-
-        # Simple, empty list used for storing the individual elements in this compound GSObject
-        self.objects = []
-
-        self._setup_data_store() # Used for storing parameter data, accessed by descriptors
-
-        # Check kwargs first
-        # The only kwarg we're looking for is real_space, which can be True or False
-        # (default if omitted is None), which specifies whether to do the convolution
-        # as an integral in real space rather than as a product in fourier space.
-        # If the parameter is omitted (or explicitly given as None I guess), then
-        # we will usually do the fourier method.  However, if there are 2 components
-        # _and_ both of them have hard edges, then we use real-space convolution.
-        self.real_space = kwargs.pop("real_space",None)
-
-        if kwargs:
-            raise TypeError(
-                "Convolve constructor got unexpected keyword argument(s): %s"%kwargs.keys())
-
-        # If 1 argument, check if it is a list, then parse:
-        if len(args) == 0:
-            pass
-        elif len(args) == 1:
-            # 1 argment.  Should be either a GSObject or a list of GSObjects
-            if isinstance(args[0], GSObject):
-                self.objects.append(args[0])
-            elif isinstance(args[0], list):
-                self.objects = list(args[0])
-            else:
-                raise TypeError("Single input argument must be a GSObject or list of them.")
-        elif len(args) >= 2:
-            self.objects = list(args)
-
-    def add(self, obj, scale=1.):
-        self.objects.append(obj * scale) # Note use of flux scaling via __mul__
-        self._SBProfile = None # Make sure that the ._SBProfile storage is emptied so that the new
-                               # Add will be re-initialized, including the new object, as required
+            raise TypeError("First argument of add() must be a GSObject or list of GSObjects.")
 
 
 class Deconvolve(GSObject):
