@@ -588,7 +588,7 @@ def BuildSingleImage(seed, config, logger=None):
         raise AttributeError("At least one of gal or psf must be specified in config.")
 
     draw_method = galsim.frontend.GetParamValue(
-        config['image'],'draw_method',config,type=str)[0]
+        config['image'],'draw_method',config,value_type=str)[0]
     #print 'draw = ',draw_method
     if draw_method == 'fft':
         im = DrawImageFFT(psf,pix,gal,config)
@@ -646,7 +646,7 @@ def BuildImages(config, logger=None):
         for k in range(nobjects):
             if 'random_seed' in config['image']:
                 seed = galsim.frontend.GetParamValue(
-                    config['image'],'random_seed',config,type=int)[0]
+                    config['image'],'random_seed',config,value_type=int)[0]
             else:
                 seed = None
             im, psf_im, t = BuildSingleImage(seed, config, logger)
@@ -691,7 +691,7 @@ def BuildImages(config, logger=None):
             # to be picklable, which they aren't currently.
             if 'random_seed' in config['image']:
                 seed = galsim.frontend.GetParamValue(
-                    config['image'],'random_seed',config,type=int)[0]
+                    config['image'],'random_seed',config,value_type=int)[0]
             else:
                 seed = None
             # Apparently the logger isn't picklable, so can't send that as an arg.

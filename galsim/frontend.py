@@ -1,6 +1,4 @@
 import galsim
-op_dict = galsim.object_param_dict
-
 
 def BuildGSObject(config, key, base=None):
     """Build a GSObject using config dict for key=key.
@@ -57,7 +55,7 @@ def BuildGSObject(config, key, base=None):
         return ck['current'], True
 
     # Otherwise build the object depending on type, shift/shear, etc. if supported for that type
-    #print 'config.%s.type = %s'%(key,ck['type'])
+    #print 'config.%s.type = %s'%(key,type)
     if type in ('Sum', 'Convolution', 'Add', 'Convolve'):   # Compound object
         gsobjects = []
         if 'items' not in ck:
@@ -67,15 +65,6 @@ def BuildGSObject(config, key, base=None):
             raise AttributeError("items entry for config.%s entry is not a list."%type)
         safe = True
         for i in range(len(items)):
-            # The way we parse the configuration items requires that we be able to 
-            # update the config dictionary items with a line like config[key] = new_value
-            # This is a workaround to the python deficiency of not having real assignment
-            # of values.  So if we only have ck = config[key], then ck = new_value doesn't
-            # actually update the entry in the original dictionary.  It just makes a 
-            # new variable equal to new_values.
-            # Anyway, the upshot of all this is that items[i] must have a key value
-            # so we can do this.  But normally it doesn't.  So we have to add a level
-            # to the dictionary here if we haven't done so yet.
             gsobject, safe1 = BuildGSObject(items, i, base)
             safe = safe and safe1
             gsobjects.append(gsobject)
@@ -119,7 +108,7 @@ def BuildGSObject(config, key, base=None):
             raise AttributeError("items entry for config.%s entry is not a list."%type)
         if 'index' not in ck:
             ck['index'] = { 'type' : 'Sequence' , 'min' : 0 , 'max' : len(items)-1 }
-        index, safe = GetParamValue(ck, 'index', base, type=int)
+        index, safe = GetParamValue(ck, 'index', base, value_type=int)
         if index < 0 or index >= len(items):
             raise AttributeError("index %d out of bounds for config.%s"%(index,type))
         #print items[index]['type']
@@ -137,15 +126,16 @@ def BuildGSObject(config, key, base=None):
         # it doesn't have any size values.
         gsobject, safe = _BuildRealGalaxy(ck, base)
 
-    elif type in op_dict: 
-        # Build object from primary GSObject keys in galsim.object_param_dict
-        gsobject, safe = _BuildSimple(ck, base)
-
+    elif type in galsim.__dict__:
+        if issubclass(galsim.__dict__[type], galsim.GSObject):
+            gsobject, safe = _BuildSimple(ck, base)
+        else:
+            TypeError("Input config type = %s is not a GSObject."%type)
     else:
-        raise NotImplementedError("Unrecognised type = %s"%type)
+        raise NotImplementedError("Unrecognised config type = %s"%type)
 
     try : 
-        ck['saved_re'] = gsobject.half_light_radius
+        ck['saved_re'] = gsobject.getHalfLightRadius()
     except :
         pass
 
@@ -232,7 +222,7 @@ def _BuildRealGalaxy(config, base):
         if (type == 'Sequence' or type == 'RandomInt') and 'max' not in index:
             index['max'] = real_cat.n-1
 
-    index, safe = GetParamValue(config, 'index', base, type=int)
+    index, safe = GetParamValue(config, 'index', base, value_type=int)
     real_gal = galsim.RealGalaxy(real_cat, index=index)
 
     if 'flux' in config:
@@ -338,19 +328,19 @@ def BuildShear(config, key, base):
         return galsim.Shear(g1=g1, g2=g2), safe
     elif type == 'GBeta':
         g, safe1 = GetParamValue(ck, 'g', base)
-        beta, safe2 = GetParamValue(ck, 'beta', base, type=galsim.Angle)
+        beta, safe2 = GetParamValue(ck, 'beta', base, value_type=galsim.Angle)
         safe = safe1 and safe2
         #print 'g,beta = ',g,beta
         return galsim.Shear(g=g, beta=beta), safe
     elif type == 'EBeta':
         e, safe1 = GetParamValue(ck, 'e', base)
-        beta, safe2 = GetParamValue(ck, 'beta', base, type=galsim.Angle)
+        beta, safe2 = GetParamValue(ck, 'beta', base, value_type=galsim.Angle)
         safe = safe1 and safe2
         #print 'e,beta = ',e,beta
         return galsim.Shear(e=e, beta=beta), safe
     elif type == 'QBeta':
         q, safe1 = GetParamValue(ck, 'q', base)
-        beta, safe2 = GetParamValue(ck, 'beta', base, type=galsim.Angle)
+        beta, safe2 = GetParamValue(ck, 'beta', base, value_type=galsim.Angle)
         safe = safe1 and safe2
         #print 'q,beta = ',q,beta
         return galsim.Shear(q=q, beta=beta), safe
@@ -406,7 +396,7 @@ def _BuildRotateObject(gsobject, config, key, base):
 
     @returns transformed GSObject.
     """
-    theta, safe = GetParamValue(config, key, base, type=galsim.Angle)
+    theta, safe = GetParamValue(config, key, base, value_type=galsim.Angle)
     #print 'theta = ',theta
     gsobject.applyRotation(theta)
     #print 'After applyRotation, gsobject = ',gsobject, safe
@@ -480,16 +470,15 @@ def _GetRequiredKwargs(config, base):
     type = config['type']
     req_kwargs = {}
     safe = True
-    for req_name in op_dict[type]['required']:
-        # Sanity check here, as far upstream as possible
-        if not req_name in config:
-            raise AttributeError("Attribute %s is required for type=%s."%(req_name,type))
-        else:
-            # TODO: It would be nice to have types here.
-            # Currently I just assume they're all floats, which is mostly true.
-            req_kwargs[req_name], safe1 = GetParamValue(config, req_name, base)
-            safe = safe and safe1
-    #print 'req ',req_kwargs
+    for name, properties in galsim.__dict__[type]._params.iteritems():
+        if properties[0] is "required":
+            # Sanity check here, as far upstream as possible
+            if not name in config:
+                raise AttributeError("Attribute %s is required for type=%s."%(name,type))
+            else:
+                value_type = properties[1]
+                req_kwargs[name], safe1 = GetParamValue(config, name, base, value_type)
+                safe = safe and safe1
     return req_kwargs, safe
 
 def _GetSizeKwarg(config, base):
@@ -499,18 +488,18 @@ def _GetSizeKwarg(config, base):
     size_kwarg = {}
     safe = True
     counter = 0  # start the counter
-    for size_name in op_dict[type]['size']:
-        if size_name in config:
+    for name, properties in galsim.__dict__[type]._params.iteritems():
+        if name in config and properties[0] is "size":
             counter += 1
             if counter == 1:
-                size_kwarg[size_name], safe1 = GetParamValue(config, size_name, base)
+                value_type = properties[1]
+                size_kwarg[name], safe1 = GetParamValue(config, name, base, value_type)
                 safe = safe and safe1
             elif counter > 1:
                 raise ValueError(
                     "More than one size attribute within input config for type=%s."%type)
-    if counter == 0 and len(op_dict[type]['size']) > 0:
+    if counter == 0:
         raise ValueError("No size attribute within input config for type=%s."%type)
-    #print 'size ',size_kwarg
     return size_kwarg, safe
 
 def _GetOptionalKwargs(config, base):
@@ -519,14 +508,15 @@ def _GetOptionalKwargs(config, base):
     type = config['type']
     optional_kwargs = {}
     safe = True
-    for entry_name in config:
-        if entry_name in op_dict[type]['optional']:
-            optional_kwargs[entry_name], safe1 = GetParamValue(config, entry_name, base)
+    for name, properties in galsim.__dict__[type]._params.iteritems():
+        if name in config and properties[0] is "optional":
+            value_type = properties[1]
+            optional_kwargs[name], safe1 = GetParamValue(config, name, base, value_type)
             safe = safe and safe1
     #print 'opt ',optional_kwargs
     return optional_kwargs, safe
 
-def GetParamValue(config, param_name, base, type=float):
+def GetParamValue(config, param_name, base, value_type=float):
     """@brief Function to read parameter values from config.
     """
     # Parse the param in case it is a configuration string
@@ -535,11 +525,11 @@ def GetParamValue(config, param_name, base, type=float):
     param = config[param_name]
 
     # First see if we can assign by param by a direct constant value
-    if isinstance(param, type):
-        #print 'param == type: ',param,True
+    if isinstance(param, value_type):
+        #print 'param == value_type: ',param,True
         return param, True
     elif not isinstance(param, dict):
-        if type is galsim.Angle :
+        if value_type is galsim.Angle :
             # Angle is a special case.  Angles are specified with a final string to 
             # declare what unit to use.
             try :
@@ -566,38 +556,38 @@ def GetParamValue(config, param_name, base, type=float):
             # In particular things like 1.e6 aren't converted to float automatically
             # by the yaml reader. (Although I think this is a bug.)
             try : 
-                val = type(param)
+                val = value_type(param)
                 config[param_name] = val
             except :
                 raise AttributeError(
-                    "Could not convert %s param = %s to type %s."%(param_name,param,type))
-        #print 'param => type: ',val,True
+                    "Could not convert %s param = %s to type %s."%(param_name,param,value_type))
+        #print 'param => value_type: ',val,True
         return val, True
     elif not 'type' in param:
         raise AttributeError(
             "%s.type attribute required in config for non-constant parameter %s."
                     %(param_name,param_name))
     else: # Use type to set param value. Currently catalog input supported only.
-        param_type = param['type']
-        if param_type == 'InputCatalog':
+        type = param['type']
+        if type == 'InputCatalog':
             val,safe = _GetInputCatParamValue(param, param_name, base)
-        elif param_type == 'RandomAngle':
+        elif type == 'RandomAngle':
             val,safe = _GetRandomAngleParamValue(param, param_name, base)
-        elif param_type == 'Random':
-            val,safe = _GetRandomParamValue(param, param_name, base, type)
-        elif param_type == 'RandomGaussian':
+        elif type == 'Random':
+            val,safe = _GetRandomParamValue(param, param_name, base, value_type)
+        elif type == 'RandomGaussian':
             val,safe = _GetRandomGaussianParamValue(param, param_name, base)
-        elif param_type == 'Sequence':
+        elif type == 'Sequence':
             val,safe = _GetSequenceParamValue(param, param_name, base)
-        elif param_type == 'List':
-            val,safe = _GetListParamValue(param, param_name, base, type)
+        elif type == 'List':
+            val,safe = _GetListParamValue(param, param_name, base, value_type)
         else:
-            raise NotImplementedError("Unrecognised parameter type %s."%param_type)
+            raise NotImplementedError("Unrecognised parameter type %s."%type)
         try : 
-            val = type(val)
+            val = value_type(val)
         except :
             raise AttributeError(
-                "Could not convert %s param = %s to type %s."%(param_name,val,type))
+                "Could not convert %s param = %s to type %s."%(param_name,val,value_type))
         return val, safe
 
 def _GetCurrentParamValue(config, param_name):
@@ -634,7 +624,7 @@ def _GetInputCatParamValue(param, param_name, base):
         if (type == 'Sequence' or type == 'Random') and 'max' not in index:
             index['max'] = input_cat.nobjects-1
 
-    index, safe = GetParamValue(param, 'index', base, type=int)
+    index, safe = GetParamValue(param, 'index', base, value_type=int)
     if index >= input_cat.nobjects:
         raise IndexError(
             "%s index has gone past the number of entries in the catalog"%param_name)
@@ -645,7 +635,7 @@ def _GetInputCatParamValue(param, param_name, base):
     #print 'InputCat: ',val,False
     return val, False
 
-def _GetRandomParamValue(param, param_name, base, type):
+def _GetRandomParamValue(param, param_name, base, value_type):
     """@brief Return a random value within a given range.
     """
     if 'rng' not in base:
@@ -659,7 +649,7 @@ def _GetRandomParamValue(param, param_name, base, type):
     max = float(param['max'])
 
     ud = galsim.UniformDeviate(rng)
-    if type is int:
+    if value_type is int:
         import math
         val = int(math.floor(ud() * (max-min+1))) + min
         # In case ud() == 1
@@ -796,7 +786,7 @@ def _GetSequenceParamValue(param, param_name, base):
     #print 'saved rep,current = ',param['rep'],param['current']
     return index, False
 
-def _GetListParamValue(param, param_name, base, type):
+def _GetListParamValue(param, param_name, base, value_type):
     """@brief Return next item from a provided list
     """
     if 'items' not in param:
@@ -806,10 +796,10 @@ def _GetListParamValue(param, param_name, base, type):
         raise AttributeError("items entry for parameter %s is not a list."%param_name)
     if 'index' not in param:
         param['index'] = { 'type' : 'Sequence' , 'min' : 0 , 'max' : len(items)-1 }
-    index, safe = GetParamValue(param, 'index', base, type=int)
+    index, safe = GetParamValue(param, 'index', base, value_type=int)
     if index < 0 or index >= len(items):
         raise AttributeError("index %d out of bounds for parameter %s"%(index,param_name))
-    val, safe1 = GetParamValue(items, index, base, type)
+    val, safe1 = GetParamValue(items, index, base, value_type)
     safe = safe and safe1
     return val, safe
  
