@@ -558,6 +558,9 @@ def Script4():
     """
     logger = logging.getLogger("Script4")
 
+    # To turn off logging:
+    #logger.propagate = False
+
     # Define some parameters we'll use below.
 
     file_name = os.path.join('output','cube_phot.fits')
@@ -641,20 +644,26 @@ def Script4():
                 t1 = time.time()
 
                 # Initialize the random number generator we will be using.
+                #print 'seed = ',random_seed+k
                 rng = galsim.UniformDeviate(random_seed+k)
+
+                # Get an new copy, so we'll want to keep the original unmodified.
+                gal1 = gal.copy()
 
                 # Generate random variates:
                 flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
+                #print 'flux = ',flux
+                gal1.setFlux(flux)
+
                 hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
+                #print 'scale = ',hlr
+                gal1.applyDilation(hlr)
+
                 ellip = rng() * (gal_e_max-gal_e_min) + gal_e_min
                 beta_ellip = rng() * 2*math.pi * galsim.radians
-
-                # Use create rather than apply for the first one to get a new copy.
-                # Could also do gal1 = gal.copy() and then gal1.applyDilation(hlr)
-                gal1 = gal.createDilated(hlr)
+                #print 'e,beta = ',ellip,beta_ellip
                 gal_shape = galsim.Shear(e=ellip, beta=beta_ellip)
                 gal1.applyShear(gal_shape)
-                gal1.flux = flux
 
                 # Build the final object by convolving the galaxy, PSF and pixel response.
                 final = galsim.Convolve([psf, pix, gal1])
@@ -681,31 +690,58 @@ def Script4():
                         #fft_image.array.sum(),final.flux)
                 t3 = time.time()
 
-                # Repeat for photon shooting image.
-                # Photon shooting automatically convolves by the pixel, so we've made sure not
-                # to include it in the profile!
-                sky_level_pixel = sky_level * pixel_scale**2
-                final_nopix.drawShoot(phot_image, noise=sky_level_pixel/100, 
-                                      uniform_deviate=rng)
-                #logger.info('   Drew phot image.  Total drawn flux = %f.  .flux = %f',
-                        #phot_image.array.sum(),final.flux)
-                t4 = time.time()
-
                 # Add Poisson noise
+                sky_level_pixel = sky_level * pixel_scale**2
                 fft_image += sky_level_pixel
                 # Again, default is gain=1, read_noise=0
                 # So this is just poisson noise with the current image flux values.
+                #fft_image.setOrigin(1,1)
+                #print 'sky_level_pixel = ',sky_level_pixel
+                #print 'im.scale = ',fft_image.scale
+                #print 'im.bounds = ',fft_image.bounds
+                #print 'before CCDNoise: rng() = ',rng()
                 fft_image.addNoise(galsim.CCDNoise(rng))
+                #print 'after CCDNoise: rng() = ',rng()
                 fft_image -= sky_level_pixel
+
+                t4 = time.time()
+
+                # The next two lines are just to get the output from this demo script
+                # to match the output from the parsing of MOD4.yaml.
+                rng = galsim.UniformDeviate(random_seed+k)
+                rng(); rng(); rng(); rng();
+                #print 'flux = ',flux
+                #print 'scale = ',hlr
+                #print 'e,beta = ',ellip,beta_ellip
+
+                # Repeat for photon shooting image.
+                # Photon shooting automatically convolves by the pixel, so we've made sure not
+                # to include it in the profile!
+                #phot_image.setOrigin(1,1)
+                #print 'noise_var = ',sky_level_pixel
+                #print 'im.scale = ',phot_image.scale
+                #print 'im.bounds = ',phot_image.bounds
+                #print 'before drawShoot: rng() = ',rng()
+                final_nopix.drawShoot(phot_image, noise=sky_level_pixel/100, 
+                                      uniform_deviate=rng)
+                #print 'after drawShoot: rng() = ',rng()
+                #print k, gal_name, psf_name
+                #logger.info('   Drew phot image.  Total drawn flux = %f.  .flux = %f',
+                        #phot_image.array.sum(),final.flux)
+                t5 = time.time()
 
                 # For photon shooting, galaxy already has poisson noise, so we want to make 
                 # sure not to add that noise again!  Thus, we just add sky noise, which 
                 # is Poisson with the mean = sky_level_pixel
+                #print 'im.scale = ',phot_image.scale
+                #print 'im.bounds = ',phot_image.bounds
+                #print 'before Poisson: rng() = ',rng()
                 phot_image.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
+                #print 'after Poisson: rng() = ',rng()
 
                 #logger.info('   Added Poisson noise.  Image fluxes are now %f and %f',
                         #fft_image.array.sum(),phot_image.array.sum())
-                t5 = time.time()
+                t6 = time.time()
 
                 # Store that into the list of all images
                 all_images += [image]
@@ -714,17 +750,17 @@ def Script4():
                 logger.info('%d: %s * %s, flux = %.2e, hlr = %.2f, ellip = (%.2f,%.2f)',
                         k,gal_name, psf_name, flux, hlr, gal_shape.getE1(), gal_shape.getE2())
 
-                #logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
-                psf_times[ipsf] += t5-t1
+                #logger.info('   Times: %f, %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
+                psf_times[ipsf] += t6-t1
                 psf_fft_times[ipsf] += t3-t2
-                psf_phot_times[ipsf] += t4-t3
-                gal_times[igal] += t5-t1
+                psf_phot_times[ipsf] += t5-t4
+                gal_times[igal] += t6-t1
                 gal_fft_times[igal] += t3-t2
-                gal_phot_times[igal] += t4-t3
+                gal_phot_times[igal] += t5-t4
                 setup_times += t2-t1
                 fft_times += t3-t2
-                phot_times += t4-t3
-                noise_times += t5-t4
+                phot_times += t5-t4
+                noise_times += t4-t3 + t6-t5
 
     logger.info('Done making images of galaxies')
     logger.info('')

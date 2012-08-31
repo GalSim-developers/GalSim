@@ -160,6 +160,8 @@ def ParseConfigOutput(config, logger=None):
         nobj = nx_tiles * ny_tiles
     else:
         raise AttributeError("Invalid image_type for output: %s",output['image_type'])
+    if logger:
+        logger.info('Building %d objects per image',nobj)
 
     # Parse the information about the output file type
     # Accumulate nimages = how many images to draw.
@@ -194,6 +196,12 @@ def ParseConfigOutput(config, logger=None):
     config['nobj_per_image'] = nobj
     config['nimages'] = nimages
     config['nobjects'] = nobj * nimages
+
+    if logger:
+        logger.info('Building %d images of type %s',nimages,output['image_type'])
+        logger.info('Output file type is %s',output['type'])
+        logger.info('Total number of objects to build is %d',config['nobjects'])
+
 
 
 def ParseConfigImage(config, logger=None):
@@ -439,9 +447,12 @@ def DrawImageFFT(psf, pix, gal, config):
         if noise['type'] == 'Poisson':
             sky_level_pixel = float(noise['sky_level']) * pixel_scale**2
             im += sky_level_pixel
-            #print 'before CCDNoise: ',rng()
+            #print 'sky_level_pixel = ',sky_level_pixel
+            #print 'im.scale = ',im.scale
+            #print 'im.bounds = ',im.bounds
+            #print 'before CCDNoise: rng() = ',rng()
             im.addNoise(galsim.CCDNoise(rng))
-            #print 'after CCDNoise: ',rng()
+            #print 'after CCDNoise: rng() = ',rng()
             im -= sky_level_pixel
             #if logger:
                 #logger.info('   Added Poisson noise with sky_level = %f',sky_level)
@@ -497,7 +508,12 @@ def DrawImagePhot(psf, gal, config):
         im = galsim.ImageF(image_xsize, image_ysize)
         im.setScale(pixel_scale)
         # TODO: Should we make this 100 a variable?
+        #print 'noise_var = ',noise_var
+        #print 'im.scale = ',im.scale
+        #print 'im.bounds = ',im.bounds
+        #print 'before drawShoot: rng() = ',rng()
         final.drawShoot(im, noise=noise_var/100, uniform_deviate=rng)
+        #print 'after drawShoot: rng() = ',rng()
     
     # Add noise
     if 'noise' in config['image']: 
@@ -509,7 +525,12 @@ def DrawImagePhot(psf, gal, config):
             # For photon shooting, galaxy already has poisson noise, so we want 
             # to make sure not to add that again!  Just add Poisson with 
             # mean = sky_level_pixel
+            #print 'sky_level_pixel = ',sky_level_pixel
+            #print 'im.scale = ',im.scale
+            #print 'im.bounds = ',im.bounds
+            #print 'before Poisson: rng() = ',rng()
             im.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
+            #print 'after Poisson: rng() = ',rng()
             #if logger:
                 #logger.info('   Added Poisson noise with sky_level = %f',sky_level)
         elif noise['type'] == 'Gaussian':
@@ -569,6 +590,7 @@ def BuildSingleImage(seed, config, logger=None):
     t1 = time.time()
 
     # Initialize the random number generator we will be using.
+    #print 'seed = ',seed
     if seed:
         rng = galsim.UniformDeviate(seed)
     else:
@@ -592,6 +614,7 @@ def BuildSingleImage(seed, config, logger=None):
         raise AttributeError("At least one of gal or psf must be specified in config.")
 
     draw_method = galsim.GetParamValue(config['image'],'draw_method',config,type=str)[0]
+    #print 'draw = ',draw_method
     if draw_method == 'fft':
         im = DrawImageFFT(psf,pix,gal,config)
     elif draw_method == 'phot':
@@ -790,12 +813,15 @@ def BuildFullImages(images, psf_images, config, logger=None):
     else:
         full_images = []
         full_psf_images = []
+        nobj = config['nobj_per_image']
         k1 = 0
-        k2 = config['nobj_per_image']
+        k2 = nobj
         for i in range(config['nimages']):
             im, psf_im = BuildSingleFullImage(images[k1:k2], psf_images[k1:k2], config, logger)
             full_images += [ im ]
             full_psf_images += [ psf_im ]
+            k1 = k2
+            k2 += nobj
         return full_images, full_psf_images
             
    
@@ -882,11 +908,14 @@ def main(argv):
     )
     logger = logging.getLogger('galsim_yaml')
 
+    # To turn off logging:
+    #logger.propagate = False
+
     config_file = argv[1]
     logger.info('Using config file %s',config_file)
 
     all_config = [ c for c in yaml.load_all(open(config_file).read()) ]
-    logger.info('config file successfully read in')
+    logger.info('Successfully read in config file.')
     #print 'all_config = ',all_config
 
     # If there is only 1 yaml document, then it is of course used for the configuration.

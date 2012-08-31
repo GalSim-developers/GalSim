@@ -80,13 +80,14 @@ gal :
     # An object may have an ellip and a shear, each of which can be specified in terms
     # of either E1E2 (distortion) or G1G2 (reduced shear).
     # The only difference between the two is if there is also a rotation specified.
-    # The order of the various modifications are:
-    # - dilate
-    # - ellip
-    # - rotation
-    # - magnify
-    # - shear
-    # - shift
+    # The ellip is applied before the rotation, and the shear after.
+    # There are also a number of other transformations, whose order is:
+    # - dilate or dilation        = scale linear size of the object preserving flux
+    # - ellip                     = set the intrinsic shape of the object
+    # - rotate or rotation        = rotate by some angle
+    # - magnify or magnification  = scale linear size of object preserving surface brightness
+    # - shear                     = apply the gravitational shear
+    # - shift                     = shift the centroid of the object
     shear : 
         type : G1G2 
         g1 : 0.013
