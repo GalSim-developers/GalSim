@@ -98,9 +98,9 @@ image :
         # The following sequence for index is automatically generated:
         #index : { type : Sequence , min : 0 , max : 1 }
 
-    # This is also pretty contrived that is really only relevant for this particular example.  
+    # This is also pretty contrived.  It is really only relevant for this particular example.  
     # The usual case is to just set a single number, which really means that each object
-    # gets a sequential value starting with this number.  In this case we reapeat each value
+    # gets a sequential value starting with this number.  In this case we repeat each value
     # two times, so the fft and phot images get the same values for the random parameters.
     random_seed : { type : Sequence , min : 1512413 , repeat : 2 }
 
