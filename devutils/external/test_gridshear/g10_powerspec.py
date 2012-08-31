@@ -60,7 +60,7 @@ class ps:
 
 		# Creating a complex wavevector
 		
-		self.el1 = 2.0 * np.pi * (np.arange(self.n)  - ((self.n-1)/2.0) + 0.001) / bigl
+		self.el1 = 2.0 * np.pi * (np.arange(self.n)  - ((self.n-1)/2.0) - 0.5 + 0.001) / bigl
 
 		self.lvec = np.zeros((self.n,self.n), dtype = np.complex)
 		icoord = np.zeros((self.n,self.n))
