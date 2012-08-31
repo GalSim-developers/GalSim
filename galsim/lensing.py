@@ -306,8 +306,8 @@ class PowerSpectrumRealizer(object):
         g2_k = self._sin*E_k + self._cos*B_k
 
         #And go to real space to get the images
-        g1=np.fft.irfft2(g1_k)
-        g2=np.fft.irfft2(g2_k)
+        g1=g1_k.shape[0]*np.fft.irfft2(g1_k)
+        g2=g2_k.shape[0]*np.fft.irfft2(g2_k)
         
         return g1, g2
 
