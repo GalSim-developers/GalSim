@@ -21,12 +21,6 @@ def BuildGSObject(config, key, base=None):
     if not base:
         base = config
 
-    # For backwards compatibility:  If config is an AttributeDict, then use its __dict__
-    if isinstance(config,galsim.AttributeDict):
-        return BuildGSObject(config.__dict__,key,base)
-    if isinstance(base,galsim.AttributeDict):
-        return BuildGSObject(config,key,base.__dict__)
-
     #print 'Start BuildGSObject: config = ',config
     if isinstance(config,dict):
         if not key in config:
@@ -298,10 +292,6 @@ def BuildShear(config, key, base):
        |e| = (1-q^2)/(1+q^2)
        |g| = (1-q)/(1+q)
     """
-    # For backwards compatibility:  If config is an AttributeDict, then use its __dict__
-    if isinstance(config,galsim.AttributeDict):
-        return BuildShear(config.__dict__,key,base)
-
     #print 'Start BuildShear'
     #print 'config[key] = ',config[key]
     _Parse(config,key)
@@ -427,10 +417,6 @@ def _BuildMagnifyObject(gsobject, config, key, base):
 def BuildShift(config, key, base):
     """@brief Construct and return the (dx,dy) tuple to be used for a shift
     """
-    # For backwards compatibility:  If config is an AttributeDict, then use its __dict__
-    if isinstance(config,galsim.AttributeDict):
-        return BuildShift(config.__dict__,key,base)
-
     _Parse(config,key)
 
     # Alias for convenience
@@ -879,10 +865,6 @@ def _Parse(config, key):
         ck = config[key]
         ck['type'] = tokens[0]
         str = tokens[1]
-    elif isinstance(ck,galsim.AttributeDict):
-        config[key] = ck.__dict__
-        _Parse(config,key)
-        return
     elif isinstance(ck,dict):
         if 'type' in ck:
             type = ck['type']
