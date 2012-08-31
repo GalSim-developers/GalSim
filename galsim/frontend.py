@@ -186,8 +186,7 @@ def _BuildPixel(config, base):
 
 
 def _BuildSimple(config, base):
-    """@brief Build a simple GSObject (i.e. not Sums, Convolutions, Pixels or SquarePixel) from
-    user input.
+    """@brief Build a simple GSObject (i.e. not Sums, Convolutions, etc.) from user input.
     """
     # First do a no-brainer checks
     if not 'type' in config:

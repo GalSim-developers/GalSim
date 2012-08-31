@@ -73,139 +73,132 @@ def Script1():
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
 
-    # Setup the config object
-    config = galsim.Config()
+    # Setup the config dict
+    config = {}
 
-    # The configuration should set up several top level things:
-    # config.psf defines the PSF
-    # config.pix defines the pixel response
-    # config.gal defines the galaxy
-    # They are all currently required, although eventually we will probably make it so
-    # they are each optional.
+    # The configuration should set up several top level dictionaries:
+    # None of these are technically required, but it is an error to have _neither_
+    # psf or gal.
+    config['psf'] = {}     # defines the PSF
+    config['gal'] = {}     # defines the galaxy
+    config['image'] = {}   # defines some information about the images
+    config['input'] = {}   # defines any necessary input files
+    config['output'] = {}  # defines the output files
 
     # Each type of profile is specified by a type.  e.g. Moffat:
-    config.psf.type = 'Moffat'
+    config['psf']['type'] = 'Moffat'
 
     # The various parameters are typically specified as well
-    config.psf.beta = 3.5
+    config['psf']['beta'] = 3.5
 
     # These parameters do not need to be constant.  There are a number of ways to
     # specify variables that might change from object to object.
     # In this case, the parameter specification also has a "type".
     # For now we only have InputCatalog, which means read the value from a catalog:
-    config.psf.fwhm.type = 'InputCatalog'
+    config['psf']['fwhm'] = {}
+    config['psf']['fwhm']['type'] = 'InputCatalog'
 
     # InputCatalog requires the extra value of which column to use in the catalog:
     # Note: the first column is called 0, not 1, as per the usual python 
     # 0-based indexing scheme.
-    config.psf.fwhm.col = 5
+    config['psf']['fwhm']['col'] = 5
 
-    # You can also specify both of these on the same line as a single string:
-    config.psf.trunc = 'InputCatalog col=8'
+    # You can also specify both of these on the same line as a dict in the normal python way.
+    config['psf']['trunc'] = { 'type' : 'InputCatalog' , 'col' : 8 }
 
-    # You can even nest string values using angle brackets:
-    config.psf.ellip = 'E1E2 e1=<InputCatalog col=6> e2=<InputCatalog col=7>'
+    # You can nest this as deep as you need to
+    config['psf']['ellip'] = {
+        'type' : 'E1E2',
+        'e1' : { 'type' : 'InputCatalog' , 'col' : 6 },
+        'e2' : { 'type' : 'InputCatalog' , 'col' : 7 }
+    }
 
     # If you don't specify a parameter, and there is a reasonable default, then it 
     # will be used instead.  If there is no reasonable default, you will get an error.
-    #config.psf.flux = 1  # Unnecessary
-
-    # If you want to use a variable in your string, you can use Python's % notation:
-    config.pix = 'SquarePixel size=%f'%pixel_scale
+    #config['psf']['flux'] = 1  # Unnecessary
 
     # A profile can be the sum of several components, each with its own type and parameters:
-    config.gal.type = 'Sum'
-    # TODO: [galsim.Config()]*2 doesn't work, since shallow copies.
-    # I guess we need a nicer way to initialize this.
-    config.gal.items = [galsim.Config(), galsim.Config()]
-    config.gal.items[0].type = 'Exponential'
-    config.gal.items[0].half_light_radius = 'InputCatalog col=9'
-    config.gal.items[0].ellip = 'E1E2 e1=<InputCatalog col=10> e2=<InputCatalog col=11>'
-    config.gal.items[0].flux = 0.6
-    config.gal.items[1].type = 'DeVaucouleurs'
-    config.gal.items[1].half_light_radius = 'InputCatalog col=12'
-    config.gal.items[1].ellip = 'E1E2 e1=<InputCatalog col=13> e2=<InputCatalog col=14>'
-    config.gal.items[1].flux = 0.4
+    config['gal']['type'] = 'Sum'
+
+    # Sum requires a field called items, which is a list
+    config['gal']['items'] = [
+        {
+            'type' : 'Exponential',
+            'half_light_radius' : { 'type' : 'InputCatalog' , 'col' : 9 },
+            'ellip' : {
+                'type' : 'E1E2',
+                'e1' : { 'type' : 'InputCatalog' , 'col' : 10 },
+                'e2' : { 'type' : 'InputCatalog' , 'col' : 11 },
+            },
+            'flux' : 0.6
+        },
+        {
+            'type' : 'DeVaucouleurs',
+            'half_light_radius' : { 'type' : 'InputCatalog' , 'col' : 12 },
+            'ellip' : {
+                'type' : 'E1E2',
+                'e1' : { 'type' : 'InputCatalog' , 'col' : 13 },
+                'e2' : { 'type' : 'InputCatalog' , 'col' : 14 },
+            },
+            'flux' : 0.4
+        } 
+    ]
 
     # When a composite object (like a Sum) has a flux specified, the "flux" values of the
     # components are taken to be relative fluxes, and the full object's value sets the
     # overall normalization.  If this is omitted, the overall flux is taken to be the
     # sum of the component fluxes.
-    config.gal.flux = gal_flux
+    config['gal']['flux'] = gal_flux
 
-    # An object may have an ellip and a shear, each of which can be specified in terms
-    # of either E1E2 (distortion) or G1G2 (reduced shear).
-    # The only difference between the two is if there is also a rotation specified.
-    # The order of the various modifications are:
-    # - ellip
-    # - rotation
-    # - shear
-    # - shift
-    config.gal.shear = 'G1G2 g1=%f g2=%f'%(gal_g1,gal_g2)
-    config.gal.shift = 'DXDY dx=<InputCatalog col=15> dy=<InputCatalog col=16>'
+    # The fields ellip and shear each do the same thing -- shear the profile by some value.
+    # Typically ellip refers to the intrinsic shape of the object, while shear refers
+    # to the applied graviational shear.  The former is usually specified in terms of 
+    # a distortion: e = (a^2-b^2)/(a^2+b^2), while the latter is usually specified in
+    # terms of a shear (or "reduced shear"): g = (a-b)/(a+b).  However, either one 
+    # may be defined using E1E2 (distortion) or G1G2 (reduced shear).
+    # Other possible types for these are EBeta and GBeta (polar coordinates), 
+    # and QBeta (using q = b/a).
+    config['gal']['shear'] = { 'type' : 'G1G2' , 'g1' : gal_g1 , 'g2' : gal_g2 }
 
+    # The shift field will shift the location of the centroid relative to the image center.
+    config['gal']['shift'] = { 
+        'type' : 'DXDY' ,
+        'dx' : { 'type' : 'InputCatalog' , 'col' : 15 },
+        'dy' : { 'type' : 'InputCatalog' , 'col' : 16 }
+    }
 
-    # Read the catalog
-    input_cat = galsim.io.ReadInputCat(config,cat_file_name)
-    logger.info('Read %d objects from catalog',input_cat.nobjects)
+    # Define some other information about the images
+    config['image']['pixel_scale'] = pixel_scale
+    config['image']['xsize'] = xsize
+    config['image']['ysize'] = ysize
+    config['image']['noise'] = { 'type' : 'Poisson' , 'sky_level' : sky_level }
 
-    # Store these in config for use by the BuildGSObject functions.
-    config.input_cat = input_cat
+    # The random seed is a bit special.  We actually set the initial seed for each
+    # galaxy in order to be sequential values starting with this one.
+    # The reason is so we can have deterministic runs even when we use multiple 
+    # processes to build each image.  So this random_seed is the seed for the _first_
+    # image.
+    config['image']['random_seed'] = random_seed
 
-    # Build the images
-    all_images = []
-    for k in range(input_cat.nobjects):
-        # Initialize the random number generator we will be using.
-        # Note: This could be done once outside the loop.
-        #       However, this is the initialization that our config parser uses in
-        #       order to work when using multiple processes.
-        #       Since we want these demo scripts to have identical output to the 
-        #       versions using config files, we follow the same convention here.
-        rng = galsim.UniformDeviate(random_seed+k)
-        config.rng = rng
+    # Define the input files -- in this case the catalog file to use.
+    config['input']['catalog'] = { 'file_name' : cat_file_name }
 
-        t1 = time.time()
-        #logger.info('Image %d',input_cat.current)
+    # Define the output format
+    config['output']['file_name'] = multi_file_name
 
-        psf = galsim.BuildGSObject(config,'psf')[0]
-        #logger.info('   Made PSF profile')
-        t2 = time.time()
+    # type = multi_fits means to use a multi-extension fits file
+    config['output']['type'] = 'multi_fits'
 
-        pix = galsim.BuildGSObject(config,'pix')[0]
-        #logger.info('   Made pixel profile')
-        t3 = time.time()
+    # You can specify how many extensions to write to the file with nimages, 
+    # but in this case, since we are using an input catalog, the default 
+    # value is to do the number of entries in the catalog.
+    #config['output']['nimages'] = 100
 
-        gal = galsim.BuildGSObject(config,'gal')[0]
-        #logger.info('   Made galaxy profile')
-        t4 = time.time()
-
-        final = galsim.Convolve([psf,pix,gal])
-        #im = final.draw(dx=pixel_scale)  # It makes these as 768 x 768 images.  A bit big.
-        im = galsim.ImageF(xsize, ysize)
-        final.draw(im, dx=pixel_scale)
-        #logger.info('   Drew image: size = %d x %d',xsize,ysize)
-        t5 = time.time()
-
-        # Add Poisson noise
-        im += sky_level * pixel_scale**2
-        im.addNoise(galsim.CCDNoise(rng))
-        im -= sky_level * pixel_scale**2
-        #logger.info('   Added noise')
-        t6 = time.time()
-
-        # Store that into the list of all images
-        all_images += [im]
-        t7 = time.time()
-
-        #logger.info('   Times: %f, %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5, t7-t6)
-        logger.info('Image %d: size = %d x %d, total time = %f sec', k, xsize, ysize, t7-t1)
-
-    logger.info('Done making images of galaxies')
-
-    # Now write the image to disk.
-    # We write the images to a multi-extension fits file.
-    galsim.fits.writeMulti(all_images, multi_file_name, clobber=True)
-    logger.info('Wrote images to multi-extension fits file %r',multi_file_name)
+    # Now the following function will do everything that we specified above:
+    # (The logger parameter is optional.)
+    galsim.ProcessConfig(config,logger)
+    logger.info('Done processing config.')
+    logger.info('Images written to multi-extension fits file %r',multi_file_name)
 
     print
 

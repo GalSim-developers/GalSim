@@ -77,11 +77,11 @@ gal :
             beta : 
                 type : RandomAngle
 
-    # An object may have an ellip and a shear, each of which can be specified in terms
-    # of either E1E2 (distortion) or G1G2 (reduced shear).
-    # The only difference between the two is if there is also a rotation specified.
-    # The ellip is applied before the rotation, and the shear after.
-    # There are also a number of other transformations, whose order is:
+    # An object may have both an ellip and a shear field, in which case, the ellip
+    # is applied before the shear.  
+    # There are also a number of other transformations that may be applied.
+    # The full list in the order of application is:
+    #
     # - dilate or dilation        = scale linear size of the object preserving flux
     # - ellip                     = set the intrinsic shape of the object
     # - rotate or rotation        = rotate by some angle

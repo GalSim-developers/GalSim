@@ -83,9 +83,12 @@ psf :
     # will be used instead.  If there is no reasonable default, you will get an error.
     #flux : 1  # Unnecessary
 
-# A profile can be the sum of several components, each with its own type and parameters:
+# Define the galaxy profile
 gal :
+    # A profile can be the sum of several components, each with its own type and parameters:
     type : Sum
+
+    # Sum requires a field called items, which is a list of items (each designed with a -)
     items :
         - 
             type : Exponential
@@ -150,7 +153,7 @@ input :
         dir : input
         file_name : galsim_default_input.asc
 
-# Define the output formats
+# Define the output format
 output :
     dir : output_yaml
     file_name : multi.fits
