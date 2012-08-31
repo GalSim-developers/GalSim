@@ -208,7 +208,7 @@ def test_poisson_image():
     p = galsim.PoissonDeviate(u, mean=pMean)
     testimage = galsim.ImageViewI(np.zeros((3, 1), dtype=np.int32))
     testimage.addNoise(p)
-    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(pResult),
+    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(pResult)-pMean,
                                err_msg="PoissonDeviate generator applied to Images does not "
                                        "reproduce expected sequence")
     t2 = time.time()
