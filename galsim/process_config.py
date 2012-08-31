@@ -26,11 +26,7 @@ def ParseConfigInput(config, logger=None):
     # Read the input catalog if provided
     if 'catalog' in input:
         catalog = input['catalog']
-        file_name = catalog['file_name']
-        if 'dir' in catalog:
-            dir = catalog['dir']
-            file_name = os.path.join(dir,file_name)
-        input_cat = galsim.io.ReadInputCat(config,file_name)
+        input_cat = galsim.io.InputCatalog(catalog)
         if logger:
             logger.info('Read %d objects from catalog',input_cat.nobjects)
         # Store input_cat in the config for use by BuildGSObject function.
