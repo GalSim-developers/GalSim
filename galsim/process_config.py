@@ -19,9 +19,11 @@ def ParseConfigInput(config, logger=None):
     """
 
     # Make config['input'] exist if it doesn't yet.
-    if not 'input' in config:
+    if 'input' not in config:
         config['input'] = {}
     input = config['input']
+    if not isinstance(input, dict):
+        raise AttributeError("config.input is not a dict.")
 
     # Read the input catalog if provided
     if 'catalog' in input:
@@ -35,6 +37,8 @@ def ParseConfigInput(config, logger=None):
     # Read the RealGalaxy catalog if provided
     if 'real_catalog' in input:
         catalog = input['real_catalog']
+        if 'file_name' not in catalog:
+            raise AttributeError("file_name is required for input real_catalog")
         file_name = catalog['file_name']
         if 'dir' in catalog:
             dir = catalog['dir']
@@ -67,6 +71,8 @@ def ParseConfigOutput(config, logger=None):
     if 'output' not in config:
         config['output'] = {}
     output = config['output']
+    if not isinstance(output, dict):
+        raise AttributeError("config.output is not a dict.")
 
     # If the output includes either data_cube or tiled_image then all images need
     # to be the same size.  We will use the first image's size for all others.
@@ -78,13 +84,14 @@ def ParseConfigOutput(config, logger=None):
     if 'file_name' in output:
         file_name = output['file_name']
     else:
+        raise AttributeError("config.output is not a dict.")
         # If a file_name isn't specified, we use the name of the calling script to
         # generate a fits file name.
         import inspect
         script_name = os.path.basiename(
             inspect.getfile(inspect.currentframe())) # script filename (usually with path)
         # Strip off a final suffix if present.
-        file_name = os.path.splitext(script_name)[0]
+        file_name = os.path.splitext(script_name)[0] + '.fits'
         if logger:
             logger.info('No output file name specified.  Using %s',file_name)
 
@@ -115,7 +122,7 @@ def ParseConfigOutput(config, logger=None):
 
     # Parse the information in output['image']
     # Accumulate nobj = how many objects per image.
-    if not 'image_type' in output:
+    if 'image_type' not in output:
         output['image_type'] = 'single'
         nobj = 1
     elif output['image_type'] == 'single':
@@ -135,7 +142,7 @@ def ParseConfigOutput(config, logger=None):
 
     # Parse the information about the output file type
     # Accumulate nimages = how many images to draw.
-    if not 'type' in output:
+    if 'type' not in output:
         output['type'] = 'fits'
         nimages = 1
     elif output['type'] == 'fits':
@@ -189,12 +196,15 @@ def ParseConfigImage(config, logger=None):
     # make an empty dict for it.
     if 'image' not in config:
         config['image'] = {}
+    image = config['image']
+    if not isinstance(image, dict):
+        raise AttributeError("config.image is not a dict.")
 
     # Set the size of the postage stamps if desired
     # If not set, the size will be set appropriately to enclose most of the flux.
-    image_size = int(config['image'].get('size',0))
-    config['image_xsize'] = int(config['image'].get('xsize',image_size))
-    config['image_ysize'] = int(config['image'].get('ysize',image_size))
+    image_size = int(image.get('size',0))
+    config['image_xsize'] = int(image.get('xsize',image_size))
+    config['image_ysize'] = int(image.get('ysize',image_size))
     
     if ( (config['image_xsize'] == 0) != (config['image_ysize'] == 0) ):
         raise AttributeError(
@@ -212,8 +222,10 @@ def ParseConfigImage(config, logger=None):
         if logger:
             logger.info('Using image size = %d x %d',config['image_xsize'],config['image_ysize'])
 
-    if 'wcs' in config['image']:
-        wcs = config['image']['wcs']
+    if 'wcs' in image:
+        wcs = image['wcs']
+        if not isinstance(wcs, dict):
+            raise AttributeError("image.wcs is not a dict.")
         if 'shear' in wcs:
             wcs_shear, safe_wcs = galsim.frontend.BuildShear(wcs, 'shear', config)
             config['wcs_shear'] = wcs_shear
@@ -223,7 +235,7 @@ def ParseConfigImage(config, logger=None):
             raise AttributeError("wcs must specify a shear")
 
     # Also, set the pixel scale (Default is 1.0)
-    pixel_scale = float(config['image'].get('pixel_scale',1.0))
+    pixel_scale = float(image.get('pixel_scale',1.0))
     config['pixel_scale'] = pixel_scale
     if logger:
         logger.info('Using pixel scale = %f',pixel_scale)
@@ -232,20 +244,24 @@ def ParseConfigImage(config, logger=None):
     # for the first item and go up sequentially from there for each object.
     # However, we allow for random_seed to be a gettable parameter, so for the 
     # normal case, we just convert it into a Sequence.
-    if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
-        first_seed = int(config['image']['random_seed'])
-        config['image']['random_seed'] = { 'type' : 'Sequence' , 'min' : first_seed }
+    if 'random_seed' in image and not isinstance(image['random_seed'],dict):
+        first_seed = int(image['random_seed'])
+        image['random_seed'] = { 'type' : 'Sequence' , 'min' : first_seed }
 
-    if 'draw_method' not in config['image']:
-        config['image']['draw_method'] = 'fft'
+    if 'draw_method' not in image:
+        image['draw_method'] = 'fft'
 
     # Get the target image variance from noise:
-    if 'noise' in config['image']:
-        noise = config['image']['noise']
+    if 'noise' in image:
+        noise = image['noise']
 
-        if not 'type' in noise:
-            raise AttributeError("noise needs a type to be specified")
+        if not isinstance(noise, dict):
+            raise AttributeError("image.noise is not a dict.")
+        if 'type' not in noise:
+            raise AttributeError("image.noise needs a type to be specified")
         if noise['type'] == 'Poisson':
+            if 'sky_level' not in noise:
+                raise AttributeError("sky_level required for noise type = Poisson")
             var = float(noise['sky_level']) * pixel_scale**2
         elif noise['type'] == 'Gaussian':
             if 'sigma' in noise:
@@ -259,6 +275,8 @@ def ParseConfigImage(config, logger=None):
                 raise AttributeError(
                     "Either sigma or variance need to be specified for Gaussian noise")
         elif noise['type'] == 'CCDNoise':
+            if 'sky_level' not in noise:
+                raise AttributeError("sky_level required for noise type = CCDNoise")
             var = float(noise['sky_level']) * pixel_scale**2
             gain = float(noise.get("gain",1.0))
             var /= gain
@@ -278,6 +296,8 @@ def ParseConfigPSF(config, logger=None):
     """
  
     if 'psf' in config:
+        if not isinstance(config['psf'], dict):
+            raise AttributeError("config.psf is not a dict.")
         psf, safe_psf = galsim.frontend.BuildGSObject(config, 'psf')
     else:
         psf = None
@@ -294,6 +314,8 @@ def ParseConfigPix(config, logger=None):
     """
  
     if 'pix' in config: 
+        if not isinstance(config['pix'], dict):
+            raise AttributeError("config.pix is not a dict.")
         pix, safe_pix = galsim.frontend.BuildGSObject(config, 'pix')
     else:
         pixel_scale = config['pixel_scale']
@@ -322,11 +344,13 @@ def ParseConfigGal(config, logger=None):
     if 'gal' in config:
         # If we are specifying the size according to a resolution, then we 
         # need to get the PSF's half_light_radius.
+        if not isinstance(config['gal'], dict):
+            raise AttributeError("config.gal is not a dict.")
         if 'resolution' in config['gal']:
-            if not 'psf' in config:
+            if 'psf' not in config:
                 raise AttributeError(
                     "Cannot use gal.resolution if no psf is set.")
-            if not 'saved_re' in config['psf']:
+            if 'saved_re' not in config['psf']:
                 raise AttributeError(
                     'Cannot use gal.resolution with psf.type = %s'%config['psf']['type'])
             psf_re = config['psf']['saved_re']
@@ -412,7 +436,7 @@ def DrawImageFFT(psf, pix, gal, config):
     if 'noise' in config['image']: 
         noise = config['image']['noise']
         rng = config['rng']
-        if not 'type' in noise:
+        if 'type' not in noise:
             raise AttributeError("noise needs a type to be specified")
         if noise['type'] == 'Poisson':
             sky_level_pixel = float(noise['sky_level']) * pixel_scale**2
@@ -488,7 +512,7 @@ def DrawImagePhot(psf, gal, config):
     # Add noise
     if 'noise' in config['image']: 
         noise = config['image']['noise']
-        if not 'type' in noise:
+        if 'type' not in noise:
             raise AttributeError("noise needs a type to be specified")
         if noise['type'] == 'Poisson':
             sky_level_pixel = float(noise['sky_level']) * pixel_scale**2
@@ -754,9 +778,11 @@ def BuildSingleFullImage(images, psf_images, config, logger=None):
         full_xsize = (image_xsize + xborder) * nx_tiles - xborder
         full_ysize = (image_ysize + yborder) * ny_tiles - yborder
         full_image = galsim.ImageF(full_xsize,full_ysize)
+        full_image.setZero()
         full_image.setScale(pixel_scale)
         if 'psf' in output:
             full_psf_image = galsim.ImageF(full_xsize,full_ysize)
+            full_psf_image.setZero()
             full_psf_image.setScale(pixel_scale)
         else:
             full_psf_image = None
@@ -769,9 +795,9 @@ def BuildSingleFullImage(images, psf_images, config, logger=None):
                     ymin = iy * (image_ysize + yborder) + 1
                     ymax = ymin + image_ysize-1
                     b = galsim.BoundsI(xmin,xmax,ymin,ymax)
-                    full_image[b] = images[k]
+                    full_image[b] += images[k]
                     if 'psf' in output:
-                        full_psf_image[b] = psf_images[k]
+                        full_psf_image[b] += psf_images[k]
                     k = k+1
         return full_image, full_psf_image
    

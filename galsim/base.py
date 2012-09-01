@@ -712,7 +712,6 @@ class AtmosphericPSF(GSObject):
     _params={
         "lam_over_r0": ("size", float),
         "fwhm": ("size", float),
-        "interpolant": ("optional", galsim.InterpolantXY),
         "oversampling": ("optional", float),
         "flux": ("optional", float)}
 
@@ -1244,13 +1243,8 @@ class RealGalaxy(GSObject):
 
     # Initialization parameters of the object, with type information
     _params={
-        "real_galaxy_catalog": ("required", galsim.RealGalaxyCatalog),
         "index": ("optional", int),
-        "ID": ("optional", str),
-        "random": ("optional", bool),
-        "uniform_deviate": ("optional", galsim.UniformDeviate),
-        "interpolant": ("optional", galsim.InterpolantXY),
-        "flux": ("optional", float)}
+        "flux": ("optional", float) }
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, ID=None, random=False,

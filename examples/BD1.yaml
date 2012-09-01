@@ -49,8 +49,8 @@ image :
 
 
 # Typically, you will want to specify the output format and file name.
-# If this is omitted, the output will be to a fits file with the same name as the 
-# script root name (so BD1.fits in this case), but that's usually not a great choice.
+# If this is omitted, the output will be to a fits file with the same root name as the 
+# config file (so BD1.fits in this case), but that's usually not a great choice.
 # So at the very least, you would typically want to specify at least the file_name.
 output :
     dir : output_yaml

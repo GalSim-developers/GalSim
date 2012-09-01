@@ -95,7 +95,7 @@ gal :
 
     # positions are shifted randomly inside a circle of radius 1 arcsec
     shift :
-        type : RandomTopHat
+        type : RandomCircle
         radius : 1 # arcsec
 
 

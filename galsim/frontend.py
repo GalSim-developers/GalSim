@@ -53,7 +53,7 @@ def BuildGSObject(config, key, base=None):
     if type in ('Sum', 'Convolution', 'Add', 'Convolve'):   # Compound object
         gsobjects = []
         if 'items' not in ck:
-            raise AttributeError("items attribute required in for config.%s entry."%type)
+            raise AttributeError("items attribute required for config.%s entry."%type)
         items = ck['items']
         if not isinstance(items,list):
             raise AttributeError("items entry for config.%s entry is not a list."%type)
@@ -96,7 +96,7 @@ def BuildGSObject(config, key, base=None):
 
     elif type == 'List':
         if 'items' not in ck:
-            raise AttributeError("items attribute required in for config.%s entry."%type)
+            raise AttributeError("items attribute required for config.%s entry."%type)
         items = ck['items']
         if not isinstance(items,list):
             raise AttributeError("items entry for config.%s entry is not a list."%type)
@@ -365,6 +365,20 @@ def BuildShear(config, key, base):
         ck['current'] = current
         #print 'return shear = ',current,False
         return current, False
+    elif type == 'List':
+        if 'items' not in param:
+            raise AttributeError("items attribute required for List parameter %s"%param_name)
+        items = param['items']
+        if not isinstance(items,list):
+            raise AttributeError("items entry for parameter %s is not a list."%param_name)
+        if 'index' not in param:
+            param['index'] = { 'type' : 'Sequence' , 'min' : 0 , 'max' : len(items)-1 }
+        index, safe = GetParamValue(param, 'index', base, value_type=int)
+        if index < 0 or index >= len(items):
+            raise AttributeError("index %d out of bounds for parameter %s"%(index,param_name))
+        val, safe1 = BuildShear(items, index, base)
+        safe = safe and safe1
+        return val, safe
     else:
         raise NotImplementedError("Unrecognised shear type %s."%type)
 
@@ -431,8 +445,8 @@ def BuildShift(config, key, base):
         safe = safe1 and safe2
         #print '(dx,dy) = ',(dx,dy)
         return (dx,dy), safe
-    elif type == 'RandomTopHat':
-        return _GetRandomTopHatParamValue(ck, 'shift', base)
+    elif type == 'RandomCircle':
+        return _GetRandomCircleParamValue(ck, 'shift', base)
     else:
         raise NotImplementedError("Unrecognised shift type %s."%type)
 
@@ -528,6 +542,8 @@ def GetParamValue(config, param_name, base, value_type=float):
                     val = galsim.Angle(value, galsim.degrees)
                 elif unit.startswith('hour') :
                     val = galsim.Angle(value, galsim.hours)
+                elif unit.startswith('hr') :
+                    val = galsim.Angle(value, galsim.hours)
                 elif unit.startswith('arcmin') :
                     val = galsim.Angle(value, galsim.arcmin)
                 elif unit.startswith('arcsec') :
@@ -564,7 +580,7 @@ def GetParamValue(config, param_name, base, value_type=float):
         elif type == 'RandomGaussian':
             val,safe = _GetRandomGaussianParamValue(param, param_name, base)
         elif type == 'Sequence':
-            val,safe = _GetSequenceParamValue(param, param_name, base)
+            val,safe = _GetSequenceParamValue(param, param_name, base, value_type)
         elif type == 'List':
             val,safe = _GetListParamValue(param, param_name, base, value_type)
         else:
@@ -724,16 +740,16 @@ def _GetRandomGaussianParamValue(param, param_name, base):
     #print 'RandomGaussian: ',val,False
     return val, False
 
-def _GetRandomTopHatParamValue(param, param_name, base):
+def _GetRandomCircleParamValue(param, param_name, base):
     """@brief Return an (x,y) pair drawn from a circular top hat distribution.
     """
     if 'rng' not in base:
-        raise ValueError("No rng available for %s.type = RandomTopHat"%param_name)
+        raise ValueError("No rng available for %s.type = RandomCircle"%param_name)
     rng = base['rng']
 
     if 'radius' not in param:
         raise AttributeError(
-            "%s.radius attribute required %s.type = RandomTopHat"%(param_name,param_name))
+            "%s.radius attribute required %s.type = RandomCircle"%(param_name,param_name))
     radius = float(param['radius'])
 
     ud = galsim.UniformDeviate(rng)
@@ -744,15 +760,15 @@ def _GetRandomTopHatParamValue(param, param_name, base):
         y = (2*ud()-1) * radius
         rsq = x**2 + y**2
     param['current'] = (x,y)
-    #print 'RandomTopHat: ',(x,y),False
+    #print 'RandomCircle: ',(x,y),False
     return (x,y), False
 
-def _GetSequenceParamValue(param, param_name, base):
+def _GetSequenceParamValue(param, param_name, base, value_type):
     """@brief Return next in a sequence of integers
     """
     #print 'Start Sequence for ',param_name,' -- param = ',param
-    min = int(param.get('min',0))
-    step = int(param.get('step',1))
+    min = value_type(param.get('min',0))
+    step = value_type(param.get('step',1))
     repeat = int(param.get('repeat',1))
     #print 'min, step, repeat = ',min,step,repeat
 
@@ -764,7 +780,7 @@ def _GetSequenceParamValue(param, param_name, base):
     else:
         rep = 1
         index = index + step
-        if 'max' in param and index > param['max']:
+        if 'max' in param and index > value_type(param['max']):
             index = min
     param['rep'] = rep
     param['current'] = index
@@ -776,7 +792,7 @@ def _GetListParamValue(param, param_name, base, value_type):
     """@brief Return next item from a provided list
     """
     if 'items' not in param:
-        raise AttributeError("items attribute required in for List parameter %s"%param_name)
+        raise AttributeError("items attribute required for List parameter %s"%param_name)
     items = param['items']
     if not isinstance(items,list):
         raise AttributeError("items entry for parameter %s is not a list."%param_name)
