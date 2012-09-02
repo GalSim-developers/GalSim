@@ -87,7 +87,7 @@ def main(argv):
         #print 'config = ',config
 
         # Process the configuration
-        galsim.ProcessConfig(config, logger)
+        galsim.config.Process(config, logger)
     
 if __name__ == "__main__":
     main(sys.argv)

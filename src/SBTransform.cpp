@@ -4,6 +4,7 @@
 #include "TMV.h"
 #include "SBTransform.h"
 #include "SBTransformImpl.h"
+#include <iomanip>
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -32,8 +33,8 @@ namespace galsim {
         _adaptee(sbin), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _fluxScaling(fluxScaling)
     {
         dbg<<"Start TransformImpl (1)\n";
-        dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
-        dbg<<"cen = "<<_cen<<", fluxScaling = "<<_fluxScaling<<std::endl;
+        dbg<<"matrix = "<<std::setprecision(15)<<_mA<<','<<std::setprecision(15)<<_mB<<','<<std::setprecision(15)<<_mC<<','<<std::setprecision(15)<<_mD<<std::endl;
+        dbg<<"cen = "<<std::setprecision(15)<<_cen<<", fluxScaling = "<<std::setprecision(15)<<_fluxScaling<<std::endl;
 
         // All the actual initialization is in a separate function so we can share code
         // with the other constructor.
@@ -45,7 +46,7 @@ namespace galsim {
         _adaptee(sbin), _cen(e.getX0()), _fluxScaling(fluxScaling)
     {
         dbg<<"Start TransformImpl (2)\n";
-        dbg<<"e = "<<e<<", fluxScaling = "<<_fluxScaling<<std::endl;
+        dbg<<"e = "<<std::setprecision(15)<<e<<", fluxScaling = "<<std::setprecision(15)<<_fluxScaling<<std::endl;
         // First get what we need from the CppEllipse:
         tmv::Matrix<double> m = e.getMatrix();
         _mA = m(0,0);

@@ -196,7 +196,7 @@ def Script1():
 
     # Now the following function will do everything that we specified above:
     # (The logger parameter is optional.)
-    galsim.ProcessConfig(config,logger)
+    galsim.config.Process(config,logger)
     logger.info('Done processing config.')
     logger.info('Images written to multi-extension fits file %r',multi_file_name)
 
@@ -215,7 +215,7 @@ def Script2():
       - Applied shear is the same for each galaxy.
       - Galaxies are oriented randomly, but in pairs to cancel shape noise.
       - Noise is poisson using a nominal sky value of 1.e6.
-      - Galaxies are sersic profiles.
+      - Galaxies are Sersic profiles.
     """
     logger = logging.getLogger("Script2")
 
@@ -306,6 +306,7 @@ def Script2():
 
             # Initialize the random number generator we will be using.
             rng = galsim.UniformDeviate(random_seed+k)
+            #print 'seed = ',random_seed+k
             gd = galsim.GaussianDeviate(rng, sigma=gal_ellip_rms)
 
             # The -1's in the next line are to provide a border of
@@ -318,6 +319,10 @@ def Script2():
             # Great08 randomized the locations of the two galaxies in each pair,
             # but for simplicity, we just do them in sequential postage stamps.
             if first_in_pair:
+                # Use a random orientation:
+                beta = rng() * 2. * math.pi * galsim.radians
+                #print 'beta = ',beta
+
                 # Determine the ellipticity to use for this galaxy.
                 ellip = 1
                 while (ellip > gal_ellip_max):
@@ -325,12 +330,14 @@ def Script2():
                     # Python basically implements this as a macro, so gd() is called twice!
                     val = gd()
                     ellip = math.fabs(val)
+                #print 'ellip = ',ellip
 
-                # Apply a random orientation:
-                beta = rng() * 2. * math.pi * galsim.radians
                 first_in_pair = False
             else:
-                beta += math.pi/2 * galsim.radians
+                # Use the previous ellip and beta + 90 degrees
+                beta += 90 * galsim.degrees
+                #print 'ring beta = ',beta
+                #print 'ring ellip = ',ellip
                 first_in_pair = True
 
             # Make a new copy of the galaxy with an applied e1/e2-type distortion 
@@ -339,6 +346,7 @@ def Script2():
 
             # Apply the gravitational reduced shear by specifying g1/g2
             this_gal.applyShear(g1=gal_g1, g2=gal_g2)
+            #print 'g1,g2 = ',gal_g1,gal_g2
 
             # Apply a random centroid shift:
             rsq = 2 * centroid_shift_sq
@@ -346,6 +354,7 @@ def Script2():
                 dx = (2*rng()-1) * centroid_shift
                 dy = (2*rng()-1) * centroid_shift
                 rsq = dx**2 + dy**2
+            #print 'dx,dy = ',dx,dy
 
             this_gal.applyShift(dx,dy)
             this_psf = final_psf.createShifted(dx,dy)
@@ -354,6 +363,7 @@ def Script2():
             final_gal = galsim.Convolve([psf,pix,this_gal])
 
             # Draw the image
+            #print 'pixel_scale = ',pixel_scale
             final_gal.draw(sub_gal_image, dx=pixel_scale)
 
             # Now determine what we need to do to get our desired S/N
@@ -370,6 +380,9 @@ def Script2():
             sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
             flux = gal_signal_to_noise / sn_meas
             # Now we rescale the flux to get our desired S/N
+            #print 'noise_var = ',sky_level_pix
+            #print 'sn_meas = ',sn_meas
+            #print 'flux = ',flux
             sub_gal_image *= flux
 
             # Add Poisson noise
@@ -377,7 +390,9 @@ def Script2():
             # The default CCDNoise has gain=1 and read_noise=0 if
             # these keyword args are not set, giving Poisson noise
             # according to the image pixel count values.
+            #print 'before CCDNoise: rng() = ',rng()
             sub_gal_image.addNoise(galsim.CCDNoise(rng))
+            #print 'after CCDNoise: rng() = ',rng()
             sub_gal_image -= sky_level_pix
 
             # Draw the PSF image
@@ -652,8 +667,8 @@ def Script4():
                 #print 'scale = ',hlr
                 gal1.applyDilation(hlr)
 
-                ellip = rng() * (gal_e_max-gal_e_min) + gal_e_min
                 beta_ellip = rng() * 2*math.pi * galsim.radians
+                ellip = rng() * (gal_e_max-gal_e_min) + gal_e_min
                 #print 'e,beta = ',ellip,beta_ellip
                 gal_shape = galsim.Shear(e=ellip, beta=beta_ellip)
                 gal1.applyShear(gal_shape)
@@ -841,15 +856,15 @@ def Script5():
         # Make the galaxy profile:
         hlr = rng() * (bulge_hlr_max-bulge_hlr_min) + bulge_hlr_min
         f = rng() * (bulge_frac_max-bulge_frac_min) + bulge_frac_min
-        ellip = rng() * (bulge_e_max-bulge_e_min) + bulge_e_min
         beta_ellip = rng() * 2*math.pi * galsim.radians
+        ellip = rng() * (bulge_e_max-bulge_e_min) + bulge_e_min
 
         bulge = galsim.Sersic(n=3.6, half_light_radius=hlr, flux=f)
         bulge.applyShear(e=ellip, beta=beta_ellip)
 
         hlr = rng() * (disk_hlr_max-disk_hlr_min) + disk_hlr_min
-        ellip = rng() * (disk_e_max-disk_e_min) + disk_e_min
         beta_ellip = rng() * 2*math.pi * galsim.radians
+        ellip = rng() * (disk_e_max-disk_e_min) + disk_e_min
 
         disk = galsim.Sersic(n=1.5, half_light_radius=hlr)
         disk.applyShear(e=ellip, beta=beta_ellip)

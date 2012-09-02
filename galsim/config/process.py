@@ -7,10 +7,40 @@ import time
 import copy
 
 import galsim
-import frontend
 
 
-def ParseConfigInput(config, logger=None):
+def Process(config, logger=None):
+    """
+    Do all processing of the provided configuration dict
+    """
+
+    # Parse the input field
+    ParseInput(config, logger)
+
+    # Parse the output field
+    ParseOutput(config, logger)
+
+    # Parse the image field
+    ParseImage(config, logger)
+
+    # Build the postage-stamp images
+    images, psf_images = BuildImages(config, logger)
+
+    # Build full images from the postage stamps (if appropriate)
+    images, psf_images = BuildFullImages(images, psf_images, config, logger)
+
+    # Write the full images to the appropriate files
+    WriteImages(images, psf_images, config, logger)
+
+
+
+#
+# ParseInput, ParseOutput, and ParseImage make sure that the top-level 
+# input, output and image fields are constructed correctly.  They also do 
+# some ancillary calculations whose results are stored at the top level of config.
+#
+
+def ParseInput(config, logger=None):
     """
     Parse the field config['input'], storing the results into the top level of config:
 
@@ -56,7 +86,7 @@ def ParseConfigInput(config, logger=None):
         # Store real_cat in the config for use by BuildGSObject function.
         config['real_cat'] = real_cat
 
-def ParseConfigOutput(config, logger=None):
+def ParseOutput(config, logger=None):
     """
     Parse the field config['output'], storing some values into the top level of config:
 
@@ -181,7 +211,7 @@ def ParseConfigOutput(config, logger=None):
 
 
 
-def ParseConfigImage(config, logger=None):
+def ParseImage(config, logger=None):
     """
     Parse the field config['image'], storing some values into the top level of config:
 
@@ -227,7 +257,7 @@ def ParseConfigImage(config, logger=None):
         if not isinstance(wcs, dict):
             raise AttributeError("image.wcs is not a dict.")
         if 'shear' in wcs:
-            wcs_shear, safe_wcs = galsim.frontend.BuildShear(wcs, 'shear', config)
+            wcs_shear, safe_wcs = galsim.config.ParseValue(wcs, 'shear', config, galsim.Shear)
             config['wcs_shear'] = wcs_shear
         else:
             # TODO: Should add other kinds of WCS specifications.
@@ -287,7 +317,193 @@ def ParseConfigImage(config, logger=None):
         config['noise_var'] = var
 
 
-def ParseConfigPSF(config, logger=None):
+#
+# BuildImages draws the postage stamps for all the objects
+#
+
+def BuildImages(config, logger=None):
+    """
+    Build the images specified by the config file
+
+    @return images, psf_images  (Both are lists)
+    """
+    def worker(input, output):
+        """
+        input is a queue with (args, info) tuples:
+            args are the arguments to pass to BuildSingleImage
+            info is passed along to the output queue.
+        output is a queue storing (result, info, proc) tuples:
+            result is the returned tuple from BuildSingleImage: 
+                (image, psf_image, time).
+            info is passed through from the input queue.
+            proc is the process name.
+        """
+        for (args, info) in iter(input.get, 'STOP'):
+            result = BuildSingleImage(*args)
+            output.put( (result, info, current_process().name) )
+    
+    images = []
+    psf_images = []
+    nobjects = config['nobjects']
+
+    if 'nproc' not in config['image'] or config['image']['nproc'] == 1:
+        for k in range(nobjects):
+            if 'random_seed' in config['image']:
+                seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+            else:
+                seed = None
+            im, psf_im, t = BuildSingleImage(seed, config, logger)
+            images += [im]
+            psf_images += [psf_im]
+            if logger:
+                logger.info('Image %d: size = %d x %d, total time = %f sec', 
+                            k, im.array.shape[0], im.array.shape[1], t)
+    else:
+        from multiprocessing import Process, Queue, current_process, cpu_count
+        nproc = config['image']['nproc']
+        if nproc <= 0:
+            # Try to figure out a good number of processes to use
+            try:
+                nproc = cpu_count()
+                if logger:
+                    logger.info('Using ncpu = %d processes',nproc)
+            except:
+                raise AttributeError(
+                    "config.nprof <= 0, but unable to determine number of cpus.")
+
+        # Don't save any 'current_val' results in the config, so we don't waste time sending
+        # pickled versions of things back and forth.
+        # TODO: This means things like gal.resolution won't work.  Once we are able to 
+        # pickle GSObjects, we should send the constructed object, rather than config.
+        config['no_save'] = True
+
+        # Initialize the images list to have the correct size.
+        # This is important here, since we'll be getting back images in a random order,
+        # and we need them to go in the right places (in order to have deterministic
+        # output files).  So we initialize the list to be the right size.
+        images = [ None for i in range(nobjects) ]
+        psf_images = [ None for i in range(nobjects) ]
+
+        # Set up the task list
+        task_queue = Queue()
+        for k in range(nobjects):
+            # Note: we currently pull out the seed from config, since that is always
+            # going to get clobbered by the multi-processing, since it involves a state
+            # variable.  However, there may be other items in config that have state 
+            # variables as well.  So the long term solution will be to construct the 
+            # full profile in the main processor, and then send that to each of the 
+            # parallel processors to draw the image.  But that will require our GSObjects
+            # to be picklable, which they aren't currently.
+            if 'random_seed' in config['image']:
+                seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+            else:
+                seed = None
+            # Apparently the logger isn't picklable, so can't send that as an arg.
+            task_queue.put( ( (seed, config), k) )
+
+        # Run the tasks
+        # Each Process command starts up a parallel process that will keep checking the queue 
+        # for a new task. If there is one there, it grabs it and does it. If not, it waits 
+        # until there is one to grab. When it finds a 'STOP', it shuts down. 
+        done_queue = Queue()
+        for j in range(nproc):
+            Process(target=worker, args=(task_queue, done_queue)).start()
+
+        # In the meanwhile, the main process keeps going.  We pull each image off of the 
+        # done_queue and put it in the appropriate place on the main image.  
+        # This loop is happening while the other processes are still working on their tasks.
+        # You'll see that these logging statements get print out as the stamp images are still 
+        # being drawn.  
+        for i in range(nobjects):
+            result, k, proc = done_queue.get()
+            im = result[0]
+            psf_im = result[1]
+            t = result[2]
+            images[k] = im
+            psf_images[k] = psf_im
+            if logger:
+                logger.info('%s: Image %d: size = %d x %d, total time = %f sec', 
+                            proc, k, im.array.shape[0], im.array.shape[1], t)
+
+        # Stop the processes
+        # The 'STOP's could have been put on the task list before starting the processes, or you
+        # can wait.  In some cases it can be useful to clear out the done_queue (as we just did)
+        # and then add on some more tasks.  We don't need that here, but it's perfectly fine to do.
+        # Once you are done with the processes, putting nproc 'STOP's will stop them all.
+        # This is important, because the program will keep running as long as there are running
+        # processes, even if the main process gets to the end.  So you do want to make sure to 
+        # add those 'STOP's at some point!
+        for j in range(nproc):
+            task_queue.put('STOP')
+
+    if logger:
+        logger.info('Done making images')
+
+    return images, psf_images
+ 
+
+def BuildSingleImage(seed, config, logger=None):
+    """
+    Build a single image using the given seed and config file
+
+    @return image, psf_image, time
+    """
+    t1 = time.time()
+
+    # Initialize the random number generator we will be using.
+    #print 'seed = ',seed
+    if seed:
+        rng = galsim.UniformDeviate(seed)
+    else:
+        rng = galsim.UniformDeviate()
+    # Store the rng in the config for use by BuildGSObject function.
+    config['rng'] = rng
+    if 'gd' in config:
+        del config['gd']  # In case it was set.
+
+    psf = BuildPSF(config,logger)
+    t2 = time.time()
+
+    pix = BuildPix(config,logger)
+    t3 = time.time()
+
+    gal = BuildGal(config,logger)
+    t4 = time.time()
+
+    # Check that we have at least gal or psf.
+    if not (gal or psf):
+        raise AttributeError("At least one of gal or psf must be specified in config.")
+
+    draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
+    #print 'draw = ',draw_method
+    if draw_method == 'fft':
+        im = DrawImageFFT(psf,pix,gal,config)
+    elif draw_method == 'phot':
+        im = DrawImagePhot(psf,gal,config)
+    else:
+        raise AttributeError("Unknown draw_method %s."%draw_method)
+    t5 = time.time()
+
+    # Note: These may be different from image_xsize and image_ysize
+    # since the latter may be None.
+    # In that case, xsize and ysize are the actual realized sized of the drawn image.
+    xsize, ysize = im.array.shape
+    config['xsize'] = xsize
+    config['ysize'] = ysize
+
+    if config['make_psf_images']:
+        psf_im = DrawPSFImage(psf,pix,config)
+    else:
+        psf_im = None
+
+    t6 = time.time()
+
+    #if logger:
+        #logger.info('   Times: %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
+    return im, psf_im, t6-t1
+
+
+def BuildPSF(config, logger=None):
     """
     Parse the field config['psf'] returning the built psf object.
 
@@ -298,14 +514,14 @@ def ParseConfigPSF(config, logger=None):
     if 'psf' in config:
         if not isinstance(config['psf'], dict):
             raise AttributeError("config.psf is not a dict.")
-        psf, safe_psf = galsim.frontend.BuildGSObject(config, 'psf')
+        psf, safe_psf = galsim.config.BuildGSObject(config, 'psf')
     else:
         psf = None
         safe_psf = True
     config['safe_psf'] = safe_psf
     return psf
 
-def ParseConfigPix(config, logger=None):
+def BuildPix(config, logger=None):
     """
     Parse the field config['pix'] returning the built pix object.
 
@@ -316,7 +532,7 @@ def ParseConfigPix(config, logger=None):
     if 'pix' in config: 
         if not isinstance(config['pix'], dict):
             raise AttributeError("config.pix is not a dict.")
-        pix, safe_pix = galsim.frontend.BuildGSObject(config, 'pix')
+        pix, safe_pix = galsim.config.BuildGSObject(config, 'pix')
     else:
         pixel_scale = config['pixel_scale']
         pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
@@ -333,7 +549,7 @@ def ParseConfigPix(config, logger=None):
     return pix
 
 
-def ParseConfigGal(config, logger=None):
+def BuildGal(config, logger=None):
     """
     Parse the field config['gal'] returning the built gal object.
 
@@ -358,12 +574,84 @@ def ParseConfigGal(config, logger=None):
             gal_re = resolution * psf_re
             config['gal']['half_light_radius'] = gal_re
 
-        gal, safe_gal = galsim.frontend.BuildGSObject(config, 'gal')
+        gal, safe_gal = galsim.config.BuildGSObject(config, 'gal')
     else:
         gal = None
         safe_gal = True
     config['safe_gal'] = safe_gal
     return gal
+
+
+#
+# BuildFullImages puts the postage stamps on the full image
+#
+
+def BuildFullImages(images, psf_images, config, logger=None):
+    """
+    Turn the postage stamp images into full images according to 
+    config['output']['image_type']
+    """
+    output = config['output']
+    if output['image_type'] == 'single':
+        return images, psf_images
+    else:
+        full_images = []
+        full_psf_images = []
+        nobj = config['nobj_per_image']
+        k1 = 0
+        k2 = nobj
+        for i in range(config['nimages']):
+            im, psf_im = BuildSingleFullImage(images[k1:k2], psf_images[k1:k2], config, logger)
+            full_images += [ im ]
+            full_psf_images += [ psf_im ]
+            k1 = k2
+            k2 += nobj
+        return full_images, full_psf_images
+ 
+def BuildSingleFullImage(images, psf_images, config, logger=None):
+    """
+    Turn some postage stamp images into a single full images according to 
+    config['output']['image_type']
+    """
+    output = config['output']
+    if output['image_type'] == 'single':
+        return images, psf_images
+    elif output['image_type'] == 'tiled':
+        nx_tiles = output['nx_tiles']
+        ny_tiles = output['ny_tiles']
+        border = output.get("border",0)
+        xborder = output.get("xborder",border)
+        yborder = output.get("yborder",border)
+        image_xsize = config['image_xsize']
+        image_ysize = config['image_ysize']
+        pixel_scale = config['pixel_scale']
+
+        full_xsize = (image_xsize + xborder) * nx_tiles - xborder
+        full_ysize = (image_ysize + yborder) * ny_tiles - yborder
+        full_image = galsim.ImageF(full_xsize,full_ysize)
+        full_image.setZero()
+        full_image.setScale(pixel_scale)
+        if 'psf' in output:
+            full_psf_image = galsim.ImageF(full_xsize,full_ysize)
+            full_psf_image.setZero()
+            full_psf_image.setScale(pixel_scale)
+        else:
+            full_psf_image = None
+        k = 0
+        for ix in range(nx_tiles):
+            for iy in range(ny_tiles):
+                if k < len(images):
+                    xmin = ix * (image_xsize + xborder) + 1
+                    xmax = xmin + image_xsize-1
+                    ymin = iy * (image_ysize + yborder) + 1
+                    ymax = ymin + image_ysize-1
+                    b = galsim.BoundsI(xmin,xmax,ymin,ymax)
+                    full_image[b] += images[k]
+                    if 'psf' in output:
+                        full_psf_image[b] += psf_images[k]
+                    k = k+1
+        return full_image, full_psf_image
+ 
 
 def DrawImageFFT(psf, pix, gal, config):
     """
@@ -393,6 +681,7 @@ def DrawImageFFT(psf, pix, gal, config):
     else:
         im = galsim.ImageF(image_xsize, image_ysize)
         im.setScale(pixel_scale)
+        #print 'pixel_scale = ',pixel_scale
         final.draw(im, dx=pixel_scale)
 
     if 'gal' in config and 'signal_to_noise' in config['gal']:
@@ -420,15 +709,15 @@ def DrawImageFFT(psf, pix, gal, config):
         sn_meas = math.sqrt( numpy.sum(im.array**2) / noise_var )
         # Now we rescale the flux to get our desired S/N
         flux = float(config['gal']['signal_to_noise']) / sn_meas
+        #print 'noise_var = ',noise_var
         #print 'sn_meas = ',sn_meas
         #print 'flux = ',flux
         im *= flux
-        #print 'sn_meas = ',sn_meas,' flux = ',flux
 
         if config['safe_gal'] and config['safe_psf'] and config['safe_pix']:
             # If the profile won't be changing, then we can store this 
             # result for future passes so we don't have to recalculate it.
-            config['gal']['current'] *= flux
+            config['gal']['current_val'] *= flux
             config['gal']['flux'] = flux
             del config['gal']['signal_to_noise']
     
@@ -460,7 +749,9 @@ def DrawImageFFT(psf, pix, gal, config):
             gain = float(noise.get("gain",1.0))
             read_noise = float(noise.get("read_noise",0.0))
             im += sky_level_pixel
+            #print 'before CCDNoise: rng() = ',rng()
             im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
+            #print 'after CCDNoise: rng() = ',rng()
             im -= sky_level_pixel
             #if logger:
                 #logger.info('   Added CCD noise with sky_level = %f, ' +
@@ -468,6 +759,7 @@ def DrawImageFFT(psf, pix, gal, config):
         else:
             raise AttributeError("Invalid type %s for noise"%noise['type'])
     return im
+
 
 def DrawImagePhot(psf, gal, config):
     """
@@ -564,7 +856,8 @@ def DrawPSFImage(psf, pix, config):
         final_psf.applyShear(config['wcs_shear'])
     # Special: if the galaxy was shifted, then also shift the psf 
     if 'shift' in config['gal']:
-        final_psf.applyShift(*config['gal']['shift']['current'])
+        gal_shift = config['gal']['shift']['current_val']
+        final_psf.applyShift(gal_shift.dx, gal_shift.dy)
 
     xsize = config['xsize']
     ysize = config['ysize']
@@ -574,255 +867,10 @@ def DrawPSFImage(psf, pix, config):
     final_psf.draw(psf_im, dx=pixel_scale)
 
     return psf_im
-
-def BuildSingleImage(seed, config, logger=None):
-    """
-    Build a single image using the given seed and config file
-
-    @return image, psf_image, time
-    """
-    t1 = time.time()
-
-    # Initialize the random number generator we will be using.
-    #print 'seed = ',seed
-    if seed:
-        rng = galsim.UniformDeviate(seed)
-    else:
-        rng = galsim.UniformDeviate()
-    # Store the rng in the config for use by BuildGSObject function.
-    config['rng'] = rng
-    if 'gd' in config:
-        del config['gd']  # In case it was set.
-
-    psf = ParseConfigPSF(config,logger)
-    t2 = time.time()
-
-    pix = ParseConfigPix(config,logger)
-    t3 = time.time()
-
-    gal = ParseConfigGal(config,logger)
-    t4 = time.time()
-
-    # Check that we have at least gal or psf.
-    if not (gal or psf):
-        raise AttributeError("At least one of gal or psf must be specified in config.")
-
-    draw_method = galsim.frontend.GetParamValue(
-        config['image'],'draw_method',config,value_type=str)[0]
-    #print 'draw = ',draw_method
-    if draw_method == 'fft':
-        im = DrawImageFFT(psf,pix,gal,config)
-    elif draw_method == 'phot':
-        im = DrawImagePhot(psf,gal,config)
-    else:
-        raise AttributeError("Unknown draw_method %s."%draw_method)
-    t5 = time.time()
-
-    # Note: These may be different from image_xsize and image_ysize
-    # since the latter may be None.
-    # In that case, xsize and ysize are the actual realized sized of the drawn image.
-    xsize, ysize = im.array.shape
-    config['xsize'] = xsize
-    config['ysize'] = ysize
-
-    if config['make_psf_images']:
-        psf_im = DrawPSFImage(psf,pix,config)
-    else:
-        psf_im = None
-
-    t6 = time.time()
-
-    #if logger:
-        #logger.info('   Times: %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
-    return im, psf_im, t6-t1
-
-
-def BuildImages(config, logger=None):
-    """
-    Build the images specified by the config file
-
-    @return images, psf_images  (Both are lists)
-    """
-    def worker(input, output):
-        """
-        input is a queue with (args, info) tuples:
-            args are the arguments to pass to BuildSingleImage
-            info is passed along to the output queue.
-        output is a queue storing (result, info, proc) tuples:
-            result is the returned tuple from BuildSingleImage: 
-                (image, psf_image, time).
-            info is passed through from the input queue.
-            proc is the process name.
-        """
-        for (args, info) in iter(input.get, 'STOP'):
-            result = BuildSingleImage(*args)
-            output.put( (result, info, current_process().name) )
-    
-    images = []
-    psf_images = []
-    nobjects = config['nobjects']
-
-    if 'nproc' not in config['image'] or config['image']['nproc'] == 1:
-        for k in range(nobjects):
-            if 'random_seed' in config['image']:
-                seed = galsim.frontend.GetParamValue(
-                    config['image'],'random_seed',config,value_type=int)[0]
-            else:
-                seed = None
-            im, psf_im, t = BuildSingleImage(seed, config, logger)
-            images += [im]
-            psf_images += [psf_im]
-            if logger:
-                logger.info('Image %d: size = %d x %d, total time = %f sec', 
-                            k, im.array.shape[0], im.array.shape[1], t)
-    else:
-        from multiprocessing import Process, Queue, current_process, cpu_count
-        nproc = config['image']['nproc']
-        if nproc <= 0:
-            # Try to figure out a good number of processes to use
-            try:
-                nproc = cpu_count()
-                if logger:
-                    logger.info('Using ncpu = %d processes',nproc)
-            except:
-                raise AttributeError(
-                    "config.nprof <= 0, but unable to determine number of cpus.")
-
-        # Don't save any 'current' results in the config, so we don't waste time sending
-        # pickled versions of things back and forth.
-        config['no_save'] = True
-
-        # Initialize the images list to have the correct size.
-        # This is important here, since we'll be getting back images in a random order,
-        # and we need them to go in the right places (in order to have deterministic
-        # output files).  So we initialize the list to be the right size.
-        images = [ None for i in range(nobjects) ]
-        psf_images = [ None for i in range(nobjects) ]
-
-        # Set up the task list
-        task_queue = Queue()
-        for k in range(nobjects):
-            # Note: we currently pull out the seed from config, since that is always
-            # going to get clobbered by the multi-processing, since it involves a state
-            # variable.  However, there may be other items in config that have state 
-            # variables as well.  So the long term solution will be to construct the 
-            # full profile in the main processor, and then send that to each of the 
-            # parallel processors to draw the image.  But that will require our GSObjects
-            # to be picklable, which they aren't currently.
-            if 'random_seed' in config['image']:
-                seed = galsim.frontend.GetParamValue(
-                    config['image'],'random_seed',config,value_type=int)[0]
-            else:
-                seed = None
-            # Apparently the logger isn't picklable, so can't send that as an arg.
-            task_queue.put( ( (seed, config), k) )
-
-        # Run the tasks
-        # Each Process command starts up a parallel process that will keep checking the queue 
-        # for a new task. If there is one there, it grabs it and does it. If not, it waits 
-        # until there is one to grab. When it finds a 'STOP', it shuts down. 
-        done_queue = Queue()
-        for j in range(nproc):
-            Process(target=worker, args=(task_queue, done_queue)).start()
-
-        # In the meanwhile, the main process keeps going.  We pull each image off of the 
-        # done_queue and put it in the appropriate place on the main image.  
-        # This loop is happening while the other processes are still working on their tasks.
-        # You'll see that these logging statements get print out as the stamp images are still 
-        # being drawn.  
-        for i in range(nobjects):
-            result, k, proc = done_queue.get()
-            im = result[0]
-            psf_im = result[1]
-            t = result[2]
-            images[k] = im
-            psf_images[k] = psf_im
-            if logger:
-                logger.info('%s: Image %d: size = %d x %d, total time = %f sec', 
-                            proc, k, im.array.shape[0], im.array.shape[1], t)
-
-        # Stop the processes
-        # The 'STOP's could have been put on the task list before starting the processes, or you
-        # can wait.  In some cases it can be useful to clear out the done_queue (as we just did)
-        # and then add on some more tasks.  We don't need that here, but it's perfectly fine to do.
-        # Once you are done with the processes, putting nproc 'STOP's will stop them all.
-        # This is important, because the program will keep running as long as there are running
-        # processes, even if the main process gets to the end.  So you do want to make sure to 
-        # add those 'STOP's at some point!
-        for j in range(nproc):
-            task_queue.put('STOP')
-
-    if logger:
-        logger.info('Done making images')
-
-    return images, psf_images
- 
-def BuildSingleFullImage(images, psf_images, config, logger=None):
-    """
-    Turn some postage stamp images into a single full images according to 
-    config['output']['image_type']
-    """
-    output = config['output']
-    if output['image_type'] == 'single':
-        return images, psf_images
-    elif output['image_type'] == 'tiled':
-        nx_tiles = output['nx_tiles']
-        ny_tiles = output['ny_tiles']
-        border = output.get("border",0)
-        xborder = output.get("xborder",border)
-        yborder = output.get("yborder",border)
-        image_xsize = config['image_xsize']
-        image_ysize = config['image_ysize']
-        pixel_scale = config['pixel_scale']
-
-        full_xsize = (image_xsize + xborder) * nx_tiles - xborder
-        full_ysize = (image_ysize + yborder) * ny_tiles - yborder
-        full_image = galsim.ImageF(full_xsize,full_ysize)
-        full_image.setZero()
-        full_image.setScale(pixel_scale)
-        if 'psf' in output:
-            full_psf_image = galsim.ImageF(full_xsize,full_ysize)
-            full_psf_image.setZero()
-            full_psf_image.setScale(pixel_scale)
-        else:
-            full_psf_image = None
-        k = 0
-        for ix in range(nx_tiles):
-            for iy in range(ny_tiles):
-                if k < len(images):
-                    xmin = ix * (image_xsize + xborder) + 1
-                    xmax = xmin + image_xsize-1
-                    ymin = iy * (image_ysize + yborder) + 1
-                    ymax = ymin + image_ysize-1
-                    b = galsim.BoundsI(xmin,xmax,ymin,ymax)
-                    full_image[b] += images[k]
-                    if 'psf' in output:
-                        full_psf_image[b] += psf_images[k]
-                    k = k+1
-        return full_image, full_psf_image
-   
-def BuildFullImages(images, psf_images, config, logger=None):
-    """
-    Turn the postage stamp images into full images according to 
-    config['output']['image_type']
-    """
-    output = config['output']
-    if output['image_type'] == 'single':
-        return images, psf_images
-    else:
-        full_images = []
-        full_psf_images = []
-        nobj = config['nobj_per_image']
-        k1 = 0
-        k2 = nobj
-        for i in range(config['nimages']):
-            im, psf_im = BuildSingleFullImage(images[k1:k2], psf_images[k1:k2], config, logger)
-            full_images += [ im ]
-            full_psf_images += [ psf_im ]
-            k1 = k2
-            k2 += nobj
-        return full_images, full_psf_images
-            
+           
+#
+# WriteImages writes the constructed images to disk.
+#
    
 def WriteImages(images, psf_images, config, logger=None):
     """
@@ -863,27 +911,4 @@ def WriteImages(images, psf_images, config, logger=None):
 
     else:
         raise AttributeError("Invalid type for output: %s",output['type'])
-
-def ProcessConfig(config, logger=None):
-    """
-    Do all processing of the provided configuration dict
-    """
-
-    # Parse the input field
-    ParseConfigInput(config, logger)
-
-    # Parse the output field
-    ParseConfigOutput(config, logger)
-
-    # Parse the image field
-    ParseConfigImage(config, logger)
-
-    # Build the postage-stamp images
-    images, psf_images = BuildImages(config, logger)
-
-    # Build full images from the postage stamps (if appropriate)
-    images, psf_images = BuildFullImages(images, psf_images, config, logger)
-
-    # Write the full images to the appropriate files
-    WriteImages(images, psf_images, config, logger)
 
