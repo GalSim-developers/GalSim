@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 Some example scripts to make multi-object images using the GalSim library.
 """
@@ -854,17 +855,24 @@ def Script5():
         psf = galsim.Moffat(fwhm = psf_fwhm, beta = 2.4)
 
         # Make the galaxy profile:
-        hlr = rng() * (bulge_hlr_max-bulge_hlr_min) + bulge_hlr_min
         f = rng() * (bulge_frac_max-bulge_frac_min) + bulge_frac_min
+        #print 'flux = ',f
+        hlr = rng() * (bulge_hlr_max-bulge_hlr_min) + bulge_hlr_min
+        #print 'hlr = ',hlr
         beta_ellip = rng() * 2*math.pi * galsim.radians
+        #print 'beta_ellip = ',beta_ellip
         ellip = rng() * (bulge_e_max-bulge_e_min) + bulge_e_min
+        #print 'ellip = ',ellip
 
         bulge = galsim.Sersic(n=3.6, half_light_radius=hlr, flux=f)
         bulge.applyShear(e=ellip, beta=beta_ellip)
 
         hlr = rng() * (disk_hlr_max-disk_hlr_min) + disk_hlr_min
+        #print 'hlr = ',hlr
         beta_ellip = rng() * 2*math.pi * galsim.radians
+        #print 'beta_ellip = ',beta_ellip
         ellip = rng() * (disk_e_max-disk_e_min) + disk_e_min
+        #print 'ellip = ',ellip
 
         disk = galsim.Sersic(n=1.5, half_light_radius=hlr)
         disk.applyShear(e=ellip, beta=beta_ellip)

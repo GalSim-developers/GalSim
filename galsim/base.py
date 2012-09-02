@@ -578,11 +578,9 @@ class Gaussian(GSObject):
     """
     
     # Initialization parameters of the object, with type information
-    _params={
-        "sigma": ("size", float),
-        "half_light_radius": ("size", float),
-        "fwhm": ("size", float),
-        "flux": ("optional", float)}
+    _req_params = {}
+    _opt_params = { "flux" : float }
+    _size_params = { "sigma" : float, "half_light_radius" : float, "fwhm" : float }
     
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
@@ -643,13 +641,9 @@ class Moffat(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={
-        "beta": ("required", float),
-        "scale_radius": ("size", float),
-        "half_light_radius": ("size", float),
-        "fwhm": ("size", float),
-        "trunc": ("optional", float),
-        "flux": ("optional", float)}
+    _req_params = { "beta" : float }
+    _opt_params = { "trunc" : float , "flux" : float }
+    _size_params = { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float }
 
     # --- Public Class methods ---
     def __init__(self, beta, scale_radius=None, half_light_radius=None,  fwhm=None, trunc=0.,
@@ -709,11 +703,9 @@ class AtmosphericPSF(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={
-        "lam_over_r0": ("size", float),
-        "fwhm": ("size", float),
-        "oversampling": ("optional", float),
-        "flux": ("optional", float)}
+    _req_params = {}
+    _opt_params = { "flux" : float , "oversampling" : float }
+    _size_params = { "lam_over_r0" : float , "fwhm" : float }
 
     # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5, flux=1.):
@@ -795,10 +787,9 @@ class Airy(GSObject):
     """
     
     # Initialization parameters of the object, with type information
-    _params={
-        "lam_over_D": ("size", float),
-        "obscuration": ("optional", float),
-        "flux": ("optional", float)}
+    _req_params = {}
+    _opt_params = { "flux" : float , "obscuration" : float }
+    _size_params = { "lam_over_D" : float }
 
     # --- Public Class methods ---
     def __init__(self, lam_over_D, obscuration=0., flux=1.):
@@ -873,11 +864,9 @@ class Kolmogorov(GSObject):
     _hlr_factor = 0.554811
 
     # Initialization parameters of the object, with type information
-    _params={
-        "lam_over_r0": ("size", float),
-        "fwhm": ("size", float),
-        "half_light_radius": ("size", float),
-        "flux": ("optional", float)}
+    _req_params = {}
+    _opt_params = { "flux" : float }
+    _size_params = { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float }
 
     # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.):
@@ -963,19 +952,20 @@ class OpticalPSF(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={
-        "lam_over_D": ("size", float),
-        "defocus": ("optional", float),
-        "astig1": ("optional", float),
-        "astig2": ("optional", float),
-        "coma1": ("optional", float),
-        "coma2": ("optional", float),
-        "spher": ("optional", float),
-        "circular_pupil": ("optional", bool),
-        "obscuration": ("optional", float),
-        "oversampling": ("optional", float),
-        "pad_factor": ("optional", float),
-        "flux": ("optional", float)}
+    _req_params = {}
+    _opt_params = {
+        "defocus" : float ,
+        "astig1" : float ,
+        "astig2" : float ,
+        "coma1" : float ,
+        "coma2" : float ,
+        "spher" : float ,
+        "circular_pupil" : bool ,
+        "obscuration" : float ,
+        "oversampling" : float ,
+        "pad_factor" : float ,
+        "flux" : float }
+    _size_params = { "lam_over_D" : float }
 
     # --- Public Class methods ---
     def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
@@ -1040,10 +1030,9 @@ class Pixel(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={
-        "xw": ("size", float),
-        "yw": ("optional", float),
-        "flux": ("optional", float)}
+    _req_params = {}
+    _opt_params = { "yw" : float , "flux" : float }
+    _size_params = { "xw" : float }
 
     # --- Public Class methods ---
     def __init__(self, xw, yw=None, flux=1.):
@@ -1087,10 +1076,9 @@ class Sersic(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={
-        "n": ("required", float),
-        "half_light_radius": ("size", float),
-        "flux": ("optional", float)}
+    _req_params = { "n" : float }
+    _opt_params = { "flux" : float }
+    _size_params = { "half_light_radius" : float }
 
     # --- Public Class methods ---
     def __init__(self, n, half_light_radius, flux=1.):
@@ -1141,10 +1129,9 @@ class Exponential(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={
-        "scale_radius": ("size", float),
-        "half_light_radius": ("size", float),
-        "flux": ("optional", float)}
+    _req_params = {}
+    _opt_params = { "flux" : float }
+    _size_params = { "scale_radius" : float , "half_light_radius" : float }
 
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
@@ -1190,9 +1177,9 @@ class DeVaucouleurs(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={
-        "half_light_radius": ("size", float),
-        "flux": ("optional", float)}
+    _req_params = {}
+    _opt_params = { "flux" : float }
+    _size_params = { "half_light_radius" : float }
 
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, flux=1.):
@@ -1242,9 +1229,9 @@ class RealGalaxy(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _params={
-        "index": ("optional", int),
-        "flux": ("optional", float) }
+    _req_params = {}
+    _opt_params = { "index" : int , "flux" : float }
+    _size_params = {}
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, ID=None, random=False,

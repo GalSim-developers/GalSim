@@ -85,6 +85,7 @@ def ParseValue(config, param_name, base, value_type):
             raise AttributeError(
                 "Could not convert %s param = %s to type %s."%(param_name,val,value_type))
         param['current_val'] = val
+        #print param_name,' = ',val
         return val, safe
 
 
@@ -113,7 +114,7 @@ def _GetAngleValue(param, param_name):
         raise AttributeError("Unable to parse %s param = %s as an Angle."%(param_name,param))
 
 
-def _CheckAllParams(param, param_name, req={}, opt={}, single=[]):
+def _CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
     """@brief Check that the parameters for a particular item are all valid
     
     @return a dict, get, with get[key] = value_type for all keys to get
@@ -135,6 +136,8 @@ def _CheckAllParams(param, param_name, req={}, opt={}, single=[]):
 
     # Check items for which exacly 1 should be defined:
     for s in single: 
+        if not s: # If no items in list, don't require one of them to be present.
+            break
         valid_keys += s.keys()
         count = 0
         for (key, value_type) in s.items():
@@ -151,8 +154,8 @@ def _CheckAllParams(param, param_name, req={}, opt={}, single=[]):
                     s.keys(),param_name,param['type']))
 
     # Check that there aren't any extra keys in param:
-    valid_keys += [ 'type' ]  # This will be there too.
-    valid_keys += [ 'current_val' ]  # This might be there, and it's ok.
+    valid_keys += ignore
+    valid_keys += [ 'type', 'current_val' ]  # These might be there, and it's ok.
     for key in param.keys():
         if key not in valid_keys:
             raise AttributeError(
@@ -160,18 +163,20 @@ def _CheckAllParams(param, param_name, req={}, opt={}, single=[]):
 
     return get
 
-def _GetAllParams(param, param_name, base, req={}, opt={}, single=[]):
+def _GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
     """@brief Check and get all the parameters for a particular item
 
     @return kwargs, safe
     """
-    get = _CheckAllParams(param,param_name,req,opt,single)
+    get = _CheckAllParams(param,param_name,req,opt,single,ignore)
     kwargs = {}
     safe = True
     for (key, value_type) in sorted(get.items()):
         val, safe1 = ParseValue(param, key, base, value_type)
         safe = safe1 and safe
         kwargs[key] = val
+    # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
+    kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.iteritems()])
     return kwargs, safe
 
 def _GetCurrentValue(config, param_name):
@@ -249,9 +254,9 @@ def _GenerateFromRing(param, param_name, base, value_type):
     """@brief Return the next shear for a ring test.
     """
     req = { 'num' : int, 'first' : galsim.Shear }
-    opt = { 'i' : int, 'current' : galsim.Shear }
+    ignore = [ 'i', 'current' ]
     # Only Check, not Get.  We don't want to generate first if it's not time yet.
-    _CheckAllParams(param, param_name, req=req, opt=opt)
+    _CheckAllParams(param, param_name, req=req, ignore=ignore)
 
     num, safe = ParseValue(param, 'num', base, int)
     #print 'In Ring parameter'
@@ -344,7 +349,6 @@ def _GenerateFromRandomAngle(param, param_name, base, value_type):
         raise ValueError("No rng available for %s.type = RandomAngle"%param_name)
     rng = base['rng']
 
-    req = { 'min' : value_type , 'max' : value_type }
     # Just make sure there aren't any extra parameters
     _CheckAllParams(param, param_name)
     import math
@@ -454,9 +458,9 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     """@brief Return next in a sequence of integers
     """
     #print 'Start Sequence for ',param_name,' -- param = ',param
-    opt = { 'min' : value_type, 'max' : value_type, 'step' : value_type, 'repeat' : int,
-            'rep' : int, 'current' : int }
-    kwargs, safe = _GetAllParams(param, param_name, base, opt=opt)
+    opt = { 'min' : value_type, 'max' : value_type, 'step' : value_type, 'repeat' : int }
+    ignore = { 'rep' : int, 'current' : int }
+    kwargs, safe = _GetAllParams(param, param_name, base, opt=opt, ignore=ignore)
 
     min = kwargs.get('min',0)
     step = kwargs.get('step',1)
