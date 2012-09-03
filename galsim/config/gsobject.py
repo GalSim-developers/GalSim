@@ -202,7 +202,7 @@ def _BuildPixel(config, key, base, ignore):
     kwargs, safe = galsim.config.value._GetAllParams(config, key, base, 
         req = galsim.__dict__['Pixel']._req_params,
         opt = galsim.__dict__['Pixel']._opt_params,
-        single = [ galsim.__dict__['Pixel']._size_params ],
+        single = galsim.__dict__['Pixel']._single_params,
         ignore = ignore)
 
     if 'yw' in kwargs.keys() and (kwargs['xw'] != kwargs['yw']):
@@ -235,7 +235,7 @@ def _BuildRealGalaxy(config, key, base, ignore):
     kwargs, safe = galsim.config.value._GetAllParams(config, key, base, 
         req = galsim.__dict__['RealGalaxy']._req_params,
         opt = galsim.__dict__['RealGalaxy']._opt_params,
-        single = [ galsim.__dict__['RealGalaxy']._size_params ],
+        single = galsim.__dict__['RealGalaxy']._single_params,
         ignore = ignore)
 
     try:
@@ -246,14 +246,15 @@ def _BuildRealGalaxy(config, key, base, ignore):
 
 
 def _BuildSimple(config, key, base, ignore):
-    """@brief Build a simple GSObject (i.e. one without a specialized _Build function)
+    """@brief Build a simple GSObject (i.e. one without a specialized _Build function) or
+    any other galsim object that defines _req_params, _opt_params and _single_params.
     """
     # Build the kwargs according to the various params objects in the class definition.
     type = config['type']
     kwargs, safe = galsim.config.value._GetAllParams(config, key, base, 
         req = galsim.__dict__[type]._req_params,
         opt = galsim.__dict__[type]._opt_params,
-        single = [ galsim.__dict__[type]._size_params ],
+        single = galsim.__dict__[type]._single_params,
         ignore = ignore)
 
     # Finally, after pulling together all the params, try making the GSObject.

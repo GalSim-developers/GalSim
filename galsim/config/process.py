@@ -55,10 +55,16 @@ def ParseInput(config, logger=None):
     if not isinstance(input, dict):
         raise AttributeError("config.input is not a dict.")
 
+    opt = { 'catalog' : dict,
+            'real_catalog' : dict }
+    # Check that there are no other attributes specified.
+    galsim.config.value._CheckAllParams(input, 'input', opt=opt)
+
     # Read the input catalog if provided
     if 'catalog' in input:
         catalog = input['catalog']
-        input_cat = galsim.io.InputCatalog(catalog)
+        catalog['type'] = 'InputCatalog'
+        input_cat = galsim.config.gsobject._BuildSimple(catalog, 'catalog', config, {})[0]
         if logger:
             logger.info('Read %d objects from catalog',input_cat.nobjects)
         # Store input_cat in the config for use by BuildGSObject function.
@@ -67,22 +73,10 @@ def ParseInput(config, logger=None):
     # Read the RealGalaxy catalog if provided
     if 'real_catalog' in input:
         catalog = input['real_catalog']
-        if 'file_name' not in catalog:
-            raise AttributeError("file_name is required for input real_catalog")
-        file_name = catalog['file_name']
-        if 'dir' in catalog:
-            dir = catalog['dir']
-            file_name = os.path.join(dir,file_name)
-            image_dir = catalog.get('image_dir',dir)
-        else:
-            image_dir = catalog.get('image_dir','.')
-        real_cat = galsim.RealGalaxyCatalog(file_name, image_dir)
+        catalog['type'] = 'RealGalaxyCatalog'
+        real_cat = galsim.config.gsobject._BuildSimple(catalog, 'real_catalog', config, {})[0]
         if logger:
             logger.info('Read %d objects from catalog',real_cat.n)
-        if 'preload' in catalog and catalog['preload']:
-            real_cat.preload()
-            if logger:
-                logger.info('Preloaded the real galaxy catalog headers')
         # Store real_cat in the config for use by BuildGSObject function.
         config['real_cat'] = real_cat
 
