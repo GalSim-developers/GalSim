@@ -1,39 +1,123 @@
 --- GalSim Installation Instructions ---
 
-Here are some notes on the installation of the GalSim toolkit, which uses SCons as its primary build
-system.  Currently, these notes are aimed at GalSim developers: they may need to be tightened up for
-public consumption!
-
-For info regarding SCons usage (once installed, see below) you can type
-
-scons --help
-
-or see http://www.scons.org/documentation.php
-
 Table of Contents:
-1. Libraries/software required before building
+1. Software required before building galsim
 2. Installing the galsim Python package
 3. Installing example executables
 4. Platform-specific notes
 5. More SCons options
 
-1. Libraries/software required before building
 
-Important note: before building and installing the software below, make sure that python is built
+1. Software required before building galsim
+===========================================
+
+i) Python (2.6 or 2.7 series), with Numpy, PyFITS and PyYAML modules installed
+------------------------------------------------------------------------------
+
+The interface to the GalSim code is via the Python package "galsim", and its associated modules.
+Therefore you must have Python installed on your system.  Python is free, and available from a
+number of sources online (see below).  Currently GalSim only supports Python versions 2.6.X and 
+2.7.X, but earlier versions of Python 2.X may be supported in future.
+
+Many systems have a version of Python pre-installed.  To check whether you already have a compatible
+version, type
+
+python --version
+
+at the terminal prompt.  If you get a "Command not found" error, or the reported version is not 
+2.6.X or 2.7.X, you will need to install 2.6 or 2.7 series Python.  In this case you should read the
+"Getting Python and required modules" Section below.
+
+It may then be that there is or will be more than one version of Python installed on your operating 
+system, in which case see the "Making sure you are using the right Python" Section below.
+
+
+Getting Python and required modules
+-----------------------------------
+For a list of places to download Python, see http://www.python.org/getit/.  
+
+The galsim package also requires that 
+
+* the numerical Python module NumPy (http://numpy.scipy.org)
+
+* the astronomical FITS file format input/output module PyFITS 
+(http://www.stsci.edu/institute/software_hardware/pyfits)
+
+* the Python YAML parser and emitter module PyYAML (http://pyyaml.org/wiki/PyYAML)
+
+are installed onto your Python system so that they can both be imported by
+
+>>> import numpy
+>>> import pyfits
+>>> import yaml
+
+within Python.  You can test this by loading up the Python interpreter for the version of python 
+you'll be using with the GalSim toolkit (usually achieved by typing "python" or 
+"/path/to/executable/bin/python" if your desired Python is not the system default), and typing the 
+two import commands above.  If you get no warning message, things are OK.  
+
+If you do not have these modules, follow the links above or alternatively try "easy_install" (or 
+"/path/to/executable/bin/easy_install" if your desired Python is not the system default).  For 
+example, if connected to the internet and with root/admin privileges simply type
+
+easy_install numpy
+easy_install pyfits
+easy_install pyyaml
+
+at prompt.  The required modules should be installed.
+
+See http://packages.python.org/distribute/easy_install.html#using-easy-install for more details
+about the extremely useful easy_install feature.
+
+Third party-maintained Python packages
+--------------------------------------
+There are a number of third party-maintained packages which bundle Python with the numerical and 
+scientific libraries that are commonly used, and many of these are free for non-commericial or 
+academic use.  
+
+One good example of such a package, which includes all of the Python dependencies required by GalSim
+(NumPy, PyFITS, PyYAML as well as SCons and nosetests; see below) is the Enthought Python 
+Distribution (EPD; see http://enthought.com/products/edudownload.php for the academic download 
+instructions).  Other re-packaged Python downloads can be found at http://www.python.org/getit/.
+
+Making sure you are using the right Python
+------------------------------------------
+Some users will find they have a few versions of Python around their operating system (determined,
+for example, using locate python at prompt).  A common way this will happen if there is already an 
+older build (e.g. Python 2.4.X) being used by the operating system and you install a newer version
+from one of the sources described above.
+
+It will be  important to make sure that the version of Python for which Numpy, PyFITS and PyYAML
+etc. are installed is also the one being used for GalSim, and that this is the one *you* want to 
+use GalSim from!
+
+Knowing which installed version of Python will be used is also important for the installation of 
+the Boost libraries (see 1.v, below).  To check this you can identify the executable for the 
+python you are using, for example
+
+which python
+
+at prompt. This tells you the location of the executable, something like
+/path/to/executable/bin/python
+
+If this is not the Python you want, please edit your startup scripts, or be sure to specify that
+your desired Python version resides at /path/to/executable/bin/python when installing the Boost C++
+libraries.
+
+A final check: Shared libraries
+-------------------------------
+Before building and installing the software below, please do make sure that python is built
 with shared libraries.  On some systems, the default is *not* to build python with shared libraries,
 which will result in mysterious issues when trying to compile GalSim (apparent numpy-related
 failures).  In the few cases where this issue was identified, python had been compiled from source
 directly; developers who used python from distributions did not encounter this problem.
 
-To check this, you can identify the executable for the python you are using, e.g., using
+You can look for the libraries in
 
-which python
-
-This tells you the location of the executable, something like
-/path/to/executable/bin/python
-Then you can look for the libraries in
 /path/to/executable/lib/libpython*.dylib [if you're on a Mac]
+
 or
+
 /path/to/executable/lib/libpython*.so [on Linux]
 
 If the libraries are not there, you may need to rebuild python with shared libraries using
@@ -41,55 +125,37 @@ If the libraries are not there, you may need to rebuild python with shared libra
 you'll have to rebuild the python-related dependencies after rebuilding python -- so it's better to
 check beforehand.
 
-i) SCons (http://www.scons.org)
+See Section 4 of this document for some suggestions about getting Python, numpy, pyfits and Boost 
+all working well together on your specfic system.
 
-This build system manager needs to be installed, as it is used by the GalSim installation process.
-Versions 2.0 and 2.1 get reasonable testing, but it should also work with 1.x  versions.  Check 
+
+ii) SCons (http://www.scons.org)
+--------------------------------
+
+GalSim uses SCons as its primary build system manager, and so needs to be installed.  Versions 2.0 
+and 2.1 of SCons get reasonable testing, but it should also work with 1.x  versions.  You can check 
 if it is installed, and if so which version, by typing
 
 scons --version
 
-See Section 4 of this document (platform-specific notes) for some easy-to-install sources of the 
-SCons software.
-
 SCons itself is written in Python, and running "scons" invokes a Python interpreter.  GalSim will 
 be configured to build against the same Python that is being used to run SCons.  Making sure that 
-matches the Python you'd like to use can help you avoid a lot of problems later on.
+matches the Python you'd like to use can help you avoid a lot of problems later on.  Many of the
+pre-packaged Python distributions (e.g. EPD) also come with SCons, so this can be a good way to
+ensure that SCons and GalSim use the same underlying Python distribution.
 
-
-ii) Python (with Numpy and PyFITS modules installed)
-The heart of this code is the Python package galsim and its associated modules.  So you need Python
-(#TODO: Make a decision about versions).  
-
-The galsim package will also assume that the Numpy (http://numpy.scipy.org) module and the 
-astronomical FITS file format input/output module Pyfits 
-(http://www.stsci.edu/institute/software_hardware/pyfits) are installed onto your Python system so 
-that they can both be imported by
-
-import numpy
-import pyfits
-
-You can test this by loading up the Python interpreter for the version of python you'll be using 
-with the GalSim toolkit, and typing the two import commands above.  If you get no warning message, 
-things are OK.  If you do not have these modules, follow the links above or try easy_install:
-http://packages.python.org/distribute/easy_install.html#using-easy-install
-
-Some users will find they have a few versions of Python around their operating system.  It will be 
-important to make sure that the version of Python for which Numpy and Pyfits are installed is also 
-the one being used for GalSim, and that this is the one *you* want to use GalSim from!
-
-Knowing which installed version of Python will be used is also important for the installation of 
-the Boost libraries (see 1.v, below).  See Section 4 of this document for some suggestions about 
-getting Python, numpy, pyfits and Boost all working well together on your specfic system.
+See Section 4 for some more suggestions about installing this on your platform.
 
 
 iii) FFTW (http://www.fftw.org)
+-------------------------------
 
 These Fast Fourier Transform libraries must be installed; see Section 4 for some suggestions about 
 installing this on your platform.
 
 
 iv) TMV (http://code.google.com/p/tmv-cpp/)  (version >= 0.71 required)
+-----------------------------------------------------------------------
 
 GalSim uses the TMV library for its linear algebra routines.  You should download it from the 
 above site and follow the instructions in its INSTALL file for how to install it.   Usually it 
@@ -104,6 +170,7 @@ a system directory then you need to use sudo, i.e.  sudo scons install PREFIX=<i
 
 
 v) Boost C++ (http://www.boost.org)
+-----------------------------------
 
 GalSim makes use of some of the Boost C++ libraries, and Boost must be installed.  It is 
 particularly important that your installed Boost library links to the version of Python you will 
@@ -139,8 +206,9 @@ otool -L <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFIX>.dylib  (on O
 
 (If the ldd command on Linux does not show the Python version, the command
 ls -l <YOUR_BOOST_LIB_LOCATION>/libboost_python*
-will possibly show the libboost_python.so linked to, e.g., libboost_python_py26.so.1.40.0,
-in which you can tell both the Python and Boost version--in this case, 2.6 and 1.40.0, respectively.)
+will possibly show the libboost_python.so linked to, for example, 
+libboost_python_py26.so.1.40.0.  In such a case you can tell both the Python and Boost versions
+being used, 2.6 and 1.40.0, respectively, in this example.)
 
 If the Python library listed is the one you will be using, all is well.  If not, Boost can be forced
 to use a different version by specifying the following options to the ./bootstrap.sh installation 
@@ -149,12 +217,12 @@ script (defaults in [] brackets):
   --with-python=PYTHON      specify the Python executable [python]
   --with-python-root=DIR    specify the root of the Python installation
                             [automatically detected, but some users have found they have to
-                            force it to use a specific one because it detected the wrong one] 
+                            force it to use a specific one because it detected the wrong one]
 
-#TODO: Add Windows checks??
 
 
 2. Installing the galsim Python package
+=======================================
 
 From the GalSim base directory (in which this INSTALL file is found) type
 
@@ -285,6 +353,13 @@ fink install boost1.46.1.cmake
 However, there is a slight caveat regarding the use of fink-installed Boost C++ and the 
 Enthought Python Distribution, see below...
 
+However, it is not automatically detected as the installed version of Python when fink installs the
+Boost C++ library.  For GalSim to work, it needs to be.
+
+The solution is then to install Boost C++ manually, which luckily is relatively straightforward. 
+This can be done by following the instructions of Section 1.v), above.
+
+
 Macports is another popular Mac package management project with similar functionality 
 (although TMV isn't on that one).  Note that when using MacPorts to install boost, you may need to 
 explicitly indicate Boost.Python, e.g., using
@@ -298,15 +373,7 @@ is normally /usr/bin/python. Of course, if you have setup your default python to
 fink/Macports installed version, using these package managers to install numpy and pyfits will be 
 fine.
 
-b) The Enthought Python Distribution (EPD) is a single-install package that provides Python, Numpy,
-and SCons, along with many other useful Python modules in a well-maintined single framework.  It 
-is free for academic use (http://enthought.com/products/edudownload.php).
 
-However, it is not automatically detected as the installed version of Python when fink installs the
-Boost C++ library.  For GalSim to work, it needs to be.
-
-The solution is then to install Boost C++ manually, which luckily is relatively straightforward. 
-This can be done by following the instructions of Section 1.v), above.
 
 (#TODO: This maybe is not even truly a Mac-only issue, as EPD is also available for Linux and
 Windows...)
