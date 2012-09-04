@@ -92,7 +92,7 @@ for Class in _galsim.ConstImageView.itervalues():
 
     From Python, the only way to explicitly construct an ConstImageView is
 
-    >>> cimv = ConstImageView(array, xMin=1, yMin=1)       # NumPy array and origin\n"
+    >>> cimv = ConstImageView(array, xMin=1, yMin=1)       # NumPy array and origin
 
     which works just like the version for ImageView except that the resulting object cannot be used
     to modify the array.
