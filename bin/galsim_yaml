@@ -40,8 +40,6 @@ def main(argv):
 
     if len(argv) < 2: 
         print 'Usage: galsim_yaml config_file'
-        print 'See the example configuration files in the examples directory.'
-        print 'They are the *.yaml files'
         sys.exit("No configuration file specified")
 
     # TODO: Should have a nice way of specifying a verbosity level...
