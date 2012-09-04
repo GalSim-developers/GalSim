@@ -220,28 +220,49 @@ script (defaults in [] brackets):
                             force it to use a specific one because it detected the wrong one]
 
 
-
 2. Installing the galsim Python package
 =======================================
+
+Once you have installed all the dependencies described above, you are ready to build GalSim.
 
 From the GalSim base directory (in which this INSTALL file is found) type
 
 scons
 
-If everything above was installed, you *might* be lucky enough to have this work first time.
+If everything above was installed in fairly standard locations, this may work first time.  
 Otherwise, you may have to tell SCons where to find some of those libraries.  There are quite a few 
 options that you can use to tell SCons where to look, as well as other things about the build 
 process.  To see a list of options you can pass to SCons, type
 
 scons -h
 
-(See also section 5 below.) 
-For example, to specify where your TMV library is located, you can type
+(See also Section 5 below.) 
+
+As an example, to specify where your TMV library is located, you can type
 
 scons TMV_DIR=<mylibdir>
 
 where <mylibdir> would be the same as the PREFIX you specified when installing TMV. i.e. The TMV 
-library and include files are installed in <mylibdir>/lib and <mylibdir>/include.
+library and include files are installed in <mylibdir>/lib and <mylibdir>/include.  Some important
+options that you may need to set are:
+
+  TMV_DIR: Explicitly give the tmv prefix
+
+  FFTW_DIR: Explicitly give the fftw3 prefix
+
+  BOOST_DIR: Explicitly give the boost prefix
+
+  TMV_LINK: File that contains the linking instructions for TMV
+
+  EXTRA_LIBS: Libraries to send to the linker
+
+  EXTRA_INCLUDE_PATH: Extra paths for header files (separated by : if more than 1) 
+      (/path/to/EXTRA_INCLUDE_PATH)
+    
+  IMPORT_PATHS: Import PATH, C_INCLUDE_PATH and LIBRARY_PATH/LD_LIBRARY_PATH environment variables
+      (default = False)
+
+Again, you can see the full list of options using scons -h.
 
 Another common option is CXX=<c++compiler>.  So to compile with icpc rather than the default g++, 
 type
@@ -254,12 +275,12 @@ builds you only need to type scons.  It can also be useful to edit this file dir
 you want to unset a parameter and return to the default value, it can be easier to just delete the 
 line from this file, rather than explicitly set it back to the default value.
 
-Also, SCons caches the results of the various checks it does for the required external libraries 
-(tmv, boost, etc.).  This is usually very helpful, since they don't generally change, so it makes 
-later builds much faster.  However, sometimes you don't want SCons to remember the results while 
-you are initally setting things up.  For example, you might recompile the boost library with a 
-different compiler or python version.  In this case, you can tell SCons not to cache the results 
-of previous library tests with 
+SCons caches the results of the various checks it does for the required external libraries (tmv,
+boost, etc.).  This is usually very helpful, since they don't generally change, so it makes later
+builds much faster.  However, sometimes you don't want SCons to remember the results while you are 
+initally setting things up.  For example, you might recompile the boost library with a different 
+compiler or python version.  In this case, you can tell SCons not to cache the results of previous 
+library tests with 
 
 scons CACHE_LIB=false
 
@@ -271,8 +292,7 @@ tried to build previously.  You can do this with
 
 This will force SCons to recheck and recompile everything from scratch.
 
-#TODO: Add more here... perhaps link to Wiki FAQs?
-#TODO: Windows?
+If you are having trouble with installing, you may find some 
 
 Once you have a successful build, you can install the GalSim library, python modules, and header 
 files into standard locations (like /usr/local and your Python site-packages directory) with
@@ -298,13 +318,11 @@ scons -c
 This is rather like a "make clean" command.
 
 
-
 3. Installing example and test executables
+==========================================
 
 There are some example executables that come with GalSim, and will be useful for testing and
-development particularly outside the python layer.  
-
-These can be built by typing
+development particularly outside the python layer.  These can be built by typing
 
 scons examples
 
@@ -330,9 +348,10 @@ a complete run of the test suite.
 
 
 4. Platform-specific notes 
+==========================
 
 i) Linux
-
+--------
 The vast majority of Linux distributions provide installable packages for most of our dependencies. 
 In may cases, however, it is also necessary to install "-devel" or "-dev" packages (e.g. python-dev
 or libboost-dev on Debian-derivatives).
