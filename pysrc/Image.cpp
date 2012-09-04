@@ -225,34 +225,7 @@ struct PyImage {
 
     static bp::object wrapImage(std::string const & suffix) {
         
-        char const * doc = \
-            "Image[SIFD], ImageView[SIFD] and ConstImage[SIFD] are the classes\n"
-            "that represent the primary way to pass image data between Python\n"
-            "and the GalSim C++ library.\n\n"
-            "There is a separate Python class for each C++ template instantiation,\n"
-            "and these can be accessed using NumPy types as keys in the Image dict:\n"
-            "  ImageS == Image[numpy.int16]\n"
-            "  ImageI == Image[numpy.int32]\n"
-            "  ImageF == Image[numpy.float32]\n"
-            "  ImageD == Image[numpy.float64]\n"
-            "\n"
-            "An Image can be thought of as containing a 2-d, row-contiguous NumPy\n"
-            "array (which it may share with other image views), and origin point, and\n"
-            "a pixel scale (the origin and pixel scale are not shared).\n"
-            "\n"
-            "There are several ways to construct an Image:\n"
-            "  Image(ncol, nrow, init_value=0)        # size and initial value - origin @ (1,1)\n"
-            "  Image(bounds=BoundsI(), init_value=0)  # bounding box and initial value\n"
-            "\n"
-            "An Image also has a '.array' attribute that provides a NumPy view into the\n"
-            "Image's pixels.  Regardless of how the Image was constructed, this array\n"
-            "and the Image will point to the same underlying data, and modifying one\n"
-            "will affect the other.\n"
-            "\n"
-            "Note that both the attribute and the array constructor argument are\n"
-            "ordered [y,x], matching the standard NumPy convention, while the Image\n"
-            "class's own accessors are all (x,y).\n\n"
-            ;
+        // Note that docstrings are now added in galsim/image.py
 
         bp::object getScale = bp::make_function(&BaseImage<T>::getScale);
         bp::object setScale = bp::make_function(&BaseImage<T>::setScale);
@@ -274,7 +247,7 @@ struct PyImage {
         ); 
 
         bp::class_< BaseImage<T>, boost::noncopyable >
-            pyBaseImage(("BaseImage" + suffix).c_str(), doc, bp::no_init);
+            pyBaseImage(("BaseImage" + suffix).c_str(), "", bp::no_init);
         pyBaseImage
             .def("getScale", getScale)
             .def("setScale", setScale)
@@ -294,7 +267,7 @@ struct PyImage {
         
 
         bp::class_< Image<T>, bp::bases< BaseImage<T> > >
-            pyImage(("Image" + suffix).c_str(), doc, bp::no_init);
+            pyImage(("Image" + suffix).c_str(), "", bp::no_init);
         pyImage
             .def(bp::init<int,int,T>(
                     (bp::args("ncol","nrow"), bp::arg("init_value")=T(0))
@@ -324,35 +297,7 @@ struct PyImage {
 
     static bp::object wrapImageView(std::string const & suffix) {
         
-        char const * doc = \
-            "ImageView[SIFD] represents a mutable view of an Image.\n"
-            "There is a separate Python class for each C++ template instantiation,\n"
-            "and these can be accessed using NumPy types as keys in the ImageView dict:\n"
-            "  ImageViewS == ImageView[numpy.int16]\n"
-            "  ImageViewI == ImageView[numpy.int32]\n"
-            "  ImageViewF == ImageView[numpy.float32]\n"
-            "  ImageViewD == ImageView[numpy.float64]\n"
-            "From python, the only way to explicitly construct an ImageView is\n"
-            "  ImageView(array, xMin=1, yMin=1)       # NumPy array and origin\n"
-            "However, they are also the return type of several functions such as\n"
-            "  im.view()\n"
-            "  im.subImage(bounds)\n"
-            "  im[bounds] (equivalent to subImage)\n"
-            "  galsim.fits.read(...)\n"
-            "\n"
-            "The array argument to the constructor must have contiguous values\n"
-            "along rows, which should be the case for newly-constructed arrays, but may\n"
-            "not be true for some views and generally will not be true for transposes.\n"
-            "\n"
-            "An ImageView also has a '.array' attribute that provides a NumPy view into the\n"
-            "ImageView's pixels.  Regardless of how the ImageView was constructed, this array\n"
-            "and the ImageView will point to the same underlying data, and modifying one\n"
-            "will affect the other.\n"
-            "\n"
-            "Note that both the attribute and the array constructor argument are\n"
-            "ordered [y,x], matching the standard NumPy convention, while the ImageView\n"
-            "class's own accessors are all (x,y).\n\n"
-            ;
+        // Note that docstrings are now added in galsim/image.py
 
         bp::object at = bp::make_function(
             &ImageView<T>::at,
@@ -360,7 +305,7 @@ struct PyImage {
             bp::args("x", "y")
         );
         bp::class_< ImageView<T>, bp::bases< BaseImage<T> > >
-            pyImageView(("ImageView" + suffix).c_str(), doc, bp::no_init);
+            pyImageView(("ImageView" + suffix).c_str(), "", bp::no_init);
         pyImageView
             .def(
                 "__init__",
@@ -388,20 +333,7 @@ struct PyImage {
 
     static bp::object wrapConstImageView(std::string const & suffix) {
         
-        char const * doc = \
-            "ConstImageView[SIFD] represents a non-mutable view of an Image.\n"
-            "There is a separate Python class for each C++ template instantiation,\n"
-            "and these can be accessed using NumPy types as keys in the ConstImageView dict:\n"
-            "  ConstImageViewS == ConstImageView[numpy.int16]\n"
-            "  ConstImageViewI == ConstImageView[numpy.int32]\n"
-            "  ConstImageViewF == ConstImageView[numpy.float32]\n"
-            "  ConstImageViewD == ConstImageView[numpy.float64]\n"
-            "From python, the only way to explicitly construct an ConstImageView is\n"
-            "  ConstImageView(array, xMin=1, yMin=1)       # NumPy array and origin\n"
-            "which works just like the version for ImageView except that the resulting \n"
-            "object cannot be used to modify the array.\n"
-            "\n"
-            ;
+        // Note that docstrings are now added in galsim/image.py
 
         bp::object at = bp::make_function(
             &BaseImage<T>::at,
@@ -409,7 +341,7 @@ struct PyImage {
             bp::args("x", "y")
         );
         bp::class_< ConstImageView<T>, bp::bases< BaseImage<T> > >
-            pyConstImageView(("ConstImageView" + suffix).c_str(), doc, bp::no_init);
+            pyConstImageView(("ConstImageView" + suffix).c_str(), "", bp::no_init);
         pyConstImageView
             .def(
                 "__init__",
