@@ -1,0 +1,99 @@
+{
+
+"#" : "JSON configuration file for use with the executable galsim_json",
+"#" : "From the examples directory, type:",
+"#" : "  galsim_json json/MOD3a.json json/MOD3b.json",
+
+"#" : "This configuration file is designed to be equivalent to the example script called",
+"#" : "Script3 in MultiObjectDemo.py",
+
+"#" : "   Make images similar to that done for the Great08 challenge:",
+"#" : "     - Each fits file is 10 x 10 postage stamps.",
+"#" : "       (The real Great08 images are 100x100, but in the interest of making the Demo",
+"#" : "        script a bit quicker, we only build 100 stars and 100 galaxies.)",
+"#" : "     - Each postage stamp is 40 x 40 pixels.",
+"#" : "     - One image is all stars.",
+"#" : "     - A second image is all galaxies.",
+"#" : "     - Applied shear is the same for each galaxy.",
+"#" : "     - Galaxies are oriented randomly, but in pairs to cancel shape noise.",
+"#" : "     - Noise is poisson using a nominal sky value of 1.e6.",
+"#" : "     - Galaxies are sersic profiles.",
+
+"#" : "For this example, we actually have two config files, since we have two different kinds",
+"#" : "of output files to make.  The first is for the psf output, and the second is for the ",
+"#" : "convolved galaxy images.",
+"#" : "Out JSON parser can take multiple input files on the command line, and will run all",
+"#" : "of them.",
+
+"#" : "Define what kind of psf to use",
+"psf" : {
+    "type" : "Sum",
+    "items" : [
+        { "type" : "Gaussian", "fwhm" : 0.6, "flux" : 0.8 },
+        { "type" : "Gaussian", "fwhm" : 2.3, "flux" : 0.2 }
+    ]
+},
+
+"gal" : {
+    "type" : "RealGalaxy",
+    "flux" : 1e5,
+
+    "index" : {
+        "type" : "Sequence",
+        "#" : "Sequence can optionally take min, max, and step, however, the defaults ",
+        "#" : "are fine here: ",
+        "#" : "  min = 0",
+        "#" : "  max = <num entries in catalog> - 1",
+        "#" : "  step = 1",
+        "#" : "If the sequential values get past max, they will repeat back at min, so it's",
+        "#" : "ok to have nobjects greater than the number of real galaxies in the catalog."
+    },
+    
+    "rotate" : {
+        "type" : "RandomAngle"
+    },
+
+    "shear" : {
+        "type" : "G1G2",
+        "g1" : -0.027,
+        "g2" : 0.031
+    }
+},
+
+"#" : "For the galaxy file, We add the noise information to the image field.",
+"#" : "Note: since the output includes a data_cube output, which requires all the",
+"#" : "images to be the same size, GalSim will choose the size of the first image",
+"#" : "automatically from the profile, but then subsequent images will be forced to",
+"#" : "be the same size. ",
+"image" : {
+    "pixel_scale" : 0.15,
+
+    "#" : "Define the initial random number seed",
+    "random_seed" : 1512413,
+
+    "noise" : {
+        "type" : "Poisson",
+        "sky_level" : 1e6
+    }
+},
+
+"#" : "Define the galaxy profile",
+"#" : "We need to define where the real galaxy input catalog is.",
+"input" : {
+    "real_catalog" : {
+        "dir" : "data",
+        "file_name" : "real_galaxy_catalog_example.fits",
+        "image_dir" : "data",
+        "preload" : true
+    }
+},
+
+"#" : "Define the output formats",
+"output" : {
+    "type" : "DataCube",
+    "dir" : "output_json",
+    "file_name" : "cube_real.fits",
+    "nimages" : 100
+}
+ 
+}

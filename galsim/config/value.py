@@ -156,6 +156,7 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
     # Check that there aren't any extra keys in param:
     valid_keys += ignore
     valid_keys += [ 'type', 'current_val' ]  # These might be there, and it's ok.
+    valid_keys += [ '#' ] # When we read in json files, there represent comments
     for key in param.keys():
         if key not in valid_keys:
             raise AttributeError(
