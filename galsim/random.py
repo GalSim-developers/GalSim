@@ -3,6 +3,7 @@ Addition of docstrings to the Random deviate classes at the Python layer.
 """
 from . import _galsim
 
+# BaseDeviate docstring
 _galsim.BaseDeviate.__doc__ = """
 Base class for all the various random deviates.
 
@@ -30,6 +31,75 @@ of the derived classes other than construct it and change the seed, and use it a
 pass to other Deviate constructors.
 """
 
+# UniformDeviate docstrings
+_galsim.UniformDeviate.__doc__ = """
+Pseudo-random number generator with uniform distribution in interval [0.,1.).
 
+Initialization
+--------------
+>>> u = UniformDeviate()       # Initializes u to be a UniformDeviate instance, and seeds the PRNG
+                               # using current time.
 
+>>> u = UniformDeviate(lseed)  # Initializes u to be a UniformDeviate instance, and seeds the PRNG
+                               # using specified long integer lseed.
 
+>>> u = UniformDeviate(dev)    # Initializes u to be a UniformDeviate instance, and use the same RNG
+                               # as dev.
+
+Calling
+-------
+Taking the instance from the above examples, successive calls to u() then generate pseudo-random
+numbers distributed uniformly in the interval [0., 1.).
+"""
+
+_galsim.UniformDeviate.applyTo.__doc__ = """
+Add Uniform deviates to every element in a supplied Image.
+
+Calling
+-------
+>>> UniformDeviate.applyTo(image)
+
+On output each element of the input Image will have a pseudo-random UniformDeviate return value
+added to it.
+"""
+
+# GaussianDeviate docstrings
+_galsim.GaussianDeviate.__doc__ = """
+Pseudo-random number generator with Gaussian distribution.
+
+Initialization
+--------------
+
+>>> g = GaussianDeviate(mean=0., sigma=1.)
+
+Initializes g to be a GaussianDeviate instance using the current time for the seed.
+
+>>> g = GaussianDeviate(lseed, mean=0., sigma=1.)
+
+Initializes g using the specified seed.
+
+>>> g = GaussianDeviate(dev, mean=0., sigma=1.)
+
+Initializes g to share the same underlying random number generator as dev.
+
+Parameters:
+
+    mean     optional mean for Gaussian distribution (default = 0.).
+    sigma    optional sigma for Gaussian distribution (default = 1.).
+
+Calling
+-------
+Taking the instance from the above examples, successive calls to g() then generate pseudo-random
+numbers Gaussian-distributed with the provided mean, sigma.
+"""
+
+_galsim.GaussianDeviate.applyTo.__doc__ = """
+Add Gaussian deviates to every element in a supplied Image.
+
+Calling
+-------
+>>> GaussianDeviate.applyTo(image)
+
+On output each element of the input Image will have a pseudo-random GaussianDeviate return value
+added to it, with current values of mean and sigma.
+"""
