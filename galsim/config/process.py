@@ -321,17 +321,25 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
     psf_images = []
     weight_images = []
     badpix_images = []
-    for i in range(nimages):
+    for k in range(nimages):
+        t2 = time.time()
         all_images = BuildImage(
                 config=config, logger=logger,
                 make_psf_image=make_psf_image, 
                 make_weight_image=False,
                 make_badpix_image=False)
         # returns a tuple ( main_image, psf_image, weight_image, badpix_image )
+        t3 = time.time()
         main_images += [ all_images[0] ]
         psf_images += [ all_images[1] ]
         weight_images += [ all_images[2] ]
         badpix_images += [ all_images[3] ]
+
+        if logger:
+            # Note: numpy shape is y,x
+            ys, xs = all_images[0].array.shape
+            logger.info('Image %d: size = %d x %d, time = %f sec', k, xs, ys, t3-t2)
+
 
     galsim.fits.writeMulti(main_images, file_name, clobber=True)
     if logger:
@@ -342,8 +350,8 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
         if logger:
             logger.info('Wrote psf images to multi-extension fits file %r',psf_file_name)
 
-    t2 = time.time()
-    return t2-t1
+    t4 = time.time()
+    return t4-t1
 
 
 def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
@@ -386,32 +394,44 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
     # All images need to be the same size for a data cube.
     # Enforce this by buliding the first image outside the below loop and setting
     # config['image_xsize'] and config['image_ysize'] to be the size of the first image.
+    t2 = time.time()
     all_images = BuildImage(
             config=config, logger=logger,
             make_psf_image=make_psf_image, 
             make_weight_image=False,
             make_badpix_image=False)
+    t3 = time.time()
+    if logger:
+        # Note: numpy shape is y,x
+        ys, xs = all_images[0].array.shape
+        logger.info('Image 0: size = %d x %d, time = %f sec', xs, ys, t3-t2)
+
     # Note: numpy shape is y,x
     image_ysize, image_xsize = all_images[0].array.shape
     config['image_xsize'] = image_xsize
     config['image_ysize'] = image_ysize
-    nimages -= 1
 
     main_images = [ all_images[0] ]
     psf_images = [ all_images[1] ]
     weight_images = [ all_images[2] ]
     badpix_images = [ all_images[3] ]
 
-    for i in range(nimages):
+    for k in range(1,nimages):
+        t4 = time.time()
         all_images = BuildImage(
                 config=config, logger=logger,
                 make_psf_image=make_psf_image, 
                 make_weight_image=False,
                 make_badpix_image=False)
+        t5 = time.time()
         main_images += [ all_images[0] ]
         psf_images += [ all_images[1] ]
         weight_images += [ all_images[2] ]
         badpix_images += [ all_images[3] ]
+        if logger:
+            # Note: numpy shape is y,x
+            ys, xs = all_images[0].array.shape
+            logger.info('Image %d: size = %d x %d, time = %f sec', k, xs, ys, t5-t4)
 
     galsim.fits.writeCube(main_images, file_name, clobber=True)
     if logger:
@@ -422,8 +442,8 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
         if logger:
             logger.info('Wrote psf images to fits data cube %r',psf_file_name)
 
-    t2 = time.time()
-    return t2-t1
+    t6 = time.time()
+    return t6-t1
 
 
 def BuildImage(config, logger=None,
@@ -755,7 +775,7 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, do_noise=True, logger=No
                 # Note: numpy shape is y,x
                 ys, xs = result[0].array.shape
                 t = result[4]
-                logger.info('Stamp %d: size = %d x %d, total time = %f sec', k, xs, ys, t)
+                logger.info('Stamp %d: size = %d x %d, time = %f sec', k, xs, ys, t)
 
     else: # nproc > 1
 
@@ -823,7 +843,7 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, do_noise=True, logger=No
                 # Note: numpy shape is y,x
                 ys, xs = result[0].array.shape
                 t = result[4]
-                logger.info('%s: Stamp %d: size = %d x %d, total time = %f sec', 
+                logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', 
                             proc, k, xs, ys, t)
 
         # Stop the processes
