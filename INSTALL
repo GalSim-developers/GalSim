@@ -3,7 +3,7 @@
 Table of Contents:
 1. Software required before building galsim
 2. Installing the galsim Python package
-3. Installing example executables
+3. Running tests and installing example executables
 4. Platform-specific notes
 5. More SCons options
 
@@ -318,33 +318,27 @@ scons -c
 This is rather like a "make clean" command.
 
 
-3. Installing example and test executables
-==========================================
+3. Running tests and installing example executables
+===================================================
 
-There are some example executables that come with GalSim, and will be useful for testing and
+You can run our test suite by typing
+
+scons tests
+
+This should compile the test suite and run it.  The tests of our C++ library will always be run, but
+we use nosetests for our python test suite, so that will only be run if nosetests is present on 
+your system.  We don't require this as a dependency, since you can still do everything with the 
+GalSim library without this.  But it is required for a complete run of the test suite.
+
+To install nosetests, you can also use easy_install as described in Section 1 above (see also 
+http://nose.readthedocs.org/en/latest/).
+
+There are also some example executables that come with GalSim, and will be useful for testing and
 development particularly outside the python layer.  These can be built by typing
 
 scons examples
 
-The executables will then be visible in GalSim/bin/.  If you wish to install them to some other 
-directory (e.g. one visible to $PATH) then this can be done by
-
-scons install examples PREFIX=<installdir>
-
-where <installdir> is the directory you wish to install to (default if unset is /usr/local).  These 
-changes can be reversed using
-
-scons uninstall examples
-
-You can also run our test suite by typing
-
-scons tests
-
-This should compile the test suite and run it.  The tests of our C++ library will always
-be run, but we use nosetests for our python test suite, so that will only be run if 
-nosetests is present on your system.  We don't require this as a dependency, since you
-can still do everything with the GalSim library without this.  But it is required for
-a complete run of the test suite.
+The executables will then be visible in GalSim/bin/.
 
 
 4. Platform-specific notes 
