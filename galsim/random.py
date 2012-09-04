@@ -63,6 +63,10 @@ On output each element of the input Image will have a pseudo-random UniformDevia
 added to it.
 """
 
+_galsim.UniformDeviate.__call__.__doc__ = """
+Draw a new random number from the distribution.
+"""
+
 # GaussianDeviate docstrings
 _galsim.GaussianDeviate.__doc__ = """
 Pseudo-random number generator with Gaussian distribution.
@@ -103,3 +107,15 @@ Calling
 On output each element of the input Image will have a pseudo-random GaussianDeviate return value
 added to it, with current values of mean and sigma.
 """
+
+_galsim.GaussianDeviate.__call__.__doc__ = """
+Draw a new random number from the distribution.
+
+Returns a Gaussian deviate with current mean and sigma.
+"""
+
+_galsim.GaussianDeviate.getMean.__doc__ = "Get current distribution mean."
+_galsim.GaussianDeviate.setMean.__doc__ = "Set current distribution mean."
+_galsim.GaussianDeviate.getSigma.__doc__ = "Get current distribution sigma."
+_galsim.GaussianDeviate.setSigma.__doc__ = "Set current distribution sigma."
+
