@@ -46,8 +46,8 @@ psf :
 
     index : 
         type : Sequence
-        min : 0
-        max : 4
+        first : 0
+        last : 4
         repeat : 40  # How many times to repeat the same value before moving on.
 
 
@@ -67,8 +67,8 @@ gal :
                 - { type : Sersic , n : 1.5 , half_light_radius : 1.2 , flux : 0.6 }
     index :
         type : Sequence
-        min : 0
-        max : 4
+        first : 0
+        last : 4
         repeat : 8  # This will repeat each 8 times, but also go through the full list 5 times
 
     flux : { type : Random , min : 1.e4 , max : 1.e5 }
@@ -103,13 +103,13 @@ image :
         type : List
         items : [ fft , phot ]
         # The following sequence for index is automatically generated:
-        #index : { type : Sequence , min : 0 , max : 1 }
+        #index : { type : Sequence , first : 0 , last : 1 }
 
     # This is also pretty contrived.  It is really only relevant for this particular example.  
     # The usual case is to just set a single number, which really means that each object
     # gets a sequential value starting with this number.  In this case we repeat each value
     # two times, so the fft and phot images get the same values for the random parameters.
-    random_seed : { type : Sequence , min : 1512413 , repeat : 2 }
+    random_seed : { type : Sequence , first : 1512413 , repeat : 2 }
 
 # Define the output formats
 output :

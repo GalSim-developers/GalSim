@@ -456,7 +456,7 @@ def BuildImage(config, logger=None,
     # normal case, we just convert it into a Sequence.
     if 'random_seed' in image and not isinstance(image['random_seed'],dict):
         first_seed = galsim.config.ParseValue(image, 'random_seed', config, int)[0]
-        image['random_seed'] = { 'type' : 'Sequence' , 'min' : first_seed }
+        image['random_seed'] = { 'type' : 'Sequence' , 'first' : first_seed }
 
     if 'draw_method' not in image:
         image['draw_method'] = 'fft'

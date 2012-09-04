@@ -40,10 +40,10 @@
 
     "index" : {
         "type" : "Sequence",
-        "#" : "Sequence can optionally take min, max, and step, however, the defaults ",
+        "#" : "Sequence can optionally take first, last, and step, however, the defaults ",
         "#" : "are fine here: ",
-        "#" : "  min = 0",
-        "#" : "  max = <num entries in catalog> - 1",
+        "#" : "  first = 0",
+        "#" : "  last = <num entries in catalog> - 1",
         "#" : "  step = 1",
         "#" : "If the sequential values get past max, they will repeat back at min, so it's",
         "#" : "ok to have nobjects greater than the number of real galaxies in the catalog."

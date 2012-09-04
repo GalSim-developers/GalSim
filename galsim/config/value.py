@@ -298,13 +298,7 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
     # Setup the indexing sequence if it hasn't been specified.
     # The normal thing with an InputCatalog is to just use each object in order,
     # so we don't require the user to specify that by hand.  We can do it for them.
-    if 'index' not in param:
-        param['index'] = { 'type' : 'Sequence' , 'min' : 0 , 'max' : input_cat.nobjects-1 }
-    elif isinstance(param['index'],dict) and 'type' in param['index']:
-        index = param['index']
-        type = index['type']
-        if (type == 'Sequence' or type == 'Random') and 'max' not in index:
-            index['max'] = input_cat.nobjects-1
+    SetDefaultIndex(param, input_cat.nobjects)
 
     req = { 'col' : int , 'index' : int }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
@@ -461,25 +455,27 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     """@brief Return next in a sequence of integers
     """
     #print 'Start Sequence for ',param_name,' -- param = ',param
-    opt = { 'min' : value_type, 'max' : value_type, 'step' : value_type, 'repeat' : int }
+    opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type, 'repeat' : int }
     ignore = { 'rep' : int, 'current' : int }
     kwargs, safe = GetAllParams(param, param_name, base, opt=opt, ignore=ignore)
 
-    min = kwargs.get('min',0)
     step = kwargs.get('step',1)
+    first = kwargs.get('first',0)
     repeat = kwargs.get('repeat',1)
-    #print 'min, step, repeat = ',min,step,repeat
+    #print 'first, step, repeat = ',first,step,repeat
 
     rep = param.get('rep',0)
-    index = param.get('current',min)
+    index = param.get('current',first)
     #print 'From saved: rep = ',rep,' index = ',index
     if rep < repeat:
         rep = rep + 1
     else:
         rep = 1
         index = index + step
-        if 'max' in kwargs and index > value_type(kwargs['max']):
-            index = min
+        if ( 'last' in kwargs and (
+             (step > 0 and index > value_type(kwargs['last'])) or
+             (step < 0 and index < value_type(kwargs['list'])) ) ):
+            index = first
     param['rep'] = rep
     param['current'] = index
     #print 'index = ',index
@@ -496,12 +492,38 @@ def _GenerateFromList(param, param_name, base, value_type):
     items = param['items']
     if not isinstance(items,list):
         raise AttributeError("items entry for parameter %s is not a list."%param_name)
-    if 'index' not in param:
-        param['index'] = { 'type' : 'Sequence' , 'min' : 0 , 'max' : len(items)-1 }
+
+    # Setup the indexing sequence if it hasn't been specified using the length of items.
+    SetDefaultIndex(param, len(items))
     index, safe = ParseValue(param, 'index', base, int)
+
     if index < 0 or index >= len(items):
         raise AttributeError("index %d out of bounds for parameter %s"%(index,param_name))
     val, safe1 = ParseValue(items, index, base, value_type)
     safe = safe and safe1
     return val, safe
  
+def SetDefaultIndex(config, num):
+    """
+    When the number of items in a list is known, we allow the user to omit some of 
+    the parameters of a Sequence or Random and set them automatically based on the 
+    size of the list, catalog, etc.
+    """
+    if 'index' not in config:
+        config['index'] = { 'type' : 'Sequence', 'last' : num-1 }
+    elif isinstance(config['index'],dict) and 'type' in config['index'] :
+        index = config['index']
+        type = index['type']
+        if ( type == 'Sequence' and 
+             ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) ) and
+             'last' not in index ):
+            index['last'] = num-1
+        elif ( type == 'Sequence' and 
+             ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
+            if 'first' not in index:
+                index['first'] = num-1
+            if 'last' not in index:
+                index['last'] = 0
+        elif type == 'Random' and 'max' not in index:
+            index['max'] = num-1
+

@@ -178,7 +178,7 @@ def _BuildList(config, key, base, ignore):
     if not isinstance(items,list):
         raise AttributeError("items entry for config.%s entry is not a list."%type)
     if 'index' not in config:
-        config['index'] = { 'type' : 'Sequence' , 'min' : 0 , 'max' : len(items)-1 }
+        config['index'] = { 'type' : 'Sequence' , 'first' : 0 , 'last' : len(items)-1 }
     index, safe = galsim.config.ParseValue(config, 'index', base, int)
     if index < 0 or index >= len(items):
         raise AttributeError("index %d out of bounds for config.%s"%(index,type))
@@ -227,11 +227,7 @@ def _BuildRealGalaxy(config, key, base, ignore):
     real_cat = base['real_catalog']
 
     # Special: if index is Sequence or Random, and max isn't set, set it to real_cat.nobjects-1
-    if 'index' in config and isinstance(config['index'],dict) and 'type' in config['index'] :
-        index = config['index']
-        type = index['type']
-        if (type == 'Sequence' or type == 'RandomInt') and 'max' not in index:
-            index['max'] = real_cat.nobjects-1
+    galsim.config.SetDefaultIndex(config, real_cat.nobjects)
 
     kwargs, safe = galsim.config.GetAllParams(config, key, base, 
         req = galsim.__dict__['RealGalaxy']._req_params,

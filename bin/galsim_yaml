@@ -8,6 +8,7 @@ import sys
 import os
 import galsim
 import logging
+import copy
 import yaml
 
 def MergeConfig(config1, config2, logger=None):
