@@ -1,7 +1,78 @@
 """
-A few adjustments to the Image classes at the python layer
+A few adjustments to the Image classes at the python layer, including the addition of docstrings.
 """
 from . import _galsim
+
+# First of all we add docstrings to the Image, ImageView and ConstImageView classes for each of the
+# S, F, I & D datatypes
+#
+for Class in _galsim.Image.itervalues():
+    Class.__doc__ = """The ImageS, ImageI, ImageF and ImageD classes.
+    
+    Image[SIFD], ImageView[SIFD] and ConstImage[SIFD] are the classes that represent the primary way
+    to pass image data between Python and the GalSim C++ library.
+
+    There is a separate Python class for each C++ template instantiation, and these can be accessed
+    using numpy types as keys in the Image dict:
+
+        ImageS == Image[numpy.int16]
+        ImageI == Image[numpy.int32]
+        ImageF == Image[numpy.float32]
+        ImageD == Image[numpy.float64]
+    
+    An Image can be thought of as containing a 2-d, row-contiguous numpy array (which it may share
+    with other ImageView objects), an origin point, and a pixel scale (the origin and pixel scale
+    are not shared).
+
+    There are several ways to construct an Image:
+
+        Image(ncol, nrow, init_value=0)        # size and initial value - origin @ (1,1)
+        Image(bounds=BoundsI(), init_value=0)  # bounding box and initial value
+
+    An Image also has a '.array' attribute that provides a numpy view into the Image's pixels.
+    Regardless of how the Image was constructed, this array and the Image will point to the same
+    underlying data, and modifying one will affect the other.
+
+    Note that both the attribute and the array constructor argument are ordered [y,x], matching the
+    standard numpy convention, while the Image class's own accessors are all (x,y).
+    """
+
+for Class in _galsim.ImageView.itervalues():
+    Class.__doc__ = """The ImageViewS, ImageViewI, ImageViewF and ImageViewD classes.
+
+    ImageView[SIFD] represents a mutable view of an Image.
+
+    There is a separate Python class for each C++ template instantiation, and these can be accessed
+    using numpy types as keys in the ImageView dict:
+    
+        ImageViewS == ImageView[numpy.int16]
+        ImageViewI == ImageView[numpy.int32]
+        ImageViewF == ImageView[numpy.float32]
+        ImageViewD == ImageView[numpy.float64]
+
+    From Python, the only way to explicitly construct an ImageView is
+
+    >>> imv = ImageView(array, xMin=1, yMin=1)       # numpy array and origin
+
+    However, ImageView instances are also the return type of several functions such as
+
+    >>> im.view()
+    >>> im.subImage(bounds)
+    >>> im[bounds]                                   # (equivalent to the subImage call above)
+    >>> galsim.fits.read(...)
+    
+    The array argument to the constructor must have contiguous values along rows, which should be
+    the case for newly-constructed arrays, but may not be true for some views and generally will not
+    be true for array transposes.
+    
+    An ImageView also has a '.array' attribute that provides a numpy array view into the ImageView
+    instance's pixels.  Regardless of how the ImageView was constructed, this array and the
+    ImageView will point to the same underlying data, and modifying one view will affect any other
+    views into the same data.
+    
+    Note that both the attribute and the array constructor argument are ordered [y,x], matching the
+    standard numpy convention, while the ImageView class's own accessors are all (x,y).
+    """
 
 def Image_setitem(self, key, value):
     self.subImage(key).copyFrom(value)
