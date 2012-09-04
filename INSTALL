@@ -298,7 +298,9 @@ Once you have a successful build, you can install the GalSim library, python mod
 files into standard locations (like /usr/local and your Python site-packages directory) with
 
 scons install
+
 or 
+
 sudo scons install
 
 If you want to install into a different location, the prefix for the library and header files can 
@@ -348,51 +350,53 @@ i) Linux
 --------
 The vast majority of Linux distributions provide installable packages for most of our dependencies. 
 In may cases, however, it is also necessary to install "-devel" or "-dev" packages (e.g. python-dev
-or libboost-dev on Debian-derivatives).
+or libboost-dev on Debian-derivatives).  However, as above we stress that you should make sure that
+the version of Python that Boost is built against must be the same as that you intend to use for
+running GalSim.
 
-
-ii) Mac OSX  (#TODO: Expand this, maybe move it to a Wiki FAQ)
-
+ii) Mac OSX
+-----------
 a) Use of Fink -- the fink (http://www.finkproject.org) package management software is popular with
-Mac users.  Once it is installed, all of the library dependencies of GalSim can be added 
-with the following commands:
+Mac users.  Once it is installed, all of the library dependencies of GalSim can be added with the 
+following commands:
 
 fink install scons
 fink install fftw3
 fink install tmv0
 fink install boost1.46.1.cmake
-(Python 2.6 should already be in /usr/bin/python.)
+(Python 2.6 should already be in /usr/bin/python but fink can also be asked to install a version
+into its /sw/bin directory if you want a more up-to-date Python version.)
 
-However, there is a slight caveat regarding the use of fink-installed Boost C++ and the 
-Enthought Python Distribution, see below...
+However, there is a slight caveat regarding the use of fink-installed Boost C++ and the Enthought 
+Python Distribution or other third party-maintained Python distributions.  These are not necessarily
+automatically detected as the installed version of Python when fink installs the Boost C++ library.
 
-However, it is not automatically detected as the installed version of Python when fink installs the
-Boost C++ library.  For GalSim to work, it needs to be.
+The solution is to install Boost C++ manually, which luckily is relatively straightforward. This can
+be done by following the instructions of Section 1.v), above.
 
-The solution is then to install Boost C++ manually, which luckily is relatively straightforward. 
-This can be done by following the instructions of Section 1.v), above.
-
-
-Macports is another popular Mac package management project with similar functionality 
-(although TMV isn't on that one).  Note that when using MacPorts to install boost, you may need to 
-explicitly indicate Boost.Python, e.g., using
-
-sudo port install boost +python27
-
-Note: You may still need to install numpy and pyfits manually (simple enough using easy_install: 
-http://packages.python.org/distribute/easy_install.html#using-easy-install), since the fink 
+You may still need to install numpy and pyfits manually, e.g. using easy_install, since the fink 
 installations use /sw/bin/python2.6 (or similar) rather than the normal command line python, which 
 is normally /usr/bin/python. Of course, if you have setup your default python to be the 
 fink/Macports installed version, using these package managers to install numpy and pyfits will be 
 fine.
 
 
+b) Macports -- this is another popular Mac package management project (http://www.macports.org/) 
+with similar functionality, although TMV is not supported.  
 
-(#TODO: This maybe is not even truly a Mac-only issue, as EPD is also available for Linux and
-Windows...)
+Note that when using MacPorts to install boost, you may need to explicitly indicate Boost.Python, 
+for example
+
+sudo port install boost +python27
+
+You may still need to install numpy and pyfits manually, e.g. using easy_install, since the 
+fink/Macports installations use /sw/bin/python2.6 (or similar) rather than the normal command line 
+python, which is normally /usr/bin/python by default.  Of course, if you have setup your default python to be the fink/Macports installed version, using these package managers to install numpy and 
+pyfits will be fine.
 
 
 5. More SCons options
+=====================
 
 Here is a fairly complete list of the options you can pass to SCons to control the build process.  
 The options are listed with their default value.  You change them simply by specifying a different 
@@ -489,4 +493,3 @@ Miscellaneous flags:
   MEM_TEST=false specifies whether to test the code for memory leaks.
   TMV_DEBUG=false specifies whether to turn on extra (slower) debugging statements 
            within the TMV library.
-
