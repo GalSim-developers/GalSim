@@ -292,7 +292,13 @@ tried to build previously.  You can do this with
 
 This will force SCons to recheck and recompile everything from scratch.
 
-If you are having trouble with installing, you may find some 
+If you are having trouble with installing, you may find some helpful hints at the GalSim
+Installation FAQ page on the Wiki: 
+https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQs
+
+If you are still having trouble, please consider opening an Issue on the GalSim Github page at
+https://github.com/GalSim-developers/GalSim to help find a solution for the problem.
+
 
 Once you have a successful build, you can install the GalSim library, python modules, and header 
 files into standard locations (like /usr/local and your Python site-packages directory) with
