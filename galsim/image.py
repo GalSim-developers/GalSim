@@ -7,7 +7,8 @@ from . import _galsim
 # S, F, I & D datatypes
 #
 for Class in _galsim.Image.itervalues():
-    Class.__doc__ = """The ImageS, ImageI, ImageF and ImageD classes.
+    Class.__doc__ = """
+    The ImageS, ImageI, ImageF and ImageD classes.
     
     Image[SIFD], ImageView[SIFD] and ConstImage[SIFD] are the classes that represent the primary way
     to pass image data between Python and the GalSim C++ library.
@@ -38,7 +39,8 @@ for Class in _galsim.Image.itervalues():
     """
 
 for Class in _galsim.ImageView.itervalues():
-    Class.__doc__ = """The ImageViewS, ImageViewI, ImageViewF and ImageViewD classes.
+    Class.__doc__ = """
+    The ImageViewS, ImageViewI, ImageViewF and ImageViewD classes.
 
     ImageView[SIFD] represents a mutable view of an Image.
 
@@ -72,6 +74,28 @@ for Class in _galsim.ImageView.itervalues():
     
     Note that both the attribute and the array constructor argument are ordered [y,x], matching the
     standard numpy convention, while the ImageView class's own accessors are all (x,y).
+    """
+
+for Class in _galsim.ConstImageView.itervalues():
+    Class.__doc__ = """
+    The ConstImageViewS, ConstImageViewI, ConstImageViewF and ConstImageViewD classes.
+
+    ConstImageView[SIFD] represents a non-mutable view of an Image.
+
+    There is a separate Python class for each C++ template instantiation, and these can be accessed
+    using NumPy types as keys in the ConstImageView dict:
+
+        ConstImageViewS == ConstImageView[numpy.int16]
+        ConstImageViewI == ConstImageView[numpy.int32]
+        ConstImageViewF == ConstImageView[numpy.float32]
+        ConstImageViewD == ConstImageView[numpy.float64]
+
+    From Python, the only way to explicitly construct an ConstImageView is
+
+    >>> cimv = ConstImageView(array, xMin=1, yMin=1)       # NumPy array and origin\n"
+
+    which works just like the version for ImageView except that the resulting object cannot be used
+    to modify the array.
     """
 
 def Image_setitem(self, key, value):
