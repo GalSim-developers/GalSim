@@ -119,3 +119,54 @@ _galsim.GaussianDeviate.setMean.__doc__ = "Set current distribution mean."
 _galsim.GaussianDeviate.getSigma.__doc__ = "Get current distribution sigma."
 _galsim.GaussianDeviate.setSigma.__doc__ = "Set current distribution sigma."
 
+# BinomialDeviate docstrings
+_galsim.BinomialDeviate.__doc__ = """
+Pseudo-random Binomial deviate for N trials each of probability p.
+
+N is number of 'coin flips,' p is probability of 'heads,' and each call returns an integer value
+where 0 <= value <= N giving number of heads.
+
+Initialization
+--------------
+
+>>> b = BinomialDeviate(N=1., p=0.5)
+
+Initializes b to be a BinomialDeviate instance using the current time for the seed.
+
+>>> b = BinomialDeviate(lseed, N=1., p=0.5)
+
+Initializes b using the specified seed.
+
+>>> b = BinomialDeviate(dev, N=1., p=0.5)
+
+Initializes b to share the same underlying random number generator as dev.
+
+Parameters:
+
+    N   optional number of 'coin flips' per trial (default `N = 1`).
+    p   optional probability of success per coin flip (default `p = 0.5`).
+
+Calling
+-------
+Taking the instance from the above examples, successive calls to b() then generate pseudo-random
+numbers binomial-distributed with the provided N, p, which must both be > 0.
+"""
+
+_galsim.BinomialDeviate.applyTo.__doc__ = """
+Add Binomial deviates to every element in a supplied Image.
+
+Calling
+-------
+>>> BinomialDeviate.applyTo(image)
+
+On output each element of the input Image will have a pseudo-random BinomialDeviate return value
+added to it, with current values of N and p.
+"""
+
+_galsim.BinomialDeviate.getN.__doc__ = "Get current distribution N."
+_galsim.BinomialDeviate.setN.__doc__ = "Set current distribution N."
+_galsim.BinomialDeviate.getP.__doc__ = "Get current distribution p."
+_galsim.BinomialDeviate.setP.__doc__ = "Set current distribution p."
+
+
+
