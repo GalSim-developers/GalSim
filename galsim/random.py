@@ -50,22 +50,25 @@ Calling
 -------
 Taking the instance from the above examples, successive calls to u() then generate pseudo-random
 numbers distributed uniformly in the interval [0., 1.).
-"""
 
-_galsim.UniformDeviate.applyTo.__doc__ = """
-Add Uniform deviates to every element in a supplied Image.
-
-Calling
+Methods
 -------
->>> UniformDeviate.applyTo(image)
+To add deviates to every element of an image, see the docstring for the .applyTo() method of each
+instance.
 
-On output each element of the input Image will have a pseudo-random UniformDeviate return value
-added to it.
+This docstring can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
-_galsim.UniformDeviate.__call__.__doc__ = """
-Draw a new random number from the distribution.
-"""
+#_galsim.UniformDeviate.applyTo.__doc__ = """
+#Add Uniform deviates to every element in a supplied Image.
+#
+#Calling
+#-------
+#>>> UniformDeviate.applyTo(image)
+#
+#On output each element of the input Image will have a pseudo-random UniformDeviate return value
+#added to it.
+#"""
 
 # GaussianDeviate docstrings
 _galsim.GaussianDeviate.__doc__ = """
@@ -94,30 +97,18 @@ Parameters:
 Calling
 -------
 Taking the instance from the above examples, successive calls to g() then generate pseudo-random
-numbers Gaussian-distributed with the provided mean, sigma.
-"""
+numbers which Gaussian-distributed with the provided mean, sigma.
 
-_galsim.GaussianDeviate.applyTo.__doc__ = """
-Add Gaussian deviates to every element in a supplied Image.
-
-Calling
+Methods
 -------
->>> GaussianDeviate.applyTo(image)
+To add deviates to every element of an image, see the docstring for the .applyTo() method of each
+instance.
 
-On output each element of the input Image will have a pseudo-random GaussianDeviate return value
-added to it, with current values of mean and sigma.
+To get and set the deviate parameters, see the docstrings for the .getN(), .setN(), .getSigma() and
+.setSigma() methods of each instance.
+
+These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
-
-_galsim.GaussianDeviate.__call__.__doc__ = """
-Draw a new random number from the distribution.
-
-Returns a Gaussian deviate with current mean and sigma.
-"""
-
-_galsim.GaussianDeviate.getMean.__doc__ = "Get current distribution mean."
-_galsim.GaussianDeviate.setMean.__doc__ = "Set current distribution mean."
-_galsim.GaussianDeviate.getSigma.__doc__ = "Get current distribution sigma."
-_galsim.GaussianDeviate.setSigma.__doc__ = "Set current distribution sigma."
 
 # BinomialDeviate docstrings
 _galsim.BinomialDeviate.__doc__ = """
@@ -150,23 +141,17 @@ Calling
 -------
 Taking the instance from the above examples, successive calls to b() then generate pseudo-random
 numbers binomial-distributed with the provided N, p, which must both be > 0.
-"""
 
-_galsim.BinomialDeviate.applyTo.__doc__ = """
-Add Binomial deviates to every element in a supplied Image.
-
-Calling
+Methods
 -------
->>> BinomialDeviate.applyTo(image)
+To add deviates to every element of an image, see the docstring for the .applyTo() method of each
+instance.
 
-On output each element of the input Image will have a pseudo-random BinomialDeviate return value
-added to it, with current values of N and p.
+To get and set the deviate parameters, see the docstrings for the .getN(), .setN(), .getP() and
+.setP() methods of each instance.
+
+These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
-
-_galsim.BinomialDeviate.getN.__doc__ = "Get current distribution N."
-_galsim.BinomialDeviate.setN.__doc__ = "Set current distribution N."
-_galsim.BinomialDeviate.getP.__doc__ = "Get current distribution p."
-_galsim.BinomialDeviate.setP.__doc__ = "Set current distribution p."
 
 
 
