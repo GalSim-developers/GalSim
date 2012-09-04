@@ -80,6 +80,10 @@ def main(argv):
 
     base_config = all_config[0]
 
+    # Set the root value in base_config
+    if 'root' not in base_config:
+        base_config['root'] = os.path.splitext(os.path.basename(config_file))[0]
+
     for config in all_config[1:]:
 
         # Merge the base_config information into this config file.

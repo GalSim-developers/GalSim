@@ -109,7 +109,7 @@ input :
 
 # Define the output formats
 output :
-    type : data_cube
+    type : DataCube
     dir : output_yaml
     file_name : cube_real.fits
     nimages : 100

@@ -101,11 +101,22 @@ gal :
 
 # Define some other information about the images 
 image :
-    pixel_scale : 1.0  # arcsec / pixel
+    # type defines what kind of image to build.
+    # The default is Single, which means one postage stamp per image .
+    # Tiled means to make an image with nx_tiles x ny_tiles of postage stamps
+    # on a single image.
+    type : Tiled
+    nx_tiles : 10
+    ny_tiles : 10
 
     # This is the size of the postage stamps.
-    xsize : 39
-    ysize : 39
+    stamp_xsize : 39
+    stamp_ysize : 39
+
+    # Put a 1 pixel border between tiles
+    border : 1  
+
+    pixel_scale : 1.0  # arcsec / pixel
 
     # Define what kind of noise to use
     noise : 
@@ -118,19 +129,8 @@ image :
 # Define the output format
 output :
     # type defines what kind of file.
-    # fits is actually the default if not specified, but we set it here anyway.
-    type : fits
-
-    # image_type defines what kind of image to build.
-    # The default is single, which means one postage stamp per image .
-    # tiled means to make an image with nx_tiles x ny_tiles of postage stamps
-    # on a single image.
-    image_type : tiled
-    nx_tiles : 10
-    ny_tiles : 10
-
-    # Put a 1 pixel border between tiles
-    border : 1  
+    # Fits is actually the default if not specified, but we set it here anyway.
+    type : Fits
 
     dir : output_yaml
     file_name : g08_gal.fits

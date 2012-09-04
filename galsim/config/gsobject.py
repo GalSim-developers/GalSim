@@ -7,8 +7,8 @@ def BuildGSObject(config, key, base=None):
     @param key        A configuration galsim.Config instance read in using galsim.config.load().
     @param base       A dict which stores potentially useful things like
                       base['rng'] = random number generator
-                      base['input_cat'] = input catalog for InputCat items
-                      base['real_cat'] = real galaxy catalog for RealGalaxy objects
+                      base['catalog'] = input catalog for InputCat items
+                      base['real_catalog'] = real galaxy catalog for RealGalaxy objects
                       Typically on the initial call to BuildGSObject, this will be 
                       the same as config, hence the name base.
 
@@ -64,7 +64,7 @@ def BuildGSObject(config, key, base=None):
     # See if this type has a specialized build function:
     build_func_name  = '_Build' + type
     if build_func_name in galsim.config.gsobject.__dict__:
-        build_func  = eval('_Build' + type)
+        build_func  = eval(build_func_name)
         gsobject, safe = build_func(ck, key, base, ignore)
     # Next, wee if this name is in the galsim dictionary.
     elif type in galsim.__dict__:
@@ -99,7 +99,7 @@ def _BuildAdd(config, key, base, ignore):
     req = { 'items' : list }
     opt = { 'flux' : float }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    galsim.config.value._CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
+    galsim.config.CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
 
     gsobjects = []
     items = config['items']
@@ -117,7 +117,7 @@ def _BuildAdd(config, key, base, ignore):
     if ('flux' not in items[-1]) and all('flux' in item for item in items[0:-1]):
         sum = 0
         for item in items[0:-1]:
-            sum += galsim.config.value._GetCurrentValue(item,'flux')
+            sum += galsim.config.value.GetCurrentValue(item,'flux')
         #print 'sum = ',sum
         f = 1. - sum
         #print 'f = ',f
@@ -143,7 +143,7 @@ def _BuildConvolve(config, key, base, ignore):
     req = { 'items' : list }
     opt = { 'flux' : float }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    galsim.config.value._CheckAllParams(config, key, req=req, ignore=ignore)
+    galsim.config.CheckAllParams(config, key, req=req, ignore=ignore)
 
     gsobjects = []
     items = config['items']
@@ -172,7 +172,7 @@ def _BuildList(config, key, base, ignore):
     req = { 'items' : list }
     opt = { 'index' : float , 'flux' : float }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    galsim.config.value._CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
+    galsim.config.CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
 
     items = config['items']
     if not isinstance(items,list):
@@ -199,14 +199,15 @@ def _BuildList(config, key, base, ignore):
 def _BuildPixel(config, key, base, ignore):
     """@brief Build a Pixel type GSObject from user input.
     """
-    kwargs, safe = galsim.config.value._GetAllParams(config, key, base, 
+    kwargs, safe = galsim.config.GetAllParams(config, key, base, 
         req = galsim.__dict__['Pixel']._req_params,
         opt = galsim.__dict__['Pixel']._opt_params,
         single = galsim.__dict__['Pixel']._single_params,
         ignore = ignore)
 
     if 'yw' in kwargs.keys() and (kwargs['xw'] != kwargs['yw']):
-        raise Warning(
+        import warnings
+        warnings.warn(
             "xw != yw found (%f != %f) "%(kwargs['xw'], kwargs['yw']) +
             "This is supported for the pixel, but not the draw routines. " +
             "There might be weirdness....")
@@ -221,22 +222,27 @@ def _BuildPixel(config, key, base, ignore):
 def _BuildRealGalaxy(config, key, base, ignore):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
-    if 'real_cat' not in base:
+    if 'real_catalog' not in base:
         raise ValueError("No real galaxy catalog available for building type = RealGalaxy")
-    real_cat = base['real_cat']
+    real_cat = base['real_catalog']
 
-    # Special: if index is Sequence or Random, and max isn't set, set it to real_cat.n-1
+    # Special: if index is Sequence or Random, and max isn't set, set it to real_cat.nobjects-1
     if 'index' in config and isinstance(config['index'],dict) and 'type' in config['index'] :
         index = config['index']
         type = index['type']
         if (type == 'Sequence' or type == 'RandomInt') and 'max' not in index:
-            index['max'] = real_cat.n-1
+            index['max'] = real_cat.nobjects-1
 
-    kwargs, safe = galsim.config.value._GetAllParams(config, key, base, 
+    kwargs, safe = galsim.config.GetAllParams(config, key, base, 
         req = galsim.__dict__['RealGalaxy']._req_params,
         opt = galsim.__dict__['RealGalaxy']._opt_params,
         single = galsim.__dict__['RealGalaxy']._single_params,
         ignore = ignore)
+
+    index = kwargs['index']
+    if index >= real_cat.nobjects:
+        raise IndexError(
+            "%s index has gone past the number of entries in the catalog"%param_name)
 
     try:
         return galsim.RealGalaxy(real_cat, **kwargs), safe
@@ -251,7 +257,7 @@ def _BuildSimple(config, key, base, ignore):
     """
     # Build the kwargs according to the various params objects in the class definition.
     type = config['type']
-    kwargs, safe = galsim.config.value._GetAllParams(config, key, base, 
+    kwargs, safe = galsim.config.GetAllParams(config, key, base, 
         req = galsim.__dict__[type]._req_params,
         opt = galsim.__dict__[type]._opt_params,
         single = galsim.__dict__[type]._single_params,

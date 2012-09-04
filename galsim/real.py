@@ -44,7 +44,7 @@ class RealGalaxyCatalog(object):
         import pyfits
         try:
             cat = pyfits.getdata(self.file_name)
-            self.n = len(cat) # number of objects in the catalog
+            self.nobjects = len(cat) # number of objects in the catalog
             self.ident = cat.field('ident') # ID for object in the training sample
             self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
             self.PSF_file_name = cat.field('PSF_filename') # file containing the PSF image

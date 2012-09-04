@@ -114,7 +114,7 @@ def _GetAngleValue(param, param_name):
         raise AttributeError("Unable to parse %s param = %s as an Angle."%(param_name,param))
 
 
-def _CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
+def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
     """@brief Check that the parameters for a particular item are all valid
     
     @return a dict, get, with get[key] = value_type for all keys to get
@@ -163,12 +163,12 @@ def _CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
 
     return get
 
-def _GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
+def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
     """@brief Check and get all the parameters for a particular item
 
     @return kwargs, safe
     """
-    get = _CheckAllParams(param,param_name,req,opt,single,ignore)
+    get = CheckAllParams(param,param_name,req,opt,single,ignore)
     kwargs = {}
     safe = True
     for (key, value_type) in sorted(get.items()):
@@ -179,7 +179,7 @@ def _GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[])
     kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.iteritems()])
     return kwargs, safe
 
-def _GetCurrentValue(config, param_name):
+def GetCurrentValue(config, param_name):
     """@brief Return the current value of a parameter (either stored or a simple value)
     """
     param = config[param_name]
@@ -197,7 +197,7 @@ def _GenerateFromG1G2(param, param_name, base, value_type):
     """@brief Return a Shear constructed from given (g1, g2)
     """
     req = { 'g1' : float, 'g2' : float }
-    kwargs, safe = _GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
     #print 'Generate from G1G2: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
@@ -205,49 +205,49 @@ def _GenerateFromE1E2(param, param_name, base, value_type):
     """@brief Return a Shear constructed from given (e1, e2)
     """
     req = { 'e1' : float, 'e2' : float }
-    kwargs, safe = _GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromEta1Eta2(param, param_name, base, value_type):
     """@brief Return a Shear constructed from given (eta1, eta2)
     """
     req = { 'eta1' : float, 'eta2' : float }
-    kwargs, safe = _GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromGBeta(param, param_name, base, value_type):
     """@brief Return a Shear constructed from given (g, beta)
     """
     req = { 'g' : float, 'beta' : galsim.Angle }
-    kwargs, safe = _GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromEBeta(param, param_name, base, value_type):
     """@brief Return a Shear constructed from given (e, beta)
     """
     req = { 'e' : float, 'beta' : galsim.Angle }
-    kwargs, safe = _GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromEtaBeta(param, param_name, base, value_type):
     """@brief Return a Shear constructed from given (eta, beta)
     """
     req = { 'eta' : float, 'beta' : galsim.Angle }
-    kwargs, safe = _GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromQBeta(param, param_name, base, value_type):
     """@brief Return a Shear constructed from given (q, beta)
     """
     req = { 'q' : float, 'beta' : galsim.Angle }
-    kwargs, safe = _GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromDXDY(param, param_name, base, value_type):
     """@brief Return a Shift constructed from given (dx,dy)
     """
     req = { 'dx' : float, 'dy' : float }
-    kwargs, safe = _GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return galsim.config.Shift(**kwargs), safe
 
 def _GenerateFromRing(param, param_name, base, value_type):
@@ -256,7 +256,7 @@ def _GenerateFromRing(param, param_name, base, value_type):
     req = { 'num' : int, 'first' : galsim.Shear }
     ignore = [ 'i', 'current' ]
     # Only Check, not Get.  We don't want to generate first if it's not time yet.
-    _CheckAllParams(param, param_name, req=req, ignore=ignore)
+    CheckAllParams(param, param_name, req=req, ignore=ignore)
 
     num, safe = ParseValue(param, 'num', base, int)
     #print 'In Ring parameter'
@@ -271,14 +271,16 @@ def _GenerateFromRing(param, param_name, base, value_type):
     elif num == 2:  # Special easy case for only 2 in ring.
         #print 'i = ',i,' Simple case of n=2'
         current = -param['current']
-        #print 'ellip = ',current.e
-        #print 'beta = ',current.beta
+        #print 'ring beta = ',current.beta
+        #print 'ring ellip = ',current.e
         i = i + 1
     else:
         import math
         #print 'i = ',i
         s = param['current']
         current = galsim.Shear(g=s.g, beta=s.beta + math.pi/num * galsim.radians)
+        #print 'ring beta = ',current.beta
+        #print 'ring ellip = ',current.e
         i = i + 1
     param['i'] = i
     param['current'] = current
@@ -288,9 +290,9 @@ def _GenerateFromRing(param, param_name, base, value_type):
 def _GenerateFromInputCatalog(param, param_name, base, value_type):
     """@brief Return a value read from an input catalog
     """
-    if 'input_cat' not in base:
+    if 'catalog' not in base:
         raise ValueError("No input catalog available for %s.type = InputCatalog"%param_name)
-    input_cat = base['input_cat']
+    input_cat = base['catalog']
 
     # Setup the indexing sequence if it hasn't been specified.
     # The normal thing with an InputCatalog is to just use each object in order,
@@ -304,7 +306,7 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
             index['max'] = input_cat.nobjects-1
 
     req = { 'col' : int , 'index' : int }
-    kwargs, safe = _GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
 
     col = kwargs['col']
     if col >= input_cat.ncols:
@@ -328,7 +330,7 @@ def _GenerateFromRandom(param, param_name, base, value_type):
     rng = base['rng']
 
     req = { 'min' : value_type , 'max' : value_type }
-    kwargs, safe = _GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
 
     min = kwargs['min']
     max = kwargs['max']
@@ -350,7 +352,7 @@ def _GenerateFromRandomAngle(param, param_name, base, value_type):
     rng = base['rng']
 
     # Just make sure there aren't any extra parameters
-    _CheckAllParams(param, param_name)
+    CheckAllParams(param, param_name)
     import math
     ud = galsim.UniformDeviate(rng)
     val = ud() * 2 * math.pi * galsim.radians
@@ -367,7 +369,7 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
 
     req = { 'sigma' : float }
     opt = { 'mean' : float, 'min' : float, 'max' : float }
-    kwargs, safe = _GetAllParams(param, param_name, base, req=req, opt=opt)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
 
     sigma = kwargs['sigma']
 
@@ -439,7 +441,7 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
     rng = base['rng']
 
     req = { 'radius' : float }
-    kwargs, safe = _GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
     radius = kwargs['radius']
 
     ud = galsim.UniformDeviate(rng)
@@ -460,7 +462,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     #print 'Start Sequence for ',param_name,' -- param = ',param
     opt = { 'min' : value_type, 'max' : value_type, 'step' : value_type, 'repeat' : int }
     ignore = { 'rep' : int, 'current' : int }
-    kwargs, safe = _GetAllParams(param, param_name, base, opt=opt, ignore=ignore)
+    kwargs, safe = GetAllParams(param, param_name, base, opt=opt, ignore=ignore)
 
     min = kwargs.get('min',0)
     step = kwargs.get('step',1)
@@ -489,7 +491,7 @@ def _GenerateFromList(param, param_name, base, value_type):
     req = { 'items' : list }
     opt = { 'index' : int }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    _CheckAllParams(param, param_name, req=req, opt=opt)
+    CheckAllParams(param, param_name, req=req, opt=opt)
     items = param['items']
     if not isinstance(items,list):
         raise AttributeError("items entry for parameter %s is not a list."%param_name)

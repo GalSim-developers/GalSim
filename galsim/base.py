@@ -1257,7 +1257,7 @@ class RealGalaxy(GSObject):
         elif random == True:
             if uniform_deviate == None:
                 uniform_deviate = galsim.UniformDeviate()
-            use_index = int(real_galaxy_catalog.n * uniform_deviate()) 
+            use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
             # this will round down, to get index in range [0, n-1]
         else:
             raise RuntimeError('No method specified for selecting a galaxy!')

@@ -42,7 +42,7 @@ image :
     # In this case we use gaussian noise.
     noise : 
         type : Gaussian
-        sigma : 300.   # ADU / pixel
+        sigma : 30.   # ADU / pixel
 
     # You can also specify the size of the image if you want, but if you omit it
     # (as we do here), then GalSim will automatically size the image appropriately.

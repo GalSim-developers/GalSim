@@ -31,6 +31,7 @@ def kxky(array_shape=(256, 256)):
     ----------
     @param array_shape   the Numpy array shape desired for `kx, ky`. 
     """
+    # Note: numpy shape is y,x
     k_xaxis = np.fft.fftfreq(array_shape[1]) * 2. * np.pi
     k_yaxis = np.fft.fftfreq(array_shape[0]) * 2. * np.pi
     return np.meshgrid(k_xaxis, k_yaxis)

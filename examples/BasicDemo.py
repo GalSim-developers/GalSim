@@ -33,7 +33,7 @@ def Script1():
     gal_sigma = 2.     # arcsec
     psf_sigma = 1.     # arcsec
     pixel_scale = 0.2  # arcsec / pixel
-    noise = 300.       # ADU / pixel
+    noise = 30.        # ADU / pixel
 
     logger.info('Starting script 1 using:')
     logger.info('    - circular Gaussian galaxy (flux = %.1e, sigma = %.1f),',gal_flux,gal_sigma)
@@ -288,22 +288,21 @@ def Script3():
                                obscuration = opt_obscuration)
     logger.info('Made optical PSF profile')
 
+    # Now apply the wcs shear to the profile without the pix
+    nopix = galsim.Convolve([atmos, optics, gal])
+    psf = galsim.Convolve([atmos, optics])
+    nopix.applyShear(g1=wcs_g1, g2=wcs_g2)
+    psf.applyShear(g1=wcs_g1, g2=wcs_g2)
+    logger.info('Applied WCS distortion')
+
     # Start with square pixels
     pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
-    # Then shear them slightly by the negative of the wcs shear.
-    # This way the later distortion of the full image will bring them back to square.
-    pix.applyShear(g1=-wcs_g1, g2=-wcs_g2)
     logger.info('Made pixel profile')
 
     # Final profile is the convolution of these.
-    final = galsim.Convolve([gal, atmos, optics, pix])
-    final_epsf = galsim.Convolve([atmos, optics, pix])
+    final = galsim.Convolve([nopix, pix])
+    final_epsf = galsim.Convolve([psf, pix])
     logger.info('Convolved components into final profile')
-
-    # Now apply the wcs shear to the final image.
-    final.applyShear(g1=wcs_g1, g2=wcs_g2)
-    final_epsf.applyShear(g1=wcs_g1, g2=wcs_g2)
-    logger.info('Applied WCS distortion')
 
     # This time we specify a particular size for the image rather than let galsim 
     # choose the size automatically.

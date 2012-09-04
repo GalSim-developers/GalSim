@@ -80,9 +80,16 @@ gal :
 
 # Define some other information about the images 
 image :
+    # Each image in the data cube has two tiles.
+    type : Tiled
+    nx_tiles : 2
+    ny_tiles : 1
+    xborder : 2  # 2 pixel border between fft and phot images
+
+    stamp_xsize : 64
+    stamp_ysize : 64
+
     pixel_scale : 0.28  # arcsec / pixel
-    xsize : 64
-    ysize : 64
 
     # Define what kind of noise to use
     noise : 
@@ -106,18 +113,9 @@ image :
 
 # Define the output formats
 output :
-    type : data_cube
+    type : DataCube
 
     dir : output_yaml
     file_name : cube_phot.fits
     
     nimages : 100
-    
-    # An image field within output indicates that each image here is 
-    # made up of more than one component image.  In this case, each 
-    # image in the data cube has two tiles.
-    image_type : tiled
-    nx_tiles : 2
-    ny_tiles : 1
-    xborder : 2  # 2 pixel border between fft and phot images
-

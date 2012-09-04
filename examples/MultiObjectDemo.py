@@ -187,8 +187,8 @@ def Script1():
     # Define the output format
     config['output']['file_name'] = multi_file_name
 
-    # type = multi_fits means to use a multi-extension fits file
-    config['output']['type'] = 'multi_fits'
+    # type = MultiFits means to use a multi-extension fits file
+    config['output']['type'] = 'MultiFits'
 
     # You can specify how many extensions to write to the file with nimages, 
     # but in this case, since we are using an input catalog, the default 
@@ -474,7 +474,7 @@ def Script3():
     # Read in galaxy catalog
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, image_dir)
     real_galaxy_catalog.preload()
-    logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.n)
+    logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
 
     ## Make the ePSF
     # first make the double Gaussian PSF

@@ -155,12 +155,12 @@ input :
 
 # Define the output format
 output :
+    # type = MultiFits means to use a multi-extension fits file
+    type : MultiFits
+
     dir : output_yaml
     file_name : multi.fits
     
-    # type = multi_fits means to use a multi-extension fits file
-    type : multi_fits
-
     # You can specify how many extensions to write to the file with nimages, 
     # but in this case, since we are using an input catalog, the default 
     # value is to do the number of entries in the catalog.

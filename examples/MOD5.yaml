@@ -50,8 +50,13 @@ gal :
     
 
 image :
+    type : Tiled
+    nx_tiles : 10
+    ny_tiles : 10
+
+    stamp_size : 64  # pixels
+
     pixel_scale : 0.28  # arcsec / pixel
-    size : 64  # pixels
 
     draw_method : phot
 
@@ -63,10 +68,7 @@ image :
 
 
 output :
-    image_type : tiled
     dir : output_yaml
-    nx_tiles : 10
-    ny_tiles : 10
 
 ---
 
