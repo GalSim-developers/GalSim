@@ -4,28 +4,28 @@
 /bin/rm output_yaml/*
 
 BasicDemo.py 1
-../bin/galsim_yaml BD1.yaml
+galsim_yaml BD1.yaml
 
 BasicDemo.py 2
-../bin/galsim_yaml BD2.yaml
+galsim_yaml BD2.yaml
 
 BasicDemo.py 3
-../bin/galsim_yaml BD3.yaml
+galsim_yaml BD3.yaml
 
 MultiObjectDemo.py 1
-../bin/galsim_yaml MOD1.yaml
+galsim_yaml MOD1.yaml
 
 MultiObjectDemo.py 2
-../bin/galsim_yaml MOD2.yaml
+galsim_yaml MOD2.yaml
 
 MultiObjectDemo.py 3
-../bin/galsim_yaml MOD3.yaml
+galsim_yaml MOD3.yaml
 
 MultiObjectDemo.py 4
-../bin/galsim_yaml MOD4.yaml
+galsim_yaml MOD4.yaml
 
 MultiObjectDemo.py 5
-../bin/galsim_yaml MOD5.yaml
+galsim_yaml MOD5.yaml
 
 echo 'Checking diffs: (No output means success)'
 

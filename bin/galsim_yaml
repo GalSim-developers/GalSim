@@ -6,12 +6,9 @@ in a configuration file.
 
 import sys
 import os
-import subprocess
 import galsim
-import yaml
 import logging
-import time
-import copy
+import yaml
 
 def MergeConfig(config1, config2, logger=None):
     """
@@ -80,7 +77,7 @@ def main(argv):
 
     # Set the root value in base_config
     if 'root' not in base_config:
-        base_config['root'] = os.path.splitext(os.path.basename(config_file))[0]
+        base_config['root'] = os.path.splitext(config_file)[0]
 
     for config in all_config[1:]:
 
