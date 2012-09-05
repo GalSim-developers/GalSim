@@ -1,0 +1,52 @@
+#!/bin/bash
+
+/bin/rm output/*
+/bin/rm output_json/*
+
+BasicDemo.py 1
+galsim_json json/BD1.json
+
+BasicDemo.py 2
+galsim_json json/BD2.json
+
+BasicDemo.py 3
+galsim_json json/BD3.json
+
+MultiObjectDemo.py 1
+galsim_json json/MOD1.json
+
+MultiObjectDemo.py 2
+galsim_json json/MOD2.json
+
+MultiObjectDemo.py 3
+galsim_json json/MOD3a.json json/MOD3b.json
+
+MultiObjectDemo.py 4
+galsim_json json/MOD4.json
+
+MultiObjectDemo.py 5
+galsim_json json/MOD5a.json json/MOD5b.json
+
+echo 'Checking diffs: (No output means success)'
+
+# Don't check demo1, since it doesn't use a deterministic seed.
+# If you add an initial seed in both places, then you can uncomment 
+# the next line and it should work.
+#diff output/demo1.fits output_json/demo1.fits 
+
+diff output/demo2.fits output_json/demo2.fits 
+diff output/demo3.fits output_json/demo3.fits 
+diff output/demo3_epsf.fits output_json/demo3_epsf.fits 
+
+diff output/multi.fits output_json/multi.fits 
+
+diff output/g08_psf.fits output_json/g08_psf.fits
+diff output/g08_gal.fits output_json/g08_gal.fits
+
+diff output/psf_real.fits output_json/psf_real.fits
+diff output/cube_real.fits output_json/cube_real.fits 
+
+diff output/cube_phot.fits output_json/cube_phot.fits 
+
+diff output/bpd_single.fits output_json/bpd_single.fits 
+diff output/bpd_multi.fits output_json/bpd_multi.fits 

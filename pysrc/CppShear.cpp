@@ -129,7 +129,10 @@ struct PyCppEllipse {
             .def(bp::self -= bp::self)
             .def(bp::self == bp::self)
             .def(bp::self != bp::self)
-            .def("reset", (void (CppEllipse::*)(const CppShear &, double, const Position<double>))&CppEllipse::reset,
+            .def(
+                "reset", (
+                    void (CppEllipse::*)(
+                        const CppShear &, double, const Position<double>))&CppEllipse::reset,
                  bp::args("s", "mu", "p"))
             .def("fwd", &CppEllipse::fwd, "FIXME: needs documentation!")
             .def("inv", &CppEllipse::inv, "FIXME: needs documentation!")

@@ -6,16 +6,16 @@ import utilities
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
-class GSObject:
+class GSObject(object):
     """@brief Base class for defining the interface with which all GalSim Objects access their
     shared methods and attributes, particularly those from the C++ SBProfile classes.
     """
     def __init__(self, SBProfile):
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
-
+    
     # Make op+ of two GSObjects work to return an Add object
     def __add__(self, other):
-        return Add(self,other)
+        return Add(self, other)
 
     # op+= converts this into the equivalent of an Add object
     def __iadd__(self, other):
@@ -59,10 +59,11 @@ class GSObject:
     def copy(self):
         """@brief Returns a copy of an object
 
-           This preserves the original type of the object, so if the caller is a
-           Gaussian (for example), the copy will also be a Gaussian, and can thus call
-           the methods that are not in GSObject, but are in Gaussian (e.g. getSigma).
+        This preserves the original type of the object, so if the caller is a
+        Gaussian (for example), the copy will also be a Gaussian, and can thus call
+        the methods that are not in GSObject, but are in Gaussian (e.g. getSigma).
         """
+        # Re-initialize a return GSObject with self's SBProfile
         sbp = self.SBProfile.__class__(self.SBProfile)
         ret = GSObject(sbp)
         ret.__class__ = self.__class__
@@ -134,7 +135,7 @@ class GSObject:
         """
         return self.SBProfile.kValue(position)
 
-    def scaleFlux(self, fluxRatio):
+    def scaleFlux(self, flux_ratio):
         """@brief Multiply the flux of the object by fluxRatio
            
         After this call, the caller's type will be a GSObject.
@@ -142,7 +143,7 @@ class GSObject:
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
         """
-        self.SBProfile.scaleFlux(fluxRatio)
+        self.SBProfile.scaleFlux(flux_ratio)
         self.__class__ = GSObject
 
     def setFlux(self, flux):
@@ -191,10 +192,9 @@ class GSObject:
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
         """
-        import math
-        flux = self.getFlux()
-        self.applyTransformation(galsim.Ellipse(math.log(scale)))
-        self.setFlux(flux)
+        old_flux = self.getFlux()
+        self.applyTransformation(galsim.Ellipse(np.log(scale)))
+        self.setFlux(old_flux) # conserve flux
 
     def applyMagnification(self, scale):
         """@brief Apply a magnification by the given scale, scaling the linear size by scale
@@ -212,9 +212,7 @@ class GSObject:
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
         """
-        import math
-        self.applyTransformation(galsim.Ellipse(math.log(scale)))
-
+        self.applyTransformation(galsim.Ellipse(np.log(scale)))
        
     def applyShear(self, *args, **kwargs):
         """@brief Apply a shear to this object, where arguments are either a galsim.shear.Shear, or
@@ -230,12 +228,12 @@ class GSObject:
                 raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
             if not isinstance(args[0], galsim.Shear):
                 raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
-            self.SBProfile.applyShear(args[0]._shear)
+            shear = args[0]
         elif len(args) > 1:
             raise TypeError("Error, too many unnamed arguments to applyShear!")
         else:
             shear = galsim.Shear(**kwargs)
-            self.SBProfile.applyShear(shear._shear)
+        self.SBProfile.applyShear(shear._shear)
         self.__class__ = GSObject
 
     def applyRotation(self, theta):
@@ -250,7 +248,7 @@ class GSObject:
             raise TypeError("Input theta should be an Angle")
         self.SBProfile.applyRotation(theta)
         self.__class__ = GSObject
-        
+
     def applyShift(self, dx, dy):
         """@brief Apply a (dx, dy) shift to this object.
            
@@ -259,7 +257,7 @@ class GSObject:
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
         """
-        self.SBProfile.applyShift(dx, dy)
+        self.SBProfile.applyShift(dx,dy)
         self.__class__ = GSObject
 
     # Also add methods which create a new GSObject with the transformations applied...
@@ -288,11 +286,10 @@ class GSObject:
         See createMagnified for a version that preserves surface brightness, and thus 
         changes the flux.
         """
-        import math
         ret = self.copy()
-        flux = self.getFlux()
-        ret.applyTransformation(galsim.Ellipse(math.log(scale)))
-        ret.setFlux(flux)
+        old_flux = self.getFlux()
+        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
+        ret.setFlux(old_flux)
         return ret
 
     def createMagnified(self, scale):
@@ -306,9 +303,8 @@ class GSObject:
         is also scaled by a factor of scale^2.
         See createDilated for a version that preserves flux.
         """
-        import math
         ret = self.copy()
-        ret.applyTransformation(galsim.Ellipse(math.log(scale)))
+        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
         return ret
 
     def createSheared(self, *args, **kwargs):
@@ -538,35 +534,74 @@ class GSObject:
                 image, n_photons, uniform_deviate, dx, gain, noise, poisson_flux)
 
         return image, added_flux
-         
 
-# Now define some of the simplest derived classes, those which are otherwise empty containers for
-# SBPs...
+
+# --- Now defining the derived classes ---
 #
-# Gaussian class inherits the GSObject method interface, but therefore has a "has a" relationship 
-# with the C++ SBProfile class rather than an "is a"... The __init__ method is very simple and all
-# the GSObject methods & attributes are inherited.
+# All derived classes inherit the GSObject method interface, but therefore have a "has a" 
+# relationship with the C++ SBProfile class rather than an "is a" one...
+#
+# The __init__ method is usually simple and all the GSObject methods & attributes are inherited.
 # 
-# In particular, the SBGaussian is now an attribute of the Gaussian, an attribute named 
-# "SBProfile", which can be queried for type as desired.
-#
 class Gaussian(GSObject):
-    """@brief GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
+    """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
+
+    For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
+    documentation produced by doxygen.
+
+    Initialization
+    --------------
+    A Gaussian can be initialized using one (and only one) of three possible size parameters
+
+        half_light_radius
+        sigma
+        fwhm
+
+    and an optional flux parameter [default flux = 1].
+
+    Example:
+    >>> gauss_obj = Gaussian(flux=3., sigma=1.)
+    >>> gauss_obj.getHalfLightRadius()
+    1.1774100225154747
+    >>> gauss_obj = Gaussian(flux=3, half_light_radius=1.)
+    >>> gauss_obj.getSigma()
+    0.8493218002880191
+
+    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
+    TypeError exception.
+
+    Methods
+    -------
+    The Gaussian is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
     """
+    
+    # Initialization parameters of the object, with type information, to indicate
+    # which attributes are allowed / required in a config file for this object.
+    # _req_params are required
+    # _opt_params are optional
+    # _single_params are a list of sets for which exactly one in the list is required.
+    _req_params = {}
+    _opt_params = { "flux" : float }
+    _single_params = [ { "sigma" : float, "half_light_radius" : float, "fwhm" : float } ]
+    
+    # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
-        GSObject.__init__(self, galsim.SBGaussian(half_light_radius=half_light_radius, 
-                                                  fwhm=fwhm, sigma=sigma, flux=flux))
-        
+        # Initialize the SBProfile
+        GSObject.__init__(
+            self, galsim.SBGaussian(
+                sigma=sigma, half_light_radius=half_light_radius, fwhm=fwhm, flux=flux))
+ 
     def getSigma(self):
         """@brief Return the sigma scale length for this Gaussian profile.
         """
         return self.SBProfile.getSigma()
-
+    
     def getFWHM(self):
         """@brief Return the FWHM for this Gaussian profile.
         """
         return self.SBProfile.getSigma() * 2.3548200450309493 # factor = 2 sqrt[2ln(2)]
-
+ 
     def getHalfLightRadius(self):
         """@brief Return the half light radius for this Gaussian profile.
         """
@@ -575,12 +610,52 @@ class Gaussian(GSObject):
 
 class Moffat(GSObject):
     """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
+
+    For more details of the Moffat Surface Brightness profile, please see the SBMoffat
+    documentation produced by doxygen.
+
+    Initialization
+    --------------
+    A Moffat is initialized with a slope parameter beta, one (and only one) of three possible size
+    parameters
+
+        scale_radius
+        half_light_radius
+        fwhm
+
+    an optional truncation radius parameter trunc [default trunc = 0., indicating no truncation] and
+    a flux parameter [default flux = 1].
+
+    Example:
+    >>> moffat_obj = Moffat(beta=3., scale_radius=3., flux=0.5)
+    >>> moffat_obj.getHalfLightRadius()
+    1.9307827587167474
+    >>> moffat_obj = Moffat(beta=3., half_light_radius=1., flux=0.5)
+    >>> moffat_obj.getScaleRadius()
+    1.5537739740300376
+
+    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
+    TypeError exception.
+
+    Methods
+    -------
+    The Moffat is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
     """
-    def __init__(self, beta, fwhm=None, scale_radius=None, half_light_radius=None,
-                 trunc=0., flux=1.):
-        GSObject.__init__(self, galsim.SBMoffat(beta, fwhm=fwhm, scale_radius=scale_radius,
-                                                half_light_radius=half_light_radius, trunc=trunc,
-                                                flux=flux))
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "beta" : float }
+    _opt_params = { "trunc" : float , "flux" : float }
+    _single_params = [ { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float } ]
+
+    # --- Public Class methods ---
+    def __init__(self, beta, scale_radius=None, half_light_radius=None,  fwhm=None, trunc=0.,
+                 flux=1.):
+        GSObject.__init__(
+            self, galsim.SBMoffat(
+                beta, scale_radius=scale_radius, half_light_radius=half_light_radius, fwhm=fwhm,
+                trunc=trunc, flux=flux))
+
     def getBeta(self):
         """@brief Return the beta parameter for this Moffat profile.
         """
@@ -600,64 +675,129 @@ class Moffat(GSObject):
         """@brief Return the half light radius for this Moffat profile.
         """
         return self.SBProfile.getHalfLightRadius()
-    
 
-class Sersic(GSObject):
-    """@brief GalSim Sersic, which has an SBSersic in the SBProfile attribute.
+
+class AtmosphericPSF(GSObject):
+    """Base class for long exposure Kolmogorov PSF.
+
+    Initialization
+    --------------
+    @code
+    atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolant=None, oversampling=1.5)
+    @endcode
+
+    Initialized atmospheric_psf as a galsim.AtmosphericPSF() instance.
+
+    @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
+                           consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
+                           PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
+                           values for the Fried parameter are on the order of 10 cm for most 
+                           observatories and up to 20 cm for excellent sites. The values are 
+                           usually quoted at lambda = 500 nm and r0 depends on wavelength as
+                           [r0 ~ lambda^(-6/5)].
+    @param fwhm            FWHM of the Kolmogorov PSF.
+                           Either fwhm or lam_over_r0 (and only one) must be specified.
+    @param interpolant     optional keyword for specifying the interpolation scheme [default =
+                           galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))]
+    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
+                           [default = 1.5], setting oversampling < 1 will produce aliasing in the 
+                           PSF (not good).
+    @param flux            total flux of the profile [default flux=1.]
     """
-    def __init__(self, n, half_light_radius, flux=1.):
-        GSObject.__init__(self, galsim.SBSersic(n, half_light_radius=half_light_radius, flux=flux))
 
-    def getN(self):
-        """@brief Return the Sersic index for this profile.
-        """
-        return self.SBProfile.getN()
+    # Initialization parameters of the object, with type information
+    _req_params = {}
+    _opt_params = { "flux" : float , "oversampling" : float }
+    _single_params = [ { "lam_over_r0" : float , "fwhm" : float } ]
+
+    # --- Public Class methods ---
+    def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5, flux=1.):
+
+        # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
+        if lam_over_r0 is None :
+            if fwhm is not None :
+                lam_over_r0 = fwhm / 0.976
+            else:
+                raise TypeError("Either lam_over_r0 or fwhm must be specified for AtmosphericPSF")
+        else :
+            if fwhm is None:
+                fwhm = 0.976 * lam_over_r0
+            else:
+                raise TypeError(
+                        "Only one of lam_over_r0 and fwhm may be specified for AtmosphericPSF")
+        # Set the lookup table sample rate via FWHM / 2 / oversampling (BARNEY: is this enough??)
+        dx_lookup = .5 * fwhm / oversampling
+
+        # Fold at 10 times the FWHM
+        stepk_kolmogorov = np.pi / (10. * fwhm)
+
+        # Odd array to center the interpolant on the centroid. Might want to pad this later to
+        # make a nice size array for FFT, but for typical seeing, arrays will be very small.
+        npix = 1 + 2 * (np.ceil(np.pi / stepk_kolmogorov)).astype(int)
+        atmoimage = galsim.atmosphere.kolmogorov_psf_image(
+            array_shape=(npix, npix), dx=dx_lookup, lam_over_r0=lam_over_r0, flux=flux)
+        
+        # Run checks on the interpolant and build default if None
+        if interpolant is None:
+            quintic = galsim.Quintic(tol=1e-4)
+            self.interpolant = galsim.InterpolantXY(quintic)
+        else:
+            if isinstance(interpolant, galsim.InterpolantXY) is False:
+                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+            self.interpolant = interpolant
+
+        # Then initialize the SBProfile
+        GSObject.__init__(
+            self, galsim.SBInterpolatedImage(atmoimage, self.interpolant, dx=dx_lookup))
+
+        # The above procedure ends up with a larger image than we really need, which
+        # means that the default stepK value will be smaller than we need.  
+        # Thus, we call the function calculateStepK() to refine the value.
+        self.SBProfile.calculateStepK()
+        self.SBProfile.calculateMaxK()
 
     def getHalfLightRadius(self):
-        """@brief Return the half light radius for this Sersic profile.
-        """
-        return self.SBProfile.getHalfLightRadius()
-
-
-class Exponential(GSObject):
-    """@brief GalSim Exponential, which has an SBExponential in the SBProfile attribute.
-    """
-    def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
-        GSObject.__init__(self, galsim.SBExponential(half_light_radius=half_light_radius,
-                                                     scale_radius=scale_radius, flux=flux))
-
-    def getScaleRadius(self):
-        """@brief Return the scale radius for this Exponential profile.
-        """
-        return self.SBProfile.getScaleRadius()
-
-    def getHalfLightRadius(self):
-        """@brief Return the half light radius for this Exponential profile.
-        """
-        # Factor not analytic, but can be calculated by iterative solution of equation:
-        #  (re / r0) = ln[(re / r0) + 1] + ln(2)
-        return self.SBProfile.getScaleRadius() * 1.6783469900166605
-
-
-class DeVaucouleurs(GSObject):
-    """@brief GalSim De-Vaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
-    """
-    def __init__(self, half_light_radius=None, flux=1.):
-        GSObject.__init__(self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius,
-                                                       flux=flux))
-
-    def getHalfLightRadius(self):
-        """@brief Return the half light radius for this DeVaucouleurs profile.
-        """
-        return self.SBProfile.getHalfLightRadius()
+        # TODO: This seems like it would not be impossible to calculate
+        raise NotImplementedError("Half light radius calculation not yet implemented for "+
+                                  "Atmospheric PSF objects (could be though).")
 
 
 class Airy(GSObject):
-    """@brief GalSim Airy, which has an SBAiry in the SBProfile attribute.
+    """GalSim Airy, which has an SBAiry in the SBProfile attribute.
+
+    For more details of the Airy Surface Brightness profile, please see the SBAiry documentation
+    produced by doxygen.
+
+    Initialization
+    --------------
+    An Airy can be initialized using one size parameter lam_over_D, an optional obscuration
+    parameter [default obscuration=0.] and an optional flux parameter [default flux = 1].  The
+    half light radius or FWHM can subsequently be calculated using the getHalfLightRadius() method
+    or getFWHM(), respectively, if obscuration = 0.
+
+    Example:
+    >>> airy_obj = Airy(flux=3., lam_over_D=2.)
+    >>> airy_obj.getHalfLightRadius()
+    1.0696642954485294
+
+    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
+    TypeError exception.
+
+    Methods
+    -------
+    The Airy is a GSObject, and inherits all of the GSObject methods (draw, drawShoot, applyShear
+    etc.) and operator bindings.
     """
+    
+    # Initialization parameters of the object, with type information
+    _req_params = { "lam_over_D" : float } # if we define fwhm or other sizes, move this to single.
+    _opt_params = { "flux" : float , "obscuration" : float }
+    _single_params = []
+
+    # --- Public Class methods ---
     def __init__(self, lam_over_D, obscuration=0., flux=1.):
-        GSObject.__init__(self, galsim.SBAiry(lam_over_D=lam_over_D, obscuration=obscuration,
-                                              flux=flux))
+        GSObject.__init__(
+            self, galsim.SBAiry(lam_over_D=lam_over_D, obscuration=obscuration, flux=flux))
 
     def getHalfLightRadius(self):
         """Return the half light radius of this Airy profile (only supported for obscuration = 0.).
@@ -693,7 +833,6 @@ class Airy(GSObject):
         return self.SBProfile.getLamOverD()
 
 
-
 class Kolmogorov(GSObject):
     """@brief GalSim Kolmogorov, which has an SBKolmogorov in the SBProfile attribute.
        
@@ -702,31 +841,39 @@ class Kolmogorov(GSObject):
     Initialization
     --------------
     @code
-    psf = galsim.Kolmogorov(lam_over_r0)
+    psf = galsim.Kolmogorov(lam_over_r0, flux=1.)
     @endcode
 
     Initialized psf as a galsim.Kolmogorov() instance.
 
-    @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
-                           consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
-                           PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
-                           values for the Fried parameter are on the order of 10 cm for most 
-                           observatories and up to 20 cm for excellent sites. The values are 
-                           usually quoted at lambda = 500 nm and r0 depends on wavelength as
-                           [r0 ~ lambda^(-6/5)].
-    @param fwhm            FWHM of the Kolmogorov PSF.
+    @param lam_over_r0        lambda / r0 in the physical units adopted (user responsible for 
+                              consistency), where r0 is the Fried parameter. The FWHM of the
+                              Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
+                              Typical values for the Fried parameter are on the order of 10 cm for
+                              most observatories and up to 20 cm for excellent sites. The values are
+                              usually quoted at lambda = 500 nm and r0 depends on wavelength as
+                              [r0 ~ lambda^(-6/5)].
+    @param fwhm               FWHM of the Kolmogorov PSF.
     @param half_light_radius  Half-light radius of the Kolmogorov PSF.
-                           One of lam_over_r0, fwhm and half_light_radius (and only one) 
-                           must be specified.
-    @param flux            optional flux value [default = 1]
+                              One of lam_over_r0, fwhm and half_light_radius (and only one) 
+                              must be specified.
+    @param flux               Optional flux value [default = 1].
     """
+    
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
     # In SBKolmogorov.cpp we refine this factor to 0.975865
     _fwhm_factor = 0.975865
     # Similarly, SBKolmogorov calculates the relation between lambda/r0 and half-light radius
     _hlr_factor = 0.554811
- 
+
+    # Initialization parameters of the object, with type information
+    _req_params = {}
+    _opt_params = { "flux" : float }
+    _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float } ]
+
+    # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.):
+
         if fwhm is not None :
             if lam_over_r0 is not None or half_light_radius is not None:
                 raise TypeError(
@@ -747,7 +894,7 @@ class Kolmogorov(GSObject):
                         "specified for Kolmogorov")
 
         GSObject.__init__(self, galsim.SBKolmogorov(lam_over_r0=lam_over_r0, flux=flux))
- 
+
     def getLamOverR0(self):
         """Return the lam_over_r0 parameter of this Kolmogorov profile.
         """
@@ -764,9 +911,133 @@ class Kolmogorov(GSObject):
         return self.SBProfile.getLamOverR0() * Kolmogorov._hlr_factor
 
 
+class OpticalPSF(GSObject):
+    """@brief Class describing aberrated PSFs due to telescope optics, which has an
+    SBInterpolatedImage in the SBProfile attribute.
+
+    Input aberration coefficients are assumed to be supplied in units of incident light wavelength,
+    and correspond to the conventions adopted here:
+    http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
+
+    Initialization
+    --------------
+    @code
+    optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0.,
+                                        coma2=0., spher=0., circular_pupil=True, obscuration=0.,
+                                        interpolant=None, oversampling=1.5, pad_factor=1.5)
+    @endcode
+
+    Initializes optical_psf as a galsim.OpticalPSF() instance.
+
+    @param lam_over_D      lambda / D in the physical units adopted (user responsible for 
+                           consistency).
+    @param defocus         defocus in units of incident light wavelength.
+    @param astig1          first component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           coma along x in units of incident light wavelength.
+    @param coma2           coma along y in units of incident light wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param circular_pupil  adopt a circular pupil? Alternative is square.
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear 
+                           dimension, [0., 1.) [default = 0.].
+    @param interpolant     optional keyword for specifying the interpolation scheme [default =
+                           galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))].
+    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
+                           [default = 1.5], setting oversampling < 1 will produce aliasing in the 
+                           PSF (not good).
+    @param pad_factor      additional multiple by which to zero-pad the PSF image to avoid folding
+                           compared to what would be required for a simple Airy [default = 1.5].
+                           Note that pad_factor may need to be increased for stronger aberrations,
+                           i.e. those larger than order unity.
+    @param flux            total flux of the profile [default flux=1.].
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "lam_over_D" : float }
+    _opt_params = {
+        "defocus" : float ,
+        "astig1" : float ,
+        "astig2" : float ,
+        "coma1" : float ,
+        "coma2" : float ,
+        "spher" : float ,
+        "circular_pupil" : bool ,
+        "obscuration" : float ,
+        "oversampling" : float ,
+        "pad_factor" : float ,
+        "flux" : float }
+    _single_params = []
+
+    # --- Public Class methods ---
+    def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+                 circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
+                 pad_factor=1.5, flux=1.):
+
+        # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
+        import galsim.optics
+        
+        # Choose dx for lookup table using Nyquist for optical aperture and the specified
+        # oversampling factor
+        dx_lookup = .5 * lam_over_D / oversampling
+        
+        # Use a similar prescription as SBAiry to set Airy stepK and thus reference unpadded image
+        # size in physical units
+        stepk_airy = min(
+            ALIAS_THRESHOLD * .5 * np.pi**3 * (1. - obscuration) / lam_over_D,
+            np.pi / 5. / lam_over_D)
+        
+        # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
+        # also make npix always *odd* so that opticalPSF lookup table array is correctly centred:
+        npix = 1 + 2 * (np.ceil(pad_factor * (np.pi / stepk_airy) / dx_lookup)).astype(int)
+        
+        # Make the psf image using this dx and array shape
+        optimage = galsim.optics.psf_image(
+            lam_over_D=lam_over_D, dx=dx_lookup, array_shape=(npix, npix), defocus=defocus,
+            astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
+            circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
+        
+        # If interpolant not specified on input, use a high-ish n lanczos
+        if interpolant == None:
+            quintic = galsim.Quintic(tol=1.e-4)
+            self.interpolant = galsim.InterpolantXY(quintic)
+        else:
+            if isinstance(self.interpolant, galsim.InterpolantXY) is False:
+                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+            self.interpolant = interpolant
+            
+        # Initialize the SBProfile
+        GSObject.__init__(
+            self, galsim.SBInterpolatedImage(optimage, self.interpolant, dx=dx_lookup))
+
+        # The above procedure ends up with a larger image than we really need, which
+        # means that the default stepK value will be smaller than we need.  
+        # Thus, we call the function calculateStepK() to refine the value.
+        self.SBProfile.calculateStepK()
+        self.SBProfile.calculateMaxK()
+
+
 class Pixel(GSObject):
     """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
+
+    Initialization
+    --------------
+    A Pixel is initialized with an x dimension width xw, an optional y dimension width (if
+    unspecifed yw=xw is assumed) and an optional flux parameter [default flux = 1].
+
+    Methods
+    -------
+    The Pixel is a GSObject, and inherits all of the GSObject methods (draw, drawShoot, applyShear
+    etc.) and operator bindings.
     """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "xw" : float }
+    _opt_params = { "yw" : float , "flux" : float }
+    _single_params = []
+
+    # --- Public Class methods ---
     def __init__(self, xw, yw=None, flux=1.):
         if yw is None:
             yw = xw
@@ -783,149 +1054,147 @@ class Pixel(GSObject):
         return self.SBProfile.getYWidth()
 
 
-class OpticalPSF(GSObject):
-    """@brief Class describing aberrated PSFs due to telescope optics.
+class Sersic(GSObject):
+    """GalSim Sersic, which has an SBSersic in the SBProfile attribute.
 
-    Input aberration coefficients are assumed to be supplied in units of incident light wavelength,
-    and correspond to the conventions adopted here:
-    http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
-
-    Initialization
-    --------------
-    @code
-    optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0.,
-                                        coma2=0., spher=0., circular_pupil=True, obscuration=0.,
-                                        interpolantxy=None, oversampling=1.5, pad_factor=1.5)
-    @endcode
-
-    Initializes optical_psf as a galsim.OpticalPSF() instance.
-
-    @param lam_over_D      lambda / D in the physical units adopted (user responsible for 
-                           consistency).
-    @param defocus         defocus in units of incident light wavelength.
-    @param astig1          first component of astigmatism (like e1) in units of incident light
-                           wavelength.
-    @param astig2          second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param coma1           coma along x in units of incident light wavelength.
-    @param coma2           coma along y in units of incident light wavelength.
-    @param spher           spherical aberration in units of incident light wavelength.
-    @param circular_pupil  adopt a circular pupil?
-    @param obscuration     linear dimension of central obscuration as fraction of pupil linear 
-                           dimension, [0., 1.) [default = 0.]
-    @param interpolantxy   optional keyword for specifying the interpolation scheme [default =
-                           galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))].
-    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
-                           [default = 1.5], setting oversampling < 1 will produce aliasing in the 
-                           PSF (not good).
-    @param pad_factor      additional multiple by which to zero-pad the PSF image to avoid folding
-                           compared to what would be required for a simple Airy [default = 1.5].
-                           Note that pad_factor may need to be increased for stronger aberrations,
-                           i.e. those larger than order unity. 
-    """
-    def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-                 circular_pupil=True, obscuration=0., interpolantxy=None, oversampling=1.5,
-                 pad_factor=1.5):
-        # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
-        import galsim.optics
-        # Choose dx for lookup table using Nyquist for optical aperture and the specified
-        # oversampling factor
-        dx_lookup = .5 * lam_over_D / oversampling
-        # Use a similar prescription as SBAiry to set Airy stepK and thus reference unpadded image
-        # size in physical units
-        stepk_airy = min(ALIAS_THRESHOLD * .5 * np.pi**3 * (1. - obscuration) / lam_over_D,
-                         np.pi / 5. / lam_over_D)
-        # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
-        # also make npix always *odd* so that opticalPSF lookup table array is correctly centred:
-        npix = 1 + 2 * (np.ceil(pad_factor * (np.pi / stepk_airy) / dx_lookup)).astype(int)
-        # Make the psf image using this dx and array shape
-        optimage = galsim.optics.psf_image(lam_over_D=lam_over_D, dx=dx_lookup,
-                                           array_shape=(npix, npix), defocus=defocus, astig1=astig1,
-                                           astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                                           circular_pupil=circular_pupil, obscuration=obscuration)
-        # If interpolant not specified on input, use a high-ish n lanczos
-        if interpolantxy == None:
-            lan5 = galsim.Quintic(tol=1.e-4)
-            self.Interpolant2D = galsim.InterpolantXY(lan5)
-        else:
-            self.Interpolant2D = interpolantxy
-        GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D,
-                                                           dx=dx_lookup))
-        # The above procedure ends up with a larger image than we really need, which
-        # means that the default stepK value will be smaller than we need.  
-        # Thus, we call the function calculateStepK() to refine the value.
-        self.SBProfile.calculateStepK()
-        self.SBProfile.calculateMaxK()
-
-    def getHalfLightRadius(self):
-        # The half light radius is a complex function for aberrated optical PSFs, so just give
-        # up gracelessly...
-        raise NotImplementedError("Half light radius calculation not implemented for OpticalPSF "
-                                   +"objects.")
-
-class AtmosphericPSF(GSObject):
-    """Base class for long exposure Kolmogorov PSF.
+    For more details of the Sersic Surface Brightness profile, please see the SBSersic documentation
+    produced by doxygen.
 
     Initialization
     --------------
-    @code
-    atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolantxy=None, oversampling=1.5)
-    @endcode
+    A Sersic is initialized with n, the Sersic index of the profile, and the half light radius size
+    parameter half_light_radius.  A flux parameter is optional [default flux = 1].
 
-    Initialized atmospheric_psf as a galsim.AtmosphericPSF() instance.
+    Example:
+    >>> sersic_obj = Sersic(n=3.5, half_light_radius=2.5, flux=40.)
+    >>> sersic_obj.getHalfLightRadius()
+    2.5
+    >>> sersic_obj.getN()
+    3.5
 
-    @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
-                           consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
-                           PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
-                           values for the Fried parameter are on the order of 10 cm for most 
-                           observatories and up to 20 cm for excellent sites. The values are 
-                           usually quoted at lambda = 500 nm and r0 depends on wavelength as
-                           [r0 ~ lambda^(-6/5)].
-    @param fwhm            FWHM of the Kolmogorov PSF.
-                           Either fwhm or lam_over_r0 (and only one) must be specified.
-    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
-                           [default = 1.5], setting oversampling < 1 will produce aliasing in the 
-                           PSF (not good).
+    Methods
+    -------
+    The Sersic is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
     """
-    def __init__(self, lam_over_r0=None, fwhm=None, interpolantxy=None, oversampling=1.5):
-        # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
-        if lam_over_r0 is None :
-            if fwhm is not None :
-                lam_over_r0 = fwhm / 0.976
-            else:
-                raise TypeError("Either lam_over_r0 or fwhm must be specified for AtmosphericPSF")
-        else :
-            if fwhm is None:
-                fwhm = 0.976 * lam_over_r0
-            else:
-                raise TypeError(
-                        "Only one of lam_over_r0 and fwhm may be specified for AtmosphericPSF")
-        dx_lookup = .5 * fwhm / oversampling
-        # Fold at 10 times the FWHM
-        stepk_kolmogorov = np.pi / (10. * fwhm)
-        # Odd array to center the interpolant on the centroid. Might want to pad this later to
-        # make a nice size array for FFT, but for typical seeing, arrays will be very small.
-        npix = 1 + 2 * (np.ceil(np.pi / stepk_kolmogorov)).astype(int)
-        atmoimage = galsim.atmosphere.kolmogorov_psf_image(array_shape=(npix, npix), dx=dx_lookup, 
-                                                           lam_over_r0=lam_over_r0)
-        if interpolantxy == None:
-            lan5 = galsim.Quintic(tol=1e-4)
-            self.Interpolant2D = galsim.InterpolantXY(lan5)
-        else:
-            self.Interpolant2D = interpolantxy
-        GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, 
-                                                           dx=dx_lookup))
-        # The above procedure ends up with a larger image than we really need, which
-        # means that the default stepK value will be smaller than we need.  
-        # Thus, we call the function calculateStepK() to refine the value.
-        self.SBProfile.calculateStepK()
-        self.SBProfile.calculateMaxK()
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "n" : float , "half_light_radius" : float }
+    _opt_params = { "flux" : float }
+    _single_params = []
+
+    # --- Public Class methods ---
+    def __init__(self, n, half_light_radius, flux=1.):
+        GSObject.__init__(
+            self, galsim.SBSersic(n, half_light_radius=half_light_radius, flux=flux))
+
+    def getN(self):
+        """@brief Return the Sersic index for this profile.
+        """
+        return self.SBProfile.getN()
 
     def getHalfLightRadius(self):
-        # TODO: This seems like it would not be impossible to calculate
-        raise NotImplementedError("Half light radius calculation not yet implemented for "+
-                                  "Atmospheric PSF objects (could be though).")
-        
+        """@brief Return the half light radius for this Sersic profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
+
+
+class Exponential(GSObject):
+    """GalSim Exponential, which has an SBExponential in the SBProfile attribute.
+
+    For more details of the Exponential Surface Brightness profile, please see the SBExponential
+    documentation produced by doxygen.
+
+    Initialization
+    --------------
+    An Exponential can be initialized using one (and only one) of two possible size parameters
+
+        half_light_radius
+        scale_radius
+
+    and an optional flux parameter [default flux = 1].
+
+    Example:
+    >>> exp_obj = Exponential(flux=3., scale_radius=5.)
+    >>> exp_obj.getHalfLightRadius()
+    8.391734950083302
+    >>> exp_obj = Exponential(flux=3., half_light_radius=1.)
+    >>> exp_obj.getScaleRadius()
+    0.5958243473776976
+
+    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
+    TypeError exception.
+
+    Methods
+    -------
+    The Exponential is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = {}
+    _opt_params = { "flux" : float }
+    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
+
+    # --- Public Class methods ---
+    def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
+        GSObject.__init__(
+            self, galsim.SBExponential(
+                half_light_radius=half_light_radius, scale_radius=scale_radius, flux=flux))
+
+    def getScaleRadius(self):
+        """@brief Return the scale radius for this Exponential profile.
+        """
+        return self.SBProfile.getScaleRadius()
+
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this Exponential profile.
+        """
+        # Factor not analytic, but can be calculated by iterative solution of equation:
+        #  (re / r0) = ln[(re / r0) + 1] + ln(2)
+        return self.SBProfile.getScaleRadius() * 1.6783469900166605
+
+
+class DeVaucouleurs(GSObject):
+    """GalSim DeVaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
+
+    For more details of the DeVaucouleurs Surface Brightness profile, please see the
+    SBDeVaucouleurs documentation produced by doxygen.
+
+    Initialization
+    --------------
+    A DeVaucouleurs is initialized with the half light radius size parameter half_light_radius and
+    an optional flux parameter [default flux = 1].
+
+    Example:
+    >>> dvc_obj = DeVaucouleurs(half_light_radius=2.5, flux=40.)
+    >>> dvc_obj.getHalfLightRadius()
+    2.5
+    >>> dvc_obj.getFlux()
+    40.0
+
+    Methods
+    -------
+    The DeVaucouleurs is a GSObject, and inherits all of the GSObject methods (draw, drawShoot,
+    applyShear etc.) and operator bindings.
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "half_light_radius" : float }
+    _opt_params = { "flux" : float }
+    _single_params = []
+
+    # --- Public Class methods ---
+    def __init__(self, half_light_radius=None, flux=1.):
+        GSObject.__init__(
+            self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, flux=flux))
+
+    def getHalfLightRadius(self):
+        """@brief Return the half light radius for this DeVaucouleurs profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
+
+     
 class RealGalaxy(GSObject):
     """@brief Class describing real galaxies from some training dataset.
 
@@ -958,15 +1227,24 @@ class RealGalaxy(GSObject):
                                 real-space interpolation scheme
                                 [default = galsim.InterpolantXY(galsim.Lanczos(5, 
                                            conserve_flux=True, tol=1.e-4))].
+    @param flux                 Total flux, if None then original flux in galaxy is adopted without
+                                change [default flux = None].
     """
-    def __init__(self, real_galaxy_catalog, index = None, ID = None, random = False,
-                 uniform_deviate = None, interpolant = None):
+
+    # Initialization parameters of the object, with type information
+    _req_params = {}
+    _opt_params = { "index" : int , "flux" : float }
+    _single_params = []
+
+    # --- Public Class methods ---
+    def __init__(self, real_galaxy_catalog, index=None, ID=None, random=False,
+                 uniform_deviate=None, interpolant=None, flux=None):
 
         import pyfits
 
         # Code block below will be for galaxy selection; not all are currently implemented.  Each
-        # option must return an index within the real_galaxy_catalog.
-        use_index = -1
+        # option must return an index within the real_galaxy_catalog.        
+        use_index = None # using -1 here for 'safety' actually indexes in Python without complaint
         if index != None:
             if (ID != None or random == True):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
@@ -978,7 +1256,7 @@ class RealGalaxy(GSObject):
         elif random == True:
             if uniform_deviate == None:
                 uniform_deviate = galsim.UniformDeviate()
-            use_index = int(real_galaxy_catalog.n * uniform_deviate()) 
+            use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
             # this will round down, to get index in range [0, n-1]
         else:
             raise RuntimeError('No method specified for selecting a galaxy!')
@@ -990,69 +1268,81 @@ class RealGalaxy(GSObject):
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
         # consider exporting this code into fits.py in some function that takes a filename and HDU,
         # and returns an ImageView
+
         gal_image = real_galaxy_catalog.getGal(use_index)
         PSF_image = real_galaxy_catalog.getPSF(use_index)
 
         # choose proper interpolant
-        if interpolant != None and isinstance(interpolant, galsim.InterpolantXY) == False:
-            raise RuntimeError('Specified interpolant is not an InterpolantXY!')
-        elif interpolant == None:
+        if interpolant == None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
-            self.Interpolant2D = galsim.InterpolantXY(lan5)
+            self.interpolant = galsim.InterpolantXY(lan5)
         else:
-            self.Interpolant2D = interpolant
+            if not isinstance(interpolant, galsim.InterpolantXY):
+                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+            self.interpolant = interpolant
 
-        # read in data about galaxy from FITS binary table; store as members of RealGalaxy
+        # read in data about galaxy from FITS binary table; store as normal attributes of RealGalaxy
 
-        # save any other relevant information
-        self.catalog_file = real_galaxy_catalog.filename
+        # save any other relevant information as instance attributes
+        self.catalog_file = real_galaxy_catalog.file_name
         self.index = use_index
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
         # note: will be adding more parameters here about noise properties etc., but let's be basic
         # for now
 
-        self.original_image = galsim.SBInterpolatedImage(gal_image, self.Interpolant2D, dx =
-                                                         self.pixel_scale)
-        self.original_PSF = galsim.SBInterpolatedImage(PSF_image, self.Interpolant2D,
-                                                         dx=self.pixel_scale)
+        # save the original image and PSF too
+        self.original_image = galsim.SBInterpolatedImage(
+            gal_image, self.interpolant, dx=self.pixel_scale)
+        self.original_PSF = galsim.SBInterpolatedImage(
+            PSF_image, self.interpolant, dx=self.pixel_scale)
+        
+        if flux != None:
+            self.original_image.setFlux(flux)
+            self.original_image.__class__ = galsim.SBTransform # correctly reflect SBProfile change
         self.original_PSF.setFlux(1.0)
-        psf_inv = galsim.SBDeconvolve(self.original_PSF)
+        self.original_PSF.__class__ = galsim.SBTransform # correctly reflect SBProfile change
 
+        # Calculate the PSF "deconvolution" kernel
+        psf_inv = galsim.SBDeconvolve(self.original_PSF)
+        # Initialize the SBProfile attribute
         GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
 
     def getHalfLightRadius(self):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
                                    +"objects.")
 
+#
+# --- Compound GSObect classes: Add and Convolve ---
+
 class Add(GSObject):
     """@brief Base class for defining the python interface to the SBAdd C++ class.
     """
+    
+    # --- Public Class methods ---
     def __init__(self, *args):
-        # This is a workaround for the fact that Python doesn't allow multiple constructors.
-        # So check the number and type of the arguments here in the single __init__ method.
+
         if len(args) == 0:
-            # No arguments.  Start with none and add objects later with add(obj)
-            GSObject.__init__(self, galsim.SBAdd())
+            # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
+            # exception instead.
+            raise ValueError("Add must be initialized with at least one GSObject.")
         elif len(args) == 1:
-            # 1 argment.  Should be either a GSObject or a list of GSObjects
+            # 1 argument.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], GSObject):
-                # If single argument is a GSObject, then use the SBAdd for a single SBProfile.
-                GSObject.__init__(self, galsim.SBAdd(args[0].SBProfile))
+                SBList = [args[0].SBProfile]
+            elif isinstance(args[0], list):
+                SBList = []
+                for obj in args[0]:
+                    if isinstance(obj, GSObject):
+                        SBList.append(obj.SBProfile)
+                    else:
+                        raise TypeError("Input list must contain only GSObjects.")
             else:
-                # Otherwise, should be a list of GSObjects
-                SBList = [obj.SBProfile for obj in args[0]]
-                GSObject.__init__(self, galsim.SBAdd(SBList))
-        elif len(args) == 2:
-            # 2 arguments.  Should both be GSObjects.
-            GSObject.__init__(self, galsim.SBAdd(args[0].SBProfile,args[1].SBProfile))
-        else:
-            # > 2 arguments.  Convert to a list of SBProfiles
+                raise TypeError("Single input argument must be a GSObject or list of them.")
+            GSObject.__init__(self, galsim.SBAdd(SBList))
+        elif len(args) >= 2:
+            # >= 2 arguments.  Convert to a list of SBProfiles
             SBList = [obj.SBProfile for obj in args]
             GSObject.__init__(self, galsim.SBAdd(SBList))
-
-    def add(self, obj, scale=1.):
-        self.SBProfile.add(obj.SBProfile, scale)
-
 
 class Convolve(GSObject):
     """@brief A class for convolving 2 or more GSObjects.
@@ -1067,7 +1357,7 @@ class Convolve(GSObject):
     back to real space.
    
     The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2)
-    where the sum is over all teh components being convolved.  Since the size of 
+    where the sum is over all the components being convolved.  Since the size of 
     the convolved image scales roughly as the quadrature sum of the components,
     this should be close to Pi/Rmax where Rmax is the radius that encloses
     all but (1-alias_threshold) of the flux in the final convolved image..
@@ -1095,22 +1385,53 @@ class Convolve(GSObject):
     automatically use real-space convolution.  In all other cases, the 
     default is to use the DFT algorithm.
     """
+                    
+    # --- Public Class methods ---
     def __init__(self, *args, **kwargs):
-        # Check kwargs first
+
+        # First check for number of arguments != 0
+        if len(args) == 0:
+            # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
+            # exception instead.
+            raise ValueError("Convolve must be initialized with at least one GSObject.")
+        elif len(args) == 1:
+            if isinstance(args[0], GSObject):
+                SBList = [args[0].SBProfile]
+            elif isinstance(args[0], list):
+                SBList=[]
+                for obj in args[0]:
+                    if isinstance(obj, GSObject):
+                        SBList.append(obj.SBProfile)
+                    else:
+                        raise TypeError("Input list must contain only GSObjects.")
+            else:
+                raise TypeError("Single input argument must be a GSObject or list of them.")
+        elif len(args) >= 2:
+            # >= 2 arguments.  Convert to a list of SBProfiles
+            SBList = []
+            for obj in args:
+                if isinstance(obj, GSObject):
+                    SBList.append(obj.SBProfile)
+                else:
+                    raise TypeError("Input args must contain only GSObjects.")
+
+        # Having built the list of SBProfiles or thrown exceptions if necessary, see now whether
+        # to perform real space convolution...
+
+        # Check kwargs
         # The only kwarg we're looking for is real_space, which can be True or False
         # (default if omitted is None), which specifies whether to do the convolution
         # as an integral in real space rather than as a product in fourier space.
         # If the parameter is omitted (or explicitly given as None I guess), then
         # we will usually do the fourier method.  However, if there are 2 components
         # _and_ both of them have hard edges, then we use real-space convolution.
-        real_space = kwargs.pop("real_space",None)
-
+        real_space = kwargs.pop("real_space", None)
         if kwargs:
             raise TypeError(
                 "Convolve constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
         # If 1 argument, check if it is a list:
-        if len(args) == 1 and isinstance(args[0],list):
+        if len(args) == 1 and isinstance(args[0], list):
             args = args[0]
 
         hard_edge = True
@@ -1126,7 +1447,7 @@ class Convolve(GSObject):
                 real_space = obj.isAnalyticX()
             else:
                 real_space = False
-
+        
         # Warn if doing DFT convolution for objects with hard edges.
         if not real_space and hard_edge:
             import warnings
@@ -1163,147 +1484,19 @@ class Convolve(GSObject):
                         real_space = False
                         break
 
-        if len(args) == 0:
-            GSObject.__init__(self, galsim.SBConvolve(real_space=real_space))
-        elif len(args) == 1:
-            GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile,real_space=real_space))
-        elif len(args) == 2:
-            GSObject.__init__(self, galsim.SBConvolve(
-                    args[0].SBProfile,args[1].SBProfile,real_space=real_space))
-        else:
-            # > 2 arguments.  Convert to a list of SBProfiles
-            SBList = [obj.SBProfile for obj in args]
-            GSObject.__init__(self, galsim.SBConvolve(SBList,real_space=real_space))
-
-    def add(self, obj):
-        self.SBProfile.add(obj.SBProfile)
+        # Then finally initialize the SBProfile using the objects' SBProfiles in SBList
+        GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=real_space))
 
 
 class Deconvolve(GSObject):
     """@brief Base class for defining the python interface to the SBDeconvolve C++ class.
     """
+    # --- Public Class methods ---
     def __init__(self, farg):
-        # the single argument should be one of our base classes
-        GSObject.__init__(self, galsim.SBDeconvolve(farg.SBProfile))
-
-class DoubleGaussian(Add):
-    """Double Gaussian, which is the sum of two Gaussian profiles
-    """
-    def __init__(self, flux1, flux2, sigma1=None, sigma2=None, fwhm1=None, fwhm2=None):
-        sblist = []
-        # Note: we do not have to check for improper args (0 or 2 radii specified) because this is
-        # done in the C++
-        sblist.append(galsim.Gaussian(sigma=sigma1, fwhm=fwhm1, flux=flux1))
-        sblist.append(galsim.Gaussian(sigma=sigma2, fwhm=fwhm2, flux=flux2))
-        galsim.Add.__init__(self, sblist)
-
-
-
-# Now we define a dictionary containing all the GSobject subclass names as keys, referencing a
-# nested dictionary containing the names of their required parameters (not including size), size
-# specification parameters (one of which only must be set), and optional parameters, stored as a
-# tuple of string names in each case.
-#
-# This is useful for I/O, and as a reference.
-#
-# NOTE TO DEVELOPERS: This dict should be kept updated to reflect changes in parameter names or new
-#                     objects.
-#
-object_param_dict = {"Gaussian":       { "required" : (),
-                                         "size" :     ("half_light_radius", "sigma", "fwhm",),
-                                         "optional" : ("flux",) },
-                     "Moffat":         { "required" : ("beta",),
-                                         "size"     : ("half_light_radius", "scale_radius", 
-                                                       "fwhm",),
-                                         "optional" : ("trunc", "flux",) },
-                     "Sersic":         { "required" : ("n",) ,
-                                         "size"     : ("half_light_radius",),
-                                         "optional" : ("flux",) },
-                     "Exponential":    { "required" : (),
-                                         "size"     : ("half_light_radius", "scale_radius"),
-                                         "optional" : ("flux",) },
-                     "DeVaucouleurs":  { "required" : (),
-                                         "size"     : ("half_light_radius",),
-                                         "optional" : ("flux",) },
-                     "Airy":           { "required" : () ,
-                                         "size"     : ("D",) ,
-                                         "optional" : ("obs", "flux",)},
-                     "Kolmogorov":     { "required" : () ,
-                                         "size"     : ("lam_over_r0", "fwhm", "half_light_radius") ,
-                                         "optional" : ("flux",)},
-                     "Pixel":          { "required" : ("xw", "yw",),
-                                         "size"     : (),
-                                         "optional" : ("flux",) },
-                     "OpticalPSF":     { "required" : (),
-                                         "size"     : ("lam_over_D",),
-                                         "optional" : ("defocus", "astig1", "astig2", "coma1",
-                                                       "coma2", "spher", "circular_pupil",
-                                                       "interpolantxy", "dx", "oversampling",
-                                                       "pad_factor") },
-                     "DoubleGaussian": { "required" : (), 
-                                         "size"     : ("sigma1, sigma2, fwhm1, fwhm2",), 
-                                         "optional" : () },
-                     "AtmosphericPSF": { "required" : (),
-                                         "size"     : ("fwhm", "lam_over_r0"),
-                                         "optional" : ("dx", "oversampling") } }
-
-
-class AttributeDict(object):
-    """@brief Dictionary class that allows for easy initialization and refs to key values via
-    attributes.
-
-    NOTE: Modified a little from Jim's bot.git AttributeDict class  (Jim, please review!) so that...
-
-    ...Tab completion now works in ipython (it didn't with the bot.git version on my build) since
-    attributes are actually added to __dict__.
-    
-    HOWEVER this means I have redefined the __dict__ attribute to be a collections.defaultdict()
-    so that Jim's previous default attrbiute behaviour is also replicated.
-
-    I prefer this, as a newbie who uses ipython and the tab completion function to aid development,
-    but does it potentially break something down the line or add undesirable behaviour? (I guessed
-    not, since collections.defaultdict objects have all the usual dict() methods, but I cannot be
-    sure.)
-    """
-    def __init__(self):
-        object.__setattr__(self, "__dict__", collections.defaultdict(AttributeDict))
-
-    def __getattr__(self, name):
-        return self.__dict__[name]
-
-    def __setattr__(self, name, value):
-        self.__dict__[name] = value
-
-    def merge(self, other):
-        self.__dict__.update(other.__dict__)
-
-    def _write(self, output, prefix=""):
-        for k, v in self.__dict__.iteritems():
-            if isinstance(v, AttributeDict):
-                v._write(output, prefix="{0}{1}.".format(prefix, k))
-            else:
-                output.append("{0}{1} = {2}".format(prefix, k, repr(v)))
-
-    def __nonzero__(self):
-        return not not self.__dict__
-
-    def __repr__(self):
-        output = []
-        self._write(output, "")
-        return "\n".join(output)
-
-    __str__ = __repr__
-
-    def __len__(self):
-        return len(self.__dict__)
-
-
-class Config(AttributeDict):
-    """@brief Config class that is basically a renamed AttributeDict, and allows for easy
-    initialization and refs to key values via attributes.
-    """
-    def __init__(self):
-        AttributeDict.__init__(self)
-
+        if isinstance(farg, GSObject):
+            self.farg = farg
+            GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile))
+        else:
+            raise TypeError("Argument farg must be a GSObject.")
 
 

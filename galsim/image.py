@@ -72,7 +72,7 @@ def Image_getstate(self):
     return self.array, self.xMin, self.yMin
 
 def Image_setstate(self, args):
-    type = self.array.dtype.type
+    type = args[0].dtype.type
     self.__class__ = _galsim.ImageView[type]
     self.__init__(*args)
 

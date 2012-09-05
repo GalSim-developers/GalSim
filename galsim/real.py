@@ -4,7 +4,7 @@ import utilities
 """@file real.py @brief Necessary functions for dealing with real galaxies and their catalogs.
 """
 
-class RealGalaxyCatalog:
+class RealGalaxyCatalog(object):
     """@brief Class containing a catalog with information about real galaxy training data.
 
     The RealGalaxyCatalog class reads in and stores information about a specific training sample of
@@ -22,37 +22,52 @@ class RealGalaxyCatalog:
 
     Parameters
     ----------
-    @param filename   The file containing the catalog (including full path).
-    @param imagedir   The directory containing the images.
+    @param file_name   The file containing the catalog.
+    @param image_dir   The directory containing the images.
+    @param dir         The directory of catalog file (optional)
+    @param preload     Whether to preload the header information. (default = False)
     """
-    def __init__(self, filename, imagedir):
+    _req_params = { 'file_name' : str , 'image_dir' : str }
+    _opt_params = { 'dir' : str, 'preload' : bool }
+    _single_params = []
+
+    def __init__(self, file_name, image_dir, dir=None, preload=False):
         import os
-        if not os.path.isdir(imagedir):
-            raise RuntimeError(imagedir+' directory does not exist!')
+        # First build full file_name
+        self.file_name = file_name
+        if not os.path.isdir(image_dir):
+            raise RuntimeError(image_dir+' directory does not exist!')
+        self.image_dir = image_dir
+        if dir is None: dir = image_dir
+        self.file_name = os.path.join(dir,self.file_name)
+
         import pyfits
-        cat = pyfits.getdata(filename)
-        self.filename = filename # store the filename from which the catalog was read
-        self.imagedir = imagedir # store the directory containing all image files (gal, PSF)
-        self.n = len(cat) # number of objects in the catalog
-        self.ident = cat.field('ident') # ID for object in the training sample
-        self.gal_filename = cat.field('gal_filename') # file containing the galaxy image
-        self.PSF_filename = cat.field('PSF_filename') # file containing the PSF image
-        self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
-        self.PSF_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
-        self.pixel_scale = cat.field('pixel_scale') # pixel scale for the image (could be different
-        # if we have training data from other datasets... let's be general here and make it a vector
-        # in case of mixed training set)
-        self.mag = cat.field('mag') # apparent magnitude
-        self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., "F814W"
-        self.weight = cat.field('weight') # weight factor to account for size-dependent probability
-        self.preloaded = False
-        # of galaxy inclusion in training sample
+        try:
+            cat = pyfits.getdata(self.file_name)
+            self.nobjects = len(cat) # number of objects in the catalog
+            self.ident = cat.field('ident') # ID for object in the training sample
+            self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
+            self.PSF_file_name = cat.field('PSF_filename') # file containing the PSF image
+            self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
+            self.PSF_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
+            self.pixel_scale = cat.field('pixel_scale') # pixel scale for the image (could be different
+            # if we have training data from other datasets... let's be general here and make it a vector
+            # in case of mixed training set)
+            self.mag = cat.field('mag') # apparent magnitude
+            self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., "F814W"
+            self.weight = cat.field('weight') # weight factor to account for size-dependent probability
+        except Exception, e:
+            print e
+            raise RuntimeError("Unable to read real galaxy catalog %s."%self.file_name)
 
-        ## eventually I think we'll want information about the training dataset, 
-        ## i.e. (dataset, ID within dataset)
+        if preload:
+            self.preload()
+            self.preloaded = True
+        else:
+            self.preloaded = False
 
-        # note: am assuming that pyfits takes care of error handling, e.g., if the file does not
-        # exist, there's no field with that name, etc.
+        # eventually I think we'll want information about the training dataset, 
+        # i.e. (dataset, ID within dataset)
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
     def get_index_for_id(self, ID):
@@ -76,47 +91,47 @@ class RealGalaxyCatalog:
         import os
         self.preloaded = True
         self.loaded_files = {}
-        for filename in self.gal_filename:
-            if filename not in self.loaded_files:
-                full_filename = os.path.join(self.imagedir,filename)
-                self.loaded_files[filename] = pyfits.open(full_filename)
-        for filename in self.PSF_filename:
-            if filename not in self.loaded_files:
-                full_filename = os.path.join(self.imagedir,filename)
-                self.loaded_files[filename] = pyfits.open(full_filename)
+        for file_name in self.gal_file_name:
+            if file_name not in self.loaded_files:
+                full_file_name = os.path.join(self.image_dir,file_name)
+                self.loaded_files[file_name] = pyfits.open(full_file_name)
+        for file_name in self.PSF_file_name:
+            if file_name not in self.loaded_files:
+                full_file_name = os.path.join(self.image_dir,file_name)
+                self.loaded_files[file_name] = pyfits.open(full_file_name)
 
     def getGal(self,i):
         """
         Returns the galaxy at index i as an ImageViewD object.
         """
-        if i >= len(self.gal_filename):
+        if i >= len(self.gal_file_name):
             raise IndexError(
-                'index %d given to getGal is out of range (0..%d)'%(i,len(self.gal_filename)-1))
+                'index %d given to getGal is out of range (0..%d)'%(i,len(self.gal_file_name)-1))
         import pyfits
         import os
         import numpy
         if self.preloaded:
-            array = self.loaded_files[self.gal_filename[i]][self.gal_hdu[i]].data
+            array = self.loaded_files[self.gal_file_name[i]][self.gal_hdu[i]].data
         else:
-            filename = os.path.join(self.imagedir,self.gal_filename[i])
-            array = pyfits.getdata(filename,self.gal_hdu[i])
+            file_name = os.path.join(self.image_dir,self.gal_file_name[i])
+            array = pyfits.getdata(file_name,self.gal_hdu[i])
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
     def getPSF(self,i):
         """
         Returns the PSF at index i as an ImageViewD object.
         """
-        if i >= len(self.PSF_filename):
+        if i >= len(self.PSF_file_name):
             raise IndexError(
-                'index %d given to getPSF is out of range (0..%d)'%(i,len(self.PSF_filename)-1))
+                'index %d given to getPSF is out of range (0..%d)'%(i,len(self.PSF_file_name)-1))
         import pyfits
         import os
         import numpy
         if self.preloaded:
-            array = self.loaded_files[self.PSF_filename[i]][self.PSF_hdu[i]].data
+            array = self.loaded_files[self.PSF_file_name[i]][self.PSF_hdu[i]].data
         else:
-            filename = os.path.join(self.imagedir,self.PSF_filename[i])
-            array = pyfits.getdata(filename,self.PSF_hdu[i])
+            file_name = os.path.join(self.image_dir,self.PSF_file_name[i])
+            array = pyfits.getdata(file_name,self.PSF_hdu[i])
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
 
@@ -202,7 +217,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
 
     # shear
     if (g1 != 0.0 or g2 != 0.0):
-        real_galaxy_copy.applyShear(g1=g1,g2=g2)
+        real_galaxy_copy.applyShear(g1=g1, g2=g2)
 
     # convolve, resample
     out_gal = galsim.Convolve([real_galaxy_copy, galsim.GSObject(target_PSF)])

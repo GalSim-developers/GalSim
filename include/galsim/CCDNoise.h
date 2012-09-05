@@ -36,10 +36,11 @@ namespace galsim {
          * @param[in] readNoise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
          */
         CCDNoise(double gain=1., double readNoise=0.):
+            BaseDeviate(),
             _gain(gain),
             _readNoise(readNoise),
-            _gd(0., 1.),
-            _pd(_gd) 
+            _gd(*this,0., 1.),
+            _pd(*this) 
         {
             if (_readNoise > 0.) _gd.setSigma( _readNoise / (_gain > 0. ? _gain : 1.));
         }
@@ -52,10 +53,11 @@ namespace galsim {
          * @param[in] readNoise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
          */
         CCDNoise(long lseed, double gain=1., double readNoise=0.):
+            BaseDeviate(lseed),
             _gain(gain),
             _readNoise(readNoise),
-            _gd(lseed, 0., 1.),
-            _pd(_gd) 
+            _gd(*this, 0., 1.),
+            _pd(*this) 
         {
             if (_readNoise > 0.) _gd.setSigma( _readNoise / (_gain > 0. ? _gain : 1.));
         }
@@ -67,7 +69,8 @@ namespace galsim {
          * @param[in] gain      Electrons per ADU in the input Images, used for Poisson noise.
          * @param[in] readNoise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
          */
-        CCDNoise(const BaseDeviate& dev, double gain=1., double readNoise=0.):
+        CCDNoise(const BaseDeviate& dev, double gain=1., double readNoise=0.) :
+            BaseDeviate(dev),
             _gain(gain),
             _readNoise(readNoise),
             _gd(dev, 0., 1.),

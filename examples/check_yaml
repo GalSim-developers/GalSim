@@ -1,0 +1,52 @@
+#!/bin/bash
+
+/bin/rm output/*
+/bin/rm output_yaml/*
+
+BasicDemo.py 1
+galsim_yaml BD1.yaml
+
+BasicDemo.py 2
+galsim_yaml BD2.yaml
+
+BasicDemo.py 3
+galsim_yaml BD3.yaml
+
+MultiObjectDemo.py 1
+galsim_yaml MOD1.yaml
+
+MultiObjectDemo.py 2
+galsim_yaml MOD2.yaml
+
+MultiObjectDemo.py 3
+galsim_yaml MOD3.yaml
+
+MultiObjectDemo.py 4
+galsim_yaml MOD4.yaml
+
+MultiObjectDemo.py 5
+galsim_yaml MOD5.yaml
+
+echo 'Checking diffs: (No output means success)'
+
+# Don't check demo1, since it doesn't use a deterministic seed.
+# If you add an initial seed in both places, then you can uncomment 
+# the next line and it should work.
+#diff output/demo1.fits output_yaml/demo1.fits 
+
+diff output/demo2.fits output_yaml/demo2.fits 
+diff output/demo3.fits output_yaml/demo3.fits 
+diff output/demo3_epsf.fits output_yaml/demo3_epsf.fits 
+
+diff output/multi.fits output_yaml/multi.fits 
+
+diff output/g08_psf.fits output_yaml/g08_psf.fits
+diff output/g08_gal.fits output_yaml/g08_gal.fits
+
+diff output/psf_real.fits output_yaml/psf_real.fits
+diff output/cube_real.fits output_yaml/cube_real.fits 
+
+diff output/cube_phot.fits output_yaml/cube_phot.fits 
+
+diff output/bpd_single.fits output_yaml/bpd_single.fits 
+diff output/bpd_multi.fits output_yaml/bpd_multi.fits 
