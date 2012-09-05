@@ -195,17 +195,7 @@ struct PyCCDNoise{
     static void wrapTemplates(W & wrapper) {
         wrapper
             .def("applyTo", (void (CCDNoise::*) (ImageView<U>) )&CCDNoise::applyTo,
-                 "\n"
-                 "Add noise to an input Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> CCDNoise.applyTo(image) \n"
-                 "\n"
-                 "On output the Image instance image will have been given an additional\n"
-                 "stochastic noise according to the gain and read noise settings of the CCDNoise\n"
-                 "instance.\n",
-                 (bp::arg("image")))
+                 "", (bp::arg("image")))
             ;
     }
 
@@ -225,12 +215,10 @@ struct PyCCDNoise{
             .def(bp::init<const BaseDeviate&, double, double>(
                 (bp::arg("dev"), bp::arg("gain")=1., bp::arg("read_noise")=0.)
                 ))
-            .def("getGain", &CCDNoise::getGain, "Get gain in current noise model.")
-            .def("setGain", &CCDNoise::setGain, "Set gain in current noise model.")
-            .def("getReadNoise", &CCDNoise::getReadNoise, 
-                 "Get read noise in current noise model.")
-            .def("setReadNoise", &CCDNoise::setReadNoise, 
-                 "Set read noise in current noise model.")
+            .def("getGain", &CCDNoise::getGain, "")
+            .def("setGain", &CCDNoise::setGain, "")
+            .def("getReadNoise", &CCDNoise::getReadNoise, "")
+            .def("setReadNoise", &CCDNoise::setReadNoise, "")
             ;
         wrapTemplates<int>(pyCCDNoise);
         wrapTemplates<short>(pyCCDNoise);
