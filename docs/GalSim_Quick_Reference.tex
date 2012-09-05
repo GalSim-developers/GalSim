@@ -1,0 +1,102 @@
+\documentclass[preprint,10pt]{aastex}
+
+% packages for figures
+\usepackage{graphicx}
+% packages for symbols
+\usepackage{latexsym,amssymb}
+% AMS-LaTeX package for e.g. subequations
+\usepackage{amsmath}
+
+%=====================================================================
+% FRONT MATTER
+%=====================================================================
+
+\slugcomment{Draft \today}
+
+%=====================================================================
+% BEGIN DOCUMENT
+%=====================================================================
+
+\newcommand{\gsobject}{{\tt GSObject}}
+\newcommand{\image}{{\tt Image}}
+
+\begin{document}
+
+\title{GalSim Library Quick Reference}
+
+\section{Overview}
+The GalSim Library provides a number of Python classes and methods for
+simulating astronomical images.  The fundamental work flow will
+normally be something like:
+\begin{itemize}
+
+\item Construct a representation of your desired astronomical object
+  as a single GalSim \gsobject~instance or in combination using the special {\tt Add} and
+  {\tt Convolve} compound-type \gsobject s --- see Section \ref{sect:gsobjects}.
+\item \emph{Optional}: Apply transformations such as shear or magnification using
+  the methods of the resulting \gsobject~instance --- see Section \ref{sect:gsobjects}.
+\item Draw the object into a GalSim \image~object representing a
+  postage stamp image of your astronomical object.  This can be done
+  using the {\tt draw()} or {\tt drawShoot()} methods carried by all
+  \gsobject s for rendering images ({\tt drawShoot} uses photon
+  shooting) --- see Section \ref{sect:gsobjects}.
+\item \emph{Optional}: Add noise to the \image~using one of the GalSim random
+  deviate classes --- see Section \ref{sect:random}.
+\item \emph{Optional}: Add the postage stamp \image~to a subsection of
+  a larger \image~ instance, or to a larger
+  structure containing multiple \image~instances each derived from \gsobject s
+  as described above --- see Section \ref{sect:image}.
+\item Save the \image (s) to file in FITS (Flexible Image Transport
+  System) format --- see Section \ref{sect:image}.
+\end{itemize}
+
+There are many examples of this workflow in the directory {\tt
+  GalSim/examples/}, in the example scripts {\tt BasicDemo.py},
+{\tt MultiObjectDemo.py} and {\tt RealDemo.py}.  We now provide a
+brief, reference description of the GalSim classes and methods which
+can be used in this workflow.
+
+\newpage 
+
+\section{GSObject classes and methods}\label{sect:gsobjects}
+\subsection{Lists of available GSObjects}
+\subsubsection*{Simple GSObjects}
+In the order in which the classes
+appear in {\tt GalSim/galsim/base.py}:
+\begin{itemize}
+\item[] Gaussian
+\item[] Moffat
+\item[] AtmosphericPSF
+\item[] Airy
+\item[] Kolmogorov
+\item[] OpticalPSF
+\item[] Pixel
+\item[] Sersic
+\item[] Exponential
+\item[] DeVaucouleurs
+\item[] RealGalaxy
+\end{itemize}
+
+\subsubsection*{Compound GSObjects}
+In the order in which the classes
+appear in {\tt GalSim/galsim/base.py}:
+\begin{itemize}
+\item[] Add
+\item[] Convolve
+\end{itemize}
+
+\subsection{Initializing GSObjects}
+All \gsobject s are initialized using a similar pattern, and
+
+\begin{itemize}
+\item {\tt Gaussian} \\
+  Requires a single (i.e.\ at least one, but no more than one) 
+\end{itemize}
+
+\section{Random deviate classes and methods}\label{sect:random}
+
+
+\section{Image classes and methods}\label{sect:image}
+
+
+\end{document}
