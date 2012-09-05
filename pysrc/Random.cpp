@@ -45,8 +45,7 @@ struct PyUniformDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (UniformDeviate::*) (ImageView<U>) )&UniformDeviate::applyTo,
-                 "",
+            .def("applyTo", (void (UniformDeviate::*) (ImageView<U>) )&UniformDeviate::applyTo, "",
                  (bp::arg("image")))
             ;
     }
@@ -156,8 +155,8 @@ struct PyPoissonDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (PoissonDeviate::*) (ImageView<U>) )&PoissonDeviate::applyTo,
-                 "", (bp::arg("image")))
+            .def("applyTo", (void (PoissonDeviate::*) (ImageView<U>) )&PoissonDeviate::applyTo, "",
+                 (bp::arg("image")))
             ;
     }
 
@@ -194,8 +193,8 @@ struct PyCCDNoise{
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (CCDNoise::*) (ImageView<U>) )&CCDNoise::applyTo,
-                 "", (bp::arg("image")))
+            .def("applyTo", (void (CCDNoise::*) (ImageView<U>) )&CCDNoise::applyTo, "", 
+                 (bp::arg("image")))
             ;
     }
 
@@ -273,16 +272,7 @@ struct PyGammaDeviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (GammaDeviate::*) (ImageView<U>) )&GammaDeviate::applyTo,
-                 "\n"
-                 "Add Gamma-distributed deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> GammaDeviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "GammaDeviate return value added to it, with current values of alpha and beta.\n",
+            .def("applyTo", (void (GammaDeviate::*) (ImageView<U>) )&GammaDeviate::applyTo, "", 
                  (bp::arg("image")))
             ;
     }
@@ -303,18 +293,11 @@ struct PyGammaDeviate {
             .def(bp::init<const BaseDeviate&, double, double>(
                 (bp::arg("dev"), bp::arg("alpha")=1., bp::arg("beta")=1.)
                 ))
-            .def("__call__", &GammaDeviate::operator(),
-                 "Draw a new random number from the distribution.\n"
-                 "\n"
-                 "Returns a Gamma-distributed deviate with current alpha and beta.\n")
-            .def("getAlpha", &GammaDeviate::getAlpha, 
-                 "Get current distribution shape parameter alpha.")
-            .def("setAlpha", &GammaDeviate::setAlpha, 
-                 "Set current distribution shape parameter alpha.")
-            .def("getBeta", &GammaDeviate::getBeta, 
-                 "Get current distribution scale parameter beta.")
-            .def("setBeta", &GammaDeviate::setBeta, 
-                 "Set current distribution scale parameter beta.")
+            .def("__call__", &GammaDeviate::operator(), "")
+            .def("getAlpha", &GammaDeviate::getAlpha, "")
+            .def("setAlpha", &GammaDeviate::setAlpha, "")
+            .def("getBeta", &GammaDeviate::getBeta, "")
+            .def("setBeta", &GammaDeviate::setBeta, "")
             ;
         wrapTemplates<int>(pyGammaDeviate);
         wrapTemplates<short>(pyGammaDeviate);
@@ -329,17 +312,7 @@ struct PyChi2Deviate {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (Chi2Deviate::*) (ImageView<U>) )&Chi2Deviate::applyTo,
-                 "\n"
-                 "Add Chi^2-distributed deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> Chi2Deviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "Chi2Deviate return value added to it, with current degrees-of-freedom.\n"
-                 "parameter n.\n",
+            .def("applyTo", (void (Chi2Deviate::*) (ImageView<U>) )&Chi2Deviate::applyTo, "",
                  (bp::arg("image")))
             ;
     }
@@ -360,14 +333,9 @@ struct PyChi2Deviate {
             .def(bp::init<const BaseDeviate&, double>(
                 (bp::arg("dev"), bp::arg("n")=1.)
                 ))
-            .def("__call__", &Chi2Deviate::operator(),
-                 "Draw a new random number from the distribution.\n"
-                 "\n"
-                 "Returns a Chi2-distributed deviate with current n degrees of freedom.\n")
-            .def("getN", &Chi2Deviate::getN, 
-                 "Get current distribution n degrees of freedom.")
-            .def("setN", &Chi2Deviate::setN, 
-                 "Set current distribution n degrees of freedom.")
+            .def("__call__", &Chi2Deviate::operator(), "")
+            .def("getN", &Chi2Deviate::getN, "")
+            .def("setN", &Chi2Deviate::setN, "")
             ;
         wrapTemplates<int>(pyChi2Deviate);
         wrapTemplates<short>(pyChi2Deviate);

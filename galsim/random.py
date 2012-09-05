@@ -442,6 +442,29 @@ To get and set the deviate parameters, see the docstrings for the .getAlpha(), .
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
+_galsim.GammaDeviate.applyTo.__func__.__doc__ = """
+Add Gamma-distributed deviates to every element in a supplied Image.
+
+Calling
+-------
+>>> GammaDeviate.applyTo(image)
+
+On output each element of the input Image will have a pseudo-random GammaDeviate return value added
+to it, with current values of alpha and beta.
+"""
+
+_galsim.GammaDeviate.__call__.__func__.__doc__ = """
+Draw a new random number from the distribution.
+
+Returns a Gamma-distributed deviate with current alpha and beta.
+"""
+_galsim.GammaDeviate.getAlpha.__func__.__doc__ = "Get current distribution shape parameter alpha."
+_galsim.GammaDeviate.setAlpha.__func__.__doc__ = "Set current distribution shape parameter alpha."
+_galsim.GammaDeviate.getBeta.__func__.__doc__ = "Get current distribution shape parameter beta."
+_galsim.GammaDeviate.setBeta.__func__.__doc__ = "Set current distribution shape parameter beta."
+
+
+# Chi2Deviate docstrings
 _galsim.Chi2Deviate.__doc__ = """
 Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter n.
 
@@ -485,3 +508,21 @@ instance.
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
+_galsim.Chi2Deviate.applyTo.__func__.__doc__ = """
+Add Chi^2-distributed deviates to every element in a supplied Image.
+
+Calling
+-------
+>>> Chi2Deviate.applyTo(image)
+
+On output each element of the input Image will have a pseudo-random Chi2Deviate return value added 
+to it, with current degrees-of-freedom parameter n.
+"""
+
+_galsim.Chi2Deviate.__call__.__func__.__doc__ = """
+Draw a new random number from the distribution.
+
+Returns a Chi2-distributed deviate with current n degrees of freedom.
+"""
+_galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution n degrees of freedom."
+_galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution n degrees of freedom."
