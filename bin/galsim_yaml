@@ -13,7 +13,7 @@ import yaml
 
 def MergeConfig(config1, config2, logger=None):
     """
-    Merge config2 into config1 sucth that it has all the information from either config1 or 
+    Merge config2 into config1 such that it has all the information from either config1 or 
     config2 including places where both input dicts have some of a field defined.
     e.g. config1 has image.pixel_scale, and config2 has image.noise.
             Then the returned dict will have both.
