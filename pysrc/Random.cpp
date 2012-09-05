@@ -46,15 +46,7 @@ struct PyUniformDeviate {
     static void wrapTemplates(W & wrapper) {
         wrapper
             .def("applyTo", (void (UniformDeviate::*) (ImageView<U>) )&UniformDeviate::applyTo,
-                 "\n"
-                 "Add Uniform deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> UniformDeviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "UniformDeviate return value added to it.\n",
+                 "",
                  (bp::arg("image")))
             ;
     }
