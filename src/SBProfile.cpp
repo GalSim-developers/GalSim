@@ -5,12 +5,10 @@
 #include "SBTransform.h"
 #include "SBProfileImpl.h"
 #include "FFT.h"
-#include <iomanip>
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-std::ostream* dbgout = &std::cout;
+std::ostream* dbgout = new std::ofstream("debug.out");
 int verbose_level = 2;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
@@ -239,9 +237,9 @@ namespace galsim {
     {
         dbg<<"Start plainDraw ImageView"<<std::endl;
         // Determine desired dx:
-        dbg<<"maxK = "<<std::setprecision(15)<<maxK()<<std::endl;
+        dbg<<"maxK = "<<maxK()<<std::endl;
         if (dx<=0.) dx = M_PI / maxK();
-        dbg<<"dx = "<<std::setprecision(15)<<dx<<std::endl;
+        dbg<<"dx = "<<dx<<std::endl;
         // recenter an existing image, to be consistent with fourierDraw:
         I.setCenter(0,0);
 
@@ -254,9 +252,9 @@ namespace galsim {
     {
         dbg<<"Start plainDraw Image"<<std::endl;
         // Determine desired dx:
-        dbg<<"maxK = "<<std::setprecision(15)<<maxK()<<std::endl;
+        dbg<<"maxK = "<<maxK()<<std::endl;
         if (dx<=0.) dx = M_PI / maxK();
-        dbg<<"dx = "<<std::setprecision(15)<<dx<<std::endl;
+        dbg<<"dx = "<<dx<<std::endl;
         if (!I.getBounds().isDefined()) {
             if (wmult<1) throw SBError("Requested wmult<1 in plainDraw()");
             // Need to choose an image size
@@ -322,13 +320,13 @@ namespace galsim {
             dx = M_PI / maxK();
         }
 
-        dbg << " maxK() " << std::setprecision(15)<<maxK() << " dx " << std::setprecision(15)<<dx << std::endl;
+        dbg << " maxK() " << maxK() << " dx " << dx << std::endl;
 
         // Now decide how big the FT must be to avoid folding:
         double xRange = 2*M_PI*wmult / stepK();
         // Some slop to keep from getting extra pixels due to roundoff errors in calculations.
         int Nnofold = int(std::ceil(xRange / dx -0.0001));
-        dbg << " stepK() " << std::setprecision(15)<<stepK() << " Nnofold " << Nnofold << std::endl;
+        dbg << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
 
         // W must make something big enough to cover the target image size:
         int xSize, ySize;
@@ -416,13 +414,13 @@ namespace galsim {
             dx = M_PI / maxK();
         }
 
-        dbg << " maxK() " << std::setprecision(15)<<maxK() << " dx " << dx << std::endl;
+        dbg << " maxK() " << maxK() << " dx " << dx << std::endl;
 
         // Now decide how big the FT must be to avoid folding:
         double xRange = 2*M_PI*wmult / stepK();
         // Some slop to keep from getting extra pixels due to roundoff errors in calculations.
         int Nnofold = int(std::ceil(xRange / dx -0.0001));
-        dbg << " stepK() " << std::setprecision(15)<<stepK() << " Nnofold " << Nnofold << std::endl;
+        dbg << " stepK() " << stepK() << " Nnofold " << Nnofold << std::endl;
 
         // And if there is a target image size, we must make something big enough to cover
         // the target image size:

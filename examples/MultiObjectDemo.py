@@ -447,8 +447,8 @@ def Script3():
 
     # Define some parameters we'll use below.
 
-    cat_file_name = os.path.join('data','real_galaxy_catalog_example.fits')
-    image_dir = os.path.join('data')
+    cat_file_name = 'real_galaxy_catalog_example.fits'
+    image_dir = 'data'
     cube_file_name = os.path.join('output','cube_real.fits')
     psf_file_name = os.path.join('output','psf_real.fits')
 

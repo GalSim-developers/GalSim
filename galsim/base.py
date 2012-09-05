@@ -10,8 +10,6 @@ class GSObject(object):
     """@brief Base class for defining the interface with which all GalSim Objects access their
     shared methods and attributes, particularly those from the C++ SBProfile classes.
     """
-
-    # --- Initialization ---
     def __init__(self, SBProfile):
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
     
@@ -230,12 +228,13 @@ class GSObject(object):
                 raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
             if not isinstance(args[0], galsim.Shear):
                 raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
-            ellipse = galsim.Ellipse(args[0])
+            shear = args[0]
         elif len(args) > 1:
             raise TypeError("Error, too many unnamed arguments to applyShear!")
         else:
-            ellipse = galsim.Ellipse(galsim.Shear(**kwargs))
-        self.applyTransformation(ellipse)
+            shear = galsim.Shear(**kwargs)
+        self.SBProfile.applyShear(shear._shear)
+        self.__class__ = GSObject
 
     def applyRotation(self, theta):
         """@brief Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
@@ -258,8 +257,8 @@ class GSObject(object):
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
         """
-        ellipse = galsim.Ellipse(x_shift=dx, y_shift=dy)
-        self.applyTransformation(ellipse)
+        self.SBProfile.applyShift(dx,dy)
+        self.__class__ = GSObject
 
     # Also add methods which create a new GSObject with the transformations applied...
     #
@@ -471,7 +470,7 @@ class GSObject(object):
         provided a large enough image to catch most of the flux.  For example:
         @code
         image, added_flux = obj.drawShoot(image)
-        assert added_flux > 0.99 * obj.flux
+        assert added_flux > 0.99 * obj.getFlux()
         @endcode
         However, the appropriate threshold will depend things like whether you are 
         keeping poisson_flux=True, how high the flux is, how big your images are relative to

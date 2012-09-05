@@ -609,6 +609,5 @@ if __name__ == "__main__":
     test_sersic_flux_scaling()
     test_exponential_flux_scaling()
     test_devaucouleurs_flux_scaling()
-    test_doublegaussian_flux_scaling()
     test_add_flux_scaling()
     test_convolve_flux_scaling()
