@@ -185,8 +185,8 @@ Methods
 To add deviates to every element of an image, see the docstring for the .applyTo() method of each
 instance.
 
-To get and set the deviate parameter, see the docstrings for the .getMean(), method of each
-instance.
+To get and set the deviate parameter, see the docstrings for the .getMean(), .setMean() method of 
+each instance.
 
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
@@ -330,5 +330,46 @@ To get and set the deviate parameters, see the docstrings for the .getAlpha(), .
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
+_galsim.Chi2Deviate.__doc__ = """
+Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter n.
 
+See http://en.wikipedia.org/wiki/Chi-squared_distribution (although note that in the Boost random 
+routine this class calls the notation adopted interprets k=n).  The Chi^2 distribution is a real 
+valued distribution producing deviates >= 0.
+
+Initialization
+--------------
+
+>>> chis = Chi2Deviate(n=1.)
+
+Initializes chis to be a Chi2Deviate instance using the current time for the seed.
+
+>>> chis = Chi2Deviate(lseed, n=1.)
+
+Initializes chis using the specified seed.
+
+>>> chis = Chi2Deviate(dev, n=1.)
+
+Initializes chis to share the same underlying random number generator as dev.
+
+Parameters:
+    n   number of degrees of freedom for the output distribution (default n = 1).
+
+n must be > 0.
+
+Calling
+-------
+Taking the instance from the above examples, successive calls to g() will return successive, 
+pseudo-random Chi^2-distributed deviates with degrees-of-freedom parameter n.
+
+Methods
+-------
+To add deviates to every element of an image, see the docstring for the .applyTo() method of each
+instance.
+
+To get and set the deviate parameter, see the docstrings for the .getN(), .setN() methods of each
+instance.
+
+These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
+"""
 
