@@ -81,9 +81,8 @@
 "#" : "We need to define where the real galaxy input catalog is.",
 "input" : {
     "real_catalog" : {
-        "dir" : "data",
-        "file_name" : "real_galaxy_catalog_example.fits",
         "image_dir" : "data",
+        "file_name" : "real_galaxy_catalog_example.fits",
         "preload" : true
     }
 },

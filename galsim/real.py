@@ -35,11 +35,11 @@ class RealGalaxyCatalog(object):
         import os
         # First build full file_name
         self.file_name = file_name
-        if dir:
-            self.file_name = os.path.join(dir,self.file_name)
         if not os.path.isdir(image_dir):
             raise RuntimeError(image_dir+' directory does not exist!')
         self.image_dir = image_dir
+        if dir is None: dir = image_dir
+        self.file_name = os.path.join(dir,self.file_name)
 
         import pyfits
         try:

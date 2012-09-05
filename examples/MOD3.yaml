@@ -102,9 +102,8 @@ image :
 # We need to define where the real galaxy input catalog is.
 input :
     real_catalog :
-        dir : data
-        file_name : real_galaxy_catalog_example.fits
         image_dir : data
+        file_name : real_galaxy_catalog_example.fits
         preload : True   # This usually makes a big improvement in speed
 
 # Define the output formats

@@ -1,3 +1,4 @@
+
 import numpy as np
 import os
 import sys
@@ -68,11 +69,11 @@ def test_float_value():
     # Test values read from an InputCatalog
     input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
     config['catalog'] = input_cat
-    cat1 = [ galsim.config.ParseValue(config,'cat1',config, float)[0] for k in range(3) ]
-    np.testing.assert_array_almost_equal(cat1, [ 1.234, 2.345, 3.456 ])
+    cat1 = [ galsim.config.ParseValue(config,'cat1',config, float)[0] for k in range(5) ]
+    np.testing.assert_array_almost_equal(cat1, [ 1.234, 2.345, 3.456, 1.234, 2.345 ])
 
-    cat2 = [ galsim.config.ParseValue(config,'cat2',config, float)[0] for k in range(3) ]
-    np.testing.assert_array_almost_equal(cat2, [ 4.131, -900, 8000 ])
+    cat2 = [ galsim.config.ParseValue(config,'cat2',config, float)[0] for k in range(5) ]
+    np.testing.assert_array_almost_equal(cat2, [ 4.131, -900, 8000, 4.131, -900 ])
 
     # Test values generated from a uniform deviate
     rng = galsim.UniformDeviate(1234)
@@ -200,11 +201,11 @@ def test_int_value():
     # Test values read from an InputCatalog
     input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
     config['catalog'] = input_cat
-    cat1 = [ galsim.config.ParseValue(config,'cat1',config, int)[0] for k in range(3) ]
-    np.testing.assert_array_equal(cat1, [ 9, 0, -4 ])
+    cat1 = [ galsim.config.ParseValue(config,'cat1',config, int)[0] for k in range(5) ]
+    np.testing.assert_array_equal(cat1, [ 9, 0, -4, 9, 0 ])
 
-    cat2 = [ galsim.config.ParseValue(config,'cat2',config, int)[0] for k in range(3) ]
-    np.testing.assert_array_equal(cat2, [ -3, 8, 17 ])
+    cat2 = [ galsim.config.ParseValue(config,'cat2',config, int)[0] for k in range(5) ]
+    np.testing.assert_array_equal(cat2, [ -3, 8, 17, -3, 8 ])
 
     # Test values generated from a uniform deviate
     rng = galsim.UniformDeviate(1234)
@@ -295,11 +296,11 @@ def test_bool_value():
     # Test values read from an InputCatalog
     input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
     config['catalog'] = input_cat
-    cat1 = [ galsim.config.ParseValue(config,'cat1',config, bool)[0] for k in range(3) ]
-    np.testing.assert_array_equal(cat1, [ 1, 0, 1 ])
+    cat1 = [ galsim.config.ParseValue(config,'cat1',config, bool)[0] for k in range(5) ]
+    np.testing.assert_array_equal(cat1, [ 1, 0, 1, 1, 0 ])
 
-    cat2 = [ galsim.config.ParseValue(config,'cat2',config, bool)[0] for k in range(3) ]
-    np.testing.assert_array_equal(cat2, [ 1, 0, 0 ])
+    cat2 = [ galsim.config.ParseValue(config,'cat2',config, bool)[0] for k in range(5) ]
+    np.testing.assert_array_equal(cat2, [ 1, 0, 0, 1, 0 ])
 
     # Test values generated from a uniform deviate
     rng = galsim.UniformDeviate(1234)
@@ -445,12 +446,12 @@ def test_angle_value():
     input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
     config['catalog'] = input_cat
     cat1 = [ galsim.config.ParseValue(config,'cat1',config, galsim.Angle)[0].rad() 
-             for k in range(3) ]
-    np.testing.assert_array_almost_equal(cat1, [ 1.2, 0.1, -0.9 ])
+             for k in range(5) ]
+    np.testing.assert_array_almost_equal(cat1, [ 1.2, 0.1, -0.9, 1.2, 0.1 ])
 
     cat2 = [ galsim.config.ParseValue(config,'cat2',config, galsim.Angle)[0] / galsim.degrees
-             for k in range(3) ]
-    np.testing.assert_array_almost_equal(cat2, [ 23, 15, 82 ])
+             for k in range(5) ]
+    np.testing.assert_array_almost_equal(cat2, [ 23, 15, 82, 23, 15 ])
 
     # Test values generated from a uniform deviate
     rng = galsim.UniformDeviate(1234)
