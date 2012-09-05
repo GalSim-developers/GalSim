@@ -1,5 +1,8 @@
 --- GalSim Installation Instructions ---
 
+System requirements: GalSim currently only supports Linux and Mac OSX.
+
+
 Table of Contents:
 1. Software required before building galsim
 2. Installing the galsim Python package
