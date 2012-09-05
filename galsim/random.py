@@ -31,6 +31,7 @@ of the derived classes other than construct it and change the seed, and use it a
 pass to other Deviate constructors.
 """
 
+# UniformDeviate docstrings
 _galsim.UniformDeviate.__doc__ = """
 Pseudo-random number generator with uniform distribution in interval [0.,1.).
 
@@ -69,6 +70,10 @@ On output each element of the input Image will have a pseudo-random UniformDevia
 added to it.
 """
 
+_galsim.UniformDeviate.__call__.__func__.__doc__= "Draw a new random number from the distribution."
+
+
+# GaussianDeviate docstrings
 _galsim.GaussianDeviate.__doc__ = """
 Pseudo-random number generator with Gaussian distribution.
 

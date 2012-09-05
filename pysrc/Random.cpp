@@ -61,8 +61,7 @@ struct PyUniformDeviate {
         pyUniformDeviate
             .def(bp::init<long>(bp::arg("lseed")))
             .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
-            .def("__call__", &UniformDeviate::operator(),
-                 "Draw a new random number from the distribution.")
+            .def("__call__", &UniformDeviate::operator(), "")
             ;
         wrapTemplates<int>(pyUniformDeviate);
         wrapTemplates<short>(pyUniformDeviate);
