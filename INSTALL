@@ -20,7 +20,8 @@ i) Python (2.6 or 2.7 series), with some additional modules installed
 The interface to the GalSim code is via the Python package "galsim", and its associated modules.
 Therefore you must have Python installed on your system.  Python is free, and available from a
 number of sources online (see below).  Currently GalSim only supports Python versions 2.6.X and 
-2.7.X, but earlier versions of Python 2.X may be supported in future.
+2.7.X, but earlier versions of Python 2.X may be supported in future: please let us know via Github
+if you need this support.
 
 Many systems have a version of Python pre-installed.  To check whether you already have a compatible
 version, type
