@@ -22,20 +22,13 @@ struct PyBaseDeviate {
         pyBaseDeviate
             .def(bp::init<long>(bp::arg("lseed")))
             .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
-            .def("seed", (void (BaseDeviate::*) () )&BaseDeviate::seed, 
-                 "Re-seed the PRNG using current time.")
-            .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed, 
-                 (bp::arg("lseed")), "Re-seed the PRNG using specified seed.")
-            .def("reset", (void (BaseDeviate::*) () )&BaseDeviate::reset, 
-                 "Re-seed the PRNG using current time, and sever the connection to any other "
-                 "Deviate.")
-            .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset, 
-                 (bp::arg("lseed")),
-                 "Re-seed the PRNG using specified seed, and sever the connection to any other "
-                 "Deviate.")
+            .def("seed", (void (BaseDeviate::*) () )&BaseDeviate::seed, "")
+            .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed, (bp::arg("lseed")), "")
+            .def("reset", (void (BaseDeviate::*) () )&BaseDeviate::reset, "")
+            .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset, (bp::arg("lseed")), 
+                 "")
             .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
-                 (bp::arg("dev")),
-                 "Re-connect this Deviate with the rng in another one")
+                 (bp::arg("dev")), "")
             ;
     }
 
