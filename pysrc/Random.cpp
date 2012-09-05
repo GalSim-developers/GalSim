@@ -234,16 +234,7 @@ struct PyWeibullDeviate {
     static void wrapTemplates(W & wrapper) {
         wrapper
             .def("applyTo", (void (WeibullDeviate::*) (ImageView<U>) )&WeibullDeviate::applyTo,
-                 "\n"
-                 "Add Weibull-distributed deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> WeibullDeviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "WeibullDeviate return value added to it, with current values of a and b.\n",
-                 (bp::arg("image")))
+                 "", (bp::arg("image")))
             ;
     }
 
@@ -263,14 +254,11 @@ struct PyWeibullDeviate {
             .def(bp::init<const BaseDeviate&, double, double>(
                 (bp::arg("dev"), bp::arg("a")=1., bp::arg("b")=1.)
                 ))
-            .def("__call__", &WeibullDeviate::operator(),
-                 "Draw a new random number from the distribution.\n"
-                 "\n"
-                 "Returns a Weibull-distributed deviate with current a and b.\n")
-            .def("getA", &WeibullDeviate::getA, "Get current distribution shape parameter a.")
-            .def("setA", &WeibullDeviate::setA, "Set current distribution shape parameter a.")
-            .def("getB", &WeibullDeviate::getB, "Get current distribution scale parameter b.")
-            .def("setB", &WeibullDeviate::setB, "Set current distribution scale parameter b.")
+            .def("__call__", &WeibullDeviate::operator(), "")
+            .def("getA", &WeibullDeviate::getA, "")
+            .def("setA", &WeibullDeviate::setA, "")
+            .def("getB", &WeibullDeviate::getB, "")
+            .def("setB", &WeibullDeviate::setB, "")
             ;
         wrapTemplates<int>(pyWeibullDeviate);
         wrapTemplates<short>(pyWeibullDeviate);
