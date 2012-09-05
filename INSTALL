@@ -138,7 +138,7 @@ you'll have to rebuild the Python-related dependencies after rebuilding Python -
 check beforehand.
 
 See Section 4 of this document for some suggestions about getting Python, Boost and all the other 
-dependencies all working well together on your specfic system.
+dependencies all working well together on your specific system.
 
 
 ii) SCons (http://www.scons.org)
