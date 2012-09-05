@@ -190,3 +190,54 @@ instance.
 
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
+
+_galsim.CCDNoise.__doc__ = """
+Pseudo-random number generator with a basic CCD noise model.
+
+A CCDNoise instance is initialized given a gain level in Electrons per ADU used for the Poisson
+noise term, and a Gaussian read noise in electrons (if gain > 0.) or ADU (if gain <= 0.).  With 
+these parameters set, the CCDNoise operates on an Image, adding noise to each pixel following this 
+model. 
+
+Initialization
+--------------
+
+>>> ccd_noise = CCDNoise(gain=1., read_noise=0.)
+
+Initializes ccd_noise to be a CCDNoise instance using the current time for the seed.
+
+>>> ccd_noise = CCDNoise(lseed, gain=1., read_noise=0.)
+
+Initializes ccd_noise to be a CCDNoise instance using the specified seed.
+
+>>> ccd_noise = CCDNoise(dev, gain=1., read_noise=0.)
+
+Initializes ccd_noise to share the same underlying random number generator as dev.
+
+Parameters:
+
+    gain        the gain for each pixel in electrons per ADU; setting gain <=0 will shut off the
+                Poisson noise, and the Gaussian rms will take the value read_noise as being in units
+                of ADU rather than electrons [default=1.].
+    read_noise  the read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.)
+                setting read_noise=0. will shut off the Gaussian noise [default=0.].
+
+Calling
+-------
+Taking the instance from the above examples, successive calls to ccd_noise() will generate noise 
+following this model.
+
+Methods
+-------
+To add deviates to every element of an image, see the docstring for the .applyTo() method of each
+instance.
+
+To get and set the deviate parameters, see the docstrings for the .getGain(), .setGain(), 
+.getReadNoise() and .setReadNoise() methods of each instance.
+
+These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
+"""
+
+
+
+
