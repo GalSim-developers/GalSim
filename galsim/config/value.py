@@ -57,7 +57,7 @@ def ParseValue(config, param_name, base, value_type):
             int : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
             bool : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
             str : [ 'InputCatalog', 'List' ],
-            Angle : [ 'Random', 'RandomAngle', 'List' ],
+            Angle : [ 'Rad', 'Deg', 'Random', 'List' ],
             Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
                       'Ring', 'List' ],
             Shift : [ 'DXDY', 'RandomCircle', 'List' ] 
@@ -65,6 +65,10 @@ def ParseValue(config, param_name, base, value_type):
 
         type = param['type']
         #print 'type = ',type
+
+        # Apply valid aliases:
+        if type == 'Radians': type = 'Rad'
+        if type == 'Degrees': type = 'Deg'
 
         # First check if the value_type is valid.
         if value_type not in valid_types.keys():
@@ -274,6 +278,20 @@ def _GenerateFromDXDY(param, param_name, base, value_type):
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return galsim.config.Shift(**kwargs), safe
 
+def _GenerateFromRad(param, param_name, base, value_type):
+    """@brief Return an Angle constructed from given theta in radians
+    """
+    req = { 'theta' : float }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    return kwargs['theta'] * galsim.radians, safe
+
+def _GenerateFromDeg(param, param_name, base, value_type):
+    """@brief Return an Angle constructed from given theta in degrees
+    """
+    req = { 'theta' : float }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    return kwargs['theta'] * galsim.degrees, safe
+
 def _GenerateFromRing(param, param_name, base, value_type):
     """@brief Return the next shear for a ring test.
     """
@@ -349,31 +367,31 @@ def _GenerateFromRandom(param, param_name, base, value_type):
     if 'rng' not in base:
         raise ValueError("No rng available for %s.type = Random"%param_name)
     rng = base['rng']
-
-    # Set defaults when reasonable:
-    if value_type is bool:
-        param.setdefault('min',0)
-        param.setdefault('max',1)
-    if value_type is galsim.Angle:
-        param.setdefault('min',0 * galsim.degrees)
-        param.setdefault('max',360 * galsim.degrees)
-
-    req = { 'min' : value_type , 'max' : value_type }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
-
-    min = kwargs['min']
-    max = kwargs['max']
-
     ud = galsim.UniformDeviate(rng)
-    if value_type in [ int, bool ]:
+
+    # Each value_type works a bit differently:
+    if value_type is galsim.Angle:
         import math
-        val = int(math.floor(ud() * (max-min+1))) + min
-        # In case ud() == 1
-        if val > max:
-            val = max
+        CheckAllParams(param, param_name)
+        return ud() * 2 * math.pi * galsim.radians, False
+    elif value_type is bool:
+        CheckAllParams(param, param_name)
+        return ud() < 0.5, False
     else:
-        val = ud() * (max-min) + min
-    return val, False
+        req = { 'min' : value_type , 'max' : value_type }
+        kwargs, safe = GetAllParams(param, param_name, base, req=req)
+
+        min = kwargs['min']
+        max = kwargs['max']
+
+        if value_type in [ int, bool ]:
+            import math
+            val = int(math.floor(ud() * (max-min+1))) + min
+            # In case ud() == 1
+            if val > max: val = max
+        else:
+            val = ud() * (max-min) + min
+        return val, False
 
 def _GenerateFromRandomGaussian(param, param_name, base, value_type):
     """@brief Return a random value drawn from a Gaussian distribution
@@ -404,6 +422,7 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
         base['current_gdsigma'] = sigma
 
     if 'min' in kwargs or 'max' in kwargs:
+        import math
         # Clip at min/max.
         # However, special cases if min == mean or max == mean
         #  -- can use fabs to double the chances of falling in the range.
@@ -431,18 +450,13 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
         while True:
             val = gd()
             #print 'val = ',val
-            if do_abs:
-                import math
-                val = math.fabs(val)
-            if val >= min and val <= max:
-                break
-        if do_neg:
-            val = -val
+            if do_abs: val = math.fabs(val)
+            if val >= min and val <= max: break
+        if do_neg: val = -val
         val += mean
     else:
         val = gd()
-        if 'mean' in kwargs:
-            val += kwargs['mean']
+        if 'mean' in kwargs: val += kwargs['mean']
 
     #print 'ellip = ',val
     #print 'RandomGaussian: ',val
@@ -466,8 +480,7 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
         dx = (2*ud()-1) * radius
         dy = (2*ud()-1) * radius
         rsq = dx**2 + dy**2
-        if rsq <= max_rsq:
-            break
+        if rsq <= max_rsq: break
     #print 'RandomCircle: ',(dx,dy)
     return galsim.config.Shift(dx=dx,dy=dy), False
 
@@ -484,8 +497,8 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     last = kwargs.get('last',None)
     repeat = kwargs.get('repeat',1)
     if repeat <= 0:
-        raise ValueError("Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(
-                repeat,param_name))
+        raise ValueError(
+            "Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(repeat,param_name))
     #print 'first, step, repeat = ',first,step,repeat
 
     if value_type is bool:

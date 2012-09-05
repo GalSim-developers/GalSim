@@ -45,7 +45,7 @@ def test_float_value():
         'list1' : { 'type' : 'List', 'items' : [ 73, 8.9, 3.14 ] },
         'list2' : { 'type' : 'List',
                     'items' : [ 0.6, 1.8, 2.1, 3.7, 4.3, 5.5, 6.1, 7.0, 8.6, 9.3, 10.8, 11.2 ],
-                    'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -2 } }
+                    'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } }
     }
 
     # Test direct values
@@ -146,7 +146,7 @@ def test_float_value():
     np.testing.assert_array_almost_equal(list1, [ 73, 8.9, 3.14, 73, 8.9 ])
 
     list2 = [ galsim.config.ParseValue(config,'list2',config, float)[0] for k in range(5) ]
-    np.testing.assert_array_almost_equal(list2, [ 10.8, 8.6, 6.1, 4.3, 2.1 ])
+    np.testing.assert_array_almost_equal(list2, [ 10.8, 7.0, 4.3, 1.8, 10.8 ])
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -177,7 +177,7 @@ def test_int_value():
         'list1' : { 'type' : 'List', 'items' : [ 73, 8, 3 ] },
         'list2' : { 'type' : 'List',
                     'items' : [ 6, 8, 1, 7, 3, 5, 1, 0, 6, 3, 8, 2 ],
-                    'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -2 } }
+                    'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } }
     }
 
     # Test direct values
@@ -237,7 +237,7 @@ def test_int_value():
     np.testing.assert_array_equal(list1, [ 73, 8, 3, 73, 8 ])
 
     list2 = [ galsim.config.ParseValue(config,'list2',config, int)[0] for k in range(5) ]
-    np.testing.assert_array_equal(list2, [ 8, 6, 1, 3, 1 ])
+    np.testing.assert_array_equal(list2, [ 8, 0, 3, 8, 8 ])
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -266,7 +266,7 @@ def test_bool_value():
         'list1' : { 'type' : 'List', 'items' : [ 'yes', 'no', 'no' ] },
         'list2' : { 'type' : 'List',
                     'items' : [ 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0 ],
-                    'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -2 } }
+                    'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } }
     }
 
     # Test direct values
@@ -306,7 +306,7 @@ def test_bool_value():
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
         ran1 = galsim.config.ParseValue(config,'ran1',config, bool)[0]
-        np.testing.assert_equal(ran1, bool(int(math.floor(rng() * 2))))
+        np.testing.assert_equal(ran1, rng() < 0.5)
 
     # Test values generated from a Sequence
     seq1 = [ galsim.config.ParseValue(config,'seq1',config, bool)[0] for k in range(6) ]
@@ -320,7 +320,367 @@ def test_bool_value():
     np.testing.assert_array_equal(list1, [ 1, 0, 0, 1, 0 ])
 
     list2 = [ galsim.config.ParseValue(config,'list2',config, bool)[0] for k in range(5) ]
-    np.testing.assert_array_equal(list2, [ 0, 0, 0, 1, 1 ])
+    np.testing.assert_array_equal(list2, [ 0, 1, 1, 1, 0 ])
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+
+def test_str_value():
+    """Test various ways to generate a str value
+    """
+    import time
+    t1 = time.time()
+
+    config = {
+        'val1' : -93,
+        'val2' : True,
+        'val3' : 123.8,
+        'str1' : "Norwegian",
+        'str2' : u"Blue",
+        'cat1' : { 'type' : 'InputCatalog' , 'col' : 6 },
+        'cat2' : { 'type' : 'InputCatalog' , 'col' : 7 },
+        'list1' : { 'type' : 'List', 'items' : [ 'Beautiful', 'plumage!', 'Ay?' ] }
+    } 
+
+    # Test direct values
+    val1 = galsim.config.ParseValue(config,'val1',config, str)[0]
+    np.testing.assert_equal(val1, '-93')
+
+    val2 = galsim.config.ParseValue(config,'val2',config, str)[0]
+    np.testing.assert_equal(val2, 'True')
+
+    val3 = galsim.config.ParseValue(config,'val3',config, str)[0]
+    np.testing.assert_equal(val3, '123.8')
+
+    # Test conversions from strings
+    str1 = galsim.config.ParseValue(config,'str1',config, str)[0]
+    np.testing.assert_equal(str1, 'Norwegian')
+
+    str2 = galsim.config.ParseValue(config,'str2',config, str)[0]
+    np.testing.assert_equal(str2, 'Blue')
+
+    # Test values read from an InputCatalog
+    input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
+    config['catalog'] = input_cat
+    cat1 = [ galsim.config.ParseValue(config,'cat1',config, str)[0] for k in range(3) ]
+    np.testing.assert_array_equal(cat1, ["He's", "bleedin'", "demised!"])
+
+    # Note: white space in the input catalog always separates columns. ' and " don't work.
+    cat2 = [ galsim.config.ParseValue(config,'cat2',config, str)[0] for k in range(3) ]
+    np.testing.assert_array_equal(cat2, ['"ceased', '"bereft', '"kicked'])
+
+    # Test values taken from a List
+    list1 = [ galsim.config.ParseValue(config,'list1',config, str)[0] for k in range(5) ]
+    np.testing.assert_array_equal(list1, ['Beautiful', 'plumage!', 'Ay?', 'Beautiful', 'plumage!'])
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_angle_value():
+    """Test various ways to generate an Angle value
+    """
+    import time
+    t1 = time.time()
+
+    config = {
+        'val1' : 1.9 * galsim.radians,
+        'val2' : -41 * galsim.degrees,
+        'str1' : '0.73 radians',
+        'str2' : '240 degrees',
+        'str3' : '1.2 rad',
+        'str4' : '45 deg',
+        'str5' : '6 hrs',
+        'str6' : '21 hour',
+        'str7' : '-240 arcmin',
+        'str8' : '1800 arcsec',
+        'cat1' : { 'type' : 'Radians' , 
+                   'theta' : { 'type' : 'InputCatalog' , 'col' : 10 } },
+        'cat2' : { 'type' : 'Degrees' , 
+                   'theta' : { 'type' : 'InputCatalog' , 'col' : 11 } },
+        'ran1' : { 'type' : 'Random' },
+        'seq1' : { 'type' : 'Rad', 'theta' : { 'type' : 'Sequence' } },
+        'seq2' : { 'type' : 'Deg', 'theta' : { 'type' : 'Sequence', 'first' : 45, 'step' : 80 } },
+        'list1' : { 'type' : 'List',
+                    'items' : [ 73 * galsim.arcmin,
+                                8.9 * galsim.arcmin,
+                                3.14 * galsim.arcmin ] },
+    }
+
+    # Test direct values
+    val1 = galsim.config.ParseValue(config,'val1',config, galsim.Angle)[0]
+    np.testing.assert_almost_equal(val1.rad(), 1.9)
+
+    val2 = galsim.config.ParseValue(config,'val2',config, galsim.Angle)[0]
+    np.testing.assert_almost_equal(val2.rad(), -41 * math.pi/180)
+
+    # Test conversions from strings
+    str1 = galsim.config.ParseValue(config,'str1',config, galsim.Angle)[0]
+    np.testing.assert_almost_equal(str1.rad(), 0.73)
+
+    str2 = galsim.config.ParseValue(config,'str2',config, galsim.Angle)[0]
+    np.testing.assert_almost_equal(str2 / galsim.degrees, -120)
+
+    str3 = galsim.config.ParseValue(config,'str3',config, galsim.Angle)[0]
+    np.testing.assert_almost_equal(str3.rad(), 1.2)
+
+    str4 = galsim.config.ParseValue(config,'str4',config, galsim.Angle)[0]
+    np.testing.assert_almost_equal(str4.rad(), math.pi/4)
+
+    str5 = galsim.config.ParseValue(config,'str5',config, galsim.Angle)[0]
+    np.testing.assert_almost_equal(str5.rad(), math.pi/2)
+
+    str6 = galsim.config.ParseValue(config,'str6',config, galsim.Angle)[0]
+    np.testing.assert_almost_equal(str6.rad(), -math.pi/4)
+
+    str7 = galsim.config.ParseValue(config,'str7',config, galsim.Angle)[0]
+    np.testing.assert_almost_equal(str7 / galsim.degrees, -4)
+
+    str8 = galsim.config.ParseValue(config,'str8',config, galsim.Angle)[0]
+    np.testing.assert_almost_equal(str8 / galsim.degrees, 0.5)
+
+    # Test values read from an InputCatalog
+    input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
+    config['catalog'] = input_cat
+    cat1 = [ galsim.config.ParseValue(config,'cat1',config, galsim.Angle)[0].rad() 
+             for k in range(3) ]
+    np.testing.assert_array_almost_equal(cat1, [ 1.2, 0.1, -0.9 ])
+
+    cat2 = [ galsim.config.ParseValue(config,'cat2',config, galsim.Angle)[0] / galsim.degrees
+             for k in range(3) ]
+    np.testing.assert_array_almost_equal(cat2, [ 23, 15, 82 ])
+
+    # Test values generated from a uniform deviate
+    rng = galsim.UniformDeviate(1234)
+    config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
+    for k in range(6):
+        ran1 = galsim.config.ParseValue(config,'ran1',config, galsim.Angle)[0]
+        theta = rng() * 2 * math.pi
+        if theta > math.pi: theta -= 2*math.pi
+        np.testing.assert_almost_equal(ran1.rad(), theta)
+
+    # Test values generated from a Sequence
+    seq1 = [ galsim.config.ParseValue(config,'seq1',config, galsim.Angle)[0].rad() 
+             for k in range(6) ]
+    np.testing.assert_array_almost_equal(seq1, [ 0, 1, 2, 3, 4-2*math.pi, 5-2*math.pi ])
+
+    seq2 = [ galsim.config.ParseValue(config,'seq2',config, galsim.Angle)[0] / galsim.degrees 
+             for k in range(6) ]
+    np.testing.assert_array_almost_equal(seq2, [ 45, 125, -155, -75, 5, 85 ])
+
+    # Test values taken from a List
+    list1 = [ galsim.config.ParseValue(config,'list1',config, galsim.Angle)[0] / galsim.arcmin
+              for k in range(5) ]
+    np.testing.assert_array_almost_equal(list1, [ 73, 8.9, 3.14, 73, 8.9 ])
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_shear_value():
+    """Test various ways to generate a Shear value
+    """
+    import time
+    t1 = time.time()
+
+    config = {
+        'val1' : galsim.Shear(g1=0.2, g2=0.3),
+        'val2' : galsim.Shear(e1=0.1),
+        's1' : { 'type' : 'E1E2', 'e1' : 0.5, 'e2' : -0.1 },
+        's2' : { 'type' : 'EBeta', 'e' : 0.5, 'beta' : 0.1 * galsim.radians },
+        's3' : { 'type' : 'G1G2', 'g1' : 0.5, 'g2' : -0.1 },
+        's4' : { 'type' : 'GBeta', 'g' : 0.5, 'beta' : 0.1 * galsim.radians },
+        's5' : { 'type' : 'Eta1Eta2', 'eta1' : 0.5, 'eta2' : -0.1 },
+        's6' : { 'type' : 'EtaBeta', 'eta' : 0.5, 'beta' : 0.1 * galsim.radians },
+        's7' : { 'type' : 'QBeta', 'q' : 0.5, 'beta' : 0.1 * galsim.radians },
+        'ring1' : { 'type' : 'Ring' ,
+                    'first' : { 'type' : 'E1E2', 
+                                'e1' : { 'type' : 'List' , 'items' : [ 0.3, 0.2, 0.8 ] },
+                                'e2' : 0.1 },
+                    'num' : 2 },
+        'ring2' : { 'type' : 'Ring' , 'first' : galsim.Shear(e2=0.3), 'num' : 10 },
+        'list1' : { 'type' : 'List',
+                    'items' : [ galsim.Shear(g1 = 0.2, g2 = -0.3),
+                                galsim.Shear(g1 = -0.5, g2 = 0.2),
+                                galsim.Shear(g1 = 0.1, g2 = 0.0) ] }
+    }
+
+    # Test direct values
+    val1 = galsim.config.ParseValue(config,'val1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(val1.getG1(), 0.2)
+    np.testing.assert_almost_equal(val1.getG2(), 0.3)
+
+    val2 = galsim.config.ParseValue(config,'val2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(val2.getE1(), 0.1)
+    np.testing.assert_almost_equal(val2.getE2(), 0.)
+
+    # Test various direct types
+    s1 = galsim.config.ParseValue(config,'s1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(s1.getE1(), 0.5)
+    np.testing.assert_almost_equal(s1.getE2(), -0.1)
+
+    s2 = galsim.config.ParseValue(config,'s2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(s2.getE(), 0.5)
+    np.testing.assert_almost_equal(s2.getBeta().rad(), 0.1)
+
+    s3 = galsim.config.ParseValue(config,'s3',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(s3.getG1(), 0.5)
+    np.testing.assert_almost_equal(s3.getG2(), -0.1)
+
+    s4 = galsim.config.ParseValue(config,'s4',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(s4.getG(), 0.5)
+    np.testing.assert_almost_equal(s4.getBeta().rad(), 0.1)
+
+    s5 = galsim.config.ParseValue(config,'s5',config, galsim.Shear)[0]
+    eta = s5.getEta()
+    e = s5.getE()
+    eta1 = s5.getE1() * eta/e
+    eta2 = s5.getE2() * eta/e
+    np.testing.assert_almost_equal(eta1, 0.5)
+    np.testing.assert_almost_equal(eta2, -0.1)
+
+    s6 = galsim.config.ParseValue(config,'s6',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(s6.getEta(), 0.5)
+    np.testing.assert_almost_equal(s6.getBeta().rad(), 0.1)
+
+    s7 = galsim.config.ParseValue(config,'s7',config, galsim.Shear)[0]
+    g = s7.getG()
+    q = (1-g)/(1+g)
+    np.testing.assert_almost_equal(q, 0.5)
+    np.testing.assert_almost_equal(s7.getBeta().rad(), 0.1)
+
+    # Test values generated from a Ring:
+    ring1 = galsim.config.ParseValue(config,'ring1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring1.getE1(), 0.3)
+    np.testing.assert_almost_equal(ring1.getE2(), 0.1)
+    ring1 = galsim.config.ParseValue(config,'ring1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring1.getE1(), -0.3)
+    np.testing.assert_almost_equal(ring1.getE2(), -0.1)
+    ring1 = galsim.config.ParseValue(config,'ring1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring1.getE1(), 0.2)
+    np.testing.assert_almost_equal(ring1.getE2(), 0.1)
+    ring1 = galsim.config.ParseValue(config,'ring1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring1.getE1(), -0.2)
+    np.testing.assert_almost_equal(ring1.getE2(), -0.1)
+    ring1 = galsim.config.ParseValue(config,'ring1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring1.getE1(), 0.8)
+    np.testing.assert_almost_equal(ring1.getE2(), 0.1)
+    ring1 = galsim.config.ParseValue(config,'ring1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring1.getE1(), -0.8)
+    np.testing.assert_almost_equal(ring1.getE2(), -0.1)
+
+    ring2 = galsim.config.ParseValue(config,'ring2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring2.getE(), 0.3)
+    np.testing.assert_almost_equal(ring2.getBeta() / galsim.degrees, 45)
+    ring2 = galsim.config.ParseValue(config,'ring2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring2.getE(), 0.3)
+    np.testing.assert_almost_equal(ring2.getBeta() / galsim.degrees, 63)
+    ring2 = galsim.config.ParseValue(config,'ring2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring2.getE(), 0.3)
+    np.testing.assert_almost_equal(ring2.getBeta() / galsim.degrees, 81)
+    ring2 = galsim.config.ParseValue(config,'ring2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring2.getE(), 0.3)
+    np.testing.assert_almost_equal(ring2.getBeta() / galsim.degrees, -81)
+    ring2 = galsim.config.ParseValue(config,'ring2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring2.getE(), 0.3)
+    np.testing.assert_almost_equal(ring2.getBeta() / galsim.degrees, -63)
+    ring2 = galsim.config.ParseValue(config,'ring2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring2.getE(), 0.3)
+    np.testing.assert_almost_equal(ring2.getBeta() / galsim.degrees, -45)
+    ring2 = galsim.config.ParseValue(config,'ring2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring2.getE(), 0.3)
+    np.testing.assert_almost_equal(ring2.getBeta() / galsim.degrees, -27)
+    ring2 = galsim.config.ParseValue(config,'ring2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring2.getE(), 0.3)
+    np.testing.assert_almost_equal(ring2.getBeta() / galsim.degrees, -9)
+    ring2 = galsim.config.ParseValue(config,'ring2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring2.getE(), 0.3)
+    np.testing.assert_almost_equal(ring2.getBeta() / galsim.degrees, 9)
+    ring2 = galsim.config.ParseValue(config,'ring2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring2.getE(), 0.3)
+    np.testing.assert_almost_equal(ring2.getBeta() / galsim.degrees, 27)
+    ring2 = galsim.config.ParseValue(config,'ring2',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ring2.getE(), 0.3)
+    np.testing.assert_almost_equal(ring2.getBeta() / galsim.degrees, 45)
+
+    # Test values taken from a List
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(list1.getG1(), 0.2)
+    np.testing.assert_almost_equal(list1.getG2(), -0.3)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(list1.getG1(), -0.5)
+    np.testing.assert_almost_equal(list1.getG2(), 0.2)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(list1.getG1(), 0.1)
+    np.testing.assert_almost_equal(list1.getG2(), 0.0)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(list1.getG1(), 0.2)
+    np.testing.assert_almost_equal(list1.getG2(), -0.3)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(list1.getG1(), -0.5)
+    np.testing.assert_almost_equal(list1.getG2(), 0.2)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_shift_value():
+    """Test various ways to generate a shift value
+    """
+    import time
+    t1 = time.time()
+
+    config = {
+        'val1' : galsim.config.Shift(0.1,0.2),
+        'dxdy1' : { 'type' : 'DXDY', 'dx' : 1.3, 'dy' : 2.4 },
+        'ran1' : { 'type' : 'RandomCircle', 'radius' : 3 },
+        'list1' : { 'type' : 'List', 
+                    'items' : [ galsim.config.Shift(0.2, -0.3),
+                                galsim.config.Shift(-0.5,0.2),
+                                galsim.config.Shift(0.1, 0.0) ] }
+    }
+
+    # Test direct values
+    val1 = galsim.config.ParseValue(config,'val1',config, galsim.config.Shift)[0]
+    np.testing.assert_almost_equal(val1.dx, 0.1)
+    np.testing.assert_almost_equal(val1.dy, 0.2)
+
+    dxdy1 = galsim.config.ParseValue(config,'dxdy1',config, galsim.config.Shift)[0]
+    np.testing.assert_almost_equal(dxdy1.dx, 1.3)
+    np.testing.assert_almost_equal(dxdy1.dy, 2.4)
+
+    # Test values generated from a uniform deviate
+    rng = galsim.UniformDeviate(1234)
+    config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
+    for k in range(6):
+        ran1 = galsim.config.ParseValue(config,'ran1',config, galsim.config.Shift)[0]
+        # Emulate a do-while loop
+        while True:
+            dx = (2*rng()-1) * 3
+            dy = (2*rng()-1) * 3
+            rsq = dx**2 + dy**2
+            if rsq <= 9: break
+        np.testing.assert_almost_equal(ran1.dx, dx)
+        np.testing.assert_almost_equal(ran1.dy, dy)
+
+    # Test values taken from a List
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.config.Shift)[0]
+    np.testing.assert_almost_equal(list1.dx, 0.2)
+    np.testing.assert_almost_equal(list1.dy, -0.3)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.config.Shift)[0]
+    np.testing.assert_almost_equal(list1.dx, -0.5)
+    np.testing.assert_almost_equal(list1.dy, 0.2)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.config.Shift)[0]
+    np.testing.assert_almost_equal(list1.dx, 0.1)
+    np.testing.assert_almost_equal(list1.dy, 0.0)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.config.Shift)[0]
+    np.testing.assert_almost_equal(list1.dx, 0.2)
+    np.testing.assert_almost_equal(list1.dy, -0.3)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.config.Shift)[0]
+    np.testing.assert_almost_equal(list1.dx, -0.5)
+    np.testing.assert_almost_equal(list1.dy, 0.2)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -330,5 +690,9 @@ if __name__ == "__main__":
     test_float_value()
     test_int_value()
     test_bool_value()
+    test_str_value()
+    test_angle_value()
+    test_shear_value()
+    test_shift_value()
 
 

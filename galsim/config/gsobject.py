@@ -45,10 +45,8 @@ def BuildGSObject(config, key, base=None):
         return ck['current_val'], True
 
     # Change the value for valid aliases:
-    if type == 'Sum':
-        type = 'Add'
-    if type == 'Convolution':
-        type = 'Convolve'
+    if type == 'Sum': type = 'Add'
+    if type == 'Convolution': type = 'Convolve'
 
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [ 
