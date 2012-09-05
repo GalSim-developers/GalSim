@@ -279,10 +279,13 @@ Methods
 To add deviates to every element of an image, see the docstring for the .applyTo() method of each
 instance.
 
-To get and set the deviate parameters, see the docstrings for the .getA(), .setA(), .getB(), and 
+To get and set the deviate parameters, see the docstrings for the .getA(), .setA(), .getB() and 
 .setB() methods of each instance.
 
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
+
+
+
 
 
