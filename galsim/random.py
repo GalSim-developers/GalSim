@@ -422,9 +422,9 @@ _galsim.WeibullDeviate.setB.__func__.__doc__ = "Set current distribution shape p
 _galsim.GammaDeviate.__doc__ = """
 Pseudo-random Gamma-distributed deviate for parameters alpha & beta.
 
-See http://en.wikipedia.org/wiki/Gamma_distribution (although note that in the Boost random routine
-this class calls the notation is alpha=k and beta=theta).  The Gamma distribution is a real valued
-distribution producing deviates >= 0.
+See http://en.wikipedia.org/wiki/Gamma_distribution (note that alpha=k and beta=theta in the
+notation adopted in the Boost.Random routine called by this class).  The Gamma distribution is a 
+real-valued distribution producing deviates >= 0.
 
 Initialization
 --------------
@@ -488,9 +488,9 @@ _galsim.GammaDeviate.setBeta.__func__.__doc__ = "Set current distribution shape 
 _galsim.Chi2Deviate.__doc__ = """
 Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter n.
 
-See http://en.wikipedia.org/wiki/Chi-squared_distribution (although note that in the Boost random 
-routine this class calls the notation adopted interprets k=n).  The Chi^2 distribution is a real 
-valued distribution producing deviates >= 0.
+See http://en.wikipedia.org/wiki/Chi-squared_distribution (note that k=n in the notation adopted in
+the Boost.Random routine called by this class).  The Chi^2 distribution is a real-valued 
+distribution producing deviates >= 0.
 
 Initialization
 --------------

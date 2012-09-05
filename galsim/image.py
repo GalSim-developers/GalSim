@@ -31,10 +31,8 @@ for Class in _galsim.Image.itervalues():
         Image(bounds=BoundsI(), init_value=0)  # bounding box and initial value
 
     An Image also has a '.array' attribute that provides a numpy view into the Image's pixels.
-    Regardless of how the Image was constructed, this array and the Image will point to the same
-    underlying data, and modifying one will affect the other.
 
-    Note that both the attribute and the array constructor argument are ordered [y,x], matching the
+    The individual elements in the array attribute are accessed as im.array[y,x], matching the
     standard numpy convention, while the Image class's own accessors are all (x,y).
     """
 
@@ -72,8 +70,9 @@ for Class in _galsim.ImageView.itervalues():
     ImageView will point to the same underlying data, and modifying one view will affect any other
     views into the same data.
     
-    Note that both the attribute and the array constructor argument are ordered [y,x], matching the
-    standard numpy convention, while the ImageView class's own accessors are all (x,y).
+    The individual elements in the array attribute are accessed as im.array[y,x], matching the
+    standard numpy convention as used in the array input to the constructor, while the ImageView 
+    class's own accessors are all (x,y).
     """
 
 for Class in _galsim.ConstImageView.itervalues():
