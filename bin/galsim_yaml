@@ -17,7 +17,7 @@ def MergeConfig(config1, config2, logger=None):
     config2 including places where both input dicts have some of a field defined.
     e.g. config1 has image.pixel_scale, and config2 has image.noise.
             Then the returned dict will have both.
-    For real comflicts (the same value in both cases), config1's value takes precedence
+    For real conflicts (the same value in both cases), config1's value takes precedence
     """
     for (key, value) in config2.items():
         if not key in config1:
