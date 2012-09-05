@@ -238,6 +238,51 @@ To get and set the deviate parameters, see the docstrings for the .getGain(), .s
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
+_galsim.WeibullDeviate.__doc__ = """
+Pseudo-random Weibull-distributed deviate for shape parameter a & scale parameter b.
 
+The Weibull distribution is related to a number of other probability distributions;  in particular,
+it interpolates between the exponential distribution (a=1) and the Rayleigh distribution (a=2). 
+See http://en.wikipedia.org/wiki/Weibull_distribution (a=k and b=lambda in the notation adopted in 
+the Wikipedia article) for more details.  The Weibull distribution is real valued and produces 
+deviates >= 0.
+
+Initialization
+--------------
+
+>>> w = WeibullDeviate(a=1., b=1.)
+
+Initializes w to be a WeibullDeviate instance using the current time for the seed.
+
+>>> w = WeibullDeviate(lseed, a=1., b=1.)
+
+Initializes w using the specified seed.
+
+>>> w = WeibullDeviate(dev, a=1., b=1.)
+
+Initializes w to share the same underlying random number generator as dev.
+
+Parameters:
+
+    a        shape parameter of the distribution (default a = 1).
+    b        scale parameter of the distribution (default b = 1).
+
+a and b must both be > 0.
+
+Calling
+-------
+Taking the instance from the above examples, successive calls to w() then generate pseudo-random 
+numbers Weibull-distributed with shape and scale parameters a and b.
+
+Methods
+-------
+To add deviates to every element of an image, see the docstring for the .applyTo() method of each
+instance.
+
+To get and set the deviate parameters, see the docstrings for the .getA(), .setA(), .getB(), and 
+.setB() methods of each instance.
+
+These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
+"""
 
 
