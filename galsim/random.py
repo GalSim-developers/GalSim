@@ -31,7 +31,6 @@ of the derived classes other than construct it and change the seed, and use it a
 pass to other Deviate constructors.
 """
 
-# UniformDeviate docstrings
 _galsim.UniformDeviate.__doc__ = """
 Pseudo-random number generator with uniform distribution in interval [0.,1.).
 
@@ -70,7 +69,6 @@ This docstring can be found using the Python interpreter or in pysrc/Random.cpp.
 #added to it.
 #"""
 
-# GaussianDeviate docstrings
 _galsim.GaussianDeviate.__doc__ = """
 Pseudo-random number generator with Gaussian distribution.
 
@@ -110,7 +108,6 @@ To get and set the deviate parameters, see the docstrings for the .getN(), .setN
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
-# BinomialDeviate docstrings
 _galsim.BinomialDeviate.__doc__ = """
 Pseudo-random Binomial deviate for N trials each of probability p.
 
@@ -153,5 +150,43 @@ To get and set the deviate parameters, see the docstrings for the .getN(), .setN
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
+_galsim.PoissonDeviate.__doc__ = """
+Pseudo-random Poisson deviate with specified mean.
 
+The input mean sets the mean and variance of the Poisson deviate.  An integer deviate with this
+distribution is returned after each call.
 
+Initialization
+--------------
+
+>>> p = PoissonDeviate(mean=1.)
+
+Initializes g to be a PoissonDeviate instance using the current time for the seed.
+
+>>> p = PoissonDeviate(lseed, mean=1.)
+
+Initializes g using the specified seed.
+
+>>> p = PoissonDeviate(dev, mean=1.)
+
+Initializes g to share the same underlying random number generator as dev.
+
+Parameters:
+
+    mean     optional mean of the distribution (default `mean = 1`).
+
+Calling
+-------
+Taking the instance from the above examples, successive calls to p() will return successive,
+pseudo-random Poisson deviates with specified mean, which must be > 0.
+
+Methods
+-------
+To add deviates to every element of an image, see the docstring for the .applyTo() method of each
+instance.
+
+To get and set the deviate parameter, see the docstrings for the .getMean(), method of each
+instance.
+
+These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
+"""
