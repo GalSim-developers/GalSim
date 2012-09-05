@@ -77,17 +77,7 @@ struct PyGaussianDeviate {
     static void wrapTemplates(W & wrapper) {
         wrapper
             .def("applyTo", (void (GaussianDeviate::*) (ImageView<U>) )&GaussianDeviate::applyTo,
-                 "\n"
-                 "Add Gaussian deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> GaussianDeviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "GaussianDeviate return value added to it, with current values of mean and\n"
-                 "sigma.\n",
-                 (bp::arg("image")))
+                 "", (bp::arg("image")))
             ;
     }
 
@@ -107,14 +97,11 @@ struct PyGaussianDeviate {
             .def(bp::init<const BaseDeviate&, double, double>(
                 (bp::arg("dev"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
-            .def("__call__", &GaussianDeviate::operator(),
-                 "Draw a new random number from the distribution.\n"
-                 "\n"
-                 "Returns a Gaussian deviate with current mean and sigma\n")
-            .def("getMean", &GaussianDeviate::getMean, "Get current distribution mean.")
-            .def("setMean", &GaussianDeviate::setMean, "Set current distribution mean.")
-            .def("getSigma", &GaussianDeviate::getSigma, "Get current distribution sigma.")
-            .def("setSigma", &GaussianDeviate::setSigma, "Set current distribution sigma.")
+            .def("__call__", &GaussianDeviate::operator(), "")
+            .def("getMean", &GaussianDeviate::getMean, "")
+            .def("setMean", &GaussianDeviate::setMean, "")
+            .def("getSigma", &GaussianDeviate::getSigma, "")
+            .def("setSigma", &GaussianDeviate::setSigma, "")
             ;
         wrapTemplates<int>(pyGaussianDeviate);
         wrapTemplates<short>(pyGaussianDeviate);
@@ -130,16 +117,7 @@ struct PyBinomialDeviate {
     static void wrapTemplates(W & wrapper) {
         wrapper
             .def("applyTo", (void (BinomialDeviate::*) (ImageView<U>) )&BinomialDeviate::applyTo,
-                 "\n"
-                 "Add Binomial deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> BinomialDeviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "BinomialDeviate return value added to it, with current values of N and p.\n",
-                 (bp::arg("image")))
+                 "", (bp::arg("image")))
             ;
     }
 
@@ -159,14 +137,11 @@ struct PyBinomialDeviate {
             .def(bp::init<const BaseDeviate&, int, double>(
                 (bp::arg("dev"), bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
-            .def("__call__", &BinomialDeviate::operator(),
-                 "Draw a new random number from the distribution.\n"
-                 "\n"
-                 "Returns a Binomial deviate with current N and p.\n")
-            .def("getN", &BinomialDeviate::getN, "Get current distribution N.")
-            .def("setN", &BinomialDeviate::setN, "Set current distribution N.")
-            .def("getP", &BinomialDeviate::getP, "Get current distribution p.")
-            .def("setP", &BinomialDeviate::setP, "Set current distribution p.")
+            .def("__call__", &BinomialDeviate::operator(), "")
+            .def("getN", &BinomialDeviate::getN, "")
+            .def("setN", &BinomialDeviate::setN, "")
+            .def("getP", &BinomialDeviate::getP, "")
+            .def("setP", &BinomialDeviate::setP, "")
             ;
         wrapTemplates<int>(pyBinomialDeviate);
         wrapTemplates<short>(pyBinomialDeviate);
@@ -182,16 +157,7 @@ struct PyPoissonDeviate {
     static void wrapTemplates(W & wrapper) {
         wrapper
             .def("applyTo", (void (PoissonDeviate::*) (ImageView<U>) )&PoissonDeviate::applyTo,
-                 "\n"
-                 "Add Poisson deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> PoissonDeviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "PoissonDeviate return value added to it, with current mean.\n",
-                 (bp::arg("image")))
+                 "", (bp::arg("image")))
             ;
     }
 
@@ -211,12 +177,9 @@ struct PyPoissonDeviate {
             .def(bp::init<const BaseDeviate&, double>(
                 (bp::arg("dev"), bp::arg("mean")=1.)
                 ))
-            .def("__call__", &PoissonDeviate::operator(),
-                 "Draw a new random number from the distribution.\n"
-                 "\n"
-                 "Returns a Poisson deviate with current mean.\n")
-            .def("getMean", &PoissonDeviate::getMean, "Get current distribution mean.")
-            .def("setMean", &PoissonDeviate::setMean, "Set current distribution mean.")
+            .def("__call__", &PoissonDeviate::operator(), "")
+            .def("getMean", &PoissonDeviate::getMean, "")
+            .def("setMean", &PoissonDeviate::setMean, "")
             ;
         wrapTemplates<int>(pyPoissonDeviate);
         wrapTemplates<short>(pyPoissonDeviate);

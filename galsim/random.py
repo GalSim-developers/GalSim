@@ -113,6 +113,29 @@ To get and set the deviate parameters, see the docstrings for the .getN(), .setN
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
+_galsim.GaussianDeviate.applyTo.__func__.__doc__ = """
+Add Gaussian deviates to every element in a supplied Image.
+
+Calling
+-------
+>>> GaussianDeviate.applyTo(image)
+
+On output each element of the input Image will have a pseudo-random GaussianDeviate return value 
+added to it, with current values of mean and sigma.
+"""
+
+_galsim.GaussianDeviate.__call__.__func__.__doc__ = """
+Draw a new random number from the distribution.
+
+Returns a Gaussian deviate with current mean and sigma.
+"""
+_galsim.GaussianDeviate.getMean.__func__.__doc__ = "Get current distribution mean."
+_galsim.GaussianDeviate.setMean.__func__.__doc__ = "Set current distribution mean."
+_galsim.GaussianDeviate.getSigma.__func__.__doc__ = "Get current distribution sigma."
+_galsim.GaussianDeviate.setSigma.__func__.__doc__ = "Set current distribution sigma."
+
+
+# BinomialDeviate docstrings
 _galsim.BinomialDeviate.__doc__ = """
 Pseudo-random Binomial deviate for N trials each of probability p.
 
@@ -155,6 +178,29 @@ To get and set the deviate parameters, see the docstrings for the .getN(), .setN
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
+_galsim.BinomialDeviate.applyTo.__func__.__doc__ = """
+Add Binomial deviates to every element in a supplied Image.
+
+Calling
+-------
+>>> BinomialDeviate.applyTo(image)
+
+On output each element of the input Image will have a pseudo-random BinomialDeviate return value 
+added to it, with current values of N and p.
+"""
+
+_galsim.BinomialDeviate.__call__.__func__.__doc__ = """
+Draw a new random number from the distribution.
+
+Returns a Binomial deviate with current N and p.
+"""
+_galsim.BinomialDeviate.getN.__func__.__doc__ = "Get current distribution N.")
+_galsim.BinomialDeviate.setN.__func__.__doc__ = "Set current distribution N.")
+_galsim.BinomialDeviate.getP.__func__.__doc__ = "Get current distribution p.")
+_galsim.BinomialDeviate.setP.__func__.__doc__ = "Set current distribution p.")
+
+
+# PoissonDeviate docstrings
 _galsim.PoissonDeviate.__doc__ = """
 Pseudo-random Poisson deviate with specified mean.
 
@@ -196,6 +242,27 @@ each instance.
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
+_galsim.PoissonDeviate.applyTo.__func__.__doc__ = """
+Add Poisson deviates to every element in a supplied Image.
+
+Calling
+-------
+>>> PoissonDeviate.applyTo(image)
+
+On output each element of the input Image will have a pseudo-random PoissonDeviate return value 
+added to it, with current mean.
+"""
+
+_galsim.PoissonDeviate.__call__.__func__.__doc__ = """
+Draw a new random number from the distribution.
+
+Returns a Poisson deviate with current mean.
+"""
+_galsim.PoissonDeviate.getMean.__func__.__doc__ = "Get current distribution mean.")
+_galsim.PoissonDeviate.setMean.__func__.__doc__ = "Set current distribution mean.")
+
+
+# CCDNoise deviate docstrings
 _galsim.CCDNoise.__doc__ = """
 Pseudo-random number generator with a basic CCD noise model.
 
@@ -242,6 +309,9 @@ To get and set the deviate parameters, see the docstrings for the .getGain(), .s
 
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
+
+
+
 
 _galsim.WeibullDeviate.__doc__ = """
 Pseudo-random Weibull-distributed deviate for shape parameter a & scale parameter b.
