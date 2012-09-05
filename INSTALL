@@ -241,7 +241,7 @@ From the GalSim base directory (in which this INSTALL file is found) type
 
 scons
 
-If everything above was installed in fairly standard locations, this may work first time.  
+If everything above was installed in fairly standard locations, this may work the first time.  
 Otherwise, you may have to tell SCons where to find some of those libraries.  There are quite a few 
 options that you can use to tell SCons where to look, as well as other things about the build 
 process.  To see a list of options you can pass to SCons, type
