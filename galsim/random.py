@@ -34,8 +34,8 @@ pass to other Deviate constructors.
 _galsim.BaseDeviate.seed.__func__.__doc__ = """
 Seed the pseudo-random number generator.
 
-Calling
--------
+Multiple Calling Options
+------------------------
 >>> BaseDeviate.seed()
 
 Re-seed the PRNG using current time.
@@ -48,8 +48,8 @@ Re-seed the PRNG using specified seed.
 _galsim.BaseDeviate.reset.__func__.__doc__ = """
 Reset the pseudo-random number generator, severing connections to any other deviates.
 
-Calling
--------
+Multiple Calling Options
+------------------------
 >>> BaseDeviate.reset()
 
 Re-seed the PRNG using current time, and sever the connection to any other Deviate.
@@ -62,7 +62,6 @@ Re-seed the PRNG using specified seed, and sever the connection to any other Dev
 
 Re-connect this Deviate with the rng in another one supplied as dev.
 """
-
 
 
 # UniformDeviate docstrings
@@ -103,7 +102,6 @@ Calling
 On output each element of the input Image will have a pseudo-random UniformDeviate return value
 added to it.
 """
-
 _galsim.UniformDeviate.__call__.__func__.__doc__= "Draw a new random number from the distribution."
 
 
