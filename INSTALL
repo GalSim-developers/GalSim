@@ -372,8 +372,8 @@ or libboost-dev on Debian-derivatives).  However, as above we stress that you sh
 the version of Python that Boost is built against must be the same as that you intend to use for
 running GalSim.
 
-The solution may be to install Boost C++ manually, which luckily is relatively straightforward. This
-can be done by following the instructions of Section 1.v), above.
+The solution may be to install Boost C++ manually. This can be done by following the instructions of
+Section 1.v), above.
 
 ii) Mac OSX
 -----------
@@ -392,8 +392,8 @@ However, there is a slight caveat regarding the use of fink-installed Boost C++ 
 Python Distribution or other third party-maintained Python distributions.  These are not necessarily
 automatically detected as the installed version of Python when fink installs the Boost C++ library.
 
-The solution is to install Boost C++ manually, which luckily is relatively straightforward. This can
-be done by following the instructions of Section 1.v), above.
+The solution is to install Boost C++ manually. This can be done by following the instructions of 
+Section 1.v), above.
 
 You may still need to install NumPy and PyFITS manually, e.g. using easy_install, with your chosen
 Python.  This is because the fink of these Python modules install and use a fink Python build in 
