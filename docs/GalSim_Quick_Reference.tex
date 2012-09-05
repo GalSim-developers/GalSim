@@ -25,6 +25,10 @@
 \title{GalSim Library Quick Reference}
 
 \section{Overview}
+
+\emph{BARNEY TODO: Tidy this whole thing up, make it look a lot less ugly,
+maybe use an entirely different document class.}
+
 The GalSim Library provides a number of Python classes and methods for
 simulating astronomical images.  The fundamental work flow will
 normally be something like:
@@ -60,38 +64,45 @@ can be used in this workflow.
 
 \section{GSObject classes and methods}\label{sect:gsobjects}
 \subsection{Lists of available GSObjects}
-\subsubsection*{Simple GSObjects}
-In the order in which the classes
-appear in {\tt GalSim/galsim/base.py}:
+
+There are currently 12 types of \gsobject. The first ten listed are
+`simple' or `atomic' \gsobject s that can be initialized by providing
+values for their required or optional parameters; the last two are
+`compound' classes used to represent combinations of \gsobject s.  
+In the order in which the classes appear in {\tt GalSim/galsim/base.py}:
 \begin{itemize}
-\item[] Gaussian
-\item[] Moffat
-\item[] AtmosphericPSF
-\item[] Airy
-\item[] Kolmogorov
-\item[] OpticalPSF
-\item[] Pixel
-\item[] Sersic
-\item[] Exponential
-\item[] DeVaucouleurs
-\item[] RealGalaxy
+\item[$\circ$] \texttt{Gaussian} --- a 2D Gaussian profile.
+\item[$\circ$] \texttt{Moffat} --- a Moffat profile, used to approximate PSFs.
+\item[$\circ$] \texttt{AtmosphericPSF} --- currently an image-based
+  implementation of a Kolmogorov PSF (see below), but expected to evolve to
+  use an image of a stochastically modelled atmospheric PSF in the near future.
+\item[$\circ$] \texttt{Airy} --- an Airy PSF for ideal diffraction
+  through a circular aperture, supports central obscuration.
+\item[$\circ$] \texttt{Kolmogorov} --- the Kolmogorov PSF for long-exposure
+  images through a turbulent atmosphere.
+\item[$\circ$] \texttt{OpticalPSF} --- a simple model for non-ideal
+  (aberrated) propagation through circular or square apertures with obscuration.
+\item[$\circ$] \texttt{Pixel} --- used for integrating light onto square or
+  rectangular pixels.
+\item[$\circ$] \texttt{Sersic} --- the S\'{e}rsic family of galaxy light
+  profiles.
+\item[$\circ$] \texttt{Exponential} --- the Exponential disc, a S\'{e}rsic
+  with index $n=1$.
+\item[$\circ$] \texttt{DeVaucouleurs} --- commonly used to model galaxy bulge
+  profiles, a S\'{e}rsic with index $n=4$.
+\item[$\circ$] \texttt{RealGalaxy} --- models galaxies using real
+  data, including correction for the original PSF.
+\item[$\circ$] \texttt{Add} --- a \emph{compound} object used for
+  summing multiple \gsobject s.
+\item[$\circ$] \texttt{Convolve} --- a \emph{compound} object used for
+convolving multiple \gsobject s
 \end{itemize}
 
-\subsubsection*{Compound GSObjects}
-In the order in which the classes
-appear in {\tt GalSim/galsim/base.py}:
-\begin{itemize}
-\item[] Add
-\item[] Convolve
-\end{itemize}
+For more info and initialization details for each \gsobject, type {\tt print
+  galsim.<GSObject\_name>.\_\_doc\_\_} within the Python interpreter.
 
-\subsection{Initializing GSObjects}
-All \gsobject s are initialized using a similar pattern, and
+\subsection{GSObject methods}
 
-\begin{itemize}
-\item {\tt Gaussian} \\
-  Requires a single (i.e.\ at least one, but no more than one) 
-\end{itemize}
 
 \section{Random deviate classes and methods}\label{sect:random}
 
