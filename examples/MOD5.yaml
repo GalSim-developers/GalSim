@@ -33,7 +33,7 @@ gal :
             ellip :
                 type : EBeta
                 e : { type : Random , min : 0.0 , max : 0.3 }
-                beta : { type : RandomAngle }
+                beta : { type : Random }
         -
             type : Sersic
             n : 1.5
@@ -44,7 +44,7 @@ gal :
             ellip :
                 type : EBeta
                 e : { type : Random , min : 0.2 , max : 0.8 }
-                beta : { type : RandomAngle }
+                beta : { type : Random }
 
     flux : { type : Random , min : 1.0e4 , max : 1.0e5 }
     

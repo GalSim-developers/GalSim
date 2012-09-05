@@ -45,4 +45,7 @@ class InputCatalog(object):
         """
         from numpy import loadtxt
         # Read in the data using the numpy convenience function
-        self.data = loadtxt(self.file_name, comments=comments)
+        # Note: we leave the data as str, rather than convert to float, so that if
+        # we have any str fields, they don't give an error here.  They'll only give an 
+        # error if one tries to convert them to float at some point.
+        self.data = loadtxt(self.file_name, comments=comments, dtype=str)

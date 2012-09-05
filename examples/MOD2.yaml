@@ -75,7 +75,7 @@ gal :
                 min : 0
                 max : 0.6
             beta : 
-                type : RandomAngle
+                type : Random
 
     # An object may have both an ellip and a shear field, in which case, the ellip
     # is applied before the shear.  

@@ -95,7 +95,7 @@
     "ellip" : {
         "type" : "EBeta",
         "e" : { "type" : "Random" , "min" : 0.0 , "max" : 0.8 },
-        "beta" : { "type" : "RandomAngle" }
+        "beta" : { "type" : "Random" }
     }
 },
 

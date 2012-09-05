@@ -24,10 +24,13 @@ def ParseValue(config, param_name, base, value_type):
         #print 'param == value_type: ',param,True
         return param, True
     elif not isinstance(param, dict):
-        if value_type is galsim.Angle :
+        if value_type is galsim.Angle:
             # Angle is a special case.  Angles are specified with a final string to 
             # declare what unit to use.
             val = _GetAngleValue(param, param_name)
+        elif value_type is bool:
+            # For bool, we allow a few special string conversions
+            val = _GetBoolValue(param, param_name)
         else:
             # Make sure strings are converted to float (or other type) if necessary.
             # In particular things like 1.e6 aren't converted to float automatically
@@ -52,7 +55,7 @@ def ParseValue(config, param_name, base, value_type):
         valid_types = {
             float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'Sequence', 'List' ],
             int : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
-            bool : [ 'InputCatalog', 'List' ],
+            bool : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
             str : [ 'InputCatalog', 'List' ],
             Angle : [ 'Random', 'RandomAngle', 'List' ],
             Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
@@ -112,6 +115,26 @@ def _GetAngleValue(param, param_name):
             raise AttributeError("Unknown Angle unit: %s for %s param"%(unit,param_name))
     except :
         raise AttributeError("Unable to parse %s param = %s as an Angle."%(param_name,param))
+
+
+def _GetBoolValue(param, param_name):
+    """ @brief Convert a string to a bool
+    """
+    #print 'GetBoolValue: param = ',param
+    if isinstance(param,str):
+        #print 'param.strip.upper = ',param.strip().upper()
+        if param.strip().upper() in [ 'TRUE', 'YES', '1' ]:
+            return True
+        elif param.strip().upper() in [ 'FALSE', 'NO', '0' ]:
+            return False
+        else:
+            raise AttributeError("Unable to parse %s param = %s as a bool."%(param_name,param))
+    else:
+        try:
+            val = bool(param)
+            return val
+        except:
+            raise AttributeError("Unable to parse %s param = %s as a bool."%(param_name,param))
 
 
 def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
@@ -285,7 +308,7 @@ def _GenerateFromRing(param, param_name, base, value_type):
         i = i + 1
     param['i'] = i
     param['current'] = current
-    #print 'return shear = ',current,False
+    #print 'return shear = ',current
     return current, False
 
 def _GenerateFromInputCatalog(param, param_name, base, value_type):
@@ -312,9 +335,12 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
         raise IndexError(
             "%s index has gone past the number of entries in the catalog"%param_name)
 
-    val = input_cat.data[index, col]
+    str = input_cat.data[index, col]
+    # We want to parse this string with ParseValue, but we need a dict to do that:
+    temp_dict = { param_name : str }
+    val = ParseValue(temp_dict,param_name,base,value_type)[0]
 
-    #print 'InputCatalog: ',val,False
+    #print 'InputCatalog: ',str,val
     return val, False
 
 def _GenerateFromRandom(param, param_name, base, value_type):
@@ -324,6 +350,14 @@ def _GenerateFromRandom(param, param_name, base, value_type):
         raise ValueError("No rng available for %s.type = Random"%param_name)
     rng = base['rng']
 
+    # Set defaults when reasonable:
+    if value_type is bool:
+        param.setdefault('min',0)
+        param.setdefault('max',1)
+    if value_type is galsim.Angle:
+        param.setdefault('min',0 * galsim.degrees)
+        param.setdefault('max',360 * galsim.degrees)
+
     req = { 'min' : value_type , 'max' : value_type }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
 
@@ -331,7 +365,7 @@ def _GenerateFromRandom(param, param_name, base, value_type):
     max = kwargs['max']
 
     ud = galsim.UniformDeviate(rng)
-    if value_type is int:
+    if value_type in [ int, bool ]:
         import math
         val = int(math.floor(ud() * (max-min+1))) + min
         # In case ud() == 1
@@ -339,20 +373,6 @@ def _GenerateFromRandom(param, param_name, base, value_type):
             val = max
     else:
         val = ud() * (max-min) + min
-    return val, False
-
-def _GenerateFromRandomAngle(param, param_name, base, value_type):
-    if 'rng' not in base:
-        raise ValueError("No rng available for %s.type = RandomAngle"%param_name)
-    rng = base['rng']
-
-    # Just make sure there aren't any extra parameters
-    CheckAllParams(param, param_name)
-    import math
-    ud = galsim.UniformDeviate(rng)
-    val = ud() * 2 * math.pi * galsim.radians
-    #print 'beta = ',val
-    #print 'RandomAngle: ',val,False
     return val, False
 
 def _GenerateFromRandomGaussian(param, param_name, base, value_type):
@@ -421,11 +441,11 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
         val += mean
     else:
         val = gd()
-        if mean in kwargs:
+        if 'mean' in kwargs:
             val += kwargs['mean']
 
     #print 'ellip = ',val
-    #print 'RandomGaussian: ',val,False
+    #print 'RandomGaussian: ',val
     return val, False
 
 def _GenerateFromRandomCircle(param, param_name, base, value_type):
@@ -448,7 +468,7 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
         rsq = dx**2 + dy**2
         if rsq <= max_rsq:
             break
-    #print 'RandomCircle: ',(dx,dy),False
+    #print 'RandomCircle: ',(dx,dy)
     return galsim.config.Shift(dx=dx,dy=dy), False
 
 def _GenerateFromSequence(param, param_name, base, value_type):
@@ -461,8 +481,25 @@ def _GenerateFromSequence(param, param_name, base, value_type):
 
     step = kwargs.get('step',1)
     first = kwargs.get('first',0)
+    last = kwargs.get('last',None)
     repeat = kwargs.get('repeat',1)
+    if repeat <= 0:
+        raise ValueError("Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(
+                repeat,param_name))
     #print 'first, step, repeat = ',first,step,repeat
+
+    if value_type is bool:
+        # Then there are only really two valid sequences: Either 010101... or 101010...
+        # Aside from the repeat value of course.
+        if first:
+            first = 1
+            last = 0
+            step = -1
+        else:
+            first = 0
+            step = 1
+            last = 1
+        #print 'first, last, step, repeat => ',first,last,step,repeat
 
     rep = param.get('rep',0)
     index = param.get('current',first)
@@ -472,9 +509,9 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     else:
         rep = 1
         index = index + step
-        if ( 'last' in kwargs and (
-             (step > 0 and index > value_type(kwargs['last'])) or
-             (step < 0 and index < value_type(kwargs['list'])) ) ):
+        if (last is not None and 
+                ( (step > 0 and index > last) or
+                  (step < 0 and index < last) ) ):
             index = first
     param['rep'] = rep
     param['current'] = index

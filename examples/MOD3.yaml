@@ -82,7 +82,7 @@ gal :
         # ok to have nobjects greater than the number of real galaxies in the catalog.
     
     rotate :
-        type : RandomAngle
+        type : Random
 
     shear : 
         type : G1G2 

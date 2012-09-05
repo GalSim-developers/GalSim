@@ -50,7 +50,7 @@
     },
     
     "rotate" : {
-        "type" : "RandomAngle"
+        "type" : "Random"
     },
 
     "shear" : {

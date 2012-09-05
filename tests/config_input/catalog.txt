@@ -1,0 +1,5 @@
+# input catalog for test_config.py
+#
+1.234  4.131  9  -3  1  yes   foo  neo
+2.345  -900   0  8   0  No    bar  trinity
+3.456  8.e3  -4  17  1  false baz  morpheus

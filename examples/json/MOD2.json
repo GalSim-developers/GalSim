@@ -79,7 +79,7 @@
                 "max" : 0.6
             },
             "beta" : {
-                "type" : "RandomAngle"
+                "type" : "Random"
             }
         }
     },
