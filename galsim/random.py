@@ -3,7 +3,7 @@ Addition of docstrings to the Random deviate classes at the Python layer.
 """
 from . import _galsim
 
-# BaseDeviate docstring
+# BaseDeviate docstrings
 _galsim.BaseDeviate.__doc__ = """
 Base class for all the various random deviates.
 
@@ -30,6 +30,40 @@ There is not much you can do with something that is only known to be a BaseDevia
 of the derived classes other than construct it and change the seed, and use it as an argument to
 pass to other Deviate constructors.
 """
+
+_galsim.BaseDeviate.seed.__func__.__doc__ = """
+Seed the pseudo-random number generator.
+
+Calling
+-------
+>>> BaseDeviate.seed()
+
+Re-seed the PRNG using current time.
+
+>>> BaseDeviate.seed(lseed)
+
+Re-seed the PRNG using specified seed.
+"""
+
+_galsim.BaseDeviate.reset.__func__.__doc__ = """
+Reset the pseudo-random number generator, severing connections to any other deviates.
+
+Calling
+-------
+>>> BaseDeviate.reset()
+
+Re-seed the PRNG using current time, and sever the connection to any other Deviate.
+
+>>> BaseDeviate.reset(lseed)
+
+Re-seed the PRNG using specified seed, and sever the connection to any other Deviate.
+
+>>> BaseDeviate.reset(dev)
+
+Re-connect this Deviate with the rng in another one supplied as dev.
+"""
+
+
 
 # UniformDeviate docstrings
 _galsim.UniformDeviate.__doc__ = """
@@ -258,8 +292,8 @@ Draw a new random number from the distribution.
 
 Returns a Poisson deviate with current mean.
 """
-_galsim.PoissonDeviate.getMean.__func__.__doc__ = "Get current distribution mean.")
-_galsim.PoissonDeviate.setMean.__func__.__doc__ = "Set current distribution mean.")
+_galsim.PoissonDeviate.getMean.__func__.__doc__ = "Get current distribution mean."
+_galsim.PoissonDeviate.setMean.__func__.__doc__ = "Set current distribution mean."
 
 
 # CCDNoise deviate docstrings
@@ -310,7 +344,7 @@ To get and set the deviate parameters, see the docstrings for the .getGain(), .s
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
-_galsim.CCDNoise.applyTo.__doc__ = """
+_galsim.CCDNoise.applyTo.__func__.__doc__ = """
 Add noise to an input Image.
 
 Calling
