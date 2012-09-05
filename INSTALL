@@ -14,7 +14,7 @@ Table of Contents:
 1. Software required before building galsim
 ===========================================
 
-i) Python (2.6 or 2.7 series), with Numpy, PyFITS and PyYAML modules installed
+i) Python (2.6 or 2.7 series), with some additional modules installed
 ------------------------------------------------------------------------------
 
 The interface to the GalSim code is via the Python package "galsim", and its associated modules.
@@ -45,15 +45,20 @@ The galsim package also requires
 * the astronomical FITS file input/output module PyFITS 
 (http://www.stsci.edu/institute/software_hardware/pyfits)
 
-* the Python YAML parser and emitter module PyYAML (http://pyyaml.org/wiki/PyYAML)
+* the Python YAML parser and emitter module PyYAML (http://pyyaml.org/wiki/PyYAML) - PyYAML is in
+  fact only required for full config file parsing functionality, and can be ommitted if users are 
+  happy to use JSON-style config parsing 
 
-These should installed onto your Python system so that they can be imported by
+These should installed onto your Python system so that they can be imported by, for example
 
 >>> import numpy
 >>> import pyfits
+
+within Python, and
+
 >>> import yaml
 
-within Python.  You can test this by loading up the Python interpreter for the version of python 
+if using PyYAML.  You can test this by loading up the Python interpreter for the version of python 
 you'll be using with the GalSim toolkit.  This is usually achieved by typing "python" or 
 "/path/to/executable/bin/python" if your desired Python is not the system default, and typing the 
 import commands above.  If you get no warning message, things are OK.  
