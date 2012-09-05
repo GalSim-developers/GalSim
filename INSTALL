@@ -402,7 +402,8 @@ your default Python to be the fink/Macports installed version, using these packa
 install NumPy and PyFITS will be fine.
 
 b) Macports -- this is another popular Mac package management project (http://www.macports.org/) 
-with similar functionality to fink, although TMV is not supported.  
+with similar functionality to fink, although TMV is not supported but can be easily installed by
+following the instructions in Section 1.iv).  
 
 Note that when using MacPorts to install boost, you may need to explicitly indicate Boost.Python, 
 for example
