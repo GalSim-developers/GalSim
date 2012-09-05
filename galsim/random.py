@@ -194,10 +194,10 @@ Draw a new random number from the distribution.
 
 Returns a Binomial deviate with current N and p.
 """
-_galsim.BinomialDeviate.getN.__func__.__doc__ = "Get current distribution N.")
-_galsim.BinomialDeviate.setN.__func__.__doc__ = "Set current distribution N.")
-_galsim.BinomialDeviate.getP.__func__.__doc__ = "Get current distribution p.")
-_galsim.BinomialDeviate.setP.__func__.__doc__ = "Set current distribution p.")
+_galsim.BinomialDeviate.getN.__func__.__doc__ = "Get current distribution N."
+_galsim.BinomialDeviate.setN.__func__.__doc__ = "Set current distribution N."
+_galsim.BinomialDeviate.getP.__func__.__doc__ = "Get current distribution p."
+_galsim.BinomialDeviate.setP.__func__.__doc__ = "Set current distribution p."
 
 
 # PoissonDeviate docstrings
