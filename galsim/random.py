@@ -141,8 +141,6 @@ instance.
 
 To get and set the deviate parameters, see the docstrings for the .getN(), .setN(), .getSigma() and
 .setSigma() methods of each instance.
-
-These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
 _galsim.GaussianDeviate.applyTo.__func__.__doc__ = """
@@ -206,8 +204,6 @@ instance.
 
 To get and set the deviate parameters, see the docstrings for the .getN(), .setN(), .getP() and
 .setP() methods of each instance.
-
-These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
 _galsim.BinomialDeviate.applyTo.__func__.__doc__ = """
@@ -270,8 +266,6 @@ instance.
 
 To get and set the deviate parameter, see the docstrings for the .getMean(), .setMean() method of 
 each instance.
-
-These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
 _galsim.PoissonDeviate.applyTo.__func__.__doc__ = """
@@ -338,8 +332,6 @@ instance.
 
 To get and set the deviate parameters, see the docstrings for the .getGain(), .setGain(), 
 .getReadNoise() and .setReadNoise() methods of each instance.
-
-These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
 _galsim.CCDNoise.applyTo.__func__.__doc__ = """
@@ -402,8 +394,6 @@ instance.
 
 To get and set the deviate parameters, see the docstrings for the .getA(), .setA(), .getB() and 
 .setB() methods of each instance.
-
-These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
 _galsim.WeibullDeviate.applyTo.__func__.__doc__ = """
@@ -470,8 +460,6 @@ instance.
 
 To get and set the deviate parameters, see the docstrings for the .getAlpha(), .setAlpha(), 
 .getBeta() and .setBeta() methods of each instance.
-
-These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
 _galsim.GammaDeviate.applyTo.__func__.__doc__ = """
@@ -536,8 +524,6 @@ instance.
 
 To get and set the deviate parameter, see the docstrings for the .getN(), .setN() methods of each
 instance.
-
-These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
 _galsim.Chi2Deviate.applyTo.__func__.__doc__ = """
