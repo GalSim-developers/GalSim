@@ -285,7 +285,50 @@ To get and set the deviate parameters, see the docstrings for the .getA(), .setA
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
+_galsim.GammaDeviate.__doc__ = """
+Pseudo-random Gamma-distributed deviate for parameters alpha & beta.
 
+See http://en.wikipedia.org/wiki/Gamma_distribution (although note that in the Boost random routine
+this class calls the notation is alpha=k and beta=theta).  The Gamma distribution is a real valued
+distribution producing deviates >= 0.
+
+Initialization
+--------------
+
+>>> gam = GammaDeviate(alpha=1., beta=1.)
+
+Initializes gam to be a GammaDeviate instance using the current time for the seed.
+
+>>> gam = GammaDeviate(lseed, alpha=1., beta=1.)
+
+Initializes gam using the specified seed.
+
+>>> gam = GammaDeviate(dev alpha=1., beta=1.)
+
+Initializes gam to share the same underlying random number generator as dev.
+
+Parameters:
+
+    alpha    shape parameter of the distribution (default alpha = 1).
+    beta     scale parameter of the distribution (default beta = 1).
+
+alpha and beta must both be > 0.
+
+Calling
+-------
+Taking the instance from the above examples, successive calls to g() will return successive, 
+pseudo-random Gamma-distributed deviates with shape and scale parameters alpha and beta. 
+
+Methods
+-------
+To add deviates to every element of an image, see the docstring for the .applyTo() method of each
+instance.
+
+To get and set the deviate parameters, see the docstrings for the .getAlpha(), .setAlpha(), 
+.getBeta() and .setBeta() methods of each instance.
+
+These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
+"""
 
 
 
