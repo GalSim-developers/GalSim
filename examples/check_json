@@ -1,31 +1,38 @@
 #!/bin/bash
 
-/bin/rm output/*
-/bin/rm output_json/*
+if [ ! -d "output" ]; then
+    mkdir output
+fi
+if [ ! -d "output_json" ]; then
+    mkdir output_json
+fi
 
-BasicDemo.py 1
-galsim_json json/BD1.json
+/bin/rm -f output/*
+/bin/rm -f output_json/*
 
-BasicDemo.py 2
-galsim_json json/BD2.json
+./BasicDemo.py 1 || exit
+galsim_json json/BD1.json || exit
 
-BasicDemo.py 3
-galsim_json json/BD3.json
+./BasicDemo.py 2 || exit
+galsim_json json/BD2.json || exit
 
-MultiObjectDemo.py 1
-galsim_json json/MOD1.json
+./BasicDemo.py 3 || exit
+galsim_json json/BD3.json || exit
 
-MultiObjectDemo.py 2
-galsim_json json/MOD2.json
+./MultiObjectDemo.py 1 || exit
+galsim_json json/MOD1.json || exit
 
-MultiObjectDemo.py 3
-galsim_json json/MOD3a.json json/MOD3b.json
+./MultiObjectDemo.py 2 || exit
+galsim_json json/MOD2.json || exit
 
-MultiObjectDemo.py 4
-galsim_json json/MOD4.json
+./MultiObjectDemo.py 3 || exit
+galsim_json json/MOD3a.json json/MOD3b.json || exit
 
-MultiObjectDemo.py 5
-galsim_json json/MOD5a.json json/MOD5b.json
+./MultiObjectDemo.py 4 || exit
+galsim_json json/MOD4.json || exit
+
+./MultiObjectDemo.py 5 || exit
+galsim_json json/MOD5a.json json/MOD5b.json || exit
 
 echo 'Checking diffs: (No output means success)'
 

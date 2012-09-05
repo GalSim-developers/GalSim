@@ -1,31 +1,38 @@
 #!/bin/bash
 
-/bin/rm output/*
-/bin/rm output_yaml/*
+if [ ! -d "output" ]; then
+    mkdir output
+fi
+if [ ! -d "output_yaml" ]; then
+    mkdir output_yaml
+fi
 
-BasicDemo.py 1
-galsim_yaml BD1.yaml
+/bin/rm -f output/*
+/bin/rm -f output_yaml/*
 
-BasicDemo.py 2
-galsim_yaml BD2.yaml
+./BasicDemo.py 1 || exit
+galsim_yaml BD1.yaml || exit
 
-BasicDemo.py 3
-galsim_yaml BD3.yaml
+./BasicDemo.py 2 || exit
+galsim_yaml BD2.yaml || exit
 
-MultiObjectDemo.py 1
-galsim_yaml MOD1.yaml
+./BasicDemo.py 3 || exit
+galsim_yaml BD3.yaml || exit
 
-MultiObjectDemo.py 2
-galsim_yaml MOD2.yaml
+./MultiObjectDemo.py 1 || exit
+galsim_yaml MOD1.yaml || exit
 
-MultiObjectDemo.py 3
-galsim_yaml MOD3.yaml
+./MultiObjectDemo.py 2 || exit
+galsim_yaml MOD2.yaml || exit
 
-MultiObjectDemo.py 4
-galsim_yaml MOD4.yaml
+./MultiObjectDemo.py 3 || exit
+galsim_yaml MOD3.yaml || exit
 
-MultiObjectDemo.py 5
-galsim_yaml MOD5.yaml
+./MultiObjectDemo.py 4 || exit
+galsim_yaml MOD4.yaml || exit
+
+./MultiObjectDemo.py 5 || exit
+galsim_yaml MOD5.yaml || exit
 
 echo 'Checking diffs: (No output means success)'
 
