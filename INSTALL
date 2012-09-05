@@ -59,7 +59,7 @@ within Python, and
 
 >>> import yaml
 
-if using PyYAML.  You can test this by loading up the Python interpreter for the version of python 
+if using PyYAML.  You can test this by loading up the Python interpreter for the version of Python 
 you'll be using with the GalSim toolkit.  This is usually achieved by typing "python" or 
 "/path/to/executable/bin/python" if your desired Python is not the system default, and typing the 
 import commands above.  If you get no warning message, things are OK.  
@@ -118,7 +118,7 @@ be sure to specify where your desired Python version resides when installing the
 A final check: Shared libraries
 -------------------------------
 Before building and installing the software below, please do make sure that Python is built with
-shared libraries.  On some systems, the default is *not* to build python with shared libraries, 
+shared libraries.  On some systems, the default is *not* to build Python with shared libraries, 
 which will result in mysterious issues when trying to compile GalSim (apparent numpy-related
 failures).  In the few cases where this issue was identified, Python had been compiled from source
 directly; developers who used Python from pre-packaged third party distributions did not tend to 
@@ -132,7 +132,7 @@ or
 
 /path/to/executable/lib/libpython*.so [on Linux]
 
-If the libraries are not there, you may need to rebuild python with shared libraries using
+If the libraries are not there, you may need to rebuild Python with shared libraries using
 --enable-shared.  Note that if you discover this after installing all the dependencies below, then
 you'll have to rebuild the Python-related dependencies after rebuilding Python -- so it's better to
 check beforehand.
@@ -207,11 +207,11 @@ The link=shared is necessary to ensure that they are built as shared libraries; 
 on some platforms, but not all.
 
 Note: if you don't want to install everything related to boost (which takes a while), you can 
-restrict to boost python and math by using --with-python --with-math on the ./b2 commands.  
-Currently we are only using boost python, but there are plans to use the RNG in boost math, so 
-installing these two will likely be sufficient for the forseeable future.
+restrict to boost Python and math by using --with-python --with-math on the ./b2 commands.  
+Currently we are only using Boost Python, but there may be parts of the math library we want to use
+so installing these two will likely be sufficient for the forseeable future.
 
-Once you have installed Boost, you can check that it links to the version of python that will be 
+Once you have installed Boost, you can check that it links to the version of Python that will be 
 used for GalSim and on which you have installed Numpy and Pyfits by typing
 
 ldd <YOUR_BOOST_LIB_LOCATION>/libboost_python<POSSIBLE_SUFFIX>.so  (on Linux)
@@ -291,7 +291,7 @@ SCons caches the results of the various checks it does for the required external
 boost, etc.).  This is usually very helpful, since they don't generally change, so it makes later
 builds much faster.  However, sometimes you don't want SCons to remember the results while you are 
 initally setting things up.  For example, you might recompile the boost library with a different 
-compiler or python version.  In this case, you can tell SCons not to cache the results of previous 
+compiler or Python version.  In this case, you can tell SCons not to cache the results of previous 
 library tests with 
 
 scons CACHE_LIB=false
@@ -321,7 +321,7 @@ or
 sudo scons install
 
 If you want to install into a different location, the prefix for the library and header files can 
-be specified with PREFIX=<installdir>, and the location for the python modules can be specified 
+be specified with PREFIX=<installdir>, and the location for the Python modules can be specified 
 with PYPREFIX=<pythondir>.  So the command would be
 
 scons install PREFIX=<installdir> PYPREFIX=<pythondir>
@@ -345,7 +345,7 @@ You can run our test suite by typing
 scons tests
 
 This should compile the test suite and run it.  The tests of our C++ library will always be run, but
-we use nosetests for our python test suite, so that will only be run if nosetests is present on 
+we use nosetests for our Python test suite, so that will only be run if nosetests is present on 
 your system.  We don't require this as a dependency, since you can still do everything with the 
 GalSim library without this.  But it is required for a complete run of the test suite.
 
@@ -354,7 +354,7 @@ http://nose.readthedocs.org/en/latest/).  Many third party-maintained Python dis
 the Enthought Python Distribution, include nosetests.
 
 There are also some example executables that come with GalSim, and will be useful for testing and
-development particularly outside the python layer.  These can be built by typing
+development particularly outside the Python layer.  These can be built by typing
 
 scons examples
 
@@ -398,7 +398,7 @@ be done by following the instructions of Section 1.v), above.
 You may still need to install NumPy and PyFITS manually, e.g. using easy_install, with your chosen
 Python.  This is because the fink of these Python modules install and use a fink Python build in 
 /sw/bin/python2.7 (or similar), which may not be your desired version. Of course, if you have setup
-your default python to be the fink/Macports installed version, using these package managers to 
+your default Python to be the fink/Macports installed version, using these package managers to 
 install NumPy and PyFITS will be fine.
 
 b) Macports -- this is another popular Mac package management project (http://www.macports.org/) 
@@ -412,7 +412,7 @@ sudo port install boost +python27
 You may still need to install NumPy and PyFITS manually, e.g. using easy_install, with your chosen
 Python.  This is because the fink of these Python modules install and use a fink Python build in 
 /sw/bin/python2.7 (or similar), which may not be your desired version. Of course, if you have setup
-your default python to be the fink/Macports installed version, using these package managers to 
+your default Python to be the fink/Macports installed version, using these package managers to 
 install NumPy and PyFITS will be fine.
 
 
