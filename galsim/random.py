@@ -374,6 +374,29 @@ To get and set the deviate parameters, see the docstrings for the .getA(), .setA
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
+_galsim.WeibullDeviate.applyTo.__func__.__doc__ = """
+Add Weibull-distributed deviates to every element in a supplied Image.
+
+Calling
+-------
+>>> WeibullDeviate.applyTo(image)
+
+On output each element of the input Image will have a pseudo-random WeibullDeviate return value 
+added to it, with current values of a and b.
+"""
+
+_galsim.WeibullDeviate.__call__.__func__.__doc__ = """
+Draw a new random number from the distribution.
+
+Returns a Weibull-distributed deviate with current a and b.
+"""
+_galsim.WeibullDeviate.getA.__func__.__doc__ = "Get current distribution shape parameter a."
+_galsim.WeibullDeviate.setA.__func__.__doc__ = "Set current distribution shape parameter a."
+_galsim.WeibullDeviate.getB.__func__.__doc__ = "Get current distribution shape parameter b."
+_galsim.WeibullDeviate.setB.__func__.__doc__ = "Set current distribution shape parameter b."
+
+
+# GammaDeviate docstrings
 _galsim.GammaDeviate.__doc__ = """
 Pseudo-random Gamma-distributed deviate for parameters alpha & beta.
 
