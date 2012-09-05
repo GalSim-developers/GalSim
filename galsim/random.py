@@ -310,9 +310,23 @@ To get and set the deviate parameters, see the docstrings for the .getGain(), .s
 These docstrings can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
+_galsim.CCDNoise.applyTo.__doc__ = """
+Add noise to an input Image.
+
+Calling
+-------
+>>> CCDNoise.applyTo(image)
+
+On output the Image instance image will have been given an additional stochastic noise according to 
+the gain and read noise settings of the CCDNoise instance.
+"""
+_galsim.CCDNoise.getGain.__func__.__doc__ = "Get gain in current noise model."
+_galsim.CCDNoise.setGain.__func__.__doc__ = "Set gain in current noise model."
+_galsim.CCDNoise.getReadNoise.__func__.__doc__ = "Get read noise in current noise model."
+_galsim.CCDNoise.setReadNoise.__func__.__doc__ = "Set read noise in current noise model."
 
 
-
+# WeibullDeviate docstrings
 _galsim.WeibullDeviate.__doc__ = """
 Pseudo-random Weibull-distributed deviate for shape parameter a & scale parameter b.
 
