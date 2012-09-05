@@ -15,35 +15,10 @@ namespace {
 struct PyBaseDeviate {
 
     static void wrap() {
-        static char const * doc = 
-            " Base class for all the various random deviates.\n"
-            " This holds the essential random number generator that all the other classes use.\n"
-            "\n"
-            " All deviates have three constructors that define different ways of setting up\n"
-            " the random number generator.\n"
-            "\n"
-            " 1) Only the arguments particular to the derived class (e.g. mean and sigma for \n"
-            "    GaussianDeviate).  In this case, a new random number generator is created and\n"
-            "    it is seeded using the computer's microsecond counter.\n"
-            "\n"
-            " 2) Using a particular seed as the first argument to the constructor.  \n"
-            "    This will also create a new random number generator, but seed it with the \n"
-            "    provided value.\n"
-            "\n"
-            " 3) Passing another BaseDeviate as the first arguemnt to the constructor.\n"
-            "    This will make the new Deviate share the same underlying random number generator\n"
-            "    with the other Deviate.  So you can make one Deviate (of any type), and seed\n"
-            "    it with a particular deterministic value.  Then if you pass that Deviate \n"
-            "    to any other one you make, they will all be using the same rng and have a \n"
-            "    particular deterministic series of values.  (It doesn't have to be the first\n"
-            "    one -- any one you've made later can also be used to seed a new one.)\n"
-            "\n"
-            " There is not much you can do with something that is only known to be a BaseDeviate\n"
-            " rather than one of the derived classes other than construct it and change the \n"
-            " seed, and use it as an argument to pass to other Deviate constructors.\n"
-            ;
+        
+        // Note that class docstrings are now added in galsim/random.py
 
-        bp::class_<BaseDeviate> pyBaseDeviate("BaseDeviate", doc, bp::init<>());
+        bp::class_<BaseDeviate> pyBaseDeviate("BaseDeviate", "", bp::init<>());
         pyBaseDeviate
             .def(bp::init<long>(bp::arg("lseed")))
             .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
@@ -85,30 +60,11 @@ struct PyUniformDeviate {
     }
 
     static void wrap() {
-        static char const * doc = 
-            "\n"
-            "Pseudo-random number generator with uniform distribution in interval [0.,1.).\n"
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            ">>> u = UniformDeviate() : Initializes u to be a UniformDeviate instance, and seeds\n"
-            "                           the PRNG using current time.\n"
-            "\n"
-            ">>> u = UniformDeviate(lseed) : Initializes u to be a UniformDeviate instance, and\n"
-            "                                seeds the PRNG using specified long integer lseed.\n" 
-            "\n"
-            ">>> u = UniformDeviate(dev) : Initializes u to be a UniformDeviate instance,\n"
-            "                              and use the same RNG as dev\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to u() then generate\n"
-            "pseudo-random numbers distributed uniformly in the interval [0., 1.).\n"
-            "\n"
-            ;
+
+        // Note that class docstrings are now added in galsim/random.py
 
         bp::class_<UniformDeviate, bp::bases<BaseDeviate> > pyUniformDeviate(
-            "UniformDeviate", doc, bp::init<>()
+            "UniformDeviate", "", bp::init<>()
         );
         pyUniformDeviate
             .def(bp::init<long>(bp::arg("lseed")))
@@ -145,37 +101,11 @@ struct PyGaussianDeviate {
     }
 
     static void wrap() {
-        static char const * doc = 
-            "\n"
-            "Pseudo-random number generator with Gaussian distribution.\n"
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> g = GaussianDeviate(mean=0., sigma=1.) \n"
-            "\n"
-            "Initializes g to be a GaussianDeviate instance using the current time for the seed.\n"
-            "\n"
-            ">>> g = GaussianDeviate(lseed, mean=0., sigma=1.) \n"
-            "\n"
-            "Initializes g using the specified seed.\n"
-            "\n"
-            ">>> g = GaussianDeviate(dev, mean=0., sigma=1.) \n"
-            "\n"
-            "Initializes g to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "mean     optional mean for Gaussian distribution (default = 0.).\n"
-            "sigma    optional sigma for Gaussian distribution (default = 1.).\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to g() then generate\n"
-            "pseudo-random numbers Gaussian-distributed with the provided mean, sigma\n"
-            ;
+
+        // Note that class docstrings are now added in galsim/random.py
+
         bp::class_<GaussianDeviate, bp::bases<BaseDeviate> > pyGaussianDeviate(
-            "GaussianDeviate", doc, bp::init<double, double >(
+            "GaussianDeviate", "", bp::init<double, double >(
                 (bp::arg("mean")=0., bp::arg("sigma")=1.)
             )
         );
@@ -223,41 +153,11 @@ struct PyBinomialDeviate {
     }
 
     static void wrap() {
-        static char const * doc =
-            "\n"
-            "Pseudo-random Binomial deviate for N trials each of probability p.\n"
-            "\n"
-            "N is number of 'coin flips,' p is probability of 'heads,' and each call returns \n"
-            "integer 0 <= value <= N giving number of heads.\n"  
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> b = BinomialDeviate(N=1., p=0.5) \n"
-            "\n"
-            "Initializes b to be a BinomialDeviate instance using the current time for the seed.\n"
-            "\n"
-            ">>> b = BinomialDeviate(lseed, N=1., p=0.5) \n"
-            "\n"
-            "Initializes b using the specified seed.\n"
-            "\n"
-            ">>> b = BinomialDeviate(dev, N=1., p=0.5) \n"
-            "\n"
-            "Initializes b to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "N        optional number of 'coin flips' per trial (default `N = 1`).\n"
-            "p        optional probability of success per coin flip (default `p = 0.5`).\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to b() then generate\n"
-            "pseudo-random numbers binomial-distributed with the provided N, p, which\n"
-            "must both be > 0.\n"
-            ;
+
+        // Note that class docstrings are now added in galsim/random.py
+
         bp::class_<BinomialDeviate, bp::bases<BaseDeviate> > pyBinomialDeviate(
-            "BinomialDeviate", doc, bp::init<int, double >(
+            "BinomialDeviate", "", bp::init<int, double >(
                 (bp::arg("N")=1, bp::arg("p")=0.5)
             )
         );
@@ -305,40 +205,11 @@ struct PyPoissonDeviate {
     }
 
     static void wrap() {
-        static char const * doc =
-            "\n"
-            "Pseudo-random Poisson deviate with specified mean.\n"
-            "\n"
-            "The input mean sets the mean and variance of the Poisson deviate. \n"
-            "An integer deviate with this distribution is returned after each call.\n"
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> p = PoissonDeviate(mean=1.)\n"
-            "\n"
-            "Initializes g to be a PoissonDeviate instance using the current time for the seed.\n"
-            "\n"
-            ">>> p = PoissonDeviate(lseed, mean=1.)\n"
-            "\n"
-            "Initializes g using the specified seed.\n"
-            "\n"
-            ">>> p = PoissonDeviate(dev, mean=1.)\n"
-            "\n"
-            "Initializes g to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "mean     optional mean of the distribution (default `mean = 1`).\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to p() will\n"
-            "return successive, pseudo-random Poisson deviates with specified mean, which must be\n"
-            "> 0.\n"
-            ;
+
+        // Note that class docstrings are now added in galsim/random.py
+
         bp::class_<PoissonDeviate, bp::bases<BaseDeviate> > pyPoissonDeviate(
-            "PoissonDeviate", doc, bp::init<double>(
+            "PoissonDeviate", "", bp::init<double>(
                 (bp::arg("mean")=1.)
             )
         );
@@ -386,45 +257,10 @@ struct PyCCDNoise{
 
     static void wrap() {
 
-        static char const * doc =
-            "\n"
-            "Pseudo-random number generator with a basic CCD noise model.\n"
-            "\n"
-            "A CCDNoise instance is initialized given a gain level in Electrons per ADU\n"
-            "used for the Poisson noise term, and a Gaussian read noise in electrons (if\n"
-            "gain > 0.) or ADU (if gain <= 0.).  With these parameters set, the CCDNoise operates\n"
-            "on an Image, adding noise to each pixel following this model.\n" 
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> ccd_noise = CCDNoise(gain=1., read_noise=0.)\n"
-            "\n"
-            "Initializes ccd_noise to be a CCDNoise instance using the current time for the seed.\n"
-            "\n"
-            ">>> ccd_noise = CCDNoise(lseed, gain=1., read_noise=0.)\n"
-            "\n"
-            "Initializes ccd_noise to be a CCDNoise instance using the specified seed.\n"
-            "\n"
-            ">>> ccd_noise = CCDNoise(dev, gain=1., read_noise=0.)\n"
-            "\n"
-            "Initializes ccd_noise to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "gain        the gain for each pixel in electrons per ADU; setting gain <=0 will shut\n"
-            "            off the Poisson noise, and the Gaussian rms will take the value\n" 
-            "            read_noise as being in units of ADU rather than electrons [default=1.].\n"
-            "read_noise  the read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.)\n"
-            "            setting read_noise=0. will shut off the Gaussian noise [default=0.].\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to ccd_noise() will\n"
-            "generate noise following this model.\n"
-            ;
+        // Note that class docstrings are now added in galsim/random.py
+
         bp::class_<CCDNoise, bp::bases<BaseDeviate> > pyCCDNoise(
-            "CCDNoise", doc, bp::init<double, double >(
+            "CCDNoise", "", bp::init<double, double >(
                 (bp::arg("gain")=1., bp::arg("read_noise")=0.)
             )
         );
@@ -470,44 +306,11 @@ struct PyWeibullDeviate {
     }
 
     static void wrap() {
-        static char const * doc =
-            "\n"
-            "Pseudo-random Weibull-distributed deviate for shape parameter a & scale parameter b\n"
-            "\n"
-            "The Weibull distribution is related to a number of other probability distributions;\n"
-            "in particular, it interpolates between the exponential distribution (a=1) and the \n"
-            "Rayleigh distribution (a=2). See http://en.wikipedia.org/wiki/Weibull_distribution\n"
-            "(a=k and b=lambda in the notation adopted in the Wikipedia article).  The Weibull\n"
-            "distribution is real valued and produces deviates >= 0.\n"
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> w = WeibullDeviate(a=1., b=1.) \n"
-            "\n"
-            "Initializes w to be a WeibullDeviate instance using the current time for the seed.\n"
-            "\n"
-            ">>> w = WeibullDeviate(lseed, a=1., b=1.) \n"
-            "\n"
-            "Initializes w using the specified seed.\n"
-            "\n"
-            ">>> w = WeibullDeviate(dev, a=1., b=1.) \n"
-            "\n"
-            "Initializes w to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "a        shape parameter of the distribution (default a = 1).\n"
-            "b        scale parameter of the distribution (default b = 1).\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to w() then generate\n"
-            "pseudo-random numbers Weibull-distributed with shape and scale\n"
-            "parameters a and b, which must both be > 0.\n"
-            ;        
+
+        // Note that class docstrings are now added in galsim/random.py     
+
         bp::class_<WeibullDeviate, bp::bases<BaseDeviate> > pyWeibullDeviate(
-            "WeibullDeviate", doc, bp::init<double, double >(
+            "WeibullDeviate", "", bp::init<double, double >(
                 (bp::arg("a")=1., bp::arg("b")=1.)
             )
         );
@@ -555,42 +358,11 @@ struct PyGammaDeviate {
     }
 
     static void wrap() {
-        static char const * doc =
-            "\n"
-            "Pseudo-random Gamma-distributed deviate for parameters alpha & beta.\n"
-            "\n"
-            "See http://en.wikipedia.org/wiki/Gamma_distribution (although note that in the Boost\n"
-            "random routine this class calls the notation is alpha=k and beta=theta).  The Gamma\n"
-            "distribution is a real valued distribution producing deviates >= 0.\n"
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> gam = GammaDeviate(alpha=1., beta=1.) \n"
-            "\n"
-            "Initializes gam to be a GammaDeviate instance using the current time for the seed.\n"
-            "\n"
-            ">>> gam = GammaDeviate(lseed, alpha=1., beta=1.) \n"
-            "\n"
-            "Initializes gam using the specified seed.\n"
-            "\n"
-            ">>> gam = GammaDeviate(dev alpha=1., beta=1.) \n"
-            "\n"
-            "Initializes gam to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "alpha    shape parameter of the distribution (default alpha = 1).\n"
-            "beta     scale parameter of the distribution (default beta = 1).\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to g() will\n"
-            "return successive, pseudo-random Gamma-distributed deviates with shape and scale\n"
-            "parameters alpha and beta, which must both be > 0.\n"
-            ;
+
+        // Note that class docstrings are now added in galsim/random.py
+
         bp::class_<GammaDeviate, bp::bases<BaseDeviate> > pyGammaDeviate(
-            "GammaDeviate", doc, bp::init<double, double >(
+            "GammaDeviate", "", bp::init<double, double >(
                 (bp::arg("alpha")=1., bp::arg("beta")=1.)
             )
         );
@@ -643,41 +415,11 @@ struct PyChi2Deviate {
     }
 
     static void wrap() {
-        static char const * doc =
-            "\n"
-            "Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter n.\n"
-            "\n"
-            "See http://en.wikipedia.org/wiki/Chi-squared_distribution (although note that in the\n"
-            "Boost random routine this class calls the notation adopted interprets k=n).\n"
-            "The Chi^2 distribution is a real valued distribution producing deviates >= 0.\n"
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> chis = Chi2Deviate(n=1.) \n"
-            "\n"
-            "Initializes chis to be a Chi2Deviate instance using the current time for the seed.\n"
-            "\n"
-            ">>> chis = Chi2Deviate(lseed, n=1.) \n"
-            "\n"
-            "Initializes chis using the specified seed.\n"
-            "\n"
-            ">>> chis = Chi2Deviate(dev, n=1.) \n"
-            "\n"
-            "Initializes chis to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "n        number of degrees of freedom for the output distribution (default n = 1).\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to g() will\n"
-            "return successive, pseudo-random Chi^2-distributed deviates with degrees-of-freedom\n"
-            "parameter n, which must be > 0.\n"
-            ;
+
+        // Note that class docstrings are now added in galsim/random.py
+
         bp::class_<Chi2Deviate, bp::bases<BaseDeviate> > pyChi2Deviate(
-            "Chi2Deviate", doc, bp::init<double >(
+            "Chi2Deviate", "", bp::init<double >(
                 (bp::arg("n")=1.)
             )
         );
