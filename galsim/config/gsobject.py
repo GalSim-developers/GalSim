@@ -141,7 +141,7 @@ def _BuildConvolve(config, key, base, ignore):
     req = { 'items' : list }
     opt = { 'flux' : float }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    galsim.config.CheckAllParams(config, key, req=req, ignore=ignore)
+    galsim.config.CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
 
     gsobjects = []
     items = config['items']

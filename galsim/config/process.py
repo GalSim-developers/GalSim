@@ -22,6 +22,18 @@ def Process(config, logger=None):
         # Strip off a final suffix if present.
         config['root'] = os.path.splitext(script_name)[0]
 
+    ProcessInput(config, logger)
+    ProcessOutput(config, logger)
+
+
+def ProcessInput(config, logger=None):
+    """
+    Process the input field, reading in any specified input files.
+    These files are saved in the top level of config.
+
+    config['catalog'] = the catalog specified by config.input.catalog
+    config['real_catalog'] = the catalog specified by config.input.real_catalog
+    """
 
     # Process the input field (read any necessary input files)
     if 'input' in config:
@@ -44,6 +56,11 @@ def Process(config, logger=None):
         # Check that there are no other attributes specified.
         galsim.config.CheckAllParams(input, 'input', ignore=cat_type.keys())
 
+
+def ProcessOutput(config, logger=None):
+    """
+    Process the output field, building and writing all the specified image files.
+    """
 
     # Make config['output'] exist if it doesn't yet.
     if 'output' not in config:

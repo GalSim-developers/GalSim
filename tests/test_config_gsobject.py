@@ -474,6 +474,11 @@ def test_realgalaxy():
     real_gal_dir = os.path.join('..','examples','data')
     real_gal_cat = 'real_galaxy_catalog_example.fits'
     config = {
+        'input' : { 'real_catalog' : 
+                        { 'image_dir' : real_gal_dir , 
+                          'file_name' : real_gal_cat ,
+                          'preload' : True } },
+
         'gal1' : { 'type' : 'RealGalaxy' },
         'gal2' : { 'type' : 'RealGalaxy' , 'index' : 23, 'flux' : 100 },
         'gal3' : { 'type' : 'RealGalaxy' , 'index' : 17, 'flux' : 1.e6,
@@ -485,9 +490,10 @@ def test_realgalaxy():
                    'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
     }
 
+    galsim.config.ProcessInput(config)
+
     real_cat = galsim.RealGalaxyCatalog(
         image_dir=real_gal_dir, file_name=real_gal_cat, preload=True)
-    config['real_catalog'] = real_cat
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b = galsim.RealGalaxy(real_cat, index=0)
@@ -519,6 +525,7 @@ def test_realgalaxy():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_add():
     """Test various ways to build a Add
     """
@@ -526,16 +533,196 @@ def test_add():
     t1 = time.time()
 
     config = {
-        'gal1' : { 'type' : 'Add' , 'sigma' : 2 },
-        'gal2' : { 'type' : 'Add' , 'fwhm' : 2, 'flux' : 100 },
-        'gal3' : { 'type' : 'Add' , 'half_light_radius' : 2, 'flux' : 1.e6,
+        'gal1' : { 'type' : 'Add' , 
+                   'items' : [
+                       { 'type' : 'Gaussian' , 'sigma' : 2 },
+                       { 'type' : 'Exponential' , 'half_light_radius' : 2.3 } ] },
+        'gal2' : { 'type' : 'Sum' ,
+                   'items' : [
+                       { 'type' : 'Gaussian' , 'half_light_radius' : 2 , 'flux' : 30 },
+                       { 'type' : 'Sersic' , 'n' : 2.5 , 'half_light_radius' : 1.7 , 'flux' : 15 },
+                       { 'type' : 'Exponential' , 'half_light_radius' : 2.3 , 'flux' : 60 } ] },
+        'gal3' : { 'type' : 'Add' ,
+                   'items' : [
+                       { 'type' : 'Sersic' , 'n' : 3.4 , 'half_light_radius' : 1.1, 
+                         'flux' : 0.3 , 'ellip' : galsim.Shear(e1=0.2,e2=0.3),
+                         'shift' : { 'type' : 'DXDY' , 'dx' : 0.4 , 'dy' : 0.9 } },
+                       { 'type' : 'Sersic' , 'n' : 1.1 , 'half_light_radius' : 2.5, 
+                         'flux' : 0.7 } ],
+                   'flux' : 1.e6,
                    'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians } },
-        'gal4' : { 'type' : 'Add' , 'sigma' : 1, 'flux' : 50,
+        'gal4' : { 'type' : 'Add' , 
+                   'items' : [
+                       { 'type' : 'Gaussian' , 'half_light_radius' : 2 , 'flux' : 8 },
+                       { 'type' : 'Exponential' , 'half_light_radius' : 2.3 , 'flux' : 2 } ],
+                   'flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'DXDY' , 'dx' : 0.7 , 'dy' : -1.2 } }
     }
+
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    gal1b_1 = galsim.Gaussian(sigma = 2)
+    gal1b_2 = galsim.Exponential(half_light_radius = 2.3)
+    gal1b = galsim.Add([gal1b_1, gal1b_2])
+    gsobject_compare(gal1a, gal1b)
+
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    gal2b_1 = galsim.Gaussian(half_light_radius = 2, flux = 30)
+    gal2b_2 = galsim.Sersic(n = 2.5, half_light_radius = 1.7, flux = 15)
+    gal2b_3 = galsim.Exponential(half_light_radius = 2.3, flux = 60)
+    gal2b = galsim.Add([gal2b_1, gal2b_2, gal2b_3])
+    gsobject_compare(gal2a, gal2b)
+
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    gal3b_1 = galsim.Sersic(n = 3.4, half_light_radius = 1.1, flux = 0.3)
+    gal3b_1.applyShear(e1=0.2, e2=0.3)
+    gal3b_1.applyShift(0.4,0.9)
+    gal3b_2 = galsim.Sersic(n = 1.1, half_light_radius = 2.5, flux = 0.7)
+    gal3b = galsim.Add([gal3b_1, gal3b_2])
+    gal3b.setFlux(1.e6)
+    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gsobject_compare(gal3a, gal3b)
+
+    gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
+    gal4b_1 = galsim.Gaussian(half_light_radius = 2, flux = 8)
+    gal4b_2 = galsim.Exponential(half_light_radius = 2.3, flux = 2)
+    gal4b = galsim.Add([gal4b_1, gal4b_2])
+    gal4b.setFlux(50)
+    gal4b.applyDilation(3)
+    gal4b.applyShear(e1 = 0.3)
+    gal4b.applyRotation(12 * galsim.degrees)
+    gal4b.applyMagnification(1.03)
+    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
+    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gsobject_compare(gal4a, gal4b)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_convolve():
+    """Test various ways to build a Convolve
+    """
+    import time
+    t1 = time.time()
+
+    config = {
+        'gal1' : { 'type' : 'Convolve' , 
+                   'items' : [
+                       { 'type' : 'Gaussian' , 'sigma' : 2 },
+                       { 'type' : 'Exponential' , 'half_light_radius' : 2.3 } ] },
+        'gal2' : { 'type' : 'Convolution' ,
+                   'items' : [
+                       { 'type' : 'Gaussian' , 'half_light_radius' : 2 , 'flux' : 30 },
+                       { 'type' : 'Sersic' , 'n' : 2.5 , 'half_light_radius' : 1.7 , 'flux' : 15 },
+                       { 'type' : 'Exponential' , 'half_light_radius' : 2.3 , 'flux' : 60 } ] },
+        'gal3' : { 'type' : 'Convolve' ,
+                   'items' : [
+                       { 'type' : 'Sersic' , 'n' : 3.4 , 'half_light_radius' : 1.1, 
+                         'flux' : 0.3 , 'ellip' : galsim.Shear(e1=0.2,e2=0.3),
+                         'shift' : { 'type' : 'DXDY' , 'dx' : 0.4 , 'dy' : 0.9 } },
+                       { 'type' : 'Sersic' , 'n' : 1.1 , 'half_light_radius' : 2.5, 
+                         'flux' : 0.7 } ],
+                   'flux' : 1.e6,
+                   'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians } },
+        'gal4' : { 'type' : 'Convolve' , 
+                   'items' : [
+                       { 'type' : 'Gaussian' , 'half_light_radius' : 2 , 'flux' : 8 },
+                       { 'type' : 'Exponential' , 'half_light_radius' : 2.3 , 'flux' : 2 } ],
+                   'flux' : 50,
+                   'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
+                   'rotate' : 12 * galsim.degrees, 
+                   'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
+                   'shift' : { 'type' : 'DXDY' , 'dx' : 0.7 , 'dy' : -1.2 } }
+    }
+
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    gal1b_1 = galsim.Gaussian(sigma = 2)
+    gal1b_2 = galsim.Exponential(half_light_radius = 2.3)
+    gal1b = galsim.Convolve([gal1b_1, gal1b_2])
+    gsobject_compare(gal1a, gal1b)
+
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    gal2b_1 = galsim.Gaussian(half_light_radius = 2, flux = 30)
+    gal2b_2 = galsim.Sersic(n = 2.5, half_light_radius = 1.7, flux = 15)
+    gal2b_3 = galsim.Exponential(half_light_radius = 2.3, flux = 60)
+    gal2b = galsim.Convolve([gal2b_1, gal2b_2, gal2b_3])
+    gsobject_compare(gal2a, gal2b)
+
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    gal3b_1 = galsim.Sersic(n = 3.4, half_light_radius = 1.1, flux = 0.3)
+    gal3b_1.applyShear(e1=0.2, e2=0.3)
+    gal3b_1.applyShift(0.4,0.9)
+    gal3b_2 = galsim.Sersic(n = 1.1, half_light_radius = 2.5, flux = 0.7)
+    gal3b = galsim.Convolve([gal3b_1, gal3b_2])
+    gal3b.setFlux(1.e6)
+    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gsobject_compare(gal3a, gal3b)
+
+    gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
+    gal4b_1 = galsim.Gaussian(half_light_radius = 2, flux = 8)
+    gal4b_2 = galsim.Exponential(half_light_radius = 2.3, flux = 2)
+    gal4b = galsim.Convolve([gal4b_1, gal4b_2])
+    gal4b.setFlux(50)
+    gal4b.applyDilation(3)
+    gal4b.applyShear(e1 = 0.3)
+    gal4b.applyRotation(12 * galsim.degrees)
+    gal4b.applyMagnification(1.03)
+    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
+    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gsobject_compare(gal4a, gal4b)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_list():
+    """Test building a GSObject from a list:
+    """
+    import time
+    t1 = time.time()
+
+    config = {
+        'gal' : { 
+            'type' : 'List' ,
+            'items' : [
+                { 'type' : 'Gaussian' , 'sigma' : 2 },
+                { 'type' : 'Gaussian' , 'fwhm' : 2, 'flux' : 100 },
+                { 'type' : 'Gaussian' , 'half_light_radius' : 2, 'flux' : 1.e6,
+                  'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians } },
+                { 'type' : 'Gaussian' , 'sigma' : 1, 'flux' : 50,
+                  'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
+                  'rotate' : 12 * galsim.degrees, 
+                  'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
+                  'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+            ]
+        }
+    }
+
+    gal = galsim.config.BuildGSObject(config, 'gal')[0]
+    gal1b = galsim.Gaussian(sigma = 2)
+    gsobject_compare(gal, gal1b)
+
+    gal = galsim.config.BuildGSObject(config, 'gal')[0]
+    gal2b = galsim.Gaussian(fwhm = 2, flux = 100)
+    gsobject_compare(gal, gal2b)
+
+    gal = galsim.config.BuildGSObject(config, 'gal')[0]
+    gal3b = galsim.Gaussian(half_light_radius = 2, flux = 1.e6)
+    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gsobject_compare(gal, gal3b)
+
+    gal = galsim.config.BuildGSObject(config, 'gal')[0]
+    gal4b = galsim.Gaussian(sigma = 1, flux = 50)
+    gal4b.applyDilation(3)
+    gal4b.applyShear(e1 = 0.3)
+    gal4b.applyRotation(12 * galsim.degrees)
+    gal4b.applyMagnification(1.03)
+    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
+    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gsobject_compare(gal, gal4b)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -551,5 +738,8 @@ if __name__ == "__main__":
     test_sersic()
     test_devaucouleurs()
     test_realgalaxy()
+    test_add()
+    test_convolve()
+    test_list()
 
 

@@ -23,6 +23,8 @@ def test_float_value():
     t1 = time.time()
 
     config = {
+        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } },
+
         'val1' : 9.9,
         'val2' : int(400),
         'str1' : '8.73',
@@ -49,6 +51,8 @@ def test_float_value():
                     'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } }
     }
 
+    galsim.config.ProcessInput(config)
+
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, float)[0]
     np.testing.assert_almost_equal(val1, 9.9)
@@ -68,7 +72,6 @@ def test_float_value():
 
     # Test values read from an InputCatalog
     input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
-    config['catalog'] = input_cat
     cat1 = [ galsim.config.ParseValue(config,'cat1',config, float)[0] for k in range(5) ]
     np.testing.assert_array_almost_equal(cat1, [ 1.234, 2.345, 3.456, 1.234, 2.345 ])
 
@@ -161,6 +164,8 @@ def test_int_value():
     t1 = time.time()
 
     config = {
+        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } },
+
         'val1' : 9,
         'val2' : float(8.7),  # Reading as int will drop the fraction.
         'val3' : -400.8,      # Not floor - negatives will round up.
@@ -181,6 +186,8 @@ def test_int_value():
                     'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } }
     }
 
+    galsim.config.ProcessInput(config)
+
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, int)[0]
     np.testing.assert_equal(val1, 9)
@@ -200,7 +207,6 @@ def test_int_value():
 
     # Test values read from an InputCatalog
     input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
-    config['catalog'] = input_cat
     cat1 = [ galsim.config.ParseValue(config,'cat1',config, int)[0] for k in range(5) ]
     np.testing.assert_array_equal(cat1, [ 9, 0, -4, 9, 0 ])
 
@@ -252,6 +258,8 @@ def test_bool_value():
     t1 = time.time()
 
     config = {
+        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } },
+
         'val1' : True,
         'val2' : 1,
         'val3' : 0.0,
@@ -269,6 +277,8 @@ def test_bool_value():
                     'items' : [ 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0 ],
                     'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } }
     }
+
+    galsim.config.ProcessInput(config)
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, bool)[0]
@@ -295,7 +305,6 @@ def test_bool_value():
 
     # Test values read from an InputCatalog
     input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
-    config['catalog'] = input_cat
     cat1 = [ galsim.config.ParseValue(config,'cat1',config, bool)[0] for k in range(5) ]
     np.testing.assert_array_equal(cat1, [ 1, 0, 1, 1, 0 ])
 
@@ -335,6 +344,8 @@ def test_str_value():
     t1 = time.time()
 
     config = {
+        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } },
+
         'val1' : -93,
         'val2' : True,
         'val3' : 123.8,
@@ -344,6 +355,8 @@ def test_str_value():
         'cat2' : { 'type' : 'InputCatalog' , 'col' : 7 },
         'list1' : { 'type' : 'List', 'items' : [ 'Beautiful', 'plumage!', 'Ay?' ] }
     } 
+
+    galsim.config.ProcessInput(config)
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, str)[0]
@@ -364,7 +377,6 @@ def test_str_value():
 
     # Test values read from an InputCatalog
     input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
-    config['catalog'] = input_cat
     cat1 = [ galsim.config.ParseValue(config,'cat1',config, str)[0] for k in range(3) ]
     np.testing.assert_array_equal(cat1, ["He's", "bleedin'", "demised!"])
 
@@ -387,6 +399,8 @@ def test_angle_value():
     t1 = time.time()
 
     config = {
+        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } },
+
         'val1' : 1.9 * galsim.radians,
         'val2' : -41 * galsim.degrees,
         'str1' : '0.73 radians',
@@ -409,6 +423,8 @@ def test_angle_value():
                                 8.9 * galsim.arcmin,
                                 3.14 * galsim.arcmin ] },
     }
+
+    galsim.config.ProcessInput(config)
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, galsim.Angle)[0]
@@ -444,7 +460,6 @@ def test_angle_value():
 
     # Test values read from an InputCatalog
     input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
-    config['catalog'] = input_cat
     cat1 = [ galsim.config.ParseValue(config,'cat1',config, galsim.Angle)[0].rad() 
              for k in range(5) ]
     np.testing.assert_array_almost_equal(cat1, [ 1.2, 0.1, -0.9, 1.2, 0.1 ])
