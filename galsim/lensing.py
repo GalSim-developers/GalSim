@@ -9,7 +9,7 @@ ISQRT2 = np.sqrt(1.0/2.0)
 
 ## TODO later: get convergences that are consistent with this shear field
 class PowerSpectrum(object):
-    """@brief Class to represent a lensing shear field according to some specified power spectrum
+    """@brief Class to represent a lensing shear field according to some power spectrum P(k)
 
     A PowerSpectrum represents some (flat-sky) shear power spectrum, either for gridded points or at
     arbitary positions.  This class is originally initialized with a power spectrum from which we
@@ -17,12 +17,22 @@ class PowerSpectrum(object):
     PowerSpectrumRealizer to generate shears on an appropriately-spaced grid, and if necessary,
     interpolates on that grid to the requested positions.  Finally, it carries around some
     information about the underlying shear power spectrum used to generate the field.
+
+    It is important to note that the power spectrum used to initialize the PowerSpectrum object
+    should be in the same units as any parameters to the getShear() method that define the locations
+    at which we want to get shears.  For example, when using a cosmological shear power spectrum
+    defined with k (or ell) in inverse radians, the grid spacing or point locations should be in
+    radians.  If you want to instead give it pixel locations, then the units of k for the power
+    spectrum function are assumed to be in inverse pixels.
     """
     def __init__(self, E_power_function=None, B_power_function=None, units=None):
         """@brief Create a PowerSpectrum object corresponding to specific P(k) for E, B modes
 
         When creating a PowerSpectrum instance, the E and B mode power spectra can optionally be set
-        at initialization or later on with the method set_power_functions.
+        at initialization or later on with the method set_power_functions.  Note that the power
+        spectra can be ones provided in galsim.lensing (currently just a few simple power laws), or
+        they can be user-provided functions that take a single argument k and return the power at
+        that k value.
 
         @param[in] E_power_function A function or other callable that accepts a 2D numpy grid of |k| and returns
         the E-mode power spectrum of the same shape.  It should cope happily with k=0.  The function should return the power
@@ -66,10 +76,23 @@ class PowerSpectrum(object):
         grid spacing and grid size for a grid of positions.  This code stores information about the
         quantities used to generate the random shear field, generates shears using a
         PowerSpectrumRealizer on a grid, and if necessary, interpolates to get g1 and g2 at the
-        specified positions.  An example of how to use getShear is as follows, for the gridded case:
+        specified positions.  The normalization is defined as follows: if P_E(k)=P_B(k)=P [const],
+        i.e., white noise in both shear components, then the shears g1 and g2 will be random
+        Gaussian deviates with variance=P.
+
+        An example of how to use getShear is as follows, for the gridded case:
         @code
-        my_ps = galsim.lensing.PowerSpectrum(galsim.lensing.pk2) g1, g2 =
-        my_ps.getShear(grid_spacing = 1., grid_nx = 100)
+        my_ps = galsim.lensing.PowerSpectrum(galsim.lensing.pk2)
+        g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
+        @endcode
+
+        To define some other P(k), the user can do the following:
+        @code
+        def mypk(k):
+            return k**(0.1)
+
+        my_ps = galsim.lensing.PowerSpectrum(mypk)
+        g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
         @endcode
 
         When using a non-gridded set of points, the code has to choose an appropriate spacing for a
@@ -89,10 +112,10 @@ class PowerSpectrum(object):
         @endcode
         where we assume a minimum x and y value of zero for the grid.
 
-        @param[in] x List of x positions (units should be consistent with P(k) function)
-        @param[in] y List of y positions (units should be consistent with P(k) function)
-        @param[in] grid_spacing Spacing for an evenly spaced grid of points (units should be
-        consistent with P(k) function)
+        @param[in] x List of x positions (it is up to the user to check that the units are
+        consistent with those in the P(k) function, just as for the y and grid_spacing keywords)
+        @param[in] y List of y positions
+        @param[in] grid_spacing Spacing for an evenly spaced grid of points
         @param[in] grid_nx Number of grid points in the x dimension
         @param[in] gaussian_deviate (Optional) A galsim.GaussianDeviate object for drawing the
         random numbers
@@ -152,7 +175,7 @@ class PowerSpectrum(object):
 class PowerSpectrumRealizer(object):
     """@brief Class for generating realizations of power spectra with any area and pixel size.
     
-    Designed to quickly generate many realizations of the same shear power spectra on a grid.
+    Designed to quickly generate many realizations of the same shear power spectra on a square grid.
     """
     def __init__(self, nx, ny, pixel_size, E_power_function, B_power_function):
         """@brief Create a Realizer object from image dimensions and power spectrum functions
