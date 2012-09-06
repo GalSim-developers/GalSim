@@ -331,7 +331,7 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
         raise NotImplementedError("Sorry, badpix image output is not currently implemented.")
     if nproc > 1:
         import warnings
-        warnings.warn("Sorry, multiple processe not currently implemented for BuildMultiFits.")
+        warnings.warn("Sorry, multiple processes not currently implemented for BuildMultiFits.")
         
 
     main_images = []
