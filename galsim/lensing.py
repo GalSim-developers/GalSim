@@ -7,7 +7,6 @@ import warnings
 
 ISQRT2 = np.sqrt(1.0/2.0)
 
-## TODO later: get convergences that are consistent with this shear field
 class PowerSpectrum(object):
     """@brief Class to represent a lensing shear field according to some power spectrum P(k)
 
@@ -65,8 +64,8 @@ class PowerSpectrum(object):
         if units is not None:
             self.units = units
 
-    def getShear(self, x=None, y=None, grid_spacing=None, grid_nx=None, grid_ny=None,
-                 gaussian_deviate=None, seed=None, interpolantxy=None):
+    def getShear(self, x=None, y=None, grid_spacing=None, grid_nx=None, gaussian_deviate=None,
+                 seed=None, interpolantxy=None):
 
         """@brief Generate a realization of the current power spectrum at the specified positions.
 
@@ -205,7 +204,7 @@ class PowerSpectrumRealizer(object):
         self.set_size(nx, ny, pixel_size, False)
         self.set_power(E_power_function, B_power_function)
         
-    def set_size(self, nx, ny, size, remake_power=True):
+    def set_size(self, nx, ny, pixel_size, remake_power=True):
         """@brief Change the size of the array you want to simulate.
         
         @param[in] nx The x-dimension of the desired image
@@ -490,6 +489,7 @@ class NFWHalo(object):
 
         @param[in] x Radial coordinate in units of r/rs (normalized to scale radius of halo)
         @param[in] ks Lensing strength prefactor
+        @param[in] out Numpy array into which results should be placed
         """
         # convenience: call with single number
         if isinstance(x, np.ndarray) == False:
@@ -522,6 +522,7 @@ class NFWHalo(object):
 
         @param[in] x Radial coordinate in units of r/rs (normalized to scale radius of halo)
         @param[in] ks Lensing strength prefactor
+        @param[in] out Numpy array into which results should be placed
         """
         # convenience: call with single number
         if isinstance(x, np.ndarray) == False:
