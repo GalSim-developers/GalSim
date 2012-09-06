@@ -1318,7 +1318,7 @@ def CalculateWCSShear(wcs):
 
 def CalculateNoiseVar(noise, pixel_scale):
     """
-    Calculate the noise variance from the noise specificed in the noise dict.
+    Calculate the noise variance from the noise specified in the noise dict.
     """
     if not isinstance(noise, dict):
         raise AttributeError("image.noise is not a dict.")
