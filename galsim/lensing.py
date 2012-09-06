@@ -32,7 +32,7 @@ class PowerSpectrum(object):
         at initialization or later on with the method set_power_functions.  Note that the power
         spectra can be ones provided in galsim.lensing (currently just a few simple power laws), or
         they can be user-provided functions that take a single argument k and return the power at
-        that k value.
+        that k value.  They should be power P(k), not Delta^2(k) = k^2 P(k) / 2pi.
 
         @param[in] E_power_function A function or other callable that accepts a 2D numpy grid of |k| and returns
         the E-mode power spectrum of the same shape.  It should cope happily with k=0.  The function should return the power
@@ -78,7 +78,15 @@ class PowerSpectrum(object):
         PowerSpectrumRealizer on a grid, and if necessary, interpolates to get g1 and g2 at the
         specified positions.  The normalization is defined as follows: if P_E(k)=P_B(k)=P [const],
         i.e., white noise in both shear components, then the shears g1 and g2 will be random
-        Gaussian deviates with variance=P.
+        Gaussian deviates with variance=P.  Note that if we really had power at all k, the variance
+        would be infinite.  But we are getting shears on a grid, which has a limited k range, and
+        hence the total power is finite.  For grid spacing dx and N grid points, the spacing between
+        k values is dk = 2pi/(N dx) and k ranges from +/-(N/2) dk.  There are alternate definitions
+        to consider, e.g., that the variance should be P*(dx)^2 for a grid spacing of dx (i.e., for
+        fixed total grid extent, a smaller grid spacing requires smaller shear variances since the
+        range of k values that are accessible is larger); those who input a continuum P(k) should,
+        when predicting the behavior of shears on a grid, keep in mind our normalization convention
+        and the fact that it's a discrete FFT.
 
         An example of how to use getShear is as follows, for the gridded case:
         @code
