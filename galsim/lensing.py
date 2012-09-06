@@ -62,14 +62,15 @@ class PowerSpectrum(object):
 
         Generate a Gaussian random realization of the specified E and B mode shear power spectra at
         some set of locations.  This can be done in two ways: first, given arbitrary (x, y)
-        positions; or second, using grid_spacing, grid_nx, and (optionally) grid_ny to specify the
-        grid spacing and grid size for a grid of positions.  This code stores information about the
-        quantities used to generate the random shear field, generates shears using a
-        PowerSpectrumRealizer on a grid, and if necessary, interpolates to get g1 and g2 at the
-        specified positions.  An example of how to use getShear is as follows, for the gridded case:
+        positions [NOT YET IMPLEMENTED]; or second, using grid_spacing, grid_nx, and (optionally)
+        grid_ny to specify the grid spacing and grid size for a grid of positions.  This code stores
+        information about the quantities used to generate the random shear field, generates shears
+        using a PowerSpectrumRealizer on a grid, and if necessary, interpolates to get g1 and g2 at
+        the specified positions.  An example of how to use getShear is as follows, for the gridded
+        case:
         @code
-        my_ps = galsim.lensing.PowerSpectrum(galsim.lensing.pk2)
-        g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
+        my_ps = galsim.lensing.PowerSpectrum(galsim.lensing.pk2) g1, g2 =
+        my_ps.getShear(grid_spacing = 1., grid_nx = 100)
         @endcode
 
         When using a non-gridded set of points, the code has to choose an appropriate spacing for a
@@ -145,40 +146,8 @@ class PowerSpectrum(object):
             psr = PowerSpectrumRealizer(grid_nx, grid_ny, grid_spacing, self.p_E, self.p_B)
             g1, g2 = psr(gaussian_deviate=gd)
         else:
-            # for now, so we can test the gridded case
+            # for now, we cannot do this
             raise NotImplementedError("Have not finished implementing the non-gridded case!")
-            # first, generate shears on a grid: choose set of input parameters for PowerSpectrumRealizer
-            ## get total range in x, y
-            tot_dx = np.max(x) - np.min(x)
-            tot_dy = np.max(y) - np.min(y)
-            med_x = 0.5*(np.min(x) + np.max(x))
-            med_y = 0.5*(np.min(y) + np.max(y))
-            ## TODO: choose an appropriate delta(x) and delta(y) which results in setting pixel_size
-            ## could simply decide that at some large value of k, that the Fourier representation of the
-            ## interpolant should not cause more than X% deviation from the desired input power
-            ## spectrum.  And then we might also wish to return some error message if the required arrays
-            ## are too large.
-
-            ## TODO: find grid size to cover the whole range at that resolution; or perhaps we should
-            ## cover a wider range to allow for large-scale modes?
-
-            # make a power spectrum realizer
-            psr = PowerSpectrumRealizer(nx, ny, pixel_size, self.p_E, self.p_B)
-            ### make a single realization
-            g1_grid, g2_grid = self.psrealizer(gaussian_deviate=gd)
-
-            # make the gridded shears from a numpy array into an Image
-            g1_grid_img = galsim.ImageViewD(np.ascontiguousarray(g1_grid.astype(np.float64)))
-            g2_grid_img = galsim.ImageViewD(np.ascontiguousarray(g2_grid.astype(np.float64)))
-
-            # make the Image into an SBInterpolatedImage
-            g1_sbimg = galsim.SBInterpolatedImage(g1_grid_img, xInterp = interpolantxy, dx = pixel_size)
-            g2_sbimg = galsim.SBInterpolatedImage(g2_grid_img, xInterp = interpolantxy, dx = pixel_size)
-
-            # interpolate from the grid points to the desired x, y values; note, typically images and
-            # SBInterpolatedImages assume image center has coords (0, 0)
-            g1 = galsim.utilities.eval_sbinterpolatedimage(g1_sbimg, x - med_x, y - med_y)
-            g2 = galsim.utilities.eval_sbinterpolatedimage(g2_sbimg, x - med_x, y - med_y)
 
         # after making either gridded shears or shears at specified x, y positions, return g1 and g2
         # arrays
