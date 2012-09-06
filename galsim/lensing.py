@@ -347,7 +347,8 @@ class Cosmology(object):
     Based on Matthias Bartelmann's libastro.
     """
     def __init__(self, Omega_m=0.3, Omega_l=0.7):
-        """@brief Create Cosmology with given energy densities.
+        """@brief Create Cosmology with given energy densities for matter and for dark energy
+        (specifically, a cosmological constant with w=-1); no quintessence, and no radiation.
         
         @param[in] Omega_m Energy density of matter
         @param[in] Omega_l Density of Dark Energy
@@ -380,7 +381,7 @@ class Cosmology(object):
     def Da(self, z, z_ref=0):
         """@brief Compute angular diameter distance between two redshifts in units of c/H0.
 
-        In order to get the distance in Mpc, multiply by ~3000.
+        In order to get the distance in Mpc/h, multiply by ~3000.
 
         @param[in] z Redshift
         @param[in] z_ref Reference redshift, with z_ref <= z.
