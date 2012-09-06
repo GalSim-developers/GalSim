@@ -9,6 +9,7 @@ from . import noise
 from . import atmosphere
 from . import optics
 from . import image
+from . import random
 from . import config
 from psfcorr import *
 from real import *
