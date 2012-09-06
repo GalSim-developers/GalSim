@@ -552,12 +552,15 @@ class NFWHalo(object):
     def getShear(self, pos_x, pos_y, z_s, units='arcsec', reduced=True):
         """@brief Calculate (reduced) shear of halo at specified positions
 
-        @param[in] pos_x X-coordinate(s) of the source. This is assumed to be post-lensing!
-        @param[in] pos_y Y-coordinate(s) of the source. This is assumed to be post-lensing!
+        @param[in] pos_x X-coordinate(s) of the source, input as a numpy array. This is assumed to
+        be post-lensing!
+        @param[in] pos_y Y-coordinate(s) of the source, input as a numpy array. This is assumed to
+        be post-lensing!
         @param[in] z_s Source redshift(s)
         @param[in] units Units of coordinates (only arcsec implemented so far).
         @param[in] reduced Whether reduced shears are returned
-        @return g1,g2 The two shear components g_1 and g_2 at the specified position(s)
+        @return g1,g2 Numpy arrays containing the two shear components g_1 and g_2 at the specified
+        position(s)
         """
         if units != 'arcsec':
             raise NotImplementedError("Only arcsec units implemented!")
@@ -584,11 +587,12 @@ class NFWHalo(object):
     def getConvergence(self, pos_x, pos_y, z_s, units='arcsec'):
         """@brief Calculate convergence of halo at specified positions
 
-        @param[in] pos_x X-coordinate(s) of the source. This is assumed to be post-lensing!
-        @param[in] pos_y Y-coordinate(s) of the source. This is assumed to be post-lensing!
+        @param[in] pos_x X-coordinate(s) of the source, input as a Numpy array. This is assumed to
+        be post-lensing!
+        @param[in] pos_y Y-coordinate(s) of the source, input as a Numpy array. This is assumed to be post-lensing!
         @param[in] z_s Source redshift(s)
         @param[in] units Units of coordinates (only arcsec implemented so far).
-        @return kappa The convergence at the specified position(s)
+        @return kappa Numpy array containing the convergence at the specified position(s)
         """
         if units != 'arcsec':
             raise NotImplementedError("Only arcsec units implemented!")
