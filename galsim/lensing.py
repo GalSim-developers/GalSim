@@ -62,12 +62,11 @@ class PowerSpectrum(object):
 
         Generate a Gaussian random realization of the specified E and B mode shear power spectra at
         some set of locations.  This can be done in two ways: first, given arbitrary (x, y)
-        positions [NOT YET IMPLEMENTED]; or second, using grid_spacing, grid_nx, and (optionally)
-        grid_ny to specify the grid spacing and grid size for a grid of positions.  This code stores
-        information about the quantities used to generate the random shear field, generates shears
-        using a PowerSpectrumRealizer on a grid, and if necessary, interpolates to get g1 and g2 at
-        the specified positions.  An example of how to use getShear is as follows, for the gridded
-        case:
+        positions [NOT YET IMPLEMENTED]; or second, using grid_spacing and grid_nx to specify the
+        grid spacing and grid size for a grid of positions.  This code stores information about the
+        quantities used to generate the random shear field, generates shears using a
+        PowerSpectrumRealizer on a grid, and if necessary, interpolates to get g1 and g2 at the
+        specified positions.  An example of how to use getShear is as follows, for the gridded case:
         @code
         my_ps = galsim.lensing.PowerSpectrum(galsim.lensing.pk2) g1, g2 =
         my_ps.getShear(grid_spacing = 1., grid_nx = 100)
@@ -81,12 +80,12 @@ class PowerSpectrum(object):
         done, and therefore it is necessary to test the fidelity of the recovered power spectrum for
         any errors due to the chosen non-linear interpolant.
 
-        For a given value of grid_spacing, grid_nx, grid_ny, we could get the x and y values on the
+        For a given value of grid_spacing and grid_nx, we could get the x and y values on the
         grid using
         @code
         import numpy as np
         x, y = np.meshgrid(np.arange(0., grid_nx*grid_spacing, grid_spacing),
-                           np.arange(0., grid_ny*grid_spacing, grid_spacing))
+                           np.arange(0., grid_nx*grid_spacing, grid_spacing))
         @endcode
         where we assume a minimum x and y value of zero for the grid.
 
@@ -95,7 +94,6 @@ class PowerSpectrum(object):
         @param[in] grid_spacing Spacing for an evenly spaced grid of points (units should be
         consistent with P(k) function)
         @param[in] grid_nx Number of grid points in the x dimension
-        @param[in] grid_ny Number of grid points in the y dimension
         @param[in] gaussian_deviate (Optional) A galsim.GaussianDeviate object for drawing the
         random numbers
         @param[in] seed (Optional) A seed to use when initializing a new galsim.GaussianDeviate for
@@ -110,14 +108,12 @@ class PowerSpectrum(object):
         if x is not None or y is not None:
             if x is None or y is None:
                 raise ValueError("When specifying points, must provide both x and y!")
-            if grid_spacing is not None or grid_nx is not None or grid_ny is not None:
+            if grid_spacing is not None or grid_nx is not None:
                 raise ValueError("When specifying points, do not also provide grid information!")
         # (2) check problem cases for regular grid of points
-        if grid_spacing is not None or grid_nx is not None or grid_ny is not None:
+        if grid_spacing is not None or grid_nx is not None:
             if grid_spacing is None or grid_nx is None:
-                raise ValueError("When specifying grid, we require at least a spacing and x size!")
-            if grid_ny is None:
-                grid_ny = grid_nx
+                raise ValueError("When specifying grid, we require both a spacing and a size!")
         # (3) make sure that we've specified some power spectrum
         if self.p_E is None and self.p_B is None:
             raise ValueError("Cannot generate shears when no E or B mode power spectrum are given!")
@@ -143,7 +139,7 @@ class PowerSpectrum(object):
 
         if grid_spacing is not None:
             # do the calculation on a grid
-            psr = PowerSpectrumRealizer(grid_nx, grid_ny, grid_spacing, self.p_E, self.p_B)
+            psr = PowerSpectrumRealizer(grid_nx, grid_nx, grid_spacing, self.p_E, self.p_B)
             g1, g2 = psr(gaussian_deviate=gd)
         else:
             # for now, we cannot do this
