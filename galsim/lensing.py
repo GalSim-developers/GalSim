@@ -371,7 +371,8 @@ class Cosmology(object):
 
         @param[in] a Scale factor
         """
-        return (self.omega_r*a**(-4) + self.omega_m*a**(-3) + self.omega_c*a**(-2) + self.omega_l)**0.5
+        return (self.omega_r*a**(-4) + self.omega_m*a**(-3) + self.omega_c*a**(-2) + \
+                self.omega_l)**0.5
 
     def __angKernel(self, x):
         """@brief Integration kernel for angular diameter distance computation
@@ -493,12 +494,14 @@ class NFWHalo(object):
         mask = (x < 0.99)
         if mask.any():
             a = ((1 - x[mask])/(x[mask] + 1))**0.5
-            out[mask] = 2*ks[mask]/(x[mask]**2 - 1)*(1 - np.log((1 + a)/(1 - a))/(1 - x[mask]**2)**0.5)
+            out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * \
+                (1 - np.log((1 + a)/(1 - a))/(1 - x[mask]**2)**0.5)
 
         mask = (x > 1.01)
         if mask.any():
             a = ((x[mask] - 1)/(x[mask] + 1))**0.5
-            out[mask] = 2*ks[mask]/(x[mask]**2 - 1)*(1 - 2*np.arctan(a)/(x[mask]**2 - 1)**0.5)
+            out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * \
+                (1 - 2*np.arctan(a)/(x[mask]**2 - 1)**0.5)
 
         mask = (x >= 0.99) & (x <= 1.01)
         if mask.any():
@@ -524,7 +527,8 @@ class NFWHalo(object):
 
         mask = (mask == False)
         if mask.any():
-            out[mask] = 4*ks[mask]*(np.log(x[mask]/2) + 2*self.__farcth(x[mask])) * x[mask]**(-2) - self.__kappa(x[mask], ks[mask])
+            out[mask] = 4*ks[mask]*(np.log(x[mask]/2) + 2*self.__farcth(x[mask])) * \
+                x[mask]**(-2) - self.__kappa(x[mask], ks[mask])
         return out
 
     def __ks(self, z_s):
