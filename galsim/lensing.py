@@ -324,12 +324,17 @@ class PowerSpectrumRealizer(object):
         S[-kx,ky]=np.sin(TwoPsi)
         return C,S
 
-# for simple demonstration purposes, a very simple power-law power spectrum that doesn't crash and
+# for simple demonstration purposes, a few very simple power-law power spectra that don't crash and
 # burn at k=0
 def pk2(k):
     return k**(2.0)
 
+def pk1(k):
+    return k
 
+def pkflat(k):
+    # note: this gives random Gaussian shears with variance of 0.01
+    return 0.01
 
 class Cosmology(object):
     """@brief Basic cosmology calculations.
