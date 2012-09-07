@@ -2,10 +2,10 @@
 
 "#" : "JSON configuration file for use with the executable galsim_json",
 "#" : "From the examples directory, type:",
-"#" : "  galsim_json json/BD2.json",
+"#" : "  galsim_json json/demo2.json",
 
-"#" : "This configuration file is designed to be equivalent to the example script called",
-"#" : "Script2 in BasicDemo.py.",
+"#" : "This configuration file is designed to be equivalent to the example script called demo2.py",
+
 "#" : "It's a little bit more sophisticated than script 1, using profiles other than Gaussians,",
 "#" : "and adding an applied shear.  It also uses Poisson noise.",
 

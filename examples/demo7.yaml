@@ -1,10 +1,9 @@
 
 # YAML configuration file for use with the executable galsim_yaml
 # Type:
-#   galsim_yaml MOD4.yaml
+#   galsim_yaml demo7.yaml
 #
-# This configuration file is designed to be equivalent to the example script called
-# Script4 in MultiObjectDemo.py
+# This configuration file is designed to be equivalent to the example script called demo7.py
 #
 #    Make a fits image cube where each frame has two images of the same galaxy drawn 
 #    with regular FFT convolution and with photon shooting.

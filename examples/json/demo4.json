@@ -2,10 +2,9 @@
 
 "#" : "JSON configuration file for use with the executable galsim_json",
 "#" : "From the examples directory, type:",
-"#" : "  galsim_json json/MOD1.json",
+"#" : "  galsim_json json/demo4.json",
 
-"#" : "This configuration file is designed to be equivalent to the example script called",
-"#" : "Script1 in MultiObjectDemo.py",
+"#" : "This configuration file is designed to be equivalent to the example script called demo4.py",
 
 "#" : "   Make a fits image cube using parameters from an input catalog",
 "#" : "     - The number of images in the cube matches the number of rows in the catalog.",

@@ -1,10 +1,10 @@
 
 # YAML configuration file for use with the executable galsim_yaml
 # Type:
-#   galsim_yaml BD3.yaml
+#   galsim_yaml demo3.yaml
 #
-# This configuration file is designed to be equivalent to the example script called
-# Script3 in BasicDemo.py.
+# This configuration file is designed to be equivalent to the example script called demo3.py.
+#
 # This is getting reasonably close to including all the principle features of a 
 # ground-based telescope:
 # - Use a sheared, Sersic profile for the galaxy 
