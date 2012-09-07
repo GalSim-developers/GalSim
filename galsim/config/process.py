@@ -1087,25 +1087,9 @@ def AddNoiseFFT(im, noise, rng):
     Add noise to an image according to the noise specifications in the noise dict
     appropriate for an image that has been drawn using the fft method.
     """
-    if 'type' not in noise:
-        raise AttributeError("noise needs a type to be specified")
+    type = noise.get('type','CCDNoise')
     pixel_scale = im.getScale()
-    if noise['type'] == 'Poisson':
-        req = { 'sky_level' : float }
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req)[0]
-
-        sky_level_pixel = params['sky_level'] * pixel_scale**2
-        im += sky_level_pixel
-        #print 'sky_level_pixel = ',sky_level_pixel
-        #print 'im.scale = ',im.scale
-        #print 'im.bounds = ',im.bounds
-        #print 'before CCDNoise: rng() = ',rng()
-        im.addNoise(galsim.CCDNoise(rng))
-        #print 'after CCDNoise: rng() = ',rng()
-        im -= sky_level_pixel
-        #if logger:
-            #logger.info('   Added Poisson noise with sky_level = %f',sky_level)
-    elif noise['type'] == 'Gaussian':
+    if type == 'Gaussian':
         single = [ { 'sigma' : float , 'variance' : float } ]
         params = galsim.config.GetAllParams(noise, 'noise', noise, single=single)[0]
 
@@ -1117,7 +1101,7 @@ def AddNoiseFFT(im, noise, rng):
         im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
         #if logger:
             #logger.info('   Added Gaussian noise with sigma = %f',sigma)
-    elif noise['type'] == 'CCDNoise':
+    elif type == 'CCDNoise':
         req = { 'sky_level' : float }
         opt = { 'gain' : float , 'read_noise' : float }
         params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
@@ -1135,7 +1119,7 @@ def AddNoiseFFT(im, noise, rng):
             #logger.info('   Added CCD noise with sky_level = %f, ' +
                         #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
     else:
-        raise AttributeError("Invalid type %s for noise"%noise['type'])
+        raise AttributeError("Invalid type %s for noise"%type)
 
 
 def DrawStampPhot(psf, gal, config, xsize, ysize, rng):
@@ -1205,26 +1189,9 @@ def AddNoisePhot(im, noise, rng):
     Add noise to an image according to the noise specifications in the noise dict
     appropriate for an image that has been drawn using the phot method.
     """
-    if 'type' not in noise:
-        raise AttributeError("noise needs a type to be specified")
+    type = noise.get('type','CCDNoise')
     pixel_scale = im.getScale()
-    if noise['type'] == 'Poisson':
-        req = { 'sky_level' : float }
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req)[0]
-
-        sky_level_pixel = params['sky_level'] * pixel_scale**2
-        # For photon shooting, galaxy already has poisson noise, so we want 
-        # to make sure not to add that again!  Just add Poisson with 
-        # mean = sky_level_pixel
-        #print 'sky_level_pixel = ',sky_level_pixel
-        #print 'im.scale = ',im.scale
-        #print 'im.bounds = ',im.bounds
-        #print 'before Poisson: rng() = ',rng()
-        im.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
-        #print 'after Poisson: rng() = ',rng()
-        #if logger:
-            #logger.info('   Added Poisson noise with sky_level = %f',sky_level)
-    elif noise['type'] == 'Gaussian':
+    if type == 'Gaussian':
         single = [ { 'sigma' : float , 'variance' : float } ]
         params = galsim.config.GetAllParams(noise, 'noise', noise, single=single)[0]
 
@@ -1235,7 +1202,7 @@ def AddNoisePhot(im, noise, rng):
         im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
         #if logger:
             #logger.info('   Added Gaussian noise with sigma = %f',sigma)
-    elif noise['type'] == 'CCDNoise':
+    elif type == 'CCDNoise':
         req = { 'sky_level' : float }
         opt = { 'gain' : float , 'read_noise' : float }
         params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
@@ -1254,7 +1221,7 @@ def AddNoisePhot(im, noise, rng):
             #logger.info('   Added CCD noise with sky_level = %f, ' +
                         #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
     else:
-        raise AttributeError("Invalid type %s for noise",noise['type'])
+        raise AttributeError("Invalid type %s for noise",type)
 
 
 def DrawPSFStamp(psf, pix, config, xsize, ysize):
@@ -1323,13 +1290,10 @@ def CalculateNoiseVar(noise, pixel_scale):
     """
     if not isinstance(noise, dict):
         raise AttributeError("image.noise is not a dict.")
-    if 'type' not in noise:
-        raise AttributeError("image.noise needs a type to be specified")
-    if noise['type'] == 'Poisson':
-        req = { 'sky_level' : float }
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req)[0]
-        var = params['sky_level'] * pixel_scale**2
-    elif noise['type'] == 'Gaussian':
+
+    type = noise.get('type','CCDNoise')
+
+    if type == 'Gaussian':
         single = [ { 'sigma' : float , 'variance' : float } ]
         params = galsim.config.GetAllParams(noise, 'noise', noise, single=single)[0]
         if 'sigma' in params:
@@ -1337,7 +1301,7 @@ def CalculateNoiseVar(noise, pixel_scale):
             var = sigma * sigma
         else:
             var = params['variance']
-    elif noise['type'] == 'CCDNoise':
+    elif type == 'CCDNoise':
         req = { 'sky_level' : float }
         opt = { 'gain' : float , 'read_noise' : float }
         params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
@@ -1348,7 +1312,7 @@ def CalculateNoiseVar(noise, pixel_scale):
         var /= gain
         var += read_noise * read_noise
     else:
-        raise AttributeError("Invalid type %s for noise",noise['type'])
+        raise AttributeError("Invalid type %s for noise",type)
 
     return var
 

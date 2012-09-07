@@ -96,7 +96,6 @@ gal :
 # be the same size. 
 image :
     noise :
-        type : Poisson
         sky_level : 1.e6  # ADU / arcsec^2
 
 # We need to define where the real galaxy input catalog is.

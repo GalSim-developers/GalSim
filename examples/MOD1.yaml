@@ -140,7 +140,7 @@ image :
 
     # Define what kind of noise to use
     noise : 
-        type : Poisson
+        # Since the default type is CCDNoise, we may omit it.
         sky_level : *sky_level
 
     # Define the initial random number seed

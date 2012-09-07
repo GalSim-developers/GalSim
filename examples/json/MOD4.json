@@ -115,7 +115,6 @@
 
     "#" : "Define what kind of noise to use",
     "noise" : {
-        "type" : "Poisson",
         "sky_level" : 1e4
     },
     

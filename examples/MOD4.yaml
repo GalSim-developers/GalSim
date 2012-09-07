@@ -93,7 +93,6 @@ image :
 
     # Define what kind of noise to use
     noise : 
-        type : Poisson
         sky_level : 1.e4  # ADU / arcsec^2
     
     # This is a pretty contrived item.  Normally, you would just choose either

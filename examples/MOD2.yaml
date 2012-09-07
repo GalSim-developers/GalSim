@@ -120,7 +120,6 @@ image :
 
     # Define what kind of noise to use
     noise : 
-        type : Poisson
         sky_level : 1.e6  # ADU / arcsec^2
 
     # Define the initial random number seed

@@ -68,7 +68,6 @@
     "draw_method" : "phot",
 
     "noise" : {
-        "type" : "Poisson",
         "sky_level" : 1.0e4
     },
 

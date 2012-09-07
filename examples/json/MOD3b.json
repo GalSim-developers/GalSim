@@ -72,7 +72,6 @@
     "random_seed" : 1512413,
 
     "noise" : {
-        "type" : "Poisson",
         "sky_level" : 1e6
     }
 },

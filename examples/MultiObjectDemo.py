@@ -21,8 +21,14 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-# Script 1: Make multiple galaxy images, reading in many of the relevant parameters
-# from an input catalog.
+# Script 1: Make multiple galaxy images
+#
+# New features in this demo:
+#
+# - Output multiple images to a multi-extension fits file
+# - Building a config dictionary in Python to specify the image properties.
+# - Reading in many of the relevant parameters from an input catalog.
+
 def Script1():
     """
     Make a fits image cube using parameters from an input catalog
@@ -172,7 +178,7 @@ def Script1():
     config['image']['pixel_scale'] = pixel_scale
     config['image']['xsize'] = xsize
     config['image']['ysize'] = ysize
-    config['image']['noise'] = { 'type' : 'Poisson' , 'sky_level' : sky_level }
+    config['image']['noise'] = { 'type' : 'CCDNoise' , 'sky_level' : sky_level }
 
     # The random seed is a bit special.  We actually set the initial seed for each
     # galaxy in order to be sequential values starting with this one.
@@ -203,7 +209,16 @@ def Script1():
 
     print
 
-# Script 2: Something along the lines of a Great08 image
+# Script 2: Something along the lines of a Great08 (Bridle, et al, 2010) image
+# 
+# New features in this demo:
+#
+# - Building a single large image, and access sub-images within it
+# - Generating object properties from a (pseudo-) random number generator.
+# - galsim.BoundsI
+# - galsim.UniformDeviate
+# - galsim.GaussianDeviate
+
 def Script2():
     """
     Make images similar to that done for the Great08 challenge:
