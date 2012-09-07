@@ -1,10 +1,10 @@
 
 # YAML configuration file for use with the executable galsim_yaml
 # Type:
-#   galsim_yaml BD1.yaml
+#   galsim_yaml demo1.yaml
 #
-# This configuration file is designed to be equivalent to the example script called
-# Script1 in BasicDemo.py.
+# This configuration file is designed to be equivalent to the example script called demo1.py.
+#
 # It's pretty close to the minimal configuration file that you might want to use.
 #
 
@@ -50,7 +50,7 @@ image :
 
 # Typically, you will want to specify the output format and file name.
 # If this is omitted, the output will be to a fits file with the same root name as the 
-# config file (so BD1.fits in this case), but that's usually not a great choice.
+# config file (so demo1.fits in this case), but that's usually not a great choice.
 # So at the very least, you would typically want to specify at least the file_name.
 output :
     dir : output_yaml

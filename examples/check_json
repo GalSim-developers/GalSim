@@ -10,29 +10,29 @@ fi
 /bin/rm -f output/*
 /bin/rm -f output_json/*
 
-time ./BasicDemo.py 1 || exit
-time galsim_json json/BD1.json || exit
+time ./demo1.py || exit
+time galsim_json json/demo1.json || exit
 
-time ./BasicDemo.py 2 || exit
-time galsim_json json/BD2.json || exit
+time ./demo2.py || exit
+time galsim_json json/demo2.json || exit
 
-time ./BasicDemo.py 3 || exit
-time galsim_json json/BD3.json || exit
+time ./demo3.py || exit
+time galsim_json json/demo3.json || exit
 
-time ./MultiObjectDemo.py 1 || exit
-time galsim_json json/MOD1.json || exit
+time ./demo4.py || exit
+time galsim_json json/demo4.json || exit
 
-time ./MultiObjectDemo.py 2 || exit
-time galsim_json json/MOD2.json || exit
+time ./demo5.py || exit
+time galsim_json json/demo5.json || exit
 
-time ./MultiObjectDemo.py 3 || exit
-time galsim_json json/MOD3a.json json/MOD3b.json || exit
+time ./demo6.py || exit
+time galsim_json json/demo6a.json json/demo6b.json || exit
 
-time ./MultiObjectDemo.py 4 || exit
-time galsim_json json/MOD4.json || exit
+time ./demo7.py || exit
+time galsim_json json/demo7.json || exit
 
-time ./MultiObjectDemo.py 5 || exit
-time galsim_json json/MOD5a.json json/MOD5b.json || exit
+time ./demo8.py || exit
+time galsim_json json/demo8a.json json/demo8b.json || exit
 
 echo 'Checking diffs: (No output means success)'
 

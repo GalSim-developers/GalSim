@@ -2,10 +2,9 @@
 
 "#" : "JSON configuration file for use with the executable galsim_json",
 "#" : "From the examples directory, type:",
-"#" : "  galsim_json json/MOD2.json",
+"#" : "  galsim_json json/demo5.json",
 
-"#" : "This configuration file is designed to be equivalent to the example script called",
-"#" : "Script2 in MultiObjectDemo.py",
+"#" : "This configuration file is designed to be equivalent to the example script called demo5.py",
 
 "#" : "   Make images similar to that done for the Great08 challenge:",
 "#" : "     - Each fits file is 10 x 10 postage stamps.",
