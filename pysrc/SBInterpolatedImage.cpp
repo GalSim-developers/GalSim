@@ -13,13 +13,13 @@ namespace galsim {
         static void wrapTemplates_Multi(W & wrapper) {
             wrapper
                 .def(bp::init<const std::vector<boost::shared_ptr<BaseImage<U> > >&, 
-                     double, double>(
+                     double, double, double>(
                         (bp::arg("images"),
-                         bp::arg("dx")=0., bp::arg("pad_factor")=0.)
+                         bp::arg("dx")=0., bp::arg("pad_factor")=0., bp::arg("pad_variance")=0.)
                 ))
-                .def(bp::init<const BaseImage<U> &, double, double>(
+              .def(bp::init<const BaseImage<U> &, double, double, double>(
                         (bp::arg("image"),
-                         bp::arg("dx")=0., bp::arg("pad_factor")=0.)
+                         bp::arg("dx")=0., bp::arg("pad_factor")=0., bp::arg("pad_variance")=0.)
                 ))
                 ;
         }
@@ -30,11 +30,11 @@ namespace galsim {
                 .def(bp::init<const BaseImage<U> &,
                      boost::shared_ptr<InterpolantXY>,
                      boost::shared_ptr<InterpolantXY>,
-                     double, double>(
+                     double, double, double>(
                          (bp::arg("image"),
                           bp::arg("xInterp")=bp::object(),
                           bp::arg("kInterp")=bp::object(),
-                          bp::arg("dx")=0., bp::arg("pad_factor")=0.)
+                          bp::arg("dx")=0., bp::arg("pad_factor")=0., bp::arg("pad_variance")=0.)
                      ))
                 ;
         }
