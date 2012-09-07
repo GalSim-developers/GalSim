@@ -169,9 +169,9 @@ def Script1():
 
     # The shift field will shift the location of the centroid relative to the image center.
     config['gal']['shift'] = { 
-        'type' : 'DXDY' ,
-        'dx' : { 'type' : 'InputCatalog' , 'col' : 15 },
-        'dy' : { 'type' : 'InputCatalog' , 'col' : 16 }
+        'type' : 'XY' ,
+        'x' : { 'type' : 'InputCatalog' , 'col' : 15 },
+        'y' : { 'type' : 'InputCatalog' , 'col' : 16 }
     }
 
     # Define some other information about the images

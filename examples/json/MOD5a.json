@@ -16,7 +16,7 @@
 
 "#" : "There are two .json files to do this.  The first one (MOD5a.json) does the ",
 "#" : "run with just 1 process.  The second one (MOD5b.json) is identical except for ",
-"#" : "setting nproc = 4 and outputting to a different file."
+"#" : "setting nproc = 4 and outputting to a different file.",
 
 "psf" : {
     "type" : "Moffat",

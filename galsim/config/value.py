@@ -1,15 +1,5 @@
 import galsim
 
-class Shift:
-    """@brief A simple class representing (dx,dy)
-    """
-    def __init__(self, dx, dy):
-        self.dx = dx
-        self.dy = dy
-    def __str__(self):
-        return 'Shift(dx='+str(self.dx)+',dy='+str(self.dy)+')'
-
-
 def ParseValue(config, param_name, base, value_type):
     """@brief Read or generate a parameter value from config.
 
@@ -52,6 +42,7 @@ def ParseValue(config, param_name, base, value_type):
         # Otherwise, we need to generate the value according to its type
         from galsim import Angle
         from galsim import Shear
+        from galsim import PositionD
         valid_types = {
             float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'Sequence', 'List' ],
             int : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
@@ -60,7 +51,7 @@ def ParseValue(config, param_name, base, value_type):
             Angle : [ 'Rad', 'Deg', 'Random', 'List' ],
             Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
                       'Ring', 'List' ],
-            Shift : [ 'DXDY', 'RandomCircle', 'List' ] 
+            PositionD : [ 'XY', 'RandomCircle', 'List' ] 
         }
 
         type = param['type']
@@ -271,12 +262,12 @@ def _GenerateFromQBeta(param, param_name, base, value_type):
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return galsim.Shear(**kwargs), safe
 
-def _GenerateFromDXDY(param, param_name, base, value_type):
-    """@brief Return a Shift constructed from given (dx,dy)
+def _GenerateFromXY(param, param_name, base, value_type):
+    """@brief Return a PositionD constructed from given (x,y)
     """
-    req = { 'dx' : float, 'dy' : float }
+    req = { 'x' : float, 'y' : float }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
-    return galsim.config.Shift(**kwargs), safe
+    return galsim.PositionD(**kwargs), safe
 
 def _GenerateFromRad(param, param_name, base, value_type):
     """@brief Return an Angle constructed from given theta in radians
@@ -463,7 +454,7 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
     return val, False
 
 def _GenerateFromRandomCircle(param, param_name, base, value_type):
-    """@brief Return a Shift drawn from a circular top hat distribution.
+    """@brief Return a PositionD drawn from a circular top hat distribution.
     """
     if 'rng' not in base:
         raise ValueError("No rng available for %s.type = RandomCircle"%param_name)
@@ -477,12 +468,12 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
     max_rsq = radius*radius
     # Emulate a do-while loop
     while True:
-        dx = (2*ud()-1) * radius
-        dy = (2*ud()-1) * radius
-        rsq = dx**2 + dy**2
+        x = (2*ud()-1) * radius
+        y = (2*ud()-1) * radius
+        rsq = x**2 + y**2
         if rsq <= max_rsq: break
-    #print 'RandomCircle: ',(dx,dy)
-    return galsim.config.Shift(dx=dx,dy=dy), False
+    #print 'RandomCircle: ',(x,y)
+    return galsim.PositionD(x=x,y=y), False
 
 def _GenerateFromSequence(param, param_name, base, value_type):
     """@brief Return next in a sequence of integers

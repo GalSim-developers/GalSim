@@ -124,9 +124,9 @@
     },
 
     "shift" : {
-        "type" : "DXDY",
-        "dx" : { "type" : "InputCatalog" , "col" : 15 },
-        "dy" : { "type" : "InputCatalog" , "col" : 16 }
+        "type" : "XY",
+        "x" : { "type" : "InputCatalog" , "col" : 15 },
+        "y" : { "type" : "InputCatalog" , "col" : 16 }
     }
 },
 
