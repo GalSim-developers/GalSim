@@ -406,8 +406,8 @@ def _ShiftObject(gsobject, config, key, base):
 
     @returns transformed GSObject.
     """
-    shift, safe = galsim.config.ParseValue(config, key, base, galsim.config.Shift)
-    gsobject.applyShift(dx=shift.dx, dy=shift.dy)
+    shift, safe = galsim.config.ParseValue(config, key, base, galsim.PositionD)
+    gsobject.applyShift(dx=shift.x, dy=shift.y)
     #print 'Shifted: ',gsobject
     return gsobject, safe
 

@@ -53,7 +53,7 @@ def test_gaussian():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -98,7 +98,7 @@ def test_moffat():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -143,7 +143,7 @@ def test_airy():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -188,7 +188,7 @@ def test_kolmogorov():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -243,7 +243,7 @@ def test_opticalpsf():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -298,7 +298,7 @@ def test_exponential():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -343,7 +343,7 @@ def test_sersic():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -388,7 +388,7 @@ def test_devaucouleurs():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -433,7 +433,7 @@ def test_pixel():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -487,7 +487,7 @@ def test_realgalaxy():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
     }
 
     galsim.config.ProcessInput(config)
@@ -546,7 +546,7 @@ def test_add():
                    'items' : [
                        { 'type' : 'Sersic' , 'n' : 3.4 , 'half_light_radius' : 1.1, 
                          'flux' : 0.3 , 'ellip' : galsim.Shear(e1=0.2,e2=0.3),
-                         'shift' : { 'type' : 'DXDY' , 'dx' : 0.4 , 'dy' : 0.9 } },
+                         'shift' : { 'type' : 'XY' , 'x' : 0.4 , 'y' : 0.9 } },
                        { 'type' : 'Sersic' , 'n' : 1.1 , 'half_light_radius' : 2.5, 
                          'flux' : 0.7 } ],
                    'flux' : 1.e6,
@@ -559,7 +559,7 @@ def test_add():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY' , 'dx' : 0.7 , 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'XY' , 'x' : 0.7 , 'y' : -1.2 } }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -622,7 +622,7 @@ def test_convolve():
                    'items' : [
                        { 'type' : 'Sersic' , 'n' : 3.4 , 'half_light_radius' : 1.1, 
                          'flux' : 0.3 , 'ellip' : galsim.Shear(e1=0.2,e2=0.3),
-                         'shift' : { 'type' : 'DXDY' , 'dx' : 0.4 , 'dy' : 0.9 } },
+                         'shift' : { 'type' : 'XY' , 'x' : 0.4 , 'y' : 0.9 } },
                        { 'type' : 'Sersic' , 'n' : 1.1 , 'half_light_radius' : 2.5, 
                          'flux' : 0.7 } ],
                    'flux' : 1.e6,
@@ -635,7 +635,7 @@ def test_convolve():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'DXDY' , 'dx' : 0.7 , 'dy' : -1.2 } }
+                   'shift' : { 'type' : 'XY' , 'x' : 0.7 , 'y' : -1.2 } }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -696,7 +696,7 @@ def test_list():
                   'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                   'rotate' : 12 * galsim.degrees, 
                   'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                  'shift' : { 'type' : 'DXDY', 'dx' : 0.7, 'dy' : -1.2 } }
+                  'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
             ]
         }
     }

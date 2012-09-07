@@ -1306,7 +1306,7 @@ def DrawPSFStamp(psf, pix, config, xsize, ysize):
     # Special: if the galaxy was shifted, then also shift the psf 
     if 'shift' in config['gal']:
         gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
-        final_psf.applyShift(gal_shift.dx, gal_shift.dy)
+        final_psf.applyShift(gal_shift.x, gal_shift.y)
 
     if xsize:
         psf_im = galsim.ImageF(xsize,ysize)
