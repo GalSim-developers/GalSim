@@ -960,7 +960,7 @@ class RealGalaxy(GSObject):
                                            conserve_flux=True, tol=1.e-4))].
     """
     def __init__(self, real_galaxy_catalog, index = None, ID = None, random = False,
-                 uniform_deviate = None, interpolant = None):
+                 uniform_deviate = None, interpolant = None, pad = False):
 
         import pyfits
 
@@ -1008,11 +1008,16 @@ class RealGalaxy(GSObject):
         self.catalog_file = real_galaxy_catalog.filename
         self.index = use_index
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
+        if pad: 
+            self.pad_variance= float(real_galaxy_catalog.variance[use_index])
+        else:
+            self.pad_variance=0.
         # note: will be adding more parameters here about noise properties etc., but let's be basic
         # for now
 
-        self.original_image = galsim.SBInterpolatedImage(gal_image, self.Interpolant2D, dx =
-                                                         self.pixel_scale)
+        self.original_image = galsim.SBInterpolatedImage(gal_image, self.Interpolant2D, 
+                                                         dx=self.pixel_scale, 
+                                                         pad_variance=self.pad_variance)
         self.original_PSF = galsim.SBInterpolatedImage(PSF_image, self.Interpolant2D,
                                                          dx=self.pixel_scale)
         self.original_PSF.setFlux(1.0)

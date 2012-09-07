@@ -40,6 +40,7 @@ class RealGalaxyCatalog:
         self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
         self.PSF_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
         self.pixel_scale = cat.field('pixel_scale') # pixel scale for the image (could be different
+        self.variance = cat.field('noise_variance') # noise variance for image
         # if we have training data from other datasets... let's be general here and make it a vector
         # in case of mixed training set)
         self.mag = cat.field('mag') # apparent magnitude
