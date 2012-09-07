@@ -258,7 +258,6 @@ def BuildFits(file_name, config, logger=None,
     
     @param file_name  The name of the output file.
     @param config     A configuration dict.
-    @param base       The base configuration dict.  Normally config = base['output']
     @param logger     If given, a logger object to log progress.
     @param psf_file_name     If given, write a psf image to this file
     @param psf_hdu           If given, write a psf image to this hdu in file_name
@@ -736,6 +735,8 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, do_noise=True, logger=No
 
     @param nstamps    How many stamps to build
     @param config     A configuration dict.
+    @param xsize      The size of a single stamp in the x direction
+    @param ysize      The size of a single stamp in the y direction
     @param nproc      How many processes to use.
     @param do_noise   Whether to add noise to the image (according to config['noise'])
     @param logger     If given, a logger object to log progress.
