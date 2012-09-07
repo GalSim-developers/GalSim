@@ -41,10 +41,13 @@
     "pixel_scale" : 0.2,
 
     "noise" : {
-        "type" : "Poisson",
-        "#" : "You may add the noise appropriate for a particular sky level even though the",
-        "#" : "final image (in this case) has a mean background of zero (i.e. it is ",
-        "#" : "sky subtracted).",
+        "#" : "CCDNoise models how noise normally happens on CCD images -- each pixel",
+        "#" : "has Poisson noise according to the number of photons hitting it.",
+        "type" : "CCDNoise",
+        "#" : "Most of the noise in the image is normally from the sky flux, rather than each",
+        "#" : "object's flux, so you need to specify what the sky level should be.",
+        "#" : "Note: the final image will be 'sky subtracted', so the mean background level",
+        "#" : "will be 0.  This just specifies the sky level to use for the noise.",
         "sky_level" : 2.5e4
     },
 
