@@ -1,10 +1,9 @@
 
 # YAML configuration file for use with the executable galsim_yaml
 # Type:
-#   galsim_yaml MOD3.yaml
+#   galsim_yaml demo6.yaml
 #
-# This configuration file is designed to be equivalent to the example script called
-# Script3 in MultiObjectDemo.py
+# This configuration file is designed to be equivalent to the example script called demo6.py
 #
 #    Make images similar to that done for the Great08 challenge:
 #      - Each fits file is 10 x 10 postage stamps.
@@ -96,7 +95,6 @@ gal :
 # be the same size. 
 image :
     noise :
-        type : Poisson
         sky_level : 1.e6  # ADU / arcsec^2
 
 # We need to define where the real galaxy input catalog is.

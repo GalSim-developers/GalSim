@@ -4,7 +4,7 @@ def BuildGSObject(config, key, base=None):
     """Build a GSObject using config dict for key=key.
 
     @param config     A dict with the configuration information.
-    @param key        A configuration galsim.Config instance read in using galsim.config.load().
+    @param key        The key name in config indicating which object to build.
     @param base       A dict which stores potentially useful things like
                       base['rng'] = random number generator
                       base['catalog'] = input catalog for InputCat items
@@ -50,8 +50,10 @@ def BuildGSObject(config, key, base=None):
 
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [ 
-        'dilate', 'dilation', 'ellip', 'rotate', 'rotation',
-        'magnify', 'magnification', 'shear', 'shift', 
+        'dilate', 'dilation', 'dilate_mu', 'dilation_mu',
+        'ellip', 'rotate', 'rotation',
+        'magnify', 'magnification', 'magnify_mu', 'magnification_mu',
+        'shear', 'shift', 
         'current_val', 'safe' ]
     # There are a few more that are specific to which key we have.
     if key == 'gal':
@@ -64,7 +66,7 @@ def BuildGSObject(config, key, base=None):
     if build_func_name in galsim.config.gsobject.__dict__:
         build_func  = eval(build_func_name)
         gsobject, safe = build_func(ck, key, base, ignore)
-    # Next, wee if this name is in the galsim dictionary.
+    # Next, we check if this name is in the galsim dictionary.
     elif type in galsim.__dict__:
         if issubclass(galsim.__dict__[type], galsim.GSObject):
             gsobject, safe = _BuildSimple(ck, key, base, ignore)
@@ -225,7 +227,8 @@ def _BuildRealGalaxy(config, key, base, ignore):
     real_cat = base['real_catalog']
 
     # Special: if index is Sequence or Random, and max isn't set, set it to real_cat.nobjects-1
-    galsim.config.SetDefaultIndex(config, real_cat.nobjects)
+    if 'id' not in config:
+        galsim.config.SetDefaultIndex(config, real_cat.nobjects)
 
     kwargs, safe = galsim.config.GetAllParams(config, key, base, 
         req = galsim.__dict__['RealGalaxy']._req_params,
@@ -233,10 +236,11 @@ def _BuildRealGalaxy(config, key, base, ignore):
         single = galsim.__dict__['RealGalaxy']._single_params,
         ignore = ignore)
 
-    index = kwargs['index']
-    if index >= real_cat.nobjects:
-        raise IndexError(
-            "%s index has gone past the number of entries in the catalog"%param_name)
+    if 'index' in kwargs:
+        index = kwargs['index']
+        if index >= real_cat.nobjects:
+            raise IndexError(
+                "%s index has gone past the number of entries in the catalog"%param_name)
 
     try:
         return galsim.RealGalaxy(real_cat, **kwargs), safe
@@ -282,6 +286,14 @@ def _TransformObject(gsobject, config, base):
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _DilateObject(gsobject, config, 'dilation', base)
         safe = safe and safe1
+    if 'dilate_mu' in config:
+        if orig: gsobject = gsobject.copy(); orig = False
+        gsobject, safe1 = _DilateMuObject(gsobject, config, 'dilate_mu', base)
+        safe = safe and safe1
+    if 'dilation_mu' in config:
+        if orig: gsobject = gsobject.copy(); orig = False
+        gsobject, safe1 = _DilateMuObject(gsobject, config, 'dilation_mu', base)
+        safe = safe and safe1
     if 'ellip' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _EllipObject(gsobject, config, 'ellip', base)
@@ -301,6 +313,14 @@ def _TransformObject(gsobject, config, base):
     if 'magnification' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnification', base)
+        safe = safe and safe1
+    if 'magnify_mu' in config:
+        if orig: gsobject = gsobject.copy(); orig = False
+        gsobject, safe1 = _MagnifyMuObject(gsobject, config, 'magnify_mu', base)
+        safe = safe and safe1
+    if 'magnification_mu' in config:
+        if orig: gsobject = gsobject.copy(); orig = False
+        gsobject, safe1 = _MagnifyMuObject(gsobject, config, 'magnification_mu', base)
         safe = safe and safe1
     if 'shear' in config:
         if orig: gsobject = gsobject.copy(); orig = False
@@ -348,6 +368,18 @@ def _DilateObject(gsobject, config, key, base):
     #print 'After applyDilation, gsobject = ',gsobject, safe
     return gsobject, safe
 
+def _DilateMuObject(gsobject, config, key, base):
+    """@brief Applies dilation to a supplied GSObject based on user input
+       according to a mu value rather than scale.  (scale = exp(mu))
+
+    @returns transformed GSObject.
+    """
+    mu, safe = galsim.config.ParseValue(config, key, base, float)
+    #print 'scale = ',scale
+    gsobject.applyDilation(exp(mu))
+    #print 'After applyDilation, gsobject = ',gsobject, safe
+    return gsobject, safe
+
 def _MagnifyObject(gsobject, config, key, base):
     """@brief Applies magnification to a supplied GSObject based on user input.
 
@@ -359,13 +391,25 @@ def _MagnifyObject(gsobject, config, key, base):
     #print 'After applyMagnification, gsobject = ',gsobject, safe
     return gsobject, safe
 
+def _MagnifyMuObject(gsobject, config, key, base):
+    """@brief Applies magnification to a supplied GSObject based on user input
+       according to a mu value rather than scale.  (scale = exp(mu))
+
+    @returns transformed GSObject.
+    """
+    mu, safe = galsim.config.ParseValue(config, key, base, float)
+    #print 'scale = ',scale
+    gsobject.applyMagnification(exp(mu))
+    #print 'After applyMagnification, gsobject = ',gsobject, safe
+    return gsobject, safe
+
 def _ShiftObject(gsobject, config, key, base):
     """@brief Applies centroid shift to a supplied GSObject based on user input.
 
     @returns transformed GSObject.
     """
-    shift, safe = galsim.config.ParseValue(config, key, base, galsim.config.Shift)
-    gsobject.applyShift(dx=shift.dx, dy=shift.dy)
+    shift, safe = galsim.config.ParseValue(config, key, base, galsim.PositionD)
+    gsobject.applyShift(dx=shift.x, dy=shift.y)
     #print 'Shifted: ',gsobject
     return gsobject, safe
 
