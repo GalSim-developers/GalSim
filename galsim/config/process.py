@@ -31,8 +31,8 @@ def ProcessInput(config, logger=None):
     Process the input field, reading in any specified input files.
     These files are saved in the top level of config.
 
-    config['catalog'] = the catalog specified by config.input.catalog
-    config['real_catalog'] = the catalog specified by config.input.real_catalog
+    config['catalog'] = the catalog specified by config.input.catalog, if provided
+    config['real_catalog'] = the catalog specified by config.input.real_catalog, if provided
     """
 
     # Process the input field (read any necessary input files)
@@ -133,7 +133,7 @@ def ProcessOutput(config, logger=None):
             import warnings
             warnings.warn(
                 "Trying to use more processes than files: output.nproc=%d, "%nproc +
-                "output.nfiles=%d"%nfiles)
+                "output.nfiles=%d.  Reducing nproc to %d."%(nfiles,nfiles))
             nproc = nfiles
     if nproc <= 0:
         # Try to figure out a good number of processes to use
@@ -141,19 +141,20 @@ def ProcessOutput(config, logger=None):
             from multiprocessing import cpu_count
             ncpu = cpu_count()
             if nfiles == 1 and (type == 'MultiFits' or type == 'DataCube'):
-                kwargs['nproc'] = ncpu 
+                kwargs['nproc'] = ncpu # Use this value in BuildImage rather than here.
+                nproc = 1
                 if logger:
                     logger.info("ncpu = %d.",ncpu)
             else:
                 if ncpu > nfiles:
-                    nproc = ncpu
-                else:
                     nproc = nfiles
+                else:
+                    nproc = ncpu
                 if logger:
                     logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
         except:
             raise AttributeError(
-                "config.nprof <= 0, but unable to determine number of cpus.")
+                "config.output.nproc <= 0, but unable to determine number of cpus.")
     
     if nproc > 1:
         # NB: See the function BuildStamps for more verbose comments about how
@@ -267,7 +268,7 @@ def BuildFits(file_name, config, logger=None,
     @param badpix_file_name  If given, write a badpix image to this file
     @param badpix_hdu        If given, write a badpix image to this hdu in file_name
 
-    @return time      Time taken to build filek
+    @return time      Time taken to build file
     """
     t1 = time.time()
 
@@ -306,7 +307,7 @@ def BuildFits(file_name, config, logger=None,
 def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
                    psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
-    Build a regular fits file as specified in config.
+    Build a multi-extension fits file as specified in config.
     
     @param file_name  The name of the output file.
     @param nimages    The number of images (and hence hdus in the output file)
@@ -317,7 +318,7 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
     @param weight_file_name  If given, write a weight image to this file
     @param badpix_file_name  If given, write a badpix image to this file
 
-    @return time      Time taken to build filek
+    @return time      Time taken to build file
     """
     t1 = time.time()
 
@@ -376,7 +377,7 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
                   weight_file_name=None, weight_hdu=None,
                   badpix_file_name=None, badpix_hdu=None):
     """
-    Build a regular fits file as specified in config.
+    Build a multi-image fits data cube as specified in config.
     
     @param file_name  The name of the output file.
     @param nimages    The number of images in the data cube
@@ -467,6 +468,12 @@ def BuildImage(config, logger=None,
                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build an image according the information in config.
+
+    This function acts as a wrapper for:
+        BuildSingleImage 
+        BuildTiledImage 
+        BuildScatteredImage 
+    choosing between these three using the contents of config if specified (default = Single)
 
     @param config     A configuration dict.
     @param logger     If given, a logger object to log progress.
@@ -729,6 +736,27 @@ def BuildTiledImage(config, logger=None,
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
 
+def BuildScatteredImage(config, logger=None,
+                        make_psf_image=False, make_weight_image=False, make_badpix_image=False):
+    """
+    Build an image containing multiple objects placed at arbitrary locations.
+
+    ** Not currently implemented. **
+
+    @param config     A configuration dict.
+    @param logger     If given, a logger object to log progress.
+    @param make_psf_image      Whether to make psf_image
+    @param make_weight_image   Whether to make weight_image
+    @param make_badpix_image   Whether to make badpix_image
+
+    @return (image, psf_image, weight_image, badpix_image)  
+
+    Note: All 4 images are always returned in the return tuple,
+          but the latter 3 might be None depending on the parameters make_*_image.    
+    """
+    raise NotImplementedError("Sorry, image.type = Scattered is not implemented yet.")
+
+
 def BuildStamps(nstamps, config, xsize, ysize, nproc=1, do_noise=True, logger=None,
                 make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
@@ -769,32 +797,29 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, do_noise=True, logger=No
                'make_weight_image' : make_weight_image,
                'make_badpix_image' : make_badpix_image }
 
-    if nproc == 1:
+    if nproc > nstamps:
+        import warnings
+        warnings.warn(
+            "Trying to use more processes than objects: image.nproc=%d, "%nproc +
+            "nstamps=%d.  Reducing nproc to %d."%(nstamps,nstamps))
+        nproc = nstamps
 
-        images = []
-        psf_images = []
-        weight_images = []
-        badpix_images = []
-
-        for k in range(nstamps):
-            if 'random_seed' in config['image']:
-                seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+    if nproc <= 0:
+        # Try to figure out a good number of processes to use
+        try:
+            from multiprocessing import cpu_count
+            ncpu = cpu_count()
+            if ncpu > nstamps:
+                nproc = nstamps
             else:
-                seed = None
-            kwargs['seed'] = seed
-
-            result = BuildSingleStamp(**kwargs)
-            images += [ result[0] ]
-            psf_images += [ result[1] ]
-            weight_images += [ result[2] ]
-            badpix_images += [ result[3] ]
+                nproc = ncpu
             if logger:
-                # Note: numpy shape is y,x
-                ys, xs = result[0].array.shape
-                t = result[4]
-                logger.info('Stamp %d: size = %d x %d, time = %f sec', k, xs, ys, t)
-
-    else: # nproc > 1
+                logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
+        except:
+            raise AttributeError(
+                "config.image.nproc <= 0, but unable to determine number of cpus.")
+    
+    if nproc > 1:
 
         from multiprocessing import Process, Queue, current_process
 
@@ -873,6 +898,32 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, do_noise=True, logger=No
         # add those 'STOP's at some point!
         for j in range(nproc):
             task_queue.put('STOP')
+
+    else : # nproc == 1
+
+        images = []
+        psf_images = []
+        weight_images = []
+        badpix_images = []
+
+        for k in range(nstamps):
+            if 'random_seed' in config['image']:
+                seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+            else:
+                seed = None
+            kwargs['seed'] = seed
+
+            result = BuildSingleStamp(**kwargs)
+            images += [ result[0] ]
+            psf_images += [ result[1] ]
+            weight_images += [ result[2] ]
+            badpix_images += [ result[3] ]
+            if logger:
+                # Note: numpy shape is y,x
+                ys, xs = result[0].array.shape
+                t = result[4]
+                logger.info('Stamp %d: size = %d x %d, time = %f sec', k, xs, ys, t)
+
 
     if logger:
         logger.info('Done making images')

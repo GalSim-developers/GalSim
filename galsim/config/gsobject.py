@@ -4,7 +4,7 @@ def BuildGSObject(config, key, base=None):
     """Build a GSObject using config dict for key=key.
 
     @param config     A dict with the configuration information.
-    @param key        A configuration galsim.Config instance read in using galsim.config.load().
+    @param key        The key name in config indicating which object to build.
     @param base       A dict which stores potentially useful things like
                       base['rng'] = random number generator
                       base['catalog'] = input catalog for InputCat items
@@ -64,7 +64,7 @@ def BuildGSObject(config, key, base=None):
     if build_func_name in galsim.config.gsobject.__dict__:
         build_func  = eval(build_func_name)
         gsobject, safe = build_func(ck, key, base, ignore)
-    # Next, wee if this name is in the galsim dictionary.
+    # Next, we check if this name is in the galsim dictionary.
     elif type in galsim.__dict__:
         if issubclass(galsim.__dict__[type], galsim.GSObject):
             gsobject, safe = _BuildSimple(ck, key, base, ignore)
