@@ -76,9 +76,9 @@
             "type" : "OpticalPSF",
 
 	    "#" : "Use value for lambda = 800 nm, D = 4 m",
-	    "#" : "lam_over_D = (800 nm) * 1.e-9 (m/nm) / (4m) * (206265 arcsec/radian)",
-            "#" : "           = 0.041253 arcsec",
-            "lam_over_D" : 0.041253,
+	    "#" : "lam_over_diam = (800 nm) * 1.e-9 (m/nm) / (4m) * (206265 arcsec/radian)",
+            "#" : "              = 0.041253 arcsec",
+            "lam_over_diam" : 0.041253,
 
             "#" : "The rest of these values are given in units of lambda",
             "defocus" : 0.53,
