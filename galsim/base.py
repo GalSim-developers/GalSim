@@ -1019,7 +1019,8 @@ class RealGalaxy(GSObject):
                                                          dx=self.pixel_scale, 
                                                          pad_variance=self.pad_variance)
         self.original_PSF = galsim.SBInterpolatedImage(PSF_image, self.Interpolant2D,
-                                                         dx=self.pixel_scale)
+                                                       dx=self.pixel_scale)
+
         self.original_PSF.setFlux(1.0)
         psf_inv = galsim.SBDeconvolve(self.original_PSF)
 
