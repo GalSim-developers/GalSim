@@ -50,8 +50,10 @@ def BuildGSObject(config, key, base=None):
 
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [ 
-        'dilate', 'dilation', 'ellip', 'rotate', 'rotation',
-        'magnify', 'magnification', 'shear', 'shift', 
+        'dilate', 'dilation', 'dilate_mu', 'dilation_mu',
+        'ellip', 'rotate', 'rotation',
+        'magnify', 'magnification', 'magnify_mu', 'magnification_mu',
+        'shear', 'shift', 
         'current_val', 'safe' ]
     # There are a few more that are specific to which key we have.
     if key == 'gal':
@@ -282,6 +284,14 @@ def _TransformObject(gsobject, config, base):
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _DilateObject(gsobject, config, 'dilation', base)
         safe = safe and safe1
+    if 'dilate_mu' in config:
+        if orig: gsobject = gsobject.copy(); orig = False
+        gsobject, safe1 = _DilateMuObject(gsobject, config, 'dilate_mu', base)
+        safe = safe and safe1
+    if 'dilation_mu' in config:
+        if orig: gsobject = gsobject.copy(); orig = False
+        gsobject, safe1 = _DilateMuObject(gsobject, config, 'dilation_mu', base)
+        safe = safe and safe1
     if 'ellip' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _EllipObject(gsobject, config, 'ellip', base)
@@ -301,6 +311,14 @@ def _TransformObject(gsobject, config, base):
     if 'magnification' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnification', base)
+        safe = safe and safe1
+    if 'magnify_mu' in config:
+        if orig: gsobject = gsobject.copy(); orig = False
+        gsobject, safe1 = _MagnifyMuObject(gsobject, config, 'magnify_mu', base)
+        safe = safe and safe1
+    if 'magnification_mu' in config:
+        if orig: gsobject = gsobject.copy(); orig = False
+        gsobject, safe1 = _MagnifyMuObject(gsobject, config, 'magnification_mu', base)
         safe = safe and safe1
     if 'shear' in config:
         if orig: gsobject = gsobject.copy(); orig = False
@@ -348,6 +366,18 @@ def _DilateObject(gsobject, config, key, base):
     #print 'After applyDilation, gsobject = ',gsobject, safe
     return gsobject, safe
 
+def _DilateMuObject(gsobject, config, key, base):
+    """@brief Applies dilation to a supplied GSObject based on user input
+       according to a mu value rather than scale.  (scale = exp(mu))
+
+    @returns transformed GSObject.
+    """
+    mu, safe = galsim.config.ParseValue(config, key, base, float)
+    #print 'scale = ',scale
+    gsobject.applyDilation(exp(mu))
+    #print 'After applyDilation, gsobject = ',gsobject, safe
+    return gsobject, safe
+
 def _MagnifyObject(gsobject, config, key, base):
     """@brief Applies magnification to a supplied GSObject based on user input.
 
@@ -356,6 +386,18 @@ def _MagnifyObject(gsobject, config, key, base):
     scale, safe = galsim.config.ParseValue(config, key, base, float)
     #print 'scale = ',scale
     gsobject.applyMagnification(scale)
+    #print 'After applyMagnification, gsobject = ',gsobject, safe
+    return gsobject, safe
+
+def _MagnifyMuObject(gsobject, config, key, base):
+    """@brief Applies magnification to a supplied GSObject based on user input
+       according to a mu value rather than scale.  (scale = exp(mu))
+
+    @returns transformed GSObject.
+    """
+    mu, safe = galsim.config.ParseValue(config, key, base, float)
+    #print 'scale = ',scale
+    gsobject.applyMagnification(exp(mu))
     #print 'After applyMagnification, gsobject = ',gsobject, safe
     return gsobject, safe
 
