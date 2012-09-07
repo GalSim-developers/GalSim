@@ -221,10 +221,10 @@ class PowerSpectrumRealizer(object):
         kx, ky=np.mgrid[0:nx/2+1,0:ny/2+1]
         self.kx = kx
         self.ky = ky
-        size = float(size)
+        pixel_size = float(pixel_size)
 
         # Set up the scalar |k| grid.
-        self.k=((kx/(size*nx))**2+(ky/(size*ny))**2)**0.5
+        self.k=((kx/(pixel_size*nx))**2+(ky/(pixel_size*ny))**2)**0.5
         
         #Compute the spin weightings
         self._cos, self._sin = self._generate_spin_weightings()
