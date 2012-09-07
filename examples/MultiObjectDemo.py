@@ -622,7 +622,7 @@ def Script4():
     psf3 = psf3_inner + psf3_outer
     atmos = galsim.Gaussian(fwhm = psf_fwhm)
     optics = galsim.OpticalPSF(
-            lam_over_D = 0.6 * psf_fwhm,
+            lam_over_diam = 0.6 * psf_fwhm,
             obscuration = 0.4,
             defocus = 0.1,
             astig1 = 0.3, astig2 = -0.2,
@@ -631,7 +631,7 @@ def Script4():
     psf4 = galsim.Convolve([atmos,optics])
     #atmos = galsim.AtmosphericPSF(fwhm = psf_fwhm)
     atmos = galsim.Kolmogorov(fwhm = psf_fwhm)
-    optics = galsim.Airy(lam_over_D = 0.3 * psf_fwhm) 
+    optics = galsim.Airy(lam_over_diam = 0.3 * psf_fwhm) 
     psf5 = galsim.Convolve([atmos,optics])
     psfs = [psf1, psf2, psf3, psf4, psf5]
     psf_names = ["Gaussian", "Moffat", "Double Gaussian", "OpticalPSF", "Kolmogorov * Airy"]

@@ -274,14 +274,14 @@ def Script3():
     logger.info('Made atmospheric PSF profile')
 
     # Define the optical part of the PSF.
-    # The first argument of OpticalPSF below is lambda/D,
+    # The first argument of OpticalPSF below is lambda/diam,
     # which needs to be in arcsec, so do the calculation:
-    lam_over_D = lam * 1.e-9 / tel_diam # radians
-    lam_over_D *= 206265  # arcsec
-    logger.info('Calculated lambda over D = %f arcsec', lam_over_D)
+    lam_over_diam = lam * 1.e-9 / tel_diam # radians
+    lam_over_diam *= 206265  # arcsec
+    logger.info('Calculated lambda over diam = %f arcsec', lam_over_diam)
     # The rest of the values here should be given in units of the 
     # wavelength of the incident light.
-    optics = galsim.OpticalPSF(lam_over_D, 
+    optics = galsim.OpticalPSF(lam_over_diam, 
                                defocus = opt_defocus,
                                coma1 = opt_c1, coma2 = opt_c2,
                                astig1 = opt_a1, astig2 = opt_a2,
@@ -313,7 +313,7 @@ def Script3():
     # Also draw the effective PSF by itself and the optical PSF component alone.
     image_epsf = galsim.ImageF(image_size,image_size)
     final_epsf.draw(image_epsf, dx=pixel_scale)
-    image_opticalpsf = optics.draw(dx=lam_over_D/2.)
+    image_opticalpsf = optics.draw(dx=lam_over_diam/2.)
     logger.info('Made image of the profile')
 
     # Add a constant sky level to the image.

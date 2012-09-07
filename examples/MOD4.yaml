@@ -34,7 +34,7 @@ psf :
             items :
                 - { type : Gaussian , fwhm : 0.65 }
                 - { type : OpticalPSF , 
-                    lam_over_D : 0.39 , obscuration : 0.4 ,
+                    lam_over_diam : 0.39 , obscuration : 0.4 ,
                     defocus : 0.1 , spher : -0.3 ,
                     astig1 : 0.3 , astig2 : -0.2 ,
                     coma1 : 0.2 , coma2 : 0.1 }
@@ -42,7 +42,7 @@ psf :
             type : Convolution
             items :
                 - { type : Kolmogorov , fwhm : 0.65 }
-                - { type : Airy , lam_over_D : 0.195 }
+                - { type : Airy , lam_over_diam : 0.195 }
 
     index : 
         type : Sequence
