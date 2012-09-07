@@ -227,7 +227,8 @@ def _BuildRealGalaxy(config, key, base, ignore):
     real_cat = base['real_catalog']
 
     # Special: if index is Sequence or Random, and max isn't set, set it to real_cat.nobjects-1
-    galsim.config.SetDefaultIndex(config, real_cat.nobjects)
+    if 'id' not in config:
+        galsim.config.SetDefaultIndex(config, real_cat.nobjects)
 
     kwargs, safe = galsim.config.GetAllParams(config, key, base, 
         req = galsim.__dict__['RealGalaxy']._req_params,
@@ -235,10 +236,11 @@ def _BuildRealGalaxy(config, key, base, ignore):
         single = galsim.__dict__['RealGalaxy']._single_params,
         ignore = ignore)
 
-    index = kwargs['index']
-    if index >= real_cat.nobjects:
-        raise IndexError(
-            "%s index has gone past the number of entries in the catalog"%param_name)
+    if 'index' in kwargs:
+        index = kwargs['index']
+        if index >= real_cat.nobjects:
+            raise IndexError(
+                "%s index has gone past the number of entries in the catalog"%param_name)
 
     try:
         return galsim.RealGalaxy(real_cat, **kwargs), safe

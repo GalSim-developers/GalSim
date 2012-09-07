@@ -45,7 +45,11 @@ class RealGalaxyCatalog(object):
         try:
             cat = pyfits.getdata(self.file_name)
             self.nobjects = len(cat) # number of objects in the catalog
-            self.ident = cat.field('ident') # ID for object in the training sample
+            ident = cat.field('ident') # ID for object in the training sample
+            # We want to make sure that the ident array contains all strings.
+            # Strangely, ident.astype(str) produces a string with each element == '1'.
+            # Hence this way of doing the conversion:
+            self.ident = [ "%s"%val for val in ident ]
             self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
             self.PSF_file_name = cat.field('PSF_filename') # file containing the PSF image
             self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
@@ -70,14 +74,17 @@ class RealGalaxyCatalog(object):
         # i.e. (dataset, ID within dataset)
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
-    def get_index_for_id(self, ID):
+    def get_index_for_id(self, id):
         """
         Find which index number corresponds to the value ID in the ident field.
         """
-        if ID in self.ident:
-            return self.ident.index(ID)
+        # Just to be completely consistent, convert id to a string in the same way we
+        # did above for the ident array:
+        id = "%s"%id
+        if id in self.ident:
+            return self.ident.index(id)
         else:
-            raise ValueError('ID %s not found in list of IDs'%ID)
+            raise ValueError('ID %s not found in list of IDs'%id)
 
     def preload(self):
         """
