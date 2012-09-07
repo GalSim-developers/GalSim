@@ -85,7 +85,10 @@ class PowerSpectrum(object):
         fixed total grid extent, a smaller grid spacing requires smaller shear variances since the
         range of k values that are accessible is larger); those who input a continuum P(k) should,
         when predicting the behavior of shears on a grid, keep in mind our normalization convention
-        and the fact that it's a discrete FFT.  Also note that the convention for axis orientation
+        and the fact that it's a discrete FFT.  If you strongly dislike our convention and would
+        like support for an alternate one, please indicate this on our GitHub issues page.
+
+        Also note that the convention for axis orientation
         differs from that for the GREAT10 challenge, so when using codes that deal with GREAT10
         challenge outputs, the sign of our g2 shear component must be flipped.
 
