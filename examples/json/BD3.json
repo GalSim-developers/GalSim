@@ -74,7 +74,10 @@
             "#" : "For the optical component, GalSim provides an OpticalPSF class that ",
             "#" : "implements the PSF pattern from various telescope aberrations.",
             "type" : "OpticalPSF",
-            "#" : "lam_over_D = (800 nm) * 1.e-9 (m/nm) / (4m) * 206265 (arcsec/rad)",
+
+	    "#" : "Use value for lambda = 800 nm, D = 4 m",
+	    "#" : "lam_over_D = (800 nm) * 1.e-9 (m/nm) / (4m) * (206265 arcsec/radian)",
+            "#" : "           = 0.041253 arcsec",
             "lam_over_D" : 0.041253,
 
             "#" : "The rest of these values are given in units of lambda",
@@ -85,6 +88,7 @@
             "coma2" : -0.33,
 
             "#" : "The linear scale of the secondary mirror obstruction",
+            "#" : "as a fraction of the primary mirror size",
             "obscuration" : 0.3
         }
     ]
