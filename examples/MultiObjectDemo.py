@@ -257,12 +257,17 @@ def Script2():
 
     gal_file_name = os.path.join('output','g08_gal.fits')
     gal_signal_to_noise = 200       # Great08 "LowNoise" run
+
     gal_n = 1                       # Use n=1 for "disk" type
     # Great08 mixed pure bulge and pure disk for its LowNoise run.
     # We're just doing disks to make things simpler.
+
     gal_resolution = 0.98           # r_gal / r_psf (use r = half_light_radius)
-                                    # This corresponds to a resolute = 1.4 in the Great08
-                                    # definition of r_obs / r_psf
+    # Note: Great08 defined their resolution as r_obs / r_psf, using the convolved 
+    #       size rather than the pre-convolved size.  
+    #       Therefore, our r_gal/r_psf = 0.98 approximately corresponds to 
+    #       their r_obs / r_psf = 1.4.
+
     gal_ellip_rms = 0.2             # using "shear" definition of ellipticity.
     gal_ellip_max = 0.6             #
     gal_g1 = 0.013                  #

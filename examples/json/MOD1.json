@@ -103,11 +103,10 @@
         }
     ],
 
-    "#" : "When a composite object (like a Sum) has a flux specified, the flux values of the",
-    "#" : "components are taken to be relative fluxes, and the full object's value sets the",
+    "#" : "When a Sum object has a flux specified, the 'flux' values of the components are",
+    "#" : "taken to be relative fluxes, and the full object's flux value sets the",
     "#" : "overall normalization.  If this is omitted, the overall flux is taken to be the",
     "#" : "sum of the component fluxes.",
-    "#" : "Note: If you want to use a variable defined above, you use a *",
     "flux" : 1e6,
 
     "#" : "An object may have an ellip and a shear, each of which can be specified in terms",
