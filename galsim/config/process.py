@@ -1017,9 +1017,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize):
 
     @return the resulting image.
     """
-    if 'wcs_shear' in config:
-        wcs_shear = config['wcs_shear']
-    elif 'image' in config and 'wcs' in config['image']:
+    if 'image' in config and 'wcs' in config['image']:
         wcs_shear = CalculateWCSShear(config['image']['wcs'])
     else:
         wcs_shear = None
@@ -1032,6 +1030,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize):
             final = galsim.Convolve([nopix, pix])
         else:
             final = nopix
+        config['wcs_shear'] = wcs_shear
     else:
         fft_list = [ prof for prof in (psf,pix,gal) if prof is not None ]
         final = galsim.Convolve(fft_list)
@@ -1148,15 +1147,14 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng):
     phot_list = [ prof for prof in (psf,gal) if prof is not None ]
     final = galsim.Convolve(phot_list)
 
-    if 'wcs_shear' in config:
-        wcs_shear = config['wcs_shear']
-    elif 'image' in config and 'wcs' in config['image']:
+    if 'image' in config and 'wcs' in config['image']:
         wcs_shear = CalculateWCSShear(config['image']['wcs'])
     else:
         wcs_shear = None
 
     if wcs_shear:
         final.applyShear(wcs_shear)
+        config['wcs_shear'] = wcs_shear
                     
     if 'signal_to_noise' in config['gal']:
         raise NotImplementedError(
@@ -1271,8 +1269,6 @@ def DrawPSFStamp(psf, pix, config, xsize, ysize):
 
     if 'wcs_shear' in config:
         wcs_shear = config['wcs_shear']
-    elif 'image' in config and 'wcs' in config['image']:
-        wcs_shear = CalculateWCSShear(config['image']['wcs'])
     else:
         wcs_shear = None
 
@@ -1311,10 +1307,15 @@ def CalculateWCSShear(wcs):
     """
     if not isinstance(wcs, dict):
         raise AttributeError("image.wcs is not a dict.")
-    elif 'shear' not in wcs:
-        raise AttributeError("wcs must specify a shear")
+
+    type = wcs.get('type','Shear')
+
+    if type == 'Shear':
+        req = { 'shear' : galsim.Shear }
+        params = galsim.config.GetAllParams(wcs, 'wcs', wcs, req=req)[0]
+        return params['shear']
     else:
-        return galsim.config.ParseValue(wcs, 'shear', wcs, galsim.Shear)[0]
+        raise AttributeError("Invalid type %s for wcs",type)
 
 def CalculateNoiseVar(noise, pixel_scale):
     """
