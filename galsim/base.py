@@ -1207,7 +1207,7 @@ class RealGalaxy(GSObject):
     Initialization
     --------------
     @code
-    real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string = None,
+    real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, id = None, 
                                     random = False, uniform_deviate = None, interpolant = None)
     @endcode
 
@@ -1220,7 +1220,7 @@ class RealGalaxy(GSObject):
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
                                 find the data, etc.
     @param index                Index of the desired galaxy in the catalog.
-    @param ID                   Object ID for the desired galaxy in the catalog.
+    @param id                   Object ID for the desired galaxy in the catalog.
     @param random               If true, then just select a completely random galaxy from the
                                 catalog.
     @param uniform_deviate      A uniform deviate to use for selecting a random galaxy (optional)
@@ -1234,11 +1234,11 @@ class RealGalaxy(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = {}
-    _opt_params = { "index" : int , "flux" : float }
-    _single_params = []
+    _opt_params = { "flux" : float }
+    _single_params = [ { "index" : int , "id" : str } ]
 
     # --- Public Class methods ---
-    def __init__(self, real_galaxy_catalog, index=None, ID=None, random=False,
+    def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  uniform_deviate=None, interpolant=None, flux=None):
 
         import pyfits
@@ -1247,13 +1247,13 @@ class RealGalaxy(GSObject):
         # option must return an index within the real_galaxy_catalog.        
         use_index = None # using -1 here for 'safety' actually indexes in Python without complaint
         if index != None:
-            if (ID != None or random == True):
+            if (id != None or random == True):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
             use_index = index
-        elif ID != None:
+        elif id != None:
             if (random == True):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
-            use_index = real_galaxy_catalog.get_index_for_id(ID)
+            use_index = real_galaxy_catalog.get_index_for_id(id)
         elif random == True:
             if uniform_deviate == None:
                 uniform_deviate = galsim.UniformDeviate()

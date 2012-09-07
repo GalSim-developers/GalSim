@@ -481,7 +481,7 @@ def test_realgalaxy():
 
         'gal1' : { 'type' : 'RealGalaxy' },
         'gal2' : { 'type' : 'RealGalaxy' , 'index' : 23, 'flux' : 100 },
-        'gal3' : { 'type' : 'RealGalaxy' , 'index' : 17, 'flux' : 1.e6,
+        'gal3' : { 'type' : 'RealGalaxy' , 'id' : 103176, 'flux' : 1.e6,
                    'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians } },
         'gal4' : { 'type' : 'RealGalaxy' , 'index' : 5, 'flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
