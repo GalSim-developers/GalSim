@@ -10,29 +10,29 @@ fi
 /bin/rm -f output/*
 /bin/rm -f output_yaml/*
 
-./BasicDemo.py 1 || exit
-galsim_yaml BD1.yaml || exit
+time ./BasicDemo.py 1 || exit
+time galsim_yaml BD1.yaml || exit
 
-./BasicDemo.py 2 || exit
-galsim_yaml BD2.yaml || exit
+time ./BasicDemo.py 2 || exit
+time galsim_yaml BD2.yaml || exit
 
-./BasicDemo.py 3 || exit
-galsim_yaml BD3.yaml || exit
+time ./BasicDemo.py 3 || exit
+time galsim_yaml BD3.yaml || exit
 
-./MultiObjectDemo.py 1 || exit
-galsim_yaml MOD1.yaml || exit
+time ./MultiObjectDemo.py 1 || exit
+time galsim_yaml MOD1.yaml || exit
 
-./MultiObjectDemo.py 2 || exit
-galsim_yaml MOD2.yaml || exit
+time ./MultiObjectDemo.py 2 || exit
+time galsim_yaml MOD2.yaml || exit
 
-./MultiObjectDemo.py 3 || exit
-galsim_yaml MOD3.yaml || exit
+time ./MultiObjectDemo.py 3 || exit
+time galsim_yaml MOD3.yaml || exit
 
-./MultiObjectDemo.py 4 || exit
-galsim_yaml MOD4.yaml || exit
+time ./MultiObjectDemo.py 4 || exit
+time galsim_yaml MOD4.yaml || exit
 
-./MultiObjectDemo.py 5 || exit
-galsim_yaml MOD5.yaml || exit
+time ./MultiObjectDemo.py 5 || exit
+time galsim_yaml MOD5.yaml || exit
 
 echo 'Checking diffs: (No output means success)'
 
