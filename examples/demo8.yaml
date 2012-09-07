@@ -1,10 +1,9 @@
 
 # YAML configuration file for use with the executable galsim_yaml
 # Type:
-#   galsim_yaml MOD5.yaml
+#   galsim_yaml demo8.yaml
 #
-# This configuration file is designed to be equivalent to the example script called
-# Script5 in MultiObjectDemo.py
+# This configuration file is designed to be equivalent to the example script called demo8.py
 #
 #    Make an image containing 10 x 10 postage stamps.
 #    The galaxies are bulge + disk with parameters drawn from random variates
@@ -61,7 +60,6 @@ image :
     draw_method : phot
 
     noise :
-        type : Poisson
         sky_level : 1.0e4  # ADU / arcsec^2
 
     random_seed : 1512413

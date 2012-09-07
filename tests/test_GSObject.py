@@ -261,17 +261,17 @@ def test_airy_flux_scaling():
     """Test flux scaling for Airy.
     """
     # init with lam_over_r0 and flux only (should be ok given last tests)
-    obj = galsim.Airy(lam_over_D=test_loD, flux=test_flux, obscuration=test_obscuration)
+    obj = galsim.Airy(lam_over_diam=test_loD, flux=test_flux, obscuration=test_obscuration)
     obj *= 2.
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __imul__.")
-    obj = galsim.Airy(lam_over_D=test_loD, flux=test_flux, obscuration=test_obscuration)
+    obj = galsim.Airy(lam_over_diam=test_loD, flux=test_flux, obscuration=test_obscuration)
     obj /= 2.
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __idiv__.")
-    obj = galsim.Airy(lam_over_D=test_loD, flux=test_flux, obscuration=test_obscuration)
+    obj = galsim.Airy(lam_over_diam=test_loD, flux=test_flux, obscuration=test_obscuration)
     obj2 = obj * 2.
     # First test that original obj is unharmed... (also tests that .copy() is working)
     np.testing.assert_almost_equal(
@@ -281,7 +281,7 @@ def test_airy_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (result).")
-    obj = galsim.Airy(lam_over_D=test_loD, flux=test_flux, obscuration=test_obscuration)
+    obj = galsim.Airy(lam_over_diam=test_loD, flux=test_flux, obscuration=test_obscuration)
     obj2 = 2. * obj
     # First test that original obj is unharmed... (also tests that .copy() is working)
     np.testing.assert_almost_equal(
@@ -291,7 +291,7 @@ def test_airy_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (result).")
-    obj = galsim.Airy(lam_over_D=test_loD, flux=test_flux, obscuration=test_obscuration)
+    obj = galsim.Airy(lam_over_diam=test_loD, flux=test_flux, obscuration=test_obscuration)
     obj2 = obj / 2.
     # First test that original obj is unharmed... (also tests that .copy() is working)
     np.testing.assert_almost_equal(
@@ -307,21 +307,21 @@ def test_opticalpsf_flux_scaling():
     """
     # init
     obj = galsim.OpticalPSF(
-        lam_over_D=test_loD, oversampling=test_oversampling, defocus=test_defocus,
+        lam_over_diam=test_loD, oversampling=test_oversampling, defocus=test_defocus,
         astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj *= 2.
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __imul__.")
     obj = galsim.OpticalPSF(
-        lam_over_D=test_loD, oversampling=test_oversampling, defocus=test_defocus,
+        lam_over_diam=test_loD, oversampling=test_oversampling, defocus=test_defocus,
         astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj /= 2.
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __idiv__.")
     obj = galsim.OpticalPSF(
-        lam_over_D=test_loD, oversampling=test_oversampling, defocus=test_defocus,
+        lam_over_diam=test_loD, oversampling=test_oversampling, defocus=test_defocus,
         astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj2 = obj * 2.
     # First test that original obj is unharmed... (also tests that .copy() is working)
@@ -333,7 +333,7 @@ def test_opticalpsf_flux_scaling():
         obj2.getFlux(), test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (result).")
     obj = galsim.OpticalPSF(
-        lam_over_D=test_loD, oversampling=test_oversampling, defocus=test_defocus,
+        lam_over_diam=test_loD, oversampling=test_oversampling, defocus=test_defocus,
         astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj2 = 2. * obj
     # First test that original obj is unharmed... (also tests that .copy() is working)
@@ -345,7 +345,7 @@ def test_opticalpsf_flux_scaling():
         obj2.getFlux(), test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (result).")
     obj = galsim.OpticalPSF(
-        lam_over_D=test_loD, oversampling=test_oversampling, defocus=test_defocus,
+        lam_over_diam=test_loD, oversampling=test_oversampling, defocus=test_defocus,
         astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj2 = obj / 2.
     # First test that original obj is unharmed... (also tests that .copy() is working)

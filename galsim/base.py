@@ -770,13 +770,13 @@ class Airy(GSObject):
 
     Initialization
     --------------
-    An Airy can be initialized using one size parameter lam_over_D, an optional obscuration
+    An Airy can be initialized using one size parameter lam_over_diam, an optional obscuration
     parameter [default obscuration=0.] and an optional flux parameter [default flux = 1].  The
     half light radius or FWHM can subsequently be calculated using the getHalfLightRadius() method
     or getFWHM(), respectively, if obscuration = 0.
 
     Example:
-    >>> airy_obj = Airy(flux=3., lam_over_D=2.)
+    >>> airy_obj = Airy(flux=3., lam_over_diam=2.)
     >>> airy_obj.getHalfLightRadius()
     1.0696642954485294
 
@@ -790,14 +790,14 @@ class Airy(GSObject):
     """
     
     # Initialization parameters of the object, with type information
-    _req_params = { "lam_over_D" : float } # if we define fwhm or other sizes, move this to single.
+    _req_params = { "lam_over_diam" : float }
     _opt_params = { "flux" : float , "obscuration" : float }
     _single_params = []
 
     # --- Public Class methods ---
-    def __init__(self, lam_over_D, obscuration=0., flux=1.):
+    def __init__(self, lam_over_diam, obscuration=0., flux=1.):
         GSObject.__init__(
-            self, galsim.SBAiry(lam_over_D=lam_over_D, obscuration=obscuration, flux=flux))
+            self, galsim.SBAiry(lam_over_diam=lam_over_diam, obscuration=obscuration, flux=flux))
 
     def getHalfLightRadius(self):
         """Return the half light radius of this Airy profile (only supported for obscuration = 0.).
@@ -810,7 +810,7 @@ class Airy(GSObject):
             # Type "Solve[BesselJ0(x)^2+BesselJ1(x)^2=1/2]" ... and divide the result by pi
             return self.SBProfile.getLamOverD() * 0.5348321477242647
         else:
-            # In principle can find the half light radius as a function of lam_over_D and
+            # In principle can find the half light radius as a function of lam_over_diam and
             # obscuration too, but it will be much more involved...!
             raise NotImplementedError("Half light radius calculation not implemented for Airy "+
                                       "objects with non-zero obscuration.")
@@ -822,13 +822,13 @@ class Airy(GSObject):
         if self.SBProfile.getObscuration() == 0.:
             return self.SBProfile.getLamOverD() * 1.028993969962188;
         else:
-            # In principle can find the FWHM as a function of lam_over_D and obscuration too,
+            # In principle can find the FWHM as a function of lam_over_diam and obscuration too,
             # but it will be much more involved...!
             raise NotImplementedError("FWHM calculation not implemented for Airy "+
                                       "objects with non-zero obscuration.")
 
     def getLamOverD(self):
-        """Return the lam_over_D parameter of this Airy profile.
+        """Return the lam_over_diam parameter of this Airy profile.
         """
         return self.SBProfile.getLamOverD()
 
@@ -922,15 +922,15 @@ class OpticalPSF(GSObject):
     Initialization
     --------------
     @code
-    optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0.,
-                                        coma2=0., spher=0., circular_pupil=True, obscuration=0.,
-                                        interpolant=None, oversampling=1.5, pad_factor=1.5)
+    optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0., coma1=0.,
+                                    coma2=0., spher=0., circular_pupil=True, obscuration=0.,
+                                    interpolant=None, oversampling=1.5, pad_factor=1.5)
     @endcode
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
 
-    @param lam_over_D      lambda / D in the physical units adopted (user responsible for 
-                           consistency).
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -955,7 +955,7 @@ class OpticalPSF(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _req_params = { "lam_over_D" : float }
+    _req_params = { "lam_over_diam" : float }
     _opt_params = {
         "defocus" : float ,
         "astig1" : float ,
@@ -971,7 +971,8 @@ class OpticalPSF(GSObject):
     _single_params = []
 
     # --- Public Class methods ---
-    def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+    def __init__(self, lam_over_diam, defocus=0.,
+                 astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
                  pad_factor=1.5, flux=1.):
 
@@ -980,13 +981,13 @@ class OpticalPSF(GSObject):
         
         # Choose dx for lookup table using Nyquist for optical aperture and the specified
         # oversampling factor
-        dx_lookup = .5 * lam_over_D / oversampling
+        dx_lookup = .5 * lam_over_diam / oversampling
         
         # Use a similar prescription as SBAiry to set Airy stepK and thus reference unpadded image
         # size in physical units
         stepk_airy = min(
-            ALIAS_THRESHOLD * .5 * np.pi**3 * (1. - obscuration) / lam_over_D,
-            np.pi / 5. / lam_over_D)
+            ALIAS_THRESHOLD * .5 * np.pi**3 * (1. - obscuration) / lam_over_diam,
+            np.pi / 5. / lam_over_diam)
         
         # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
         # also make npix always *odd* so that opticalPSF lookup table array is correctly centred:
@@ -994,7 +995,7 @@ class OpticalPSF(GSObject):
         
         # Make the psf image using this dx and array shape
         optimage = galsim.optics.psf_image(
-            lam_over_D=lam_over_D, dx=dx_lookup, array_shape=(npix, npix), defocus=defocus,
+            lam_over_diam=lam_over_diam, dx=dx_lookup, array_shape=(npix, npix), defocus=defocus,
             astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
             circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
         
@@ -1206,7 +1207,7 @@ class RealGalaxy(GSObject):
     Initialization
     --------------
     @code
-    real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string = None,
+    real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, id = None, 
                                     random = False, uniform_deviate = None, interpolant = None)
     @endcode
 
@@ -1219,7 +1220,7 @@ class RealGalaxy(GSObject):
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
                                 find the data, etc.
     @param index                Index of the desired galaxy in the catalog.
-    @param ID                   Object ID for the desired galaxy in the catalog.
+    @param id                   Object ID for the desired galaxy in the catalog.
     @param random               If true, then just select a completely random galaxy from the
                                 catalog.
     @param uniform_deviate      A uniform deviate to use for selecting a random galaxy (optional)
@@ -1233,11 +1234,11 @@ class RealGalaxy(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = {}
-    _opt_params = { "index" : int , "flux" : float }
-    _single_params = []
+    _opt_params = { "flux" : float }
+    _single_params = [ { "index" : int , "id" : str } ]
 
     # --- Public Class methods ---
-    def __init__(self, real_galaxy_catalog, index=None, ID=None, random=False,
+    def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  uniform_deviate=None, interpolant=None, flux=None):
 
         import pyfits
@@ -1246,13 +1247,13 @@ class RealGalaxy(GSObject):
         # option must return an index within the real_galaxy_catalog.        
         use_index = None # using -1 here for 'safety' actually indexes in Python without complaint
         if index != None:
-            if (ID != None or random == True):
+            if (id != None or random == True):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
             use_index = index
-        elif ID != None:
+        elif id != None:
             if (random == True):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
-            use_index = real_galaxy_catalog.get_index_for_id(ID)
+            use_index = real_galaxy_catalog.get_index_for_id(id)
         elif random == True:
             if uniform_deviate == None:
                 uniform_deviate = galsim.UniformDeviate()

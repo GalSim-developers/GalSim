@@ -642,61 +642,61 @@ def test_shear_value():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_shift_value():
-    """Test various ways to generate a shift value
+def test_pos_value():
+    """Test various ways to generate a Postion value
     """
     import time
     t1 = time.time()
 
     config = {
-        'val1' : galsim.config.Shift(0.1,0.2),
-        'dxdy1' : { 'type' : 'DXDY', 'dx' : 1.3, 'dy' : 2.4 },
+        'val1' : galsim.PositionD(0.1,0.2),
+        'xy1' : { 'type' : 'XY', 'x' : 1.3, 'y' : 2.4 },
         'ran1' : { 'type' : 'RandomCircle', 'radius' : 3 },
         'list1' : { 'type' : 'List', 
-                    'items' : [ galsim.config.Shift(0.2, -0.3),
-                                galsim.config.Shift(-0.5,0.2),
-                                galsim.config.Shift(0.1, 0.0) ] }
+                    'items' : [ galsim.PositionD(0.2, -0.3),
+                                galsim.PositionD(-0.5,0.2),
+                                galsim.PositionD(0.1, 0.0) ] }
     }
 
     # Test direct values
-    val1 = galsim.config.ParseValue(config,'val1',config, galsim.config.Shift)[0]
-    np.testing.assert_almost_equal(val1.dx, 0.1)
-    np.testing.assert_almost_equal(val1.dy, 0.2)
+    val1 = galsim.config.ParseValue(config,'val1',config, galsim.PositionD)[0]
+    np.testing.assert_almost_equal(val1.x, 0.1)
+    np.testing.assert_almost_equal(val1.y, 0.2)
 
-    dxdy1 = galsim.config.ParseValue(config,'dxdy1',config, galsim.config.Shift)[0]
-    np.testing.assert_almost_equal(dxdy1.dx, 1.3)
-    np.testing.assert_almost_equal(dxdy1.dy, 2.4)
+    xy1 = galsim.config.ParseValue(config,'xy1',config, galsim.PositionD)[0]
+    np.testing.assert_almost_equal(xy1.x, 1.3)
+    np.testing.assert_almost_equal(xy1.y, 2.4)
 
     # Test values generated from a uniform deviate
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
-        ran1 = galsim.config.ParseValue(config,'ran1',config, galsim.config.Shift)[0]
+        ran1 = galsim.config.ParseValue(config,'ran1',config, galsim.PositionD)[0]
         # Emulate a do-while loop
         while True:
-            dx = (2*rng()-1) * 3
-            dy = (2*rng()-1) * 3
-            rsq = dx**2 + dy**2
+            x = (2*rng()-1) * 3
+            y = (2*rng()-1) * 3
+            rsq = x**2 + y**2
             if rsq <= 9: break
-        np.testing.assert_almost_equal(ran1.dx, dx)
-        np.testing.assert_almost_equal(ran1.dy, dy)
+        np.testing.assert_almost_equal(ran1.x, x)
+        np.testing.assert_almost_equal(ran1.y, y)
 
     # Test values taken from a List
-    list1 = galsim.config.ParseValue(config,'list1',config, galsim.config.Shift)[0]
-    np.testing.assert_almost_equal(list1.dx, 0.2)
-    np.testing.assert_almost_equal(list1.dy, -0.3)
-    list1 = galsim.config.ParseValue(config,'list1',config, galsim.config.Shift)[0]
-    np.testing.assert_almost_equal(list1.dx, -0.5)
-    np.testing.assert_almost_equal(list1.dy, 0.2)
-    list1 = galsim.config.ParseValue(config,'list1',config, galsim.config.Shift)[0]
-    np.testing.assert_almost_equal(list1.dx, 0.1)
-    np.testing.assert_almost_equal(list1.dy, 0.0)
-    list1 = galsim.config.ParseValue(config,'list1',config, galsim.config.Shift)[0]
-    np.testing.assert_almost_equal(list1.dx, 0.2)
-    np.testing.assert_almost_equal(list1.dy, -0.3)
-    list1 = galsim.config.ParseValue(config,'list1',config, galsim.config.Shift)[0]
-    np.testing.assert_almost_equal(list1.dx, -0.5)
-    np.testing.assert_almost_equal(list1.dy, 0.2)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.PositionD)[0]
+    np.testing.assert_almost_equal(list1.x, 0.2)
+    np.testing.assert_almost_equal(list1.y, -0.3)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.PositionD)[0]
+    np.testing.assert_almost_equal(list1.x, -0.5)
+    np.testing.assert_almost_equal(list1.y, 0.2)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.PositionD)[0]
+    np.testing.assert_almost_equal(list1.x, 0.1)
+    np.testing.assert_almost_equal(list1.y, 0.0)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.PositionD)[0]
+    np.testing.assert_almost_equal(list1.x, 0.2)
+    np.testing.assert_almost_equal(list1.y, -0.3)
+    list1 = galsim.config.ParseValue(config,'list1',config, galsim.PositionD)[0]
+    np.testing.assert_almost_equal(list1.x, -0.5)
+    np.testing.assert_almost_equal(list1.y, 0.2)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -709,6 +709,6 @@ if __name__ == "__main__":
     test_str_value()
     test_angle_value()
     test_shear_value()
-    test_shift_value()
+    test_pos_value()
 
 
