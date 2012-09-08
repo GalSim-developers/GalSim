@@ -1,0 +1,149 @@
+{
+
+"#" : "JSON configuration file for use with the executable galsim_json",
+"#" : "From the examples directory, type:",
+"#" : "  galsim_json json/demo3.json",
+
+"#" : "This configuration file is designed to be equivalent to the example script called demo3.py",
+
+"#" : "This is getting reasonably close to including all the principle features of a ",
+"#" : "ground-based telescope:",
+"#" : "- Use a sheared, Sersic profile for the galaxy ",
+"#" : "  (n = 3.5, half_light_radius=3.7).",
+"#" : "- Let the PSF have both atmospheric and optical components.",
+"#" : "    - The atmospheric component is the sum of two non-circular Gaussians.",
+"#" : "    - The optical component has some defocus, coma, and astigmatism.",
+"#" : "- Add both Poisson noise to the image and Gaussian read noise.",
+"#" : "- Let the pixels be slightly distorted relative to the sky.",
+
+"gal" : {
+    "type" : "Sersic",
+    "n" : 3.5,
+    "half_light_radius" : 3.7,
+    "flux" : 1e6,
+
+    "shear" :  {
+        "#" : "QBeta means to use the axis ratio (q = b/a) and a position angle.",
+        "type" : "QBeta",
+        "q" : 0.73,
+        "#" : "For angles, you must let GalSim know which units you intend.",
+        "#" : "So the number must be followed by either degrees or radians",
+        "#" : "(or arcminutes or arcseconds if you prefer).",
+        "#" : "These may be abbreviated to deg and rad (and  arcmin, arcsec).",
+        "beta" : "23 degrees"
+    }
+},
+ 
+
+"psf" : {
+    "#" : "This PSF will be the convolution of an atmospheric component and an optical component.",
+    "type" : "Convolution",
+
+    "#" : "Any number of items may be convolved together, so we specify them in a list.",
+    "#" : "Use one bullet for each item.",
+    "items" : [
+        {
+            "#" : "For the atmospheric component, we'll use a double Gaussian.",
+            "#" : "Sum works just like Convolution, where the items to be added are ",
+            "#" : "provided in a list.",
+            "type" : "Sum",
+            "items" : [
+                {
+                    "type" : "Gaussian",
+                    "sigma" : 2.1,
+                    "ellip" : {
+                        "type" : "EBeta",
+                        "e" : 0.13,
+                        "beta" : "0.81 radians"
+                    },
+                    "flux" : 0.2
+                },
+                {
+                    "type" : "Gaussian",
+                    "sigma" : 0.9,
+                    "ellip" : {
+                        "type" : "EBeta",
+                        "e" : 0.04,
+                        "beta" : "-0.17 radians"
+                    },
+                    "flux" : 0.8
+                }
+            ]
+        },
+        {
+            "#" : "For the optical component, GalSim provides an OpticalPSF class that ",
+            "#" : "implements the PSF pattern from various telescope aberrations.",
+            "type" : "OpticalPSF",
+
+	    "#" : "Use value for lambda = 800 nm, D = 4 m",
+	    "#" : "lam_over_diam = (800 nm) * 1.e-9 (m/nm) / (4m) * (206265 arcsec/radian)",
+            "#" : "              = 0.041253 arcsec",
+            "lam_over_diam" : 0.041253,
+
+            "#" : "The rest of these values are given in units of lambda",
+            "defocus" : 0.53,
+            "astig1" : -0.29,
+            "astig2" : 0.12,
+            "coma1" : 0.64,
+            "coma2" : -0.33,
+
+            "#" : "The linear scale of the secondary mirror obstruction",
+            "#" : "as a fraction of the primary mirror size",
+            "obscuration" : 0.3
+        }
+    ]
+},
+
+"image" : {
+    "pixel_scale" : 0.23,
+    "size" : 64,
+    "#" : "(You can also specify xsize and ysize separately for non-square images.)",
+   
+    "#" : "You may provide a WCS to be applied to the image.",
+    "#" : "In this case, we simply have a constant telescope distortion over the image.",
+    "wcs" : {
+        "#" : "Eventually, we will have more sophisticated options for the WCS, but for now,",
+        "#" : "the only valid type is Shear (which is the default, so can be left unspecified),",
+	"#" : "which just takes a given shear value for the telescope distortion.",
+        "shear" : {
+            "type" : "G1G2",
+            "g1" : -0.02,
+            "g2" : 0.01
+        }
+    },
+
+    "noise" : {
+        "#" : "The CCDNoise type has the potential to be more sophisticated than just a ",
+        "#" : "simple Poisson noise according to the flux of sky + object.",
+        "#" : "You can also specify a gain and a read_noise for the CCD.",
+        "#" : "The gain indicates how many photons (or electrons, technically) correspond",
+        "#" : "to each final ADU.  And the read_noise is an additional Gaussian noise",
+        "#" : "(specified as the sigma or rms value) to be added to each pixel at the end.",
+        "type" : "CCDNoise",
+        "sky_level" : 2.5e4,
+        "gain" : 1.7,
+        "read_noise" : 0.3
+    },
+
+
+    "#" : "If you want the random values to be deterministic, you can provide an initial seed.",
+    "#" : "If this isn't set, then it will use the current time to create an initial seed.",
+    "random_seed" : 1314662
+},
+
+"output" : {
+    "dir" : "output_json",
+    "file_name" : "demo3.fits",
+    
+    "#" : "Sometimes it is useful to have the PSF image also written to a file.",
+    "#" : "The PSF image will always have the same pixel centering as the galaxy, and if there ",
+    "#" : "was any random component to the PSF generation, then this will be the exact same PSF",
+    "#" : "that was used for the galaxy.  Plus, there is no noise in the PSF image.",
+    "psf" : {
+        "#" : "You may either specify a new file_name as we do here, or you can specify",
+        "#" : "hdu to put the PSF image in the same fits file, but in another HDU.",
+        "file_name" : "demo3_epsf.fits"
+    }
+}
+
+}
