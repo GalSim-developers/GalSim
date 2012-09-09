@@ -646,6 +646,35 @@ int main()
             'Error: TMV file failed to compile.',
             'Check that the correct location is specified for TMV_DIR')
 
+
+def TryScript(context,text,executable):
+    # I couldn't find a way to do this using the existing SCons functions, so this
+    # is basically taken from parts of the code for TryBuild and TryRun.
+
+    # First make the file name using the same counter as TryBuild uses:
+    from SCons.SConf import _ac_build_counter
+    f = "conftest_" + str(SCons.SConf._ac_build_counter)
+    SCons.SConf._ac_build_counter = SCons.SConf._ac_build_counter + 1
+
+    # Build a file containg the given text
+    textFile = context.sconf.confdir.File(f)
+    sourcetext = context.env.Value(text)
+    textFileNode = context.env.SConfSourceBuilder(target=textFile, source=sourcetext)
+    context.sconf.BuildNodes(textFileNode)
+    source = textFileNode
+
+    # Run the given executable with the source file we just built
+    output = context.sconf.confdir.File(f + '.out')
+    node = context.env.Command(output, source, executable + " < $SOURCE > $TARGET")
+    ok = context.sconf.BuildNodes(node)
+
+    if ok:
+        # For successful execution, also return the output contents
+        outputStr = output.get_contents()
+        return 1, outputStr.strip()
+    else:
+        return 0, ""
+
 def CheckPython(context):
     python_source_file = """
 #include "Python.h"
@@ -657,13 +686,12 @@ int main()
 }
 """
     context.Message('Checking if we can build against Python... ')
+    source_file2 = "import distutils.sysconfig; print distutils.sysconfig.get_python_inc()"
+    result, py_inc = TryScript(context,source_file2,'/usr/bin/env python')
+    context.env.AppendUnique(CPPPATH=py_inc)
+    result = context.TryCompile(python_source_file,'.cpp')
+    # TODO: Once the module checks are working, we shouldn't need the rest of this.
 
-    try:
-        import distutils.sysconfig
-    except ImportError:
-        context.Result(0)
-        ErrorExit('Failed to import distutils.sysconfig.')
-    context.env.AppendUnique(CPPPATH=distutils.sysconfig.get_python_inc())
     libDir = distutils.sysconfig.get_config_var("LIBDIR")
     context.env.AppendUnique(LIBPATH=libDir)
     libfile = distutils.sysconfig.get_config_var("LIBRARY")
@@ -724,9 +752,11 @@ int main()
 }
 """
     context.Message('Checking if we can build against NumPy... ')
-    try:
-        import numpy
-    except ImportError:
+
+    source_file2 = "import numpy; print numpy.get_include()"
+    result, numpy_inc = TryScript(context,source_file2,'/usr/bin/env python')
+
+    if not result:
         whichpy = which('python')
         context.Result(0)
         ErrorExit(
@@ -742,11 +772,8 @@ int main()
             '   Alternatively, you can reinstall SCons with your preferred python.',
             '2) Check that if you open a python session from the command line,',
             '   import numpy is successful there.')
-    context.env.Append(CPPPATH=numpy.get_include())
-    result = CheckLibs(context,[''],numpy_source_file)
-    if not result:
-        context.Result(0)
-        ErrorExit('Cannot build against NumPy.')
+
+    context.env.Append(CPPPATH=numpy_inc)
     result, output = context.TryRun(numpy_source_file,'.cpp')
     if not result:
         context.Result(0)
@@ -758,9 +785,10 @@ int main()
 # for me, even after rm .scons.dblite beforehand.  Is that right?  Otherwise, it seems to work...
 def CheckPyFITS(context):
     context.Message('Checking for PyFITS... ')
-    try:
-        import pyfits
-    except ImportError:
+
+    result, output = TryScript(context,"import pyfits",'/usr/bin/env python')
+
+    if not result:
         whichpy = which('python')
         context.Result(0)
         ErrorExit(
