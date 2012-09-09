@@ -45,7 +45,11 @@ mod_files.extend(ReadFileList('files.txt'))
 # Library file containing generic code
 obj_mod = env1.SharedObject(mod_files)
 
-mod = env1.LoadableModule(os.path.join('#galsim','_galsim.so'), obj_mod)
+# MJ: Seems weird that we need to explicitly specify the suffix, but on Macs it doesn't get
+# set to this (at least with SCons 2.0), and .so is required.
+mod = env1.LoadableModule(
+        os.path.join('#galsim','_galsim'), obj_mod,
+        SHLIBPREFIX="", LDMODULESUFFIX='.so')
 mod_targets = [mod]
 
 # NB: With LoadableModule (rather than SharedLibrary), we don't need the RenameLib stuff on Macs.
