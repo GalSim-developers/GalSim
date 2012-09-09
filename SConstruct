@@ -1149,14 +1149,21 @@ if not GetOption('help'):
 
     # Set PYPREFIX if not given:
     if env['PYPREFIX'] == '':
+        import subprocess
         if sys.platform == 'linux2' and env['PREFIX'] != '':
             # On linux, we try to match the behavior of distutils
-            env['PYPREFIX'] = distutils.sysconfig.get_python_lib(prefix=env['PREFIX']) 
+            cmd = "%s -c \"import distutils.sysconfig; "%(python)
+            cmd += "print distutils.sysconfig.get_python_lib(prefix='%s')\""%(env['PREFIX'])
+            p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
+            env['PYPREFIX'] = p.stdout.read().strip()
             print 'Using PYPREFIX generated from PREFIX = ',env['PYPREFIX']
         else:
             # On Macs, the regular python lib is usually writable, so it works fine for 
             # installing the python modules.
-            env['PYPREFIX'] = distutils.sysconfig.get_python_lib() 
+            cmd = "%s -c \"import distutils.sysconfig; "%(python)
+            cmd += "print distutils.sysconfig.get_python_lib()\""
+            p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
+            env['PYPREFIX'] = p.stdout.read().strip()
             print 'Using default PYPREFIX = ',env['PYPREFIX']
 
     # Set up the configuration
