@@ -604,16 +604,16 @@ def ReadFileList(fname):
     return files
 
 
-def CheckLibs(context,try_libs,source_file):
-    init_libs = context.env['LIBS']
-    context.env.PrependUnique(LIBS=try_libs)
-    result = context.TryLink(source_file,'.cpp')
+def CheckLibs(config,try_libs,source_file):
+    init_libs = config.env['LIBS']
+    config.env.PrependUnique(LIBS=try_libs)
+    result = config.TryLink(source_file,'.cpp')
     if not result :
-        context.env.Replace(LIBS=init_libs)
+        config.env.Replace(LIBS=init_libs)
     return result
       
 
-def CheckTMV(context):
+def CheckTMV(config):
     tmv_source_file = """
 #include "TMV_Sym.h"
 int main()
@@ -627,31 +627,27 @@ int main()
 """
 
     print 'Checking for correct TMV linkage... (this may take a little while)'
-    context.Message('Checking for correct TMV linkage... ')
+    config.Message('Checking for correct TMV linkage... ')
 
-    if context.TryCompile(tmv_source_file,'.cpp'):
-
-        result = (
-            CheckLibs(context,['tmv_symband','tmv'],tmv_source_file) or
-            CheckLibs(context,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
-        
-        if not result:
-            context.Result(0)
-            ErrorExit(
-                'Error: TMV file failed to link correctly',
-                'Check that the correct location is specified for TMV_DIR') 
-
-        context.Result(1)
-        return 1
-
-    else:
-        context.Result(0)
+    result = config.TryCompile(tmv_source_file,'.cpp')
+    if not result:
         ErrorExit(
             'Error: TMV file failed to compile.',
             'Check that the correct location is specified for TMV_DIR')
 
+    result = (
+        CheckLibs(config,['tmv_symband','tmv'],tmv_source_file) or
+        CheckLibs(config,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
+    if not result:
+        ErrorExit(
+            'Error: TMV file failed to link correctly',
+            'Check that the correct location is specified for TMV_DIR') 
 
-def TryScript(context,text,executable):
+    config.Result(1)
+    return 1
+
+
+def TryScript(config,text,executable):
     # Check if a particular script (given as text) is runnable with the 
     # executable (given as executable).
     #
@@ -663,22 +659,23 @@ def TryScript(context,text,executable):
     f = "conftest_" + str(SCons.SConf._ac_build_counter)
     SCons.SConf._ac_build_counter = SCons.SConf._ac_build_counter + 1
 
-    context.sconf.pspawn = context.env['PSPAWN'] 
-    save_spawn = context.env['SPAWN'] 
+    config.sconf.pspawn = config.sconf.env['PSPAWN'] 
+    save_spawn = config.sconf.env['SPAWN'] 
+    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper 
 
     # Build a file containg the given text
-    textFile = context.sconf.confdir.File(f)
-    sourcetext = context.env.Value(text)
-    textFileNode = context.env.SConfSourceBuilder(target=textFile, source=sourcetext)
-    context.sconf.BuildNodes(textFileNode)
+    textFile = config.sconf.confdir.File(f)
+    sourcetext = config.env.Value(text)
+    textFileNode = config.env.SConfSourceBuilder(target=textFile, source=sourcetext)
+    config.sconf.BuildNodes(textFileNode)
     source = textFileNode
 
     # Run the given executable with the source file we just built
-    output = context.sconf.confdir.File(f + '.out')
-    node = context.env.Command(output, source, executable + " < $SOURCE > $TARGET")
-    ok = context.sconf.BuildNodes(node)
+    output = config.sconf.confdir.File(f + '.out')
+    node = config.env.Command(output, source, executable + " < $SOURCE > $TARGET")
+    ok = config.sconf.BuildNodes(node)
 
-    context.env['SPAWN'] = save_spawn 
+    config.sconf.env['SPAWN'] = save_spawn 
 
     if ok:
         # For successful execution, also return the output contents
@@ -687,33 +684,33 @@ def TryScript(context,text,executable):
     else:
         return 0, ""
 
-def TryModule(context,text,name):
+def TryModule(config,text,name):
     # Check if a particular program (given as text) is compilable as a python module.
     
-    context.sconf.pspawn = context.env['PSPAWN'] 
-    save_spawn = context.env['SPAWN'] 
+    config.sconf.pspawn = config.sconf.env['PSPAWN'] 
+    save_spawn = config.sconf.env['SPAWN'] 
+    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper 
 
     # First try to build the code as a SharedObject:
-    ok = context.TryBuild(context.env.SharedObject,text,'.cpp')
+    ok = config.TryBuild(config.env.SharedObject,text,'.cpp')
     if not ok: return 0
 
     # Get the object file as the lastTarget:
-    obj = context.sconf.lastTarget
+    obj = config.sconf.lastTarget
 
     # Try to build the LoadableModule
     dir = os.path.splitext(os.path.basename(obj.path))[0] + '_mod'
-    output = context.sconf.confdir.File(os.path.join(dir,name + '.so'))
+    output = config.sconf.confdir.File(os.path.join(dir,name + '.so'))
     dir = os.path.dirname(output.path)
-    mod = context.env.LoadableModule(output, obj,
-                                     FRAMEWORKSFLAGS = '-w -flat_namespace -undefined suppress')
-    ok = context.sconf.BuildNodes(mod)
+    mod = config.env.LoadableModule(output, obj)
+    ok = config.sconf.BuildNodes(mod)
     if not ok: return 0
 
     # Finally try to import and run the module in python:
     text2 = "import sys; sys.path.append('%s'); import %s; print %s.run()"%(dir,name,name)
-    ok, out = TryScript(context,text2,python)
+    ok, out = TryScript(config,text2,python)
 
-    context.env['SPAWN'] = save_spawn 
+    config.sconf.env['SPAWN'] = save_spawn 
 
     # We have an arbitrary requirement that the run() command output the answer 23.
     # So if we didn't get this answer, then something must have gone wrong.
@@ -724,16 +721,16 @@ def TryModule(context,text,name):
     return ok
 
 
-def CheckModuleLibs(context,try_libs,source_file,name):
-    init_libs = context.env['LIBS']
-    context.env.PrependUnique(LIBS=try_libs)
-    result = TryModule(context,source_file,name)
+def CheckModuleLibs(config,try_libs,source_file,name):
+    init_libs = config.env['LIBS']
+    config.env.PrependUnique(LIBS=try_libs)
+    result = TryModule(config,source_file,name)
     if not result :
-        context.env.Replace(LIBS=init_libs)
+        config.env.Replace(LIBS=init_libs)
     return result
      
 
-def CheckPython(context):
+def CheckPython(config):
     python_source_file = """
 #include "Python.h"
 
@@ -748,23 +745,48 @@ static PyMethodDef Methods[] = {
 PyMODINIT_FUNC initcheck_python(void)
 { Py_InitModule("check_python", Methods); }
 """
-    context.Message('Checking if we can build against Python... ')
+    config.Message('Checking if we can build against Python... ')
 
     source_file2 = "import distutils.sysconfig; print distutils.sysconfig.get_python_inc()"
-    result, py_inc = TryScript(context,source_file2,python)
-    context.env.AppendUnique(CPPPATH=py_inc)
-    if not context.TryCompile(python_source_file,'.cpp'):
+    result, py_inc = TryScript(config,source_file2,python)
+    if not result:
+        ErrorExit('Unable to get python include path python executable:\n%s',python)
+
+    config.env.AppendUnique(CPPPATH=py_inc)
+    if not config.TryCompile(python_source_file,'.cpp'):
         ErrorExit('Unable to compile a file with #include "Python.h" using the include path:',
                   '%s'%py_inc)
+    
+    source_file3 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBRARY')"
+    result, py_lib = TryScript(config,source_file3,python)
+    if not result:
+        ErrorExit('Unable to get python library name using python executable:\n%s',python)
+    py_lib = os.path.splitext(py_lib)[0]
+    if py_lib.startswith('lib'): py_lib = py_lib[3:]
 
-    if not TryModule(context,python_source_file,'check_python'):
+    source_file4 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBDIR')"
+    result, py_libdir = TryScript(config,source_file4,python)
+    if not result:
+        ErrorExit('Unable to get python library path using python executable:\n%s',python)
+
+    config.env.PrependUnique(LIBPATH=py_libdir)
+
+    result = (
+        CheckModuleLibs(config,[''],python_source_file,'check_python') or
+        CheckModuleLibs(config,[py_lib],python_source_file,'check_python') or
+        ( '2.6' in py_inc and 
+          CheckModuleLibs(config,['python2.6'],python_source_file,'check_python') ) or
+        ( '2.7' in py_inc and 
+          CheckModuleLibs(config,['python2.7'],python_source_file,'check_python') ) or
+        CheckModuleLibs(config,['python'],python_source_file,'check_python') )
+    if not result:
         ErrorExit('Unable to build a python loadable module using the python executable:',
                   '%s'%python)
         
-    context.Result(1)
+    config.Result(1)
     return 1
 
-def CheckNumPy(context):
+def CheckNumPy(config):
     numpy_source_file = """
 #include "Python.h"
 #include "numpy/arrayobject.h"
@@ -796,34 +818,35 @@ static PyMethodDef Methods[] = {
 PyMODINIT_FUNC initcheck_numpy(void)
 { Py_InitModule("check_numpy", Methods); }
 """
-    context.Message('Checking if we can build against NumPy... ')
+    config.Message('Checking if we can build against NumPy... ')
 
-    result, numpy_inc = TryScript(context,"import numpy; print numpy.get_include()",python)
+    result, numpy_inc = TryScript(config,"import numpy; print numpy.get_include()",python)
     if not result:
         ErrorExit("Unable to import numpy using the python executable:\n%s"%python)
-    context.env.AppendUnique(CPPPATH=numpy_inc)
+    config.env.AppendUnique(CPPPATH=numpy_inc)
 
-    if not context.TryCompile(numpy_source_file,'.cpp'):
+    result = config.TryCompile(numpy_source_file,'.cpp')
+    if not result:
         ErrorExit('Unable to compile a file with numpy using the include path:\n%s.'%numpy_inc)
 
-    if not TryModule(context,numpy_source_file,'check_numpy'):
+    result = TryModule(config,numpy_source_file,'check_numpy')
+    if not result:
         ErrorExit('Unable to build a python loadable module that uses numpy')
    
-    context.Result(1)
+    config.Result(1)
     return 1
 
-def CheckPyFITS(context):
-    context.Message('Checking for PyFITS... ')
+def CheckPyFITS(config):
+    config.Message('Checking for PyFITS... ')
 
-    result, output = TryScript(context,"import pyfits",python)
-
+    result, output = TryScript(config,"import pyfits",python)
     if not result:
         ErrorExit("Unable to import pyfits using the python executable:\n%s"%python)
 
-    context.Result(1)
+    config.Result(1)
     return 1
 
-def CheckBoostPython(context):
+def CheckBoostPython(config):
     bp_source_file = """
 #include "boost/python.hpp"
 
@@ -833,20 +856,20 @@ BOOST_PYTHON_MODULE(check_bp) {
     boost::python::def("run",&check_bp_run);
 }
 """
-    context.Message('Checking if we can build against Boost.Python... ')
+    config.Message('Checking if we can build against Boost.Python... ')
 
-    if not context.TryCompile(bp_source_file,'.cpp'):
+    result = config.TryCompile(bp_source_file,'.cpp')
+    if not result:
         ErrorExit('Unable to compile a file with #include "boost/python.hpp"')
 
     result = (
-        CheckModuleLibs(context,[''],bp_source_file,'check_bp') or
-        CheckModuleLibs(context,['boost_python'],bp_source_file,'check_bp') or
-        CheckModuleLibs(context,['boost_python-mt'],bp_source_file,'check_bp') )
-
+        CheckModuleLibs(config,[''],bp_source_file,'check_bp') or
+        CheckModuleLibs(config,['boost_python'],bp_source_file,'check_bp') or
+        CheckModuleLibs(config,['boost_python-mt'],bp_source_file,'check_bp') )
     if not result:
         ErrorExit('Unable to build a python loadable module with Boost.Python')
 
-    context.Result(1)
+    config.Result(1)
     return 1
 
 def FindPathInEnv(env, dirtag):
@@ -954,7 +977,7 @@ def DoLibraryAndHeaderChecks(config):
     compiler = config.env['CXXTYPE']
     version = config.env['CXXVERSION_NUMERICAL']
 
-    if not (config.env.has_key('LIBS')) :
+    if not config.env.has_key('LIBS') :
         config.env['LIBS'] = []
 
     tmv_link_file = FindTmvLinkFile(config)
