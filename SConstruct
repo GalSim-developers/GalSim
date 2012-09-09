@@ -687,7 +687,7 @@ def TryScript(context,text,executable):
     else:
         return 0, ""
 
-def TryModule(context,text,name,executable):
+def TryModule(context,text,name):
     # Check if a particular program (given as text) is compilable as a python module.
     
     context.sconf.pspawn = context.env['PSPAWN'] 
@@ -695,31 +695,43 @@ def TryModule(context,text,name,executable):
 
     # First try to build the code as a SharedObject:
     ok = context.TryBuild(context.env.SharedObject,text,'.cpp')
+    if not ok: return 0
 
     # Get the object file as the lastTarget:
     obj = context.sconf.lastTarget
 
     # Try to build the LoadableModule
-    output = context.sconf.confdir.File(name + '.so')
+    dir = os.path.splitext(os.path.basename(obj.path))[0] + '_mod'
+    output = context.sconf.confdir.File(os.path.join(dir,name + '.so'))
+    dir = os.path.dirname(output.path)
     mod = context.env.LoadableModule(output, obj,
                                      FRAMEWORKSFLAGS = '-w -flat_namespace -undefined suppress')
     ok = context.sconf.BuildNodes(mod)
+    if not ok: return 0
 
     # Finally try to import and run the module in python:
-    conf_dir = str(context.sconf.confdir)
-    text2 = "import sys; sys.path.append('%s'); import %s; print %s.run()"%(conf_dir,name,name)
-    ok, out = TryScript(context,text2,executable)
+    text2 = "import sys; sys.path.append('%s'); import %s; print %s.run()"%(dir,name,name)
+    ok, out = TryScript(context,text2,python)
 
     context.env['SPAWN'] = save_spawn 
 
     # We have an arbitrary requirement that the run() command output the answer 23.
     # So if we didn't get this answer, then something must have gone wrong.
-    if out != '23':
+    if ok and out != '23':
         print "Script's run() command didn't output '23'."
         ok = False
 
     return ok
 
+
+def CheckModuleLibs(context,try_libs,source_file,name):
+    init_libs = context.env['LIBS']
+    context.env.PrependUnique(LIBS=try_libs)
+    result = TryModule(context,source_file,name)
+    if not result :
+        context.env.Replace(LIBS=init_libs)
+    return result
+     
 
 def CheckPython(context):
     python_source_file = """
@@ -745,7 +757,7 @@ PyMODINIT_FUNC initcheck_python(void)
         ErrorExit('Unable to compile a file with #include "Python.h" using the include path:',
                   '%s'%py_inc)
 
-    if not TryModule(context,python_source_file,'check_python',python):
+    if not TryModule(context,python_source_file,'check_python'):
         ErrorExit('Unable to build a python loadable module using the python executable:',
                   '%s'%python)
         
@@ -786,8 +798,7 @@ PyMODINIT_FUNC initcheck_numpy(void)
 """
     context.Message('Checking if we can build against NumPy... ')
 
-    source_file2 = "import numpy; print numpy.get_include()"
-    result, numpy_inc = TryScript(context,source_file2,python)
+    result, numpy_inc = TryScript(context,"import numpy; print numpy.get_include()",python)
     if not result:
         ErrorExit("Unable to import numpy using the python executable:\n%s"%python)
     context.env.AppendUnique(CPPPATH=numpy_inc)
@@ -795,16 +806,12 @@ PyMODINIT_FUNC initcheck_numpy(void)
     if not context.TryCompile(numpy_source_file,'.cpp'):
         ErrorExit('Unable to compile a file with numpy using the include path:\n%s.'%numpy_inc)
 
-    if not TryModule(context,numpy_source_file,'check_numpy',python):
-        ErrorExit(
-            'Unable to build a python loadable module with numpy using the python executable:',
-            '%s'%python)
+    if not TryModule(context,numpy_source_file,'check_numpy'):
+        ErrorExit('Unable to build a python loadable module that uses numpy')
    
     context.Result(1)
     return 1
 
-# Note from Barney to Mike: the code below always seems to say (cached) in the message at build
-# for me, even after rm .scons.dblite beforehand.  Is that right?  Otherwise, it seems to work...
 def CheckPyFITS(context):
     context.Message('Checking for PyFITS... ')
 
@@ -820,33 +827,25 @@ def CheckBoostPython(context):
     bp_source_file = """
 #include "boost/python.hpp"
 
-class Foo { public: Foo() {} };
+int check_bp_run() { return 23; }
 
-int main()
-{
-  Py_Initialize();
-  boost::python::object obj;
-  boost::python::class_< Foo >("Foo", boost::python::init<>());
-  Py_Finalize();
-  return 0;
+BOOST_PYTHON_MODULE(check_bp) {
+    boost::python::def("run",&check_bp_run);
 }
 """
     context.Message('Checking if we can build against Boost.Python... ')
 
+    if not context.TryCompile(bp_source_file,'.cpp'):
+        ErrorExit('Unable to compile a file with #include "boost/python.hpp"')
+
     result = (
-        CheckLibs(context,[''],bp_source_file) or
-        CheckLibs(context,['boost_python'],bp_source_file) or
-        CheckLibs(context,['boost_python-mt'],bp_source_file) )
+        CheckModuleLibs(context,[''],bp_source_file,'check_bp') or
+        CheckModuleLibs(context,['boost_python'],bp_source_file,'check_bp') or
+        CheckModuleLibs(context,['boost_python-mt'],bp_source_file,'check_bp') )
 
     if not result:
-        context.Result(0)
-        ErrorExit('Cannot build against Boost.Python.')
+        ErrorExit('Unable to build a python loadable module with Boost.Python')
 
-    result, output = context.TryRun(bp_source_file,'.cpp')
-
-    if not result:
-        context.Result(0)
-        ErrorExit('Cannot run program built with Boost.Python.')
     context.Result(1)
     return 1
 
@@ -983,8 +982,8 @@ def DoLibraryAndHeaderChecks(config):
     config.CheckTMV()
     config.CheckPython()
     config.CheckNumPy()
-    config.CheckBoostPython()
     config.CheckPyFITS() 
+    config.CheckBoostPython()
 
 
 def GetNCPU():
