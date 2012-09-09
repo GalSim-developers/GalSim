@@ -34,11 +34,14 @@ config_file = 'gs_scons.conf'
 # MJ: Is there a python function that might return this in a more platform-independent way?
 default_prefix = '/usr/local'  
 
+default_python = '/usr/bin/env python'
+
 # first check for a saved conf file
 opts = Variables(config_file)
 
 # Now set up options for the command line
 opts.Add('CXX','Name of c++ compiler')
+opts.Add('PYTHON','Name of python executable','')
 opts.Add('FLAGS','Compile flags to send to the compiler','')
 opts.Add('EXTRA_FLAGS','Extra flags to send to the compiler','')
 opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
@@ -142,6 +145,7 @@ def ErrorExit(*args, **kwargs):
     out = open("gs.error","wb")
 
     # Start with the error message to output both to the screen and to the end of gs.error:
+    print
     for s in args:
         print s
         out.write(s + '\n')
@@ -600,16 +604,16 @@ def ReadFileList(fname):
     return files
 
 
-def CheckLibs(context,try_libs,source_file):
-    init_libs = context.env['LIBS']
-    context.env.PrependUnique(LIBS=try_libs)
-    result = context.TryLink(source_file,'.cpp')
+def CheckLibs(config,try_libs,source_file):
+    init_libs = config.env['LIBS']
+    config.env.PrependUnique(LIBS=try_libs)
+    result = config.TryLink(source_file,'.cpp')
     if not result :
-        context.env.Replace(LIBS=init_libs)
+        config.env.Replace(LIBS=init_libs)
     return result
       
 
-def CheckTMV(context):
+def CheckTMV(config):
     tmv_source_file = """
 #include "TMV_Sym.h"
 int main()
@@ -623,194 +627,249 @@ int main()
 """
 
     print 'Checking for correct TMV linkage... (this may take a little while)'
-    context.Message('Checking for correct TMV linkage... ')
+    config.Message('Checking for correct TMV linkage... ')
 
-    if context.TryCompile(tmv_source_file,'.cpp'):
-
-        result = (
-            CheckLibs(context,['tmv_symband','tmv'],tmv_source_file) or
-            CheckLibs(context,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
-        
-        if not result:
-            context.Result(0)
-            ErrorExit(
-                'Error: TMV file failed to link correctly',
-                'Check that the correct location is specified for TMV_DIR') 
-
-        context.Result(1)
-        return 1
-
-    else:
-        context.Result(0)
+    result = config.TryCompile(tmv_source_file,'.cpp')
+    if not result:
         ErrorExit(
             'Error: TMV file failed to compile.',
             'Check that the correct location is specified for TMV_DIR')
 
-def CheckPython(context):
-    python_source_file = """
-#include "Python.h"
-int main()
-{
-  Py_Initialize();
-  Py_Finalize();
-  return 0;
-}
-"""
-    context.Message('Checking if we can build against Python... ')
-
-    try:
-        import distutils.sysconfig
-    except ImportError:
-        context.Result(0)
-        ErrorExit('Failed to import distutils.sysconfig.')
-    context.env.AppendUnique(CPPPATH=distutils.sysconfig.get_python_inc())
-    libDir = distutils.sysconfig.get_config_var("LIBDIR")
-    context.env.AppendUnique(LIBPATH=libDir)
-    libfile = distutils.sysconfig.get_config_var("LIBRARY")
-    import re
-    match = re.search("(python.*)\.(a|so|dylib)", libfile)
-    if match:
-        context.env.AppendUnique(LIBS=match.group(1))
-    flags = [f for f in " ".join(distutils.sysconfig.get_config_vars("MODLIBS", "SHLIBS")).split()
-             if f != "-L"]
-    context.env.MergeFlags(" ".join(flags))
-
-    result, output = context.TryRun(python_source_file,'.cpp')
-
-    if not result and sys.platform == 'darwin':
-        # Sometimes we need some extra stuff on Mac OS
-        frameworkDir = libDir       # search up the libDir tree for the proper home for frameworks
-        while frameworkDir and frameworkDir != "/":
-            frameworkDir, d2 = os.path.split(frameworkDir)
-            if d2 == "Python.framework":
-                if not "Python" in os.listdir(os.path.join(frameworkDir, d2)):
-                    context.Result(0)
-                    ErrorExit(
-                        "Expected to find Python in framework directory %s, but it isn't there"
-                        % frameworkDir)
-                break
-        context.env.AppendUnique(LDFLAGS="-F%s"%frameworkDir)
-        result, output = context.TryRun(python_source_file,'.cpp')
-
+    result = (
+        CheckLibs(config,['tmv_symband','tmv'],tmv_source_file) or
+        CheckLibs(config,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
     if not result:
-        context.Result(0)
-        ErrorExit("Cannot run program built with Python.")
+        ErrorExit(
+            'Error: TMV file failed to link correctly',
+            'Check that the correct location is specified for TMV_DIR') 
 
-    context.Result(1)
+    config.Result(1)
     return 1
 
-def CheckNumPy(context):
+
+def TryScript(config,text,executable):
+    # Check if a particular script (given as text) is runnable with the 
+    # executable (given as executable).
+    #
+    # I couldn't find a way to do this using the existing SCons functions, so this
+    # is basically taken from parts of the code for TryBuild and TryRun.
+
+    # First make the file name using the same counter as TryBuild uses:
+    from SCons.SConf import _ac_build_counter
+    f = "conftest_" + str(SCons.SConf._ac_build_counter)
+    SCons.SConf._ac_build_counter = SCons.SConf._ac_build_counter + 1
+
+    config.sconf.pspawn = config.sconf.env['PSPAWN'] 
+    save_spawn = config.sconf.env['SPAWN'] 
+    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper 
+
+    # Build a file containg the given text
+    textFile = config.sconf.confdir.File(f)
+    sourcetext = config.env.Value(text)
+    textFileNode = config.env.SConfSourceBuilder(target=textFile, source=sourcetext)
+    config.sconf.BuildNodes(textFileNode)
+    source = textFileNode
+
+    # Run the given executable with the source file we just built
+    output = config.sconf.confdir.File(f + '.out')
+    node = config.env.Command(output, source, executable + " < $SOURCE > $TARGET")
+    ok = config.sconf.BuildNodes(node)
+
+    config.sconf.env['SPAWN'] = save_spawn 
+
+    if ok:
+        # For successful execution, also return the output contents
+        outputStr = output.get_contents()
+        return 1, outputStr.strip()
+    else:
+        return 0, ""
+
+def TryModule(config,text,name):
+    # Check if a particular program (given as text) is compilable as a python module.
+    
+    config.sconf.pspawn = config.sconf.env['PSPAWN'] 
+    save_spawn = config.sconf.env['SPAWN'] 
+    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper 
+
+    # First try to build the code as a SharedObject:
+    ok = config.TryBuild(config.env.SharedObject,text,'.cpp')
+    if not ok: return 0
+
+    # Get the object file as the lastTarget:
+    obj = config.sconf.lastTarget
+
+    # Try to build the LoadableModule
+    dir = os.path.splitext(os.path.basename(obj.path))[0] + '_mod'
+    output = config.sconf.confdir.File(os.path.join(dir,name + '.so'))
+    dir = os.path.dirname(output.path)
+    mod = config.env.LoadableModule(output, obj)
+    ok = config.sconf.BuildNodes(mod)
+    if not ok: return 0
+
+    # Finally try to import and run the module in python:
+    text2 = "import sys; sys.path.append('%s'); import %s; print %s.run()"%(dir,name,name)
+    ok, out = TryScript(config,text2,python)
+
+    config.sconf.env['SPAWN'] = save_spawn 
+
+    # We have an arbitrary requirement that the run() command output the answer 23.
+    # So if we didn't get this answer, then something must have gone wrong.
+    if ok and out != '23':
+        print "Script's run() command didn't output '23'."
+        ok = False
+
+    return ok
+
+
+def CheckModuleLibs(config,try_libs,source_file,name):
+    init_libs = config.env['LIBS']
+    config.env.PrependUnique(LIBS=try_libs)
+    result = TryModule(config,source_file,name)
+    if not result :
+        config.env.Replace(LIBS=init_libs)
+    return result
+     
+
+def CheckPython(config):
+    python_source_file = """
+#include "Python.h"
+
+static PyObject* run(PyObject* self, PyObject* args)
+{ return Py_BuildValue("i", 23); }
+
+static PyMethodDef Methods[] = {
+    {"run",  run, METH_VARARGS, "return 23"},
+    {NULL, NULL, 0, NULL}
+};
+
+PyMODINIT_FUNC initcheck_python(void)
+{ Py_InitModule("check_python", Methods); }
+"""
+    config.Message('Checking if we can build against Python... ')
+
+    source_file2 = "import distutils.sysconfig; print distutils.sysconfig.get_python_inc()"
+    result, py_inc = TryScript(config,source_file2,python)
+    if not result:
+        ErrorExit('Unable to get python include path python executable:\n%s',python)
+
+    config.env.AppendUnique(CPPPATH=py_inc)
+    if not config.TryCompile(python_source_file,'.cpp'):
+        ErrorExit('Unable to compile a file with #include "Python.h" using the include path:',
+                  '%s'%py_inc)
+    
+    source_file3 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBRARY')"
+    result, py_lib = TryScript(config,source_file3,python)
+    if not result:
+        ErrorExit('Unable to get python library name using python executable:\n%s',python)
+    py_lib = os.path.splitext(py_lib)[0]
+    if py_lib.startswith('lib'): py_lib = py_lib[3:]
+
+    source_file4 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBDIR')"
+    result, py_libdir = TryScript(config,source_file4,python)
+    if not result:
+        ErrorExit('Unable to get python library path using python executable:\n%s',python)
+
+    config.env.PrependUnique(LIBPATH=py_libdir)
+
+    result = (
+        CheckModuleLibs(config,[''],python_source_file,'check_python') or
+        CheckModuleLibs(config,[py_lib],python_source_file,'check_python') or
+        ( '2.6' in py_inc and 
+          CheckModuleLibs(config,['python2.6'],python_source_file,'check_python') ) or
+        ( '2.7' in py_inc and 
+          CheckModuleLibs(config,['python2.7'],python_source_file,'check_python') ) or
+        CheckModuleLibs(config,['python'],python_source_file,'check_python') )
+    if not result:
+        ErrorExit('Unable to build a python loadable module using the python executable:',
+                  '%s'%python)
+        
+    config.Result(1)
+    return 1
+
+def CheckNumPy(config):
     numpy_source_file = """
 #include "Python.h"
 #include "numpy/arrayobject.h"
+ 
 static void doImport() {
-  import_array();
+    import_array();
 }
-int main()
-{
-  int result = 0;
-  Py_Initialize();
-  doImport();
-  if (PyErr_Occurred()) {
-    result = 1;
-  } else {
-    npy_intp dims = 2;
-    PyObject * a = PyArray_SimpleNew(1, &dims, NPY_INT);
-    if (!a) result = 1;
-    Py_DECREF(a);
-  }
-  Py_Finalize();
-  return result;
+
+static PyObject* run(PyObject* self, PyObject* args)
+{ 
+    doImport();
+    int result = 1;
+    if (!PyErr_Occurred()) {
+        npy_intp dims = 2;
+        PyObject* a = PyArray_SimpleNew(1, &dims, NPY_INT);
+        if (a) {
+            Py_DECREF(a);
+            result = 23; 
+        }
+    }
+    return Py_BuildValue("i", result); 
 }
+
+static PyMethodDef Methods[] = {
+    {"run",  run, METH_VARARGS, "return 23"},
+    {NULL, NULL, 0, NULL}
+};
+
+PyMODINIT_FUNC initcheck_numpy(void)
+{ Py_InitModule("check_numpy", Methods); }
 """
-    context.Message('Checking if we can build against NumPy... ')
-    try:
-        import numpy
-    except ImportError:
-        whichpy = which('python')
-        context.Result(0)
-        ErrorExit(
-            'Failed to import numpy.',
-            'Things to try:',
-            '1) Check that the python with which you installed numpy,',
-            '   probably the command line python:',
-            '   %s' % whichpy,
-            '   is the same as the one used by SCons:',
-            '   %s' % sys.executable,
-            '   If not, then you probably need to reinstall numpy with %s.' % sys.executable,
-            '   And remember to use that when running python for use with GalSim.',
-            '   Alternatively, you can reinstall SCons with your preferred python.',
-            '2) Check that if you open a python session from the command line,',
-            '   import numpy is successful there.')
-    context.env.Append(CPPPATH=numpy.get_include())
-    result = CheckLibs(context,[''],numpy_source_file)
+    config.Message('Checking if we can build against NumPy... ')
+
+    result, numpy_inc = TryScript(config,"import numpy; print numpy.get_include()",python)
     if not result:
-        context.Result(0)
-        ErrorExit('Cannot build against NumPy.')
-    result, output = context.TryRun(numpy_source_file,'.cpp')
+        ErrorExit("Unable to import numpy using the python executable:\n%s"%python)
+    config.env.AppendUnique(CPPPATH=numpy_inc)
+
+    result = config.TryCompile(numpy_source_file,'.cpp')
     if not result:
-        context.Result(0)
-        ErrorExit('Cannot run program built with NumPy.')
-    context.Result(1)
+        ErrorExit('Unable to compile a file with numpy using the include path:\n%s.'%numpy_inc)
+
+    result = TryModule(config,numpy_source_file,'check_numpy')
+    if not result:
+        ErrorExit('Unable to build a python loadable module that uses numpy')
+   
+    config.Result(1)
     return 1
 
-# Note from Barney to Mike: the code below always seems to say (cached) in the message at build
-# for me, even after rm .scons.dblite beforehand.  Is that right?  Otherwise, it seems to work...
-def CheckPyFITS(context):
-    context.Message('Checking for PyFITS... ')
-    try:
-        import pyfits
-    except ImportError:
-        whichpy = which('python')
-        context.Result(0)
-        ErrorExit(
-            'Failed to import PyFITS.',
-            'Things to try:',
-            '1) Check that the python with which you installed PyFITS,',
-            '   probably the command line python:',
-            '   %s' % whichpy,
-            '   is the same as the one used by SCons:',
-            '   %s' % sys.executable,
-            '   If not, then you probably need to reinstall PyFITS with %s.' % sys.executable,
-            '   And remember to use that when running python for use with GalSim.',
-            '   Alternatively, you can reinstall SCons with your preferred python.',
-            '2) Check that if you open a python session from the command line,',
-            '   import pyfits is successful there.')
-    context.Result(1)
+def CheckPyFITS(config):
+    config.Message('Checking for PyFITS... ')
+
+    result, output = TryScript(config,"import pyfits",python)
+    if not result:
+        ErrorExit("Unable to import pyfits using the python executable:\n%s"%python)
+
+    config.Result(1)
     return 1
 
-def CheckBoostPython(context):
+def CheckBoostPython(config):
     bp_source_file = """
 #include "boost/python.hpp"
 
-class Foo { public: Foo() {} };
+int check_bp_run() { return 23; }
 
-int main()
-{
-  Py_Initialize();
-  boost::python::object obj;
-  boost::python::class_< Foo >("Foo", boost::python::init<>());
-  Py_Finalize();
-  return 0;
+BOOST_PYTHON_MODULE(check_bp) {
+    boost::python::def("run",&check_bp_run);
 }
 """
-    context.Message('Checking if we can build against Boost.Python... ')
+    config.Message('Checking if we can build against Boost.Python... ')
+
+    result = config.TryCompile(bp_source_file,'.cpp')
+    if not result:
+        ErrorExit('Unable to compile a file with #include "boost/python.hpp"')
 
     result = (
-        CheckLibs(context,[''],bp_source_file) or
-        CheckLibs(context,['boost_python'],bp_source_file) or
-        CheckLibs(context,['boost_python-mt'],bp_source_file) )
-
+        CheckModuleLibs(config,[''],bp_source_file,'check_bp') or
+        CheckModuleLibs(config,['boost_python'],bp_source_file,'check_bp') or
+        CheckModuleLibs(config,['boost_python-mt'],bp_source_file,'check_bp') )
     if not result:
-        context.Result(0)
-        ErrorExit('Cannot build against Boost.Python.')
+        ErrorExit('Unable to build a python loadable module with Boost.Python')
 
-    result, output = context.TryRun(bp_source_file,'.cpp')
-
-    if not result:
-        context.Result(0)
-        ErrorExit('Cannot run program built with Boost.Python.')
-    context.Result(1)
+    config.Result(1)
     return 1
 
 def FindPathInEnv(env, dirtag):
@@ -918,7 +977,7 @@ def DoLibraryAndHeaderChecks(config):
     compiler = config.env['CXXTYPE']
     version = config.env['CXXVERSION_NUMERICAL']
 
-    if not (config.env.has_key('LIBS')) :
+    if not config.env.has_key('LIBS') :
         config.env['LIBS'] = []
 
     tmv_link_file = FindTmvLinkFile(config)
@@ -946,8 +1005,8 @@ def DoLibraryAndHeaderChecks(config):
     config.CheckTMV()
     config.CheckPython()
     config.CheckNumPy()
-    config.CheckBoostPython()
     config.CheckPyFITS() 
+    config.CheckBoostPython()
 
 
 def GetNCPU():
@@ -981,7 +1040,7 @@ def DoConfig(env):
 
     # Figure out what kind of compiler we are dealing with
     GetCompilerVersion(env)
-   
+
     # If not explicit, set number of jobs according to number of CPUs
     if env.GetOption('num_jobs') != 1:
         print "Using specified number of jobs =",env.GetOption('num_jobs')
@@ -999,11 +1058,11 @@ def DoConfig(env):
         AddOpenMPFlag(env)
     if not env['DEBUG']:
         print 'Debugging turned off'
-        env.Append(CPPDEFINES=['NDEBUG'])
+        env.AppendUnique(CPPDEFINES=['NDEBUG'])
     else:
         if env['TMV_DEBUG']:
             print 'TMV Extra Debugging turned on'
-            env.Append(CPPDEFINES=['TMV_EXTRA_DEBUG'])
+            env.AppendUnique(CPPDEFINES=['TMV_EXTRA_DEBUG'])
 
     import SCons.SConf
 
@@ -1037,7 +1096,7 @@ def DoConfig(env):
     # uses MEMTEST, you might need to move this to before
     # the DoLibraryAndHeaderChecks call.
     if env['MEM_TEST']:
-        env.Append(CPPDEFINES=['MEM_TEST'])
+        env.AppendUnique(CPPDEFINES=['MEM_TEST'])
 
 
 
@@ -1081,6 +1140,12 @@ if not GetOption('help'):
     if os.path.exists("gs.error"):
         os.remove("gs.error")
         ClearCache()
+
+    if env['PYTHON'] == '':
+        python = default_python
+    else:
+        python = env['PYTHON']
+    print 'Using python = ',python
 
     # Set PYPREFIX if not given:
     if env['PYPREFIX'] == '':
