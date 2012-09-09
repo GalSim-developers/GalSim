@@ -7,7 +7,7 @@ import glob
 Import('env')
 ReadFileList=env['__readfunc']
 
-env1 = env.Clone()
+env1 = env['src_env'].Clone()
 
 # TODO: This won't work on Windows machines...
 env1['OBJPREFIX'] = '.obj/'

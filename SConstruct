@@ -1003,10 +1003,18 @@ def DoLibraryAndHeaderChecks(config):
         config.env.AppendUnique(LINKFLAGS='-fopenmp')
 
     config.CheckTMV()
+
+    # At this point we have everything we need for the regular C++ build.
+    # So save the current env.
+    config.env['src_env'] = config.env.Clone()
+
     config.CheckPython()
     config.CheckNumPy()
     config.CheckPyFITS() 
     config.CheckBoostPython()
+
+    # This is now the env we want to use in pysrc.
+    config.env['pysrc_env'] = config.env.Clone()
 
 
 def GetNCPU():
