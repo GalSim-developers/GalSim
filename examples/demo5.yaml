@@ -1,10 +1,9 @@
 
 # YAML configuration file for use with the executable galsim_yaml
 # Type:
-#   galsim_yaml MOD2.yaml
+#   galsim_yaml demo5.yaml
 #
-# This configuration file is designed to be equivalent to the example script called
-# Script2 in MultiObjectDemo.py
+# This configuration file is designed to be equivalent to the example script called demo5.py
 #
 #    Make images similar to that done for the Great08 challenge:
 #      - Each fits file is 10 x 10 postage stamps.
@@ -45,7 +44,7 @@ gal :
     # This is in lieu of setting a size parameter directly.
     # Note: The Great08 definition of resolution was based on the observed size,
     #       r_obs ~= sqrt(r_gal^2 + r_psf^2).  
-    #       So this value corresponds to their resolution = r_obs/r_psf = 1.4.
+    #       So this value approximately corresponds to their resolution = r_obs/r_psf = 1.4.
     resolution : 0.98
 
     # Here we specify the desired signal-to-noise of the drawn image, rather than 
@@ -120,7 +119,6 @@ image :
 
     # Define what kind of noise to use
     noise : 
-        type : Poisson
         sky_level : 1.e6  # ADU / arcsec^2
 
     # Define the initial random number seed

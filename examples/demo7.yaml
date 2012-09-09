@@ -1,10 +1,9 @@
 
 # YAML configuration file for use with the executable galsim_yaml
 # Type:
-#   galsim_yaml MOD4.yaml
+#   galsim_yaml demo7.yaml
 #
-# This configuration file is designed to be equivalent to the example script called
-# Script4 in MultiObjectDemo.py
+# This configuration file is designed to be equivalent to the example script called demo7.py
 #
 #    Make a fits image cube where each frame has two images of the same galaxy drawn 
 #    with regular FFT convolution and with photon shooting.
@@ -34,7 +33,7 @@ psf :
             items :
                 - { type : Gaussian , fwhm : 0.65 }
                 - { type : OpticalPSF , 
-                    lam_over_D : 0.39 , obscuration : 0.4 ,
+                    lam_over_diam : 0.39 , obscuration : 0.4 ,
                     defocus : 0.1 , spher : -0.3 ,
                     astig1 : 0.3 , astig2 : -0.2 ,
                     coma1 : 0.2 , coma2 : 0.1 }
@@ -42,7 +41,7 @@ psf :
             type : Convolution
             items :
                 - { type : Kolmogorov , fwhm : 0.65 }
-                - { type : Airy , lam_over_D : 0.195 }
+                - { type : Airy , lam_over_diam : 0.195 }
 
     index : 
         type : Sequence
@@ -93,7 +92,6 @@ image :
 
     # Define what kind of noise to use
     noise : 
-        type : Poisson
         sky_level : 1.e4  # ADU / arcsec^2
     
     # This is a pretty contrived item.  Normally, you would just choose either

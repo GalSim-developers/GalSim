@@ -2,10 +2,9 @@
 
 "#" : "JSON configuration file for use with the executable galsim_json",
 "#" : "From the examples directory, type:",
-"#" : "  galsim_json json/MOD4.json",
+"#" : "  galsim_json json/demo7.json",
 
-"#" : "This configuration file is designed to be equivalent to the example script called",
-"#" : "Script4 in MultiObjectDemo.py",
+"#" : "This configuration file is designed to be equivalent to the example script called demo7.py",
 
 "#" : "   Make a fits image cube where each frame has two images of the same galaxy drawn ",
 "#" : "   with regular FFT convolution and with photon shooting.",
@@ -39,7 +38,7 @@
             "items" : [
                 { "type" : "Gaussian" , "fwhm" : 0.65 },
                 { "type" : "OpticalPSF" , 
-                  "lam_over_D" : 0.39 , "obscuration" : 0.4 ,
+                  "lam_over_diam" : 0.39 , "obscuration" : 0.4 ,
                   "defocus" : 0.1 , "spher" : -0.3 ,
                   "astig1" : 0.3 , "astig2" : -0.2 ,
                   "coma1" : 0.2 , "coma2" : 0.1 }
@@ -49,7 +48,7 @@
             "type" : "Convolution",
             "items" : [
                 { "type" : "Kolmogorov" , "fwhm" : 0.65 },
-                { "type" : "Airy" , "lam_over_D" : 0.195 }
+                { "type" : "Airy" , "lam_over_diam" : 0.195 }
             ]
         }
     ],
@@ -115,7 +114,6 @@
 
     "#" : "Define what kind of noise to use",
     "noise" : {
-        "type" : "Poisson",
         "sky_level" : 1e4
     },
     

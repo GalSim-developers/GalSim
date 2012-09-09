@@ -10,29 +10,29 @@ fi
 /bin/rm -f output/*
 /bin/rm -f output_yaml/*
 
-./BasicDemo.py 1 || exit
-galsim_yaml BD1.yaml || exit
+time ./demo1.py || exit
+time galsim_yaml demo1.yaml || exit
 
-./BasicDemo.py 2 || exit
-galsim_yaml BD2.yaml || exit
+time ./demo2.py || exit
+time galsim_yaml demo2.yaml || exit
 
-./BasicDemo.py 3 || exit
-galsim_yaml BD3.yaml || exit
+time ./demo3.py || exit
+time galsim_yaml demo3.yaml || exit
 
-./MultiObjectDemo.py 1 || exit
-galsim_yaml MOD1.yaml || exit
+time ./demo4.py || exit
+time galsim_yaml demo4.yaml || exit
 
-./MultiObjectDemo.py 2 || exit
-galsim_yaml MOD2.yaml || exit
+time ./demo5.py || exit
+time galsim_yaml demo5.yaml || exit
 
-./MultiObjectDemo.py 3 || exit
-galsim_yaml MOD3.yaml || exit
+time ./demo6.py || exit
+time galsim_yaml demo6.yaml || exit
 
-./MultiObjectDemo.py 4 || exit
-galsim_yaml MOD4.yaml || exit
+time ./demo7.py || exit
+time galsim_yaml demo7.yaml || exit
 
-./MultiObjectDemo.py 5 || exit
-galsim_yaml MOD5.yaml || exit
+time ./demo8.py || exit
+time galsim_yaml demo8.yaml || exit
 
 echo 'Checking diffs: (No output means success)'
 
