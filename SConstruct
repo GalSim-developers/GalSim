@@ -747,6 +747,7 @@ PyMODINIT_FUNC initcheck_python(void)
 """
     config.Message('Checking if we can build against Python... ')
 
+    # First check the python include directory -- see if we can compile the module.
     source_file2 = "import distutils.sysconfig; print distutils.sysconfig.get_python_inc()"
     result, py_inc = TryScript(config,source_file2,python)
     if not result:
@@ -757,32 +758,95 @@ PyMODINIT_FUNC initcheck_python(void)
         ErrorExit('Unable to compile a file with #include "Python.h" using the include path:',
                   '%s'%py_inc)
     
+    # Now see if we can build it as a LoadableModule and run in from python.
+    # Sometimes (e.g. most linux systems), we don't need the python library to dot this.
+    # So the first attempt below with [''] for the libs will work.
+    if CheckModuleLibs(config,[''],python_source_file,'check_python'):
+        config.Result(1)
+        return 1
+
+    # Other times (e.g. most Mac systems) we'll need to link the library.
+    # We can get the library name from distutils.sysconfig:
     source_file3 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBRARY')"
-    result, py_lib = TryScript(config,source_file3,python)
+    result, py_libfile = TryScript(config,source_file3,python)
     if not result:
         ErrorExit('Unable to get python library name using python executable:\n%s',python)
-    py_lib = os.path.splitext(py_lib)[0]
-    if py_lib.startswith('lib'): py_lib = py_lib[3:]
+    py_lib = os.path.splitext(py_libfile)[0]
+    if py_lib.startswith('lib'): 
+        py_lib = py_lib[3:]
 
+    # We might want to use the version number in some of the below stuff, so see if we
+    # can figure it out.
+    if '2.7' in py_inc or '2.7' in python:
+        py_version = '2.7'
+    elif '2.6' in py_inc or '2.6' in python:
+        py_version = '2.6'
+    elif '2.5' in py_inc or '2.5' in python:
+        py_version = '2.5'
+    elif '2.4' in py_inc or '2.4' in python:
+        py_version = '2.4'
+    else:
+        py_version = ''
+
+    # First check if this works as is.  Sometimes there is a link from somewhere in the
+    # standard path, so we won't have to add anything to env['LIBPATH']
+    result = (
+        CheckModuleLibs(config,[py_lib],python_source_file,'check_python') or
+        CheckModuleLibs(config,['python'+py_version],python_source_file,'check_python') or
+        CheckModuleLibs(config,['python'],python_source_file,'check_python') )
+    if result:
+        config.Result(1)
+        return 1
+
+    # This library path is also supposed to be reported by distutils.sysconfig.
+    # However, it's pretty unreliable, and I couldn't find anything more reliable.
+    # So after getting this values, we might need to edit it.
     source_file4 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBDIR')"
     result, py_libdir = TryScript(config,source_file4,python)
     if not result:
         ErrorExit('Unable to get python library path using python executable:\n%s',python)
 
-    config.env.PrependUnique(LIBPATH=py_libdir)
+    # Check if LIBDIR/LIBRARY is actually a file:
+    if os.path.isfile(os.path.join(py_libdir,py_libfile)):
+        #print 'full file name = %s exists.'%os.path.join(py_libdir,py_libfile)
+        py_libdir1 = py_libdir
+        config.env.PrependUnique(LIBPATH=py_libdir)
+
+    # Otherwise try to find the correct path
+    # First option: add config to LIBDIR
+    elif os.path.isfile(os.path.join(py_libdir,'config',py_libfile)):
+        #print 'Adding config worked: use %s.'%os.path.join(py_libdir,'config',py_libfile)
+        py_libdir1 = os.path.join(py_libdir,'config')
+        config.env.PrependUnique(LIBPATH=py_libdir1)
+
+    # Next try adding python2.x/config
+    elif os.path.isfile(os.path.join(py_libdir,'python'+py_version,'config',py_libfile)):
+        #print 'Adding config worked: use %s.'%os.path.join(py_libdir,'python'+py_version,'config',py_libfile)
+        py_libdir1 = os.path.join(py_libdir,'python'+py_version,'config')
+        config.env.PrependUnique(LIBPATH=py_libdir1)
+
+    # Oh well, it was worth a shot.
+    else:
+        ErrorExit('Unable to find a usable python library',
+                  'The library name reported by distutils.sysconfig is %s'%py_libfile,
+                  'The library directory reported by distutils.sysconfig is %s'%py_libdir,
+                  'However, this combination does not seem to exist.',
+                  'Nor do the known permutations to this exist.',
+                  'If you can find the right location for the python library on your system',
+                  'you can use the flags EXTRA_LIB_PATH and/or EXTRA_LIBS to tell scons.')
 
     result = (
-        CheckModuleLibs(config,[''],python_source_file,'check_python') or
         CheckModuleLibs(config,[py_lib],python_source_file,'check_python') or
-        ( '2.6' in py_inc and 
-          CheckModuleLibs(config,['python2.6'],python_source_file,'check_python') ) or
-        ( '2.7' in py_inc and 
-          CheckModuleLibs(config,['python2.7'],python_source_file,'check_python') ) or
+        CheckModuleLibs(config,['python'+py_version],python_source_file,'check_python') or
         CheckModuleLibs(config,['python'],python_source_file,'check_python') )
     if not result:
         ErrorExit('Unable to build a python loadable module using the python executable:',
-                  '%s'%python)
-        
+                  '%s,'%python,
+                  'the library name %s,'%py_libfile,
+                  'and the libdir %s.'%py_libdir1,
+                  'If these are not the correct library names, you can tell scons the ',
+                  'correct names to use with the flags EXTRA_LIB_PATH and/or EXTRA_LIBS.')
+
     config.Result(1)
     return 1
 
