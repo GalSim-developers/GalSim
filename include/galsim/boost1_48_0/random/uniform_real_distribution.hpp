@@ -20,9 +20,9 @@
 #include <istream>
 #include <boost/assert.hpp>
 #include <boost/config.hpp>
-#include "galsim/boost1_48_0.random/detail/config.hpp"
-#include "galsim/boost1_48_0.random/detail/operators.hpp"
-#include "galsim/boost1_48_0.random/detail/signed_unsigned_tools.hpp"
+#include "galsim/boost1_48_0/random/detail/config.hpp"
+#include "galsim/boost1_48_0/random/detail/operators.hpp"
+#include "galsim/boost1_48_0/random/detail/signed_unsigned_tools.hpp"
 #include <boost/type_traits/is_integral.hpp>
 
 namespace boost {

@@ -13,7 +13,7 @@
 #ifndef BOOST_RANDOM_DETAIL_OPERATORS_HPP
 #define BOOST_RANDOM_DETAIL_OPERATORS_HPP
 
-#include "galsim/boost1_48_0.random/detail/config.hpp"
+#include "galsim/boost1_48_0/random/detail/config.hpp"
 #include <boost/detail/workaround.hpp>
 
 #if BOOST_WORKAROUND(BOOST_MSVC, <= 1310)   \

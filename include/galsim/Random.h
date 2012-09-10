@@ -22,14 +22,14 @@
 #include <sys/time.h>
 #include "Image.h"
 #ifdef DIVERT_BOOST_RANDOM
-#include "galsim/boost1_48_0.random/mersenne_twister.hpp"
-#include "galsim/boost1_48_0.random/normal_distribution.hpp"
-#include "galsim/boost1_48_0.random/binomial_distribution.hpp"
-#include "galsim/boost1_48_0.random/poisson_distribution.hpp"
-#include "galsim/boost1_48_0.random/uniform_real_distribution.hpp"
-#include "galsim/boost1_48_0.random/weibull_distribution.hpp"
-#include "galsim/boost1_48_0.random/gamma_distribution.hpp"
-#include "galsim/boost1_48_0.random/chi_squared_distribution.hpp"
+#include "galsim/boost1_48_0/random/mersenne_twister.hpp"
+#include "galsim/boost1_48_0/random/normal_distribution.hpp"
+#include "galsim/boost1_48_0/random/binomial_distribution.hpp"
+#include "galsim/boost1_48_0/random/poisson_distribution.hpp"
+#include "galsim/boost1_48_0/random/uniform_real_distribution.hpp"
+#include "galsim/boost1_48_0/random/weibull_distribution.hpp"
+#include "galsim/boost1_48_0/random/gamma_distribution.hpp"
+#include "galsim/boost1_48_0/random/chi_squared_distribution.hpp"
 #else
 #include "boost/random/mersenne_twister.hpp"
 #include "boost/random/normal_distribution.hpp"

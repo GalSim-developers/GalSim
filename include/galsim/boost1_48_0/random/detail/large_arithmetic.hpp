@@ -16,9 +16,9 @@
 #include <boost/cstdint.hpp>
 #include <boost/integer.hpp>
 #include <boost/limits.hpp>
-#include "galsim/boost1_48_0.random/detail/integer_log2.hpp"
+#include "galsim/boost1_48_0/random/detail/integer_log2.hpp"
 
-#include "galsim/boost1_48_0.random/detail/disable_warnings.hpp"
+#include "galsim/boost1_48_0/random/detail/disable_warnings.hpp"
 
 namespace boost {
 namespace random {
@@ -117,6 +117,6 @@ inline boost::uintmax_t mulmod(boost::uintmax_t a, boost::uintmax_t b, boost::ui
 } // namespace random
 } // namespace boost
 
-#include "galsim/boost1_48_0.random/detail/enable_warnings.hpp"
+#include "galsim/boost1_48_0/random/detail/enable_warnings.hpp"
 
 #endif // BOOST_RANDOM_DETAIL_LARGE_ARITHMETIC_HPP

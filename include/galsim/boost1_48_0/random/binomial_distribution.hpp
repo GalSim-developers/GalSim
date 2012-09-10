@@ -13,14 +13,14 @@
 #ifndef BOOST_RANDOM_BINOMIAL_DISTRIBUTION_HPP_INCLUDED
 #define BOOST_RANDOM_BINOMIAL_DISTRIBUTION_HPP_INCLUDED
 
-#include <boost/config/no_tr1/cmath.hpp>
+#include "galsim/boost1_48_0/config/no_tr1/cmath.hpp"
 #include <cstdlib>
 #include <iosfwd>
 
-#include "galsim/boost1_48_0.random/detail/config.hpp"
-#include "galsim/boost1_48_0.random/uniform_01.hpp"
+#include "galsim/boost1_48_0/random/detail/config.hpp"
+#include "galsim/boost1_48_0/random/uniform_01.hpp"
 
-#include "galsim/boost1_48_0.random/detail/disable_warnings.hpp"
+#include "galsim/boost1_48_0/random/detail/disable_warnings.hpp"
 
 namespace boost {
 namespace random {
@@ -417,6 +417,6 @@ using random::binomial_distribution;
 
 }
 
-#include "galsim/boost1_48_0.random/detail/enable_warnings.hpp"
+#include "galsim/boost1_48_0/random/detail/enable_warnings.hpp"
 
 #endif

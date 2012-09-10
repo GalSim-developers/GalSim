@@ -18,10 +18,10 @@
 #include <boost/limits.hpp>
 #include <boost/config.hpp>
 #include <boost/integer.hpp>
-#include "galsim/boost1_48_0.random/detail/config.hpp"
-#include "galsim/boost1_48_0.random/detail/generator_bits.hpp"
+#include "galsim/boost1_48_0/random/detail/config.hpp"
+#include "galsim/boost1_48_0/random/detail/generator_bits.hpp"
 
-#include "galsim/boost1_48_0.random/detail/disable_warnings.hpp"
+#include "galsim/boost1_48_0/random/detail/disable_warnings.hpp"
 
 namespace boost {
 namespace random {
@@ -71,6 +71,6 @@ private:
 } // namespace random
 } // namespace boost
 
-#include "galsim/boost1_48_0.random/detail/enable_warnings.hpp"
+#include "galsim/boost1_48_0/random/detail/enable_warnings.hpp"
 
 #endif // BOOST_RANDOM_DETAIL_UNIFORM_INT_FLOAT_HPP
