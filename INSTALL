@@ -109,8 +109,8 @@ one of the sources described above.
 It will be important to make sure that the version of Python for which Numpy, 
 PyFITS and PyYAML etc. are installed is also the one being used for GalSim, 
 and that this is the one *you* want to use GalSim from!  Knowing which 
-installed version of Python will be used is also important for the 
-installation of the Boost libraries (see Section 1.v, below).  
+installed version of Python will be used is also important for the installation
+of the Boost libraries (see Section 1.v, below).  
 
 To check which Python is your default you can identify the location of the 
 executable by, for example, typing
@@ -131,8 +131,8 @@ Python is built with shared libraries.  On some systems, the default is *not*
 to build Python with shared libraries, which will result in mysterious issues 
 when trying to compile GalSim (apparent numpy-related failures).  In the few 
 cases where this issue was identified, Python had been compiled from source 
-directly; developers who used Python from pre-packaged third party 
-distributions did not tend to encounter this problem.  
+directly; developers who used Python from pre-packaged third party distributions
+did not tend to encounter this problem.  
 
 To check, you can look for the libraries in
 
@@ -148,18 +148,18 @@ installing all the dependencies below, then you'll have to rebuild the Python-
 related dependencies after rebuilding Python -- so it's better to check 
 beforehand.  
 
-See Section 4 of this document for some suggestions about getting Python, 
-Boost and all the other dependencies all working well together on your 
-specific system.
+See Section 4 of this document for some suggestions about getting Python, Boost
+and all the other dependencies all working well together on your specific 
+system.
 
 
 ii) SCons (http://www.scons.org)
 --------------------------------
 
-GalSim uses SCons to configure and run its installation procedures, and so 
-SCons needs to be installed in advance.  Versions 2.0 and 2.1 of SCons get 
-reasonable testing with GalSim, but it should also work with 1.x versions.  
-You can check if it is installed, and if so which version, by typing
+GalSim uses SCons to configure and run its installation procedures, and so SCons
+needs to be installed in advance.  Versions 2.0 and 2.1 of SCons get reasonable
+testing with GalSim, but it should also work with 1.x versions.  You can check 
+if it is installed, and if so which version, by typing
 
 scons --version
 
@@ -167,8 +167,8 @@ SCons itself is written in Python, and running "scons" invokes a Python
 interpreter.  GalSim will be configured to build against the same Python that 
 is being used to run SCons.  Making sure that matches the Python you'd like to 
 use can help you avoid a lot of problems later on.  Many of the pre-packaged 
-Python distributions (e.g. EPD) also come with SCons, so this can be a good 
-way to ensure that SCons and GalSim use the same underlying Python distribution.  
+Python distributions (e.g. EPD) also come with SCons, so this can be a good way
+to ensure that SCons and GalSim use the same underlying Python distribution.  
 
 See Section 4 for some more suggestions about installing this on your platform.
 
@@ -190,11 +190,11 @@ file for how to install it.   Usually installing TMV just requires the command
 
 scons install PREFIX=<installdir>
 
-but there are additional options you might consider, so you should read the 
-TMV INSTALL file for full details.   Also note, you may not need to specify 
-the installation directory if you are comfortable installing it into /usr/local.
-However, if you are trying to install it into a system directory then you 
-need to use sudo scons install [PREFIX=<installdir>].  
+but there are additional options you might consider, so you should read the TMV
+INSTALL file for full details.   Also note, you may not need to specify the 
+installation directory if you are comfortable installing it into /usr/local.
+However, if you are trying to install it into a system directory then you need 
+to use sudo scons install [PREFIX=<installdir>].  
 
 v) Boost C++ (http://www.boost.org)
 -----------------------------------
@@ -203,9 +203,9 @@ GalSim makes use of some of the Boost C++ libraries, and these parts of Boost
 must be installed.  It is particularly important that your installed Boost 
 library links to the same version of Python which which you will be using 
 galsim and on which you have installed NumPy and PyFITS (see Section ii, above). 
-Boost can be downloaded from the above website, and must be installed per 
-the (rather limited) instructions there, which essentially amount to using a 
-command ./bootstrap.sh
+Boost can be downloaded from the above website, and must be installed per the 
+(rather limited) instructions there, which essentially amount to using a command
+./bootstrap.sh
 
 (Additional bootstrap.sh options may be necessary to ensure Boost is built 
 against the correct version of Python; see below).
@@ -214,7 +214,7 @@ followed by
 
 ./b2 link=shared
 ./b2 --prefix=<INSTALL_DIR> link=shared install
-(if you are installing to a system directory, the second needs to be run as
+(if you are installing to a system directory, the second needs to be run as 
  root, of course ./b2...)
 
 The link=shared is necessary to ensure that they are built as shared libraries; 
@@ -239,14 +239,15 @@ libboost_python.so linked to, for example, libboost_python_py26.so.1.40.0.  In
 such a case you can tell both the Python and Boost versions being used, 2.6 
 and 1.40.0, respectively, in this example.) 
 
-If the Python library listed is the one you will be using, all is well.  If not, 
+If the Python library listed is the one you will be using, all is well.  If not,
 Boost can be forced to use a different version by specifying the following 
 options to the ./bootstrap.sh installation script (defaults in [] brackets):
 
   --with-python=PYTHON      specify the Python executable [python]
   --with-python-root=DIR    specify the root of the Python installation
-                            [automatically detected, but some users have found they have to
-                            force it to use a specific one because it detected the wrong one]
+                            [automatically detected, but some users have found 
+                            they have to force it to use a specific one because 
+                            it detected the wrong one]
 
 
 2. Installing the galsim Python package
@@ -359,10 +360,10 @@ You can run our test suite by typing
 scons tests
 
 This should compile the test suite and run it.  The tests of our C++ library 
-will always be run, but we use nosetests for our Python test suite, so that 
-will only be run if nosetests is present on your system.  We don't require 
-this as a dependency, since you can still do everything with the GalSim 
-library without this.  But it is required for a complete run of the test suite.  
+will always be run, but we use nosetests for our Python test suite, so that will
+only be run if nosetests is present on your system.  We don't require this as a
+dependency, since you can still do everything with the GalSim library without 
+this.  But it is required for a complete run of the test suite.  
 
 To install nosetests, you can also use easy_install as described in Section 1 
 above (see also http://nose.readthedocs.org/en/latest/).  Many third party-
@@ -375,8 +376,8 @@ the tests directory.  If this finishes without an error, then all the tests
 have passed.  
 
 There are also some example executables that come with GalSim, and will be 
-useful for testing and development particularly outside the Python layer.  
-These can be built by typing 
+useful for testing and development particularly outside the Python layer.  These
+can be built by typing 
 
 scons examples
 
@@ -384,12 +385,14 @@ The executables will then be visible in GalSim/bin/.
 
 The examples directory also has a series of demo scripts: 
 demo1.py, demo2.py, ... 
-These can be considered a tutorial on getting up to speed with GalSim.  
-Reading through these in order will introduce you to how to use most of the 
-features of GalSim in python.  
+
+These can be considered a tutorial on getting up to speed with GalSim.  Reading
+through these in order will introduce you to how to use most of the features of
+GalSim in python.  
 
 There are also a corresponding set of config files: 
 demo1.yaml, demo2.yaml, ... 
+
 These files can be run using the executable galsim_yaml, and will produce the 
 same output images as the python scripts.  They are also well commented, and 
 can be considered a parallel tutorial for learning the config file usage of 
@@ -408,8 +411,8 @@ derivatives).  However, as above we stress that you should make sure that the
 version of Python that Boost is built against must be the same as that you 
 intend to use for running GalSim.  
 
-The solution may be to install Boost C++ manually. This can be done by 
-following the instructions of Section 1.v), above.
+The solution may be to install Boost C++ manually. This can be done by following
+the instructions of Section 1.v), above.
 
 ii) Mac OSX
 -----------
@@ -429,8 +432,8 @@ and the Enthought Python Distribution or other third party-maintained Python
 distributions.  These are not necessarily automatically detected as the 
 installed version of Python when fink installs the Boost C++ library.  
 
-The solution is to install Boost C++ manually. This can be done by following 
-the instructions of Section 1.v), above.
+The solution is to install Boost C++ manually. This can be done by following the
+instructions of Section 1.v), above.
 
 You may still need to install NumPy and PyFITS manually, e.g. using 
 easy_install, with your chosen Python.  This is because the fink of these 
@@ -450,18 +453,19 @@ indicate Boost.Python, for example
 sudo port install boost +python27
 
 You may still need to install NumPy and PyFITS manually, e.g. using 
-easy_install, with your chosen Python.  This is because when fink installs 
-these Python modules, it use a fink Python built in /sw/bin/python2.7 (or 
-similar), which may not be your desired version. Of course, if you have setup 
-your default Python to be the fink or Macports installed version, using these 
-package managers to install NumPy and PyFITS will be fine.  
+easy_install, with your chosen Python.  This is because when fink installs these
+Python modules, it use a fink Python built in /sw/bin/python2.7 (or similar), 
+which may not be your desired version. Of course, if you have setup your default
+Python to be the fink or Macports installed version, using these package 
+managers to install NumPy and PyFITS will be fine.  
 
 5. More SCons options
 =====================
 
 Here is a fairly complete list of the options you can pass to SCons to control 
-the build process.  The options are listed with their default value.  You 
-change them simply by specifying a different value on the command line.  
+the build process.  The options are listed with their default value.  You change
+them simply by specifying a different value on the command line.  
+
 For example:
 
   scons CXX=icpc TMV_DIR=~
@@ -515,8 +519,7 @@ Flags that specify where to look for external libraries:
   FFTW_DIR ('') specifies the root location of FFTW.  The header files should
            be in FFTW_DIR/include and the library files in FFTW_DIR/lib.
   BOOST_DIR ('') specifies the root location of BOOST  The header files should 
-           be in BOOST_DIR/include/boost and the library files in 
-	   BOOST_DIR/lib.
+           be in BOOST_DIR/include/boost and the library files in BOOST_DIR/lib.
   EXTRA_INCLUDE_PATH ('') specifies extra directories in which to search for 
            header files in addition to the standard locations such as 
 	   /usr/include and /usr/local/include and the ones derived from the 
