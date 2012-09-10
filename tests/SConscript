@@ -12,9 +12,12 @@ ReadFileList=env['__readfunc']
 
 libs=['galsim']
 
-env0 = env['src_env']
-env1 = env0.Clone(CPPDEFINES=[],LIBS=libs+env0['LIBS'])
-env1['RUN_NOSETESTS'] = env['RUN_NOSETESTS']
+try:
+    env0 = env['src_env']
+    env1 = env0.Clone(CPPDEFINES=[],LIBS=libs+env0['LIBS'])
+    env1['RUN_NOSETESTS'] = env['RUN_NOSETESTS']
+except:
+    env1 = env.Clone()
 
 env1['OBJPREFIX'] = '.obj/'
 

@@ -6,7 +6,11 @@ import glob
 
 Import('env')
 ReadFileList=env['__readfunc']
-pyenv = env['pysrc_env'].Clone()
+
+try:
+    pyenv = env['pysrc_env'].Clone()
+except:
+    pyenv = env.Clone()
 
 pyenv.Append(LIBS=["galsim"])
 pyenv['OBJPREFIX'] = '.obj/'
@@ -45,7 +49,8 @@ mod_files.extend(ReadFileList('files.txt'))
 # Library file containing generic code
 obj_mod = env1.SharedObject(mod_files)
 
-mod = env1.LoadableModule(os.path.join('#galsim','_galsim.so'), obj_mod)
+mod = env1.LoadableModule(os.path.join('#galsim','_galsim'), obj_mod,
+                          LDMODULEPREFIX='', LDMODULESUFFIX='.so')
 mod_targets = [mod]
 
 # NB: With LoadableModule (rather than SharedLibrary), we don't need the RenameLib stuff on Macs.
