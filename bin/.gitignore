@@ -1,9 +1,7 @@
-int_example
-sizeof_SIFD
-test_random
-test_main
-MeasMoments
-MeasShape
-sbdraw
-galsim_yaml
-galsim_json
+# Everything
+*
+
+# Except for:
+.gitignore
+SConscript
+*.py

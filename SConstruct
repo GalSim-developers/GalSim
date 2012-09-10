@@ -1165,7 +1165,17 @@ def DoConfig(env):
     if env['MEM_TEST']:
         env.AppendUnique(CPPDEFINES=['MEM_TEST'])
 
-
+# In both bin and examplex, we will need a builder that can take a .py file, 
+# and add the correct shebang to the top of it, and also make it executable.
+# Rather than put this funciton in both SConscript files, we put it here and
+# add it as a builder to env. 
+def BuildExecutableScript(target, source, env):
+    for i in range(len(source)):
+        f = open(str(target[i]), "w")
+        f.write( '#!' + env['PYTHON'] + '\n' )
+        f.write(source[i].get_contents())
+        f.close()
+        os.chmod(str(target[i]),0775)
 
 
 #
@@ -1240,8 +1250,8 @@ if not GetOption('help'):
     env['_InstallProgram'] = RunInstall
     env['_UninstallProgram'] = RunUninstall
 
-    #if env['WITH_UPS']:
-        #subdirs += ['ups']
+    # Both bin and examples use this:
+    env['BUILDERS']['ExecScript'] = Builder(action = BuildExecutableScript)
 
     if 'examples' in COMMAND_LINE_TARGETS:
         subdirs += ['examples']

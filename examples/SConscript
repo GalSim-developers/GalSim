@@ -32,21 +32,28 @@ if major < 2 or (major == 2 and minor == 0):
     env1.Append( LINKFLAGS = ["$__RPATH"] )
 
 int_example = env1.Program(os.path.join('#bin','int_example'), 'IntExample.cpp')
-
 test_random = env1.Program(os.path.join('#bin','test_random'), 'testRandom.cpp')
+sizeof_SIFD = env1.Program(os.path.join('#bin','sizeof_SIFD'), 'sizeof_SIFD.cpp')
 
-sizeof_SIFD = env1.Program(os.path.join('#bin', 'sizeof_SIFD'), 'sizeof_SIFD.cpp')
+targets = [ int_example, test_random, sizeof_SIFD ]
 
-example_targets = [ int_example, test_random, sizeof_SIFD ]
+# Also build executable versions of the demo scripts:
+scripts = [ 'demo1', 'demo2', 'demo3', 'demo4', 'demo5',
+            'demo6', 'demo7', 'demo8', 
+            'MeasMoments', 'MeasShape', 'RealDemo',
+            'Shera', 'ShootInterpolated', 'TestOpticalPSFInterpolant', 'TestImages' ]
 
-env.Alias(target='examples',source=example_targets)
+for script in scripts:
+    targets.append(env.ExecScript(os.path.join('#bin',script), script + '.py'))
+
+env.Alias(target='examples',source=targets)
 
 # I think we don't actually want to install the example programs.
 # But here is how we would do it for real programs that the user will want
 # to have installed:
 if 'install' in COMMAND_LINE_TARGETS:
 
-    installed_bin = env1.Install(dir=bin_install_dir, source=example_targets)
+    installed_bin = env1.Install(dir=bin_install_dir, source=targets)
     env1.Alias(target='install', source=installed_bin)
 
 
@@ -54,7 +61,7 @@ if 'uninstall' in COMMAND_LINE_TARGETS:
     # There is no env.Uninstall method, we must build our own
     deltarget = Delete("$TARGET")
 
-    binfiles = [os.path.join(bin_install_dir, os.path.basename(str(f[0]))) for f in example_targets]
+    binfiles = [os.path.join(bin_install_dir, os.path.basename(str(f[0]))) for f in targets]
 
     for f in binfiles:
         env1.Alias('uninstall', env1.Command(f, None, deltarget))
