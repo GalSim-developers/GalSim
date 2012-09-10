@@ -12,10 +12,22 @@ python_install_dir = os.path.join(env['PYPREFIX'], python_dir)
 
 py_files = glob.glob("*.py")
 
+subdir_list = [ 'config' ]
+
+py_files_sub = []
+python_install_subdir = []
+for subdir in subdir_list:
+    py_files_sub.append(glob.glob(os.path.join("config","*.py")))
+    python_install_subdir.append(os.path.join(python_install_dir,"config"))
+
 if 'install' in COMMAND_LINE_TARGETS:
 
     installed_py = env.Install(dir=python_install_dir, source=py_files)
     env.Alias(target='install', source=installed_py)
+
+    for i in range(len(subdir_list)):
+        installed_py += env.Install(dir=python_install_subdir[i], source=py_files_sub[i])
+        env.Alias(target='install', source=installed_py)
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
     # There is no env.Uninstall method, we must build our own
@@ -27,4 +39,9 @@ if 'uninstall' in COMMAND_LINE_TARGETS:
 
     for f in py_files:
         env.Alias('uninstall', env.Command(os.path.join(python_install_dir, f), None, deltarget))
+
+    for i in range(len(subdir_list)):
+        for f in py_files_sub[i]:
+            env.Alias('uninstall', env.Command(os.path.join(python_install_subdir[i], f), 
+                      None, deltarget))
 

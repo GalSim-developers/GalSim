@@ -1,0 +1,88 @@
+
+# YAML configuration file for use with the executable galsim_yaml
+# Type:
+#   galsim_yaml demo8.yaml
+#
+# This configuration file is designed to be equivalent to the example script called demo8.py
+#
+#    Make an image containing 10 x 10 postage stamps.
+#    The galaxies are bulge + disk with parameters drawn from random variates
+#    Each galaxy is drawn using photon shooting.
+#
+#    We do the same thing twice -- once with a single process, and again with 
+#    multiprocessing.
+
+
+# We again use the multiple document feature.
+# So start with the common information:
+
+psf : 
+    type : Moffat
+    beta : 2.4
+    fwhm : 0.65  # arcsec
+
+gal :
+    type : Sum
+    items : 
+        -
+            type : Sersic
+            n : 3.6
+            half_light_radius : { type : Random , min : 0.3 , max : 0.9 }
+            flux : { type : Random , min : 0.1 , max : 0.5 }
+            ellip :
+                type : EBeta
+                e : { type : Random , min : 0.0 , max : 0.3 }
+                beta : { type : Random }
+        -
+            type : Sersic
+            n : 1.5
+            half_light_radius : { type : Random , min : 0.5 , max : 1.5 }
+            # Special: if the last item in a Sum doesn't have a flux specified,
+            # then it is given whatever is needed to bring the total to 1.
+            # This is especially useful when other components have a random value.
+            ellip :
+                type : EBeta
+                e : { type : Random , min : 0.2 , max : 0.8 }
+                beta : { type : Random }
+
+    flux : { type : Random , min : 1.0e4 , max : 1.0e5 }
+    
+
+image :
+    type : Tiled
+    nx_tiles : 10
+    ny_tiles : 10
+
+    stamp_size : 64  # pixels
+
+    pixel_scale : 0.28  # arcsec / pixel
+
+    draw_method : phot
+
+    noise :
+        sky_level : 1.0e4  # ADU / arcsec^2
+
+    random_seed : 1512413
+
+
+output :
+    dir : output_yaml
+
+---
+
+# The first version of this uses a single process
+
+output :
+    file_name : bpd_single.fits
+ 
+---
+
+# The second version of this uses 4 processes
+
+image :
+    # If nproc <= 0, then this means to use nproc = ncpu.
+    nproc : 4
+
+output :
+    file_name : bpd_multi.fits
+

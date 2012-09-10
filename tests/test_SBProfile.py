@@ -546,7 +546,7 @@ def test_airy():
     """
     import time
     t1 = time.time()
-    mySBP = galsim.SBAiry(lam_over_D=1./0.8, obscuration=0.1, flux=1)
+    mySBP = galsim.SBAiry(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP.draw(myImg,dx=0.2)
@@ -556,16 +556,16 @@ def test_airy():
             err_msg="Airy profile disagrees with expected result") 
 
     # Repeat with the GSObject version of this:
-    airy = galsim.Airy(lam_over_D=1./0.8, obscuration=0.1, flux=1)
+    airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
     airy.draw(myImg,dx=0.2, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy disagrees with expected result")
 
     # Test photon shooting.
-    airy = galsim.Airy(lam_over_D=1./0.8, obscuration=0.0, flux=1)
+    airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.0, flux=1)
     do_shoot(airy,myImg,"Airy obscuration=0.0")
-    airy = galsim.Airy(lam_over_D=1./0.8, obscuration=0.1, flux=1)
+    airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
     do_shoot(airy,myImg,"Airy obscuration=0.1")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -576,8 +576,8 @@ def test_airy_radii():
     import time
     t1 = time.time() 
     import math
-    # Test constructor using lam_over_D: (only option for Airy)
-    test_gal = galsim.Airy(lam_over_D= 1./0.8, flux=1.)
+    # Test constructor using lam_over_diam: (only option for Airy)
+    test_gal = galsim.Airy(lam_over_diam= 1./0.8, flux=1.)
     # test half-light-radius getter
     got_hlr = test_gal.getHalfLightRadius()
     hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)

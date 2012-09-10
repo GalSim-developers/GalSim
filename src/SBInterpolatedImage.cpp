@@ -504,42 +504,25 @@ namespace galsim {
         double dk = _ktab->getDk();
         double dk2 = dk*dk;
 
-        // This may not be the most efficient way to do this, but it's probably not 
-        // too bad.  I make a list of pairs of (R, kval) then I sort this by R and
-        // find the last kval in the sorted list that is above the threshold.
-
-        // Build the vector.
-        std::vector<std::pair<double,double> > vals(N*N);
-        for(int ix=-N/2, j=0; ix<N/2; ++ix) for(int iy=-N/2; iy<N/2; ++iy, ++j) {
-            double ksq = (ix*ix + iy*iy) * dk2;
-            vals[j].first = ksq;
-            vals[j].second = std::norm(_ktab->kval(ix,iy));
-        }
-
-        // Sort the vector by the first element in the pair (= ksq)
-        std::sort(vals.begin(), vals.end(), PairSorter());
-
-        // Find the last element in the sorted list with kval > thresh
+        // Among the elements with kval > thresh, find the one with the maximum ksq
         double thresh = sbp::maxk_threshold * getFlux();
-        thresh *= thresh; // Since values are |kval|^2.
-        std::vector<std::pair<double, double> >::reverse_iterator iter = 
-            std::find_if(vals.rbegin(), vals.rend(), AboveThresh(thresh));
-        assert(iter != vals.rend());
-        if (iter == vals.rbegin()) {
-            dbg<<"The largest ksq in the vector already has kval > thresh";
-            dbg<<"This probably means that the image isn't large enough!.";
-            return;
+        thresh *= thresh; // Since values will be |kval|^2.
+        double maxk_ksq = 0.;
+        double maxk_norm_kval = 0.;
+        for(int ix=-N/2, j=0; ix<N/2; ++ix) for(int iy=-N/2; iy<N/2; ++iy, ++j) {
+            double norm_kval = std::norm(_ktab->kval(ix,iy));
+            if (norm_kval > thresh) {
+                double ksq = (ix*ix + iy*iy) * dk2;
+                if (ksq  > maxk_ksq) {
+                    maxk_ksq = ksq;
+                    maxk_norm_kval = norm_kval;
+                }
+            }
         }
-
-        // Take the prev value, which will be at a radius where all k values at that 
-        // radius and farther out are below the threshold.
-        --iter; // --, not ++, since we are iterating in reverse order in the vector.
+        dbg<<"Found |kval|^2 = "<<maxk_norm_kval<<" at ksq = "<<maxk_ksq<<std::endl;
 
         // Check if we want to use the new value.  (Only if smaller than the current value.)
-        double ksq = iter->first;
-        double norm_kval = iter->second;
-        dbg<<"Found |kval|^2 = "<<norm_kval<<" at ksq = "<<ksq<<std::endl;
-        double new_maxk = sqrt(ksq);
+        double new_maxk = sqrt(maxk_ksq);
         dbg<<"new_maxk = "<<new_maxk<<std::endl;
         if (new_maxk < _maxk) {
             dbg<<"New value is smaller, so update\n";

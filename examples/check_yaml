@@ -1,0 +1,59 @@
+#!/bin/bash
+
+if [ ! -d "output" ]; then
+    mkdir output
+fi
+if [ ! -d "output_yaml" ]; then
+    mkdir output_yaml
+fi
+
+/bin/rm -f output/*
+/bin/rm -f output_yaml/*
+
+time ./demo1.py || exit
+time galsim_yaml demo1.yaml || exit
+
+time ./demo2.py || exit
+time galsim_yaml demo2.yaml || exit
+
+time ./demo3.py || exit
+time galsim_yaml demo3.yaml || exit
+
+time ./demo4.py || exit
+time galsim_yaml demo4.yaml || exit
+
+time ./demo5.py || exit
+time galsim_yaml demo5.yaml || exit
+
+time ./demo6.py || exit
+time galsim_yaml demo6.yaml || exit
+
+time ./demo7.py || exit
+time galsim_yaml demo7.yaml || exit
+
+time ./demo8.py || exit
+time galsim_yaml demo8.yaml || exit
+
+echo 'Checking diffs: (No output means success)'
+
+# Don't check demo1, since it doesn't use a deterministic seed.
+# If you add an initial seed in both places, then you can uncomment 
+# the next line and it should work.
+#diff output/demo1.fits output_yaml/demo1.fits 
+
+diff output/demo2.fits output_yaml/demo2.fits 
+diff output/demo3.fits output_yaml/demo3.fits 
+diff output/demo3_epsf.fits output_yaml/demo3_epsf.fits 
+
+diff output/multi.fits output_yaml/multi.fits 
+
+diff output/g08_psf.fits output_yaml/g08_psf.fits
+diff output/g08_gal.fits output_yaml/g08_gal.fits
+
+diff output/psf_real.fits output_yaml/psf_real.fits
+diff output/cube_real.fits output_yaml/cube_real.fits 
+
+diff output/cube_phot.fits output_yaml/cube_phot.fits 
+
+diff output/bpd_single.fits output_yaml/bpd_single.fits 
+diff output/bpd_multi.fits output_yaml/bpd_multi.fits 

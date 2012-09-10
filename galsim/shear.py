@@ -47,7 +47,7 @@ specified, then beta is also required to be specified.  It is possible to initia
 zero reduced shear by specifying no args or kwargs, i.e. galsim.Shear().  The galsim.Shear contains
 a C++ CppShear object, and operations on Shear rely on wrapped methods of the CppShear.
 """
-class Shear:
+class Shear(object):
     def __init__(self, *args, **kwargs):
         import numpy as np
 

@@ -31,6 +31,7 @@ def kxky(array_shape=(256, 256)):
     ----------
     @param array_shape   the Numpy array shape desired for `kx, ky`. 
     """
+    # Note: numpy shape is y,x
     k_xaxis = np.fft.fftfreq(array_shape[1]) * 2. * np.pi
     k_yaxis = np.fft.fftfreq(array_shape[0]) * 2. * np.pi
     return np.meshgrid(k_xaxis, k_yaxis)
@@ -55,4 +56,46 @@ def g1g2_to_e1e2(g1, g2):
         return 0., 0.
     else:
         raise ValueError("Input |g|^2 < 0, cannot convert.")
+
+class AttributeDict(object):
+    """@brief Dictionary class that allows for easy initialization and refs to key values via
+    attributes.
+
+    NOTE: Modified a little from Jim's bot.git AttributeDict class so that tab completion now works
+    in ipython since attributes are actually added to __dict__.
+    
+    HOWEVER this means the __dict__ attribute has been redefined to be a collections.defaultdict()
+    so that Jim's previous default attribute behaviour is also replicated.
+    """
+    def __init__(self):
+        object.__setattr__(self, "__dict__", collections.defaultdict(AttributeDict))
+
+    def __getattr__(self, name):
+        return self.__dict__[name]
+
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+
+    def merge(self, other):
+        self.__dict__.update(other.__dict__)
+
+    def _write(self, output, prefix=""):
+        for k, v in self.__dict__.iteritems():
+            if isinstance(v, AttributeDict):
+                v._write(output, prefix="{0}{1}.".format(prefix, k))
+            else:
+                output.append("{0}{1} = {2}".format(prefix, k, repr(v)))
+
+    def __nonzero__(self):
+        return not not self.__dict__
+
+    def __repr__(self):
+        output = []
+        self._write(output, "")
+        return "\n".join(output)
+
+    __str__ = __repr__
+
+    def __len__(self):
+        return len(self.__dict__)
 

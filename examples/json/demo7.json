@@ -1,0 +1,148 @@
+{
+
+"#" : "JSON configuration file for use with the executable galsim_json",
+"#" : "From the examples directory, type:",
+"#" : "  galsim_json json/demo7.json",
+
+"#" : "This configuration file is designed to be equivalent to the example script called demo7.py",
+
+"#" : "   Make a fits image cube where each frame has two images of the same galaxy drawn ",
+"#" : "   with regular FFT convolution and with photon shooting.",
+
+"#" : "   We do this for 5 different PSFs and 5 different galaxies, each with 4 different (random)",
+"#" : "   fluxes, sizes, and shapes.",
+
+
+"#" : "Define the PSF's",
+"psf" : {
+    "type" : "List",
+    "items" : [
+        {
+            "type" : "Gaussian",
+            "fwhm" : 0.65
+        },
+        {
+            "type" : "Moffat",
+            "fwhm" : 0.65,
+            "beta" : 2.4
+        },
+        {
+            "type" : "Sum",
+            "items" : [
+                { "type" : "Gaussian" , "flux" : 0.8 , "fwhm" : 0.65 },
+                { "type" : "Gaussian" , "flux" : 0.2 , "fwhm" : 1.3 }
+            ]
+        },
+        {
+            "type" : "Convolution",
+            "items" : [
+                { "type" : "Gaussian" , "fwhm" : 0.65 },
+                { "type" : "OpticalPSF" , 
+                  "lam_over_diam" : 0.39 , "obscuration" : 0.4 ,
+                  "defocus" : 0.1 , "spher" : -0.3 ,
+                  "astig1" : 0.3 , "astig2" : -0.2 ,
+                  "coma1" : 0.2 , "coma2" : 0.1 }
+            ]
+        },
+        {
+            "type" : "Convolution",
+            "items" : [
+                { "type" : "Kolmogorov" , "fwhm" : 0.65 },
+                { "type" : "Airy" , "lam_over_diam" : 0.195 }
+            ]
+        }
+    ],
+
+    "index" : {
+        "type" : "Sequence",
+        "first" : 0,
+        "last" : 4,
+        "repeat" : 40 ,
+        "#" : "How many times to repeat the same value before moving on."
+    }
+},
+
+"#" : "Define the galaxy profiles",
+"gal" : {
+    "type" : "List",
+
+    "#" : "The sizes here start as 1, but we dilate the profile below:",
+    "items" : [
+        { "type" : "Gaussian" , "half_light_radius" : 1 },
+        { "type" : "Exponential" , "half_light_radius" : 1 },
+        { "type" : "DeVaucouleurs" , "half_light_radius" : 1 },
+        { "type" : "Sersic" , "n" : 2.5 , "half_light_radius" : 1 },
+        {
+            "type" : "Sum",
+            "items" : [
+                { "type" : "Sersic" , "n" : 3.2 , "half_light_radius" : 0.7 , "flux" : 0.4 },
+                { "type" : "Sersic" , "n" : 1.5 , "half_light_radius" : 1.2 , "flux" : 0.6 }
+            ]
+        }
+    ],
+
+    "index" : {
+        "type" : "Sequence",
+        "first" : 0,
+        "last" : 4,
+        "repeat" : 8,
+        "#" : "This will repeat each 8 times, but also go through the full list 5 times"
+    },
+
+    "flux" : { "type" : "Random" , "min" : 1e4 , "max" : 1e5 },
+    "dilate" : { "type" : "Random" , "min" : 0.3 , "max" : 1.3 },
+    "ellip" : {
+        "type" : "EBeta",
+        "e" : { "type" : "Random" , "min" : 0.0 , "max" : 0.8 },
+        "beta" : { "type" : "Random" }
+    }
+},
+
+"#" : "Define some other information about the images ",
+"image" : {
+    "#" : "Each image in the data cube has two tiles.",
+    "type" : "Tiled",
+    "nx_tiles" : 2,
+    "ny_tiles" : 1,
+    "xborder" : 2  ,
+    "#" : "2 pixel border between fft and phot images",
+
+    "stamp_xsize" : 64,
+    "stamp_ysize" : 64,
+
+    "pixel_scale" : 0.28,
+
+    "#" : "Define what kind of noise to use",
+    "noise" : {
+        "sky_level" : 1e4
+    },
+    
+    "#" : "This is a pretty contrived item.  Normally, you would just choose either",
+    "#" : "fft or phot.  But here we alternate between the two of them to make ",
+    "#" : "images that compare the same object drawn both ways.",
+    "draw_method" : {
+        "type" : "List",
+        "items" : [ "fft" , "phot" ],
+        "#" : "The following sequence for index is automatically generated:",
+        "#" : "index : { type : Sequence , firat : 0 , last : 1 }"
+    },
+
+    "#" : "This is also pretty contrived. ",
+    "#" : "It is really only relevant for this particular example.  ",
+    "#" : "The usual case is to just set a single number, which really means that each object",
+    "#" : "gets a sequential value starting with this number.  In this case we repeat each value",
+    "#" : "two times, so the fft and phot images get the same values for the random parameters.",
+    "random_seed" : { "type" : "Sequence" , "first" : 1512413 , "repeat" : 2 }
+},
+
+"#" : "Define the output formats",
+"output" : {
+    "type" : "DataCube",
+
+    "dir" : "output_json",
+    "file_name" : "cube_phot.fits",
+    
+    "nimages" : 100
+}
+
+}

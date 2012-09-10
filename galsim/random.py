@@ -276,7 +276,8 @@ Calling
 >>> PoissonDeviate.applyTo(image)
 
 On output each element of the input Image will have a pseudo-random PoissonDeviate return value 
-added to it, with current mean.
+added to it, with current mean, and then that mean subtracted.  So the average  effect on each 
+pixel is zero, but there will be Poisson noise added to the image with the right variance.
 """
 
 _galsim.PoissonDeviate.__call__.__func__.__doc__ = """
