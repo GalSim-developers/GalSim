@@ -67,8 +67,8 @@ achieved by typing "python" or "/path/to/executable/bin/python" if your
 desired Python is not the system default, and typing the import commands above,
 If you get no warning message, things are OK.  
 
-If you do not have these modules, follow the links above or alternatively try "
-easy_install" (or equivalently "/path/to/executable/bin/easy_install" if your 
+If you do not have these modules, follow the links above or alternatively try 
+"easy_install" (or equivalently "/path/to/executable/bin/easy_install" if your 
 desired Python is not the default).  
 
 As an example, if using the default system Python, connected to the internet 
@@ -78,8 +78,8 @@ easy_install numpy
 easy_install pyfits
 easy_install pyyaml
 
-at prompt.  If not using an admin account, prefix the commands above with "
-sudo " and enter your admin password when prompted.  The required modules 
+at prompt.  If not using an admin account, prefix the commands above with
+"sudo " and enter your admin password when prompted.  The required modules
 should then be installed.  
 
 See http://packages.python.org/distribute/easy_install.html#using-easy-install 
@@ -107,7 +107,7 @@ being used by the operating system and then you install a newer version from
 one of the sources described above.  
 
 It will be important to make sure that the version of Python for which Numpy, 
-PyFITS and PyYAML etc.  are installed is also the one being used for GalSim, 
+PyFITS and PyYAML etc. are installed is also the one being used for GalSim, 
 and that this is the one *you* want to use GalSim from!  Knowing which 
 installed version of Python will be used is also important for the 
 installation of the Boost libraries (see Section 1.v, below).  
@@ -402,8 +402,8 @@ GalSim.
 i) Linux
 --------
 The vast majority of Linux distributions provide installable packages for most 
-of our dependencies.  In may cases, however, it is also necessary to install "-
-devel" or "-dev" packages (e.g. python-dev or libboost-dev on Debian-
+of our dependencies.  In may cases, however, it is also necessary to install 
+"-devel" or "-dev" packages (e.g. python-dev or libboost-dev on Debian-
 derivatives).  However, as above we stress that you should make sure that the 
 version of Python that Boost is built against must be the same as that you 
 intend to use for running GalSim.  
@@ -439,10 +439,10 @@ similar), which may not be your desired version. Of course, if you have setup
 your default Python to be the fink/Macports installed version, using these 
 package managers to install NumPy and PyFITS will be fine.  
 
-b) Macports -- this is another popular Mac package management project (http://
-www.macports.org/) with similar functionality to fink, although TMV is not 
-supported but can be easily installed by following the instructions in Section 
-1.iv).  
+b) Macports -- this is another popular Mac package management project 
+(http://www.macports.org/) with similar functionality to fink, although TMV
+is not supported but can be easily installed by following the instructions 
+in Section 1.iv).  
 
 Note that when using MacPorts to install boost, you may need to explicitly 
 indicate Boost.Python, for example
