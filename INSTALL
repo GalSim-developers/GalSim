@@ -457,6 +457,10 @@ Basic flags about the C++ compilation (listed with their default values in paren
 	   else.  Maybe in the credo.txt file?
   WITH_OPENMP (False) specifies whether to use OpenMP to parallelize some parts of the code.
            (We don't actually use OpenMP currently, so this doesn't do anything.)
+  PYTHON (/usr/bin/env python) specified which version of python you are 
+           planning to use GalSim with.  If you choose not to use the default 
+           here, then you need to remember to use the correct python version 
+           whenever you run any GalSim python scripts.
 
 Flags about where to install the library and modules:
 
@@ -509,6 +513,11 @@ Flags that specify where to look for external libraries:
 
 Miscellaneous flags:
 
+  NOSETESTS (nosetests) specifies which version of nosetests you want to use
+           for running the unit tests.  If you specified a non-default python,
+           then there is a possibility that the standard nosetests executable
+           in your path won't work (since it might be for a different version
+           of python).  In that case, specify the correct nosetests here.
   CACHE_LIB (True) specifies whether to cache the results of the library checks
            While you are working one getting the prerequisites installed properly, it can
 	   be useful to set this to False to force SCons to redo all of its library checks

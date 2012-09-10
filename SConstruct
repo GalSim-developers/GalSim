@@ -41,55 +41,50 @@ opts = Variables(config_file)
 
 # Now set up options for the command line
 opts.Add('CXX','Name of c++ compiler')
-opts.Add('PYTHON','Name of python executable','')
 opts.Add('FLAGS','Compile flags to send to the compiler','')
 opts.Add('EXTRA_FLAGS','Extra flags to send to the compiler','')
 opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
+opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', True))
+opts.Add('PYTHON','Name of python executable','')
 
 opts.Add(PathVariable('PREFIX','prefix for installation',
             '', PathVariable.PathAccept))
 opts.Add(PathVariable('PYPREFIX','location of your site-packages directory',
             '', PathVariable.PathAccept))
 
-opts.Add(PathVariable('EXTRA_PATH',
-            'Extra paths for executables (separated by : if more than 1)',
+opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
+opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
+opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
+opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
+
+opts.Add(PathVariable('EXTRA_INCLUDE_PATH',
+            'Extra paths for header files (separated by : if more than 1)',
             '', PathVariable.PathAccept))
 opts.Add(PathVariable('EXTRA_LIB_PATH',
             'Extra paths for linking (separated by : if more than 1)',
             '', PathVariable.PathAccept))
-opts.Add(PathVariable('EXTRA_INCLUDE_PATH',
-            'Extra paths for header files (separated by : if more than 1)',
+opts.Add(PathVariable('EXTRA_PATH',
+            'Extra paths for executables (separated by : if more than 1)',
             '', PathVariable.PathAccept))
 opts.Add(BoolVariable('IMPORT_PATHS',
             'Import PATH, C_INCLUDE_PATH and LIBRARY_PATH/LD_LIBRARY_PATH environment variables',
             False))
 opts.Add(BoolVariable('IMPORT_ENV',
             'Import full environment from calling shell',True))
+opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
 opts.Add(BoolVariable('INCLUDE_PREFIX_PATHS',
             'Add PREFIX/bin, PREFIX/include and PREFIX/lib to corresponding path lists',
             True))
 
-opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
-opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
-opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
-
-opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
-opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
+opts.Add('NOSETESTS','Name of nosetests executable','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
+opts.Add(BoolVariable('WITH_PROF',
+            'Use the compiler flag -pg to include profiling info for gprof', False))
+opts.Add(BoolVariable('MEM_TEST','Test for memory leaks', False))
+opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
 
 # None of the code uses openmp yet.  Probably make this default True if we start using it.
 opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
-opts.Add(BoolVariable('MEM_TEST','Test for memory leaks', False))
-opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', True))
-opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
-opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
-
-#opts.Add(BoolVariable('WITH_UPS',
-            #'Create ups/galsim.table.  Install the ups directory under PREFIX/ups',
-            #False))
-opts.Add(BoolVariable('WITH_PROF',
-            'Use the compiler flag -pg to include profiling info for gprof',
-            False))
 
 opts.Add(BoolVariable('USE_UNKNOWN_VARS',
             'Allow other parameters besides the ones listed here.',False))
@@ -1253,11 +1248,12 @@ if not GetOption('help'):
         subdirs += ['examples']
 
     if 'tests' in COMMAND_LINE_TARGETS:
-        nosetests = which('nosetests')
-        if nosetests is None:
-            env['RUN_NOSETESTS'] = False
-        else:
-            env['RUN_NOSETESTS'] = True
+        if env['NOSETESTS'] == '':
+            nosetests = which('nosetests')
+            if nosetests is None:
+                env['NOSETESTS'] = None
+            else:
+                env['NOSETESTS'] = nosetests
         subdirs += ['tests']
 
     # subdirectores to process.  We process src and pysrc by default

@@ -15,7 +15,7 @@ libs=['galsim']
 try:
     env0 = env['src_env']
     env1 = env0.Clone(CPPDEFINES=[],LIBS=libs+env0['LIBS'])
-    env1['RUN_NOSETESTS'] = env['RUN_NOSETESTS']
+    env1['NOSETESTS'] = env['NOSETESTS']
 except:
     env1 = env.Clone()
 
@@ -43,7 +43,9 @@ obj_list = env1.StaticObject(cpp_list)
 cpp_test_name = os.path.join('#bin','test_main')
 cpp_test = env1.Program( cpp_test_name , ['test_main.cpp' , obj_list] )
 
-if not env1['RUN_NOSETESTS']:
+if env1['NOSETESTS']:
+    print 'Using nosetests from: ',env1['NOSETESTS']
+else:
     print '\nWARNING: Could not find nosetests in path.'
     print 'The cpp test programs will be compiled and run,',
     print 'but you will have to run the python tests manually.'
@@ -58,10 +60,10 @@ def run_tests(target, source, env):
     log = open(str(target[0]),'w')
 
     # We only run nosetests if we found nosetests in the path.
-    if env['RUN_NOSETESTS']:
+    if env['NOSETESTS']:
         print '\nStarting python tests...'
         py_proc = subprocess.Popen(
-            'nosetests',
+            env['NOSETESTS'],
             cwd='tests',
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
