@@ -20,9 +20,9 @@
 #include <boost/static_assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/type_traits/make_unsigned.hpp>
-#include "galsim/boost1_48_0.random/detail/large_arithmetic.hpp"
+#include "galsim/boost1_48_0/random/detail/large_arithmetic.hpp"
 
-#include "galsim/boost1_48_0.random/detail/disable_warnings.hpp"
+#include "galsim/boost1_48_0/random/detail/disable_warnings.hpp"
 
 namespace boost {
 namespace random {
@@ -211,6 +211,6 @@ private:
 } // namespace random
 } // namespace boost
 
-#include "galsim/boost1_48_0.random/detail/enable_warnings.hpp"
+#include "galsim/boost1_48_0/random/detail/enable_warnings.hpp"
 
 #endif // BOOST_RANDOM_CONST_MOD_HPP

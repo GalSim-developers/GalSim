@@ -25,13 +25,13 @@
 
 // New features to cstdint.hpp added sometime between 1.41 and 1.48, which are 
 // needed in this file.  So copy that here too.
-#include "galsim/boost1_48_0.random/cstdint.hpp"
+#include "galsim/boost1_48_0/random/cstdint.hpp"
 
-#include "galsim/boost1_48_0.random/detail/config.hpp"
-#include "galsim/boost1_48_0.random/detail/ptr_helper.hpp"
-#include "galsim/boost1_48_0.random/detail/seed.hpp"
-#include "galsim/boost1_48_0.random/detail/seed_impl.hpp"
-#include "galsim/boost1_48_0.random/detail/generator_seed_seq.hpp"
+#include "galsim/boost1_48_0/random/detail/config.hpp"
+#include "galsim/boost1_48_0/random/detail/ptr_helper.hpp"
+#include "galsim/boost1_48_0/random/detail/seed.hpp"
+#include "galsim/boost1_48_0/random/detail/seed_impl.hpp"
+#include "galsim/boost1_48_0/random/detail/generator_seed_seq.hpp"
 
 namespace boost {
 namespace random {
