@@ -168,14 +168,12 @@ namespace galsim {
         { os << theta._val; return os; }
 
     private:
-        /// Wraps this angle to the range [0, 2 pi)
+        /// Wraps this angle to the range (-pi, pi]
         void wrap() {
             const double TWOPI = 2.*M_PI;
             _val = std::fmod(_val, TWOPI); // now in range (-TWOPI, TWOPI)
-            if (_val < 0.0) _val += TWOPI;
-            // if _val was -epsilon, adding 360.0 gives 360.0-epsilon = 360.0 which is actually 0.0
-            // Thus, a rare equivalence conditional test for a double ...
-            if (_val == TWOPI) _val = 0.0;
+            if (_val <= -M_PI) _val += TWOPI;
+            if (_val > M_PI) _val -= TWOPI;
         }
 
         double _val;

@@ -41,7 +41,11 @@ cpp_test = env1.Program( cpp_test_name , ['test_main.cpp' , obj_list] )
 if not env['RUN_NOSETESTS']:
     print '\nWARNING: Could not find nosetests in path.'
     print 'The cpp test programs will be compiled and run,',
-    print 'but you will have to run the python tests manually.\n'
+    print 'but you will have to run the python tests manually.'
+    print 'To do so, type: '
+    print '   cd tests '
+    print '   run_all_tests '
+    print 'If this doesn\'t end with an error, then the tests all passed.'
 
 # Define an action for running nosetests, storing the output in a log file
 def run_tests(target, source, env):

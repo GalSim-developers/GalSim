@@ -1,0 +1,83 @@
+{
+
+"#" : "JSON configuration file for use with the executable galsim_json",
+"#" : "From the examples directory, type:",
+"#" : "  galsim_json json/demo8a.json json/demo8b.json",
+
+"#" : "This configuration file is designed to be equivalent to the example script called demo8.py",
+
+"#" : "   Make an image containing 10 x 10 postage stamps.",
+"#" : "   The galaxies are bulge + disk with parameters drawn from random variates",
+"#" : "   Each galaxy is drawn using photon shooting.",
+
+"#" : "   We do the same thing twice -- once with a single process, and again with ",
+"#" : "   multiprocessing.",
+
+"#" : "There are two .json files to do this.  The first one (demo8a.json) does the ",
+"#" : "run with just 1 process.  The second one (demo8b.json) is identical except for ",
+"#" : "setting nproc = 4 and outputting to a different file.",
+
+"psf" : {
+    "type" : "Moffat",
+    "beta" : 2.4,
+    "fwhm" : 0.65
+},
+
+"gal" : {
+    "type" : "Sum",
+    "items" : [
+        {
+            "type" : "Sersic",
+            "n" : 3.6,
+            "half_light_radius" : { "type" : "Random" , "min" : 0.3 , "max" : 0.9 },
+            "flux" : { "type" : "Random" , "min" : 0.1 , "max" : 0.5 },
+            "ellip" : {
+                "type" : "EBeta",
+                "e" : { "type" : "Random" , "min" : 0.0 , "max" : 0.3 },
+                "beta" : { "type" : "Random" }
+            }
+        },
+        {
+            "type" : "Sersic",
+            "n" : 1.5,
+            "half_light_radius" : { "type" : "Random" , "min" : 0.5 , "max" : 1.5 },
+            "#" : "Special: if the last item in a Sum doesn't have a flux specified,",
+            "#" : "then it is given whatever is needed to bring the total to 1.",
+            "#" : "This is especially useful when other components have a random value.",
+            "ellip" : {
+                "type" : "EBeta",
+                "e" : { "type" : "Random" , "min" : 0.2 , "max" : 0.8 },
+                "beta" : { "type" : "Random" }
+            }
+        }
+    ],
+
+    "flux" : { "type" : "Random" , "min" : 1.0e4 , "max" : 1.0e5 }
+},
+
+"image" : {
+    "type" : "Tiled",
+    "nx_tiles" : 10,
+    "ny_tiles" : 10,
+
+    "stamp_size" : 64,
+
+    "pixel_scale" : 0.28,
+
+    "draw_method" : "phot",
+
+    "noise" : {
+        "sky_level" : 1.0e4
+    },
+
+    "random_seed" : 1512413
+},
+
+"#" : "The first version of this uses a single process",
+"output" : {
+    "dir" : "output_json",
+    "file_name" : "bpd_single.fits"
+}
+
+}
+
