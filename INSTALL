@@ -15,7 +15,7 @@ Table of Contents:
 ===========================================
 
 i) Python (2.6 or 2.7 series), with some additional modules installed
-------------------------------------------------------------------------------
+---------------------------------------------------------------------
 
 The interface to the GalSim code is via the Python package "galsim", and its 
 associated modules.  Therefore you must have Python installed on your system.  
@@ -438,7 +438,7 @@ instructions of Section 1.v), above.
 You may still need to install NumPy and PyFITS manually, e.g. using 
 easy_install, with your chosen Python.  This is because the fink of these 
 Python modules install and use a fink Python build in /sw/bin/python2.7 (or 
-similar), which may not be your desired version. Of course, if you have setup 
+similar), which may not be your desired version.  Of course, if you have setup 
 your default Python to be the fink/Macports installed version, using these 
 package managers to install NumPy and PyFITS will be fine.  
 
@@ -455,8 +455,8 @@ sudo port install boost +python27
 You may still need to install NumPy and PyFITS manually, e.g. using 
 easy_install, with your chosen Python.  This is because when fink installs these
 Python modules, it use a fink Python built in /sw/bin/python2.7 (or similar), 
-which may not be your desired version. Of course, if you have setup your default
-Python to be the fink or Macports installed version, using these package 
+which may not be your desired version.  Of course, if you have setup your
+default Python to be the fink or Macports installed version, using these package
 managers to install NumPy and PyFITS will be fine.  
 
 5. More SCons options
