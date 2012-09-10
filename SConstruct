@@ -1209,9 +1209,8 @@ if not GetOption('help'):
         ClearCache()
 
     if env['PYTHON'] == '':
-        python = default_python
-    else:
-        python = env['PYTHON']
+        env['PYTHON'] = default_python
+    python = env['PYTHON']
     print 'Using python = ',python
 
     # Set PYPREFIX if not given:

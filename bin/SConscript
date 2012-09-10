@@ -5,11 +5,27 @@ Import('env')
 
 install_subdir = 'bin'
 
-galsim_yaml = env.File('galsim_yaml')
-galsim_json = env.File('galsim_json')
+# We need to add the right shebang to the top of the python scripts.
+# We copy over to a file without the .py ending, add the shebang,
+# and make sure the file is executable:
 
-targets = [ galsim_yaml, galsim_json ]
+def BuildExecutableScript(target, source, env):
+    for i in range(len(source)):
+        f = open(str(target[i]), "w")
+        f.write( '#!' + env['PYTHON'] + '\n' )
+        f.write(source[i].get_contents())
+        f.close()
+        os.chmod(str(target[i]),0775)
 
+env['BUILDERS']['ExecScript'] = Builder(action = BuildExecutableScript)
+
+scripts = [ 'galsim_yaml', 'galsim_json' ]
+targets = []
+for script in scripts:
+    targets.append(env.ExecScript(script, script + '.py'))
+
+Default(targets)
+        
 if 'install' in COMMAND_LINE_TARGETS:
     RunInstall = env['_InstallProgram']
     RunInstall(env, targets, install_subdir)

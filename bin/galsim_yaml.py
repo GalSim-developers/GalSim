@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 The main driver program for making images of galaxies whose parameters are specified
 in a configuration file.

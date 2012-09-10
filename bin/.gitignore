@@ -5,3 +5,5 @@ test_main
 MeasMoments
 MeasShape
 sbdraw
+galsim_yaml
+galsim_json
