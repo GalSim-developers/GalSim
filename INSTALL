@@ -455,8 +455,6 @@ Basic flags about the C++ compilation (listed with their default values in paren
 	   compiler is a stickler for something that didn't get caught in development.
 	   #TODO: Move this prescription that developers should set it to True somewhere
 	   else.  Maybe in the credo.txt file?
-  WITH_OPENMP (False) specifies whether to use OpenMP to parallelize some parts of the code.
-           (We don't actually use OpenMP currently, so this doesn't do anything.)
   PYTHON (/usr/bin/env python) specified which version of python you are 
            planning to use GalSim with.  If you choose not to use the default 
            here, then you need to remember to use the correct python version 
@@ -510,6 +508,12 @@ Flags that specify where to look for external libraries:
 	   libraries here.  If there is more than one, they should be quoted with 
 	   spaces between the different libraries.  e.g. 
 	   EXTRA_LIBS="mkl_intel mkl_intel_thread mkl_core"
+  INCLUDE_PREFIX_PATHS ('True') specifies whether to include the directories
+           PREFIX/include, PREFIX/lib and PREFIX/bin as part of the standard
+           path lists.  Normally, you install everything in the same place,
+           so it is useful to search those locations for some of the 
+           prerequisite packages, so the default is True.  But occasionally,
+           this might be inconvenient, so you can turn this feature off.
 
 Miscellaneous flags:
 
@@ -528,4 +532,11 @@ Miscellaneous flags:
   MEM_TEST (False) specifies whether to test the code for memory leaks.
   TMV_DEBUG (False) specifies whether to turn on extra (slower) debugging statements 
            within the TMV library.
+  WITH_OPENMP (False) specifies whether to use OpenMP to parallelize some parts of the code.
+           (We don't actually use OpenMP currently, so this doesn't do anything.)
+  USE_UNKNOWN_VARS (False) specifies whether to accept scons parameters other
+           than the ones listed here.  Normally, another name would indicate
+           a typo, so we catch it and let you know.  But if you want to use
+           other scons options that we didn't list here, you would want to 
+           also set this to True.
 
