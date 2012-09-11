@@ -15,5 +15,4 @@ from . import random
 from . import config
 from psfcorr import *
 from io import *
-from frontend import *
 from . import lensing
