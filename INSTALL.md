@@ -1,4 +1,5 @@
 #Installation Instructions
+***
 
 System requirements: GalSim currently only supports Linux and Mac OSX.
 
