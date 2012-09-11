@@ -8,7 +8,7 @@ Import('env')
 ReadFileList=env['__readfunc']
 
 try:
-    pyenv = env['pysrc_env'].Clone()
+    pyenv = env['pyenv'].Clone()
 except:
     # scons -c doesn't end up making src_env, so just use regular env.
     pyenv = env.Clone()

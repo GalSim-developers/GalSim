@@ -1008,7 +1008,7 @@ def FindTmvLinkFile(config):
     ErrorExit('No tmv-link file could be found')
 
 
-def DoLibraryAndHeaderChecks(config):
+def DoCppChecks(config):
     """
     Check for some headers.  
     """
@@ -1063,20 +1063,14 @@ def DoLibraryAndHeaderChecks(config):
 
     config.CheckTMV()
 
-    # At this point we have everything we need for the regular C++ build.
-    # So save the current env.
-    env_save = config.env.Clone()
+
+def DoPyChecks(config):
+    # These checks are only relevant for the pysrc compilation:
 
     config.CheckPython()
     config.CheckNumPy()
     config.CheckPyFITS() 
     config.CheckBoostPython()
-
-    # This is now the env we want to use in pysrc.
-    # Get the saved env back and store this as pysrc_env.
-    pysrc_env = config.env
-    config.env = env_save
-    config.env['pysrc_env'] = pysrc_env
 
 
 def GetNCPU():
@@ -1148,13 +1142,21 @@ def DoConfig(env):
         # Add out custom configuration tests
         config = env.Configure(custom_tests = {
             'CheckTMV' : CheckTMV ,
+            })
+        DoCppChecks(config)
+        env = config.Finish()
+
+        pyenv = env.Clone()
+        config = pyenv.Configure(custom_tests = {
             'CheckPython' : CheckPython ,
             'CheckNumPy' : CheckNumPy ,
             'CheckBoostPython' : CheckBoostPython ,
             'CheckPyFITS' : CheckPyFITS ,
             })
-        DoLibraryAndHeaderChecks(config)
-        env = config.Finish()
+        DoPyChecks(config)
+        pyenv = config.Finish()
+
+        env['pyenv'] = pyenv
 
         # Turn the cache back on now, since we always want it for the main compilation steps.
         if not env['CACHE_LIB']:
