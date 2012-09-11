@@ -365,8 +365,8 @@ class Cosmology(object):
         """@brief Create Cosmology with given energy densities for matter and for dark energy
         (specifically, a cosmological constant with w=-1); no quintessence, and no radiation.
         
-        @param[in] Omega_m Present day energy density of matter
-        @param[in] Omega_l Present day density of Dark Energy
+        @param[in] Omega_m Present day energy density of matter relative to critical density
+        @param[in] Omega_l Present day density of Dark Energy relative to critical density
         """
         # no quintessence, no radiation in this universe!
         self.omega_m = Omega_m
