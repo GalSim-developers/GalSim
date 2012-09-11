@@ -124,30 +124,6 @@ If this is not the Python you want, please edit your startup scripts (e.g.
 .profile or .bashrc), and be sure to specify where your desired Python version 
 resides when installing the Boost C++ libraries (see Section 1.v).
 
-A final check: Shared libraries
--------------------------------
-Before building and installing the software below, please do make sure that 
-Python is built with shared libraries.  On some systems, the default is *not* 
-to build Python with shared libraries, which will result in mysterious issues 
-when trying to compile GalSim (apparent numpy-related failures).  In the few 
-cases where this issue was identified, Python had been compiled from source 
-directly; developers who used Python from pre-packaged third party distributions
-did not tend to encounter this problem.  
-
-To check, you can look for the libraries in
-
-/path/to/executable/lib/libpython*.dylib [if you're on a Mac]
-
-or
-
-/path/to/executable/lib/libpython*.so [on Linux]
-
-If the libraries are not there, you may need to rebuild Python with shared 
-libraries using --enable-shared.  Note that if you discover this after 
-installing all the dependencies below, then you'll have to rebuild the Python-
-related dependencies after rebuilding Python -- so it's better to check 
-beforehand.  
-
 See Section 4 of this document for some suggestions about getting Python, Boost
 and all the other dependencies all working well together on your specific 
 system.
@@ -163,13 +139,6 @@ if it is installed, and if so which version, by typing
 
 scons --version
 
-SCons itself is written in Python, and running "scons" invokes a Python 
-interpreter.  GalSim will be configured to build against the same Python that 
-is being used to run SCons.  Making sure that matches the Python you'd like to 
-use can help you avoid a lot of problems later on.  Many of the pre-packaged 
-Python distributions (e.g. EPD) also come with SCons, so this can be a good way
-to ensure that SCons and GalSim use the same underlying Python distribution.  
-
 See Section 4 for some more suggestions about installing this on your platform.
 
 
@@ -177,8 +146,9 @@ iii) FFTW (http://www.fftw.org)
 -------------------------------
 
 These Fast Fourier Transform libraries must be installed as GalSim will link 
-to them during the build; see Section 4 for some suggestions about installing 
-this on your platform.  
+to them during the build.  We require version 3 (or greater presumably),
+which is often distributed as fftw3.  See Section 4 for some suggestions about
+installing this on your platform.
 
 
 iv) TMV (http://code.google.com/p/tmv-cpp/)  (version >= 0.71 required)
@@ -220,8 +190,8 @@ followed by
 The link=shared is necessary to ensure that they are built as shared libraries; 
 this is automatic on some platforms, but not all.
 
-Note: if you don't want to install everything related to boost (which takes a 
-while), you can restrict to boost Python and math by using --with-python 
+Note: if you don't want to install everything related to Boost (which takes a 
+while), you can restrict to Boost Python and math by using --with-python 
 --with-math on the ./b2 commands.  Currently we are only using Boost Python, 
 but there may be parts of the math library we want to use so installing these 
 two will likely be sufficient for the forseeable future.  
@@ -277,11 +247,11 @@ where <tmv-dir> would be the same as the PREFIX you specified when installing
 TMV, i.e. The TMV library and include files are installed in <tmv-dir>/lib and 
 <tmv-dir>/include.  Some important options that you may need to set are:
 
-  TMV_DIR: Explicitly give the tmv prefix
+  TMV_DIR: Explicitly give the TMV prefix
 
-  FFTW_DIR: Explicitly give the fftw3 prefix
+  FFTW_DIR: Explicitly give the FFTW prefix
 
-  BOOST_DIR: Explicitly give the boost prefix
+  BOOST_DIR: Explicitly give the Boost prefix
 
   EXTRA_LIBS: Additional libraries to send to the linker
 
@@ -306,7 +276,7 @@ parameter and return to the default value, it can be easier to just delete the
 line from this file, rather than explicitly set it back to the default value.  
 
 SCons caches the results of the various checks it does for the required 
-external libraries (tmv, boost, etc.).  This is usually very helpful, since 
+external libraries (TMV, Boost, etc.).  This is usually very helpful, since 
 they don't generally change, so it makes later builds much faster.  However, 
 sometimes (rarely) SCons can get confused and not realized that things on your 
 system have changed, which might cause problems for you.  You can delete 
@@ -417,47 +387,50 @@ the instructions of Section 1.v), above.
 ii) Mac OSX
 -----------
 a) Use of Fink -- the fink (http://www.finkproject.org) package management 
-software is popular with Mac users.  Once it is installed, all of the library 
-dependencies of GalSim can be added with the following commands:
+software is popular with Mac users.  Once it is installed, you can get either
+most or all of the prerequisites using it, depending on whether you want
+to use GalSim with the fink version of python (/sw/bin/python) or the system 
+python (/usr/bin/python) or something else still.
 
-fink install scons
-fink install fftw3
-fink install tmv0
-fink install boost1.46.1.cmake
-(Python 2.6 should already be in /usr/bin/python but fink can also be asked to 
-install a version into its /sw/bin directory.)
+If you are happy with running GalSim using fink's python, you can install 
+everything with the following commands:
 
-However, there is a slight caveat regarding the use of fink-installed Boost C++
-and the Enthought Python Distribution or other third party-maintained Python 
-distributions.  These are not necessarily automatically detected as the 
-installed version of Python when fink installs the Boost C++ library.  
+fink install scons fftw3 tmv0 python27 numpy-py27 pyfits-py27 yaml-py27 \
+nose-py27 boost1.35-python27
+scons PYTHON=/sw/bin/python2.7 TMV_DIR=/sw NOSETESTS=/sw/bin/nosetests
 
-The solution is to install Boost C++ manually. This can be done by following the
-instructions of Section 1.v), above.
+(assuming your fink installation is in /sw)
 
-You may still need to install NumPy and PyFITS manually, e.g. using 
-easy_install, with your chosen Python.  This is because the fink of these 
-Python modules install and use a fink Python build in /sw/bin/python2.7 (or 
-similar), which may not be your desired version.  Of course, if you have setup 
-your default Python to be the fink/Macports installed version, using these 
-package managers to install NumPy and PyFITS will be fine.  
+If you want to use the system python, or some other version, then the 
+fink python installations won't work.  You'll need to manually install
+numpy, pyFits, pyYaml and nose, for example using easy_install, with your 
+chosen Python. 
+
+For the system python, you can use fink for Boost, but you'll want 
+a different package than above:
+
+fink install scons fftw3 tmv0 boost1.46.1.cmake
+scons TMV_DIR=/sw
+
+For other python versions, the fink-installed Boost usually won't work,
+so you can only use fink for SCons, FFTW and TMV.  So you'll probably need
+to install Boost manually.  This can be done by following the instructions of 
+Section 1.v), above.
+
 
 b) Macports -- this is another popular Mac package management project 
 (http://www.macports.org/) with similar functionality to fink, although TMV
 is not supported but can be easily installed by following the instructions 
 in Section 1.iv).  
 
-Note that when using MacPorts to install boost, you may need to explicitly 
+Note that when using MacPorts to install Boost, you may need to explicitly 
 indicate Boost.Python, for example
 
 sudo port install boost +python27
 
-You may still need to install NumPy and PyFITS manually, e.g. using 
-easy_install, with your chosen Python.  This is because when fink installs these
-Python modules, it use a fink Python built in /sw/bin/python2.7 (or similar), 
-which may not be your desired version.  Of course, if you have setup your
-default Python to be the fink or Macports installed version, using these package
-managers to install NumPy and PyFITS will be fine.  
+As with fink, you may still need to install NumPy and PyFITS manually, e.g.
+using easy_install, with your chosen Python.
+
 
 5. More SCons options
 =====================
@@ -552,7 +525,7 @@ Flags that specify where to look for external libraries:
   EXTRA_LIBS ('') specifies libraries to use in addition to what SCons finds 
            on its own.  This might be useful if you have a non-standard name 
            for one of the external libraries.  e.g. If you want to use the 
-           Intel MKL library for the fftw3 library, SCons won't automatically 
+           Intel MKL library for the FFTW library, SCons won't automatically 
            try that, so you could add those libraries here.  If there is more 
            than one, they should be quoted with spaces between the different 
            libraries.  e.g.  EXTRA_LIBS="mkl_intel mkl_intel_thread mkl_core"
