@@ -169,6 +169,8 @@ class PowerSpectrum(object):
         # (5) set default interpolant if none given
         if interpolantxy is None:
             interpolantxy = galsim.InterpolantXY(galsim.Linear())
+        elif not isinstance(interpolantxy, galsim.InterpolantXY):
+            raise TypeError("Any input interpolantxy must be a galsim.InterpolantXY instance.")
 
         # store some more information
         self.interpolantxy = interpolantxy
