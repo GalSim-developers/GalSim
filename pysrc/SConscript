@@ -17,7 +17,7 @@ pyenv.Append(LIBS=["galsim"])
 pyenv['OBJPREFIX'] = '.obj/'
 
 lib_dir = 'lib'
-lib_install_dir = os.path.join(env['PYPREFIX'], lib_dir)
+lib_install_dir = os.path.join(env['FINAL_PREFIX'], lib_dir)
 
 # Include the library location within the modules.
 # TODO: Check if we still need this, now that we are using LoadableModule
