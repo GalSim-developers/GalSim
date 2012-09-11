@@ -76,7 +76,10 @@ class PowerSpectrum(object):
         grid spacing and grid size for a grid of positions.  This code stores information about the
         quantities used to generate the random shear field, generates shears using a
         PowerSpectrumRealizer on a grid, and if necessary, interpolates to get g1 and g2 at the
-        specified positions.  The normalization is defined as follows: if P_E(k)=P_B(k)=P [const],
+        specified positions.
+        
+        The normalization of the shears from a given power spectrum is defined as follows: if 
+        P_E(k)=P_B(k)=P [const],
         i.e., white noise in both shear components, then the shears g1 and g2 will be random
         Gaussian deviates with variance=P.  Note that if we really had power at all k, the variance
         would be infinite.  But we are getting shears on a grid, which has a limited k range, and
