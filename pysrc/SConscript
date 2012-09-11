@@ -13,7 +13,7 @@ except:
     # scons -c doesn't end up making src_env, so just use regular env.
     pyenv = env.Clone()
 
-pyenv.Append(LIBS=["galsim"])
+pyenv.Append(LIBS=["galsim.0"])
 pyenv['OBJPREFIX'] = '.obj/'
 
 lib_dir = 'lib'
