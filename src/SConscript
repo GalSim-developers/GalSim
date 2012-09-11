@@ -44,7 +44,7 @@ version = 0,1
 compat_version = 0,1
 
 if 'install' in COMMAND_LINE_TARGETS:
-    lib_final_dir = os.path.join(env['INSTALL_PREFIX'],'lib')
+    lib_final_dir = os.path.join(env['FINAL_PREFIX'],'lib')
 else:
     lib_final_dir = os.path.join(GetBuildPath('#lib'))
 
@@ -111,7 +111,7 @@ elif sys.platform == 'linux2':
     # Removes all -l lib flags, and add the explicit static library files.
     env1.Replace(LIBS=new_libs)
 
-    lib_final_name = os.path.join(lib_final_dir,'libgalsim.so.%s'%version[0])
+    lib_final_name = 'libgalsim.so.%s'%version[0]
     #lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s.%s'%version)
     lib_short_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s'%version[0])
     link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so')

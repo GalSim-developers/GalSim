@@ -480,6 +480,10 @@ Flags about where to install the library and modules:
            install.
   PYPREFIX ([your python dir]/site-packages) specifies where to install the 
            Python modules when running scons install.
+  FINAL_PREFIX (PREFIX) specifies the final installation prefix if different
+           from PREFIX.  (Only really needed for things like fink, where they
+           install into a staging area first before copying over to the 
+           final location.)
 
 Flags that specify where to look for external libraries:
 
@@ -529,7 +533,7 @@ Flags that specify where to look for external libraries:
            try that, so you could add those libraries here.  If there is more 
            than one, they should be quoted with spaces between the different 
            libraries.  e.g.  EXTRA_LIBS="mkl_intel mkl_intel_thread mkl_core"
-  INCLUDE_PREFIX_PATHS ('True') specifies whether to include the directories
+  IMPORT_PREFIX ('True') specifies whether to include the directories
            PREFIX/include, PREFIX/lib and PREFIX/bin as part of the standard
            path lists.  Normally, you install everything in the same place,
            so it is useful to search those locations for some of the 

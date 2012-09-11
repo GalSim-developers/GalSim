@@ -48,9 +48,12 @@ opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', True))
 opts.Add('PYTHON','Name of python executable','')
 
 opts.Add(PathVariable('PREFIX','prefix for installation',
-            '', PathVariable.PathAccept))
+         '', PathVariable.PathAccept))
 opts.Add(PathVariable('PYPREFIX','location of your site-packages directory',
-            '', PathVariable.PathAccept))
+         '', PathVariable.PathAccept))
+opts.Add(PathVariable('FINAL_PREFIX',
+         'final installation prefix if different from PREFIX',
+         '', PathVariable.PathAccept))
 
 opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
@@ -58,23 +61,22 @@ opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
 opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
 
 opts.Add(PathVariable('EXTRA_INCLUDE_PATH',
-            'Extra paths for header files (separated by : if more than 1)',
-            '', PathVariable.PathAccept))
+         'Extra paths for header files (separated by : if more than 1)',
+         '', PathVariable.PathAccept))
 opts.Add(PathVariable('EXTRA_LIB_PATH',
-            'Extra paths for linking (separated by : if more than 1)',
-            '', PathVariable.PathAccept))
+         'Extra paths for linking (separated by : if more than 1)',
+         '', PathVariable.PathAccept))
 opts.Add(PathVariable('EXTRA_PATH',
-            'Extra paths for executables (separated by : if more than 1)',
-            '', PathVariable.PathAccept))
+         'Extra paths for executables (separated by : if more than 1)',
+         '', PathVariable.PathAccept))
 opts.Add(BoolVariable('IMPORT_PATHS',
-            'Import PATH, C_INCLUDE_PATH and LIBRARY_PATH/LD_LIBRARY_PATH environment variables',
-            False))
+         'Import PATH, C_INCLUDE_PATH and LIBRARY_PATH/LD_LIBRARY_PATH environment variables',
+         False))
 opts.Add(BoolVariable('IMPORT_ENV',
-            'Import full environment from calling shell',True))
+         'Import full environment from calling shell',True))
 opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
-opts.Add(BoolVariable('INCLUDE_PREFIX_PATHS',
-            'Add PREFIX/bin, PREFIX/include and PREFIX/lib to corresponding path lists',
-            True))
+opts.Add(BoolVariable('IMPORT_PREFIX',
+         'Use PREFIX/include and PREFIX/lib in search paths', True))
 
 opts.Add('NOSETESTS','Name of nosetests executable','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
@@ -82,10 +84,8 @@ opts.Add(BoolVariable('WITH_PROF',
             'Use the compiler flag -pg to include profiling info for gprof', False))
 opts.Add(BoolVariable('MEM_TEST','Test for memory leaks', False))
 opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
-
 # None of the code uses openmp yet.  Probably make this default True if we start using it.
 opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
-
 opts.Add(BoolVariable('USE_UNKNOWN_VARS',
             'Allow other parameters besides the ones listed here.',False))
 
@@ -544,12 +544,20 @@ def AddExtraPaths(env):
     # But still use the default /usr/local for installation
     if env['PREFIX'] == '':
         env['INSTALL_PREFIX'] = default_prefix
+        env['FINAL_PREFIX'] = default_prefix
     else:
-        if env['INCLUDE_PREFIX_PATHS']:
+        env['INSTALL_PREFIX'] = env['PREFIX']
+
+        # FINAL_PREFIX is designed for installations like that done by fink where it installs
+        # everything into a temporary directory, and then once it finished successfully, it
+        # copies the resulting files to a final location.
+        if env['FINAL_PREFIX'] == '':
+            env['FINAL_PREFIX'] = env['PREFIX']
+
+        if env['IMPORT_PREFIX']:
             AddPath(bin_paths, os.path.join(env['PREFIX'], 'bin'))
             AddPath(lib_paths, os.path.join(env['PREFIX'], 'lib'))
             AddPath(cpp_paths, os.path.join(env['PREFIX'], 'include'))
-        env['INSTALL_PREFIX'] = env['PREFIX']
     
     # Paths found in environment paths
     if env['IMPORT_PATHS'] and os.environ.has_key('PATH'):
