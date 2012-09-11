@@ -1,0 +1,167 @@
+
+# YAML configuration file for use with the executable galsim_yaml
+# Type:
+#   galsim_yaml demo4.yaml
+#
+# This configuration file is designed to be equivalent to the example script called demo4.py
+#
+#    Make a fits image cube using parameters from an input catalog
+#      - The number of images in the cube matches the number of rows in the catalog.
+#      - Each image size is computed automatically by GalSim based on the Nyquist size.
+#      - Only galaxies.  No stars.
+#      - PSF is Moffat
+#      - Each galaxy is bulge plus disk: deVaucouleurs + Exponential.
+#      - Parameters taken from the input catalog:
+#        - PSF beta
+#        - PSF fwhm
+#        - PSF e1
+#        - PSF e2
+#        - PSF trunc
+#        - Bulge half-light-radius
+#        - Bulge e1
+#        - Bulge e2
+#        - Bulge flux
+#        - Disc half-light-radius
+#        - Disc e1
+#        - Disc e2
+#        - Disc flux
+#        - Galaxy dx (two components have same center)
+#        - Galaxy dy
+#      - Applied shear is the same for each file
+#      - Noise is poisson using a nominal sky value of 1.e6
+
+# You can define variables to be used later using the & symbol here.
+# Later they will be used with the * symbol.
+# This can be useful since you can put things you want to change often near the top of the 
+# file so you don't have to scroll down to fine the right place to edit something each time 
+# you want to change it.
+# However, now that we've presented this option, so you can see how it works, we won't 
+# bother with it for out subsequent example config files.
+some_variables :
+    - &sky_level  1.e6                # ADU / arcsec^2
+    - &pixel_scale  1.0               # arcsec / pixel  (size units in input catalog are pixels)
+    - &gal_flux  1.e6                 # arbitrary choise, makes nice (not too) noisy images
+    - &gal_g1  -0.009                 #
+    - &gal_g2  0.011                  #
+    - &image_size  64                 # pixels
+
+# Define what kind of psf to use
+psf : 
+    # Each type of profile is specified by a type.  e.g. Moffat:
+    type : Moffat
+
+    # The various parameters are typically specified as well
+    beta : 3.5
+
+    fwhm : 
+        # These parameters do not need to be constant.  There are a number of ways to
+        # specify variables that might change from object to object.
+        # In this case, the parameter specification also has a "type".
+        # For now we only have InputCatalog, which means read the value from a catalog:
+        type : InputCatalog
+
+        # InputCatalog requires the extra value of which column to use in the catalog:
+        # Note: the first column is called 0, not 1, as per the usual python 
+        # 0-based indexing scheme.
+        col : 5
+
+    # You can also specify both of these on the same line using {}
+    trunc : { type : InputCatalog , col : 8 }
+
+    # The nesting goes as deep as it needs to
+    ellip :
+        type : E1E2 
+        e1 : 
+            type : InputCatalog 
+            col : 6
+        e2 : 
+            type : InputCatalog 
+            col : 7
+
+    # If you don't specify a parameter, and there is a reasonable default, then it 
+    # will be used instead.  If there is no reasonable default, you will get an error.
+    #flux : 1  # Unnecessary
+
+# Define the galaxy profile
+gal :
+    # A profile can be the sum of several components, each with its own type and parameters:
+    type : Sum
+
+    # Sum requires a field called items, which is a list of items (each designed with a -)
+    items :
+        - 
+            type : Exponential
+            half_light_radius : { type : InputCatalog , col : 9 }
+            ellip : 
+                type : E1E2 
+                e1 : { type : InputCatalog , col : 10 }  
+                e2 : { type : InputCatalog , col : 11 }
+            flux : 0.6
+        -
+            type : DeVaucouleurs
+            half_light_radius : { type : InputCatalog , col : 12 }
+            ellip : 
+                type : E1E2 
+                e1 : { type : InputCatalog , col : 13 }  
+                e2 : { type : InputCatalog , col : 14 }
+            flux : 0.4
+
+    # When a Sum object has a flux specified, the "flux" values of the components are 
+    # taken to be relative fluxes, and the full object's flux value sets the
+    # overall normalization.  If this is omitted, the overall flux is taken to be the
+    # sum of the component fluxes.
+    # Note: If you want to use a variable defined above, you use a *
+    flux : *gal_flux
+
+    # An object may have an ellip and a shear, each of which can be specified in terms
+    # of either E1E2 (distortion) or G1G2 (reduced shear).
+    # The only difference between the two is if there is also a rotation specified.
+    # The order of the various modifications are:
+    # - ellip
+    # - rotation
+    # - shear
+    # - shift
+    shear : 
+        type : G1G2 
+        g1 : *gal_g1
+        g2 : *gal_g2
+
+    shift : 
+        type : XY 
+        x : { type : InputCatalog , col : 15 } 
+        y : { type : InputCatalog , col : 16 }
+
+# Define some other information about the images 
+image :
+    pixel_scale : *pixel_scale
+    xsize : *image_size
+    ysize : *image_size
+
+    # Define what kind of noise to use
+    noise : 
+        # Since the default type is CCDNoise, we may omit it.
+        sky_level : *sky_level
+
+    # Define the initial random number seed
+    random_seed : 8241573
+
+# Define the input files -- in this case the catalog file to use.
+input :
+    # In this case, we just have a catalog to read in.
+    catalog :
+        dir : input
+        file_name : galsim_default_input.asc
+
+# Define the output format
+output :
+    # type = MultiFits means to use a multi-extension fits file
+    type : MultiFits
+
+    dir : output_yaml
+    file_name : multi.fits
+    
+    # You can specify how many extensions to write to the file with nimages, 
+    # but in this case, since we are using an input catalog, the default 
+    # value is to do the number of entries in the catalog.
+    #nimages = 100
+

@@ -147,6 +147,7 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
         scale = im.scale
         xMin = im.xMin
         yMin = im.yMin
+        # Note: numpy shape is y,x
         array_shape = (nimages, ny, nx)
         cube = numpy.array([[[]]])
         cube.resize(array_shape)

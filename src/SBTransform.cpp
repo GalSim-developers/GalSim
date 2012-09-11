@@ -7,8 +7,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -295,10 +295,10 @@ namespace galsim {
 
         // Figure out which function we need for kValue and kValueNoPhase
         if (std::abs(_absdet-1.) < sbp::kvalue_accuracy) {
-            xdbg<<"absdet = "<<_absdet*_fluxScaling<<" = 1, so use NoDet version.\n";
+            xdbg<<"absdet*fluxScaling = "<<_absdet<<" = 1, so use NoDet version.\n";
             _kValueNoPhase = &SBTransform::_kValueNoPhaseNoDet;
         } else {
-            xdbg<<"absdet = "<<_absdet*_fluxScaling<<" != 1, so use WithDet version.\n";
+            xdbg<<"absdet*fluxScaling = "<<_absdet<<" != 1, so use WithDet version.\n";
             _kValueNoPhase = &SBTransform::_kValueNoPhaseWithDet;
         }
         if (_cen.x == 0. && _cen.y == 0.) _kValue = _kValueNoPhase;

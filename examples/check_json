@@ -1,0 +1,59 @@
+#!/bin/bash
+
+if [ ! -d "output" ]; then
+    mkdir output
+fi
+if [ ! -d "output_json" ]; then
+    mkdir output_json
+fi
+
+/bin/rm -f output/*
+/bin/rm -f output_json/*
+
+time ./demo1.py || exit
+time galsim_json json/demo1.json || exit
+
+time ./demo2.py || exit
+time galsim_json json/demo2.json || exit
+
+time ./demo3.py || exit
+time galsim_json json/demo3.json || exit
+
+time ./demo4.py || exit
+time galsim_json json/demo4.json || exit
+
+time ./demo5.py || exit
+time galsim_json json/demo5.json || exit
+
+time ./demo6.py || exit
+time galsim_json json/demo6a.json json/demo6b.json || exit
+
+time ./demo7.py || exit
+time galsim_json json/demo7.json || exit
+
+time ./demo8.py || exit
+time galsim_json json/demo8a.json json/demo8b.json || exit
+
+echo 'Checking diffs: (No output means success)'
+
+# Don't check demo1, since it doesn't use a deterministic seed.
+# If you add an initial seed in both places, then you can uncomment 
+# the next line and it should work.
+#diff output/demo1.fits output_json/demo1.fits 
+
+diff output/demo2.fits output_json/demo2.fits 
+diff output/demo3.fits output_json/demo3.fits 
+diff output/demo3_epsf.fits output_json/demo3_epsf.fits 
+
+diff output/multi.fits output_json/multi.fits 
+
+diff output/g08_psf.fits output_json/g08_psf.fits
+diff output/g08_gal.fits output_json/g08_gal.fits
+
+diff output/psf_real.fits output_json/psf_real.fits
+diff output/cube_real.fits output_json/cube_real.fits 
+
+diff output/cube_phot.fits output_json/cube_phot.fits 
+
+diff output/bpd_single.fits output_json/bpd_single.fits 
+diff output/bpd_multi.fits output_json/bpd_multi.fits 

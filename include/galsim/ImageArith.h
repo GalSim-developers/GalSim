@@ -349,7 +349,7 @@ namespace galsim {
 
 
     //
-    // Image + Scalar
+    // Image - Scalar
     //
 
     template <typename T>

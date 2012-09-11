@@ -1,0 +1,21 @@
+# vim: set filetype=python :
+
+import os
+Import('env')
+
+install_subdir = 'bin'
+
+galsim_yaml = env.File('galsim_yaml')
+galsim_json = env.File('galsim_json')
+
+targets = [ galsim_yaml, galsim_json ]
+
+if 'install' in COMMAND_LINE_TARGETS:
+    RunInstall = env['_InstallProgram']
+    RunInstall(env, targets, install_subdir)
+
+if 'uninstall' in COMMAND_LINE_TARGETS:
+    RunUninstall = env['_UninstallProgram']
+    RunUninstall(env, targets, install_subdir)
+
+
