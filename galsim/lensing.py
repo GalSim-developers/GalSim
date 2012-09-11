@@ -33,9 +33,10 @@ class PowerSpectrum(object):
         they can be user-provided functions that take a single argument k and return the power at
         that k value.  They should be power P(k), not Delta^2(k) = k^2 P(k) / 2pi.
 
-        @param[in] E_power_function A function or other callable that accepts a 2D numpy grid of |k| and returns
-        the E-mode power spectrum of the same shape.  It should cope happily with k=0.  The function should return the power
-        spectrum desired in the E (gradient) mode of the image
+        @param[in] E_power_function A function or other callable that accepts a 2D numpy grid of 
+        |k| and returns the E-mode power spectrum of the same shape.  It should cope happily with 
+        k=0.  The function should return the power spectrum desired in the E (gradient) mode of 
+        the image
         @param[in] B_power_function A function or other callable that can take an array of k values
         and return a power.  It should cope happily with k=0.  The function should return the power
         spectrum desired in the B (curl) mode of the image
