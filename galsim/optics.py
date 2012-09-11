@@ -21,14 +21,14 @@ complex number. The OTF is the autocorrelation function of the wavefront.
 """
 
 
-def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_D=2., circular_pupil=True,
+def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circular_pupil=True,
                          obscuration=0.):
     """Generate a pupil plane, including a central obscuration such as caused by a secondary mirror.
 
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units.
-    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
-                           consistency).
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
@@ -38,7 +38,7 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_D=2., circular_
     wavefront across the pupil plane.  The array in_pupil is a vector of Bools used to specify
     where in the pupil plane described by rho, theta is illuminated.  See also optics.wavefront. 
     """
-    kmax_internal = dx * 2. * np.pi / lam_over_D # INTERNAL kmax in units of array grid spacing
+    kmax_internal = dx * 2. * np.pi / lam_over_diam # INTERNAL kmax in units of array grid spacing
     # Build kx, ky coords
     kx, ky = utilities.kxky(array_shape)
     # Then define unit disc rho and theta pupil coords for Zernike polynomials
@@ -59,15 +59,15 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_D=2., circular_
                                    (np.abs(ky) >= .5 * obscuration * kmax_internal))
     return rho, theta, in_pupil
 
-def wavefront(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
+def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """Return a complex, aberrated wavefront across a circular (default) or square pupil.
     
     Outputs a complex image (shape=array_shape) of a circular pupil wavefront of unit amplitude
-    that can be easily transformed to produce an optical PSF with lambda/D = lam_over_D on an
+    that can be easily transformed to produce an optical PSF with lambda/D = lam_over_diam on an
     output grid of spacing dx.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
+    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
     (kx, ky) = (0, 0) is the [0, 0] array element.
@@ -80,8 +80,8 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
-    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
-                           consistency).
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -98,7 +98,7 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     """
     # Define the pupil coordinates and non-zero regions based on input kwargs
     rho, theta, in_pupil = generate_pupil_plane(array_shape=array_shape, dx=dx,
-                                                lam_over_D=lam_over_D,
+                                                lam_over_diam=lam_over_diam,
                                                 circular_pupil=circular_pupil,
                                                 obscuration=obscuration)
     pi = np.pi # minor but saves Python checking the entire np. namespace every time I need pi    
@@ -121,15 +121,16 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     wf[in_pupil] *= np.exp(2j * pi * spher * (6. * rho[in_pupil]**4 - 6. * rho[in_pupil]**2 + 1.))
     return wf
 
-def wavefront_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
-                    coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
+def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
+                    astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+                    circular_pupil=True, obscuration=0.):
     """@brief Return wavefront as a (real, imag) tuple of ImageViewD objects rather than complex
     numpy array.
 
     Outputs a circular pupil wavefront of unit amplitude that can be easily transformed to produce
-    an optical PSF with lambda/D = lam_over_D on an output grid of spacing dx.
+    an optical PSF with lambda/diam = lam_over_diam on an output grid of spacing dx.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
+    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
     (kx, ky) = (0, 0) is the [0, 0] array element.
@@ -142,8 +143,8 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., as
     ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
-    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
-                           consistency).
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -156,13 +157,13 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., as
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    array = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
+    array = wavefront(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
                       astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
                       circular_pupil=circular_pupil, obscuration=obscuration)
     return (galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64))),
             galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64))))
 
-def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0., coma1=0.,
+def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., spher=0., circular_pupil=True, obscuration=0., flux=1.):
     """@brief Return numpy array containing circular (default) or square pupil PSF with low-order
     aberrations.
@@ -170,7 +171,7 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     The PSF is centred on the array[array_shape[0] / 2, array_shape[1] / 2] pixel by default, and
     uses surface brightness rather than flux units for pixel values, matching SBProfile.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
+    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
     Ouput numpy array is C-contiguous.
 
@@ -178,8 +179,8 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
-    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
-                           consistency).
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -193,7 +194,7 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
                            dimension, [0., 1.)
     @param flux            total flux of the profile [default flux=1.]
     """
-    wf = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
+    wf = wavefront(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
                    astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
                    circular_pupil=circular_pupil, obscuration=obscuration)
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
@@ -201,7 +202,7 @@ def psf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     im = utilities.roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
     return im * (flux / (im.sum() * dx**2))
 
-def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
+def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0., flux=1.):
     """@brief Return circular (default) or square pupil PSF with low-order aberrations as an
     ImageViewD.
@@ -209,14 +210,14 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     The PSF is centred on the array[array_shape[0] / 2, array_shape[1] / 2] pixel by default, and
     uses surface brightness rather than flux units for pixel values, matching SBProfile.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
+    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
     Parameters
     ----------
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
-    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
-                           consistency).
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -230,12 +231,12 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
                            dimension, [0., 1.)
     @param flux            total flux of the profile [default flux=1.]
     """
-    array = psf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
+    array = psf(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
                 circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
     return galsim.ImageViewD(array.astype(np.float64))
 
-def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0., coma1=0.,
+def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return the complex OTF of a circular (default) or square pupil with low-order
     aberrations as a numpy array.
@@ -243,7 +244,7 @@ def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     OTF array element ordering follows the DFT standard of kxky(array_shape), and has
     otf[0, 0] = 1+0j by default.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
+    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
     Output complex numpy array is C-contiguous.
     
@@ -251,8 +252,8 @@ def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
-    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
-                           consistency).
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -265,7 +266,7 @@ def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    wf = wavefront(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
+    wf = wavefront(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
                    astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
                    circular_pupil=circular_pupil, obscuration=obscuration)
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
@@ -273,7 +274,7 @@ def otf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     # Make unit flux before returning
     return np.ascontiguousarray(otf) / otf[0, 0].real
 
-def otf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
+def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return the complex OTF of a circular (default) or square pupil with low-order
     aberrations as a (real, imag) tuple of ImageViewD objects rather than a complex numpy array.
@@ -281,14 +282,14 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     OTF array element ordering follows the DFT standard of kxky(array_shape), and has
     otf[0, 0] = 1+0j by default.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
+    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
     Parameters
     ----------
     @param array_shape     the Numpy array shape desired for array views of ImageViewD tuple.
     @param dx              grid spacing of PSF in real space units
-    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
-                           consistency).
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -301,13 +302,13 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    array = otf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
+    array = otf(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
                 circular_pupil=circular_pupil, obscuration=obscuration)
     return (galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64))),
             galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64))))
 
-def mtf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0., coma1=0.,
+def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return numpy array containing the MTF of a circular (default) or square pupil with
     low-order aberrations.
@@ -315,7 +316,7 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     MTF array element ordering follows the DFT standard of kxky(array_shape), and has
     mtf[0, 0] = 1 by default.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
+    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
     Output double numpy array is C-contiguous.
 
@@ -323,8 +324,8 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
-    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
-                           consistency).
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -337,11 +338,11 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    return np.abs(otf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
+    return np.abs(otf(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
                       astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
                       obscuration=obscuration, circular_pupil=circular_pupil))
 
-def mtf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
+def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return the MTF of a circular (default) or square pupil with low-order aberrations as
     an ImageViewD.
@@ -349,14 +350,14 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     MTF array element ordering follows the DFT standard of kxky(array_shape), and has
     mtf[0, 0] = 1 by default.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
+    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
     Parameters
     ----------
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
-    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
-                           consistency).
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -369,12 +370,12 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    array = mtf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
+    array = mtf(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
                 circular_pupil=circular_pupil, obscuration=obscuration)
     return galsim.ImageViewD(array.astype(np.float64))
 
-def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0., coma1=0.,
+def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return numpy array containing the PTF [radians] of a circular (default) or square
     pupil with low-order aberrations.
@@ -382,7 +383,7 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     PTF array element ordering follows the DFT standard of kxky(array_shape), and has
     ptf[0, 0] = 0. by default.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
+    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
     Output double numpy array is C-contiguous.
 
@@ -390,8 +391,8 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
-    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
-                           consistency).
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -407,16 +408,17 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., ast
     kx, ky = utilities.kxky(array_shape)
     k2 = (kx**2 + ky**2)
     ptf = np.zeros(array_shape)
-    kmax_internal = dx * 2. * np.pi / lam_over_D # INTERNAL kmax in units of array grid spacing
+    kmax_internal = dx * 2. * np.pi / lam_over_diam # INTERNAL kmax in units of array grid spacing
     # Try to handle where both real and imag tend to zero...
-    ptf[k2 < kmax_internal**2] = np.angle(otf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D,
+    ptf[k2 < kmax_internal**2] = np.angle(otf(array_shape=array_shape, dx=dx, 
+                                              lam_over_diam=lam_over_diam,
                                               defocus=defocus, astig1=astig1, astig2=astig2,
                                               coma1=coma1, coma2=coma2, spher=spher,
                                               circular_pupil=circular_pupil,
                                               obscuration=obscuration)[k2 < kmax_internal**2])
     return ptf
 
-def ptf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0., astig2=0.,
+def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
     """@brief Return the PTF [radians] of a circular (default) or square pupil with low-order
     aberrations as an ImageViewD.
@@ -424,14 +426,14 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     PTF array element ordering follows the DFT standard of kxky(array_shape), and has
     ptf[0, 0] = 0. by default.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_D >= 2. * dx.
+    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
     Parameters
     ----------
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
-    @param lam_over_D      lambda / D in the physical units adopted for dx (user responsible for 
-                           consistency).
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
     @param astig1          first component of astigmatism (like e1) in units of incident light
                            wavelength.
@@ -444,7 +446,7 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_D=2., defocus=0., astig1=0
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    array = ptf(array_shape=array_shape, dx=dx, lam_over_D=lam_over_D, defocus=defocus,
+    array = ptf(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
                 astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
                 circular_pupil=circular_pupil, obscuration=obscuration)
     return galsim.ImageViewD(array.astype(np.float64))

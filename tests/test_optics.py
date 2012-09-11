@@ -57,7 +57,7 @@ def test_simple_wavefront():
     wf_true = np.zeros(kmag.shape)
     wf_true[in_pupil] = 1.
     # Compare
-    wf = galsim.optics.wavefront(array_shape=testshape, dx=dx_test, lam_over_D=lod_test)
+    wf = galsim.optics.wavefront(array_shape=testshape, dx=dx_test, lam_over_diam=lod_test)
     np.testing.assert_array_almost_equal(wf, wf_true, decimal=decimal)
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -78,7 +78,7 @@ def test_simple_mtf():
     mtf_true[in_pupil] = (np.arccos(kmag[in_pupil]) - kmag[in_pupil] *
                           np.sqrt(1. - kmag[in_pupil]**2)) * 2. / np.pi
     # Compare
-    mtf = galsim.optics.mtf(array_shape=testshape, dx=dx_test, lam_over_D=lod_test)
+    mtf = galsim.optics.mtf(array_shape=testshape, dx=dx_test, lam_over_diam=lod_test)
     np.testing.assert_array_almost_equal(mtf, mtf_true, decimal=decimal_dft)
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -107,11 +107,11 @@ def test_consistency_psf_mtf():
     dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
     lod_test = 8. # }
     kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code 
-    psf = galsim.optics.psf(array_shape=testshape, dx=dx_test, lam_over_D=lod_test)
+    psf = galsim.optics.psf(array_shape=testshape, dx=dx_test, lam_over_diam=lod_test)
     psf *= dx_test**2 # put the PSF into flux units rather than SB for comparison
     mtf_test = np.abs(np.fft.fft2(psf))
     # Compare
-    mtf = galsim.optics.mtf(array_shape=testshape, dx=dx_test, lam_over_D=lod_test)
+    mtf = galsim.optics.mtf(array_shape=testshape, dx=dx_test, lam_over_diam=lod_test)
     np.testing.assert_array_almost_equal(mtf, mtf_test, decimal=decimal_dft)
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -182,7 +182,7 @@ def test_OpticalPSF_flux():
     nlook = 512         # Need a bit bigger image than below to get enough flux
     image = galsim.ImageF(nlook,nlook)
     for lod in lods:
-        optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1)
+        optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1)
         optics_array = optics_test.draw(dx=1.,image=image).array 
         np.testing.assert_almost_equal(optics_array.sum(), 1., 2, 
                 err_msg="Unaberrated Optical flux not quite unity.")
@@ -198,8 +198,8 @@ def test_OpticalPSF_vs_Airy():
     nlook = 100
     image = galsim.ImageF(nlook,nlook)
     for lod in lods:
-        airy_test = galsim.Airy(lam_over_D=lod, obscuration=0., flux=1.)
-        optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1) #pad same as an Airy, natch!
+        airy_test = galsim.Airy(lam_over_diam=lod, obscuration=0., flux=1.)
+        optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1) #pad same as an Airy, natch!
         airy_array = airy_test.draw(dx=1.,image=image).array
         optics_array = optics_test.draw(dx=1.,image=image).array 
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
@@ -217,8 +217,8 @@ def test_OpticalPSF_vs_Airy_with_obs():
     nlook = 100          # size of array region at the centre of each image to compare
     image = galsim.ImageF(nlook,nlook)
     for obs in obses:
-        airy_test = galsim.Airy(lam_over_D=lod, obscuration=obs, flux=1.)
-        optics_test = galsim.OpticalPSF(lam_over_D=lod, pad_factor=1, obscuration=obs)
+        airy_test = galsim.Airy(lam_over_diam=lod, obscuration=obs, flux=1.)
+        optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1, obscuration=obs)
         airy_array = airy_test.draw(dx=1.,image=image).array
         optics_array = optics_test.draw(dx=1.,image=image).array 
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 

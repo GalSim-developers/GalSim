@@ -1,10 +1,10 @@
 
 # YAML configuration file for use with the executable galsim_yaml
 # Type:
-#   galsim_yaml BD2.yaml
+#   galsim_yaml demo2.yaml
 #
-# This configuration file is designed to be equivalent to the example script called
-# Script2 in BasicDemo.py.
+# This configuration file is designed to be equivalent to the example script demo2.py.
+#
 # It's a little bit more sophisticated than script 1, using profiles other than Gaussians,
 # and adding an applied shear.  It also uses Poisson noise.
 #
@@ -39,10 +39,13 @@ image :
     pixel_scale : 0.2  # arcsec / pixel
 
     noise : 
-        type : Poisson
-        # You may add the noise appropriate for a particular sky level even though the
-        # final image (in this case) has a mean background of zero (i.e. it is 
-        # sky subtracted).
+        # CCDNoise models how noise normally happens on CCD images -- each pixel
+        # has Poisson noise according to the number of photons hitting it.
+        type : CCDNoise
+        # Most of the noise in the image is normally from the sky flux, rather than each
+        # object's flux, so you need to specify what the sky level should be.
+        # Note: the final image will be "sky subtracted", so the mean background level
+        # will be 0.  This just specifies the sky level to use for the noise.
         sky_level : 2.5e4  # ADU / arcsec^2
 
     # If you want the random values to be deterministic, you can provide an initial seed.

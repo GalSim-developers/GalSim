@@ -13,11 +13,11 @@ import yaml
 
 def MergeConfig(config1, config2, logger=None):
     """
-    Merge config2 into config1 sucth that it has all the information from either config1 or 
+    Merge config2 into config1 such that it has all the information from either config1 or 
     config2 including places where both input dicts have some of a field defined.
     e.g. config1 has image.pixel_scale, and config2 has image.noise.
             Then the returned dict will have both.
-    For real comflicts (the same value in both cases), config1's value takes precedence
+    For real conflicts (the same value in both cases), config1's value takes precedence
     """
     for (key, value) in config2.items():
         if not key in config1:
@@ -43,6 +43,9 @@ def main(argv):
     # TODO: Should have a nice way of specifying a verbosity level...
     # Then we can just pass that verbosity into the logger.
     # Can also have the logging go to a file, etc.
+    #  -- Note: should use optparse rather than argparse, since we want it to work for 
+    #           python 2.6, and we probably don't need any of the extra features that 
+    #           argparse provides.
     # But for now, just do a basic setup.
     logging.basicConfig(
         format="%(message)s",
@@ -69,6 +72,7 @@ def main(argv):
     #   all_cong[0] + allconfig[2]
     #   all_cong[0] + allconfig[3]
     #   ...
+    # See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.
 
     if len(all_config) == 1:
         # If we only have 1, prepend an empty "base_config"
