@@ -321,12 +321,9 @@ class PowerSpectrumRealizer(object):
         #Internal function to generate the result of a power function evaluated on a grid,
         #taking into account the symmetries.
         power_array = np.zeros((self.nx, self.ny/2+1))
-        kx = self.kx
-        ky = self.ky
-        k  = self.k
-        P_k = power_function(k)
-        power_array[ kx, ky] = P_k
-        power_array[-kx, ky] = P_k
+        P_k = power_function(self.k)
+        power_array[ self.kx, self.ky] = P_k
+        power_array[-self.kx, self.ky] = P_k
         return power_array
     
     def _generate_spin_weightings(self):
