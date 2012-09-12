@@ -53,7 +53,7 @@ if 'install' in COMMAND_LINE_TARGETS:
     env.Alias(target='install', source=installed_py)
 
     check = env.CheckPyPrefix(target='#/check', source=None)
-    Depends(check,installed_py)
+    Depends(check,[installed_py, '#pysrc', '#bin', python_install_dir])
     AlwaysBuild(check)
     env.Alias(target='install', source=check)
 
