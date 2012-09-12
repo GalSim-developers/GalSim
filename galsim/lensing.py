@@ -19,12 +19,24 @@ class PowerSpectrum(object):
 
     It is important to note that the power spectrum used to initialize the PowerSpectrum object
     should be in the same units as any parameters to the getShear() method that define the locations
-    at which we want to get shears.  For example, when using a cosmological shear power spectrum
-    defined with k (or ell) in inverse radians, the grid spacing or point locations should be in
-    radians.  If you want to instead give it pixel locations, then the units of k for the power
-    spectrum function are assumed to be in inverse pixels.
+    at which we want to get shears.  When we actually draw images, there is a natural scale that
+    defines the pitch of the image (dx), which is typically taken to be arcsec.  This definition of
+    a specific length scale means that we should also use the same units (arcsec) for the positions
+    at which we want our galaxies to be located when we draw shears from a power spectrum, and
+    likewise the values of k (wavenumber) going into the power spectrum function should be inverse
+    arcsec.  To give a specific example, if we want to draw Gaussians on an image with dx=0.2"
+    (i.e., the argument dx to the draw method will be =0.2), and if we want a grid of galaxies
+    spaced 40 pixels apart, then when we call the getShear method of the PowerSpectrum class, we
+    should use grid_spacing=8 [arcsec, =(40 pixels)*(0.2 arcsec/pixel)].
+
+    If the power spectrum used for this calculation comes from a standard cosmology calculator that
+    uses units of inverse radians for the wavenumber, then it is important to convert such that the
+    units are consistent with our choice of inverse arcsec.  If there is sufficient interest from
+    users for the code to have a "unit" class that handles conversions between the various units
+    that one might use, then future versions of GalSim might be updated to include this
+    functionality.
     """
-    def __init__(self, E_power_function=None, B_power_function=None, units=None):
+    def __init__(self, E_power_function=None, B_power_function=None, units="arcsec"):
         """@brief Create a PowerSpectrum object corresponding to specific P(k) for E, B modes
 
         When creating a PowerSpectrum instance, the E and B mode power spectra can optionally be set
@@ -41,14 +53,15 @@ class PowerSpectrum(object):
         and return a power.  It should cope happily with k=0.  The function should return the power
         spectrum desired in the B (curl) mode of the image
         @param[in] units A string specifying the units for the power spectrum.  This string is not
-        used in any calculations, but is saved for later information.
+        used in any calculations, but is saved for later information.  Currently we require a value
+        of "arcsec", so the user must do any necessary conversions to ensure that this is the case.
         """
         self.p_E = E_power_function
         self.p_B = B_power_function
-        if units is not None:
-            self.units = units
+        if units is not "arcsec":
+            raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
 
-    def set_power_functions(self, E_power_function=None, B_power_function=None, units=None):
+    def set_power_functions(self, E_power_function=None, B_power_function=None, units="arcsec"):
         """@brief Set / change the functions that compute the E and B mode power spectra.
 
         @param[in] E_power_function A function or other callable that accepts a 2D numpy grid of |k|
@@ -58,12 +71,13 @@ class PowerSpectrum(object):
         and returns the B-mode power spectrum of the same shape.  It should cope happily with k=0.
         Set to None for there to be no B-mode power
         @param[in] units A string specifying the units for the power spectrum.  This string is not
-        used in any calculations, but is saved for later information.
+        used in any calculations, but is saved for later information.  Currently we require a value
+        of "arcsec", so the user must do any necessary conversions to ensure that this is the case.
         """
         self.p_E = E_power_function
         self.p_B = B_power_function
-        if units is not None:
-            self.units = units
+        if units is not "arcsec":
+            raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
 
     def getShear(self, x=None, y=None, grid_spacing=None, grid_nx=None, gaussian_deviate=None,
                  seed=None, interpolantxy=None):
@@ -92,11 +106,12 @@ class PowerSpectrum(object):
         and the fact that it's a discrete FFT.  If you strongly dislike our convention and would
         like support for an alternate one, please indicate this on our GitHub issues page.
 
-        Also note that the convention for axis orientation
-        differs from that for the GREAT10 challenge, so when using codes that deal with GREAT10
-        challenge outputs, the sign of our g2 shear component must be flipped.
+        Also note that the convention for axis orientation differs from that for the GREAT10
+        challenge, so when using codes that deal with GREAT10 challenge outputs, the sign of our g2
+        shear component must be flipped.
 
-        An example of how to use getShear is as follows, for the gridded case:
+        An example of how to use getShear is as follows, for the gridded case, where the choice of
+        grid_spacing indicates that the grid points are spaced by 1":
         @code
         my_ps = galsim.lensing.PowerSpectrum(galsim.lensing.pk2)
         g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
@@ -131,7 +146,9 @@ class PowerSpectrum(object):
         @param[in] x List of x positions (it is up to the user to check that the units are
         consistent with those in the P(k) function, just as for the y and grid_spacing keywords)
         @param[in] y List of y positions
-        @param[in] grid_spacing Spacing for an evenly spaced grid of points
+        @param[in] grid_spacing Spacing for an evenly spaced grid of points, in arcsec for
+        consistency with the natural length scale of images created using the draw or drawShoot
+        methods
         @param[in] grid_nx Number of grid points in the x dimension
         @param[in] gaussian_deviate (Optional) A galsim.GaussianDeviate object for drawing the
         random numbers
