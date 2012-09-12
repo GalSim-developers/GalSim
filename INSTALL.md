@@ -7,7 +7,7 @@ Table of Contents:
 
 1. Software required before building GalSim
 
-2. Installing the galsim Python package
+2. Installing the GalSim Python package
 
 3. Running tests and installing example executables
 
@@ -16,7 +16,7 @@ Table of Contents:
 5. More SCons options
 
 
-#1. Software required before building GalSim
+# 1. Software required before building GalSim
 ***
 
 i) Python (2.6 or 2.7 series), with some additional modules installed
@@ -37,17 +37,17 @@ already have a compatible version, type
 at the terminal prompt. If you get a "Command not found" error, or the reported
 version is not 2.6.X or 2.7.X, you will need to install 2.6 or 2.7 series 
 Python. In this case you should read the "Getting Python and required modules" 
-Section below.
+section below.
 
 It may be that there is or soon will be more than one version of Python 
 installed on your operating system, in which case please see the "Making sure
 you are using the right Python" Section below.
 
-###Getting Python and required modules
+### Getting Python and required modules
 
 For a list of places to download Python, see http://www.python.org/getit/.
 
-The galsim package also requires
+The GalSim package also requires
 
 * the numerical Python module NumPy (http://numpy.scipy.org)
 
@@ -83,14 +83,14 @@ and with root/admin privileges simply type
     easy_install pyfits
     easy_install pyyaml
 
-at prompt.  If not using an admin account, prefix the commands above with `sudo`
-and enter your admin password when prompted. The required modules should then be
-installed.
+at the prompt.  If not using an admin account, prefix the commands above with 
+`sudo` and enter your admin password when prompted. The required modules should
+then be installed.
 
 See http://packages.python.org/distribute/easy_install.html#using-easy-install
 for more details about the extremely useful `easy_install` feature.
 
-###Third party-maintained Python packages
+### Third party-maintained Python packages
 
 There are a number of third party-maintained packages which bundle Python with
 many of the numerical and scientific libraries that are commonly used, and
@@ -103,10 +103,10 @@ http://enthought.com/products/edudownload.php for the academic download
 instructions). Other re-packaged Python downloads can be found at
 http://www.python.org/getit/.
 
-###Making sure you are using the right Python
+### Making sure you are using the right Python
 
 Some users will find they have a few versions of Python around their operating
-system (determined, for example, using "locate python" at prompt). A common
+system (determined, for example, using "locate python" at the prompt). A common
 way this will happen if there is already an older build (e.g. Python 2.4.X)
 being used by the operating system and then you install a newer version from
 one of the sources described above.
@@ -122,36 +122,12 @@ executable by, for example, typing
 
     which python
 
-at prompt. This will tell you the location of the executable, something like
+at the prompt. This will tell you the location of the executable, something like
     /path/to/executable/bin/python
 
 If this is not the Python you want, please edit your startup scripts (e.g.
 .profile or .bashrc), and be sure to specify where your desired Python version
 resides when installing the Boost C++ libraries (see Section 1.v).
-
-###A final check: Shared libraries
-
-Before building and installing the software below, please do make sure that
-Python is built with shared libraries. On some systems, the default is *not*
-to build Python with shared libraries, which will result in mysterious issues
-when trying to compile GalSim (apparent numpy-related failures). In the few
-cases where this issue was identified, Python had been compiled from source
-directly; developers who used Python from pre-packaged third party distributions
-did not tend to encounter this problem.
-
-To check, you can look for the libraries in
-
-    /path/to/executable/lib/libpython*.dylib [if you are using a Mac]
-
-or
-
-    /path/to/executable/lib/libpython*.so [on Linux]
-
-If the libraries are not there, you may need to rebuild Python with shared
-libraries using --enable-shared. Note that if you discover this after
-installing all the dependencies below, then you will have to rebuild the Python-
-related dependencies after rebuilding Python -- so it is better to check
-beforehand.
 
 See Section 4 of this document for some suggestions about getting Python, Boost
 and all the other dependencies all working well together on your specific
@@ -168,13 +144,6 @@ if it is installed, and if so which version, by typing
 
     scons --version
 
-SCons itself is written in Python, and running "scons" invokes a Python
-interpreter. GalSim will be configured to build against the same Python that
-is being used to run SCons.  Making sure that matches the Python you would like
-to use can help you avoid a lot of problems later on. Many of the pre-packaged
-Python distributions (e.g. EPD) also come with SCons, so this can be a good way
-to ensure that SCons and GalSim use the same underlying Python distribution.
-
 See Section 4 for some more suggestions about installing this on your platform.
 
 
@@ -182,8 +151,9 @@ iii) FFTW (http://www.fftw.org)
 -------------------------------
 
 These Fast Fourier Transform libraries must be installed as GalSim will link
-to them during the build; see Section 4 for some suggestions about installing
-this on your platform.
+to them during the build. We require version 3 (or greater presumably), which
+is often distributed as fftw3.  See Section 4 for some suggestions about 
+installing this on your platform.
 
 
 iv) TMV (http://code.google.com/p/tmv-cpp/) (version >= 0.71 required)
@@ -208,7 +178,7 @@ v) Boost C++ (http://www.boost.org)
 GalSim makes use of some of the Boost C++ libraries, and these parts of Boost
 must be installed. It is particularly important that your installed Boost
 library links to the same version of Python which which you will be using
-galsim and on which you have installed NumPy and PyFITS (see Section ii, above).
+GalSim and on which you have installed NumPy and PyFITS (see Section ii, above).
 Boost can be downloaded from the above website, and must be installed per the
 (rather limited) instructions there, which essentially amount to using a command
 
@@ -227,8 +197,8 @@ followed by
 The `link=shared` is necessary to ensure that they are built as shared 
 libraries; this is automatic on some platforms, but not all.
 
-Note: if you do not want to install everything related to boost (which takes a
-while), you can restrict to boost Python and math by using `--with-python`
+Note: if you do not want to install everything related to Boost (which takes a
+while), you can restrict to Boost Python and math by using `--with-python`
 `--with-math` on the `./b2` commands.  Currently we are only using Boost Python,
 but there may be parts of the math library we want to use so installing these
 two will likely be sufficient for the forseeable future.
@@ -253,16 +223,16 @@ options to the ./bootstrap.sh installation script (defaults in `[]` brackets):
 * `--with-python=PYTHON` specify the Python executable [python]
 
 * `--with-python-root=DIR` specify the root of the Python installation
-                            [automatically detected, but some users have found
-                            they have to force it to use a specific one because
-                            it detected the wrong one]
+                           [automatically detected, but some users have found
+                           they have to force it to use a specific one because
+                           it detected the wrong one]
 
 
-# 2. Installing the galsim Python package
+# 2. Installing the GalSim Python package
 ***
 
 Once you have installed all the dependencies described above, you are ready to
-build GalSim. From the GalSim base directory (in which this INSTALL file is
+build GalSim. From the GalSim base directory (in which this INSTALL.md file is
 found) type
 
     scons
@@ -286,19 +256,19 @@ installing TMV, i.e. The TMV library and include files are installed in
 `<tmv-dir>/lib` and `<tmv-dir>/include`. Some important options that you may 
 need to set are:
 
-* `TMV_DIR`: Explicitly give the tmv prefix
+* `TMV_DIR`: Explicitly give the TMV prefix
 
-* `FFTW_DIR`: Explicitly give the fftw3 prefix
+* `FFTW_DIR`: Explicitly give the FFTW prefix
 
-* `BOOST_DIR`: Explicitly give the boost prefix
+* `BOOST_DIR`: Explicitly give the Boost prefix
 
 * `EXTRA_LIBS`: Additional libraries to send to the linker
 
 * `EXTRA_INCLUDE_PATH`: Extra paths for header files (separated by : if more
-                       than 1)
+                        than 1)
 
 * `EXTRA_FLAGS`: Extra flags to send to the compiler other than what is
-               automatically used. (e.g. -m64 to force 64 bit compilation)
+                 automatically used. (e.g. -m64 to force 64 bit compilation)
     
 Again, you can see the full list of options using `scons -h`.
 
@@ -315,7 +285,7 @@ parameter and return to the default value, it can be easier to just delete the
 line from this file, rather than explicitly set it back to the default value.
 
 SCons caches the results of the various checks it does for the required
-external libraries (tmv, boost, etc.). This is usually very helpful, since
+external libraries (TMV, Boost, etc.). This is usually very helpful, since
 they do not generally change, so it makes later builds much faster.  However,
 sometimes (rarely) SCons can get confused and not realized that things on your
 system have changed, which might cause problems for you. You can delete
@@ -408,7 +378,7 @@ can be considered a parallel tutorial for learning the config file usage of
 GalSim.
 
 
-#4. Platform-specific notes
+# 4. Platform-specific notes
 ***
 
 i) Linux
@@ -425,50 +395,58 @@ the instructions of Section 1.v), above.
 
 ii) Mac OSX
 -----------
-a) Use of Fink -- the `fink` (http://www.finkproject.org) package management
-software is popular with Mac users. Once it is installed, all of the library
-dependencies of GalSim can be added with the following commands:
+a) Use of Fink -- the `fink` (http://www.finkproject.org) package management 
+software is popular with Mac users.  Once it is installed, you can get either
+most or all of the prerequisites using it, depending on whether you want
+to use GalSim with the fink version of python (`/sw/bin/python`) or the system 
+python (`/usr/bin/python`) or something else still.
 
-    fink install scons
-    fink install fftw3
-    fink install tmv0
-    fink install boost1.46.1.cmake
-(Python 2.6 should already be in `/usr/bin/python` but fink can also be asked to
-install a version into its `/sw/bin` directory.)
+If you are happy with running GalSim using the fink version of python 2.7, you 
+can install everything with the following commands:
 
-However, there is a slight caveat regarding the use of fink-installed Boost C++
-and the Enthought Python Distribution or other third party-maintained Python
-distributions. These are not necessarily automatically detected as the
-installed version of Python when fink installs the Boost C++ library.
+    fink install scons fftw3 tmv0 python27 numpy-py27 pyfits-py27 yaml-py27 \
+    boost1.35-python27
+    scons PYTHON=/sw/bin/python2.7 TMV_DIR=/sw 
+    scons install
 
-The solution is to install Boost C++ manually. This can be done by following the
-instructions of Section 1.v), above.
+(assuming your fink installation is in /sw.)
 
-You may still need to install NumPy and PyFITS manually, e.g. using
-easy_install, with your chosen Python. This is because the fink of these
-Python modules install and use a fink Python build in `/sw/bin/python2.7` (or
-similar), which may not be your desired version. Of course, if you have setup
-your default Python to be the fink/Macports installed version, using these
-package managers to install NumPy and PyFITS will be fine.
+To run the unit tests, you will also need nosetests, which you can also get 
+from fink:
+
+    fink install nose-py27
+    scons tests NOSETESTS=/sw/bin/nosetests
+
+If you want to use the system python, or some other version, then the fink 
+python installations will not work.  You will need to manually install
+numpy, pyFits, pyYaml and nose, for example using easy_install, with your 
+chosen Python. 
+
+For the system python, you can use fink for Boost, but you will want a 
+different package than above:
+
+    fink install scons fftw3 tmv0 boost1.46.1.cmake
+    scons TMV_DIR=/sw
+
+For other python versions, the fink-installed Boost usually will not work,
+so you can only use fink for SCons, FFTW and TMV.  So you will probably need
+to install Boost manually.  This can be done by following the instructions of 
+Section 1.v), above.
 
 b) Macports -- this is another popular Mac package management project
 (http://www.macports.org/) with similar functionality to fink, although TMV
 is not supported but can be easily installed by following the instructions
 in Section 1.iv).
 
-Note that when using MacPorts to install boost, you may need to explicitly
+Note that when using MacPorts to install Boost, you may need to explicitly
 indicate Boost.Python, for example
 
     sudo port install boost +python27
 
-You may still need to install NumPy and PyFITS manually, e.g. using
-easy_install, with your chosen Python. This is because when fink installs these
-Python modules, it use a fink Python built in /sw/bin/python2.7 (or similar),
-which may not be your desired version. Of course, if you have setup your
-default Python to be the fink or Macports installed version, using these package
-managers to install NumPy and PyFITS will be fine.
+As with fink, you may still need to install NumPy and PyFITS manually, e.g.
+using easy_install, with your chosen Python.
 
-#5. More SCons options
+# 5. More SCons options
 ***
 
 Here is a fairly complete list of the options you can pass to SCons to control
@@ -489,38 +467,41 @@ You can list these options from the command line with
 * `CXX` (g++) specifies which C++ compiler to use.
 
 * `FLAGS` ('') specifies the basic flags to pass to the compiler.  The default 
-    behavior is to automatically choose good flags to use according to which 
-    kind of compiler you are using. This option overrides that and lets you 
-    specify exactly what flags to use.
+   behavior is to automatically choose good flags to use according to which 
+   kind of compiler you are using. This option overrides that and lets you 
+   specify exactly what flags to use.
 
 * `EXTRA_FLAGS` ('') specifies some extra flags that you want to use in addition
-    to the defaults that SCons determines on its own. Unlike the above option, 
-    this do not override the defaults, it just adds to them.
+   to the defaults that SCons determines on its own. Unlike the above option, 
+   this do not override the defaults, it just adds to them.
 
 * `DEBUG` (True) specifies whether to keep the debugging assert statements in
-    the compiled library code. They are not much of a performance hit, so it is
-    generally worth keeping them in, but if you need to squeeze out every last 
-    bit of performance, you can set this to False.
+   the compiled library code. They are not much of a performance hit, so it is
+   generally worth keeping them in, but if you need to squeeze out every last 
+   bit of performance, you can set this to False.
 
 * `WARN` (False) specifies whether to add warning compiler flags such as 
-    `-Wall`.  Developers should set this to True and fix everything that comes 
-    up as a warning (on both `g++` and `icpc`).  However, end users can leave
-    it as False in case their compiler is a stickler for something that did not
-    get caught in development.  TODO: Move this prescription that developers 
-    should set it to True somewhere else. Maybe in the credo.txt file?
+   `-Wall`.  Developers should set this to True and fix everything that comes 
+   up as a warning (on both `g++` and `icpc`).  However, end users can leave
+   it as False in case their compiler is a stickler for something that did not
+   get caught in development.  TODO: Move this prescription that developers 
+   should set it to True somewhere else. Maybe in the credo.txt file?
 
-* `WITH_OPENMP` (False) specifies whether to use OpenMP to parallelize some 
-    parts of the code. (Note: We do not actually use OpenMP currently, so this
-    does not do anything.)
+* `PYTHON` (/usr/bin/env python) specifies which version of python you are 
+   planning to use GalSim with.  If you choose not to use the default here, 
+   then you need to remember to use the correct python version 
 
 ### Flags about where to install the library and modules:
 
 * `PREFIX` (/usr/local) specifies where to install the library when running 
-    `scons install`.
+   `scons install`.
 
 * `PYPREFIX` ([your python dir]/site-packages) specifies where to install the
-    Python modules when running `scons install`.
+   Python modules when running `scons install`.
 
+* `FINAL_PREFIX` (`PREFIX`) specifies the final installation prefix if different
+   from PREFIX.  (This is only needed for things like fink, where they install 
+   into a staging area first before copying over to the final location.)
 
 ### Flags that specify where to look for external libraries:
 
@@ -572,12 +553,25 @@ You can list these options from the command line with
 * `EXTRA_LIBS` ('') specifies libraries to use in addition to what SCons finds
    on its own. This might be useful if you have a non-standard name for one of 
    the external libraries. e.g. If you want to use the Intel MKL library for the
-   fftw3 library, SCons will not automatically try that, so you could add those
+   FFTW library, SCons will not automatically try that, so you could add those
    libraries here. If there is more than one, they should be quoted with spaces
    between the different libraries. e.g. 
    `EXTRA_LIBS="mkl_intel mkl_intel_thread mkl_core"`
 
+* `IMPORT_PREFIX` (True) specifies whether to include the directories
+   `PREFIX/include`, `PREFIX/lib` and `PREFIX/bin` as part of the standard
+   path lists.  Normally, you install everything in the same place, so it is 
+   useful to search those locations for some of the prerequisite packages, so 
+   the default is True.  But occasionally, this might be inconvenient, so you 
+   can turn this feature off.
+
 ### Miscellaneous flags:
+
+* `NOSETESTS` (nosetests) specifies which version of nosetests you want to use
+   for running the unit tests.  If you specified a non-default python, then 
+   there is a possibility that the standard nosetests executable in your path 
+   will not work (since it might be for a different version of python).  In 
+   that case, specify the correct nosetests here.
 
 * `CACHE_LIB` (True) specifies whether to cache the results of the library 
    checks.  While you are working one getting the prerequisites installed
@@ -592,3 +586,13 @@ You can list these options from the command line with
 
 * `TMV_DEBUG` (False) specifies whether to turn on extra (slower) debugging
    statements within the TMV library.
+
+* `WITH_OPENMP` (False) specifies whether to use OpenMP to parallelize some 
+   parts of the code. (Note: We do not actually use OpenMP currently, so this
+   does not do anything.)
+
+* `USE_UNKNOWN_VARS` (False) specifies whether to accept scons parameters other
+   than the ones listed here.  Normally, another name would indicate a typo, so
+   we catch it and let you know.  But if you want to use other scons options 
+   that we did not list here, you would want to also set this to True.
+
