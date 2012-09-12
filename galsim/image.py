@@ -52,14 +52,14 @@ for Class in _galsim.ImageView.itervalues():
 
     From Python, the only way to explicitly construct an ImageView is
 
-    >>> imv = ImageView(array, xMin=1, yMin=1)       # numpy array and origin
+        >>> imv = ImageView(array, xMin=1, yMin=1)       # numpy array and origin
 
     However, ImageView instances are also the return type of several functions such as
 
-    >>> im.view()
-    >>> im.subImage(bounds)
-    >>> im[bounds]                                   # (equivalent to the subImage call above)
-    >>> galsim.fits.read(...)
+        >>> im.view()
+        >>> im.subImage(bounds)
+        >>> im[bounds]                                   # (equivalent to the subImage call above)
+        >>> galsim.fits.read(...)
     
     The array argument to the constructor must have contiguous values along rows, which should be
     the case for newly-constructed arrays, but may not be true for some views and generally will not
@@ -91,7 +91,7 @@ for Class in _galsim.ConstImageView.itervalues():
 
     From Python, the only way to explicitly construct an ConstImageView is
 
-    >>> cimv = ConstImageView(array, xMin=1, yMin=1)       # NumPy array and origin
+        >>> cimv = ConstImageView(array, xMin=1, yMin=1)       # NumPy array and origin
 
     which works just like the version for ImageView except that the resulting object cannot be used
     to modify the array.
