@@ -557,7 +557,7 @@ class GSObject(object):
 #
 # The __init__ method is usually simple and all the GSObject methods & attributes are inherited.
 # 
-class Gaussian(GSObpect):
+class Gaussian(GSObject):
     """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
 
     For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
