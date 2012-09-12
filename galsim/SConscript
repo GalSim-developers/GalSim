@@ -20,14 +20,43 @@ for subdir in subdir_list:
     py_files_sub.append(glob.glob(os.path.join("config","*.py")))
     python_install_subdir.append(os.path.join(python_install_dir,"config"))
 
+# If the python_install_dir being used isn't in the sys.path, then warn the user
+# that they should add that path to their PYTHONPATH environment variable.
+def CheckPyPrefix(target, source, env):
+    import subprocess
+    cmd = "%s -c \"import sys; print sys.path\""%(env['PYTHON'])
+    p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
+    sys_path = p.stdout.read().strip()
+    sys_path = eval(sys_path)
+    if env['PYPREFIX'] not in sys_path:
+        print
+        print 'WARNING: The python installation prefix: %s'%env['PYPREFIX']
+        print '         is not in the search path for %s.'%env['PYTHON']
+        print
+        print '         You should add this directory to your PYTHONPATH environment'
+        print '         variable so python will find the installed galsim modules.'
+        print
+        print '         For example, if you use bash, you should add the line:'
+        print '             export PYTHONPATH=$PYTHONPATH:%s'%env['PYPREFIX']
+        print '         to your .bashrc or .bash_profile file.'
+        print
+
+env['BUILDERS']['CheckPyPrefix'] = Builder(action = CheckPyPrefix)
+
 if 'install' in COMMAND_LINE_TARGETS:
 
     installed_py = env.Install(dir=python_install_dir, source=py_files)
-    env.Alias(target='install', source=installed_py)
 
     for i in range(len(subdir_list)):
         installed_py += env.Install(dir=python_install_subdir[i], source=py_files_sub[i])
-        env.Alias(target='install', source=installed_py)
+
+    env.Alias(target='install', source=installed_py)
+
+    check = env.CheckPyPrefix(target='#/check', source=None)
+    Depends(check,installed_py)
+    AlwaysBuild(check)
+    env.Alias(target='install', source=check)
+
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
     # There is no env.Uninstall method, we must build our own
