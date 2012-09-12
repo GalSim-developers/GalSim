@@ -72,7 +72,8 @@ There are currently 12 types of \gsobject. The first ten listed are
 `simple' or `atomic' \gsobject s that can be initialized by providing
 values for their required or optional parameters; the last two are
 `compound' classes used to represent combinations of \gsobject s.  
-In the order in which the classes appear in {\tt GalSim/galsim/base.py}:
+They are summarized in the following hyperlinked list, 
+in the order in which the classes appear in {\tt GalSim/galsim/base.py}:
 \begin{itemize}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_gaussian.html}{\texttt{Gaussian}}
@@ -110,13 +111,72 @@ For more info and initialization details for each \gsobject, type
 within the Python interpreter, or follow the hyperlinks on the class names above to view the
 \emph{doxygen} documentation based on the Python docstrings.
 
-\section{GSObject methods}\label{sect:gsobjectmethods}
+\section{Important GSObject methods}\label{sect:gsobjectmethods}
+A number of methods are shared by all the \gsobject s of Section
+\ref{sect:gsobjects}, and are also to be found in \\ {\tt
+  GalSim/galsim/base.py} within the definition of the \gsobject~base
+class.  In what follows, we assume that a \gsobject~labelled
+\texttt{obj} has been
+instantiated using one of the calls described in the documentation
+linked above.  For example,
+
+{\tt >>> obj = galsim.Sersic(n=3.5, half\_light\_radius=1.743)}.
+
+Some of the most important and commonly-used methods for such an
+instance are:
+\begin{itemize}
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#aa0b398d4b0fca70211e4a73f81ea7e1a}{\texttt{obj.copy()}}
+  --- returns a copy of the \gsobject.
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a662d8ce421ecd90080bdcaaf6890aed8}{\texttt{obj.getFlux()}}
+  --- gets the flux of the \gsobject.
+\item[$\circ$]\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#af4193645a9af52e7d54a044cafec8ab9}{\texttt{obj.scaleFlux(flux\_ratio)}}
+  --- multiplies the flux of the \gsobject~by \texttt{flux\_ratio}.
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a1993652591ddc802b734186391b28894}{\texttt{obj.setFlux(flux)}}
+    --- sets the flux of the \gsobject~to \texttt{flux}.
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a4301c73bbc1491ebb170e64c509cadd5}{\texttt{obj.applyDilation(scale)}}
+  --- applies a dilation of the linear size of the \gsobject~by a
+  factor \texttt{scale}.
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a9d13b0238057f6d5d01f2681d91c09b0}{\texttt{obj.applyMagnification(scale)}}
+  - dilate linear size by \texttt{scale} and \gsobject~flux by
+  \texttt{scale}$^2$, conserving surface brightness.
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a85cc0094dcf470cfbff93d9830ab80bd}{\texttt{applyShear(*args,
+      **kwargs)}}
+  --- apply a shear to the \gsobject, handling a number of different
+  input conventions.
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ad6236e3153f23f1201396369dd67f1c7}{\texttt{obj.applyRotation(theta)}}
+  --- apply a rotation of \texttt{theta} (positive direction
+  anti-clockwise) to the \gsobject, where \texttt{theta} is a
+  \texttt{galsim.Angle} instance (see Section \ref{sect:misc}). 
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a6b547741eeec4086de9abe227dae9325}{\texttt{applyShift(dx,
+      dy)}} --- apply a $(dx, dy)$ shift to this object.
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...)}}
+  --- draws an image of the \gsobject~using Discrete Fourier
+  Transforms and interpolation to perform the image rendering.
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}
+  --- draws an image of the \gsobject~by shooting a finite number of
+  photons to perform the image rendering.  The resulting image
+  therefore contains stochastic noise, but the rendering is otherwise
+  very close to exact.
+\end{itemize}
+
 
 
 \section{Random deviate classes and methods}\label{sect:random}
 
 
 \section{Image classes and methods}\label{sect:image}
+
+\section{Miscellaneous classes and methods}\label{sect:misc}
 
 
 \end{document}
