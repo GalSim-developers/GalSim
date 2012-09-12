@@ -222,7 +222,8 @@ with \texttt{mean} and standard deviation \texttt{sigma}.}
 
 Unfortunately the random deviate classes are not yet fully integrated within
 the \emph{doxygen} documentation, due to their being C++ with compiled
-Python wrappers.  This means that the class names above are not
+Python wrappers.  This means that the class names above and methods
+below are not
 hyperlinked.
 
 However, the full docstrings are available in
@@ -254,27 +255,82 @@ instance are:
 \end{itemize}
 
 \section{Image classes and methods}\label{sect:image}
+The GalSim \texttt{Image}, classes store array data, pixel units and
+image bounds information (origin, extent).  The \texttt{ImageView}
+provides a mutable view into \texttt{Image} instance data, and
+\texttt{ConstImageView} an immutable view into
+\texttt{Image} instance data.  The full docstrings are available in
+\texttt{galsim/image.py} with a description of the differences between
+these fundamental types.
 
+They are used to store the rendered output of the
+\gsobject~\texttt{draw()} and \texttt{drawShoot()} methods, can be
+operated on to add stochastic noise simulating real astronomical
+images (e.g.\ Section \ref{sect:random}), and also have methods for
+reading from and writing to FITS format output.
+
+There are four types of GalSim \texttt{Image}, one for each of four
+supported data types:
 \begin{itemize}
 
-\item[$\circ$] \texttt{ImageS}
+\item[$\circ$] \texttt{ImageS}; \texttt{ImageViewS};
+  \texttt{ConstImageViewS} --- \emph{for short integers (typically 16 bit).}
 
-\item[$\circ$] \texttt{ImageI}
+\item[$\circ$] \texttt{ImageI}; \texttt{ImageViewI};
+  \texttt{ConstImageViewI} --- \emph{for integers (typically 32 bit).}
 
-\item[$\circ$] \texttt{ImageF}
+\item[$\circ$] \texttt{ImageF}; \texttt{ImageViewF};
+  \texttt{ConstImageViewF} --- \emph{for single precision (typically 32 bit)
+  floats.}
 
-\item[$\circ$] \texttt{ImageD}
+\item[$\circ$] \texttt{ImageD}; \texttt{ImageViewD};
+  \texttt{ConstImageViewD} --- \emph{for double precision (typically 64 bit)
+  floats.}
 
 \end{itemize}
+Unfortunately the \texttt{Image} classes are not yet fully integrated within
+the \emph{doxygen} documentation, due to their being in C++ with compiled
+Python wrappers.  This means that the class names above and methods below are not
+hyperlinked.
 
+However, the full docstrings are available in
+\texttt{galsim/image.py}, so please refer there for more information,
+or type
 
+{\tt >>> print galsim.<ImageName>.\_\_doc\_\_}
+
+within the Python interpreter.
+
+We now illustrate the most commonly-used methods of \texttt{Image}
+class instances.
+We will assume that some image \texttt{img} 
+has been instantiated. As an example:
+
+{\tt im = obj.draw(dx=1.)}.
+
+The most important and commonly-used methods for such an
+instance are:
 \begin{itemize}
 
-\item[$\circ$] \texttt{img.read()}
+\item[$\circ$] \texttt{img.addNoise(dev)} --- (see
+  \texttt{galsim/noise.py}) this adds stochastic noise, distributed as
+  represented by the random deviate instance \texttt{dev}, to image
+  element of the image \texttt{img}.  This therefore has the same
+  effect as \texttt{dev.applyTo(img)} (see Section \ref{sect:random}).
 
-\item[$\circ$] \texttt{img.addNoise()}
+\item[$\circ$] \texttt{img.write(image, fits, ...)}  ---  (see
+  \texttt{galsim/fits.py})\emph{write the \texttt{image} to a FITS
+    file or object as determined by the \texttt{fits} input parameter.}
 
-\item[$\circ$] \texttt{img.write()}
+\item[$\circ$] \texttt{img.writeMulti(image\_list, fits, ...)} ---   (see
+  \texttt{galsim/fits.py}) \emph{write multiple images stored in a
+  Python list object \texttt{image\_list} to a Multi-Extension FITS
+  file or object as determined by the \texttt{fits} input parameter.}
+
+\item[$\circ$] \texttt{img.writeCube(image\_list, fits...)} ---   (see
+  \texttt{galsim/fits.py}) \emph{write multiple images stored in a
+  Python list object \texttt{image\_list} to a three-dimensional FITS
+  datacube object as determined by the \texttt{fits} input parameter.}
 
 \end{itemize}
 
