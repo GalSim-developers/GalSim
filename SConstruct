@@ -493,7 +493,7 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
 
     """
 
-    types = ['TMV','FFTW','BOOST']
+    types = ['BOOST', 'TMV', 'FFTW']
 
     for t in types:
         dirtag = t+'_DIR'
