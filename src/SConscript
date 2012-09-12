@@ -53,7 +53,7 @@ if sys.platform == 'darwin':
     lib_final_name = os.path.join(lib_final_dir,'libgalsim.%s.dylib'%version[0])
     #lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.%s.%s.dylib'%version)
     lib_short_name = os.path.join(GetBuildPath('#lib'),'libgalsim.%s.dylib'%version[0])
-    #link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.dylib')
+    link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.dylib')
     # TODO: If we have more than one lib, we need a different SHLINKFLAGS for each one.
     # The easiest way to do this is to have multiple environments that differ in their
     # SHLINKFLAGS values.  For now we just have the one, so this is fine.
@@ -114,7 +114,7 @@ elif sys.platform == 'linux2':
     lib_final_name = 'libgalsim.so.%s'%version[0]
     #lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s.%s'%version)
     lib_short_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s'%version[0])
-    #link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so')
+    link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so')
     env1.AppendUnique(SHLINKFLAGS=['-Wl,-soname,%s'%lib_final_name ])
     env1.Replace(SHLIBSUFFIX = '.so.%s'%version[0])
 
@@ -132,8 +132,8 @@ def SymLink(target, source, env):
     os.symlink(env['LibName'], t)
 
 # This just makes a link in the #lib directory.  Need to redo this in the install directory.
-#link = env1.Command( link_name , lib , SymLink, LibName=lib_short_name)
-#Default(link)
+link = env1.Command( link_name , lib , SymLink, LibName=lib_short_name)
+Default(link)
 
 lib_targets = [lib]
 
@@ -143,12 +143,11 @@ if 'install' in COMMAND_LINE_TARGETS:
 
     installed_lib = env1.Install(dir=lib_install_dir, source=lib_targets)
 
-    #installed_link_name = os.path.join(lib_install_dir, os.path.basename(link_name))
-    #installed_link = env1.Command( installed_link_name, installed_lib, SymLink,
-        #LibName=lib_final_name)
+    installed_link_name = os.path.join(lib_install_dir, os.path.basename(link_name))
+    installed_link = env1.Command( installed_link_name, installed_lib, SymLink,
+        LibName=lib_final_name)
 
-    #env1.Alias(target='install', source=[installed_lib, installed_link])
-    env1.Alias(target='install', source=[installed_lib])
+    env1.Alias(target='install', source=[installed_lib, installed_link])
 
     #hfiles1 = os.listdir(GetBuildPath('#include'))
     #hfiles = []
