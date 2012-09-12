@@ -38,21 +38,23 @@ normally be something like:
 \begin{itemize}
 
 \item Construct a representation of your desired astronomical object
-  as a single GalSim \gsobject~instance or in combination using the special {\tt Add} and
-  {\tt Convolve} compound-type \gsobject s --- see Section \ref{sect:gsobjects}.
-\item \emph{Optional}: Apply transformations such as shear or magnification using
-  the methods of the resulting \gsobject~instance --- see Section \ref{sect:gsobjectmethods}.
+  as a single GalSim \gsobject~instance or in combination using the
+  special {\tt Add} and {\tt Convolve} compound-type \gsobject s ---
+  see Section \ref{sect:gsobjects}.
+\item \emph{Optional}: Apply transformations such as shear or
+  magnification using the methods of the resulting \gsobject~instance
+  --- see Section \ref{sect:gsobjectmethods}.
 \item Draw the object into a GalSim \image~object representing a
   postage stamp image of your astronomical object.  This can be done
   using the {\tt draw()} or {\tt drawShoot()} methods carried by all
   \gsobject s for rendering images ({\tt drawShoot} uses photon
   shooting) --- see Section \ref{sect:gsobjectmethods}.
-\item \emph{Optional}: Add noise to the \image~using one of the GalSim random
-  deviate classes --- see Section \ref{sect:random}.
+\item \emph{Optional}: Add noise to the \image~using one of the GalSim
+  random deviate classes --- see Section \ref{sect:random}.
 \item \emph{Optional}: Add the postage stamp \image~to a subsection of
-  a larger \image~ instance, or to a larger
-  structure containing multiple \image~instances each derived from \gsobject s
-  as described above --- see Section \ref{sect:image}.
+  a larger \image~ instance, or to a larger structure containing
+  multiple \image~instances each derived from \gsobject s as described
+  above --- see Section \ref{sect:image}.
 \item Save the \image (s) to file in FITS (Flexible Image Transport
   System) format --- see Section \ref{sect:image}.
 \end{itemize}
@@ -114,17 +116,17 @@ the Python docstring for each class is available by typing
 
 {\tt >>> print galsim.<GSObject\_name>.\_\_doc\_\_}
 
-within the Python interpreter. Alternatively follow the hyperlinks on the class names above to view the
-\emph{doxygen} documentation based on the Python docstrings.
+within the Python interpreter. Alternatively follow the hyperlinks on
+the class names above to view the \emph{doxygen} documentation based
+on the Python docstrings.
 
 \section{Important GSObject methods}\label{sect:gsobjectmethods}
-A number of methods are shared by all the \gsobject s of Section
+A number of methods are shared by all the \gsobject s~of Section
 \ref{sect:gsobjects}, and are also to be found in \\ {\tt
   GalSim/galsim/base.py} within the definition of the \gsobject~base
 class.  In what follows, we assume that a \gsobject~labelled
-\texttt{obj} has been
-instantiated using one of the calls described in the documentation
-linked above.  For example,
+\texttt{obj} has been instantiated using one of the calls described in
+the documentation linked above.  For example,
 
 {\tt >>> obj = galsim.Sersic(n=3.5, half\_light\_radius=1.743)}.
 
@@ -179,8 +181,13 @@ the Python docstring is available
 
 {\tt >>> print obj.<method\_name>.\_\_doc\_\_}
 
-within the Python interpreter.  Alternatively follow the hyperlinks on the class names above to view the
-\emph{doxygen} documentation based on the Python docstrings.
+within the Python interpreter.  Alternatively follow the hyperlinks on
+the class names above to view the \emph{doxygen} documentation based
+on the Python docstrings.  You will see that many of the \gsobject
+instances also have their own specialized methods, often for
+retreiving parameter values. Examples are \texttt{obj.getSigma()} for
+the Gaussian or \texttt{obj.getHalfLightRadius()} for many of the
+\gsobject s.
 
 \section{Random deviate classes and methods}\label{sect:random}
 
