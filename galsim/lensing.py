@@ -439,12 +439,13 @@ class NFWHalo(object):
     def __init__(self, mass=1e15, conc=4, z=0.3, pos_x=0, pos_y=0, cosmo=Cosmology()):
         """@brief Create NFW halo.
 
-        @param[in] mass Mass
-        @param[in] conc Concentration parameter
+        @param[in] mass Mass defined using a spherical overdensity of 200 times the critical density
+        of the universe, in units of M_solar/h.
+        @param[in] conc Concentration parameter, i.e., ratio of virial radius to NFW scale radius
         @param[in] z Redshift
         @param[in] pos_x X-coordinate [arcsec]
         @param[in] pos_y Y-coordinate [arcsec]
-        @param[in] cosmo A Comology instance
+        @param[in] cosmo A Cosmology instance
         """
         self.M = mass
         self.c = conc
@@ -455,11 +456,17 @@ class NFWHalo(object):
 
         # calculate scale radius
         a = self.cosmo.a(z)
-        R200 = 1.63e-5/(1+self.z) * (self.M * self.__omega(a)/self.__omega(1))**0.3333 # in Mpc
+        # First we get the virial radius, which is defined for some spherical overdensity as
+        # 3 M / (4 pi r_vir)^3 = overdensity
+        # Here we have overdensity = 200 * rhocrit, to determine R200. The factor of 1.63e-5 comes
+        # from the following set of prefactors: (3 / (4 pi * 200 * rhocrit))^(1/3)
+        # where rhocrit = 2.8e11 h^2 M_solar / Mpc^3.  The mass in the equation below is in
+        # M_solar/h, which is how the final units are Mpc/h.
+        R200 = 1.63e-5/(1+self.z) * (self.M * self.__omega(a)/self.__omega(1))**0.3333 # in Mpc/h
         self.rs = R200/self.c
 
         # convert scale radius in arcsec
-        dl = self.cosmo.Da(self.z)*3000.; # in Mpc
+        dl = self.cosmo.Da(self.z)*3000.; # in Mpc/h
         scale = self.rs / dl
         arcsec2rad = 1./206265;
         self.rs_arcsec = scale/arcsec2rad;
