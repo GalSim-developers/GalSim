@@ -1,7 +1,7 @@
-\documentclass[preprint,10pt]{aastex}
+\documentclass[preprint,11pt]{aastex}
 
 % packages for figures
-\usepackage{graphicx}
+\usepackage{graphicx,times}
 % packages for symbols
 \usepackage{latexsym,amssymb,hyperref}
 % AMS-LaTeX package for e.g. subequations
@@ -22,6 +22,9 @@
 
 \begin{document}
 
+\setlength{\parskip}{2.0ex plus 0.5ex minus 0.5ex}
+\setlength{\parindent}{0cm} 
+
 \title{GalSim Library Quick Reference}
 
 \section{Overview}
@@ -38,12 +41,12 @@ normally be something like:
   as a single GalSim \gsobject~instance or in combination using the special {\tt Add} and
   {\tt Convolve} compound-type \gsobject s --- see Section \ref{sect:gsobjects}.
 \item \emph{Optional}: Apply transformations such as shear or magnification using
-  the methods of the resulting \gsobject~instance --- see Section \ref{sect:gsobjects}.
+  the methods of the resulting \gsobject~instance --- see Section \ref{sect:gsobjectmethods}.
 \item Draw the object into a GalSim \image~object representing a
   postage stamp image of your astronomical object.  This can be done
   using the {\tt draw()} or {\tt drawShoot()} methods carried by all
   \gsobject s for rendering images ({\tt drawShoot} uses photon
-  shooting) --- see Section \ref{sect:gsobjects}.
+  shooting) --- see Section \ref{sect:gsobjectmethods}.
 \item \emph{Optional}: Add noise to the \image~using one of the GalSim random
   deviate classes --- see Section \ref{sect:random}.
 \item \emph{Optional}: Add the postage stamp \image~to a subsection of
@@ -60,10 +63,10 @@ There are many examples of this workflow in the directory {\tt
 brief, reference description of the GalSim classes and methods which
 can be used in this workflow.
 
-\newpage 
+\newpage
 
-\section{GSObject classes and methods}\label{sect:gsobjects}
-\subsection{Lists of available GSObjects}
+%\section{GSObject classes and methods}
+\section{The GSObjects}\label{sect:gsobjects}
 
 There are currently 12 types of \gsobject. The first ten listed are
 `simple' or `atomic' \gsobject s that can be initialized by providing
@@ -71,37 +74,43 @@ values for their required or optional parameters; the last two are
 `compound' classes used to represent combinations of \gsobject s.  
 In the order in which the classes appear in {\tt GalSim/galsim/base.py}:
 \begin{itemize}
-\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_gaussian.html}{\texttt{Gaussian}} --- a 2D Gaussian profile.
-\item[$\circ$] \texttt{Moffat} --- a Moffat profile, used to approximate PSFs.
-\item[$\circ$] \texttt{AtmosphericPSF} --- currently an image-based
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_gaussian.html}{\texttt{Gaussian}}
+  --- a 2D Gaussian light profile.
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_moffat.html}{\texttt{Moffat}} --- a Moffat profile, used to approximate PSFs.
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_atmospheric_p_s_f.html}{\texttt{AtmosphericPSF}} --- currently an image-based
   implementation of a Kolmogorov PSF (see below), but expected to evolve to
   use an image of a stochastically modelled atmospheric PSF in the near future.
-\item[$\circ$] \texttt{Airy} --- an Airy PSF for ideal diffraction
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_airy.html}{\texttt{Airy}} --- an Airy PSF for ideal diffraction
   through a circular aperture, supports central obscuration.
-\item[$\circ$] \texttt{Kolmogorov} --- the Kolmogorov PSF for long-exposure
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_kolmogorov.html}{\texttt{Kolmogorov}} --- the Kolmogorov PSF for long-exposure
   images through a turbulent atmosphere.
-\item[$\circ$] \texttt{OpticalPSF} --- a simple model for non-ideal
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_optical_p_s_f.html}{\texttt{OpticalPSF}} --- a simple model for non-ideal
   (aberrated) propagation through circular or square apertures with obscuration.
-\item[$\circ$] \texttt{Pixel} --- used for integrating light onto square or
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_pixel.html}{\texttt{Pixel}} --- used for integrating light onto square or
   rectangular pixels.
-\item[$\circ$] \texttt{Sersic} --- the S\'{e}rsic family of galaxy light
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_sersic.html}{\texttt{Sersic}} --- the S\'{e}rsic family of galaxy light
   profiles.
-\item[$\circ$] \texttt{Exponential} --- the Exponential disc, a S\'{e}rsic
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_exponential.html}{\texttt{Exponential}} --- the Exponential disc, a S\'{e}rsic
   with index $n=1$.
-\item[$\circ$] \texttt{DeVaucouleurs} --- commonly used to model galaxy bulge
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_de_vaucouleurs.html}{\texttt{DeVaucouleurs}} --- commonly used to model galaxy bulge
   profiles, a S\'{e}rsic with index $n=4$.
-\item[$\circ$] \texttt{RealGalaxy} --- models galaxies using real
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_real_galaxy.html}{\texttt{RealGalaxy}} --- models galaxies using real
   data, including correction for the original PSF.
-\item[$\circ$] \texttt{Add} --- a \emph{compound} object used for
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_add.html}{\texttt{Add}} --- a \emph{compound} object used for
   summing multiple \gsobject s.
-\item[$\circ$] \texttt{Convolve} --- a \emph{compound} object used for
-convolving multiple \gsobject s
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_convolve.html}{\texttt{Convolve}} --- a \emph{compound} object used for
+convolving multiple \gsobject s.
 \end{itemize}
 
-For more info and initialization details for each \gsobject, type {\tt print
-  galsim.<GSObject\_name>.\_\_doc\_\_} within the Python interpreter.
+For more info and initialization details for each \gsobject, type
 
-\subsection{GSObject methods}
+{\tt >>> print galsim.<GSObject\_name>.\_\_doc\_\_}
+
+within the Python interpreter, or follow the hyperlinks on the class names above to view the
+\emph{doxygen} documentation based on the Python docstrings.
+
+\section{GSObject methods}\label{sect:gsobjectmethods}
 
 
 \section{Random deviate classes and methods}\label{sect:random}
