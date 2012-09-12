@@ -190,31 +190,66 @@ the Gaussian or \texttt{obj.getHalfLightRadius()} for many of the
 \gsobject s.
 
 \section{Random deviate classes and methods}\label{sect:random}
-
+A short summary of the 8 random deviates currently implemented in GalSim,
+with a short description of their distributions:
 \begin{itemize}
 
-\item[$\circ$] \texttt{UniformDeviate}
+\item[$\circ$] \texttt{UniformDeviate} --- \emph{uniform distribution in the
+  interval $[0, 1)$.}
 
-\item[$\circ$] \texttt{GaussianDeviate}
+\item[$\circ$] \texttt{GaussianDeviate} --- \emph{Gaussian distribution
+with \texttt{mean} and standard deviation \texttt{sigma}.}
 
-\item[$\circ$] \texttt{BinomialDeviate}
+\item[$\circ$] \texttt{BinomialDeviate} --- \emph{Binomial
+    distribution for \texttt{N} trials each of probability \texttt{p}.}
 
-\item[$\circ$] \texttt{PoissonDeviate}
+\item[$\circ$] \texttt{PoissonDeviate} --- \emph{Poisson distribution
+    with a single \texttt{mean} rate.}
 
-\item[$\circ$] \texttt{CCDNoise}
+\item[$\circ$] \texttt{CCDNoise}  --- \emph{Distribution following a
+    basic CCD noise model, depending on \texttt{gain} and \texttt{read\_noise}.}
 
-\item[$\circ$] \texttt{WeibullDeviate}
+\item[$\circ$] \texttt{WeibullDeviate} --- \emph{Weibull distribution
+    family (includes Rayleigh and Exponential) with shape parameters \texttt{a} and \texttt{b}.}
 
-\item[$\circ$] \texttt{GammaDeviate}
+\item[$\circ$] \texttt{GammaDeviate} --- \emph{Gamma distribution for
+    parameters \texttt{alpha} and \texttt{beta}.}
 
-\item[$\circ$] \texttt{Chi2Deviate}
+\item[$\circ$] \texttt{Chi2Deviate} --- \emph{$\chi^2$ distribution
+    for degrees of freedom parameter \texttt{n}.}
 
 \end{itemize}
 
+Unfortunately the random deviate classes are not yet fully integrated within
+the \emph{doxygen} documentation, due to their being C++ with compiled
+Python wrappers.  This means that the class names above are not
+hyperlinked.
 
+However, the full docstrings are available in
+\texttt{galsim/random.py}, so please refer there for more information,
+or type
+
+{\tt >>> print galsim.<RandomDeviate\_name>.\_\_doc\_\_}
+
+within the Python interpreter.
+
+We now illustrate the most commonly-used methods of the random deviates.
+If we assume that some random deviate instance 
+has been instantiated as \texttt{dev},  for example
+
+{\tt >>> dev = galsim.GaussianDeviate(sigma=3.9, mean=50.)},
+
+Some of the most important and commonly-used methods for such an
+instance are:
 \begin{itemize}
 
-\item[$\circ$] \texttt{dev.applyTo()}
+\item[$\circ$] \texttt{dev.applyTo(image)} --- \emph{adds a deviate
+  distributed according to the distribution represented by 
+\texttt{dev} to each element in in a supplied Image instance \texttt{image} (see Section \ref{sect:image}).}
+
+\item[$\circ$] \texttt{dev()} --- \emph{this direct call method
+    returns a new random number drawn from the distribution
+    represented by \texttt{dev}}.
 
 \end{itemize}
 
