@@ -312,7 +312,22 @@ command would be
 
     scons install PREFIX=<installdir> PYPREFIX=<pythondir>
 
-The installed files are removed with the command
+Note: if you specify a specific directory for the Python modules with PYPREFIX,
+this directory should be in the sys.path search path for the version of 
+Python you are using.  You can check with 
+
+    python -c "import sys; print sys.path"
+
+If your PYPREFIX directory is not there, then python will not be able to find
+the installed galsim module.  You should therefore add this directory to your
+PYTHONPATH environment variable.  For example, if you use bash, then you 
+should add the line
+
+    export PYTHONPATH=$PYTHONPATH:<pythondir>
+
+where `<pythondir>` is the same directory you used above for `PYPREFIX`.
+
+The installed files can be removed with the command
 
     scons uninstall
 
