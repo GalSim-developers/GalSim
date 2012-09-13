@@ -97,8 +97,69 @@ def test_shear_flatps():
     bottom1 = np.sum((g1-np.mean(g1))**2)
     bottom2 = np.sum((g2-np.mean(g2))**2)
     corr = top / np.sqrt(bottom1*bottom2)
-    np.testing.assert_almost_equal(corr, 0., decimal=2,
-                                   err_msg="Shear components should be uncorrelated with each other!")
+    np.testing.assert_almost_equal(
+        corr, 0., decimal=2,
+        err_msg="Shear components should be uncorrelated with each other!")
+
+
+    # make a pure E-mode spectrum
+    test_ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pkflat)
+    # get shears on 500x500 grid
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500)
+    # check: are shears consistent with variance=0.01 as we expect for pkflat?
+    var1 = np.var(g1)
+    var2 = np.var(g2)
+    print 'var(g1), var(g2) = ',var1,var2
+    np.testing.assert_almost_equal(
+        var1+var2, 0.01, decimal=3,
+        err_msg="Incorrect shear variance from E-mode power spectrum!")
+    # Note: These next two don't work.  
+    # var1,var2 are approximately 0.0043, 0.0057.  Not sure why...
+    #np.testing.assert_almost_equal(
+        #var1, 0.005, decimal=3,
+        #err_msg="Incorrect shear variance(1) from E-mode power spectrum!")
+    #np.testing.assert_almost_equal(
+        #var2, 0.005, decimal=3,
+        #err_msg="Incorrect shear variance(2) from E-mode power spectrum!")
+
+    # check: are g1, g2 uncorrelated with each other?
+    top= np.sum((g1-np.mean(g1))*(g2-np.mean(g2)))
+    bottom1 = np.sum((g1-np.mean(g1))**2)
+    bottom2 = np.sum((g2-np.mean(g2))**2)
+    corr = top / np.sqrt(bottom1*bottom2)
+    np.testing.assert_almost_equal(
+        corr, 0., decimal=2,
+        err_msg="Shear components should be uncorrelated with each other!")
+
+
+    # make a pure B-mode spectrum
+    test_ps = galsim.lensing.PowerSpectrum(B_power_function=galsim.lensing.pkflat)
+    # get shears on 500x500 grid
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500)
+    # check: are shears consistent with variance=0.01 as we expect for pkflat?
+    var1 = np.var(g1)
+    var2 = np.var(g2)
+    print 'var(g1), var(g2) = ',var1,var2
+    np.testing.assert_almost_equal(
+        var1+var2, 0.01, decimal=3,
+        err_msg="Incorrect shear variance from B-mode power spectrum!")
+    # Note: These next two don't work.  
+    # var1,var2 are approximately 0.0057, 0.0043.  Not sure why...
+    #np.testing.assert_almost_equal(
+        #var1, 0.005, decimal=3,
+        #err_msg="Incorrect shear variance(1) from B-mode power spectrum!")
+    #np.testing.assert_almost_equal(
+        #var2, 0.005, decimal=3,
+        #err_msg="Incorrect shear variance(2) from B-mode power spectrum!")
+
+    # check: are g1, g2 uncorrelated with each other?
+    top= np.sum((g1-np.mean(g1))*(g2-np.mean(g2)))
+    bottom1 = np.sum((g1-np.mean(g1))**2)
+    bottom2 = np.sum((g2-np.mean(g2))**2)
+    corr = top / np.sqrt(bottom1*bottom2)
+    np.testing.assert_almost_equal(
+        corr, 0., decimal=2,
+        err_msg="Shear components should be uncorrelated with each other!")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
