@@ -2,7 +2,6 @@
 """
 import galsim
 import numpy as np
-import warnings
 
 class PowerSpectrum(object):
     """@brief Class to represent a lensing shear field according to some power spectrum P(k)
@@ -428,20 +427,17 @@ class Cosmology(object):
                 raise ValueError("Redshift z must not be negative")
             if z < z_ref:
                 raise ValueError("Redshift z must not be smaller than the reference redshift")
-            try:
-                from scipy.integrate import quad
-                d = quad(self.__angKernel, z_ref+1, z+1)[0]
-                # check for curvature
-                rk = (abs(self.omega_c))**0.5
-                if (rk*d > 0.01):
-                    if self.omega_c > 0:
-                        d = sinh(rk*d)/rk
-                    if self.omega_c < 0:
-                        d = sin(rk*d)/rk
-                return d/(1+z)
-            except ImportError:
-                warnings.warn("scipy not found! Integrator required for angular diameter distances")
-                return z
+	    # TODO: We don't want to depend on scipy, so need to move this down to c++.
+            from scipy.integrate import quad
+            d = quad(self.__angKernel, z_ref+1, z+1)[0]
+            # check for curvature
+            rk = (abs(self.omega_c))**0.5
+            if (rk*d > 0.01):
+                if self.omega_c > 0:
+                    d = sinh(rk*d)/rk
+                if self.omega_c < 0:
+                    d = sin(rk*d)/rk
+            return d/(1+z)
 
 
 class NFWHalo(object):
