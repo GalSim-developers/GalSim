@@ -89,31 +89,37 @@ in the order in which the classes appear in {\tt GalSim/galsim/base.py}:
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_gaussian.html}{\texttt{Gaussian}}
   --- \emph{a 2D Gaussian light profile.}
-\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_moffat.html}{\texttt{Moffat}} --- \emph{a Moffat profile, used to approximate PSFs.}
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_moffat.html}{\texttt{Moffat}}
+  --- \emph{a Moffat profile, used to approximate ground-based
+    telescope PSFs.}
 \item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_atmospheric_p_s_f.html}{\texttt{AtmosphericPSF}} --- \emph{currently an image-based
   implementation of a Kolmogorov PSF (see below), but expected to evolve to
   use an image of a stochastically modelled atmospheric PSF in the near future.}
 \item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_airy.html}{\texttt{Airy}} --- \emph{an Airy PSF for ideal diffraction
-  through a circular aperture, supports central obscuration.}
+  through a circular aperture, with optional obscuration.}
 \item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_kolmogorov.html}{\texttt{Kolmogorov}} --- \emph{the Kolmogorov PSF for long-exposure
   images through a turbulent atmosphere.}
 \item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_optical_p_s_f.html}{\texttt{OpticalPSF}} --- \emph{a simple model for non-ideal
-  (aberrated) propagation through circular or square apertures with obscuration.}
+  (aberrated) propagation through circular or square apertures, with
+  optional obscuration.}
 \item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_pixel.html}{\texttt{Pixel}} --- \emph{used for integrating light onto square or
   rectangular pixels.}
 \item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_sersic.html}{\texttt{Sersic}} ---\emph{ the S\'{e}rsic family of galaxy light
   profiles.}
-\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_exponential.html}{\texttt{Exponential}} --- \emph{the Exponential disc, a S\'{e}rsic
-  with index $n=1$.}
-\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_de_vaucouleurs.html}{\texttt{DeVaucouleurs}} --- \emph{commonly used to model galaxy bulge
-  profiles, a S\'{e}rsic with index $n=4$.}
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_exponential.html}{\texttt{Exponential}}
+  --- \emph{the Exponential galaxy disc profile, a S\'{e}rsic with index $n=1$.}
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_de_vaucouleurs.html}{\texttt{DeVaucouleurs}}
+  --- \emph{the De Vaucouleurs galaxy bulge profile, a S\'{e}rsic with index $n=4$.}
 \item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_real_galaxy.html}{\texttt{RealGalaxy}} --- \emph{models galaxies using real
   data, including a correction for the original PSF.  Requires the
   download of external data for full functionality.}
 \item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_add.html}{\texttt{Add}} --- \emph{a \emph{compound} object used for
-  summing multiple \gsobject s.}
+  summing multiple \texttt{GSObject}s.}
 \item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_convolve.html}{\texttt{Convolve}} --- \emph{a \emph{compound} object used for
-convolving multiple \gsobject s.}
+convolving multiple \texttt{GSObject}s.}
 \end{itemize}
 
 For more information and initialization details for each \gsobject,
