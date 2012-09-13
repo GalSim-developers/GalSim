@@ -146,43 +146,46 @@ instance are:
 \begin{itemize}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#aa0b398d4b0fca70211e4a73f81ea7e1a}{\texttt{obj.copy()}}
-  --- \emph{return a copy of the \gsobject.}
+  --- \emph{return a copy of the \texttt{GSObject}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a662d8ce421ecd90080bdcaaf6890aed8}{\texttt{obj.getFlux()}}
-  --- \emph{get the flux of the \gsobject.}
+  --- \emph{get the flux of the \texttt{GSObject}.}
 \item[$\circ$]\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#af4193645a9af52e7d54a044cafec8ab9}{\texttt{obj.scaleFlux(flux\_ratio)}}
-  --- \emph{multiply the flux of the \gsobject~by \texttt{flux\_ratio}.}
+  --- \emph{multiply the flux of the \texttt{GSObject}~by \texttt{flux\_ratio}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a1993652591ddc802b734186391b28894}{\texttt{obj.setFlux(flux)}}
-    --- \emph{set the flux of the \gsobject~to \texttt{flux}.}
+    --- \emph{set the flux of the \texttt{GSObject}~to \texttt{flux}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a4301c73bbc1491ebb170e64c509cadd5}{\texttt{obj.applyDilation(scale)}}
-  --- \emph{apply a dilation of the linear size of the \gsobject~by a
-  factor \texttt{scale}.}
+  --- \emph{change of the linear size of the \texttt{GSObject}~by a
+    factor \texttt{scale}, conserving flux.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a9d13b0238057f6d5d01f2681d91c09b0}{\texttt{obj.applyMagnification(scale)}}
-  --- \emph{dilate linear size by \texttt{scale} and \gsobject~flux by
+  --- \emph{dilate linear size by \texttt{scale} and multiply total flux by
   \texttt{scale}$^2$, conserving surface brightness.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a85cc0094dcf470cfbff93d9830ab80bd}{\texttt{applyShear(*args,
       **kwargs)}}
-  --- \emph{apply a shear to the \gsobject, handling a number of different
-  input conventions.}
+  --- \emph{apply a shear to the \texttt{GSObject}, handling a number of different
+  input conventions (see also
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1ellipse_1_1_ellipse.html}{\texttt{Ellipse}};
+  Section \ref{sect:misc}).}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ad6236e3153f23f1201396369dd67f1c7}{\texttt{obj.applyRotation(theta)}}
   --- \emph{apply a rotation of \texttt{theta} (positive direction
-  anti-clockwise) to the \gsobject, where \texttt{theta} is a
+  anti-clockwise) to the \texttt{GSObject}, where \texttt{theta} is a
   \texttt{galsim.Angle} instance (see Section \ref{sect:misc}). }
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a6b547741eeec4086de9abe227dae9325}{\texttt{applyShift(dx,
-      dy)}} --- \emph{apply a $(dx, dy)$ shift to this object.}
+      dy)}} --- \emph{apply a $(dx, dy)$ position shift to the
+    \texttt{GSObject} centroid.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...)}}
-  --- \emph{draw an image of the \gsobject~using Discrete Fourier
+  --- \emph{draw an image of the \texttt{GSObject}~using Discrete Fourier
   Transforms and interpolation to perform the image rendering.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}
-  --- \emph{draw an image of the \gsobject~by shooting a finite number of
+  --- \emph{draw an image of the \texttt{GSObject}~by shooting a finite number of
   photons to perform the image rendering.  The resulting image
   therefore contains stochastic noise, but the rendering is otherwise
   very close to exact.}
@@ -217,25 +220,24 @@ with \texttt{mean} and standard deviation \texttt{sigma}.}
 \item[$\circ$] \texttt{PoissonDeviate} --- \emph{Poisson distribution
     with a single \texttt{mean} rate.}
 
-\item[$\circ$] \texttt{CCDNoise}  --- \emph{Distribution following a
-    basic CCD noise model, depending on \texttt{gain} and \texttt{read\_noise}.}
+\item[$\circ$] \texttt{CCDNoise}  --- \emph{a
+    basic detector noise model, parameterized by \texttt{gain} and \texttt{read\_noise}.}
 
 \item[$\circ$] \texttt{WeibullDeviate} --- \emph{Weibull distribution
     family (includes Rayleigh and Exponential) with shape parameters \texttt{a} and \texttt{b}.}
 
-\item[$\circ$] \texttt{GammaDeviate} --- \emph{Gamma distribution for
+\item[$\circ$] \texttt{GammaDeviate} --- \emph{Gamma distribution with
     parameters \texttt{alpha} and \texttt{beta}.}
 
 \item[$\circ$] \texttt{Chi2Deviate} --- \emph{$\chi^2$ distribution
-    for degrees of freedom parameter \texttt{n}.}
+    with degrees-of-freedom parameter \texttt{n}.}
 
 \end{itemize}
 
 Unfortunately the random deviate classes are not yet fully integrated within
 the \emph{doxygen} documentation, due to their being C++ with compiled
 Python wrappers.  This means that the class names above and methods
-below are not
-hyperlinked.
+below are not yet hyperlinked.
 
 However, the full docstrings are available in
 \texttt{galsim/random.py}, so please refer there for more information,
@@ -245,22 +247,22 @@ or type
 
 within the Python interpreter.
 
-We now illustrate the most commonly-used methods of the random deviates.
-If we assume that some random deviate instance 
-has been instantiated as \texttt{dev},  for example
+We now illustrate the most commonly-used methods of the random
+deviates, assuming that some random deviate instance \texttt{dev}
+has been instantiated, for example by
 
-{\tt >>> dev = galsim.GaussianDeviate(sigma=3.9, mean=50.)},
+{\tt >>> dev = galsim.GaussianDeviate(sigma=3.9, mean=50.)}.
 
 The two most important and commonly-used methods for such an
 instance are:
 \begin{itemize}
 
-\item[$\circ$] \texttt{dev.applyTo(image)} --- \emph{adds a deviate
+\item[$\circ$] \texttt{dev.applyTo(image)} --- \emph{adds a random
+    number,
   distributed according to the distribution represented by 
-\texttt{dev} to each element in in a supplied Image instance \texttt{image} (see Section \ref{sect:image}).}
+\texttt{dev}, to each element in in a supplied \texttt{Image} instance \texttt{image} (see Section \ref{sect:image}).}
 
-\item[$\circ$] \texttt{dev()} --- \emph{this direct call method
-    returns a new random number drawn from the distribution
+\item[$\circ$] \texttt{dev()} --- \emph{returns a new random number drawn from the distribution
     represented by \texttt{dev}}.
 
 \end{itemize}
