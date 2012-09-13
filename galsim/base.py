@@ -120,9 +120,9 @@ class GSObject(object):
         """Returns the value of the object at a chosen 2D position in real space.
         
         As in SBProfile, this function assumes all are real-valued.  xValue() may not be implemented
- for    derived classes (e.g. SBConvolve) that require an Discrete Fourier Transform to determine 
-        real space values.  In this case, an SBError will be thrown at the C++ layer (raises a 
-        RuntimeError in Python).
+        for derived classes (e.g. SBConvolve) that require an Discrete Fourier Transform to 
+        determine real space values.  In this case, an SBError will be thrown at the C++ layer 
+        (raises a RuntimeError in Python).
         
         @param position  A 2D galsim.PositionD/I instance giving the position in real space.
         """
