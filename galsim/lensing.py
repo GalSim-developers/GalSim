@@ -2,10 +2,7 @@
 """
 import galsim
 import numpy as np
-from math import log
 import warnings
-
-ISQRT2 = np.sqrt(1.0/2.0)
 
 class PowerSpectrum(object):
     """@brief Class to represent a lensing shear field according to some power spectrum P(k)
@@ -294,6 +291,8 @@ class PowerSpectrumRealizer(object):
         
         @return g1,g2 Two image arrays for the two shear components g_1 and g_2
         """
+        ISQRT2 = np.sqrt(1.0/2.0)
+
         #If desired, recompute power spectra
         if new_power:
             self.set_power(self.p_E, self.p_B)
@@ -499,18 +498,19 @@ class NFWHalo(object):
         if out is None:
             out = np.zeros_like(x)
 
-        # 3 cases: x > 1, x < 1, and |x-1| < 0.01
-        mask = (x < 0.99)
+        # 3 cases: x > 1, x < 1, and |x-1| < 0.001
+        mask = (x < 0.999)
         if mask.any():
             a = ((1.-x[mask])/(x[mask]+1.))**0.5
             out[mask] = 0.5*np.log((1.+a)/(1.-a))/(1-x[mask]**2)**0.5
 
-        mask = (x > 1.01)
+        mask = (x > 1.001)
         if mask.any():
             a = ((x[mask]-1.)/(x[mask]+1.))**0.5
             out[mask] = np.arctan(a)/(x[mask]**2 - 1)**0.5
 
-        mask = (x >= 0.99) & (x <= 1.01)
+        # the approximation below has a maximum fractional error of 2.3e-7
+        mask = (x >= 0.999) & (x <= 1.001)
         if mask.any():
             out[mask] = 5./6. - x[mask]/3.
 
@@ -530,20 +530,21 @@ class NFWHalo(object):
         if out is None:
             out = np.zeros_like(x)
 
-        # 3 cases: x > 1, x < 1, and |x-1| < 0.01
-        mask = (x < 0.99)
+        # 3 cases: x > 1, x < 1, and |x-1| < 0.001
+        mask = (x < 0.999)
         if mask.any():
             a = ((1 - x[mask])/(x[mask] + 1))**0.5
             out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * \
                 (1 - np.log((1 + a)/(1 - a))/(1 - x[mask]**2)**0.5)
 
-        mask = (x > 1.01)
+        mask = (x > 1.001)
         if mask.any():
             a = ((x[mask] - 1)/(x[mask] + 1))**0.5
             out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * \
                 (1 - 2*np.arctan(a)/(x[mask]**2 - 1)**0.5)
 
-        mask = (x >= 0.99) & (x <= 1.01)
+        # this approximation is accurate at the 10^-6 level
+        mask = (x >= 0.999) & (x <= 1.001)
         if mask.any():
             out[mask] = ks[mask]*(22./15. - 0.8*x[mask])
 
@@ -581,7 +582,7 @@ class NFWHalo(object):
         # density contrast of halo at redshift z
         a = self.cosmo.a(self.z)
         ez = self.cosmo.E(a)
-        d0 = 200./3 * self.c**3/(log(1+self.c) - (1.*self.c)/(1+self.c))
+        d0 = 200./3 * self.c**3/(np.log(1+self.c) - (1.*self.c)/(1+self.c))
         rho_s = rho_c * ez**2 *d0
 
         # lensing weights: the only thing that depends on z_s
