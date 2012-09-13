@@ -1,6 +1,9 @@
 import numpy as np
 import galsim
 
+# The reference data for this test was generated with this script, using the version of the code on
+# branch #216 at commit 88d1035
+
 # random seed, etc.
 outfile = 'shearfield_reference.dat'
 seed = 14136
