@@ -76,7 +76,7 @@ class PowerSpectrum(object):
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
 
     def getShear(self, x=None, y=None, grid_spacing=None, grid_nx=None, gaussian_deviate=None,
-                 seed=None, interpolantxy=None):
+                 interpolantxy=None):
 
         """@brief Generate a realization of the current power spectrum at the specified positions.
 
@@ -147,9 +147,8 @@ class PowerSpectrum(object):
         methods
         @param[in] grid_nx Number of grid points in the x dimension
         @param[in] gaussian_deviate (Optional) A galsim.GaussianDeviate object for drawing the
-        random numbers
-        @param[in] seed (Optional) A seed to use when initializing a new galsim.GaussianDeviate for
-        drawing the random numbers
+        random numbers.  (If this is a BaseDeviate class other than GaussianDeviate, that's
+        fine too.)
         @param[in] interpolantxy (Optional) Interpolant to use for interpolating the shears on a
         grid to the requested positions [default = galsim.InterpolantXY(galsim.Linear())].
         @return g1,g2 Two Numpy arrays for the two shear components g_1 and g_2
@@ -169,19 +168,15 @@ class PowerSpectrum(object):
         # (3) make sure that we've specified some power spectrum
         if self.p_E is None and self.p_B is None:
             raise ValueError("Cannot generate shears when no E or B mode power spectrum are given!")
-        # (4) handle any specification of the Gaussian deviate and/or seed
+        # (4) make a GaussianDeviate if necessary
         if gaussian_deviate is None:
-            if seed is None:
-                gd = galsim.GaussianDeviate()
-            else:
-                gd = galsim.GaussianDeviate(seed)
-                self.seed = seed
-        else:
-            if seed:
-                raise ValueError("Cannot provide both a Gaussian deviate and a random seed!")
-            if isinstance(gaussian_deviate, galsim.GaussianDeviate) == False:
-                raise TypeError("The requested gaussian_deviate is not a Gaussian deviate!")
+            gd = galsim.GaussianDeviate()
+        elif isinstance(gaussian_deviate, galsim.GaussianDeviate):
             gd = gaussian_deviate
+        elif isinstance(gaussian_deviate, galsim.BaseDeviate):
+            gd = galsim.GaussianDeviate(gaussian_deviate)
+        else:
+            raise TypeError("The requested gaussian_deviate is not a BaseDeviate!")
         # (5) set default interpolant if none given
         if interpolantxy is None:
             interpolantxy = galsim.InterpolantXY(galsim.Linear())
@@ -277,7 +272,7 @@ class PowerSpectrumRealizer(object):
         else:            self.amplitude_B = np.sqrt(self._generate_power_array(p_B))
 
 
-    def __call__(self, new_power=False, gaussian_deviate=None, seed=None):
+    def __call__(self, new_power=False, gaussian_deviate=None):
         """@brief Generate a realization of the current power spectrum.
         
         @param[in] new_power If the power-spectrum functions that you specified are not
@@ -286,7 +281,6 @@ class PowerSpectrumRealizer(object):
         spectrum realization each time.
         @param[in] gaussian_deviate (Optional) gaussian deviate to use when generating the shear
         fields
-        @param[in] seed (Optional) random seed to use when generating the Gaussian random shear fields
         
         @return g1,g2 Two image arrays for the two shear components g_1 and g_2
         """
@@ -297,14 +291,13 @@ class PowerSpectrumRealizer(object):
             self.set_power(self.p_E, self.p_B)
         
         if gaussian_deviate is None:
-            if seed is None:
-                gd = galsim.GaussianDeviate()
-            else:
-                gd = galsim.GaussianDeviate(seed)
-        else:
-            if seed:
-                raise ValueError("Cannot provide both a Gaussian deviate and a random seed!")
+            gd = galsim.GaussianDeviate()
+        elif isinstance(gaussian_deviate, galsim.GaussianDeviate):
             gd = gaussian_deviate
+        elif isinstance(gaussian_deviate, galsim.BaseDeviate):
+            gd = galsim.GaussianDeviate(gd)
+        else:
+            raise TypeError("The requested gaussian_deviate is not a BaseDeviate!")
 
         #Generate a random complex realization for the E-mode, if there is one
         if self.amplitude_E is not None:
@@ -427,7 +420,7 @@ class Cosmology(object):
                 raise ValueError("Redshift z must not be negative")
             if z < z_ref:
                 raise ValueError("Redshift z must not be smaller than the reference redshift")
-	    # TODO: We don't want to depend on scipy, so need to move this down to c++.
+            # TODO: We don't want to depend on scipy, so need to move this down to c++.
             from scipy.integrate import quad
             d = quad(self.__angKernel, z_ref+1, z+1)[0]
             # check for curvature

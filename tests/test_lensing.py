@@ -119,15 +119,18 @@ def test_shear_seeds():
     assert not ((g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]))
 
     # get shears on a grid w/ specified seed
-    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx = 10, seed = 13796)
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx = 10,
+                              gaussian_deviate=galsim.GaussianDeviate(13796))
     # get shears on a grid w/ same specified seed: should be same
-    g1new, g2new = test_ps.getShear(grid_spacing=1.0, grid_nx = 10, seed = 13796)
+    g1new, g2new = test_ps.getShear(grid_spacing=1.0, grid_nx = 10,
+                                    gaussian_deviate=galsim.GaussianDeviate(13796))
     np.testing.assert_array_equal(g1, g1new,
                                   err_msg="New shear field differs from previous (same seed)!")
     np.testing.assert_array_equal(g2, g2new,
                                   err_msg="New shear field differs from previous (same seed)!")
     # get shears on a grid w/ diff't specified seed: should differ
-    g1new, g2new = test_ps.getShear(grid_spacing=1.0, grid_nx = 10, seed = 1379)
+    g1new, g2new = test_ps.getShear(grid_spacing=1.0, grid_nx = 10,
+                                    gaussian_deviate=galsim.GaussianDeviate(1379))
     assert not ((g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]))
 
     t2 = time.time()
@@ -144,7 +147,8 @@ def test_shear_reference():
     g2_in = ref[:,1]
 
     # set up params
-    seed = 14136
+    #seed = 14136
+    rng = galsim.UniformDeviate(14136)  # "gaussian_deviate" may be any BaseDeviate type
     n = 10
     dx = 1.
 
@@ -152,7 +156,7 @@ def test_shear_reference():
     ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pkflat,
                                       B_power_function=galsim.lensing.pkflat)
     # get shears
-    g1, g2 = ps.getShear(grid_spacing = dx, grid_nx = n, seed = seed)
+    g1, g2 = ps.getShear(grid_spacing = dx, grid_nx = n, gaussian_deviate=rng)
 
     # put in same format as data that got read in
     g1vec = g1.reshape(n*n)
