@@ -17,6 +17,9 @@ def funcname():
     return inspect.stack()[1][3]
 
 def test_nfwhalo():
+    import time
+    t1 = time.time()
+
     # reference data comes from Matthias Bartelmann's libastro code
     # cluster properties: M=1e15, conc=4, redshift=1
     # sources at redshift=2
@@ -25,8 +28,6 @@ def test_nfwhalo():
     # distance go from 1 .. 599 arcsec
     ref = np.loadtxt(refdir + '/nfw_lens.dat')
 
-    import time
-    t1 = time.time()
     # set up the same halo
     halo = galsim.lensing.NFWHalo(mass=1e15, conc=4, z=1, pos_x=0, pos_y=0)
     pos_x = np.arange(1,600)
@@ -51,11 +52,15 @@ def test_nfwhalo():
                                 err_msg="Computation of reduced shear deviates from reference.")
     np.testing.assert_allclose(ref[:,4], kappa,  rtol=1e-4,
                                err_msg="Computation of convergence deviates from reference.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_shear_flatps():
     """Test that shears from power spectrum P(k)=const have the expected statistical properties"""
+    import time
+    t1 = time.time()
+
     # make a flat power spectrum for E, B modes
     test_ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pkflat,
                                            B_power_function=galsim.lensing.pkflat)
@@ -76,8 +81,14 @@ def test_shear_flatps():
     np.testing.assert_almost_equal(corr, 0., decimal=2,
                                    err_msg="Shear components should be uncorrelated with each other!")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_shear_seeds():
     """Test that shears from lensing engine behave appropriate when given same/different seeds"""
+    import time
+    t1 = time.time()
+
     # make a power spectrum for some E, B power function
     test_ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pk2,
                                            B_power_function=galsim.lensing.pkflat)
@@ -106,8 +117,14 @@ def test_shear_seeds():
         np.testing.assert_equal(0,1,err_msg="New shear field is same as previous!")
         np.testing.assert_equal(0,1,err_msg="New shear field is same as previous!")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_shear_reference():
     """Test shears from lensing engine compared to stored reference values"""
+    import time
+    t1 = time.time()
+
     # read input data
     ref = np.loadtxt(refdir + '/shearfield_reference.dat')
     g1_in = ref[:,0]
@@ -132,6 +149,10 @@ def test_shear_reference():
                                    err_msg = "Shear field differs from reference shear field!")
     np.testing.assert_almost_equal(g2_in, g2vec, 9,
                                    err_msg = "Shear field differs from reference shear field!")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 if __name__ == "__main__":
     test_nfwhalo()

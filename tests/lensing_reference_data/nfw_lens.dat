@@ -1,3 +1,10 @@
+# reference data comes from Matthias Bartelmann's libastro code
+# cluster properties: M=1e15, conc=4, redshift=1
+# sources at redshift=2
+# columns:
+# distance [arcsec], deflection [arcsec], shear, reduced shear, convergence
+# distance go from 1 .. 599 arcsec
+#
 ### cluster properties:
 # 1e+15		mass
 # 4		concentration
