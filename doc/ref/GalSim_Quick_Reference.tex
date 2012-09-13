@@ -45,26 +45,24 @@ be something like the following:
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_add.html}{\texttt{Add}}
   and 
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_convolve.html}{\texttt{Convolve}}
-  classes --- see Section \ref{sect:gsobjects}.
+  classes --- see Section~\ref{sect:gsobjects}.
 \item Apply transformations such as shears, shifts or magnification
-  using the methods of the \texttt{GSObject}~ --- see Section
-  \ref{sect:gsobjectmethods}.
+  using the methods of the \texttt{GSObject}~ --- see Section~\ref{sect:gsobjectmethods}.
 \item Draw the object into a GalSim \texttt{Image}, representing a postage
   stamp image of your astronomical object.  This can be done using the
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...)}}
   or
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}
   methods carried by all \texttt{GSObject}s for rendering images --- see
-  Section \ref{sect:gsobjectmethods}.
+  Section~\ref{sect:gsobjectmethods}.
 \item Add noise to the \texttt{Image}~using one of the GalSim
-  random deviate classes --- see Section \ref{sect:random}.
+  random deviate classes --- see Section~\ref{sect:random}.
 \item Add the postage stamp \texttt{Image}~to a subsection of a larger
   \texttt{Image} 
   instance, or to a list of \texttt{Image} instances multiple
-  \texttt{Image}~instances in preparation for output --- see Section
-  \ref{sect:image}.
+  \texttt{Image}~instances in preparation for output --- see Section~\ref{sect:image}.
 \item Save the \texttt{Image}(s) to file in FITS (Flexible Image Transport
-  System) format --- see Section \ref{sect:image}.
+  System) format --- see Section~\ref{sect:image}.
 \end{itemize}
 
 There are many examples of this workflow in the directory {\tt
@@ -154,12 +152,13 @@ convolving multiple \texttt{GSObject}s.}
 
 
 \section{Important GSObject methods}\label{sect:gsobjectmethods}
-A number of methods are shared by all the \texttt{GSObject}s~of Section
-\ref{sect:gsobjects}, and are also to be found in \\ {\tt
-  GalSim/galsim/base.py} within the definition of the \texttt{GSObject}~base
-class.  In what follows, we assume that a \texttt{GSObject} labelled
-\texttt{obj} has been instantiated using one of the calls described in
-the documentation linked above.  For example,
+A number of methods are shared by all the \texttt{GSObject}s of
+Section~\ref{sect:gsobjects}, and are also to be found in \\ {\tt
+  GalSim/galsim/base.py} within the definition of the
+\texttt{GSObject}~base class.  In what follows, we assume that a
+\texttt{GSObject} labelled \texttt{obj} has been instantiated using
+one of the calls described in the documentation linked above.  For
+example,
 
 {\tt >>> obj = galsim.Sersic(n=3.5, half\_light\_radius=1.743)}.
 
@@ -172,7 +171,7 @@ instance are:
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a662d8ce421ecd90080bdcaaf6890aed8}{\texttt{obj.centroid()}}
   \newline \emph{return the $(x, y)$ centroid of the \texttt{GSObject} as a
-    \texttt{PositionD} (see Section \ref{sect:misc}).}
+    \texttt{PositionD} (see Section~\ref{sect:misc}).}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a662d8ce421ecd90080bdcaaf6890aed8}{\texttt{obj.getFlux()}}
   \newline \emph{get the flux of the \texttt{GSObject}.}
@@ -184,7 +183,7 @@ instance are:
 \item[$\circ$]
 \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ad491a1276fda07b148c6466d5dbd07b1}{\texttt{obj.applyTransformation(ellipse)}}
 \newline \emph{apply an \texttt{Ellipse} transformation represented by
-  \texttt{ellipse} to the \texttt{GSObject} (see \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1ellipse_1_1_ellipse.html}{\texttt{Ellipse}}; Section \ref{sect:misc}).}
+  \texttt{ellipse} to the \texttt{GSObject} (see \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1ellipse_1_1_ellipse.html}{\texttt{Ellipse}}; Section~\ref{sect:misc}).}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a4301c73bbc1491ebb170e64c509cadd5}{\texttt{obj.applyDilation(scale)}}
   \newline \emph{change of the linear size of the \texttt{GSObject}~by a
@@ -198,12 +197,12 @@ instance are:
   \newline \emph{apply a shear to the \texttt{GSObject}, handling a number of different
   input conventions (see also 
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1shear_1_1_shear.html}{\texttt{Shear}};
-  Section \ref{sect:misc}).}
+  Section~\ref{sect:misc}).}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ad6236e3153f23f1201396369dd67f1c7}{\texttt{obj.applyRotation(theta)}}
   \newline \emph{apply a rotation of \texttt{theta} (positive direction
   anti-clockwise) to the \texttt{GSObject}, where \texttt{theta} is an
-  \texttt{Angle} instance (see Section \ref{sect:misc}).}
+  \texttt{Angle} instance (see Section~\ref{sect:misc}).}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a6b547741eeec4086de9abe227dae9325}{\texttt{applyShift(dx,
       dy)}} \newline \emph{apply a $(dx, dy)$ position shift to the
@@ -295,7 +294,7 @@ instance are:
 \item[$\circ$] \texttt{dev.applyTo(image)} \newline \emph{adds a random
     number,
   distributed according to the distribution represented by 
-\texttt{dev}, to each element in in a supplied \texttt{Image} instance \texttt{image} (see Section \ref{sect:image}).}
+\texttt{dev}, to each element in in a supplied \texttt{Image} instance \texttt{image} (see Section~\ref{sect:image}).}
 
 \item[$\circ$] \texttt{dev()} \newline \emph{returns a new random number drawn from the distribution
     represented by \texttt{dev}}.
@@ -316,7 +315,7 @@ They are used to store the rendered output of the
 and
 \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}
 methods. They can also be operated on to add stochastic noise
-simulating real astronomical images (see Section \ref{sect:random}),
+simulating real astronomical images (see Section~\ref{sect:random}),
 and have methods for writing to FITS format output.
 
 There are four types of GalSim \texttt{Image}, one for each of four
@@ -364,8 +363,7 @@ instance are:
 \item[$\circ$] \texttt{image.addNoise(dev)} \newline \emph{this adds stochastic noise, distributed as
   represented by the random deviate instance \texttt{dev}, to each
   element of the data array in \texttt{image}.  This therefore has the same
-  effect as \texttt{dev.applyTo(image)} (see Section
-  \ref{sect:random}; also \texttt{galsim/noise.py}).}
+  effect as \texttt{dev.applyTo(image)} (see Section~\ref{sect:random}; also \texttt{galsim/noise.py}).}
 
 \item[$\circ$] \texttt{image.write(fits, ...)}  \newline  \emph{write the \texttt{image} to a FITS
     file or object as determined by the \texttt{fits} input parameter
