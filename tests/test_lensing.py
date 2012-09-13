@@ -66,7 +66,7 @@ def test_shear_flatps():
                                            B_power_function=galsim.lensing.pkflat)
     # get shears on 500x500 grid
     g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500)
-    # check: are shears consistent with unit variance?
+    # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
     np.testing.assert_almost_equal(var1, 0.01, decimal=3,
