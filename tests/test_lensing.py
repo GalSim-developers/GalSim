@@ -47,12 +47,27 @@ def test_nfwhalo():
 
         # comparison to reference:
         # tangential shear in x-direction is purely negative in g1
-        np.testing.assert_allclose(-ref[:,2], gamma1,  rtol=1e-4,
-                                   err_msg="Computation of shear deviates from reference.")
-        np.testing.assert_allclose(-ref[:,3], g1,  rtol=1e-4,
-                                   err_msg="Computation of reduced shear deviates from reference.")
-        np.testing.assert_allclose(ref[:,4], kappa,  rtol=1e-4,
-                                   err_msg="Computation of convergence deviates from reference.")
+        try:
+            np.testing.assert_allclose(
+                -ref[:,2], gamma1, rtol=1e-4,
+                err_msg="Computation of shear deviates from reference.")
+            np.testing.assert_allclose(
+                -ref[:,3], g1, rtol=1e-4,
+                err_msg="Computation of reduced shear deviates from reference.")
+            np.testing.assert_allclose(
+                ref[:,4], kappa, rtol=1e-4,
+                err_msg="Computation of convergence deviates from reference.")
+        except AttributeError:
+            # Older numpy versions don't have assert_allclose, so use this instead:
+            np.testing.assert_array_almost_equal(
+                -ref[:,2], gamma1, decimal=4,
+                err_msg="Computation of shear deviates from reference.")
+            np.testing.assert_array_almost_equal(
+                -ref[:,3], g1, decimal=4,
+                err_msg="Computation of reduced shear deviates from reference.")
+            np.testing.assert_array_almost_equal(
+                ref[:,4], kappa, decimal=4,
+                err_msg="Computation of convergence deviates from reference.")
     except ImportError:
         import warnings
         warnings.warn("scipy not found! Integrator required for angular diameter distances")
