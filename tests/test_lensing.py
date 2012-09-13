@@ -97,11 +97,7 @@ def test_shear_seeds():
     g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx = 10)
     # do it again, w/o specifying seed: should differ
     g1new, g2new = test_ps.getShear(grid_spacing=1.0, grid_nx = 10)
-    ## I'm not actually sure how to use numpy.testing to require inequality, so I'm going to just
-    ## fake it by explicitly testing first element and using a ridiculous assertion
-    if (g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]):
-        np.testing.assert_equal(0,1,err_msg="New shear field is same as previous!")
-        np.testing.assert_equal(0,1,err_msg="New shear field is same as previous!")
+    assert not ((g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]))
 
     # get shears on a grid w/ specified seed
     g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx = 10, seed = 13796)
@@ -113,9 +109,7 @@ def test_shear_seeds():
                                   err_msg="New shear field differs from previous (same seed)!")
     # get shears on a grid w/ diff't specified seed: should differ
     g1new, g2new = test_ps.getShear(grid_spacing=1.0, grid_nx = 10, seed = 1379)
-    if (g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]):
-        np.testing.assert_equal(0,1,err_msg="New shear field is same as previous!")
-        np.testing.assert_equal(0,1,err_msg="New shear field is same as previous!")
+    assert not ((g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
