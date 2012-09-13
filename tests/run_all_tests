@@ -12,3 +12,4 @@ python test_real.py || exit
 python test_shear.py || exit
 python test_spline.py || exit
 python test_utilities.py || exit
+python test_lensing.py || exit
