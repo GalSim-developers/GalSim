@@ -335,7 +335,8 @@ class PowerSpectrumRealizer(object):
         return power_array
     
     def _generate_spin_weightings(self):
-        #Internal function to generate the cosine and sine spin weightings for the current array set up
+        #Internal function to generate the cosine and sine spin weightings for the current 
+        #array set up
         C=np.zeros((self.nx,self.ny/2+1))
         S=np.zeros((self.nx,self.ny/2+1))
         kx = self.kx
@@ -445,7 +446,7 @@ class NFWHalo(object):
         """@brief Create NFW halo.
 
         @param[in] mass Mass defined using a spherical overdensity of 200 times the critical density
-        of the universe, in units of M_solar/h.
+                        of the universe, in units of M_solar/h.
         @param[in] conc Concentration parameter, i.e., ratio of virial radius to NFW scale radius
         @param[in] z Redshift
         @param[in] pos_x X-coordinate [arcsec]
@@ -532,7 +533,7 @@ class NFWHalo(object):
             out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * \
                 (1 - 2*np.arctan(a)/(x[mask]**2 - 1)**0.5)
 
-        # this approximation is accurate at the 10^-6 level
+        # the approximation below has a maximum fractional error of 7.4e-7
         mask = (x >= 0.999) & (x <= 1.001)
         if mask.any():
             out[mask] = ks[mask]*(22./15. - 0.8*x[mask])
@@ -552,14 +553,16 @@ class NFWHalo(object):
         if out is None:
             out = np.zeros_like(x)
 
-        mask = (x < 0.05)
-        if mask.any():
-            out[mask] = 4*ks[mask]*(0.25 + 0.125 * x[mask]**2 * (3.25 + 3.0*np.log(x[mask]/2)))
-
-        mask = (mask == False)
+        mask = (x > 0.01)
         if mask.any():
             out[mask] = 4*ks[mask]*(np.log(x[mask]/2) + 2*self.__farcth(x[mask])) * \
                 x[mask]**(-2) - self.__kappa(x[mask], ks[mask])
+
+        # the approximation below has a maximum fractional error of 1.1e-7
+        mask = (x <= 0.01)
+        if mask.any():
+            out[mask] = 4*ks[mask]*(0.25 + 0.125 * x[mask]**2 * (3.25 + 3.0*np.log(x[mask]/2)))
+
         return out
 
     def __ks(self, z_s):
@@ -584,14 +587,14 @@ class NFWHalo(object):
         """@brief Calculate (reduced) shear of halo at specified positions
 
         @param[in] pos_x X-coordinate(s) of the source, input as a numpy array. This is assumed to
-        be post-lensing!
+                         be post-lensing!
         @param[in] pos_y Y-coordinate(s) of the source, input as a numpy array. This is assumed to
-        be post-lensing!
+                         be post-lensing!
         @param[in] z_s Source redshift(s)
         @param[in] units Units of coordinates (only arcsec implemented so far).
         @param[in] reduced Whether reduced shears are returned
         @return g1,g2 Numpy arrays containing the two shear components g_1 and g_2 at the specified
-        position(s)
+                      position(s)
         """
         if units != 'arcsec':
             raise NotImplementedError("Only arcsec units implemented!")
@@ -619,8 +622,9 @@ class NFWHalo(object):
         """@brief Calculate convergence of halo at specified positions
 
         @param[in] pos_x X-coordinate(s) of the source, input as a Numpy array. This is assumed to
-        be post-lensing!
-        @param[in] pos_y Y-coordinate(s) of the source, input as a Numpy array. This is assumed to be post-lensing!
+                         be post-lensing!
+        @param[in] pos_y Y-coordinate(s) of the source, input as a Numpy array. This is assumed to 
+                         be post-lensing!
         @param[in] z_s Source redshift(s)
         @param[in] units Units of coordinates (only arcsec implemented so far).
         @return kappa Numpy array containing the convergence at the specified position(s)
