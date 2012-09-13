@@ -1,4 +1,5 @@
 import numpy as np
+import galsim
 
 def roll2d(image, (iroll, jroll)):
     """Perform a 2D roll (circular shift) on a supplied 2D numpy array, conveniently.
@@ -99,3 +100,22 @@ class AttributeDict(object):
     def __len__(self):
         return len(self.__dict__)
 
+def rand_arr(shape, deviate):
+    """@brief Function to make a 2d array of random deviates (of any sort)
+    """
+    if len(shape) is not 2:
+        raise ValueError("Can only make a 2d array from this function!")
+    # note reversed indices due to Numpy vs. Image array indexing conventions!
+    tmp_img = galsim.ImageD(shape[1], shape[0])
+    deviate.applyTo(tmp_img.view())
+    return tmp_img.array
+
+def eval_sbinterpolatedimage(sbi, x_list, y_list):
+    """@brief Function to get the value of some SBInterpolatedImage at a list of positions.
+    """
+    if len(x_list) != len(y_list):
+        raise RuntimeError("x and y list lengths must match!")
+    vals = []
+    for x_ind in range(len(x_list)):
+        vals.append(sbi.xValue(galsim.PositionD(x_list[x_ind], y_list[x_ind])))
+    return vals
