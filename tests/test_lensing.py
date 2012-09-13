@@ -70,9 +70,9 @@ def test_shear_flatps():
     var1 = np.var(g1)
     var2 = np.var(g2)
     np.testing.assert_almost_equal(var1, 0.01, decimal=3,
-                                   err_msg="Non-unit shear variance(1) from flat power spectrum!")
+                                   err_msg="Incorrect shear variance(1) from flat power spectrum!")
     np.testing.assert_almost_equal(var2, 0.01, decimal=3,
-                                   err_msg="Non-unit shear variance(2) from flat power spectrum!")
+                                   err_msg="Incorrect shear variance(2) from flat power spectrum!")
     # check: are g1, g2 uncorrelated with each other?
     top= np.sum((g1-np.mean(g1))*(g2-np.mean(g2)))
     bottom1 = np.sum((g1-np.mean(g1))**2)
