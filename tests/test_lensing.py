@@ -214,8 +214,8 @@ def test_shear_reference():
     dx = 1.
 
     # define power spectrum
-    ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pkflat,
-                                      B_power_function=galsim.lensing.pkflat)
+    ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pk2,
+                                      B_power_function=galsim.lensing.pk1)
     # get shears
     g1, g2 = ps.getShear(grid_spacing = dx, grid_nx = n, gaussian_deviate=rng)
 
