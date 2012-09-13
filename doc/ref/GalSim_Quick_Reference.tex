@@ -268,7 +268,8 @@ instance are:
 \end{itemize}
 
 \section{Image classes and methods}\label{sect:image}
-The GalSim \texttt{Image}, classes store array data, pixel units and
+The GalSim \texttt{Image} classes store array datam, along with a figure
+for the pixel separation in physical units and
 image bounds information (origin, extent).  The \texttt{ImageView}
 provides a mutable view into \texttt{Image} instance data, and
 \texttt{ConstImageView} an immutable view into
@@ -277,13 +278,16 @@ provides a mutable view into \texttt{Image} instance data, and
 these fundamental types.
 
 They are used to store the rendered output of the
-\gsobject~\texttt{draw()} and \texttt{drawShoot()} methods, can be
+\gsobject~\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...)}}
+  and
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}
+  methods. They can also be
 operated on to add stochastic noise simulating real astronomical
-images (e.g.\ Section \ref{sect:random}), and also have methods for
-reading from and writing to FITS format output.
+images (see Section \ref{sect:random}), and have methods for
+writing to FITS format output.
 
-There are four types of GalSim \texttt{Image}, one for each of four
-supported data types:
+There are four types of GalSim \texttt{Image},  one for each of four
+supported array data types:
 \begin{itemize}
 
 \item[$\circ$] \texttt{ImageS}; \texttt{ImageViewS};
@@ -317,7 +321,7 @@ within the Python interpreter.
 We now illustrate the most commonly-used methods of \texttt{Image}
 class instances.
 We will assume that some image \texttt{img} 
-has been instantiated. As an example:
+has been instantiated, for example by
 
 {\tt im = obj.draw(dx=1.)}.
 
@@ -326,10 +330,10 @@ instance are:
 \begin{itemize}
 
 \item[$\circ$] \texttt{img.addNoise(dev)} --- (see
-  \texttt{galsim/noise.py}) this adds stochastic noise, distributed as
-  represented by the random deviate instance \texttt{dev}, to image
-  element of the image \texttt{img}.  This therefore has the same
-  effect as \texttt{dev.applyTo(img)} (see Section \ref{sect:random}).
+  \texttt{galsim/noise.py}) \emph{this adds stochastic noise, distributed as
+  represented by the random deviate instance \texttt{dev}, to each
+  element of the data array in \texttt{img}.  This therefore has the same
+  effect as \texttt{dev.applyTo(img)} (see Section \ref{sect:random}).}
 
 \item[$\circ$] \texttt{img.write(image, fits, ...)}  ---  (see
   \texttt{galsim/fits.py}) \emph{write the \texttt{image} to a FITS
@@ -352,11 +356,11 @@ instance are:
 \begin{itemize}
 
 \item[$\circ$] \texttt{Angle} --- TODO: Find a good description of the
-  working of the Angle class and put it here.
+  working of the Angle class and put it here!
 
 \item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1ellipse_1_1_ellipse.html}{\texttt{Ellipse}} --- (see \texttt{galsim/ellipse.py})
-  class to represent ellipses and thus ellipse-type transformations.  
-The class can be initialized using a variety of differing parameter conventions.
+  \emph{class to represent ellipses and thus ellipse-type transformations.  
+The class can be initialized using a variety of differing parameter conventions.}
 
 \end{itemize}
 
