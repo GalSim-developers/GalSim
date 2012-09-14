@@ -288,6 +288,8 @@ namespace galsim {
         return f;
     }
 
+    //! @cond
+
     // Default uses T1 as the result type
     template <typename T1, typename T2>
     struct ResultType { typedef T1 type; };
@@ -585,6 +587,8 @@ namespace galsim {
     template <typename T1, typename T2>
     inline Image<T1>& operator/=(Image<T1>& im, const BaseImage<T2>& x) 
     { im.view() /= x; return im; }
+
+    //! @endcond
 
 } // namespace galsim
 
