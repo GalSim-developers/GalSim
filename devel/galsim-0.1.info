@@ -5,7 +5,7 @@ Description: Galaxy Image Simulator
 HomePage: https://github.com/GalSim-developers/GalSim
 License: GPL
 Maintainer: Mike Jarvis <mikejarvis17@gmail.com>
-BuildDepends: scons
+BuildDepends: scons, boost1.35.python27
 Depends: python27, numpy-py27, pyfits-py27, boost1.35.python27-shlibs, yaml-py27, tmv0-shlibs, fftw3-shlibs
 BuildDependsOnly: false
 Source: https://github.com/downloads/GalSim-developers/GalSim/GalSim-developers-GalSim-74f868c.tar.gz
