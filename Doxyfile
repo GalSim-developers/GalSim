@@ -632,7 +632,9 @@ EXCLUDE                = include/galsim/boost1_48_0.random \
                        = include/galsim/integ/MoreFunctional.h \
                        = include/galsim/Laguerre.h \
                        = include/galsim/integ/IntGKPData1.h \
-                       = include/galsim/integ/IntGKPData10.h
+                       = include/galsim/integ/IntGKPData10.h \
+                       = include/galsim/mmgr.h \
+                       = include/galsim/Stopwatch.h
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
