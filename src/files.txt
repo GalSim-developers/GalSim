@@ -20,7 +20,6 @@ SBInterpolatedImage.cpp
 SBDeconvolve.cpp
 SBKolmogorov.cpp
 CppShear.cpp
-StringStuff.cpp
 Table.cpp
 RealSpaceConvolve.cpp
 Random.cpp
