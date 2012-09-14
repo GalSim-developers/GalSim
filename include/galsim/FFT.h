@@ -51,6 +51,7 @@
 
 namespace galsim {
 
+    //! @cond
 
     // Class for errors
     class FFTError : public std::runtime_error 
@@ -77,9 +78,13 @@ namespace galsim {
         FFTInvalid(const std::string& m="invalid plan or data") : FFTError(m) {}
     };
 
+    //! @endcond
+
     // A helper function that will return the smallest 2^n or 3x2^n value that is
     // even and >= the input integer.
     int goodFFTSize(int input);
+
+    //! @cond
 
     // Quick helper struct to tell if T is real or complex
     template <typename T>
@@ -162,6 +167,8 @@ namespace galsim {
         size_t _n, _nn;
         T* _array;
     };
+
+    //! @endcond
 
     class XTable;
 
