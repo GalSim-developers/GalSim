@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Some example scripts to make multi-object images using the GalSim library.
 """
