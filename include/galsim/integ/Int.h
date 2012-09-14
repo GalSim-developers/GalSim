@@ -334,6 +334,7 @@ namespace integ {
             }
         }
 
+        // All code between the @cond and @endcond is excluded from Doxygen documentation
         //! @cond
 
         /**
@@ -379,6 +380,7 @@ namespace integ {
         boost::shared_ptr<std::map<T,T> > _fxmap_source;
     };
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
 
     /// Rescale the error if int |f| dx or int |f-mean| dx are too large
@@ -849,6 +851,7 @@ namespace integ {
         return int1d(func,reg,relerr,abserr); 
     }
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
     template <class BF, class YREG> 
     class Int2DAuxType : 
@@ -898,6 +901,7 @@ namespace integ {
         return answer;
     }
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
     template <class TF, class YREG, class ZREG> 
     class Int3DAuxType : 
@@ -952,6 +956,7 @@ namespace integ {
 
     // Helpers for constant regions for int2d, int3d:
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
     template <class T> 
     struct ConstantReg1 : 

@@ -51,6 +51,7 @@
 
 namespace galsim {
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
 
     // Class for errors
@@ -84,6 +85,7 @@ namespace galsim {
     // even and >= the input integer.
     int goodFFTSize(int input);
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
 
     // Quick helper struct to tell if T is real or complex

@@ -288,6 +288,7 @@ namespace galsim {
         return f;
     }
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
 
     // Default uses T1 as the result type
