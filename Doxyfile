@@ -314,7 +314,7 @@ EXTRACT_ALL            = YES
 # If the EXTRACT_PRIVATE tag is set to YES all private members of a class
 # will be included in the documentation.
 
-EXTRACT_PRIVATE        = YES
+EXTRACT_PRIVATE        = NO
 
 # If the EXTRACT_STATIC tag is set to YES all static members of a file
 # will be included in the documentation.
@@ -325,7 +325,7 @@ EXTRACT_STATIC         = YES
 # defined locally in source files will be included in the documentation.
 # If set to NO only classes defined in header files are included.
 
-EXTRACT_LOCAL_CLASSES  = YES
+EXTRACT_LOCAL_CLASSES  = NO
 
 # This flag is only useful for Objective-C code. When set to YES local
 # methods, which are defined in the implementation section but not in
@@ -628,7 +628,12 @@ RECURSIVE              = YES
 # excluded from the INPUT source files. This way you can easily exclude a
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = include/galsim/boost1_48_0.random
+EXCLUDE                = include/galsim/boost1_48_0.random \
+                       = include/galsim/integ/MoreFunctional.h \
+                       = include/galsim/Laguerre.h \
+                       = include/galsim/integ/IntGKPData1.h \
+                       = include/galsim/integ/IntGKPData10.h \
+                       = include/galsim/Pset.h
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
