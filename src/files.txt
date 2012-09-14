@@ -5,7 +5,6 @@ Interpolant.cpp
 Laguerre.cpp
 OneDimensionalDeviate.cpp
 PhotonArray.cpp
-Pset.cpp
 SBProfile.cpp
 SBBox.cpp
 SBGaussian.cpp
