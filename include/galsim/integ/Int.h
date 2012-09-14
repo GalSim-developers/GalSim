@@ -334,6 +334,8 @@ namespace integ {
             }
         }
 
+        //! @cond
+
         /**
          * @brief Add a split point to the current list to be used by the next subDivide call
          *
@@ -363,6 +365,7 @@ namespace integ {
         /// Setup an fxmap for this region.
         void useFXMap() 
         { _fxmap_source.reset(new std::map<T,T>()); fxmap = _fxmap_source.get(); }
+        //! @endcond
 
     private:
         T _a,_b,_error,_area;
@@ -375,6 +378,8 @@ namespace integ {
     private:
         boost::shared_ptr<std::map<T,T> > _fxmap_source;
     };
+
+    //! @cond
 
     /// Rescale the error if int |f| dx or int |f-mean| dx are too large
     template <class T> 
@@ -765,6 +770,7 @@ namespace integ {
     template <class UF> AuxFunc2<UF> 
     inline Aux2(const UF& uf) 
     { return AuxFunc2<UF>(uf); }
+    //! @endcond
 
     /// Perform a 1-dimensional integral using an IntRegion
     template <class UF> 
@@ -843,6 +849,7 @@ namespace integ {
         return int1d(func,reg,relerr,abserr); 
     }
 
+    //! @cond
     template <class BF, class YREG> 
     class Int2DAuxType : 
         public std::unary_function<typename BF::first_argument_type,typename BF::result_type> 
@@ -870,6 +877,7 @@ namespace integ {
         const YREG& yreg;
         typename BF::result_type relerr,abserr;
     };
+    //! @endcond
 
     /// Perform a 2-dimensional integral
     template <class BF, class YREG> 
@@ -890,6 +898,7 @@ namespace integ {
         return answer;
     }
 
+    //! @cond
     template <class TF, class YREG, class ZREG> 
     class Int3DAuxType : 
         public std::unary_function<typename TF::firstof3_argument_type,typename TF::result_type> 
@@ -918,6 +927,7 @@ namespace integ {
         const ZREG& zreg;
         typename TF::result_type relerr,abserr;
     };
+    //! @endcond
 
     /// Perform a 3-dimensional integral
     template <class TF, class YREG, class ZREG> 
@@ -942,6 +952,7 @@ namespace integ {
 
     // Helpers for constant regions for int2d, int3d:
 
+    //! @cond
     template <class T> 
     struct ConstantReg1 : 
         public std::unary_function<T, IntRegion<T> >
@@ -961,6 +972,7 @@ namespace integ {
         IntRegion<T> operator()(T x, T y) const { return ir; }
         IntRegion<T> ir;
     };
+    //! @endcond
 
     /// Perform a 3-dimensional integral using constant IntRegions for both regions
     /// (i.e. the integral is over a square)
