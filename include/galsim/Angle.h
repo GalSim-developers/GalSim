@@ -71,8 +71,7 @@ namespace galsim {
     const AngleUnit arcmin(M_PI/60./180.); ///< constant with units of arcminutes
     const AngleUnit arcsec(M_PI/3600./180.); ///< constant with units of arcseconds
 
-    /**************************************************************************************/
-    /*
+    /**
      *  @brief A class representing an Angle
      *
      *  Angles are a value with an AngleUnit.
