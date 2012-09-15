@@ -185,7 +185,8 @@ def test_gaussian():
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -394,7 +395,8 @@ def test_exponential():
     mySBP = galsim.SBExponential(flux=1., scale_radius=r0)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -474,7 +476,8 @@ def test_sersic():
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -549,7 +552,8 @@ def test_airy():
     mySBP = galsim.SBAiry(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -618,7 +622,8 @@ def test_box():
     mySBP = galsim.SBBox(xw=1, yw=1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -656,7 +661,8 @@ def test_moffat():
                             trunc=5*fwhm_backwards_compatible, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -926,7 +932,8 @@ def test_kolmogorov():
     #savedImg.write(os.path.join(imgdir, "kolmogorov.fits"))
     savedImg = galsim.fits.read(os.path.join(imgdir, "kolmogorov.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1097,7 +1104,8 @@ def test_smallshear():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     mySBP.applyShear(myShear._shear)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1106,7 +1114,7 @@ def test_smallshear():
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     mySBP.applyTransformation(myEllipse._ellipse)
     myImg.setZero()
-    mySBP.draw(myImg,dx=0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1159,7 +1167,8 @@ def test_largeshear():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
     mySBP.applyShear(myShear._shear)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Large-shear DeVaucouleurs profile disagrees with expected result")
@@ -1167,7 +1176,7 @@ def test_largeshear():
     mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
     mySBP.applyTransformation(myEllipse._ellipse)
     myImg.setZero()
-    mySBP.draw(myImg,dx=0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1227,7 +1236,8 @@ def test_convolve():
     # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    myConv.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    myConv.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 4,
@@ -1273,7 +1283,8 @@ def test_shearconvolve():
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    myConv.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    myConv.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1285,7 +1296,7 @@ def test_shearconvolve():
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     myImg.setZero()
-    myConv.draw(myImg,dx=0.2)
+    myConv.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1356,7 +1367,8 @@ def test_realspace_convolve():
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
     img = galsim.ImageF(saved_img.bounds)
-    conv.draw(img,dx=0.2)
+    img.setScale(0.2)
+    conv.draw(img.view())
     printval(img, saved_img)
     arg = abs(saved_img.array-img.array).argmax()
     np.testing.assert_array_almost_equal(
@@ -1418,7 +1430,8 @@ def test_realspace_distorted_convolve():
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel_distorted.fits"))
     img = galsim.ImageF(saved_img.bounds)
-    conv.draw(img,dx=0.2)
+    img.setScale(0.2)
+    conv.draw(img.view())
     printval(img, saved_img)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
@@ -1476,7 +1489,8 @@ def test_realspace_shearconvolve():
     conv = galsim.SBConvolve([psf,pix],real_space=True)
     saved_img = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     img = galsim.ImageF(saved_img.bounds)
-    conv.draw(img,dx=0.2)
+    img.setScale(0.2)
+    conv.draw(img.view())
     printval(img, saved_img)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
@@ -1522,7 +1536,8 @@ def test_rotate():
     mySBP.applyRotation(45.0 * galsim.degrees)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_ellip_rotated.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1557,7 +1572,8 @@ def test_mag():
     mySBP.applyTransformation(myEll._ellipse)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_mag.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1630,7 +1646,8 @@ def test_add():
     myAdd = galsim.SBAdd(mySBP, mySBP2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    myAdd.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    myAdd.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1697,7 +1714,8 @@ def test_shift():
     mySBP.applyShift(0.2, -0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_shift.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1732,7 +1750,8 @@ def test_rescale():
     mySBP.setFlux(2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_doubleflux.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1837,7 +1856,8 @@ def test_sbinterpolatedimage():
         sbinterp = galsim.SBInterpolatedImage(image_in, lan3_2d, dx=1.0)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
         image_out = galsim.ImageView[array_type](test_array)
-        sbinterp.draw(image_out, dx=1.0)
+        image_out.setScale(1.0)
+        sbinterp.draw(image_out.view())
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_out.array,
                 err_msg="Array from output Image differs from reference array for type %s"%

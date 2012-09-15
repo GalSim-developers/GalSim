@@ -1,4 +1,4 @@
-// -*- c++ -*-
+
 #ifndef SBPROFILE_H
 #define SBPROFILE_H
 /** 
@@ -228,6 +228,20 @@ namespace galsim {
         double stepK() const;
 
         /**
+         * @brief Determine a good size for a drawn image based on dx and stepK()
+         *
+         * @param[in] dx      The pixel scale of the image
+         * @param[in] wmult   If desired, a scaling to make the image larger than normal.
+         *                    (default `wmult` = 1)
+         *
+         * @returns the recommended image size.
+         *
+         * The basic formult is 2pi * wmult / (dx * stepK())
+         * But then we round up to the next even integer value.
+         */
+        int getGoodImageSize(double dx, double wmult = 1.) const;
+
+        /**
          * @brief Check whether the SBProfile is known to have rotational symmetry about x=y=0
          *
          * If the SBProfile has rotational symmetry, certain calculations can be simplified.
@@ -443,7 +457,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @param[in] dx  grid on which SBProfile is drawn has pitch `dx`
          *            Given `dx=0.` default, routine will take dx from the image scale.
-         * @param[in] gain  Number of ADU to draw per photon. (default `gain` = 1.)
+         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
          * @param[in] noise If provided, the allowed extra noise in each pixel.
          *            This is only relevant if N=0, so the number of photons is being 
          *            automatically calculated.  In that case, if the image noise is 
@@ -474,127 +488,62 @@ namespace galsim {
         { return drawShoot(img.view(), N, ud, dx, gain, noise, poisson_flux); }
         //@}
 
-        /** 
-         * @brief Draw an image of the SBProfile in real space.
-         *
-         * The draw method produces a 2d sampled rendering of a given SBProfile using the Image
-         * class.  A square image will be drawn which is big enough to avoid "folding."  If drawing
-         * is done using FFT, as is the case for SBProfiles for which isAnalyticX is false, then the
-         * image size will be scaled up to a power of 2, or 3x2^n, whichever fits.  If
-         * input image has finite dimensions then these will be used, although in an FFT the image
-         * may be calculated internally on a larger grid to avoid folding.  The default draw()
-         * routines decide internally whether image can be drawn directly in real space or needs to
-         * be done via FFT from k space.  Note that if you give an input image, its origin may be
-         * redefined by the time it comes back.
-         *
-         * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
-         *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
-         *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
-         *                  you will receive an image with the aliased frequencies included.
-         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
-         * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
-         *                  than the default choice, i.e. it will have finer sampling in k space 
-         *                  and have less folding.
-         * @returns image (as ImageViewF; if another type is preferred, then use the draw 
-         *                 method that takes an image as argument)
-         */
-        ImageView<float> draw(double dx=0., double gain=1., int wmult=1) const;
 
-        //@{
         /** 
          * @brief Draw the SBProfile in real space returning the summed flux.
          *
-         * If the input image `img` is an Image (not ImageView) and has null dimension,
-         * a square image will be drawn which is big enough to avoid "folding." 
-         * If drawing is done using FFT, it will be scaled up to a power of 2, or 3x2^n, 
-         * whichever fits.
-         * If input image has finite dimensions then these will be used, although in an FFT the 
-         * image may be calculated internally on a larger grid to avoid folding.
+         * The image will be drawn on the provided ImageView, although for an FFT draw method,
+         * the k-image may be calculated internally on a larger grid to avoid folding.
          * The default draw() routines decide internally whether image can be drawn directly
          * in real space or needs to be done via FFT from k space.
-         * Note that if you give an input image, its origin may be redefined by the time it comes 
-         * back.
+         *
          * The image is not cleared out before drawing.  So this profile will be added
          * to anything already on the input image.
          *
-         * @param[in,out]   image (any of ImageF, ImageD, ImageS, ImageI)
-         * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
-         *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
-         *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
-         *                  you will receive an image with the aliased frequencies included.
-         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
-         * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
-         *                  than the default choice, i.e. it will have finer sampling in k space 
-         *                  and have less folding.
+         * @param[in,out]   image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
+         *
          * @returns summed flux.
          */
         template <typename T>
-        double draw(Image<T>& image, double dx=0., double gain=1., int wmult=1) const; 
-        template <typename T>
-        double draw(ImageView<T>& image, double dx=0., double gain=1., int wmult=1) const; 
-        //@}
+        double draw(ImageView<T> image, double gain=1.) const; 
 
-        //@{
         /** 
          * @brief Draw an image of the SBProfile in real space forcing the use of real methods 
          * where we have a formula for x values.
-         *
-         * If the input image is an Image and has null dimension, a square image will be
-         * drawn which is big enough to avoid "folding." 
-         * If input image has finite dimensions then these will be used, although in an FFT the 
-         * image may be calculated internally on a larger grid to avoid folding.
-         * Note that if you give an input image, its origin may be redefined by the time it comes 
-         * back.  For SBProfiles without an analytic real-space representation, an exception will be
+         * For SBProfiles without an analytic real-space representation, an exception will be
          * thrown.
          *
-         * @param[in,out]   image (any of ImageF, ImageD, ImageS, ImageI or views)
-         * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
-         *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
-         *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
-         *                  you will receive an image with the aliased frequencies included.
-         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
-         * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
-         *                  than the default choice, i.e. it will have finer sampling in k space 
-         *                  and have less folding.
+         * The image is not cleared out before drawing.  So this profile will be added
+         * to anything already on the input image.
+         *
+         * @param[in,out]   image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
+         *
          * @returns summed flux.
          */
         template <typename T>
-        double plainDraw(ImageView<T>& image, double dx=0., double gain=1., int wmult=1) const; 
-        template <typename T>
-        double plainDraw(Image<T>& image, double dx=0., double gain=1., int wmult=1) const; 
-        //@}
+        double plainDraw(ImageView<T> image, double gain=1.) const; 
 
-        //@{
         /** 
          * @brief Draw an image of the SBProfile in real space forcing the use of Fourier transform
          * from k space.
          *
-         * If the input image is an Image and has null dimension, a square image will be
-         * drawn which is big enough to avoid "folding."  Drawing is done using FFT,
-         * and the image will be scaled up to a power of 2, or 3x2^n, whicher fits.
-         * If input image has finite dimensions then these will be used, although in an FFT the 
-         * image may be calculated internally on a larger grid to avoid folding.
-         * Note that if you give an input image, its origin may be redefined by the time it comes 
-         * back.
+         * The image will be drawn on the provided ImageView, although the k-image may be 
+         * calculated internally on a larger grid to avoid folding.  The FFT image will also
+         * be scaled up to either a power of 2 or 3 x a power of 2, whichever fits.
          *
-         * @param[in,out]   image (any of ImageF, ImageD, ImageS, ImageI or views)
-         * @param[in] dx    grid on which SBProfile is drawn has pitch `dx`; given `dx=0.` default, 
-         *                  routine will choose `dx` to be at least fine enough for Nyquist sampling
-         *                  at `maxK()`.  If you specify dx, image will be drawn with this `dx` and
-         *                  you will receive an image with the aliased frequencies included.
-         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
-         * @param[in] wmult specifying `wmult>1` will draw an image that is `wmult` times larger 
-         *                  than the default choice, i.e. it will have finer sampling in k space 
-         *                  and have less folding.
+         * The image is not cleared out before drawing.  So this profile will be added
+         * to anything already on the input image.
+         *
+         * @param[in,out]   image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
+         *
          * @returns summed flux.
          */
         template <typename T>
-        double fourierDraw(ImageView<T>& image, double dx=0., double gain=1., int wmult=1) const; 
-        template <typename T>
-        double fourierDraw(Image<T>& image, double dx=0., double gain=1., int wmult=1) const; 
-        //@}
+        double fourierDraw(ImageView<T> image, double gain=1.) const; 
 
-        //@{
         /** 
          * @brief Draw an image of the SBProfile in k space.
          *
@@ -608,26 +557,15 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   re image of real argument of SBProfile in k space (any of ImageF,
-         *                  ImageD, ImageS, ImageI or views). 
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space (any of ImageF,
-         *                  ImageD, ImageS, ImageI or views).
-         * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
-         *                  routine will choose `dk` necessary to avoid folding of image in real 
-         *                  space.  If you specify `dk`, image will be drawn with this `dk` and
-         *                  you will receive an image with folding artifacts included.
-         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
-         * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
+         * @param[in,out]   re image of real argument of SBProfile in k space
+         *                  (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in,out]   im image of imaginary argument of SBProfile in k space
+         *                  (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
          */
         template <typename T>
-        void drawK(
-            ImageView<T>& re, ImageView<T>& im, double dk=0., double gain=1., int wmult=1) const; 
-        template <typename T>
-        void drawK(
-            Image<T>& re, Image<T>& im, double dk=0., double gain=1., int wmult=1) const; 
-        //@}
+        void drawK(ImageView<T> re, ImageView<T> im, double gain=1.) const; 
 
-        //@{
         /** 
          * @brief Draw an image of the SBProfile in k space forcing the use of k space methods 
          * where we have a formula for k values.
@@ -639,26 +577,15 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   re image of real argument of SBProfile in k space (any of ImageF,
-         *                  ImageD, ImageS, ImageI or views).
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space (any of ImageF,
-         *                  ImageD, ImageS, ImageI or views).
-         * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
-         *                  routine will choose `dk` necessary to avoid folding of image in real 
-         *                  space.  If you specify `dk`, image will be drawn with this `dk` and
-         *                  you will receive an image with folding artifacts included.
-         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
-         * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
+         * @param[in,out]   re image of real argument of SBProfile in k space
+         *                  (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in,out]   im image of imaginary argument of SBProfile in k space
+         *                  (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
          */
         template <typename T>
-        void plainDrawK(
-            ImageView<T>& re, ImageView<T>& im, double dk=0., double gain=1., int wmult=1) const; 
-        template <typename T>
-        void plainDrawK(
-            Image<T>& re, Image<T>& im, double dk=0., double gain=1., int wmult=1) const; 
-        //@}
+        void plainDrawK(ImageView<T> re, ImageView<T> im, double gain=1.) const; 
 
-        //@{
         /**
          * @brief Draw an image of the SBProfile in k space forcing the use of Fourier transform 
          * from real space.
@@ -673,24 +600,14 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   re image of real argument of SBProfile in k space (any of ImageF,
-         *                  ImageD, ImageS, ImageI or views).
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space (any of ImageF,
-         *                  ImageD, ImageS, ImageI or views).
-         * @param[in] dk    grid on which SBProfile is drawn has pitch `dk`; given `dk=0.` default,
-         *                  routine will choose `dk` necessary to avoid folding of image in real 
-         *                  space.  If you specify `dk`, image will be drawn with this `dk` and
-         *                  you will receive an image with folding artifacts included.
-         * @param[in] gain  Number of ADU to draw per "photon". (default `gain` = 1.)
-         * @param[in] wmult specifying `wmult>1` will expand the size drawn in k space.
+         * @param[in,out]   re image of real argument of SBProfile in k space
+         *                  (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in,out]   im image of imaginary argument of SBProfile in k space
+         *                  (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
          */
         template <typename T>
-        void fourierDrawK(
-            ImageView<T>& re, ImageView<T>& im, double dk=0., double gain=1., int wmult=1) const; 
-        template <typename T>
-        void fourierDrawK(
-            Image<T>& re, Image<T>& im, double dk=0., double gain=1., int wmult=1) const; 
-        //@}
+        void fourierDrawK(ImageView<T> re, ImageView<T> im, double gain=1.) const; 
 
     protected:
 

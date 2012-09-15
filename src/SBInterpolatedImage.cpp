@@ -340,25 +340,25 @@ namespace galsim {
     // Returns total flux
     template <typename T>
     double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<T>& I, double dx, double gain) const 
+        ImageView<T>& I, double gain) const 
     {
+        double dx = I.getScale();
         if ( dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
             double sum=0.;
             for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
                 for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {
                     Position<double> x(ix*dx,iy*dx);
-                    T val = gain * xValue(x);
+                    T val = xValue(x) / gain;
                     sum += val;
                     I(ix,iy) += val;
                 }
             }
-            I.setScale(dx);
             return sum;
         } else {
             // Otherwise just use the normal routine to fill the grid:
             // Note that we need to call doFillXImage, not fillXImage here,
             // to avoid the virtual function resolution.
-            return SBProfileImpl::doFillXImage(I,dx,gain);
+            return SBProfileImpl::doFillXImage(I,gain);
         }
     }
 
@@ -669,8 +669,8 @@ namespace galsim {
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
 
     template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<float>& I, double dx, double gain) const;
+        ImageView<float>& I, double gain) const;
     template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<double>& I, double dx, double gain) const;
+        ImageView<double>& I, double gain) const;
 }
 
