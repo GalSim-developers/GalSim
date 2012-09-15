@@ -1,38 +1,43 @@
-
-// Objects that make use of 2d FFT's in VERSION 3 of the FFTW package.
-// I am ASSUMING that the FFTW is set up to do double-precision.
-
-// Notes:
-// *All tables have even dimensions (enforced on construction).
-//
-// *The complex arrays (KTables) must be Hermitian, so transforms are real.
-//
-// *All arrays are 0-indexed.
-//
-// *FFTW arrays are stored in ROW-MAJOR order, meaning that in matrix notation, the most 
-// rapidly varying index is the last one. However in an "image" view of the array, we would
-// label this as the x value that is increasing along rows.  When doing real-to-complex
-// transforms, the complex output contains (N/2+1) elements along this latter index, 0<=j<=N/2,
-// and the j<0 elements must be obtained via conjugation. Imaginary parts of 0 and N/2 are zero.
-//
-// *This interface will assume an "image" based convention in which all access to real
-// or complex elements is in (ix, iy) format, and ix will be the rapidly varying index, with
-// the k-space arrays being half-sized in the x direction.  
-//
-// **** so: when filling arrays, make ix your inner loop.  And provide only kx>=0 to fill KTable.
-//
-// *xTable arrays have indices -N/2 <= ix,iy < N/2.  To store in FFTW arrays, which assume
-// 0<=j < N, we add N/2 to indices before accessing FFTW arrays. This means that k
-// values need to be multiplied by -1^(ix+iy) before/after transforms. 
-//
-// *kTable arrays can be accessed by -N/2 <= jx, jy <= N/2.  FFTW puts DC at [0,0] element, 
-// so the code in this class changes negative input indices to wrap them properly, also
-// considering that jx<0 must be conjugated.
-//
-// *"forward" transform, x->k, has -1 in exponent.
-
 #ifndef FFT_H
 #define FFT_H
+
+/**
+ * @file FFT.h
+ *
+ * @brief Objects that make use of 2d FFT's in VERSION 3 of the FFTW package.
+ *
+ * Notes:
+ * 
+ * * Requires that the FFTW is set up to do double-precision.
+ *
+ * * All tables have even dimensions (enforced on construction).
+ *
+ * * The complex arrays (KTables) must be Hermitian, so transforms are real.
+ *
+ * * All arrays are 0-indexed.
+ *
+ * * FFTW arrays are stored in ROW-MAJOR order, meaning that in matrix notation, the most 
+ * rapidly varying index is the last one. However in an "image" view of the array, we would
+ * label this as the x value that is increasing along rows.  When doing real-to-complex
+ * transforms, the complex output contains (N/2+1) elements along this latter index, 0<=j<=N/2,
+ * and the j<0 elements must be obtained via conjugation. Imaginary parts of 0 and N/2 are zero.
+ *
+ * * This interface will assume an "image" based convention in which all access to real
+ * or complex elements is in (ix, iy) format, and ix will be the rapidly varying index, with
+ * the k-space arrays being half-sized in the x direction.  
+ *
+ * * **SO**: when filling arrays, make ix your inner loop.  And provide only kx>=0 to fill KTable.
+ *
+ * * xTable arrays have indices -N/2 <= ix,iy < N/2.  To store in FFTW arrays, which assume
+ * 0<=j < N, we add N/2 to indices before accessing FFTW arrays. This means that k
+ * values need to be multiplied by -1^(ix+iy) before/after transforms. 
+ *
+ * * kTable arrays can be accessed by -N/2 <= jx, jy <= N/2.  FFTW puts DC at [0,0] element, 
+ * so the code in this class changes negative input indices to wrap them properly, also
+ * considering that jx<0 must be conjugated.
+ *
+ * * "forward" transform, x->k, has -1 in exponent.
+ */
 
 #include <stdexcept>
 #include <deque>
@@ -44,9 +49,9 @@
 #include "Std.h"
 #include "Interpolant.h"
 
-    // Define this to get extra debugging checks in the FFT routines.
-    // Since these routines are not available to the end user, once code is working
-    // it should be ok to turn these off for some modest speed up.
+// Define this to get extra debugging checks in the FFT routines.
+// Since these routines are not available to the end user, once code is working
+// it should be ok to turn these off for some modest speed up.
 //#define FFT_DEBUG
 
 namespace galsim {
@@ -167,16 +172,21 @@ namespace galsim {
 
     class XTable;
 
-    // KTable is class holding k-space representation of real function.
-    // It will be based on an assumed Hermitian 2d square array.
-    // Table will be forced to be of even size.
+    /**
+     * @brief KTable is a class holding the k-space representation of a real function.
+     *
+     * It will be based on an assumed Hermitian 2d square array.
+     * The table will be forced to be of even size.
+     */
     class KTable 
     {
         typedef std::complex<double> function1(double kx, double ky);
         typedef std::complex<double> function2(double kx, double ky, std::complex<double> val);
     public:
-        KTable() : _N(0), _dk(0) {} // dummy constructor
+        /// dummy constructor
+        KTable() : _N(0), _dk(0) {} 
 
+        /// Construct with size and spacing.  Default is to zero out the table.
         KTable(int N, double dk, std::complex<double> value=0.);
 
         KTable(const KTable& rhs) : _array(rhs._array), _N(rhs._N), _dk(rhs._dk) {}
@@ -194,64 +204,85 @@ namespace galsim {
         
         ~KTable() {}
 
-        //  Fourier transform methods:
-        // FFT to give pointer to a new XTable
+        /**
+         * @brief Fourier transform from (complex) k to x.
+         *
+         * This version returns a pointer to the result in real space.
+         */
         boost::shared_ptr<XTable> transform() const; 
+
+        /**
+         * @brief Fourier transform from (complex) k to x.
+         *
+         * This version writes the result to the provided XTable argument.
+         */
         void transform(XTable& xt) const;
 
-        // Have FFTW develop "wisdom" on doing this kind of transform
+        /// Have FFTW develop "wisdom" on doing this kind of transform
         void fftwMeasure() const;
 
-        // This one does a "dumb" Fourier transform for a single (x,y) point:
+        /// This one does a "dumb" Fourier transform for a single (x,y) point:
         double xval(double x, double y) const;
 
-        // Data access methods:
-        // return value at grid point ix,iy (k = (ix*dk, iy*dk))
+        /// Return value at grid point ix,iy (k = (ix*dk, iy*dk))
         std::complex<double> kval(int ix, int iy) const; 
+
+        /// Same as kval, but assumes ix,iy are already known to be valid arguments of index2.
         std::complex<double> kval2(int ix, int iy) const 
         { return _array[index2(ix,iy)]; }
 
-        // interpolate to k=(kx, ky) - WILL wrap k values to fill interpolant kernel
+        /// interpolate to k=(kx, ky) - WILL wrap k values to fill interpolant kernel
         std::complex<double> interpolate(double kx, double ky, const Interpolant2d& interp) const;
 
+        /// Set the value of a grid point ix,iy (k = (ix*dk, iy*dk)) to a given value.
         void kSet(int ix, int iy, std::complex<double> value);
+
+        /// Same as kSet, but assumes ix,iy are already known to be valid arguments of index2.
         void kSet2(int ix, int iy, std::complex<double> value)
         { _array[index2(ix,iy)]=value; }
 
-        void clear();  // Set all values to zero
+        /// Set all values to zero
+        void clear();  
+
+        /// Clear any cached values that had been set from previous passes.
         void clearCache() const 
         {
             _cache.clear(); 
             _xwt.clear();
         }
 
-        void accumulate(const KTable& rhs, double scalar=1.); // this += scalar*rhs
+        /// this += scalar*rhs
+        void accumulate(const KTable& rhs, double scalar=1.); 
 
+        /// Multiply each element by the corresponding element in rhs.
         void operator*=(const KTable& rhs);
+
+        /// Multiply each element by a scalar.
         void operator*=(double scalar);
 
-        // Produce a new KTable which wraps this one onto range +-Nout/2.  Nout will
-        // be raised to even value.  In other words, aliases the data.
+        /// Produce a new KTable which wraps this one onto range +-Nout/2.  Nout will
+        /// be raised to even value.  In other words, aliases the data.
         boost::shared_ptr<KTable> wrap(int Nout) const;
 
-        // Info about the table:  
+        /// Get the size of the table.
         int getN() const { return _N; }
+        /// Get the pixel spacing of the table
         double getDk() const { return _dk; }
 
-        // Translate to move origin at (x0,y0)
+        /// Translate to move origin at (x0,y0)
         void translate(double x0, double y0);
 
-        // Fill table from a function or function object:
+        /// Fill table from a function or function object:
         void fill(function1 func);
         template <class T> void fill( const T& f) ;
 
-        // New table is function of this one:
+        /// New table is function of this one:
         boost::shared_ptr<KTable> function(function2 func) const;
 
-        // Integrate a function over d^2k:
+        /// Integrate a function over d^2k:
         std::complex<double> integrate(function2 func) const;
 
-        // Integrate KTable over d^2k (sum of all pixels * dk * dk)
+        /// Integrate KTable over d^2k (sum of all pixels * dk * dk)
         std::complex<double> integratePixels() const;
 
     private:
@@ -297,13 +328,17 @@ namespace galsim {
         friend class XTable; 
     };
 
-    // The x-space lookup table is a simple real matrix.  Force N even again,
-    // put origin at (N/2, N/2).
+    /**
+     * @brief XTable is a class holding a lookup table of a real 2-d function.
+     *
+     * N is forced to be even, and the origin is taken to be (N/2, N/2).
+     */
     class XTable 
     {
         typedef double function1(double x, double y);
         typedef double function2(double x, double y, double val);
     public:
+        /// Construct with size and spacing.  Default is to zero out the table.
         XTable(int N, double dx, double value=0.);
 
         XTable(const XTable& rhs) : _array(rhs._array), _N(rhs._N), _dx(rhs._dx) {}
@@ -321,53 +356,67 @@ namespace galsim {
 
         ~XTable() {}
 
-        ///// Fourier transforms:
-        // FFT to give pointer to a new KTable
+        /**
+         * @brief Fourier transform from x to (complex) k.
+         *
+         * This version returns a pointer to the result in Fourier space.
+         */
         boost::shared_ptr<KTable> transform() const;
+
+        /**
+         * @brief Fourier transform from x to (complex) k.
+         *
+         * This version writes the result to the provided KTable argument.
+         */
         void transform(KTable& kt) const;
 
-        // Have FFTW develop "wisdom" on doing this kind of transform
+        /// Have FFTW develop "wisdom" on doing this kind of transform
         void fftwMeasure() const;
 
-        // Do a "dumb" FT at a single frequency:
+        /// Do a "dumb" FT at a single frequency:
         std::complex<double> kval(double kx, double ky) const; 
 
-        ////// Data access:
-        // get value at grid point x=(ix*dx, iy*dx)
+        /// Get value at grid point (x,y) = (ix*dx, iy*dx)
         double xval(int ix, int iy) const; 
 
-        // interpolate to (x,y) - will NOT wrap the x data around +-N/2
+        /// interpolate to (x,y) - will NOT wrap the x data around +-N/2
         double interpolate(double x, double y, const Interpolant2d& interp) const;
 
+        /// Set the value of a grid point ix,iy ((x,y) = (ix*dk, iy*dk)) to a given value.
         void xSet(int ix, int iy, double value);
 
-        void clear();  // Set all values to zero
+        /// Set all values to zero
+        void clear();  
+
+        /// Clear any cached values that had been set from previous passes.
         void clearCache() const 
         {
             _cache.clear(); 
             _xwt.clear();
         }
 
-        void accumulate(const XTable& rhs, double scalar=1.); // this += scalar*rhs
+        /// this += scalar*rhs
+        void accumulate(const XTable& rhs, double scalar=1.); 
 
+        /// Multiply each element by a scalar.
         void operator*=(double scalar);
 
-        // Produce a new XTable which wraps this one onto range +-Nout/2.  Nout will
-        // be raised to even value.  
+        /// Produce a new XTable which wraps this one onto range +-Nout/2.  Nout will
+        /// be raised to even value.  
         boost::shared_ptr<XTable> wrap(int Nout) const;
 
-        ////// Info on the table:
+        /// Get the size of the table.
         int getN() const { return _N; }
+        /// Get the pixel spacing of the table
         double getDx() const { return _dx; }
 
-        ///// Other operations:
-        // Fill table from a function:
+        /// Fill table from a function:
         void fill(function1 func);
 
-        // Integrate a (real) function over d^2x; set flag for sum:
+        /// Integrate a (real) function over d^2x; set flag for sum:
         double  integrate(function2 func, bool sumonly=false) const;
 
-        // Integrate XTable over d^2x (sum of all pixels * dx * dx)
+        /// Integrate XTable over d^2x (sum of all pixels * dx * dx)
         double integratePixels() const;
 
     private:
@@ -406,7 +455,7 @@ namespace galsim {
         friend class KTable;
     };
 
-    // Fill table from a function class:
+    /// Fill table from a function class:
     template <class T>
     void KTable::fill(const T& f) 
     {
