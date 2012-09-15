@@ -12,6 +12,7 @@
 
 namespace galsim {
 
+    /// @brief Exception class thrown by Solve
     class SolveError : public std::runtime_error 
     {
     public:
@@ -23,6 +24,73 @@ namespace galsim {
 
     enum Method { Bisect, Brent };
 
+    /**
+     * @brief A class that solves a provided function for a zero.
+     *
+     * The first template argument, F, is the type of the function.  
+     * Typically you would simple function object that defines the operator() method
+     * and use that for F.
+     *
+     * The second template argument (optional: default = double) is the type of
+     * the arguments to the function.
+     *
+     * The solving process is in two parts:
+     *
+     * 1. First the solution needs to be bracketed. 
+     *
+     *    This can be done in several ways:
+     *
+     *    a) If you know the appropriate range, you can set it in the constructor:
+     *
+     *    @code
+     *    Solve<MyFunc> solver(func, x_min, x_max);
+     *    @endcode
+     *
+     *    b) If you don't know the range, you can set an initial guess range and let
+     *    Solve expand the range until it finds a range that brackets the solution:
+     *
+     *    @code
+     *    Solve<MyFunc> solver(func, x_min, x_max);
+     *    solver.bracket()
+     *    @endcode
+     *
+     *    c) If you know one end of the range, but not the other you can expand only one
+     *    side of the range from the initial guess:
+     *
+     *    @code
+     *    Solve<MyFunc> solver(func, 0, r_max);
+     *    solver.bracketUpper()
+     *    @endcode
+     *
+     *    (There is also a corresponding bracketLower() method.)
+     *
+     * 2. The next step is to solve for the root within this range.
+     *    There are currently two algorithms for doing that: Bisect and Brent.
+     *    You can tell Solve which one to use with:
+     *
+     *    @code
+     *    solver.setMethod(Bisect)
+     *    solver.setMethod(Brent)
+     *    @endcode
+     *
+     *    (In fact, the former is unnecessary, since Biset is the default.)
+     *
+     *    Then the method root() will solve for the root in that range.
+     *
+     * Typical usage:
+     *
+     * @code
+     * struct MyFunc {
+     *     double operator()(double x) { return [...] }
+     * };
+     *
+     * MyFunc func;
+     * Solve<MyFunc> solver(func, xmin, xmax);
+     * solver.bracket();         // If necessary
+     * solver.setMethod(Brent);  // If desired
+     * double result = solver.root()
+     * @endcode
+     */
     template <class F, class T=double>
     class Solve 
     {
@@ -38,21 +106,38 @@ namespace galsim {
         Method m;
 
     public:
+        /// Constructor taking the function to solve, and the range (if known).
         Solve(const F& func_, T lb_=0., T ub_=1.) :
             func(func_), lBound(lb_), uBound(ub_), xTolerance(defaultTolerance),
             maxSteps(defaultMaxSteps), boundsAreEvaluated(false), m(Bisect) {}
 
+        /// Set the maximum number of steps for the solving algorithm to use.
         void setMaxSteps(int m) { maxSteps=m; }
+
+        /// Set which method to use: Bisect or Brent
         void setMethod(Method m_) { m=m_; }
-        T getXTolerance() const { return xTolerance; }
+
+        /// Set the tolerance to define when the root is close enough to 0. (abs(x) < tol)
         void setXTolerance(T tol) { xTolerance=tol; }
+
+        /// Get the current tolerance
+        T getXTolerance() const { return xTolerance; }
+
+        /// Set the bounds for the search to new values
         void setBounds(T lb, T ub) { lBound=lb; uBound=ub; }
+
+        //@{
+        /// Get the current search bounds
         double getLowerBound() const { return lBound; }
         double getUpperBound() const { return uBound; }
+        //@}
 
-        // Hunt for bracket, geometrically expanding range
-        // This version assumes that the root is to the side of the  end point that is 
-        // closer to 0.  This will be true if the function is monotonic.
+        /**
+         * @brief Hunt for bracket, geometrically expanding range
+         *
+         * This version assumes that the root is to the side of the  end point that is 
+         * closer to 0.  This will be true if the function is monotonic.
+         */
         void bracket() 
         {
             const double factor=2.0;
@@ -84,9 +169,12 @@ namespace galsim {
             throw SolveError("Too many iterations in bracket()");
         }
 
-        // Hunt for bracket, geometrically expanding range
-        // This one only expands to the right for when you know that the lower bound is 
-        // definitely to the left of the root, but the upper bound might not bracket it.
+        /**
+         * @brief Hunt for bracket, geometrically expanding range
+         *
+         * This one only expands to the right for when you know that the lower bound is 
+         * definitely to the left of the root, but the upper bound might not bracket it.
+         */
         void bracketUpper() 
         {
             const double factor=2.0;
@@ -110,8 +198,11 @@ namespace galsim {
             throw SolveError("Too many iterations in bracketUpper()");
         }
 
-        // Hunt for bracket, geometrically expanding range
-        // The opposite of bracketUpper -- only expand to the left.
+        /**
+         * @brief Hunt for bracket, geometrically expanding range
+         *
+         * The opposite of bracketUpper -- only expand to the left.
+         */
         void bracketLower() 
         {
             const double factor = 2.0;
@@ -135,6 +226,9 @@ namespace galsim {
             throw SolveError("Too many iterations in bracketLower()");
         }
 
+        /**
+         * @brief Find the root according the the method currently set.
+         */
         T root() const 
         {
             switch (m) {
@@ -147,6 +241,9 @@ namespace galsim {
             }
         }
 
+        /**
+         * @brief A simple bisection root-finder
+         */
         T bisect() const 
         {
             T dx,f,fmid,xmid,rtb;
@@ -172,6 +269,9 @@ namespace galsim {
             return 0.0;
         }
 
+        /**
+         * @brief A more sophisticated root-finder using Brent's algorithm 
+         */
         T zbrent() const 
         {
             T a=lBound, b=uBound, c=uBound;
