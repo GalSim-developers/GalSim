@@ -54,39 +54,26 @@ namespace galsim {
     // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
 
-    // Class for errors
+    /// @brief Basic exception class thrown by XTable and KTable
     class FFTError : public std::runtime_error 
     {
     public:
         FFTError(const std::string& m="") : std::runtime_error("FFT error: " + m) {}
     };
 
+    /// @brief Exception class for XTable and KTable access ouside the allowed range
     class FFTOutofRange : public FFTError 
     {
     public:
         FFTOutofRange(const std::string& m="value out of range") : FFTError(m) {}
     };
 
-    class FFTMalloc : public FFTError 
-    {
-    public:
-        FFTMalloc(const std::string& m="malloc failure") : FFTError(m) {}
-    };
-
+    /// @brief Exception class thrown when fftw3 returns an invalid plan.
     class FFTInvalid : public FFTError 
     {
     public:
         FFTInvalid(const std::string& m="invalid plan or data") : FFTError(m) {}
     };
-
-    //! @endcond
-
-    // A helper function that will return the smallest 2^n or 3x2^n value that is
-    // even and >= the input integer.
-    int goodFFTSize(int input);
-
-    // All code between the @cond and @endcond is excluded from Doxygen documentation
-    //! @cond
 
     // Quick helper struct to tell if T is real or complex
     template <typename T>
@@ -171,6 +158,12 @@ namespace galsim {
     };
 
     //! @endcond
+
+    /**
+     * @brief A helper function that will return the smallest 2^n or 3x2^n value that is
+     * even and >= the input integer.
+     */
+    int goodFFTSize(int input);
 
     class XTable;
 

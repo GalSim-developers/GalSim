@@ -4,6 +4,9 @@
 
 namespace galsim {
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
+
     /**
      *  @brief Exception class usually thrown by images.
      */
@@ -26,6 +29,8 @@ namespace galsim {
 
         ImageBoundsError(int x, int y, const Bounds<int> b);
     };
+
+    //! @endcond
 
 
     template <typename T> class AssignableToImage;

@@ -15,6 +15,9 @@
 
 namespace galsim {
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
+
     /// @brief Basic exception class thrown by Table
     class TableError : public std::runtime_error 
     {
@@ -35,6 +38,8 @@ namespace galsim {
     public:
         TableReadError(const std::string& c) : TableError("Data read error for line ->"+c) {}
     };
+
+    //! @endcond
 
     /**
      * @brief A single entry in a Table including an argument and an value.

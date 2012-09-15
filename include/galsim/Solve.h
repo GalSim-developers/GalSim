@@ -12,12 +12,17 @@
 
 namespace galsim {
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
+
     /// @brief Exception class thrown by Solve
     class SolveError : public std::runtime_error 
     {
     public:
         SolveError(const std::string m) : std::runtime_error("Solve error: "+m) {}
     };
+
+    //! @endcond
 
     const double defaultTolerance=1.e-7;
     const int defaultMaxSteps=40;
