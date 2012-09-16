@@ -111,7 +111,7 @@ def main(argv):
         # Photon shooting automatically convolves by the pixel, so we've made sure not
         # to include it in the profile!
         sky_level_pixel = sky_level * pixel_scale**2
-        final_nopix.drawShoot(stamp, noise=sky_level_pixel/100, uniform_deviate=rng)
+        final_nopix.drawShoot(stamp, max_extra_noise=sky_level_pixel/100, uniform_deviate=rng)
 
         # For photon shooting, galaxy already has poisson noise, so we want to make 
         # sure not to add that noise again!  Thus, we just add sky noise, which 

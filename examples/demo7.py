@@ -189,7 +189,7 @@ def main(argv):
                 #print 'im.scale = ',phot_image.scale
                 #print 'im.bounds = ',phot_image.bounds
                 #print 'before drawShoot: rng() = ',rng()
-                final_nopix.drawShoot(phot_image, noise=sky_level_pixel/100, 
+                final_nopix.drawShoot(phot_image, max_extra_noise=sky_level_pixel/100, 
                                       uniform_deviate=rng)
                 #print 'after drawShoot: rng() = ',rng()
                 #print k, gal_name, psf_name

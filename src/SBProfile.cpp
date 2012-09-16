@@ -513,8 +513,8 @@ namespace galsim {
     }
 
     template <class T>
-    double SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate u, double dx,
-                                double gain, double noise, bool poisson_flux) const 
+    double SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate u,
+                                double gain, double max_extra_noise, bool poisson_flux) const 
     {
         // If N = 0, this routine will try to end up with an image with the number of real 
         // photons = flux that has the corresponding Poisson noise. For profiles that are 
@@ -558,15 +558,17 @@ namespace galsim {
         //
         // As expected, we see that lowering Ntot will increase the noise in that (and every 
         // other) pixel.
-        // The input noise parameter is the maximum value of spurious noise we want to allow.
-        // So setting N^2 = noise, we get
+        // The input max_extra_noise parameter is the maximum value of spurious noise we want 
+        // to allow.
         //
-        // Ntot = fmax * flux / (1-2eta)^2 / noise
+        // So setting N^2 = max_extra_noise, we get
+        //
+        // Ntot = fmax * flux / (1-2eta)^2 / max_extra_noise
         //
         // One wrinkle about this calculation is that we don't know fmax a priori.
         // So we start with a plausible number of photons to get going.  Then we keep adding 
         // more photons until we either hit N = flux / (1-2eta)^2 or the noise in the brightest
-        // pixel is < noise.
+        // pixel is < max_extra_noise.
         //
         // We also make the assumption that the pixel to look at for fmax is at the centroid.
         //
@@ -575,12 +577,9 @@ namespace galsim {
         
         dbg<<"Start drawShoot.\n";
         dbg<<"N = "<<N<<std::endl;
-        dbg<<"dx = "<<dx<<std::endl;
         dbg<<"gain = "<<gain<<std::endl;
-        dbg<<"noise = "<<noise<<std::endl;
+        dbg<<"max_extra_noise = "<<max_extra_noise<<std::endl;
         dbg<<"poisson = "<<poisson_flux<<std::endl;
-
-        if (dx > 0.) img.setScale(dx);
 
         // Don't do more than this at a time to keep the  memory usage reasonable.
         const int maxN = 100000; 
@@ -638,9 +637,9 @@ namespace galsim {
         // since we might need to rescale them all before adding.
         std::vector<boost::shared_ptr<PhotonArray> > arrays;
 
-        // If we're automatically figuring out N based on the noise, start with 100 photons
+        // If we're automatically figuring out N based on max_extra_noise, start with 100 photons
         // Otherwise we'll do a maximum of maxN at a time until we go through all N.
-        int thisN = noise > 0. ? 100 : maxN;
+        int thisN = max_extra_noise > 0. ? 100 : maxN;
         Position<double> cen = centroid();
         Bounds<double> b(cen);
         b.addBorder(0.5);
@@ -648,8 +647,8 @@ namespace galsim {
         T raw_fmax = 0.;
         int fmax_count = 0;
         while (true) {
-            // We break out of the loop when either N drops to 0 (if noise = 0) or 
-            // we find that the max pixel has a noise level < noise (if noise > 0)
+            // We break out of the loop when either N drops to 0 (if max_extra_noise = 0) or 
+            // we find that the max pixel has a noise level < max_extra_noise
             
             if (thisN > maxN) thisN = maxN;
             // NB: don't need floor, since rhs is positive, so floor is superfluous.
@@ -669,7 +668,7 @@ namespace galsim {
             // This is always a reason to break out.
             if (N < 1.) break;
 
-            if (noise > 0.) {
+            if (max_extra_noise > 0.) {
                 xdbg<<"Check the noise level\n";
                 // First need to find what the current fmax is.
                 // (Only need to update based on the latest pa.)
@@ -691,8 +690,8 @@ namespace galsim {
                 double fmax = raw_fmax * origN / (origN-N);
                 xdbg<<"fmax = "<<fmax<<std::endl;
                 // Estimate a good value of Ntot based on what we know now
-                // Ntot = fmax * flux / (1-2eta)^2 / noise
-                double Ntot = fmax * mod_flux / noise;
+                // Ntot = fmax * flux / (1-2eta)^2 / max_extra_noise
+                double Ntot = fmax * mod_flux / max_extra_noise;
                 xdbg<<"Calculated Ntot = "<<Ntot<<std::endl;
                 // So far we've done (origN-N)
                 // Set thisN to do the rest on the next pass.
@@ -762,11 +761,11 @@ namespace galsim {
         ImageView<double>& img, double gain) const;
 
     template double SBProfile::drawShoot(
-        ImageView<float> image, double N, UniformDeviate ud, double dx, double gain,
-        double noise, bool poisson_flux) const;
+        ImageView<float> image, double N, UniformDeviate ud, double gain,
+        double max_extra_noise, bool poisson_flux) const;
     template double SBProfile::drawShoot(
-        ImageView<double> image, double N, UniformDeviate ud, double dx, double gain,
-        double noise, bool poisson_flux) const;
+        ImageView<double> image, double N, UniformDeviate ud, double gain,
+        double max_extra_noise, bool poisson_flux) const;
 
     template double SBProfile::draw(ImageView<float> img, double gain) const;
     template double SBProfile::draw(ImageView<double> img, double gain) const;

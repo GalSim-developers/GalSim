@@ -332,62 +332,15 @@ class GSObject(object):
         ret.applyShift(dx, dy)
         return ret
 
-    def draw(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
-             add_to_image=False):
-        """Draws an Image of the object, with bounds optionally set by an input Image.
+    # Make sure the image is defined with the right size and scale for the draw and
+    # drawShoot commands.
+    def _draw_setup_image(self, image, dx, wmult, add_to_image):
 
-        @param image  If provided, this will be the image on which to draw the profile.
-                      If image=None, then an automatically-sized image will be created.
-                      if image != None, but its Bounds are undefined (e.g. if it was 
-                      constructed with `image = galsim.ImageF()`), then it will be resized
-                      appropriately based on the profile's size.
-                      (Default = None)
-
-        @param dx     If provided, use this as the pixel scale for the image.
-                      If dx is None and image != None, then take the provided image's pixel scale.
-                      If dx is None and image == None, then use the Nyquist scale = pi/maxK()
-                      If dx <= 0 (regardless of image), then use the Nyquist scale = pi/maxK()
-                      (Default = None)
-
-        @param gain   The number of photons per ADU.  (Default = 1.0)
-
-        @param wmult  A factor by which to make the intermediate images larger than 
-                      they are normally made.  The size is normally automatically chosen 
-                      to reach some preset accuracy targets (see include/galsim/SBProfile.h); 
-                      however, if you see strange artifacts in the image, you might try using 
-                      wmult > 1.  This will take longer of course, but it will produce more 
-                      accurate images, since they will have less "folding" in Fourier space.
-                      (Default = 1.)
-
-        @param normalization  Two options for the normalization:
-                              "flux" or "f" means that the sum of the output pixels is normalized
-                                     to be equal to the total flux.  (Modulo any flux that
-                                     falls off the edge of the image of course.)
-                              "surface brightness" or "sb" means that the output pixels sample
-                                     the surface brightness distribution at each location.
-                              (Default = "flux")
-
-        @param add_to_image  Whether to add flux to the existing image rather than clear out
-                             anything in the image before shooting.
-                             (Default = False)
-
-        @returns      The drawn image.
-        """
-        # Raise an exception immediately if the normalization type is not recognized
-        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
-            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
-                              "'f', 'surface brightness' or 'sb'.") % normalization)
-        # Make sure the types for gain, wmult are correct:
+        # Make sure the type of wmult is correct and has a valid value:
         if type(wmult) != float:
             wmult = float(wmult)
-        if type(gain) != float:
-            gain = float(gain)
-
-        # Sanity checks:
         if wmult <= 0:
             raise ValueError("Invalid wmult <= 0 in draw command")
-        if gain <= 0.:
-            raise ValueError("Invalid gain <= 0. in draw command")
 
         # Check dx value and adjust if necessary:
         if dx is None:
@@ -427,6 +380,64 @@ class GSObject(object):
                 image.setZero()
             image.setScale(dx)
 
+        return image, dx
+
+
+    def draw(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
+             add_to_image=False):
+        """Draws an Image of the object, with bounds optionally set by an input Image.
+
+        @param image  If provided, this will be the image on which to draw the profile.
+                      If image=None, then an automatically-sized image will be created.
+                      if image != None, but its Bounds are undefined (e.g. if it was 
+                      constructed with `image = galsim.ImageF()`), then it will be resized
+                      appropriately based on the profile's size.
+                      (Default = None)
+
+        @param dx     If provided, use this as the pixel scale for the image.
+                      If dx is None and image != None, then take the provided image's pixel scale.
+                      If dx is None and image == None, then use the Nyquist scale = pi/maxK()
+                      If dx <= 0 (regardless of image), then use the Nyquist scale = pi/maxK()
+                      (Default = None)
+
+        @param gain   The number of photons per ADU.  (Default = 1.0)
+
+        @param wmult  A factor by which to make an automatically-sized image larger than 
+                      it would normally be made.  The size is normally automatically chosen 
+                      to reach some preset accuracy targets (see include/galsim/SBProfile.h); 
+                      however, if you see strange artifacts in the image, you might try using 
+                      wmult > 1.  This will take longer of course, but it will produce more 
+                      accurate images, since they will have less "folding" in Fourier space.
+                      (Default = 1.)
+
+        @param normalization  Two options for the normalization:
+                              "flux" or "f" means that the sum of the output pixels is normalized
+                                     to be equal to the total flux.  (Modulo any flux that
+                                     falls off the edge of the image of course.)
+                              "surface brightness" or "sb" means that the output pixels sample
+                                     the surface brightness distribution at each location.
+                              (Default = "flux")
+
+        @param add_to_image  Whether to add flux to the existing image rather than clear out
+                             anything in the image before shooting.
+                             (Default = False)
+
+        @returns      The drawn image.
+        """
+        # Raise an exception immediately if the normalization type is not recognized
+        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
+            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                              "'f', 'surface brightness' or 'sb'.") % normalization)
+
+        # Make sure the type of gain is correct and has a valid value:
+        if type(gain) != float:
+            gain = float(gain)
+        if gain <= 0.:
+            raise ValueError("Invalid gain <= 0. in draw command")
+
+        # Make sure image is setup correctly
+        image, dx = self._draw_setup_image(image,dx,wmult,add_to_image)
+
         # SBProfile draw command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
         if normalization.lower() == "flux" or normalization.lower() == "f":
@@ -439,33 +450,30 @@ class GSObject(object):
 
         return image
 
-    def drawShoot(self, image, n_photons=0., dx=None, gain=1., uniform_deviate=None,
-                  normalization="flux", noise=0., poisson_flux=True, add_to_image=False):
+    def drawShoot(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
+                  add_to_image=False, n_photons=0., uniform_deviate=None,
+                  max_extra_noise=0., poisson_flux=True):
         """Draw an image of the object by shooting individual photons drawn from the surface 
         brightness profile of the object.
 
-        @param image  The image on which to draw the profile.
-                      Note: Unlike for the regular draw command, image is a required
-                      parameter.  drawShoot will not make the image for you.
+        @param image  If provided, this will be the image on which to draw the profile.
+                      If image=None, then an automatically-sized image will be created.
+                      if image != None, but its Bounds are undefined (e.g. if it was 
+                      constructed with `image = galsim.ImageF()`), then it will be resized
+                      appropriately based on the profile's size.
+                      (Default = None)
         
-        @param n_photons    If provided, the number of photons to use.
-                            If not provided, use as many photons as necessary to end up with
-                            an image with the correct poisson shot noise for the object's flux.
-                            For positive definite profiles, this is equivalent to n_photons = flux.
-                            However, some profiles need more than this because some of the shot
-                            photons are negative (usually due to interpolants).
-                            (Default = 0)
-
         @param dx     If provided, use this as the pixel scale for the image.
-                      If dx is None then use the provided image's pixel scale.
+                      If dx is None and image != None, then take the provided image's pixel scale.
+                      If dx is None and image == None, then use the Nyquist scale = pi/maxK()
+                      If dx <= 0 (regardless of image), then use the Nyquist scale = pi/maxK()
                       (Default = None)
 
         @param gain   The number of photons per ADU.  (Default = 1.0)
 
-        @param uniform_deviate  If provided, a UniformDeviate to use for the random numbers
-                                If uniform_deviate=None, one will be automatically created, 
-                                using the time as a seed.
-                                (Default = None)
+        @param wmult  A factor by which to make an automatically-sized image larger than 
+                      it would normally be made.  
+                      (Default = 1.)
 
         @param normalization  Two options for the normalization:
                               "flux" or "f" means that the sum of the output pixels is normalized
@@ -475,31 +483,46 @@ class GSObject(object):
                                      the surface brightness distribution at each location.
                               (Default = "flux")
 
-        @param noise  If provided, the allowed extra noise in each pixel.
-                      This is only relevant if n_photons=0, so the number of photons is being 
-                      automatically calculated.  In that case, if the image noise is 
-                      dominated by the sky background, you can get away with using fewer
-                      shot photons than the full n_photons = flux.  Essentially each shot photon
-                      can have a flux > 1, which increases the noise in each pixel.
-                      The noise parameter specifies how much extra noise per pixel is allowed 
-                      because of this approximation.  A typical value for this might be
-                      noise = sky_level / 100 where sky_level is the flux per pixel 
-                      due to the sky.  If the natural number of photons produces less noise 
-                      than this value for all pixels, we lower the number of photons to bring 
-                      the resultant noise up to this value.  If the natural value produces 
-                      more noise than this, we accept it and just use the natural value.
-                      Note that this uses a "variance" definition of noise, not a "sigma" 
-                      definition.
-                      (Default = 0.)
+        @param add_to_image  Whether to add flux to the existing image rather than clear out
+                             anything in the image before shooting.
+                             (Default = False)
+                              
+        @param n_photons    If provided, the number of photons to use.
+                            If not provided, use as many photons as necessary to end up with
+                            an image with the correct poisson shot noise for the object's flux.
+                            For positive definite profiles, this is equivalent to n_photons = flux.
+                            However, some profiles need more than this because some of the shot
+                            photons are negative (usually due to interpolants).
+                            (Default = 0)
+
+        @param uniform_deviate  If provided, a UniformDeviate to use for the random numbers
+                                If uniform_deviate=None, one will be automatically created, 
+                                using the time as a seed.
+                                (Default = None)
+
+        @param max_extra_noise  If provided, the allowed extra noise in each pixel.
+                                This is only relevant if n_photons=0, so the number of photons is 
+                                being automatically calculated.  In that case, if the image noise 
+                                is dominated by the sky background, you can get away with using 
+                                fewer shot photons than the full n_photons = flux.  Essentially 
+                                each shot photon can have a flux > 1, which increases the noise in 
+                                each pixel.
+                                The max_extra_noise parameter specifies how much extra noise per
+                                pixel is allowed because of this approximation.  A typical value 
+                                for this might be max_extra_noise = sky_level / 100 where 
+                                sky_level is the flux per pixel due to the sky.
+                                If the natural number of photons produces less noise than this 
+                                value for all pixels, we lower the number of photons to bring the 
+                                resultant noise up to this value.  
+                                If the natural value produces more noise than this, we accept it 
+                                and just use the natural value.  Note that this uses a "variance" 
+                                definition of noise, not a "sigma" definition.
+                                (Default = 0.)
 
         @param poisson_flux  Whether to allow total object flux scaling to vary according to 
                              Poisson statistics for n_photons samples.
                              (Default = True)
 
-        @param add_to_image  Whether to add flux to the existing image rather than clear out
-                             anything in the image before shooting.
-                             (Default = False)
-                              
         @returns  The tuple (image, added_flux), where image is the input with drawn photons 
                   added and added_flux is the total flux of photons that landed inside the image 
                   bounds.
@@ -530,38 +553,44 @@ class GSObject(object):
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
                               "'f', 'surface brightness' or 'sb'.") % normalization)
-        # Raise an exception here since C++ is picky about the input types
-        if image is None:
-            raise TypeError("drawShoot requires the image to be provided.")
 
-        if type(n_photons) != float:
-            # if given an int, just convert it to a float
-            n_photons = float(n_photons)
-        if dx is None: 
-            dx = 0.
-        if type(dx) != float:
-            dx = float(dx)
+        # Make sure the type of gain is correct and has a valid value:
         if type(gain) != float:
             gain = float(gain)
-        if type(noise) != float:
-            noise = float(noise)
+        if gain <= 0.:
+            raise ValueError("Invalid gain <= 0. in draw command")
+
+        # Make sure the type of n_photons is correct and has a valid value:
+        if type(n_photons) != float:
+            n_photons = float(n_photons)
+        if n_photons < 0.:
+            raise ValueError("Invalid n_photons < 0. in draw command")
+
+        # Make sure the type of max_extra_noise is correct and has a valid value:
+        if type(max_extra_noise) != float:
+            max_extra_noise = float(max_extra_noise)
+
+        # Setup the uniform_deviate if not provided one.
         if uniform_deviate == None:
             uniform_deviate = galsim.UniformDeviate()
+        elif isinstance(uniform_deviate,galsim.UniformDeviate):
+            pass  # already correct
+        elif isinstance(uniform_deviate,galsim.BaseDeviate):
+            # If it's another kind of BaseDeviate, we can convert
+            uniform_deviate = galsim.UniformDeviate(uniform_deviate)
+        else:
+            raise ValueError("Invalid uniform_deviate in draw command.  " +
+                             "It must be at least a BaseDeviate instance.")
 
         # Check that either n_photons is set to something or flux is set to something
         if n_photons == 0. and self.getFlux() == 1.:
             import warnings
             msg = "Warning: drawShoot for object with flux == 1, but n_photons == 0.\n"
-            msg += "This will only shoot a single photon."
+            msg += "This will only shoot a single photon (since flux = 1)."
             warnings.warn(msg)
 
-        # Clear the image if we are not adding to it.
-        if not add_to_image:
-            image.setZero()
-
-        # Set dx based on the image if not provided something else.
-        if dx <= 0.:
-            dx = image.getScale()
+        # Make sure image is setup correctly
+        image, dx = self._draw_setup_image(image,dx,wmult,add_to_image)
 
         # SBProfile drawShoot command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
@@ -570,9 +599,9 @@ class GSObject(object):
             # gain is photons / ADU.  The photons are the given flux, and we want to 
             # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
             gain /= dx**2
-            
+
         added_flux = self.SBProfile.drawShoot(
-                image, n_photons, uniform_deviate, dx, gain, noise, poisson_flux)
+            image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
 
         return image, added_flux
 
