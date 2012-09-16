@@ -1,7 +1,7 @@
-int_example
-sizeof_SIFD
-test_random
-test_main
-MeasMoments
-MeasShape
-sbdraw
+# Everything
+*
+
+# Except for:
+.gitignore
+SConscript
+*.py

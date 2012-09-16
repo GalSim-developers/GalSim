@@ -5,11 +5,13 @@ Import('env')
 
 install_subdir = 'bin'
 
-galsim_yaml = env.File('galsim_yaml')
-galsim_json = env.File('galsim_json')
+scripts = [ 'galsim_yaml', 'galsim_json' ]
+targets = []
+for script in scripts:
+    targets.append(env.ExecScript(script, script + '.py'))
 
-targets = [ galsim_yaml, galsim_json ]
-
+Default(targets)
+        
 if 'install' in COMMAND_LINE_TARGETS:
     RunInstall = env['_InstallProgram']
     RunInstall(env, targets, install_subdir)

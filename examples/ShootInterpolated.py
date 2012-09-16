@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Simple test of shooting photons to sample from an existing pixelized image.
 Usage: ShootInterpolated.py <input FITS> <output FITS> <dx> <dim> <nPhotons> [g1] [g2]

@@ -44,7 +44,7 @@ version = 0,1
 compat_version = 0,1
 
 if 'install' in COMMAND_LINE_TARGETS:
-    lib_final_dir = os.path.join(env['INSTALL_PREFIX'],'lib')
+    lib_final_dir = os.path.join(env['FINAL_PREFIX'],'lib')
 else:
     lib_final_dir = os.path.join(GetBuildPath('#lib'))
 
@@ -111,7 +111,7 @@ elif sys.platform == 'linux2':
     # Removes all -l lib flags, and add the explicit static library files.
     env1.Replace(LIBS=new_libs)
 
-    lib_final_name = os.path.join(lib_final_dir,'libgalsim.so.%s'%version[0])
+    lib_final_name = 'libgalsim.so.%s'%version[0]
     #lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s.%s'%version)
     lib_short_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s'%version[0])
     link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so')
@@ -149,12 +149,12 @@ if 'install' in COMMAND_LINE_TARGETS:
 
     env1.Alias(target='install', source=[installed_lib, installed_link])
 
-    hfiles1 = os.listdir(GetBuildPath('#include'))
-    hfiles = []
-    for f in hfiles1:
-        hfiles += [os.path.join('#include',f)]
-    installed_h = env1.Install(dir=header_install_dir, source=hfiles)
-    env1.Alias(target='install', source=installed_h)
+    #hfiles1 = os.listdir(GetBuildPath('#include'))
+    #hfiles = []
+    #for f in hfiles1:
+        #hfiles += [os.path.join('#include',f)]
+    #installed_h = env1.Install(dir=header_install_dir, source=hfiles)
+    #env1.Alias(target='install', source=installed_h)
 
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
@@ -165,9 +165,9 @@ if 'uninstall' in COMMAND_LINE_TARGETS:
     # should change this.  Proabaly roll our own Delete function.
     deltarget = Delete("$TARGET")
 
-    hfiles = os.listdir(GetBuildPath('#include'))
-    for f in hfiles:
-        env1.Alias('uninstall', env1.Command(os.path.join(header_install_dir,f), None, deltarget))
+    #hfiles = os.listdir(GetBuildPath('#include'))
+    #for f in hfiles:
+        #env1.Alias('uninstall', env1.Command(os.path.join(header_install_dir,f), None, deltarget))
 
     libfiles = [os.path.join(lib_install_dir, os.path.basename(str(f[0]))) for f in lib_targets]
 

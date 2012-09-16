@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 A basic script demonstrating usage of the RealGalaxy functionality.
 """
