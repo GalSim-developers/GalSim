@@ -35,13 +35,14 @@ simulating astronomical images.  The package is imported into Python with
 
 \texttt{>>> import galsim}
 
-and the typical work flow will normally
+and the typical work flow, as demonstrated in the example scripts in the {\tt
+  GalSim/examples/} directory, will normally
 be something like the following:
 \begin{itemize}
 
 \item Construct a representation of your desired astronomical object
-  as an instance of the {\tt GSObject} class.  Multiple components can be
-  combined or in combination using the special
+  as an instance of the {\tt GSObject} class, which represent surface brightness profiles (of galaxies or PSFs).  Multiple components can be
+  combined using the special
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_add.html}{\texttt{Add}}
   and 
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_convolve.html}{\texttt{Convolve}}
@@ -80,7 +81,8 @@ description can be found.
 %\section{GSObject classes and methods}
 \section{The GSObjects}\label{sect:gsobjects}
 
-There are currently 12 types of \texttt{GSObject}. The first ten listed are
+There are currently 12 types of \texttt{GSObject}s that represent various types of surface brightness
+profiles. The first ten listed are 
 `simple' \texttt{GSObject}s that can be initialized by providing values for
 their required and optional parameters.  The last two are `compound'
 classes used to represent combinations of \texttt{GSObject}s.  
@@ -88,13 +90,13 @@ classes used to represent combinations of \texttt{GSObject}s.
 They are summarized in the following hyperlinked list, in which we also give
 the required parameters for initializing each class in parentheses
 after the class name.  For more information and initialization details for each \texttt{GSObject},
-the Python docstring for each class is available by typing
+the Python docstring for each class is available within the python interpreter, for example for
+\texttt{Sersic} the documentation would be accessed using 
 
-{\tt >>> print galsim.<GSObjectName>.\_\_doc\_\_}
+{\tt >>> print galsim.Sersic.\_\_doc\_\_}
 
-within the Python interpreter, for example \texttt{print
-  galsim.Sersic.\_\_doc\_\_}.  Alternatively follow the hyperlinks on
-the class names to view the \emph{doxygen} documentation based
+Alternatively follow the hyperlinks on
+the class names listed below to view the documentation based
 on the Python docstrings.
 
 In the order in which
@@ -142,14 +144,23 @@ the classes appear in {\tt GalSim/galsim/base.py}:
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_real_galaxy.html}{\texttt{galsim.RealGalaxy(real\_galaxy\_catalog,
       ...)}} \newline \emph{models galaxies using real
   data, including a correction for the original PSF.  Requires the
-  download of external data, stored and input in \texttt{real\_galaxy\_catalog}, for full functionality.}
-\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_add.html}{\texttt{galsim.Add(...)}} \newline \emph{a \emph{compound} object used for
-  summing multiple \texttt{GSObject}s.}
-\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_convolve.html}{\texttt{galsim.Convolve(...)}} \newline \emph{a \emph{compound} object used for
-convolving multiple \texttt{GSObject}s.}
+  download of external data, stored and input in \texttt{real\_galaxy\_catalog} (an instance of the
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1real_1_1_real_galaxy_catalog.html}{\texttt{RealGalaxyCatalog}}
+  class), for full functionality.}
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_add.html}{\texttt{galsim.Add(...)}}
+  \newline \emph{a \emph{compound} object representing the sum of 
+  multiple \texttt{GSObject}s.}
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_convolve.html}{\texttt{galsim.Convolve(...)}}
+  \newline \emph{a \emph{compound} object representing the convolution of 
+multiple \texttt{GSObject}s.}
 \end{itemize}
 
-
+Note that all of the \texttt{GSObject}s except for \texttt{RealGalaxy}, \texttt{Add}, and
+\texttt{Convolve} {\em require} the specification of some radius parameter, where the choice of
+possible radii to specify (e.g., half-light radius, FWHM, etc.) is given in the documentation for
+the class.
 
 \section{Important GSObject methods}\label{sect:gsobjectmethods}
 A number of methods are shared by all the \texttt{GSObject}s of
@@ -225,7 +236,7 @@ the Python docstring is available
 {\tt >>> print obj.<methodName>.\_\_doc\_\_}
 
 within the Python interpreter.  Alternatively follow the hyperlinks on
-the class names above to view the \emph{doxygen} documentation based
+the class names above to view the documentation based
 on the Python docstrings.  You will see that many of the \texttt{GSObject}
 instances also have their own specialized methods, often for
 retreiving parameter values. Examples are
@@ -268,11 +279,11 @@ with \texttt{mean} and standard deviation \texttt{sigma}.}
 
 \end{itemize}
 
-Unfortunately the random deviate classes are not yet fully integrated
-within the \emph{doxygen} documentation, due to their being C++ with
+It is possible to specify the random seed so as to get fully deterministic behavior of the noise
+when running a particular script.  Unfortunately the random deviate classes are not yet fully integrated
+within the documentation, due to their being C++ with
 compiled Python wrappers.  This means that the class names above and
-methods below are not yet hyperlinked.
-
+methods below are not yet hyperlinked.  
 However, the full docstrings are available in
 \texttt{galsim/random.py}, so please refer there for more information,
 or type
@@ -296,7 +307,8 @@ instance are:
   distributed according to the distribution represented by 
 \texttt{dev}, to each element in in a supplied \texttt{Image} instance \texttt{image} (see Section~\ref{sect:image}).}
 
-\item[$\circ$] \texttt{dev()} \newline \emph{returns a new random number drawn from the distribution
+\item[$\circ$] \texttt{dev()} \newline \emph{calling the deviate directly returns a new random
+    number drawn from the distribution 
     represented by \texttt{dev}}.
 
 \end{itemize}
@@ -314,7 +326,8 @@ They are used to store the rendered output of the
 \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...)}}
 and
 \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}
-methods. They can also be operated on to add stochastic noise
+methods. To access that output as a Numpy array, use \texttt{image.array}.  They can also be
+operated on to add stochastic noise 
 simulating real astronomical images (see Section~\ref{sect:random}),
 and have methods for writing to FITS format output.
 
@@ -338,10 +351,9 @@ supported array data types:
 
 \end{itemize}
 Unfortunately the \texttt{Image} classes are not yet fully integrated
-within the \emph{doxygen} documentation, due to their being in C++
+within the documentation, due to their being in C++
 with compiled Python wrappers.  This means that the class names above
-and methods below are not hyperlinked.
-
+and methods below are not hyperlinked. 
 However, the full docstrings are available in
 \texttt{galsim/image.py}, so please refer there for more information,
 or type
@@ -354,7 +366,8 @@ We now illustrate the most commonly-used methods of \texttt{Image}
 class instances.  We will assume that some image \texttt{img} has been
 instantiated, for example by
 
-{\tt image = obj.draw(dx=1.)}.
+{\tt obj = galsim.Gaussian(fwhm=5.)}\\
+{\tt image = obj.draw(dx=1.)}
 
 The most important and commonly-used methods for such an
 instance are:
@@ -368,7 +381,8 @@ instance are:
 \item[$\circ$] \texttt{image.write(fits, ...)}  \newline  \emph{write the \texttt{image} to a FITS
     file or object as determined by the \texttt{fits} input parameter
     (see \\
-  \texttt{galsim/fits.py}).}
+  \texttt{galsim/fits.py}).  In Section~\ref{sect:misc} we discuss how to write to multi-extension
+  FITS files.}
 
 \end{itemize}
 
@@ -389,7 +403,7 @@ A summary of miscellaneous GalSim library objects:
 \item[$\circ$] \texttt{galsim.PositionI(x, y)} \&
   \texttt{galsim.PositionD(x, y)} \newline
   \emph{classes to represent 2D positions on the \texttt{x}-\texttt{y}
-    plane (see \texttt{galsim/position.py}).}
+    plane (see \texttt{galsim/position.py}), e.g., for describing object centroid positions.}
 
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1ellipse_1_1_ellipse.html}{\texttt{galsim.Ellipse(...)}}
