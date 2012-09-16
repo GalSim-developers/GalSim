@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 SBProfile-based implementation of SHERA, with comparison to actual
 SHERA results.  Currently, can only be run in the examples/ directory as 

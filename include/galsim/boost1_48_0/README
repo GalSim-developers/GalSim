@@ -1,0 +1,10 @@
+We want to use a particular version of boost random for our random number generators
+so that our random numbers are deterministic given a particular initial seed.
+This way, we can distribute configuration files with particular seed values and 
+know that everyone will generate the same images from them.  
+
+To this end, we have copied the random number parts of boost version 1.48.0.
+We had to copy a few extra files as well in order to make sure this is compatible
+with native boost distributions.  We have tested that this works when the 
+native boost is 1.35 through 1.50, but if yours is older or newer than that,
+there's a possibility that it won't work.

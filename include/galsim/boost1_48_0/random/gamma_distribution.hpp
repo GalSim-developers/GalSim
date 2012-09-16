@@ -15,14 +15,14 @@
 #ifndef BOOST_RANDOM_GAMMA_DISTRIBUTION_HPP
 #define BOOST_RANDOM_GAMMA_DISTRIBUTION_HPP
 
-#include <boost/config/no_tr1/cmath.hpp>
+#include "galsim/boost1_48_0/config/no_tr1/cmath.hpp"
 #include <istream>
 #include <iosfwd>
 #include <boost/assert.hpp>
 #include <boost/limits.hpp>
 #include <boost/static_assert.hpp>
-#include "galsim/boost1_48_0.random/detail/config.hpp"
-#include "galsim/boost1_48_0.random/exponential_distribution.hpp"
+#include "galsim/boost1_48_0/random/detail/config.hpp"
+#include "galsim/boost1_48_0/random/exponential_distribution.hpp"
 
 namespace boost {
 namespace random {
