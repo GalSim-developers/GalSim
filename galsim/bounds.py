@@ -94,7 +94,7 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     """
 
     Class.expand.__func__.__doc__ = "Grow the Bounds by the supplied factor about the center."
-    Class.isDefined.__func__.__doc__ "Test whether Bounds rectangle is defined."
+    Class.isDefined.__func__.__doc__ = "Test whether Bounds rectangle is defined."
     Class.getXMin.__func__.__doc__ = "Get the value of xmin."
     Class.getXMax.__func__.__doc__ = "Get the value of xmax."
     Class.getYMin.__func__.__doc__ = "Get the value of ymin."
