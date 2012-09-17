@@ -204,18 +204,36 @@ instance are:
   \newline \emph{dilate linear size by \texttt{scale} and multiply total flux by
   \texttt{scale}$^2$, conserving surface brightness.}
 \item[$\circ$]
-  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a85cc0094dcf470cfbff93d9830ab80bd}{\texttt{applyShear(...)}}
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a85cc0094dcf470cfbff93d9830ab80bd}{\texttt{obj.applyShear(...)}}
   \newline \emph{apply a shear to the \texttt{GSObject}, handling a number of different
   input conventions (see also 
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1shear_1_1_shear.html}{\texttt{Shear}};
-  Section~\ref{sect:misc}).}
+  Section~\ref{sect:misc}).  Commonly-used input conventions:
+   \begin{itemize}
+  \item \texttt{obj.applyShear(g1, g2)} \\
+    apply the first (\texttt{g1}) and second (\texttt{g2}) component
+    of a shear defined so that $|g| = (a - b) / (a + b)$ where $a$ and
+    $b$ are the semi-major and semi-minor axes of an ellipse.
+   \item \texttt{obj.applyShear(e1, e2)} \\
+   apply the first (\texttt{e1}) and second (\texttt{e2}) component
+    of a shear defined so that $|e| = (a^2 - b^2) / (a^2 + b^2)$ where $a$ and
+    $b$ are the semi-major and semi-minor axes of an ellipse.
+   \item \texttt{obj.applyShear(g, beta)} \\
+   apply magnitude (\texttt{g}) and polar angle (\texttt{beta}) of a
+   shear defined so that $|g| = (a - b) / (a + b)$ where $a$ and
+    $b$ are the semi-major and semi-minor axes of an ellipse.
+   \item \texttt{obj.applyShear(e, beta)} \\
+    apply magnitude (\texttt{e}) and polar angle (\texttt{beta}) of a
+   shear defined so that $|e| = (a^2 - b^2) / (a^2 + b^2)$ where $a$ and
+    $b$ are the semi-major and semi-minor axes of an ellipse.
+   \end{itemize}}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ad6236e3153f23f1201396369dd67f1c7}{\texttt{obj.applyRotation(theta)}}
   \newline \emph{apply a rotation of \texttt{theta} (positive direction
   anti-clockwise) to the \texttt{GSObject}, where \texttt{theta} is an
   \texttt{Angle} instance (see Section~\ref{sect:misc}).}
 \item[$\circ$]
-  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a6b547741eeec4086de9abe227dae9325}{\texttt{applyShift(dx,
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a6b547741eeec4086de9abe227dae9325}{\texttt{obj.applyShift(dx,
       dy)}} \newline \emph{apply a $(dx, dy)$ position shift to the
     \texttt{GSObject} centroid.}
 \item[$\circ$]
@@ -400,6 +418,10 @@ A summary of miscellaneous GalSim library objects:
 \emph{class for holding angular unit definitions, specified on
   initialization in \texttt{radians}.}
 
+\item[$\circ$] \texttt{galsim.BoundsI(...)} \& \texttt{galsim.BoundsD(...)} \newline 
+\emph{classes to represent image bounds in the \texttt{x}-\texttt{y}
+    plane as the vertices of a rectangle (see \texttt{galsim/bounds.py}).}
+
 \item[$\circ$] \texttt{galsim.PositionI(x, y)} \&
   \texttt{galsim.PositionD(x, y)} \newline
   \emph{classes to represent 2D positions on the \texttt{x}-\texttt{y}
@@ -409,13 +431,35 @@ A summary of miscellaneous GalSim library objects:
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1ellipse_1_1_ellipse.html}{\texttt{galsim.Ellipse(...)}}
   \newline \emph{class to represent
     ellipses and thus ellipse-type transformations.  The class can be
-    initialized using a variety of different parameter conventions  (see \texttt{galsim/ellipse.py}).}
+    initialized using a variety of different parameter conventions
+    (see \texttt{galsim/ellipse.py}), including being initialized with
+    a Shear instance (see below).}
 
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1shear_1_1_shear.html}{\texttt{galsim.Shear(...)}}
   \newline \emph{class to represent shears
     in a variety of ways.  Like the \texttt{galsim.Ellipse}, this class can be
-    initialized using a variety of different parameter conventions (see \texttt{galsim/shear.py}).}
+    initialized using a variety of different parameter conventions
+    (see \texttt{galsim/shear.py}).
+Commonly-used examples:
+   \begin{itemize}
+  \item \texttt{galsim.Shear(g1, g2)} \\
+    set via the first (\texttt{g1}) and second (\texttt{g2}) component
+    of a shear defined so that $|g| = (a - b) / (a + b)$ where $a$ and
+    $b$ are the semi-major and semi-minor axes of an ellipse.
+   \item \texttt{galsim.Shear(e1, e2)} \\
+   set via the first (\texttt{e1}) and second (\texttt{e2}) component
+    of a shear defined so that $|e| = (a^2 - b^2) / (a^2 + b^2)$ where $a$ and
+    $b$ are the semi-major and semi-minor axes of an ellipse.
+   \item \texttt{galsim.Shear(g, beta)} \\
+   set via magnitude (\texttt{g}) and polar angle (\texttt{beta}) of a
+   shear defined so that $|g| = (a - b) / (a + b)$ where $a$ and
+    $b$ are the semi-major and semi-minor axes of an ellipse.
+   \item \texttt{galsim.Shear(e, beta)} \\
+    set via magnitude (\texttt{e}) and polar angle (\texttt{beta}) of a
+   shear defined so that $|e| = (a^2 - b^2) / (a^2 + b^2)$ where $a$ and
+    $b$ are the semi-major and semi-minor axes of an ellipse.
+   \end{itemize}}
 
 \item[$\circ$] \texttt{galsim.fits.writeMulti(image\_list, fits, ...)}
   \newline 
