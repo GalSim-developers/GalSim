@@ -89,22 +89,20 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
         >>> bounds.includes(galsim.BoundsD(-50., -50., 150., 150.))
         False
 
-     The type of the PositionI/D and BoundsI/D instances (i.e. integer or float type) should match
-     that of the bounds instance.
-     """
+    The type of the PositionI/D and BoundsI/D instances (i.e. integer or float type) should match
+    that of the bounds instance.
+    """
 
-     Class.expand.__func__.__doc__ = "Grow the Bounds by the supplied factor about the center."
-     Class.isDefined.__func__.__doc__ "Test whether Bounds rectangle is defined."
-     Class.getXMin.__func__.__doc__ = "Get the value of xmin."
-     Class.getXMax.__func__.__doc__ = "Get the value of xmax."
-     Class.getYMin.__func__.__doc__ = "Get the value of ymin."
-     Class.getYMax.__func__.__doc__ = "Get the value of ymax."
-     Class.setXMin.__func__.__doc__ = "Set the value of xmin."
-     Class.setXMax.__func__.__doc__ = "Set the value of xmax."
-     Class.setYMin.__func__.__doc__ = "Set the value of ymin."
-     Class.setYMax.__func__.__doc__ = "Set the value of ymax."
+    Class.expand.__func__.__doc__ = "Grow the Bounds by the supplied factor about the center."
+    Class.isDefined.__func__.__doc__ "Test whether Bounds rectangle is defined."
+    Class.getXMin.__func__.__doc__ = "Get the value of xmin."
+    Class.getXMax.__func__.__doc__ = "Get the value of xmax."
+    Class.getYMin.__func__.__doc__ = "Get the value of ymin."
+    Class.getYMax.__func__.__doc__ = "Get the value of ymax."
+    Class.setXMin.__func__.__doc__ = "Set the value of xmin."
+    Class.setXMax.__func__.__doc__ = "Set the value of xmax."
+    Class.setYMin.__func__.__doc__ = "Set the value of ymin."
+    Class.setYMax.__func__.__doc__ = "Set the value of ymax."
  
-
-
 
 del Class    # cleanup public namespace
