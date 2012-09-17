@@ -344,7 +344,7 @@ class GSObject(object):
 
         # Check dx value and adjust if necessary:
         if dx is None:
-            if image is not None:
+            if image is not None and image.getScale() > 0.:
                 dx = image.getScale()
             else:
                 dx = self.SBProfile.nyquistDx()
