@@ -61,4 +61,40 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     information.
     """
 
+    Class.area.__func__.__doc__ = """Return the area of the enclosed region.
+
+    The area is a bit different for integer-type BoundsI and float-type BoundsD instances.
+    For floating point types, it is simply (xmax-xmin)*(ymax-ymin).  However, for integer types, we
+    add 1 to each size to correctly count the number of pixels being described by the bounding box.
+    """
+
+    Class.addBorder.__func__.__doc__ = """Add a border of the specified width to the Bounds.
+
+    The bounds rectangle must be defined, i.e. xmax > xmin, ymax > min.
+    """
+
+    Class.center.__func__.__doc__ = "Return the central point of the Bounds as a Position."
+
+    Class.includes.__func__.__doc__ = """Test whether a supplied x-y pair, Position, or Bounds lie
+    within the Bounds of this instance.
+
+    TODO: The examples below are how this should work, but it appears to be broken!! Fix!!
+
+    Calling Examples
+    ----------------
+
+        >>> bounds = galsim.BoundsD(0., 0., 100., 100.)
+        >>> bounds.includes(50., 50.)
+        True
+        >>> bounds.includes(galsim.PositionD(50., 50.))
+        True
+        >>> bounds.includes(galsim.BoundsD(-50., -50., 150., 150.))
+        False
+
+     The type of the PositionI/D and BoundsI/D instances (i.e. integer or float type) should match
+     that of the bounds instance.
+     """
+
+
+
 del Class    # cleanup public namespace
