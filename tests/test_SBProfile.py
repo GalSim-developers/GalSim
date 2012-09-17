@@ -1821,6 +1821,11 @@ def test_rescale():
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True results in wrong flux "+
                     "according to the returned tot")
 
+    # Can also get a flux of 2 using gain = 0.5
+    sersic.draw(myImg, dx=0.2, gain=0.5, normalization="surface brightness")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Drawing with gain=0.5 disagrees with expected result")
  
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
