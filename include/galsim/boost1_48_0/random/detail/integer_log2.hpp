@@ -14,9 +14,11 @@
 #ifndef BOOST_RANDOM_DETAIL_INTEGER_LOG2_HPP
 #define BOOST_RANDOM_DETAIL_INTEGER_LOG2_HPP
 
+#define BOOST_NO_CONSTEXPR
+
 #include <boost/config.hpp>
 #include <boost/limits.hpp>
-#include <boost/pending/integer_log2.hpp>
+#include "galsim/boost1_48_0/pending/integer_log2.hpp"
 
 namespace boost {
 namespace random {

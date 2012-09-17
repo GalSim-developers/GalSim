@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 A simple script based originally on script 4 from MultiObjectDemo.py.  
 The point of the test is to which interpolant is the best choice for OpticalPSF.

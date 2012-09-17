@@ -10,29 +10,29 @@ fi
 /bin/rm -f output/*
 /bin/rm -f output_yaml/*
 
-time ./demo1.py || exit
-time galsim_yaml demo1.yaml || exit
+time ../bin/demo1 || exit
+time ../bin/galsim_yaml demo1.yaml || exit
 
-time ./demo2.py || exit
-time galsim_yaml demo2.yaml || exit
+time ../bin/demo2 || exit
+time ../bin/galsim_yaml demo2.yaml || exit
 
-time ./demo3.py || exit
-time galsim_yaml demo3.yaml || exit
+time ../bin/demo3 || exit
+time ../bin/galsim_yaml demo3.yaml || exit
 
-time ./demo4.py || exit
-time galsim_yaml demo4.yaml || exit
+time ../bin/demo4 || exit
+time ../bin/galsim_yaml demo4.yaml || exit
 
-time ./demo5.py || exit
-time galsim_yaml demo5.yaml || exit
+time ../bin/demo5 || exit
+time ../bin/galsim_yaml demo5.yaml || exit
 
-time ./demo6.py || exit
-time galsim_yaml demo6.yaml || exit
+time ../bin/demo6 || exit
+time ../bin/galsim_yaml demo6.yaml || exit
 
-time ./demo7.py || exit
-time galsim_yaml demo7.yaml || exit
+time ../bin/demo7 || exit
+time ../bin/galsim_yaml demo7.yaml || exit
 
-time ./demo8.py || exit
-time galsim_yaml demo8.yaml || exit
+time ../bin/demo8 || exit
+time ../bin/galsim_yaml demo8.yaml || exit
 
 echo 'Checking diffs: (No output means success)'
 
