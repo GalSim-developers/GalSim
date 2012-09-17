@@ -490,13 +490,15 @@ namespace galsim {
          * The image is not cleared out before drawing.  So this profile will be added
          * to anything already on the input image.
          *
-         * @param[in,out]   image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
+         * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain   Number of photons per ADU. (default `gain` = 1.)
+         * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
+         *                   (default `wmult` = 1)
          *
          * @returns summed flux.
          */
         template <typename T>
-        double draw(ImageView<T> image, double gain=1.) const; 
+        double draw(ImageView<T> image, double gain=1., double wmult=1.) const; 
 
         /** 
          * @brief Draw an image of the SBProfile in real space forcing the use of real methods 
@@ -507,8 +509,8 @@ namespace galsim {
          * The image is not cleared out before drawing.  So this profile will be added
          * to anything already on the input image.
          *
-         * @param[in,out]   image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
+         * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain   Number of photons per ADU. (default `gain` = 1.)
          *
          * @returns summed flux.
          */
@@ -526,13 +528,15 @@ namespace galsim {
          * The image is not cleared out before drawing.  So this profile will be added
          * to anything already on the input image.
          *
-         * @param[in,out]   image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
+         * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain   Number of photons per ADU. (default `gain` = 1.)
+         * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
+         *                   (default `wmult` = 1)
          *
          * @returns summed flux.
          */
         template <typename T>
-        double fourierDraw(ImageView<T> image, double gain=1.) const; 
+        double fourierDraw(ImageView<T> image, double gain=1., double wmult=1.) const; 
 
         /** 
          * @brief Draw an image of the SBProfile in k space.
@@ -547,14 +551,16 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   re image of real argument of SBProfile in k space
-         *                  (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space
-         *                  (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
+         * @param[in,out]    re image of real argument of SBProfile in k space
+         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in,out]    im image of imaginary argument of SBProfile in k space
+         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain   Number of photons per ADU. (default `gain` = 1.)
+         * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
+         *                   (default `wmult` = 1)
          */
         template <typename T>
-        void drawK(ImageView<T> re, ImageView<T> im, double gain=1.) const; 
+        void drawK(ImageView<T> re, ImageView<T> im, double gain=1., double wmult=1.) const; 
 
         /** 
          * @brief Draw an image of the SBProfile in k space forcing the use of k space methods 
@@ -567,11 +573,11 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   re image of real argument of SBProfile in k space
-         *                  (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space
-         *                  (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
+         * @param[in,out]    re image of real argument of SBProfile in k space
+         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in,out]    im image of imaginary argument of SBProfile in k space
+         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain   Number of photons per ADU. (default `gain` = 1.)
          */
         template <typename T>
         void plainDrawK(ImageView<T> re, ImageView<T> im, double gain=1.) const; 
@@ -590,14 +596,16 @@ namespace galsim {
          * Note that if you give an input image, its origin may be redefined by the time it comes 
          * back.
          *
-         * @param[in,out]   re image of real argument of SBProfile in k space
-         *                  (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in,out]   im image of imaginary argument of SBProfile in k space
-         *                  (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
+         * @param[in,out]    re image of real argument of SBProfile in k space
+         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in,out]    im image of imaginary argument of SBProfile in k space
+         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain   Number of photons per ADU. (default `gain` = 1.)
+         * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
+         *                   (default `wmult` = 1)
          */
         template <typename T>
-        void fourierDrawK(ImageView<T> re, ImageView<T> im, double gain=1.) const; 
+        void fourierDrawK(ImageView<T> re, ImageView<T> im, double gain=1., double wmult=1.) const; 
 
     protected:
 

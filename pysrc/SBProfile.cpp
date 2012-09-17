@@ -31,8 +31,8 @@ namespace galsim {
                      "\n"
                      "Returns total flux of photons that landed inside image bounds.")
                 .def("draw", 
-                     (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::draw,
-                     (bp::arg("image"), bp::arg("gain")=1.),
+                     (double (SBProfile::*)(ImageView<U>, double, double) const)&SBProfile::draw,
+                     (bp::arg("image"), bp::arg("gain")=1., bp::arg("wmult")=1.),
                      "Draw in-place and return the summed flux.")
                 ;
         }
@@ -60,19 +60,14 @@ namespace galsim {
                 "SBConvolve: convolution of other SBProfiles\n"
                 "\n"
                 "==== Drawing routines ==== \n"
-                "Grid on which SBProfile is drawn has pitch dx; given dx=0. default,\n"
-                "routine will choose dx to be at least fine enough for Nyquist sampling\n"
-                "at maxK().  If you specify dx, image will be drawn with this dx and\n"
-                "you will receive an image with the aliased frequencies included.\n"
+                "Grid on which SBProfile is drawn has pitch dx, which is taken from the\n"
+                "image's scale parameter.\n"
                 "\n"
-                "If input image is not specified or has null dimension, a square image\n"
-                "will be drawn which is big enough to avoid folding.  If drawing is\n"
-                "done using FFT, it will be scaled up to a power of 2, or 3x2^n,\n"
-                "whicher fits.  If input image has finite dimensions then these will be\n"
-                "used, although in an FFT the image may be calculated internally on a\n"
-                "larger grid to avoid folding.  Specifying wmult>1 will draw an image\n"
-                "that is wmult times larger than the default choice, i.e. it will have\n"
-                "finer sampling in k space and have less folding.\n"
+                "Note that in an FFT the image may be calculated internally on a\n"
+                "larger grid than the provided image to avoid folding.\n"
+                "Specifying wmult > 1 will draw an image that is wmult times larger than the \n"
+                "default choice, i.e. it will have finer sampling in k space and have less \n"
+                "folding.\n"
                 ;
 
             bp::class_<SBProfile> pySBProfile("SBProfile", doc, bp::no_init);
