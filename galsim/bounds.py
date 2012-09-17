@@ -76,14 +76,12 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.center.__func__.__doc__ = "Return the central point of the Bounds as a Position."
 
     Class.includes.__func__.__doc__ = """Test whether a supplied x-y pair, Position, or Bounds lie
-    within the Bounds of this instance.
-
-    TODO: The examples below are how this should work, but it appears to be broken!! Fix!!
+    within a defined Bounds rectangle of this instance.
 
     Calling Examples
     ----------------
 
-        >>> bounds = galsim.BoundsD(0., 0., 100., 100.)
+        >>> bounds = galsim.BoundsD(0., 100., 0., 100.)
         >>> bounds.includes(50., 50.)
         True
         >>> bounds.includes(galsim.PositionD(50., 50.))
@@ -94,6 +92,18 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
      The type of the PositionI/D and BoundsI/D instances (i.e. integer or float type) should match
      that of the bounds instance.
      """
+
+     Class.expand.__func__.__doc__ = "Grow the Bounds by the supplied factor about the center."
+     Class.isDefined.__func__.__doc__ "Test whether Bounds rectangle is defined."
+     Class.getXMin.__func__.__doc__ = "Get the value of xmin."
+     Class.getXMax.__func__.__doc__ = "Get the value of xmax."
+     Class.getYMin.__func__.__doc__ = "Get the value of ymin."
+     Class.getYMax.__func__.__doc__ = "Get the value of ymax."
+     Class.setXMin.__func__.__doc__ = "Set the value of xmin."
+     Class.setXMax.__func__.__doc__ = "Set the value of xmax."
+     Class.setYMin.__func__.__doc__ = "Set the value of ymin."
+     Class.setYMax.__func__.__doc__ = "Set the value of ymax."
+ 
 
 
 
