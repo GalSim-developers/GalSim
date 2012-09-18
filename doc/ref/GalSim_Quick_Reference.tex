@@ -99,7 +99,7 @@ methods and attributes of the GalSim classes.
 %\section{GSObject classes and methods}
 \section{GSObjects}\label{sect:gsobjects}
 
-\subsection{GSObject classes and when to use them}
+\subsection{GSObject classes and when to use them}\label{sect:gsobjectclasses}
 There are currently 13 types of \texttt{GSObject}s that represent various types of surface brightness
 profiles. The first 11 listed are 
 `simple' \texttt{GSObject}s that can be initialized by providing values for
@@ -224,6 +224,15 @@ one of the calls described in the documentation linked above.  For
 example,
 
 {\tt >>> obj = galsim.Sersic(n=3.5, half\_light\_radius=1.743)}.
+
+One important fact about \texttt{GSObject}s is that all of the
+methods which change the properties of the astronomical object
+representend by the instance (e.g., \texttt{setFlux()},
+  \texttt{applyShear()} etc.) also make fundamental changes to the
+  instance itself.  In most cases this will mean that special methods
+  available to individual classes described in Section
+  \ref{sect:gsobjectclasses}, such as \texttt{getFWHM()} for the
+  \texttt{Moffat}, will be unavailable.
 
 Some of the most important and commonly-used methods for such an
 instance are:
