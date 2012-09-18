@@ -140,6 +140,10 @@ def main(argv):
     gal_image = galsim.ImageF(nx_pixels * nx_stamps-1 , ny_pixels * ny_stamps-1)
     psf_image = galsim.ImageF(nx_pixels * nx_stamps-1 , ny_pixels * ny_stamps-1)
 
+    # Set the pixel_scale of the images:
+    gal_image.setScale(pixel_scale)
+    psf_image.setScale(pixel_scale)
+
     centroid_shift_sq = centroid_shift**2
 
     first_in_pair = True  # Make pairs that are rotated by 45 degrees
@@ -222,7 +226,7 @@ def main(argv):
 
             # Draw the image
             #print 'pixel_scale = ',pixel_scale
-            final_gal.draw(sub_gal_image, dx=pixel_scale)
+            final_gal.draw(sub_gal_image)
 
             # Now determine what we need to do to get our desired S/N
             # There are lots of definitions of S/N, but here is the one used by Great08
@@ -251,7 +255,7 @@ def main(argv):
 
             # Draw the PSF image
             # No noise on PSF images.  Just draw it as is.
-            this_psf.draw(sub_psf_image, dx=pixel_scale)
+            this_psf.draw(sub_psf_image)
 
             # for first instance, measure moments
             if ix==0 and iy==0:
