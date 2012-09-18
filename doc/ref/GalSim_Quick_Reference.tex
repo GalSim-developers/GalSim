@@ -34,13 +34,16 @@
 %maybe use an entirely different document class.}
 
 The GalSim package provides a number of Python classes and methods for
-simulating astronomical images.  The package is imported into Python with
-
+simulating astronomical images.  We assuming GalSim is installed; see the
+\href{https://github.com/GalSim-developers/GalSim/wiki}{\emph{GalSim
+    Wiki}} or the file \texttt{INSTALL.md} in the base directory \texttt{/your/path/to/GalSim/}
+for instructions.  The package is imported into Python with
 
 \texttt{>>> import galsim}
 
 and the typical work flow, as demonstrated in the example scripts in the {\tt
-  GalSim/examples/} directory, will normally
+examples/} directory (all paths given relative to
+\texttt{/your/path/to/GalSim/} from now on), will normally
 be something like the following:
 \begin{itemize}
 
@@ -72,7 +75,7 @@ be something like the following:
 \end{itemize}
 
 There are many examples of this workflow in the directory {\tt
-  GalSim/examples/}, showing most of the GalSim library in action, in
+ examples/}, showing most of the GalSim library in action, in
 the scripts named \texttt{demo1.py} -- \texttt{demo8.py}.
 
 We now provide a brief, reference description of the GalSim classes
@@ -119,7 +122,7 @@ the class names listed below to view the documentation based
 on the Python docstrings.
 
 In the order in which
-the classes appear in {\tt GalSim/galsim/base.py}:
+the classes appear in {\tt galsim/base.py}:
 \begin{itemize}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_gaussian.html}{\texttt{galsim.Gaussian(...)}}
@@ -217,7 +220,7 @@ system of units could be used.\footnote{Unfortunately, as it happens, there is
 \subsection{Important GSObject methods}\label{sect:gsobjectmethods}
 A number of methods are shared by all the \texttt{GSObject}s of
 Section~\ref{sect:gsobjects}, and are also to be found in \\ {\tt
-  GalSim/galsim/base.py} within the definition of the
+ galsim/base.py} within the definition of the
 \texttt{GSObject} base class.  In what follows, we assume that a
 \texttt{GSObject} labelled \texttt{obj} has been instantiated using
 one of the calls described in the documentation linked above.  For
