@@ -162,11 +162,42 @@ Note that all of the \texttt{GSObject}s except for \texttt{RealGalaxy}, \texttt{
 possible radii to specify (e.g., half-light radius, FWHM, etc.) is given in the documentation for
 the class.
 
+\subsection*{Units}
+The choice of units for these size specifications is up to the user,
+but it must be kept consistent between all \texttt{GSObjects}.  These
+units must also adopted when specifying the \texttt{Image} sample
+rate \texttt{dx}, whether this is set via the \texttt{GSObject}
+instance methods \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...)}}
+and
+\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}
+(see Section~\ref{sect:gsobjectmethods}),
+or when setting the scale of an \texttt{Image} with a given
+\texttt{dx} using the \texttt{image.setScale(dx)} method (see Section~\ref{sect:image}).
+
+As an example, consider the
+\texttt{lam\_over\_diam} parameter which provides an angular scale for
+the \texttt{Airy} via
+the ratio $\lambda / D$ for light at wavelength $\lambda$ passing
+through a telescope of diameter $D$. Putting both $\lambda$ and
+$D$ in metres and taking the ratio gives \texttt{lam\_over\_diam} in
+radians, but this is not a commonly used angular scale when describing
+astronomical objects such as galaxies and stellar PSFs, nor is
+it often used for image pixel scales.  If wishing to use arcsec, which
+is more common in both cases, the user should multiply the result in
+radians by the conversion factor
+$648000 / \pi$.  In principle, however, any consistent
+system of units could be used.\footnote{Unfortunately, as it happens, there is
+  currently an issue in the use of \texttt{OpticalPSF} with very small
+  numerical values
+  of \texttt{lam\_over\_diam}, such as those which would be needed if using
+  radians as the system of units.  This will hopefully be fixed soon.}
+
+
 \section{Important GSObject methods}\label{sect:gsobjectmethods}
 A number of methods are shared by all the \texttt{GSObject}s of
 Section~\ref{sect:gsobjects}, and are also to be found in \\ {\tt
   GalSim/galsim/base.py} within the definition of the
-\texttt{GSObject}~base class.  In what follows, we assume that a
+\texttt{GSObject} base class.  In what follows, we assume that a
 \texttt{GSObject} labelled \texttt{obj} has been instantiated using
 one of the calls described in the documentation linked above.  For
 example,
@@ -237,16 +268,21 @@ instance are:
       dy)}} \newline \emph{apply a $(dx, dy)$ position shift to the
     \texttt{GSObject} centroid.}
 \item[$\circ$]
-  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...)}}
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...,
+      dx=1)}}
   \newline \emph{draw an image of the \texttt{GSObject}~using Discrete Fourier
-  Transforms and interpolation to perform the image rendering.}
+  Transforms and interpolation to perform the image rendering.  The
+  optional image sample scale \texttt{dx} (default \texttt{dx~=~1})
+  should use the same units as used for the \texttt{GSobject} size parameters.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(image,
-      ...)}}
+      ..., dx=1)}}
   \newline \emph{draw an image of the \texttt{GSObject}~by shooting a finite number of
   photons into a user-supplied \texttt{Image} instance,
   \texttt{image}, which unlike for \texttt{draw()} is a required input.  The resulting rendering
-  therefore contains stochastic noise, but uses few approximations.}
+  therefore contains stochastic noise, but uses few approximations. The
+  optional image sample scale \texttt{dx} (default \texttt{dx~=~1})
+  should use the same units as used for the \texttt{GSobject} size parameters.}
 \end{itemize}
 Once again, for more information regarding each \texttt{galsim.GSObject}~method,
 the Python docstring is available
@@ -335,19 +371,22 @@ instance are:
 The GalSim \texttt{Image} classes store array data, along with a
 figure for the pixel separation in physical units and image bounds
 information (origin, extent).  The \texttt{ImageView} provides a
-mutable view into \texttt{Image} instance data, and
+mutable view into \texttt{Image} instance data (although not all
+\texttt{Image} methods are available), and
 \texttt{ConstImageView} an immutable view into \texttt{Image} instance
-data.  The full docstrings are available in \texttt{galsim/image.py}
-with a description of the differences between these fundamental types.
+data.
 
-They are used to store the rendered output of the
+However, if creating these objects directly you will mostly only need to use \texttt{Image} instances.  
+The \texttt{ImageView} classes are most commonly found when used to store the rendered output
+of the \texttt{GSObject} instance methods
 \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...)}}
 and
-\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}
-methods. To access that output as a Numpy array, use \texttt{image.array}.  They can also be
+\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}. 
+To access the data as a Numpy array, use the \texttt{img.array} attribute.
+Both \texttt{Image} and \texttt{ImageView} instances can be
 operated on to add stochastic noise 
 simulating real astronomical images (see Section~\ref{sect:random}),
-and have methods for writing to FITS format output.
+and have methods for writing to FITS format output. 
 
 There are four types of GalSim \texttt{Image}, one for each of four
 supported array data types:
@@ -368,6 +407,9 @@ supported array data types:
   floats.}
 
 \end{itemize}
+ Docstrings are available in \texttt{galsim/image.py}
+with a bit more detail in the description of the differences between these fundamental types.
+
 Unfortunately the \texttt{Image} classes are not yet fully integrated
 within the documentation, due to their being in C++
 with compiled Python wrappers.  This means that the class names above
@@ -381,22 +423,30 @@ or type
 within the Python interpreter.
 
 We now illustrate the most commonly-used methods of \texttt{Image}
-class instances.  We will assume that some image \texttt{img} has been
+class instances.  We will assume that some \texttt{Image} instance \texttt{img} has been
 instantiated, for example by
 
-{\tt obj = galsim.Gaussian(fwhm=5.)}\\
-{\tt image = obj.draw(dx=1.)}
+{\tt img = galsim.ImageD(100, 100)}.
 
+This \texttt{Image} instance is then ready to pass to a \texttt{GSObject} for drawing.
 The most important and commonly-used methods for such an
 instance are:
 \begin{itemize}
 
-\item[$\circ$] \texttt{image.addNoise(dev)} \newline \emph{this adds stochastic noise, distributed as
+\item[$\circ$] \texttt{img.getScale()} \newline
+ \emph{get the sample scale \texttt{dx} for this image.}
+
+\item[$\circ$] \texttt{img.setScale(dx)} \newline
+ \emph{set the sample scale for this image to \texttt{dx} --- note that
+   this scale should use the same units adopted for the
+   \texttt{GSObject} sizes.}
+
+\item[$\circ$] \texttt{img.addNoise(dev)} \newline \emph{this adds stochastic noise, distributed as
   represented by the random deviate instance \texttt{dev}, to each
-  element of the data array in \texttt{image}.  This therefore has the same
+  element of the data array in \texttt{imv}.  This therefore has the same
   effect as \texttt{dev.applyTo(image)} (see Section~\ref{sect:random}; also \texttt{galsim/noise.py}).}
 
-\item[$\circ$] \texttt{image.write(fits, ...)}  \newline  \emph{write the \texttt{image} to a FITS
+\item[$\circ$] \texttt{img.write(fits, ...)}  \newline  \emph{write the \texttt{imageView} to a FITS
     file or object as determined by the \texttt{fits} input parameter
     (see \\
   \texttt{galsim/fits.py}).  In Section~\ref{sect:misc} we discuss how to write to multi-extension
