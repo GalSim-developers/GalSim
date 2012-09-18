@@ -120,21 +120,26 @@ the class names listed below to view the documentation based
 on the Python docstrings.
 
 In the order in which
-the classes appear in {\tt galsim/base.py}:
+the classes appear in {\tt galsim/base.py}, with all non-optional
+parameters listed:
 \begin{itemize}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_gaussian.html}{\texttt{galsim.Gaussian(...)}}
-  \newline \emph{a 2D Gaussian light profile.}
+  \newline \emph{a 2D Gaussian light profile. Requires one of the
+    following size parameters to be set: \texttt{sigma}; \texttt{FWHM}; \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_moffat.html}{\texttt{galsim.Moffat(beta,
     ...)}}
   \newline \emph{a Moffat profile with slope parameter \texttt{beta}, used to approximate ground-based
-    telescope PSFs.}
+    telescope PSFs. Requires one of the
+    following size parameters to be set: \texttt{scale\_radius}; \texttt{FWHM}; \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_atmospheric_p_s_f.html}{\texttt{galsim.AtmosphericPSF(...)}}
   \newline \emph{currently simply an image-based
   implementation of a Kolmogorov PSF (see below), and therefore deprecated, but expected to evolve to
-  store a stochastically modelled atmospheric PSF in the near future.}
+  store a stochastically modelled atmospheric PSF in the near future.
+Requires one of the
+    following size parameters to be set: \texttt{FWHM}; \texttt{lam\_over\_r0}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_airy.html}{\texttt{galsim.Airy(lam\_over\_diam,
       ...)}} \newline \emph{an Airy PSF for ideal diffraction
@@ -154,14 +159,19 @@ the classes appear in {\tt galsim/base.py}:
   rectangular pixels, requires at least one side dimension \texttt{xw}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_sersic.html}{\texttt{galsim.Sersic(n,
-    ...)}} \newline\emph{ the S\'{e}rsic family of galaxy light
-  profiles, parameterized by an index \texttt{n}.}
+      half\_light\_radius, ...)}} \newline\emph{ the S\'{e}rsic family of galaxy light
+  profiles, parameterized by an index \texttt{n} and size \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_exponential.html}{\texttt{galsim.Exponential(...)}}
-  \newline \emph{the Exponential galaxy disc profile, a S\'{e}rsic with index \texttt{n=1}.}
+  \newline \emph{the Exponential galaxy disc profile, a S\'{e}rsic
+    with index \texttt{n=1}.  Requires one of the
+    following size parameters to be set: \texttt{scale\_radius}; \texttt{half\_light\_radius}.}
 \item[$\circ$]
-  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_de_vaucouleurs.html}{\texttt{galsim.DeVaucouleurs(...)}}
-  \newline \emph{the De Vaucouleurs galaxy bulge profile, a S\'{e}rsic with index \texttt{n=4}.}
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_de_vaucouleurs.html}{\texttt{galsim.DeVaucouleurs(half\_light\_radius,
+      flux=1.)}}
+  \newline \emph{the De Vaucouleurs galaxy bulge profile, a S\'{e}rsic
+    with index \texttt{n=4}.  Requires the size parameter
+    \texttt{half\_light\_radius} to be set.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_real_galaxy.html}{\texttt{galsim.RealGalaxy(real\_galaxy\_catalog,
       ...)}} \newline \emph{models galaxies using real
@@ -185,7 +195,7 @@ possible radii to specify (e.g., half-light radius, FWHM, etc.) is given in the 
 the class.
 
 \subsection{Units}
-The choice of units for these size specifications is up to the user,
+The choice of units for the size parameters is up to the user,
 but it must be kept consistent between all \texttt{GSObjects}.  These
 units must also adopted when specifying the \texttt{Image} sample
 rate \texttt{dx}, whether this is set via the \texttt{GSObject}
