@@ -1,26 +1,32 @@
-
-# YAML configuration file for use with the executable galsim_yaml
-# Type:
-#   galsim_yaml demo8.yaml
 #
-# This configuration file is designed to be equivalent to the example script called demo8.py
+# Demo #8
 #
-#    Make an image containing 10 x 10 postage stamps.
-#    The galaxies are bulge + disk with parameters drawn from random variates
-#    Each galaxy is drawn using photon shooting.
+# The eighth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be view in a window 100 characters wide.)
 #
-#    We do the same thing twice -- once with a single process, and again with 
-#    multiprocessing.
+# In this script, we show how to build a configuration dict from within python, rather
+# than using a config file.  The parallel tutorial examples/demo*.py have shown how to
+# do the same thing as these demo*.yaml files directly in python.  Now we turn the tables
+# and show how to use some of the machinery in the GalSim configuration processing 
+# from within python itself.  As such, this config file doesn't add much in the way
+# of new features.  The main one is the ability to build an image using multiple processes.
+# We build the same image using a single process and again using 4 processes.
+#
+# New features introduced in this demo:
+#
+# - image type : Tiled : stamp_size
+# - image : nproc
 
 
-# We again use the multiple document feature.
-# So start with the common information:
+# We again use the multiple document feature.  So start with the common information:
 
+# Define the PSF profile
 psf : 
     type : Moffat
     beta : 2.4
     fwhm : 0.65  # arcsec
 
+# Define the galaxy profile
 gal :
     type : Sum
     items : 

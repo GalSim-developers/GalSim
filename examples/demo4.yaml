@@ -1,40 +1,38 @@
-
-# YAML configuration file for use with the executable galsim_yaml
-# Type:
-#   galsim_yaml demo4.yaml
 #
-# This configuration file is designed to be equivalent to the example script called demo4.py
+# Demo #4
 #
-#    Make a fits image cube using parameters from an input catalog
-#      - The number of images in the cube matches the number of rows in the catalog.
-#      - Each image size is computed automatically by GalSim based on the Nyquist size.
-#      - Only galaxies.  No stars.
-#      - PSF is Moffat
-#      - Each galaxy is bulge plus disk: deVaucouleurs + Exponential.
-#      - The catalog's columns are:
-#         0 PSF beta
-#         1 PSF fwhm
-#         2 PSF e1
-#         3 PSF e2
-#         4 PSF trunc
-#         5 Disc half-light-radius
-#         6 Disc e1
-#         7 Disc e2
-#         8 Bulge half-light-radius
-#         9 Bulge e1
-#        10 Bulge e2
-#        11 Galaxy dx (the two components have same center)
-#        12 Galaxy dy
-#      - Applied shear is the same for each galaxy
-#      - Noise is poisson using a nominal sky value of 1.e6
+# The fourth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be view in a window 100 characters wide.)
+#
+# This script is our first one to create multiple images.  Typically, you would want each object
+# to have at least some of its attributes vary when you are drawing multiple images (although 
+# not necessarily -- you might just want different noise realization of the same profile).  
+# The easiest way to do this is to read in the properties from a catalog, which is what we
+# do in this script.  The PSF is a truncated Moffat profile, and the galaxy is bulge plus disk.
+# Both components get many of its parameters from an input catalog.  We also shift the 
+# profile by a fraction of a pixel in each direction so the effect of pixelization varies
+# among the images.  Each galaxy has the same applied shear.  The noise is simple poisson noise.
+# We write the images out into a multi-extension fits file.
+#
+# New features introduced in this demo:
+#
+# - obj type : Moffat (beta, fwhm, trunc)
+# - obj type : DeVaucouleurs (flux, half_light_radius)
+# - value type : InputCatalog (col)
+# - shift type : XY (x,y)
+# - shear type : E1E2 (e1,e2)
+# - image : xsize, ysize
+# - input : catalog (file_name, dir)
+# - output type : MultiFits (file_name, dir)
+# - Using both ellip and shear for the same object
+# - Using variables in a YAML file
+ 
 
 # You can define variables to be used later using the & symbol here.
 # Later they will be used with the * symbol.
 # This can be useful since you can put things you want to change often near the top of the 
 # file so you don't have to scroll down to find the right place to edit something each time 
 # you want to change it.
-# However, now that we've presented this option, so you can see how it works, we won't 
-# bother with it for our subsequent example config files.
 some_variables :
     - &sky_level  1.e6                # ADU / arcsec^2
     - &pixel_scale  1.0               # arcsec / pixel  (size units in input catalog are pixels)
@@ -43,14 +41,10 @@ some_variables :
     - &gal_g2  0.011                  #
     - &image_size  64                 # pixels
 
-# Define what kind of psf to use
+# Define the PSF profile
 psf : 
-    # Each type of profile is specified by a type.  e.g. Moffat:
     type : Moffat
-
-    # The various parameters are typically specified as well
     beta : 3.5
-
     fwhm : 
         # These parameters do not need to be constant.  There are a number of ways to
         # specify variables that might change from object to object.
@@ -82,10 +76,8 @@ psf :
 
 # Define the galaxy profile
 gal :
-    # A profile can be the sum of several components, each with its own type and parameters:
     type : Sum
 
-    # Sum requires a field called items, which is a list of items (each designed with a -)
     items :
         - 
             type : Exponential
@@ -104,10 +96,6 @@ gal :
                 e2 : { type : InputCatalog , col : 10 }
             flux : 0.4
 
-    # When a Sum object has a flux specified, the "flux" values of the components are 
-    # taken to be relative fluxes, and the full object's flux value sets the
-    # overall normalization.  If this is omitted, the overall flux is taken to be the
-    # sum of the component fluxes.
     # Note: If you want to use a variable defined above, you use a *
     flux : *gal_flux
 
@@ -129,18 +117,15 @@ gal :
         x : { type : InputCatalog , col : 11 } 
         y : { type : InputCatalog , col : 12 }
 
-# Define some other information about the images 
 image :
     pixel_scale : *pixel_scale
     xsize : *image_size
     ysize : *image_size
 
-    # Define what kind of noise to use
     noise : 
         # Since the default type is CCDNoise, we may omit it.
         sky_level : *sky_level
 
-    # Define the initial random number seed
     random_seed : 8241573
 
 # Define the input files -- in this case the catalog file to use.

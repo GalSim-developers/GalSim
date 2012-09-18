@@ -2,7 +2,7 @@
 Demo #4
 
 The fourth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
-(Script is designed to be viewed in a window 100 characters wide.)
+(This file is designed to be viewed in a window 100 characters wide.)
 
 This script is our first one to create multiple images.  Typically, you would want each object
 to have at least some of its attributes vary when you are drawing multiple images (although 

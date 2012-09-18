@@ -1,21 +1,32 @@
-
-# YAML configuration file for use with the executable galsim_yaml
-# Type:
-#   galsim_yaml demo3.yaml
 #
-# This configuration file is designed to be equivalent to the example script called demo3.py.
+# Demo #3
 #
-# This is getting reasonably close to including all the principle features of a 
-# ground-based telescope:
-# - Use a sheared, Sersic profile for the galaxy 
-#   (n = 3.5, half_light_radius=3.7).
-# - Let the PSF have both atmospheric and optical components.
-#     - The atmospheric component is the sum of two non-circular Gaussians.
-#     - The optical component has some defocus, coma, and astigmatism.
-# - Add both Poisson noise to the image and Gaussian read noise.
-# - Let the pixels be slightly distorted relative to the sky.
+# The third YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be view in a window 100 characters wide.)
 #
-
+# This script is getting reasonably close to including all the principal features of an image
+# from a ground-based telescope.  The galaxy is a bulge plus disk, where each component is 
+# a sheared Sersic profile (with different Sersic indices).  The PSF has both atmospheric and 
+# optical components.  The atmospheric component is a Kolmogorov turbulent spectrum.
+# The optical component includes defocus, coma and astigmatism, as well as obscuration from
+# a secondary mirror.  The noise model includes both a gain and read noise.  And finally,
+# we include the effect of a slight telescope distortion.
+#
+# New features introduced in this demo:
+#
+# - obj type : Sum (items)
+# - obj type : Convolve (items)
+# - obj type : Sersic (flux, n, half_light_radius)
+# - obj type : Kolmogorov (fwhm)
+# - obj type : OpticalPSF (lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)
+# - shear type : QBeta (q,beta) -- including how to specify an angle
+# - shear type : EBeta (q,beta) 
+# - noise type : CCDNoise (sky_level, gain, read_noise)
+# - image : size
+# - image : wcs (shear)
+# - output : psf
+ 
+# Define the galaxy profile
 gal :
     # This galaxy will be the sum of a bulge component and a disk component
     type : Sum
@@ -50,6 +61,7 @@ gal :
     flux : 1.e6  # ADU
 
 
+# Define the PSF profile
 psf : 
     # This PSF will be the convolution of an atmospheric component and an optical component.
     type : Convolution

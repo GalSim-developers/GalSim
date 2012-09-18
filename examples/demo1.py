@@ -2,7 +2,7 @@
 Demo #1
 
 Ths first script in our tutorial about using GalSim in python scripts: examples/demo*.py.
-(Script is designed to be viewed in a window 100 characters wide.)
+(This file is designed to be viewed in a window 100 characters wide.)
 
 This first script is about as simple as it gets.  We draw an image of a single galaxy convolved 
 with a PSF and write it to disk.  We use a circular Gaussian profile for both the PSF and the 

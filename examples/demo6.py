@@ -2,7 +2,7 @@
 Demo #6
 
 The sixth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
-(Script is designed to be viewed in a window 100 characters wide.)
+(This file is designed to be viewed in a window 100 characters wide.)
 
 This script uses real galaxy images from COSMOS observations.  The catalog of real galaxy
 images distributed with GalSim only includes 100 galaxies, but you can download a much

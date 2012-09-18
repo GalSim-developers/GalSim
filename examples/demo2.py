@@ -2,7 +2,7 @@
 Demo #2
 
 The second script in our tutorial about using GalSim in python scripts: examples/demo*.py.
-(Script is designed to be viewed in a window 100 characters wide.)
+(This file is designed to be viewed in a window 100 characters wide.)
  
 This script is a bit more sophisticated, but still pretty basic.  We're still only making
 a single image, but now the galaxy has an exponential radial profile and is sheared.

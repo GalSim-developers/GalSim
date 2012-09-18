@@ -2,7 +2,7 @@
 Demo #3
 
 The third script in our tutorial about using GalSim in python scripts: examples/demo*.py.
-(Script is designed to be viewed in a window 100 characters wide.)
+(This file is designed to be viewed in a window 100 characters wide.)
 
 This script is getting reasonably close to including all the principal features of an image
 from a ground-based telescope.  The galaxy is a bulge plus disk, where each component is 

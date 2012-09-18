@@ -2,7 +2,7 @@
 Demo #8
 
 The eighth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
-(Script is designed to be viewed in a window 100 characters wide.)
+(This file is designed to be viewed in a window 100 characters wide.)
 
 In this script, we show how to build a configuration dict from within python, rather
 than using a config file.  The parallel tutorial examples/demo*.yaml have shown how to

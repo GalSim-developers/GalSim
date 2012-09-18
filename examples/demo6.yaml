@@ -1,22 +1,30 @@
+#
+# Demo #6
+#
+# The sixth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be view in a window 100 characters wide.)
+#
+# This script uses real galaxy images from COSMOS observations.  The catalog of real galaxy
+# images distributed with GalSim only includes 100 galaxies, but you can download a much
+# larger set of images from our dropbox at [ TODO: What url? ]
+# The galaxy images include images of the effective PSF for the original observations, 
+# so GalSim first deconvolves by that PSF, and then convolves by whatever PSF you desire.
+# In this case, we use a double Gaussian PSF.  The galaxies are randomly rotated and then
+# given an applied gravitational shear as well as gravitational magnification.
+# The output for this script is to a FITS "data cube".  With DS9, this can be view with a
+# slider to quickly move through the different images.
+#
+# New features introduced in this demo:
+#
+# - input : real_catalog (file_name, image_dir, preload)
+# - obj type : RealGalaxy (index)
+# - obj : rotate 
+# - obj : magnify
+# - image : sky_level
+# - value type : Sequence
+# - output type : DataCube (file_name, dir, nimages)
+# - Using YAML's multiple document feature to do more than one thing
 
-# YAML configuration file for use with the executable galsim_yaml
-# Type:
-#   galsim_yaml demo6.yaml
-#
-# This configuration file is designed to be equivalent to the example script called demo6.py
-#
-#    Make images similar to that done for the Great08 challenge:
-#      - Each fits file is 10 x 10 postage stamps.
-#        (The real Great08 images are 100x100, but in the interest of making the Demo
-#         script a bit quicker, we only build 100 stars and 100 galaxies.)
-#      - Each postage stamp is 40 x 40 pixels.
-#      - One image is all stars.
-#      - A second image is all galaxies.
-#      - Applied shear is the same for each galaxy.
-#      - Galaxies are oriented randomly, but in pairs to cancel shape noise.
-#      - Noise is poisson using a nominal sky value of 1.e6.
-#      - Galaxies are sersic profiles.
-#
 
 # In this file, we use yaml's multiple documents feature.
 # This can be useful if you are doing similar things, but have a couple differences
@@ -37,7 +45,7 @@
 
 # So start with the common information:
 
-# Define what kind of psf to use
+# Define the PSF profile
 psf : 
     type : Sum
     items :
@@ -91,7 +99,7 @@ gal :
 
     # Also apply a magnification mu = ( (1-kappa)^2 - |gamma|^2 )^-1
     # This conserves surface brightness, so it scale both the size and flux.
-    magnification : 1.082
+    magnify : 1.082
 
 # We add the noise information to the image field.
 # Note: since the output includes a data_cube output, which requires all the

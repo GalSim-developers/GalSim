@@ -2,7 +2,7 @@
 Demo #7
 
 The seventh script in our tutorial about using GalSim in python scripts: examples/demo*.py.
-(Script is designed to be viewed in a window 100 characters wide.)
+(This file is designed to be viewed in a window 100 characters wide.)
 
 This script introduces drawing profiles with photon shooting rather than doing the 
 convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 different
