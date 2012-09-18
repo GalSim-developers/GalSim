@@ -370,12 +370,12 @@ with \texttt{mean} and standard deviation \texttt{sigma}.}
 
 \end{itemize}
 
-It is possible to specify the random seed so as to get fully deterministic behavior of the noise
-when running a particular script.  Unfortunately the random deviate classes are not yet fully integrated
-within the documentation, due to their being C++ with
-compiled Python wrappers.  This means that the class names above and
-methods below are not yet hyperlinked.  
-However, the full docstrings are available in
+It is possible to specify the random seed so as to get fully
+deterministic behavior of the noise when running a particular script.
+Unfortunately the random deviate classes are not yet fully integrated
+within the documentation, due to their being C++ with compiled Python
+wrappers.  This means that the class names above and methods below are
+not yet hyperlinked.  However, the full docstrings are available in
 \texttt{galsim/random.py}, so please refer there for more information,
 or type
 
@@ -394,20 +394,21 @@ The two most important and commonly-used methods for such an
 instance are:
 \begin{itemize}
 
-\item[$\circ$] \texttt{dev.applyTo(image)} \newline \emph{adds a random
-    number,
-  distributed according to the distribution represented by 
-\texttt{dev}, to each element in in a supplied \texttt{Image} instance \texttt{image} (see Section~\ref{sect:image}).}
+\item[$\circ$] \texttt{dev.applyTo(image)} \newline \emph{adds a
+    random number, distributed according to the distribution
+    represented by \texttt{dev}, to each element in a supplied
+    \texttt{Image} instance \texttt{image} (see
+    Section~\ref{sect:image}).}
 
 \item[$\circ$] \texttt{dev()} \newline \emph{calling the deviate
-    directly simply returns a single new random
-    number drawn from the distribution 
+    directly simply returns a single new random number drawn from the
+    distribution
     represented by \texttt{dev}.  As an example:\newline \\
-{\tt >>> dev = galsim.UniformDeviate()}\\
-{\tt >>> dev()} \\
-{\tt 0.35068059829063714} \\
-{\tt >>> dev() }\\
-{\tt 0.56841182382777333}}
+    {\tt >>> dev = galsim.UniformDeviate()}\\
+    {\tt >>> dev()} \\
+    {\tt 0.35068059829063714} \\
+    {\tt >>> dev() }\\
+    {\tt 0.56841182382777333}}
 
 \end{itemize}
 
@@ -422,16 +423,17 @@ mutable view into \texttt{Image} instance data (although not all
 \texttt{ConstImageView} an immutable view into \texttt{Image} instance
 data.
 
-If creating these objects directly you will mostly only need to use \texttt{Image} instances.  
-The \texttt{ImageView} classes are most commonly encountered as the output
-of the \texttt{GSObject} instance methods
+If creating these objects directly you will mostly only need to use
+\texttt{Image} instances.  The \texttt{ImageView} classes are most
+commonly encountered as the output of the \texttt{GSObject} instance
+methods
 \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...)}}
 and
-\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}. 
-Both \texttt{Image} and \texttt{ImageView} instances can be
-operated on to add stochastic noise 
-simulating real astronomical images (see Section~\ref{sect:random}),
-and have methods for writing to FITS format output. 
+\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}.
+Both \texttt{Image} and \texttt{ImageView} instances can be operated
+on to add stochastic noise simulating real astronomical images (see
+Section~\ref{sect:random}), and have methods for writing to FITS
+format output.
 
 There are several types of GalSim \texttt{Image}, one for each of four
 supported array data types:
@@ -454,18 +456,17 @@ supported array data types:
 \end{itemize}
 To access the data as a Numpy array, simply use the \texttt{img.array}
 attribute, where \texttt{img} is an instance of one of these
-\texttt{Image} classes.  However, note that the individual elements in the array
-attribute are accessed as \texttt{img.array[y,x]}, 
-matching the standard NumPy convention, while the \texttt{Image}
-class's own accessors are all $(x,y)$ in ordering.  
+\texttt{Image} classes.  However, note that the individual elements in
+the array attribute are accessed as \texttt{img.array[y,x]}, matching
+the standard NumPy convention, while the \texttt{Image} class's own
+accessors are all $(x,y)$ in ordering.
 
 Unfortunately the \texttt{Image} classes are not yet fully integrated
-within the online documentation, due to their being in C++
-with compiled Python wrappers.  This means that the class names above
-and methods below are not hyperlinked. 
-However, the full docstrings are available in
-\texttt{galsim/image.py}, so please refer there for more information,
-or type
+within the online documentation, due to their being in C++ with
+compiled Python wrappers.  This means that the class names above and
+methods below are not hyperlinked.  However, the full docstrings are
+available in \texttt{galsim/image.py}, so please refer there for more
+information, or type
 
 {\tt >>> print galsim.<ImageName>.\_\,\_doc\_\,\_}
 
@@ -473,34 +474,37 @@ within the Python interpreter.
 
 \subsection{Important Image methods and operations}\label{sect:imagemethods}
 We now illustrate the most commonly-used methods of \texttt{Image}
-class instances.  We will assume that some \texttt{Image} instance \texttt{img} has been
-instantiated, for example by
+class instances.  We will assume that some \texttt{Image} instance
+\texttt{img} has been instantiated, for example by
 
 {\tt img = galsim.ImageD(100, 100)}.
 
-This \texttt{Image} instance is then ready to pass to a \texttt{GSObject} for drawing.
-The most important and commonly-used methods for such an
-instance are:
+This \texttt{Image} instance is then ready to pass to a
+\texttt{GSObject} for drawing.  The most important and commonly-used
+methods for such an instance are:
 \begin{itemize}
 
-\item[$\circ$] \texttt{img.getScale()} \newline
- \emph{get the sample scale \texttt{dx} for this image.}
+\item[$\circ$] \texttt{img.getScale()} \newline \emph{get the sample
+    scale \texttt{dx} for this image.}
 
-\item[$\circ$] \texttt{img.setScale(dx)} \newline
- \emph{set the sample scale for this image to \texttt{dx} --- note that
-   this scale should use the same units adopted for the
-   \texttt{GSObject} sizes.}
+\item[$\circ$] \texttt{img.setScale(dx)} \newline \emph{set the sample
+    scale for this image to \texttt{dx} --- note that this scale
+    should use the same units adopted for the \texttt{GSObject}
+    sizes.}
 
-\item[$\circ$] \texttt{img.addNoise(dev)} \newline \emph{this adds stochastic noise, distributed as
-  represented by the random deviate instance \texttt{dev}, to each
-  element of the data array in \texttt{imv}.  This therefore has the same
-  effect as \texttt{dev.applyTo(image)} (see Section~\ref{sect:random}; also \texttt{galsim/noise.py}).}
+\item[$\circ$] \texttt{img.addNoise(dev)} \newline \emph{this adds
+    stochastic noise, distributed as represented by the random deviate
+    instance \texttt{dev}, to each element of the data array in
+    \texttt{imv}.  This therefore has the same effect as
+    \texttt{dev.applyTo(image)} (see Section~\ref{sect:random}; also
+    \texttt{galsim/noise.py}).}
 
-\item[$\circ$] \texttt{img.write(fits, ...)}  \newline  \emph{write the \texttt{imageView} to a FITS
-    file or object as determined by the \texttt{fits} input parameter
+\item[$\circ$] \texttt{img.write(fits, ...)}  \newline \emph{write the
+    \texttt{imageView} to a FITS file or object as determined by the
+    \texttt{fits} input parameter
     (see \\
-  \texttt{galsim/fits.py}).  In Section~\ref{sect:multifits} we discuss how to write to multi-extension
-  FITS files.}
+    \texttt{galsim/fits.py}).  In Section~\ref{sect:multifits} we
+    discuss how to write to multi-extension FITS files.}
 
 \end{itemize}
 
@@ -511,8 +515,8 @@ sub-section of an existing \texttt{Image}.  For example
 
 where \texttt{bounds} is a \texttt{BoundsI} instance (see Section
 \ref{sect:bounds}) assigns \texttt{imv} as an \texttt{ImageView} into
-the sub-region of \texttt{img} lying in the area represented
-by \texttt{bounds}.  Equivalent syntax is also
+the sub-region of \texttt{img} lying in the area represented by
+\texttt{bounds}.  Equivalent syntax is also
 
 {\tt >>> imv = img[bounds]}.
 
@@ -523,12 +527,14 @@ this way, for example
 
 if wishing to add the contents of \texttt{imv} to the area lying
 within its bounds in \texttt{img}.  Note that here we have made use of
-the \texttt{.bounds} attribute carried by all of the \texttt{Image} classes.
+the \texttt{.bounds} attribute carried by all of the \texttt{Image}
+classes.
 
 \section{Miscellaneous classes and functions}\label{sect:misc}
 
 A summary of miscellaneous GalSim library objects, subcategorized into
-broad themes.  As ever, docstrings for the \emph{all} the classes and functions below can be accessed via
+broad themes.  As ever, docstrings for the \emph{all} the classes and
+functions below can be accessed via
 
 {\tt >>> print galsim.<Name>.\_\,\_doc\_\,\_}
 
@@ -537,35 +543,39 @@ within the Python interpreter.
 \subsection{Angles}\label{sect:angles}
 \begin{itemize}
 
-\item[$\circ$] \texttt{galsim.Angle(value, angle\_unit)} \newline 
+\item[$\circ$] \texttt{galsim.Angle(value, angle\_unit)} \newline
   \emph{class to represent angles and handle multiple unit types,
-    which can be initialized very simply by a multipling a numerical value and an
-    \texttt{AngleUnit} instance \texttt{angle\_unit} (see below, and \texttt{galsim/angle.py}).}
+    which can be initialized very simply by a multipling a numerical
+    value and an \texttt{AngleUnit} instance \texttt{angle\_unit} (see
+    below, and \texttt{galsim/angle.py}).}
 
-\item[$\circ$] \texttt{galsim.AngleUnit(radians)} \newline 
-\emph{class for holding angular unit definitions, specified on
-  initialization in \texttt{radians}.  There are five built-in AngleUnits which are always available for use:
+\item[$\circ$] \texttt{galsim.AngleUnit(radians)} \newline \emph{class
+    for holding angular unit definitions, specified on initialization
+    in \texttt{radians}.  There are five built-in AngleUnits which are
+    always available for use:
  \begin{itemize}
-   \item {\tt galsim.radians   \# = galsim.AngleUnit(1.)}
-    \item {\tt galsim.degrees   \# = galsim.AngleUnit(pi / 180.)}
-    \item {\tt galsim.hours     \# = galsim.AngleUnit(pi / 12.)}
-    \item {\tt galsim.arcmin    \# = galsim.AngleUnit(pi / 180. / 60.)}
-    \item {\tt galsim.arcsec    \# = galsim.AngleUnit(pi / 180. / 3600.)}
-\end{itemize}}
+ \item {\tt galsim.radians \# = galsim.AngleUnit(1.)}
+ \item {\tt galsim.degrees \# = galsim.AngleUnit(pi / 180.)}
+ \item {\tt galsim.hours \# = galsim.AngleUnit(pi / 12.)}
+ \item {\tt galsim.arcmin \# = galsim.AngleUnit(pi / 180. / 60.)}
+ \item {\tt galsim.arcsec \# = galsim.AngleUnit(pi / 180. / 3600.)}
+ \end{itemize}}
 \end{itemize}
 
 \subsection{Bounds and Positions}\label{sect:bounds}
 
 \begin{itemize}
 
-\item[$\circ$] \texttt{galsim.BoundsI(...)} \& \texttt{galsim.BoundsD(...)} \newline 
-\emph{classes to represent image bounds in the \texttt{x}-\texttt{y}
-    plane as the vertices of a rectangle (see \texttt{galsim/bounds.py}).}
+\item[$\circ$] \texttt{galsim.BoundsI(...)} \&
+  \texttt{galsim.BoundsD(...)} \newline \emph{classes to represent
+    image bounds in the \texttt{x}-\texttt{y} plane as the vertices of
+    a rectangle (see \texttt{galsim/bounds.py}).}
 
 \item[$\circ$] \texttt{galsim.PositionI(x, y)} \&
-  \texttt{galsim.PositionD(x, y)} \newline
-  \emph{classes to represent 2D positions on the \texttt{x}-\texttt{y}
-    plane (see \texttt{galsim/position.py}), e.g., for describing object centroid positions.}
+  \texttt{galsim.PositionD(x, y)} \newline \emph{classes to represent
+    2D positions on the \texttt{x}-\texttt{y} plane (see
+    \texttt{galsim/position.py}), e.g., for describing object centroid
+    positions.}
 
 \end{itemize}
 
@@ -575,19 +585,17 @@ within the Python interpreter.
 
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1ellipse_1_1_ellipse.html}{\texttt{galsim.Ellipse(...)}}
-  \newline \emph{class to represent
-    ellipses and thus ellipse-type transformations.  The class can be
-    initialized using a variety of different parameter conventions
-    (see \texttt{galsim/ellipse.py}), including being initialized with
-    a Shear instance (see below).}
+  \newline \emph{class to represent ellipses and thus ellipse-type
+    transformations.  The class can be initialized using a variety of
+    different parameter conventions (see \texttt{galsim/ellipse.py}),
+    including being initialized with a Shear instance (see below).}
 
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1shear_1_1_shear.html}{\texttt{galsim.Shear(...)}}
-  \newline \emph{class to represent shears
-    in a variety of ways.  Like the \texttt{galsim.Ellipse}, this class can be
-    initialized using a variety of different parameter conventions
-    (see \texttt{galsim/shear.py}).
-Commonly-used examples:
+  \newline \emph{class to represent shears in a variety of ways.  Like
+    the \texttt{galsim.Ellipse}, this class can be initialized using a
+    variety of different parameter conventions (see
+    \texttt{galsim/shear.py}).  Commonly-used examples:
    \begin{itemize}
   \item \texttt{galsim.Shear(g1, g2)} \\
     set via the first (\texttt{g1}) and second (\texttt{g2}) component
