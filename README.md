@@ -1,59 +1,58 @@
---- README for the early-stage development versions of  --- 
---- GalSim: The modular galaxy image simulation toolkit ---
+@mainpage
+#GalSim: The modular galaxy image simulation toolkit
+----------------------------------------------------
 
-For installation instructions, please see INSTALL.  There are tagged versions of
-the code corresponding to specific project milestones and releases.  During the
-code development process, these tagged versions may be the best ones to try if
-you want a stable version of the code with specific capabilities.  (For more
-info on tags see the "Milestone tags" Section below and docs/git.txt)
+For installation instructions, please see the file INSTALL.md  
+
+There are tagged versions of the code corresponding to specific project 
+milestones and releases.  
+
+If interested in code from before v0.1, the tagged milestone versions may be the
+best ones to try if you want a stable version with specific capabilities.  
+
+(For more info on tags see the "Milestone tags" Section below and docs/git.txt)
 
 
---- How to get started ---
+#How to get started
+-------------------
 
-1) We assume that all steps in INSTALL are complete.
+1. We assume that all steps in `INSTALL.md` are complete.
 
-2) Compile the code by running `scons' while sitting in the main directory of
-this repository.  Optionally, install the software using `scons install' (or you
-may need to run `sudo scons install' depending on whether or not you have root
-privileges); for more details on options that can be used with scons, see
-INSTALL.
-
-3) Optional, but recommended whenever you try a new version of the code: run the
+2. Optional, but recommended whenever you try a new version of the code: run the
 unit tests to make sure that there are no errors.  You can do this by running
-`scons tests'.
+`scons tests`.
 
-4) Optional: run doxygen to generate documentation, using docs/Doxyfile to
-specify all doxygen settings.  You can alternatively view the documentation on
-GitHub at http://galsim-developers.github.com/GalSim/
-
-
---- Demonstration scripts ---
-
-Once these steps are completed, there are a number of scripts in examples/ that
-demonstrate how the code can be used.  These are:
-
-a) BasicDemo.py contains 3 demo scripts, which can all be run using `python
-BasicDemo.py', or you can run them one at a time using `python BasicDemo.py 1'
-and so on.  These scripts are heavily commented, and demonstrate GalSim commands
-for simulating single objects of various types and checking their properties.
-
-b) MultiObjectDemo.py also contains 4 demo scripts and is heavily commented to
-serve as an example for new users.  It demonstrates functionality for handling
-multi-object simulations, e.g., galaxy grids in the style of GREAT08/GREAT10,
-and also simulations based on real galaxy training data from HST.
-
-c) RealDemo.py is a single script demonstrating single-object simulation of
-realistic galaxies using the DFT approach.
-
-As the project develops through further milestones, and adds further
-capabilities to the software, further demo scripts will be added to examples/ to
-illustrate and showcase what GalSim can do.
+3. Optional: run `doxygen` to generate documentation, using `Doxyfile` in the
+main repository directory to specify all doxygen settings.  You can 
+alternatively view the documentation on GitHub at 
+http://galsim-developers.github.com/GalSim/
 
 
---- Additional scripts ---
+#Demonstration scripts
+----------------------
 
-While scripts (a)-(c) can be run from the command-line while sitting in
-examples/ without any arguments, the remaining scripts are auxiliary utilities
+Once these steps are completed, there are a number of scripts in `examples/` 
+that demonstrate how the code can be used.  These labelled `demo1.py`-`demo8.py`
+
+As the project develops through further versions, and adds further
+capabilities to the software, further demo scripts will be added to `examples/`
+to illustrate and showcase what GalSim can do.
+
+
+#Reference documentation
+------------------------
+
+For an overview of GalSim workflow and tools, please see 
+`doc/GalSim_Quick_Reference.pdf` in the GalSim repository.
+
+For the Python GSObject classes used to describe astronomical objects, see 
+galsim.base in the doxygen documentation.
+
+
+# Additional scripts
+--------------------
+While the demo scripts can be run from the command-line while sitting in
+`examples/` without any arguments, the remaining scripts are auxiliary utilities
 that take various command-line arguments, which are always explained in comments
 at the top of the file.
 
@@ -68,9 +67,9 @@ elliptical Gaussian) for a FITS image.
 methods, given FITS images of the galaxy and PSF.
 
 
---- Milestone tags ---
+# Milestone tags
 
-After every GalSim general milestone we tag a snapshot of the code at that 
+After every GalSim general milestone we tagged a snapshot of the code at that 
 moment, with the tag name "milestoneN" where N is the milestone number.
 
 You can see the available tags using the command "git tag -l" at terminal from 
