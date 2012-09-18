@@ -489,5 +489,5 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
         warnings.warn(
             "PTF Image scale will not be correct in both directions for non-square arrays, only "+
             "square grids currently supported by galsim.Images.")
-    im.setScale(2. np.pi / array_shape[0])
+    im.setScale(2. * np.pi / array_shape[0])
     return im
