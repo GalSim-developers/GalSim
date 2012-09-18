@@ -69,7 +69,9 @@ def ProcessOutput(config, logger=None):
     if not isinstance(output, dict):
         raise AttributeError("config.output is not a dict.")
 
-    type = output.get('type','Fits') # Default is Fits
+    if 'type' not in output:
+        output['type'] = 'Fits'  # Default is Fits
+    type = output['type']
 
     # If (1) type is MultiFits or DataCube,
     #    (2) the image type is Single, and
@@ -504,11 +506,13 @@ def BuildImage(config, logger=None,
     if 'draw_method' not in image:
         image['draw_method'] = 'fft'
 
-    type = image.get('type','Single') # Default is Single
+    if 'type' not in image:
+        image['type'] = 'Single'  # Default is Single
+    type = image['type']
 
     valid_types = [ 'Single', 'Tiled', 'Scattered' ]
     if type not in valid_types:
-        raise AttributeError("Invalue image.type=%s."%type)
+        raise AttributeError("Invalid image.type=%s."%type)
 
     build_func = eval('Build' + type + 'Image')
     return build_func(
@@ -536,7 +540,7 @@ def BuildSingleImage(config, logger=None,
     """
     ignore = [ 'draw_method', 'noise', 'wcs', 'nproc' ]
     opt = { 'random_seed' : int , 'size' : int , 'xsize' : int , 'ysize' : int ,
-            'pixel_scale' : float }
+            'pixel_scale' : float , 'sky_level' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
@@ -561,9 +565,12 @@ def BuildSingleImage(config, logger=None,
         seed = params['random_seed']
     else:
         seed = None
+
+    sky_level = params.get('sky_level',None)
+
     return BuildSingleStamp(
             seed=seed, config=config, xsize=xsize, ysize=ysize, 
-            do_noise=True, logger=logger,
+            sky_level=sky_level, do_noise=True, logger=logger,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -589,7 +596,7 @@ def BuildTiledImage(config, logger=None,
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
-            'pixel_scale' : float , 'nproc' : int }
+            'pixel_scale' : float , 'nproc' : int , 'sky_level' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
 
@@ -609,6 +616,8 @@ def BuildTiledImage(config, logger=None,
     border = params.get("border",0)
     xborder = params.get("xborder",border)
     yborder = params.get("yborder",border)
+
+    sky_level = params.get('sky_level',None)
 
     do_noise = xborder >= 0 and yborder >= 0
     # TODO: Note: if one of these is < 0 and the other is > 0, then
@@ -637,7 +646,7 @@ def BuildTiledImage(config, logger=None,
             seed = None
         first_images = BuildSingleStamp(
             seed=seed, config=config, xsize=stamp_xsize, ysize=stamp_ysize, 
-            do_noise=do_noise, logger=logger,
+            sky_level=sky_level, do_noise=do_noise, logger=logger,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -690,7 +699,7 @@ def BuildTiledImage(config, logger=None,
 
     stamp_images = BuildStamps(
             nstamps=nstamps, config=config, xsize=stamp_xsize, ysize=stamp_ysize,
-            nproc=nproc, do_noise=do_noise, logger=logger,
+            nproc=nproc, sky_level=sky_level, do_noise=do_noise, logger=logger,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -718,19 +727,24 @@ def BuildTiledImage(config, logger=None,
                     full_badpix_image[b] += badpix_images[k]
                 k = k+1
 
-    if not do_noise and 'noise' in config['image']:
-        # If we didn't apply noise in each stamp, then we need to apply it now.
+    if not do_noise:
+        if 'noise' in config['image']:
+            # If we didn't apply noise in each stamp, then we need to apply it now.
 
-        # Use the current rng stored in config
-        rng = config['rng']
+            # Use the current rng stored in config
+            rng = config['rng']
 
-        draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
-        if draw_method == 'fft':
-            AddNoiseFFT(full_image,config['image']['noise'],rng)
-        elif draw_method == 'phot':
-            AddNoisePhot(full_image,config['image']['noise'],rng)
-        else:
-            raise AttributeError("Unknown draw_method %s."%draw_method)
+            draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
+            if draw_method == 'fft':
+                AddNoiseFFT(full_image,config['image']['noise'],rng,sky_level)
+            elif draw_method == 'phot':
+                AddNoisePhot(full_image,config['image']['noise'],rng,sky_level)
+            else:
+                raise AttributeError("Unknown draw_method %s."%draw_method)
+        elif sky_level:
+            # If we aren't doing noise, we still need to add a non-zero sky_level
+            pixel_scale = full_image.getScale()
+            full_image += sky_level * pixel_scale**2
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
@@ -756,7 +770,7 @@ def BuildScatteredImage(config, logger=None,
     raise NotImplementedError("Sorry, image.type = Scattered is not implemented yet.")
 
 
-def BuildStamps(nstamps, config, xsize, ysize, nproc=1, do_noise=True, logger=None,
+def BuildStamps(nstamps, config, xsize, ysize, nproc=1, sky_level=None, do_noise=True, logger=None,
                 make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build a number of postage stamp images as specified by the config dict.
@@ -766,6 +780,7 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, do_noise=True, logger=No
     @param xsize      The size of a single stamp in the x direction
     @param ysize      The size of a single stamp in the y direction
     @param nproc      How many processes to use.
+    @param sky_level  The background sky level to add to the image
     @param do_noise   Whether to add noise to the image (according to config['noise'])
     @param logger     If given, a logger object to log progress.
     @param make_psf_image      Whether to make psf_image
@@ -793,6 +808,7 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, do_noise=True, logger=No
     # We'll be adding to this below...
     kwargs = { 'config' : config,
                'xsize' : xsize, 'ysize' : ysize, 
+               'sky_level' : sky_level,
                'do_noise' : do_noise,
                'make_psf_image' : make_psf_image,
                'make_weight_image' : make_weight_image,
@@ -932,7 +948,7 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, do_noise=True, logger=No
     return images, psf_images, weight_images, badpix_images
  
 
-def BuildSingleStamp(seed, config, xsize, ysize, do_noise=True, logger=None,
+def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, logger=None,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build a single image using the given seed and config file
@@ -941,6 +957,7 @@ def BuildSingleStamp(seed, config, xsize, ysize, do_noise=True, logger=None,
     @param config     A configuration dict.
     @param xsize      The xsize of the image to build
     @param ysize      The ysize of the image to build
+    @param sky_level  The background sky level to add to the image
     @param do_noise   Whether to add noise to the image (according to config['noise'])
     @param logger     If given, a logger object to log progress.
     @param make_psf_image      Whether to make psf_image
@@ -979,13 +996,21 @@ def BuildSingleStamp(seed, config, xsize, ysize, do_noise=True, logger=None,
     draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
     #print 'draw = ',draw_method
     if draw_method == 'fft':
-        im = DrawStampFFT(psf,pix,gal,config,xsize,ysize)
-        if do_noise and 'noise' in config['image']:
-            AddNoiseFFT(im,config['image']['noise'],rng)
+        im = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level)
+        if do_noise:
+            if 'noise' in config['image']:
+                AddNoiseFFT(im,config['image']['noise'],rng,sky_level)
+            elif sky_level:
+                pixel_scale = im.getScale()
+                im += sky_level * pixel_scale**2
     elif draw_method == 'phot':
-        im = DrawStampPhot(psf,gal,config,xsize,ysize,rng)
-        if do_noise and 'noise' in config['image']:
-            AddNoisePhot(im,config['image']['noise'],rng)
+        im = DrawStampPhot(psf,gal,config,xsize,ysize,rng,sky_level)
+        if do_noise:
+            if 'noise' in config['image']:
+                AddNoisePhot(im,config['image']['noise'],rng,sky_level)
+            elif sky_level:
+                pixel_scale = im.getScale()
+                im += sky_level * pixel_scale**2
     else:
         raise AttributeError("Unknown draw_method %s."%draw_method)
     t5 = time.time()
@@ -999,8 +1024,8 @@ def BuildSingleStamp(seed, config, xsize, ysize, do_noise=True, logger=None,
 
     t6 = time.time()
 
-    #if logger:
-        #logger.info('   Times: %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
+    if logger:
+        logger.debug('   Times: %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
     return im, psf_im, None, None, t6-t1
 
 
@@ -1062,7 +1087,7 @@ def BuildGal(config, logger=None):
 
 
 
-def DrawStampFFT(psf, pix, gal, config, xsize, ysize):
+def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level):
     """
     Draw an image using the given psf, pix and gal profiles (which may be None)
     using the FFT method for doing the convolution.
@@ -1092,7 +1117,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize):
     else:
         pixel_scale = 1.0
 
-    print 'final.flux = ',final.getFlux()
+    #print 'final.flux = ',final.getFlux()
     if not xsize:
         im = final.draw(dx=pixel_scale)
     else:
@@ -1100,7 +1125,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize):
         im.setScale(pixel_scale)
         #print 'pixel_scale = ',pixel_scale
         final.draw(im, dx=pixel_scale)
-        print 'image.sum = ',im.array.sum()
+        #print 'image.sum = ',im.array.sum()
 
     if 'gal' in config and 'signal_to_noise' in config['gal']:
         import math
@@ -1110,7 +1135,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize):
                 'Only one of signal_to_noise or flux may be specified for gal')
 
         if 'image' in config and 'noise' in config['image']:
-            noise_var = CalculateNoiseVar(config['image']['noise'], pixel_scale)
+            noise_var = CalculateNoiseVar(config['image']['noise'], pixel_scale, sky_level)
         else:
             raise AttributeError(
                 "Need to specify noise level when using gal.signal_to_noise")
@@ -1134,15 +1159,27 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize):
         #print 'sn_meas = ',sn_meas
         #print 'flux = ',flux
         im *= flux
+
     return im
 
-def AddNoiseFFT(im, noise, rng):
+def AddNoiseFFT(im, noise, rng, sky_level):
     """
     Add noise to an image according to the noise specifications in the noise dict
     appropriate for an image that has been drawn using the fft method.
     """
-    type = noise.get('type','CCDNoise')
+    if not isinstance(noise, dict):
+        raise AttributeError("image.noise is not a dict.")
+
+    if 'type' not in noise:
+        noise['type'] = 'CCDNoise'  # Default is CCDNoise
+    type = noise['type']
     pixel_scale = im.getScale()
+
+    # First add the sky noise, if provided
+    if sky_level:
+        im += sky_level * pixel_scale**2
+
+    # Then add the correct kind of noise
     if type == 'Gaussian':
         single = [ { 'sigma' : float , 'variance' : float } ]
         params = galsim.config.GetAllParams(noise, 'noise', noise, single=single)[0]
@@ -1154,32 +1191,40 @@ def AddNoiseFFT(im, noise, rng):
             sigma = math.sqrt(params['variance'])
         im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
         #if logger:
-            #logger.info('   Added Gaussian noise with sigma = %f',sigma)
+            #logger.debug('   Added Gaussian noise with sigma = %f',sigma)
     elif type == 'CCDNoise':
-        req = { 'sky_level' : float }
+        req = {}
         opt = { 'gain' : float , 'read_noise' : float }
+        if sky_level:
+            # The noise sky_level is only required here if the image doesn't have any.
+            opt['sky_level'] = float
+        else:
+            req['sky_level'] = float
         params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
-        sky_level = params['sky_level']
         gain = params.get('gain',1.0)
         read_noise = params.get('read_noise',0.0)
 
-        sky_level_pixel = sky_level * pixel_scale**2
-        im += sky_level_pixel
+        if 'sky_level' in params:
+            sky_level_pixel = params['sky_level'] * pixel_scale**2
+            im += sky_level_pixel
         #print 'before CCDNoise: rng() = ',rng()
         im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
         #print 'after CCDNoise: rng() = ',rng()
-        im -= sky_level_pixel
+        if 'sky_level' in params:
+            im -= sky_level_pixel
         #if logger:
-            #logger.info('   Added CCD noise with sky_level = %f, ' +
-                        #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
+            #logger.debug('   Added CCD noise with sky_level = %f, ' +
+                         #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
     else:
         raise AttributeError("Invalid type %s for noise"%type)
 
 
-def DrawStampPhot(psf, gal, config, xsize, ysize, rng):
+def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level):
     """
-    Add noise to an image according to the noise specifications in the noise dict
-    appropriate for an image that has been drawn using the phot method.
+    Draw an image using the given psf and gal profiles (which may be None)
+    using the photon shooting method for doing the convolution.
+
+    @return the resulting image.
     """
 
     phot_list = [ prof for prof in (psf,gal) if prof is not None ]
@@ -1214,7 +1259,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng):
 
     if max_extra_noise > 0.:
         if 'image' in config and 'noise' in config['image']:
-            noise_var = CalculateNoiseVar(config['image']['noise'], pixel_scale)
+            noise_var = CalculateNoiseVar(config['image']['noise'], pixel_scale, sky_level)
         else:
             raise AttributeError(
                 "Need to specify noise level when using draw_method = phot")
@@ -1238,13 +1283,23 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng):
 
     return im
     
-def AddNoisePhot(im, noise, rng):
+def AddNoisePhot(im, noise, rng, sky_level):
     """
     Add noise to an image according to the noise specifications in the noise dict
     appropriate for an image that has been drawn using the phot method.
     """
-    type = noise.get('type','CCDNoise')
+    if not isinstance(noise, dict):
+        raise AttributeError("image.noise is not a dict.")
+
+    if 'type' not in noise:
+        noise['type'] = 'CCDNoise'  # Default is CCDNoise
+    type = noise['type']
     pixel_scale = im.getScale()
+
+    # First add the sky noise, if provided
+    if sky_level:
+        im += sky_level * pixel_scale**2
+
     if type == 'Gaussian':
         single = [ { 'sigma' : float , 'variance' : float } ]
         params = galsim.config.GetAllParams(noise, 'noise', noise, single=single)[0]
@@ -1255,25 +1310,32 @@ def AddNoisePhot(im, noise, rng):
             sigma = math.sqrt(params['variance'])
         im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
         #if logger:
-            #logger.info('   Added Gaussian noise with sigma = %f',sigma)
+            #logger.debug('   Added Gaussian noise with sigma = %f',sigma)
     elif type == 'CCDNoise':
-        req = { 'sky_level' : float }
+        req = {}
         opt = { 'gain' : float , 'read_noise' : float }
+        if sky_level:
+            opt['sky_level'] = float
+        else:
+            req['sky_level'] = float
+            sky_level = 0. # Switch from None to 0.
         params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
-        sky_level = params['sky_level']
+        if 'sky_level' in params:
+            sky_level += params['sky_level']
         gain = params.get('gain',1.0)
         read_noise = params.get('read_noise',0.0)
 
-        sky_level_pixel = params['sky_level'] * pixel_scale**2
         # For photon shooting, galaxy already has poisson noise, so we want 
         # to make sure not to add that again!
-        im *= gain
-        im.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel*gain))
-        im /= gain
-        im.addNoise(galsim.GaussianDeviate(rng, sigma=read_noise))
+        if sky_level != 0.:
+            sky_level_pixel = sky_level * pixel_scale**2
+            if gain != 1.0: im *= gain
+            im.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel*gain))
+            if gain != 1.0: im /= gain
+            im.addNoise(galsim.GaussianDeviate(rng, sigma=read_noise))
         #if logger:
-            #logger.info('   Added CCD noise with sky_level = %f, ' +
-                        #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
+            #logger.debug('   Added CCD noise with sky_level = %f, ' +
+                         #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
     else:
         raise AttributeError("Invalid type %s for noise",type)
 
@@ -1329,7 +1391,9 @@ def CalculateWCSShear(wcs):
     if not isinstance(wcs, dict):
         raise AttributeError("image.wcs is not a dict.")
 
-    type = wcs.get('type','Shear')
+    if 'type' not in wcs:
+        wcs['type'] = 'Shear'  # Default is Shear
+    type = wcs['type']
 
     if type == 'Shear':
         req = { 'shear' : galsim.Shear }
@@ -1338,14 +1402,16 @@ def CalculateWCSShear(wcs):
     else:
         raise AttributeError("Invalid type %s for wcs",type)
 
-def CalculateNoiseVar(noise, pixel_scale):
+def CalculateNoiseVar(noise, pixel_scale, sky_level):
     """
     Calculate the noise variance from the noise specified in the noise dict.
     """
     if not isinstance(noise, dict):
         raise AttributeError("image.noise is not a dict.")
 
-    type = noise.get('type','CCDNoise')
+    if 'type' not in noise:
+        noise['type'] = 'CCDNoise'  # Default is CCDNoise
+    type = noise['type']
 
     if type == 'Gaussian':
         single = [ { 'sigma' : float , 'variance' : float } ]
@@ -1356,10 +1422,15 @@ def CalculateNoiseVar(noise, pixel_scale):
         else:
             var = params['variance']
     elif type == 'CCDNoise':
-        req = { 'sky_level' : float }
+        req = {}
         opt = { 'gain' : float , 'read_noise' : float }
+        if sky_level:
+            opt['sky_level'] = float
+        else:
+            req['sky_level'] = float
         params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
-        sky_level = params['sky_level']
+        if 'sky_level' in params:
+            sky_level = params['sky_level']
         gain = params.get('gain',1.0)
         read_noise = params.get('read_noise',0.0)
         var = params['sky_level'] * pixel_scale**2
