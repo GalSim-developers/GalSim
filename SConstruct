@@ -18,7 +18,7 @@ EnsureSConsVersion(1, 1)
 
 # Subdirectories containing SConscript files.  We always process these, but
 # there are some other optional ones
-subdirs=['src', 'pysrc', 'galsim', 'bin']
+subdirs=['src', 'pysrc', 'bin', 'galsim']
 
 # Configurations will be saved here so command line options don't
 # have to be sent more than once
@@ -34,6 +34,8 @@ config_file = 'gs_scons.conf'
 # MJ: Is there a python function that might return this in a more platform-independent way?
 default_prefix = '/usr/local'  
 
+default_python = '/usr/bin/env python'
+
 # first check for a saved conf file
 opts = Variables(config_file)
 
@@ -42,52 +44,48 @@ opts.Add('CXX','Name of c++ compiler')
 opts.Add('FLAGS','Compile flags to send to the compiler','')
 opts.Add('EXTRA_FLAGS','Extra flags to send to the compiler','')
 opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
+opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', True))
+opts.Add('PYTHON','Name of python executable','')
 
 opts.Add(PathVariable('PREFIX','prefix for installation',
-            '', PathVariable.PathAccept))
+         '', PathVariable.PathAccept))
 opts.Add(PathVariable('PYPREFIX','location of your site-packages directory',
-            '', PathVariable.PathAccept))
-
-opts.Add(PathVariable('EXTRA_PATH',
-            'Extra paths for executables (separated by : if more than 1)',
-            '', PathVariable.PathAccept))
-opts.Add(PathVariable('EXTRA_LIB_PATH',
-            'Extra paths for linking (separated by : if more than 1)',
-            '', PathVariable.PathAccept))
-opts.Add(PathVariable('EXTRA_INCLUDE_PATH',
-            'Extra paths for header files (separated by : if more than 1)',
-            '', PathVariable.PathAccept))
-opts.Add(BoolVariable('IMPORT_PATHS',
-            'Import PATH, C_INCLUDE_PATH and LIBRARY_PATH/LD_LIBRARY_PATH environment variables',
-            False))
-opts.Add(BoolVariable('IMPORT_ENV',
-            'Import full environment from calling shell',True))
-opts.Add(BoolVariable('INCLUDE_PREFIX_PATHS',
-            'Add PREFIX/bin, PREFIX/include and PREFIX/lib to corresponding path lists',
-            True))
+         '', PathVariable.PathAccept))
+opts.Add(PathVariable('FINAL_PREFIX',
+         'final installation prefix if different from PREFIX',
+         '', PathVariable.PathAccept))
 
 opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
+opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
 opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
 opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
 
-opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
+opts.Add(PathVariable('EXTRA_INCLUDE_PATH',
+         'Extra paths for header files (separated by : if more than 1)',
+         '', PathVariable.PathAccept))
+opts.Add(PathVariable('EXTRA_LIB_PATH',
+         'Extra paths for linking (separated by : if more than 1)',
+         '', PathVariable.PathAccept))
+opts.Add(PathVariable('EXTRA_PATH',
+         'Extra paths for executables (separated by : if more than 1)',
+         '', PathVariable.PathAccept))
+opts.Add(BoolVariable('IMPORT_PATHS',
+         'Import PATH, C_INCLUDE_PATH and LIBRARY_PATH/LD_LIBRARY_PATH environment variables',
+         False))
+opts.Add(BoolVariable('IMPORT_ENV',
+         'Import full environment from calling shell',True))
 opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
-opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
+opts.Add(BoolVariable('IMPORT_PREFIX',
+         'Use PREFIX/include and PREFIX/lib in search paths', True))
 
+opts.Add('NOSETESTS','Name of nosetests executable','')
+opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
+opts.Add(BoolVariable('WITH_PROF',
+            'Use the compiler flag -pg to include profiling info for gprof', False))
+opts.Add(BoolVariable('MEM_TEST','Test for memory leaks', False))
+opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
 # None of the code uses openmp yet.  Probably make this default True if we start using it.
 opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
-opts.Add(BoolVariable('MEM_TEST','Test for memory leaks', False))
-opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', True))
-opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
-opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
-
-#opts.Add(BoolVariable('WITH_UPS',
-            #'Create ups/galsim.table.  Install the ups directory under PREFIX/ups',
-            #False))
-opts.Add(BoolVariable('WITH_PROF',
-            'Use the compiler flag -pg to include profiling info for gprof',
-            False))
-
 opts.Add(BoolVariable('USE_UNKNOWN_VARS',
             'Allow other parameters besides the ones listed here.',False))
 
@@ -142,6 +140,7 @@ def ErrorExit(*args, **kwargs):
     out = open("gs.error","wb")
 
     # Start with the error message to output both to the screen and to the end of gs.error:
+    print
     for s in args:
         print s
         out.write(s + '\n')
@@ -262,12 +261,10 @@ def BasicCCFlags(env):
 
     extra_flags = env['EXTRA_FLAGS'].split(' ')
     env.AppendUnique(CCFLAGS=extra_flags)
-    if '-m64' in extra_flags:
-        # Then this also needs to be in LINKFLAGS
-        env.AppendUnique(LINKFLAGS='-m64')
-    if '-m32' in extra_flags:
-        # Likewise
-        env.AppendUnique(LINKFLAGS='-m32')
+    for flag in extra_flags:
+        if flag.startswith('-Wl') or flag.startswith('-m'):
+            # Then this also needs to be in LINKFLAGS
+            env.AppendUnique(LINKFLAGS=flag)
 
 
 def AddOpenMPFlag(env):
@@ -494,7 +491,7 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
 
     """
 
-    types = ['TMV','FFTW','BOOST']
+    types = ['BOOST', 'TMV', 'FFTW']
 
     for t in types:
         dirtag = t+'_DIR'
@@ -545,12 +542,20 @@ def AddExtraPaths(env):
     # But still use the default /usr/local for installation
     if env['PREFIX'] == '':
         env['INSTALL_PREFIX'] = default_prefix
+        env['FINAL_PREFIX'] = default_prefix
     else:
-        if env['INCLUDE_PREFIX_PATHS']:
+        env['INSTALL_PREFIX'] = env['PREFIX']
+
+        # FINAL_PREFIX is designed for installations like that done by fink where it installs
+        # everything into a temporary directory, and then once it finished successfully, it
+        # copies the resulting files to a final location.
+        if env['FINAL_PREFIX'] == '':
+            env['FINAL_PREFIX'] = env['PREFIX']
+
+        if env['IMPORT_PREFIX']:
             AddPath(bin_paths, os.path.join(env['PREFIX'], 'bin'))
             AddPath(lib_paths, os.path.join(env['PREFIX'], 'lib'))
             AddPath(cpp_paths, os.path.join(env['PREFIX'], 'include'))
-        env['INSTALL_PREFIX'] = env['PREFIX']
     
     # Paths found in environment paths
     if env['IMPORT_PATHS'] and os.environ.has_key('PATH'):
@@ -600,16 +605,16 @@ def ReadFileList(fname):
     return files
 
 
-def CheckLibs(context,try_libs,source_file):
-    init_libs = context.env['LIBS']
-    context.env.PrependUnique(LIBS=try_libs)
-    result = context.TryLink(source_file,'.cpp')
+def CheckLibs(config,try_libs,source_file):
+    init_libs = config.env['LIBS']
+    config.env.PrependUnique(LIBS=try_libs)
+    result = config.TryLink(source_file,'.cpp')
     if not result :
-        context.env.Replace(LIBS=init_libs)
+        config.env.Replace(LIBS=init_libs)
     return result
       
 
-def CheckTMV(context):
+def CheckTMV(config):
     tmv_source_file = """
 #include "TMV_Sym.h"
 int main()
@@ -623,194 +628,313 @@ int main()
 """
 
     print 'Checking for correct TMV linkage... (this may take a little while)'
-    context.Message('Checking for correct TMV linkage... ')
+    config.Message('Checking for correct TMV linkage... ')
 
-    if context.TryCompile(tmv_source_file,'.cpp'):
-
-        result = (
-            CheckLibs(context,['tmv_symband','tmv'],tmv_source_file) or
-            CheckLibs(context,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
-        
-        if not result:
-            context.Result(0)
-            ErrorExit(
-                'Error: TMV file failed to link correctly',
-                'Check that the correct location is specified for TMV_DIR') 
-
-        context.Result(1)
-        return 1
-
-    else:
-        context.Result(0)
+    result = config.TryCompile(tmv_source_file,'.cpp')
+    if not result:
         ErrorExit(
             'Error: TMV file failed to compile.',
             'Check that the correct location is specified for TMV_DIR')
 
-def CheckPython(context):
-    python_source_file = """
-#include "Python.h"
-int main()
-{
-  Py_Initialize();
-  Py_Finalize();
-  return 0;
-}
-"""
-    context.Message('Checking if we can build against Python... ')
-
-    try:
-        import distutils.sysconfig
-    except ImportError:
-        context.Result(0)
-        ErrorExit('Failed to import distutils.sysconfig.')
-    context.env.AppendUnique(CPPPATH=distutils.sysconfig.get_python_inc())
-    libDir = distutils.sysconfig.get_config_var("LIBDIR")
-    context.env.AppendUnique(LIBPATH=libDir)
-    libfile = distutils.sysconfig.get_config_var("LIBRARY")
-    import re
-    match = re.search("(python.*)\.(a|so|dylib)", libfile)
-    if match:
-        context.env.AppendUnique(LIBS=match.group(1))
-    flags = [f for f in " ".join(distutils.sysconfig.get_config_vars("MODLIBS", "SHLIBS")).split()
-             if f != "-L"]
-    context.env.MergeFlags(" ".join(flags))
-
-    result, output = context.TryRun(python_source_file,'.cpp')
-
-    if not result and sys.platform == 'darwin':
-        # Sometimes we need some extra stuff on Mac OS
-        frameworkDir = libDir       # search up the libDir tree for the proper home for frameworks
-        while frameworkDir and frameworkDir != "/":
-            frameworkDir, d2 = os.path.split(frameworkDir)
-            if d2 == "Python.framework":
-                if not "Python" in os.listdir(os.path.join(frameworkDir, d2)):
-                    context.Result(0)
-                    ErrorExit(
-                        "Expected to find Python in framework directory %s, but it isn't there"
-                        % frameworkDir)
-                break
-        context.env.AppendUnique(LDFLAGS="-F%s"%frameworkDir)
-        result, output = context.TryRun(python_source_file,'.cpp')
-
+    result = (
+        CheckLibs(config,['tmv_symband','tmv'],tmv_source_file) or
+        CheckLibs(config,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
     if not result:
-        context.Result(0)
-        ErrorExit("Cannot run program built with Python.")
+        ErrorExit(
+            'Error: TMV file failed to link correctly',
+            'Check that the correct location is specified for TMV_DIR') 
 
-    context.Result(1)
+    config.Result(1)
     return 1
 
-def CheckNumPy(context):
+
+def TryScript(config,text,executable):
+    # Check if a particular script (given as text) is runnable with the 
+    # executable (given as executable).
+    #
+    # I couldn't find a way to do this using the existing SCons functions, so this
+    # is basically taken from parts of the code for TryBuild and TryRun.
+
+    # First make the file name using the same counter as TryBuild uses:
+    from SCons.SConf import _ac_build_counter
+    f = "conftest_" + str(SCons.SConf._ac_build_counter)
+    SCons.SConf._ac_build_counter = SCons.SConf._ac_build_counter + 1
+
+    config.sconf.pspawn = config.sconf.env['PSPAWN'] 
+    save_spawn = config.sconf.env['SPAWN'] 
+    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper 
+
+    # Build a file containg the given text
+    textFile = config.sconf.confdir.File(f)
+    sourcetext = config.env.Value(text)
+    textFileNode = config.env.SConfSourceBuilder(target=textFile, source=sourcetext)
+    config.sconf.BuildNodes(textFileNode)
+    source = textFileNode
+
+    # Run the given executable with the source file we just built
+    output = config.sconf.confdir.File(f + '.out')
+    node = config.env.Command(output, source, executable + " < $SOURCE > $TARGET")
+    ok = config.sconf.BuildNodes(node)
+
+    config.sconf.env['SPAWN'] = save_spawn 
+
+    if ok:
+        # For successful execution, also return the output contents
+        outputStr = output.get_contents()
+        return 1, outputStr.strip()
+    else:
+        return 0, ""
+
+def TryModule(config,text,name):
+    # Check if a particular program (given as text) is compilable as a python module.
+    
+    config.sconf.pspawn = config.sconf.env['PSPAWN'] 
+    save_spawn = config.sconf.env['SPAWN'] 
+    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper 
+
+    # First try to build the code as a SharedObject:
+    ok = config.TryBuild(config.env.SharedObject,text,'.cpp')
+    if not ok: return 0
+
+    # Get the object file as the lastTarget:
+    obj = config.sconf.lastTarget
+
+    # Try to build the LoadableModule
+    dir = os.path.splitext(os.path.basename(obj.path))[0] + '_mod'
+    output = config.sconf.confdir.File(os.path.join(dir,name + '.so'))
+    dir = os.path.dirname(output.path)
+    mod = config.env.LoadableModule(output, obj)
+    ok = config.sconf.BuildNodes(mod)
+    if not ok: return 0
+
+    # Finally try to import and run the module in python:
+    text2 = "import sys; sys.path.append('%s'); import %s; print %s.run()"%(dir,name,name)
+    ok, out = TryScript(config,text2,python)
+
+    config.sconf.env['SPAWN'] = save_spawn 
+
+    # We have an arbitrary requirement that the run() command output the answer 23.
+    # So if we didn't get this answer, then something must have gone wrong.
+    if ok and out != '23':
+        print "Script's run() command didn't output '23'."
+        ok = False
+
+    return ok
+
+
+def CheckModuleLibs(config,try_libs,source_file,name):
+    init_libs = config.env['LIBS']
+    config.env.PrependUnique(LIBS=try_libs)
+    result = TryModule(config,source_file,name)
+    if not result :
+        config.env.Replace(LIBS=init_libs)
+    return result
+     
+
+def CheckPython(config):
+    python_source_file = """
+#include "Python.h"
+
+static PyObject* run(PyObject* self, PyObject* args)
+{ return Py_BuildValue("i", 23); }
+
+static PyMethodDef Methods[] = {
+    {"run",  run, METH_VARARGS, "return 23"},
+    {NULL, NULL, 0, NULL}
+};
+
+PyMODINIT_FUNC initcheck_python(void)
+{ Py_InitModule("check_python", Methods); }
+"""
+    config.Message('Checking if we can build against Python... ')
+
+    # First check the python include directory -- see if we can compile the module.
+    source_file2 = "import distutils.sysconfig; print distutils.sysconfig.get_python_inc()"
+    result, py_inc = TryScript(config,source_file2,python)
+    if not result:
+        ErrorExit('Unable to get python include path python executable:\n%s',python)
+
+    config.env.AppendUnique(CPPPATH=py_inc)
+    if not config.TryCompile(python_source_file,'.cpp'):
+        ErrorExit('Unable to compile a file with #include "Python.h" using the include path:',
+                  '%s'%py_inc)
+    
+    # Now see if we can build it as a LoadableModule and run in from python.
+    # Sometimes (e.g. most linux systems), we don't need the python library to dot this.
+    # So the first attempt below with [''] for the libs will work.
+    if CheckModuleLibs(config,[''],python_source_file,'check_python'):
+        config.Result(1)
+        return 1
+
+    # Other times (e.g. most Mac systems) we'll need to link the library.
+    # We can get the library name from distutils.sysconfig:
+    source_file3 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBRARY')"
+    result, py_libfile = TryScript(config,source_file3,python)
+    if not result:
+        ErrorExit('Unable to get python library name using python executable:\n%s',python)
+    py_lib = os.path.splitext(py_libfile)[0]
+    if py_lib.startswith('lib'): 
+        py_lib = py_lib[3:]
+
+    # We might want to use the version number in some of the below stuff, so see if we
+    # can figure it out.
+    if '2.7' in py_inc or '2.7' in python:
+        py_version = '2.7'
+    elif '2.6' in py_inc or '2.6' in python:
+        py_version = '2.6'
+    elif '2.5' in py_inc or '2.5' in python:
+        py_version = '2.5'
+    elif '2.4' in py_inc or '2.4' in python:
+        py_version = '2.4'
+    else:
+        py_version = ''
+
+    # First check if this works as is.  Sometimes there is a link from somewhere in the
+    # standard path, so we won't have to add anything to env['LIBPATH']
+    result = (
+        CheckModuleLibs(config,[py_lib],python_source_file,'check_python') or
+        CheckModuleLibs(config,['python'+py_version],python_source_file,'check_python') or
+        CheckModuleLibs(config,['python'],python_source_file,'check_python') )
+    if result:
+        config.Result(1)
+        return 1
+
+    # This library path is also supposed to be reported by distutils.sysconfig.
+    # However, it's pretty unreliable, and I couldn't find anything more reliable.
+    # So after getting this values, we might need to edit it.
+    source_file4 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBDIR')"
+    result, py_libdir = TryScript(config,source_file4,python)
+    if not result:
+        ErrorExit('Unable to get python library path using python executable:\n%s',python)
+
+    # Check if LIBDIR/LIBRARY is actually a file:
+    if os.path.isfile(os.path.join(py_libdir,py_libfile)):
+        #print 'full file name = %s exists.'%os.path.join(py_libdir,py_libfile)
+        py_libdir1 = py_libdir
+        config.env.PrependUnique(LIBPATH=py_libdir)
+
+    # Otherwise try to find the correct path
+    # First option: add config to LIBDIR
+    elif os.path.isfile(os.path.join(py_libdir,'config',py_libfile)):
+        #print 'Adding config worked: use %s.'%os.path.join(py_libdir,'config',py_libfile)
+        py_libdir1 = os.path.join(py_libdir,'config')
+        config.env.PrependUnique(LIBPATH=py_libdir1)
+
+    # Next try adding python2.x/config
+    elif os.path.isfile(os.path.join(py_libdir,'python'+py_version,'config',py_libfile)):
+        #print 'Adding config worked: use %s.'%os.path.join(py_libdir,'python'+py_version,'config',py_libfile)
+        py_libdir1 = os.path.join(py_libdir,'python'+py_version,'config')
+        config.env.PrependUnique(LIBPATH=py_libdir1)
+
+    # Oh well, it was worth a shot.
+    else:
+        ErrorExit('Unable to find a usable python library',
+                  'The library name reported by distutils.sysconfig is %s'%py_libfile,
+                  'The library directory reported by distutils.sysconfig is %s'%py_libdir,
+                  'However, this combination does not seem to exist.',
+                  'Nor do the known permutations to this exist.',
+                  'If you can find the right location for the python library on your system',
+                  'you can use the flags EXTRA_LIB_PATH and/or EXTRA_LIBS to tell scons.')
+
+    result = (
+        CheckModuleLibs(config,[py_lib],python_source_file,'check_python') or
+        CheckModuleLibs(config,['python'+py_version],python_source_file,'check_python') or
+        CheckModuleLibs(config,['python'],python_source_file,'check_python') )
+    if not result:
+        ErrorExit('Unable to build a python loadable module using the python executable:',
+                  '%s,'%python,
+                  'the library name %s,'%py_libfile,
+                  'and the libdir %s.'%py_libdir1,
+                  'If these are not the correct library names, you can tell scons the ',
+                  'correct names to use with the flags EXTRA_LIB_PATH and/or EXTRA_LIBS.')
+
+    config.Result(1)
+    return 1
+
+def CheckNumPy(config):
     numpy_source_file = """
 #include "Python.h"
 #include "numpy/arrayobject.h"
+ 
 static void doImport() {
-  import_array();
+    import_array();
 }
-int main()
-{
-  int result = 0;
-  Py_Initialize();
-  doImport();
-  if (PyErr_Occurred()) {
-    result = 1;
-  } else {
-    npy_intp dims = 2;
-    PyObject * a = PyArray_SimpleNew(1, &dims, NPY_INT);
-    if (!a) result = 1;
-    Py_DECREF(a);
-  }
-  Py_Finalize();
-  return result;
+
+static PyObject* run(PyObject* self, PyObject* args)
+{ 
+    doImport();
+    int result = 1;
+    if (!PyErr_Occurred()) {
+        npy_intp dims = 2;
+        PyObject* a = PyArray_SimpleNew(1, &dims, NPY_INT);
+        if (a) {
+            Py_DECREF(a);
+            result = 23; 
+        }
+    }
+    return Py_BuildValue("i", result); 
 }
+
+static PyMethodDef Methods[] = {
+    {"run",  run, METH_VARARGS, "return 23"},
+    {NULL, NULL, 0, NULL}
+};
+
+PyMODINIT_FUNC initcheck_numpy(void)
+{ Py_InitModule("check_numpy", Methods); }
 """
-    context.Message('Checking if we can build against NumPy... ')
-    try:
-        import numpy
-    except ImportError:
-        whichpy = which('python')
-        context.Result(0)
-        ErrorExit(
-            'Failed to import numpy.',
-            'Things to try:',
-            '1) Check that the python with which you installed numpy,',
-            '   probably the command line python:',
-            '   %s' % whichpy,
-            '   is the same as the one used by SCons:',
-            '   %s' % sys.executable,
-            '   If not, then you probably need to reinstall numpy with %s.' % sys.executable,
-            '   And remember to use that when running python for use with GalSim.',
-            '   Alternatively, you can reinstall SCons with your preferred python.',
-            '2) Check that if you open a python session from the command line,',
-            '   import numpy is successful there.')
-    context.env.Append(CPPPATH=numpy.get_include())
-    result = CheckLibs(context,[''],numpy_source_file)
+    config.Message('Checking if we can build against NumPy... ')
+
+    result, numpy_inc = TryScript(config,"import numpy; print numpy.get_include()",python)
     if not result:
-        context.Result(0)
-        ErrorExit('Cannot build against NumPy.')
-    result, output = context.TryRun(numpy_source_file,'.cpp')
+        ErrorExit("Unable to import numpy using the python executable:\n%s"%python)
+    config.env.AppendUnique(CPPPATH=numpy_inc)
+
+    result = config.TryCompile(numpy_source_file,'.cpp')
     if not result:
-        context.Result(0)
-        ErrorExit('Cannot run program built with NumPy.')
-    context.Result(1)
+        ErrorExit('Unable to compile a file with numpy using the include path:\n%s.'%numpy_inc)
+
+    result = TryModule(config,numpy_source_file,'check_numpy')
+    if not result:
+        ErrorExit('Unable to build a python loadable module that uses numpy')
+   
+    config.Result(1)
     return 1
 
-# Note from Barney to Mike: the code below always seems to say (cached) in the message at build
-# for me, even after rm .scons.dblite beforehand.  Is that right?  Otherwise, it seems to work...
-def CheckPyFITS(context):
-    context.Message('Checking for PyFITS... ')
-    try:
-        import pyfits
-    except ImportError:
-        whichpy = which('python')
-        context.Result(0)
-        ErrorExit(
-            'Failed to import PyFITS.',
-            'Things to try:',
-            '1) Check that the python with which you installed PyFITS,',
-            '   probably the command line python:',
-            '   %s' % whichpy,
-            '   is the same as the one used by SCons:',
-            '   %s' % sys.executable,
-            '   If not, then you probably need to reinstall PyFITS with %s.' % sys.executable,
-            '   And remember to use that when running python for use with GalSim.',
-            '   Alternatively, you can reinstall SCons with your preferred python.',
-            '2) Check that if you open a python session from the command line,',
-            '   import pyfits is successful there.')
-    context.Result(1)
+def CheckPyFITS(config):
+    config.Message('Checking for PyFITS... ')
+
+    result, output = TryScript(config,"import pyfits",python)
+    if not result:
+        ErrorExit("Unable to import pyfits using the python executable:\n%s"%python)
+
+    config.Result(1)
     return 1
 
-def CheckBoostPython(context):
+def CheckBoostPython(config):
     bp_source_file = """
 #include "boost/python.hpp"
 
-class Foo { public: Foo() {} };
+int check_bp_run() { return 23; }
 
-int main()
-{
-  Py_Initialize();
-  boost::python::object obj;
-  boost::python::class_< Foo >("Foo", boost::python::init<>());
-  Py_Finalize();
-  return 0;
+BOOST_PYTHON_MODULE(check_bp) {
+    boost::python::def("run",&check_bp_run);
 }
 """
-    context.Message('Checking if we can build against Boost.Python... ')
+    config.Message('Checking if we can build against Boost.Python... ')
+
+    result = config.TryCompile(bp_source_file,'.cpp')
+    if not result:
+        ErrorExit('Unable to compile a file with #include "boost/python.hpp"')
 
     result = (
-        CheckLibs(context,[''],bp_source_file) or
-        CheckLibs(context,['boost_python'],bp_source_file) or
-        CheckLibs(context,['boost_python-mt'],bp_source_file) )
-
+        CheckModuleLibs(config,[''],bp_source_file,'check_bp') or
+        CheckModuleLibs(config,['boost_python'],bp_source_file,'check_bp') or
+        CheckModuleLibs(config,['boost_python-mt'],bp_source_file,'check_bp') )
     if not result:
-        context.Result(0)
-        ErrorExit('Cannot build against Boost.Python.')
+        ErrorExit('Unable to build a python loadable module with Boost.Python')
 
-    result, output = context.TryRun(bp_source_file,'.cpp')
-
-    if not result:
-        context.Result(0)
-        ErrorExit('Cannot run program built with Boost.Python.')
-    context.Result(1)
+    config.Result(1)
     return 1
 
 def FindPathInEnv(env, dirtag):
@@ -890,7 +1014,7 @@ def FindTmvLinkFile(config):
     ErrorExit('No tmv-link file could be found')
 
 
-def DoLibraryAndHeaderChecks(config):
+def DoCppChecks(config):
     """
     Check for some headers.  
     """
@@ -918,7 +1042,7 @@ def DoLibraryAndHeaderChecks(config):
     compiler = config.env['CXXTYPE']
     version = config.env['CXXVERSION_NUMERICAL']
 
-    if not (config.env.has_key('LIBS')) :
+    if not config.env.has_key('LIBS') :
         config.env['LIBS'] = []
 
     tmv_link_file = FindTmvLinkFile(config)
@@ -944,10 +1068,15 @@ def DoLibraryAndHeaderChecks(config):
         config.env.AppendUnique(LINKFLAGS='-fopenmp')
 
     config.CheckTMV()
+
+
+def DoPyChecks(config):
+    # These checks are only relevant for the pysrc compilation:
+
     config.CheckPython()
     config.CheckNumPy()
-    config.CheckBoostPython()
     config.CheckPyFITS() 
+    config.CheckBoostPython()
 
 
 def GetNCPU():
@@ -981,7 +1110,7 @@ def DoConfig(env):
 
     # Figure out what kind of compiler we are dealing with
     GetCompilerVersion(env)
-   
+
     # If not explicit, set number of jobs according to number of CPUs
     if env.GetOption('num_jobs') != 1:
         print "Using specified number of jobs =",env.GetOption('num_jobs')
@@ -999,11 +1128,11 @@ def DoConfig(env):
         AddOpenMPFlag(env)
     if not env['DEBUG']:
         print 'Debugging turned off'
-        env.Append(CPPDEFINES=['NDEBUG'])
+        env.AppendUnique(CPPDEFINES=['NDEBUG'])
     else:
         if env['TMV_DEBUG']:
             print 'TMV Extra Debugging turned on'
-            env.Append(CPPDEFINES=['TMV_EXTRA_DEBUG'])
+            env.AppendUnique(CPPDEFINES=['TMV_EXTRA_DEBUG'])
 
     import SCons.SConf
 
@@ -1019,13 +1148,21 @@ def DoConfig(env):
         # Add out custom configuration tests
         config = env.Configure(custom_tests = {
             'CheckTMV' : CheckTMV ,
+            })
+        DoCppChecks(config)
+        env = config.Finish()
+
+        pyenv = env.Clone()
+        config = pyenv.Configure(custom_tests = {
             'CheckPython' : CheckPython ,
             'CheckNumPy' : CheckNumPy ,
             'CheckBoostPython' : CheckBoostPython ,
             'CheckPyFITS' : CheckPyFITS ,
             })
-        DoLibraryAndHeaderChecks(config)
-        env = config.Finish()
+        DoPyChecks(config)
+        pyenv = config.Finish()
+
+        env['pyenv'] = pyenv
 
         # Turn the cache back on now, since we always want it for the main compilation steps.
         if not env['CACHE_LIB']:
@@ -1037,9 +1174,19 @@ def DoConfig(env):
     # uses MEMTEST, you might need to move this to before
     # the DoLibraryAndHeaderChecks call.
     if env['MEM_TEST']:
-        env.Append(CPPDEFINES=['MEM_TEST'])
+        env.AppendUnique(CPPDEFINES=['MEM_TEST'])
 
-
+# In both bin and examplex, we will need a builder that can take a .py file, 
+# and add the correct shebang to the top of it, and also make it executable.
+# Rather than put this funciton in both SConscript files, we put it here and
+# add it as a builder to env. 
+def BuildExecutableScript(target, source, env):
+    for i in range(len(source)):
+        f = open(str(target[i]), "w")
+        f.write( '#!' + env['PYTHON'] + '\n' )
+        f.write(source[i].get_contents())
+        f.close()
+        os.chmod(str(target[i]),0775)
 
 
 #
@@ -1082,16 +1229,28 @@ if not GetOption('help'):
         os.remove("gs.error")
         ClearCache()
 
+    if env['PYTHON'] == '':
+        env['PYTHON'] = default_python
+    python = env['PYTHON']
+    print 'Using python = ',python
+
     # Set PYPREFIX if not given:
     if env['PYPREFIX'] == '':
+        import subprocess
         if sys.platform == 'linux2' and env['PREFIX'] != '':
             # On linux, we try to match the behavior of distutils
-            env['PYPREFIX'] = distutils.sysconfig.get_python_lib(prefix=env['PREFIX']) 
+            cmd = "%s -c \"import distutils.sysconfig; "%(python)
+            cmd += "print distutils.sysconfig.get_python_lib(prefix='%s')\""%(env['PREFIX'])
+            p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
+            env['PYPREFIX'] = p.stdout.read().strip()
             print 'Using PYPREFIX generated from PREFIX = ',env['PYPREFIX']
         else:
             # On Macs, the regular python lib is usually writable, so it works fine for 
             # installing the python modules.
-            env['PYPREFIX'] = distutils.sysconfig.get_python_lib() 
+            cmd = "%s -c \"import distutils.sysconfig; "%(python)
+            cmd += "print distutils.sysconfig.get_python_lib()\""
+            p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
+            env['PYPREFIX'] = p.stdout.read().strip()
             print 'Using default PYPREFIX = ',env['PYPREFIX']
 
     # Set up the configuration
@@ -1102,18 +1261,19 @@ if not GetOption('help'):
     env['_InstallProgram'] = RunInstall
     env['_UninstallProgram'] = RunUninstall
 
-    #if env['WITH_UPS']:
-        #subdirs += ['ups']
+    # Both bin and examples use this:
+    env['BUILDERS']['ExecScript'] = Builder(action = BuildExecutableScript)
 
     if 'examples' in COMMAND_LINE_TARGETS:
         subdirs += ['examples']
 
     if 'tests' in COMMAND_LINE_TARGETS:
-        nosetests = which('nosetests')
-        if nosetests is None:
-            env['RUN_NOSETESTS'] = False
-        else:
-            env['RUN_NOSETESTS'] = True
+        if env['NOSETESTS'] == '':
+            nosetests = which('nosetests')
+            if nosetests is None:
+                env['NOSETESTS'] = None
+            else:
+                env['NOSETESTS'] = nosetests
         subdirs += ['tests']
 
     # subdirectores to process.  We process src and pysrc by default

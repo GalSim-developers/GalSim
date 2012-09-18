@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Some example scripts to see some basic usage of the GalSim library.
 """
