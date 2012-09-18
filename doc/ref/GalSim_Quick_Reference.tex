@@ -524,13 +524,19 @@ within the Python interpreter.
 
 \item[$\circ$] \texttt{galsim.Angle(value, angle\_unit)} \newline 
   \emph{class to represent angles and handle multiple unit types,
-    which can be initialized using a numerical value and an
-    \texttt{AngleUnit} instance \texttt{angle\_unit} (see \texttt{galsim/angle.py}).}
+    which can be initialized very simply by a multipling a numerical value and an
+    \texttt{AngleUnit} instance \texttt{angle\_unit} (see below, and \texttt{galsim/angle.py}).}
 
 \item[$\circ$] \texttt{galsim.AngleUnit(radians)} \newline 
 \emph{class for holding angular unit definitions, specified on
-  initialization in \texttt{radians}.}
-
+  initialization in \texttt{radians}.  There are five built-in AngleUnits which are always available for use:
+ \begin{itemize}
+   \item {\tt galsim.radians   \# = galsim.AngleUnit(1.)}
+    \item {\tt galsim.degrees   \# = galsim.AngleUnit(pi / 180.)}
+    \item {\tt galsim.hours     \# = galsim.AngleUnit(pi / 12.)}
+    \item {\tt galsim.arcmin    \# = galsim.AngleUnit(pi / 180. / 60.)}
+    \item {\tt galsim.arcsec    \# = galsim.AngleUnit(pi / 180. / 3600.)}
+\end{itemize}}
 \end{itemize}
 
 \subsection{Bounds and Positions}\label{sect:bounds}
