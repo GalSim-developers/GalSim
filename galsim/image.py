@@ -35,6 +35,9 @@ for Class in _galsim.Image.itervalues():
     The individual elements in the array attribute are accessed as im.array[y,x], matching the
     standard numpy convention, while the Image class's own accessors are all (x,y).
     """
+    Class.getScale.__func__.__doc__ = "Get the sample scale dx for the image."
+    Class.setScale.__func__.__doc__ = "Set the sample scale dx for the image."
+
 
 for Class in _galsim.ImageView.itervalues():
     Class.__doc__ = """
