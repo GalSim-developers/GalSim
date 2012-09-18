@@ -1,0 +1,10 @@
+/**
+ @mainpage 
+
+ Welcome to the GalSim class library reference pages.  For an overview of GalSim workflow and 
+ tools, please see `doc/GalSim_Quick_Reference.pdf` in the GalSim repository.
+
+ For the Python layer galsim.base.GSObject classes used to describe astronomical objects, see 
+ galsim.base
+
+*/
