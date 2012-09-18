@@ -236,7 +236,7 @@ namespace galsim {
          *
          * @returns the recommended image size.
          *
-         * The basic formult is 2pi * wmult / (dx * stepK())
+         * The basic formula is 2pi * wmult / (dx * stepK())
          * But then we round up to the next even integer value.
          */
         int getGoodImageSize(double dx, double wmult = 1.) const;
