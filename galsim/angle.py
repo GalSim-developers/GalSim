@@ -40,6 +40,14 @@ You can initialize explicitly, taking a value and a unit:
 
     >>> phi = galsim.Angle(90, galsim.degrees)
 
+There are five built-in AngleUnits which are always available for use:
+
+    galsim.radians   # = galsim.AngleUnit(1.)
+    galsim.degrees   # = galsim.AngleUnit(pi / 180.)
+    galsim.hours     # = galsim.AngleUnit(pi / 12.)
+    galsim.arcmin    # = galsim.AngleUnit(pi / 180. / 60.)
+    galsim.arcsec    # = galsim.AngleUnit(pi / 180. / 3600.)
+
 Radian access method
 --------------------
 
