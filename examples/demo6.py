@@ -1,5 +1,30 @@
 """
-Some example scripts to make multi-object images using the GalSim library.
+Demo #6
+
+The sixth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
+(Script is designed to be viewed in a window 100 characters wide.)
+
+This script uses real galaxy images from COSMOS observations.  The catalog of real galaxy
+images distributed with GalSim only includes 100 galaxies, but you can download a much
+larger set of images from our dropbox at [ TODO: What url? ]
+The galaxy images include images of the effective PSF for the original observations, 
+so GalSim first deconvolves by that PSF, and then convolves by whatever PSF you desire.
+In this case, we use a double Gaussian PSF.  The galaxies are randomly rotated and then
+given an applied gravitational shear as well as gravitational magnification.
+The output for this script is to a FITS "data cube".  With DS9, this can be view with a
+slider to quickly move through the different images.
+
+
+New features introduced in this demo:
+
+- real_cat = galsim.RealGalaxyCatalog(file_name, image_dir)
+- real_cat.preload()
+- obj = galsim.Gaussian(fwhm, flux)
+- obj = galsim.RealGalaxy(real_cat, index)
+- obj.applyRotation(theta)
+- obj.applyMagnification(scale)
+- image += image2
+- galsim.fits.writeCube([list of images], file_name, clobber)
 """
 
 import sys
@@ -10,7 +35,6 @@ import logging
 import time
 import galsim
 
-# Simulations with real galaxies from a catalog
 def main(argv):
     """
     Make a fits image cube using real COSMOS galaxies from a catalog describing the training
@@ -42,6 +66,7 @@ def main(argv):
     gal_flux = 1.e5         # arbitrary choice, makes nice (not too) noisy images
     gal_g1 = -0.027         #
     gal_g2 = 0.031          #
+    gal_mu = 1.082          # mu = ( (1-kappa)^2 - g1^2 - g2^2 )^-1
     psf_inner_fwhm = 0.6    # arcsec
     psf_outer_fwhm = 2.3    # arcsec
     psf_inner_fraction = 0.8  # fraction of total PSF flux in the inner Gaussian
@@ -57,6 +82,11 @@ def main(argv):
     
     # Read in galaxy catalog
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, image_dir)
+
+    # Preloading the header information usually speeds up subsequent access.
+    # Basically, it tells pyfits to read all the headers in once and save them, rather
+    # than re-open the galaxy catalog fits file each time you want to access a new galaxy.
+    # If you are doing more than a few galaxies, then it seems to be worthwhile.
     real_galaxy_catalog.preload()
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
 
@@ -66,7 +96,7 @@ def main(argv):
     psf2 = galsim.Gaussian(fwhm = psf_outer_fwhm, flux = psf_outer_fraction)
     psf = psf1+psf2
     # make the pixel response
-    pix = galsim.Pixel(xw = pixel_scale, yw = pixel_scale)
+    pix = galsim.Pixel(pixel_scale)
     # convolve PSF and pixel response function to get the effective PSF (ePSF)
     epsf = galsim.Convolve([psf, pix])
     # Draw this one with no noise.
@@ -78,14 +108,14 @@ def main(argv):
     # Build the images
     all_images = []
     for k in range(ngal):
-        #logger.info('Start work on image %d',i)
+        logger.debug('Start work on image %d',k)
         t1 = time.time()
 
         # Initialize the random number generator we will be using.
         rng = galsim.UniformDeviate(random_seed+k)
 
         gal = galsim.RealGalaxy(real_galaxy_catalog, index = k)
-        #logger.info('   Read in training sample galaxy and PSF from file')
+        logger.debug('   Read in training sample galaxy and PSF from file')
         t2 = time.time()
 
         # Set the flux
@@ -97,6 +127,10 @@ def main(argv):
 
         # Apply the desired shear
         gal.applyShear(g1=gal_g1, g2=gal_g2)
+
+        # Also apply a magnification mu = ( (1-kappa)^2 - |gamma|^2 )^-1
+        # This conserves surface brightness, so it scale both the size and flux.
+        gal.applyMagnification(gal_mu)
         
         # Make the combined profile
         final = galsim.Convolve([psf, pix, gal])
@@ -109,25 +143,29 @@ def main(argv):
             im = galsim.ImageF(xsize,ysize)
             final.draw(im, dx=pixel_scale)
 
-        #logger.info('   Drew image')
+        logger.debug('   Drew image')
         t3 = time.time()
 
-        # Add Poisson noise
-        sky_level_pixel = sky_level * pixel_scale**2
-        im += sky_level_pixel
-        # Again, default is gain=1, read_noise=0
-        # So this is just poisson noise with the current image flux values.
-        im.addNoise(galsim.CCDNoise(rng)) 
-        im -= sky_level_pixel
+        # Make an image for the background level.
+        # Here we just fill it with a constant value, but you could do something
+        # more complicated if you wanted.
+        background = galsim.ImageF(xsize,ysize)
+        background.fill(sky_level * pixel_scale**2)
 
-        #logger.info('   Added Poisson noise')
+        # Add this to our drawn image of the object:
+        im += background
+
+        # Add Poisson noise
+        im.addNoise(galsim.CCDNoise(rng)) 
+
+        logger.debug('   Added Poisson noise')
         t4 = time.time()
 
         # Store that into the list of all images
         all_images += [im]
         t5 = time.time()
 
-        #logger.info('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
+        logger.debug('   Times: %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4)
         logger.info('Image %d: size = %d x %d, total time = %f sec', k, xsize, ysize, t5-t1)
 
     logger.info('Done making images of galaxies')

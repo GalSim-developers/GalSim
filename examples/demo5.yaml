@@ -35,10 +35,9 @@ psf :
 
 # Define the galaxy profile
 gal :
-    type : Sersic
     # Great08 mixed pure bulge and pure disk for its LowNoise run.
     # We're just doing disks to make things simpler.
-    n : 1
+    type : Exponential
 
     # r_gal / r_psf  (use r = half_light_radius)
     # This is in lieu of setting a size parameter directly.
@@ -74,6 +73,7 @@ gal :
                 min : 0
                 max : 0.6
             beta : 
+                # An angle of type Random means uniform within 0 .. 2pi radians
                 type : Random
 
     # An object may have both an ellip and a shear field, in which case, the ellip

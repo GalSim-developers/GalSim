@@ -11,32 +11,30 @@
 #      - Only galaxies.  No stars.
 #      - PSF is Moffat
 #      - Each galaxy is bulge plus disk: deVaucouleurs + Exponential.
-#      - Parameters taken from the input catalog:
-#        - PSF beta
-#        - PSF fwhm
-#        - PSF e1
-#        - PSF e2
-#        - PSF trunc
-#        - Bulge half-light-radius
-#        - Bulge e1
-#        - Bulge e2
-#        - Bulge flux
-#        - Disc half-light-radius
-#        - Disc e1
-#        - Disc e2
-#        - Disc flux
-#        - Galaxy dx (two components have same center)
-#        - Galaxy dy
-#      - Applied shear is the same for each file
+#      - The catalog's columns are:
+#         0 PSF beta
+#         1 PSF fwhm
+#         2 PSF e1
+#         3 PSF e2
+#         4 PSF trunc
+#         5 Disc half-light-radius
+#         6 Disc e1
+#         7 Disc e2
+#         8 Bulge half-light-radius
+#         9 Bulge e1
+#        10 Bulge e2
+#        11 Galaxy dx (the two components have same center)
+#        12 Galaxy dy
+#      - Applied shear is the same for each galaxy
 #      - Noise is poisson using a nominal sky value of 1.e6
 
 # You can define variables to be used later using the & symbol here.
 # Later they will be used with the * symbol.
 # This can be useful since you can put things you want to change often near the top of the 
-# file so you don't have to scroll down to fine the right place to edit something each time 
+# file so you don't have to scroll down to find the right place to edit something each time 
 # you want to change it.
 # However, now that we've presented this option, so you can see how it works, we won't 
-# bother with it for out subsequent example config files.
+# bother with it for our subsequent example config files.
 some_variables :
     - &sky_level  1.e6                # ADU / arcsec^2
     - &pixel_scale  1.0               # arcsec / pixel  (size units in input catalog are pixels)
@@ -63,20 +61,20 @@ psf :
         # InputCatalog requires the extra value of which column to use in the catalog:
         # Note: the first column is called 0, not 1, as per the usual python 
         # 0-based indexing scheme.
-        col : 5
+        col : 1
 
     # You can also specify both of these on the same line using {}
-    trunc : { type : InputCatalog , col : 8 }
+    trunc : { type : InputCatalog , col : 4 }
 
     # The nesting goes as deep as it needs to
     ellip :
         type : E1E2 
         e1 : 
             type : InputCatalog 
-            col : 6
+            col : 2
         e2 : 
             type : InputCatalog 
-            col : 7
+            col : 3
 
     # If you don't specify a parameter, and there is a reasonable default, then it 
     # will be used instead.  If there is no reasonable default, you will get an error.
@@ -91,19 +89,19 @@ gal :
     items :
         - 
             type : Exponential
-            half_light_radius : { type : InputCatalog , col : 9 }
+            half_light_radius : { type : InputCatalog , col : 5 }
             ellip : 
                 type : E1E2 
-                e1 : { type : InputCatalog , col : 10 }  
-                e2 : { type : InputCatalog , col : 11 }
+                e1 : { type : InputCatalog , col : 6 }  
+                e2 : { type : InputCatalog , col : 7 }
             flux : 0.6
         -
             type : DeVaucouleurs
-            half_light_radius : { type : InputCatalog , col : 12 }
+            half_light_radius : { type : InputCatalog , col : 8 }
             ellip : 
                 type : E1E2 
-                e1 : { type : InputCatalog , col : 13 }  
-                e2 : { type : InputCatalog , col : 14 }
+                e1 : { type : InputCatalog , col : 9 }  
+                e2 : { type : InputCatalog , col : 10 }
             flux : 0.4
 
     # When a Sum object has a flux specified, the "flux" values of the components are 
@@ -128,8 +126,8 @@ gal :
 
     shift : 
         type : XY 
-        x : { type : InputCatalog , col : 15 } 
-        y : { type : InputCatalog , col : 16 }
+        x : { type : InputCatalog , col : 11 } 
+        y : { type : InputCatalog , col : 12 }
 
 # Define some other information about the images 
 image :

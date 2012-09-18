@@ -17,11 +17,25 @@
 #
 
 gal :
-    type : Sersic
-    n : 3.5
-    half_light_radius : 3.7  # arcsec
-    flux : 1.e6  # ADU
+    # This galaxy will be the sum of a bulge component and a disk component
+    type : Sum
 
+    # Any number of items may be added together, so we specify them in a list.
+    # Use one bullet for each item.
+    items :
+        -   # First the bulge:
+            type : Sersic
+            n : 3.5
+            half_light_radius : 2.3  # arcsec
+            flux : 0.3  # flux here is used to mean "fractional flux"
+
+        -   # Now the disk:
+            type : Sersic
+            n : 1.5
+            half_light_radius : 3.7  # arcsec
+            flux : 0.7
+
+    # A shear at this level applies to the summed profile
     shear : 
         # QBeta means to use the axis ratio (q = b/a) and a position angle.
         type : QBeta
@@ -29,39 +43,30 @@ gal :
         # For angles, you must let GalSim know which units you intend.
         # So the number must be followed by either degrees or radians
         # (or arcminutes or arcseconds if you prefer).
-        # These may be abbreviated to deg and rad (and  arcmin, arcsec).
+        # These may be abbreviated to deg and rad (and arcmin, arcsec).
         beta : 23 degrees
  
+    # The flux here also applies to the full galaxy object.
+    flux : 1.e6  # ADU
+
 
 psf : 
     # This PSF will be the convolution of an atmospheric component and an optical component.
     type : Convolution
 
-    # Any number of items may be convolved together, so we specify them in a list.
-    # Use one bullet for each item.
+    # Any number of items may be convolved together, so just like for Sum,
+    # we specify them in a list.
     items :
         -
-            # For the atmospheric component, we'll use a double Gaussian.
-            # Sum works just like Convolution, where the items to be added are 
-            # provided in a list.
-            type : Sum
-            items :
-                -
-                    type : Gaussian
-                    sigma : 2.1  # arcsec
-                    ellip :
-                        type : EBeta
-                        e : 0.13
-                        beta : 0.81 radians
-                    flux : 0.2  # Fractional flux in this component
-                -
-                    type : Gaussian
-                    sigma : 0.9  # arcsec
-                    ellip :
-                        type : EBeta
-                        e : 0.04
-                        beta : -0.17 radians
-                    flux : 0.8  # Fractional flux in this component
+            # For the atmospheric component, we use a Kolmogorov spectrum
+            type : Kolmogorov
+            fwhm : 2.1  # arcsec
+
+            # A shear at this level just applies to this component.
+            shear:
+                type : EBeta
+                e : 0.13
+                beta : 0.81 radians
 
         -
             # For the optical component, GalSim provides an OpticalPSF class that 

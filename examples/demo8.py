@@ -1,221 +1,187 @@
 """
-Some example scripts to make multi-object images using the GalSim library.
+Demo #8
+
+The eighth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
+(Script is designed to be viewed in a window 100 characters wide.)
+
+In this script, we show how to build a configuration dict from within python, rather
+than using a config file.  The parallel tutorial examples/demo*.yaml have shown how to
+do the same thing as these demo*.py files using a config file.  Now we turn the tables
+and show how to use some of the machinery in the GalSim configuration processing 
+from within python itself.  To appreciate this example script, you'll probably want to 
+have looked through that series as well up to demo8.yaml and reference that file
+as you look through this one.
+
+This could be useful if you want to use the config machinery to build the images, but then
+rather than write the images to disk, you want to keep them in memory and do further 
+processing with them.  (e.g. Run your shape measurement code on the images from within python.)
+
+New features introduced in this demo:
+
+- galsim.config.Process(config)
+- galsim.config.ProcessInput(config)
+- galsim.config.ProcessOutput(config)
+- galsim.config.BuildFits(file_name, config)
+- galsim.config.BuildMultiFits(file_name, config)
+- galsim.config.BuildDataCube(file_name, config)
+- galsim.config.BuildImage(config)
+- galsim.fits.read(file_name)
 """
 
 import sys
 import os
-import subprocess
-import math
 import numpy
 import logging
 import time
+import copy
 import galsim
 
-# Use multiple processes to draw image in parallel
 def main(argv):
     """
     Make an image containing 10 x 10 postage stamps.
     The galaxies are bulge + disk with parameters drawn from random variates
     Each galaxy is drawn using photon shooting.
     """
-    from multiprocessing import Process, Queue, current_process, cpu_count
 
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo8")
 
-    # Define some parameters we'll use below.
-
-    single_file_name = os.path.join('output','bpd_single.fits')
-    multi_file_name = os.path.join('output','bpd_multi.fits')
-
-    random_seed = 1512413
-    sky_level = 1.e4        # ADU / arcsec^2
-    pixel_scale = 0.28      # arcsec
-    nx_pixels = 64          # size of each postage stamp in pixels
-    ny_pixels = 64
-    nx_stamps = 10          # number of postage stamps in each direction
-    ny_stamps = 10
-
-    gal_flux_min = 1.e4     # Range for galaxy flux
-    gal_flux_max = 1.e5  
-    bulge_hlr_min = 0.3     # Range for bulge's half-light radius (arcsec)
-    bulge_hlr_max = 0.9
-    bulge_e_min = 0.        # Range for bulge's ellipticity
-    bulge_e_max = 0.3
-    bulge_frac_min = 0.1    # Range for bulge fraction
-    bulge_frac_max = 0.5
-    disk_hlr_min = 0.5      # Range for disk's half-light radius (arcsec)
-    disk_hlr_max = 1.5
-    disk_e_min = 0.2        # Range for disk's ellipticity
-    disk_e_max = 0.8
-
-    psf_fwhm = 0.65         # arcsec
-
     logger.info('Starting demo script 8')
 
-    def draw_stamp(seed):
-        """A function that draws a single postage stamp using a given seed for the 
-           random number generator.
-           Returns the image and the total time taken.
-        """
-        t1 = time.time()
+    # What we think of as the configuration file is really just a python dict:
+    config = {}
 
-        # Initialize the random number generator we will be using.
-        rng = galsim.UniformDeviate(seed)
+    # We'll only be using three top-level fields in this file: psf, gal, and image.
+    # We don't have any input files, so we don't need input.   And we're only going to 
+    # have the config machinery build the images, so we don't need output.
+    # And as usual, we'll use a simple square pixel, so we don't need pix.
 
-        # Make the pixel:
-        pix = galsim.Pixel(xw = pixel_scale)
+    # We can define each attribute individually:
+    config['psf'] = {}
+    config['psf']['type'] = 'Moffat'
+    config['psf']['beta'] = 2.4
+    config['psf']['fwhm'] = 0.65
 
-        # Make the PSF profile:
-        psf = galsim.Moffat(fwhm = psf_fwhm, beta = 2.4)
+    # However, defining each field using the normal python way of specifying a dict is 
+    # probably more often going to be the preferred way to do this:
+    # (This looks a lot like a JSON file -- see the examples in examples/json/demo*.json.)
+    config['gal'] = {
+        "type" : "Sum",
+        "items" : [
+            {
+                "type" : "Sersic",
+                "n" : 3.6,
+                "half_light_radius" : { "type" : "Random" , "min" : 0.3 , "max" : 0.9 },
+                "flux" : { "type" : "Random" , "min" : 0.1 , "max" : 0.5 },
+                "ellip" : {
+                    "type" : "EBeta",
+                    "e" : { "type" : "Random" , "min" : 0.0 , "max" : 0.3 },
+                    "beta" : { "type" : "Random" }
+                }
+            },
+            {
+                "type" : "Sersic",
+                "n" : 1.5,
+                "half_light_radius" : { "type" : "Random" , "min" : 0.5 , "max" : 1.5 },
+                "ellip" : {
+                    "type" : "EBeta",
+                    "e" : { "type" : "Random" , "min" : 0.2 , "max" : 0.8 },
+                    "beta" : { "type" : "Random" }
+                }
+            }
+        ],
+        "flux" : { "type" : "Random" , "min" : 1.0e4 , "max" : 1.0e5 }
+    }
 
-        # Make the galaxy profile:
-        f = rng() * (bulge_frac_max-bulge_frac_min) + bulge_frac_min
-        #print 'flux = ',f
-        hlr = rng() * (bulge_hlr_max-bulge_hlr_min) + bulge_hlr_min
-        #print 'hlr = ',hlr
-        beta_ellip = rng() * 2*math.pi * galsim.radians
-        #print 'beta_ellip = ',beta_ellip
-        ellip = rng() * (bulge_e_max-bulge_e_min) + bulge_e_min
-        #print 'ellip = ',ellip
+    config['image'] = {
+        'type' : 'Tiled',
+        'nx_tiles' : 10,
+        'ny_tiles' : 10,
+        'stamp_size' : 64,
+        'pixel_scale' : 0.28,
+        'draw_method' : 'phot',
+        'noise' : { 'sky_level' : 1.e4 },
+        'random_seed' : 1512413
+    }
 
-        bulge = galsim.Sersic(n=3.6, half_light_radius=hlr, flux=f)
-        bulge.applyShear(e=ellip, beta=beta_ellip)
+    # Make a copy of the config dict as it exists now.
+    save_config = copy.deepcopy(config)
 
-        hlr = rng() * (disk_hlr_max-disk_hlr_min) + disk_hlr_min
-        #print 'hlr = ',hlr
-        beta_ellip = rng() * 2*math.pi * galsim.radians
-        #print 'beta_ellip = ',beta_ellip
-        ellip = rng() * (disk_e_max-disk_e_min) + disk_e_min
-        #print 'ellip = ',ellip
+    # Now that we have the config dict setup, there are a number of functions we can use
+    # to process it in various ways.  The simplest is to do the full end-to-end processing
+    # as is done by the program galsim_yaml:
+    #
+    #     galsim.config.Process(config)
+    #
+    # Since we don't want to have the config machinery output this to a file, we don't want
+    # to do that here.  But if you also define the output field appropriately, that's the 
+    # simplest way to process a config dict.
+    #
+    # That function is essentially equivalent to the following two functions:
+    #
+    #     galsim.config.ProcessInput(config)
+    #     galsim.config.ProcessOutput(config)
+    #
+    # The former in particular may be useful to run separately.  If you are using an input
+    # catalog (or other item that requires setup), it will read the file(s) from disk and
+    # save the catalog (or whatever) in the config dict in the way that further processing
+    # function expect.  However, we don't have any input field, so we don't need it here.
+    #
+    # The ProcessOutput function reads in the output field and then calls one of the following:
+    #
+    #     galsim.config.BuildFits(file_name, config)        -- build a regular fits file
+    #     galsim.config.BuildMultiFits(file_name, config)   -- build a multi-extension fits file
+    #     galsim.config.BuildDataCute(file_name, config)    -- build a fits data cube
+    #
+    # Finally, these functions all call the following function to process the image field
+    # and actually build the images:
+    #
+    #     galsim.config.BuildImage(config)
+    #
+    # This returns a tuple of potentially 4 images:
+    #
+    #     (image, psf_image, weight_image, badpix_image)
+    #
+    # The default is for the latter 3 to all be None, but you can have the function build those
+    # images as well by setting the optional kwargs: make_psf_image=True, make_weight_image=True,
+    # and make_badpix_image=True, respectively.
+    #
 
-        disk = galsim.Sersic(n=1.5, half_light_radius=hlr)
-        disk.applyShear(e=ellip, beta=beta_ellip)
-        disk.setFlux(1.-f)
-
-        gal = galsim.Add([bulge,disk])
-
-        flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
-        gal.setFlux(flux)
-
-        # Build the final object by convolving the galaxy and PSF 
-        # Not including the pixel -- since we are using drawShoot
-        final_nopix = galsim.Convolve([psf, gal])
-
-        # Define the stamp image
-        stamp = galsim.ImageF(nx_pixels, ny_pixels)
-        stamp.setScale(pixel_scale)
-
-        # Photon shooting automatically convolves by the pixel, so we've made sure not
-        # to include it in the profile!
-        sky_level_pixel = sky_level * pixel_scale**2
-        final_nopix.drawShoot(stamp, max_extra_noise=sky_level_pixel/100, uniform_deviate=rng)
-
-        # For photon shooting, galaxy already has poisson noise, so we want to make 
-        # sure not to add that noise again!  Thus, we just add sky noise, which 
-        # is Poisson with the mean = sky_level_pixel
-        stamp.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
-
-        t2 = time.time()
-        return stamp, t2-t1
-
-    def worker(input, output):
-        """input is a queue with (seed, info) tuples:
-               seed is the argement to pass to draw_stamp
-               info is passed along to the output queue.
-           output is a queue storing (result, info, proc) tuples:
-               result is the returned tuple from draw_stamp: (image, time).
-               info is passed through from the input queue.
-               proc is the process name.
-        """
-        for (seed, info) in iter(input.get, 'STOP'):
-            result = draw_stamp(seed)
-            output.put( (result, info, current_process().name) )
-    
-    ntot = nx_stamps * ny_stamps
-
-    # Take seeds to be sequential after the given seed value. 
-    # This way different galaxies are deterministic, but uncorrelated.
-    seeds = [ random_seed + k for k in range(ntot) ]
-
-    # First draw the image using just a single process:
     t1 = time.time()
-    image_single = galsim.ImageF(nx_stamps * nx_pixels , ny_stamps * ny_pixels)
-    image_single.setScale(pixel_scale)
 
-    k = 0
-    for ix in range(nx_stamps):
-        for iy in range(ny_stamps):
-            bounds = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels, 
-                                    iy*ny_pixels+1 , (iy+1)*ny_pixels)
-            im, t = draw_stamp(seeds[k])
-            image_single[bounds] = im
-            proc = current_process().name
-            logger.info('%s: Time for stamp (%d,%d) was %f',proc,ix,iy,t)
-            k = k+1
+    # Build the image
+    # All of the above functions have an optional kwarg, logger, which can take a 
+    # logger object to output diagnostic information if desired.
+    image, _, _, _ = galsim.config.BuildImage(config, logger=logger)
+    
+    # At this point you could do something interesting with the image in memory.
+    # However, we're going to be boring and just write it to a file.
+    single_file_name = os.path.join('output','bpd_single.fits')
+    image.write(single_file_name, clobber=True)
+
     t2 = time.time()
-    
-    # Now do the same thing, but use multiple processes
-    image_multi = galsim.ImageF(nx_stamps * nx_pixels , ny_stamps * ny_pixels)
-    image_multi.setScale(pixel_scale)
 
+    # The config processing functions save various things in the dict as they go, so 
+    # for the second pass, start with a pristine version of the config dict.
+    config = save_config
+
+    # For this pass, we'll use 4 processes to build the image in parallel:
     nproc = 4
-    logger.info('Using ncpu = %d processes',nproc)
+    config['image']['nproc'] = nproc
 
-    # Set up the task list
-    task_queue = Queue()
-    k = 0
-    for ix in range(nx_stamps):
-        for iy in range(ny_stamps):
-            task_queue.put( (seeds[k], [ix,iy]) ) 
-            k = k+1
-    
-    # Run the tasks
-    # Each Process command starts up a parallel process that will keep checking the queue 
-    # for a new task. If there is one there, it grabs it and does it. If not, it waits 
-    # until there is one to grab. When it finds a 'STOP', it shuts down. 
-    done_queue = Queue()
-    for k in range(nproc):
-        Process(target=worker, args=(task_queue, done_queue)).start()
-
-    # In the meanwhile, the main process keeps going.  We pull each image off of the 
-    # done_queue and put it in the appropriate place on the main image.  
-    # This loop is happening while the other processes are still working on their tasks.
-    # You'll see that these logging statements get print out as the stamp images are still 
-    # being drawn.  
-    for i in range(ntot):
-        result, info, proc = done_queue.get()
-        ix = info[0]
-        iy = info[1]
-        bounds = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels, 
-                                iy*ny_pixels+1 , (iy+1)*ny_pixels)
-        im = result[0]
-        image_multi[bounds] = im
-        t = result[1]
-        logger.info('%s: Time for stamp (%d,%d) was %f',proc,ix,iy,t)
+    # This time, let's just combine the two operations above and use the BuildFits function:
+    multi_file_name = os.path.join('output','bpd_multi.fits')
+    galsim.config.BuildFits(multi_file_name, config, logger=logger)
 
     t3 = time.time()
 
-    # Stop the processes
-    # The 'STOP's could have been put on the task list before starting the processes, or you
-    # can wait.  In some cases it can be useful to clear out the done_queue (as we just did)
-    # and then add on some more tasks.  We don't need that here, but it's perfectly fine to do.
-    # Once you are done with the processes, putting nproc 'STOP's will stop them all.
-    # This is important, because the program will keep running as long as there are running
-    # processes, even if the main process gets to the end.  So you do want to make sure to 
-    # add those 'STOP's at some point!
-    for k in range(nproc):
-        task_queue.put('STOP')
-
     logger.info('Total time taken using a single process = %f',t2-t1)
     logger.info('Total time taken using %d processes = %f',nproc,t3-t2)
-
-    # Now write the images to disk.
-    image_single.write(single_file_name, clobber=True)
-    image_multi.write(multi_file_name, clobber=True)
     logger.info('Wrote images to %r and %r',single_file_name, multi_file_name)
 
-    numpy.testing.assert_array_equal(image_single.array, image_multi.array,
+    # Check that the builds are deterministic, even when using multiple processes.
+    image2 = galsim.fits.read(multi_file_name) 
+    numpy.testing.assert_array_equal(image.array, image2.array,
                                      err_msg="Images are not equal")
     logger.info('Images created using single and multiple processes are exactly equal.')
     logger.info('')

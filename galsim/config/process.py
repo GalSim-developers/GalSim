@@ -1092,6 +1092,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize):
     else:
         pixel_scale = 1.0
 
+    print 'final.flux = ',final.getFlux()
     if not xsize:
         im = final.draw(dx=pixel_scale)
     else:
@@ -1099,6 +1100,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize):
         im.setScale(pixel_scale)
         #print 'pixel_scale = ',pixel_scale
         final.draw(im, dx=pixel_scale)
+        print 'image.sum = ',im.array.sum()
 
     if 'gal' in config and 'signal_to_noise' in config['gal']:
         import math

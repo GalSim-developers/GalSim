@@ -50,9 +50,9 @@ def BuildGSObject(config, key, base=None):
 
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [ 
-        'dilate', 'dilation', 'dilate_mu', 'dilation_mu',
+        'dilate', 'dilation', #'dilate_mu', 'dilation_mu',
         'ellip', 'rotate', 'rotation',
-        'magnify', 'magnification', 'magnify_mu', 'magnification_mu',
+        'magnify', 'magnification', #'magnify_mu', 'magnification_mu',
         'shear', 'shift', 
         'current_val', 'safe' ]
     # There are a few more that are specific to which key we have.
@@ -286,14 +286,14 @@ def _TransformObject(gsobject, config, base):
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _DilateObject(gsobject, config, 'dilation', base)
         safe = safe and safe1
-    if 'dilate_mu' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _DilateMuObject(gsobject, config, 'dilate_mu', base)
-        safe = safe and safe1
-    if 'dilation_mu' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _DilateMuObject(gsobject, config, 'dilation_mu', base)
-        safe = safe and safe1
+#   if 'dilate_mu' in config:
+#       if orig: gsobject = gsobject.copy(); orig = False
+#       gsobject, safe1 = _DilateMuObject(gsobject, config, 'dilate_mu', base)
+#       safe = safe and safe1
+#   if 'dilation_mu' in config:
+#       if orig: gsobject = gsobject.copy(); orig = False
+#       gsobject, safe1 = _DilateMuObject(gsobject, config, 'dilation_mu', base)
+#       safe = safe and safe1
     if 'ellip' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _EllipObject(gsobject, config, 'ellip', base)
@@ -314,14 +314,14 @@ def _TransformObject(gsobject, config, base):
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnification', base)
         safe = safe and safe1
-    if 'magnify_mu' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _MagnifyMuObject(gsobject, config, 'magnify_mu', base)
-        safe = safe and safe1
-    if 'magnification_mu' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _MagnifyMuObject(gsobject, config, 'magnification_mu', base)
-        safe = safe and safe1
+#   if 'magnify_mu' in config:
+#       if orig: gsobject = gsobject.copy(); orig = False
+#       gsobject, safe1 = _MagnifyMuObject(gsobject, config, 'magnify_mu', base)
+#       safe = safe and safe1
+#   if 'magnification_mu' in config:
+#       if orig: gsobject = gsobject.copy(); orig = False
+#       gsobject, safe1 = _MagnifyMuObject(gsobject, config, 'magnification_mu', base)
+#       safe = safe and safe1
     if 'shear' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _EllipObject(gsobject, config, 'shear', base)

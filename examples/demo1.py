@@ -1,5 +1,23 @@
 """
-Some example scripts to see some basic usage of the GalSim library.
+Demo #1
+
+Ths first script in our tutorial about using GalSim in python scripts: examples/demo*.py.
+(Script is designed to be viewed in a window 100 characters wide.)
+
+This first script is about as simple as it gets.  We draw an image of a single galaxy convolved 
+with a PSF and write it to disk.  We use a circular Gaussian profile for both the PSF and the 
+galaxy.  And we add a constant level of Gaussian noise to the image.
+
+New features introduced in this demo:
+
+- obj = galsim.Gaussian(flux, sigma)
+- obj = galsim.Pixel(pixel_scale)
+- obj = galsim.Convolve([list of objects])
+- image = obj.draw(dx)
+- noise = galsim.GaussianDeviate(sigma)
+- image.addNoise(noise)
+- image.write(file_name, clobber)
+- image.FindAdaptiveMom()
 """
 
 import sys
@@ -8,7 +26,6 @@ import math
 import logging
 import galsim
 
-# Simple Gaussian for both galaxy and psf, with Gaussian noise
 def main(argv):
     """
     About as simple as it gets:
@@ -34,30 +51,29 @@ def main(argv):
 
     # Define the galaxy profile
     gal = galsim.Gaussian(flux=gal_flux, sigma=gal_sigma)
-    logger.info('Made galaxy profile')
+    logger.debug('Made galaxy profile')
 
     # Define the PSF profile
     psf = galsim.Gaussian(flux=1., sigma=psf_sigma) # psf flux should always = 1
-    logger.info('Made PSF profile')
+    logger.debug('Made PSF profile')
 
     # Define the pixel size
-    # The pixels could be rectangles, but normally xw = yw = pixel_scale
-    pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
-    logger.info('Made pixel profile')
+    pix = galsim.Pixel(pixel_scale)
+    logger.debug('Made pixel profile')
 
     # Final profile is the convolution of these
     # Can include any number of things in the list, all of which are convolved 
     # together to make the final flux profile.
     final = galsim.Convolve([gal, psf, pix])
-    logger.info('Convolved components into final profile')
+    logger.debug('Convolved components into final profile')
 
     # Draw the image with a particular pixel scale
     image = final.draw(dx=pixel_scale)
-    logger.info('Made image of the profile')
+    logger.debug('Made image of the profile')
 
     # Add Gaussian noise to the image with specified sigma
     image.addNoise(galsim.GaussianDeviate(sigma=noise))
-    logger.info('Added Gaussian noise')
+    logger.debug('Added Gaussian noise')
 
     # Write the image to a file
     if not os.path.isdir('output'):
