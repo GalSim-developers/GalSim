@@ -281,19 +281,19 @@ instance are:
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1shear_1_1_shear.html}{\texttt{Shear}};
   Section~\ref{sect:shears}).  Commonly-used input conventions:
    \begin{itemize}
-  \item \texttt{obj.applyShear(g1, g2)} \\
+  \item \texttt{obj.applyShear(g1=g1, g2=g2)} \\
     apply the first (\texttt{g1}) and second (\texttt{g2}) component
     of a shear defined so that $|g| = (a - b) / (a + b)$ where $a$ and
     $b$ are the semi-major and semi-minor axes of an ellipse.
-   \item \texttt{obj.applyShear(e1, e2)} \\
+   \item \texttt{obj.applyShear(e1=e1, e2=e2)} \\
    apply the first (\texttt{e1}) and second (\texttt{e2}) component
     of a shear defined so that $|e| = (a^2 - b^2) / (a^2 + b^2)$ where $a$ and
     $b$ are the semi-major and semi-minor axes of an ellipse.
-   \item \texttt{obj.applyShear(g, beta)} \\
+   \item \texttt{obj.applyShear(g=g, beta=beta)} \\
    apply magnitude (\texttt{g}) and polar angle (\texttt{beta}) of a
    shear defined so that $|g| = (a - b) / (a + b)$ where $a$ and
     $b$ are the semi-major and semi-minor axes of an ellipse.
-   \item \texttt{obj.applyShear(e, beta)} \\
+   \item \texttt{obj.applyShear(e=e, beta=beta)} \\
     apply magnitude (\texttt{e}) and polar angle (\texttt{beta}) of a
    shear defined so that $|e| = (a^2 - b^2) / (a^2 + b^2)$ where $a$ and
     $b$ are the semi-major and semi-minor axes of an ellipse.
