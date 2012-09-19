@@ -638,10 +638,7 @@ RECURSIVE              = YES
 # excluded from the INPUT source files. This way you can easily exclude a
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = include/galsim/boost1_48_0/random \
-                       = include/galsim/boost1_48_0/random/detail \
-                       = include/galsim/boost1_48_0/config/no_tr1 \
-                       = include/galsim/boost1_48_0/pending \
+EXCLUDE                = include/galsim/boost1_48_0 \
                        = include/galsim/integ/MoreFunctional.h \
                        = include/galsim/Laguerre.h \
                        = include/galsim/integ/IntGKPData1.h \
