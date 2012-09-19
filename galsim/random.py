@@ -36,13 +36,10 @@ Seed the pseudo-random number generator.
 
 Multiple Calling Options
 ------------------------
->>> BaseDeviate.seed()
+>>> BaseDeviate.seed()         # Re-seed the PRNG using current time.
 
-Re-seed the PRNG using current time.
+>>> BaseDeviate.seed(lseed)    # Re-seed the PRNG using specified seed, where lseed is a long int.
 
->>> BaseDeviate.seed(lseed)
-
-Re-seed the PRNG using specified seed, where lseed is a long int.
 """
 
 _galsim.BaseDeviate.reset.__func__.__doc__ = """
@@ -50,18 +47,14 @@ Reset the pseudo-random number generator, severing connections to any other devi
 
 Multiple Calling Options
 ------------------------
->>> BaseDeviate.reset()
+>>> BaseDeviate.reset()        # Re-seed the PRNG using current time, and sever the connection to 
+                               # any other Deviate.
 
-Re-seed the PRNG using current time, and sever the connection to any other Deviate.
+>>> BaseDeviate.reset(lseed)   # Re-seed the PRNG using specified seed, where lseed is a long int, 
+                               # and sever the connection to any other Deviate.
 
->>> BaseDeviate.reset(lseed)
+>>> BaseDeviate.reset(dev)     # Re-connect this Deviate with the rng in another one supplied as dev.
 
-Re-seed the PRNG using specified seed, where lseed is a long int, and sever the connection to any 
-other Deviate.
-
->>> BaseDeviate.reset(dev)
-
-Re-connect this Deviate with the rng in another one supplied as dev.
 """
 
 
@@ -98,10 +91,11 @@ Add Uniform deviates to every element in a test test supplied Image.
 
 Calling
 -------
->>> UniformDeviate.applyTo(image)
+>>> UniformDeviate.applyTo(image)  
 
-On output each element of the input Image will have a pseudo-random UniformDeviate return value
+On output each element of the input Image will have a pseudo-random UniformDeviate return value 
 added to it.
+
 """
 _galsim.UniformDeviate.__call__.__func__.__doc__= "Draw a new random number from the distribution."
 
@@ -113,17 +107,14 @@ Pseudo-random number generator with Gaussian distribution.
 Initialization
 --------------
 
->>> g = GaussianDeviate(mean=0., sigma=1.)
+>>> g = GaussianDeviate(mean=0., sigma=1.)          # Initializes g to be a GaussianDeviate instance
+                                                    # using the current time for the seed.
 
-Initializes g to be a GaussianDeviate instance using the current time for the seed.
+>>> g = GaussianDeviate(lseed, mean=0., sigma=1.)   # Initializes g using the specified seed, where 
+                                                    # lseed is a long int.
 
->>> g = GaussianDeviate(lseed, mean=0., sigma=1.)
-
-Initializes g using the specified seed, where lseed is a long int.
-
->>> g = GaussianDeviate(dev, mean=0., sigma=1.)
-
-Initializes g to share the same underlying random number generator as dev.
+>>> g = GaussianDeviate(dev, mean=0., sigma=1.)     # Initializes g to share the same underlying 
+                                                    # random number generator as dev.
 
 Parameters:
 
@@ -153,6 +144,7 @@ Calling
 
 On output each element of the input Image will have a pseudo-random GaussianDeviate return value 
 added to it, with current values of mean and sigma.
+
 """
 
 _galsim.GaussianDeviate.__call__.__func__.__doc__ = """
@@ -176,17 +168,14 @@ where 0 <= value <= N giving number of heads.
 Initialization
 --------------
 
->>> b = BinomialDeviate(N=1., p=0.5)
+>>> b = BinomialDeviate(N=1., p=0.5)          # Initializes b to be a BinomialDeviate instance 
+                                              # using the current time for the seed.
 
-Initializes b to be a BinomialDeviate instance using the current time for the seed.
+>>> b = BinomialDeviate(lseed, N=1., p=0.5)   # Initializes b using the specified seed, where 
+                                              # lseed is a long int.
 
->>> b = BinomialDeviate(lseed, N=1., p=0.5)
-
-Initializes b using the specified seed, where lseed is a long int.
-
->>> b = BinomialDeviate(dev, N=1., p=0.5)
-
-Initializes b to share the same underlying random number generator as dev.
+>>> b = BinomialDeviate(dev, N=1., p=0.5)     # Initializes b to share the same underlying random 
+                                              # number generator as dev.
 
 Parameters:
 
@@ -212,10 +201,11 @@ Add Binomial deviates to every element in a supplied Image.
 
 Calling
 -------
->>> BinomialDeviate.applyTo(image)
+>>> BinomialDeviate.applyTo(image)    
 
 On output each element of the input Image will have a pseudo-random BinomialDeviate return value 
 added to it, with current values of N and p.
+
 """
 
 _galsim.BinomialDeviate.__call__.__func__.__doc__ = """
@@ -239,17 +229,14 @@ distribution is returned after each call.
 Initialization
 --------------
 
->>> p = PoissonDeviate(mean=1.)
+>>> p = PoissonDeviate(mean=1.)         # Initializes g to be a PoissonDeviate instance using the 
+                                        # current time for the seed.
 
-Initializes g to be a PoissonDeviate instance using the current time for the seed.
+>>> p = PoissonDeviate(lseed, mean=1.)  # Initializes g using the specified seed, where lseed is 
+                                        # a long int.
 
->>> p = PoissonDeviate(lseed, mean=1.)
-
-Initializes g using the specified seed, where lseed is a long int.
-
->>> p = PoissonDeviate(dev, mean=1.)
-
-Initializes g to share the same underlying random number generator as dev.
+>>> p = PoissonDeviate(dev, mean=1.)    # Initializes g to share the same underlying random number 
+                                        # generator as dev.
 
 Parameters:
 
@@ -302,17 +289,16 @@ model.
 Initialization
 --------------
 
->>> ccd_noise = CCDNoise(gain=1., read_noise=0.)
+>>> ccd_noise = CCDNoise(gain=1., read_noise=0.)         # Initializes ccd_noise to be a CCDNoise 
+                                                         # instance using the current time for the 
+                                                         # seed.
 
-Initializes ccd_noise to be a CCDNoise instance using the current time for the seed.
+>>> ccd_noise = CCDNoise(lseed, gain=1., read_noise=0.)  # Initializes ccd_noise to be a CCDNoise 
+                                                         # instance using the specified seed, where 
+                                                         # lseed is a long int.
 
->>> ccd_noise = CCDNoise(lseed, gain=1., read_noise=0.)
-
-Initializes ccd_noise to be a CCDNoise instance using the specified seed, where lseed is a long int.
-
->>> ccd_noise = CCDNoise(dev, gain=1., read_noise=0.)
-
-Initializes ccd_noise to share the same underlying random number generator as dev.
+>>> ccd_noise = CCDNoise(dev, gain=1., read_noise=0.)    # Initializes ccd_noise to share the same 
+                                                         # underlying random number generator as dev.
 
 Parameters:
 
@@ -365,17 +351,14 @@ deviates >= 0.
 Initialization
 --------------
 
->>> w = WeibullDeviate(a=1., b=1.)
+>>> w = WeibullDeviate(a=1., b=1.)         # Initializes w to be a WeibullDeviate instance using 
+                                           # the current time for the seed.
 
-Initializes w to be a WeibullDeviate instance using the current time for the seed.
+>>> w = WeibullDeviate(lseed, a=1., b=1.)  # Initializes w using the specified seed, where lseed 
+                                           # is a long int.
 
->>> w = WeibullDeviate(lseed, a=1., b=1.)
-
-Initializes w using the specified seed, where lseed is a long int.
-
->>> w = WeibullDeviate(dev, a=1., b=1.)
-
-Initializes w to share the same underlying random number generator as dev.
+>>> w = WeibullDeviate(dev, a=1., b=1.)    # Initializes w to share the same underlying random 
+                                           # number generator as dev.
 
 Parameters:
 
@@ -431,17 +414,14 @@ real-valued distribution producing deviates >= 0.
 Initialization
 --------------
 
->>> gam = GammaDeviate(alpha=1., beta=1.)
+>>> gam = GammaDeviate(alpha=1., beta=1.)         # Initializes gam to be a GammaDeviate instance 
+                                                  # using the current time for the seed.
 
-Initializes gam to be a GammaDeviate instance using the current time for the seed.
+>>> gam = GammaDeviate(lseed, alpha=1., beta=1.)  # Initializes gam using the specified seed, 
+                                                  # where lseed is a long int.
 
->>> gam = GammaDeviate(lseed, alpha=1., beta=1.)
-
-Initializes gam using the specified seed, where lseed is a long int.
-
->>> gam = GammaDeviate(dev alpha=1., beta=1.)
-
-Initializes gam to share the same underlying random number generator as dev.
+>>> gam = GammaDeviate(dev alpha=1., beta=1.)     # Initializes gam to share the same underlying 
+                                                  # random number generator as dev.
 
 Parameters:
 
@@ -497,17 +477,14 @@ distribution producing deviates >= 0.
 Initialization
 --------------
 
->>> chis = Chi2Deviate(n=1.)
+>>> chis = Chi2Deviate(n=1.)          # Initializes chis to be a Chi2Deviate instance using the 
+                                      # current time for the seed.
 
-Initializes chis to be a Chi2Deviate instance using the current time for the seed.
+>>> chis = Chi2Deviate(lseed, n=1.)   # Initializes chis using the specified seed, where lseed is 
+                                      # a long int.
 
->>> chis = Chi2Deviate(lseed, n=1.)
-
-Initializes chis using the specified seed, where lseed is a long int.
-
->>> chis = Chi2Deviate(dev, n=1.)
-
-Initializes chis to share the same underlying random number generator as dev.
+>>> chis = Chi2Deviate(dev, n=1.)     # Initializes chis to share the same underlying random number
+                                      # generator as dev.
 
 Parameters:
     n   number of degrees of freedom for the output distribution (default n = 1).
