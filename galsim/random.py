@@ -351,11 +351,6 @@ Parameters:
     read_noise  the read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.)
                 setting read_noise=0. will shut off the Gaussian noise [default `read_noise = 0.`].
 
-Calling
--------
-Taking the instance from the above examples, successive calls to ccd_noise() will generate noise 
-following this model.
-
 Methods
 -------
 To add deviates to every element of an image, see the docstring for the .applyTo() method of each
