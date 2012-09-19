@@ -145,6 +145,8 @@ class GSObject(object):
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
         are no longer available.
+
+        @param flux_ratio The factor by which to scale the flux.
         """
         self.SBProfile.scaleFlux(flux_ratio)
         self.__class__ = GSObject
@@ -156,6 +158,8 @@ class GSObject(object):
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
         are no longer available.
+
+        @param flux The new flux for the object.
         """
         self.SBProfile.setFlux(flux)
         self.__class__ = GSObject
@@ -174,6 +178,8 @@ class GSObject(object):
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
         are no longer available.
+
+        @param ellipse The galsim.Ellipse transformation to apply
         """
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
@@ -194,6 +200,8 @@ class GSObject(object):
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
         are no longer available.
+
+        @param scale The linear rescaling factor to apply.
         """
         old_flux = self.getFlux()
         self.applyTransformation(galsim.Ellipse(np.log(scale)))
@@ -214,12 +222,16 @@ class GSObject(object):
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
-        """
+
+        @param scale The linear rescaling factor to apply.
+       """
         self.applyTransformation(galsim.Ellipse(np.log(scale)))
        
     def applyShear(self, *args, **kwargs):
         """Apply a shear to this object, where arguments are either a galsim.Shear, or
         arguments that will be used to initialize one.
+
+        For more details about the allowed keyword arguments, see the documentation of galsim.Shear.
 
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
@@ -240,12 +252,14 @@ class GSObject(object):
         self.__class__ = GSObject
 
     def applyRotation(self, theta):
-        """Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
+        """Apply a rotation theta to this object.
            
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
         are no longer available.
+
+        @param theta Rotation angle (Angle object, +ve anticlockwise).
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
@@ -259,6 +273,9 @@ class GSObject(object):
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
         are no longer available.
+
+        @param dx Horizontal shift to apply (float).
+        @param dy Vertical shift to apply (float).
         """
         self.SBProfile.applyShift(dx,dy)
         self.__class__ = GSObject
@@ -271,6 +288,9 @@ class GSObject(object):
 
         Note that Ellipse objects can be initialized in a variety of ways (see documentation 
         of this class for details).
+
+        @param ellipse The galsim.Ellipse transformation to apply
+        @returns The transformed GSObject.
         """
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to createTransformed must be a galsim.Ellipse!")
@@ -287,6 +307,9 @@ class GSObject(object):
         This operation preserves flux.
         See createMagnified() for a version that preserves surface brightness, and thus 
         changes the flux.
+
+        @param scale The linear rescaling factor to apply.
+        @returns The rescaled GSObject.
         """
         ret = self.copy()
         old_flux = self.getFlux()
@@ -305,21 +328,29 @@ class GSObject(object):
         is also scaled by a factor of scale^2.
 
         See createDilated() for a version that preserves flux.
+
+        @param scale The linear rescaling factor to apply.
+        @returns The rescaled GSObject.
         """
         ret = self.copy()
         ret.applyTransformation(galsim.Ellipse(np.log(scale)))
         return ret
 
     def createSheared(self, *args, **kwargs):
-        """Returns a new GSObject by applying a shear, where arguments are either a
-        galsim.Shear or keyword arguments that can be used to create one.
+        """Returns a new GSObject by applying a shear, where arguments are either a galsim.Shear or
+        keyword arguments that can be used to create one.
+
+        For more details about the allowed keyword arguments, see the documentation of galsim.Shear.
         """
         ret = self.copy()
         ret.applyShear(*args, **kwargs)
         return ret
 
     def createRotated(self, theta):
-        """Returns a new GSObject by applying a rotation theta (Angle object, +ve anticlockwise).
+        """Returns a new GSObject by applying a rotation.
+
+        @param theta Rotation angle (Angle object, +ve anticlockwise).
+        @returns The rotated GSObject.
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
@@ -328,7 +359,11 @@ class GSObject(object):
         return ret
         
     def createShifted(self, dx, dy):
-        """Returns a new GSObject by applying a (dx, dy) shift.
+        """Returns a new GSObject by applying a shift.
+
+        @param dx Horizontal shift to apply (float).
+        @param dy Vertical shift to apply (float).
+        @returns The shifted GSObject.
         """
         ret = self.copy()
         ret.applyShift(dx, dy)
