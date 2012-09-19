@@ -29,6 +29,18 @@ generator.
 There is not much you can do with something that is only known to be a BaseDeviate rather than one
 of the derived classes other than construct it and change the seed, and use it as an argument to
 pass to other Deviate constructors.
+
+Example
+-------
+>>> rng = galsim.BaseDeviate(215324)
+>>> rng()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: 'BaseDeviate' object is not callable
+>>> ud = galsim.UniformDeviate(rng)
+>>> ud()
+0.58736140513792634
+
 """
 
 _galsim.BaseDeviate.seed.__func__.__doc__ = """
