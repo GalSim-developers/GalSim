@@ -138,7 +138,7 @@ class GSObject(object):
         return self.SBProfile.kValue(position)
 
     def scaleFlux(self, flux_ratio):
-        """Multiply the flux of the object by fluxRatio
+        """Multiply the flux of the object by flux_ratio
            
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
