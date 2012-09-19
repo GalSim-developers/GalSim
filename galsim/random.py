@@ -93,7 +93,7 @@ This docstring can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
 _galsim.UniformDeviate.applyTo.__func__.__doc__ = """
-Add Uniform deviates to every element in a test test supplied Image.
+Add Uniform deviates to every element in a supplied Image.
 
 Calling
 -------
