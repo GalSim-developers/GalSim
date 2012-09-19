@@ -7,8 +7,9 @@ from . import _galsim
 @brief A class to represent shears in a variety of ways.
 
 The python Shear class (galsim.Shear) can be initialized in a variety of ways to represent shape
-distortions. All arguments must be named.  Given semi-major and semi-minor axes a and b, we can
-define multiple shape measurements:
+distortions.  A shear is an operation that trasforms a circle into an ellipse of major and minor axis
+a and b, with orientation beta, while conserving the area.  Given the multiple definitions of 
+ellipticity, we have multiple definitions of shear:
 
 reduced shear |g| = (a - b)/(a + b)
 distortion |e| = (a^2 - b^2)/(a^2 + b^2)
@@ -25,7 +26,8 @@ Note: beta is _not_ the phase of a complex valued shear.
 Rather, the complex shear is g1 + i g2 = g exp(2 i beta).
 Likewise for eta or e.  Beta is twice the phase of the complex value.
 
-The following are all examples of valid calls to initialize a Shear object:
+The following are all examples of valid calls to initialize a Shear object.  All arguments must 
+be named:
 @code
 s = galsim.Shear() # empty constructor sets ellipticity/shear to zero
 s = galsim.Shear(g1=0.05, g2=0.05)
