@@ -1362,7 +1362,8 @@ class RealGalaxy(GSObject):
 # --- Compound GSObect classes: Add and Convolve ---
 
 class Add(GSObject):
-    """Base class for defining the python interface to the SBAdd C++ class.
+    """Base class for defining the python interface to the SBAdd C++ class (which is its SBProfile
+    attribute).
 
     Methods
     -------
@@ -1436,6 +1437,8 @@ class Convolve(GSObject):
     there are 2 profiles, both of which have hard edges.  In this case, we 
     automatically use real-space convolution.  In all other cases, the 
     default is to use the DFT algorithm.
+
+    The SBProfile attribute for the Convolve class is an SBConvolve.
     """
                     
     # --- Public Class methods ---
