@@ -73,15 +73,15 @@ Milestone tags
 --------------
 
 After every GalSim general milestone we tagged a snapshot of the code at that 
-moment, with the tag name "milestoneN" where N is the milestone number.
+moment, with the tag name `milestoneN` where N is the milestone number.
 
-You can see the available tags using the command "git tag -l" at terminal from 
+You can see the available tags using the command `git tag -l` at terminal from 
 within the repository.
 
 The version of the code at any given milestone can then be checked out using the
 tag name, e.g.:
 
-$ git checkout milestone2
+    $ git checkout milestone2
 
 This will then update your directory tree to the snapshot of the code at the 
 milestone requested.  (You will also get a message about being in a "detached" 
