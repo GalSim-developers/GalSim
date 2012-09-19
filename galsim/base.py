@@ -1403,7 +1403,7 @@ class Convolve(GSObject):
 
     The objects to be convolved may be provided either as multiple unnamed arguments
     (e.g. `Convolve(psf,gal,pix)`) or as a list (e.g. `Convolve([psf,gal,pix])`).
-    Any number of objects may be provided using either syntax.  (Even 0 or 1, although
+    Any number of objects >=1 may be provided using either syntax.  (Even 1, although
     that doesn't really make much sense.)
    
     The convolution will normally be done using discrete Fourier transforms of 
