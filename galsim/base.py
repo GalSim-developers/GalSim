@@ -124,7 +124,8 @@ class GSObject(object):
         determine real space values.  In this case, an SBError will be thrown at the C++ layer 
         (raises a RuntimeError in Python).
         
-        @param position  A 2D galsim.PositionD/I instance giving the position in real space.
+        @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in real
+        space.
         """
         return self.SBProfile.xValue(position)
 
