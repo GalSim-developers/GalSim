@@ -1,8 +1,9 @@
 @mainpage
-#GalSim: The modular galaxy image simulation toolkit
-----------------------------------------------------
 
-For installation instructions, please see the file INSTALL.md  
+# GalSim: The modular galaxy image simulation toolkit
+
+For installation instructions, please see the file INSTALL.md in the main
+repository directory. 
 
 There are tagged versions of the code corresponding to specific project 
 milestones and releases.  
@@ -13,8 +14,8 @@ best ones to try if you want a stable version with specific capabilities.
 (For more info on tags see the "Milestone tags" Section below and docs/git.txt)
 
 
-#How to get started
--------------------
+How to get started
+------------------
 
 1. We assume that all steps in `INSTALL.md` are complete.
 
@@ -28,8 +29,8 @@ alternatively view the documentation on GitHub at
 http://galsim-developers.github.com/GalSim/
 
 
-#Demonstration scripts
-----------------------
+Demonstration scripts
+---------------------
 
 Once these steps are completed, there are a number of scripts in `examples/` 
 that demonstrate how the code can be used.  These labelled `demo1.py`-`demo8.py`
@@ -39,8 +40,8 @@ capabilities to the software, further demo scripts will be added to `examples/`
 to illustrate and showcase what GalSim can do.
 
 
-#Reference documentation
-------------------------
+Reference documentation
+-----------------------
 
 For an overview of GalSim workflow and tools, please see 
 `doc/GalSim_Quick_Reference.pdf` in the GalSim repository.
@@ -49,8 +50,9 @@ For the Python GSObject classes used to describe astronomical objects, see
 galsim.base in the doxygen documentation.
 
 
-# Additional scripts
---------------------
+Additional scripts
+------------------
+
 While the demo scripts can be run from the command-line while sitting in
 `examples/` without any arguments, the remaining scripts are auxiliary utilities
 that take various command-line arguments, which are always explained in comments
@@ -67,7 +69,8 @@ elliptical Gaussian) for a FITS image.
 methods, given FITS images of the galaxy and PSF.
 
 
-# Milestone tags
+Milestone tags
+--------------
 
 After every GalSim general milestone we tagged a snapshot of the code at that 
 moment, with the tag name "milestoneN" where N is the milestone number.
