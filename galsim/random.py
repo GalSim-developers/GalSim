@@ -32,17 +32,18 @@ pass to other Deviate constructors.
 
 Example
 -------
->>> rng = galsim.BaseDeviate(215324)
->>> rng()
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-TypeError: 'BaseDeviate' object is not callable
->>> ud = galsim.UniformDeviate(rng)
->>> ud()
-0.58736140513792634
->>> ud2 = galsim.UniformDeviate(215324)
->>> ud2()
-0.58736140513792634
+
+    >>> rng = galsim.BaseDeviate(215324)    
+    >>> rng()
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    TypeError: 'BaseDeviate' object is not callable
+    >>> ud = galsim.UniformDeviate(rng)
+    >>> ud()
+    0.58736140513792634
+    >>> ud2 = galsim.UniformDeviate(215324)
+    >>> ud2()
+    0.58736140513792634
 
 """
 
@@ -51,6 +52,7 @@ Seed the pseudo-random number generator.
 
 Multiple Calling Options
 ------------------------
+
 >>> BaseDeviate.seed()         # Re-seed the PRNG using current time.
 
 >>> BaseDeviate.seed(lseed)    # Re-seed the PRNG using specified seed, where lseed is a long int.
@@ -62,6 +64,7 @@ Reset the pseudo-random number generator, severing connections to any other devi
 
 Multiple Calling Options
 ------------------------
+
 >>> BaseDeviate.reset()        # Re-seed the PRNG using current time, and sever the connection to 
                                # any other Deviate.
 
@@ -79,6 +82,7 @@ Pseudo-random number generator with uniform distribution in interval [0.,1.).
 
 Initialization
 --------------
+
 >>> u = UniformDeviate()       # Initializes u to be a UniformDeviate instance, and seeds the PRNG
                                # using current time.
 
@@ -93,11 +97,11 @@ Calling
 Taking the instance from the above examples, successive calls to u() then generate pseudo-random
 numbers distributed uniformly in the interval [0., 1.).
 
->>> u = UniformDeviate()
->>> u()
-0.35068059829063714
->>> u()            
-0.56841182382777333
+    >>> u = UniformDeviate()
+    >>> u()
+    0.35068059829063714
+    >>> u()            
+    0.56841182382777333
 
 Methods
 -------
@@ -112,7 +116,8 @@ Add Uniform deviates to every element in a supplied Image.
 
 Calling
 -------
->>> UniformDeviate.applyTo(image)  
+
+    >>> UniformDeviate.applyTo(image)  
 
 On output each element of the input Image will have a pseudo-random UniformDeviate return value 
 added to it.
@@ -149,11 +154,11 @@ Calling
 Taking the instance from the above examples, successive calls to g() then generate pseudo-random
 numbers which Gaussian-distributed with the provided mean, sigma.
 
->>> g = galsim.GaussianDeviate()
->>> g()
-1.398768034960607
->>> g()
--0.8456136323830128
+    >>> g = galsim.GaussianDeviate()
+    >>> g()
+    1.398768034960607
+    >>> g()
+    -0.8456136323830128
 
 Methods
 -------
@@ -169,7 +174,8 @@ Add Gaussian deviates to every element in a supplied Image.
 
 Calling
 -------
->>> GaussianDeviate.applyTo(image)
+
+    >>> GaussianDeviate.applyTo(image)
 
 On output each element of the input Image will have a pseudo-random GaussianDeviate return value 
 added to it, with current values of mean and sigma.
@@ -217,11 +223,11 @@ Calling
 Taking the instance from the above examples, successive calls to b() then generate pseudo-random
 numbers binomial-distributed with the provided N, p.
 
->>> b = galsim.BinomialDeviate()
->>> b()
-0
->>> b()
-1
+    >>> b = galsim.BinomialDeviate()
+    >>> b()
+    0
+    >>> b()
+    1
 
 Methods
 -------
@@ -237,7 +243,8 @@ Add Binomial deviates to every element in a supplied Image.
 
 Calling
 -------
->>> BinomialDeviate.applyTo(image)    
+
+    >>> BinomialDeviate.applyTo(image)    
 
 On output each element of the input Image will have a pseudo-random BinomialDeviate return value 
 added to it, with current values of N and p.
@@ -284,11 +291,11 @@ Calling
 Taking the instance from the above examples, successive calls to p() will return successive,
 pseudo-random Poisson deviates with specified mean.
 
->>> p = galsim.PoissonDeviate()
->>> p()
-1
->>> p()
-2
+    >>> p = galsim.PoissonDeviate()
+    >>> p()
+    1
+    >>> p()
+    2
 
 Methods
 -------
@@ -304,7 +311,8 @@ Add Poisson deviates to every element in a supplied Image.
 
 Calling
 -------
->>> PoissonDeviate.applyTo(image)
+
+    >>> PoissonDeviate.applyTo(image)
 
 On output each element of the input Image will have a pseudo-random PoissonDeviate return value 
 added to it, with current mean, and then that mean subtracted.  So the average  effect on each 
@@ -409,11 +417,11 @@ Calling
 Taking the instance from the above examples, successive calls to w() then generate pseudo-random 
 numbers Weibull-distributed with shape and scale parameters a and b.
 
->>> w = galsim.WeibullDeviate()
->>> w()
-2.152873075208731
->>> w()
-2.0826856212853846
+    >>> w = galsim.WeibullDeviate()
+    >>> w()
+    2.152873075208731
+    >>> w()
+    2.0826856212853846
 
 Methods
 -------
@@ -429,7 +437,8 @@ Add Weibull-distributed deviates to every element in a supplied Image.
 
 Calling
 -------
->>> WeibullDeviate.applyTo(image)
+
+    >>> WeibullDeviate.applyTo(image)
 
 On output each element of the input Image will have a pseudo-random WeibullDeviate return value 
 added to it, with current values of a and b.
@@ -476,11 +485,11 @@ Calling
 Taking the instance from the above examples, successive calls to g() will return successive, 
 pseudo-random Gamma-distributed deviates with shape and scale parameters alpha and beta. 
 
->>> gam = galsim.GammaDeviate()
->>> gam()
-0.020092014608829315
->>> gam()
-0.5062533114685395
+    >>> gam = galsim.GammaDeviate()
+    >>> gam()
+    0.020092014608829315
+    >>> gam()
+    0.5062533114685395
 
 Methods
 -------
@@ -496,7 +505,8 @@ Add Gamma-distributed deviates to every element in a supplied Image.
 
 Calling
 -------
->>> GammaDeviate.applyTo(image)
+
+    >>> GammaDeviate.applyTo(image)
 
 On output each element of the input Image will have a pseudo-random GammaDeviate return value added
 to it, with current values of alpha and beta.
@@ -541,11 +551,11 @@ Calling
 Taking the instance from the above examples, successive calls to g() will return successive, 
 pseudo-random Chi^2-distributed deviates with degrees-of-freedom parameter n.
 
->>> chis = galsim.Chi2Deviate()
->>> chis()
-0.35617890086874854
->>> chis()
-0.17269982670901735
+    >>> chis = galsim.Chi2Deviate()
+    >>> chis()
+    0.35617890086874854
+    >>> chis()
+    0.17269982670901735
 
 Methods
 -------
@@ -561,7 +571,8 @@ Add Chi^2-distributed deviates to every element in a supplied Image.
 
 Calling
 -------
->>> Chi2Deviate.applyTo(image)
+
+    >>> Chi2Deviate.applyTo(image)
 
 On output each element of the input Image will have a pseudo-random Chi2Deviate return value added 
 to it, with current degrees-of-freedom parameter n.
