@@ -31,27 +31,30 @@ class PowerSpectrum(object):
     users for the code to have a "unit" class that handles conversions between the various units
     that one might use, then future versions of GalSim might be updated to include this
     functionality.
+
+    When creating a PowerSpectrum instance, the E and B mode power spectra can optionally be set at
+    initialization or later on with the method set_power_functions.  Note that the power spectra can
+    be ones provided in galsim.lensing (currently just a few simple power laws), or they can be
+    user-provided functions that take a single argument k and return the power at that k value.
+    They should be power P(k), not Delta^2(k) = k^2 P(k) / 2pi.
+
+    Parameters
+    ----------
+
+    @param[in] E_power_function A function or other callable that accepts a grid of |k| values, and
+                                returns the E-mode power spectrum P_E(|k|).  It should cope happily with
+                                |k|=0.  The function should return the power spectrum desired in the
+                                E (gradient) mode of the image.
+    @param[in] B_power_function A function or other callable that accepts a grid of |k| values, and
+                                returns the B-mode power spectrum P_B(|k|).  It should cope happily with
+                                |k|=0.  The function should return the power spectrum desired in the
+                                B (curl) mode of the image.
+    @param[in] units            A string specifying the units for the power spectrum.  This string is not
+                                used in any calculations, but is saved for later information.
+                                Currently we require a value of "arcsec", so the user must do any
+                                necessary conversions to ensure that this is the case.
     """
     def __init__(self, E_power_function=None, B_power_function=None, units="arcsec"):
-        """@brief Create a PowerSpectrum object corresponding to specific P(k) for E, B modes
-
-        When creating a PowerSpectrum instance, the E and B mode power spectra can optionally be set
-        at initialization or later on with the method set_power_functions.  Note that the power
-        spectra can be ones provided in galsim.lensing (currently just a few simple power laws), or
-        they can be user-provided functions that take a single argument k and return the power at
-        that k value.  They should be power P(k), not Delta^2(k) = k^2 P(k) / 2pi.
-
-        @param[in] E_power_function A function or other callable that accepts a 2D numpy grid of 
-        |k| and returns the E-mode power spectrum of the same shape.  It should cope happily with 
-        k=0.  The function should return the power spectrum desired in the E (gradient) mode of 
-        the image
-        @param[in] B_power_function A function or other callable that can take an array of k values
-        and return a power.  It should cope happily with k=0.  The function should return the power
-        spectrum desired in the B (curl) mode of the image
-        @param[in] units A string specifying the units for the power spectrum.  This string is not
-        used in any calculations, but is saved for later information.  Currently we require a value
-        of "arcsec", so the user must do any necessary conversions to ensure that this is the case.
-        """
         self.p_E = E_power_function
         self.p_B = B_power_function
         if units is not "arcsec":
@@ -201,25 +204,26 @@ class PowerSpectrum(object):
 class PowerSpectrumRealizer(object):
     """@brief Class for generating realizations of power spectra with any area and pixel size.
     
-    Designed to quickly generate many realizations of the same shear power spectra on a square grid.
+    This class is designed to quickly generate many realizations of the same shear power spectra on
+    a square grid.  The initializer sets up the grids in k-space and computes the power on them.  It
+    also computes spin weighting terms.  You can alter any of the setup properties later.
+
+    Parameters
+    ----------
+    @param[in] nx The x-dimension of the desired image
+    @param[in] ny The y-dimension of the desired image
+    @param[in] pixel_size The size of the pixel sides, in units consistent with the units
+                          expected by the power spectrum functions
+    @param[in] E_power_function A function or other callable that can take an array of k values
+                                and return a power.  It should cope happily with k=0.  The function
+                                should return the power spectrum desired in the E (gradient) mode of
+                                the image.
+    @param[in] B_power_function A function or other callable that can take an array of k values
+                                and return a power.  It should cope happily with k=0.  The function
+                                should return the power spectrum desired in the B (curl) mode of the
+                                image.
     """
     def __init__(self, nx, ny, pixel_size, E_power_function, B_power_function):
-        """@brief Create a Realizer object from image dimensions and power spectrum functions
-        
-        The initializer sets up the grids in k-space and computes the power on them.
-        It also computes spin weighting terms.  You can alter any of the setup properties later.
-        
-        @param[in] nx The x-dimension of the desired image
-        @param[in] ny The y-dimension of the desired image
-        @param[in] pixel_size The size of the pixel sides, in units consistent with the units
-        expected by the power spectrum functions
-        @param[in] E_power_function A function or other callable that can take an array of k values
-        and return a power.  It should cope happily with k=0.  The function should return the power
-        spectrum desired in the E (gradient) mode of the image
-        @param[in] B_power_function A function or other callable that can take an array of k values
-        and return a power.  It should cope happily with k=0.  The function should return the power
-        spectrum desired in the B (curl) mode of the image
-        """
         self.set_size(nx, ny, pixel_size, False)
         self.set_power(E_power_function, B_power_function)
         
