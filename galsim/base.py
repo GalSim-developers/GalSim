@@ -439,7 +439,7 @@ class GSObject(object):
 
         @param gain  The number of ADU to place on the image per photon.  (Default = 1)
 
-        @param uniform_deviate  If provided, a UniformDeviate to use for the random numbers
+        @param uniform_deviate  If provided, a UniformDeviate to use for the random numbers.
                                 If uniform_deviate=None, one will be automatically created, 
                                 using the time as a seed.
                                 (Default = None)
