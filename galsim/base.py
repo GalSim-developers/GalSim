@@ -1240,10 +1240,11 @@ class DeVaucouleurs(GSObject):
 class RealGalaxy(GSObject):
     """Class describing real galaxies from some training dataset.
 
-    This class uses a catalog describing galaxies in some training data to read in data about
-    realistic galaxies that can be used for simulations based on those galaxies.  Also included in
-    the class is additional information that might be needed to make or interpret the simulations,
-    e.g., the noise properties of the training data.
+    This class uses a catalog describing galaxies in some training data (for more details, see the
+    RealGalaxyCatalog documentation) to read in data about realistic galaxies that can be used for
+    simulations based on those galaxies.  Also included in the class is additional information that
+    might be needed to make or interpret the simulations, e.g., the noise properties of the training
+    data.
 
     Initialization
     --------------
