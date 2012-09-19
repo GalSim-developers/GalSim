@@ -87,7 +87,8 @@ class GSObject(object):
         return self.SBProfile.stepK()
 
     def hasHardEdges(self):
-        """Returns True if there are any hard edges in the profile.
+        """Returns True if there are any hard edges in the profile, which would require very small k
+        spacing when working in the Fourier domain.
         """
         return self.SBProfile.hasHardEdges()
 
@@ -165,7 +166,7 @@ class GSObject(object):
         Ellipse objects can be initialized in a variety of ways (see documentation of this
         class for details).
 
-        Note: if the ellipse includes a dilation, then this transformation will 
+        Note: if the ellipse includes a dilation, then this transformation will
         not be flux-conserving.  It conserves surface brightness instead.
         Thus, the flux will increase by the increase in area = dilation^2.
 
