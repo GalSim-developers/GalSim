@@ -143,8 +143,8 @@ Methods
 To add deviates to every element of an image, see the docstring for the .applyTo() method of each
 instance.
 
-To get and set the deviate parameters, see the docstrings for the .getN(), .setN(), .getSigma() and
-.setSigma() methods of each instance.
+To get and set the deviate parameters, see the docstrings for the .getMean(), .setMean(), 
+.getSigma() and .setSigma() methods of each instance.
 """
 
 _galsim.GaussianDeviate.applyTo.__func__.__doc__ = """
