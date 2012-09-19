@@ -119,9 +119,9 @@ class GSObject(object):
     def xValue(self, position):
         """Returns the value of the object at a chosen 2D position in real space.
         
-        As in SBProfile, this function assumes all are real-valued.  xValue() may not be
-        implemented for derived classes (e.g. SBConvolve) that require an Discrete Fourier Transform
-        to determine real space values.  In this case, an SBError will be thrown at the C++ layer 
+        As in SBProfile, this function assumes all are real-valued.  xValue() may not be implemented
+        for derived classes (e.g. SBConvolve) that require an Discrete Fourier Transform to 
+        determine real space values.  In this case, an SBError will be thrown at the C++ layer 
         (raises a RuntimeError in Python).
         
         @param position  A 2D galsim.PositionD/I instance giving the position in real space.
@@ -694,15 +694,18 @@ class Moffat(GSObject):
 
 
 class AtmosphericPSF(GSObject):
-    """Base class for long exposure Kolmogorov PSF.
+    """Base class for long exposure Kolmogorov PSF.  Currently deprecated: use Kolmogorov.
 
     Initialization
     --------------
     
-        atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolant=None, oversampling=1.5)
+        >>> atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolant=None, oversampling=1.5)
     
 
-    Initializes atmospheric_psf as a galsim.AtmosphericPSF() instance.
+    Initializes atmospheric_psf as a galsim.AtmosphericPSF() instance.  This class is currently
+    deprecated in favour of the newer Kolmogorov class which does not require grid FFTs.  However,
+    it is retained as a placeholder for a future AtmosphericPSF which will model the turbulent
+    atmosphere stochastically.
 
     @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
                            consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
