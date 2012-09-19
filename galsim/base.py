@@ -160,7 +160,7 @@ class GSObject(object):
         self.__class__ = GSObject
 
     def applyTransformation(self, ellipse):
-        """Apply a galsim.ellipse.Ellipse distortion to this object.
+        """Apply a galsim.Ellipse distortion to this object.
            
         Ellipse objects can be initialized in a variety of ways (see documentation of this
         class for details).
