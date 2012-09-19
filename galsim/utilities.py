@@ -107,7 +107,13 @@ class AttributeDict(object):
         return len(self.__dict__)
 
 def rand_arr(shape, deviate):
-    """@brief Function to make a 2d array of random deviates (of any sort)
+    """@brief Function to make a 2d array of random deviates (of any sort).
+
+    @param shape A list of length 2, indicating the desired 2d array dimensions
+    @param deviate Any GalSim deviate (see random.py) such as UniformDeviate, GaussianDeviate,
+    etc. to be used to generate random numbers
+    @returns A Numpy array of the desired dimensions with random numbers generated using the
+    supplied deviate.
     """
     if len(shape) is not 2:
         raise ValueError("Can only make a 2d array from this function!")
@@ -118,6 +124,11 @@ def rand_arr(shape, deviate):
 
 def eval_sbinterpolatedimage(sbi, x_list, y_list):
     """@brief Function to get the value of some SBInterpolatedImage at a list of positions.
+
+    @param sbi An SBInterpolatedImage on which we want to carry out the interpolation.
+    @param x_list A list of the x values at which we want to do the interpolation.
+    @param y_list A list of the y values at which we awnt to do the interpolation.
+    @returns A list of the image values at the desired (x, y) positions.
     """
     if len(x_list) != len(y_list):
         raise RuntimeError("x and y list lengths must match!")
