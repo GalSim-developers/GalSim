@@ -934,12 +934,12 @@ class Kolmogorov(GSObject):
         return self.SBProfile.getLamOverR0()
     
     def getFWHM(self):
-        """Return the FWHM of this Kolmogorov profile
+        """Return the FWHM of this Kolmogorov profile.
         """
         return self.SBProfile.getLamOverR0() * Kolmogorov._fwhm_factor
 
     def getHalfLightRadius(self):
-        """Return the half light radius of this Kolmogorov profile
+        """Return the half light radius of this Kolmogorov profile.
         """
         return self.SBProfile.getLamOverR0() * Kolmogorov._hlr_factor
 
