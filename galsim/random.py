@@ -42,7 +42,7 @@ Re-seed the PRNG using current time.
 
 >>> BaseDeviate.seed(lseed)
 
-Re-seed the PRNG using specified seed.
+Re-seed the PRNG using specified seed, where lseed is a long int.
 """
 
 _galsim.BaseDeviate.reset.__func__.__doc__ = """
@@ -56,7 +56,8 @@ Re-seed the PRNG using current time, and sever the connection to any other Devia
 
 >>> BaseDeviate.reset(lseed)
 
-Re-seed the PRNG using specified seed, and sever the connection to any other Deviate.
+Re-seed the PRNG using specified seed, where lseed is a long int, and sever the connection to any 
+other Deviate.
 
 >>> BaseDeviate.reset(dev)
 
@@ -118,7 +119,7 @@ Initializes g to be a GaussianDeviate instance using the current time for the se
 
 >>> g = GaussianDeviate(lseed, mean=0., sigma=1.)
 
-Initializes g using the specified seed.
+Initializes g using the specified seed, where lseed is a long int.
 
 >>> g = GaussianDeviate(dev, mean=0., sigma=1.)
 
@@ -181,7 +182,7 @@ Initializes b to be a BinomialDeviate instance using the current time for the se
 
 >>> b = BinomialDeviate(lseed, N=1., p=0.5)
 
-Initializes b using the specified seed.
+Initializes b using the specified seed, where lseed is a long int.
 
 >>> b = BinomialDeviate(dev, N=1., p=0.5)
 
@@ -244,7 +245,7 @@ Initializes g to be a PoissonDeviate instance using the current time for the see
 
 >>> p = PoissonDeviate(lseed, mean=1.)
 
-Initializes g using the specified seed.
+Initializes g using the specified seed, where lseed is a long int.
 
 >>> p = PoissonDeviate(dev, mean=1.)
 
@@ -307,7 +308,7 @@ Initializes ccd_noise to be a CCDNoise instance using the current time for the s
 
 >>> ccd_noise = CCDNoise(lseed, gain=1., read_noise=0.)
 
-Initializes ccd_noise to be a CCDNoise instance using the specified seed.
+Initializes ccd_noise to be a CCDNoise instance using the specified seed, where lseed is a long int.
 
 >>> ccd_noise = CCDNoise(dev, gain=1., read_noise=0.)
 
@@ -370,7 +371,7 @@ Initializes w to be a WeibullDeviate instance using the current time for the see
 
 >>> w = WeibullDeviate(lseed, a=1., b=1.)
 
-Initializes w using the specified seed.
+Initializes w using the specified seed, where lseed is a long int.
 
 >>> w = WeibullDeviate(dev, a=1., b=1.)
 
@@ -436,7 +437,7 @@ Initializes gam to be a GammaDeviate instance using the current time for the see
 
 >>> gam = GammaDeviate(lseed, alpha=1., beta=1.)
 
-Initializes gam using the specified seed.
+Initializes gam using the specified seed, where lseed is a long int.
 
 >>> gam = GammaDeviate(dev alpha=1., beta=1.)
 
@@ -502,7 +503,7 @@ Initializes chis to be a Chi2Deviate instance using the current time for the see
 
 >>> chis = Chi2Deviate(lseed, n=1.)
 
-Initializes chis using the specified seed.
+Initializes chis using the specified seed, where lseed is a long int.
 
 >>> chis = Chi2Deviate(dev, n=1.)
 
