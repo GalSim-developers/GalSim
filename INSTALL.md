@@ -54,17 +54,22 @@ The GalSim package also requires
 * the astronomical FITS file input/output module PyFITS
   (http://www.stsci.edu/institute/software_hardware/pyfits)
 
-* the Python YAML parser and emitter module PyYAML
+* Optional dependency: the Python YAML parser and emitter module PyYAML
   (http://pyyaml.org/wiki/PyYAML)
   Note: PyYAML is in fact only required for full config file parsing
   functionality, and can be ommitted if users are happy to use JSON-style
   config parsing
+
+* Optional dependency: the scientific Python module SciPy
+  (http://www.scipy.org).  SciPy is only required for generation of
+  shears due to an NFW halo.
 
 These should installed onto your Python system so that they can be imported by:
 
     >>> import numpy
     >>> import pyfits
     >>> import yaml [ if using PyYAML ]
+    >>> import scipy [ if generating shears according to an NFW halo ]
 
 within Python.  You can test this by loading up the Python interpreter for the
 version of Python you will be using with the GalSim toolkit. This is usually
