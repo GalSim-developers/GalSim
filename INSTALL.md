@@ -57,8 +57,8 @@ The GalSim package also requires
 * the Python YAML parser and emitter module PyYAML
   (http://pyyaml.org/wiki/PyYAML)
   Note: PyYAML is in fact only required for full config file parsing
-  functionality, and can be ommitted if users are happy to use JSON-style
-  config parsing
+  functionality, and can be omitted if users are happy to use JSON-style
+  config parsing or prefer to write python scripts directly.
 
 These should installed onto your Python system so that they can be imported by:
 
@@ -94,7 +94,7 @@ for more details about the extremely useful `easy_install` feature.
 
 There are a number of third party-maintained packages which bundle Python with
 many of the numerical and scientific libraries that are commonly used, and
-many of these are free for non-commericial or academic use.
+many of these are free for non-commercial or academic use.
 
 One good example of such a package, which includes all of the Python
 dependencies required by GalSim (NumPy, PyFITS, PyYAML as well as SCons and
@@ -111,7 +111,7 @@ way this will happen if there is already an older build (e.g. Python 2.4.X)
 being used by the operating system and then you install a newer version from
 one of the sources described above.
 
-It will be important to make sure that the version of Python for which Numpy,
+It will be important to make sure that the version of Python for which NumPy,
 PyFITS and PyYAML etc. are installed is also the one being used for GalSim,
 and that this is the one *you* want to use GalSim from! Knowing which installed
 version of Python will be used is also important for the installation of the 
@@ -201,11 +201,11 @@ Note: if you do not want to install everything related to Boost (which takes a
 while), you can restrict to Boost Python and math by using `--with-python`
 `--with-math` on the `./b2` commands.  Currently we are only using Boost Python,
 but there may be parts of the math library we want to use so installing these
-two will likely be sufficient for the forseeable future.
+two will likely be sufficient for the foreseeable future.
 
 Once you have installed Boost, you can check that it links to the version of
-Python that will be used for GalSim and on which you have installed Numpy and
-Pyfits by typing
+Python that will be used for GalSim and on which you have installed NumPy and
+PyFITS by typing
 
     ldd <YOUR_BOOST_LIB_DIR>/libboost_python<POSSIBLE_SUFFIX>.so (Linux)
     otool -L <YOUR_BOOST_LIB_DIR>/libboost_python<POSSIBLE_SUFFIX>.dylib (OSX)
@@ -434,7 +434,7 @@ from fink:
 
 If you want to use the system python, or some other version, then the fink 
 python installations will not work.  You will need to manually install
-numpy, pyFits, pyYaml and nose, for example using easy_install, with your 
+NumPy, PyFITS, PyYAML and nose, for example using easy_install, with your
 chosen Python. 
 
 For the system python, you can use fink for Boost, but you will want a 
@@ -454,12 +454,15 @@ is not supported but can be easily installed by following the instructions
 in Section 1.iv).
 
 Note that when using MacPorts to install Boost, you may need to explicitly
-indicate Boost.Python, for example
+indicate Boost.Python.  Furthermore, some users have had problems due
+to a recently-fixed Macports bug, so the following sequence of
+commands should be used to update Macports (avoiding the buggy
+version) and install all dependencies that are available on Macports:
 
+    sudo port selfupdate
+    sudo port upgrade outdated
+    sudo port install scons fftw-3 python27 py27-nose py27-numpy py27-pyfits py27-yaml
     sudo port install boost +python27
-
-As with fink, you may still need to install NumPy and PyFITS manually, e.g.
-using easy_install, with your chosen Python.
 
 # 5. More SCons options
 ***
@@ -545,7 +548,7 @@ You can list these options from the command line with
    libraries in addition to the standard locations such as `/usr/lib` and 
    `/usr/local/lib`.  These directories are specified as `-L` flags to the 
    linker. If you are giving multiple directories, they should be separated by 
-   colons.
+   colons.  Sometimes, both EXTRA_LIB_PATH and EXTRA_LIBS need to be specified.
 
 * `EXTRA_PATH` ('') specifies directories in which to search for executables
    (notably the compiler, although you can also just give the full path in the 
