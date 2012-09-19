@@ -39,6 +39,12 @@ def kxky(array_shape=(256, 256)):
 
 def g1g2_to_e1e2(g1, g2):
     """@brief Convenience function for going from (g1, g2) -> (e1, e2).
+
+    Here g1 and g2 are reduced shears, and e1 and e2 are distortions - see shear.py for definitions
+    of reduced shear and distortion in terms of axis ratios or other ways of specifying ellipses.
+    @param g1  First reduced shear component (along pixel axes)
+    @param g2  Second reduced shear component (at 45 degrees with respect to image axes)
+    @returns The corresponding distortions, e1 and e2.
     """
     # Conversion:
     # e = (a^2-b^2) / (a^2+b^2)
