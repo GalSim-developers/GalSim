@@ -214,7 +214,10 @@ PyFITS by typing
 `ls -l <YOUR_BOOST_LIB_LOCATION>/libboost_python*` may show the version of
 libboost_python.so linked to, for example, `libboost_python_py26.so.1.40.0`.
 In such a case you can tell both the Python and Boost versions being used, 2.6
-and `1.40.0`, respectively, in this example.)
+and `1.40.0`, respectively, in this example.)  On some Linux systems,
+ldd will not indicate the Python library against which boost was
+compiled; in this case, continue with the installation procedure and
+any issues will be revealed at a later stage.
 
 If the Python library listed is the one you will be using, all is well. If not,
 Boost can be forced to use a different version by specifying the following
