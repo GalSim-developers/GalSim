@@ -64,14 +64,18 @@ class PowerSpectrum(object):
         """@brief Set / change the functions that compute the E and B mode power spectra.
 
         @param[in] E_power_function A function or other callable that accepts a 2D numpy grid of |k|
-        and returns the E-mode power spectrum of the same shape.  It should cope happily with k=0.
-        Set to None for there to be no E-mode power.
+                                    and returns the E-mode power spectrum of the same shape.  It
+                                    should cope happily with k=0. Set to None for there to be no
+                                    E-mode power.
         @param[in] B_power_function A function or other callable that accepts a 2D numpy grid of |k|
-        and returns the B-mode power spectrum of the same shape.  It should cope happily with k=0.
-        Set to None for there to be no B-mode power
-        @param[in] units A string specifying the units for the power spectrum.  This string is not
-        used in any calculations, but is saved for later information.  Currently we require a value
-        of "arcsec", so the user must do any necessary conversions to ensure that this is the case.
+                                    and returns the B-mode power spectrum of the same shape.  It
+                                    should cope happily with k=0. Set to None for there to be no
+                                    B-mode power.
+        @param[in] units            A string specifying the units for the power spectrum.  This
+                                    string is not used in any calculations, but is saved for later
+                                    information.  Currently we require a value of "arcsec", so the
+                                    user must do any necessary conversions to ensure that this is
+                                    the case.
         """
         self.p_E = E_power_function
         self.p_B = B_power_function
@@ -142,19 +146,21 @@ class PowerSpectrum(object):
         @endcode
         where we assume a minimum x and y value of zero for the grid.
 
-        @param[in] x List of x positions (it is up to the user to check that the units are
-        consistent with those in the P(k) function, just as for the y and grid_spacing keywords)
-        @param[in] y List of y positions
-        @param[in] grid_spacing Spacing for an evenly spaced grid of points, in arcsec for
-        consistency with the natural length scale of images created using the draw or drawShoot
-        methods
-        @param[in] grid_nx Number of grid points in the x dimension
+        @param[in] x                List of x positions (it is up to the user to check that the
+                                    units are consistent with those in the P(k) function, just as
+                                    for the y and grid_spacing keywords)
+        @param[in] y                List of y positions
+        @param[in] grid_spacing     Spacing for an evenly spaced grid of points, in arcsec for
+                                    consistency with the natural length scale of images created
+                                    using the draw or drawShoot methods
+        @param[in] grid_nx          Number of grid points in the x dimension
         @param[in] gaussian_deviate (Optional) A galsim.GaussianDeviate object for drawing the
-        random numbers.  (If this is a BaseDeviate class other than GaussianDeviate, that's
-        fine too.)
-        @param[in] interpolantxy (Optional) Interpolant to use for interpolating the shears on a
-        grid to the requested positions [default = galsim.InterpolantXY(galsim.Linear())].
-        @return g1,g2 Two Numpy arrays for the two shear components g_1 and g_2
+                                    random numbers.  (If this is a BaseDeviate class other than
+                                    GaussianDeviate, that's fine too.)
+        @param[in] interpolantxy    (Optional) Interpolant to use for interpolating the shears on a
+                                    grid to the requested positions [default =
+                                    galsim.InterpolantXY(galsim.Linear())].
+        @return g1,g2               Two Numpy arrays for the two shear components g_1 and g_2
         """
 
         # check input values for all keywords
@@ -230,12 +236,12 @@ class PowerSpectrumRealizer(object):
     def set_size(self, nx, ny, pixel_size, remake_power=True):
         """@brief Change the size of the array you want to simulate.
         
-        @param[in] nx The x-dimension of the desired image
-        @param[in] ny The y-dimension of the desired image
-        @param[in] pixel_size The size of the pixel sides, in units consistent with the units
-        expected by the power spectrum functions
+        @param[in] nx           The x-dimension of the desired image
+        @param[in] ny           The y-dimension of the desired image
+        @param[in] pixel_size   The size of the pixel sides, in units consistent with the units
+                                expected by the power spectrum functions.
         @param[in] remake_power Whether to re-build the power spectra on the new grids.  Set this to
-        False if you are about to change the power spectrum functions too
+                                False if you are about to change the power spectrum functions too.
         
         """
         # Set up the k grids in x and y, and the instance variables
@@ -262,9 +268,11 @@ class PowerSpectrumRealizer(object):
         This function re-generates the grids that the power spectrum is computed over.
         
         @param[in] p_E A function or other callable that accepts a 2D numpy grid of |k| and returns
-        the E-mode power spectrum of the same shape.  Set to None for there to be no E-mode power
+                       the E-mode power spectrum of the same shape.  Set to None for there to be no
+                       E-mode power.
         @param[in] p_B A function or other callable that accepts a 2D numpy grid of |k| and returns
-        the B-mode power spectrum of the same shape.  Set to None for there to be no B-mode power
+                       the B-mode power spectrum of the same shape.  Set to None for there to be no
+                       B-mode power.
         
         """
         self.p_E = p_E
@@ -279,14 +287,15 @@ class PowerSpectrumRealizer(object):
     def __call__(self, new_power=False, gaussian_deviate=None):
         """@brief Generate a realization of the current power spectrum.
         
-        @param[in] new_power If the power-spectrum functions that you specified are not
-        deterministic then you can set this value to True to call them again to get new values.
-        For example, you could include a cosmic variance term in your power spectrum and get a new
-        spectrum realization each time.
+        @param[in] new_power        If the power-spectrum functions that you specified are not
+                                    deterministic then you can set this value to True to call them
+                                    again to get new values.  For example, you could include a
+                                    cosmic variance term in your power spectrum and get a new
+                                    spectrum realization each time.
         @param[in] gaussian_deviate (Optional) gaussian deviate to use when generating the shear
-        fields
+                                    fields.
         
-        @return g1,g2 Two image arrays for the two shear components g_1 and g_2
+        @return g1,g2               Two image arrays for the two shear components g_1 and g_2
         """
         ISQRT2 = np.sqrt(1.0/2.0)
 
@@ -449,10 +458,10 @@ class NFWHalo(object):
     def __init__(self, mass=1e15, conc=4, z=0.3, pos_x=0, pos_y=0, cosmo=Cosmology()):
         """@brief Create NFW halo.
 
-        @param[in] mass Mass defined using a spherical overdensity of 200 times the critical density
-                        of the universe, in units of M_solar/h.
-        @param[in] conc Concentration parameter, i.e., ratio of virial radius to NFW scale radius
-        @param[in] z Redshift
+        @param[in] mass  Mass defined using a spherical overdensity of 200 times the critical density
+                         of the universe, in units of M_solar/h.
+        @param[in] conc  Concentration parameter, i.e., ratio of virial radius to NFW scale radius
+        @param[in] z     Redshift
         @param[in] pos_x X-coordinate [arcsec]
         @param[in] pos_y Y-coordinate [arcsec]
         @param[in] cosmo A Cosmology instance
@@ -513,8 +522,8 @@ class NFWHalo(object):
     def __kappa(self, x, ks, out=None):
         """@brief Calculate convergence of halo.
 
-        @param[in] x Radial coordinate in units of r/rs (normalized to scale radius of halo)
-        @param[in] ks Lensing strength prefactor
+        @param[in] x   Radial coordinate in units of r/rs (normalized to scale radius of halo)
+        @param[in] ks  Lensing strength prefactor
         @param[in] out Numpy array into which results should be placed
         """
         # convenience: call with single number
@@ -547,8 +556,8 @@ class NFWHalo(object):
     def __gamma(self, x, ks, out=None):
         """@brief Calculate tangential shear of halo.
 
-        @param[in] x Radial coordinate in units of r/rs (normalized to scale radius of halo)
-        @param[in] ks Lensing strength prefactor
+        @param[in] x   Radial coordinate in units of r/rs (normalized to scale radius of halo)
+        @param[in] ks  Lensing strength prefactor
         @param[in] out Numpy array into which results should be placed
         """
         # convenience: call with single number
@@ -590,15 +599,15 @@ class NFWHalo(object):
     def getShear(self, pos_x, pos_y, z_s, units='arcsec', reduced=True):
         """@brief Calculate (reduced) shear of halo at specified positions
 
-        @param[in] pos_x X-coordinate(s) of the source, input as a numpy array. This is assumed to
-                         be post-lensing!
-        @param[in] pos_y Y-coordinate(s) of the source, input as a numpy array. This is assumed to
-                         be post-lensing!
-        @param[in] z_s Source redshift(s)
-        @param[in] units Units of coordinates (only arcsec implemented so far).
+        @param[in] pos_x   X-coordinate(s) of the source, input as a numpy array. This is assumed to
+                           be post-lensing!
+        @param[in] pos_y   Y-coordinate(s) of the source, input as a numpy array. This is assumed to
+                           be post-lensing!
+        @param[in] z_s     Source redshift(s)
+        @param[in] units   Units of coordinates (only arcsec implemented so far).
         @param[in] reduced Whether reduced shears are returned
-        @return g1,g2 Numpy arrays containing the two shear components g_1 and g_2 at the specified
-                      position(s)
+        @return g1,g2      Numpy arrays containing the two shear components g_1 and g_2 at the
+                           specified position(s).
         """
         if units != 'arcsec':
             raise NotImplementedError("Only arcsec units implemented!")
@@ -629,9 +638,9 @@ class NFWHalo(object):
                          be post-lensing!
         @param[in] pos_y Y-coordinate(s) of the source, input as a Numpy array. This is assumed to 
                          be post-lensing!
-        @param[in] z_s Source redshift(s)
+        @param[in] z_s   Source redshift(s)
         @param[in] units Units of coordinates (only arcsec implemented so far).
-        @return kappa Numpy array containing the convergence at the specified position(s)
+        @return kappa    Numpy array containing the convergence at the specified position(s)
         """
         if units != 'arcsec':
             raise NotImplementedError("Only arcsec units implemented!")
