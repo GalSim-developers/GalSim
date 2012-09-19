@@ -121,6 +121,7 @@ Calling
 On output each element of the input Image will have a pseudo-random UniformDeviate return value 
 added to it.
 
+To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 _galsim.UniformDeviate.__call__.__func__.__doc__= "Draw a new random number from the distribution."
 
@@ -178,6 +179,7 @@ Calling
 On output each element of the input Image will have a pseudo-random GaussianDeviate return value 
 added to it, with current values of mean and sigma.
 
+To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 
 _galsim.GaussianDeviate.__call__.__func__.__doc__ = """
@@ -246,6 +248,7 @@ Calling
 On output each element of the input Image will have a pseudo-random BinomialDeviate return value 
 added to it, with current values of N and p.
 
+To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 
 _galsim.BinomialDeviate.__call__.__func__.__doc__ = """
@@ -313,6 +316,8 @@ Calling
 On output each element of the input Image will have a pseudo-random PoissonDeviate return value 
 added to it, with current mean, and then that mean subtracted.  So the average  effect on each 
 pixel is zero, but there will be Poisson noise added to the image with the right variance.
+
+To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 
 _galsim.PoissonDeviate.__call__.__func__.__doc__ = """
@@ -373,6 +378,8 @@ Calling
 
 On output the Image instance image will have been given an additional stochastic noise according to 
 the gain and read noise settings of the CCDNoise instance.
+
+To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 _galsim.CCDNoise.getGain.__func__.__doc__ = "Get gain in current noise model."
 _galsim.CCDNoise.setGain.__func__.__doc__ = "Set gain in current noise model."
@@ -436,6 +443,8 @@ Calling
 
 On output each element of the input Image will have a pseudo-random WeibullDeviate return value 
 added to it, with current values of a and b.
+
+To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 
 _galsim.WeibullDeviate.__call__.__func__.__doc__ = """
@@ -491,6 +500,8 @@ To add deviates to every element of an image, use the syntax image.addNoise().
 
 To get and set the deviate parameters, see the docstrings for the .getAlpha(), .setAlpha(), 
 .getBeta() and .setBeta() methods of each instance.
+
+To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 
 _galsim.GammaDeviate.applyTo.__func__.__doc__ = """
@@ -568,6 +579,8 @@ Calling
 
 On output each element of the input Image will have a pseudo-random Chi2Deviate return value added 
 to it, with current degrees-of-freedom parameter n.
+
+To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 
 _galsim.Chi2Deviate.__call__.__func__.__doc__ = """
