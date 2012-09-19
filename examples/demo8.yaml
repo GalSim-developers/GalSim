@@ -68,7 +68,7 @@ image :
     noise :
         sky_level : 1.0e4  # ADU / arcsec^2
 
-    random_seed : 1512413
+    random_seed : 22345921
 
 
 output :

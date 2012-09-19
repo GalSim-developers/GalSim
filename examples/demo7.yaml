@@ -119,7 +119,7 @@ image :
     # The usual case is to just set a single number, which really means that each object
     # gets a sequential value starting with this number.  In this case we repeat each value
     # two times, so the fft and phot images get the same values for the random parameters.
-    random_seed : { type : Sequence , first : 1512413 , repeat : 2 }
+    random_seed : { type : Sequence , first : 553728 , repeat : 2 }
 
 # Define the output formats
 output :

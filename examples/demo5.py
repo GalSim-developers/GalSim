@@ -60,10 +60,10 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    nx_stamps = 10                  #
-    ny_stamps = 10                  #
-    nx_pixels = 40                  #
-    ny_pixels = 40                  #
+    nx_tiles = 10                   #
+    ny_tiles = 10                   #
+    stamp_xsize = 40                #
+    stamp_ysize = 40                #
 
     random_seed = 6424512           #
 
@@ -90,11 +90,11 @@ def main(argv):
     gal_g1 = 0.013                  #
     gal_g2 = -0.008                 #
 
-    centroid_shift = 1.0            # arcsec (=pixels)
+    shift_radius = 1.0              # arcsec (=pixels)
 
     logger.info('Starting demo script 5 using:')
-    logger.info('    - image with %d x %d postage stamps',nx_stamps,ny_stamps)
-    logger.info('    - postage stamps of size %d x %d pixels',nx_pixels,ny_pixels)
+    logger.info('    - image with %d x %d postage stamps',nx_tiles,ny_tiles)
+    logger.info('    - postage stamps of size %d x %d pixels',stamp_xsize,stamp_ysize)
     logger.info('    - Moffat PSF (beta = %.1f, FWHM = %.2f, trunc = %.2f),',
             psf_beta,psf_fwhm,psf_trunc)
     logger.info('    - PSF ellip = (%.3f,%.3f)',psf_e1,psf_e2)
@@ -104,7 +104,7 @@ def main(argv):
             gal_ellip_rms, gal_ellip_max)
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
-    logger.info('    - Centroid shifts up to = %.2f pixels',centroid_shift)
+    logger.info('    - Centroid shifts up to = %.2f pixels',shift_radius)
 
 
     # Define the PSF profile
@@ -137,20 +137,20 @@ def main(argv):
 
     # This profile is placed with different orientations and noise realizations
     # at each postage stamp in the gal image.
-    gal_image = galsim.ImageF(nx_pixels * nx_stamps-1 , ny_pixels * ny_stamps-1)
-    psf_image = galsim.ImageF(nx_pixels * nx_stamps-1 , ny_pixels * ny_stamps-1)
+    gal_image = galsim.ImageF(stamp_xsize * nx_tiles-1 , stamp_ysize * ny_tiles-1)
+    psf_image = galsim.ImageF(stamp_xsize * nx_tiles-1 , stamp_ysize * ny_tiles-1)
 
     # Set the pixel_scale of the images:
     gal_image.setScale(pixel_scale)
     psf_image.setScale(pixel_scale)
 
-    centroid_shift_sq = centroid_shift**2
+    shift_radius_sq = shift_radius**2
 
     first_in_pair = True  # Make pairs that are rotated by 45 degrees
 
     k = 0
-    for ix in range(nx_stamps):
-        for iy in range(ny_stamps):
+    for ix in range(nx_tiles):
+        for iy in range(ny_tiles):
             # The normal procedure for setting random numbers in GalSim is to start a new
             # random number generator for each object using sequential seed values.
             # This sounds weird at first (especially if you were indoctrinated by Numerical 
@@ -173,8 +173,8 @@ def main(argv):
 
             # The -1's in the next line are to provide a border of
             # 1 pixel between postage stamps
-            b = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels-1, 
-                               iy*ny_pixels+1 , (iy+1)*ny_pixels-1)
+            b = galsim.BoundsI(ix*stamp_xsize+1 , (ix+1)*stamp_xsize-1, 
+                               iy*stamp_ysize+1 , (iy+1)*stamp_ysize-1)
             sub_gal_image = gal_image[b]
             sub_psf_image = psf_image[b]
 
@@ -210,11 +210,11 @@ def main(argv):
             this_gal.applyShear(g1=gal_g1, g2=gal_g2)
             #print 'g1,g2 = ',gal_g1,gal_g2
 
-            # Apply a random centroid shift:
-            rsq = 2 * centroid_shift_sq
-            while (rsq > centroid_shift_sq):
-                dx = (2*ud()-1) * centroid_shift
-                dy = (2*ud()-1) * centroid_shift
+            # Apply a random shift_radius:
+            rsq = 2 * shift_radius_sq
+            while (rsq > shift_radius_sq):
+                dx = (2*ud()-1) * shift_radius
+                dy = (2*ud()-1) * shift_radius
                 rsq = dx**2 + dy**2
             #print 'dx,dy = ',dx,dy
 

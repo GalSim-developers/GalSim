@@ -52,7 +52,7 @@ def main(argv):
 
     file_name = os.path.join('output','cube_phot.fits')
 
-    random_seed = 1512413
+    random_seed = 553728
     sky_level = 1.e4        # ADU / arcsec^2
     pixel_scale = 0.28      # arcsec
     nx = 64

@@ -101,7 +101,7 @@ def main(argv):
         'pixel_scale' : 0.28,
         'draw_method' : 'phot',
         'noise' : { 'sky_level' : 1.e4 },
-        'random_seed' : 1512413
+        'random_seed' : 22345921
     }
 
     # Make a copy of the config dict as it exists now.
