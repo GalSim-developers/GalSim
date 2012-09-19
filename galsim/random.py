@@ -78,6 +78,12 @@ Calling
 Taking the instance from the above examples, successive calls to u() then generate pseudo-random
 numbers distributed uniformly in the interval [0., 1.).
 
+>>> u = UniformDeviate()
+>>> u()
+0.35068059829063714
+>>> u()            
+0.56841182382777333
+
 Methods
 -------
 To add deviates to every element of an image, see the docstring for the .applyTo() method of each
@@ -125,6 +131,12 @@ Calling
 -------
 Taking the instance from the above examples, successive calls to g() then generate pseudo-random
 numbers which Gaussian-distributed with the provided mean, sigma.
+
+>>> g = galsim.GaussianDeviate()
+>>> g()
+1.398768034960607
+>>> g()
+-0.8456136323830128
 
 Methods
 -------
@@ -187,6 +199,12 @@ Calling
 Taking the instance from the above examples, successive calls to b() then generate pseudo-random
 numbers binomial-distributed with the provided N, p, which must both be > 0.
 
+>>> b = galsim.BinomialDeviate()
+>>> b()
+0
+>>> b()
+1
+
 Methods
 -------
 To add deviates to every element of an image, see the docstring for the .applyTo() method of each
@@ -246,6 +264,12 @@ Calling
 -------
 Taking the instance from the above examples, successive calls to p() will return successive,
 pseudo-random Poisson deviates with specified mean, which must be > 0.
+
+>>> p = galsim.PoissonDeviate()
+>>> p()
+1
+>>> p()
+2
 
 Methods
 -------
@@ -372,6 +396,12 @@ Calling
 Taking the instance from the above examples, successive calls to w() then generate pseudo-random 
 numbers Weibull-distributed with shape and scale parameters a and b.
 
+>>> w = galsim.WeibullDeviate()
+>>> w()
+2.152873075208731
+>>> w()
+2.0826856212853846
+
 Methods
 -------
 To add deviates to every element of an image, see the docstring for the .applyTo() method of each
@@ -435,6 +465,12 @@ Calling
 Taking the instance from the above examples, successive calls to g() will return successive, 
 pseudo-random Gamma-distributed deviates with shape and scale parameters alpha and beta. 
 
+>>> gam = galsim.GammaDeviate()
+>>> gam()
+0.020092014608829315
+>>> gam()
+0.5062533114685395
+
 Methods
 -------
 To add deviates to every element of an image, see the docstring for the .applyTo() method of each
@@ -495,6 +531,12 @@ Calling
 -------
 Taking the instance from the above examples, successive calls to g() will return successive, 
 pseudo-random Chi^2-distributed deviates with degrees-of-freedom parameter n.
+
+>>> chis = galsim.Chi2Deviate()
+>>> chis()
+0.35617890086874854
+>>> chis()
+0.17269982670901735
 
 Methods
 -------
