@@ -120,8 +120,8 @@ class GSObject(object):
         """Returns the value of the object at a chosen 2D position in real space.
         
         As in SBProfile, this function assumes all are real-valued.  xValue() may not be implemented
-        for derived classes (e.g. SBConvolve) that require an Discrete Fourier Transform to 
-        determine real space values.  In this case, an SBError will be thrown at the C++ layer 
+        for derived classes (e.g. SBConvolve) that require an Discrete Fourier Transform to
+        determine real space values.  In this case, an SBError will be thrown at the C++ layer
         (raises a RuntimeError in Python).
         
         @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in real
@@ -1255,7 +1255,9 @@ class RealGalaxy(GSObject):
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
     keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
     options, e.g., to choose at random but accounting for the non-constant weight factors
-    (probabilities for objects to make it into the training sample).
+    (probabilities for objects to make it into the training sample).  Like other GSObjects, the
+    RealGalaxy contains an SBProfile attribute which is an SBConvolve representing the deconvolved
+    HST galaxy.
 
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
                                 find the data, etc.
