@@ -355,7 +355,8 @@ Add noise to an input Image.
 
 Calling
 -------
->>> CCDNoise.applyTo(image)
+
+    >>> CCDNoise.applyTo(image)
 
 On output the Image instance image will have been given an additional stochastic noise according to 
 the gain and read noise settings of the CCDNoise instance.
