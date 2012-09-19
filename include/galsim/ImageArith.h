@@ -4,6 +4,9 @@
 
 namespace galsim {
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
+
     /**
      *  @brief Exception class usually thrown by images.
      */
@@ -26,6 +29,8 @@ namespace galsim {
 
         ImageBoundsError(int x, int y, const Bounds<int> b);
     };
+
+    //! @endcond
 
 
     template <typename T> class AssignableToImage;
@@ -287,6 +292,9 @@ namespace galsim {
         }
         return f;
     }
+
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
 
     // Default uses T1 as the result type
     template <typename T1, typename T2>
@@ -585,6 +593,8 @@ namespace galsim {
     template <typename T1, typename T2>
     inline Image<T1>& operator/=(Image<T1>& im, const BaseImage<T2>& x) 
     { im.view() /= x; return im; }
+
+    //! @endcond
 
 } // namespace galsim
 
