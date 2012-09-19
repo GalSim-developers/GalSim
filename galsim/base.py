@@ -1410,7 +1410,7 @@ class Convolve(GSObject):
     where the sum is over all the components being convolved.  Since the size of 
     the convolved image scales roughly as the quadrature sum of the components,
     this should be close to Pi/Rmax where Rmax is the radius that encloses
-    all but (1-alias_threshold) of the flux in the final convolved image..
+    all but (1-alias_threshold) of the flux in the final convolved image.
     
     The maxK used for the k-space image will be the minimum of the maxK calculated for
     each component.  Since the k-space images are multiplied, if one of them is 
@@ -1424,7 +1424,7 @@ class Convolve(GSObject):
     for more than 2 profiles, an exception will be raised.
     
     The real-space convolution is normally slower than the DFT convolution.
-    The exception is if both component profiles have hard edges.  e.g. a truncated
+    The exception is if both component profiles have hard edges, e.g., a truncated
     Moffat with a Pixel.  In that case, the maxK for each component is quite large
     since the ringing dies off fairly slowly.  So it can be quicker to use 
     real-space convolution instead.  Also, real-space convolution tends to be more
