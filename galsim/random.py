@@ -105,8 +105,7 @@ numbers distributed uniformly in the interval [0., 1.).
 
 Methods
 -------
-To add deviates to every element of an image, see the docstring for the .applyTo() method of each
-instance.
+To add deviates to every element of an image, use the syntax image.addNoise().
 
 This docstring can be found using the Python interpreter or in pysrc/Random.cpp.
 """
@@ -162,8 +161,7 @@ numbers which Gaussian-distributed with the provided mean, sigma.
 
 Methods
 -------
-To add deviates to every element of an image, see the docstring for the .applyTo() method of each
-instance.
+To add deviates to every element of an image, use the syntax image.addNoise().
 
 To get and set the deviate parameters, see the docstrings for the .getMean(), .setMean(), 
 .getSigma() and .setSigma() methods of each instance.
@@ -231,8 +229,7 @@ numbers binomial-distributed with the provided N, p.
 
 Methods
 -------
-To add deviates to every element of an image, see the docstring for the .applyTo() method of each
-instance.
+To add deviates to every element of an image, use the syntax image.addNoise().
 
 To get and set the deviate parameters, see the docstrings for the .getN(), .setN(), .getP() and
 .setP() methods of each instance.
@@ -299,8 +296,7 @@ pseudo-random Poisson deviates with specified mean.
 
 Methods
 -------
-To add deviates to every element of an image, see the docstring for the .applyTo() method of each
-instance.
+To add deviates to every element of an image, use the syntax image.addNoise().
 
 To get and set the deviate parameter, see the docstrings for the .getMean(), .setMean() method of 
 each instance.
@@ -361,8 +357,7 @@ Parameters:
 
 Methods
 -------
-To add deviates to every element of an image, see the docstring for the .applyTo() method of each
-instance.
+To add deviates to every element of an image, use the syntax image.addNoise().
 
 To get and set the deviate parameters, see the docstrings for the .getGain(), .setGain(), 
 .getReadNoise() and .setReadNoise() methods of each instance.
@@ -425,8 +420,7 @@ numbers Weibull-distributed with shape and scale parameters a and b.
 
 Methods
 -------
-To add deviates to every element of an image, see the docstring for the .applyTo() method of each
-instance.
+To add deviates to every element of an image, use the syntax image.addNoise().
 
 To get and set the deviate parameters, see the docstrings for the .getA(), .setA(), .getB() and 
 .setB() methods of each instance.
@@ -493,8 +487,7 @@ pseudo-random Gamma-distributed deviates with shape and scale parameters alpha a
 
 Methods
 -------
-To add deviates to every element of an image, see the docstring for the .applyTo() method of each
-instance.
+To add deviates to every element of an image, use the syntax image.addNoise().
 
 To get and set the deviate parameters, see the docstrings for the .getAlpha(), .setAlpha(), 
 .getBeta() and .setBeta() methods of each instance.
@@ -559,8 +552,7 @@ pseudo-random Chi^2-distributed deviates with degrees-of-freedom parameter n.
 
 Methods
 -------
-To add deviates to every element of an image, see the docstring for the .applyTo() method of each
-instance.
+To add deviates to every element of an image, use the syntax image.addNoise().
 
 To get and set the deviate parameter, see the docstrings for the .getN(), .setN() methods of each
 instance.
