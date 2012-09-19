@@ -124,8 +124,8 @@ Initialization
 
 Parameters:
 
-    mean     optional mean for Gaussian distribution (default = 0.).
-    sigma    optional sigma for Gaussian distribution (default = 1.).
+    mean     optional mean for Gaussian distribution [default `mean = 0.`].
+    sigma    optional sigma for Gaussian distribution [default `sigma = 1.`].  Must be > 0.
 
 Calling
 -------
@@ -191,13 +191,13 @@ Initialization
 
 Parameters:
 
-    N   optional number of 'coin flips' per trial (default `N = 1`).
-    p   optional probability of success per coin flip (default `p = 0.5`).
+    N   optional number of 'coin flips' per trial [default `N = 1`].  Must be > 0.
+    p   optional probability of success per coin flip [default `p = 0.5`].  Must be > 0.
 
 Calling
 -------
 Taking the instance from the above examples, successive calls to b() then generate pseudo-random
-numbers binomial-distributed with the provided N, p, which must both be > 0.
+numbers binomial-distributed with the provided N, p.
 
 >>> b = galsim.BinomialDeviate()
 >>> b()
@@ -258,12 +258,12 @@ Initialization
 
 Parameters:
 
-    mean     optional mean of the distribution (default `mean = 1`).
+    mean     optional mean of the distribution [default `mean = 1`].  Must be > 0.
 
 Calling
 -------
 Taking the instance from the above examples, successive calls to p() will return successive,
-pseudo-random Poisson deviates with specified mean, which must be > 0.
+pseudo-random Poisson deviates with specified mean.
 
 >>> p = galsim.PoissonDeviate()
 >>> p()
@@ -328,9 +328,9 @@ Parameters:
 
     gain        the gain for each pixel in electrons per ADU; setting gain <=0 will shut off the
                 Poisson noise, and the Gaussian rms will take the value read_noise as being in units
-                of ADU rather than electrons [default=1.].
+                of ADU rather than electrons [default `gain = 1.`].
     read_noise  the read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.)
-                setting read_noise=0. will shut off the Gaussian noise [default=0.].
+                setting read_noise=0. will shut off the Gaussian noise [default `read_noise = 0.`].
 
 Calling
 -------
@@ -386,10 +386,8 @@ Initialization
 
 Parameters:
 
-    a        shape parameter of the distribution (default a = 1).
-    b        scale parameter of the distribution (default b = 1).
-
-a and b must both be > 0.
+    a        shape parameter of the distribution [default `a = 1`].  Must be > 0.
+    b        scale parameter of the distribution [default `b = 1`].  Must be > 0.
 
 Calling
 -------
@@ -455,10 +453,8 @@ Initialization
 
 Parameters:
 
-    alpha    shape parameter of the distribution (default alpha = 1).
-    beta     scale parameter of the distribution (default beta = 1).
-
-alpha and beta must both be > 0.
+    alpha    shape parameter of the distribution [default `alpha = 1`].  Must be > 0.
+    beta     scale parameter of the distribution [default `beta = 1`].  Must be > 0.
 
 Calling
 -------
@@ -523,9 +519,7 @@ Initialization
                                       # generator as dev.
 
 Parameters:
-    n   number of degrees of freedom for the output distribution (default n = 1).
-
-n must be > 0.
+    n   number of degrees of freedom for the output distribution [default `n = 1`].  Must be > 0.
 
 Calling
 -------
