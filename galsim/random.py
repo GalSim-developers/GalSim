@@ -110,6 +110,8 @@ _galsim.UniformDeviate.__call__.__func__.__doc__= "Draw a new random number from
 _galsim.GaussianDeviate.__doc__ = """
 Pseudo-random number generator with Gaussian distribution.
 
+See http://en.wikipedia.org/wiki/Gaussian_distribution for further details.
+
 Initialization
 --------------
 
@@ -175,7 +177,8 @@ _galsim.BinomialDeviate.__doc__ = """
 Pseudo-random Binomial deviate for N trials each of probability p.
 
 N is number of 'coin flips,' p is probability of 'heads,' and each call returns an integer value
-where 0 <= value <= N giving number of heads.
+where 0 <= value <= N giving number of heads.  See http://en.wikipedia.org/wiki/Binomial_distribution
+for more information.
 
 Initialization
 --------------
@@ -242,7 +245,8 @@ _galsim.PoissonDeviate.__doc__ = """
 Pseudo-random Poisson deviate with specified mean.
 
 The input mean sets the mean and variance of the Poisson deviate.  An integer deviate with this
-distribution is returned after each call.
+distribution is returned after each call.  See http://en.wikipedia.org/wiki/Poisson_distribution
+for more details.
 
 Initialization
 --------------
