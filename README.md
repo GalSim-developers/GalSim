@@ -2,16 +2,17 @@
 
 # GalSim: The modular galaxy image simulation toolkit
 
-For installation instructions, please see the file INSTALL.md in the main
+For installation instructions, please see the file `INSTALL.md` in the main
 repository directory. 
 
 There are tagged versions of the code corresponding to specific project 
-milestones and releases.  
+releases and development milestones.  
 
-If interested in code from before v0.1, the tagged milestone versions may be the
-best ones to try if you want a stable version with specific capabilities.  
+If interested in code from before `v0.1`, the tagged milestone versions may be 
+the best ones to try if you want a stable version with specific capabilities.  
 
-(For more info on tags see the "Milestone tags" Section below and docs/git.txt)
+(For more info on tags see the "Milestone tags" Section below and 
+`docs/git.txt`)
 
 
 How to get started
@@ -58,27 +59,31 @@ While the demo scripts can be run from the command-line while sitting in
 that take various command-line arguments, which are always explained in comments
 at the top of the file.
 
-* ShootInterpolated.py is a script that takes as input a filename for a FITS
+* `ShootInterpolated.py` is a script that takes as input a filename for a FITS
 image, which it will simulate (optionally sheared and/or resampled) via
 photon-shooting.
 
-* MeasMoments.py can be used to measure the adaptive moments (best-fit
+* `MeasMoments.py` can be used to measure the adaptive moments (best-fit
 elliptical Gaussian) for a FITS image.
 
-* MeasShape.py can be used to carry out PSF correction using one of four
+* `MeasShape.py` can be used to carry out PSF correction using one of four
 methods, given FITS images of the galaxy and PSF.
 
 
-Milestone tags
---------------
+Release and Milestone tags
+--------------------------
 
-After every GalSim general milestone we tagged a snapshot of the code at that 
-moment, with the tag name `milestoneN` where N is the milestone number.
+After every GalSim release and development milestone we tag a snapshot of the 
+code at that moment, with the tag name `vX.X` or `milestoneN` where N is the 
+milestone number.
 
-You can see the available tags using the command `git tag -l` at terminal from 
-within the repository.
+You can see the available tags using the command
 
-The version of the code at any given milestone can then be checked out using the
+    git tag -l
+
+at terminal from within the repository.
+
+The version of the code at any given snapshot can then be checked out using the
 tag name, e.g.:
 
     $ git checkout milestone2
