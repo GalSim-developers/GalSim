@@ -515,7 +515,7 @@ class NFWHalo(object):
         """
         # convenience: call with single number
         if isinstance(x, np.ndarray) == False:
-            return kappa(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
+            return self.__kappa(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
 
         if out is None:
             out = np.zeros_like(x)
@@ -549,7 +549,7 @@ class NFWHalo(object):
         """
         # convenience: call with single number
         if isinstance(x, np.ndarray) == False:
-            return gamma(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
+            return self.__gamma(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
         if out is None:
             out = np.zeros_like(x)
 
