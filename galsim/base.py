@@ -125,7 +125,7 @@ class GSObject(object):
         (raises a RuntimeError in Python).
         
         @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in real
-        space.
+                         space.
         """
         return self.SBProfile.xValue(position)
 
