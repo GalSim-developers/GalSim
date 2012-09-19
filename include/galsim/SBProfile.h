@@ -106,12 +106,17 @@ namespace galsim {
         //@}
     }
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
+
     /// @brief Exception class thrown by SBProfiles.
     class SBError : public std::runtime_error 
     {
     public:
         SBError(const std::string& m="") : std::runtime_error("SB Error: " + m) {}
     };
+
+    //! @endcond
 
     /** 
      * @brief A base class representing all of the 2D surface brightness profiles that 
