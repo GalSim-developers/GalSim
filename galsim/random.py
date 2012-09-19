@@ -40,6 +40,9 @@ TypeError: 'BaseDeviate' object is not callable
 >>> ud = galsim.UniformDeviate(rng)
 >>> ud()
 0.58736140513792634
+>>> ud2 = galsim.UniformDeviate(215324)
+>>> ud2()
+0.58736140513792634
 
 """
 
