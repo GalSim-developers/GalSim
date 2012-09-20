@@ -125,70 +125,70 @@ parameters listed:
 \begin{itemize}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_gaussian.html}{\texttt{galsim.Gaussian(...)}}
-  \newline \emph{a 2D Gaussian light profile. Requires one of the
+  \newline {a 2D Gaussian light profile. Requires one of the
     following size parameters to be set: \texttt{sigma}; \texttt{FWHM}; \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_moffat.html}{\texttt{galsim.Moffat(beta,
     ...)}}
-  \newline \emph{a Moffat profile with slope parameter \texttt{beta}, used to approximate ground-based
+  \newline {a Moffat profile with slope parameter \texttt{beta}, used to approximate ground-based
     telescope PSFs. Requires one of the
     following size parameters to be set: \texttt{scale\_radius}; \texttt{FWHM}; \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_atmospheric_p_s_f.html}{\texttt{galsim.AtmosphericPSF(...)}}
-  \newline \emph{currently simply an image-based
+  \newline {currently simply an image-based
   implementation of a Kolmogorov PSF (see below), and therefore deprecated, but expected to evolve to
   store a stochastically modelled atmospheric PSF in the near future.
 Requires one of the
     following size parameters to be set: \texttt{FWHM}; \texttt{lam\_over\_r0}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_airy.html}{\texttt{galsim.Airy(lam\_over\_diam,
-      ...)}} \newline \emph{an Airy PSF for ideal diffraction
+      ...)}} \newline {an Airy PSF for ideal diffraction
   through a circular aperture, parametrized by the wavelength-aperture
   diameter ratio \texttt{lam\_over\_diam}, with optional obscuration.}
-\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_kolmogorov.html}{\texttt{galsim.Kolmogorov(...)}} \newline \emph{the Kolmogorov PSF for long-exposure
+\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_kolmogorov.html}{\texttt{galsim.Kolmogorov(...)}} \newline {the Kolmogorov PSF for long-exposure
   images through a turbulent atmosphere.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_optical_p_s_f.html}{\texttt{galsim.OpticalPSF(lam\_over\_diam,
-      ...)}} \newline \emph{a simple model for non-ideal
+      ...)}} \newline {a simple model for non-ideal
   (aberrated) propagation through circular or square apertures, parametrized by the wavelength-aperture
   dimension ratio \texttt{lam\_over\_diam}, with
   optional obscuration.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_pixel.html}{\texttt{galsim.Pixel(xw,
-    ...)}} \newline \emph{used for integrating light onto square or
+    ...)}} \newline {used for integrating light onto square or
   rectangular pixels, requires at least one side dimension \texttt{xw}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_sersic.html}{\texttt{galsim.Sersic(n,
-      half\_light\_radius, ...)}} \newline\emph{ the S\'{e}rsic family of galaxy light
+      half\_light\_radius, ...)}} \newline{ the S\'{e}rsic family of galaxy light
   profiles, parametrized by an index \texttt{n} and size \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_exponential.html}{\texttt{galsim.Exponential(...)}}
-  \newline \emph{the Exponential galaxy disc profile, a S\'{e}rsic
+  \newline {the Exponential galaxy disc profile, a S\'{e}rsic
     with index \texttt{n=1}.  Requires one of the
     following size parameters to be set: \texttt{scale\_radius}; \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_de_vaucouleurs.html}{\texttt{galsim.DeVaucouleurs(half\_light\_radius,
       flux=1.)}}
-  \newline \emph{the De Vaucouleurs galaxy bulge profile, a S\'{e}rsic
+  \newline {the De Vaucouleurs galaxy bulge profile, a S\'{e}rsic
     with index \texttt{n=4}.  Requires the size parameter
     \texttt{half\_light\_radius} to be set.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_real_galaxy.html}{\texttt{galsim.RealGalaxy(real\_galaxy\_catalog,
-      ...)}} \newline \emph{models galaxies using real
+      ...)}} \newline {models galaxies using real
   data, including a correction for the original PSF.  Requires the
   download of external data, stored and input in \texttt{real\_galaxy\_catalog} (an instance of the
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1real_1_1_real_galaxy_catalog.html}{\texttt{RealGalaxyCatalog}}
   class), for full functionality.  A set of $\sim$26\,000 real galaxy
   images, with original PSFs, can be downloaded from the following
   Public Dropbox folder: \newline
-  \href{https://www.dropbox.com/sh/ns2yh4q00trqs5r/JypUX8qwLw}{{\bf https://www.dropbox.com/sh/ns2yh4q00trqs5r/JypUX8qwLw}}.}
+  \href{https://www.dropbox.com/sh/ns2yh4q00trqs5r/JypUX8qwLw}{\emph{https://www.dropbox.com/sh/ns2yh4q00trqs5r/JypUX8qwLw}}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_add.html}{\texttt{galsim.Add(...)}}
-  \newline \emph{a \emph{compound} object representing the sum of 
+  \newline {a {compound} object representing the sum of 
   multiple \texttt{GSObject}s.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_convolve.html}{\texttt{galsim.Convolve(...)}}
-  \newline \emph{a \emph{compound} object representing the convolution of 
+  \newline {a \emph{compound} object representing the convolution of 
 multiple \texttt{GSObject}s.}
 \end{itemize}
 
@@ -249,34 +249,34 @@ instance are:
 \begin{itemize}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#aa0b398d4b0fca70211e4a73f81ea7e1a}{\texttt{obj.copy()}}
-  \newline \emph{return a copy of the \texttt{GSObject}.}
+  \newline {return a copy of the \texttt{GSObject}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a662d8ce421ecd90080bdcaaf6890aed8}{\texttt{obj.centroid()}}
-  \newline \emph{return the $(x, y)$ centroid of the \texttt{GSObject} as a
+  \newline {return the $(x, y)$ centroid of the \texttt{GSObject} as a
     \texttt{PositionD} (see Section~\ref{sect:bounds}).}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a662d8ce421ecd90080bdcaaf6890aed8}{\texttt{obj.getFlux()}}
-  \newline \emph{get the flux of the \texttt{GSObject}.}
+  \newline {get the flux of the \texttt{GSObject}.}
 \item[$\circ$]\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#af4193645a9af52e7d54a044cafec8ab9}{\texttt{obj.scaleFlux(flux\_ratio)}}
-  \newline \emph{multiply the flux of the \texttt{GSObject}~by \texttt{flux\_ratio}.}
+  \newline {multiply the flux of the \texttt{GSObject}~by \texttt{flux\_ratio}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a1993652591ddc802b734186391b28894}{\texttt{obj.setFlux(flux)}}
-    \newline \emph{set the flux of the \texttt{GSObject}~to \texttt{flux}.}
+    \newline {set the flux of the \texttt{GSObject}~to \texttt{flux}.}
 \item[$\circ$]
 \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ad491a1276fda07b148c6466d5dbd07b1}{\texttt{obj.applyTransformation(ellipse)}}
-\newline \emph{apply an \texttt{Ellipse} transformation represented by
+\newline {apply an \texttt{Ellipse} transformation represented by
   \texttt{ellipse} to the \texttt{GSObject} (see \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1ellipse_1_1_ellipse.html}{\texttt{Ellipse}}; Section~\ref{sect:shears}).}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a4301c73bbc1491ebb170e64c509cadd5}{\texttt{obj.applyDilation(scale)}}
-  \newline \emph{change of the linear size of the \texttt{GSObject}~by a
+  \newline {change of the linear size of the \texttt{GSObject}~by a
     factor \texttt{scale}, conserving flux.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a9d13b0238057f6d5d01f2681d91c09b0}{\texttt{obj.applyMagnification(scale)}}
-  \newline \emph{dilate linear size by \texttt{scale} and multiply total flux by
+  \newline {dilate linear size by \texttt{scale} and multiply total flux by
   \texttt{scale}$^2$, conserving surface brightness.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a85cc0094dcf470cfbff93d9830ab80bd}{\texttt{obj.applyShear(...)}}
-  \newline \emph{apply a shear to the \texttt{GSObject}, handling a number of different
+  \newline {apply a shear to the \texttt{GSObject}, handling a number of different
   input conventions (see also 
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1shear_1_1_shear.html}{\texttt{Shear}};
   Section~\ref{sect:shears}).  Commonly-used input conventions:
@@ -300,24 +300,24 @@ instance are:
    \end{itemize}}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ad6236e3153f23f1201396369dd67f1c7}{\texttt{obj.applyRotation(theta)}}
-  \newline \emph{apply a rotation of \texttt{theta} (positive direction
+  \newline {apply a rotation of \texttt{theta} (positive direction
   anti-clockwise) to the \texttt{GSObject}, where \texttt{theta} is an
   \texttt{Angle} instance (see Section~\ref{sect:angles}).}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a6b547741eeec4086de9abe227dae9325}{\texttt{obj.applyShift(dx,
-      dy)}} \newline \emph{apply a $(dx, dy)$ position shift to the
+      dy)}} \newline {apply a $(dx, dy)$ position shift to the
     \texttt{GSObject} centroid.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...,
       dx=1)}}
-  \newline \emph{draw an image of the \texttt{GSObject}~using Discrete Fourier
+  \newline {draw an image of the \texttt{GSObject}~using Discrete Fourier
   Transforms and interpolation to perform the image rendering.  The
   optional image sample scale \texttt{dx} (default \texttt{dx~=~1})
   should use the same units as used for the \texttt{GSObject} size parameters.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(image,
       ..., dx=1)}}
-  \newline \emph{draw an image of the \texttt{GSObject}~by shooting a finite number of
+  \newline {draw an image of the \texttt{GSObject}~by shooting a finite number of
   photons into a user-supplied \texttt{Image} instance,
   \texttt{image}, which unlike for \texttt{draw()} is a required input.  The resulting rendering
   therefore contains stochastic noise, but uses few approximations. The
@@ -353,28 +353,28 @@ with a short description of their distributions, parametrization and
 default parameter values:
 \begin{itemize}
 
-\item[$\circ$] \texttt{galsim.UniformDeviate(...)} \newline \emph{uniform distribution in the
+\item[$\circ$] \texttt{galsim.UniformDeviate(...)} \newline {uniform distribution in the
   interval $[0, 1)$.}
 
-\item[$\circ$] \texttt{galsim.GaussianDeviate(..., mean=0., sigma=1.)} \newline \emph{Gaussian distribution
+\item[$\circ$] \texttt{galsim.GaussianDeviate(..., mean=0., sigma=1.)} \newline {Gaussian distribution
 with \texttt{mean} and standard deviation \texttt{sigma}.}
 
-\item[$\circ$] \texttt{galsim.BinomialDeviate(..., N=1, p=0.5)} \newline \emph{Binomial
+\item[$\circ$] \texttt{galsim.BinomialDeviate(..., N=1, p=0.5)} \newline {Binomial
     distribution for \texttt{N} trials each of probability \texttt{p}.}
 
-\item[$\circ$] \texttt{galsim.PoissonDeviate(..., mean=1.)} \newline \emph{Poisson distribution
+\item[$\circ$] \texttt{galsim.PoissonDeviate(..., mean=1.)} \newline {Poisson distribution
     with a single \texttt{mean} rate.}
 
-\item[$\circ$] \texttt{galsim.CCDNoise(..., gain=1., read\_noise=0.)}  \newline \emph{a
+\item[$\circ$] \texttt{galsim.CCDNoise(..., gain=1., read\_noise=0.)}  \newline {a
     basic detector noise model, parametrized by \texttt{gain} and \texttt{read\_noise}.}
 
-\item[$\circ$] \texttt{galsim.WeibullDeviate(..., a=1., b=1.)} \newline \emph{Weibull distribution
+\item[$\circ$] \texttt{galsim.WeibullDeviate(..., a=1., b=1.)} \newline {Weibull distribution
     family (includes Rayleigh and Exponential) with shape parameters \texttt{a} and \texttt{b}.}
 
-\item[$\circ$] \texttt{galsim.GammaDeviate(..., alpha=1., beta=1.)} \newline \emph{Gamma distribution with
+\item[$\circ$] \texttt{galsim.GammaDeviate(..., alpha=1., beta=1.)} \newline {Gamma distribution with
     parameters \texttt{alpha} and \texttt{beta}.}
 
-\item[$\circ$] \texttt{galsim.Chi2Deviate(..., n=1.)} \newline \emph{$\chi^2$ distribution
+\item[$\circ$] \texttt{galsim.Chi2Deviate(..., n=1.)} \newline {$\chi^2$ distribution
     with degrees-of-freedom parameter \texttt{n}.}
 
 \end{itemize}
@@ -403,13 +403,13 @@ The two most important and commonly-used methods for such an
 instance are:
 \begin{itemize}
 
-\item[$\circ$] \texttt{dev.applyTo(image)} \newline \emph{adds a
+\item[$\circ$] \texttt{dev.applyTo(image)} \newline {adds a
     random number, distributed according to the distribution
     represented by \texttt{dev}, to each element in a supplied
     \texttt{Image} instance \texttt{image} (see
     Section~\ref{sect:image}).}
 
-\item[$\circ$] \texttt{dev()} \newline \emph{calling the deviate
+\item[$\circ$] \texttt{dev()} \newline {calling the deviate
     directly simply returns a single new random number drawn from the
     distribution
     represented by \texttt{dev}.  As an example:\newline \\
@@ -449,17 +449,17 @@ supported array data types:
 \begin{itemize}
 
 \item[$\circ$] \texttt{galsim.ImageS(...)}; \texttt{galsim.ImageViewS(...)};
-  \texttt{galsim.ConstImageViewS(...)} \newline \emph{for short integers (typically 16 bit).}
+  \texttt{galsim.ConstImageViewS(...)} \newline {for short integers (typically 16 bit).}
 
 \item[$\circ$] \texttt{galsim.ImageI(...)}; \texttt{galsim.ImageViewI(...)};
-  \texttt{galsim.ConstImageViewI(...)} \newline \emph{for integers (typically 32 bit).}
+  \texttt{galsim.ConstImageViewI(...)} \newline {for integers (typically 32 bit).}
 
 \item[$\circ$] \texttt{galsim.ImageF(...)}; \texttt{galsim.ImageViewF(...)};
-  \texttt{galsim.ConstImageViewF(...)} \newline \emph{for single precision (typically 32 bit)
+  \texttt{galsim.ConstImageViewF(...)} \newline {for single precision (typically 32 bit)
   floats.}
 
 \item[$\circ$] \texttt{galsim.ImageD(...)}; \texttt{galsim.ImageViewD(...)};
-  \texttt{galsim.ConstImageViewD(...)} \newline \emph{for double precision (typically 64 bit)
+  \texttt{galsim.ConstImageViewD(...)} \newline {for double precision (typically 64 bit)
   floats.}
 
 \end{itemize}
@@ -493,22 +493,22 @@ This \texttt{Image} instance is then ready to pass to a
 methods for such an instance are:
 \begin{itemize}
 
-\item[$\circ$] \texttt{img.getScale()} \newline \emph{get the sample
+\item[$\circ$] \texttt{img.getScale()} \newline {get the sample
     scale \texttt{dx} for this image.}
 
-\item[$\circ$] \texttt{img.setScale(dx)} \newline \emph{set the sample
+\item[$\circ$] \texttt{img.setScale(dx)} \newline {set the sample
     scale for this image to \texttt{dx} --- note that this scale
     should use the same units adopted for the \texttt{GSObject}
     sizes.}
 
-\item[$\circ$] \texttt{img.addNoise(dev)} \newline \emph{this adds
+\item[$\circ$] \texttt{img.addNoise(dev)} \newline {this adds
     stochastic noise, distributed as represented by the random deviate
     instance \texttt{dev}, to each element of the data array in
     \texttt{img}.  This therefore has the same effect as
     \texttt{dev.applyTo(img)} (see Section~\ref{sect:random}; also
     \texttt{galsim/noise.py}).}
 
-\item[$\circ$] \texttt{img.write(fits, ...)}  \newline \emph{write the
+\item[$\circ$] \texttt{img.write(fits, ...)}  \newline {write the
     \texttt{imageView} to a FITS file or object as determined by the
     \texttt{fits} input parameter
     (see \\
@@ -553,12 +553,12 @@ within the Python interpreter.
 \begin{itemize}
 
 \item[$\circ$] \texttt{galsim.Angle(value, angle\_unit)} \newline
-  \emph{class to represent angles and handle multiple unit types,
+  {class to represent angles and handle multiple unit types,
     which can be initialized very simply by multiplying a numerical
     value and an \texttt{AngleUnit} instance \texttt{angle\_unit} (see
     below, and \texttt{galsim/angle.py}).}
 
-\item[$\circ$] \texttt{galsim.AngleUnit(radians)} \newline \emph{class
+\item[$\circ$] \texttt{galsim.AngleUnit(radians)} \newline {class
     for holding angular unit definitions, specified on initialization
     in \texttt{radians}.  There are five built-in AngleUnits which are
     always available for use:
@@ -576,12 +576,12 @@ within the Python interpreter.
 \begin{itemize}
 
 \item[$\circ$] \texttt{galsim.BoundsI(...)} \&
-  \texttt{galsim.BoundsD(...)} \newline \emph{classes to represent
+  \texttt{galsim.BoundsD(...)} \newline {classes to represent
     image bounds in the \texttt{x}-\texttt{y} plane as the vertices of
     a rectangle (see \texttt{galsim/bounds.py}).}
 
 \item[$\circ$] \texttt{galsim.PositionI(x, y)} \&
-  \texttt{galsim.PositionD(x, y)} \newline \emph{classes to represent
+  \texttt{galsim.PositionD(x, y)} \newline {classes to represent
     2D positions on the \texttt{x}-\texttt{y} plane (see
     \texttt{galsim/position.py}), e.g., for describing object centroid
     positions.}
@@ -594,14 +594,14 @@ within the Python interpreter.
 
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1ellipse_1_1_ellipse.html}{\texttt{galsim.Ellipse(...)}}
-  \newline \emph{class to represent ellipses and thus ellipse-type
+  \newline {class to represent ellipses and thus ellipse-type
     transformations.  The class can be initialized using a variety of
     different parameter conventions (see \texttt{galsim/ellipse.py}),
     including being initialized with a Shear instance (see below).}
 
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1shear_1_1_shear.html}{\texttt{galsim.Shear(...)}}
-  \newline \emph{class to represent shears in a variety of ways.  Like
+  \newline {class to represent shears in a variety of ways.  Like
     the \texttt{galsim.Ellipse}, this class can be initialized using a
     variety of different parameter conventions (see
     \texttt{galsim/shear.py}).  Commonly-used examples:
@@ -632,14 +632,14 @@ within the Python interpreter.
 
 \item[$\circ$] \texttt{galsim.fits.writeMulti(image\_list, fits, ...)}
   \newline 
-\emph{write multiple \texttt{Image} instances stored in a
+{write multiple \texttt{Image} instances stored in a
   Python \texttt{list} object \texttt{image\_list} to a Multi-Extension FITS
   file or object as determined by the \texttt{fits} input parameter (see
   \texttt{galsim/fits.py}).}
 
 \item[$\circ$] \texttt{galsim.fits.writeCube(image\_list, fits, ...)}
   \newline 
-\emph{write multiple \texttt{Image} instances stored in a
+{write multiple \texttt{Image} instances stored in a
   Python \texttt{list} object \texttt{image\_list} to a three-dimensional FITS
   datacube object as determined by the \texttt{fits} input parameter (see
   \texttt{galsim/fits.py}).}
