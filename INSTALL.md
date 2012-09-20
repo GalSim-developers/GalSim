@@ -423,7 +423,7 @@ If you are happy with running GalSim using the fink version of python 2.7, you
 can install everything with the following commands:
 
     fink install scons fftw3 tmv0 python27 numpy-py27 pyfits-py27 yaml-py27 \
-    boost1.35-python27
+    	 boost1.35-python27
     scons PYTHON=/sw/bin/python2.7 TMV_DIR=/sw 
     scons install
 
@@ -457,14 +457,14 @@ is not supported but can be easily installed by following the instructions
 in Section 1.iv).
 
 Note that when using MacPorts to install Boost, you may need to explicitly
-indicate Boost.Python.  Furthermore, some users have had problems due
-to a recently-fixed Macports bug, so the following sequence of
-commands should be used to update Macports (avoiding the buggy
-version) and install all dependencies that are available on Macports:
+indicate Boost.Python.  It is in general a good idea to upgrade all modules
+('selfupdate' and 'upgrade outdated') prior to installing any new modules.
+The following modules relevant to GalSim are available on Macports:
 
     sudo port selfupdate
     sudo port upgrade outdated
-    sudo port install scons fftw-3 python27 py27-nose py27-numpy py27-pyfits py27-yaml
+    sudo port install scons fftw-3 python27 py27-nose py27-numpy py27-pyfits \
+    	 py27-yaml
     sudo port install boost +python27
 
 # 5. More SCons options
@@ -551,7 +551,9 @@ You can list these options from the command line with
    libraries in addition to the standard locations such as `/usr/lib` and 
    `/usr/local/lib`.  These directories are specified as `-L` flags to the 
    linker. If you are giving multiple directories, they should be separated by 
-   colons.  Sometimes, both EXTRA_LIB_PATH and EXTRA_LIBS need to be specified.
+   colons.  Sometimes, both EXTRA_LIB_PATH and EXTRA_LIBS need to be specified;
+   to add the library `/blah/libfoo.a`, specify 
+   `EXTRA_LIB_PATH=/blah/ EXTRA_LIBS=foo`.
 
 * `EXTRA_PATH` ('') specifies directories in which to search for executables
    (notably the compiler, although you can also just give the full path in the 
