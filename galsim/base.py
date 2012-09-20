@@ -595,7 +595,7 @@ class GSObject(object):
 # The __init__ method is usually simple and all the GSObject methods & attributes are inherited.
 # 
 class Gaussian(GSObject):
-    """GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
+    """A class describing Gaussian profile objects.  Has an SBGaussian in the SBProfile attribute.
 
     For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
     documentation produced by doxygen.
@@ -661,7 +661,7 @@ class Gaussian(GSObject):
 
 
 class Moffat(GSObject):
-    """GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
+    """A class describing Moffat PSF profiles.  Has an SBMoffat in the SBProfile attribute.
 
     For more details of the Moffat Surface Brightness profile, please see the SBMoffat
     documentation produced by doxygen.
@@ -825,7 +825,7 @@ class AtmosphericPSF(GSObject):
 
 
 class Airy(GSObject):
-    """GalSim Airy, which has an SBAiry in the SBProfile attribute.
+    """A class describing Airy PSF profiles.  Has an SBAiry in the SBProfile attribute.
 
     For more details of the Airy Surface Brightness profile, please see the SBAiry documentation
     produced by doxygen.
@@ -898,7 +898,7 @@ class Airy(GSObject):
 
 
 class Kolmogorov(GSObject):
-    """GalSim Kolmogorov, which has an SBKolmogorov in the SBProfile attribute.
+    """A class describing Kolmogorov PSF profiles.  Has an SBKolmogorov in the SBProfile attribute.
        
     Represents a long exposure Kolmogorov PSF.
 
@@ -981,8 +981,8 @@ class Kolmogorov(GSObject):
 
 
 class OpticalPSF(GSObject):
-    """Class describing aberrated PSFs due to telescope optics, which has an SBInterpolatedImage in
-    the SBProfile attribute.
+    """A class describing aberrated PSFs due to telescope optics.  Has an SBInterpolatedImage in the
+    SBProfile attribute.
 
     Input aberration coefficients are assumed to be supplied in units of incident light wavelength,
     and correspond to the conventions adopted here:
@@ -1094,7 +1094,7 @@ class OpticalPSF(GSObject):
 
 
 class Pixel(GSObject):
-    """GalSim Pixel, which has an SBBox in the SBProfile attribute.
+    """A class describing pixels.  Has an SBBox in the SBProfile attribute.
 
     Initialization
     --------------
@@ -1130,7 +1130,7 @@ class Pixel(GSObject):
 
 
 class Sersic(GSObject):
-    """GalSim Sersic, which has an SBSersic in the SBProfile attribute.
+    """A class describing Sersic profile objects.  Has an SBSersic in the SBProfile attribute.
 
     For more details of the Sersic Surface Brightness profile, please see the SBSersic documentation
     produced by doxygen.
@@ -1176,7 +1176,8 @@ class Sersic(GSObject):
 
 
 class Exponential(GSObject):
-    """GalSim Exponential, which has an SBExponential in the SBProfile attribute.
+    """A class describing exponential profile objects.  Has an SBExponential in the SBProfile 
+    attribute.
 
     For more details of the Exponential Surface Brightness profile, please see the SBExponential
     documentation produced by doxygen.
@@ -1233,7 +1234,8 @@ class Exponential(GSObject):
 
 
 class DeVaucouleurs(GSObject):
-    """GalSim DeVaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
+    """A class describing DeVaucouleurs profile objects.  Has an SBDeVaucouleurs in the SBProfile 
+    attribute.
 
     For more details of the DeVaucouleurs Surface Brightness profile, please see the
     SBDeVaucouleurs documentation produced by doxygen.
@@ -1274,7 +1276,8 @@ class DeVaucouleurs(GSObject):
 
      
 class RealGalaxy(GSObject):
-    """Class describing real galaxies from some training dataset.
+    """A class describing real galaxies from some training dataset.  Has an SBConvolve in the
+    SBProfile attribute.
 
     This class uses a catalog describing galaxies in some training data (for more details, see the
     RealGalaxyCatalog documentation) to read in data about realistic galaxies that can be used for
@@ -1399,8 +1402,7 @@ class RealGalaxy(GSObject):
 # --- Compound GSObect classes: Add and Convolve ---
 
 class Add(GSObject):
-    """Base class for defining the python interface to the SBAdd C++ class (which is its SBProfile
-    attribute).
+    """A class for adding 2 or more GSObjects.  Has an SBAdd in the SBProfile attribute.
 
     Methods
     -------
@@ -1435,7 +1437,7 @@ class Add(GSObject):
             GSObject.__init__(self, galsim.SBAdd(SBList))
 
 class Convolve(GSObject):
-    """A class for convolving 2 or more GSObjects.
+    """A class for convolving 2 or more GSObjects.  Has an SBConvolve in the SBProfile attribute.
 
     The objects to be convolved may be provided either as multiple unnamed arguments
     (e.g. `Convolve(psf,gal,pix)`) or as a list (e.g. `Convolve([psf,gal,pix])`).
@@ -1474,8 +1476,6 @@ class Convolve(GSObject):
     there are 2 profiles, both of which have hard edges.  In this case, we 
     automatically use real-space convolution.  In all other cases, the 
     default is to use the DFT algorithm.
-
-    The SBProfile attribute for the Convolve class is an SBConvolve.
     """
                     
     # --- Public Class methods ---
