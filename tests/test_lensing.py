@@ -80,11 +80,14 @@ def test_shear_flatps():
     import time
     t1 = time.time()
 
+    # setup the gaussian deviate object to use for these tests
+    gd = galsim.GaussianDeviate(512342)
+
     # make a flat power spectrum for E, B modes
     test_ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pkflat,
                                            B_power_function=galsim.lensing.pkflat)
     # get shears on 500x500 grid
-    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500)
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, gaussian_deviate=gd)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -105,7 +108,7 @@ def test_shear_flatps():
     # make a pure E-mode spectrum
     test_ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pkflat)
     # get shears on 500x500 grid
-    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500)
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, gaussian_deviate=gd)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -135,7 +138,7 @@ def test_shear_flatps():
     # make a pure B-mode spectrum
     test_ps = galsim.lensing.PowerSpectrum(B_power_function=galsim.lensing.pkflat)
     # get shears on 500x500 grid
-    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500)
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, gaussian_deviate=gd)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
