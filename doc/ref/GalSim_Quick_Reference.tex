@@ -244,6 +244,15 @@ represented by the instance (e.g., \texttt{setFlux()},
   \ref{sect:gsobjectclasses}, such as \texttt{getFWHM()} for the
   \texttt{Moffat}, will be unavailable.
 
+Once again, for more information regarding each \texttt{galsim.GSObject}~method,
+the Python docstring is available
+
+{\tt >>> help(obj.<methodName>)}
+
+within the Python interpreter.  Alternatively follow the hyperlinks on
+the class names above to view the documentation based
+on the Python docstrings. 
+
 Some of the most important and commonly-used methods for such an
 instance are:
 \begin{itemize}
@@ -279,7 +288,8 @@ instance are:
   \newline {apply a shear to the \texttt{GSObject}, handling a number of different
   input conventions (see also 
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1shear_1_1_shear.html}{\texttt{Shear}};
-  Section~\ref{sect:shears}).  Commonly-used input conventions:
+  Section~\ref{sect:shears}).  Commonly-used input conventions
+  (supplied as keyword arguments, default values zero):
    \begin{itemize}
   \item \texttt{obj.applyShear(g1=g1, g2=g2)} \\
     apply the first (\texttt{g1}) and second (\texttt{g2}) component
@@ -308,30 +318,62 @@ instance are:
       dy)}} \newline {apply a $(dx, dy)$ position shift to the
     \texttt{GSObject} centroid.}
 \item[$\circ$]
-  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...,
-      dx=1)}}
-  \newline {draw an image of the \texttt{GSObject}~using Discrete Fourier
-  Transforms and interpolation to perform the image rendering.  The
-  optional image pixel scale \texttt{dx} (default \texttt{dx~=~1})
-  should use the same units as used for the \texttt{GSObject} size parameters.}
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{image
+      = obj.draw(image=None, dx=None, add\_to\_image = False, ...)}}
+  \newline {draw and return an \texttt{Image} (see Section \ref{sect:image}) of the \texttt{GSObject}~using Discrete Fourier
+  Transforms and interpolation to perform the image rendering.  
+  Some information about important optional parameters (see the
+  linked / Python docstrings for more detail), along with default values:
+  \begin{itemize}
+  \item \texttt{image} (default = \texttt{None}) \newline 
+    if supplied, the drawing will be done into a user-supplied
+    \texttt{Image} instance \texttt{image}.  If not supplied
+    (i.e. \texttt{image = None}), an
+    automatically-sized \texttt{Image} instance will be returned.
+  \item \texttt{dx} (default = \texttt{None}) \newline 
+    the optional image pixel scale \texttt{dx}, which if provided
+    should use the same units as used for the \texttt{GSObject} size
+    parameters.  If not provided, will take either the scale from a
+    supplied \texttt{image}, else use the Nyquist scale given the
+    maximum modelled frequency in the \texttt{GSObject}.
+  \item \texttt{add\_to\_image} (default = \texttt{False}) \newline
+   Whether to add flux to a (must be supplied) \texttt{image} rather than clear out
+   anything in the image before drawing.
+ \end{itemize}
+The \texttt{draw} method has a number of additional optional
+ parameters.  Please see the linked / Python docstrings for more
+ details.
+ }
 \item[$\circ$]
-  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(image,
-      ..., dx=1)}}
-  \newline {draw an image of the \texttt{GSObject}~by shooting a finite number of
-  photons into a user-supplied \texttt{Image} instance,
-  \texttt{image}, which unlike for \texttt{draw()} is a required input.  The resulting rendering
-  therefore contains stochastic noise, but uses few approximations. The
-  optional image pixel scale \texttt{dx} (default \texttt{dx~=~1})
-  should use the same units as used for the \texttt{GSObject} size parameters.}
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{image
+      = obj.drawShoot(image=None, dx=None, add\_to\_image = False, ...)}} \newline {draw and return an
+    \texttt{Image} (see Section \ref{sect:image}) of the
+    \texttt{GSObject}~by shooting a finite number of photons.  The resulting
+    rendering therefore contains stochastic noise, but uses few
+    approximations. Some information about important optional parameters, along with default values:
+  \begin{itemize}
+  \item \texttt{image} (default = \texttt{None}) \newline 
+    if supplied, the drawing will be done into a user-supplied
+    \texttt{Image} instance \texttt{image}.  If not supplied
+    (i.e. \texttt{image = None}), an
+    automatically-sized \texttt{Image} instance will be returned.
+  \item \texttt{dx} (default = \texttt{None}) \newline 
+    the optional image pixel scale \texttt{dx}, which if provided
+    should use the same units as used for the \texttt{GSObject} size
+    parameters.  If not provided, will take either the scale from a
+    supplied \texttt{image}, else use the Nyquist scale given the
+    maximum modelled frequency in the \texttt{GSObject}.
+  \item \texttt{add\_to\_image} (default = \texttt{False}) \newline
+   Whether to add flux to a (must be supplied) \texttt{image} rather than clear out
+   anything in the image before drawing.
+ \end{itemize}
+ The \texttt{drawShoot} method has a number of additional optional
+ parameters.  Please see the linked / Python docstrings for more
+ details.
+}
 \end{itemize}
-Once again, for more information regarding each \texttt{galsim.GSObject}~method,
-the Python docstring is available
 
-{\tt >>> help(obj.<methodName>)}
-
-within the Python interpreter.  Alternatively follow the hyperlinks on
-the class names above to view the documentation based
-on the Python docstrings.  You will see that many of the \texttt{GSObject}
+Finally, you may see by exploring the docstrings that many of the \texttt{GSObject}
 instances also have their own specialized methods, often for
 retrieving parameter values. Examples are
 \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_gaussian.html#a418f2826a7b8934cfedc181de23ce826}{\texttt{obj.getSigma()}}
@@ -606,10 +648,11 @@ within the Python interpreter.
 
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1shear_1_1_shear.html}{\texttt{galsim.Shear(...)}}
-  \newline {class to represent shears in a variety of ways.  Like
-    the \texttt{galsim.Ellipse}, this class can be initialized using a
+  \newline {class to represent shears in a variety of ways.  Like the
+    \texttt{galsim.Ellipse}, this class can be initialized using a
     variety of different parameter conventions (see
-    \texttt{galsim/shear.py}).  Commonly-used examples:
+    \texttt{galsim/shear.py}).  Commonly-used examples (supplied as
+    keyword arguments, default values zero):
    \begin{itemize}
   \item \texttt{galsim.Shear(g1=g1, g2=g2)} \\
     set via the first (\texttt{g1}) and second (\texttt{g2}) component
