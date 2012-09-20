@@ -71,7 +71,8 @@ Multiple Calling Options
 >>> BaseDeviate.reset(lseed)   # Re-seed the PRNG using specified seed, where lseed is a long int, 
                                # and sever the connection to any other Deviate.
 
->>> BaseDeviate.reset(dev)     # Re-connect this Deviate with the rng in another one supplied as dev.
+>>> BaseDeviate.reset(dev)     # Re-connect this Deviate with the rng in another one supplied as 
+                               # dev.
 
 """
 
@@ -105,7 +106,7 @@ numbers distributed uniformly in the interval [0., 1.).
 
 Methods
 -------
-To add deviates to every element of an image, use the syntax image.addNoise().
+To add deviates to every element of an image, use the syntax image.addNoise(u).
 
 This docstring can be found using the Python interpreter or in pysrc/Random.cpp.
 """
@@ -162,7 +163,7 @@ numbers which Gaussian-distributed with the provided mean, sigma.
 
 Methods
 -------
-To add deviates to every element of an image, use the syntax image.addNoise().
+To add deviates to every element of an image, use the syntax image.addNoise(g).
 
 To get and set the deviate parameters, see the docstrings for the .getMean(), .setMean(), 
 .getSigma() and .setSigma() methods of each instance.
@@ -231,7 +232,7 @@ numbers binomial-distributed with the provided N, p.
 
 Methods
 -------
-To add deviates to every element of an image, use the syntax image.addNoise().
+To add deviates to every element of an image, use the syntax image.addNoise(b).
 
 To get and set the deviate parameters, see the docstrings for the .getN(), .setN(), .getP() and
 .setP() methods of each instance.
@@ -299,7 +300,7 @@ pseudo-random Poisson deviates with specified mean.
 
 Methods
 -------
-To add deviates to every element of an image, use the syntax image.addNoise().
+To add deviates to every element of an image, use the syntax image.addNoise(p).
 
 To get and set the deviate parameter, see the docstrings for the .getMean(), .setMean() method of 
 each instance.
@@ -362,7 +363,7 @@ Parameters:
 
 Methods
 -------
-To add deviates to every element of an image, use the syntax image.addNoise().
+To add deviates to every element of an image, use the syntax image.addNoise(ccd_noise).
 
 To get and set the deviate parameters, see the docstrings for the .getGain(), .setGain(), 
 .getReadNoise() and .setReadNoise() methods of each instance.
@@ -427,7 +428,7 @@ numbers Weibull-distributed with shape and scale parameters a and b.
 
 Methods
 -------
-To add deviates to every element of an image, use the syntax image.addNoise().
+To add deviates to every element of an image, use the syntax image.addNoise(w).
 
 To get and set the deviate parameters, see the docstrings for the .getA(), .setA(), .getB() and 
 .setB() methods of each instance.
@@ -496,7 +497,7 @@ pseudo-random Gamma-distributed deviates with shape and scale parameters alpha a
 
 Methods
 -------
-To add deviates to every element of an image, use the syntax image.addNoise().
+To add deviates to every element of an image, use the syntax image.addNoise(gam).
 
 To get and set the deviate parameters, see the docstrings for the .getAlpha(), .setAlpha(), 
 .getBeta() and .setBeta() methods of each instance.
@@ -563,7 +564,7 @@ pseudo-random Chi^2-distributed deviates with degrees-of-freedom parameter n.
 
 Methods
 -------
-To add deviates to every element of an image, use the syntax image.addNoise().
+To add deviates to every element of an image, use the syntax image.addNoise(chis).
 
 To get and set the deviate parameter, see the docstrings for the .getN(), .setN() methods of each
 instance.
