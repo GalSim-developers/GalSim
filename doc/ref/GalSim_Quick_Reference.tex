@@ -200,8 +200,8 @@ the class.
 \subsection{Units}
 The choice of units for the size parameters is up to the user,
 but it must be kept consistent between all \texttt{GSObjects}.  These
-units must also adopted when specifying the \texttt{Image} sample
-rate \texttt{dx}, whether this is set via the \texttt{GSObject}
+units must also adopted when specifying the \texttt{Image} pixel
+scale \texttt{dx}, whether this is set via the \texttt{GSObject}
 instance methods \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...)}}
 and
 \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}
@@ -312,7 +312,7 @@ instance are:
       dx=1)}}
   \newline {draw an image of the \texttt{GSObject}~using Discrete Fourier
   Transforms and interpolation to perform the image rendering.  The
-  optional image sample scale \texttt{dx} (default \texttt{dx~=~1})
+  optional image pixel scale \texttt{dx} (default \texttt{dx~=~1})
   should use the same units as used for the \texttt{GSObject} size parameters.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(image,
@@ -321,7 +321,7 @@ instance are:
   photons into a user-supplied \texttt{Image} instance,
   \texttt{image}, which unlike for \texttt{draw()} is a required input.  The resulting rendering
   therefore contains stochastic noise, but uses few approximations. The
-  optional image sample scale \texttt{dx} (default \texttt{dx~=~1})
+  optional image pixel scale \texttt{dx} (default \texttt{dx~=~1})
   should use the same units as used for the \texttt{GSObject} size parameters.}
 \end{itemize}
 Once again, for more information regarding each \texttt{galsim.GSObject}~method,
@@ -500,10 +500,10 @@ This \texttt{Image} instance is then ready to pass to a
 methods for such an instance are:
 \begin{itemize}
 
-\item[$\circ$] \texttt{img.getScale()} \newline {get the sample
+\item[$\circ$] \texttt{img.getScale()} \newline {get the pixel
     scale \texttt{dx} for this image.}
 
-\item[$\circ$] \texttt{img.setScale(dx)} \newline {set the sample
+\item[$\circ$] \texttt{img.setScale(dx)} \newline {set the pixel
     scale for this image to \texttt{dx} --- note that this scale
     should use the same units adopted for the \texttt{GSObject}
     sizes.}
