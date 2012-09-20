@@ -103,9 +103,11 @@ class GSObject(object):
         """
         return self.SBProfile.isAnalyticX()
 
-    # This method does not seem to be wrapped from C++
-    # def isAnalyticK(self):
-    # return self.SBProfile.isAnalyticK()
+    def isAnalyticK(self):
+        """Returns True if k-space values can be determined immediately at any position without 
+        requiring a Discrete Fourier Transform.
+        """
+        return self.SBProfile.isAnalyticK()
 
     def centroid(self):
         """Returns the (x, y) centroid of an object as a Position.

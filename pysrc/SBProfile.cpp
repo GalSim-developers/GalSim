@@ -210,6 +210,9 @@ namespace galsim {
                 .def("isAnalyticX", &SBProfile::isAnalyticX,
                      "True if real-space values can be determined immediately at any position "
                      "without DFT.")
+                .def("isAnalyticK", &SBProfile::isAnalyticK,
+                     "True if k-space values can be determined immediately at any position "
+                     "without DFT.")
                 .def("centroid", &SBProfile::centroid)
                 .def("getFlux", &SBProfile::getFlux)
                 .def("scaleFlux", &SBProfile::scaleFlux, bp::args("fluxRatio"))
