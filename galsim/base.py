@@ -420,7 +420,7 @@ class GSObject(object):
                               (Default = "flux")
 
         @param add_to_image  Whether to add flux to the existing image rather than clear out
-                             anything in the image before shooting.
+                             anything in the image before drawing.
                              Note: This requires that image be provided (i.e. not None) and 
                              that it have defined bounds.
                              (Default = False)
