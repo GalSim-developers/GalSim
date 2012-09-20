@@ -106,12 +106,17 @@ namespace galsim {
         //@}
     }
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
+
     /// @brief Exception class thrown by SBProfiles.
     class SBError : public std::runtime_error 
     {
     public:
         SBError(const std::string& m="") : std::runtime_error("SB Error: " + m) {}
     };
+
+    //! @endcond
 
     /** 
      * @brief A base class representing all of the 2D surface brightness profiles that 
@@ -236,7 +241,7 @@ namespace galsim {
          *
          * @returns the recommended image size.
          *
-         * The basic formult is 2pi * wmult / (dx * stepK())
+         * The basic formula is 2pi * wmult / (dx * stepK())
          * But then we round up to the next even integer value.
          */
         int getGoodImageSize(double dx, double wmult = 1.) const;
