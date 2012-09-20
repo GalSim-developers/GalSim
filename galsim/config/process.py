@@ -1231,7 +1231,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng):
         #print 'im.scale = ',im.scale
         #print 'im.bounds = ',im.bounds
         #print 'before drawShoot: rng() = ',rng()
-        final.drawShoot(im, noise=max_extra_noise, uniform_deviate=rng)
+        final.drawShoot(im, max_extra_noise=max_extra_noise, uniform_deviate=rng)
         #print 'after drawShoot: rng() = ',rng()
 
     return im

@@ -53,16 +53,16 @@ namespace galsim {
         void fillXGrid(XTable& xt) const;
 
         template <typename T>
-        double fillXImage(ImageView<T>& I, double dx, double gain) const;
+        double fillXImage(ImageView<T>& I, double gain) const;
 
-        double doFillXImage(ImageView<float>& I, double dx, double gain) const
-        { return fillXImage(I,dx,gain); }
-        double doFillXImage(ImageView<double>& I, double dx, double gain) const
-        { return fillXImage(I,dx,gain); }
-        double doFillXImage(ImageView<short>& I, double dx, double gain) const
-        { return fillXImage(I,dx,gain); }
-        double doFillXImage(ImageView<int>& I, double dx, double gain) const
-        { return fillXImage(I,dx,gain); }
+        double doFillXImage(ImageView<float>& I, double gain) const
+        { return fillXImage(I,gain); }
+        double doFillXImage(ImageView<double>& I, double gain) const
+        { return fillXImage(I,gain); }
+        double doFillXImage(ImageView<short>& I, double gain) const
+        { return fillXImage(I,gain); }
+        double doFillXImage(ImageView<int>& I, double gain) const
+        { return fillXImage(I,gain); }
 
     private:
         double _xw;   ///< Boxcar function is `xw` x `yw` across.

@@ -4,7 +4,9 @@ import utilities
 
 """@file optics.py @brief Module containing the optical PSF generation routines.
 
-These are just functions; they are used to generate galsim.Optics() class instances (see base.py).
+These are just functions; they are used to generate galsim.OpticalPSF() class instances (see 
+base.py).   Mostly they are solely of use to developers for generating arrays that may be useful in
+defining GSObjects with an optical component.
 
 Glossary of key terms used in function names:
 
@@ -55,8 +57,9 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
     else:
         in_pupil = (np.abs(kx) < .5 * kmax_internal) * (np.abs(ky) < .5 * kmax_internal)
         if obscuration > 0.:
-            in_pupil = in_pupil * ((np.abs(kx) >= .5 * obscuration * kmax_internal) *
-                                   (np.abs(ky) >= .5 * obscuration * kmax_internal))
+            in_pupil = in_pupil * (
+                (np.abs(kx) >= .5 * obscuration * kmax_internal) *
+                (np.abs(ky) >= .5 * obscuration * kmax_internal))
     return rho, theta, in_pupil
 
 def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
@@ -97,10 +100,9 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     Outputs the wavefront for kx, ky locations corresponding to kxky(array_shape).
     """
     # Define the pupil coordinates and non-zero regions based on input kwargs
-    rho, theta, in_pupil = generate_pupil_plane(array_shape=array_shape, dx=dx,
-                                                lam_over_diam=lam_over_diam,
-                                                circular_pupil=circular_pupil,
-                                                obscuration=obscuration)
+    rho, theta, in_pupil = generate_pupil_plane(
+        array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, circular_pupil=circular_pupil,
+        obscuration=obscuration)
     pi = np.pi # minor but saves Python checking the entire np. namespace every time I need pi    
     # Then make wavefront image
     wf = np.zeros(array_shape, dtype=complex)
@@ -133,7 +135,8 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
-    (kx, ky) = (0, 0) is the [0, 0] array element.
+    (kx, ky) = (0, 0) is the [0, 0] array element.  The scale of the output ImageViewD is correct in
+    k space units.
 
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the definitions given here:
@@ -157,11 +160,20 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    array = wavefront(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
-                      astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                      circular_pupil=circular_pupil, obscuration=obscuration)
-    return (galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64))),
-            galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64))))
+    array = wavefront(
+        array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
+        astig2=astig2, coma1=coma1, coma2=coma2, spher=spher, circular_pupil=circular_pupil, 
+        obscuration=obscuration)
+    imreal = galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64)))
+    imimag = galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64)))
+    if array_shape[0] != array_shape[1]:
+        import warnings
+        warnings.warn(
+            "Wavefront Images' scales will not be correct in both directions for non-square "+
+            "arrays, only square grids currently supported by galsim.Images.")
+    imreal.setScale(2. * np.pi / array_shape[0])
+    imimag.setScale(2. * np.pi / array_shape[0])
+    return (imreal, imimag)
 
 def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., spher=0., circular_pupil=True, obscuration=0., flux=1.):
@@ -194,9 +206,10 @@ def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
                            dimension, [0., 1.)
     @param flux            total flux of the profile [default flux=1.]
     """
-    wf = wavefront(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
-                   astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                   circular_pupil=circular_pupil, obscuration=obscuration)
+    wf = wavefront(
+        array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
+        astig2=astig2, coma1=coma1, coma2=coma2, spher=spher, circular_pupil=circular_pupil, 
+        obscuration=obscuration)
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
     im = utilities.roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
@@ -231,10 +244,13 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
                            dimension, [0., 1.)
     @param flux            total flux of the profile [default flux=1.]
     """
-    array = psf(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
-                astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
-    return galsim.ImageViewD(array.astype(np.float64))
+    array = psf(
+        array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
+        astig2=astig2, coma1=coma1, coma2=coma2, spher=spher, circular_pupil=circular_pupil, 
+        obscuration=obscuration, flux=flux)
+    im = galsim.ImageViewD(array.astype(np.float64))
+    im.setScale(dx)
+    return im
 
 def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., spher=0., circular_pupil=True, obscuration=0.):
@@ -266,9 +282,10 @@ def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    wf = wavefront(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
-                   astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                   circular_pupil=circular_pupil, obscuration=obscuration)
+    wf = wavefront(
+        array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
+        astig2=astig2, coma1=coma1, coma2=coma2, spher=spher, circular_pupil=circular_pupil, 
+        obscuration=obscuration)
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     otf = np.fft.ifft2((ftwf * ftwf.conj()).real)
     # Make unit flux before returning
@@ -280,7 +297,7 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     aberrations as a (real, imag) tuple of ImageViewD objects rather than a complex numpy array.
 
     OTF array element ordering follows the DFT standard of kxky(array_shape), and has
-    otf[0, 0] = 1+0j by default.
+    otf[0, 0] = 1+0j by default.  The scale of the output ImageViewD is correct in k space units.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
@@ -302,11 +319,20 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    array = otf(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
-                astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                circular_pupil=circular_pupil, obscuration=obscuration)
-    return (galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64))),
-            galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64))))
+    array = otf(
+        array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
+        astig2=astig2, coma1=coma1, coma2=coma2, spher=spher, circular_pupil=circular_pupil, 
+        obscuration=obscuration)
+    imreal = galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64)))
+    imimag = galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64)))
+    if array_shape[0] != array_shape[1]:
+        import warnings
+        warnings.warn(
+            "OTF Images' scales will not be correct in both directions for non-square arrays, "+
+            "only square grids currently supported by galsim.Images.")
+    imreal.setScale(2. * np.pi / array_shape[0])
+    imimag.setScale(2. * np.pi / array_shape[0])
+    return (imreal, imimag)
 
 def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., spher=0., circular_pupil=True, obscuration=0.):
@@ -338,9 +364,10 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    return np.abs(otf(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
-                      astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                      obscuration=obscuration, circular_pupil=circular_pupil))
+    return np.abs(otf(
+        array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
+        astig2=astig2, coma1=coma1, coma2=coma2, spher=spher, obscuration=obscuration, 
+        circular_pupil=circular_pupil))
 
 def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
@@ -348,7 +375,7 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     an ImageViewD.
 
     MTF array element ordering follows the DFT standard of kxky(array_shape), and has
-    mtf[0, 0] = 1 by default.
+    mtf[0, 0] = 1 by default.  The scale of the output ImageViewD is correct in k space units.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
@@ -370,10 +397,18 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    array = mtf(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
-                astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                circular_pupil=circular_pupil, obscuration=obscuration)
-    return galsim.ImageViewD(array.astype(np.float64))
+    array = mtf(
+        array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
+        astig2=astig2, coma1=coma1, coma2=coma2, spher=spher, circular_pupil=circular_pupil, 
+        obscuration=obscuration)
+    im = galsim.ImageViewD(array.astype(np.float64))
+    if array_shape[0] != array_shape[1]:
+        import warnings
+        warnings.warn(
+            "MTF Image scale will not be correct in both directions for non-square arrays, only "+
+            "square grids currently supported by galsim.Images.")
+    im.setScale(2. * np.pi / array_shape[0])
+    return im
 
 def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., spher=0., circular_pupil=True, obscuration=0.):
@@ -410,12 +445,10 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
     ptf = np.zeros(array_shape)
     kmax_internal = dx * 2. * np.pi / lam_over_diam # INTERNAL kmax in units of array grid spacing
     # Try to handle where both real and imag tend to zero...
-    ptf[k2 < kmax_internal**2] = np.angle(otf(array_shape=array_shape, dx=dx, 
-                                              lam_over_diam=lam_over_diam,
-                                              defocus=defocus, astig1=astig1, astig2=astig2,
-                                              coma1=coma1, coma2=coma2, spher=spher,
-                                              circular_pupil=circular_pupil,
-                                              obscuration=obscuration)[k2 < kmax_internal**2])
+    ptf[k2 < kmax_internal**2] = np.angle(otf(
+        array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
+        astig2=astig2, coma1=coma1, coma2=coma2, spher=spher, circular_pupil=circular_pupil,
+        obscuration=obscuration)[k2 < kmax_internal**2])
     return ptf
 
 def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
@@ -424,7 +457,7 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     aberrations as an ImageViewD.
 
     PTF array element ordering follows the DFT standard of kxky(array_shape), and has
-    ptf[0, 0] = 0. by default.
+    ptf[0, 0] = 0. by default.  The scale of the output ImageViewD is correct in k space units.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
@@ -446,8 +479,15 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     """
-    array = ptf(array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus,
-                astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                circular_pupil=circular_pupil, obscuration=obscuration)
-    return galsim.ImageViewD(array.astype(np.float64))
-
+    array = ptf(
+        array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
+        astig2=astig2, coma1=coma1, coma2=coma2, spher=spher, circular_pupil=circular_pupil, 
+        obscuration=obscuration)
+    im = galsim.ImageViewD(array.astype(np.float64))
+    if array_shape[0] != array_shape[1]:
+        import warnings
+        warnings.warn(
+            "PTF Image scale will not be correct in both directions for non-square arrays, only "+
+            "square grids currently supported by galsim.Images.")
+    im.setScale(2. * np.pi / array_shape[0])
+    return im

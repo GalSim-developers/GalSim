@@ -41,6 +41,9 @@
 namespace galsim {
 namespace hsm {
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
+
     /**
      * @brief Exception class thrown by the adaptive moment and shape measurement routines in the
      * hsm namespace
@@ -50,6 +53,8 @@ namespace hsm {
         HSMError(const std::string& m="") :
             std::runtime_error("HSM Error: " + m) {}
     };
+
+    //! @endcond
 
     /**
      * @brief Characterizes the shape and other parameters of objects.
