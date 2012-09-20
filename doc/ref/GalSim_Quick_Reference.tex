@@ -603,17 +603,17 @@ within the Python interpreter.
     value and an \texttt{AngleUnit} instance \texttt{angle\_unit} (see
     below, and \texttt{galsim/angle.py}).}
 
-\item[$\circ$] \texttt{galsim.AngleUnit(radians)} \newline {class
-    for holding angular unit definitions, specified on initialization
-    in \texttt{radians}.  There are five built-in AngleUnits which are
+\item[$\circ$] \texttt{galsim.AngleUnit} \newline {There are five built-in \texttt{AngleUnit}s which are
     always available for use:
  \begin{itemize}
- \item {\tt galsim.radians \# = galsim.AngleUnit(1.)}
- \item {\tt galsim.degrees \# = galsim.AngleUnit(pi / 180.)}
- \item {\tt galsim.hours \# = galsim.AngleUnit(pi / 12.)}
- \item {\tt galsim.arcmin \# = galsim.AngleUnit(pi / 180. / 60.)}
- \item {\tt galsim.arcsec \# = galsim.AngleUnit(pi / 180. / 3600.)}
+ \item {\tt galsim.radians}
+ \item {\tt galsim.degrees}
+ \item {\tt galsim.hours}
+ \item {\tt galsim.arcmin}
+ \item {\tt galsim.arcsec}
  \end{itemize}}
+ Please see the Python docstrings for information about defining your
+ own \texttt{AngleUnit}s.
 \end{itemize}
 
 \subsection{Bounds and Positions}\label{sect:bounds}
