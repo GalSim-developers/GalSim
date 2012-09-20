@@ -178,12 +178,12 @@ def test_OpticalPSF_flux():
     """
     import time
     t1 = time.time()
-    lods = (1., 4., 9.) # lambda/D values: don't choose unity in case symmetry hides something
+    lods = (1.e-8, 4., 9.e5) # lambda/D values: don't choose unity in case symmetry hides something
     nlook = 512         # Need a bit bigger image than below to get enough flux
     image = galsim.ImageF(nlook,nlook)
     for lod in lods:
         optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1)
-        optics_array = optics_test.draw(dx=1.,image=image).array 
+        optics_array = optics_test.draw(dx=.25*lod, image=image).array 
         np.testing.assert_almost_equal(optics_array.sum(), 1., 2, 
                 err_msg="Unaberrated Optical flux not quite unity.")
     t2 = time.time()
@@ -194,14 +194,14 @@ def test_OpticalPSF_vs_Airy():
     """
     import time
     t1 = time.time()
-    lods = (4., 9., 16.) # lambda/D values: don't choose unity in case symmetry hides something
+    lods = (4.e-7, 9., 16.4) # lambda/D values: don't choose unity in case symmetry hides something
     nlook = 100
     image = galsim.ImageF(nlook,nlook)
     for lod in lods:
         airy_test = galsim.Airy(lam_over_diam=lod, obscuration=0., flux=1.)
-        optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1) #pad same as an Airy, natch!
-        airy_array = airy_test.draw(dx=1.,image=image).array
-        optics_array = optics_test.draw(dx=1.,image=image).array 
+        optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1)#pad same as an Airy, natch!
+        airy_array = airy_test.draw(dx=.25*lod, image=image).array
+        optics_array = optics_test.draw(dx=.25*lod, image=image).array 
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
                 err_msg="Unaberrated Optical not quite equal to Airy")
     t2 = time.time()
