@@ -257,9 +257,24 @@ namespace galsim {
         }
     }
 
+    // First the generic version:
+    template <class T, bool is_int>
+    struct CalculateCenter 
+    {
+        static Position<T> call(const Bounds<T>& b)
+        { return Position<T>((b.getXMin() + b.getXMax())/T(2),(b.getYMin() + b.getYMax())/T(2)); }
+    };
+    // Slightly different for integer types:
+    template <class T>
+    struct CalculateCenter<T, true>
+    {
+        static Position<T> call(const Bounds<T>& b)
+        { return Position<T>((b.getXMin()+b.getXMax()+1)/T(2),(b.getYMin()+b.getYMax()+1)/T(2)); }
+    };
+
     template <class T>
     Position<T> Bounds<T>::center() const
-    { return Position<T>((xmin + xmax)/T(2),(ymin + ymax)/T(2)); }
+    { return CalculateCenter<T,std::numeric_limits<T>::is_integer>::call(*this); }
 
     // & operator finds intersection, if any
     template <class T>
