@@ -131,7 +131,8 @@ image :
     # Define the initial random number seed
     random_seed : 6424512
 
-# Define the output format
+
+# Define the names and format of the output files
 output :
     # type defines what kind of file.
     # Fits is actually the default if not specified, but we set it here anyway.

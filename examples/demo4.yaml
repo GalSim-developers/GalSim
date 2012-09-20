@@ -74,6 +74,7 @@ psf :
     # will be used instead.  If there is no reasonable default, you will get an error.
     #flux : 1  # Unnecessary
 
+
 # Define the galaxy profile
 gal :
     type : Sum
@@ -117,6 +118,8 @@ gal :
         x : { type : InputCatalog , col : 11 } 
         y : { type : InputCatalog , col : 12 }
 
+
+# Define some other information about the images 
 image :
     pixel_scale : *pixel_scale
     xsize : *image_size
@@ -128,14 +131,16 @@ image :
 
     random_seed : 8241573
 
-# Define the input files -- in this case the catalog file to use.
+
+# Define the input files
 input :
     # In this case, we just have a catalog to read in.
     catalog :
         dir : input
         file_name : galsim_default_input.asc
 
-# Define the output format
+
+# Define the name and format of the output file
 output :
     # type = MultiFits means to use a multi-extension fits file
     type : MultiFits

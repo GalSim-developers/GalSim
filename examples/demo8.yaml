@@ -26,6 +26,7 @@ psf :
     beta : 2.4
     fwhm : 0.65  # arcsec
 
+
 # Define the galaxy profile
 gal :
     type : Sum
@@ -54,6 +55,7 @@ gal :
     flux : { type : Random , min : 1.0e4 , max : 1.0e5 }
     
 
+# Define some other information about the images 
 image :
     type : Tiled
     nx_tiles : 10
@@ -71,6 +73,7 @@ image :
     random_seed : 22345921
 
 
+# Define the names and format of the output files
 output :
     dir : output_yaml
 

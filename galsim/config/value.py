@@ -47,7 +47,7 @@ def ParseValue(config, param_name, base, value_type):
             float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'Sequence', 'List' ],
             int : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
             bool : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
-            str : [ 'InputCatalog', 'List' ],
+            str : [ 'InputCatalog', 'List', 'NumberedFile' ],
             Angle : [ 'Rad', 'Deg', 'Random', 'List' ],
             Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
                       'Ring', 'List' ],
@@ -68,7 +68,8 @@ def ParseValue(config, param_name, base, value_type):
             
         if type not in valid_types[value_type]:
             raise AttributeError(
-                "Invalid value for %s.type=%s with value_type = %s."%(param_name,type,value_type))
+                "Invalid type = %s specified for parameter %s with value_type = %s."%(
+                        type, param_name, value_type))
 
         generate_func = eval('_GenerateFrom' + type)
         #print 'generate_func = ',generate_func
@@ -522,6 +523,30 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     #print 'index = ',index
     #print 'saved rep,current = ',param['rep'],param['current']
     return index, False
+
+def _GenerateFromNumberedFile(param, param_name, base, value_type):
+    """@brief Return a file_name using a root, a number, and an extension
+    """
+    print 'Start FileSequence for ',param_name,' -- param = ',param
+    if 'num' not in param:
+        param['num'] = { 'type' : 'Sequence', 'first' : 1 }
+    req = { 'root' : str , 'num' : int }
+    opt = { 'ext' : str , 'digits' : int }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+
+    template = kwargs['root']
+    if 'digits' in kwargs:
+        template += '%%0%dd'%kwargs['digits']
+    else:
+        template += '%d'
+    if 'ext' in kwargs:
+        template += kwargs['ext']
+    print 'template = ',template
+    s = eval("'%s'%%%d"%(template,kwargs['num']))
+    print 'num = ',kwargs['num']
+    print 's = ',s
+    
+    return s, safe
 
 def _GenerateFromList(param, param_name, base, value_type):
     """@brief Return next item from a provided list

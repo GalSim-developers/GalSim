@@ -101,6 +101,8 @@ psf :
             # as a fraction of the primary mirror size.
             obscuration : 0.3
 
+
+# Define some other information about the images 
 image :
     pixel_scale : 0.23   # arcsec / pixel
     size : 64  # pixels in each direction
@@ -135,6 +137,7 @@ image :
     random_seed : 1314662
 
 
+# Define the name and format of the output file
 output :
     dir : output_yaml
     file_name : demo3.fits

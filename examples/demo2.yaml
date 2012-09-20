@@ -46,6 +46,8 @@ psf :
     beta : 5.0 
     half_light_radius : 1.0  # arcsec
 
+
+# Define some other information about the images 
 image :
     pixel_scale : 0.2  # arcsec / pixel
 
@@ -63,6 +65,8 @@ image :
     # If this isn't set, then it will use the current time to create an initial seed.
     random_seed : 1534225
 
+
+# Define the name and format of the output file
 output :
     dir : output_yaml
     file_name : demo2.fits

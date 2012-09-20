@@ -89,6 +89,7 @@ gal :
         e : { type : Random , min : 0.0 , max : 0.8 }
         beta : { type : Random }
 
+
 # Define some other information about the images 
 image :
     # Each image in the data cube has two tiles.
@@ -121,7 +122,8 @@ image :
     # two times, so the fft and phot images get the same values for the random parameters.
     random_seed : { type : Sequence , first : 553728 , repeat : 2 }
 
-# Define the output formats
+
+# Define the name and format of the output file
 output :
     type : DataCube
 

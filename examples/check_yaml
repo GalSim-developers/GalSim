@@ -72,7 +72,7 @@ for dir_num in {1..4}
 do
     for file_num in {1..5}
     do
-        file_name=mass$dir_num/cluster0$file_num.fits
+        file_name=mass$dir_num/cluster000$file_num.fits
 	diff output/$file_name output_yaml/$file_name
     done
 done

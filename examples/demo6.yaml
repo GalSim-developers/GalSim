@@ -53,18 +53,20 @@ psf :
         - { type : Gaussian, fwhm : 2.3, flux : 0.2 }
 
 
-# Define the pixel size
-# This time, we'll leave the size unspecified to let GalSim automatically choose 
-# an appropriate size.
+# Define some other information about the images 
 image :
+    # The pixel size applies to both outputs, so put that here in the first document.
     pixel_scale : 0.15  # arcsec / pixel
 
-    # Define the initial random number seed
-    random_seed : 1512413
+    # This time, we'll leave the size unspecified to let GalSim automatically choose 
+    # an appropriate size.  So no image : size item.
+    
+
 ---
 
 # The first specialization document is for the psf output.
 
+# Define the name and format of the output file
 output :
     dir : output_yaml
     file_name : psf_real.fits
@@ -101,11 +103,7 @@ gal :
     # This conserves surface brightness, so it scale both the size and flux.
     magnify : 1.082
 
-# We add the noise information to the image field.
-# Note: since the output includes a data_cube output, which requires all the
-# images to be the same size, GalSim will choose the size of the first image
-# automatically from the profile, but then subsequent images will be forced to
-# be the same size. 
+# Define some other information about the images 
 image :
     
     # If we specify the sky_level as an image attribute, it will be used
@@ -118,14 +116,24 @@ image :
     # (If we omit it entirely, that would mean no noise, which isn't what we want.)
     noise : {}
 
-# We need to define where the real galaxy input catalog is.
+    random_seed : 1512413
+
+    # Note: since the output includes a data_cube output, which requires all the
+    # images to be the same size, GalSim will choose the size of the first image
+    # automatically from the profile (since we aren't setting any image : size here), 
+    # but then subsequent images will be forced to be the same size as the first one.
+
+
+# Define the input files
 input :
+    # In this case, we need to define where the real galaxy input catalog is.
     real_catalog :
         image_dir : data
         file_name : real_galaxy_catalog_example.fits
         preload : True   # This usually makes a big improvement in speed
 
-# Define the output formats
+
+# Define the name and format of the output file
 output :
     type : DataCube
     dir : output_yaml

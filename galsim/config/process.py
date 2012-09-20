@@ -155,8 +155,11 @@ def ProcessOutput(config, logger=None):
                 if logger:
                     logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
         except:
-            raise AttributeError(
+            warnings.warn(
                 "config.output.nproc <= 0, but unable to determine number of cpus.")
+            nproc = 1
+            if logger:
+                logger.info("Unable to determine ncpu.  Using %d processes",nproc)
     
     if nproc > 1:
         # NB: See the function BuildStamps for more verbose comments about how
