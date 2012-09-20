@@ -756,8 +756,6 @@ def BuildScatteredImage(config, logger=None,
     """
     Build an image containing multiple objects placed at arbitrary locations.
 
-    ** Not currently implemented. **
-
     @param config     A configuration dict.
     @param logger     If given, a logger object to log progress.
     @param make_psf_image      Whether to make psf_image
@@ -769,7 +767,142 @@ def BuildScatteredImage(config, logger=None,
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
-    raise NotImplementedError("Sorry, image.type = Scattered is not implemented yet.")
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ]
+    req = { 'nobjects' : int }
+    opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'center' : galsim.PositionD ,
+            'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
+            'pixel_scale' : float , 'nproc' : int , 'sky_level' : float }
+    params = galsim.config.GetAllParams(
+        config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
+
+    nobjects = params['nobjects']
+
+    full_size = params.get('size',0)
+    full_xsize = params.get('xsize',stamp_size)
+    full_ysize = params.get('ysize',stamp_size)
+
+    stamp_size = params.get('stamp_size',0)
+    stamp_xsize = params.get('stamp_xsize',stamp_size)
+    stamp_ysize = params.get('stamp_ysize',stamp_size)
+
+    if (stamp_xsize == 0) != (stamp_ysize == 0):
+        raise AttributeError(
+            "Both (or neither) of image.stamp_xsize and image.stamp_ysize need to be "+
+            "defined and != 0.")
+
+    border = params.get("border",0)
+    xborder = params.get("xborder",border)
+    yborder = params.get("yborder",border)
+
+    sky_level = params.get('sky_level',None)
+
+    do_noise = xborder >= 0 and yborder >= 0
+    # TODO: Note: if one of these is < 0 and the other is > 0, then
+    #       this will add noise to the border region.  Not exactly the 
+    #       design, but I didn't bother to do the bookkeeping right to 
+    #       make the borders pure 0 in that case.
+
+    # If image_xsize and image_ysize were set in config, this overrides the read-in params.
+    if 'image_xsize' in config and 'image_ysize' in config:
+        stamp_xsize = (config['image_xsize']+xborder) / nx_tiles - xborder
+        stamp_ysize = (config['image_ysize']+yborder) / ny_tiles - yborder
+        full_xsize = (stamp_xsize + xborder) * nx_tiles - xborder
+        full_ysize = (stamp_ysize + yborder) * ny_tiles - yborder
+        if ( full_xsize != config['image_xsize'] or full_ysize != config['image_ysize'] ):
+            raise ValueError(
+                "Unable to reconcile saved image_xsize and image_ysize with current "+
+                "nx_tiles=%d, ny_tiles=%d, "%(nx_tiles,ny_tiles) +
+                "xborder=%d, yborder=%d\n"%(xborder,yborder) +
+                "Calculated full_size = (%d,%d) "%(full_xsize,full_ysize)+
+                "!= required (%d,%d)."%(config['image_xsize'],config['image_ysize']))
+
+    images = []
+    psf_images = []
+    weight_images = []
+    badpix_images = []
+
+    pixel_scale = params.get('pixel_scale',1.0)
+    if 'pix' not in config:
+        config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
+
+    nproc = params.get('nproc',1)
+
+    full_image = galsim.ImageF(full_xsize,full_ysize)
+    full_image.setZero()
+    full_image.setScale(pixel_scale)
+
+    if make_psf_image:
+        full_psf_image = galsim.ImageF(full_xsize,full_ysize)
+        full_psf_image.setZero()
+        full_psf_image.setScale(pixel_scale)
+    else:
+        full_psf_image = None
+
+    if make_weight_image:
+        full_weight_image = galsim.ImageF(full_xsize,full_ysize)
+        full_weight_image.setZero()
+        full_weight_image.setScale(pixel_scale)
+    else:
+        full_weight_image = None
+
+    if make_badpix_image:
+        full_badpix_image = galsim.ImageF(full_xsize,full_ysize)
+        full_badpix_image.setZero()
+        full_badpix_image.setScale(pixel_scale)
+    else:
+        full_badpix_image = None
+
+    stamp_images = BuildStamps(
+            nstamps=nstamps, config=config, xsize=stamp_xsize, ysize=stamp_ysize,
+            nproc=nproc, sky_level=sky_level, do_noise=do_noise, logger=logger,
+            make_psf_image=make_psf_image,
+            make_weight_image=make_weight_image,
+            make_badpix_image=make_badpix_image)
+
+    images += stamp_images[0]
+    psf_images += stamp_images[1]
+    weight_images += stamp_images[2]
+    badpix_images += stamp_images[3]
+
+    k = 0
+    for ix in range(nx_tiles):
+        for iy in range(ny_tiles):
+            if k < len(images):
+                xmin = ix * (stamp_xsize + xborder) + 1
+                xmax = xmin + stamp_xsize-1
+                ymin = iy * (stamp_ysize + yborder) + 1
+                ymax = ymin + stamp_ysize-1
+                b = galsim.BoundsI(xmin,xmax,ymin,ymax)
+                full_image[b] += images[k]
+                if make_psf_image:
+                    full_psf_image[b] += psf_images[k]
+                if make_weight_image:
+                    full_weight_image[b] += weight_images[k]
+                if make_badpix_image:
+                    full_badpix_image[b] += badpix_images[k]
+                k = k+1
+
+    if not do_noise:
+        if 'noise' in config['image']:
+            # If we didn't apply noise in each stamp, then we need to apply it now.
+
+            # Use the current rng stored in config
+            rng = config['rng']
+
+            draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
+            if draw_method == 'fft':
+                AddNoiseFFT(full_image,config['image']['noise'],rng,sky_level)
+            elif draw_method == 'phot':
+                AddNoisePhot(full_image,config['image']['noise'],rng,sky_level)
+            else:
+                raise AttributeError("Unknown draw_method %s."%draw_method)
+        elif sky_level:
+            # If we aren't doing noise, we still need to add a non-zero sky_level
+            pixel_scale = full_image.getScale()
+            full_image += sky_level * pixel_scale**2
+
+    return full_image, full_psf_image, full_weight_image, full_badpix_image
+
 
 
 def BuildStamps(nstamps, config, xsize, ysize, nproc=1, sky_level=None, do_noise=True, logger=None,

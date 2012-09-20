@@ -40,18 +40,15 @@ def ParseValue(config, param_name, base, value_type):
                     %(param_name,param_name))
     else:
         # Otherwise, we need to generate the value according to its type
-        from galsim import Angle
-        from galsim import Shear
-        from galsim import PositionD
         valid_types = {
             float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'Sequence', 'List' ],
             int : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
             bool : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
             str : [ 'InputCatalog', 'List', 'NumberedFile' ],
-            Angle : [ 'Rad', 'Deg', 'Random', 'List' ],
-            Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
+            galsim.Angle : [ 'Rad', 'Deg', 'Random', 'List' ],
+            galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
                       'Ring', 'List' ],
-            PositionD : [ 'XY', 'RandomCircle', 'List' ] 
+            galsim.PositionD : [ 'XY', 'RandomCircle', 'List' ] 
         }
 
         type = param['type']
@@ -527,7 +524,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
 def _GenerateFromNumberedFile(param, param_name, base, value_type):
     """@brief Return a file_name using a root, a number, and an extension
     """
-    print 'Start FileSequence for ',param_name,' -- param = ',param
+    #print 'Start NumberedFile for ',param_name,' -- param = ',param
     if 'num' not in param:
         param['num'] = { 'type' : 'Sequence', 'first' : 1 }
     req = { 'root' : str , 'num' : int }
@@ -541,10 +538,10 @@ def _GenerateFromNumberedFile(param, param_name, base, value_type):
         template += '%d'
     if 'ext' in kwargs:
         template += kwargs['ext']
-    print 'template = ',template
+    #print 'template = ',template
     s = eval("'%s'%%%d"%(template,kwargs['num']))
-    print 'num = ',kwargs['num']
-    print 's = ',s
+    #print 'num = ',kwargs['num']
+    #print 's = ',s
     
     return s, safe
 
