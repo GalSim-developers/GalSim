@@ -672,7 +672,8 @@ class Moffat(GSObject):
     """A class describing Moffat PSF profiles.  Has an SBMoffat in the SBProfile attribute.
 
     For more details of the Moffat Surface Brightness profile, please see the SBMoffat
-    documentation produced by doxygen.
+    documentation produced by doxygen, or refer to 
+    http://home.fnal.gov/~neilsen/notebook/astroPSF/astroPSF.html.
 
     Initialization
     --------------
@@ -836,7 +837,7 @@ class Airy(GSObject):
     """A class describing Airy PSF profiles.  Has an SBAiry in the SBProfile attribute.
 
     For more details of the Airy Surface Brightness profile, please see the SBAiry documentation
-    produced by doxygen.
+    produced by doxygen, or refer to http://en.wikipedia.org/wiki/Airy_disc.
 
     Initialization
     --------------
@@ -908,7 +909,8 @@ class Airy(GSObject):
 class Kolmogorov(GSObject):
     """A class describing Kolmogorov PSF profiles.  Has an SBKolmogorov in the SBProfile attribute.
        
-    Represents a long exposure Kolmogorov PSF.
+    Represents a long exposure Kolmogorov PSF.  For more information, refer to 
+    http://en.wikipedia.org/wiki/Atmospheric_seeing#The_Kolmogorov_model_of_turbulence.
 
     Initialization
     --------------
@@ -1141,7 +1143,7 @@ class Sersic(GSObject):
     """A class describing Sersic profile objects.  Has an SBSersic in the SBProfile attribute.
 
     For more details of the Sersic Surface Brightness profile, please see the SBSersic documentation
-    produced by doxygen.
+    produced by doxygen, or refer to http://en.wikipedia.org/wiki/Sersic_profile.
 
     Initialization
     --------------
@@ -1246,7 +1248,8 @@ class DeVaucouleurs(GSObject):
     attribute.
 
     For more details of the DeVaucouleurs Surface Brightness profile, please see the
-    SBDeVaucouleurs documentation produced by doxygen.
+    SBDeVaucouleurs documentation produced by doxygen, or refer to 
+    http://en.wikipedia.org/wiki/De_Vaucouleurs'_law.
 
     Initialization
     --------------
