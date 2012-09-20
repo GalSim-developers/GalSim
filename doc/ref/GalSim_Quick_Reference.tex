@@ -467,10 +467,10 @@ deviates.  This takes the following form:
 
 \begin{itemize}
 
-\item[$\circ$] \texttt{img.addNoise(dev)} \newline {this adds
+\item[$\circ$] \texttt{image.addNoise(dev)} \newline {this adds
     stochastic noise, distributed as represented by the random deviate
     instance \texttt{dev}, to each element of the data array in the
-    \texttt{Image} instance \texttt{img}.}
+    \texttt{Image} instance \texttt{image}.}
 
 \end{itemize}
 
@@ -508,10 +508,10 @@ supported array data types:
   floats.}
 
 \end{itemize}
-To access the data as a NumPy array, simply use the \texttt{img.array}
-attribute, where \texttt{img} is an instance of one of these
+To access the data as a NumPy array, simply use the \texttt{image.array}
+attribute, where \texttt{image} is an instance of one of these
 \texttt{Image} classes.  However, note that the individual elements in
-the array attribute are accessed as \texttt{img.array[y,x]}, matching
+the array attribute are accessed as \texttt{image.array[y,x]}, matching
 the standard NumPy convention, while the \texttt{Image} class's own
 accessors are all $(x,y)$ in ordering.
 
@@ -529,29 +529,29 @@ within the Python interpreter.
 \subsection{Important Image methods and operations}\label{sect:imagemethods}
 We now illustrate the most commonly-used methods of \texttt{Image}
 class instances.  We will assume that some \texttt{Image} instance
-\texttt{img} has been instantiated, for example by
+\texttt{image} has been instantiated, for example by
 
-{\tt img = galsim.ImageD(100, 100)}.
+{\tt image = galsim.ImageD(100, 100)}.
 
 This \texttt{Image} instance is then ready to pass to a
 \texttt{GSObject} for drawing.  The most important and commonly-used
 methods for such an instance are:
 \begin{itemize}
 
-\item[$\circ$] \texttt{img.getScale()} \newline {get the pixel
+\item[$\circ$] \texttt{image.getScale()} \newline {get the pixel
     scale \texttt{dx} for this image.}
 
-\item[$\circ$] \texttt{img.setScale(dx)} \newline {set the pixel
+\item[$\circ$] \texttt{image.setScale(dx)} \newline {set the pixel
     scale for this image to \texttt{dx} --- note that this scale
     should use the same units adopted for the \texttt{GSObject}
     sizes.}
 
-\item[$\circ$] \texttt{img.addNoise(dev)} \newline {this adds
+\item[$\circ$] \texttt{image.addNoise(dev)} \newline {this adds
     stochastic noise, distributed as represented by the random deviate
     instance \texttt{dev}, to each element of the data array in
-    \texttt{img}.  This is the method previously referenced in Section~\ref{sect:random}.}
+    \texttt{image}.  This is the method previously referenced in Section~\ref{sect:random}.}
 
-\item[$\circ$] \texttt{img.write(fits, ...)}  \newline {write the
+\item[$\circ$] \texttt{image.write(fits, ...)}  \newline {write the
     \texttt{imageView} to a FITS file or object as determined by the
     \texttt{fits} input parameter
     (see \\
@@ -565,23 +565,23 @@ methods for such an instance are:
   \ref{sect:imageclasses}.}  instances are also returned when
 accessing a sub-section of an existing \texttt{Image}.  For example
 
-{\tt >>> imsub = img.subImage(bounds)}
+{\tt >>> imsub = image.subImage(bounds)}
 
 where \texttt{bounds} is a \texttt{BoundsI} instance (see Section
 \ref{sect:bounds}) assigns \texttt{imsub} as an view into
-the sub-region of \texttt{img} lying in the area represented by
+the sub-region of \texttt{image} lying in the area represented by
 \texttt{bounds}.  Equivalent syntax is also
 
-{\tt >>> imsub = img[bounds]}.
+{\tt >>> imsub = image[bounds]}.
 
 It is also possible to change the values of a sub-region of an image
 this way, for example
 
-{\tt >>> img[imsub.bounds] += imsub}
+{\tt >>> image[imsub.bounds] += imsub}
 
 if wishing to add the contents of \texttt{imsub} to the area lying
-within its bounds in \texttt{img}.  Note that here we have made use of
-the \texttt{.bounds} attribute carried by all of the \texttt{Image}
+within its bounds in \texttt{image}.  Note that here we have made use of
+the \texttt{image.bounds} attribute carried by all of the \texttt{Image}
 classes.
 
 \section{Miscellaneous classes and functions}\label{sect:misc}
@@ -676,19 +676,22 @@ within the Python interpreter.
 
 \begin{itemize}
 
+\item[$\circ$] \texttt{image = galsim.fits.read(fits)} \newline
+{returns as an \texttt{Image} instance \texttt{image} from a FITS
+  representation \texttt{fits}.  If \texttt{fits} is a string it is
+  interpreted as a filename, otherwise it is interpreted as a PyFITS
+  representation of HDU data (see
+  \texttt{galsim/fits.py}).}
 \item[$\circ$] \texttt{galsim.fits.writeMulti(image\_list, fits, ...)}
-  \newline 
-{write multiple \texttt{Image} instances stored in a
-  Python \texttt{list} object \texttt{image\_list} to a Multi-Extension FITS
-  file or object as determined by the \texttt{fits} input parameter (see
-  \texttt{galsim/fits.py}).}
-
+  \newline {write multiple \texttt{Image} instances stored in a Python
+    \texttt{list} object \texttt{image\_list} to a Multi-Extension
+    FITS file or PyFITS HDU object, specified by the \texttt{fits} input
+    parameter (see \texttt{galsim/fits.py}).}
 \item[$\circ$] \texttt{galsim.fits.writeCube(image\_list, fits, ...)}
-  \newline 
-{write multiple \texttt{Image} instances stored in a
-  Python \texttt{list} object \texttt{image\_list} to a three-dimensional FITS
-  datacube object as determined by the \texttt{fits} input parameter (see
-  \texttt{galsim/fits.py}).}
+  \newline {write multiple \texttt{Image} instances stored in a Python
+    \texttt{list} object \texttt{image\_list} to a three-dimensional
+    FITS datacube or PyFITS HDU object, specified by the \texttt{fits} input
+    parameter (see \texttt{galsim/fits.py}).}
 
 \end{itemize}
 
