@@ -477,43 +477,34 @@ deviates.  This takes the following form:
 
 \section{Images}\label{sect:image}
 
-\subsection{Image classes and when to use them}
+\subsection{Image classes and when to use them}\label{sect:imageclasses}
 The GalSim \texttt{Image} classes store array data, along with a
 figure for the pixel separation in physical units and image bounds
-information (origin, extent).  The \texttt{ImageView} provides a
-mutable view into \texttt{Image} instance data (although not all
-\texttt{Image} methods are available), and
-\texttt{ConstImageView} an immutable view into \texttt{Image} instance
-data.
+information (origin, extent).  \footnote{There are additional flavours
+  of \texttt{Image} that you might also encounter: \texttt{ImageView}
+  provides a mutable view into \texttt{Image} instance data, and
+  \texttt{ConstImageView} an immutable view into \texttt{Image}
+  instance data. If creating these objects directly you will mostly
+  only need to use \texttt{Image} instances.  The \texttt{ImageView}
+  classes are functionally very similar to an \texttt{Image}, and are
+  most commonly encountered as the output of the \texttt{GSObject}
+  instance \texttt{draw} and \texttt{drawShoot} methods, but may also
+  be found elsewhere.}
+\texttt{Image} instances can be operated upon to add stochastic noise
+simulating real astronomical images (see Section~\ref{sect:random}),
+and have methods for writing to FITS format output.
 
-If creating these objects directly you will mostly only need to use
-\texttt{Image} instances.  The \texttt{ImageView} classes are most
-commonly encountered as the output of the \texttt{GSObject} instance
-methods
-\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{obj.draw(...)}}
-and
-\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{obj.drawShoot(...)}}.
-Both \texttt{Image} and \texttt{ImageView} instances can be operated
-on to add stochastic noise simulating real astronomical images (see
-Section~\ref{sect:random}), and have methods for writing to FITS
-format output.
-
-There are several types of GalSim \texttt{Image}, one for each of four
+There are four types of GalSim \texttt{Image}, one for each of four
 supported array data types:
 \begin{itemize}
+\item[$\circ$] \texttt{galsim.ImageS(...)} {for short integers (typically 16 bit).}
 
-\item[$\circ$] \texttt{galsim.ImageS(...)}; \texttt{galsim.ImageViewS(...)};
-  \texttt{galsim.ConstImageViewS(...)} \newline {for short integers (typically 16 bit).}
+\item[$\circ$] \texttt{galsim.ImageI(...)} {for integers (typically 32 bit).}
 
-\item[$\circ$] \texttt{galsim.ImageI(...)}; \texttt{galsim.ImageViewI(...)};
-  \texttt{galsim.ConstImageViewI(...)} \newline {for integers (typically 32 bit).}
-
-\item[$\circ$] \texttt{galsim.ImageF(...)}; \texttt{galsim.ImageViewF(...)};
-  \texttt{galsim.ConstImageViewF(...)} \newline {for single precision (typically 32 bit)
+\item[$\circ$] \texttt{galsim.ImageF(...)} {for single precision (typically 32 bit)
   floats.}
 
-\item[$\circ$] \texttt{galsim.ImageD(...)}; \texttt{galsim.ImageViewD(...)};
-  \texttt{galsim.ConstImageViewD(...)} \newline {for double precision (typically 64 bit)
+\item[$\circ$] \texttt{galsim.ImageD(...)} {for double precision (typically 64 bit)
   floats.}
 
 \end{itemize}
@@ -569,24 +560,26 @@ methods for such an instance are:
 
 \end{itemize}
 
-The \texttt{ImageView} classes are also returned when accessing a
-sub-section of an existing \texttt{Image}.  For example
+\texttt{Image}\footnote{Actually, the functionally almost-equivalent
+  \texttt{ImageView}, see the footnote in Section
+  \ref{sect:imageclasses}.}  instances are also returned when
+accessing a sub-section of an existing \texttt{Image}.  For example
 
-{\tt >>> imv = img.subImage(bounds)}
+{\tt >>> imsub = img.subImage(bounds)}
 
 where \texttt{bounds} is a \texttt{BoundsI} instance (see Section
-\ref{sect:bounds}) assigns \texttt{imv} as an \texttt{ImageView} into
+\ref{sect:bounds}) assigns \texttt{imsub} as an view into
 the sub-region of \texttt{img} lying in the area represented by
 \texttt{bounds}.  Equivalent syntax is also
 
-{\tt >>> imv = img[bounds]}.
+{\tt >>> imsub = img[bounds]}.
 
 It is also possible to change the values of a sub-region of an image
 this way, for example
 
-{\tt >>> img[imv.bounds] += imv}
+{\tt >>> img[imsub.bounds] += imsub}
 
-if wishing to add the contents of \texttt{imv} to the area lying
+if wishing to add the contents of \texttt{imsub} to the area lying
 within its bounds in \texttt{img}.  Note that here we have made use of
 the \texttt{.bounds} attribute carried by all of the \texttt{Image}
 classes.
@@ -679,7 +672,7 @@ within the Python interpreter.
 
 \end{itemize}
 
-\subsection{Multiple image FITS output tools}\label{sect:multifits}
+\subsection{Additional FITS input/output tools}\label{sect:multifits}
 
 \begin{itemize}
 
