@@ -4,8 +4,6 @@ import galsim
 def roll2d(image, (iroll, jroll)):
     """Perform a 2D roll (circular shift) on a supplied 2D numpy array, conveniently.
 
-    Parameters
-    ----------
     @param image            the numpy array to be circular shifted.
     @param (iroll, jroll)   the roll in the i and j dimensions, respectively.
 
@@ -28,8 +26,6 @@ def kxky(array_shape=(256, 256)):
     leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
     uses this convention.
 
-    Parameters
-    ----------
     @param array_shape   the Numpy array shape desired for `kx, ky`. 
     """
     # Note: numpy shape is y,x
@@ -38,7 +34,7 @@ def kxky(array_shape=(256, 256)):
     return np.meshgrid(k_xaxis, k_yaxis)
 
 def g1g2_to_e1e2(g1, g2):
-    """@brief Convenience function for going from (g1, g2) -> (e1, e2).
+    """Convenience function for going from (g1, g2) -> (e1, e2).
 
     Here g1 and g2 are reduced shears, and e1 and e2 are distortions - see shear.py for definitions
     of reduced shear and distortion in terms of axis ratios or other ways of specifying ellipses.
@@ -65,8 +61,7 @@ def g1g2_to_e1e2(g1, g2):
         raise ValueError("Input |g|^2 < 0, cannot convert.")
 
 class AttributeDict(object):
-    """@brief Dictionary class that allows for easy initialization and refs to key values via
-    attributes.
+    """Dictionary class that allows for easy initialization and refs to key values via attributes.
 
     NOTE: Modified a little from Jim's bot.git AttributeDict class so that tab completion now works
     in ipython since attributes are actually added to __dict__.
@@ -107,7 +102,7 @@ class AttributeDict(object):
         return len(self.__dict__)
 
 def rand_arr(shape, deviate):
-    """@brief Function to make a 2d array of random deviates (of any sort).
+    """Function to make a 2d array of random deviates (of any sort).
 
     @param shape A list of length 2, indicating the desired 2d array dimensions
     @param deviate Any GalSim deviate (see random.py) such as UniformDeviate, GaussianDeviate,
@@ -123,7 +118,7 @@ def rand_arr(shape, deviate):
     return tmp_img.array
 
 def eval_sbinterpolatedimage(sbi, x_list, y_list):
-    """@brief Function to get the value of some SBInterpolatedImage at a list of positions.
+    """Function to get the value of some SBInterpolatedImage at a list of positions.
 
     @param sbi An SBInterpolatedImage on which we want to carry out the interpolation.
     @param x_list A list of the x values at which we want to do the interpolation.
