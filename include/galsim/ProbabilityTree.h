@@ -28,7 +28,10 @@ namespace galsim {
      * The `find()` method will now return random draws with near-optimal speed.
      */
     template <class FluxData>
-    class ProbabilityTree: private std::vector<FluxData> 
+    class ProbabilityTree :
+        //! @cond  This keeps doxygen from adding vector to our list of classes.
+        private std::vector<FluxData> 
+        //! @endcond
     {
         typedef typename std::vector<FluxData>::iterator VecIter;
         class FluxCompare;
