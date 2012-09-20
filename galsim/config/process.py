@@ -194,8 +194,7 @@ def ProcessOutput(config, logger=None):
         # Prepend a dir to the beginning of the filename if requested.
         if 'dir' in output:
             dir = galsim.config.ParseValue(output, 'dir', config, str)[0]
-            if not os.path.isdir(dir):
-                os.mkdir(output['dir'])
+            if not os.path.isdir(dir): os.mkdir(dir)
             file_name = os.path.join(dir,file_name)
 
         kwargs['file_name'] = file_name
