@@ -399,15 +399,9 @@ been instantiated, for example by
 
 {\tt >>> dev = galsim.GaussianDeviate(sigma=3.9, mean=50.)}.
 
-The two most important and commonly-used methods for such an
-instance are:
+The most important and commonly-used method for such an
+instance is:
 \begin{itemize}
-
-\item[$\circ$] \texttt{dev.applyTo(image)} \newline {adds a
-    random number, distributed according to the distribution
-    represented by \texttt{dev}, to each element in a supplied
-    \texttt{Image} instance \texttt{image} (see
-    Section~\ref{sect:image}).}
 
 \item[$\circ$] \texttt{dev()} \newline {calling the deviate
     directly simply returns a single new random number drawn from the
@@ -420,6 +414,19 @@ instance are:
     {\tt 0.56841182382777333}}
 
 \end{itemize}
+However, there is also an important method of \texttt{Image} objects
+(see Section \ref{sect:image}, below) which relates to random
+deviates.  This takes the following form:
+
+\begin{itemize}
+
+\item[$\circ$] \texttt{img.addNoise(dev)} \newline {this adds
+    stochastic noise, distributed as represented by the random deviate
+    instance \texttt{dev}, to each element of the data array in the
+    \texttt{Image} instance \texttt{img}.}
+
+\end{itemize}
+
 
 \section{Images}\label{sect:image}
 
@@ -504,9 +511,7 @@ methods for such an instance are:
 \item[$\circ$] \texttt{img.addNoise(dev)} \newline {this adds
     stochastic noise, distributed as represented by the random deviate
     instance \texttt{dev}, to each element of the data array in
-    \texttt{img}.  This therefore has the same effect as
-    \texttt{dev.applyTo(img)} (see Section~\ref{sect:random}; also
-    \texttt{galsim/noise.py}).}
+    \texttt{img}.  This is the method previously referenced in Section~\ref{sect:random}.}
 
 \item[$\circ$] \texttt{img.write(fits, ...)}  \newline {write the
     \texttt{imageView} to a FITS file or object as determined by the
