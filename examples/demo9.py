@@ -51,19 +51,16 @@ def main(argv):
     nfiles = 5 # number of files per item in mass list
     nobj = 5  # number of objects to draw for each file
 
-    image_size = 256
-    stamp_size = 64
+    image_size = 512
     pixel_scale = 0.43
-    sky_level = 1.e3
+    sky_level = 1.e4
 
     psf_fwhm = 0.9
 
-    gal_eta_rms = 0.2
-    gal_n_min = 0.5
-    gal_n_max = 4.
+    gal_eta_rms = 0.4
     gal_hlr_min = 0.8
     gal_hlr_max = 2.8
-    gal_flux_min = 1.e5
+    gal_flux_min = 1.e4
     gal_flux_max = 1.e6
 
     random_seed = 8383721
@@ -78,7 +75,6 @@ def main(argv):
 
         full_image = galsim.ImageF(image_size, image_size)
         full_image.setScale(pixel_scale)
-        full_image.setCenter(0,0)
 
         for k in range(nobj):
 
@@ -87,20 +83,18 @@ def main(argv):
             gd = galsim.GaussianDeviate(rng, sigma = gal_eta_rms)
 
             # Determine where this object is going to go:
-            x = (rng()-0.5) * (image_size-stamp_size)
-            y = (rng()-0.5) * (image_size-stamp_size)
+            x = rng() * (image_size-1) + 1
+            y = rng() * (image_size-1) + 1
             print 'x,y = ',x,y
 
-            # Define the stamp image
-            xmin = int(math.floor(x-stamp_size/2 + 0.5))
-            ymin = int(math.floor(y-stamp_size/2 + 0.5))
-            bounds = galsim.BoundsI(xmin, xmin+stamp_size-1, ymin, ymin+stamp_size-1)
-            print 'bounds = ',bounds
-            print 'full_image bounds = ',full_image.bounds
-            bounds = bounds & full_image.bounds
-            print 'bounds => ',bounds
-            stamp = full_image[bounds]
-            stamp.setScale(pixel_scale)
+            # Get the integer values of these which will be the center of the 
+            # postage stamp image.
+            ix = int(math.floor(x+0.5))
+            iy = int(math.floor(y+0.5))
+
+            # The remainder will be accounted for in a shift
+            x -= ix
+            y -= iy
 
             # Make the pixel:
             pix = galsim.Pixel(pixel_scale)
@@ -111,8 +105,6 @@ def main(argv):
             # Determine the random values for the galaxy:
             flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
             print 'flux = ',flux
-            n = rng() * (gal_n_max-gal_n_min) + gal_n_min
-            print 'n = ',n
             hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
             print 'hlr = ',hlr
             eta1 = gd()  # Unlike g or e, large values of eta are valid, so no need to cutoff.
@@ -120,15 +112,31 @@ def main(argv):
             print 'eta = ',eta1,eta2
 
             # Make the galaxy profile with these values:
-            gal = galsim.Sersic(n=n, half_light_radius=hlr, flux=flux)
+            gal = galsim.Exponential(half_light_radius=hlr, flux=flux)
             gal.applyShear(eta1=eta1, eta2=eta2)
 
             # Build the final object
             final = galsim.Convolve([psf, pix, gal])
 
+            # Account for the non-integral portion of the position
+            final.applyShift(x*pixel_scale,y*pixel_scale)
+            print 'shift by ',x,y
+            print 'which in arcsec is ',x*pixel_scale,y*pixel_scale
+
             # Draw the stamp image
-            final.draw(stamp)
-            print 'draw stamp ',k
+            stamp = final.draw(dx=pixel_scale)
+            print 'drew stamp ',k
+
+            # Recenter the stamp at the desired position:
+            stamp.setCenter(ix,iy)
+
+            # Find overlapping bounds
+            bounds = stamp.bounds & full_image.bounds
+            print 'stamp bounds = ',stamp.bounds
+            print 'full bounds = ',full_image.bounds
+            print 'Overlap = ',bounds
+            full_image[bounds] += stamp[bounds]
+
         print 'Done drawing stamps'
 
         # Add Poisson noise to the full image
@@ -158,35 +166,11 @@ def main(argv):
             result = build_file(*args)
             output.put( (result, info, current_process().name) )
     
-    ntot = nfiles * len(mass_list)
-
-    # Take seeds to be sequential after the given seed value. 
-    # But need to step by the number of galaxies in each file.
-    seeds = [ random_seed + k*nobj for k in range(ntot) ]
-
-    # First draw the image using just a single process:
     t1 = time.time()
 
-    seed = random_seed
-    for i in range(len(mass_list)):
-        mass = mass_list[i]
-        dir_name = "mass%d"%i
-        dir = os.path.join('output',dir_name)
-        if not os.path.isdir(dir): os.mkdir(dir)
-        for j in range(nfiles):
-            file_name = "cluster%d.fits"%j
-            full_name = os.path.join(dir,file_name)
-            t = build_file(seed, full_name, mass)
-            # Need to step by the number of galaxies in each file.
-            seed += nobj
-            proc = current_process().name
-            logger.info('%s: Time for file %s was %f',proc,full_name,t)
+    ntot = nfiles * len(mass_list)
 
-    t2 = time.time()
-    
-    # Now do the same thing, but use multiple processes
-
-    nproc = 4
+    nproc = 1
     logger.info('Using ncpu = %d processes',nproc)
 
     # Set up the task list
@@ -194,11 +178,15 @@ def main(argv):
     seed = random_seed
     for i in range(len(mass_list)):
         mass = mass_list[i]
-        dir_name = "mass%d"%i
+        dir_name = "mass%d"%(i+1)
         dir = os.path.join('output',dir_name)
+        if not os.path.isdir(dir): os.mkdir(dir)
         for j in range(nfiles):
-            file_name = "cluster%02d.fits"%j
+            file_name = "cluster%02d.fits"%(j+1)
             full_name = os.path.join(dir,file_name)
+            # We put on the task queue the args to the buld_file function and
+            # some extra info to pass through to the output queue.
+            # Our extra info is just the file name that we use to write out which file finished.
             task_queue.put( ( (seed, full_name, mass), full_name ) )
             # Need to step by the number of galaxies in each file.
             seed += nobj
@@ -233,31 +221,9 @@ def main(argv):
     for k in range(nproc):
         task_queue.put('STOP')
 
-    t3 = time.time()
+    t2 = time.time()
 
-    logger.info('Total time taken using a single process = %f',t2-t1)
-    logger.info('Total time taken using %d processes = %f',nproc,t3-t2)
-
-    for i in range(len(mass_list)):
-        mass = mass_list[i]
-        dir_name = "mass%d"%i
-        dir = os.path.join('output',dir_name)
-        for j in range(nfiles):
-            file_name1 = "cluster%d.fits"%j
-            file_name2 = "cluster%02d.fits"%j
-            full_name1 = os.path.join(dir,file_name1)
-            full_name2 = os.path.join(dir,file_name2)
-            print 'full_name1 = ',full_name1
-            print 'full_name2 = ',full_name2
-            im1 = galsim.fits.read(full_name1)
-            im2 = galsim.fits.read(full_name2)
-            print 'im1 = ',im1
-            print 'im2 = ',im2
-            numpy.testing.assert_array_equal(
-                    im1.array, im2.array,
-                    err_msg="Files %s and %s are not equal"%(full_name1,full_name2))
-    logger.info('Files created using single and multiple processes are exactly equal.')
-    logger.info('')
+    logger.info('Total time taken using %d processes = %f',nproc,t2-t1)
 
     print
 
