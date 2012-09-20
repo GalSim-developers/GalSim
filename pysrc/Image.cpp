@@ -289,6 +289,7 @@ struct PyImage {
             .def("copyFrom", &Image<T>::copyFrom)
             .def("fill", &Image<T>::fill)
             .def("setZero", &Image<T>::setZero)
+            .def("resize", &Image<T>::resize)
             .enable_pickling()
             ;
         
