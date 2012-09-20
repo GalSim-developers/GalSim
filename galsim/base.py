@@ -224,7 +224,7 @@ class GSObject(object):
         are no longer available.
 
         @param scale The linear rescaling factor to apply.
-       """
+        """
         self.applyTransformation(galsim.Ellipse(np.log(scale)))
        
     def applyShear(self, *args, **kwargs):
