@@ -120,6 +120,8 @@ class GSObject(object):
     def xValue(self, position):
         """Returns the value of the object at a chosen 2D position in real space.
         
+        xValue() is available if obj.isAnalyticX() == True.
+
         As in SBProfile, this function assumes all are real-valued.  xValue() may not be implemented
         for derived classes (e.g. SBConvolve) that require an Discrete Fourier Transform to
         determine real space values.  In this case, an SBError will be thrown at the C++ layer
@@ -132,6 +134,11 @@ class GSObject(object):
 
     def kValue(self, position):
         """Returns the value of the object at a chosen 2D position in k space.
+
+        kValue() is available if the given obj has obj.isAnalyticK() == True. 
+
+        If Convolve uses real_space=True (either by argument or if it decides on its own to do so),
+        then it is not analytic in k-space, so kValue() will raise an exception.
 
         @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in k 
                          space.
