@@ -346,30 +346,35 @@ The \texttt{draw} method has a number of additional optional
  }
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{image
-      = obj.drawShoot(image=None, dx=None, add\_to\_image = False, ...)}} \newline {draw and return an
-    \texttt{Image} (see Section \ref{sect:image}) of the
-    \texttt{GSObject}~by shooting a finite number of photons.  The resulting
-    rendering therefore contains stochastic noise, but uses few
-    approximations. Some information about important optional parameters, along with default values:
-  \begin{itemize}
-  \item \texttt{image} (default = \texttt{None}) \newline 
-    if supplied, the drawing will be done into a user-supplied
-    \texttt{Image} instance \texttt{image}.  If not supplied
-    (i.e. \texttt{image = None}), an
-    automatically-sized \texttt{Image} instance will be returned.
-  \item \texttt{dx} (default = \texttt{None}) \newline 
-    the optional image pixel scale \texttt{dx}, which if provided
-    should use the same units as used for the \texttt{GSObject} size
-    parameters.  If not provided, will take either the scale from a
-    supplied \texttt{image}, else use the Nyquist scale given the
-    maximum modelled frequency in the \texttt{GSObject}.
-  \item \texttt{add\_to\_image} (default = \texttt{False}) \newline
-   Whether to add flux to a (must be supplied) \texttt{image} rather than clear out
-   anything in the image before drawing.
- \end{itemize}
- The \texttt{drawShoot} method has a number of additional optional
- parameters.  Please see the linked / Python docstrings for more
- details.
+      = obj.drawShoot(image=None, dx=None, add\_to\_image = False,
+      ...)}} \newline {draw and return an \texttt{Image} (see Section
+    \ref{sect:image}) of the \texttt{GSObject}~by shooting a finite
+    number of photons.  The resulting rendering therefore contains
+    stochastic noise, but uses few approximations. \texttt{drawShoot}
+    shares all the parameters listed for \texttt{draw}, above, but the
+    \texttt{drawShoot} method also has a number of additional optional
+    parameters. Important examples worthy of mention are:
+\begin{itemize}
+\item \texttt{n\_photons} (default = \texttt{0}) \newline If provided,
+  the number of photons to use.  If not provided, use as many photons
+  as necessary to end up with an image with the correct poisson shot
+  noise for the object's \texttt{flux}.
+\item \texttt{max\_extra\_noise} (default = \texttt{0.}) \newline If
+  provided, the allowed extra noise in each pixel.  This is only
+  relevant if \texttt{n\_photons = 0}, so the number of photons is
+  being automatically calculated.  In that case, if the image noise is
+  dominated by the sky background, you can get away with using fewer
+  shot photons than the full \texttt{n\_photons = flux}.  Essentially
+  each shot photon can have a $\texttt{flux} > 1$, which increases the
+  noise in each pixel.  The \texttt{max\_extra\_noise} parameter
+  specifies how much extra noise per pixel is allowed because of this
+  approximation.
+\item \texttt{poisson\_flux} (default = \texttt{True}) \newline
+  Whether to allow total object flux scaling to vary according to
+  Poisson statistics for \texttt{n\_photons} samples.
+\end{itemize}
+As before, you are strongly encouraged to see the linked / Python
+docstrings for more details.
 }
 \end{itemize}
 
