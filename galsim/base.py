@@ -1008,10 +1008,10 @@ class OpticalPSF(GSObject):
     Initialization
     --------------
     
-        optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0., coma1=0.,
-                                        coma2=0., spher=0., circular_pupil=True, obscuration=0.,
-                                        interpolant=None, oversampling=1.5, pad_factor=1.5)
-    
+        >>> optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0.,
+                                            coma1=0., coma2=0., spher=0., circular_pupil=True,
+                                            obscuration=0., interpolant=None, oversampling=1.5,
+                                            pad_factor=1.5)
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
 
