@@ -82,8 +82,6 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     to the definitions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -149,8 +147,6 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
     to the definitions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -194,8 +190,6 @@ def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
     Ouput numpy array is C-contiguous.
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -236,8 +230,6 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -275,8 +267,6 @@ def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
     Output complex numpy array is C-contiguous.
     
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -316,8 +306,6 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for array views of ImageViewD tuple.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -361,8 +349,6 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
     Output double numpy array is C-contiguous.
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -398,8 +384,6 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -441,8 +425,6 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
     Output double numpy array is C-contiguous.
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -484,8 +466,6 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
