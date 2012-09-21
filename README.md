@@ -64,11 +64,12 @@ http://galsim-developers.github.com/GalSim/
 Reference documentation
 -----------------------
 
-For an overview of GalSim workflow and python tools, please see 
-`doc/GalSim_Quick_Reference.pdf` in the GalSim repository.  A guide to using
-configuration files to generate simulations can be found on the GalSim wiki,
+For an overview of GalSim workflow and python tools, please see
+`doc/GalSim_Quick_Reference.pdf` in the GalSim repository.  A guide to using the
+configuration files to generate simulations, a FAQ for installation issues, and
+other useful references can be found on the GalSim wiki,
 
-https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation
+https://github.com/GalSim-developers/GalSim/wiki
 
 More thorough documentation for all parts of the code can be found in the
 doxygen documentation mentioned in the previous section, or in the python
