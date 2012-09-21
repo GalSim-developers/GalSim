@@ -555,7 +555,7 @@ class GSObject(object):
         if isinstance(self.SBProfile, galsim.SBDeconvolve):
             raise NotImplementedError(
                 "Currently you cannot drawShoot() with GSObjects that have SBDeconvolve instances "+
-                "in the SBProfile attribute (e.g. RealGalaxy, Deconolve).")
+                "in the SBProfile attribute (e.g. RealGalaxy, Deconvolve).")
 
         # Raise an exception immediately if the normalization type is not recognized
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
@@ -932,7 +932,7 @@ class Kolmogorov(GSObject):
     Initialization
     --------------
     
-    A Kolmoogorov is initialized with one (and only one) of three possible size parameters
+    A Kolmogorov is initialized with one (and only one) of three possible size parameters
 
         lam_over_r0
         half_light_radius
@@ -1616,7 +1616,7 @@ class Convolve(GSObject):
 class Deconvolve(GSObject):
     """Base class for defining the python interface to the SBDeconvolve C++ class.
     
-    The GSObject drawShoot() method is currently unavailable for Convolve instances.
+    The GSObject drawShoot() method is currently unavailable for Deconvolve instances.
     """
     # --- Public Class methods ---
     def __init__(self, farg):
