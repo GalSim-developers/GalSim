@@ -17,9 +17,9 @@ Distribution
 ------------
 
 Please feel free to fork this repository at any time.  However, please be aware
-that the code is still actively being developed (hence the current version
-number is v0.1).  The release of v1.0 will be accompanied with a publication
-that users should cite.
+that the code is still actively being developed and tested (hence the current
+version number is v0.1).  The release of v1.0 in mid-2013 will be accompanied
+with a publication that users should cite.
 
 
 How to communicate with the GalSim developers
