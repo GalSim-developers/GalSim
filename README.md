@@ -1,4 +1,4 @@
-@mainpage
+<!--- @mainpage --->
 
 # GalSim: The modular galaxy image simulation toolkit
 
