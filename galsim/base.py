@@ -932,7 +932,17 @@ class Kolmogorov(GSObject):
     Initialization
     --------------
     
-        psf = galsim.Kolmogorov(lam_over_r0, flux=1.)
+    A is initialized with one (and only one) of three possible size parameters
+
+        lam_over_r0
+        half_light_radius
+        fwhm
+
+    and an optional `flux` parameter [default `flux = 1`].
+
+    Example:
+
+        >>> psf = galsim.Kolmogorov(lam_over_r0=3., flux=1.)
 
     Initializes psf as a galsim.Kolmogorov() instance.
 
