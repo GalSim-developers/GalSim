@@ -147,7 +147,7 @@ class PowerSpectrum(object):
                                 the draw or drawShoot methods.
         @param grid_nx          Number of grid points in the x dimension.
         @param gaussian_deviate (Optional) A galsim.GaussianDeviate object for drawing the random
-                                numbers.  (Alternatively, a BaseDeviate class can be used.)
+                                numbers.  (Alternatively, any BaseDeviate can be used.)
         @param interpolantxy    (Optional) Interpolant to use for interpolating the shears on a grid
                                 to the requested positions [default =
                                 galsim.InterpolantXY(galsim.Linear())].
