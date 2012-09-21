@@ -201,9 +201,10 @@ class PowerSpectrum(object):
 class PowerSpectrumRealizer(object):
     """Class for generating realizations of power spectra with any area and pixel size.
     
-    This class is designed to quickly generate many realizations of the same shear power spectra on
-    a square grid.  The initializer sets up the grids in k-space and computes the power on them.  It
-    also computes spin weighting terms.  You can alter any of the setup properties later.
+    This class is not one that end-users should expect to interact with.  It is designed to quickly
+    generate many realizations of the same shear power spectra on a square grid.  The initializer
+    sets up the grids in k-space and computes the power on them.  It also computes spin weighting
+    terms.  You can alter any of the setup properties later.
 
     @param nx               The x-dimension of the desired image.
     @param ny               The y-dimension of the desired image.
