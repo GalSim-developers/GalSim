@@ -7,7 +7,7 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
                      guess_sig_gal = 5.0, guess_sig_PSF = 3.0, precision = 1.0e-6,
                      guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True):
     """
-    @brief PSF correction method from HSM.
+    PSF correction method from HSM.
 
     Carry out PSF correction using one of the methods of the HSM package to estimate shears.
     Example usage:
@@ -42,28 +42,28 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     print "Number of failures: ", n_fail
     @endcode
 
-    Parameters
-    ----------
-    @param[in] gal_image The Image or ImageView of the galaxy being measured.
-    @param[in] PSF_image The Image or ImageView for the PSF
-    @param[in] sky_var The variance of the sky level, used for estimating uncertainty on the
-               measured shape; default 0.
-    @param[in] *shear_est A string indicating the desired method of PSF correction: REGAUSS,
-               LINEAR, BJ, or KSB; default REGAUSS.
-    @param[in] flags A flag determining various aspects of the shape measurement process (only
-               necessary for REGAUSS); default 0xe.
-    @param[in] guess_sig_gal Optional argument with an initial guess for the Gaussian sigma of
-               the galaxy, default 5.0 (pixels).
-    @param[in] guess_sig_PSF Optional argument with an initial guess for the Gaussian sigma of
-               the PSF, default 3.0 (pixels).
-    @param[in] precision The convergence criterion for the moments; default 1e-6.
-    @param[in] guess_x_centroid An initial guess for the x component of the object centroid (useful
-               in case it is not located at the center, which is the default assumption).
-    @param[in] guess_y_centroid An initial guess for the y component of the object centroid (useful
-               in case it is not located at the center, which is the default assumption).
-    @param[in] strict If True (default), then there will be a run-time exception if shear
-               estimation fails.  If set to False, then information about failures will be silently
-               stored in the output HSMShapeData object.
+    @param gal_image         The Image or ImageView of the galaxy being measured.
+    @param PSF_image         The Image or ImageView for the PSF.
+    @param sky_var           The variance of the sky level, used for estimating uncertainty on the
+                             measured shape; default 0.
+    @param *shear_est        A string indicating the desired method of PSF correction: REGAUSS,
+                             LINEAR, BJ, or KSB; default REGAUSS.
+    @param flags             A flag determining various aspects of the shape measurement process
+                             (only necessary for REGAUSS); default 0xe.
+    @param guess_sig_gal     Optional argument with an initial guess for the Gaussian sigma of the
+                             galaxy, default 5.0 (pixels).
+    @param guess_sig_PSF     Optional argument with an initial guess for the Gaussian sigma of the
+                             PSF, default 3.0 (pixels).
+    @param precision         The convergence criterion for the moments; default 1e-6.
+    @param guess_x_centroid  An initial guess for the x component of the object centroid (useful in
+                             case it is not located at the center, which is the default
+                             assumption).
+    @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
+                             case it is not located at the center, which is the default
+                             assumption).
+    @param strict            If True (default), then there will be a run-time exception if shear
+                             estimation fails.  If set to False, then information about failures
+                             will be silently stored in the output HSMShapeData object.
     @return A HSMShapeData object containing the results of shape measurement.
     """
     gal_image_view = gal_image.view()
@@ -87,7 +87,7 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
 def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
                     guess_y_centroid = -1000.0, strict = True):
     """
-    @brief Measure adaptive moments of an object.
+    Measure adaptive moments of an object.
 
     The key result is the best-fit elliptical Gaussian to the object, which is computed iteratively
     by initially guessing a circular Gaussian that is used as a weight function, computing the
@@ -129,17 +129,19 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
     print "Number of failures: ", n_fail
     @endcode
 
-    @param[in] object_image The Image or ImageView for the object being measured.
-    @param[in] guess_sig Optional argument with an initial guess for the Gaussian sigma of
-               the object, default 5.0 (pixels).
-    @param[in] precision The convergence criterion for the moments; default 1e-6.
-    @param[in] guess_x_centroid An initial guess for the x component of the object centroid (useful
-               in case it is not located at the center, which is the default assumption).
-    @param[in] guess_y_centroid An initial guess for the y component of the object centroid (useful
-               in case it is not located at the center, which is the default assumption).
-    @param[in] strict If True (default), then there will be a run-time exception when moment
-               measurement fails.  If set to False, then information about failures will be silently
-               stored in the output HSMShapeData object.
+    @param object_image      The Image or ImageView for the object being measured.
+    @param guess_sig         Optional argument with an initial guess for the Gaussian sigma of the
+                             object, default 5.0 (pixels).
+    @param precision         The convergence criterion for the moments; default 1e-6.
+    @param guess_x_centroid  An initial guess for the x component of the object centroid (useful in
+                             case it is not located at the center, which is the default
+                             assumption).
+    @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
+                             case it is not located at the center, which is the default
+                             assumption).
+    @param strict            If True (default), then there will be a run-time exception when moment
+                             measurement fails.  If set to False, then information about failures
+                             will be silently stored in the output HSMShapeData object.
     @return A HSMShapeData object containing the results of moment measurement.
     """
     object_image_view = object_image.view()
