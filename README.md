@@ -167,10 +167,10 @@ Currently, GalSim has the following capabilities:
   ensure that the treatment of the latter is sufficiently accurate to use for
   precision tests of shear.
 
-* Can make the images either via Fourier transforms (for convolution) and
-  interpolation (for shearing), or via photon-shooting.  The exception is that
-  simulations based on real galaxies images must be carried out using the first
-  method only.
+* Can make the images either via i) Fourier transform / real-space convolution 
+  (real-space being occasionally faster than Fourier), and interpolation (for 
+  shearing); or via ii) photon-shooting.  The exception is that simulations 
+  based on real galaxies images must be carried out using Fourier methods only.
 
 * Can add uncorrelated noise using a variety of noise models.
 
