@@ -100,9 +100,12 @@ Demonstration scripts
 ---------------------
 
 There are a number of scripts in `examples/` that demonstrate how the code can
-be used.  These are called `demo1.py`-`demo8.py`.  As the project develops
-through further versions, and adds further capabilities to the software, more
-demo scripts will be added to `examples/` to illustrate what GalSim can do.
+be used.  These are called `demo1.py`-`demo8.py`.  A completely parallel
+sequence of configuration scripts, `demo1.yaml`-`demo8.yaml`, demonstrates how
+to make the same set of simulations using config scripts.  As the project
+develops through further versions, and adds further capabilities to the
+software, more demo scripts will be added to `examples/` to illustrate what
+GalSim can do.
 
 
 Additional scripts
