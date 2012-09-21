@@ -455,11 +455,11 @@ instance is:
     directly simply returns a single new random number drawn from the
     distribution
     represented by \texttt{dev}.  As an example:\newline \\
-    {\tt >>> dev = galsim.UniformDeviate()}\\
+    {\tt >>> dev = galsim.UniformDeviate(lseed=12345)}\\
     {\tt >>> dev()} \\
-    {\tt 0.35068059829063714} \\
+    {\tt 0.9296160866506398} \\
     {\tt >>> dev() }\\
-    {\tt 0.56841182382777333}}
+    {\tt 0.8901547130662948}}
 
 \end{itemize}
 However, there is also an important method of \texttt{Image} objects
