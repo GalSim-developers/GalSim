@@ -225,7 +225,7 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     uses surface brightness rather than flux units for pixel values, matching SBProfile.
 
     The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
-    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted
     for lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
@@ -301,7 +301,7 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     otf[0, 0] = 1+0j by default.  The scale of the output ImageViewD is correct in k space units.
 
     The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
-    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted
     for lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
@@ -379,7 +379,7 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     mtf[0, 0] = 1 by default.  The scale of the output ImageViewD is correct in k space units.
 
     The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
-    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted
     for lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
@@ -461,7 +461,7 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     ptf[0, 0] = 0. by default.  The scale of the output ImageViewD is correct in k space units.
 
     The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
-    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted
     for lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
