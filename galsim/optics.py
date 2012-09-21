@@ -5,8 +5,11 @@ import utilities
 """@file optics.py @brief Module containing the optical PSF generation routines.
 
 These are just functions; they are used to generate galsim.OpticalPSF() class instances (see 
-base.py).   Mostly they are solely of use to developers for generating arrays that may be useful in
-defining GSObjects with an optical component.
+base.py).   
+
+Mostly they are solely of use to developers for generating arrays that may be useful in defining 
+GSObjects with an optical component.  They will not therefore be used in a typical image simulation
+workflow: users will find most of what they need simply using the OpticalPSF() class.
 
 Glossary of key terms used in function names:
 
