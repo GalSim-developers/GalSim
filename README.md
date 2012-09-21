@@ -25,9 +25,13 @@ that users should cite.
 How to communicate with the GalSim developers
 ---------------------------------------------
 
-If you have any comments or questions, please feel free to open up an Issue on
-this GitHub repository.  Alternatively, if you prefer e-mail, then you can find
-contact information on the GREAT3 webpage linked above.
+If you have any comments, questions, or suggestins, please open up an Issue on
+our GitHub repository:
+
+https://github.com/GalSim-developers/GalSim/issues?state=open
+
+Alternatively, if you prefer e-mail, then you can find contact information on
+the GREAT3 webpage linked above.
 
 
 Installation
@@ -37,22 +41,20 @@ For installation instructions, please see the file `INSTALL.md` in the main
 repository directory. 
 
 There are tagged versions of the code corresponding to specific project releases
-and development milestones.  If interested in code from before `v0.1`, the
-tagged milestone versions may be the best ones to try if you want a stable
-version with specific capabilities.  (For more info on tags see the "Milestone
-tags" section below and `devel/git.txt`)
+and development milestones, including v0.1 and several earlier milestones. (For
+more info, see the "Tagged versions" section below, and `devel/git.txt`)
 
 
 Getting started
 ---------------
 
-1. We assume that all steps in `INSTALL.md` are complete.
+* Install the code as in `INSTALL.md`.
 
-2. Optional, but recommended whenever you try a new version of the code: run the
+* Optional, but recommended whenever you try a new version of the code: run the
 unit tests to make sure that there are no errors.  You can do this by running
 `scons tests`.  If there are any issues, please open an Issue on our GitHub page.
 
-3. Optional: run `doxygen` to generate documentation, using `Doxyfile` in the
+* Optional: run `doxygen` to generate documentation, using `Doxyfile` in the
 main repository directory to specify all doxygen settings.  You can 
 alternatively view the documentation online at
 http://galsim-developers.github.com/GalSim/
@@ -69,7 +71,7 @@ https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation
 
 More thorough documentation for all parts of the code can be found in the
 doxygen documentation mentioned in the previous section, or in the python
-docstrings in galsim/*.py.
+docstrings in `galsim/*.py`.
 
 
 Repository directory structure
@@ -122,8 +124,8 @@ elliptical Gaussian) for a FITS image.
 methods, given FITS images of the galaxy and PSF.
 
 
-Release and Milestone tags
---------------------------
+Tagged versions
+---------------
 
 After every GalSim release and development milestone we tag a snapshot of the 
 code at that moment, with the tag name `vX.X` or `milestoneN` where N is the 
