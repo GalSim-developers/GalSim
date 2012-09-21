@@ -459,6 +459,8 @@ class GSObject(object):
         """Draw an image of the object by shooting individual photons drawn from the surface 
         brightness profile of the object.
 
+        Note that the drawShoot method is invalid for RealGalaxy GSObjects at the current time.
+
         @param image  If provided, this will be the image on which to draw the profile.
                       If image=None, then an automatically-sized image will be created.
                       if image != None, but its Bounds are undefined (e.g. if it was 
@@ -549,6 +551,11 @@ class GSObject(object):
         large n_photons) as draw() produces when the same object is convolved with Pixel(xw=dx) 
         when drawing onto an image with pixel scale dx.
         """
+        # Raise an exception immediately if the SBProfile attribute is an SBDeconvolve
+        if isinstance(self.SBProfile, galsim.SBDeconvolve):
+            raise NotImplementedError(
+                "Currently you cannot drawShoot() with GSObjects that have SBDeconvolve instances "+
+                "in the SBProfile attribute (e.g. RealGalaxy, Deconolve).")
 
         # Raise an exception immediately if the normalization type is not recognized
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
@@ -1301,6 +1308,8 @@ class RealGalaxy(GSObject):
     the class is additional information that might be needed to make or interpret the simulations,
     e.g., the noise properties of the training data.
 
+    The GSObject drawShoot method is currently unavailable for RealGalaxy instances.
+
     Initialization
     --------------
     
@@ -1328,8 +1337,8 @@ class RealGalaxy(GSObject):
 
     Methods
     -------
-    The RealGalaxy is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
-    applyShear() etc.) and operator bindings.
+    The RealGalaxy is a GSObject, and inherits all of the GSObject methods (draw(), applyShear(), 
+    etc. except drawShoot() which is unavailable), and operator bindings.
     """
 
     # Initialization parameters of the object, with type information
@@ -1596,6 +1605,8 @@ class Convolve(GSObject):
 
 class Deconvolve(GSObject):
     """Base class for defining the python interface to the SBDeconvolve C++ class.
+    
+    The GSObject drawShoot() method is currently unavailable for Convolve instances.
     """
     # --- Public Class methods ---
     def __init__(self, farg):
