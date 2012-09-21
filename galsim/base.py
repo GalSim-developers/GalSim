@@ -459,7 +459,8 @@ class GSObject(object):
         """Draw an image of the object by shooting individual photons drawn from the surface 
         brightness profile of the object.
 
-        Note that the drawShoot method is invalid for RealGalaxy GSObjects at the current time.
+        Note that the drawShoot method is unavailable for objects which contain an SBDeconvolve,
+        or are compound objects (e.g. Add, Convolve) that include an SBDeconvolve.
 
         @param image  If provided, this will be the image on which to draw the profile.
                       If image=None, then an automatically-sized image will be created.
@@ -551,11 +552,6 @@ class GSObject(object):
         large n_photons) as draw() produces when the same object is convolved with Pixel(xw=dx) 
         when drawing onto an image with pixel scale dx.
         """
-        # Raise an exception immediately if the SBProfile attribute is an SBDeconvolve
-        if isinstance(self.SBProfile, galsim.SBDeconvolve):
-            raise NotImplementedError(
-                "Currently you cannot drawShoot() with GSObjects that have SBDeconvolve instances "+
-                "in the SBProfile attribute (e.g. RealGalaxy, Deconvolve).")
 
         # Raise an exception immediately if the normalization type is not recognized
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
@@ -608,8 +604,14 @@ class GSObject(object):
             # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
             gain /= dx**2
 
-        added_flux = self.SBProfile.drawShoot(
-            image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
+        try:
+            added_flux = self.SBProfile.drawShoot(
+                image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
+        except RuntimeError:
+            raise RuntimeError(
+                "Unable to drawShoot from this GSObject, perhaps it contains an SBDeconvolve "+
+                "in the SBProfile attribute or is a compound including one or more Deconvolve "+
+                "objects.")
 
         return image, added_flux
 
@@ -1318,7 +1320,7 @@ class RealGalaxy(GSObject):
     the class is additional information that might be needed to make or interpret the simulations,
     e.g., the noise properties of the training data.
 
-    The GSObject drawShoot method is currently unavailable for RealGalaxy instances.
+    The GSObject drawShoot method is unavailable for RealGalaxy instances.
 
     Initialization
     --------------
@@ -1616,7 +1618,7 @@ class Convolve(GSObject):
 class Deconvolve(GSObject):
     """Base class for defining the python interface to the SBDeconvolve C++ class.
     
-    The GSObject drawShoot() method is currently unavailable for Deconvolve instances.
+    The GSObject drawShoot() method is unavailable for Deconvolve instances.
     """
     # --- Public Class methods ---
     def __init__(self, farg):
