@@ -135,6 +135,10 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
     Outputs a circular pupil wavefront of unit amplitude that can be easily transformed to produce
     an optical PSF with lambda/diam = lam_over_diam on an output grid of spacing dx.
 
+    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
+    for lam_over_diam.
+
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
@@ -226,6 +230,10 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     The PSF is centred on the array[array_shape[0] / 2, array_shape[1] / 2] pixel by default, and
     uses surface brightness rather than flux units for pixel values, matching SBProfile.
 
+    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
+    for lam_over_diam.
+
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
     Parameters
@@ -301,6 +309,10 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     OTF array element ordering follows the DFT standard of kxky(array_shape), and has
     otf[0, 0] = 1+0j by default.  The scale of the output ImageViewD is correct in k space units.
+
+    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
+    for lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
@@ -379,6 +391,10 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     MTF array element ordering follows the DFT standard of kxky(array_shape), and has
     mtf[0, 0] = 1 by default.  The scale of the output ImageViewD is correct in k space units.
+
+    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
+    for lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
@@ -461,6 +477,10 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     PTF array element ordering follows the DFT standard of kxky(array_shape), and has
     ptf[0, 0] = 0. by default.  The scale of the output ImageViewD is correct in k space units.
+
+    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
+    for lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
