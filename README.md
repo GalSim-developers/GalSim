@@ -2,53 +2,105 @@
 
 # GalSim: The modular galaxy image simulation toolkit
 
+GalSim is open-source software for simulating images of astronomical objects
+(stars, galaxies) in a variety of ways.  The bulk of the calculations are
+carried out in C++, and the user interface is in python.  In addition, the code
+can operate directly on "config" files, for those users who prefer not to work
+in python.  The code is being developed as a collaborative project for the
+upcoming weak lensing community data challenge, GREAT3
+(http://great3challenge.info/), though it has additional capabilities beyond
+those needed for the challenge.  At the end of this file, there is a list of the
+code capabilities and plans for future development.
+
+
+Distribution
+------------
+
+Please feel free to fork this repository at any time.  However, please be aware
+that the code is still actively being developed (hence the current version
+number is v0.1).  The release of v1.0 will be accompanied with a publication
+that users should cite.
+
+
+How to communicate with the GalSim developers
+---------------------------------------------
+
+If you have any comments or questions, please feel free to open up an Issue on
+this GitHub repository.  Alternatively, if you prefer e-mail, then you can find
+contact information on the GREAT3 webpage linked above.
+
+
+Installation
+------------
+
 For installation instructions, please see the file `INSTALL.md` in the main
 repository directory. 
 
-There are tagged versions of the code corresponding to specific project 
-releases and development milestones.  
-
-If interested in code from before `v0.1`, the tagged milestone versions may be 
-the best ones to try if you want a stable version with specific capabilities.  
-
-(For more info on tags see the "Milestone tags" Section below and 
-`docs/git.txt`)
+There are tagged versions of the code corresponding to specific project releases
+and development milestones.  If interested in code from before `v0.1`, the
+tagged milestone versions may be the best ones to try if you want a stable
+version with specific capabilities.  (For more info on tags see the "Milestone
+tags" section below and `devel/git.txt`)
 
 
-How to get started
-------------------
+Getting started
+---------------
 
 1. We assume that all steps in `INSTALL.md` are complete.
 
 2. Optional, but recommended whenever you try a new version of the code: run the
 unit tests to make sure that there are no errors.  You can do this by running
-`scons tests`.
+`scons tests`.  If there are any issues, please open an Issue on our GitHub page.
 
 3. Optional: run `doxygen` to generate documentation, using `Doxyfile` in the
 main repository directory to specify all doxygen settings.  You can 
-alternatively view the documentation on GitHub at 
+alternatively view the documentation online at
 http://galsim-developers.github.com/GalSim/
-
-
-Demonstration scripts
----------------------
-
-Once these steps are completed, there are a number of scripts in `examples/` 
-that demonstrate how the code can be used.  These labelled `demo1.py`-`demo8.py`
-
-As the project develops through further versions, and adds further
-capabilities to the software, further demo scripts will be added to `examples/`
-to illustrate and showcase what GalSim can do.
 
 
 Reference documentation
 -----------------------
 
-For an overview of GalSim workflow and tools, please see 
-`doc/GalSim_Quick_Reference.pdf` in the GalSim repository.
+For an overview of GalSim workflow and python tools, please see 
+`doc/GalSim_Quick_Reference.pdf` in the GalSim repository.  A guide to using
+configuration files to generate simulations can be found on the GalSim wiki,
 
-For the Python GSObject classes used to describe astronomical objects, see 
-galsim.base in the doxygen documentation.
+https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation
+
+More thorough documentation for all parts of the code can be found in the
+doxygen documentation mentioned in the previous section, or in the python
+docstrings in galsim/*.py.
+
+
+Repository directory structure
+------------------------------
+
+The repository has a number of subdirectories. Below is a guide to their
+contents:
+
+* bin/ :      executables (after the compilation procedure is done).
+* devel/ :    an assortment of developer tools.
+* doc/ :      documentation, including a `Quick Reference` guide and, if the
+              user generates doxygen documentation using Doxyfile, the outputs
+              will also go in this directory.
+* examples/ : example scripts (see the following section).
+* galsim/ :   the python code for GalSim (which is what most end-users interact
+              with).
+* include/ :  the .h header files for the C++ parts of GalSim.
+* lib/ :      compiled libraries (after the compilation procedure is done).
+* pysrc/ :    the code that makes the purely C++ parts of GalSim accessible to
+              the python layer of GalSim.
+* src/ :      the source code for the purely C++ parts of GalSim.
+* tests/ :    unit tests.
+
+
+Demonstration scripts
+---------------------
+
+There are a number of scripts in `examples/` that demonstrate how the code can
+be used.  These are called `demo1.py`-`demo8.py`.  As the project develops
+through further versions, and adds further capabilities to the software, more
+demo scripts will be added to `examples/` to illustrate what GalSim can do.
 
 
 Additional scripts
@@ -81,7 +133,7 @@ You can see the available tags using the command
 
     git tag -l
 
-at terminal from within the repository.
+at a terminal from within the repository.
 
 The version of the code at any given snapshot can then be checked out using the
 tag name, e.g.:
@@ -91,3 +143,63 @@ tag name, e.g.:
 This will then update your directory tree to the snapshot of the code at the 
 milestone requested.  (You will also get a message about being in a "detached" 
 HEAD state.  That is normal.)
+
+
+Summary of current capabilities
+-------------------------------
+
+Currently, GalSim has the following capabilities:
+
+* Can generate PSFs from a variety of simple parametric models and first-order
+  optics.
+
+* Can simulate galaxies from a variety of simple parametric models and based on
+  HST training data.  Some additional testing will be done in future versions to
+  ensure that the treatment of the latter is sufficiently accurate to use for
+  precision tests of shear.
+
+* Can make the images either via Fourier transforms (for convolution) and
+  interpolation (for shearing), or via photon-shooting.  The exception is that
+  simulations based on real galaxies images must be carried out using the first
+  method only.
+
+* Can add uncorrelated noise using a variety of noise models.
+
+* Can draw galaxy images into arbitrary locations within a larger image.
+
+* It is possible to carry out nearly any simulation that a user might want using
+  two parallel methods: directly using python code, or by specifying the
+  simulation properties in an input configuration script.
+
+* Constant shears and lensing magnifications can be applied to the galaxies.
+
+* Non-constant shears and magnifications can be drawn from a shear field
+  expected for an NFW profile dark matter halo (as for weak lensing by galaxy
+  clusters).  For gridded galaxy positions, lensing shears can be drawn randomly
+  from a specified shear power spectrum.
+
+
+
+Summary of planned future development
+-------------------------------------
+
+In addition to carrying out further testing on some existing parts of the code,
+we plan to add the following additional capabilities in future versions of
+GalSim:
+
+* PSFs from stochastic atmosphere models.
+
+* Lensing shears from a power spectrum for arbitrary (non-gridded) galaxy
+  positions.  In addition, further testing of the power spectrum code will be
+  done.
+
+* Self-consistent shears AND magnifications from a power spectrum.
+
+* Simulating correlated noise fields with some user-specified correlation
+  function.
+
+* Handling (that is, whitening and imposing isotropy or four-fold symmetry on)
+  the input noise in the HST training data, so that deeper training samples can
+  be used for simulations of realistic galaxies.
+
+* Simulating simple detector defects or image artifacts.
