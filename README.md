@@ -26,7 +26,7 @@ with a publication that users should cite.
 How to communicate with the GalSim developers
 ---------------------------------------------
 
-If you have any comments, questions, or suggestins, please open up an Issue on
+If you have any comments, questions, or suggestions, please open up an Issue on
 our GitHub repository:
 
 https://github.com/GalSim-developers/GalSim/issues?state=open
