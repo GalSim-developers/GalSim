@@ -47,8 +47,9 @@ def main(argv):
 
     # Define some parameters we'll use below.
 
-    mass_list = [ 1.e15, 7.e14, 4.e14, 2.e14 ]  # mass in Msun/h
-    nfiles = 5 # number of files per item in mass list
+    #mass_list = [ 1.e15, 7.e14, 4.e14, 2.e14 ]  # mass in Msun/h
+    mass_list = [ 1.e15 ]
+    nfiles = 1 # number of files per item in mass list
     nobj = 5  # number of objects to draw for each file
 
     image_size = 512
@@ -80,7 +81,6 @@ def main(argv):
 
             # Initialize the random number generator we will be using for this object:
             rng = galsim.UniformDeviate(seed+k)
-            gd = galsim.GaussianDeviate(rng, sigma = gal_eta_rms)
 
             # Determine where this object is going to go:
             x = rng() * (image_size-1) + 1
@@ -107,6 +107,7 @@ def main(argv):
             print 'flux = ',flux
             hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
             print 'hlr = ',hlr
+            gd = galsim.GaussianDeviate(rng, sigma = gal_eta_rms)
             eta1 = gd()  # Unlike g or e, large values of eta are valid, so no need to cutoff.
             eta2 = gd()
             print 'eta = ',eta1,eta2
@@ -125,7 +126,6 @@ def main(argv):
 
             # Draw the stamp image
             stamp = final.draw(dx=pixel_scale)
-            print 'drew stamp ',k
 
             # Recenter the stamp at the desired position:
             stamp.setCenter(ix,iy)
@@ -142,7 +142,12 @@ def main(argv):
         # Add Poisson noise to the full image
         sky_level_pixel = sky_level * pixel_scale**2
         full_image += sky_level_pixel
-        full_image.addNoise(galsim.CCDNoise(rng))
+        # Going to the next seed isn't really required, but it matches the behavior of the 
+        # config parser, so doing this will result in identical output files.
+        # If you didn't care about that, you could instead construct this as a continuation
+        # of the last rng from the above loop: ccdnoise = galsim.CCDNoise(rng)
+        ccdnoise = galsim.CCDNoise(seed+nobj)
+        full_image.addNoise(ccdnoise)
         full_image -= sky_level_pixel
         print 'Added noise'
 

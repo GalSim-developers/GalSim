@@ -1,0 +1,138 @@
+#
+# Demo #9
+#
+# The ninth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be view in a window 100 characters wide.)
+#
+# This script simulates cluster lensing or galaxy-galaxy lensing.  The graviational shear 
+# applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations 
+# of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
+# has its own file, organized into 4 directories (one for each mass).  In order to have a total
+# of only 100 galaxies (for time considerations), each image only has 5 background galaxies.
+# For more realistic investigations, you would of course want to use more galaxies per image,
+# but for the purposes of the demo script, this suffices.
+#
+# New features introduced in this demo:
+#
+# - image type : Scattered
+# - str_value type : NumberedFile
+# - output : nproc
+
+
+# We again use the multiple document feature.  So start with the common information:
+
+# Define the PSF profile
+psf : 
+    type : Kolmogorov
+    fwhm : 0.9  # arcsec
+
+
+# Define the galaxy profile
+gal :
+    type : Exponential
+    half_light_radius : { type : Random , min : 0.8 , max : 2.8 }
+    flux : { type : Random , min : 1.0e4 , max : 1.0e6 }
+    ellip :
+        type : Eta1Eta2
+        eta1 : { type : RandomGaussian , sigma : 0.4 }
+        eta2 : { type : RandomGaussian , sigma : 0.4 }
+
+
+# Define some other information about the images 
+image :
+
+    # A Scattered image means that the objects can be placed arbitrarily at any (x,y) value.
+    type : Scattered
+
+    # Either size or (xsize,ysize) is required to specify the size of the image.
+    size : 512  # pixels
+
+    # nobjects is required to specify how many objects to place on the image.
+    nobjects : 5
+
+    # You can optionally specify stamp_size or (stamp_xsize,stamp_ysize) to set the size of
+    # the postage stamp image to draw for each object.  However, if you omit these,
+    # then galsim will automatically determine a good size to draw each object -- larger
+    # for larger objects, and smaller for smaller ones.  So this is usually the way to go.
+    
+    # Another optional parameter is center (which expects a "pos_value") to specify the location
+    # of the center of each object.  The default if this is omitted is random x from 
+    # 1..xsize and random y from 1..ysize.  i.e.
+    # center : 
+    #     type : XY 
+    #     x : { type : Random , min : 1 , max : xsize }
+    #     y : { type : Random , min : 1 , max : ysize }
+
+
+    pixel_scale : 0.43  # arcsec / pixel
+
+    noise :
+        sky_level : 1.0e4  # ADU / arcsec^2
+
+    random_seed : 8383721
+
+
+# Define the names and format of the output files
+output :
+
+    file_name :
+
+        # A NumberedFile type creates a string of the form rootNNNNext
+        # where the NNNN is a number that will typicallly be drawn from a Sequence.
+        # In our case, our file_name's will be:
+        #     cluster0001.fits
+        #     cluster0002.fits
+        #     cluster0003.fits
+        #     cluster0004.fits
+        #     cluster0005.fits
+        type : NumberedFile
+
+        # root specifies the text to go before the number
+        root : 'cluster'
+
+        # num specifies how to choose the number for each file. 
+        # If omitted, the default is simply a Sequence starting at 1.
+        # i.e. { type : Sequence , first : 1 }
+        num : 
+            type : Sequence
+            first : 1
+            last : &nfiles_per_directory 5
+
+        # ext specifies the text to go after the number, if desired (default = None)
+        ext : '.fits'
+
+        # digits specifies how many digits to use in writing the number.  The default is
+        # to use as many as necessary, but if your numbers go above 9, then this makes
+        # the file names appear out of order in a directory listing.  So it is common 
+        # practice to pad the smaller numbers with 0's so file0099 will appear before file0100.
+        digits : 4
+
+
+    dir : 
+        # Our directory names wil be:
+        #     mass1
+        #     mass2
+        #     mass3
+        #     mass4
+        type : NumberedFile
+        root : 'mass'
+        num : 
+            type : Sequence
+            first : 1
+            last : 4
+
+            # For our directory name, we have each number in the sequence repeat 5 times
+            # before moving on to the next value, since we have 5 files to put in each directory.
+            # Here is a case where using a named variable comes in handy.
+            repeat : *nfiles_per_directory
+
+    # nproc in the output field indicates that multiple processes should be used to 
+    # build the files.  This is a much more efficient way to parallelize than putting
+    # nproc in the image field (as in demo8.yaml), since it requires less communication 
+    # between the processes.  Unless you are building enormous files such that only one
+    # at a time can fit in memory, this will be the normal way you'll want to parallelize.
+    #
+    # Also, this time, we set nproc <= 0.  This means that galsim should try to automatically
+    # determine the number of cpus you have and use that many processes.
+    nproc : -1
+

@@ -380,6 +380,8 @@ def _GenerateFromRandom(param, param_name, base, value_type):
             if val > max: val = max
         else:
             val = ud() * (max-min) + min
+
+        print 'Random = ',val
         return val, False
 
 def _GenerateFromRandomGaussian(param, param_name, base, value_type):
@@ -447,8 +449,7 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
         val = gd()
         if 'mean' in kwargs: val += kwargs['mean']
 
-    #print 'ellip = ',val
-    #print 'RandomGaussian: ',val
+    print 'RandomGaussian: ',val
     return val, False
 
 def _GenerateFromRandomCircle(param, param_name, base, value_type):
