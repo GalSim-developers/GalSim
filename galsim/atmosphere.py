@@ -4,7 +4,8 @@ import numpy as np
 import galsim
 import utilities
 
-"""@file atmosphere.py @brief Module containing simple atmospheric PSF generation routines.
+"""@file atmosphere.py
+Module containing simple atmospheric PSF generation routines.
 
 These are just functions; they are used to generate galsim.AtmosphericPSF() class instances (see 
 base.py).   

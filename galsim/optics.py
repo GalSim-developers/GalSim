@@ -2,7 +2,8 @@ import numpy as np
 import galsim
 import utilities
 
-"""@file optics.py @brief Module containing the optical PSF generation routines.
+"""@file optics.py
+Module containing the optical PSF generation routines.
 
 These are just functions; they are used to generate galsim.OpticalPSF() class instances (see 
 base.py).   Mostly they are solely of use to developers for generating arrays that may be useful in
