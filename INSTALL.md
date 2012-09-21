@@ -419,6 +419,11 @@ most or all of the prerequisites using it, depending on whether you want
 to use GalSim with the fink version of python (`/sw/bin/python`) or the system 
 python (`/usr/bin/python`) or something else still.
 
+It is in general a good idea to update fink prior to installing any new modules:
+
+    fink selfupdate
+    fink update-all
+
 If you are happy with running GalSim using the fink version of python 2.7, you 
 can install everything with the following commands:
 
