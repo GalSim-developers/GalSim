@@ -68,7 +68,8 @@ These should installed onto your Python system so that they can be imported by:
 
     >>> import numpy
     >>> import pyfits
-    >>> import yaml [ if using PyYAML ]
+    >>> import yaml [ if using the galsim_yaml executable or otherwise plan to
+                      parse .yaml configuration files ]
     >>> import scipy [ if generating shears according to an NFW halo ]
 
 within Python.  You can test this by loading up the Python interpreter for the
