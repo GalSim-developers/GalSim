@@ -146,7 +146,8 @@ Requires one of the
   through a circular aperture, parametrized by the wavelength-aperture
   diameter ratio \texttt{lam\_over\_diam}, with optional obscuration.}
 \item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_kolmogorov.html}{\texttt{galsim.Kolmogorov(\dots)}} \newline {the Kolmogorov PSF for long-exposure
-  images through a turbulent atmosphere.}
+  images through a turbulent atmosphere. Requires one of the
+    following size parameters to be set: \texttt{lam\_over\_r0}; \texttt{FWHM}; \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_optical_p_s_f.html}{\texttt{galsim.OpticalPSF(lam\_over\_diam,
       \dots)}} \newline {a simple model for non-ideal
@@ -373,7 +374,8 @@ The \texttt{draw} method has a number of additional optional
   Poisson statistics for \texttt{n\_photons} samples.
 \end{itemize}
 As before, you are strongly encouraged to see the linked / Python
-docstrings for more details.
+docstrings for more details.  Finally, you currently cannot
+\texttt{drawShoot} with the \texttt{RealGalaxy}.
 }
 \end{itemize}
 

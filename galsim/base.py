@@ -932,7 +932,7 @@ class Kolmogorov(GSObject):
     Initialization
     --------------
     
-    A is initialized with one (and only one) of three possible size parameters
+    A Kolmoogorov is initialized with one (and only one) of three possible size parameters
 
         lam_over_r0
         half_light_radius
