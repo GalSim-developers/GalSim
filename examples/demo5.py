@@ -25,10 +25,10 @@ New features introduced in this demo:
 - sub_image = image[bounds]
 - obj2 = obj.createSheared(e,beta)
 
-- Building a single large image, and access sub-images within it
+- Build a single large image, and access sub-images within it.
 - Set the galaxy size based on the psf size and a resolution factor.
 - Set the object's flux according to a target S/N vale.
-- Use 90 degree-rotated pairs for the intrinsic galaxy shapes
+- Use 90 degree-rotated pairs for the intrinsic galaxy shapes.
 - Shift by a random (dx,dy) drawn from a unit circle top hat.
 """
 
@@ -275,10 +275,10 @@ def main(argv):
     logger.info('Done making images of postage stamps')
 
     # Now write the images to disk.
-    psf_image.write(psf_file_name, clobber=True)
+    psf_image.write(psf_file_name)
     logger.info('Wrote PSF file %s',psf_file_name)
 
-    gal_image.write(gal_file_name, clobber=True)
+    gal_image.write(gal_file_name)
     logger.info('Wrote image to %r',gal_file_name)  # using %r adds quotes around filename for us
 
 

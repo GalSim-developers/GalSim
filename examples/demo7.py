@@ -247,7 +247,7 @@ def main(argv):
     logger.info('')
 
     # Now write the image to disk.
-    galsim.fits.writeCube(all_images, file_name, clobber=True)
+    galsim.fits.writeCube(all_images, file_name)
     logger.info('Wrote fft image to fits data cube %r',file_name)
 
 

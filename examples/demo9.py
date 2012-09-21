@@ -14,9 +14,10 @@ but for the purposes of the demo script, this suffices.
 
 New features introduced in this demo:
 
-- Use shears from an NFW Halo model
-- Make multiple output files
-- Write a weight image as the second HDU in each file
+- Use shears from an NFW Halo model.
+- Make multiple output files.
+- Place galaxies at random positions on a larger image.
+- Write a weight image as the second HDU in each file.
 - Use multiple processes to construct each file in parallel.
 """
 
@@ -76,6 +77,10 @@ def main(argv):
 
         full_image = galsim.ImageF(image_size, image_size)
         full_image.setScale(pixel_scale)
+
+        # The weight image will hold the inverse variance for each pixel.
+        weight_image = galsim.ImageF(image_size, image_size)
+        weight_image.setScale(pixel_scale)
 
         for k in range(nobj):
 
@@ -142,6 +147,11 @@ def main(argv):
         # Add Poisson noise to the full image
         sky_level_pixel = sky_level * pixel_scale**2
         full_image += sky_level_pixel
+
+        # The image right now has the variance in each pixel.  So before going on with the 
+        # noise, copy these over to the weight image and invert.
+        weight_image.array = 1. / full_image.array
+
         # Going to the next seed isn't really required, but it matches the behavior of the 
         # config parser, so doing this will result in identical output files.
         # If you didn't care about that, you could instead construct this as a continuation
@@ -152,8 +162,8 @@ def main(argv):
         print 'Added noise'
 
         # Write the file to disk:
-        full_image.write(file_name)
-        print 'Write image to ',file_name
+        galsim.fits.writeMulti([full_image, weight_image], file_name)
+        print 'Write images to ',file_name
 
         t2 = time.time()
         return t2-t1

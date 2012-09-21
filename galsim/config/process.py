@@ -199,6 +199,8 @@ def ProcessOutput(config, logger=None):
             dir = galsim.config.ParseValue(output, 'dir', config, str)[0]
             if not os.path.isdir(dir): os.mkdir(dir)
             file_name = os.path.join(dir,file_name)
+        else:
+            dir = None
 
         kwargs['file_name'] = file_name
         kwargs['config'] = config
@@ -211,17 +213,19 @@ def ProcessOutput(config, logger=None):
             extra_file_name = None
             output_extra = output[extra]
             if 'file_name' in output_extra:
-                extra_file_name = output_extra['file_name']
+                extra_file_name = galsim.config.ParseValue(output[extra],'file_name',config,str)
                 if 'dir' in output:
-                    extra_file_name = os.path.join(output['dir'],extra_file_name)
+                    extra_file_name = os.path.join(dir,extra_file_name)
                 kwargs[ extra+'_file_name' ] = extra_file_name
-            elif type == 'MultiFits':
+            elif type != 'Fits':
                 raise AttributeError(
                     "Only the file_name version of %s output is possible for "%extra+
-                    "output type == MultiFits.")
+                    "output type == %s."%type)
+            elif 'hdu' not in output_extra:
+                raise AttributeError("Must specify either file_name or hdu for %s output."%extra)
             else:
-                raise NotImplementedError(
-                    "Only the file_name version of %s output is currently implemented."%extra)
+                extra_hdu = galsim.config.ParseValue(output[extra],'hdu',config,int)
+                kwargs[ extra+'_hdu' ] = extra_hdu
     
         if nproc > 1:
             new_kwargs = {}
@@ -376,9 +380,7 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
 
 
 def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
-                  psf_file_name=None, psf_hdu=None,
-                  weight_file_name=None, weight_hdu=None,
-                  badpix_file_name=None, badpix_hdu=None):
+                  psf_file_name=None, weight_file_name=None, badpix_file_name=None)
     """
     Build a multi-image fits data cube as specified in config.
     
@@ -388,11 +390,8 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
     @param nproc      How many processes to use.
     @param logger     If given, a logger object to log progress.
     @param psf_file_name     If given, write a psf image to this file
-    @param psf_hdu           If given, write a psf image to this hdu in file_name
     @param weight_file_name  If given, write a weight image to this file
-    @param weight_hdu        If given, write a weight image to this hdu in file_name
     @param badpix_file_name  If given, write a badpix image to this file
-    @param badpix_hdu        If given, write a badpix image to this hdu in file_name
 
     @return time      Time taken to build file
     """
@@ -400,13 +399,11 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
 
     if psf_file_name:
         make_psf_image = True
-    elif psf_hdu:
-        raise NotImplementedError("Sorry, psf hdu output is not currently implemented.")
     else:
         make_psf_image = False
-    if weight_file_name or weight_hdu:
+    if weight_file_name:
         raise NotImplementedError("Sorry, weight image output is not currently implemented.")
-    if badpix_file_name or badpix_hdu:
+    if badpix_file_name:
         raise NotImplementedError("Sorry, badpix image output is not currently implemented.")
     if nproc > 1:
         import warnings

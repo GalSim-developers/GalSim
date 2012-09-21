@@ -107,8 +107,8 @@ def main(argv):
         os.mkdir('output')
     file_name = os.path.join('output', 'demo2.fits')
     file_name_epsf = os.path.join('output','demo2_epsf.fits')
-    image.write(file_name, clobber=True)
-    image_epsf.write(file_name_epsf, clobber=True)
+    image.write(file_name)
+    image_epsf.write(file_name_epsf)
     logger.info('Wrote image to %r',file_name)
     logger.info('Wrote effective PSF image to %r',file_name_epsf)
 

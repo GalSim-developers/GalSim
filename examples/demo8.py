@@ -157,7 +157,7 @@ def main(argv):
     # At this point you could do something interesting with the image in memory.
     # However, we're going to be boring and just write it to a file.
     single_file_name = os.path.join('output','bpd_single.fits')
-    image.write(single_file_name, clobber=True)
+    image.write(single_file_name)
 
     t2 = time.time()
 

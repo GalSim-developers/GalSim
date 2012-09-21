@@ -25,7 +25,7 @@ New features introduced in this demo:
 - obj.applyRotation(theta)
 - obj.applyMagnification(scale)
 - image += image2
-- galsim.fits.writeCube([list of images], file_name, clobber)
+- galsim.fits.writeCube([list of images], file_name)
 """
 
 import sys
@@ -103,7 +103,7 @@ def main(argv):
     # Draw this one with no noise.
     epsf_image = epsf.draw(dx = pixel_scale)
     # write to file
-    epsf_image.write(psf_file_name, clobber = True)
+    epsf_image.write(psf_file_name)
     logger.info('Created ePSF and wrote to file %r',psf_file_name)
 
     # Build the images
@@ -173,7 +173,7 @@ def main(argv):
 
     # Now write the image to disk.
     # We write the images to a fits data cube.
-    galsim.fits.writeCube(all_images, cube_file_name, clobber=True)
+    galsim.fits.writeCube(all_images, cube_file_name)
     logger.info('Wrote image to fits data cube %r',cube_file_name)
 
 

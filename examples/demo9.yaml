@@ -114,8 +114,9 @@ output :
         #     mass2
         #     mass3
         #     mass4
+        # as subdirectories of output_yaml.
         type : NumberedFile
-        root : 'mass'
+        root : 'output_yaml/mass'
         num : 
             type : Sequence
             first : 1
@@ -125,6 +126,17 @@ output :
             # before moving on to the next value, since we have 5 files to put in each directory.
             # Here is a case where using a named variable comes in handy.
             repeat : *nfiles_per_directory
+
+    # The weight field means that a weight image should be built and written out.
+    # The weights are calculated as the inverse variance in each pixel.
+    weight :
+        # Either file_name or hdu is required for weight.  In this case we write to the 
+        # first hdu extension.  The main image is in the primary HDU, which is number 0.
+        # Note: it is an error to skip hdu's, so if weight is the only other image, it must 
+        # be in hud 1.  If weight, badpix and psf all specify an hdu value, then they must be
+        # 1, 2 and 3 in some order.
+        # Also, hdu is only valid for image.type = Fits (which is the default if unspecified).
+        hdu : 1
 
     # nproc in the output field indicates that multiple processes should be used to 
     # build the files.  This is a much more efficient way to parallelize than putting

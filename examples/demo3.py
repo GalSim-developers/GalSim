@@ -196,9 +196,9 @@ def main(argv):
     file_name_epsf = os.path.join('output','demo3_epsf.fits')
     file_name_opticalpsf = os.path.join('output','demo3_opticalpsf.fits')
     
-    image.write(file_name, clobber=True)
-    image_epsf.write(file_name_epsf, clobber=True)
-    image_opticalpsf.write(file_name_opticalpsf, clobber=True)
+    image.write(file_name)
+    image_epsf.write(file_name_epsf)
+    image_opticalpsf.write(file_name_opticalpsf)
     logger.info('Wrote image to %r', file_name)
     logger.info('Wrote effective PSF image to %r', file_name_epsf)
     logger.info('Wrote optics-only PSF image (Nyquist sampled) to %r', file_name_opticalpsf)

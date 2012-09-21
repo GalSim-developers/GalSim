@@ -20,7 +20,7 @@ New features introduced in this demo:
 - obj = galsim.Moffat(beta, fwhm, trunc)
 - obj = galsim.Add([list of objects])
 - obj.setFlux(flux)
-- galsim.fits.writeMulti([list of images], file_name, clobber)
+- galsim.fits.writeMulti([list of images], file_name)
 """
 
 import sys
@@ -140,7 +140,7 @@ def main(argv):
         images.append(image)
     
     # Now write the images to a multi-extension fits file.  Each image will be in its own hdu.
-    galsim.fits.writeMulti(images, multi_file_name, clobber=True)
+    galsim.fits.writeMulti(images, multi_file_name)
     logger.info('Images written to multi-extension fits file %r',multi_file_name)
 
 

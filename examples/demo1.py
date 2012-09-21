@@ -16,7 +16,7 @@ New features introduced in this demo:
 - image = obj.draw(dx)
 - noise = galsim.GaussianDeviate(sigma)
 - image.addNoise(noise)
-- image.write(file_name, clobber)
+- image.write(file_name)
 - image.FindAdaptiveMom()
 """
 
@@ -79,7 +79,8 @@ def main(argv):
     if not os.path.isdir('output'):
         os.mkdir('output')
     file_name = os.path.join('output','demo1.fits')
-    image.write(file_name, clobber=True)
+    # Note: if the file already exists, this will overwrite it.
+    image.write(file_name)
     logger.info('Wrote image to %r' % file_name)  # using %r adds quotes around filename for us
 
     results = image.FindAdaptiveMom()
