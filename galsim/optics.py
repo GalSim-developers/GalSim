@@ -134,7 +134,7 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
     an optical PSF with lambda/diam = lam_over_diam on an output grid of spacing dx.
 
     The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
-    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted
     for lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
