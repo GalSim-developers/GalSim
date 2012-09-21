@@ -347,13 +347,15 @@ The \texttt{draw} method has a number of additional optional
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{image
       = obj.drawShoot(image=None, dx=None, add\_to\_image = False,
-      \dots)}} \newline {draw and return an \texttt{Image} (see Section
-    \ref{sect:image}) of the \texttt{GSObject}~by shooting a finite
-    number of photons.  The resulting rendering therefore contains
-    stochastic noise, but uses few approximations. \texttt{drawShoot}
-    shares all the parameters listed for \texttt{draw}, above, but the
-    \texttt{drawShoot} method also has a number of additional optional
-    parameters. Important examples worthy of mention are:
+      \dots)}} \newline {draw and return an \texttt{Image} (see
+    Section \ref{sect:image}) of the \texttt{GSObject}~by shooting a
+    finite number of photons.  The resulting rendering therefore
+    contains stochastic noise, but uses few approximations.  Note
+    however, that you cannot currently \texttt{drawShoot} with a
+    \texttt{RealGalaxy} instance.  \texttt{drawShoot} shares all the parameters
+    listed for \texttt{draw}, above, but the \texttt{drawShoot} method
+    also has a number of additional optional parameters. Important
+    examples worthy of mention are:
 \begin{itemize}
 \item \texttt{n\_photons} (default = \texttt{0}) \newline If provided,
   the number of photons to use.  If not provided, use as many photons
@@ -374,8 +376,7 @@ The \texttt{draw} method has a number of additional optional
   Poisson statistics for \texttt{n\_photons} samples.
 \end{itemize}
 As before, you are strongly encouraged to see the linked / Python
-docstrings for more details.  Finally, you currently cannot
-\texttt{drawShoot} with the \texttt{RealGalaxy}.
+docstrings for more details.
 }
 \end{itemize}
 
