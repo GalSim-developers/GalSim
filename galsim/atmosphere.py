@@ -12,8 +12,8 @@ base.py).
 
 Mostly they are solely of use to developers for generating arrays that may be useful in defining 
 GSObjects with a Kolmogorov atmospheric PSF profile.  They will not therefore be used in a typical
-image simulation workflow: users will find most of what they need simply using the Kolmogorov()
-(preferred) or AtmosphericPSF() class.
+image simulation workflow.  In future it is planned to implemenent, in this module, a stochastic
+atmospheric model with multiple turbulent layers.
 
 Glossary of key terms used in function names:
 
