@@ -4,7 +4,21 @@ import numpy as np
 import galsim
 import utilities
 
-"""\file atmosphere.py Simple atmospheric PSF generation routines
+"""@file atmosphere.py @brief Module containing simple atmospheric PSF generation routines.
+
+These are just functions; they are used to generate galsim.AtmosphericPSF() class instances (see 
+base.py).   
+
+Mostly they are solely of use to developers for generating arrays that may be useful in defining 
+GSObjects with a Kolmogorov atmospheric component.  They will not therefore be used in a typical
+image simulation workflow: users will find most of what they need simply using the Kolmogorov()
+(preferred) or AtmosphericPSF() class.
+
+Glossary of key terms used in function names:
+
+PSF = point spread function
+
+MTF = modulation transfer function = |FT{PSF}|
 """
 
 def kolmogorov_mtf(array_shape=(256, 256), dx=1., lam_over_r0=1.):
@@ -31,7 +45,11 @@ def kolmogorov_mtf(array_shape=(256, 256), dx=1., lam_over_r0=1.):
 
 def kolmogorov_mtf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
     """@brief Return the atmospheric modulation transfer function for long exposures with 
-    Kolmogorov turbulence as an ImageViewD. 
+    Kolmogorov turbulence as an ImageViewD.
+
+    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
+    for lam_over_r0.
 
     Parameters
     ----------
@@ -64,6 +82,7 @@ def kolmogorov_psf(array_shape=(256,256), dx=1., lam_over_r0=1., flux=1.):
                            [r0 ~ lambda^(-6/5)].
     @param flux            total flux of the profile [default flux=1.]
     """
+
     amtf = kolmogorov_mtf(array_shape=array_shape, dx=dx, lam_over_r0=lam_over_r0)
     ftmtf = np.fft.fft2(amtf)
     im = galsim.utilities.roll2d((ftmtf * ftmtf.conj()).real, (array_shape[0] / 2,
@@ -72,6 +91,10 @@ def kolmogorov_psf(array_shape=(256,256), dx=1., lam_over_r0=1., flux=1.):
     
 def kolmogorov_psf_image(array_shape=(256, 256), dx=1., lam_over_r0=1., flux=1.):
     """@brief Return long exposure Kolmogorov PSF as an ImageViewD.
+
+    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
+    for lam_over_diam.
 
     Parameters
     ----------
