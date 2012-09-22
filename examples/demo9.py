@@ -14,6 +14,8 @@ but for the purposes of the demo script, this suffices.
 
 New features introduced in this demo:
 
+- image.copyFrom(image2)
+
 - Use shears from an NFW Halo model.
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -150,7 +152,12 @@ def main(argv):
 
         # The image right now has the variance in each pixel.  So before going on with the 
         # noise, copy these over to the weight image and invert.
-        weight_image.array = 1. / full_image.array
+        # Note: Writing `weight_image = full_image` is wrong! 
+        #       In python this just declares weight_image to be another name for full_image.
+        #       We want to copy the values from full_image over to weight_image.
+        #       For GalSim images, we do this with the copyFrom method.
+        weight_image.copyFrom(full_image)
+        weight_image.invertSelf()
 
         # Going to the next seed isn't really required, but it matches the behavior of the 
         # config parser, so doing this will result in identical output files.

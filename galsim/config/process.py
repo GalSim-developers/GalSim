@@ -213,7 +213,7 @@ def ProcessOutput(config, logger=None):
             extra_file_name = None
             output_extra = output[extra]
             if 'file_name' in output_extra:
-                extra_file_name = galsim.config.ParseValue(output[extra],'file_name',config,str)
+                extra_file_name = galsim.config.ParseValue(output[extra],'file_name',config,str)[0]
                 if 'dir' in output:
                     extra_file_name = os.path.join(dir,extra_file_name)
                 kwargs[ extra+'_file_name' ] = extra_file_name
@@ -224,7 +224,7 @@ def ProcessOutput(config, logger=None):
             elif 'hdu' not in output_extra:
                 raise AttributeError("Must specify either file_name or hdu for %s output."%extra)
             else:
-                extra_hdu = galsim.config.ParseValue(output[extra],'hdu',config,int)
+                extra_hdu = galsim.config.ParseValue(output[extra],'hdu',config,int)[0]
                 kwargs[ extra+'_hdu' ] = extra_hdu
     
         if nproc > 1:
@@ -279,33 +279,77 @@ def BuildFits(file_name, config, logger=None,
     """
     t1 = time.time()
 
-    if psf_file_name:
+    # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
+    hdus = {}
+    # The primary hdu is always the main image.
+    hdus[0] = 0
+
+    if psf_file_name or psf_hdu:
         make_psf_image = True
-    elif psf_hdu:
-        raise NotImplementedError("Sorry, psf hdu output is not currently implemented.")
+        if psf_hdu: 
+            if psf_hdu <= 0 or psf_hdu in hdus.keys():
+                raise ValueError("psf_hdu = %d is invalid or a duplicate."%pdf_hdu)
+            hdus[psf_hdu] = 1
     else:
         make_psf_image = False
 
     if weight_file_name or weight_hdu:
-        raise NotImplementedError("Sorry, weight image output is not currently implemented.")
+        make_weight_image = True
+        if weight_hdu: 
+            if weight_hdu <= 0 or weight_hdu in hdus.keys():
+                raise ValueError("weight_hdu = %d is invalid or a duplicate."&weight_hdu)
+            hdus[weight_hdu] = 2
+    else:
+        make_weight_image = False
+
     if badpix_file_name or badpix_hdu:
-        raise NotImplementedError("Sorry, badpix image output is not currently implemented.")
+        make_badpix_image = True
+        if badpix_hdu: 
+            if badpix_hdu <= 0 or badpix_hdu in hdus.keys():
+                raise ValueError("badpix_hdu = %d is invalid or a duplicate."&badpix_hdu)
+            hdus[badpix_hdu] = 3
+    else:
+        make_badpix_image = False
+
+    for h in range(len(hdus.keys())):
+        if h not in hdus.keys():
+            raise ValueError("Image for hdu %d not found.  Cannot skip hdus."%h)
 
     all_images = BuildImage(
             config=config, logger=logger, 
             make_psf_image=make_psf_image,
-            make_weight_image=False, 
-            make_badpix_image=False)
+            make_weight_image=make_weight_image,
+            make_badpix_image=make_badpix_image)
     # returns a tuple ( main_image, psf_image, weight_image, badpix_image )
 
-    all_images[0].write(file_name, clobber=True)
+    hdulist = []
+    for h in range(len(hdus.keys())):
+        assert h in hdus.keys()  # Checked for this above.
+        hdulist.append(all_images[hdus[h]])
+        print 'Add allimages[%d] to hdulist'%hdus[h]
+
+    # This next line is ok even if the main image is the only one in the list.
+    galsim.fits.writeMulti(hdulist, file_name)
     if logger:
-        logger.info('Wrote image to fits file %r',file_name)
+        if len(hdus.keys()) == 1:
+            logger.info('Wrote image to fits file %r',file_name)
+        else:
+            logger.info('Wrote image (with extra hdus) to multi-extension fits file %r',file_name)
 
     if psf_file_name:
-        all_images[1].write(psf_file_name, clobber=True)
+        all_images[1].write(psf_file_name)
         if logger:
             logger.info('Wrote psf image to fits file %r',psf_file_name)
+
+    if weight_file_name:
+        all_images[2].write(weight_file_name)
+        if logger:
+            logger.info('Wrote weight image to fits file %r',weight_file_name)
+
+    if badpix_file_name:
+        all_images[3].write(badpix_file_name)
+        if logger:
+            logger.info('Wrote badpix image to fits file %r',badpix_file_name)
 
     t2 = time.time()
     return t2-t1
@@ -333,14 +377,20 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
         make_psf_image = True
     else:
         make_psf_image = False
+
     if weight_file_name:
-        raise NotImplementedError("Sorry, weight image output is not currently implemented.")
+        make_weight_image = True
+    else:
+        make_weight_image = False
+
     if badpix_file_name:
-        raise NotImplementedError("Sorry, badpix image output is not currently implemented.")
+        make_badpix_image = True
+    else:
+        make_badpix_image = False
+
     if nproc > 1:
         import warnings
         warnings.warn("Sorry, multiple processes not currently implemented for BuildMultiFits.")
-        
 
     main_images = []
     psf_images = []
@@ -351,8 +401,8 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
         all_images = BuildImage(
                 config=config, logger=logger,
                 make_psf_image=make_psf_image, 
-                make_weight_image=False,
-                make_badpix_image=False)
+                make_weight_image=make_weight_image,
+                make_badpix_image=make_badpix_image)
         # returns a tuple ( main_image, psf_image, weight_image, badpix_image )
         t3 = time.time()
         main_images += [ all_images[0] ]
@@ -366,21 +416,32 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
             logger.info('Image %d: size = %d x %d, time = %f sec', k, xs, ys, t3-t2)
 
 
-    galsim.fits.writeMulti(main_images, file_name, clobber=True)
+    galsim.fits.writeMulti(main_images, file_name)
     if logger:
         logger.info('Wrote images to multi-extension fits file %r',file_name)
 
     if psf_file_name:
-        galsim.fits.writeMulti(psf_images, psf_file_name, clobber=True)
+        galsim.fits.writeMulti(psf_images, psf_file_name)
         if logger:
             logger.info('Wrote psf images to multi-extension fits file %r',psf_file_name)
+
+    if weight_file_name:
+        galsim.fits.writeMulti(weight_images, weight_file_name)
+        if logger:
+            logger.info('Wrote weight images to multi-extension fits file %r',weight_file_name)
+
+    if badpix_file_name:
+        galsim.fits.writeMulti(badpix_images, badpix_file_name)
+        if logger:
+            logger.info('Wrote badpix images to multi-extension fits file %r',badpix_file_name)
+
 
     t4 = time.time()
     return t4-t1
 
 
 def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
-                  psf_file_name=None, weight_file_name=None, badpix_file_name=None)
+                  psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
     Build a multi-image fits data cube as specified in config.
     
@@ -401,10 +462,20 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
         make_psf_image = True
     else:
         make_psf_image = False
+
     if weight_file_name:
-        raise NotImplementedError("Sorry, weight image output is not currently implemented.")
+        make_weight_image = True
+    else:
+        make_weight_image = False
+
     if badpix_file_name:
+        make_badpix_image = True
+    else:
+        make_badpix_image = False
+
+    if make_badpix_image:
         raise NotImplementedError("Sorry, badpix image output is not currently implemented.")
+
     if nproc > 1:
         import warnings
         warnings.warn("Sorry, multiple processe not currently implemented for BuildMultiFits.")
@@ -416,8 +487,8 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
     all_images = BuildImage(
             config=config, logger=logger,
             make_psf_image=make_psf_image, 
-            make_weight_image=False,
-            make_badpix_image=False)
+            make_weight_image=make_weight_image,
+            make_badpix_image=make_badpix_image)
     t3 = time.time()
     if logger:
         # Note: numpy shape is y,x
@@ -439,8 +510,8 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
         all_images = BuildImage(
                 config=config, logger=logger,
                 make_psf_image=make_psf_image, 
-                make_weight_image=False,
-                make_badpix_image=False)
+                make_weight_image=make_weight_imagee,
+                make_badpix_image=make_badpix_imagee)
         t5 = time.time()
         main_images += [ all_images[0] ]
         psf_images += [ all_images[1] ]
@@ -451,14 +522,24 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
             ys, xs = all_images[0].array.shape
             logger.info('Image %d: size = %d x %d, time = %f sec', k, xs, ys, t5-t4)
 
-    galsim.fits.writeCube(main_images, file_name, clobber=True)
+    galsim.fits.writeCube(main_images, file_name)
     if logger:
         logger.info('Wrote image to fits data cube %r',file_name)
 
     if psf_file_name:
-        galsim.fits.writeCube(psf_images, psf_file_name, clobber=True)
+        galsim.fits.writeCube(psf_images, psf_file_name)
         if logger:
             logger.info('Wrote psf images to fits data cube %r',psf_file_name)
+
+    if weight_file_name:
+        galsim.fits.writeCube(weight_images, weight_file_name)
+        if logger:
+            logger.info('Wrote weight images to fits data cube %r',weight_file_name)
+
+    if badpix_file_name:
+        galsim.fits.writeCube(badpix_images, badpix_file_name)
+        if logger:
+            logger.info('Wrote badpix images to fits data cube %r',badpix_file_name)
 
     t6 = time.time()
     return t6-t1
@@ -514,11 +595,19 @@ def BuildImage(config, logger=None,
         raise AttributeError("Invalid image.type=%s."%type)
 
     build_func = eval('Build' + type + 'Image')
-    return build_func(
+    all_images = build_func(
             config=config, logger=logger,
             make_psf_image=make_psf_image, 
-            make_weight_image=False,
-            make_badpix_image=False)
+            make_weight_image=make_weight_image,
+            make_badpix_image=make_badpix_image)
+
+    # The later image building functions build up the weight image as the total variance 
+    # in each pixel.  We need to invert this to produce the inverse variance map.
+    # Doing it here means it only needs to be done in this one place.
+    if all_images[2]:
+        all_images[2].invertSelf()
+
+    return all_images
 
 
 def BuildSingleImage(config, logger=None,
@@ -690,7 +779,7 @@ def BuildTiledImage(config, logger=None,
         full_weight_image = None
 
     if make_badpix_image:
-        full_badpix_image = galsim.ImageF(full_xsize,full_ysize)
+        full_badpix_image = galsim.ImageS(full_xsize,full_ysize)
         full_badpix_image.setZero()
         full_badpix_image.setScale(pixel_scale)
     else:
@@ -723,7 +812,7 @@ def BuildTiledImage(config, logger=None,
                 if make_weight_image:
                     full_weight_image[b] += weight_images[k]
                 if make_badpix_image:
-                    full_badpix_image[b] += badpix_images[k]
+                    full_badpix_image[b] |= badpix_images[k]
                 k = k+1
 
     if not do_noise:
@@ -739,9 +828,9 @@ def BuildTiledImage(config, logger=None,
 
             draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
             if draw_method == 'fft':
-                AddNoiseFFT(full_image,config['image']['noise'],rng,sky_level)
+                AddNoiseFFT(full_image,full_weight_image,config['image']['noise'],rng,sky_level)
             elif draw_method == 'phot':
-                AddNoisePhot(full_image,config['image']['noise'],rng,sky_level)
+                AddNoisePhot(full_image,full_weight_image,config['image']['noise'],rng,sky_level)
             else:
                 raise AttributeError("Unknown draw_method %s."%draw_method)
         elif sky_level:
@@ -838,7 +927,7 @@ def BuildScatteredImage(config, logger=None,
         full_weight_image = None
 
     if make_badpix_image:
-        full_badpix_image = galsim.ImageF(full_xsize,full_ysize)
+        full_badpix_image = galsim.ImageS(full_xsize,full_ysize)
         full_badpix_image.setZero()
         full_badpix_image.setScale(pixel_scale)
     else:
@@ -861,6 +950,9 @@ def BuildScatteredImage(config, logger=None,
         print 'stamp bounds = ',images[k].bounds
         print 'full bounds = ',full_image.bounds
         print 'Overlap = ',bounds
+        if make_weight_image:
+            print 'weight bounds = ',weight_images[k].bounds
+            print 'full_weight bounds = ',full_weight_image.bounds
         if (not bounds.isDefined()):
             import warnings
             warnings.warn(
@@ -872,11 +964,11 @@ def BuildScatteredImage(config, logger=None,
         full_image[bounds] += images[k][bounds]
 
         if make_psf_image:
-            full_psf_image[bounds] += psf_image[k][bounds]
+            full_psf_image[bounds] += psf_images[k][bounds]
         if make_weight_image:
-            full_weight_image[bounds] += weight_image[k][bounds]
+            full_weight_image[bounds] += weight_images[k][bounds]
         if make_badpix_image:
-            full_badpix_image[bounds] += badpix_image[k][bounds]
+            full_badpix_image[bounds] |= badpix_images[k][bounds]
 
     if 'noise' in config['image']:
         # Apply the noise to the full image
@@ -890,9 +982,9 @@ def BuildScatteredImage(config, logger=None,
 
         draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
         if draw_method == 'fft':
-            AddNoiseFFT(full_image,config['image']['noise'],rng,sky_level)
+            AddNoiseFFT(full_image,full_weight_image,config['image']['noise'],rng,sky_level)
         elif draw_method == 'phot':
-            AddNoisePhot(full_image,config['image']['noise'],rng,sky_level)
+            AddNoisePhot(full_image,full_weight_image,config['image']['noise'],rng,sky_level)
         else:
             raise AttributeError("Unknown draw_method %s."%draw_method)
 
@@ -1147,32 +1239,54 @@ def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, 
     #print 'draw = ',draw_method
     if draw_method == 'fft':
         im = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level,final_shift)
+        if icenter:
+            im.setCenter(icenter.x, icenter.y)
+        if make_weight_image:
+            weight_im = galsim.ImageF(im.bounds)
+            print 'make weight_im from im.bounds = ',im.bounds
+            print 'weight_im.bounds = ',weight_im.bounds
+            weight_im.setScale(im.scale)
+            weight_im.setZero()
+        else:
+            weight_im = None
         if do_noise:
             if 'noise' in config['image']:
-                AddNoiseFFT(im,config['image']['noise'],rng,sky_level)
+                AddNoiseFFT(im,weight_im,config['image']['noise'],rng,sky_level)
             elif sky_level:
                 pixel_scale = im.getScale()
                 im += sky_level * pixel_scale**2
+
     elif draw_method == 'phot':
         im = DrawStampPhot(psf,gal,config,xsize,ysize,rng,sky_level,final_shift)
+        if icenter:
+            im.setCenter(icenter.x, icenter.y)
+        if make_weight_image:
+            weight_im = galsim.ImageF(im.bounds)
+            weight_im.setScale(im.scale)
+            weight_im.setZero()
+        else:
+            weight_im = None
         if do_noise:
             if 'noise' in config['image']:
-                AddNoisePhot(im,config['image']['noise'],rng,sky_level)
+                AddNoisePhot(im,weight_im,config['image']['noise'],rng,sky_level)
             elif sky_level:
                 pixel_scale = im.getScale()
                 im += sky_level * pixel_scale**2
+
     else:
         raise AttributeError("Unknown draw_method %s."%draw_method)
 
-    if icenter:
-        im.setCenter(icenter.x, icenter.y)
+    if make_badpix_image:
+        badpix_im = galsim.ImageS(im.bounds)
+        badpix_im.setScale(im.scale)
+        badpix_im.setZero()
+    else:
+        badpix_im = None
 
     t5 = time.time()
 
     if make_psf_image:
-        # Note: numpy shape is y,x
-        ysize, xsize = im.array.shape
-        psf_im = DrawPSFStamp(psf,pix,config,xsize,ysize,final_shift)
+        psf_im = DrawPSFStamp(psf,pix,config,im.bounds,final_shift)
     else:
         psf_im = None
 
@@ -1180,7 +1294,7 @@ def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, 
 
     if logger:
         logger.debug('   Times: %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
-    return im, psf_im, None, None, t6-t1
+    return im, psf_im, weight_im, badpix_im, t6-t1
 
 
 def BuildPSF(config, logger=None):
@@ -1277,14 +1391,12 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level, final_shift):
         print 'which in arcsec is ',final_shift.x*pixel_scale,final_shift.y*pixel_scale
 
     #print 'final.flux = ',final.getFlux()
-    if not xsize:
-        im = final.draw(dx=pixel_scale)
-    else:
+    if xsize:
         im = galsim.ImageF(xsize, ysize)
-        im.setScale(pixel_scale)
-        #print 'pixel_scale = ',pixel_scale
-        final.draw(im, dx=pixel_scale)
-        #print 'image.sum = ',im.array.sum()
+    else:
+        im = None
+
+    im = final.draw(image=im, dx=pixel_scale)
 
     if 'gal' in config and 'signal_to_noise' in config['gal']:
         import math
@@ -1321,7 +1433,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level, final_shift):
 
     return im
 
-def AddNoiseFFT(im, noise, rng, sky_level):
+def AddNoiseFFT(im, weight_im, noise, rng, sky_level):
     """
     Add noise to an image according to the noise specifications in the noise dict
     appropriate for an image that has been drawn using the fft method.
@@ -1349,6 +1461,10 @@ def AddNoiseFFT(im, noise, rng, sky_level):
             import math
             sigma = math.sqrt(params['variance'])
         im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
+
+        if weight_im:
+            weight_im.fill(sigma*sigma)
+
         #if logger:
             #logger.debug('   Added Gaussian noise with sigma = %f',sigma)
     elif type == 'CCDNoise':
@@ -1366,6 +1482,17 @@ def AddNoiseFFT(im, noise, rng, sky_level):
         if 'sky_level' in params:
             sky_level_pixel = params['sky_level'] * pixel_scale**2
             im += sky_level_pixel
+
+        # The image right now has the variance in each pixel.  So before going on with the 
+        # noise, copy these over to the weight image and invert.
+        if weight_im:
+            import math
+            weight_im.copyFrom(im)
+            if gain != 1.0:
+                weight_im /= math.sqrt(gain)
+            if read_noise != 0.0:
+                weight_im += read_noise*read_noise
+
         #print 'before CCDNoise: rng() = ',rng()
         im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
         #print 'after CCDNoise: rng() = ',rng()
@@ -1429,23 +1556,17 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level, final_shift):
             raise ValueError("noise_var calculated to be < 0.")
         max_extra_noise *= noise_var
 
-    if not xsize:
-        # TODO: Change this once issue #82 is done.
-        raise AttributeError(
-            "image size must be specified when doing photon shooting.")
-    else:
+    if xsize:
         im = galsim.ImageF(xsize, ysize)
-        im.setScale(pixel_scale)
-        #print 'noise_var = ',noise_var
-        #print 'im.scale = ',im.scale
-        #print 'im.bounds = ',im.bounds
-        #print 'before drawShoot: rng() = ',rng()
-        final.drawShoot(im, max_extra_noise=max_extra_noise, uniform_deviate=rng)
-        #print 'after drawShoot: rng() = ',rng()
+    else:
+        im = None
+
+    im = final.drawShoot(image=im, dx=pixel_scale,
+                         max_extra_noise=max_extra_noise, uniform_deviate=rng)
 
     return im
     
-def AddNoisePhot(im, noise, rng, sky_level):
+def AddNoisePhot(im, weight_im, noise, rng, sky_level):
     """
     Add noise to an image according to the noise specifications in the noise dict
     appropriate for an image that has been drawn using the phot method.
@@ -1472,6 +1593,10 @@ def AddNoisePhot(im, noise, rng, sky_level):
             import math
             sigma = math.sqrt(params['variance'])
         im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
+
+        if weight_im:
+            weight_im.fill(sigma*sigma)
+
         #if logger:
             #logger.debug('   Added Gaussian noise with sigma = %f',sigma)
     elif type == 'CCDNoise':
@@ -1488,6 +1613,12 @@ def AddNoisePhot(im, noise, rng, sky_level):
         gain = params.get('gain',1.0)
         read_noise = params.get('read_noise',0.0)
 
+        # We don't have an exact value for the variance in each pixel, but the drawn image
+        # before adding the Poisson noise is our best guess for the variance from the 
+        # object's flux, so just use that for starters.
+        if weight_im:
+            weight_im.copyFrom(im)
+
         # For photon shooting, galaxy already has poisson noise, so we want 
         # to make sure not to add that again!
         if sky_level != 0.:
@@ -1495,7 +1626,17 @@ def AddNoisePhot(im, noise, rng, sky_level):
             if gain != 1.0: im *= gain
             im.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel*gain))
             if gain != 1.0: im /= gain
+        if read_noise != 0.:
             im.addNoise(galsim.GaussianDeviate(rng, sigma=read_noise))
+
+        # Add in these effects to the weight image:
+        if weight_im:
+            import math
+            if sky_level != 0.:
+                weight_im += sky_level_pixel / math.sqrt(gain)
+            if read_noise != 0.0:
+                weight_im += read_noise * read_noise
+                
         #if logger:
             #logger.debug('   Added CCD noise with sky_level = %f, ' +
                          #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
@@ -1503,7 +1644,7 @@ def AddNoisePhot(im, noise, rng, sky_level):
         raise AttributeError("Invalid type %s for noise",type)
 
 
-def DrawPSFStamp(psf, pix, config, xsize, ysize):
+def DrawPSFStamp(psf, pix, config, bounds, final_shift):
     """
     Draw an image using the given psf and pix profiles.
 
@@ -1525,6 +1666,9 @@ def DrawPSFStamp(psf, pix, config, xsize, ysize):
 
     final_psf = galsim.Convolve(psf_list)
 
+    if final_shift:
+        final_psf.applyShift(final_shift)
+
 
     if 'image' in config and 'pixel_scale' in config['image']:
         pixel_scale = galsim.config.ParseValue(config['image'], 'pixel_scale', config, float)[0]
@@ -1536,12 +1680,9 @@ def DrawPSFStamp(psf, pix, config, xsize, ysize):
         gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
         final_psf.applyShift(gal_shift.x, gal_shift.y)
 
-    if xsize:
-        psf_im = galsim.ImageF(xsize,ysize)
-        psf_im.setScale(pixel_scale)
-        final_psf.draw(psf_im, dx=pixel_scale)
-    else:
-        psf_im = final_psf.draw(dx=pixel_scale)
+    psf_im = galsim.ImageF(bounds)
+    psf_im.setScale(pixel_scale)
+    final_psf.draw(psf_im, dx=pixel_scale)
 
     return psf_im
            
