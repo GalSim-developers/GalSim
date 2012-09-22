@@ -1,7 +1,7 @@
 
 import galsim
 
-def BuildImage(config, logger=None,
+def BuildImage(config, logger=None, seeds=None,
                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build an image according the information in config.
@@ -12,8 +12,9 @@ def BuildImage(config, logger=None,
         BuildScatteredImage 
     choosing between these three using the contents of config if specified (default = Single)
 
-    @param config     A configuration dict.
-    @param logger     If given, a logger object to log progress.
+    @param config              A configuration dict.
+    @param logger              If given, a logger object to log progress.
+    @param seeds               If given, a list of seeds to use
     @param make_psf_image      Whether to make psf_image
     @param make_weight_image   Whether to make weight_image
     @param make_badpix_image   Whether to make badpix_image
@@ -31,13 +32,16 @@ def BuildImage(config, logger=None,
     if not isinstance(image, dict):
         raise AttributeError("config.image is not a dict.")
 
-    # Normally, random_seed is just a number, which really means to use that number
-    # for the first item and go up sequentially from there for each object.
-    # However, we allow for random_seed to be a gettable parameter, so for the 
-    # normal case, we just convert it into a Sequence.
-    if 'random_seed' in image and not isinstance(image['random_seed'],dict):
-        first_seed = galsim.config.ParseValue(image, 'random_seed', config, int)[0]
-        image['random_seed'] = { 'type' : 'Sequence' , 'first' : first_seed }
+    if seeds:
+        image['random_seed'] = { 'type' : 'List' , 'items' : seeds }
+    else:
+        # Normally, random_seed is just a number, which really means to use that number
+        # for the first item and go up sequentially from there for each object.
+        # However, we allow for random_seed to be a gettable parameter, so for the 
+        # normal case, we just convert it into a Sequence.
+        if 'random_seed' in image and not isinstance(image['random_seed'],dict):
+            first_seed = galsim.config.ParseValue(image, 'random_seed', config, int)[0]
+            image['random_seed'] = { 'type' : 'Sequence' , 'first' : first_seed }
 
     if 'draw_method' not in image:
         image['draw_method'] = 'fft'

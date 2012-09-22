@@ -63,8 +63,9 @@ def ProcessOutput(config, logger=None):
     if not isinstance(output, dict):
         raise AttributeError("config.output is not a dict.")
 
+    # Get the output type.  Default = Fits
     if 'type' not in output:
-        output['type'] = 'Fits'  # Default is Fits
+        output['type'] = 'Fits' 
     type = output['type']
 
     # If (1) type is MultiFits or DataCube,
@@ -90,33 +91,167 @@ def ProcessOutput(config, logger=None):
          'catalog' in config ):
         config['image']['nobjects'] = config['catalog'].nobjects
 
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
-    if type == 'Fits':
-        build_func = BuildFits
-        galsim.config.CheckAllParams(output, 'output', ignore=ignore)
+    # build_func is the function we'll call to build each file.
+    build_func = eval('Build'+type)
 
-    elif type == 'MultiFits':
-        build_func = BuildMultiFits
-        req = { 'nimages' : int }
-        params = galsim.config.CheckAllParams(output, 'output', req=req, ignore=ignore)
-
-    elif type == 'DataCube':
-        build_func = BuildDataCube
-        req = { 'nimages' : int }
-        params = galsim.config.CheckAllParams(output, 'output', req=req, ignore=ignore)
-
-    else:
-        raise AttributeError("Invalid output.type=%s."%type)
- 
-    # The kwargs to pass to build_func
-    # We'll be building this up as we go...
-    kwargs = {}
-
+    # We need to set up the list of random number seeds now, since we might need to 
+    # do this with multiple processors, so it we let the regular sequencing happen, 
+    # it will get screwed up by the multi-processing.
+    # Start with the number of files.
     if 'nfiles' in output:
         nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
     else:
         nfiles = 1 
+    print 'nfiles = ',nfiles
 
+    # Now let's figure out how many images we need to build in each file.
+    # We'll put this in a list, since it's conceivable that the nimages parameter
+    # is different for each file.  (Weird though it may seem.)
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
+ 
+    if type == 'Fits':
+        galsim.config.CheckAllParams(output, 'output', ignore=ignore)
+        nimages_per_file = [ 1 ] * nfiles
+        print 'Fits: nimages_per_file = ',nimages_per_file
+
+    elif type == 'MultiFits' or type == 'DataCube':
+        req = { 'nimages' : int }
+        galsim.config.CheckAllParams(output, 'output', req=req, ignore=ignore)
+        if isinstance(output['nimages'],dict):
+            nimages_per_file = []
+            for k in range(nfiles):
+                nimages = galsim.config.ParseValue(output,'nimages',config,int)[0]
+                nimages_per_file.append(nimages)
+        else:
+            nimages = galsim.config.ParseValue(output,'nimages',config,int)[0]
+            nimages_per_file = [ nimages ] * nfiles
+        print '%s: nimages_per_file = '%type,nimages_per_file
+
+    else:
+        raise AttributeError("Invalid output.type=%s."%type)
+
+    # Finally, we figure out how many objects will be drawn in each image
+    if 'image' in config and 'type' in config['image']:
+        image_type = config['image']['type']
+    else:
+        image_type = 'Single'
+
+    if image_type == 'Single':
+        nseed_per_image = [ [ 1 ] * nim for nim in nimages_per_file ]
+        print 'Single: nseed_per_image = ',nseed_per_image
+
+    elif image_type == 'Scattered':
+        import copy
+        image = copy.deepcopy(config['image'])
+        if 'nobjects' not in image:
+            raise AttributeError(
+                "Attribute nobjects is required for image.type = Scattered")
+        if isinstance(image['nobjects'],dict):
+            nseed_per_image = []
+            for k in range(nfiles):
+                nseed_per_image.append([])
+                for j in range(nimages_per_file[k]):
+                    # Note: For this and (maybe) Tiled, we declare one extra seed per image
+                    #       than the number of objects to account for an rng that might be 
+                    #       necessary adding noise to the full image after building all
+                    #       the postage stamps.
+                    nseed = galsim.config.ParseValue(image,'nobjects',config,int)[0] + 1
+                    nseed_per_image[k].append(nseed)
+        else:
+            nseed = galsim.config.ParseValue(image,'nobjects',config,int)[0] + 1
+            nseed_per_image = [ [ nseed ] * nim for nim in nimages_per_file ]
+
+    elif image_type == 'Tiled':
+        # In case any of these things are dicts with variable values, we don't want to mess
+        # up the sequence.  So deep copy the image dict before processing it.
+        import copy
+        image = copy.deepcopy(config['image'])
+        if 'nx_tiles' not in image or 'ny_tiles' not in image:
+            raise AttributeError(
+                "Attributes nx_tiles and ny_tiles are required for image.type = Tiled")
+
+        if ( isinstance(image['nx_tiles'],dict) or isinstance(image['ny_tiles'],dict) or
+             ( 'border' in image and isinstance(image['border'],dict) ) or
+             ( 'xborder' in image and isinstance(image['xborder'],dict) ) or
+             ( 'yborder' in image and isinstance(image['yborder'],dict) ) ):
+            nseed_per_image = []
+            for k in range(nfiles):
+                nseed_per_image.append([])
+                for j in range(nimages_per_file[k]):
+                    nx = galsim.config.ParseValue(image,'nx_tiles',config,int)[0]
+                    ny = galsim.config.ParseValue(image,'ny_tiles',config,int)[0]
+                    nseed = nx*ny
+                    if 'noise' in image:
+                        if 'border' in image:
+                            border = galsim.config.ParseValue(image,'border',config,int)[0]
+                        else:
+                            border = 0
+                        if 'xborder' in image:
+                            xborder = galsim.config.ParseValue(image,'xborder',config,int)[0]
+                        else:
+                            xborder = border
+                        if 'yborder' in image:
+                            yborder = galsim.config.ParseValue(image,'yborder',config,int)[0]
+                        else:
+                            yborder = border
+                        if xborder < 0 or yborder < 0:
+                            nseed += 1
+                    nseed_per_image[k].append(nseed)
+        else:
+            nx = galsim.config.ParseValue(image,'nx_tiles',config,int)[0]
+            ny = galsim.config.ParseValue(image,'ny_tiles',config,int)[0]
+            nseed = nx*ny
+            if 'noise' in image:
+                if 'border' in image:
+                    border = galsim.config.ParseValue(image,'border',config,int)[0]
+                else:
+                    border = 0
+                if 'xborder' in image:
+                    xborder = galsim.config.ParseValue(image,'xborder',config,int)[0]
+                else:
+                    xborder = border
+                if 'yborder' in image:
+                    yborder = galsim.config.ParseValue(image,'yborder',config,int)[0]
+                else:
+                    yborder = border
+                if xborder < 0 or yborder < 0:
+                    nseed += 1
+            nseed_per_image = [ [ nseed ] * nim for nim in nimages_per_file ]
+
+    else:
+        raise AttributeError("Invalid image.type=%s."%image_type)
+
+    # OK, now we have what we need to build a list of list of list of seed values:
+    if ( 'image' in config and 'random_seed' in config['image']):
+        if isinstance(config['image']['random_seed'],dict):
+            seeds = []
+            for k in range(nfiles):
+                seeds.append([])
+                for j in range(nimages_per_file[k]):
+                    seeds[k].append([])
+                    for i in range(nseed_per_image[k][j]):
+                        s = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+                        seeds[k][j].append(s)
+        else:
+            s = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+            seeds = []
+            for k in range(nfiles):
+                seeds.append([])
+                for j in range(nimages_per_file[k]):
+                    seeds[k].append([])
+                    for i in range(nseed_per_image[k][j]):
+                        seeds[k][j].append(s)
+                        s = s + 1
+    else:
+        seeds = [ [ None ] * nimages for nimages in nimages_per_file ]
+    print 'seeds = ',seeds
+
+    # The kwargs to pass to build_func
+    # We'll be building this up as we go...
+    kwargs = {}
+
+    # Figure out how many processes we will use for building the files.
+    # (If nfiles = 1, but nimages > 1, we'll do the multi-processing at the image stage.)
     if 'nproc' in output:
         nproc = galsim.config.ParseValue(output, 'nproc', config, int)[0]
     else:
@@ -155,6 +290,7 @@ def ProcessOutput(config, logger=None):
             if logger:
                 logger.info("Unable to determine ncpu.  Using %d processes",nproc)
     
+    # Set up the multi-process worker function if we're going to need it.
     if nproc > 1:
         # NB: See the function BuildStamps for more verbose comments about how
         # the multiprocessing stuff works.
@@ -177,6 +313,7 @@ def ProcessOutput(config, logger=None):
         # Set up the task list
         task_queue = Queue()
 
+    # Now start working on the files.
     for k in range(nfiles):
         # Get the file_name
         if 'file_name' in output:
@@ -196,13 +333,15 @@ def ProcessOutput(config, logger=None):
         else:
             dir = None
 
+        # Assign some of the kwargs we know now:
         kwargs['file_name'] = file_name
         kwargs['config'] = config
+        kwargs['seeds'] = seeds[k]
 
         if type == 'MultiFits' or type == 'DataCube':
-            nimages = galsim.config.ParseValue(output, 'nimages', config, int)[0]
-            kwargs['nimages'] = nimages 
+            kwargs['nimages'] = len(seeds[k])
 
+        # Check if we need to build extra images for write out as well
         for extra in [ k for k in [ 'psf' , 'weight', 'badpix' ] if k in output ]:
             extra_file_name = None
             output_extra = output[extra]
@@ -221,17 +360,22 @@ def ProcessOutput(config, logger=None):
                 extra_hdu = galsim.config.ParseValue(output[extra],'hdu',config,int)[0]
                 kwargs[ extra+'_hdu' ] = extra_hdu
     
+        # This is where we actually build the file.
+        # If we doing multiprocessing, we send this information off to the task_queue.
+        # Otherwise, we just call build_func.
         if nproc > 1:
             new_kwargs = {}
             new_kwargs.update(kwargs)
+            # Apparently the logger isn't picklable, so can't send that for nproc > 1
             task_queue.put( (new_kwargs, file_name) )
         else:
-            # Apparently the logger isn't picklable, so can't send that for nproc > 1
             kwargs['logger'] = logger 
             t = build_func(**kwargs)
             if logger:
                 logger.info('Built file %s: total time = %f sec', file_name, t)
 
+    # If we're doing multiprocessing, here is the machinery to run through the task_queue
+    # and process the results.
     if nproc > 1:
         # Run the tasks
         done_queue = Queue()
@@ -252,16 +396,17 @@ def ProcessOutput(config, logger=None):
         logger.info('Done building files')
 
 
-def BuildFits(file_name, config, logger=None,
+def BuildFits(file_name, config, logger=None, seeds=None,
               psf_file_name=None, psf_hdu=None,
               weight_file_name=None, weight_hdu=None,
               badpix_file_name=None, badpix_hdu=None):
     """
     Build a regular fits file as specified in config.
     
-    @param file_name  The name of the output file.
-    @param config     A configuration dict.
-    @param logger     If given, a logger object to log progress.
+    @param file_name         The name of the output file.
+    @param config            A configuration dict.
+    @param logger            If given, a logger object to log progress.
+    @param seeds             If given, the seeds to use.  Otherwise get from the config file.
     @param psf_file_name     If given, write a psf image to this file
     @param psf_hdu           If given, write a psf image to this hdu in file_name
     @param weight_file_name  If given, write a weight image to this file
@@ -309,8 +454,13 @@ def BuildFits(file_name, config, logger=None,
         if h not in hdus.keys():
             raise ValueError("Image for hdu %d not found.  Cannot skip hdus."%h)
 
+    if seeds:
+        assert isinstance(seeds,list)
+        assert len(seeds) == 1
+        seeds = seeds[0]
+
     all_images = galsim.config.BuildImage(
-            config=config, logger=logger, 
+            config=config, logger=logger, seeds=seeds,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -349,16 +499,17 @@ def BuildFits(file_name, config, logger=None,
     return t2-t1
 
 
-def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
+def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None, seeds=None,
                    psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
     Build a multi-extension fits file as specified in config.
     
-    @param file_name  The name of the output file.
-    @param nimages    The number of images (and hence hdus in the output file)
-    @param config     A configuration dict.
-    @param nproc      How many processes to use.
-    @param logger     If given, a logger object to log progress.
+    @param file_name         The name of the output file.
+    @param nimages           The number of images (and hence hdus in the output file)
+    @param config            A configuration dict.
+    @param nproc             How many processes to use.
+    @param logger            If given, a logger object to log progress.
+    @param seeds             If given, the seeds to use
     @param psf_file_name     If given, write a psf image to this file
     @param weight_file_name  If given, write a weight image to this file
     @param badpix_file_name  If given, write a badpix image to this file
@@ -386,6 +537,12 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
         import warnings
         warnings.warn("Sorry, multiple processes not currently implemented for BuildMultiFits.")
 
+    if seeds:
+        assert isinstance(seeds,list)
+        assert len(seeds) == nimages
+    else:
+        seeds = [ None ] * nimages
+
     main_images = []
     psf_images = []
     weight_images = []
@@ -393,7 +550,7 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
     for k in range(nimages):
         t2 = time.time()
         all_images = galsim.config.BuildImage(
-                config=config, logger=logger,
+                config=config, logger=logger, seeds=seeds[k],
                 make_psf_image=make_psf_image, 
                 make_weight_image=make_weight_image,
                 make_badpix_image=make_badpix_image)
@@ -434,16 +591,17 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
     return t4-t1
 
 
-def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
+def BuildDataCube(file_name, nimages, config, nproc=1, logger=None, seeds=None,
                   psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
     Build a multi-image fits data cube as specified in config.
     
-    @param file_name  The name of the output file.
-    @param nimages    The number of images in the data cube
-    @param config     A configuration dict.
-    @param nproc      How many processes to use.
-    @param logger     If given, a logger object to log progress.
+    @param file_name         The name of the output file.
+    @param nimages           The number of images in the data cube
+    @param config            A configuration dict.
+    @param nproc             How many processes to use.
+    @param logger            If given, a logger object to log progress.
+    @param seeds             If given, the seeds to use
     @param psf_file_name     If given, write a psf image to this file
     @param weight_file_name  If given, write a weight image to this file
     @param badpix_file_name  If given, write a badpix image to this file
@@ -474,12 +632,18 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
         import warnings
         warnings.warn("Sorry, multiple processe not currently implemented for BuildMultiFits.")
 
+    if seeds:
+        assert isinstance(seeds,list)
+        assert len(seeds) == nimages
+    else:
+        seeds = [ None ] * nimages
+
     # All images need to be the same size for a data cube.
     # Enforce this by buliding the first image outside the below loop and setting
     # config['image_xsize'] and config['image_ysize'] to be the size of the first image.
     t2 = time.time()
     all_images = galsim.config.BuildImage(
-            config=config, logger=logger,
+            config=config, logger=logger, seeds=seeds[0],
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -502,7 +666,7 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
     for k in range(1,nimages):
         t4 = time.time()
         all_images = galsim.config.BuildImage(
-                config=config, logger=logger,
+                config=config, logger=logger, seeds=seeds[k],
                 make_psf_image=make_psf_image, 
                 make_weight_image=make_weight_image,
                 make_badpix_image=make_badpix_image)
