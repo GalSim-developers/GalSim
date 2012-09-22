@@ -24,15 +24,15 @@ generator.
      This will make the new Deviate share the same underlying random number generator with the other
      Deviate.  So you can make one Deviate (of any type), and seed it with a particular
      deterministic value.  Then if you pass that Deviate to any other one you make, they will all be
-     using the same rng and have a particular deterministic series of values.  (It doesn't have to
+     using the same RNG and have a particular deterministic series of values.  (It doesn't have to
      be the first one -- any one you've made later can also be used to seed a new one.)
      
 There is not much you can do with something that is only known to be a BaseDeviate rather than one
 of the derived classes other than construct it and change the seed, and use it as an argument to
 pass to other Deviate constructors.
 
-Example
--------
+Examples
+--------
 
     >>> rng = galsim.BaseDeviate(215324)    
     >>> rng()
@@ -54,9 +54,10 @@ Seed the pseudo-random number generator.
 Multiple Calling Options
 ------------------------
 
->>> BaseDeviate.seed()         # Re-seed the PRNG using current time.
+    >>> galsim.BaseDeviate.seed()       # Re-seed the PRNG using current time.
 
->>> BaseDeviate.seed(lseed)    # Re-seed the PRNG using specified seed, where lseed is a long int.
+    >>> galsim.BaseDeviate.seed(lseed)  # Re-seed the PRNG using specified seed, where lseed is a
+                                        # long int.
 
 """
 
@@ -66,14 +67,14 @@ Reset the pseudo-random number generator, severing connections to any other devi
 Multiple Calling Options
 ------------------------
 
->>> BaseDeviate.reset()        # Re-seed the PRNG using current time, and sever the connection to 
-                               # any other Deviate.
+    >>> galsim.BaseDeviate.reset()        # Re-seed the PRNG using current time, and sever the
+                                          # connection to any other Deviate.
 
->>> BaseDeviate.reset(lseed)   # Re-seed the PRNG using specified seed, where lseed is a long int, 
-                               # and sever the connection to any other Deviate.
+    >>> galsim.BaseDeviate.reset(lseed)   # Re-seed the PRNG using specified seed, where lseed is a
+                                          # long int, and sever the connection to any other Deviate.
 
->>> BaseDeviate.reset(dev)     # Re-connect this Deviate with the rng in another one supplied as 
-                               # dev.
+    >>> galsim.BaseDeviate.reset(dev)     # Re-connect this Deviate with the same underlying random
+                                          # number generator supplied in dev.
 
 """
 
@@ -85,21 +86,21 @@ Pseudo-random number generator with uniform distribution in interval [0.,1.).
 Initialization
 --------------
 
->>> u = UniformDeviate()       # Initializes u to be a UniformDeviate instance, and seeds the PRNG
-                               # using current time.
+    >>> u = galsim.UniformDeviate()       # Initializes u to be a UniformDeviate instance, and seeds
+                                          # the PRNG using current time.
 
->>> u = UniformDeviate(lseed)  # Initializes u to be a UniformDeviate instance, and seeds the PRNG
-                               # using specified long integer lseed.
+    >>> u = galsim.UniformDeviate(lseed)  # Initializes u to be a UniformDeviate instance, and seeds
+                                          # the PRNG using specified long integer lseed.
 
->>> u = UniformDeviate(dev)    # Initializes u to be a UniformDeviate instance, and use the same RNG
-                               # as dev.
+    >>> u = galsim.UniformDeviate(dev)    # Initializes u to be a UniformDeviate instance, and share
+                                          # the same underlying random number generator as dev.
 
 Calling
 -------
 Taking the instance from the above examples, successive calls to u() then generate pseudo-random
 numbers distributed uniformly in the interval [0., 1.).
 
-    >>> u = UniformDeviate()
+    >>> u = galsim.UniformDeviate()
     >>> u()
     0.35068059829063714
     >>> u()            
@@ -118,7 +119,7 @@ Add Uniform deviates to every element in a supplied Image.
 Calling
 -------
 
-    >>> UniformDeviate.applyTo(image)  
+    >>> galsim.UniformDeviate.applyTo(image)  
 
 On output each element of the input Image will have a pseudo-random UniformDeviate return value 
 added to it.
@@ -137,14 +138,16 @@ See http://en.wikipedia.org/wiki/Gaussian_distribution for further details.
 Initialization
 --------------
 
->>> g = GaussianDeviate(mean=0., sigma=1.)          # Initializes g to be a GaussianDeviate instance
-                                                    # using the current time for the seed.
+    >>> g = galsim.GaussianDeviate(mean=0., sigma=1.)          # Initializes g to be a
+                                                               # GaussianDeviate instance using the
+                                                               # current time for the seed.
 
->>> g = GaussianDeviate(lseed, mean=0., sigma=1.)   # Initializes g using the specified seed, where 
-                                                    # lseed is a long int.
+    >>> g = galsim.GaussianDeviate(lseed, mean=0., sigma=1.)   # Initializes g using the specified
+                                                               # seed, where lseed is a long int.
 
->>> g = GaussianDeviate(dev, mean=0., sigma=1.)     # Initializes g to share the same underlying 
-                                                    # random number generator as dev.
+    >>> g = galsim.GaussianDeviate(dev, mean=0., sigma=1.)     # Initializes g to share the same
+                                                               # underlying random number generator
+                                                               # as dev.
 
 Parameters:
 
@@ -176,7 +179,7 @@ Add Gaussian deviates to every element in a supplied Image.
 Calling
 -------
 
-    >>> GaussianDeviate.applyTo(image)
+    >>> galsim.GaussianDeviate.applyTo(image)
 
 On output each element of the input Image will have a pseudo-random GaussianDeviate return value 
 added to it, with current values of mean and sigma.
@@ -206,14 +209,15 @@ for more information.
 Initialization
 --------------
 
->>> b = BinomialDeviate(N=1., p=0.5)          # Initializes b to be a BinomialDeviate instance 
-                                              # using the current time for the seed.
+    >>> b = galsim.BinomialDeviate(N=1., p=0.5)          # Initializes b to be a BinomialDeviate
+                                                         # instance using the current time for the
+                                                         # seed.
 
->>> b = BinomialDeviate(lseed, N=1., p=0.5)   # Initializes b using the specified seed, where 
-                                              # lseed is a long int.
+    >>> b = galsim.BinomialDeviate(lseed, N=1., p=0.5)   # Initializes b using the specified seed,
+                                                         # where lseed is a long int.
 
->>> b = BinomialDeviate(dev, N=1., p=0.5)     # Initializes b to share the same underlying random 
-                                              # number generator as dev.
+    >>> b = galsim.BinomialDeviate(dev, N=1., p=0.5)     # Initializes b to share the same
+                                                         # underlying random number generator as dev.
 
 Parameters:
 
@@ -245,7 +249,7 @@ Add Binomial deviates to every element in a supplied Image.
 Calling
 -------
 
-    >>> BinomialDeviate.applyTo(image)    
+    >>> galsim.BinomialDeviate.applyTo(image)    
 
 On output each element of the input Image will have a pseudo-random BinomialDeviate return value 
 added to it, with current values of N and p.
@@ -275,14 +279,14 @@ for more details.
 Initialization
 --------------
 
->>> p = PoissonDeviate(mean=1.)         # Initializes g to be a PoissonDeviate instance using the 
-                                        # current time for the seed.
+    >>> p = galsim.PoissonDeviate(mean=1.)         # Initializes g to be a PoissonDeviate instance
+                                                   # using the current time for the seed.
 
->>> p = PoissonDeviate(lseed, mean=1.)  # Initializes g using the specified seed, where lseed is 
-                                        # a long int.
+    >>> p = galsim.PoissonDeviate(lseed, mean=1.)  # Initializes g using the specified seed, where
+                                                   # lseed is a long int.
 
->>> p = PoissonDeviate(dev, mean=1.)    # Initializes g to share the same underlying random number 
-                                        # generator as dev.
+    >>> p = galsim.PoissonDeviate(dev, mean=1.)    # Initializes g to share the same underlying
+                                                   # random number generator as dev.
 
 Parameters:
 
@@ -313,7 +317,7 @@ Add Poisson deviates to every element in a supplied Image.
 Calling
 -------
 
-    >>> PoissonDeviate.applyTo(image)
+    >>> galsim.PoissonDeviate.applyTo(image)
 
 On output each element of the input Image will have a pseudo-random PoissonDeviate return value 
 added to it, with current mean, and then that mean subtracted.  So the average  effect on each 
@@ -343,16 +347,18 @@ model.
 Initialization
 --------------
 
->>> ccd_noise = CCDNoise(gain=1., read_noise=0.)         # Initializes ccd_noise to be a CCDNoise 
-                                                         # instance using the current time for the 
-                                                         # seed.
+    >>> ccd_noise = galsim.CCDNoise(gain=1., read_noise=0.)         # Initializes ccd_noise to be a
+                                                                    # CCDNoise instance using the
+                                                                    # current time for the seed.
 
->>> ccd_noise = CCDNoise(lseed, gain=1., read_noise=0.)  # Initializes ccd_noise to be a CCDNoise 
-                                                         # instance using the specified seed, where 
-                                                         # lseed is a long int.
+    >>> ccd_noise = galsim.CCDNoise(lseed, gain=1., read_noise=0.)  # Initializes ccd_noise to be a
+                                                                    # CCDNoise instance using the
+                                                                    # specified seed, where lseed is
+                                                                    # a long int.
 
->>> ccd_noise = CCDNoise(dev, gain=1., read_noise=0.)    # Initializes ccd_noise to share the same 
-                                                         # underlying random number generator as dev.
+    >>> ccd_noise = galsim.CCDNoise(dev, gain=1., read_noise=0.)    # Initializes ccd_noise to share
+                                                                    # the same underlying random
+                                                                    # number generator as dev.
 
 Parameters:
 
@@ -376,7 +382,7 @@ Add noise to an input Image.
 Calling
 -------
 
-    >>> CCDNoise.applyTo(image)
+    >>> galsim.CCDNoise.applyTo(image)
 
 On output the Image instance image will have been given an additional stochastic noise according to 
 the gain and read noise settings of the CCDNoise instance.
@@ -402,14 +408,14 @@ deviates >= 0.
 Initialization
 --------------
 
->>> w = WeibullDeviate(a=1., b=1.)         # Initializes w to be a WeibullDeviate instance using 
-                                           # the current time for the seed.
+    >>> w = galsim.WeibullDeviate(a=1., b=1.)         # Initializes w to be a WeibullDeviate
+                                                      # instance using the current time for the seed.
 
->>> w = WeibullDeviate(lseed, a=1., b=1.)  # Initializes w using the specified seed, where lseed 
-                                           # is a long int.
+    >>> w = galsim.WeibullDeviate(lseed, a=1., b=1.)  # Initializes w using the specified seed,
+                                                      # where lseed is a long int.
 
->>> w = WeibullDeviate(dev, a=1., b=1.)    # Initializes w to share the same underlying random 
-                                           # number generator as dev.
+    >>> w = galsim.WeibullDeviate(dev, a=1., b=1.)    # Initializes w to share the same underlying
+                                                      # random number generator as dev.
 
 Parameters:
 
@@ -441,7 +447,7 @@ Add Weibull-distributed deviates to every element in a supplied Image.
 Calling
 -------
 
-    >>> WeibullDeviate.applyTo(image)
+    >>> galsim.WeibullDeviate.applyTo(image)
 
 On output each element of the input Image will have a pseudo-random WeibullDeviate return value 
 added to it, with current values of a and b.
@@ -471,14 +477,16 @@ real-valued distribution producing deviates >= 0.
 Initialization
 --------------
 
->>> gam = GammaDeviate(alpha=1., beta=1.)         # Initializes gam to be a GammaDeviate instance 
-                                                  # using the current time for the seed.
+    >>> gam = galsim.GammaDeviate(alpha=1., beta=1.)         # Initializes gam to be a GammaDeviate
+                                                             # instance using the current time for
+                                                             # the seed.
 
->>> gam = GammaDeviate(lseed, alpha=1., beta=1.)  # Initializes gam using the specified seed, 
-                                                  # where lseed is a long int.
+    >>> gam = galsim.GammaDeviate(lseed, alpha=1., beta=1.)  # Initializes gam using the specified
+                                                             # seed, where lseed is a long int.
 
->>> gam = GammaDeviate(dev alpha=1., beta=1.)     # Initializes gam to share the same underlying 
-                                                  # random number generator as dev.
+    >>> gam = galsim.GammaDeviate(dev alpha=1., beta=1.)     # Initializes gam to share the same
+                                                             # underlying random number generator as
+                                                             # dev.
 
 Parameters:
 
@@ -512,7 +520,7 @@ Add Gamma-distributed deviates to every element in a supplied Image.
 Calling
 -------
 
-    >>> GammaDeviate.applyTo(image)
+    >>> galsim.GammaDeviate.applyTo(image)
 
 On output each element of the input Image will have a pseudo-random GammaDeviate return value added
 to it, with current values of alpha and beta.
@@ -540,14 +548,14 @@ distribution producing deviates >= 0.
 Initialization
 --------------
 
->>> chis = Chi2Deviate(n=1.)          # Initializes chis to be a Chi2Deviate instance using the 
-                                      # current time for the seed.
+    >>> chis = galsim.Chi2Deviate(n=1.)          # Initializes chis to be a Chi2Deviate instance
+                                                 # using the current time for the seed.
 
->>> chis = Chi2Deviate(lseed, n=1.)   # Initializes chis using the specified seed, where lseed is 
-                                      # a long int.
+    >>> chis = galsim.Chi2Deviate(lseed, n=1.)   # Initializes chis using the specified seed, where
+                                                 # lseed is a long int.
 
->>> chis = Chi2Deviate(dev, n=1.)     # Initializes chis to share the same underlying random number
-                                      # generator as dev.
+    >>> chis = galsim.Chi2Deviate(dev, n=1.)     # Initializes chis to share the same underlying
+                                                 # random number generator as dev.
 
 Parameters:
     n   number of degrees of freedom for the output distribution [default `n = 1`].  Must be > 0.
@@ -577,7 +585,7 @@ Add Chi^2-distributed deviates to every element in a supplied Image.
 Calling
 -------
 
-    >>> Chi2Deviate.applyTo(image)
+    >>> galsim.Chi2Deviate.applyTo(image)
 
 On output each element of the input Image will have a pseudo-random Chi2Deviate return value added 
 to it, with current degrees-of-freedom parameter n.
