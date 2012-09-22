@@ -2,11 +2,15 @@ import numpy as np
 import galsim
 import utilities
 
-"""@file optics.py @brief Module containing the optical PSF generation routines.
+"""@file optics.py
+Module containing the optical PSF generation routines.
 
 These are just functions; they are used to generate galsim.OpticalPSF() class instances (see 
-base.py).   Mostly they are solely of use to developers for generating arrays that may be useful in
-defining GSObjects with an optical component.
+base.py).   
+
+Mostly they are solely of use to developers for generating arrays that may be useful in defining 
+GSObjects with an optical component.  They will not therefore be used in a typical image simulation
+workflow: users will find most of what they need simply using the OpticalPSF() class.
 
 Glossary of key terms used in function names:
 
@@ -79,8 +83,6 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     to the definitions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -132,6 +134,10 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
     Outputs a circular pupil wavefront of unit amplitude that can be easily transformed to produce
     an optical PSF with lambda/diam = lam_over_diam on an output grid of spacing dx.
 
+    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted
+    for lam_over_diam.
+
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
@@ -142,8 +148,6 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
     to the definitions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -187,8 +191,6 @@ def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
     Ouput numpy array is C-contiguous.
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -223,10 +225,12 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     The PSF is centred on the array[array_shape[0] / 2, array_shape[1] / 2] pixel by default, and
     uses surface brightness rather than flux units for pixel values, matching SBProfile.
 
+    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted
+    for lam_over_diam.
+
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -264,8 +268,6 @@ def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
     Output complex numpy array is C-contiguous.
     
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -299,10 +301,12 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     OTF array element ordering follows the DFT standard of kxky(array_shape), and has
     otf[0, 0] = 1+0j by default.  The scale of the output ImageViewD is correct in k space units.
 
+    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted
+    for lam_over_diam.
+
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for array views of ImageViewD tuple.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -346,8 +350,6 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
     Output double numpy array is C-contiguous.
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -377,10 +379,12 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     MTF array element ordering follows the DFT standard of kxky(array_shape), and has
     mtf[0, 0] = 1 by default.  The scale of the output ImageViewD is correct in k space units.
 
+    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted
+    for lam_over_diam.
+
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -422,8 +426,6 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
     Output double numpy array is C-contiguous.
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
@@ -459,10 +461,12 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     PTF array element ordering follows the DFT standard of kxky(array_shape), and has
     ptf[0, 0] = 0. by default.  The scale of the output ImageViewD is correct in k space units.
 
+    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    .getScale() method will reflect the spacing of the output grid in the system of units adopted
+    for lam_over_diam.
+
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    Parameters
-    ----------
     @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
