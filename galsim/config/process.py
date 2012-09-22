@@ -230,7 +230,7 @@ def ProcessOutput(config, logger=None):
         if nproc > 1:
             new_kwargs = {}
             new_kwargs.update(kwargs)
-            task_queue.put( new_kwargs, file_name )
+            task_queue.put( (new_kwargs, file_name) )
         else:
             # Apparently the logger isn't picklable, so can't send that for nproc > 1
             kwargs['logger'] = logger 
@@ -245,7 +245,7 @@ def ProcessOutput(config, logger=None):
             Process(target=worker, args=(task_queue, done_queue)).start()
 
         # Log the results.
-        for i in range(nimages):
+        for k in range(nfiles):
             t, file_name, proc = done_queue.get()
             if logger:
                 logger.info('%s: File %s: total time = %f sec', proc, file_name, t)
@@ -510,8 +510,8 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
         all_images = BuildImage(
                 config=config, logger=logger,
                 make_psf_image=make_psf_image, 
-                make_weight_image=make_weight_imagee,
-                make_badpix_image=make_badpix_imagee)
+                make_weight_image=make_weight_image,
+                make_badpix_image=make_badpix_image)
         t5 = time.time()
         main_images += [ all_images[0] ]
         psf_images += [ all_images[1] ]
@@ -822,6 +822,7 @@ def BuildTiledImage(config, logger=None,
             # Get the next random number seed.
             if 'random_seed' in config['image']:
                 seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+                print 'For noise, seed = ',seed
                 rng = galsim.BaseDeviate(seed)
             else:
                 rng = galsim.BaseDeviate()
@@ -976,6 +977,7 @@ def BuildScatteredImage(config, logger=None,
         # Get the next random number seed.
         if 'random_seed' in config['image']:
             seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+            print 'For noise, seed = ',seed
             rng = galsim.BaseDeviate(seed)
         else:
             rng = galsim.BaseDeviate()
@@ -1094,6 +1096,7 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, sky_level=None, do_noise
             # to be picklable, which they aren't currently.
             if 'random_seed' in config['image']:
                 seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+                'Using seed = ',seed
             else:
                 seed = None
             # Need to make a new copy of kwargs, otherwise python's shallow copying 
@@ -1153,6 +1156,7 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, sky_level=None, do_noise
         for k in range(nstamps):
             if 'random_seed' in config['image']:
                 seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+                'Using seed = ',seed
             else:
                 seed = None
             kwargs['seed'] = seed
@@ -1196,7 +1200,7 @@ def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, 
     t1 = time.time()
 
     # Initialize the random number generator we will be using.
-    #print 'seed = ',seed
+    print 'Build single stamp: seed = ',seed
     if seed:
         rng = galsim.UniformDeviate(seed)
     else:
@@ -1562,7 +1566,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level, final_shift):
         im = None
 
     im = final.drawShoot(image=im, dx=pixel_scale,
-                         max_extra_noise=max_extra_noise, uniform_deviate=rng)
+                         max_extra_noise=max_extra_noise, uniform_deviate=rng)[0]
 
     return im
     

@@ -17,6 +17,8 @@
 # - image type : Scattered
 # - str_value type : NumberedFile
 # - output : nproc
+# - output : weight
+# - output : badpix
 
 
 # We again use the multiple document feature.  So start with the common information:
@@ -74,6 +76,8 @@ image :
 
 # Define the names and format of the output files
 output :
+
+    nfiles : 20
 
     file_name :
 
@@ -153,5 +157,5 @@ output :
     #
     # Also, this time, we set nproc <= 0.  This means that galsim should try to automatically
     # determine the number of cpus you have and use that many processes.
-    nproc : -1
+    #nproc : -1
 

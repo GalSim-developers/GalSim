@@ -19,7 +19,7 @@ New features introduced in this demo:
 - Use shears from an NFW Halo model.
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
-- Write a weight image as the second HDU in each file.
+- Write a bad pixel mask and a weight image as the second and third HDUs in each file.
 - Use multiple processes to construct each file in parallel.
 """
 
@@ -50,9 +50,10 @@ def main(argv):
 
     # Define some parameters we'll use below.
 
-    #mass_list = [ 1.e15, 7.e14, 4.e14, 2.e14 ]  # mass in Msun/h
-    mass_list = [ 1.e15 ]
-    nfiles = 1 # number of files per item in mass list
+    mass_list = [ 1.e15, 7.e14, 4.e14, 2.e14 ]  # mass in Msun/h
+    nfiles = 5 # number of files per item in mass list
+    #mass_list = [ 1.e15 ]
+    #nfiles = 1 # number of files per item in mass list
     nobj = 5  # number of objects to draw for each file
 
     image_size = 512
@@ -95,6 +96,7 @@ def main(argv):
 
             # Initialize the random number generator we will be using for this object:
             rng = galsim.UniformDeviate(seed+k)
+            print 'Using seed = ',seed+k
 
             # Determine where this object is going to go:
             x = rng() * (image_size-1) + 1
@@ -171,13 +173,14 @@ def main(argv):
         # If you didn't care about that, you could instead construct this as a continuation
         # of the last rng from the above loop: ccdnoise = galsim.CCDNoise(rng)
         ccdnoise = galsim.CCDNoise(seed+nobj)
+        print 'For noise, seed = ',seed+nobj
         full_image.addNoise(ccdnoise)
         full_image -= sky_level_pixel
         print 'Added noise'
 
         # Write the file to disk:
         galsim.fits.writeMulti([full_image, badpix_image, weight_image], file_name)
-        print 'Write images to ',file_name
+        print 'Wrote images to ',file_name
 
         t2 = time.time()
         return t2-t1
@@ -227,7 +230,7 @@ def main(argv):
             # Our extra info is just the file name that we use to write out which file finished.
             task_queue.put( ( (seed, full_name, mass), full_name ) )
             # Need to step by the number of galaxies in each file.
-            seed += nobj
+            seed += nobj+1
 
     # Run the tasks
     # Each Process command starts up a parallel process that will keep checking the queue 

@@ -34,6 +34,9 @@ time ../bin/galsim_yaml demo7.yaml || exit
 time ../bin/demo8 || exit
 time ../bin/galsim_yaml demo8.yaml || exit
 
+time ../bin/demo9 || exit
+time ../bin/galsim_yaml demo9.yaml || exit
+
 echo 'Checking diffs: (No output means success)'
 
 # demo1:
