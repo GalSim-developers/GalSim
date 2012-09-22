@@ -151,6 +151,44 @@ def Image_idiv(self, other):
         self.array[:,:] /= other
     return self
 
+# Define &, ^ and | only for integer-type images
+def Image_and(self, other):
+    ret = self.copy()
+    ret &= other
+    return ret
+
+def Image_iand(self, other):
+    try:
+        self.array[:,:] &= other.array
+    except AttributeError:
+        self.array[:,:] &= other
+    return self
+
+def Image_xor(self, other):
+    ret = self.copy()
+    ret ^= other
+    return ret
+
+def Image_ixor(self, other):
+    try:
+        self.array[:,:] ^= other.array
+    except AttributeError:
+        self.array[:,:] ^= other
+    return self
+
+def Image_or(self, other):
+    ret = self.copy()
+    ret |= other
+    return ret
+
+def Image_ior(self, other):
+    try:
+        self.array[:,:] |= other.array
+    except AttributeError:
+        self.array[:,:] |= other
+    return self
+
+
 def Image_copy(self):
     # self can be an Image or an ImageView, but the return type needs to be an Image.
     # So use the array.dtype.type attribute to get the type of the underlying data,
@@ -220,5 +258,17 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__truediv__ = Image_div
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
+
+import numpy as np
+for int_type in [ np.int16, np.int32 ]:
+    for Class in [ _galsim.Image[int_type], _galsim.ImageView[int_type],
+                   _galsim.ConstImageView[int_type] ]:
+        Class.__and__ = Image_and
+        Class.__xor__ = Image_xor
+        Class.__or__ = Image_or
+    for Class in [ _galsim.Image[int_type], _galsim.ImageView[int_type] ]:
+        Class.__iand__ = Image_iand
+        Class.__ixor__ = Image_ixor
+        Class.__ior__ = Image_ior
 
 del Class    # cleanup public namespace

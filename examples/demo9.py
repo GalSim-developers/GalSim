@@ -84,6 +84,13 @@ def main(argv):
         weight_image = galsim.ImageF(image_size, image_size)
         weight_image.setScale(pixel_scale)
 
+        # It is common for astrometric images to also have a bad pixel mask.  We don't have any
+        # defect simulation currently, so our bad pixel masks are currently all zeros. 
+        # But someday, we plan to add defect functionality to GalSim, at which point, we'll
+        # be able to mark those defects on a bad pixel mask.
+        badpix_image = galsim.ImageS(image_size, image_size)
+        badpix_image.setScale(pixel_scale)
+
         for k in range(nobj):
 
             # Initialize the random number generator we will be using for this object:
@@ -169,7 +176,7 @@ def main(argv):
         print 'Added noise'
 
         # Write the file to disk:
-        galsim.fits.writeMulti([full_image, weight_image], file_name)
+        galsim.fits.writeMulti([full_image, badpix_image, weight_image], file_name)
         print 'Write images to ',file_name
 
         t2 = time.time()

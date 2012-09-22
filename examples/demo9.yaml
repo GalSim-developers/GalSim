@@ -136,6 +136,13 @@ output :
         # be in hud 1.  If weight, badpix and psf all specify an hdu value, then they must be
         # 1, 2 and 3 in some order.
         # Also, hdu is only valid for image.type = Fits (which is the default if unspecified).
+        hdu : 2
+
+    # It is common for astrometric images to also have a bad pixel mask.  We don't have any
+    # defect simulation currently, so our bad pixel masks are currently all zeros. 
+    # But someday, we plan to add defect functionality to GalSim, at which point, we'll
+    # be able to mark those defects on a bad pixel mask.
+    badpix :
         hdu : 1
 
     # nproc in the output field indicates that multiple processes should be used to 
