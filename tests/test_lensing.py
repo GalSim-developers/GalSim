@@ -30,17 +30,17 @@ def test_nfwhalo():
 
     try:
         # set up the same halo
-        halo = galsim.lensing.NFWHalo(mass=1e15, conc=4, z=1, pos_x=0, pos_y=0)
+        halo = galsim.lensing.NFWHalo(mass=1e15, conc=4, redshift=1)
         pos_x = np.arange(1,600)
         pos_y = np.zeros_like(pos_x)
         z_s = 2
-        kappa = halo.getConvergence(pos_x, pos_y, z_s)
-        gamma1, gamma2 = halo.getShear(pos_x, pos_y, z_s, reduced=False)
-        g1, g2 = halo.getShear(pos_x, pos_y, z_s, reduced=True)
+        kappa = halo.getConvergence((pos_x, pos_y), z_s)
+        gamma1, gamma2 = halo.getShear((pos_x, pos_y), z_s, reduced=False)
+        g1, g2 = halo.getShear((pos_x, pos_y), z_s, reduced=True)
 
         # check internal correctness:
         # g1 = gamma1/(1-kappa), and g2 = 0
-        np.testing.assert_array_equal(g1, gamma1/(1-kappa),
+        np.testing.assert_array_equal(g1, gamma1/(1-np.array(kappa)),
                                       err_msg="Computation of reduced shear g incorrect.")
         np.testing.assert_array_equal(g2, np.zeros_like(g2),
                                       err_msg="Computation of reduced shear g2 incorrect.")

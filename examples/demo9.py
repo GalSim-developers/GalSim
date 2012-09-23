@@ -16,7 +16,7 @@ New features introduced in this demo:
 - im = galsim.ImageS(xsize,ysize)
 - pos = galsim.PositionD(x,y)
 - nfw = galsim.NFWHalo(mass, conc, z, pos)
-- shear = nfw.getShear(pos, z)
+- g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMag(pos, z)
 
 - Make multiple output files.
@@ -154,7 +154,8 @@ def main(argv):
             pos = galsim.PositionD(x,y) * pixel_scale
             print 'pos = ',pos
             try:
-                shear = nfw.getShear( pos , nfw_z_source )
+                g1,g2 = nfw.getShear( pos , nfw_z_source )
+                shear = galsim.Shear(g1=g1,g2=g2)
             except:
                 import warnings        
                 warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +

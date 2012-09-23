@@ -650,7 +650,7 @@ class NFWHalo(object):
         @param units     Angular units of coordinates (only arcsec implemented so far).
         @param reduced   Whether returned shear(s) should be reduced shears. (default=True)
 
-        @return shear (as a galsim.Shear) or list of shears 
+        @return (g1,g2)   [g1 and g2 are each a list if input was a list]
         """
         if units != galsim.arcsec:
             raise NotImplementedError("Only arcsec units implemented!")
@@ -676,13 +676,14 @@ class NFWHalo(object):
 
         # pure tangential shear, no cross component
         phi = np.arctan2(pos_y - self.pos_y, pos_x - self.pos_x)
-        phi += np.pi/2 
+        g1 = -g / (np.cos(2*phi) + np.sin(2*phi)*np.tan(2*phi))
+        g2 = g1 * np.tan(2*phi)
 
-        # Convert to galsim.Shear:
+        # Convert to a tuple of floats or lists of floats
         if len(g) == 1:
-            return galsim.Shear(g=g[0], beta=phi[0] * galsim.radians)
+            return g1[0], g2[0]
         else:
-            return [ galsim.Shear(g=g[k], beta=phi[k] * galsim.radians) for k in range(len(g)) ]
+            return g1.tolist(), g2.tolist()
 
 
     def getConvergence(self, pos, z_s, units=galsim.arcsec):
@@ -705,7 +706,7 @@ class NFWHalo(object):
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = self._convertPositions(pos, 'getKappa')
 
-        x = ((pos_x - self.pos_x)**2 + (pos_y - self.pos_y)**2)**0.5/self.rs_arcsec
+        r = ((pos_x - self.pos_x)**2 + (pos_y - self.pos_y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
         ks = self.__ks(z_s)
         if isinstance(z_s, np.ndarray) == False:

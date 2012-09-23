@@ -595,7 +595,8 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     
     print 'NFWHaloShear: pos = ',pos,' z = ',redshift
     try:
-        shear = base['nfw_halo'].getShear(pos,redshift)
+        g1,g2 = base['nfw_halo'].getShear(pos,redshift)
+        shear = galsim.Shear(g1=g1,g2=g2)
     except:
         import warnings
         warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
