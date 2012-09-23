@@ -195,7 +195,7 @@ def Image_copy(self):
     # which in turn can be used to index our Image dictionary:
     return _galsim.Image[self.array.dtype.type](self)
 
-# Some function to enable pickling of images
+# Some functions to enable pickling of images
 def ImageView_getinitargs(self):
     return self.array, self.xMin, self.yMin
 

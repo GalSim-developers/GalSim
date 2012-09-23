@@ -75,10 +75,9 @@ input :
             index : 
                 type : Sequence
                 first : 0
-                last : &n_mass 4
                 repeat : &n_clusters_per_mass 5
                 # Note: this is a good example of when the YAML named variables come in handy.
-                # We'll use these variables below when setting up the output files.
+                # We'll use this variable below when setting up the output files.
 
         conc : 4  # The concentration parameter = virial radius / NFW scale radius
         redshift : 0.3  # The redshift of the halo.
@@ -182,7 +181,7 @@ output :
         num : 
             type : Sequence
             first : 1
-            last : *n_mass
+            last : 4
 
             # For our directory name, we have each number in the sequence repeat 5 times
             # before moving on to the next value, since we have 5 files to put in each directory.
@@ -214,5 +213,5 @@ output :
     #
     # Also, this time, we set nproc <= 0.  This means that galsim should try to automatically
     # determine the number of cpus you have and use that many processes.
-    #nproc : -1
+    nproc : -1
 

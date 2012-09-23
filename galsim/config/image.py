@@ -225,13 +225,13 @@ def BuildTiledImage(config, logger=None,
     config['image']['center'] = { 
         'type' : 'XY' ,
         'x' : { 'type' : 'Sequence' , 
-                'first' : (1.+stamp_xsize)/2. , 
+                'first' : stamp_xsize/2+1 , 
                 'step' : stamp_xsize + xborder ,
                 'last' : full_xsize ,
                 'repeat' : ny_tiles
               },
         'y' : { 'type' : 'Sequence' , 
-                'first' : (1.+stamp_ysize)/2. , 
+                'first' : stamp_ysize/2+1 , 
                 'step' : stamp_ysize + yborder ,
                 'last' : full_ysize 
               },

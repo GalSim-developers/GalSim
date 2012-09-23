@@ -346,7 +346,7 @@ def Process(config, logger=None):
             kwargs['nimages'] = len(seeds[k])
 
         # Check if we need to build extra images for write out as well
-        for extra in [ k for k in [ 'psf' , 'weight', 'badpix' ] if k in output ]:
+        for extra in [ key for key in [ 'psf' , 'weight', 'badpix' ] if key in output ]:
             extra_file_name = None
             output_extra = output[extra]
             if 'file_name' in output_extra:
@@ -365,6 +365,7 @@ def Process(config, logger=None):
                 kwargs[ extra+'_hdu' ] = extra_hdu
     
         # Before building each file, (re-)process the input field.
+        print 'Before re-processInput k = ',k
         if k > 0:
             ProcessInput(config, logger)
 
