@@ -454,14 +454,6 @@ class NFWHalo(object):
 
     def __init__(self, mass, conc, redshift, pos=galsim.PositionD(0,0), 
                  omega_m=None, omega_lam=None, cosmo=None):
-        print 'NFWHalo initialized with:'
-        print '  mass = ',mass
-        print '  conc = ',conc
-        print '  redshift = ',redshift
-        print '  pos = ',pos
-        print '  omega_m = ',omega_m
-        print '  omega_lam = ',omega_lam
-        print '  cosmo = ',cosmo
         if omega_m or omega_lam:
             if cosmo:
                 raise TypeError("NFWHalo constructor received both cosmo and omega parameters")
@@ -657,12 +649,8 @@ class NFWHalo(object):
 
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = self._convertPositions(pos, 'getShear')
-        print 'pox_x, pos_y = ',pos_x,pos_y
-        print 'pox - self.pos = ',pos_x-self.pos_x,pos_y-self.pos_y
-        print 'rs_arcsec = ',self.rs_arcsec
 
         r = ((pos_x - self.pos_x)**2 + (pos_y - self.pos_y)**2)**0.5/self.rs_arcsec
-        print 'r = ',r
         # compute strength of lensing fields
         ks = self.__ks(z_s)
         if isinstance(z_s, np.ndarray) == False:

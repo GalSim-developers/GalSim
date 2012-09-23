@@ -204,7 +204,7 @@ def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, 
     t1 = time.time()
 
     # Initialize the random number generator we will be using.
-    print 'Build single stamp: seed = ',seed
+    #print 'Build single stamp: seed = ',seed
     if seed:
         rng = galsim.UniformDeviate(seed)
     else:
@@ -218,7 +218,7 @@ def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, 
     if 'center' in config['image']:
         import math
         center = galsim.config.ParseValue(config['image'],'center',config,galsim.PositionD)[0]
-        print 'center x,y = ',center.x,center.y
+        #print 'center x,y = ',center.x,center.y
         icenter = galsim.PositionI(
             int(math.floor(center.x+0.5)),
             int(math.floor(center.y+0.5)) )
@@ -253,8 +253,8 @@ def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, 
             im.setCenter(icenter.x, icenter.y)
         if make_weight_image:
             weight_im = galsim.ImageF(im.bounds)
-            print 'make weight_im from im.bounds = ',im.bounds
-            print 'weight_im.bounds = ',weight_im.bounds
+            #print 'make weight_im from im.bounds = ',im.bounds
+            #print 'weight_im.bounds = ',weight_im.bounds
             weight_im.setScale(im.scale)
             weight_im.setZero()
         else:
@@ -397,8 +397,8 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level, final_shift):
 
     if final_shift:
         final.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
-        print 'shift by ',final_shift.x,final_shift.y
-        print 'which in arcsec is ',final_shift.x*pixel_scale,final_shift.y*pixel_scale
+        #print 'shift by ',final_shift.x,final_shift.y
+        #print 'which in arcsec is ',final_shift.x*pixel_scale,final_shift.y*pixel_scale
 
     #print 'final.flux = ',final.getFlux()
     if xsize:

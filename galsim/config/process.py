@@ -107,7 +107,7 @@ def Process(config, logger=None):
         nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
     else:
         nfiles = 1 
-    print 'nfiles = ',nfiles
+    #print 'nfiles = ',nfiles
 
     # Now let's figure out how many images we need to build in each file.
     # We'll put this in a list, since it's conceivable that the nimages parameter
@@ -117,7 +117,7 @@ def Process(config, logger=None):
     if type == 'Fits':
         galsim.config.CheckAllParams(output, 'output', ignore=ignore)
         nimages_per_file = [ 1 ] * nfiles
-        print 'Fits: nimages_per_file = ',nimages_per_file
+        #print 'Fits: nimages_per_file = ',nimages_per_file
 
     elif type == 'MultiFits' or type == 'DataCube':
         req = { 'nimages' : int }
@@ -130,7 +130,7 @@ def Process(config, logger=None):
         else:
             nimages = galsim.config.ParseValue(output,'nimages',config,int)[0]
             nimages_per_file = [ nimages ] * nfiles
-        print '%s: nimages_per_file = '%type,nimages_per_file
+        #print '%s: nimages_per_file = '%type,nimages_per_file
 
     else:
         raise AttributeError("Invalid output.type=%s."%type)
@@ -143,7 +143,7 @@ def Process(config, logger=None):
 
     if image_type == 'Single':
         nseed_per_image = [ [ 1 ] * nim for nim in nimages_per_file ]
-        print 'Single: nseed_per_image = ',nseed_per_image
+        #print 'Single: nseed_per_image = ',nseed_per_image
 
     elif image_type == 'Scattered':
         import copy
@@ -249,7 +249,7 @@ def Process(config, logger=None):
                         s = s + 1
     else:
         seeds = [ [ None ] * nimages for nimages in nimages_per_file ]
-    print 'seeds = ',seeds
+    #print 'seeds = ',seeds
 
     # The kwargs to pass to build_func
     # We'll be building this up as we go...
@@ -365,7 +365,7 @@ def Process(config, logger=None):
                 kwargs[ extra+'_hdu' ] = extra_hdu
     
         # Before building each file, (re-)process the input field.
-        print 'Before re-processInput k = ',k
+        #print 'Before re-processInput k = ',k
         if k > 0:
             ProcessInput(config, logger)
 
@@ -482,7 +482,7 @@ def BuildFits(file_name, config, logger=None, seeds=None,
     for h in range(len(hdus.keys())):
         assert h in hdus.keys()  # Checked for this above.
         hdulist.append(all_images[hdus[h]])
-        print 'Add allimages[%d] to hdulist'%hdus[h]
+        #print 'Add allimages[%d] to hdulist'%hdus[h]
 
     # This next line is ok even if the main image is the only one in the list.
     galsim.fits.writeMulti(hdulist, file_name)

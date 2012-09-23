@@ -183,7 +183,6 @@ def main(argv):
             if first_in_pair:
                 # Use a random orientation:
                 beta = ud() * 2. * math.pi * galsim.radians
-                #print 'beta = ',beta
 
                 # Determine the ellipticity to use for this galaxy.
                 ellip = 1
@@ -192,14 +191,11 @@ def main(argv):
                     # Python basically implements this as a macro, so gd() is called twice!
                     val = gd()
                     ellip = math.fabs(val)
-                #print 'ellip = ',ellip
 
                 first_in_pair = False
             else:
                 # Use the previous ellip and beta + 90 degrees
                 beta += 90 * galsim.degrees
-                #print 'ring beta = ',beta
-                #print 'ring ellip = ',ellip
                 first_in_pair = True
 
             # Make a new copy of the galaxy with an applied e1/e2-type distortion 
@@ -208,7 +204,6 @@ def main(argv):
 
             # Apply the gravitational reduced shear by specifying g1/g2
             this_gal.applyShear(g1=gal_g1, g2=gal_g2)
-            #print 'g1,g2 = ',gal_g1,gal_g2
 
             # Apply a random shift_radius:
             rsq = 2 * shift_radius_sq
@@ -216,7 +211,6 @@ def main(argv):
                 dx = (2*ud()-1) * shift_radius
                 dy = (2*ud()-1) * shift_radius
                 rsq = dx**2 + dy**2
-            #print 'dx,dy = ',dx,dy
 
             this_gal.applyShift(dx,dy)
             this_psf = final_psf.createShifted(dx,dy)
@@ -225,7 +219,6 @@ def main(argv):
             final_gal = galsim.Convolve([psf,pix,this_gal])
 
             # Draw the image
-            #print 'pixel_scale = ',pixel_scale
             final_gal.draw(sub_gal_image)
 
             # Now determine what we need to do to get our desired S/N
@@ -242,9 +235,6 @@ def main(argv):
             sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
             flux = gal_signal_to_noise / sn_meas
             # Now we rescale the flux to get our desired S/N
-            #print 'noise_var = ',sky_level_pix
-            #print 'sn_meas = ',sn_meas
-            #print 'flux = ',flux
             sub_gal_image *= flux
 
             # Add Poisson noise -- the CCDNoise can also take another rng as its argument

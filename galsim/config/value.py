@@ -400,7 +400,7 @@ def _GenerateFromRandom(param, param_name, base, value_type):
         else:
             val = ud() * (max-min) + min
 
-        print 'Random = ',val
+        #print 'Random = ',val
         return val, False
 
 
@@ -469,7 +469,7 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
         val = gd()
         if 'mean' in kwargs: val += kwargs['mean']
 
-    print 'RandomGaussian: ',val
+    #print 'RandomGaussian: ',val
     return val, False
 
 
@@ -593,7 +593,7 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     if 'nfw_halo' not in base:
         raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
     
-    print 'NFWHaloShear: pos = ',pos,' z = ',redshift
+    #print 'NFWHaloShear: pos = ',pos,' z = ',redshift
     try:
         g1,g2 = base['nfw_halo'].getShear(pos,redshift)
         shear = galsim.Shear(g1=g1,g2=g2)
@@ -602,7 +602,7 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
         warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
                       "Using shear = 0.")
         shear = galsim.Shear(g1=0,g2=0)
-    print 'shear = ',shear
+    #print 'shear = ',shear
     return shear, False
 
 def _GenerateFromNFWHaloMag(param, param_name, base, value_type):
@@ -619,9 +619,9 @@ def _GenerateFromNFWHaloMag(param, param_name, base, value_type):
     if 'nfw_halo' not in base:
         raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
     
-    print 'NFWHaloMag: pos = ',pos,' z = ',redshift
+    #print 'NFWHaloMag: pos = ',pos,' z = ',redshift
     mu = base['nfw_halo'].getMag(pos,redshift)
-    print 'mu = ',mu
+    #print 'mu = ',mu
 
     if mu < 0 or mu > 25:
         import warnings
@@ -630,7 +630,7 @@ def _GenerateFromNFWHaloMag(param, param_name, base, value_type):
     else:
         import math
         scale = math.sqrt(mu)
-    print 'scale = ',scale
+    #print 'scale = ',scale
     return scale, False
 
 

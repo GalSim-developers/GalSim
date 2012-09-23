@@ -186,8 +186,6 @@ def main(argv):
     logger.info('Images created using single and multiple processes are exactly equal.')
     logger.info('')
 
-    print
-
 
 if __name__ == "__main__":
     main(sys.argv)

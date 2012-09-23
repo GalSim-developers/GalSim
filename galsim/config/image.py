@@ -304,7 +304,7 @@ def BuildTiledImage(config, logger=None,
             # Get the next random number seed.
             if 'random_seed' in config['image']:
                 seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-                print 'For noise, seed = ',seed
+                #print 'For noise, seed = ',seed
                 rng = galsim.BaseDeviate(seed)
             else:
                 rng = galsim.BaseDeviate()
@@ -435,12 +435,9 @@ def BuildScatteredImage(config, logger=None,
 
     for k in range(nobjects):
         bounds = images[k].bounds & full_image.bounds
-        print 'stamp bounds = ',images[k].bounds
-        print 'full bounds = ',full_image.bounds
-        print 'Overlap = ',bounds
-        if make_weight_image:
-            print 'weight bounds = ',weight_images[k].bounds
-            print 'full_weight bounds = ',full_weight_image.bounds
+        #print 'stamp bounds = ',images[k].bounds
+        #print 'full bounds = ',full_image.bounds
+        #print 'Overlap = ',bounds
         if (not bounds.isDefined()):
             import warnings
             warnings.warn(
@@ -464,7 +461,7 @@ def BuildScatteredImage(config, logger=None,
         # Get the next random number seed.
         if 'random_seed' in config['image']:
             seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-            print 'For noise, seed = ',seed
+            #print 'For noise, seed = ',seed
             rng = galsim.BaseDeviate(seed)
         else:
             rng = galsim.BaseDeviate()

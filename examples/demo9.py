@@ -113,12 +113,10 @@ def main(argv):
 
             # Initialize the random number generator we will be using for this object:
             rng = galsim.UniformDeviate(seed+k)
-            print 'Using seed = ',seed+k
 
             # Determine where this object is going to go:
             x = rng() * (image_size-1) + 1
             y = rng() * (image_size-1) + 1
-            print 'x,y = ',x,y
 
             # Get the integer values of these which will be the center of the 
             # postage stamp image.
@@ -137,13 +135,10 @@ def main(argv):
 
             # Determine the random values for the galaxy:
             flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
-            print 'flux = ',flux
             hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
-            print 'hlr = ',hlr
             gd = galsim.GaussianDeviate(rng, sigma = gal_eta_rms)
             eta1 = gd()  # Unlike g or e, large values of eta are valid, so no need to cutoff.
             eta2 = gd()
-            print 'eta = ',eta1,eta2
 
             # Make the galaxy profile with these values:
             gal = galsim.Exponential(half_light_radius=hlr, flux=flux)
@@ -152,7 +147,6 @@ def main(argv):
             # Now apply the appropriate lensing effects for this position from 
             # the NFW halo mass.
             pos = galsim.PositionD(x,y) * pixel_scale
-            print 'pos = ',pos
             try:
                 g1,g2 = nfw.getShear( pos , nfw_z_source )
                 shear = galsim.Shear(g1=g1,g2=g2)
@@ -161,10 +155,8 @@ def main(argv):
                 warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
                               "Using shear = 0.")
                 shear = galsim.Shear(g1=0,g2=0)
-            print 'shear = ',shear
 
             mu = nfw.getMag( pos , nfw_z_source )
-            print 'mu = ',mu
             if mu < 0:
                 import warnings
                 warnings.warn("Warning: mu < 0 means strong lensing!  Using scale=5.")
@@ -175,7 +167,6 @@ def main(argv):
                 scale = 5
             else:
                 scale = math.sqrt(mu)
-            print 'scale = ',scale
 
             gal.applyMagnification(scale)
             gal.applyShear(shear)
@@ -185,8 +176,6 @@ def main(argv):
 
             # Account for the non-integral portion of the position
             final.applyShift(dx*pixel_scale,dy*pixel_scale)
-            print 'shift by ',x,y
-            print 'which in arcsec is ',x*pixel_scale,y*pixel_scale
 
             # Draw the stamp image
             stamp = final.draw(dx=pixel_scale)
@@ -196,12 +185,8 @@ def main(argv):
 
             # Find overlapping bounds
             bounds = stamp.bounds & full_image.bounds
-            print 'stamp bounds = ',stamp.bounds
-            print 'full bounds = ',full_image.bounds
-            print 'Overlap = ',bounds
             full_image[bounds] += stamp[bounds]
 
-        print 'Done drawing stamps'
 
         # Add Poisson noise to the full image
         sky_level_pixel = sky_level * pixel_scale**2
@@ -221,14 +206,11 @@ def main(argv):
         # If you didn't care about that, you could instead construct this as a continuation
         # of the last rng from the above loop: ccdnoise = galsim.CCDNoise(rng)
         ccdnoise = galsim.CCDNoise(seed+nobj)
-        print 'For noise, seed = ',seed+nobj
         full_image.addNoise(ccdnoise)
         full_image -= sky_level_pixel
-        print 'Added noise'
 
         # Write the file to disk:
         galsim.fits.writeMulti([full_image, badpix_image, weight_image], file_name)
-        print 'Wrote images to ',file_name
 
         t2 = time.time()
         return t2-t1
@@ -313,8 +295,6 @@ def main(argv):
     t2 = time.time()
 
     logger.info('Total time taken using %d processes = %f',nproc,t2-t1)
-
-    print
 
 
 if __name__ == "__main__":
