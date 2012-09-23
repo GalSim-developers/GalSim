@@ -43,7 +43,7 @@ It may be that there is or soon will be more than one version of Python
 installed on your operating system, in which case please see the "Making sure
 you are using the right Python" Section below.
 
-### Getting Python and required modules
+### Getting Python and required modules ###
 
 For a list of places to download Python, see http://www.python.org/getit/.
 
@@ -90,7 +90,7 @@ then be installed.
 See http://packages.python.org/distribute/easy_install.html#using-easy-install
 for more details about the extremely useful `easy_install` feature.
 
-### Third party-maintained Python packages
+### Third party-maintained Python packages ###
 
 There are a number of third party-maintained packages which bundle Python with
 many of the numerical and scientific libraries that are commonly used, and
@@ -103,7 +103,7 @@ http://enthought.com/products/edudownload.php for the academic download
 instructions). Other re-packaged Python downloads can be found at
 http://www.python.org/getit/.
 
-### Making sure you are using the right Python
+### Making sure you are using the right Python ###
 
 Some users will find they have a few versions of Python around their operating
 system (determined, for example, using "locate python" at the prompt). A common
@@ -492,7 +492,7 @@ You can list these options from the command line with
 
     scons -h
 
-### Basic flags about the C++ compilation (default values in parentheses):
+### Basic flags about the C++ compilation (default values in parentheses) ###
 
 * `CXX` (g++) specifies which C++ compiler to use.
 
@@ -521,7 +521,7 @@ You can list these options from the command line with
    planning to use GalSim with.  If you choose not to use the default here, 
    then you need to remember to use the correct python version 
 
-### Flags about where to install the library and modules:
+### Flags about where to install the library and modules ###
 
 * `PREFIX` (/usr/local) specifies where to install the library when running 
    `scons install`.
@@ -533,7 +533,7 @@ You can list these options from the command line with
    from PREFIX.  (This is only needed for things like fink, where they install 
    into a staging area first before copying over to the final location.)
 
-### Flags that specify where to look for external libraries:
+### Flags that specify where to look for external libraries ###
 
 * `TMV_DIR` ('') specifies the location of TMV if it is not in a standard
    location. This should be the same value as you used for PREFIX when 
@@ -596,7 +596,7 @@ You can list these options from the command line with
    the default is True.  But occasionally, this might be inconvenient, so you 
    can turn this feature off.
 
-### Miscellaneous flags:
+### Miscellaneous flags ###
 
 * `NOSETESTS` (nosetests) specifies which version of nosetests you want to use
    for running the unit tests.  If you specified a non-default python, then 
