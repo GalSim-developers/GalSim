@@ -1,5 +1,5 @@
-#Installation Instructions
-***
+Installation Instructions
+=========================
 
 System requirements: GalSim currently only supports Linux and Mac OSX.
 
@@ -16,8 +16,8 @@ Table of Contents:
 5. More SCons options
 
 
-# 1. Software required before building GalSim
-***
+1. Software required before building GalSim
+===========================================
 
 i) Python (2.6 or 2.7 series), with some additional modules installed
 ---------------------------------------------------------------------
@@ -43,7 +43,7 @@ It may be that there is or soon will be more than one version of Python
 installed on your operating system, in which case please see the "Making sure
 you are using the right Python" Section below.
 
-### Getting Python and required modules
+### Getting Python and required modules ###
 
 For a list of places to download Python, see http://www.python.org/getit/.
 
@@ -57,8 +57,8 @@ The GalSim package also requires
 * Optional dependency: the Python YAML parser and emitter module PyYAML
   (http://pyyaml.org/wiki/PyYAML)
   Note: PyYAML is in fact only required for full config file parsing
-  functionality, and can be ommitted if users are happy to use JSON-style
-  config parsing
+  functionality, and can be omitted if users are happy to use JSON-style
+  config parsing or prefer to write python scripts directly.
 
 * Optional dependency: the scientific Python module SciPy
   (http://www.scipy.org).  SciPy is only required for generation of
@@ -96,11 +96,11 @@ then be installed.
 See http://packages.python.org/distribute/easy_install.html#using-easy-install
 for more details about the extremely useful `easy_install` feature.
 
-### Third party-maintained Python packages
+### Third party-maintained Python packages ###
 
 There are a number of third party-maintained packages which bundle Python with
 many of the numerical and scientific libraries that are commonly used, and
-many of these are free for non-commericial or academic use.
+many of these are free for non-commercial or academic use.
 
 One good example of such a package, which includes all of the Python
 dependencies required by GalSim (NumPy, PyFITS, PyYAML as well as SCons and
@@ -109,7 +109,7 @@ http://enthought.com/products/edudownload.php for the academic download
 instructions). Other re-packaged Python downloads can be found at
 http://www.python.org/getit/.
 
-### Making sure you are using the right Python
+### Making sure you are using the right Python ###
 
 Some users will find they have a few versions of Python around their operating
 system (determined, for example, using "locate python" at the prompt). A common
@@ -117,7 +117,7 @@ way this will happen if there is already an older build (e.g. Python 2.4.X)
 being used by the operating system and then you install a newer version from
 one of the sources described above.
 
-It will be important to make sure that the version of Python for which Numpy,
+It will be important to make sure that the version of Python for which NumPy,
 PyFITS and PyYAML etc. are installed is also the one being used for GalSim,
 and that this is the one *you* want to use GalSim from! Knowing which installed
 version of Python will be used is also important for the installation of the 
@@ -207,11 +207,11 @@ Note: if you do not want to install everything related to Boost (which takes a
 while), you can restrict to Boost Python and math by using `--with-python`
 `--with-math` on the `./b2` commands.  Currently we are only using Boost Python,
 but there may be parts of the math library we want to use so installing these
-two will likely be sufficient for the forseeable future.
+two will likely be sufficient for the foreseeable future.
 
 Once you have installed Boost, you can check that it links to the version of
-Python that will be used for GalSim and on which you have installed Numpy and
-Pyfits by typing
+Python that will be used for GalSim and on which you have installed NumPy and
+PyFITS by typing
 
     ldd <YOUR_BOOST_LIB_DIR>/libboost_python<POSSIBLE_SUFFIX>.so (Linux)
     otool -L <YOUR_BOOST_LIB_DIR>/libboost_python<POSSIBLE_SUFFIX>.dylib (OSX)
@@ -220,7 +220,10 @@ Pyfits by typing
 `ls -l <YOUR_BOOST_LIB_LOCATION>/libboost_python*` may show the version of
 libboost_python.so linked to, for example, `libboost_python_py26.so.1.40.0`.
 In such a case you can tell both the Python and Boost versions being used, 2.6
-and `1.40.0`, respectively, in this example.)
+and `1.40.0`, respectively, in this example.)  On some Linux systems,
+ldd will not indicate the Python library against which boost was
+compiled; in this case, continue with the installation procedure and
+any issues will be revealed at a later stage.
 
 If the Python library listed is the one you will be using, all is well. If not,
 Boost can be forced to use a different version by specifying the following
@@ -234,8 +237,8 @@ options to the ./bootstrap.sh installation script (defaults in `[]` brackets):
                            it detected the wrong one]
 
 
-# 2. Installing the GalSim Python package
-***
+2. Installing the GalSim Python package
+=======================================
 
 Once you have installed all the dependencies described above, you are ready to
 build GalSim. From the GalSim base directory (in which this INSTALL.md file is
@@ -352,8 +355,8 @@ GalSim Github page at https://github.com/GalSim-developers/GalSim to help find
 a solution for the problem.
 
 
-# 3. Running tests and installing example executables
-***
+3. Running tests and installing example executables
+===================================================
 
 You can run our test suite by typing
 
@@ -399,8 +402,8 @@ can be considered a parallel tutorial for learning the config file usage of
 GalSim.
 
 
-# 4. Platform-specific notes
-***
+4. Platform-specific notes
+==========================
 
 i) Linux
 --------
@@ -422,11 +425,16 @@ most or all of the prerequisites using it, depending on whether you want
 to use GalSim with the fink version of python (`/sw/bin/python`) or the system 
 python (`/usr/bin/python`) or something else still.
 
+It is in general a good idea to update fink prior to installing any new modules:
+
+    fink selfupdate
+    fink update-all
+
 If you are happy with running GalSim using the fink version of python 2.7, you 
 can install everything with the following commands:
 
     fink install scons fftw3 tmv0 python27 numpy-py27 pyfits-py27 yaml-py27 \
-    boost1.35-python27
+    	 boost1.35-python27
     scons PYTHON=/sw/bin/python2.7 TMV_DIR=/sw 
     scons install
 
@@ -440,7 +448,7 @@ from fink:
 
 If you want to use the system python, or some other version, then the fink 
 python installations will not work.  You will need to manually install
-numpy, pyFits, pyYaml and nose, for example using easy_install, with your 
+NumPy, PyFITS, PyYAML and nose, for example using easy_install, with your
 chosen Python. 
 
 For the system python, you can use fink for Boost, but you will want a 
@@ -459,16 +467,23 @@ b) Macports -- this is another popular Mac package management project
 is not supported but can be easily installed by following the instructions
 in Section 1.iv).
 
-Note that when using MacPorts to install Boost, you may need to explicitly
-indicate Boost.Python, for example
+It is in general a good idea to upgrade all modules, prior to installing any new
+modules:
 
+    sudo port selfupdate
+    sudo port upgrade outdated
+
+The following modules relevant to GalSim are available on Macports (note that
+when using MacPorts to install Boost, you may need to explicitly indicate 
+Boost.Python):
+
+    sudo port install scons fftw-3 python27 py27-nose py27-numpy py27-pyfits \
+    	 py27-yaml
     sudo port install boost +python27
 
-As with fink, you may still need to install NumPy and PyFITS manually, e.g.
-using easy_install, with your chosen Python.
 
-# 5. More SCons options
-***
+5. More SCons options
+=====================
 
 Here is a fairly complete list of the options you can pass to SCons to control
 the build process. The options are listed with their default value. You change
@@ -483,7 +498,7 @@ You can list these options from the command line with
 
     scons -h
 
-### Basic flags about the C++ compilation (default values in parentheses):
+### Basic flags about the C++ compilation (default values in parentheses) ###
 
 * `CXX` (g++) specifies which C++ compiler to use.
 
@@ -512,7 +527,7 @@ You can list these options from the command line with
    planning to use GalSim with.  If you choose not to use the default here, 
    then you need to remember to use the correct python version 
 
-### Flags about where to install the library and modules:
+### Flags about where to install the library and modules ###
 
 * `PREFIX` (/usr/local) specifies where to install the library when running 
    `scons install`.
@@ -524,7 +539,7 @@ You can list these options from the command line with
    from PREFIX.  (This is only needed for things like fink, where they install 
    into a staging area first before copying over to the final location.)
 
-### Flags that specify where to look for external libraries:
+### Flags that specify where to look for external libraries ###
 
 * `TMV_DIR` ('') specifies the location of TMV if it is not in a standard
    location. This should be the same value as you used for PREFIX when 
@@ -551,7 +566,8 @@ You can list these options from the command line with
    libraries in addition to the standard locations such as `/usr/lib` and 
    `/usr/local/lib`.  These directories are specified as `-L` flags to the 
    linker. If you are giving multiple directories, they should be separated by 
-   colons.
+   colons.  To add the library `/blah/libfoo.a`, specify 
+   `EXTRA_LIB_PATH=/blah/ EXTRA_LIBS=foo`.
 
 * `EXTRA_PATH` ('') specifies directories in which to search for executables
    (notably the compiler, although you can also just give the full path in the 
@@ -575,7 +591,7 @@ You can list these options from the command line with
    on its own. This might be useful if you have a non-standard name for one of 
    the external libraries. e.g. If you want to use the Intel MKL library for the
    FFTW library, SCons will not automatically try that, so you could add those
-   libraries here. If there is more than one, they should be quoted with spaces
+   libraries here.  If there is more than one, they should be quoted with spaces
    between the different libraries. e.g. 
    `EXTRA_LIBS="mkl_intel mkl_intel_thread mkl_core"`
 
@@ -586,7 +602,7 @@ You can list these options from the command line with
    the default is True.  But occasionally, this might be inconvenient, so you 
    can turn this feature off.
 
-### Miscellaneous flags:
+### Miscellaneous flags ###
 
 * `NOSETESTS` (nosetests) specifies which version of nosetests you want to use
    for running the unit tests.  If you specified a non-default python, then 
