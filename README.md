@@ -1,7 +1,7 @@
-GalSim Main Page                                              {#mainpage}
-================
+@mainpage
 
-# GalSim: The modular galaxy image simulation toolkit
+GalSim: The modular galaxy image simulation toolkit
+===================================================
 
 GalSim is open-source software for simulating images of astronomical objects
 (stars, galaxies) in a variety of ways.  The bulk of the calculations are
