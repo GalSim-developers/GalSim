@@ -1,11 +1,11 @@
-"""\file shear.py Redefinition of the Shear class at the Python layer.
+"""@file shear.py 
+Redefinition of the Shear class at the Python layer.
 """
 
 from . import _galsim
 
 class Shear(object):
-    """
-    @brief A class to represent shears in a variety of ways.
+    """A class to represent shears in a variety of ways.
 
     The python Shear class (galsim.Shear) can be initialized in a variety of ways to represent shape
     distortions. All arguments must be named.  Given semi-major and semi-minor axes a and b, we can
@@ -17,37 +17,34 @@ class Shear(object):
     minor-to-major axis ratio q = b/a
 
     These can be thought of as a magnitude and a real-space position angle beta, or as two
-    components e.g., g1 and g2, with
+    components, e.g., `g1` and `g2`, with
 
-    g1 = |g| cos(2*beta)
-    g2 = |g| sin(2*beta)
+    `g1` = |g| cos(2*`beta`)
+    `g2` = |g| sin(2*`beta`)
 
-    Note: beta is _not_ the phase of a complex valued shear.
-    Rather, the complex shear is g1 + i g2 = g exp(2 i beta).
-    Likewise for eta or e.  Beta is twice the phase of the complex value.
+    Note: `beta` is _not_ the phase of a complex valued shear.  Rather, the complex shear is 
+    `g1` + i `g2` = `g` exp(2 i `beta`).  Likewise for `eta` or `e`.  The phase of the complex value
+    is twice `beta`.
 
     The following are all examples of valid calls to initialize a Shear object:
-    @code
-    s = galsim.Shear() # empty constructor sets ellipticity/shear to zero
-    s = galsim.Shear(g1=0.05, g2=0.05)
-    s = galsim.Shear(g1=0.05) # assumes g2=0
-    s = galsim.Shear(e1=0.05, e2=0.05)
-    s = galsim.Shear(e2=0.05) # assumes e1=0
-    s = galsim.Shear(eta1=0.07, eta2=-0.1)
-    s = galsim.Shear(eta=0.05, beta=45.0*galsim.degrees)
-    s = galsim.Shear(g=0.05, beta=0.25*numpy.pi*galsim.radians)
-    s = galsim.Shear(e=0.3, beta=30.0*galsim.degrees)
-    s = galsim.Shear(q=0.5, beta=0.0*galsim.radians)
-    # can explicitly construct Angle instance, but this is not necessary:
-    s = galsim.Shear(e=0.3, beta=galsim.Angle(30.0*galsim.degrees))
-    @endcode
+    
+        >>> s = galsim.Shear()                    # empty constructor sets ellipticity/shear to zero
+        >>> s = galsim.Shear(g1=0.05, g2=0.05)
+        >>> s = galsim.Shear(g1=0.05)             # assumes g2=0
+        >>> s = galsim.Shear(e1=0.05, e2=0.05)
+        >>> s = galsim.Shear(e2=0.05)             # assumes e1=0
+        >>> s = galsim.Shear(eta1=0.07, eta2=-0.1)
+        >>> s = galsim.Shear(eta=0.05, beta=45.0*galsim.degrees)
+        >>> s = galsim.Shear(g=0.05, beta=0.25*numpy.pi*galsim.radians)
+        >>> s = galsim.Shear(e=0.3, beta=30.0*galsim.degrees)
+        >>> s = galsim.Shear(q=0.5, beta=0.0*galsim.radians)
 
-    There can be no mixing and matching, e.g., specifying g1 and e2.  It is permissible to only
-    specify one of two components, with the other assumed to be zero.  If a magnitude such as e, g,
-    eta, or q is specified, then beta is also required to be specified.  It is possible to
-    initialize a Shear with zero reduced shear by specifying no args or kwargs, i.e. galsim.Shear().
-    The galsim.Shear contains a C++ CppShear object, and operations on Shear rely on wrapped methods
-    of the CppShear.
+    There can be no mixing and matching, e.g., specifying `g1` and `e2`.  It is permissible to only
+    specify one of two components, with the other assumed to be zero.  If a magnitude such as `e`, 
+    `g`, `eta`, or `q` is specified, then `beta` is also required to be specified.  It is possible 
+    to initialize a Shear with zero reduced shear by specifying no args or kwargs, i.e. 
+    galsim.Shear().  The galsim.Shear contains a C++ CppShear object, and operations on Shear rely 
+    on wrapped methods of the CppShear.
     """
     def __init__(self, *args, **kwargs):
         import numpy as np
