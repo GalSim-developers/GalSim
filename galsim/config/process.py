@@ -3,9 +3,49 @@ import os
 import time
 import galsim
 
+def ProcessInput(config, logger=None):
+    """
+    Process the input field, reading in any specified input files or setting up
+    any objects that need to be initialized.
+
+    These objects are saved in the top level of config:
+        config['catalog'] = the catalog specified by config.input.catalog, if provided.
+        config['real_catalog'] = the catalog specified by config.input.real_catalog, if provided.
+        config['nfw_halo'] = an NFWHalo specified by config.input.nfw_halo, if provided.
+    """
+
+    # Process the input field (read any necessary input files)
+    if 'input' in config:
+        input = config['input']
+        if not isinstance(input, dict):
+            raise AttributeError("config.input is not a dict.")
+
+        # Read all input fields provided and create the corresponding object
+        # with the parameters given in the config file.
+        input_type = { 
+                'catalog' : 'InputCatalog' , 
+                'real_catalog' : 'RealGalaxyCatalog' ,
+                'nfw_halo' : 'NFWHalo'
+                }
+        for key in [ k for k in input_type.keys() if k in input ]:
+            field = input[key]
+            field['type'] = input_type[key]
+            input_obj = galsim.config.gsobject._BuildSimple(field, key, config, {})[0]
+            if logger and  key in ['catalog', 'real_catalog']:
+                logger.info('Read %d objects from %s',input_obj.nobjects,key)
+            # Store input_obj in the config for use by BuildGSObject function.
+            config[key] = input_obj
+
+        # Check that there are no other attributes specified.
+        galsim.config.CheckAllParams(input, 'input', ignore=input_type.keys())
+
+
 def Process(config, logger=None):
     """
-    Do all processing of the provided configuration dict
+    Do all processing of the provided configuration dict.  In particular, this
+    function handles processing the output field, calling other functions to
+    build and write the specified files.  The input field is processed before
+    building each file.
     """
 
     # If we don't have a root specified yet, we generate it from the current script.
@@ -15,46 +55,6 @@ def Process(config, logger=None):
             inspect.getfile(inspect.currentframe())) # script filename (usually with path)
         # Strip off a final suffix if present.
         config['root'] = os.path.splitext(script_name)[0]
-
-    ProcessInput(config, logger)
-    ProcessOutput(config, logger)
-
-
-def ProcessInput(config, logger=None):
-    """
-    Process the input field, reading in any specified input files.
-    These files are saved in the top level of config.
-
-    config['catalog'] = the catalog specified by config.input.catalog, if provided
-    config['real_catalog'] = the catalog specified by config.input.real_catalog, if provided
-    """
-
-    # Process the input field (read any necessary input files)
-    if 'input' in config:
-        input = config['input']
-        if not isinstance(input, dict):
-            raise AttributeError("config.input is not a dict.")
-
-        # Read the input catalogs if provided
-        cat_type = { 'catalog' : 'InputCatalog' , 
-                     'real_catalog' : 'RealGalaxyCatalog' }
-        for key in [ k for k in cat_type.keys() if k in input ]:
-            catalog = input[key]
-            catalog['type'] = cat_type[key]
-            input_cat = galsim.config.gsobject._BuildSimple(catalog, key, config, {})[0]
-            if logger:
-                logger.info('Read %d objects from %s',input_cat.nobjects,key)
-            # Store input_cat in the config for use by BuildGSObject function.
-            config[key] = input_cat
-
-        # Check that there are no other attributes specified.
-        galsim.config.CheckAllParams(input, 'input', ignore=cat_type.keys())
-
-
-def ProcessOutput(config, logger=None):
-    """
-    Process the output field, building and writing all the specified image files.
-    """
 
     # Make config['output'] exist if it doesn't yet.
     if 'output' not in config:
@@ -67,6 +67,11 @@ def ProcessOutput(config, logger=None):
     if 'type' not in output:
         output['type'] = 'Fits' 
     type = output['type']
+
+    # Process the input field.  We'll do this again before subsequent files, 
+    # but we may need some information from the input catalogs to help out on 
+    # the number of images and such.
+    ProcessInput(config, logger)
 
     # If (1) type is MultiFits or DataCube,
     #    (2) the image type is Single, and
@@ -335,7 +340,6 @@ def ProcessOutput(config, logger=None):
 
         # Assign some of the kwargs we know now:
         kwargs['file_name'] = file_name
-        kwargs['config'] = config
         kwargs['seeds'] = seeds[k]
 
         if type == 'MultiFits' or type == 'DataCube':
@@ -360,15 +364,22 @@ def ProcessOutput(config, logger=None):
                 extra_hdu = galsim.config.ParseValue(output[extra],'hdu',config,int)[0]
                 kwargs[ extra+'_hdu' ] = extra_hdu
     
+        # Before building each file, (re-)process the input field.
+        if k > 0:
+            ProcessInput(config, logger)
+
         # This is where we actually build the file.
         # If we doing multiprocessing, we send this information off to the task_queue.
         # Otherwise, we just call build_func.
         if nproc > 1:
+            import copy
             new_kwargs = {}
             new_kwargs.update(kwargs)
-            # Apparently the logger isn't picklable, so can't send that for nproc > 1
+            new_kwargs['config'] = copy.deepcopy(config)
             task_queue.put( (new_kwargs, file_name) )
         else:
+            kwargs['config'] = config
+            # Apparently the logger isn't picklable, so can't send that for nproc > 1
             kwargs['logger'] = logger 
             t = build_func(**kwargs)
             if logger:

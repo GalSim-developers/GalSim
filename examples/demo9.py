@@ -7,16 +7,18 @@ The ninth script in our tutorial about using GalSim in python scripts: examples/
 This script simulates cluster lensing or galaxy-galaxy lensing.  The graviational shear 
 applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations 
 of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
-has its own file, organized into 4 directories (one for each mass).  In order to have a total
-of only 100 galaxies (for time considerations), each image only has 5 background galaxies.
-For more realistic investigations, you would of course want to use more galaxies per image,
-but for the purposes of the demo script, this suffices.
+has its own file, organized into 4 directories (one for each mass).  For each cluster, we
+draw 20 lensed galaxies at random positions of the image.
 
 New features introduced in this demo:
 
 - image.copyFrom(image2)
+- im = galsim.ImageS(xsize,ysize)
+- pos = galsim.PositionD(x,y)
+- nfw = galsim.NFWHalo(mass, conc, z, pos)
+- shear = nfw.getShear(pos, z)
+- mag = nfw.getMag(pos, z)
 
-- Use shears from an NFW Halo model.
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
 - Write a bad pixel mask and a weight image as the second and third HDUs in each file.
@@ -52,21 +54,28 @@ def main(argv):
 
     mass_list = [ 1.e15, 7.e14, 4.e14, 2.e14 ]  # mass in Msun/h
     nfiles = 5 # number of files per item in mass list
+    nobj = 20  # number of objects to draw for each file
+
+    # MJ
+    #nobj = 5
     #mass_list = [ 1.e15 ]
-    #nfiles = 1 # number of files per item in mass list
-    nobj = 5  # number of objects to draw for each file
+    #nfiles = 1
 
-    image_size = 512
-    pixel_scale = 0.43
-    sky_level = 1.e4
+    image_size = 512       # pixels
+    pixel_scale = 0.19     # arcsec / pixel
+    sky_level = 1.e6       # ADU / arcsec^2
 
-    psf_fwhm = 0.9
+    psf_fwhm = 0.5         # arcsec
 
-    gal_eta_rms = 0.4
-    gal_hlr_min = 0.8
-    gal_hlr_max = 2.8
-    gal_flux_min = 1.e4
-    gal_flux_max = 1.e6
+    gal_eta_rms = 0.4      # eta is defined as ln(a/b)
+    gal_hlr_min = 0.4      # arcsec
+    gal_hlr_max = 1.2      # arcsec
+    gal_flux_min = 1.e4    # ADU
+    gal_flux_max = 1.e6    # ADU
+
+    nfw_conc = 4           # concentration parameter = virial radius / NFW scale radius
+    nfw_z_halo = 0.3       # redshift of the halo
+    nfw_z_source = 0.6     # redshift of the lensed sources
 
     random_seed = 8383721
 
@@ -89,8 +98,16 @@ def main(argv):
         # defect simulation currently, so our bad pixel masks are currently all zeros. 
         # But someday, we plan to add defect functionality to GalSim, at which point, we'll
         # be able to mark those defects on a bad pixel mask.
+        # Note: the S in ImageS means to use "short int" for the data type.
+        # This is a typical choice for a bad pixel image.
         badpix_image = galsim.ImageS(image_size, image_size)
         badpix_image.setScale(pixel_scale)
+
+        # Setup the NFWHalo stuff:
+
+        im_center = galsim.BoundsD(1,image_size,1,image_size).center()
+        nfw = galsim.NFWHalo(mass=mass, conc=nfw_conc, redshift=nfw_z_halo,
+                             pos=im_center*pixel_scale)
 
         for k in range(nobj):
 
@@ -109,8 +126,8 @@ def main(argv):
             iy = int(math.floor(y+0.5))
 
             # The remainder will be accounted for in a shift
-            x -= ix
-            y -= iy
+            dx = x - ix
+            dy = y - iy
 
             # Make the pixel:
             pix = galsim.Pixel(pixel_scale)
@@ -132,11 +149,41 @@ def main(argv):
             gal = galsim.Exponential(half_light_radius=hlr, flux=flux)
             gal.applyShear(eta1=eta1, eta2=eta2)
 
+            # Now apply the appropriate lensing effects for this position from 
+            # the NFW halo mass.
+            pos = galsim.PositionD(x,y) * pixel_scale
+            print 'pos = ',pos
+            try:
+                shear = nfw.getShear( pos , nfw_z_source )
+            except:
+                import warnings        
+                warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
+                              "Using shear = 0.")
+                shear = galsim.Shear(g1=0,g2=0)
+            print 'shear = ',shear
+
+            mu = nfw.getMag( pos , nfw_z_source )
+            print 'mu = ',mu
+            if mu < 0:
+                import warnings
+                warnings.warn("Warning: mu < 0 means strong lensing!  Using scale=5.")
+                scale = 5
+            elif mu > 25:
+                import warnings
+                warnings.warn("Warning: mu > 25 means strong lensing!  Using scale=5.")
+                scale = 5
+            else:
+                scale = math.sqrt(mu)
+            print 'scale = ',scale
+
+            gal.applyMagnification(scale)
+            gal.applyShear(shear)
+
             # Build the final object
             final = galsim.Convolve([psf, pix, gal])
 
             # Account for the non-integral portion of the position
-            final.applyShift(x*pixel_scale,y*pixel_scale)
+            final.applyShift(dx*pixel_scale,dy*pixel_scale)
             print 'shift by ',x,y
             print 'which in arcsec is ',x*pixel_scale,y*pixel_scale
 
@@ -219,7 +266,7 @@ def main(argv):
     seed = random_seed
     for i in range(len(mass_list)):
         mass = mass_list[i]
-        dir_name = "mass%d"%(i+1)
+        dir_name = "nfw%d"%(i+1)
         dir = os.path.join('output',dir_name)
         if not os.path.isdir(dir): os.mkdir(dir)
         for j in range(nfiles):

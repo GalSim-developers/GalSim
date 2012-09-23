@@ -223,6 +223,8 @@ def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, 
             int(math.floor(center.x+0.5)),
             int(math.floor(center.y+0.5)) )
         final_shift = galsim.PositionD(center.x-icenter.x , center.y-icenter.y)
+        # Calculate and save the position relative to the image center
+        config['pos'] = (center - config['image_cen']) * config['pixel_scale']
     else:
         center = None
         icenter = None
@@ -674,10 +676,6 @@ def DrawPSFStamp(psf, pix, config, bounds, final_shift):
 
     final_psf = galsim.Convolve(psf_list)
 
-    if final_shift:
-        final_psf.applyShift(final_shift)
-
-
     if 'image' in config and 'pixel_scale' in config['image']:
         pixel_scale = galsim.config.ParseValue(config['image'], 'pixel_scale', config, float)[0]
     else:
@@ -687,6 +685,10 @@ def DrawPSFStamp(psf, pix, config, bounds, final_shift):
     if 'shift' in config['gal']:
         gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
         final_psf.applyShift(gal_shift.x, gal_shift.y)
+
+    # Also apply any "final" shift to the psf.
+    if final_shift:
+        final_psf.applyShift(final_shift.x, final_shift.y)
 
     psf_im = galsim.ImageF(bounds)
     psf_im.setScale(pixel_scale)

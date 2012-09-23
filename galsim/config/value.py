@@ -1,5 +1,6 @@
 import galsim
 
+
 def ParseValue(config, param_name, base, value_type):
     """@brief Read or generate a parameter value from config.
 
@@ -41,13 +42,14 @@ def ParseValue(config, param_name, base, value_type):
     else:
         # Otherwise, we need to generate the value according to its type
         valid_types = {
-            float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'Sequence', 'List' ],
+            float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'NFWHaloMag',
+                      'Sequence', 'List' ],
             int : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
             bool : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
             str : [ 'InputCatalog', 'List', 'NumberedFile' ],
             galsim.Angle : [ 'Rad', 'Deg', 'Random', 'List' ],
             galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
-                      'Ring', 'List' ],
+                             'Ring', 'NFWHaloShear', 'List' ],
             galsim.PositionD : [ 'XY', 'RandomCircle', 'List' ] 
         }
 
@@ -89,7 +91,7 @@ def _GetAngleValue(param, param_name):
     """ @brief Convert a string consisting of a value and an angle unit into an Angle.
     """
     try :
-        (value, unit) = param.rsplit(None,1)
+        value, unit = param.rsplit(None,1)
         value = float(value)
         unit = unit.lower()
         if unit.startswith('rad') :
@@ -108,6 +110,18 @@ def _GetAngleValue(param, param_name):
             raise AttributeError("Unknown Angle unit: %s for %s param"%(unit,param_name))
     except :
         raise AttributeError("Unable to parse %s param = %s as an Angle."%(param_name,param))
+
+
+def _GetPositionValue(param, param_name):
+    """ @brief Convert a string that looks like "a,b" into a galsim.PositionD.
+    """
+    try :
+        x, y = param.split(',')
+        x = x.strip()
+        y = y.strip()
+        return galsim.PositionD(x,y)
+    except :
+        raise AttributeError("Unable to parse %s param = %s as a PositionD."%(param_name,param))
 
 
 def _GetBoolValue(param, param_name):
@@ -180,6 +194,7 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
 
     return get
 
+
 def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
     """@brief Check and get all the parameters for a particular item
 
@@ -195,6 +210,7 @@ def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
     kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.iteritems()])
     return kwargs, safe
+
 
 def GetCurrentValue(config, param_name):
     """@brief Return the current value of a parameter (either stored or a simple value)
@@ -281,6 +297,7 @@ def _GenerateFromDeg(param, param_name, base, value_type):
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return kwargs['theta'] * galsim.degrees, safe
 
+
 def _GenerateFromRing(param, param_name, base, value_type):
     """@brief Return the next shear for a ring test.
     """
@@ -318,6 +335,7 @@ def _GenerateFromRing(param, param_name, base, value_type):
     #print 'return shear = ',current
     return current, False
 
+
 def _GenerateFromInputCatalog(param, param_name, base, value_type):
     """@brief Return a value read from an input catalog
     """
@@ -349,6 +367,7 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
 
     #print 'InputCatalog: ',str,val
     return val, False
+
 
 def _GenerateFromRandom(param, param_name, base, value_type):
     """@brief Return a random value drawn from a uniform distribution
@@ -383,6 +402,7 @@ def _GenerateFromRandom(param, param_name, base, value_type):
 
         print 'Random = ',val
         return val, False
+
 
 def _GenerateFromRandomGaussian(param, param_name, base, value_type):
     """@brief Return a random value drawn from a Gaussian distribution
@@ -452,6 +472,7 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
     print 'RandomGaussian: ',val
     return val, False
 
+
 def _GenerateFromRandomCircle(param, param_name, base, value_type):
     """@brief Return a PositionD drawn from a circular top hat distribution.
     """
@@ -460,11 +481,17 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
     rng = base['rng']
 
     req = { 'radius' : float }
+    opt = { 'inner_radius' : float, 'center' : galsim.PositionD }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     radius = kwargs['radius']
 
     ud = galsim.UniformDeviate(rng)
-    max_rsq = radius*radius
+    max_rsq = radius**2
+    if 'inner_radius' in kwargs:
+        inner_radius = kwargs['inner_radius']
+        min_rsq = inner_radius**2
+    else:
+        min_rsq = 0.
     # Emulate a do-while loop
     while True:
         x = (2*ud()-1) * radius
@@ -472,7 +499,11 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
         rsq = x**2 + y**2
         if rsq <= max_rsq: break
     #print 'RandomCircle: ',(x,y)
-    return galsim.PositionD(x=x,y=y), False
+    pos = galsim.PositionD(x,y)
+    if 'center' in kwargs:
+        pos += params['center']
+    return pos, False
+
 
 def _GenerateFromSequence(param, param_name, base, value_type):
     """@brief Return next in a sequence of integers
@@ -522,6 +553,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     #print 'saved rep,current = ',param['rep'],param['current']
     return index, False
 
+
 def _GenerateFromNumberedFile(param, param_name, base, value_type):
     """@brief Return a file_name using a root, a number, and an extension
     """
@@ -546,6 +578,61 @@ def _GenerateFromNumberedFile(param, param_name, base, value_type):
     
     return s, safe
 
+
+def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
+    """@brief Return a shear calculated from an NFWHalo object.
+    """
+    if 'pos' not in base:
+        raise ValueError("NFWHaloShear requested, but no position defined.")
+    pos = base['pos']
+
+    if 'gal' not in base or 'redshift' not in base['gal']:
+        raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
+    redshift = GetCurrentValue(base['gal'],'redshift')
+
+    if 'nfw_halo' not in base:
+        raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
+    
+    print 'NFWHaloShear: pos = ',pos,' z = ',redshift
+    try:
+        shear = base['nfw_halo'].getShear(pos,redshift)
+    except:
+        import warnings
+        warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
+                      "Using shear = 0.")
+        shear = galsim.Shear(g1=0,g2=0)
+    print 'shear = ',shear
+    return shear, False
+
+def _GenerateFromNFWHaloMag(param, param_name, base, value_type):
+    """@brief Return a magnification calculated from an NFWHalo object.
+    """
+    if 'pos' not in base:
+        raise ValueError("NFWHaloShear requested, but no position defined.")
+    pos = base['pos']
+
+    if 'gal' not in base or 'redshift' not in base['gal']:
+        raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
+    redshift = GetCurrentValue(base['gal'],'redshift')
+
+    if 'nfw_halo' not in base:
+        raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
+    
+    print 'NFWHaloMag: pos = ',pos,' z = ',redshift
+    mu = base['nfw_halo'].getMag(pos,redshift)
+    print 'mu = ',mu
+
+    if mu < 0 or mu > 25:
+        import warnings
+        warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using scale=5."%mu)
+        scale = 5
+    else:
+        import math
+        scale = math.sqrt(mu)
+    print 'scale = ',scale
+    return scale, False
+
+
 def _GenerateFromList(param, param_name, base, value_type):
     """@brief Return next item from a provided list
     """
@@ -567,6 +654,7 @@ def _GenerateFromList(param, param_name, base, value_type):
     safe = safe and safe1
     return val, safe
  
+
 def SetDefaultIndex(config, num):
     """
     When the number of items in a list is known, we allow the user to omit some of 

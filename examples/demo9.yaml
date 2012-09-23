@@ -7,15 +7,17 @@
 # This script simulates cluster lensing or galaxy-galaxy lensing.  The graviational shear 
 # applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations 
 # of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
-# has its own file, organized into 4 directories (one for each mass).  In order to have a total
-# of only 100 galaxies (for time considerations), each image only has 5 background galaxies.
-# For more realistic investigations, you would of course want to use more galaxies per image,
-# but for the purposes of the demo script, this suffices.
+# has its own file, organized into 4 directories (one for each mass).  For each cluster, we
+# draw 20 lensed galaxies at random positions on the image.
 #
 # New features introduced in this demo:
 #
-# - image type : Scattered
-# - str_value type : NumberedFile
+# - shear_type : NFWHaloShear (redshift)
+# - float_type : NFWHaloMag (redshift)
+# - input : nfw_halo (mass, conc, redshift)
+# - shear_type : Eta1Eta2 (eta1, eta2)
+# - image type : Scattered (size, nobjects)
+# - str_value type : NumberedFile (root, num, ext, digits)
 # - output : nproc
 # - output : weight
 # - output : badpix
@@ -26,18 +28,72 @@
 # Define the PSF profile
 psf : 
     type : Kolmogorov
-    fwhm : 0.9  # arcsec
+    fwhm : 0.5  # arcsec
 
 
 # Define the galaxy profile
 gal :
     type : Exponential
-    half_light_radius : { type : Random , min : 0.8 , max : 2.8 }
+    half_light_radius : { type : Random , min : 0.4 , max : 1.2 }
     flux : { type : Random , min : 1.0e4 , max : 1.0e6 }
     ellip :
+        # The eta definition of shear is |eta| = ln(a/b) where a and b are (as usual)
+        # the semi-major and semi-minor axes.  This definition has the advantage that 
+        # it is well defined for all values from 0 to infinity, so we don't need to
+        # cut it off to avoid |e| > 1.
         type : Eta1Eta2
         eta1 : { type : RandomGaussian , sigma : 0.4 }
         eta2 : { type : RandomGaussian , sigma : 0.4 }
+
+    magnification :
+        # We'll use a model of on NFW halo for our magnification and shear.
+        # Both require that the galaxy to have a redshift attribute.
+        # We put the redshift at the gal level, rather than here, since we
+        # want to use the same value for both mag and shear.
+        # They also require an input.nfw_halo field.  See below.
+        type : NFWHaloMag
+
+    shear:
+        type : NFWHaloShear
+
+    # Note: the redshift could be variable for each galaxy.  We just use a constant here.
+    redshift : 0.6 
+
+
+# Setup the NFW Halo:
+# This isn't really an "input" in the normal sense, but we put in input  anything that 
+# requires an initial setup.  That includes setting up the NFW Halo parameters.
+input :
+    nfw_halo : 
+        # Note: the input field gets processed each time we start a new output file
+        # So any non-constant variables here will change with that cadence.
+        # For our mass, we use each value for 5 sequential files, then change
+        # to the next mass in the list.
+        mass : 
+            type : List
+            items : [ 1.0e15, 7.0e14, 4.0e14, 2.0e14 ]
+            index : 
+                type : Sequence
+                first : 0
+                last : &n_mass 4
+                repeat : &n_clusters_per_mass 5
+                # Note: this is a good example of when the YAML named variables come in handy.
+                # We'll use these variables below when setting up the output files.
+
+        conc : 4  # The concentration parameter = virial radius / NFW scale radius
+        redshift : 0.3  # The redshift of the halo.
+
+        # These next two are optional.  If they are omitted, then (0.3, 0.7) are actually the 
+        # defaults.  If you only specify one of them, the other is set so that the total is 1.
+        # But you can define both values so that the total is not 1 if you want.
+        # Radiation is assumed to be zero and dark energy equation of state w = -1.
+        omega_m : 0.3
+        omega_lam : 0.7
+
+        # Another optional parameter for nfw_halo is pos, which specifies the location of 
+        # the halo with respect to the center of the image.  The default is (0,0).
+        # pos : 0,0
+
 
 
 # Define some other information about the images 
@@ -50,7 +106,7 @@ image :
     size : 512  # pixels
 
     # nobjects is required to specify how many objects to place on the image.
-    nobjects : 5
+    nobjects : 20
 
     # You can optionally specify stamp_size or (stamp_xsize,stamp_ysize) to set the size of
     # the postage stamp image to draw for each object.  However, if you omit these,
@@ -66,10 +122,10 @@ image :
     #     y : { type : Random , min : 1 , max : ysize }
 
 
-    pixel_scale : 0.43  # arcsec / pixel
+    pixel_scale : 0.19  # arcsec / pixel
 
     noise :
-        sky_level : 1.0e4  # ADU / arcsec^2
+        sky_level : 1.0e6  # ADU / arcsec^2
 
     random_seed : 8383721
 
@@ -100,7 +156,9 @@ output :
         num : 
             type : Sequence
             first : 1
-            last : &nfiles_per_directory 5
+            # Here is a case where using a named variable comes in handy.
+            # This was defined about in input.nfw_halo.
+            last : *n_clusters_per_mass
 
         # ext specifies the text to go after the number, if desired (default = None)
         ext : '.fits'
@@ -114,22 +172,21 @@ output :
 
     dir : 
         # Our directory names wil be:
-        #     mass1
-        #     mass2
-        #     mass3
-        #     mass4
+        #     nfw1
+        #     nfw2
+        #     nfw3
+        #     nfw4
         # as subdirectories of output_yaml.
         type : NumberedFile
-        root : 'output_yaml/mass'
+        root : 'output_yaml/nfw'
         num : 
             type : Sequence
             first : 1
-            last : 4
+            last : *n_mass
 
             # For our directory name, we have each number in the sequence repeat 5 times
             # before moving on to the next value, since we have 5 files to put in each directory.
-            # Here is a case where using a named variable comes in handy.
-            repeat : *nfiles_per_directory
+            repeat : *n_clusters_per_mass
 
     # The weight field means that a weight image should be built and written out.
     # The weights are calculated as the inverse variance in each pixel.
@@ -157,5 +214,5 @@ output :
     #
     # Also, this time, we set nproc <= 0.  This means that galsim should try to automatically
     # determine the number of cpus you have and use that many processes.
-    nproc : -1
+    #nproc : -1
 

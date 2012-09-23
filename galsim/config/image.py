@@ -105,8 +105,9 @@ def BuildSingleImage(config, logger=None,
         raise AttributeError(
             "Both (or neither) of image.xsize and image.ysize need to be defined  and != 0.")
 
+    pixel_scale = params.get('pixel_scale',1.0)
+    config['pixel_scale'] = pixel_scale
     if 'pix' not in config:
-        pixel_scale = params.get('pixel_scale',1.0)
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
 
     if 'random_seed' in params:
@@ -140,7 +141,7 @@ def BuildTiledImage(config, logger=None,
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ]
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'center' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
@@ -215,8 +216,29 @@ def BuildTiledImage(config, logger=None,
     full_ysize = (stamp_ysize + yborder) * ny_tiles - yborder
 
     pixel_scale = params.get('pixel_scale',1.0)
+    config['pixel_scale'] = pixel_scale
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
+
+    # Define a 'center' field so the stamps can set their position appropriately in case
+    # we need it for PowerSpectum or NFWHalo.
+    config['image']['center'] = { 
+        'type' : 'XY' ,
+        'x' : { 'type' : 'Sequence' , 
+                'first' : (1.+stamp_xsize)/2. , 
+                'step' : stamp_xsize + xborder ,
+                'last' : full_xsize ,
+                'repeat' : ny_tiles
+              },
+        'y' : { 'type' : 'Sequence' , 
+                'first' : (1.+stamp_ysize)/2. , 
+                'step' : stamp_ysize + yborder ,
+                'last' : full_ysize 
+              },
+    }
+    # Also define the overall image center, since we need that to calculate the position 
+    # of each stamp relative to the center.
+    config['image_cen'] = galsim.PositionD((1.+full_xsize)/2.,(1.+full_ysize)/2.)
 
     nproc = params.get('nproc',1)
 
@@ -298,7 +320,6 @@ def BuildTiledImage(config, logger=None,
                 raise AttributeError("Unknown draw_method %s."%draw_method)
         elif sky_level:
             # If we aren't doing noise, we still need to add a non-zero sky_level
-            pixel_scale = full_image.getScale()
             full_image += sky_level * pixel_scale**2
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
@@ -359,6 +380,7 @@ def BuildScatteredImage(config, logger=None,
         full_ysize = config['image_ysize']
 
     pixel_scale = params.get('pixel_scale',1.0)
+    config['pixel_scale'] = pixel_scale
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
 
@@ -368,6 +390,9 @@ def BuildScatteredImage(config, logger=None,
             'x' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_xsize },
             'y' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_ysize }
         }
+    # Also define the overall image center, since we need that to calculate the position 
+    # of each stamp relative to the center.
+    config['image_cen'] = galsim.PositionD((1.+full_xsize)/2.,(1.+full_ysize)/2.)
 
     nproc = params.get('nproc',1)
 
@@ -456,7 +481,6 @@ def BuildScatteredImage(config, logger=None,
 
     elif sky_level:
         # If we aren't doing noise, we still need to add a non-zero sky_level
-        pixel_scale = full_image.getScale()
         full_image += sky_level * pixel_scale**2
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
