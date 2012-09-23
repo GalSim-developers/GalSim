@@ -1,5 +1,5 @@
-#Installation Instructions
-***
+Installation Instructions
+=========================
 
 System requirements: GalSim currently only supports Linux and Mac OSX.
 
@@ -16,8 +16,8 @@ Table of Contents:
 5. More SCons options
 
 
-# 1. Software required before building GalSim
-***
+1. Software required before building GalSim
+===========================================
 
 i) Python (2.6 or 2.7 series), with some additional modules installed
 ---------------------------------------------------------------------
@@ -231,8 +231,8 @@ options to the ./bootstrap.sh installation script (defaults in `[]` brackets):
                            it detected the wrong one]
 
 
-# 2. Installing the GalSim Python package
-***
+2. Installing the GalSim Python package
+=======================================
 
 Once you have installed all the dependencies described above, you are ready to
 build GalSim. From the GalSim base directory (in which this INSTALL.md file is
@@ -349,8 +349,8 @@ GalSim Github page at https://github.com/GalSim-developers/GalSim to help find
 a solution for the problem.
 
 
-# 3. Running tests and installing example executables
-***
+3. Running tests and installing example executables
+===================================================
 
 You can run our test suite by typing
 
@@ -396,8 +396,8 @@ can be considered a parallel tutorial for learning the config file usage of
 GalSim.
 
 
-# 4. Platform-specific notes
-***
+4. Platform-specific notes
+==========================
 
 i) Linux
 --------
@@ -476,8 +476,8 @@ Boost.Python):
     sudo port install boost +python27
 
 
-# 5. More SCons options
-***
+5. More SCons options
+=====================
 
 Here is a fairly complete list of the options you can pass to SCons to control
 the build process. The options are listed with their default value. You change
