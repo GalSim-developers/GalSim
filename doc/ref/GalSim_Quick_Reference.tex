@@ -749,6 +749,11 @@ positions; see the documentation for these classes for more details.
   interpreted as a filename, otherwise it is interpreted as a PyFITS
   representation of HDU data (see
   \texttt{galsim/fits.py}).}
+\item[$\circ$] \texttt{image_list = galsim.fits.readMulti(fits)}
+  \newline
+{returns a Python \texttt{list} of \texttt{Image} instances (\texttt{image_list}) from a
+Multi-Extension FITS file or PyFITS HDU object, specified by the
+\texttt{fits} input parameter (see \texttt{galsim/fits.py}).}
 \item[$\circ$] \texttt{galsim.fits.writeMulti(image\_list, fits, \dots)}
   \newline {write multiple \texttt{Image} instances stored in a Python
     \texttt{list} object \texttt{image\_list} to a Multi-Extension
