@@ -526,19 +526,25 @@ simulating real astronomical images (see Section~\ref{sect:random}),
 and have methods for writing to FITS format output.
 
 There are four types of GalSim \texttt{Image}, one for each of four
-supported array data types:
+supported array data types.  The most common way to initialize an
+image is with two integer parameters \texttt{nx} and \texttt{ny},
+giving the image extent in the $x$ and $y$ dimensions, respectively.
+Example initialization calls for the four types of \texttt{Image} are
+therefore:
 \begin{itemize}
-\item[$\circ$] \texttt{galsim.ImageS(\dots)} {for short integers (typically 16 bit).}
+\item[$\circ$] \texttt{galsim.ImageS(nx, ny)} {for short integers (typically 16 bit).}
 
-\item[$\circ$] \texttt{galsim.ImageI(\dots)} {for integers (typically 32 bit).}
+\item[$\circ$] \texttt{galsim.ImageI(nx, ny)} {for integers (typically 32 bit).}
 
-\item[$\circ$] \texttt{galsim.ImageF(\dots)} {for single precision (typically 32 bit)
+\item[$\circ$] \texttt{galsim.ImageF(nx, ny)} {for single precision (typically 32 bit)
   floats.}
 
-\item[$\circ$] \texttt{galsim.ImageD(\dots)} {for double precision (typically 64 bit)
+\item[$\circ$] \texttt{galsim.ImageD(nx, ny)} {for double precision (typically 64 bit)
   floats.}
 
 \end{itemize}
+Other ways to construct an \texttt{Image} can be found in the docstrings.
+
 To access the data as a NumPy array, simply use the \texttt{image.array}
 attribute, where \texttt{image} is an instance of one of these
 \texttt{Image} classes.  However, note that the individual elements in
