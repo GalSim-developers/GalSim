@@ -46,10 +46,10 @@ gal :
         eta2 : { type : RandomGaussian , sigma : 0.4 }
 
     magnification :
-        # We'll use a model of on NFW halo for our magnification and shear.
+        # For this demo, we use a model of on NFW halo for our magnification and shear.
         # Both require that the galaxy to have a redshift attribute.
-        # We put the redshift at the gal level, rather than here, since we
-        # want to use the same value for both mag and shear.
+        # We put the redshift at the gal level, rather than here, since we want to use the 
+        # same value for both mag and shear.
         # They also require an input.nfw_halo field.  See below.
         type : NFWHaloMag
 

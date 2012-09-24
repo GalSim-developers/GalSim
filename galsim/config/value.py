@@ -49,7 +49,7 @@ def ParseValue(config, param_name, base, value_type):
             str : [ 'InputCatalog', 'NumberedFile', 'List', 'Eval' ],
             galsim.Angle : [ 'Rad', 'Deg', 'Random', 'List', 'Eval' ],
             galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
-                             'Ring', 'NFWHaloShear', 'List', 'Eval' ],
+                             'Ring', 'NFWHaloShear', 'PowerSpectrumShear', 'List', 'Eval' ],
             galsim.PositionD : [ 'XY', 'RandomCircle', 'List', 'Eval' ] 
         }
 
@@ -381,10 +381,14 @@ def _GenerateFromRandom(param, param_name, base, value_type):
     if value_type is galsim.Angle:
         import math
         CheckAllParams(param, param_name)
-        return ud() * 2 * math.pi * galsim.radians, False
+        val = ud() * 2 * math.pi * galsim.radians
+        #print 'Random angle = ',val
+        return val, False
     elif value_type is bool:
         CheckAllParams(param, param_name)
-        return ud() < 0.5, False
+        val = ud() < 0.5
+        #print 'Random bool = ',val
+        return val, False
     else:
         req = { 'min' : value_type , 'max' : value_type }
         kwargs, safe = GetAllParams(param, param_name, base, req=req)
@@ -596,6 +600,7 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     #print 'NFWHaloShear: pos = ',pos,' z = ',redshift
     try:
         g1,g2 = base['nfw_halo'].getShear(pos,redshift)
+        #print 'g1,g2 = ',g1,g2
         shear = galsim.Shear(g1=g1,g2=g2)
     except:
         import warnings
@@ -604,6 +609,7 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
         shear = galsim.Shear(g1=0,g2=0)
     #print 'shear = ',shear
     return shear, False
+
 
 def _GenerateFromNFWHaloMag(param, param_name, base, value_type):
     """@brief Return a magnification calculated from an NFWHalo object.
@@ -632,6 +638,31 @@ def _GenerateFromNFWHaloMag(param, param_name, base, value_type):
         scale = math.sqrt(mu)
     #print 'scale = ',scale
     return scale, False
+
+
+def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
+    """@brief Return a shear calculated from a PowerSpectrum object.
+    """
+    if 'pos' not in base:
+        raise ValueError("PowerSpectrumShear requested, but no position defined.")
+    pos = base['pos']
+
+    if 'power_spectrum' not in base:
+        raise ValueError("PowerSpectrumShear requested, but no input.power_spectrum defined.")
+    
+    #print 'PowerSpectrumShear: pos = ',pos
+
+    #try:
+    g1,g2 = base['power_spectrum'].getShear(pos)
+    #print 'g1,g2 = ',g1,g2
+    shear = galsim.Shear(g1=g1,g2=g2)
+    #except:
+        #import warnings
+        #warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +
+                      #"Using shear = 0.")
+        #shear = galsim.Shear(g1=0,g2=0)
+    #print 'shear = ',shear
+    return shear, False
 
 
 def _GenerateFromList(param, param_name, base, value_type):
@@ -693,7 +724,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
     # Try evaluating the string as is.
     try:
         val = value_type(eval(string))
-        print 'Simple success: val = ',val
+        #print 'Simple success: val = ',val
         return val, safe
     except:
         pass
@@ -701,11 +732,11 @@ def _GenerateFromEval(param, param_name, base, value_type):
     # Then try bringing in the allowed variables to see if that works:
     if 'pos' in base:
         pos = base['pos']
-        print 'pos = ',pos
+        #print 'pos = ',pos
 
     try:
         val = value_type(eval(string))
-        print 'Needed pos: val = ',val
+        #print 'Needed pos: val = ',val
         return val, False
     except:
         raise ValueError("Unable to evaluate string %r as a %s for %s"%(

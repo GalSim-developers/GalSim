@@ -196,6 +196,13 @@ class PowerSpectrum(object):
                                 If given a list of positions: each is a python list of values.
                                 If pos=None, these are 2-d NumPy arrays.
         """
+        print 'Start getShear:'
+        print 'pos = ',pos
+        print 'grid_spacing = ',grid_spacing
+        print 'grid_nx = ',grid_nx
+        print 'rng = ',rng
+        print 'interpolant = ',interpolant
+        print 'center = ',center
 
         # Convert to numpy arrays for internal usage:
         if pos is not None:
@@ -250,24 +257,30 @@ class PowerSpectrum(object):
             self.im_g2.setScale(grid_spacing)
             self.sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp = interpolantxy)
 
+            # Convert image.bounds to a BoundsD so the types work when we want to check
+            # the a given position is included.
+            b = self.im_g1.bounds
+            self.bounds = galsim.BoundsD(b.xMin*grid_spacing, b.xMax*grid_spacing,
+                                         b.yMin*grid_spacing, b.yMax*grid_spacing)
+
         if pos is None:
             return self.grid_g1, self.grid_g2
         else:
             # interpolate if necessary
             g1,g2 = [], []
-            for pos in [ galsim.Position(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
+            for pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
                 # Check that the position is in the bounds of the interpolated image
-                if not self.im_g1.bounds.includes(pos):
+                if not self.bounds.includes(pos):
                     import warnings
                     warnings.warn(
                         "Warning position (%f,%f) not within the bounds "%(pos.x,pos.y) +
-                        "of the gridded shear values: " + str(self.im_g1.bounds) + 
+                        "of the gridded shear values: " + str(self.bounds) + 
                         ".  Returning a shear of (0,0) for this point.")
                     g1.append(0.)
                     g2.append(0.)
                 else:
-                    g1.append(self.sbii_g1.xValue(pos.x,pos.y))
-                    g2.append(self.sbii_g2.xValue(pos.x,pos.y))
+                    g1.append(self.sbii_g1.xValue(pos))
+                    g2.append(self.sbii_g2.xValue(pos))
             if len(pos_x) == 1:
                 return g1[0], g2[0]
             else:

@@ -32,6 +32,8 @@ def BuildImage(config, logger=None, seeds=None,
     if not isinstance(image, dict):
         raise AttributeError("config.image is not a dict.")
 
+    #print 'BuildImage: seeds = ',seeds
+    #print 'len(seeds) = ',len(seeds)
     if seeds:
         image['random_seed'] = { 'type' : 'List' , 'items' : seeds }
     else:
@@ -191,6 +193,7 @@ def BuildTiledImage(config, logger=None,
     if stamp_xsize == 0:
         if 'random_seed' in config['image']:
             seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+            #print 'First tile: seed = ',seed
         else:
             seed = None
         first_images = galsim.config.BuildSingleStamp(
@@ -236,6 +239,38 @@ def BuildTiledImage(config, logger=None,
                 'last' : full_ysize 
               },
     }
+
+    # Set the rng to None.  We might create it next for building the power spectrum.
+    # Or we might build it later for adding noise.  But we don't want to create two.
+    rng = None
+
+    if 'power_spectrum' in config:
+        # Get the next random number seed.
+        if 'random_seed' in config['image']:
+            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+            #print 'For power spectrum, seed = ',seed
+            rng = galsim.BaseDeviate(seed)
+        else:
+            rng = galsim.BaseDeviate()
+        # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
+        n_tiles = max(nx_tiles, ny_tiles)
+        stamp_size = max(stamp_xsize, stamp_ysize)
+        grid_dx = stamp_size * pixel_scale
+        #print 'n_tiles = ',n_tiles
+        #print 'stamp_size = ',stamp_size
+
+        g1,g2 = config['power_spectrum'].getShear(grid_spacing=grid_dx, grid_nx=n_tiles, rng=rng)
+        #print 'g1,g2 = ',g1,g2
+        # We don't care about the output here.  This just builds the grid, which we'll
+        # access for each object using its position.
+        #print 'g1.xvalue(0,0) = ',config['power_spectrum'].sbii_g1.xValue(galsim.PositionD(0,0))
+        x = grid_dx
+        y = grid_dx
+        #print 'g1.xvalue(%f,%f) = '%(x,y),config['power_spectrum'].sbii_g1.xValue(galsim.PositionD(x,y))
+        x = -(n_tiles/2) * grid_dx
+        y = -(n_tiles/2) * grid_dx
+        #print 'g1.xvalue(%f,%f) = '%(x,y),config['power_spectrum'].sbii_g1.xValue(galsim.PositionD(x,y))
+
     nproc = params.get('nproc',1)
 
     full_image = galsim.ImageF(full_xsize,full_ysize)
@@ -302,13 +337,14 @@ def BuildTiledImage(config, logger=None,
         if 'noise' in config['image']:
             # If we didn't apply noise in each stamp, then we need to apply it now.
 
-            # Get the next random number seed.
-            if 'random_seed' in config['image']:
-                seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-                #print 'For noise, seed = ',seed
-                rng = galsim.BaseDeviate(seed)
-            else:
-                rng = galsim.BaseDeviate()
+            if not rng:
+                # Get the next random number seed.
+                if 'random_seed' in config['image']:
+                    seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+                    #print 'For noise, seed = ',seed
+                    rng = galsim.BaseDeviate(seed)
+                else:
+                    rng = galsim.BaseDeviate()
 
             draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
             if draw_method == 'fft':
@@ -392,6 +428,8 @@ def BuildScatteredImage(config, logger=None,
             'y' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_ysize }
         }
 
+    rng = None
+
     nproc = params.get('nproc',1)
 
     full_image = galsim.ImageF(full_xsize,full_ysize)
@@ -461,13 +499,14 @@ def BuildScatteredImage(config, logger=None,
     if 'noise' in config['image']:
         # Apply the noise to the full image
 
-        # Get the next random number seed.
-        if 'random_seed' in config['image']:
-            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-            #print 'For noise, seed = ',seed
-            rng = galsim.BaseDeviate(seed)
-        else:
-            rng = galsim.BaseDeviate()
+        if not rng:
+            # Get the next random number seed.
+            if 'random_seed' in config['image']:
+                seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+                #print 'For noise, seed = ',seed
+                rng = galsim.BaseDeviate(seed)
+            else:
+                rng = galsim.BaseDeviate()
 
         draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
         if draw_method == 'fft':

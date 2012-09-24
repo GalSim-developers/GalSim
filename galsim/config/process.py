@@ -42,10 +42,10 @@ def ProcessInput(config, logger=None):
             opt = { 'e_power' : str , 'b_power' : str }
             field = input['power_spectrum']
             field['type'] = 'PowerSpectrum'
-            print 'field = ',field
-            print 'opt = ',opt
+            #print 'field = ',field
+            #print 'opt = ',opt
             params = galsim.config.GetAllParams(field, 'power_spectrum', config, opt=opt)[0]
-            print 'params = ',params
+            #print 'params = ',params
             if 'e_power' in params:
                 try:
                     E_power_function = eval('lambda k : ' + params['e_power'])
@@ -220,7 +220,9 @@ def Process(config, logger=None):
                     nx = galsim.config.ParseValue(image,'nx_tiles',config,int)[0]
                     ny = galsim.config.ParseValue(image,'ny_tiles',config,int)[0]
                     nseed = nx*ny
-                    if 'noise' in image:
+                    if 'input' in config and 'power_spectrum' in config['input']:
+                        nseed += 1
+                    elif 'noise' in image:
                         if 'border' in image:
                             border = galsim.config.ParseValue(image,'border',config,int)[0]
                         else:
@@ -240,7 +242,9 @@ def Process(config, logger=None):
             nx = galsim.config.ParseValue(image,'nx_tiles',config,int)[0]
             ny = galsim.config.ParseValue(image,'ny_tiles',config,int)[0]
             nseed = nx*ny
-            if 'noise' in image:
+            if 'input' in config and 'power_spectrum' in config['input']:
+                nseed += 1
+            elif 'noise' in image:
                 if 'border' in image:
                     border = galsim.config.ParseValue(image,'border',config,int)[0]
                 else:

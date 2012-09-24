@@ -13,10 +13,11 @@
 #
 # New features introduced in this demo:
 #
+# - shear_type : PowerSpectrumShear 
+# - input : power_spectrum (e_power, b_power)
 # - RealGalaxy : id
 # - image.psf : real_space
-#
-# - Eval using pos variable, user-defined variables and math functions
+# - type : Eval using pos variable, user-defined variables and math functions
 #
 
 
@@ -70,6 +71,11 @@ gal :
 
     dilation : 3  # Make the galaxies a factor of 3 larger than their original observed size.
     rotation : { type : Random }
+
+    shear : 
+        # For this demo, we use shears drawn from a power spectrum P(k) = k^1.5.
+        # The power spectrum is set up below using input : power_spectrum.  See below.
+        type : PowerSpectrumShear
 
     shift : 
         type : XY
