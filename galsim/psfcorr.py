@@ -1,69 +1,68 @@
 from . import _galsim
 
-"""\file psfcorr.py Routines for adaptive moment estimation and PSF correction
+"""@file psfcorr.py 
+Routines for adaptive moment estimation and PSF correction.
 """
 
 def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS", flags = 0xe,
                      guess_sig_gal = 5.0, guess_sig_PSF = 3.0, precision = 1.0e-6,
                      guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True):
-    """
-    PSF correction method from HSM.
+    """PSF correction method from HSM.
 
     Carry out PSF correction using one of the methods of the HSM package to estimate shears.
     Example usage:
 
-    @code
-    galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
-    galaxy.applyShear(g1=0.05, g2=0.0)  # shear it by (0.05, 0) using the g=(a-b)/(a+b) definition
-    psf = galsim.AtmosphericPSF(flux = 1.0, fwhm = 0.7)
-    pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
-    final = galsim.Convolve([galaxy, psf, pixel])
-    final_epsf = galsim.Convolve([psf, pixel])
-    final_image = final.draw(dx = 0.2)
-    final_epsf_image = final_epsf.draw(dx = 0.2)
-    result = galsim.EstimateShearHSM(final_image, final_epsf_image)
-    @endcode
+        >>> galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
+        >>> galaxy.applyShear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
+                                                # |g| = (a - b)/(a + b) definition
+        >>> psf = galsim.AtmosphericPSF(flux = 1.0, fwhm = 0.7)
+        >>> pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
+        >>> final = galsim.Convolve([galaxy, psf, pixel])
+        >>> final_epsf = galsim.Convolve([psf, pixel])
+        >>> final_image = final.draw(dx = 0.2)
+        >>> final_epsf_image = final_epsf.draw(dx = 0.2)
+        >>> result = galsim.EstimateShearHSM(final_image, final_epsf_image)
+    
+    After running the above code, `result.observed_shape` ["shape" = distortion, which uses the 
+    (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is `(0.088939,5.33012e-18)` and 
+    `result.corrected_shape` is `(0.0997273,-1.07985e-16)`, compared with the expected 
+    `(0.09975, 0)` for a perfect PSF correction method.  
 
-    After running the above code, result.observed_shape ["shape" = distortion, (a^2-b^2)/(a^2+b^2)]
-    is (0.088939,5.33012e-18) and result.corrected_shape is (0.0997273,-1.07985e-16), compared with
-    the expected (0.09975, 0) for a perfect PSF correction method.  Note that the method will fail
-    if the PSF or galaxy are too point-like to easily fit an elliptical Gaussian; when running on
-    batches of many galaxies, it may be preferable to set strict=False and catch errors explicitly,
-    i.e.
+    Note that the method will fail if the PSF or galaxy are too point-like to easily fit an 
+    elliptical Gaussian; when running on batches of many galaxies, it may be preferable to set 
+    `strict=False` and catch errors explicitly, e.g.
 
-    @code
-    n_image = 100
-    n_fail = 0
-    for i=0, range(n_image):
-        ...some code defining this_image, this_final_epsf_image...
-        result = galsim.EstimateShearHSM(this_image, this_final_epsf_image, strict = False)
-        if result.error_message != "":
-            n_fail += 1
-    print "Number of failures: ", n_fail
-    @endcode
+        n_image = 100
+        n_fail = 0
+        for i=0, range(n_image):
+            #...some code defining this_image, this_final_epsf_image...
+            result = galsim.EstimateShearHSM(this_image, this_final_epsf_image, strict = False)
+            if result.error_message != "":
+                n_fail += 1
+        print "Number of failures: ", n_fail
 
     @param gal_image         The Image or ImageView of the galaxy being measured.
     @param PSF_image         The Image or ImageView for the PSF.
     @param sky_var           The variance of the sky level, used for estimating uncertainty on the
-                             measured shape; default 0.
-    @param *shear_est        A string indicating the desired method of PSF correction: REGAUSS,
-                             LINEAR, BJ, or KSB; default REGAUSS.
+                             measured shape; default `sky_var = 0.`.
+    @param shear_est         A string indicating the desired method of PSF correction: REGAUSS,
+                             LINEAR, BJ, or KSB; default `shear_est = "REGAUSS"`.
     @param flags             A flag determining various aspects of the shape measurement process
-                             (only necessary for REGAUSS); default 0xe.
+                             (only necessary for REGAUSS); default `flags=0`.
     @param guess_sig_gal     Optional argument with an initial guess for the Gaussian sigma of the
-                             galaxy, default 5.0 (pixels).
+                             galaxy, default `guess_sig_gal = 5.` (pixels).
     @param guess_sig_PSF     Optional argument with an initial guess for the Gaussian sigma of the
-                             PSF, default 3.0 (pixels).
-    @param precision         The convergence criterion for the moments; default 1e-6.
+                             PSF, default `guess_sig_PSF = 3.` (pixels).
+    @param precision         The convergence criterion for the moments; default `precision = 1e-6`.
     @param guess_x_centroid  An initial guess for the x component of the object centroid (useful in
                              case it is not located at the center, which is the default
                              assumption).
     @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
                              case it is not located at the center, which is the default
                              assumption).
-    @param strict            If True (default), then there will be a run-time exception if shear
-                             estimation fails.  If set to False, then information about failures
-                             will be silently stored in the output HSMShapeData object.
+    @param strict            If `strict = True` (default), then there will be a run-time exception 
+                             if shear estimation fails.  If set to `False`, then information about 
+                             failures will be silently stored in the output HSMShapeData object.
     @return A HSMShapeData object containing the results of shape measurement.
     """
     gal_image_view = gal_image.view()
