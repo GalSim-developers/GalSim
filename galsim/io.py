@@ -1,23 +1,23 @@
 import galsim
 
 class InputCatalog(object):
-    """@brief A class storing the data from an input catalog where each row corresponds to 
-    a different object to be built, and each column stores some item of information about
-    that object (e.g. flux or half_light_radius).
+    """A class storing the data from an input catalog.
+
+    Each row corresponds to a different object to be built, and each column stores some item of
+    information about that object (e.g. flux or half_light_radius).
+
+    @param file_name     Filename of the input catalog. (Required)
+    @param dir           Directory catalog is in.
+    @param file_type     Either 'ASCII' (currently the only, default, option) or (soon) 'FITS'.
+                         (TODO: default = determine from extension or, if that fails, ASCII)
+    @param comments      The character used to indicate the start of a comment in an
+                         ASCII catalog.  (default='#').
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str , 'file_type' : str , 'comments' : str }
     _single_params = []
 
     def __init__(self, file_name, dir=None, file_type='ASCII', comments='#'):
-        """
-        @param file_name     Filename of the input catalog. (Required)
-        @param dir           Directory catalog is in. (default = .)
-        @param file_type     Either 'ASCII' (currently the only, default, option) or (soon) 'FITS'.
-                             (TODO: default = determine from extension or, if that fails, ASCII)
-        @param comments      The character used to indicate the start of a comment in an 
-                             ASCII catalog.  (default='#').
-        """
         # First build full file_name
         self.file_name = file_name
         if dir:
