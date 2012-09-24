@@ -511,16 +511,14 @@ deviates.  This takes the following form:
 \subsection{Image classes and when to use them}\label{sect:imageclasses}
 The GalSim \texttt{Image} classes store array data, along with a
 figure for the pixel separation in physical units and image bounds
-information (origin, extent).\footnote{There are additional flavours
-  of \texttt{Image} that you might also encounter: \texttt{ImageView}
-  provides a mutable view into \texttt{Image} instance data, and
-  \texttt{ConstImageView} an immutable view into \texttt{Image}
-  instance data. If creating these objects directly you will mostly
-  only need to use \texttt{Image} instances.  The \texttt{ImageView}
-  classes are functionally very similar to an \texttt{Image}, and are
-  most commonly encountered as the output of the \texttt{GSObject}
-  instance \texttt{draw} and \texttt{drawShoot} methods, but may also
-  be found elsewhere.}
+information (origin, extent).\footnote{
+There are additional flavours
+of \texttt{Image} that you might also encounter: \texttt{ImageView}
+provides a mutable view into \texttt{Image} instance data, and
+\texttt{ConstImageView} an immutable view into \texttt{Image}
+instance data.  These may be the type of images returned from
+various GalSim functions, but as they work the same way as \texttt{Image},
+you shouldn't notice the difference.  See their docstrings for more information.}
 \texttt{Image} instances can be operated upon to add stochastic noise
 simulating real astronomical images (see Section~\ref{sect:random}),
 and have methods for writing to FITS format output.
