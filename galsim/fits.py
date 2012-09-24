@@ -1,6 +1,9 @@
 """
-Support for reading and writing galsim.Image* objects to FITS, via new
-Python-only methods injected into the Image classes.
+@file
+Support for reading and writing galsim.Image* objects to FITS.
+
+This file includes routines for reading and writing individual Images to/from FITS files, and also
+routines for handling multiple Images.
 """
 import os
 from sys import byteorder
@@ -11,22 +14,23 @@ native_byteorder = {'big': '>', 'little': '<'}[byteorder]
 
 def write(image, fits, add_wcs=True, clobber=True):
     """
-    Write the image to a FITS file, with details depending on the type of
-    the 'fits' argument:
-    - If 'fits' is a pyfits.HDUList, the image will be appended as a new HDU.
-      The user is responsible for calling fits.writeto(...) afterwards.
-    - If 'fits' is a string, it will be interpreted as a filename for a new
-      FITS file.
-   
-    If add_wcs evaluates to True, a 'LINEAR' WCS will be added using the Image's
-    bounding box.  This is not necessary to ensure an Image can be round-tripped
-    through FITS, as the bounding box (and scale) are always saved in custom header
-    keys.  If add_wcs is a string, this will be used as the WCS name.
+    Write a single image to a FITS file.
 
-    This function can be called directly as "galsim.fits.write(image, ...)",
-    with the image as the first argument, or as an image method: "image.write(...)".
+    Write the image to a FITS file, with details depending on the arguments.  This function can be
+    called directly as "galsim.fits.write(image, ...)", with the image as the first argument, or as
+    an image method: "image.write(...)".
 
-    Setting clobber=True when 'fits' is a string will silently overwrite existing files.
+    @param fits      If 'fits' is a pyfits.HDUList, the image will be appended as a new HDU.  In
+                     that case, the user is responsible for calling fits.writeto(...) afterwards.
+                     If 'fits' is a string, it will be interpreted as a filename for a new FITS
+                     file.
+    @param add_wcs   If add_wcs evaluates to True, a 'LINEAR' WCS will be added using the Image's
+                     bounding box.  This is not necessary to ensure an Image can be round-tripped
+                     through FITS, as the bounding box (and scale) are always saved in custom header
+                     keys.  If add_wcs is a string, this will be used as the WCS name. (Default:
+                     'add_wcs'=True.)
+    @param clobber   Setting clobber=True when 'fits' is a string will silently overwrite existing
+                     files. (Default: 'clobber'=True.)
     """
     import pyfits    # put this at function scope to keep pyfits optional
 
