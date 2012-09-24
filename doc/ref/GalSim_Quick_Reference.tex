@@ -101,11 +101,12 @@ methods and attributes of the GalSim classes.
 \section{GSObjects}\label{sect:gsobjects}
 
 \subsection{GSObject classes and when to use them}\label{sect:gsobjectclasses}
-There are currently 13 types of \texttt{GSObject}s that represent various types of surface brightness
-profiles. The first 11 listed are 
-`simple' \texttt{GSObject}s that can be initialized by providing values for
-their required and optional parameters.  The last two are `compound'
-classes used to represent combinations of \texttt{GSObject}s.  
+There are currently 13 types of \texttt{GSObject}s that represent
+various types of surface brightness profiles. The first 11 listed are
+`simple' \texttt{GSObject}s that can be initialized by providing
+values for their required and optional parameters.  The last two are
+`compound' classes used to represent combinations of
+\texttt{GSObject}s.
 
 They are summarized in the following hyperlinked list, in which we also give
 the required parameters for initializing each class in parentheses
@@ -119,69 +120,91 @@ Alternatively follow the hyperlinks on
 the class names listed below to view the documentation based
 on the Python docstrings.
 
-In the order in which
-the classes appear in {\tt galsim/base.py}, with all non-optional
-parameters listed:
+We now list, in the order in which
+the classes appear in {\tt galsim/base.py}, the \texttt{GSObject}s.
+Where multiple options for specifying the object \emph{\texttt{size}}
+exist we list these in the object description. We also show some of the non-optional
+parameters available for use (e.g.\ total \texttt{flux}) along with default values:
 \begin{itemize}
 \item[$\circ$]
-  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_gaussian.html}{\texttt{galsim.Gaussian(\dots)}}
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_gaussian.html}{\texttt{galsim.Gaussian(\emph{size},
+      flux=1.)}}
   \newline {a 2D Gaussian light profile. Requires one of the
-    following size parameters to be set: \texttt{sigma}; \texttt{FWHM}; \texttt{half\_light\_radius}.}
+    following \emph{\texttt{size}} parameters to be set as a keyword argument: \texttt{sigma}; \texttt{FWHM}; \texttt{half\_light\_radius}.}
 \item[$\circ$]
-  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_moffat.html}{\texttt{galsim.Moffat(beta,
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_moffat.html}{\texttt{galsim.Moffat(beta, \emph{size},
     \dots)}}
   \newline {a Moffat profile with slope parameter \texttt{beta}, used to approximate ground-based
     telescope PSFs. Requires one of the
-    following size parameters to be set: \texttt{scale\_radius}; \texttt{FWHM}; \texttt{half\_light\_radius}.}
+    following \emph{\texttt{size}} parameters to be set as a keyword argument: \texttt{scale\_radius};
+    \texttt{FWHM}; \texttt{half\_light\_radius}.  For information
+    about other optional parameters, see the documentation for this object.}
 \item[$\circ$]
-  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_atmospheric_p_s_f.html}{\texttt{galsim.AtmosphericPSF(\dots)}}
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_atmospheric_p_s_f.html}{\texttt{galsim.AtmosphericPSF(\emph{size},
+    ...)}}
   \newline {currently simply an image-based
   implementation of a Kolmogorov PSF (see below), and therefore deprecated, but expected to evolve to
   store a stochastically modelled atmospheric PSF in the near future.
 Requires one of the
-    following size parameters to be set: \texttt{FWHM}; \texttt{lam\_over\_r0}.}
+    following \emph{\texttt{size}} parameters to be set as a keyword argument:
+    \texttt{FWHM}; \texttt{lam\_over\_r0}.  For information
+    about other optional parameters, see the documentation for this object.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_airy.html}{\texttt{galsim.Airy(lam\_over\_diam,
-      \dots)}} \newline {an Airy PSF for ideal diffraction
+      obscuration=0., flux=1.)}} \newline {an Airy PSF for ideal diffraction
   through a circular aperture, parametrized by the wavelength-aperture
-  diameter ratio \texttt{lam\_over\_diam}, with optional obscuration.}
-\item[$\circ$] \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_kolmogorov.html}{\texttt{galsim.Kolmogorov(\dots)}} \newline {the Kolmogorov PSF for long-exposure
+  diameter ratio \texttt{lam\_over\_diam}, with optional
+  \texttt{obscuration}.}
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_kolmogorov.html}{\texttt{galsim.Kolmogorov(\emph{size},
+      flux=1.)}} \newline {the Kolmogorov PSF for long-exposure
   images through a turbulent atmosphere. Requires one of the
-    following size parameters to be set: \texttt{lam\_over\_r0}; \texttt{FWHM}; \texttt{half\_light\_radius}.}
+    following \emph{\texttt{size}} parameters to be set as a keyword
+    argument: \texttt{lam\_over\_r0}; \texttt{FWHM}; \\
+\texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_optical_p_s_f.html}{\texttt{galsim.OpticalPSF(lam\_over\_diam,
       \dots)}} \newline {a simple model for non-ideal
   (aberrated) propagation through circular or square apertures, parametrized by the wavelength-aperture
   dimension ratio \texttt{lam\_over\_diam}, with
-  optional obscuration.}
+  optional \texttt{obscuration}.  For information
+    about other optional parameters, see the documentation for this object.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_pixel.html}{\texttt{galsim.Pixel(xw,
-    \dots)}} \newline {used for integrating light onto square or
-  rectangular pixels, requires at least one side dimension \texttt{xw}.}
+      yw = None, flux=1.)}} \newline {used for integrating light onto square or
+  rectangular pixels, requires at least one side dimension
+  \texttt{xw}.  If no width \texttt{yw} for the $y$ dimension of the
+  \texttt{Pixel}} is given, the assumed shape is square.
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_sersic.html}{\texttt{galsim.Sersic(n,
-      half\_light\_radius, \dots)}} \newline{ the S\'{e}rsic family of galaxy light
-  profiles, parametrized by an index \texttt{n} and size \texttt{half\_light\_radius}.}
+      half\_light\_radius, flux=1.)}} \newline{ the S\'{e}rsic family of galaxy light
+  profiles, parametrized by an index \texttt{n} and \texttt{half\_light\_radius}.}
 \item[$\circ$]
-  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_exponential.html}{\texttt{galsim.Exponential(\dots)}}
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_exponential.html}{\texttt{galsim.Exponential(\emph{size},
+      flux=1.)}}
   \newline {the Exponential galaxy disc profile, a S\'{e}rsic
     with index \texttt{n=1}.  Requires one of the
-    following size parameters to be set: \texttt{scale\_radius}; \texttt{half\_light\_radius}.}
+    following \texttt{\emph{size}} parameters to be set as a keyword argument: \texttt{scale\_radius}; \texttt{half\_light\_radius}.}
 \item[$\circ$]
-  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_de_vaucouleurs.html}{\texttt{galsim.DeVaucouleurs(half\_light\_radius, \dots)}}
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_de_vaucouleurs.html}{\texttt{galsim.DeVaucouleurs(half\_light\_radius, flux=1.)}}
   \newline {the De Vaucouleurs galaxy bulge profile, a S\'{e}rsic
-    with index \texttt{n=4}.  Requires the size parameter
-    \texttt{half\_light\_radius} to be set.}
+    with index \texttt{n=4} and input
+    \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_real_galaxy.html}{\texttt{galsim.RealGalaxy(real\_galaxy\_catalog,
       \dots)}} \newline {models galaxies using real
-  data, including a correction for the original PSF.  Requires the
-  download of external data, stored and input in \texttt{real\_galaxy\_catalog} (an instance of the
+  data, including a correction for the original PSF.   Requires the
+  download of external data, stored and input as the
+  \texttt{real\_galaxy\_catalog} parameter (an instance of the
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1real_1_1_real_galaxy_catalog.html}{\texttt{RealGalaxyCatalog}}
-  class), for full functionality.  An example catalog of 100 real galaxies is in the repository itself; a set of $\sim$26\,000 real galaxy
+  class), for full functionality.  
+
+  An example catalog of 100 real galaxies is in the repository itself; a set of $\sim$26\,000 real galaxy
   images, with original PSFs, can be downloaded from the following
   Public Dropbox folder: \newline
-  \href{https://www.dropbox.com/sh/ns2yh4q00trqs5r/JypUX8qwLw}{\emph{https://www.dropbox.com/sh/ns2yh4q00trqs5r/JypUX8qwLw}}.}
+  \href{https://www.dropbox.com/sh/ns2yh4q00trqs5r/JypUX8qwLw}{\emph{https://www.dropbox.com/sh/ns2yh4q00trqs5r/JypUX8qwLw}}. \newline
+For information
+    about other optional parameters, see the documentation for this object.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_add.html}{\texttt{galsim.Add( [ list of objects ] )}}
   \newline {a {compound} object representing the sum of 
@@ -193,9 +216,8 @@ multiple \texttt{GSObject}s.}
 \end{itemize}
 
 Note that all of the \texttt{GSObject}s except for \texttt{RealGalaxy}, \texttt{Add}, and
-\texttt{Convolve} {\em require} the specification of some radius parameter, where the choice of
-possible radii to specify (e.g., half-light radius, FWHM, etc.) is given above and in the documentation for
-the class.
+\texttt{Convolve} {\em require} the specification of one radius size
+parameter. 
 
 \subsection{Units}
 The choice of units for the size parameters is up to the user,
