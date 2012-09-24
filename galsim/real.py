@@ -3,6 +3,12 @@ import utilities
 
 """@file real.py
 Necessary functions for dealing with real galaxies and their catalogs.
+
+This module defines the RealGalaxyCatalog class, used to store all required information about a
+real galaxy simulation training sample and accompanying PSF model.
+
+The function simReal takes this information and uses it to simulate a (no-noise-added) image from 
+some lower-resolution telescope.
 """
 
 class RealGalaxyCatalog(object):
