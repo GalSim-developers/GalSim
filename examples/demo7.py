@@ -21,7 +21,7 @@ New features introduced in this demo:
 - obj.applyDilation(scale)
 - image.setScale(pixel_scale)
 - obj.draw(image)  -- i.e. taking the scale from the image rather than a dx= argument
-- obj.drawShoot(image, max_extra_noise, uniform_deviate)
+- obj.drawShoot(image, max_extra_noise, rng)
 - noise = galsim.PoissonDeviate(rng, mean)
 """
 
@@ -193,8 +193,7 @@ def main(argv):
                 # Repeat for photon shooting image.
                 # Photon shooting automatically convolves by the pixel, so we've made sure not
                 # to include it in the profile!
-                final_nopix.drawShoot(phot_image, max_extra_noise=sky_level_pixel/100, 
-                                      uniform_deviate=rng)
+                final_nopix.drawShoot(phot_image, max_extra_noise=sky_level_pixel/100, rng=rng)
                 t5 = time.time()
 
                 # For photon shooting, galaxy already has poisson noise, so we want to make 

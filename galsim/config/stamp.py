@@ -571,8 +571,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level, final_shift):
     else:
         im = None
 
-    im = final.drawShoot(image=im, dx=pixel_scale,
-                         max_extra_noise=max_extra_noise, uniform_deviate=rng)[0]
+    im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng)[0]
 
     return im
     
@@ -674,7 +673,14 @@ def DrawPSFStamp(psf, pix, config, bounds, final_shift):
 
     psf_list = [ prof for prof in (psf,pix) if prof is not None ]
 
-    final_psf = galsim.Convolve(psf_list)
+    if ('output' in config and 
+        'psf' in config['output'] and 
+        'real_space' in config['output']['psf'] ):
+        real_space = galsim.config.ParseValue(config['output']['psf'],'real_space',config,bool)[0]
+    else:
+        real_space = None
+        
+    final_psf = galsim.Convolve(psf_list, real_space=real_space)
 
     if 'image' in config and 'pixel_scale' in config['image']:
         pixel_scale = galsim.config.ParseValue(config['image'], 'pixel_scale', config, float)[0]

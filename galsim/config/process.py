@@ -347,22 +347,29 @@ def Process(config, logger=None):
 
         # Check if we need to build extra images for write out as well
         for extra in [ key for key in [ 'psf' , 'weight', 'badpix' ] if key in output ]:
+            #print 'extra = ',extra
             extra_file_name = None
             output_extra = output[extra]
-            if 'file_name' in output_extra:
-                extra_file_name = galsim.config.ParseValue(output[extra],'file_name',config,str)[0]
-                if 'dir' in output:
+
+            output_extra['type'] = 'default'
+            single = [ { 'file_name' : str, 'hdu' : int } ]
+            ignore = []
+            if extra == 'psf': 
+                ignore.append('real_space')
+            params, safe = galsim.config.GetAllParams(output_extra, extra, config,
+                                                      single=single, ignore=ignore)
+
+            if 'file_name' in params:
+                extra_file_name = params['file_name']
+                if dir:
                     extra_file_name = os.path.join(dir,extra_file_name)
                 kwargs[ extra+'_file_name' ] = extra_file_name
             elif type != 'Fits':
                 raise AttributeError(
                     "Only the file_name version of %s output is possible for "%extra+
                     "output type == %s."%type)
-            elif 'hdu' not in output_extra:
-                raise AttributeError("Must specify either file_name or hdu for %s output."%extra)
             else:
-                extra_hdu = galsim.config.ParseValue(output[extra],'hdu',config,int)[0]
-                kwargs[ extra+'_hdu' ] = extra_hdu
+                kwargs[ extra+'_hdu' ] = params['hdu']
     
         # Before building each file, (re-)process the input field.
         #print 'Before re-processInput k = ',k

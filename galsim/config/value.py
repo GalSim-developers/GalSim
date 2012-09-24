@@ -12,7 +12,7 @@ def ParseValue(config, param_name, base, value_type):
 
     # First see if we can assign by param by a direct constant value
     if isinstance(param, value_type):
-        #print 'param == value_type: ',param,True
+        #print param_name,' = ',param
         return param, True
     elif not isinstance(param, dict):
         if value_type is galsim.Angle:
@@ -33,7 +33,7 @@ def ParseValue(config, param_name, base, value_type):
                     "Could not convert %s param = %s to type %s."%(param_name,param,value_type))
         # Save the converted type for next time.
         config[param_name] = val
-        #print 'param => value_type: ',val,True
+        #print param_name,' = ',val
         return val, True
     elif 'type' not in param:
         raise AttributeError(
@@ -392,7 +392,7 @@ def _GenerateFromRandom(param, param_name, base, value_type):
         min = kwargs['min']
         max = kwargs['max']
 
-        if value_type in [ int, bool ]:
+        if value_type is int:
             import math
             val = int(math.floor(ud() * (max-min+1))) + min
             # In case ud() == 1
@@ -677,6 +677,10 @@ def SetDefaultIndex(config, num):
                 index['first'] = num-1
             if 'last' not in index:
                 index['last'] = 0
-        elif type == 'Random' and 'max' not in index:
-            index['max'] = num-1
+        elif type == 'Random':
+            if 'max' not in index:
+                index['max'] = num-1
+            if 'min' not in index:
+                index['min'] = 0
+
 

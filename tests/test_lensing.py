@@ -87,7 +87,7 @@ def test_shear_flatps():
     test_ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pkflat,
                                            B_power_function=galsim.lensing.pkflat)
     # get shears on 500x500 grid
-    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, gaussian_deviate=gd)
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, rng=gd)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -108,7 +108,7 @@ def test_shear_flatps():
     # make a pure E-mode spectrum
     test_ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pkflat)
     # get shears on 500x500 grid
-    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, gaussian_deviate=gd)
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, rng=gd)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -138,7 +138,7 @@ def test_shear_flatps():
     # make a pure B-mode spectrum
     test_ps = galsim.lensing.PowerSpectrum(B_power_function=galsim.lensing.pkflat)
     # get shears on 500x500 grid
-    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, gaussian_deviate=gd)
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, rng=gd)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -184,17 +184,17 @@ def test_shear_seeds():
 
     # get shears on a grid w/ specified seed
     g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx = 10,
-                              gaussian_deviate=galsim.GaussianDeviate(13796))
+                              rng=galsim.GaussianDeviate(13796))
     # get shears on a grid w/ same specified seed: should be same
     g1new, g2new = test_ps.getShear(grid_spacing=1.0, grid_nx = 10,
-                                    gaussian_deviate=galsim.GaussianDeviate(13796))
+                                    rng=galsim.GaussianDeviate(13796))
     np.testing.assert_array_equal(g1, g1new,
                                   err_msg="New shear field differs from previous (same seed)!")
     np.testing.assert_array_equal(g2, g2new,
                                   err_msg="New shear field differs from previous (same seed)!")
     # get shears on a grid w/ diff't specified seed: should differ
     g1new, g2new = test_ps.getShear(grid_spacing=1.0, grid_nx = 10,
-                                    gaussian_deviate=galsim.GaussianDeviate(1379))
+                                    rng=galsim.GaussianDeviate(1379))
     assert not ((g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]))
 
     t2 = time.time()
@@ -220,7 +220,7 @@ def test_shear_reference():
     ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pk2,
                                       B_power_function=galsim.lensing.pk1)
     # get shears
-    g1, g2 = ps.getShear(grid_spacing = dx, grid_nx = n, gaussian_deviate=rng)
+    g1, g2 = ps.getShear(grid_spacing = dx, grid_nx = n, rng=rng)
 
     # put in same format as data that got read in
     g1vec = g1.reshape(n*n)

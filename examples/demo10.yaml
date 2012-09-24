@@ -1,0 +1,97 @@
+#
+# Demo #10
+#
+# The tenth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be view in a window 100 characters wide.)
+#
+# This script uses both a variable PSF and variable shear, taken from a power spectrum,
+# along the lines of a Great10 challenge image.  The galaxies are placed on a grid
+# (10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
+# is 48 x 48 pixels.  Instead of putting the psf images on a separate image, we package them
+# as the second hdu in the file.  For the galaxies, we use a random selection from 5 specific
+# RealGalaxy's, selected to be 5 particularly irregular ones, each with a random orientation.
+#
+# New features introduced in this demo:
+#
+# - RealGalaxy : id
+# - image.psf : real_space
+#
+
+
+# We again use the multiple document feature.  So start with the common information:
+
+# Define the PSF profile
+psf : 
+    type : Moffat
+    beta : 2.4
+    fwhm : 0.9  # arcsec
+
+
+# Define the galaxy profile
+gal :
+    type : List
+    items : 
+        # Note: we could have made the type RealGalaxy and then have the id be a list
+        #       with a random index.  However, doing it this way means that the Fourier
+        #       transforms of the real galaxy images don't need to be recalculated each time,
+        #       so it's a bit more effficient.
+        - { type : RealGalaxy , id : 106416 }
+        - { type : RealGalaxy , id : 106731 }
+        - { type : RealGalaxy , id : 108402 }
+        - { type : RealGalaxy , id : 116045 }
+        - { type : RealGalaxy , id : 116448 }
+    index : { type : Random }
+
+    dilation : 3  # Make the galaxies a factor of 3 larger than their original observed size.
+    rotation : { type : Random }
+
+    shift : 
+        type : XY
+        # Half a pixel in any direction
+        x : { type : Random , min : -0.22 , max : 0.22 }
+        y : { type : Random , min : -0.22 , max : 0.22 }
+
+    signal_to_noise : 100
+
+
+# Define some other information about the images 
+image :
+
+    type : Tiled
+    nx_tiles : 10
+    ny_tiles : 10
+
+    stamp_xsize : 48  # pixels
+    stamp_ysize : 48  # pixels
+
+    pixel_scale : 0.44  # arcsec / pixel
+
+    noise :
+        sky_level : 1.e6  # ADU / arcsec^2
+
+    random_seed : 3339201
+
+
+# Define the input files
+input :
+    # In this case, we need to define where the real galaxy input catalog is.
+    real_catalog :
+        image_dir : data
+        file_name : real_galaxy_catalog_example.fits
+        preload : False   # Not so important this time, since only using 5 items in the catalog.
+
+
+# Define the names and format of the output files
+output :
+
+    dir : output_yaml
+    file_name : power_spectrum.fits
+
+    # Put the psf image in hdu=1 (the first extension after tha primary hdu)
+    psf : 
+        hdu : 1
+        # We use real space convolution to avoid some of the 
+        # artifacts that can show up with Fourier convolution.
+        # The level of the artifacts is quite low, but when drawing with
+        # no noise, they are apparent with ds9's zscale viewing.
+        real_space : True

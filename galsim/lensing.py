@@ -173,7 +173,7 @@ class PowerSpectrum(object):
         if rng is None:
             gd = galsim.GaussianDeviate()
         elif isinstance(rng, galsim.GaussianDeviate):
-            gd = gaussian_deviate
+            gd = rng
         elif isinstance(rng, galsim.BaseDeviate):
             gd = galsim.GaussianDeviate(rng)
         else:

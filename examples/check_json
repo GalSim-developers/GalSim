@@ -34,6 +34,12 @@ time ../bin/galsim_json json/demo7.json || exit
 time ../bin/demo8 || exit
 time ../bin/galsim_json json/demo8a.json json/demo8b.json || exit
 
+time ../bin/demo9 || echo "Sorry, sciPy required for running demo9"
+time ../bin/galsim_json demo9.json || echo "Sorry, sciPy required for running demo9"
+
+time ../bin/demo10 || exit
+time ../bin/galsim_json demo10.json || exit
+
 echo 'Checking diffs: (No output means success)'
 
 # demo1:
@@ -72,8 +78,11 @@ for dir_num in {1..4}
 do
     for file_num in {1..5}
     do
-        file_name=mass$dir_num/cluster0$file_num.fits
+        file_name=nfw$dir_num/cluster000$file_num.fits
 	diff output/$file_name output_json/$file_name
     done
 done
+
+# demo10:
+diff output/power_spectrum.fits output_json/power_spectrum.fits 
 

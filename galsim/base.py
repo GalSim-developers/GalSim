@@ -1355,7 +1355,7 @@ class RealGalaxy(GSObject):
             elif isinstance(rng, galsim.UniformDeviate):
                 uniform_deviate = rng
             elif isinstance(rng, galsim.BaseDeviate):
-                uniform_deviate = galsim.UniformDeviate(rng):
+                uniform_deviate = galsim.UniformDeviate(rng)
             else:
                 raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
             use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
