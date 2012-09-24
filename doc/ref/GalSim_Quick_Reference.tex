@@ -477,8 +477,8 @@ been instantiated, for example by
 
 {\tt >>> dev = galsim.GaussianDeviate(sigma=3.9, mean=50.)}.
 
-The most important and commonly-used method for such an
-instance is:
+The most important and commonly-used method for such
+instances is:
 \begin{itemize}
 
 \item[$\circ$] \texttt{dev()} \newline {calling the deviate
@@ -492,8 +492,9 @@ instance is:
     {\tt 0.8901547130662948}}
 
 \end{itemize}
+This is available for all the random deviates \emph{except} the \texttt{CCDNoise}.
 However, there is also an important method of \texttt{Image} objects
-(see Section \ref{sect:image}, below) which relates to random
+(see Section \ref{sect:image}, below) which relates to \emph{all} random
 deviates.  This takes the following form:
 
 \begin{itemize}
@@ -504,7 +505,6 @@ deviates.  This takes the following form:
     \texttt{Image} instance \texttt{image}.}
 
 \end{itemize}
-
 
 \section{Images}\label{sect:image}
 
