@@ -30,7 +30,7 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
 
     Note that the method will fail if the PSF or galaxy are too point-like to easily fit an 
     elliptical Gaussian; when running on batches of many galaxies, it may be preferable to set 
-    `strict=False` and catch errors explicitly, e.g.
+    `strict=False` and catch errors explicitly, i.e.
 
         n_image = 100
         n_fail = 0
@@ -60,10 +60,11 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
                              case it is not located at the center, which is the default
                              assumption).
-    @param strict            If `strict = True` (default), then there will be a run-time exception 
-                             if shear estimation fails.  If set to `False`, then information about 
-                             failures will be silently stored in the output HSMShapeData object.
-    @return A HSMShapeData object containing the results of shape measurement.
+    @param strict            If `strict = True` (default), then there will be a RuntimeError 
+                             exception if shear estimation fails.  If set to `False`, then 
+                             information about failures will be silently stored in the output 
+                             HSMShapeData object.
+    @return                  A HSMShapeData object containing the results of shape measurement.
     """
     gal_image_view = gal_image.view()
     PSF_image_view = PSF_image.view()
@@ -85,63 +86,59 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
 
 def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
                     guess_y_centroid = -1000.0, strict = True):
-    """
-    Measure adaptive moments of an object.
+    """Measure adaptive moments of an object.
 
     The key result is the best-fit elliptical Gaussian to the object, which is computed iteratively
     by initially guessing a circular Gaussian that is used as a weight function, computing the
     weighted moments, recomputing the moments using the result of the previous step as the weight
     function, and so on until the moments that are measured are the same as those used for the
     weight function.  FindAdaptiveMom can be used either as a free function, or as a method of the
-    ImageView class.  Example usage:
+    ImageViewI(), ImageViewD() etc. classes.  Example usage:
 
-    @code
-    my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
-    my_gaussian_image = my_gaussian.draw(dx = 0.2)
-    my_moments = galsim.FindAdaptiveMom(my_gaussian_image)
-    @endcode
+        >>> my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
+        >>> my_gaussian_image = my_gaussian.draw(dx = 0.2)
+        >>> my_moments = galsim.FindAdaptiveMom(my_gaussian_image)
 
     OR
     
-    @code
-    my_moments = my_gaussian_image.FindAdaptiveMom()
-    @endcode
+        >>> my_moments = my_gaussian_image.FindAdaptiveMom()
 
     Assuming a successful measurement, the most relevant pieces of information are
-    my_moments.moments_sigma, which is |det(M)|^(1/4) [=sigma for a circular Gaussian] and
-    my_moments.observed_shape, which is a C++ CppShear.  Methods of the Shear class can be used to
-    get the distortion (e1, e2) = (a^2-b^2)/(a^2+b^2), i.e. my_moments.observed_shape.getE1() -- or,
-    to get the shear g, the conformal shear eta, and so on.
+    `my_moments.moments_sigma`, which is `|det(M)|^(1/4)` [=`sigma` for a circular Gaussian] and
+    `my_moments.observed_shape`, which is a C++ CppShear.  
+
+    Methods of the galsim.Shear() class can be used to get the distortion 
+    `(e1, e2) = (a^2 - b^2)/(a^2 + b^2)`, e.g. `my_moments.observed_shape.getE1()`, or to get the
+    shear `g`, the conformal shear `eta`, and so on.
 
     Note that the method will fail if the object is too point-like to easily fit an elliptical
-    Gaussian; when running on batches of many galaxies, it may be preferable to set strict=False and
-    catch errors explicitly, i.e.
+    Gaussian; when running on batches of many galaxies, it may be preferable to set `strict = False`
+    and catch errors explicitly, i.e.
 
-    @code
-    n_image = 100
-    n_fail = 0
-    for i=0, range(n_image):
-        ...some code defining this_image for index i...
-        result = this_image.FindAdaptiveMom(strict = False)
-        if result.error_message != "":
-            n_fail += 1
-    print "Number of failures: ", n_fail
-    @endcode
+        n_image = 100
+        n_fail = 0
+        for i=0, range(n_image):
+            #...some code defining this_image for index i...
+            result = this_image.FindAdaptiveMom(strict = False)
+            if result.error_message != "":
+                n_fail += 1
+        print "Number of failures: ", n_fail
 
     @param object_image      The Image or ImageView for the object being measured.
     @param guess_sig         Optional argument with an initial guess for the Gaussian sigma of the
-                             object, default 5.0 (pixels).
-    @param precision         The convergence criterion for the moments; default 1e-6.
+                             object, default `guess_sig = 5.0` (pixels).
+    @param precision         The convergence criterion for the moments; default `precision = 1e-6`.
     @param guess_x_centroid  An initial guess for the x component of the object centroid (useful in
                              case it is not located at the center, which is the default
                              assumption).
     @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
                              case it is not located at the center, which is the default
                              assumption).
-    @param strict            If True (default), then there will be a run-time exception when moment
-                             measurement fails.  If set to False, then information about failures
-                             will be silently stored in the output HSMShapeData object.
-    @return A HSMShapeData object containing the results of moment measurement.
+    @param strict            If `strict = True` (default), then there will be a `RuntimeError`
+                             exception when moment measurement fails.  If set to `False`, then 
+                             information about failures will be silently stored in the output 
+                             HSMShapeData object.
+    @return                  A HSMShapeData object containing the results of moment measurement.
     """
     object_image_view = object_image.view()
     try:
