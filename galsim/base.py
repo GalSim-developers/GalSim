@@ -403,7 +403,8 @@ class GSObject(object):
                       If dx is None and image == None, then use pi/maxK()
                       (Default = None)
 
-        @param gain   The number of ADU to place on the image per photon.  (Default = 1)
+        @param gain   The number of ADU ("analog to digital units", the units of the numbers output
+                      from a CCD) to place on the image per photon.  (Default = 1)
 
         @param wmult  A factor by which to make the intermediate images larger than 
                       they are normally made.  The size is normally automatically chosen 
