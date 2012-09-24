@@ -257,10 +257,11 @@ class GSObject(object):
         self.applyTransformation(galsim.Ellipse(np.log(scale)))
        
     def applyShear(self, *args, **kwargs):
-        """Apply a shear to this object, where arguments are either a galsim.Shear, or
-        arguments that will be used to initialize one.
+        """Apply a shear to this object, where arguments are either a \link galsim.shear.Shear
+        galsim.Shear\endlink, or arguments that will be used to initialize one.
 
-        For more details about the allowed keyword arguments, see the documentation of galsim.Shear.
+        For more details about the allowed keyword arguments, see the documentation of \link
+        galsim.shear.Shear galsim.Shear\endlink.
 
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
