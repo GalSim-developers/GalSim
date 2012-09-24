@@ -20,6 +20,9 @@ def write(image, fits, add_wcs=True, clobber=True):
     called directly as "galsim.fits.write(image, ...)", with the image as the first argument, or as
     an image method: "image.write(...)".
 
+    @param image     The image to write to file.  Per the description of this method, it may be
+                     given explicitly via galsim.fits.write(image, ...) or the method may be called
+                     directly as an image method, image.write(...).
     @param fits      If 'fits' is a pyfits.HDUList, the image will be appended as a new HDU.  In
                      that case, the user is responsible for calling fits.writeto(...) afterwards.
                      If 'fits' is a string, it will be interpreted as a filename for a new FITS
@@ -74,18 +77,17 @@ def write(image, fits, add_wcs=True, clobber=True):
 
 def writeMulti(image_list, fits, add_wcs=True, clobber=True):
     """
-    Write the image to a multi-extension FITS file:
-    - If 'fits' is a pyfits.HDUList, the images will be appended as new HDUs.
-      The user is responsible for calling fits.writeto(...) afterwards.
-    - If 'fits' is a string, it will be interpreted as a filename for a new
-      multi-extension FITS file.
-   
-    If add_wcs evaluates to True, a 'LINEAR' WCS will be added using each Image's
-    bounding box.  This is not necessary to ensure an Image can be round-tripped
-    through FITS, as the bounding box (and scale) are always saved in custom header
-    keys.  If add_wcs is a string, this will be used as the WCS name.
+    Write the Python list of images to a multi-extension FITS file.
 
-    Setting clobber=True when 'fits' is a string will silently overwrite existing files.
+    The details of how the images are written to file depends on the arguments.
+
+    @param image_list A Python list of Images.
+    @param fits       If 'fits' is a pyfits.HDUList, the images will be appended as new HDUs.  The
+                      user is responsible for calling fits.writeto(...) afterwards. If 'fits' is a
+                      string, it will be interpreted as a filename for a new multi-extension FITS
+                      file.
+    @param add_wcs    See documentation for this parameter on the write method.
+    @param clobber    See documentation for this parameter on the write method.
     """
     import pyfits    # put this at function scope to keep pyfits optional
 
