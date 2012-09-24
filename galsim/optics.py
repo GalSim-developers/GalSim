@@ -31,7 +31,7 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
                          obscuration=0.):
     """Generate a pupil plane, including a central obscuration such as caused by a secondary mirror.
 
-    @param array_shape     the Numpy array shape desired for the output array.
+    @param array_shape     the NumPy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units.
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
@@ -83,7 +83,7 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     to the definitions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
 
-    @param array_shape     the Numpy array shape desired for the output array.
+    @param array_shape     the NumPy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
@@ -128,8 +128,8 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
                     astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
                     circular_pupil=True, obscuration=0.):
-    """@brief Return wavefront as a (real, imag) tuple of ImageViewD objects rather than complex
-    numpy array.
+    """Return wavefront as a (real, imag) tuple of ImageViewD objects rather than complex NumPy
+    array.
 
     Outputs a circular pupil wavefront of unit amplitude that can be easily transformed to produce
     an optical PSF with lambda/diam = lam_over_diam on an output grid of spacing dx.
@@ -148,7 +148,7 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
     to the definitions given here:
     http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
 
-    @param array_shape     the Numpy array shape desired for the output array.
+    @param array_shape     the NumPy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
@@ -181,7 +181,7 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
 
 def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., spher=0., circular_pupil=True, obscuration=0., flux=1.):
-    """@brief Return numpy array containing circular (default) or square pupil PSF with low-order
+    """Return NumPy array containing circular (default) or square pupil PSF with low-order 
     aberrations.
 
     The PSF is centred on the array[array_shape[0] / 2, array_shape[1] / 2] pixel by default, and
@@ -189,9 +189,9 @@ def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    Ouput numpy array is C-contiguous.
+    Ouput NumPy array is C-contiguous.
 
-    @param array_shape     the Numpy array shape desired for the output array.
+    @param array_shape     the NumPy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
@@ -219,8 +219,7 @@ def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
 def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0., flux=1.):
-    """@brief Return circular (default) or square pupil PSF with low-order aberrations as an
-    ImageViewD.
+    """Return circular (default) or square pupil PSF with low-order aberrations as an ImageViewD.
 
     The PSF is centred on the array[array_shape[0] / 2, array_shape[1] / 2] pixel by default, and
     uses surface brightness rather than flux units for pixel values, matching SBProfile.
@@ -231,7 +230,7 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
+    @param array_shape     the NumPy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
@@ -258,17 +257,17 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
 def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., spher=0., circular_pupil=True, obscuration=0.):
-    """@brief Return the complex OTF of a circular (default) or square pupil with low-order
-    aberrations as a numpy array.
+    """Return the complex OTF of a circular (default) or square pupil with low-order aberrations as
+    a NumPy array.
 
     OTF array element ordering follows the DFT standard of kxky(array_shape), and has
     otf[0, 0] = 1+0j by default.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    Output complex numpy array is C-contiguous.
+    Output complex NumPy array is C-contiguous.
     
-    @param array_shape     the Numpy array shape desired for the output array.
+    @param array_shape     the NumPy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
@@ -295,8 +294,8 @@ def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
 def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
-    """@brief Return the complex OTF of a circular (default) or square pupil with low-order
-    aberrations as a (real, imag) tuple of ImageViewD objects rather than a complex numpy array.
+    """Return the complex OTF of a circular (default) or square pupil with low-order aberrations as 
+    a (real, imag) tuple of ImageViewD objects, rather than a complex NumPy array.
 
     OTF array element ordering follows the DFT standard of kxky(array_shape), and has
     otf[0, 0] = 1+0j by default.  The scale of the output ImageViewD is correct in k space units.
@@ -307,7 +306,7 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
-    @param array_shape     the Numpy array shape desired for array views of ImageViewD tuple.
+    @param array_shape     the NumPy array shape desired for array views of ImageViewD tuple.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
@@ -340,17 +339,17 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
 def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., spher=0., circular_pupil=True, obscuration=0.):
-    """@brief Return numpy array containing the MTF of a circular (default) or square pupil with
-    low-order aberrations.
+    """Return NumPy array containing the MTF of a circular (default) or square pupil with low-order
+    aberrations.
 
     MTF array element ordering follows the DFT standard of kxky(array_shape), and has
     mtf[0, 0] = 1 by default.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    Output double numpy array is C-contiguous.
+    Output double NumPy array is C-contiguous.
 
-    @param array_shape     the Numpy array shape desired for the output array.
+    @param array_shape     the NumPy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
@@ -373,8 +372,8 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
 def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
-    """@brief Return the MTF of a circular (default) or square pupil with low-order aberrations as
-    an ImageViewD.
+    """Return the MTF of a circular (default) or square pupil with low-order aberrations as an 
+    ImageViewD.
 
     MTF array element ordering follows the DFT standard of kxky(array_shape), and has
     mtf[0, 0] = 1 by default.  The scale of the output ImageViewD is correct in k space units.
@@ -385,7 +384,7 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
+    @param array_shape     the NumPy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
@@ -416,17 +415,17 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
 def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., spher=0., circular_pupil=True, obscuration=0.):
-    """@brief Return numpy array containing the PTF [radians] of a circular (default) or square
-    pupil with low-order aberrations.
+    """Return NumPy array containing the PTF [radians] of a circular (default) or square pupil with
+    low-order aberrations.
 
     PTF array element ordering follows the DFT standard of kxky(array_shape), and has
     ptf[0, 0] = 0. by default.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    Output double numpy array is C-contiguous.
+    Output double NumPy array is C-contiguous.
 
-    @param array_shape     the Numpy array shape desired for the output array.
+    @param array_shape     the NumPy array shape desired for the output array.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
@@ -455,8 +454,8 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
 def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., spher=0., circular_pupil=True, obscuration=0.):
-    """@brief Return the PTF [radians] of a circular (default) or square pupil with low-order
-    aberrations as an ImageViewD.
+    """Return the PTF [radians] of a circular (default) or square pupil with low-order aberrations
+    as an ImageViewD.
 
     PTF array element ordering follows the DFT standard of kxky(array_shape), and has
     ptf[0, 0] = 0. by default.  The scale of the output ImageViewD is correct in k space units.
@@ -467,7 +466,7 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
-    @param array_shape     the Numpy array shape desired for the array view of the ImageViewD.
+    @param array_shape     the NumPy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
