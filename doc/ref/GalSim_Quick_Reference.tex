@@ -708,6 +708,38 @@ integer and double-precision floating point representations.
 
 \end{itemize}
 
+\subsection{Lensing shear fields}\label{sect:lensing}
+
+GalSim has relatively new functionality to simulate scientifically-motivated
+lensing shear fields. Due to its newness, the user interface is subject to
+change, and it is not currently accessible via configuration files (only
+directly in python).  The code and documentation for the ``lensing engine'' is
+in {\tt galsim/lensing.py}.  The two relevant classes for users are:
+
+\begin{itemize}
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1lensing_1_1_power_spectrum.html}{\texttt{galsim.lensing.PowerSpectrum(\dots)}}
+  \newline {represents a flat-sky shear power spectrum $P(k)$, where the $E$ and
+    $B$-mode power spectra can be separately specified as 
+    \texttt{E\_power\_function} and \texttt{B\_power\_function}.  The
+    \texttt{getShear(\dots)} method is used to generate a random realization of
+    a shear field from a given \texttt{PowerSpectrum} object.  Currently, it is
+    only possible to generate shears at gridded positions, but in future
+    versions of GalSim this restriction will no longer be applicable.}
+
+\item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1lensing_1_1_n_f_w_halo.html}{\texttt{galsim.lensing.NFWHalo(\dots)}}
+  \newline {represents a matter density profile corresponding to a projected,
+    circularly-symmetric NFW profile such as might be used to simulate lensing
+    by a galaxy cluster.  This class has two methods of interest for users,
+    \texttt{getShear()} and \texttt{getConvergence()}, which can be used to get
+    the shears and convergences at {\em any} (non-gridded) image-plane
+    position.}
+\end{itemize}
+
+These classes have additional requirements on the units used to specify
+positions; see the documentation for these classes for more details.
+
 \subsection{Additional FITS input/output tools}\label{sect:multifits}
 
 \begin{itemize}
