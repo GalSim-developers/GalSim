@@ -39,7 +39,7 @@ class InputCatalog(object):
         self.ncols = self.data.shape[1]
 
     def read_ascii(self, comments):
-        """@brief Read in an input catalog from an ASCII file.
+        """Read in an input catalog from an ASCII file.
 
         Does not check for sensible inputs, leaving this up to the wrapper function read.
         """
