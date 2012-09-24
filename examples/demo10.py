@@ -37,7 +37,7 @@ def main(argv):
       - The second hdu has the corresponding PSF image.
       - Applied shear is from a power spectrum P(k) ~ k^2.
       - Galaxies are randomly oriented real galaxies.
-      - The PSF is Moffat with e1,e2 polynomials in (x,y)
+      - The PSF is Gaussian with fwhm,e,beta functions of (x,y)
       - Noise is poisson using a nominal sky value of 1.e6.
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -58,8 +58,9 @@ def main(argv):
 
     file_name = os.path.join('output','power_spectrum.fits')
 
-    psf_beta = 2.4                  #
-    psf_fwhm = 0.9                  # arcsec
+    #psf_fwhm = 0.9 + 0.3 * (r/100)^2
+    #psf_e = 0.3 * (r/100)^1.5
+    #psf_beta = atan2(y/x) + pi/2
 
     gal_signal_to_noise = 100       # Great08 "LowNoise" run
     gal_dilation = 3                # Make the galaxies a bit larger than their original size.
@@ -92,6 +93,10 @@ def main(argv):
     gal_image.setScale(pixel_scale)
     psf_image.setScale(pixel_scale)
 
+    im_center = gal_image.bounds.center()
+    #print 'image bounds = ',gal_image.bounds
+    #print 'im_center = ',im_center
+
     # Build each postage stamp:
     k = 0
     for ix in range(nx_tiles):
@@ -111,12 +116,29 @@ def main(argv):
                                iy*stamp_ysize+1 , (iy+1)*stamp_ysize)
             sub_gal_image = gal_image[b]
             sub_psf_image = psf_image[b]
-            x = b.center().x
-            y = b.center().y
-            #print 'x,y = ',x,y
+
+            pos = b.center() - im_center
+            #print 'b.center = ',b.center()
+            #print 'im_center = ',im_center
+            #print 'pos = ',pos
+            pos = galsim.PositionD(pos.x * pixel_scale , pos.y * pixel_scale)
+            #print 'pos => ',pos
+            # The image comes out as about 211 arcsec across, so we define our variable
+            # parameters in terms of (r/100 arcsec), so roughly the scale radius of the image.
+            rsq = (pos.x**2 + pos.y**2) / 100**2
+            #print 'rsq = ',rsq
+            r = rsq**0.5
+            #print 'r = ',r
+            psf_fwhm = 0.9 + 0.4 * rsq
+            #print 'fwhm = ',psf_fwhm
+            psf_e = 0.3 * r**1.5
+            #print 'e = ',psf_e
+            psf_beta = (math.atan2(pos.y,pos.x) + math.pi/2) * galsim.radians
+            #print 'beta = ',psf_beta
 
             # Define the PSF profile
-            psf = galsim.Moffat(psf_beta, fwhm = psf_fwhm)
+            psf = galsim.Gaussian(fwhm=psf_fwhm)
+            psf.applyShear(e=psf_e, beta=psf_beta)
 
             # Define the pixel
             pix = galsim.Pixel(pixel_scale)
@@ -173,7 +195,7 @@ def main(argv):
             # No noise on PSF images.  Just draw it as is.
             final_psf.draw(sub_psf_image)
 
-            logger.info('Galaxy (%d,%d): center = (%.0f,%0.f)', ix,iy,x,y)
+            logger.info('Galaxy (%d,%d): center = (%.0f,%0.f)', ix,iy,pos.x,pos.y)
             k = k+1
 
     logger.info('Done making images of postage stamps')

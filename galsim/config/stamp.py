@@ -225,6 +225,10 @@ def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, 
         final_shift = galsim.PositionD(center.x-icenter.x , center.y-icenter.y)
         # Calculate and save the position relative to the image center
         config['pos'] = (center - config['image_cen']) * config['pixel_scale']
+        #print 'center = ',center
+        #print 'image_cen = ',config['image_cen']
+        #print 'pos = ',center - config['image_cen']
+        #print 'pos => ',config['pos']
     else:
         center = None
         icenter = None

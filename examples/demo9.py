@@ -100,7 +100,8 @@ def main(argv):
 
         # Setup the NFWHalo stuff:
 
-        im_center = galsim.BoundsD(1,image_size,1,image_size).center()
+        im_center = full_image.bounds.center()
+        im_center = galsim.PositionD(im_center.x, im_center.y)
         nfw = galsim.NFWHalo(mass=mass, conc=nfw_conc, redshift=nfw_z_halo,
                              pos=im_center*pixel_scale)
 

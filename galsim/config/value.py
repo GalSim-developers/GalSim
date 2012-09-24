@@ -43,14 +43,14 @@ def ParseValue(config, param_name, base, value_type):
         # Otherwise, we need to generate the value according to its type
         valid_types = {
             float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'NFWHaloMag',
-                      'Sequence', 'List' ],
-            int : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
-            bool : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
-            str : [ 'InputCatalog', 'List', 'NumberedFile' ],
-            galsim.Angle : [ 'Rad', 'Deg', 'Random', 'List' ],
+                      'Sequence', 'List', 'Eval' ],
+            int : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
+            bool : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
+            str : [ 'InputCatalog', 'NumberedFile', 'List', 'Eval' ],
+            galsim.Angle : [ 'Rad', 'Deg', 'Random', 'List', 'Eval' ],
             galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
-                             'Ring', 'NFWHaloShear', 'List' ],
-            galsim.PositionD : [ 'XY', 'RandomCircle', 'List' ] 
+                             'Ring', 'NFWHaloShear', 'List', 'Eval' ],
+            galsim.PositionD : [ 'XY', 'RandomCircle', 'List', 'Eval' ] 
         }
 
         type = param['type']
@@ -655,6 +655,62 @@ def _GenerateFromList(param, param_name, base, value_type):
     safe = safe and safe1
     return val, safe
  
+def _GenerateFromEval(param, param_name, base, value_type):
+    """@brief Evaluate a string as the provided type
+    """
+    #print 'Start Eval for ',param_name
+    req = { 'str' : str }
+    opt = {}
+    for key in param.keys():
+        if key not in [ 'type' , 'str' ]:
+            if len(key) < 2:
+                raise AttributeError("Invalid user-defined variable %r"%key)
+            if key[0] == 'f':
+                opt[key] = float
+            elif key[0] == 'i':
+                opt[key] = int
+            elif key[0] == 's':
+                opt[key] = str
+            elif key[0] == 'a':
+                opt[key] = galsim.Angle
+            elif key[0] == 'p':
+                opt[key] = galsim.PositionD
+            elif key[0] == 'g':
+                opt[key] = galsim.Shear
+            # else let GetAllParams rais an appropriate exception about unexpected key    
+    params, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+    string = params['str']
+    #print 'string = ',string
+
+    # Bring the user-defined variables into scope.
+    for key in opt.keys():
+        exec(key[1:] + ' = params[key]')
+        #print key[1:],'=',eval(key[1:])
+
+    # Also, we allow the use of math functions
+    import math
+
+    # Try evaluating the string as is.
+    try:
+        val = value_type(eval(string))
+        #print 'Simple success: val = ',val
+        return val, safe
+    except:
+        pass
+
+    # Then try bringing in the allowed variables to see if that works:
+    if 'pos' in base:
+        pos = base['pos']
+        #print 'pos = ',pos
+
+    try:
+        val = value_type(eval(string))
+        #print 'Needed pos: val = ',val
+        return val, False
+    except:
+        raise ValueError("Unable to evaluate string %r as a %s for %s"%(
+                string,value_type,param_name))
+
 
 def SetDefaultIndex(config, num):
     """

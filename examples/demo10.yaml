@@ -16,15 +16,41 @@
 # - RealGalaxy : id
 # - image.psf : real_space
 #
+# - Eval using pos variable, user-defined variables and math functions
+#
 
-
-# We again use the multiple document feature.  So start with the common information:
 
 # Define the PSF profile
 psf : 
-    type : Moffat
-    beta : 2.4
-    fwhm : 0.9  # arcsec
+    type : Gaussian
+    fwhm : 
+        # We saw the Eval type before (in demo3.yaml) as a way to do simple arithmetic.
+        # It becomes much more powerful when you include variables in your equation.
+        # One variable that is usable is `pos`, which is the position of the current 
+        # object relative to the center of the image in arcsec.  This lets you define
+        # any arbitrary function for a particular variable in terms of (x,y).
+        type : Eval
+        str : '0.9 + 0.4 * (pos.x**2 + pos.y**2) / 100**2'  # 0.9 + 0.4 * (r/100 arcsec)^2
+
+    ellip:
+        type : EBeta
+        e : 
+            type : Eval
+            # We also allow any number of user-defined variables.
+            # The first letter of the variable name indicates what type it is expected to be:
+            #     f = float
+            #     i = int
+            #     s = string
+            #     a = Angle
+            #     p = Position
+            #     g = Shear
+            fr : { type : Eval , str : '(pos.x**2 + pos.y**2)**0.5' } # r
+            # Now we can use this variable (without the first letter) in our string:
+            str : '0.3 * (r/100)**1.5'
+        beta:
+            type : Eval
+            # And you can also use anything in the Python math module:
+            str : '(math.atan2(pos.y,pos.x) + math.pi/2.) * galsim.radians'
 
 
 # Define the galaxy profile

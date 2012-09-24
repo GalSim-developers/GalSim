@@ -236,15 +236,16 @@ def BuildTiledImage(config, logger=None,
                 'last' : full_ysize 
               },
     }
-    # Also define the overall image center, since we need that to calculate the position 
-    # of each stamp relative to the center.
-    config['image_cen'] = galsim.PositionD((1.+full_xsize)/2.,(1.+full_ysize)/2.)
-
     nproc = params.get('nproc',1)
 
     full_image = galsim.ImageF(full_xsize,full_ysize)
     full_image.setZero()
     full_image.setScale(pixel_scale)
+
+    # Also define the overall image center, since we need that to calculate the position 
+    # of each stamp relative to the center.
+    image_cen = full_image.bounds.center()
+    config['image_cen'] = galsim.PositionD(image_cen.x,image_cen.y)
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize,full_ysize)
@@ -390,15 +391,17 @@ def BuildScatteredImage(config, logger=None,
             'x' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_xsize },
             'y' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_ysize }
         }
-    # Also define the overall image center, since we need that to calculate the position 
-    # of each stamp relative to the center.
-    config['image_cen'] = galsim.PositionD((1.+full_xsize)/2.,(1.+full_ysize)/2.)
 
     nproc = params.get('nproc',1)
 
     full_image = galsim.ImageF(full_xsize,full_ysize)
     full_image.setZero()
     full_image.setScale(pixel_scale)
+
+    # Also define the overall image center, since we need that to calculate the position 
+    # of each stamp relative to the center.
+    image_cen = full_image.bounds.center()
+    config['image_cen'] = galsim.PositionD(image_cen.x,image_cen.y)
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize,full_ysize)

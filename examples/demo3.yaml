@@ -88,7 +88,12 @@ psf :
             # Use value for lambda = 800 nm, D = 4 m
             # lam_over_diam = (800 nm) * 1.e-9 (m/nm) / (4m) * (206265 arcsec/radian)
             #               = 0.041253 arcsec
-            lam_over_diam : 0.041253  # arcsec
+            # You can have python do the arithmetic for you using the Eval type.
+            # The string given by str will be evaluated using the Python eval(str) function.
+            lam_over_diam : 
+                type : Eval
+                str : '800 * 1.e-9 / 4 * 206265'
+            #lam_over_diam : 0.041253  # arcsec
 
             # The rest of these values are given in units of lambda
             defocus : 0.53
