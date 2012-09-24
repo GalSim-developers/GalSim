@@ -14,6 +14,10 @@ RealGalaxy's, selected to be 5 particularly irregular ones, each with a random o
 New features introduced in this demo:
 
 - rng = galsim.BaseDeviate(seed)
+- obj = galsim.RealGalaxy(real_galaxy_catalog, id)
+- obj = galsim.Convolve([list], real_space)
+- ps = galsim.PowerSpectrum(E_power_function, B_power_function)
+- g1,g2 = ps.getShear(pos, grid_spacing, grid_nx, rng, center)
 
 - Choosing PSF parameters as a function of (x,y)
 - Selecting ReadGalaxy by ID rather than index.
@@ -35,7 +39,7 @@ def main(argv):
       - The main image is 10 x 10 postage stamps.
       - Each postage stamp is 48 x 48 pixels.
       - The second hdu has the corresponding PSF image.
-      - Applied shear is from a power spectrum P(k) ~ k^2.
+      - Applied shear is from a power spectrum P(k) ~ k^1.8.
       - Galaxies are randomly oriented real galaxies.
       - The PSF is Gaussian with fwhm,e,beta functions of (x,y)
       - Noise is poisson using a nominal sky value of 1.e6.
@@ -46,10 +50,8 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    nx_tiles = 10                   #
-    ny_tiles = 10                   #
-    stamp_xsize = 48                #
-    stamp_ysize = 48                #
+    n_tiles = 15                    # number of tiles in each direction.
+    stamp_size = 48                 # pixels
 
     random_seed = 3339201           #
 
@@ -58,8 +60,10 @@ def main(argv):
 
     file_name = os.path.join('output','power_spectrum.fits')
 
-    #psf_fwhm = 0.9 + 0.3 * (r/100)^2
-    #psf_e = 0.3 * (r/100)^1.5
+    # These will be create for each object below.  The values we'll use will be functions
+    # of (x,y) relative to the center of the image.  (r = sqrt(x^2+y^2))
+    #psf_fwhm = 0.9 + 0.5 * (r/160)^2
+    #psf_e = 0.4 * (r/160)^1.5
     #psf_beta = atan2(y/x) + pi/2
 
     gal_signal_to_noise = 100       # Great08 "LowNoise" run
@@ -87,9 +91,30 @@ def main(argv):
     for gal in gal_list:
         gal.applyDilation(gal_dilation) 
 
+    # Setup the PowerSpectrum object we'll be using:
+    ps = galsim.PowerSpectrum(lambda k : k**1.8)
+    # The parameter here is E_power_function which defines the E-mode power to use.
+    # There is also a B_power_function if you want to include any B-mode power:
+    #ps = galsim.PowerSpectrum(E_power_function, B_power_function)
+    # You may even omit the E_power_function argument and have a pure B-mode power spectrum.
+    #ps = galsim.PowerSpectrum(B_power_function = B_power_function)
+
+    # Now have it build a grid of shear values for us to use.
+    # All the random number generator classes derive from BaseDeviate.
+    # When we construct another kind of deviate class from any other
+    # kind of deviate class, the two share the same underlying random number
+    # generator.  Sometimes it can be clearer to just construct a BaseDeviate
+    # explicitly and then construct anything else you need from that.
+    # Note: A BaseDeviate cannot be used to generate any values.  It can
+    # only be used in the constructor for other kinds of deviates.
+    rng = galsim.BaseDeviate(random_seed)
+    gal_g1, gal_g2 = ps.getShear(grid_spacing=stamp_size, grid_nx = n_tiles, rng=rng)
+    print 'gal_g1 = ',gal_g1
+    print 'gal_g2 = ',gal_g2
+
     # Setup the images:
-    gal_image = galsim.ImageF(stamp_xsize * nx_tiles , stamp_ysize * ny_tiles)
-    psf_image = galsim.ImageF(stamp_xsize * nx_tiles , stamp_ysize * ny_tiles)
+    gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
+    psf_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
     gal_image.setScale(pixel_scale)
     psf_image.setScale(pixel_scale)
 
@@ -99,21 +124,17 @@ def main(argv):
 
     # Build each postage stamp:
     k = 0
-    for ix in range(nx_tiles):
-        for iy in range(ny_tiles):
-            # All the random number generator classes derive from BaseDeviate.
-            # When we construct another kind of deviate class from any other
-            # kind of deviate class, the two share the same underlying random number
-            # generator.  Sometimes it can be clearer to just construct a BaseDeviate
-            # explicitly and then construct anything else you need from that.
-            # Note: A BaseDeviate cannot be used to generate any values.  It can
-            # only be used in the constructor for other kinds of deviates.
+    for ix in range(n_tiles):
+        for iy in range(n_tiles):
+            # The seed here is augmented by k+1 rather than the usual k, since we already
+            # used a seed for the power spectrum above.
+            #rng = galsim.BaseDeviate(random_seed+k+1)
             rng = galsim.BaseDeviate(random_seed+k)
-            #print 'seed = ',random_seed+k
+            print 'seed = ',random_seed+k
 
             # Determine the bounds for this stamp and its center position.
-            b = galsim.BoundsI(ix*stamp_xsize+1 , (ix+1)*stamp_xsize, 
-                               iy*stamp_ysize+1 , (iy+1)*stamp_ysize)
+            b = galsim.BoundsI(ix*stamp_size+1 , (ix+1)*stamp_size, 
+                               iy*stamp_size+1 , (iy+1)*stamp_size)
             sub_gal_image = gal_image[b]
             sub_psf_image = psf_image[b]
 
@@ -123,18 +144,17 @@ def main(argv):
             #print 'pos = ',pos
             pos = galsim.PositionD(pos.x * pixel_scale , pos.y * pixel_scale)
             #print 'pos => ',pos
-            # The image comes out as about 211 arcsec across, so we define our variable
-            # parameters in terms of (r/100 arcsec), so roughly the scale radius of the image.
-            rsq = (pos.x**2 + pos.y**2) / 100**2
-            #print 'rsq = ',rsq
-            r = rsq**0.5
-            #print 'r = ',r
-            psf_fwhm = 0.9 + 0.4 * rsq
-            #print 'fwhm = ',psf_fwhm
-            psf_e = 0.3 * r**1.5
-            #print 'e = ',psf_e
+            # The image comes out as about 320 arcsec across, so we define our variable
+            # parameters in terms of (r/160 arcsec), so roughly the scale size of the image.
+            print 'pos = ',pos
+            r = math.sqrt(pos.x**2 + pos.y**2) / 160
+            print 'r = ',r
+            psf_fwhm = 0.9 + 0.5 * r**2
+            print 'fwhm = ',psf_fwhm
+            psf_e = 0.4 * r**1.5
+            print 'e = ',psf_e
             psf_beta = (math.atan2(pos.y,pos.x) + math.pi/2) * galsim.radians
-            #print 'beta = ',psf_beta
+            print 'beta = ',psf_beta
 
             # Define the PSF profile
             psf = galsim.Gaussian(fwhm=psf_fwhm)
@@ -154,6 +174,11 @@ def main(argv):
             #print 'theta = ',theta
             # This makes a new copy so we're not changing the object in the gal_list.
             gal = gal.createRotated(theta)
+
+            # Apply the shear from the power spectrum.
+            print 'g1 = ',gal_g1[ix,iy]
+            print 'g2 = ',gal_g2[ix,iy]
+            #gal.applyShear(g1 = gal_g1[ix,iy], g2 = gal_g2[ix,iy])
 
             # Apply a random shift within a square box the size of a pixel
             dx = (ud()-0.5) * pixel_scale

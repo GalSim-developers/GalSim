@@ -3,6 +3,41 @@
 import galsim
 import numpy as np
 
+# A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
+def _convertPositions(pos, func):
+    """Convert pos from the valid ways to input positions to two numpy arrays
+    """
+    try:
+        # Check for PositionD:
+        if isinstance(pos,galsim.PositionD):
+            return ( np.array([pos.x], dtype='float'),
+                        np.array([pos.y], dtype='float') )
+
+        # Check for list of PositionD:
+        # The only other options allow pos[0], so if this is invalid, an exception 
+        # will be raised and appropriately dealt with:
+        elif isinstance(pos[0],galsim.PositionD):
+            return ( np.array([p.x for p in pos], dtype='float'),
+                        np.array([p.y for p in pos], dtype='float') )
+
+        # Now pos must be a tuple of length 2
+        elif len(pos) != 2:
+            raise TypeError()
+
+        # Check for (x,y):
+        elif isinstance(pos[0],float):
+            return ( np.array([pos[0]], dtype='float'),
+                        np.array([pos[1]], dtype='float') )
+
+        # Only other valid option is ( xlist , ylist )
+        else:
+            return ( np.array(pos[0], dtype='float'),
+                        np.array(pos[1], dtype='float') )
+
+    except:
+        raise TypeError("Unable to parse the input pos argument for %s."%func)
+            
+
 class PowerSpectrum(object):
     """Class to represent a lensing shear field according to some power spectrum P(k)
 
@@ -73,8 +108,8 @@ class PowerSpectrum(object):
         if units is not galsim.arcsec:
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
 
-    def getShear(self, x=None, y=None, grid_spacing=None, grid_nx=None, rng=None,
-                 interpolantxy=None):
+    def getShear(self, pos=None, grid_spacing=None, grid_nx=None, rng=None,
+                 interpolant=None, center=galsim.PositionI(0,0)):
         """Generate a realization of the current power spectrum at the specified positions.
 
         Generate a Gaussian random realization of the specified E and B mode shear power spectra at
@@ -136,40 +171,50 @@ class PowerSpectrum(object):
         @endcode
         where we assume a minimum x and y value of zero for the grid.
 
-        @param x                List of x positions (it is up to the user to check that the units
-                                are consistent with those in the P(k) function, just as for the y
-                                and grid_spacing keywords).
-        @param y                List of y positions.
+        @param pos              Position(s) of the source(s), assumed to be post-lensing!  (It is 
+                                up to the user to check that the units are consistent with those in 
+                                the P(k) function, just as for the y and grid_spacing keywords.)
+                                Valid ways to input this:
+                                  - Single galsim.PositionD instance
+                                  - tuple of floats: (x,y)
+                                  - list of galsim.PositionD instances
+                                  - tuple of lists: ( xlist, ylist )
+                                pos may also be None to just build a gridded array of (g1,g2).
         @param grid_spacing     Spacing for an evenly spaced grid of points, in arcsec for
                                 consistency with the natural length scale of images created using
                                 the draw or drawShoot methods.
         @param grid_nx          Number of grid points in the x dimension.
         @param rng              (Optional) A galsim.GaussianDeviate object for drawing the random
                                 numbers.  (Alternatively, any BaseDeviate can be used.)
-        @param interpolantxy    (Optional) Interpolant to use for interpolating the shears on a grid
+        @param interpolant      (Optional) Interpolant to use for interpolating the shears on a grid
                                 to the requested positions.
-                                [default = galsim.InterpolantXY(galsim.Linear())]
-        @return g1,g2           Two Numpy arrays for the two shear components g_1 and g_2.
+                                [default = galsim.Linear()]
+        @param center           (Optional) If setting up a new grid, define what position you
+                                want to consider the center of that grid. [default = (0,0)]
+        
+        @return g1,g2           If given a single position: the two shear components g_1 and g_2.
+                                If given a list of positions: each is a python list of values.
+                                If pos=None, these are 2-d NumPy arrays.
         """
 
-        # check input values for all keywords
-        # (1) check problem cases for irregularly spaced set of points
-        if x is not None or y is not None:
-            if x is None or y is None:
-                raise ValueError("When specifying points, must provide both x and y!")
-            if grid_spacing is not None or grid_nx is not None:
-                raise ValueError("When specifying points, do not also provide grid information!")
+        # Convert to numpy arrays for internal usage:
+        if pos is not None:
+            pos_x, pos_y = _convertPositions(pos, 'getShear')
+            if grid_spacing is None and not hasattr(self,'sbii_g1'):
+                raise AttributeError(
+                    "Calling PowerSpectrum.getShear without grid parameters, and " +
+                    "no grid previously set up.")
 
-        # (2) check problem cases for regular grid of points
+        # Check problem cases for regular grid of points
         if grid_spacing is not None or grid_nx is not None:
             if grid_spacing is None or grid_nx is None:
                 raise ValueError("When specifying grid, we require both a spacing and a size!")
 
-        # (3) make sure that we've specified some power spectrum
+        # Make sure that we've specified some power spectrum
         if self.p_E is None and self.p_B is None:
             raise ValueError("Cannot generate shears when no E or B mode power spectrum are given!")
 
-        # (4) make a GaussianDeviate if necessary
+        # Make a GaussianDeviate if necessary
         if rng is None:
             gd = galsim.GaussianDeviate()
         elif isinstance(rng, galsim.GaussianDeviate):
@@ -179,26 +224,54 @@ class PowerSpectrum(object):
         else:
             raise TypeError("The rng provided to getShear is not a BaseDeviate")
 
-        # (5) set default interpolant if none given
-        if interpolantxy is None:
+        # Set default interpolant if none given
+        if interpolant is None:
             interpolantxy = galsim.InterpolantXY(galsim.Linear())
-        elif not isinstance(interpolantxy, galsim.InterpolantXY):
-            raise TypeError("Any input interpolantxy must be a galsim.InterpolantXY instance.")
-
-        # store some more information
-        self.interpolantxy = interpolantxy
-
-        if grid_spacing is not None:
-            # do the calculation on a grid
-            psr = PowerSpectrumRealizer(grid_nx, grid_nx, grid_spacing, self.p_E, self.p_B)
-            g1, g2 = psr(gd)
+        elif isinstance(interpolant, galsim.Interpolant):
+            interpolantxy = galsim.InterpolantXY(interpolant)
+        elif isinstance(interpolant, galsim.InterpolantXY):
+            interpolantxy = interpolant
         else:
-            # for now, we cannot do this
-            raise NotImplementedError("Have not finished implementing the non-gridded case!")
+            raise TypeError("Invalid interpolant provided to PowerSpectrum.getShear")
 
-        # after making either gridded shears or shears at specified x, y positions, return g1 and g2
-        # arrays
-        return g1, g2
+        # Build the grid if requested.
+        if grid_spacing is not None:
+            self.psr = PowerSpectrumRealizer(grid_nx, grid_nx, grid_spacing, self.p_E, self.p_B)
+            self.grid_g1, self.grid_g2 = self.psr(gd)
+            
+            # Setup interpolated images
+            self.im_g1 = galsim.ImageViewD(self.grid_g1)
+            self.im_g1.setCenter(center.x, center.y)
+            self.im_g1.setScale(grid_spacing)
+            self.sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp = interpolantxy)
+
+            self.im_g2 = galsim.ImageViewD(self.grid_g2)
+            self.im_g2.setCenter(center.x, center.y)
+            self.im_g2.setScale(grid_spacing)
+            self.sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp = interpolantxy)
+
+        if pos is None:
+            return self.grid_g1, self.grid_g2
+        else:
+            # interpolate if necessary
+            g1,g2 = [], []
+            for pos in [ galsim.Position(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
+                # Check that the position is in the bounds of the interpolated image
+                if not self.im_g1.bounds.includes(pos):
+                    import warnings
+                    warnings.warn(
+                        "Warning position (%f,%f) not within the bounds "%(pos.x,pos.y) +
+                        "of the gridded shear values: " + str(self.im_g1.bounds) + 
+                        ".  Returning a shear of (0,0) for this point.")
+                    g1.append(0.)
+                    g2.append(0.)
+                else:
+                    g1.append(self.sbii_g1.xValue(pos.x,pos.y))
+                    g2.append(self.sbii_g2.xValue(pos.x,pos.y))
+            if len(pos_x) == 1:
+                return g1[0], g2[0]
+            else:
+                return g1, g2
 
 class PowerSpectrumRealizer(object):
     """Class for generating realizations of power spectra with any area and pixel size.
@@ -233,12 +306,18 @@ class PowerSpectrumRealizer(object):
         
         """
         # Set up the k grids in x and y, and the instance variables
+        print 'start set_size'
+        print 'nx = ',nx
+        print 'ny = ',ny
         self.nx = nx
         self.ny = ny
         kx, ky=np.mgrid[0:nx/2+1,0:ny/2+1]
         self.kx = kx
         self.ky = ky
+        print 'kx = ',kx
+        print 'ky = ',ky
         pixel_size = float(pixel_size)
+        print 'pixel_size = ',pixel_size
 
         # Set up the scalar |k| grid.
         self.k=((kx/(pixel_size*nx))**2+(ky/(pixel_size*ny))**2)**0.5
@@ -279,7 +358,7 @@ class PowerSpectrumRealizer(object):
                                 term in your power spectrum and get a new spectrum realization each
                                 time.
         
-        @return g1,g2               Two image arrays for the two shear components g_1 and g_2
+        @return g1,g2           Two image arrays for the two shear components g_1 and g_2
         """
         ISQRT2 = np.sqrt(1.0/2.0)
 
@@ -296,6 +375,7 @@ class PowerSpectrumRealizer(object):
             r2 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
             E_k = self.amplitude_E * (r1 + 1j*r2) * ISQRT2  
             #Do we need to multiply one of the rows by two to account for the reality?
+            print 'E_k = ',E_k.shape
         else: E_k = 0
 
         #Generate a random complex realization for the B-mode, if there is one
@@ -303,16 +383,22 @@ class PowerSpectrumRealizer(object):
             r1 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
             B_k = self.amplitude_B * (r1 + 1j*r2) * ISQRT2
+            print 'B_k = ',B_k.shape
         else:
             B_k = 0
 
         #Now convert from E,B to g1,g2  still in fourier space
         g1_k = self._cos*E_k - self._sin*B_k
         g2_k = self._sin*E_k + self._cos*B_k
+        print 'g1_k = ',g1_k.shape
+        print 'g2_k = ',g2_k.shape
 
         #And go to real space to get the images
-        g1=g1_k.shape[0]*np.fft.irfft2(g1_k)
-        g2=g2_k.shape[0]*np.fft.irfft2(g2_k)
+        g1=g1_k.shape[0]*np.fft.irfft2(g1_k, s=(self.nx,self.ny))
+        g2=g2_k.shape[0]*np.fft.irfft2(g2_k, s=(self.nx,self.ny))
+
+        print 'g1 = ',g1.shape
+        print 'g2 = ',g2.shape
         
         return g1, g2
 
@@ -592,40 +678,6 @@ class NFWHalo(object):
         k_s = dl * self.rs * rho_s / Sigma_c
         return k_s
 
-    def _convertPositions(self, pos, func):
-        """Convert pos from the valid ways to input positions to two numpy arrays
-        """
-        try:
-            # Check for PositionD:
-            if isinstance(pos,galsim.PositionD):
-                return ( np.array([pos.x], dtype='float'),
-                         np.array([pos.y], dtype='float') )
-
-            # Check for list of PositionD:
-            # The only other options allow pos[0], so if this is invalid, an exception 
-            # will be raised and appropriately dealt with:
-            elif isinstance(pos[0],galsim.PositionD):
-                return ( np.array([p.x for p in pos], dtype='float'),
-                         np.array([p.y for p in pos], dtype='float') )
-
-            # Now pos must be a tuple of length 2
-            elif len(pos) != 2:
-                raise TypeError()
-
-            # Check for (x,y):
-            elif isinstance(pos[0],float):
-                return ( np.array([pos[0]], dtype='float'),
-                         np.array([pos[1]], dtype='float') )
-
-            # Only other valid option is ( xlist , ylist )
-            else:
-                return ( np.array(pos[0], dtype='float'),
-                         np.array(pos[1], dtype='float') )
-
-        except:
-            raise TypeError("Unable to parse the input pos argument for %s."%func)
-            
-
     def getShear(self, pos, z_s, units=galsim.arcsec, reduced=True):
         """Calculate (reduced) shear of halo at specified positions.
 
@@ -645,7 +697,7 @@ class NFWHalo(object):
             raise NotImplementedError("Only arcsec units implemented!")
 
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = self._convertPositions(pos, 'getShear')
+        pos_x, pos_y = _convertPositions(pos, 'getShear')
 
         r = ((pos_x - self.pos_x)**2 + (pos_y - self.pos_y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
@@ -689,7 +741,7 @@ class NFWHalo(object):
             raise NotImplementedError("Only arcsec units implemented!")
 
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = self._convertPositions(pos, 'getKappa')
+        pos_x, pos_y = _convertPositions(pos, 'getKappa')
 
         r = ((pos_x - self.pos_x)**2 + (pos_y - self.pos_y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
@@ -721,7 +773,7 @@ class NFWHalo(object):
             raise NotImplementedError("Only arcsec units implemented!")
 
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = self._convertPositions(pos, 'getMag')
+        pos_x, pos_y = _convertPositions(pos, 'getMag')
 
         r = ((pos_x - self.pos_x)**2 + (pos_y - self.pos_y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields

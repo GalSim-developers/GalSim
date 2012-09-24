@@ -693,7 +693,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
     # Try evaluating the string as is.
     try:
         val = value_type(eval(string))
-        #print 'Simple success: val = ',val
+        print 'Simple success: val = ',val
         return val, safe
     except:
         pass
@@ -701,11 +701,11 @@ def _GenerateFromEval(param, param_name, base, value_type):
     # Then try bringing in the allowed variables to see if that works:
     if 'pos' in base:
         pos = base['pos']
-        #print 'pos = ',pos
+        print 'pos = ',pos
 
     try:
         val = value_type(eval(string))
-        #print 'Needed pos: val = ',val
+        print 'Needed pos: val = ',val
         return val, False
     except:
         raise ValueError("Unable to evaluate string %r as a %s for %s"%(
