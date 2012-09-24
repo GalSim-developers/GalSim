@@ -60,7 +60,7 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
                              case it is not located at the center, which is the default
                              assumption).
-    @param strict            If `strict = True` (default), then there will be a RuntimeError 
+    @param strict            If `strict = True` (default), then there will be a `RuntimeError` 
                              exception if shear estimation fails.  If set to `False`, then 
                              information about failures will be silently stored in the output 
                              HSMShapeData object.
