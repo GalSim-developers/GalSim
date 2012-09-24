@@ -396,6 +396,14 @@ class GSObject(object):
     def draw(self, image=None, dx=None, gain=1., wmult=1, normalization="flux", add_to_image=False):
         """Draws an Image of the object, with bounds optionally set by an input Image.
 
+        The draw method is used to draw an Image of the GSObject, typically using Fourier space
+        convolution (or, for certain GSObjects that have hard edges, real-space convolution may be
+        used), and using interpolation to carry out image transformations such as shearing.  This
+        method can create a new Image or can draw into an existing one, depending on the choice of
+        the `image` keyword parameter.  Other keywords of particular relevance for users are those
+        that set the pixel scale for the image, that choose the normalization convention for the
+        flux, and that decide whether the clear the input Image before drawing into it.
+
         @param image  If provided, this will be the image on which to draw the profile.
                       If image=None, then an automatically-sized image will be created.
                       (Default = None)
