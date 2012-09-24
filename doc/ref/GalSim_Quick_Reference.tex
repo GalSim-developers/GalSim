@@ -165,7 +165,7 @@ Requires one of the
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_optical_p_s_f.html}{\texttt{galsim.OpticalPSF(lam\_over\_diam,
       flux=1.)}} \newline {a simple model for non-ideal
-  (aberrated) propagation through circular or square apertures, parametrized by the wavelength-aperture
+  (aberrated) propagation through circular/square apertures, parametrized by the wavelength-aperture
   dimension ratio \texttt{lam\_over\_diam}, with
   optional \texttt{obscuration}.  For information
     about other optional parameters, see the documentation for this object.}
@@ -462,8 +462,8 @@ deterministic behavior of the noise when running a particular script.
 Unfortunately the random deviate classes are not yet fully integrated
 within the documentation, due to their being C++ with compiled Python
 wrappers.  This means that the class names above and methods below are
-not yet hyperlinked.  However, the full docstrings are available in
-\texttt{galsim/random.py}, so please refer there for more information,
+not yet hyperlinked.  For more information, please refer to the full docstrings in
+\texttt{galsim/random.py}, 
 or type
 
 {\tt >>> help(galsim.<RandomDeviateName>)}
@@ -633,8 +633,8 @@ within the Python interpreter.
 \begin{itemize}
 
 \item[$\circ$] \texttt{galsim.Angle(value, angle\_unit)} \newline
-  {class to represent angles and handle multiple unit types,
-    which can be initialized very simply by multiplying a numerical
+  {class to represent angles (with multiple unit types),
+    which can be initialized by multiplying a numerical
     value and an \texttt{AngleUnit} instance \texttt{angle\_unit} (see
     below, and \texttt{galsim/angle.py}).}
 
@@ -657,7 +657,7 @@ within the Python interpreter.
 
 \item[$\circ$] \texttt{galsim.BoundsI(\dots)} \newline
   \texttt{galsim.BoundsD(\dots)} \newline {classes to represent
-    image bounds in the \texttt{x}-\texttt{y} plane as the vertices of
+    image boundaries as the vertices of
     a rectangle (see \texttt{galsim/bounds.py}).}
 
 \item[$\circ$] \texttt{galsim.PositionI(x, y)} \newline
@@ -749,19 +749,19 @@ positions; see the documentation for these classes for more details.
   interpreted as a filename, otherwise it is interpreted as a PyFITS
   representation of HDU data (see
   \texttt{galsim/fits.py}).}
-\item[$\circ$] \texttt{image_list = galsim.fits.readMulti(fits)}
+\item[$\circ$] \texttt{image\_list = galsim.fits.readMulti(fits)}
   \newline
-{returns a Python \texttt{list} of \texttt{Image} instances (\texttt{image_list}) from a
+{returns a Python \texttt{list} of \texttt{Image} instances (\texttt{image\_list}) from a
 Multi-Extension FITS file or PyFITS HDU object, specified by the
 \texttt{fits} input parameter (see \texttt{galsim/fits.py}).}
 \item[$\circ$] \texttt{galsim.fits.writeMulti(image\_list, fits, \dots)}
   \newline {write multiple \texttt{Image} instances stored in a Python
-    \texttt{list} object \texttt{image\_list} to a Multi-Extension
+    \texttt{list} (\texttt{image\_list}) to a Multi-Extension
     FITS file or PyFITS HDU object, specified by the \texttt{fits} input
     parameter (see \texttt{galsim/fits.py}).}
 \item[$\circ$] \texttt{galsim.fits.writeCube(image\_list, fits, \dots)}
   \newline {write multiple \texttt{Image} instances stored in a Python
-    \texttt{list} object \texttt{image\_list} to a three-dimensional
+    \texttt{list} (\texttt{image\_list}) to a three-dimensional
     FITS datacube or PyFITS HDU object, specified by the \texttt{fits} input
     parameter (see \texttt{galsim/fits.py}).}
 
