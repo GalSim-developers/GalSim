@@ -130,14 +130,14 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_gaussian.html}{\texttt{galsim.Gaussian(\emph{size},
       flux=1.)}}
   \newline {a 2D Gaussian light profile. Requires one of the
-    following \emph{\texttt{size}} parameters to be set as a keyword argument: \texttt{sigma}; \texttt{FWHM}; \texttt{half\_light\_radius}.}
+    following \emph{\texttt{size}} parameters to be set as a keyword argument: \texttt{sigma}; \texttt{fwhm}; \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_moffat.html}{\texttt{galsim.Moffat(beta, \emph{size},
     \dots)}}
   \newline {a Moffat profile with slope parameter \texttt{beta}, used to approximate ground-based
     telescope PSFs. Requires one of the
     following \emph{\texttt{size}} parameters to be set as a keyword argument: \texttt{scale\_radius};
-    \texttt{FWHM}; \texttt{half\_light\_radius}.  For information
+    \texttt{fwhm}; \texttt{half\_light\_radius}.  For information
     about other optional parameters, see the documentation for this object.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_atmospheric_p_s_f.html}{\texttt{galsim.AtmosphericPSF(\emph{size},
@@ -147,7 +147,7 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
   store a stochastically modelled atmospheric PSF in the near future.
 Requires one of the
     following \emph{\texttt{size}} parameters to be set as a keyword argument:
-    \texttt{FWHM}; \texttt{lam\_over\_r0}.  For information
+    \texttt{fwhm}; \texttt{lam\_over\_r0}.  For information
     about other optional parameters, see the documentation for this object.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_airy.html}{\texttt{galsim.Airy(lam\_over\_diam,
@@ -160,7 +160,7 @@ Requires one of the
       flux=1.)}} \newline {the Kolmogorov PSF for long-exposure
   images through a turbulent atmosphere. Requires one of the
     following \emph{\texttt{size}} parameters to be set as a keyword
-    argument: \texttt{lam\_over\_r0}; \texttt{FWHM}; \\
+    argument: \texttt{lam\_over\_r0}; \texttt{fwhm}; \\
 \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_optical_p_s_f.html}{\texttt{galsim.OpticalPSF(lam\_over\_diam,
