@@ -133,7 +133,7 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
     following \emph{\texttt{size}} parameters to be set as a keyword argument: \texttt{sigma}; \texttt{fwhm}; \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_moffat.html}{\texttt{galsim.Moffat(beta, \emph{size},
-    \dots)}}
+    flux=1.)}}
   \newline {a Moffat profile with slope parameter \texttt{beta}, used to approximate ground-based
     telescope PSFs. Requires one of the
     following \emph{\texttt{size}} parameters to be set as a keyword argument: \texttt{scale\_radius};
@@ -141,7 +141,7 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
     about other optional parameters, see the documentation for this object.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_atmospheric_p_s_f.html}{\texttt{galsim.AtmosphericPSF(\emph{size},
-    ...)}}
+    flux=1.)}}
   \newline {currently simply an image-based
   implementation of a Kolmogorov PSF (see below), and therefore deprecated, but expected to evolve to
   store a stochastically modelled atmospheric PSF in the near future.
@@ -164,7 +164,7 @@ Requires one of the
 \texttt{half\_light\_radius}.}
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_optical_p_s_f.html}{\texttt{galsim.OpticalPSF(lam\_over\_diam,
-      \dots)}} \newline {a simple model for non-ideal
+      flux=1.)}} \newline {a simple model for non-ideal
   (aberrated) propagation through circular or square apertures, parametrized by the wavelength-aperture
   dimension ratio \texttt{lam\_over\_diam}, with
   optional \texttt{obscuration}.  For information
