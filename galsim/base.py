@@ -119,9 +119,9 @@ class GSObject(object):
     def xValue(self, position):
         """Returns the value of the object at a chosen 2D position in real space.
         
-        As in SBProfile, this function assumes all are real-valued.  xValue() may not be
-        implemented for derived classes (e.g. SBConvolve) that require an Discrete Fourier Transform
-        to determine real space values.  In this case, an SBError will be thrown at the C++ layer 
+        As in SBProfile, this function assumes all are real-valued.  xValue() may not be implemented
+        for derived classes (e.g. SBConvolve) that require a Discrete Fourier Transform to 
+        determine real space values.  In this case, an SBError will be thrown at the C++ layer 
         (raises a RuntimeError in Python).
         
         @param position  A 2D galsim.PositionD/I instance giving the position in real space.
@@ -420,7 +420,7 @@ class GSObject(object):
                               (Default = "flux")
 
         @param add_to_image  Whether to add flux to the existing image rather than clear out
-                             anything in the image before shooting.
+                             anything in the image before drawing.
                              Note: This requires that image be provided (i.e. not None) and 
                              that it have defined bounds.
                              (Default = False)
@@ -458,6 +458,9 @@ class GSObject(object):
                   max_extra_noise=0., poisson_flux=True):
         """Draw an image of the object by shooting individual photons drawn from the surface 
         brightness profile of the object.
+
+        Note that the drawShoot method is unavailable for objects which contain an SBDeconvolve,
+        or are compound objects (e.g. Add, Convolve) that include an SBDeconvolve.
 
         @param image  If provided, this will be the image on which to draw the profile.
                       If image=None, then an automatically-sized image will be created.
@@ -601,8 +604,14 @@ class GSObject(object):
             # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
             gain /= dx**2
 
-        added_flux = self.SBProfile.drawShoot(
-            image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
+        try:
+            added_flux = self.SBProfile.drawShoot(
+                image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
+        except RuntimeError:
+            raise RuntimeError(
+                "Unable to drawShoot from this GSObject, perhaps it contains an SBDeconvolve "+
+                "in the SBProfile attribute or is a compound including one or more Deconvolve "+
+                "objects.")
 
         return image, added_flux
 
@@ -751,15 +760,18 @@ class Moffat(GSObject):
 
 
 class AtmosphericPSF(GSObject):
-    """Base class for long exposure Kolmogorov PSF.
+    """Base class for long exposure Kolmogorov PSF.  Currently deprecated: use Kolmogorov.
 
     Initialization
     --------------
     
-        atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolant=None, oversampling=1.5)
+        >>> atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolant=None, oversampling=1.5)
     
 
-    Initializes atmospheric_psf as a galsim.AtmosphericPSF() instance.
+    Initializes atmospheric_psf as a galsim.AtmosphericPSF() instance.  This class is currently
+    deprecated in favour of the newer Kolmogorov class which does not require grid FFTs.  However,
+    it is retained as a placeholder for a future AtmosphericPSF which will model the turbulent
+    atmosphere stochastically.
 
     @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
                            consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
@@ -922,7 +934,17 @@ class Kolmogorov(GSObject):
     Initialization
     --------------
     
-        psf = galsim.Kolmogorov(lam_over_r0, flux=1.)
+    A Kolmogorov is initialized with one (and only one) of three possible size parameters
+
+        lam_over_r0
+        half_light_radius
+        fwhm
+
+    and an optional `flux` parameter [default `flux = 1`].
+
+    Example:
+
+        >>> psf = galsim.Kolmogorov(lam_over_r0=3., flux=1.)
 
     Initializes psf as a galsim.Kolmogorov() instance.
 
@@ -1298,6 +1320,8 @@ class RealGalaxy(GSObject):
     the class is additional information that might be needed to make or interpret the simulations,
     e.g., the noise properties of the training data.
 
+    The GSObject drawShoot method is unavailable for RealGalaxy instances.
+
     Initialization
     --------------
     
@@ -1325,8 +1349,8 @@ class RealGalaxy(GSObject):
 
     Methods
     -------
-    The RealGalaxy is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
-    applyShear() etc.) and operator bindings.
+    The RealGalaxy is a GSObject, and inherits all of the GSObject methods (draw(), applyShear(), 
+    etc. except drawShoot() which is unavailable), and operator bindings.
     """
 
     # Initialization parameters of the object, with type information
@@ -1593,6 +1617,8 @@ class Convolve(GSObject):
 
 class Deconvolve(GSObject):
     """Base class for defining the python interface to the SBDeconvolve C++ class.
+    
+    The GSObject drawShoot() method is unavailable for Deconvolve instances.
     """
     # --- Public Class methods ---
     def __init__(self, farg):
