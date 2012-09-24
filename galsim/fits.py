@@ -201,19 +201,18 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
 def read(fits):
     """
     Construct a new ImageView from a FITS representation.
-     - If 'fits' is a pyfits.HDUList, the Primary HDU will be used.
-     - If 'fits' is a pyfits.PrimaryHDU or pyfits.ImageHDU, that HDU will be used.
-     - If 'fits' is a string, it will be interpreted as a filename to open;
-       the Primary HDU of that file will be used.
 
-    If the FITS header has GS_* keywords, these will be used to initialize the
-    bounding box and scale.  If not, the bounding box will have (xMin,yMin) at
-    (1,1) and the scale will be set to 1.0.
-
-    Not all FITS pixel types are supported (only those with C++ Image template
-    instantiations are: short, int, float, and double).
+    Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
+    short, int, float, and double).  If the FITS header has GS_* keywords, these will be used to
+    initialize the bounding box and scale.  If not, the bounding box will have (xMin,yMin) at (1,1)
+    and the scale will be set to 1.0.
 
     This function is called as "im = galsim.fits.read(...)"
+
+    @param fits    If 'fits' is a pyfits.HDUList, the Primary HDU will be used.  If 'fits' is a
+                   pyfits.PrimaryHDU or pyfits.ImageHDU, that HDU will be used. If 'fits' is a
+                   string, it will be interpreted as a filename to open; the Primary HDU of that
+                   file will be used.
     """
     import pyfits     # put this at function scope to keep pyfits optional
     
