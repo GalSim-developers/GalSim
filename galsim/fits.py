@@ -77,7 +77,7 @@ def write(image, fits, add_wcs=True, clobber=True):
 
 def writeMulti(image_list, fits, add_wcs=True, clobber=True):
     """
-    Write the Python list of images to a multi-extension FITS file.
+    Write a Python list of images to a multi-extension FITS file.
 
     The details of how the images are written to file depends on the arguments.
 
@@ -107,24 +107,22 @@ def writeMulti(image_list, fits, add_wcs=True, clobber=True):
 
 def writeCube(image_list, fits, add_wcs=True, clobber=True):
     """
-    Write the image to a FITS file as a data cube:
-    - If 'fits' is a pyfits.HDUList, the cube will be appended as new HDUs.
-      The user is responsible for calling fits.writeto(...) afterwards.
-    - If 'fits' is a string, it will be interpreted as a filename for a new
-      FITS file.
-    Normally 'image_list' is a python array of Image's (or ImageViews).
-    Each is required to have the same size (nx,ny).  If not a ValueError is raised.
+    Write a Python list of images to a FITS file as a data cube.
 
-    The image_list can also be either an array of numpy arrays or a 3d numpy array,
-    in which case this is written to the fits file directly.  In the former case,
-    not explicit check is made that the numpy arrays are all the same shape, but 
-    a numpy exception will be raised which we let pass upstream unmolested.
+    The details of how the images are written to file depends on the arguments.  Unlike for
+    writeMulti, when writing a data cube it is necessary that each Image in image_list has the same
+    size (nx, ny).  No check is made to confirm that all images have the same origin and pixel
+    scale.
 
-    If add_wcs evaluates to True, a 'LINEAR' WCS will be added using the first Image's
-    bounding box.  No check is made to confirm that all images have the 
-    same origin and pixel scale. If add_wcs is a string, this will be used as the WCS name.
-
-    Setting clobber=True when 'fits' is a string will silently overwrite existing files.
+    @param image_list The image_list can also be either an array of numpy arrays or a 3d numpy
+                      array, in which case this is written to the fits file directly.  In the former
+                      case, no explicit check is made that the numpy arrays are all the same shape,
+                      but a numpy exception will be raised which we let pass upstream unmolested.
+    @param fits       If 'fits' is a pyfits.HDUList, the cube will be appended as new HDUs.  The
+                      user is responsible for calling fits.writeto(...) afterwards. If 'fits' is a
+                      string, it will be interpreted as a filename for a new FITS file.
+    @param add_wcs    See documentation for this parameter on the write method.
+    @param clobber    See documentation for this parameter on the write method.
     """
     import numpy
     import pyfits    # put this at function scope to keep pyfits optional
