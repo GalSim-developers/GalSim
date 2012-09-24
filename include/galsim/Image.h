@@ -320,7 +320,7 @@ namespace galsim {
          *  Most often, this is used for default-constructing an Image which is then
          *  resized later.
          */
-        BaseImage(const Bounds<int>& b, double scale);
+        BaseImage(const Bounds<int>& b, double scale=0.);
 
         /**
          *  @brief Allocate new memory for the image
@@ -596,7 +596,7 @@ namespace galsim {
         /**
          *  @brief Can construct from any AssignableToImage
          */
-        Image(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds(),1.) 
+        Image(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds()) 
         { rhs.assignTo(view()); }
 
         /**

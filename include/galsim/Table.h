@@ -1,10 +1,4 @@
 
-// Classes to represent lookup tables.
-// A is the argument class, which must have ordering
-// operations, and +-*/ for interpolation.
-// D is the value class, which must have + and * operations
-// to permit interpolation.
-
 #ifndef TABLE_H
 #define TABLE_H
 
@@ -21,26 +15,39 @@
 
 namespace galsim {
 
-    // Exception classes:
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
+
+    /// @brief Basic exception class thrown by Table
     class TableError : public std::runtime_error 
     {
     public:
         TableError(const std::string& m="") : std::runtime_error("Table Error: " +m) {}
     };
 
+    /// @brief Exception class for Table access ouside the allowed range
     class TableOutOfRange : public TableError 
     {
     public:
         TableOutOfRange() : TableError("Argument out of range") {}
     };
 
+    /// @brief Exception class for I/O errors when reading in a Table
     class TableReadError : public TableError 
     {
     public:
         TableReadError(const std::string& c) : TableError("Data read error for line ->"+c) {}
     };
 
-    // Table element:
+    //! @endcond
+
+    /**
+     * @brief A single entry in a Table including an argument and an value.
+     *
+     * There are two template arguments:
+     * A is the type of the argument
+     * V is the type of the value
+     */
     template<class V, class A>
     class TableEntry 
     {
@@ -62,18 +69,26 @@ namespace galsim {
         bool operator>=(const A rhs) const { return arg>=rhs; }
     };
 
-    // The Table itself:
-    // Derive from Function1d if that has been defined, otherwise not needed.
+    /**
+     * @brief A class to represent lookup tables for a function y = f(x).
+     *
+     * A is the type of the argument of the function.
+     * V is the type of the value of the function.
+     *
+     * Requirements for A,V: 
+     *   A must have ordering operators (< > ==) and the normal arithmetic ops (+ - * /)
+     *   V must have + and *.
+     */
     template<class V, class A>
     class Table 
     {
     public:
         enum interpolant { linear, spline, floor, ceil };
 
-        //Construct empty table
+        /// Construct empty table
         Table(interpolant i=linear) : iType(i), isReady(false) {} 
 
-        //Table from two arrays:
+        /// Table from two arrays:
         Table(const A* argvec, const V* valvec, int N, interpolant in=linear);
         Table(const std::vector<A>& a, const std::vector<V>& v, interpolant in=linear);
 
@@ -83,21 +98,26 @@ namespace galsim {
         void clear() { v.clear(); isReady=false; }
         void read(std::istream& is);
 
-        void addEntry(const A a, const V v); //new element for table.
+        /// new element for table.
+        void addEntry(const A a, const V v); 
 
-        V operator() (const A a) const; //lookup & interp. function value.
+        /// lookup & interp. function value.
+        V operator() (const A a) const; 
 
-        V lookup(const A a) const; //interp, but exception if beyond bounds
+        /// interp, but exception if beyond bounds
+        V lookup(const A a) const; 
 
-        int size() const { return v.size(); } //size of table
+        /// size of table
+        int size() const { return v.size(); } 
 
-        //Smallest argument
+        /// Smallest argument
         A argMin() const 
         { 
             setup();
             return _argMin();
         }
-        //Largest argument
+
+        /// Largest argument
         A argMax() const 
         { 
             setup();
@@ -132,26 +152,28 @@ namespace galsim {
         typedef typename std::vector<Entry>::iterator iter;
 
         interpolant iType;
-        mutable bool isReady; //Flag if table has been prepped.
-        mutable bool equalSpaced; //Flag set if arguments are nearly equally spaced.
-        mutable A dx; // ...in which case this is argument interval
-        mutable int lastIndex; //Index for last lookup into table.
+        mutable bool isReady; //< Flag if table has been prepped.
+        mutable bool equalSpaced; //< Flag set if arguments are nearly equally spaced.
+        mutable A dx; //<  ...in which case this is argument interval
+        mutable int lastIndex; //< Index for last lookup into table.
 
         mutable std::vector<Entry> v;
-        mutable std::vector<V> y2; //vector of 2nd derivs for spline
+        mutable std::vector<V> y2; //< vector of 2nd derivs for spline
 
-        // Private versions that don't check for a null table:
+        //@{
+        /// Private versions that don't check for a null table:
         A _argMin() const { return v.front().arg; }
         A _argMax() const { return v.back().arg; }
+        //@}
 
-        //get index to 1st element >= argument.  Can throw the exception here.
+        /// get index to 1st element >= argument.  Can throw the exception here.
         int upperIndex(const A a) const;
 
         void sortIt() const { std::sort(v.begin(), v.end()); }
-        void setup() const; //Do any necessary preparation;
-        void setupSpline() const; // Calculate the y2 vector
+        void setup() const; //< Do any necessary preparation;
+        void setupSpline() const; //<  Calculate the y2 vector
 
-        //Interpolate value btwn p & --p:
+        /// Interpolate value btwn p & --p:
         mutable V (*interpolate)(A a, int i, const std::vector<Entry>& v,
                                  const std::vector<V>& y2);
 
@@ -166,21 +188,26 @@ namespace galsim {
 
     };
 
-    // Table<double,double> works as a FluxDensity for OneDimensionalDeviate, so specialize:
+    /**
+     * @brief Table<double,double> works as a FluxDensity for OneDimensionalDeviate,
+     *        so specialize to add the FluxDensity functionality.
+     */
     class TableDD: 
         public Table<double,double>,
         public FluxDensity
     {
     public:
-        // Constructors just use Table constructors:
+        //@{ 
+        /// Constructors just use Table constructors:
         TableDD(interpolant i=linear) : Table<double,double>(i) {}
         TableDD(const double* argvec, const double* valvec, int N, interpolant in=linear) :
             Table<double,double>(argvec,valvec,N,in) {}
         TableDD(const std::vector<double>& a, const std::vector<double>& v,
                 interpolant in=linear) : Table<double,double>(a,v,in) {}
         TableDD(std::istream& is, interpolant in=linear) : Table<double,double>(is,in) {}
+        //@}
 
-        // Virtual function from FluxDensity just calls Table version.
+        /// Virtual function from FluxDensity just calls Table version.
         double operator()(double a) const { return Table<double,double>::operator()(a); }
     };
 

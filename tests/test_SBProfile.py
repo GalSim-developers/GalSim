@@ -185,7 +185,8 @@ def test_gaussian():
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -394,7 +395,8 @@ def test_exponential():
     mySBP = galsim.SBExponential(flux=1., scale_radius=r0)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -474,7 +476,8 @@ def test_sersic():
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -549,7 +552,8 @@ def test_airy():
     mySBP = galsim.SBAiry(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -618,7 +622,8 @@ def test_box():
     mySBP = galsim.SBBox(xw=1, yw=1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -656,7 +661,8 @@ def test_moffat():
                             trunc=5*fwhm_backwards_compatible, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -926,7 +932,8 @@ def test_kolmogorov():
     #savedImg.write(os.path.join(imgdir, "kolmogorov.fits"))
     savedImg = galsim.fits.read(os.path.join(imgdir, "kolmogorov.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1097,7 +1104,8 @@ def test_smallshear():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     mySBP.applyShear(myShear._shear)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1106,7 +1114,7 @@ def test_smallshear():
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     mySBP.applyTransformation(myEllipse._ellipse)
     myImg.setZero()
-    mySBP.draw(myImg,dx=0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1159,7 +1167,8 @@ def test_largeshear():
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
     mySBP.applyShear(myShear._shear)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Large-shear DeVaucouleurs profile disagrees with expected result")
@@ -1167,7 +1176,7 @@ def test_largeshear():
     mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
     mySBP.applyTransformation(myEllipse._ellipse)
     myImg.setZero()
-    mySBP.draw(myImg,dx=0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1227,7 +1236,8 @@ def test_convolve():
     # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    myConv.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    myConv.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 4,
@@ -1273,7 +1283,8 @@ def test_shearconvolve():
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    myConv.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    myConv.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1285,7 +1296,7 @@ def test_shearconvolve():
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     myImg.setZero()
-    myConv.draw(myImg,dx=0.2)
+    myConv.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1356,7 +1367,8 @@ def test_realspace_convolve():
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
     img = galsim.ImageF(saved_img.bounds)
-    conv.draw(img,dx=0.2)
+    img.setScale(0.2)
+    conv.draw(img.view())
     printval(img, saved_img)
     arg = abs(saved_img.array-img.array).argmax()
     np.testing.assert_array_almost_equal(
@@ -1418,7 +1430,8 @@ def test_realspace_distorted_convolve():
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel_distorted.fits"))
     img = galsim.ImageF(saved_img.bounds)
-    conv.draw(img,dx=0.2)
+    img.setScale(0.2)
+    conv.draw(img.view())
     printval(img, saved_img)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
@@ -1476,7 +1489,8 @@ def test_realspace_shearconvolve():
     conv = galsim.SBConvolve([psf,pix],real_space=True)
     saved_img = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     img = galsim.ImageF(saved_img.bounds)
-    conv.draw(img,dx=0.2)
+    img.setScale(0.2)
+    conv.draw(img.view())
     printval(img, saved_img)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
@@ -1522,7 +1536,8 @@ def test_rotate():
     mySBP.applyRotation(45.0 * galsim.degrees)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_ellip_rotated.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1557,7 +1572,8 @@ def test_mag():
     mySBP.applyTransformation(myEll._ellipse)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_mag.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1630,7 +1646,8 @@ def test_add():
     myAdd = galsim.SBAdd(mySBP, mySBP2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    myAdd.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    myAdd.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1697,7 +1714,8 @@ def test_shift():
     mySBP.applyShift(0.2, -0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_shift.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1732,7 +1750,8 @@ def test_rescale():
     mySBP.setFlux(2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_doubleflux.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
-    mySBP.draw(myImg,dx=0.2)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1770,6 +1789,13 @@ def test_rescale():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Drawing with add_to_image=True disagrees with expected result")
+    # With wmult = 2, the calculated flux should come out right so long as we also 
+    # convolve by a pixel:
+    sersic3 = galsim.Convolve([sersic, galsim.Pixel(xw=0.2)])
+    myImg2 = sersic3.draw(dx=0.2, wmult=2)
+    sersic3.draw(myImg2, add_to_image=True)
+    np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
+            err_msg="Drawing with add_to_image=True results in wrong flux")
 
     # Check that the flux works out when adding multiple times.
     gauss = galsim.Gaussian(flux=1.e5, sigma=2.)
@@ -1802,6 +1828,21 @@ def test_rescale():
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True results in wrong flux "+
                     "according to the returned tot")
 
+    # Can also get a flux of 2 using gain = 0.5
+    sersic.draw(myImg, dx=0.2, gain=0.5, normalization="surface brightness")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Drawing with gain=0.5 disagrees with expected result")
+    myImg2 = sersic3.draw(dx=0.2, wmult=2, gain=0.5)
+    np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
+            err_msg="Drawing with gain=0.5 results in wrong flux")
+    myImg2 = sersic3.draw(dx=0.2, wmult=2, gain=4.)
+    np.testing.assert_almost_equal(myImg2.array.sum(), 0.25, 3,
+            err_msg="Drawing with gain=4. results in wrong flux")
+    # Check add_to_image in conjunction with gain
+    sersic3.draw(myImg2, gain=4., add_to_image=True)
+    np.testing.assert_almost_equal(myImg2.array.sum(), 0.5, 3,
+            err_msg="Drawing with gain=4. results in wrong flux")
  
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
@@ -1837,7 +1878,8 @@ def test_sbinterpolatedimage():
         sbinterp = galsim.SBInterpolatedImage(image_in, lan3_2d, dx=1.0)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
         image_out = galsim.ImageView[array_type](test_array)
-        sbinterp.draw(image_out, dx=1.0)
+        image_out.setScale(1.0)
+        sbinterp.draw(image_out.view())
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_out.array,
                 err_msg="Array from output Image differs from reference array for type %s"%
@@ -1857,6 +1899,243 @@ def test_sbinterpolatedimage():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_draw():
+    """Test the various optional parameters to the draw function.
+       In particular test the parameters image, dx, and wmult in various combinations.
+    """
+    import time
+    t1 = time.time()
+
+    # We use a simple Exponential for our object:
+    obj = galsim.Exponential(flux=test_flux, scale_radius=2)
+
+    # Setup the test to see if this was drawn correctly on the image:
+    def CalculateScale(im):
+        # We just determine the scale radius of the drawn exponential by calculating 
+        # the second moments of the image.
+        # int r^2 exp(-r/s) 2pir dr = 12 s^4 pi
+        # int exp(-r/s) 2pir dr = 2 s^2 pi
+        x, y = np.meshgrid(np.arange(np.shape(im.array)[0]), np.arange(np.shape(im.array)[1]))
+        flux = im.array.sum()
+        mx = (x * im.array).sum() / flux
+        my = (y * im.array).sum() / flux
+        mxx = (((x-mx)**2) * im.array).sum() / flux
+        myy = (((y-my)**2) * im.array).sum() / flux
+        mxy = ((x-mx) * (y-my) * im.array).sum() / flux
+        np.testing.assert_almost_equal(mxy, 0, 2, "Found mxy != 0 for Exponential draw")
+        np.testing.assert_almost_equal(mxx-myy, 0, 2, "Found mxx != myy for Exponential draw")
+        s2 = (mxx+myy) / 6
+        return np.sqrt(s2) * im.scale
+ 
+
+    # First test draw() with no kwargs.  It should:
+    #   - create a new image
+    #   - return the new image
+    #   - set the scale to obj.nyquistDx()
+    #   - set the size large enough to contain 99.5% of the flux
+    im1 = obj.draw()
+    dx_nyq = obj.nyquistDx()
+    np.testing.assert_almost_equal(im1.scale, dx_nyq, 9,
+                                   "obj.draw() produced image with wrong scale")
+    assert im1.bounds == galsim.BoundsI(1,48,1,48),(
+            "obj.draw() produced image with wrong bounds")
+    np.testing.assert_almost_equal(CalculateScale(im1), 2, 1,
+                                   "Measured wrong scale after obj.draw()")
+
+    # The flux is only really expected to come out right if the object has been
+    # convoled with a pixel:
+    obj2 = galsim.Convolve([ obj, galsim.Pixel(im1.scale) ])
+    im2 = obj2.draw()
+    dx_nyq = obj2.nyquistDx()
+    np.testing.assert_almost_equal(im2.scale, dx_nyq, 9,
+                                   "obj2.draw() produced image with wrong scale")
+    np.testing.assert_almost_equal(im2.array.astype(float).sum(), test_flux, 2,
+                                   "obj2.draw() produced image with wrong flux")
+    assert im2.bounds == galsim.BoundsI(1,48,1,48),(
+            "obj2.draw() produced image with wrong bounds")
+    np.testing.assert_almost_equal(CalculateScale(im2), 2, 1,
+                                   "Measured wrong scale after obj2.draw()")
+
+    # Test if we provide an image argument.  It should:
+    #   - write to the existing image
+    #   - also return that image
+    #   - set the scale to obj2.nyquistDx()
+    #   - zero out any existing data
+    im3 = galsim.ImageD(48,48)
+    im4 = obj2.draw(im3)
+    np.testing.assert_almost_equal(im3.scale, dx_nyq, 9,
+                                   "obj2.draw(im3) produced image with wrong scale")
+    np.testing.assert_almost_equal(im3.array.sum(), test_flux, 2,
+                                   "obj2.draw(im3) produced image with wrong flux")
+    np.testing.assert_almost_equal(im3.array.sum(), im2.array.astype(float).sum(), 6,
+                                   "obj2.draw(im3) produced image with different flux than im2")
+    np.testing.assert_almost_equal(CalculateScale(im3), 2, 1,
+                                   "Measured wrong scale after obj2.draw(im3)")
+    np.testing.assert_array_equal(im3.array, im4.array,
+                                  "im4 = obj2.draw(im3) produced im4 != im3")
+    im3.fill(9.8)
+    np.testing.assert_array_equal(im3.array, im4.array,
+                                  "im4 = obj2.draw(im3) produced im4 is not im3")
+    im4 = obj2.draw(im3)
+    np.testing.assert_almost_equal(im3.array.sum(), im2.array.astype(float).sum(), 6,
+                                   "obj2.draw(im3) doesn't zero out existing data")
+    
+    # Test if we provide an image with undefined bounds.  It should:
+    #   - resize the provided image
+    #   - also return that image
+    #   - set the scale to obj2.nyquistDx()
+    im5 = galsim.ImageD()
+    obj2.draw(im5)
+    np.testing.assert_almost_equal(im5.scale, dx_nyq, 9,
+                                   "obj2.draw(im5) produced image with wrong scale")
+    np.testing.assert_almost_equal(im5.array.sum(), test_flux, 2,
+                                   "obj2.draw(im5) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im5), 2, 1,
+                                   "Measured wrong scale after obj2.draw(im5)")
+    np.testing.assert_almost_equal(im5.array.sum(), im2.array.astype(float).sum(), 6,
+                                   "obj2.draw(im5) produced image with different flux than im2")
+    assert im5.bounds == galsim.BoundsI(1,48,1,48),(
+            "obj2.draw(im5) produced image with wrong bounds")
+
+    # Test if we provide wmult.  It should:
+    #   - create a new image that is wmult times larger in each direction.
+    #   - return the new image
+    #   - set the scale to obj2.nyquistDx()
+    im6 = obj2.draw(wmult=4.)
+    np.testing.assert_almost_equal(im6.scale, dx_nyq, 9,
+                                   "obj2.draw(wmult) produced image with wrong scale")
+    # Can assert accuracy to 5 decimal places now, since we're capturing much more
+    # of the flux on the image.
+    np.testing.assert_almost_equal(im6.array.astype(float).sum(), test_flux, 5,
+                                   "obj2.draw(wmult) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im6), 2, 2,
+                                   "Measured wrong scale after obj2.draw(wmult)")
+    assert im6.bounds == galsim.BoundsI(1,190,1,190),(
+            "obj2.draw(wmult) produced image with wrong bounds")
+
+    # Test if we provide an image argument and wmult.  It should:
+    #   - write to the existing image
+    #   - also return that image
+    #   - set the scale to obj2.nyquistDx()
+    #   - zero out any existing data
+    #   - the calculation of the convolution should be slightly more accurate than for im3
+    im3.setZero()
+    im5.setZero()
+    obj2.draw(im3, wmult=4.)
+    obj2.draw(im5)
+    np.testing.assert_almost_equal(im3.scale, dx_nyq, 9,
+                                   "obj2.draw(im3) produced image with wrong scale")
+    np.testing.assert_almost_equal(im3.array.sum(), test_flux, 2,
+                                   "obj2.draw(im3,wmult) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im3), 2, 1,
+                                   "Measured wrong scale after obj2.draw(im3,wmult)")
+    assert ((im3.array-im5.array)**2).sum() > 0, (
+            "obj2.draw(im3,wmult) produced the same image as without wmult")
+    
+    # Test if we provide a dx to use.  It should:
+    #   - create a new image using that dx for the scale
+    #   - return the new image
+    #   - set the size large enough to contain 99.5% of the flux
+    im7 = obj2.draw(dx=0.51)
+    np.testing.assert_almost_equal(im7.scale, 0.51, 9,
+                                   "obj2.draw(dx) produced image with wrong scale")
+    np.testing.assert_almost_equal(im7.array.astype(float).sum(), test_flux, 2,
+                                   "obj2.draw(dx) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im7), 2, 1,
+                                   "Measured wrong scale after obj2.draw(dx)")
+    assert im7.bounds == galsim.BoundsI(1,60,1,60),(
+            "obj2.draw(dx) produced image with wrong bounds")
+
+    # Test with dx and wmult.  It should:
+    #   - create a new image using that dx for the scale
+    #   - set the size a factor of wmult times larger in each direction.
+    #   - return the new image
+    im8 = obj2.draw(dx=0.51, wmult=4.)
+    np.testing.assert_almost_equal(im8.scale, 0.51, 9,
+                                   "obj2.draw(dx,wmult) produced image with wrong scale")
+    np.testing.assert_almost_equal(im8.array.astype(float).sum(), test_flux, 5,
+                                   "obj2.draw(dx,wmult) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im8), 2, 2,
+                                   "Measured wrong scale after obj2.draw(dx,wmult)")
+    assert im8.bounds == galsim.BoundsI(1,234,1,234),(
+            "obj2.draw(dx,wmult) produced image with wrong bounds")
+
+    # Test if we provide an image with a defined scale.  It should:
+    #   - write to the existing image
+    #   - use the image's scale 
+    im9 = galsim.ImageD(200,200)
+    im9.setScale(0.51)
+    obj2.draw(im9)
+    np.testing.assert_almost_equal(im9.scale, 0.51, 9,
+                                   "obj2.draw(im9) produced image with wrong scale")
+    np.testing.assert_almost_equal(im9.array.sum(), test_flux, 5,
+                                   "obj2.draw(im9) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im9), 2, 2,
+                                   "Measured wrong scale after obj2.draw(im9)")
+
+    # Test if we provide an image with a defined scale <= 0.  It should:
+    #   - write to the existing image
+    #   - set the scale to obj2.nyquistDx()
+    im9.setScale(-0.51)
+    im9.setZero()
+    obj2.draw(im9)
+    np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
+                                   "obj2.draw(im9) produced image with wrong scale")
+    np.testing.assert_almost_equal(im9.array.sum(), test_flux, 5,
+                                   "obj2.draw(im9) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im9), 2, 2,
+                                   "Measured wrong scale after obj2.draw(im9)")
+    im9.setScale(0)
+    im9.setZero()
+    obj2.draw(im9)
+    np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
+                                   "obj2.draw(im9) produced image with wrong scale")
+    np.testing.assert_almost_equal(im9.array.sum(), test_flux, 5,
+                                   "obj2.draw(im9) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im9), 2, 2,
+                                   "Measured wrong scale after obj2.draw(im9)")
+    
+
+    # Test if we provide an image and dx.  It should:
+    #   - write to the existing image
+    #   - use the provided dx
+    #   - write the new dx value to the image's scale
+    im9.setScale(0.73)
+    im9.setZero()
+    obj2.draw(im9, dx=0.51)
+    np.testing.assert_almost_equal(im9.scale, 0.51, 9,
+                                   "obj2.draw(im9,dx) produced image with wrong scale")
+    np.testing.assert_almost_equal(im9.array.sum(), test_flux, 5,
+                                   "obj2.draw(im9,dx) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im9), 2, 2,
+                                   "Measured wrong scale after obj2.draw(im9,dx)")
+
+    # Test if we provide an image and dx <= 0.  It should:
+    #   - write to the existing image
+    #   - set the scale to obj2.nyquistDx()
+    im9.setScale(0.73)
+    im9.setZero()
+    obj2.draw(im9, dx=-0.51)
+    np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
+                                   "obj2.draw(im9,dx<0) produced image with wrong scale")
+    np.testing.assert_almost_equal(im9.array.sum(), test_flux, 5,
+                                   "obj2.draw(im9,dx<0) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im9), 2, 2,
+                                   "Measured wrong scale after obj2.draw(im9,dx<0)")
+    im9.setScale(0.73)
+    im9.setZero()
+    obj2.draw(im9, dx=0)
+    np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
+                                   "obj2.draw(im9,dx=0) produced image with wrong scale")
+    np.testing.assert_almost_equal(im9.array.sum(), test_flux, 5,
+                                   "obj2.draw(im9,dx=0) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im9), 2, 2,
+                                   "Measured wrong scale after obj2.draw(im9,dx=0)")
+    
+    
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
@@ -1889,3 +2168,4 @@ if __name__ == "__main__":
     test_shift()
     test_rescale()
     test_sbinterpolatedimage()
+    test_draw()
