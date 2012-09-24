@@ -10,7 +10,9 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     """PSF correction method from HSM.
 
     Carry out PSF correction using one of the methods of the HSM package to estimate shears.
-    Example usage:
+
+    Example usage
+    -------------
 
         >>> galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
         >>> galaxy.applyShear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
@@ -93,7 +95,10 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
     weighted moments, recomputing the moments using the result of the previous step as the weight
     function, and so on until the moments that are measured are the same as those used for the
     weight function.  FindAdaptiveMom can be used either as a free function, or as a method of the
-    ImageViewI(), ImageViewD() etc. classes.  Example usage:
+    ImageViewI(), ImageViewD() etc. classes.
+
+    Example usage
+    -------------
 
         >>> my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
         >>> my_gaussian_image = my_gaussian.draw(dx = 0.2)
