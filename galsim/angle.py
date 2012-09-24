@@ -81,6 +81,10 @@ Allowed arithmetic with Angles include the following:
     >>> theta2 -= theta1
     >>> theta *= x
     >>> theta /= x
+
+Operations on Numpy arrays containing Angles are permitted, provided that they are within the bounds
+of the allowed operations on Angles listed above (e.g., addition/subtraction of Angles,
+multiplication of an Angle by a float, but not multiplication of Angles together).
 """
 
 def __str__(self):
