@@ -86,8 +86,8 @@ def writeMulti(image_list, fits, add_wcs=True, clobber=True):
                       user is responsible for calling fits.writeto(...) afterwards. If 'fits' is a
                       string, it will be interpreted as a filename for a new multi-extension FITS
                       file.
-    @param add_wcs    See documentation for this parameter on the write method.
-    @param clobber    See documentation for this parameter on the write method.
+    @param add_wcs    See documentation for this parameter on the galsim.fits.write method.
+    @param clobber    See documentation for this parameter on the galsim.fits.write method.
     """
     import pyfits    # put this at function scope to keep pyfits optional
 
@@ -121,8 +121,8 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
     @param fits       If 'fits' is a pyfits.HDUList, the cube will be appended as new HDUs.  The
                       user is responsible for calling fits.writeto(...) afterwards. If 'fits' is a
                       string, it will be interpreted as a filename for a new FITS file.
-    @param add_wcs    See documentation for this parameter on the write method.
-    @param clobber    See documentation for this parameter on the write method.
+    @param add_wcs    See documentation for this parameter on the galsim.fits.write method.
+    @param clobber    See documentation for this parameter on the galsim.fits.write method.
     """
     import numpy
     import pyfits    # put this at function scope to keep pyfits optional
