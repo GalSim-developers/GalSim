@@ -454,7 +454,7 @@ class GSObject(object):
         return image
 
     def drawShoot(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
-                  add_to_image=False, n_photons=0., uniform_deviate=None,
+                  add_to_image=False, n_photons=0., rng=None,
                   max_extra_noise=0., poisson_flux=True):
         """Draw an image of the object by shooting individual photons drawn from the surface 
         brightness profile of the object.
@@ -478,32 +478,31 @@ class GSObject(object):
                       it would normally be made.  
                       (Default = 1.)
 
-        @param normalization  Two options for the normalization:
-                              "flux" or "f" means that the sum of the output pixels is normalized
+        @param normalization    Two options for the normalization:
+                                "flux" or "f" means that the sum of the output pixels is normalized
                                      to be equal to the total flux.  (Modulo any flux that
                                      falls off the edge of the image of course.)
-                              "surface brightness" or "sb" means that the output pixels sample
+                                "surface brightness" or "sb" means that the output pixels sample
                                      the surface brightness distribution at each location.
-                              (Default = "flux")
+                                (Default = "flux")
 
-        @param add_to_image  Whether to add flux to the existing image rather than clear out
-                             anything in the image before shooting.
-                             Note: This requires that image be provided (i.e. not None) and 
-                             that it have defined bounds.
-                             (Default = False)
+        @param add_to_image     Whether to add flux to the existing image rather than clear out
+                                anything in the image before shooting.
+                                Note: This requires that image be provided (i.e. not None) and 
+                                that it have defined bounds.
+                                (Default = False)
                               
-        @param n_photons    If provided, the number of photons to use.
-                            If not provided, use as many photons as necessary to end up with
-                            an image with the correct poisson shot noise for the object's flux.
-                            For positive definite profiles, this is equivalent to n_photons = flux.
-                            However, some profiles need more than this because some of the shot
-                            photons are negative (usually due to interpolants).
-                            (Default = 0)
+        @param n_photons        If provided, the number of photons to use.
+                                If not provided, use as many photons as necessary to end up with
+                                an image with the correct poisson shot noise for the object's flux.
+                                For positive definite profiles, this is equivalent to 
+                                n_photons = flux.
+                                However, some profiles need more than this because some of the shot
+                                photons are negative (usually due to interpolants).
+                                (Default = 0)
 
-        @param uniform_deviate  If provided, a UniformDeviate to use for the random numbers
-                                If uniform_deviate=None, one will be automatically created, 
-                                using the time as a seed.
-                                (Default = None)
+        @param rng              A random number generator to use for photon shooting.
+                                (may be any kind of BaseDeviate or None) (Default = None)
 
         @param max_extra_noise  If provided, the allowed extra noise in each pixel.
                                 This is only relevant if n_photons=0, so the number of photons is 
@@ -524,9 +523,9 @@ class GSObject(object):
                                 definition of noise, not a "sigma" definition.
                                 (Default = 0.)
 
-        @param poisson_flux  Whether to allow total object flux scaling to vary according to 
-                             Poisson statistics for n_photons samples.
-                             (Default = True)
+        @param poisson_flux     Whether to allow total object flux scaling to vary according to 
+                                Poisson statistics for n_photons samples.
+                                (Default = True)
 
         @returns  The tuple (image, added_flux), where image is the input with drawn photons 
                   added and added_flux is the total flux of photons that landed inside the image 
@@ -572,16 +571,15 @@ class GSObject(object):
             max_extra_noise = float(max_extra_noise)
 
         # Setup the uniform_deviate if not provided one.
-        if uniform_deviate == None:
+        if rng == None:
             uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(uniform_deviate,galsim.UniformDeviate):
-            pass  # already correct
-        elif isinstance(uniform_deviate,galsim.BaseDeviate):
+        elif isinstance(rng,galsim.UniformDeviate):
+            uniform_deviate = rng
+        elif isinstance(rng,galsim.BaseDeviate):
             # If it's another kind of BaseDeviate, we can convert
-            uniform_deviate = galsim.UniformDeviate(uniform_deviate)
+            uniform_deviate = galsim.UniformDeviate(rng)
         else:
-            raise ValueError("Invalid uniform_deviate in draw command.  " +
-                             "It must be at least a BaseDeviate instance.")
+            raise TypeError("The rng provided to drawShoot is not a BaseDeviate")
 
         # Check that either n_photons is set to something or flux is set to something
         if n_photons == 0. and self.getFlux() == 1.:
@@ -1302,7 +1300,7 @@ class RealGalaxy(GSObject):
     --------------
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
-                                        uniform_deviate=None, interpolant=None)
+                                        rng=None, interpolant=None)
 
     This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -1316,7 +1314,8 @@ class RealGalaxy(GSObject):
     @param id                   Object ID for the desired galaxy in the catalog.
     @param random               If true, then just select a completely random galaxy from the
                                 catalog.
-    @param uniform_deviate      A uniform deviate to use for selecting a random galaxy (optional)
+    @param rng                  A random number generator to use for selecting a random galaxy 
+                                (may be any kind of BaseDeviate or None)
     @param interpolant          Optional keyword for specifying the real-space interpolation scheme
                                 [default `interpolant = galsim.InterpolantXY(galsim.Lanczos(5, 
                                  conserve_flux=True, tol=1.e-4))`].
@@ -1336,31 +1335,35 @@ class RealGalaxy(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
-                 uniform_deviate=None, interpolant=None, flux=None):
+                 rng=None, interpolant=None, flux=None):
 
         import pyfits
 
         # Code block below will be for galaxy selection; not all are currently implemented.  Each
         # option must return an index within the real_galaxy_catalog.        
-        use_index = None # using -1 here for 'safety' actually indexes in Python without complaint
         if index != None:
             if (id != None or random == True):
-                raise RuntimeError('Too many methods for selecting a galaxy!')
+                raise AttributeError('Too many methods for selecting a galaxy!')
             use_index = index
         elif id != None:
             if (random == True):
-                raise RuntimeError('Too many methods for selecting a galaxy!')
+                raise AttributeError('Too many methods for selecting a galaxy!')
             use_index = real_galaxy_catalog.get_index_for_id(id)
         elif random == True:
-            if uniform_deviate == None:
+            if rng == None:
                 uniform_deviate = galsim.UniformDeviate()
+            elif isinstance(rng, galsim.UniformDeviate):
+                uniform_deviate = rng
+            elif isinstance(rng, galsim.BaseDeviate):
+                uniform_deviate = galsim.UniformDeviate(rng):
+            else:
+                raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
             use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
-            # this will round down, to get index in range [0, n-1]
         else:
-            raise RuntimeError('No method specified for selecting a galaxy!')
-        if random == False and uniform_deviate != None:
+            raise AttributeError('No method specified for selecting a galaxy!')
+        if random == False and rng != None:
             import warnings
-            msg = "Warning: uniform_deviate supplied, but random selection method was not chosen!"
+            msg = "Warning: rng provided to RealGalaxy, but random selection method was not chosen!"
             warnings.warn(msg)
 
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should

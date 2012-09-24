@@ -73,9 +73,8 @@ class PowerSpectrum(object):
         if units is not galsim.arcsec:
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
 
-    def getShear(self, x=None, y=None, grid_spacing=None, grid_nx=None, gaussian_deviate=None,
+    def getShear(self, x=None, y=None, grid_spacing=None, grid_nx=None, rng=None,
                  interpolantxy=None):
-
         """Generate a realization of the current power spectrum at the specified positions.
 
         Generate a Gaussian random realization of the specified E and B mode shear power spectra at
@@ -145,7 +144,7 @@ class PowerSpectrum(object):
                                 consistency with the natural length scale of images created using
                                 the draw or drawShoot methods.
         @param grid_nx          Number of grid points in the x dimension.
-        @param gaussian_deviate (Optional) A galsim.GaussianDeviate object for drawing the random
+        @param rng              (Optional) A galsim.GaussianDeviate object for drawing the random
                                 numbers.  (Alternatively, any BaseDeviate can be used.)
         @param interpolantxy    (Optional) Interpolant to use for interpolating the shears on a grid
                                 to the requested positions.
@@ -160,22 +159,26 @@ class PowerSpectrum(object):
                 raise ValueError("When specifying points, must provide both x and y!")
             if grid_spacing is not None or grid_nx is not None:
                 raise ValueError("When specifying points, do not also provide grid information!")
+
         # (2) check problem cases for regular grid of points
         if grid_spacing is not None or grid_nx is not None:
             if grid_spacing is None or grid_nx is None:
                 raise ValueError("When specifying grid, we require both a spacing and a size!")
+
         # (3) make sure that we've specified some power spectrum
         if self.p_E is None and self.p_B is None:
             raise ValueError("Cannot generate shears when no E or B mode power spectrum are given!")
+
         # (4) make a GaussianDeviate if necessary
-        if gaussian_deviate is None:
+        if rng is None:
             gd = galsim.GaussianDeviate()
-        elif isinstance(gaussian_deviate, galsim.GaussianDeviate):
+        elif isinstance(rng, galsim.GaussianDeviate):
             gd = gaussian_deviate
-        elif isinstance(gaussian_deviate, galsim.BaseDeviate):
-            gd = galsim.GaussianDeviate(gaussian_deviate)
+        elif isinstance(rng, galsim.BaseDeviate):
+            gd = galsim.GaussianDeviate(rng)
         else:
-            raise TypeError("The requested gaussian_deviate is not a BaseDeviate!")
+            raise TypeError("The rng provided to getShear is not a BaseDeviate")
+
         # (5) set default interpolant if none given
         if interpolantxy is None:
             interpolantxy = galsim.InterpolantXY(galsim.Linear())
@@ -188,7 +191,7 @@ class PowerSpectrum(object):
         if grid_spacing is not None:
             # do the calculation on a grid
             psr = PowerSpectrumRealizer(grid_nx, grid_nx, grid_spacing, self.p_E, self.p_B)
-            g1, g2 = psr(gaussian_deviate=gd)
+            g1, g2 = psr(gd)
         else:
             # for now, we cannot do this
             raise NotImplementedError("Have not finished implementing the non-gridded case!")
@@ -266,15 +269,15 @@ class PowerSpectrumRealizer(object):
         else:            self.amplitude_B = np.sqrt(self._generate_power_array(p_B))
 
 
-    def __call__(self, new_power=False, gaussian_deviate=None):
+    def __call__(self, gd, new_power=False):
         """Generate a realization of the current power spectrum.
         
+        @param gd               A gaussian deviate to use when generating the shear fields.
         @param new_power        If the power-spectrum functions that you specified are not
                                 deterministic then you can set this value to True to call them again
                                 to get new values.  For example, you could include a cosmic variance
                                 term in your power spectrum and get a new spectrum realization each
                                 time.
-        @param gaussian_deviate (Optional) gaussian deviate to use when generating the shear fields.
         
         @return g1,g2               Two image arrays for the two shear components g_1 and g_2
         """
@@ -284,14 +287,8 @@ class PowerSpectrumRealizer(object):
         if new_power:
             self.set_power(self.p_E, self.p_B)
         
-        if gaussian_deviate is None:
-            gd = galsim.GaussianDeviate()
-        elif isinstance(gaussian_deviate, galsim.GaussianDeviate):
-            gd = gaussian_deviate
-        elif isinstance(gaussian_deviate, galsim.BaseDeviate):
-            gd = galsim.GaussianDeviate(gd)
-        else:
-            raise TypeError("The requested gaussian_deviate is not a BaseDeviate!")
+        if not isinstance(gd, galsim.GaussianDeviate):
+            raise TypeError("The gd provided to psr() is not a GaussianDeviate!")
 
         #Generate a random complex realization for the E-mode, if there is one
         if self.amplitude_E is not None:

@@ -48,18 +48,13 @@ def main(argv):
     from multiprocessing import Process, Queue, current_process, cpu_count
 
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
-    logger = logging.getLogger("demo8")
+    logger = logging.getLogger("demo9")
 
     # Define some parameters we'll use below.
 
     mass_list = [ 1.e15, 7.e14, 4.e14, 2.e14 ]  # mass in Msun/h
     nfiles = 5 # number of files per item in mass list
     nobj = 20  # number of objects to draw for each file
-
-    # MJ
-    #nobj = 5
-    #mass_list = [ 1.e15 ]
-    #nfiles = 1
 
     image_size = 512       # pixels
     pixel_scale = 0.19     # arcsec / pixel
