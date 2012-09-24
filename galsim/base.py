@@ -1445,10 +1445,14 @@ class RealGalaxy(GSObject):
 class Add(GSObject):
     """A class for adding 2 or more GSObjects.  Has an SBAdd in the SBProfile attribute.
 
+    The Add class is used to represent the sum of multiple GSObjects.  For example, it might be used
+    to represent a multiple-component galaxy as the sum of an Exponential and a DeVaucouleurs, or to
+    represent a PSF as the sum of multiple Gaussians.
+
     Methods
     -------
-    The Add is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
-    applyShear() etc.) and operator bindings.  
+    The Add is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
+    applyShear() etc.) and operator bindings.
     """
     
     # --- Public Class methods ---
@@ -1623,6 +1627,10 @@ class Convolve(GSObject):
 
 class Deconvolve(GSObject):
     """Base class for defining the python interface to the SBDeconvolve C++ class.
+
+    The Deconvolve class represents a deconvolution kernel.  Note that the Deconvolve class, or
+    compound objects (Add, Convolve) that include a Deconvolve as one of the components, cannot be
+    photon-shot using the drawShoot method.
     """
     # --- Public Class methods ---
     def __init__(self, farg):
