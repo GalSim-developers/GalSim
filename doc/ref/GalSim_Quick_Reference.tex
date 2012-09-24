@@ -420,7 +420,7 @@ object parameters according to a given distribution or generating random
 numbers to be added to image pixel values to model noise. 
 
 We now give a short summary of the 8 random deviates currently
-implemented in GalSim.   The optional parameter \texttt{[ seed ]}
+implemented in GalSim.   The optional parameter \emph{\texttt{seed}}
 listed below is used
 to seed the pseudo-random number generator: it can
 either be omitted (the random deviate seed will be set using the
@@ -431,28 +431,28 @@ The deviates, with a description of their distributions, parametrization and
 default parameter values, are as follows:
 \begin{itemize}
 
-\item[$\circ$] \texttt{galsim.UniformDeviate( [ seed ] )} \newline {uniform distribution in the
+\item[$\circ$] \texttt{galsim.UniformDeviate(\emph{seed})} \newline {uniform distribution in the
   interval $[0, 1)$.}
 
-\item[$\circ$] \texttt{galsim.GaussianDeviate( [ seed ] , mean=0., sigma=1.)} \newline {Gaussian distribution
+\item[$\circ$] \texttt{galsim.GaussianDeviate(\emph{seed}, mean=0., sigma=1.)} \newline {Gaussian distribution
 with \texttt{mean} and standard deviation \texttt{sigma}.}
 
-\item[$\circ$] \texttt{galsim.BinomialDeviate( [ seed ] , N=1, p=0.5)} \newline {Binomial
+\item[$\circ$] \texttt{galsim.BinomialDeviate(\emph{seed}, N=1, p=0.5)} \newline {Binomial
     distribution for \texttt{N} trials each of probability \texttt{p}.}
 
-\item[$\circ$] \texttt{galsim.PoissonDeviate( [ seed ] , mean=1.)} \newline {Poisson distribution
+\item[$\circ$] \texttt{galsim.PoissonDeviate(\emph{seed}, mean=1.)} \newline {Poisson distribution
     with a single \texttt{mean} rate.}
 
-\item[$\circ$] \texttt{galsim.CCDNoise( [ seed ] , gain=1., read\_noise=0.)}  \newline {a
+\item[$\circ$] \texttt{galsim.CCDNoise(\emph{seed}, gain=1., read\_noise=0.)}  \newline {a
     basic detector noise model, parametrized by \texttt{gain} and \texttt{read\_noise}.}
 
-\item[$\circ$] \texttt{galsim.WeibullDeviate( [ seed ] , a=1., b=1.)} \newline {Weibull distribution
+\item[$\circ$] \texttt{galsim.WeibullDeviate(\emph{seed}, a=1., b=1.)} \newline {Weibull distribution
     family (includes Rayleigh and Exponential) with shape parameters \texttt{a} and \texttt{b}.}
 
-\item[$\circ$] \texttt{galsim.GammaDeviate( [ seed ] , alpha=1., beta=1.)} \newline {Gamma distribution with
+\item[$\circ$] \texttt{galsim.GammaDeviate(\emph{seed}, alpha=1., beta=1.)} \newline {Gamma distribution with
     parameters \texttt{alpha} and \texttt{beta}.}
 
-\item[$\circ$] \texttt{galsim.Chi2Deviate( [ seed ] s, n=1.)} \newline {$\chi^2$ distribution
+\item[$\circ$] \texttt{galsim.Chi2Deviate(\emph{seed}, n=1.)} \newline {$\chi^2$ distribution
     with degrees-of-freedom parameter \texttt{n}.}
 
 \end{itemize}
