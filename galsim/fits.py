@@ -246,16 +246,18 @@ def read(fits):
 
 def readMulti(fits):
     """
-    Construct an array of ImageViews from a FITS data cube.
-     - If 'fits' is a pyfits.HDUList, it will read images from these
-     - If 'fits' is a string, it will be interpreted as a filename to open and read
+    Construct a Python list of ImageViews from a FITS data cube.
 
-    If the FITS header has GS_* keywords, these will be used to initialize the
-    bounding box and scale.  If not, the bounding box will have (xMin,yMin) at
-    (1,1) and the scale will be set to 1.0.
+    Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
+    short, int, float, and double).  If the FITS header has GS_* keywords, these will be used to
+    initialize the bounding box and scale.  If not, the bounding box will have (xMin,yMin) at (1,1)
+    and the scale will be set to 1.0.
 
-    Not all FITS pixel types are supported (only those with C++ Image template
-    instantiations are: short, int, float, and double).
+    This function is called as "im = galsim.fits.readMulti(...)"
+
+    @param   fits  If 'fits' is a pyfits.HDUList, readMulti will read images from these.If 'fits' is
+                   a string, it will be interpreted as a filename to open and read.
+    @returns A Python list of ImageViews.
     """
 
     import pyfits     # put this at function scope to keep pyfits optional
@@ -274,20 +276,20 @@ def readMulti(fits):
 
 def readCube(fits):
     """
-    Construct an array of ImageViews from a FITS data cube.
-     - If 'fits' is a pyfits.HDUList, the Primary HDU will be used.
-     - If 'fits' is a pyfits.PrimaryHDU or pyfits.ImageHDU, that HDU will be used.
-     - If 'fits' is a string, it will be interpreted as a filename to open;
-       the Primary HDU of that file will be used.
+    Construct a Python list of ImageViews from a FITS data cube.
 
-    If the FITS header has GS_* keywords, these will be used to initialize the
-    bounding boxes and scales.  If not, the bounding boxes will have (xMin,yMin) at
+    Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
+    short, int, float, and double).  If the FITS header has GS_* keywords, these will be used to
+    initialize the bounding boxes and scales.  If not, the bounding boxes will have (xMin,yMin) at
     (1,1) and the scale will be set to 1.0.
 
-    Not all FITS pixel types are supported (only those with C++ Image template
-    instantiations are: short, int, float, and double).
-
     This function is called as "image_list = galsim.fits.readCube(...)"
+
+    @param fits  If 'fits' is a pyfits.HDUList, the Primary HDU will be used.  If 'fits' is a
+                 pyfits.PrimaryHDU or pyfits.ImageHDU, that HDU will be used.  If 'fits' is a
+                 string, it will be interpreted as a filename to open; the Primary HDU of that file
+                 will be used.
+    @returns     A Python list of ImageViews.
     """
     import pyfits     # put this at function scope to keep pyfits optional
     
