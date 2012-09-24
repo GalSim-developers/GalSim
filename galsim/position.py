@@ -1,4 +1,5 @@
-"""@file position.py @brief A few adjustments to the Position classes at the Python layer.
+"""@file position.py
+A few adjustments to the Position classes at the Python layer.
 """
 
 from . import _galsim
