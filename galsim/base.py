@@ -151,9 +151,11 @@ class GSObject(object):
 
         kValue() is available if the given obj has obj.isAnalyticK() == True. 
 
-        If an GSConvolve object uses real_space=True (either by argument or if it decides on its 
-        own to do so), then it is not analytic in k-space, so kValue() will raise an exception.  
-        An SBError will be thrown at the C++ layer (raises a RuntimeError in Python).
+        kValue() can be used for all of our simple base classes.  However, if a Convolve object
+        representing the convolution of multiple objects uses real-space convolution rather than the
+        DFT approach, i.e., real_space=True (either by argument or if it decides on its own to do
+        so), then it is not analytic in k-space, so kValue() will raise an exception.  An SBError
+        will be thrown at the C++ layer (raises a RuntimeError in Python).
 
         @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in k 
                          space.
