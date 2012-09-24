@@ -13,8 +13,9 @@ class RealGalaxyCatalog(object):
     one directory; they could be individual files, or multiple HDUs of the same file.  Currently
     there is no functionality that lets this be a FITS data cube, because we assume that the object
     postage stamps will in general need to be different sizes depending on the galaxy size.  For
-    example, if the catalog is called 'catalog.fits' and is in the working directory, and the images
-    are in a subdirectory called 'images', then the RealGalaxyCatalog can be read in as follows:
+    example, if the catalog is called `'catalog.fits'` and is in the working directory, and the 
+    images are in a subdirectory called `'images'`, then the RealGalaxyCatalog can be read in as 
+    follows:
 
         >>> my_rgc = galsim.RealGalaxyCatalog('./catalog.fits', 'images')
 
@@ -24,7 +25,7 @@ class RealGalaxyCatalog(object):
     @param file_name   The file containing the catalog.
     @param image_dir   The directory containing the images.
     @param dir         The directory of catalog file (optional)
-    @param preload     Whether to preload the header information. (default = False)
+    @param preload     Whether to preload the header information. (default `preload = False`)
     """
     _req_params = { 'file_name' : str , 'image_dir' : str }
     _opt_params = { 'dir' : str, 'preload' : bool }
@@ -105,8 +106,8 @@ class RealGalaxyCatalog(object):
                 full_file_name = os.path.join(self.image_dir,file_name)
                 self.loaded_files[file_name] = pyfits.open(full_file_name)
 
-    def getGal(self,i):
-        """Returns the galaxy at index i as an ImageViewD object.
+    def getGal(self, i):
+        """Returns the galaxy at index `i` as an ImageViewD object.
         """
         if i >= len(self.gal_file_name):
             raise IndexError(
@@ -121,8 +122,8 @@ class RealGalaxyCatalog(object):
             array = pyfits.getdata(file_name,self.gal_hdu[i])
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
-    def getPSF(self,i):
-        """Returns the PSF at index i as an ImageViewD object.
+    def getPSF(self, i):
+        """Returns the PSF at index `i` as an ImageViewD object.
         """
         if i >= len(self.PSF_file_name):
             raise IndexError(
@@ -160,15 +161,17 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
     @param target_PSF          The target PSF, either one of our base classes or an ImageView/Image.
     @param target_pixel_scale  The pixel scale for the final image, in arcsec.
     @param g1                  First component of shear to impose (components defined with respect
-                                                                   to pixel coordinates), default 0.
-    @param g2                  Second component of shear to impose, default 0.
-    @param rotation_angle      Angle by which to rotate the galaxy (must be an Angle instance).
-    @param rand_rotate         If `True` (default) then impose a random rotation on the training
-                               galaxy; this is ignored if `rotation_angle` is set.
+                               to pixel coordinates), default `g1 = 0.`
+    @param g2                  Second component of shear to impose, default `g2 = 0.`
+    @param rotation_angle      Angle by which to rotate the galaxy (must be a galsim.Angle() 
+                               instance).
+    @param rand_rotate         If `rand_rotate = True` (default) then impose a random rotation on 
+                               the training galaxy; this is ignored if `rotation_angle` is set.
     @param uniform_deviate     Uniform RNG to use for selection of the random rotation angle
-                               (optional).
-    @param target_flux         The target flux in the output galaxy image, default 1000.
-    @param image               As with the GSObject.draw function, if an image is provided,
+                               (optional, must be a galsim.UniformDeviate() if supplied).
+    @param target_flux         The target flux in the output galaxy image, default 
+                               `target_flux = 1000.`
+    @param image               As with the GSObject.draw() function, if an image is provided,
                                then it will be used and returned.
                                If `image=None`, then an appropriately sized image will be created.
     """
