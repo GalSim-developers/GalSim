@@ -4,7 +4,8 @@ import numpy as np
 import galsim
 import utilities
 
-"""@file base.py Definitions for the GalSim base classes and associated methods
+"""@file base.py 
+Definitions for the GalSim base classes and associated methods
 
 This file includes the key parts of the user interface to GalSim: base classes representing surface
 brightness profiles for astronomical objects (galaxies, PSFs, pixel response).  These base classes
