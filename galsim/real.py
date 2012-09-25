@@ -38,6 +38,13 @@ class RealGalaxyCatalog(object):
     To explore for the future: scaling with number of galaxies, adding more information as needed,
     and other i/o related issues.
 
+    The GalSim repository currently contains an example catalog, in
+    GalSim/examples/data/real_galaxy_catalog_example.fits (100 galaxies), along with the
+    corresponding image data in other files (real_galaxy_images.fits and
+    real_galaxy_PSF_images.fits) in that directory.  For information on how to download a larger
+    sample of 26k training galaxies, see the RealGalaxy Data Download Page on the GalSim Wiki:
+    https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data%20Download%20Page
+
     @param file_name   The file containing the catalog.
     @param image_dir   The directory containing the images.
     @param dir         The directory of catalog file (optional)
