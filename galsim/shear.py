@@ -8,8 +8,9 @@ class Shear(object):
     """A class to represent shears in a variety of ways.
 
     The python Shear class (galsim.Shear) can be initialized in a variety of ways to represent shape
-    distortions. All arguments must be named.  Given semi-major and semi-minor axes a and b, we can
-    define multiple shape measurements:
+    distortions.  A shear is an operation that transforms a circle into an ellipse with
+    minor-to-major axis ratio b/a, with position angle beta, while conserving the area.  Given the
+    multiple definitions of ellipticity, we have multiple definitions of shear:
 
     reduced shear |g| = (a - b)/(a + b)
     distortion |e| = (a^2 - b^2)/(a^2 + b^2)
