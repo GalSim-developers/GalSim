@@ -30,7 +30,8 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
                      guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True):
     """PSF correction method from HSM.
 
-    Carry out PSF correction using one of the methods of the HSM package to estimate shears.
+    Carry out PSF correction using one of the methods of the HSM package (see references in
+    docstring for file psfcorr.py) to estimate shears, correcting for the convolution by the PSF.
 
     Example usage
     -------------
@@ -38,7 +39,7 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
         >>> galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
         >>> galaxy.applyShear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
                                                 # |g| = (a - b)/(a + b) definition
-        >>> psf = galsim.AtmosphericPSF(flux = 1.0, fwhm = 0.7)
+        >>> psf = galsim.Kolmogorov(flux = 1.0, fwhm = 0.7)
         >>> pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
         >>> final = galsim.Convolve([galaxy, psf, pixel])
         >>> final_epsf = galsim.Convolve([psf, pixel])
@@ -46,10 +47,10 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
         >>> final_epsf_image = final_epsf.draw(dx = 0.2)
         >>> result = galsim.EstimateShearHSM(final_image, final_epsf_image)
     
-    After running the above code, `result.observed_shape` ["shape" = distortion, which uses the 
-    (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is `(0.088939,5.33012e-18)` and 
-    `result.corrected_shape` is `(0.0997273,-1.07985e-16)`, compared with the expected 
-    `(0.09975, 0)` for a perfect PSF correction method.  
+    After running the above code, `result.observed_shape` ["shape" = distortion, the
+    (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is `(0.0876162,1.23478e-17)` and
+    `result.corrected_shape` is `(0.0993412,-1.86255e-09)`, compared with the expected
+    `(0.09975, 0)` for a perfect PSF correction method.
 
     Note that the method will fail if the PSF or galaxy are too point-like to easily fit an 
     elliptical Gaussian; when running on batches of many galaxies, it may be preferable to set 
