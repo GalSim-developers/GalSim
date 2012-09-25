@@ -150,9 +150,8 @@ class RealGalaxyCatalog(object):
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
 
-def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rotation_angle = None, 
-            rand_rotate = True, uniform_deviate = None, target_flux = 1000.0,
-            image=None):
+def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None, 
+            rand_rotate=True, uniform_deviate=None, target_flux=1000.0, image=None):
     """Function to simulate images (no added noise) from real galaxy training data.
 
     This function takes a RealGalaxy from some training set, and manipulates it as needed to 
