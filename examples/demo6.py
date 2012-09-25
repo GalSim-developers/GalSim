@@ -6,7 +6,8 @@ The sixth script in our tutorial about using GalSim in python scripts: examples/
 
 This script uses real galaxy images from COSMOS observations.  The catalog of real galaxy
 images distributed with GalSim only includes 100 galaxies, but you can download a much
-larger set of images from:  https://www.dropbox.com/sh/ns2yh4q00trqs5r/JypUX8qwLw
+larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link
+to the download page.
 
 The galaxy images include images of the effective PSF for the original observations, 
 so GalSim first deconvolves by that PSF, and then convolves by whatever PSF you desire.
