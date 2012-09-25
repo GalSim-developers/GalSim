@@ -15,7 +15,7 @@ represent the sum and convolution of multiple GSObjects, respectively.
 
 These classes also have associated methods to (a) retrieve information (like the flux, half-light 
 radius, or intensity at a particular point); (b) carry out common operations, like shearing, rescaling
-of flux or size, rotating, and shifting; and (c) to actually make images of the surface brightness 
+of flux or size, rotating, and shifting; and (c) actually make images of the surface brightness 
 profiles.
 
 For a description of units conventions for scale radii for our base classes, see
