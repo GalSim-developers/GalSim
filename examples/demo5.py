@@ -119,6 +119,10 @@ def main(argv):
     gal_image = galsim.ImageF(nx_pixels * nx_stamps-1 , ny_pixels * ny_stamps-1)
     psf_image = galsim.ImageF(nx_pixels * nx_stamps-1 , ny_pixels * ny_stamps-1)
 
+    # Set the pixel scale of these images:
+    gal_image.setScale(pixel_scale)
+    psf_image.setScale(pixel_scale)
+
     centroid_shift_sq = centroid_shift**2
 
     first_in_pair = True  # Make pairs that are rotated by 45 degrees
