@@ -17,7 +17,8 @@ New features introduced in this demo:
 - obj = galsim.RealGalaxy(real_galaxy_catalog, id)
 - obj = galsim.Convolve([list], real_space)
 - ps = galsim.PowerSpectrum(E_power_function, B_power_function)
-- g1,g2 = ps.getShear(pos, grid_spacing, grid_nx, rng, center)
+- g1,g2 = ps.getShear(grid_spacing, grid_nx, rng)
+- g1,g2 = ps.getShear(pos)
 
 - Choosing PSF parameters as a function of (x,y)
 - Selecting ReadGalaxy by ID rather than index.
@@ -50,7 +51,7 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    n_tiles = 15                    # number of tiles in each direction.
+    n_tiles = 10                    # number of tiles in each direction.
     stamp_size = 48                 # pixels
 
     random_seed = 3339201           #
@@ -62,8 +63,8 @@ def main(argv):
 
     # These will be create for each object below.  The values we'll use will be functions
     # of (x,y) relative to the center of the image.  (r = sqrt(x^2+y^2))
-    #psf_fwhm = 0.9 + 0.5 * (r/160)^2
-    #psf_e = 0.4 * (r/160)^1.5
+    #psf_fwhm = 0.9 + 0.5 * (r/100)^2
+    #psf_e = 0.4 * (r/100)^1.5
     #psf_beta = atan2(y/x) + pi/2
 
     gal_signal_to_noise = 100       # Great08 "LowNoise" run
@@ -94,10 +95,13 @@ def main(argv):
     # Setup the PowerSpectrum object we'll be using:
     ps = galsim.PowerSpectrum(lambda k : k**1.8)
     # The parameter here is E_power_function which defines the E-mode power to use.
+
     # There is also a B_power_function if you want to include any B-mode power:
-    #ps = galsim.PowerSpectrum(E_power_function, B_power_function)
+    #     ps = galsim.PowerSpectrum(E_power_function, B_power_function)
+
     # You may even omit the E_power_function argument and have a pure B-mode power spectrum.
-    #ps = galsim.PowerSpectrum(B_power_function = B_power_function)
+    #     ps = galsim.PowerSpectrum(B_power_function = B_power_function)
+
 
     # Now have it build a grid of shear values for us to use.
     # All the random number generator classes derive from BaseDeviate.
@@ -108,7 +112,7 @@ def main(argv):
     # Note: A BaseDeviate cannot be used to generate any values.  It can
     # only be used in the constructor for other kinds of deviates.
     rng = galsim.BaseDeviate(random_seed)
-    gal_g1, gal_g2 = ps.getShear(grid_spacing=stamp_size*pixel_scale, grid_nx=n_tiles, rng=rng)
+    grid_g1, grid_g2 = ps.getShear(grid_spacing=stamp_size*pixel_scale, grid_nx=n_tiles, rng=rng)
 
     # Setup the images:
     gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
@@ -117,8 +121,6 @@ def main(argv):
     psf_image.setScale(pixel_scale)
 
     im_center = gal_image.bounds.center()
-    #print 'image bounds = ',gal_image.bounds
-    #print 'im_center = ',im_center
 
     # Build each postage stamp:
     k = 0
@@ -135,14 +137,10 @@ def main(argv):
             sub_psf_image = psf_image[b]
 
             pos = b.center() - im_center
-            #print 'b.center = ',b.center()
-            #print 'im_center = ',im_center
-            #print 'pos = ',pos
             pos = galsim.PositionD(pos.x * pixel_scale , pos.y * pixel_scale)
-            #print 'pos => ',pos
-            # The image comes out as about 320 arcsec across, so we define our variable
-            # parameters in terms of (r/160 arcsec), so roughly the scale size of the image.
-            r = math.sqrt(pos.x**2 + pos.y**2) / 160
+            # The image comes out as about 211 arcsec across, so we define our variable
+            # parameters in terms of (r/100 arcsec), so roughly the scale size of the image.
+            r = math.sqrt(pos.x**2 + pos.y**2) / 100
             psf_fwhm = 0.9 + 0.5 * r**2
             psf_e = 0.4 * r**1.5
             psf_beta = (math.atan2(pos.y,pos.x) + math.pi/2) * galsim.radians
@@ -166,7 +164,16 @@ def main(argv):
 
             # Apply the shear from the power spectrum.
             # Note: numpy likes to access values by [iy,ix]
-            gal.applyShear(g1 = gal_g1[iy,ix], g2 = gal_g2[iy,ix])
+            gal.applyShear(g1 = grid_g1[iy,ix], g2 = grid_g2[iy,ix])
+
+            # Note: another way to access this after having build the g1,g2 grid
+            # is to use ps.getShear(pos) which just returns a single shear for that position.
+            # The provided position does not have to be on the original grid, but it does
+            # need to be contained within the bounds of the full grid. 
+            # ie. only interpolations is allowed -- not extrapolation.
+            alt_g1,alt_g2 = ps.getShear(pos)
+            assert math.fabs(alt_g1 - grid_g1[iy,ix]) < 1.e-15
+            assert math.fabs(alt_g2 - grid_g2[iy,ix]) < 1.e-15
 
             # Apply a random shift within a square box the size of a pixel
             dx = (ud()-0.5) * pixel_scale

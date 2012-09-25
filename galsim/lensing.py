@@ -109,7 +109,7 @@ class PowerSpectrum(object):
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
 
     def getShear(self, pos=None, grid_spacing=None, grid_nx=None, rng=None,
-                 interpolant=None, center=galsim.PositionI(0,0)):
+                 interpolant=None, center=galsim.PositionD(0,0)):
         """Generate a realization of the current power spectrum at the specified positions.
 
         Generate a Gaussian random realization of the specified E and B mode shear power spectra at
@@ -196,13 +196,13 @@ class PowerSpectrum(object):
                                 If given a list of positions: each is a python list of values.
                                 If pos=None, these are 2-d NumPy arrays.
         """
-        print 'Start getShear:'
-        print 'pos = ',pos
-        print 'grid_spacing = ',grid_spacing
-        print 'grid_nx = ',grid_nx
-        print 'rng = ',rng
-        print 'interpolant = ',interpolant
-        print 'center = ',center
+        #print 'Start getShear:'
+        #print 'pos = ',pos
+        #print 'grid_spacing = ',grid_spacing
+        #print 'grid_nx = ',grid_nx
+        #print 'rng = ',rng
+        #print 'interpolant = ',interpolant
+        #print 'center = ',center
 
         # Convert to numpy arrays for internal usage:
         if pos is not None:
@@ -248,20 +248,40 @@ class PowerSpectrum(object):
             
             # Setup interpolated images
             self.im_g1 = galsim.ImageViewD(self.grid_g1)
-            self.im_g1.setCenter(center.x, center.y)
             self.im_g1.setScale(grid_spacing)
             self.sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp = interpolantxy)
 
             self.im_g2 = galsim.ImageViewD(self.grid_g2)
-            self.im_g2.setCenter(center.x, center.y)
             self.im_g2.setScale(grid_spacing)
             self.sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp = interpolantxy)
 
-            # Convert image.bounds to a BoundsD so the types work when we want to check
-            # the a given position is included.
+            # Dealing with the center here is a bit confusing, especially if grid_nx is even.
+            # The InterpolatedImage will consider position (0,0) to correspond to 
+            # self.im_g1.bounds.center() on the image.  We call this nominal_center.
+            # However, if grid_nx is even, this is slightly up and to the right of the 
+            # true center. The true center x and y are at (1+grid_nx)/2 * grid_spacing.
+            # And finally, we may be passed a value to consider the center of the image.
             b = self.im_g1.bounds
+            nominal_center = galsim.PositionD(b.center().x, b.center().y) * grid_spacing
+            true_center = galsim.PositionD( (1.+grid_nx)/2. , (1.+grid_nx)/2. ) * grid_spacing
+            #print 'nominal_center = ',nominal_center
+            #print 'true_center = ',true_center
+            #print 'target_center = ',center
+            
+            # The offset to be added to any position is then such that if we are 
+            # provided the target center position, the result will be the location of 
+            # the true center with respect to the nominal center.  In other words:
+            #   center + offset = true_center - nominal_center
+            self.offset = true_center - nominal_center - center
+            #print 'offset = ',self.offset
+
+            # Construct a bounds that we can use to check if a provided position will
+            # end up falling on the interpolating image.
             self.bounds = galsim.BoundsD(b.xMin*grid_spacing, b.xMax*grid_spacing,
                                          b.yMin*grid_spacing, b.yMax*grid_spacing)
+            self.bounds.shift(-nominal_center - self.offset)
+            #print 'valid bounds = ',self.bounds
+            
 
         if pos is None:
             return self.grid_g1, self.grid_g2
@@ -279,8 +299,8 @@ class PowerSpectrum(object):
                     g1.append(0.)
                     g2.append(0.)
                 else:
-                    g1.append(self.sbii_g1.xValue(pos))
-                    g2.append(self.sbii_g2.xValue(pos))
+                    g1.append(self.sbii_g1.xValue(pos+self.offset))
+                    g2.append(self.sbii_g2.xValue(pos+self.offset))
             if len(pos_x) == 1:
                 return g1[0], g2[0]
             else:
@@ -319,18 +339,12 @@ class PowerSpectrumRealizer(object):
         
         """
         # Set up the k grids in x and y, and the instance variables
-        print 'start set_size'
-        print 'nx = ',nx
-        print 'ny = ',ny
         self.nx = nx
         self.ny = ny
         kx, ky=np.mgrid[0:nx/2+1,0:ny/2+1]
         self.kx = kx
         self.ky = ky
-        print 'kx = ',kx
-        print 'ky = ',ky
         pixel_size = float(pixel_size)
-        print 'pixel_size = ',pixel_size
 
         # Set up the scalar |k| grid.
         self.k=((kx/(pixel_size*nx))**2+(ky/(pixel_size*ny))**2)**0.5
@@ -388,7 +402,6 @@ class PowerSpectrumRealizer(object):
             r2 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
             E_k = self.amplitude_E * (r1 + 1j*r2) * ISQRT2  
             #Do we need to multiply one of the rows by two to account for the reality?
-            print 'E_k = ',E_k.shape
         else: E_k = 0
 
         #Generate a random complex realization for the B-mode, if there is one
@@ -396,23 +409,17 @@ class PowerSpectrumRealizer(object):
             r1 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
             B_k = self.amplitude_B * (r1 + 1j*r2) * ISQRT2
-            print 'B_k = ',B_k.shape
         else:
             B_k = 0
 
         #Now convert from E,B to g1,g2  still in fourier space
         g1_k = self._cos*E_k - self._sin*B_k
         g2_k = self._sin*E_k + self._cos*B_k
-        print 'g1_k = ',g1_k.shape
-        print 'g2_k = ',g2_k.shape
 
         #And go to real space to get the images
         g1=g1_k.shape[0]*np.fft.irfft2(g1_k, s=(self.nx,self.ny))
         g2=g2_k.shape[0]*np.fft.irfft2(g2_k, s=(self.nx,self.ny))
 
-        print 'g1 = ',g1.shape
-        print 'g2 = ',g2.shape
-        
         return g1, g2
 
     def _generate_power_array(self, power_function):

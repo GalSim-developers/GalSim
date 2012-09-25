@@ -652,15 +652,15 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     
     #print 'PowerSpectrumShear: pos = ',pos
 
-    #try:
-    g1,g2 = base['power_spectrum'].getShear(pos)
-    #print 'g1,g2 = ',g1,g2
-    shear = galsim.Shear(g1=g1,g2=g2)
-    #except:
-        #import warnings
-        #warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +
-                      #"Using shear = 0.")
-        #shear = galsim.Shear(g1=0,g2=0)
+    try:
+        g1,g2 = base['power_spectrum'].getShear(pos)
+        #print 'g1,g2 = ',g1,g2
+        shear = galsim.Shear(g1=g1,g2=g2)
+    except:
+        import warnings
+        warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +
+                      "Using shear = 0.")
+        shear = galsim.Shear(g1=0,g2=0)
     #print 'shear = ',shear
     return shear, False
 

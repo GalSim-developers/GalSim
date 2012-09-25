@@ -31,7 +31,7 @@
     "#" : "any arbitrary function for a particular variable in terms of (x,y).",
     "fwhm" : {
         "type" : "Eval",
-        "str" : "0.9 + 0.5 * (pos.x**2 + pos.y**2) / 160**2"  
+        "str" : "0.9 + 0.5 * (pos.x**2 + pos.y**2) / 100**2"  
     },
 
     "ellip":{
@@ -49,7 +49,7 @@
         "e" : {
             "type" : "Eval",
             "fr" : { "type" : "Eval" , "str" : "(pos.x**2 + pos.y**2)**0.5" },
-            "str" : "0.4 * (r/160)**1.5"
+            "str" : "0.4 * (r/100)**1.5"
         },
 
         "#" : "And you can also use anything in the Python math module:",
@@ -104,11 +104,10 @@
 "image" : {
 
     "type" : "Tiled",
-    "nx_tiles" : 15,
-    "ny_tiles" : 15,
+    "nx_tiles" : 10,
+    "ny_tiles" : 10,
 
-    "stamp_xsize" : 48,
-    "stamp_ysize" : 48,
+    "stamp_size" : 48,
 
     "pixel_scale" : 0.44 ,
 

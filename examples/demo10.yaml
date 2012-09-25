@@ -31,7 +31,7 @@ psf :
         # object relative to the center of the image in arcsec.  This lets you define
         # any arbitrary function for a particular variable in terms of (x,y).
         type : Eval
-        str : '0.9 + 0.5 * (pos.x**2 + pos.y**2) / 160**2'  # 0.9 + 0.5 * (r/160 arcsec)^2
+        str : '0.9 + 0.5 * (pos.x**2 + pos.y**2) / 100**2'  # 0.9 + 0.5 * (r/100 arcsec)^2
 
     ellip:
         type : EBeta
@@ -47,7 +47,7 @@ psf :
             #     g = Shear
             fr : { type : Eval , str : '(pos.x**2 + pos.y**2)**0.5' } # float variable: r
             # Now we can use this variable (without the first letter) in our string:
-            str : '0.4 * (r/160)**1.5'
+            str : '0.4 * (r/100)**1.5'
         beta:
             type : Eval
             # And you can also use anything in the Python math module:
@@ -90,11 +90,10 @@ gal :
 image :
 
     type : Tiled
-    nx_tiles : 15
-    ny_tiles : 15
+    nx_tiles : 10
+    ny_tiles : 10
 
-    stamp_xsize : 48  # pixels
-    stamp_ysize : 48  # pixels
+    stamp_size : 48  # pixels
 
     pixel_scale : 0.44  # arcsec / pixel
 

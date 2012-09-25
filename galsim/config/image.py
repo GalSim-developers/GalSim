@@ -263,13 +263,6 @@ def BuildTiledImage(config, logger=None,
         #print 'g1,g2 = ',g1,g2
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
-        #print 'g1.xvalue(0,0) = ',config['power_spectrum'].sbii_g1.xValue(galsim.PositionD(0,0))
-        x = grid_dx
-        y = grid_dx
-        #print 'g1.xvalue(%f,%f) = '%(x,y),config['power_spectrum'].sbii_g1.xValue(galsim.PositionD(x,y))
-        x = -(n_tiles/2) * grid_dx
-        y = -(n_tiles/2) * grid_dx
-        #print 'g1.xvalue(%f,%f) = '%(x,y),config['power_spectrum'].sbii_g1.xValue(galsim.PositionD(x,y))
 
     nproc = params.get('nproc',1)
 
