@@ -1,11 +1,3 @@
-import os
-import collections
-import numpy as np
-import galsim
-import utilities
-
-version = '0.1'
-
 """@file base.py 
 Definitions for the GalSim base classes and associated methods
 
@@ -25,6 +17,14 @@ doc/GalSim_Quick_Reference.pdf section 2.2.  In short, any system that will ensu
 between the scale radii used to specify the size of the GSObject and between the pixel scale of the
 Image is acceptable.
 """
+
+import os
+import collections
+import numpy as np
+import galsim
+import utilities
+
+version = '0.1'
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 

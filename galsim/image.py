@@ -1,5 +1,6 @@
-"""
-A few adjustments to the Image classes at the Python layer, including the addition of docstrings.
+"""@file image.py
+A few adjustments to the galsim.Image classes at the Python layer, including the addition of 
+docstrings.
 """
 from . import _galsim
 

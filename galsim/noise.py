@@ -1,3 +1,7 @@
+"""@file noise.py
+Module which adds the addNoise method to the galsim.Image classes at the Python layer.
+"""
+
 from . import _galsim
 
 def addNoise(image, noise):

@@ -1,3 +1,7 @@
+"""@file utilities.py
+Module containing general utilities for the GalSim software.
+"""
+
 import numpy as np
 import galsim
 
