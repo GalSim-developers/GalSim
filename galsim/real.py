@@ -1,11 +1,12 @@
 import galsim
 import utilities
 
-"""@file real.py @brief Necessary functions for dealing with real galaxies and their catalogs.
+"""@file real.py
+Necessary functions for dealing with real galaxies and their catalogs.
 """
 
 class RealGalaxyCatalog(object):
-    """@brief Class containing a catalog with information about real galaxy training data.
+    """Class containing a catalog with information about real galaxy training data.
 
     The RealGalaxyCatalog class reads in and stores information about a specific training sample of
     realistic galaxies. We assume that all files containing the images (galaxies and PSFs) live in
@@ -15,13 +16,11 @@ class RealGalaxyCatalog(object):
     example, if the catalog is called 'catalog.fits' and is in the working directory, and the images
     are in a subdirectory called 'images', then the RealGalaxyCatalog can be read in as follows:
 
-    my_rgc = galsim.RealGalaxyCatalog('./catalog.fits','images')
+        >>> my_rgc = galsim.RealGalaxyCatalog('./catalog.fits', 'images')
 
     To explore for the future: scaling with number of galaxies, adding more information as needed,
     and other i/o related issues.
 
-    Parameters
-    ----------
     @param file_name   The file containing the catalog.
     @param image_dir   The directory containing the images.
     @param dir         The directory of catalog file (optional)
@@ -54,12 +53,13 @@ class RealGalaxyCatalog(object):
             self.PSF_file_name = cat.field('PSF_filename') # file containing the PSF image
             self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
             self.PSF_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
-            self.pixel_scale = cat.field('pixel_scale') # pixel scale for the image (could be different
-            # if we have training data from other datasets... let's be general here and make it a vector
-            # in case of mixed training set)
-            self.mag = cat.field('mag') # apparent magnitude
-            self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., "F814W"
-            self.weight = cat.field('weight') # weight factor to account for size-dependent probability
+            self.pixel_scale = cat.field('pixel_scale') # pixel scale for image (could be different
+            # if we have training data from other datasets... let's be general here and make it a 
+            # vector in case of mixed training set)
+            self.mag = cat.field('mag')   # apparent magnitude
+            self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
+            self.weight = cat.field('weight') # weight factor to account for size-dependent
+                                              # probability
         except Exception, e:
             print e
             raise RuntimeError("Unable to read real galaxy catalog %s."%self.file_name)
@@ -75,8 +75,7 @@ class RealGalaxyCatalog(object):
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
     def get_index_for_id(self, id):
-        """
-        Find which index number corresponds to the value ID in the ident field.
+        """Find which index number corresponds to the value ID in the ident field.
         """
         # Just to be completely consistent, convert id to a string in the same way we
         # did above for the ident array:
@@ -87,12 +86,11 @@ class RealGalaxyCatalog(object):
             raise ValueError('ID %s not found in list of IDs'%id)
 
     def preload(self):
-        """
-        Preload the files into memory.
+        """Preload the files into memory.
         
-        There are memory implications to this, so we don't do this by default.
-        However, it can be a big speedup if memory isn't an issue.  Especially
-        if many (or all) of the images are stored in the same file as different HDUs.
+        There are memory implications to this, so we don't do this by default.  However, it can be 
+        a big speedup if memory isn't an issue.  Especially if many (or all) of the images are 
+        stored in the same file as different HDUs.
         """
         import pyfits
         import os
@@ -108,8 +106,7 @@ class RealGalaxyCatalog(object):
                 self.loaded_files[file_name] = pyfits.open(full_file_name)
 
     def getGal(self,i):
-        """
-        Returns the galaxy at index i as an ImageViewD object.
+        """Returns the galaxy at index i as an ImageViewD object.
         """
         if i >= len(self.gal_file_name):
             raise IndexError(
@@ -125,8 +122,7 @@ class RealGalaxyCatalog(object):
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
     def getPSF(self,i):
-        """
-        Returns the PSF at index i as an ImageViewD object.
+        """Returns the PSF at index i as an ImageViewD object.
         """
         if i >= len(self.PSF_file_name):
             raise IndexError(
@@ -144,20 +140,21 @@ class RealGalaxyCatalog(object):
 
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rotation_angle = None, 
             rand_rotate = True, rng = None, target_flux = 1000.0, image=None):
-    """@brief Function to simulate images (no added noise) from real galaxy training data.
+    """Function to simulate images (no added noise) from real galaxy training data.
 
-    This function takes a RealGalaxy from some training set, and manipulates it as needed to
+    This function takes a RealGalaxy from some training set, and manipulates it as needed to 
     simulate a (no-noise-added) image from some lower-resolution telescope.  It thus requires a
-    target ePSF (which could be an image, or one of our base classes) that represents all PSF
-    components including the pixel response, and a target pixel scale.  The default rotation option
-    is to impose a random rotation to make irrelevant any real shears in the galaxy training data
-    (optionally, the RNG can be supplied).  This default can be turned off by setting rand_rotate =
-    False or by requesting a specific rotation angle using the rotation_angle keyword, in which case
-    rand_rotate is ignored.  Optionally, the user can specify a shear (default 0).  Finally, they
-    can specify a flux normalization for the final image, default 1000.
+    target PSF (which could be an image, or one of our base classes) that represents all PSF 
+    components including the pixel response, and a target pixel scale.  
 
-    Parameters
-    ----------
+    The default rotation option is to impose a random rotation to make irrelevant any real shears 
+    in the galaxy training data (optionally, the RNG can be supplied).  This default can be turned 
+    off by setting `rand_rotate = False` or by requesting a specific rotation angle using the
+    `rotation_angle` keyword, in which case `rand_rotate` is ignored.
+
+    Optionally, the user can specify a shear (default 0).  Finally, they can specify a flux 
+    normalization for the final image, default 1000.
+
     @param real_galaxy         The RealGalaxy object to use.
     @param target_PSF          The target PSF, either one of our base classes or an ImageView/Image.
     @param target_pixel_scale  The pixel scale for the final image, in arcsec.
@@ -165,14 +162,14 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
                                                                    to pixel coordinates), default 0.
     @param g2                  Second component of shear to impose, default 0.
     @param rotation_angle      Angle by which to rotate the galaxy (must be an Angle instance).
-    @param rand_rotate         If true (default) then impose a random rotation on the training
-                               galaxy; this is ignored if rotation_angle is set.
+    @param rand_rotate         If `True` (default) then impose a random rotation on the training
+                               galaxy; this is ignored if `rotation_angle` is set.
     @param rng                 A random number generator to use for the random rotation angle.
-                               (may be any kind of BaseDeviate or None) (Default = None)
+                               (may be any kind of BaseDeviate or None) (default = None)
     @param target_flux         The target flux in the output galaxy image, default 1000.
     @param image               As with the GSObject.draw function, if an image is provided,
                                then it will be used and returned.
-                               If image=None, then an appropriately sized image will be created.
+                               If `image=None`, then an appropriately sized image will be created.
     """
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
@@ -181,7 +178,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1 = 0.0, g2 = 0.0, rot
         if isinstance(target_PSF, Class):
             lan5 = galsim.Lanczos(5, conserve_flux = True, tol = 1.e-4)
             interp2d = galsim.InterpolantXY(lan5)
-            target_PSF = galsim.SBInterpolatedImage(target_PSF.view(), interp2d, dx = target_pixel_scale)
+            target_PSF = galsim.SBInterpolatedImage(
+                target_PSF.view(), interp2d, dx = target_pixel_scale)
             break
     for Class in galsim.ImageView.itervalues():
         if isinstance(target_PSF, Class):

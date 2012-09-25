@@ -1,4 +1,5 @@
-"""@file ellipse.py @brief A few adjustments to the Ellipse class at the Python layer.
+"""@file ellipse.py
+A few adjustments to the Ellipse class at the Python layer.
 """
 
 from . import _galsim
@@ -7,7 +8,7 @@ import galsim
 
 
 class Ellipse(object):
-    """@brief A class to represent ellipses in a variety of ways.
+    """A class to represent ellipses in a variety of ways.
 
     The galsim Ellipse class (galsim.Ellipse) represents a shear (shape distortion), dilation,
     and/or centroid shift.
@@ -22,20 +23,19 @@ class Ellipse(object):
     CppEllipse object, and operations on Ellipse rely on wrapped methods of the CppEllipse.
 
     The following are all examples of valid calls to initialize a Ellipse object:
-    @code
-    s = galsim.Shear(g1=0.05, g2=0.05)
-    shift = galsim.PositionD(0.0, 0.2)
-    ell = galsim.Ellipse() # an empty ellipse, i.e. no shearing, dilation, shifting
-    ell = galsim.Ellipse(s) # represents shearing by s only
-    ell = galsim.Ellipse(shear = s) # same as previous, but with keyword explicitly named
-    ell = galsim.Ellipse(s, shift) # shear and shift
-    ell = galsim.Ellipse(shift, s) # can specify the arguments in any order
-    ell = galsim.Ellipse(s, y_shift=0.2) # same as previous, specifying the y shift directly
-    ell = galsim.Ellipse(mu=0.0, shear=s) # no dilation, but shear by s
-    ell = galsim.Ellipse(shift, g1=0.05, g2=0.05) # arguments can be used to specify a shear
-    ell = galsim.Ellipse(mu=0.5, g=0.5, beta=45.0*galsim.degrees) # dilation, shear via
-    keyword argument
-    @endcode
+    
+        >>> s = galsim.Shear(g1=0.05, g2=0.05)
+        >>> shift = galsim.PositionD(0.0, 0.2)
+        >>> ell = galsim.Ellipse()            # an empty ellipse, i.e. no shear, dilation, shift
+        >>> ell = galsim.Ellipse(s)           # represents shearing by s only
+        >>> ell = galsim.Ellipse(shear = s)   # same as previous, but with keyword explicitly named
+        >>> ell = galsim.Ellipse(s, shift)       # shear and shift
+        >>> ell = galsim.Ellipse(shift, s)       # can specify the arguments in any order
+        >>> ell = galsim.Ellipse(s, y_shift=0.2) # same as previous, specifying the y shift directly
+        >>> ell = galsim.Ellipse(mu=0.0, shear=s)         # no dilation, but shear by s
+        >>> ell = galsim.Ellipse(shift, g1=0.05, g2=0.05) # arguments can be used to specify a shear
+        >>> ell = galsim.Ellipse(mu=0.5, g=0.5, beta=45.0*galsim.degrees) # dilation, shear via
+                                                                          # keyword argument
 """
     def __init__(self, *args, **kwargs):
         use_mu = None

@@ -1,0 +1,7 @@
+*.aux
+*.ps
+*.sh
+*.dvi
+*.log
+*.out
+*.toc
