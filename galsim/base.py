@@ -196,12 +196,12 @@ class GSObject(object):
     def applyTransformation(self, ellipse):
         """Apply a galsim.Ellipse distortion to this object.
            
-        Ellipse objects can be initialized in a variety of ways (see documentation of this
-        class for details).
+        galsim.Ellipse objects can be initialized in a variety of ways (see documentation of this
+        class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
 
-        Note: if the ellipse includes a dilation, then this transformation will
-        not be flux-conserving.  It conserves surface brightness instead.
-        Thus, the flux will increase by the increase in area = dilation^2.
+        Note: if the ellipse includes a dilation, then this transformation will not be
+        flux-conserving.  It conserves surface brightness instead.  Thus, the flux will increase by
+        the increase in area = dilation^2.
 
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
@@ -257,11 +257,11 @@ class GSObject(object):
         self.applyTransformation(galsim.Ellipse(np.log(scale)))
        
     def applyShear(self, *args, **kwargs):
-        """Apply a shear to this object, where arguments are either a \link galsim.shear.Shear
-        galsim.Shear\endlink, or arguments that will be used to initialize one.
+        """Apply a shear to this object, where arguments are either a galsim.Shear, or arguments
+        that will be used to initialize one.
 
-        For more details about the allowed keyword arguments, see the documentation of \link
-        galsim.shear.Shear galsim.Shear\endlink.
+        For more details about the allowed keyword arguments, see the documentation for galsim.Shear
+        (for doxygen documentation, see galsim.shear.Shear).
 
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
@@ -316,8 +316,8 @@ class GSObject(object):
         """Returns a new GSObject by applying a galsim.Ellipse transformation 
         (shear, dilate, and/or shift).
 
-        Note that Ellipse objects can be initialized in a variety of ways (see documentation 
-        of this class for details).
+        Note that galsim.Ellipse objects can be initialized in a variety of ways (see documentation
+        of this class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
 
         @param ellipse The galsim.Ellipse transformation to apply
         @returns The transformed GSObject.
@@ -370,7 +370,8 @@ class GSObject(object):
         """Returns a new GSObject by applying a shear, where arguments are either a galsim.Shear or
         keyword arguments that can be used to create one.
 
-        For more details about the allowed keyword arguments, see the documentation of galsim.Shear.
+        For more details about the allowed keyword arguments, see the documentation of galsim.Shear
+        (for doxygen documentation, see galsim.shear.Shear).
         """
         ret = self.copy()
         ret.applyShear(*args, **kwargs)
