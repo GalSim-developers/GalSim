@@ -470,14 +470,14 @@ class GSObject(object):
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was 
-                       constructed with `image = galsim.ImageF()`), then it will be resized
-                       appropriately based on the profile's size (default `image = None`).
+                        constructed with `image = galsim.ImageF()`), then it will be resized
+                        appropriately based on the profile's size (default `image = None`).
 
         @param dx     If provided, use this as the pixel scale for the image.
                       If `dx` is `None` and `image != None`, then take the provided image's pixel 
-                       scale.
+                        scale.
                       If `dx` is `None` and `image == None`, then use the Nyquist scale 
-                       `= pi/maxK()`.
+                        `= pi/maxK()`.
                       If `dx <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
                       (Default `dx = None`.)
 
@@ -494,11 +494,11 @@ class GSObject(object):
                       less "folding" in Fourier space. (Default `wmult = 1.`)
 
         @param normalization  Two options for the normalization:
-                              "flux" or "f" means that the sum of the output pixels is normalized
-                                     to be equal to the total flux.  (Modulo any flux that
-                                     falls off the edge of the image of course.)
+                                "flux" or "f" means that the sum of the output pixels is normalized
+                                  to be equal to the total flux.  (Modulo any flux that falls off 
+                                  the edge of the image of course.)
                               "surface brightness" or "sb" means that the output pixels sample
-                                     the surface brightness distribution at each location.
+                                  the surface brightness distribution at each location.
                               (Default `normalization = "flux"`)
 
         @param add_to_image  Whether to add flux to the existing image rather than clear out
@@ -559,14 +559,15 @@ class GSObject(object):
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was constructed 
-                      with `image = galsim.ImageF()`), then it will be resized appropriately based 
-                      on the profile's size. (Default `image = None`.)
+                        with `image = galsim.ImageF()`), then it will be resized appropriately base 
+                        on the profile's size.
+                      (Default `image = None`.)
 
         @param dx     If provided, use this as the pixel scale for the image.
                       If `dx` is `None` and `image != None`, then take the provided image's pixel 
-                       scale.
+                        scale.
                       If `dx` is `None` and `image == None`, then use the Nyquist scale 
-                       `= pi/maxK()`.
+                        `= pi/maxK()`.
                       If `dx <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
                       (Default `dx = None`.)
 
@@ -577,11 +578,11 @@ class GSObject(object):
                       it would normally be made.
 
         @param normalization    Two options for the normalization:
-                                "flux" or "f" means that the sum of the output pixels is normalized
-                                       to be equal to the total flux.  (Modulo any flux that
-                                       falls off the edge of the image of course.)
-                                "surface brightness" or "sb" means that the output pixels sample
-                                       the surface brightness distribution at each location.
+                                 "flux" or "f" means that the sum of the output pixels is normalized
+                                   to be equal to the total flux.  (Modulo any flux that falls off 
+                                   the edge of the image of course.)
+                                 "surface brightness" or "sb" means that the output pixels sample
+                                   the surface brightness distribution at each location.
                                 (Default `normalization = "flux"`)
 
         @param add_to_image     Whether to add flux to the existing image rather than clear out
@@ -589,36 +590,36 @@ class GSObject(object):
                                 Note: This requires that image be provided (i.e. `image != None`)
                                 and that it have defined bounds (default `add_to_image = False`).
                               
-        @param n_photons        If provided, the number of photons to use.  If not provided (i.e. 
-                                `n_photons = 0`), use as many photons as necessary to result in an 
-                                image with the correct Poisson shot noise for the object's flux.
-                                For positive definite profiles, this is equivalent to 
-                                `n_photons = flux`.  However, some profiles need more than this 
-                                because some of the shot photons are negative (usually due to 
-                                interpolants). (Default `n_photons = 0`).
+        @param n_photons        If provided, the number of photons to use.
+                                If not provided (i.e. `n_photons = 0`), use as many photons as
+                                  necessary to result in an image with the correct Poisson shot 
+                                  noise for the object's flux.  For positive definite profiles, this
+                                  is equivalent to `n_photons = flux`.  However, some profiles need
+                                  more than this because some of the shot photons are negative 
+                                  (usually due to interpolants).
+                                (Default `n_photons = 0`).
 
         @param uniform_deviate  If provided, a galsim.UniformDeviate to use for the random numbers
                                 If `uniform_deviate=None`, one will be automatically created, 
-                                 using the time as a seed.
+                                  using the time as a seed.
                                 (Default `uniform_deviate = None`)
 
         @param max_extra_noise  If provided, the allowed extra noise in each pixel.
-                                This is only relevant if `n_photons=0`, so the number of photons is 
-                                being automatically calculated.  In that case, if the image noise 
-                                is dominated by the sky background, you can get away with using 
-                                fewer shot photons than the full `n_photons = flux`.  Essentially 
-                                each shot photon can have a flux > 1, which increases the noise in 
-                                each pixel.
-                                The `max_extra_noise` parameter specifies how much extra noise per
-                                pixel is allowed because of this approximation.  A typical value 
-                                for this might be `max_extra_noise = sky_level / 100` where 
-                                `sky_level` is the flux per pixel due to the sky.
-                                If the natural number of photons produces less noise than this 
-                                value for all pixels, we lower the number of photons to bring the 
-                                resultant noise up to this value.  
-                                If the natural value produces more noise than this, we accept it 
-                                and just use the natural value.  Note that this uses a "variance" 
-                                definition of noise, not a "sigma" definition.
+                                  This is only relevant if `n_photons=0`, so the number of photons 
+                                  is being automatically calculated.  In that case, if the image 
+                                  noise is dominated by the sky background, you can get away with 
+                                  using fewer shot photons than the full `n_photons = flux`.
+                                  Essentially each shot photon can have a `flux > 1`, which 
+                                  increases the noise in each pixel.  The `max_extra_noise` 
+                                  parameter specifies how much extra noise per pixel is allowed 
+                                  because of this approximation.  A typical value for this might be
+                                  `max_extra_noise = sky_level / 100` where `sky_level` is the flux
+                                  per pixel due to the sky.  If the natural number of photons 
+                                  produces less noise than this value for all pixels, we lower the 
+                                  number of photons to bring the resultant noise up to this value.
+                                  If the natural value produces more noise than this, we accept it 
+                                  and just use the natural value.  Note that this uses a "variance"
+                                  definition of noise, not a "sigma" definition.
                                 (Default `max_extra_noise = 0.`)
 
         @param poisson_flux     Whether to allow total object flux scaling to vary according to 
