@@ -6,8 +6,10 @@ Functions for dealing with galsim.RealGalaxy objects and the catalogs that store
 
 The galsim.RealGalaxy uses images of galaxies from real astrophysical data (e.g. the Hubble Space
 Telescope), along with a PSF model of the optical properties of the telescope that took these
-images, to simulate new galaxy images with a different (must be larger) telescope PSF.  For details
-of the method in a previous implementation see Mandelbaum et al. (2012; MNRAS, 540, 1518).
+images, to simulate new galaxy images with a different (must be larger) telescope PSF.  A 
+description of the simulation method can be found in Section 5 of Mandelbaum et al. (2012; MNRAS, 
+540, 1518), although note that the details of the implementation in Section 7 of that work are not 
+relevant to the more recent software used here.
 
 This module defines the RealGalaxyCatalog class, used to store all required information about a
 real galaxy simulation training sample and accompanying PSF model.
