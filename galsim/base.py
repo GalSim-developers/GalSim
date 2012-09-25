@@ -1474,43 +1474,28 @@ class Add(GSObject):
 class Convolve(GSObject):
     """A class for convolving 2 or more GSObjects.
 
-    The objects to be convolved may be provided either as multiple unnamed arguments
-    (e.g. `Convolve(psf,gal,pix)`) or as a list (e.g. `Convolve([psf,gal,pix])`).
-    Any number of objects may be provided using either syntax.  (Even 0 or 1, although
-    that doesn't really make much sense.)
+    The objects to be convolved may be provided either as multiple unnamed arguments (e.g. 
+    `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf,gal,pix])`).  Any number of objects
+    may be provided using either syntax.  (Even 0 or 1, although that doesn't really make much 
+    sense.)
    
-    The convolution will normally be done using discrete Fourier transforms of 
-    each of the component profiles, multiplying them together, and then transforming
-    back to real space.
+    The convolution will normally be done using discrete Fourier transforms of each of the component
+    profiles, multiplying them together, and then transforming back to real space.
    
-    The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2)
-    where the sum is over all the components being convolved.  Since the size of 
-    the convolved image scales roughly as the quadrature sum of the components,
-    this should be close to Pi/Rmax where Rmax is the radius that encloses
-    all but (1-alias_threshold) of the flux in the final convolved image..
+    There is also an option to do the convolution as integrals in real space.  To do this, use the 
+    optional keyword argument `real_space = True`.  Currently, the real-space integration is only 
+    enabled for 2 profiles.  (Aside from the trivial implementaion for 1 profile.)  If you try to
+    use it for more than 2 profiles, an exception will be raised.
     
-    The maxK used for the k-space image will be the minimum of the maxK calculated for
-    each component.  Since the k-space images are multiplied, if one of them is 
-    essentially zero beyond some k value, then that will be true of the final image
-    as well.
-    
-    There is also an option to do the convolution as integrals in real space.
-    To do this, use the optional keyword argument real_space=True.
-    Currently, the real-space integration is only enabled for 2 profiles.
-    (Aside from the trivial implementaion for 1 profile.)  If you try to use it 
-    for more than 2 profiles, an exception will be raised.
-    
-    The real-space convolution is normally slower than the DFT convolution.
-    The exception is if both component profiles have hard edges.  e.g. a truncated
-    Moffat with a Pixel.  In that case, the maxK for each component is quite large
-    since the ringing dies off fairly slowly.  So it can be quicker to use 
-    real-space convolution instead.  Also, real-space convolution tends to be more
-    accurate in this case as well.
+    The real-space convolution is normally slower than the DFT convolution.  The exception is if
+    both component profiles have hard edges, e.g. a truncated Moffat with a Pixel.  In that case,
+    the highest frequency `maxK` for each component is quite large since the ringing dies off fairly
+    slowly.  So it can be quicker to use real-space convolution instead.  Also, real-space 
+    convolution tends to be more accurate in this case as well.
 
-    If you do not specify either True or False explicitly, then we check if 
-    there are 2 profiles, both of which have hard edges.  In this case, we 
-    automatically use real-space convolution.  In all other cases, the 
-    default is to use the DFT algorithm.
+    If you do not specify either True or False explicitly, then we check if there are 2 profiles, 
+    both of which have hard edges.  In this case, we automatically use real-space convolution.  In 
+    all other cases, the default is to use the DFT algorithm.
     """
                     
     # --- Public Class methods ---
