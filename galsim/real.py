@@ -86,8 +86,8 @@ class RealGalaxyCatalog(object):
         # i.e. (dataset, ID within dataset)
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
-    def get_index_for_id(self, id):
-        """Find which index number corresponds to the value ID in the ident field.
+    def _get_index_for_id(self, id):
+        """Internal function to find which index # corresponds to the value ID in the ident field.
         """
         # Just to be completely consistent, convert id to a string in the same way we
         # did above for the ident array:
