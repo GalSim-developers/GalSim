@@ -14,8 +14,9 @@ class Ellipse(object):
     and/or centroid shift.
 
     The python Ellipse class can be initialized in a variety of ways.  Unnamed arguments must be a
-    galsim.Shear object for shape distortion, a float for dilation (via the mu parameter),
-    and/or a Position for centroid shift.  Some examples are listed below.
+    galsim.Shear object for shape distortion (see galsim.shear.Shear for doxygen documentation), a
+    float for dilation (via the mu parameter), and/or a Position for centroid shift.  Some examples
+    are listed below.
 
     Keyword arguments can be used to set parameters of the shape distortion the same as for the
     Shear class; or the parameter `dilation` can be used for re-sizing; or the parameters
