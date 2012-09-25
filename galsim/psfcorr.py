@@ -28,13 +28,25 @@ detailed discussion on all of these algorithms, see the relevant papers above.
 def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS", flags = 0xe,
                      guess_sig_gal = 5.0, guess_sig_PSF = 3.0, precision = 1.0e-6,
                      guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True):
-    """PSF correction method from HSM.
+    """Carry out moments-based PSF correction routines.
 
     Carry out PSF correction using one of the methods of the HSM package (see references in
-    docstring for file psfcorr.py) to estimate shears, correcting for the convolution by the PSF.
+    docstring for file psfcorr.py) to estimate galaxy shears, correcting for the convolution by the
+    PSF.  This method works from Image inputs rather than galsim.base.GSObject inputs, which provides additional
+    flexibility (e.g., it is possible to work from an Image that was read from file and corresponds to no
+    particular GSObject), but this also means that users who wish to apply it to simple combinations of
+    GSObjects (e.g., a Convolve) must take the additional step of drawing their GSObjects into
+    Images.  This function has a number of keyword parameters, many of which a typical user will not
+    need to change from the default.  Note that the method will fail if the PSF or galaxy are too
+    point-like to easily fit an elliptical Gaussian; when running on batches of many galaxies, it
+    may be preferable to set `strict=False` and catch errors explicitly, as in the second example
+    below.
+
 
     Example usage
     -------------
+
+    Typical application to a single object:
 
         >>> galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
         >>> galaxy.applyShear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
@@ -52,9 +64,8 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     `result.corrected_shape` is `(0.0993412,-1.86255e-09)`, compared with the expected
     `(0.09975, 0)` for a perfect PSF correction method.
 
-    Note that the method will fail if the PSF or galaxy are too point-like to easily fit an 
-    elliptical Gaussian; when running on batches of many galaxies, it may be preferable to set 
-    `strict=False` and catch errors explicitly, i.e.
+    The code below gives an example of how one could run this routine on a large batch of galaxies,
+    explicitly catching and tracking any failures:
 
         n_image = 100
         n_fail = 0
