@@ -1,4 +1,5 @@
-"""@file bounds.py @brief A few adjustments to the Bounds class at the Python layer.
+"""@file bounds.py
+A few adjustments to the Bounds class at the Python layer.
 """
 
 from . import _galsim
