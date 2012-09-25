@@ -852,30 +852,30 @@ class AtmosphericPSF(GSObject):
 
     Initialization
     --------------
-    
+    Example:    
+
         >>> atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolant=None, oversampling=1.5)
     
-
     Initializes atmospheric_psf as a galsim.AtmosphericPSF() instance.  This class is currently
     deprecated in favour of the newer Kolmogorov class which does not require grid FFTs.  However,
     it is retained as a placeholder for a future AtmosphericPSF which will model the turbulent
     atmosphere stochastically.
 
-    @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
-                           consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
-                           PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
-                           values for the Fried parameter are on the order of 10 cm for most 
-                           observatories and up to 20 cm for excellent sites. The values are 
-                           usually quoted at lambda = 500 nm and r0 depends on wavelength as
+    @param lam_over_r0     lambda / r0 in the physical units adopted for apparent sizes (user 
+                           responsible for consistency), where r0 is the Fried parameter.  The FWHM
+                           of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 
+                           108). Typical  values for the Fried parameter are on the order of 10cm 
+                           for most observatories and up to 20cm for excellent sites.  The values 
+                           are usually quoted at lambda = 500nm and r0 depends on wavelength as
                            [r0 ~ lambda^(-6/5)].
     @param fwhm            FWHM of the Kolmogorov PSF.
-                           Either fwhm or lam_over_r0 (and only one) must be specified.
-    @param interpolant     optional keyword for specifying the interpolation scheme [default
+                           Either `fwhm` or `lam_over_r0` (and only one) must be specified.
+    @param interpolant     Optional keyword for specifying the interpolation scheme [default
                            `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`]
-    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
-                           [default `oversampling = 1.5`], setting oversampling < 1 will produce 
+    @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
+                           [default `oversampling = 1.5`], setting `oversampling < 1` will produce 
                            aliasing in the PSF (not good).
-    @param flux            total flux of the profile [default `flux=1.`]
+    @param flux            Total flux of the profile [default `flux=1.`]
     
     Methods
     -------
@@ -1040,9 +1040,9 @@ class Kolmogorov(GSObject):
     @param lam_over_r0        lambda / r0 in the physical units adopted (user responsible for 
                               consistency), where r0 is the Fried parameter. The FWHM of the
                               Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
-                              Typical values for the Fried parameter are on the order of 10 cm for
-                              most observatories and up to 20 cm for excellent sites. The values are
-                              usually quoted at lambda = 500 nm and r0 depends on wavelength as
+                              Typical values for the Fried parameter are on the order of 10cm for
+                              most observatories and up to 20cm for excellent sites. The values are
+                              usually quoted at lambda = 500nm and r0 depends on wavelength as
                               [r0 ~ lambda^(-6/5)].
     @param fwhm               FWHM of the Kolmogorov PSF.
     @param half_light_radius  Half-light radius of the Kolmogorov PSF.
@@ -1128,27 +1128,27 @@ class OpticalPSF(GSObject):
 
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
-    @param defocus         defocus in units of incident light wavelength.
-    @param astig1          first component of astigmatism (like e1) in units of incident light
+    @param defocus         Defocus in units of incident light wavelength.
+    @param astig1          First component of astigmatism (like e1) in units of incident light
                            wavelength.
-    @param astig2          second component of astigmatism (like e2) in units of incident light
+    @param astig2          Second component of astigmatism (like e2) in units of incident light
                            wavelength.
-    @param coma1           coma along x in units of incident light wavelength.
-    @param coma2           coma along y in units of incident light wavelength.
-    @param spher           spherical aberration in units of incident light wavelength.
-    @param circular_pupil  adopt a circular pupil? Alternative is square.
-    @param obscuration     linear dimension of central obscuration as fraction of pupil linear 
+    @param coma1           Coma along x in units of incident light wavelength.
+    @param coma2           Coma along y in units of incident light wavelength.
+    @param spher           Spherical aberration in units of incident light wavelength.
+    @param circular_pupil  Adopt a circular pupil? Alternative is square.
+    @param obscuration     Linear dimension of central obscuration as fraction of pupil linear 
                            dimension, [0., 1.) [default `obscuration = 0.`].
-    @param interpolant     optional keyword for specifying the interpolation scheme [default 
+    @param interpolant     Optional keyword for specifying the interpolation scheme [default 
                            `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].
-    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
+    @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
                            [default `oversampling = 1.5`], setting oversampling < 1 will produce 
                            aliasing in the PSF (not good).
-    @param pad_factor      additional multiple by which to zero-pad the PSF image to avoid folding
-                           compared to what would be required for a simple Airy 
+    @param pad_factor      Additional multiple by which to zero-pad the PSF image to avoid folding
+                           compared to what would be employed for a simple galsim.Airy 
                            [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 
                            increased for stronger aberrations, i.e. those larger than order unity.
-    @param flux            total flux of the profile [default `flux=1.`].
+    @param flux            Total flux of the profile [default `flux=1.`].
      
     Methods
     -------
@@ -1578,43 +1578,37 @@ class Add(GSObject):
 class Convolve(GSObject):
     """A class for convolving 2 or more GSObjects.  Has an SBConvolve in the SBProfile attribute.
 
-    The objects to be convolved may be provided either as multiple unnamed arguments
-    (e.g. `Convolve(psf,gal,pix)`) or as a list (e.g. `Convolve([psf,gal,pix])`).
-    Any number of objects >=1 may be provided using either syntax.  (Even 1, although
-    that doesn't really make much sense.)
+    The objects to be convolved may be provided either as multiple unnamed arguments (e.g. 
+    `Convolve(psf,gal,pix)`) or as a list (e.g. `Convolve([psf,gal,pix])`).  Any number of 
+    objects >=1 may be provided using either syntax.  (Even 1, although that doesn't really make 
+    much sense.)
    
-    The convolution will normally be done using discrete Fourier transforms of 
-    each of the component profiles, multiplying them together, and then transforming
-    back to real space.
+    The convolution will normally be done using discrete Fourier transforms of each of the component
+    profiles, multiplying them together, and then transforming back to real space.
    
-    The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2)
-    where the sum is over all the components being convolved.  Since the size of 
-    the convolved image scales roughly as the quadrature sum of the components,
-    this should be close to Pi/Rmax where Rmax is the radius that encloses
-    all but (1-alias_threshold) of the flux in the final convolved image.
+    The `stepK` used for the k-space image will be (Sum 1/stepK()^2)^(-1/2) where the sum is over 
+    all the components being convolved.  Since the size of the convolved image scales roughly as the
+    quadrature sum of the components, this should be close to Pi/Rmax where Rmax is the radius that
+    encloses all but `(1-alias_threshold)` of the flux in the final convolved image.
     
-    The maxK used for the k-space image will be the minimum of the maxK calculated for
-    each component.  Since the k-space images are multiplied, if one of them is 
-    essentially zero beyond some k value, then that will be true of the final image
-    as well.
+    The maxK used for the k-space image will be the minimum of the maxK calculated for each 
+    component.  Since the k-space images are multiplied, if one of them is essentially zero beyond 
+    some k value, then that will be true of the final image as well.
     
-    There is also an option to do the convolution as integrals in real space.
-    To do this, use the optional keyword argument real_space=True.
-    Currently, the real-space integration is only enabled for 2 profiles.
-    (Aside from the trivial implementaion for 1 profile.)  If you try to use it 
-    for more than 2 profiles, an exception will be raised.
+    There is also an option to do the convolution as integrals in real space.  To do this, use the 
+    optional keyword argument `real_space = True`.  Currently, the real-space integration is only 
+    enabled for convolutions of 2 profiles. (Aside from the trivial implementaion for 1 profile.)  
+    If you try to use it for more than 2 profiles, an exception will be raised.
     
-    The real-space convolution is normally slower than the DFT convolution.
-    The exception is if both component profiles have hard edges, e.g., a truncated
-    Moffat with a Pixel.  In that case, the maxK for each component is quite large
-    since the ringing dies off fairly slowly.  So it can be quicker to use 
-    real-space convolution instead.  Also, real-space convolution tends to be more
-    accurate in this case as well.
+    The real-space convolution is normally slower than the DFT convolution.  The exception is if 
+    both component profiles have hard edges, e.g., a truncated Moffat with a Pixel.  In that case, 
+    the `maxK` for each component is quite large since the ringing dies off fairly slowly.  So it 
+    can be quicker to use real-space convolution instead.  Also, real-space convolution tends to be
+    more accurate in this case as well.
 
-    If you do not specify either True or False explicitly, then we check if 
-    there are 2 profiles, both of which have hard edges.  In this case, we 
-    automatically use real-space convolution.  In all other cases, the 
-    default is to use the DFT algorithm.
+    If you do not specify either `real_space = True` or `False` explicitly, then we check if there 
+    are 2 profiles, both of which have hard edges.  In this case, we automatically use real-space 
+    convolution.  In all other cases, the default is not to use real-space convolution.
     """
                     
     # --- Public Class methods ---
