@@ -1374,7 +1374,7 @@ class RealGalaxy(GSObject):
         elif id != None:
             if (random == True):
                 raise RuntimeError('Too many methods for selecting a galaxy!')
-            use_index = real_galaxy_catalog.get_index_for_id(id)
+            use_index = real_galaxy_catalog._get_index_for_id(id)
         elif random == True:
             if uniform_deviate == None:
                 uniform_deviate = galsim.UniformDeviate()
