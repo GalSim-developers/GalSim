@@ -12,7 +12,10 @@ description of the simulation method can be found in Section 5 of Mandelbaum et 
 relevant to the more recent software used here.
 
 This module defines the RealGalaxyCatalog class, used to store all required information about a
-real galaxy simulation training sample and accompanying PSF model.
+real galaxy simulation training sample and accompanying PSF model.  For information about 
+downloading GalSim-readable RealGalaxyCatalog data in FITS format, see the RealGalaxy Data Download
+page on the GalSim Wiki: 
+https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data%20Download%20Page
 
 The function simReal takes this information and uses it to simulate a (no-noise-added) image from 
 some lower-resolution telescope.
