@@ -18,7 +18,7 @@ except ImportError:
     import galsim
 
 # define some variables etc.
-real_catalog_filename = 'data/real_galaxy_catalog_example.fits'
+real_catalog_filename = 'real_galaxy_catalog_example.fits'
 image_dir = 'data'
 output_dir = 'output'
 good_psf_central_fwhm = 0.6 # arcsec; FWHM of smaller Gaussian in the double Gaussian for good 
@@ -29,6 +29,7 @@ outer_fwhm_mult = 2.0 # ratio of (outer)/(inner) Gaussian FWHM for double Gaussi
 pixel_scale = 0.2 # arcsec
 g1 = 0.05
 g2 = 0.00
+wmult = 1.0 # oversampling to use in intermediate steps of calculations
 
 # read in a random galaxy from the training data
 rgc = galsim.RealGalaxyCatalog(real_catalog_filename, image_dir)
@@ -49,14 +50,15 @@ pixel = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
 good_epsf = galsim.Convolve(good_psf, pixel)
 bad_epsf = galsim.Convolve(bad_psf, pixel)
 
-# simulate some nice ground-based data, e.g., Subaru/CFHT with good seeing; with and without shear
+# simulate some high-quality ground-based data, e.g., Subaru/CFHT with good seeing; with and without
+# shear
 print "Simulating unsheared galaxy in good seeing..."
 sim_image_good_noshear = galsim.simReal(real_galaxy, good_epsf, pixel_scale, rand_rotate=False)
 print "Simulating sheared galaxy in good seeing..."
 sim_image_good_shear = galsim.simReal(real_galaxy, good_epsf, pixel_scale, g1=g1, g2=g2,
                                       rand_rotate=False)
 
-# simulate some crappy ground-based data, e.g., a bad night at SDSS; with and without shear
+# simulate some poor-quality ground-based data, e.g., a bad night for SDSS; with and without shear
 print "Simulating unsheared galaxy in bad seeing..."
 sim_image_bad_noshear = galsim.simReal(real_galaxy, bad_epsf, pixel_scale, rand_rotate=False)
 print "Simulating sheared galaxy in bad seeing..."
@@ -65,11 +67,18 @@ sim_image_bad_shear = galsim.simReal(real_galaxy, bad_epsf, pixel_scale, g1=g1, 
 
 # write to files: original galaxy, original PSF, 2 target PSFs, 4 simulated images
 # note: will differ each time it is run, because we chose a random image
-print "Writing results to files!"
-orig_gal_img = real_galaxy.original_image.draw(dx=real_galaxy.pixel_scale)
+print "Drawing images and writing to files!"
+
+N = real_galaxy.original_image.getGoodImageSize(real_galaxy.pixel_scale, wmult)
+orig_gal_img = galsim.ImageF(N, N)
+orig_gal_img.setScale(real_galaxy.pixel_scale)
+real_galaxy.original_image.draw(orig_gal_img.view())
 orig_gal_img.write(os.path.join(output_dir, 'demoreal.orig_gal.fits'), clobber=True)
 
-orig_psf_img = real_galaxy.original_PSF.draw(dx=real_galaxy.pixel_scale)
+N = real_galaxy.original_PSF.getGoodImageSize(real_galaxy.pixel_scale, wmult)
+orig_psf_img = galsim.ImageF(N, N)
+orig_psf_img.setScale(real_galaxy.pixel_scale)
+real_galaxy.original_PSF.draw(orig_psf_img.view())
 orig_psf_img.write(os.path.join(output_dir, 'demoreal.orig_PSF.fits'), clobber=True)
 
 good_epsf_img = good_epsf.draw(dx=pixel_scale)
