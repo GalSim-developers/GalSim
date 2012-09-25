@@ -167,7 +167,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     Optionally, the user can specify a shear (default 0).  Finally, they can specify a flux 
     normalization for the final image, default 1000.
 
-    @param real_galaxy         The RealGalaxy object to use.
+    @param real_galaxy         The RealGalaxy object to use, not modified in generating the
+                               simulated image.
     @param target_PSF          The target PSF, either one of our base classes or an ImageView/Image.
     @param target_pixel_scale  The pixel scale for the final image, in arcsec.
     @param g1                  First component of shear to impose (components defined with respect
@@ -184,6 +185,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     @param image               As with the GSObject.draw() function, if an image is provided,
                                then it will be used and returned.
                                If `image=None`, then an appropriately sized image will be created.
+    @return A simulated galaxy image.  The input RealGalaxy is unmodified. 
     """
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
