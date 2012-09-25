@@ -32,7 +32,7 @@ def write(image, fits, add_wcs=True, clobber=True):
                      custom header keys.  If `add_wcs` is a string, this will be used as the WCS 
                      name. (Default `add_wcs = True`.)
     @param clobber   Setting `clobber=True` when `fits` is a string will silently overwrite existing
-                     files. (Default: `clobber=True`.)
+                     files. (Default `clobber = True`.)
     """
     import pyfits    # put this at function scope to keep pyfits optional
 
