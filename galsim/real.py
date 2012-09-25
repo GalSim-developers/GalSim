@@ -2,7 +2,13 @@ import galsim
 import utilities
 
 """@file real.py
-Necessary functions for dealing with real galaxies and their catalogs.
+Functions for dealing with galsim.RealGalaxy objects and the catalogs that store their data.
+
+The galsim.RealGalaxy uses images of galaxies from real astrophysical data (e.g. the Hubble Space
+Telescope), along with a PSF model of the optical properties of the telescope that took these
+images, to generate simulate new galaxy images with a different (must be larger) telescope PSF.
+For details of the method in a previous implementation see Mandelbaum et al. (2012; MNRAS, 540, 
+1518).
 
 This module defines the RealGalaxyCatalog class, used to store all required information about a
 real galaxy simulation training sample and accompanying PSF model.
