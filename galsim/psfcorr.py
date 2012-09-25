@@ -2,6 +2,27 @@ from . import _galsim
 
 """@file psfcorr.py 
 Routines for adaptive moment estimation and PSF correction.
+
+This file contains the python interface to C++ routines for estimation of second moments of images,
+and for carrying out PSF correction using a variety of algorithms.  The algorithms are described in
+Hirata & Seljak (2003; MNRAS, 343, 459), and were tested/characterized using real data in Mandelbaum
+et al. (2005; MNRAS, 361, 1287).
+
+The moments that are estimated are "adaptive moments" (see the first paper cited above for details);
+that is, they use an elliptical Gaussian weight that is matched to the image of the object being
+measured.  The PSF correction includes several algorithms:
+
+- One from Kaiser, Squires, & Broadhurts (1995), "KSB"
+
+- One from Bernstein & Jarvis (2002), "BJ"
+
+- One that represents a modification by Hirata & Seljak (2003) of methods in Bernstein & Jarvis
+(2002), "LINEAR"
+
+- One new method from Hirata & Seljak (2003), "REGAUSS"
+
+These are all based on correction of moments, but with different sets of assumptions.  For more
+detailed discussion on all of these algorithms, see the relevant papers above.
 """
 
 def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS", flags = 0xe,
