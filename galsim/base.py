@@ -479,7 +479,7 @@ class GSObject(object):
                       `= pi/maxK()` (default `dx = None`).
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
-                      numbers output from a CCD).  (Default `gain =  1.`).
+                      numbers output from a CCD).  (Default `gain =  1.`)
 
         @param wmult  A factor by which to make an automatically-sized image larger than 
                       it would normally be made.  This factor also applies to any intermediate 
@@ -488,7 +488,7 @@ class GSObject(object):
                       (see include/galsim/SBProfile.h); however, if you see strange artifacts 
                       in the image, you might try using wmult > 1.  This will take longer of 
                       course, but it will produce more accurate images, since they will have 
-                      less "folding" in Fourier space. (Default `wmult = 1.`).
+                      less "folding" in Fourier space. (Default `wmult = 1.`)
 
         @param normalization  Two options for the normalization:
                               "flux" or "f" means that the sum of the output pixels is normalized
@@ -500,7 +500,7 @@ class GSObject(object):
 
         @param add_to_image  Whether to add flux to the existing image rather than clear out
                              anything in the image before drawing.
-                             Note: This requires that image be provided (i.e. `image` is not `None`) 
+                             Note: This requires that image be provided (i.e. `image` is not `None`)
                              and that it have defined bounds (default `add_to_image = False`).
 
         @returns      The drawn image.
@@ -546,94 +546,98 @@ class GSObject(object):
         convolved with the square image pixel.  So when using drawShoot() instead of draw(), you
         should not explicitly include the pixel response by convolving with a Pixel GSObject.  Using
         drawShoot without convolving with a Pixel will produce the equivalent image (for very large
-        n_photons) as draw() produces when the same object is convolved with Pixel(xw=dx) when
-        drawing onto an image with pixel scale dx.
+        n_photons) as draw() produces when the same object is convolved with `Pixel(xw=dx)` when
+        drawing onto an image with pixel scale `dx`.
 
         Note that the drawShoot method is unavailable for objects which contain an SBDeconvolve,
         or are compound objects (e.g. Add, Convolve) that include an SBDeconvolve.
 
         @param image  If provided, this will be the image on which to draw the profile.
-                      If image=None, then an automatically-sized image will be created.
-                      if image != None, but its Bounds are undefined (e.g. if it was 
+                      If `image = None`, then an automatically-sized image will be created.
+                      If `image != None`, but its bounds are undefined (e.g. if it was 
                       constructed with `image = galsim.ImageF()`), then it will be resized
-                      appropriately based on the profile's size.
-                      (Default = None)
-        
-        @param dx     If provided, use this as the pixel scale for the image.
-                      If dx is None and image != None, then take the provided image's pixel scale.
-                      If dx is None and image == None, then use the Nyquist scale = pi/maxK()
-                      If dx <= 0 (regardless of image), then use the Nyquist scale = pi/maxK()
-                      (Default = None)
+                      appropriately based on the profile's size (default `image = None`).
 
-        @param gain   The number of photons per ADU.  (Default = 1.0)
+        @param dx     If provided, use this as the pixel scale for the image.
+                      If `dx` is `None` and `image != None`, then take the provided image's pixel 
+                      scale.  If `dx` is `None` and `image == None`, then use the Nyquist scale 
+                      `= pi/maxK()`.  If `dx <= 0` (regardless of image), then use the Nyquist scale 
+                      `= pi/maxK()` (default `dx = None`).
+
+        @param gain   The number of photons per ADU ("analog to digital units", the units of the 
+                      numbers output from a CCD).  (Default `gain =  1.`)
 
         @param wmult  A factor by which to make an automatically-sized image larger than 
-                      it would normally be made.  
-                      (Default = 1.)
+                      it would normally be made.  This factor also applies to any intermediate 
+                      images during Fourier calculations.  The size of the intermediate images
+                      are normally automatically chosen to reach some preset accuracy targets 
+                      (see include/galsim/SBProfile.h); however, if you see strange artifacts 
+                      in the image, you might try using wmult > 1.  This will take longer of 
+                      course, but it will produce more accurate images, since they will have 
+                      less "folding" in Fourier space. (Default `wmult = 1.`)
 
-        @param normalization  Two options for the normalization:
-                              "flux" or "f" means that the sum of the output pixels is normalized
-                                     to be equal to the total flux.  (Modulo any flux that
-                                     falls off the edge of the image of course.)
-                              "surface brightness" or "sb" means that the output pixels sample
-                                     the surface brightness distribution at each location.
-                              (Default = "flux")
+        @param normalization    Two options for the normalization:
+                                "flux" or "f" means that the sum of the output pixels is normalized
+                                       to be equal to the total flux.  (Modulo any flux that
+                                       falls off the edge of the image of course.)
+                                "surface brightness" or "sb" means that the output pixels sample
+                                       the surface brightness distribution at each location.
+                                (Default `normalization = "flux"`)
 
-        @param add_to_image  Whether to add flux to the existing image rather than clear out
-                             anything in the image before shooting.
-                             Note: This requires that image be provided (i.e. not None) and 
-                             that it have defined bounds.
-                             (Default = False)
+        @param add_to_image     Whether to add flux to the existing image rather than clear out
+                                anything in the image before drawing.
+                                Note: This requires that image be provided (i.e. `image != None`)
+                                and that it have defined bounds (default `add_to_image = False`).
                               
-        @param n_photons    If provided, the number of photons to use.
-                            If not provided, use as many photons as necessary to end up with
-                            an image with the correct poisson shot noise for the object's flux.
-                            For positive definite profiles, this is equivalent to n_photons = flux.
-                            However, some profiles need more than this because some of the shot
-                            photons are negative (usually due to interpolants).
-                            (Default = 0)
+        @param n_photons        If provided, the number of photons to use.  If not provided (i.e. 
+                                `n_photons = 0`), use as many photons as necessary to result in an 
+                                image with the correct Poisson shot noise for the object's flux.
+                                For positive definite profiles, this is equivalent to 
+                                `n_photons = flux`.  However, some profiles need more than this 
+                                because some of the shot photons are negative (usually due to 
+                                interpolants). (Default `n_photons = 0`).
 
-        @param uniform_deviate  If provided, a UniformDeviate to use for the random numbers
-                                If uniform_deviate=None, one will be automatically created, 
+        @param uniform_deviate  If provided, a galsim.UniformDeviate to use for the random numbers
+                                If `uniform_deviate=None`, one will be automatically created, 
                                 using the time as a seed.
-                                (Default = None)
+                                (Default `uniform_deviate = None`)
 
         @param max_extra_noise  If provided, the allowed extra noise in each pixel.
-                                This is only relevant if n_photons=0, so the number of photons is 
+                                This is only relevant if `n_photons=0`, so the number of photons is 
                                 being automatically calculated.  In that case, if the image noise 
                                 is dominated by the sky background, you can get away with using 
-                                fewer shot photons than the full n_photons = flux.  Essentially 
+                                fewer shot photons than the full `n_photons = flux`.  Essentially 
                                 each shot photon can have a flux > 1, which increases the noise in 
                                 each pixel.
-                                The max_extra_noise parameter specifies how much extra noise per
+                                The `max_extra_noise` parameter specifies how much extra noise per
                                 pixel is allowed because of this approximation.  A typical value 
-                                for this might be max_extra_noise = sky_level / 100 where 
-                                sky_level is the flux per pixel due to the sky.
+                                for this might be `max_extra_noise = sky_level / 100` where 
+                                `sky_level` is the flux per pixel due to the sky.
                                 If the natural number of photons produces less noise than this 
                                 value for all pixels, we lower the number of photons to bring the 
                                 resultant noise up to this value.  
                                 If the natural value produces more noise than this, we accept it 
                                 and just use the natural value.  Note that this uses a "variance" 
                                 definition of noise, not a "sigma" definition.
-                                (Default = 0.)
+                                (Default `max_extra_noise = 0.`)
 
-        @param poisson_flux  Whether to allow total object flux scaling to vary according to 
-                             Poisson statistics for n_photons samples.
-                             (Default = True)
+        @param poisson_flux     Whether to allow total object flux scaling to vary according to 
+                                Poisson statistics for `n_photons` samples (default 
+                                `poisson_flux = True`).
 
         @returns  The tuple (image, added_flux), where image is the input with drawn photons 
                   added and added_flux is the total flux of photons that landed inside the image 
                   bounds.
 
-        The second part of the return tuple may be useful as a sanity check that you have
-        provided a large enough image to catch most of the flux.  For example:
+        The second part of the return tuple may be useful as a sanity check that you have provided a
+        large enough image to catch most of the flux.  For example:
         
             image, added_flux = obj.drawShoot(image)
             assert added_flux > 0.99 * obj.getFlux()
         
-        However, the appropriate threshold will depend things like whether you are 
-        keeping poisson_flux=True, how high the flux is, how big your images are relative to
-        the size of your object, etc.
+        However, the appropriate threshold will depend things like whether you are keeping 
+        `poisson_flux = True`, how high the flux is, how big your images are relative to the size of
+        your object, etc.
         """
 
         # Raise an exception immediately if the normalization type is not recognized
