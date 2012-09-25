@@ -41,6 +41,7 @@ psf :
             # The first letter of the variable name indicates what type it is expected to be:
             #     f = float
             #     i = int
+            #     b = bool
             #     s = string
             #     a = Angle
             #     p = Position

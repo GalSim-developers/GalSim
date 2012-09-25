@@ -700,6 +700,8 @@ def _GenerateFromEval(param, param_name, base, value_type):
                 opt[key] = float
             elif key[0] == 'i':
                 opt[key] = int
+            elif key[0] == 'b':
+                opt[key] = bool
             elif key[0] == 's':
                 opt[key] = str
             elif key[0] == 'a':
@@ -720,6 +722,8 @@ def _GenerateFromEval(param, param_name, base, value_type):
 
     # Also, we allow the use of math functions
     import math
+    import numpy
+    import os
 
     # Try evaluating the string as is.
     try:
@@ -733,6 +737,16 @@ def _GenerateFromEval(param, param_name, base, value_type):
     if 'pos' in base:
         pos = base['pos']
         #print 'pos = ',pos
+    if 'rng' in base:
+        rng = base['rng']
+    if 'catalog' in base:
+        catalog = base['catalog']
+    if 'real_catalog' in base:
+        real_catalog = base['real_catalog']
+    if 'nfw_halo' in base:
+        nfw_halo = base['nfw_halo']
+    if 'power_spectrum' in base:
+        power_spectrum = base['power_spectrum']
 
     try:
         val = value_type(eval(string))
