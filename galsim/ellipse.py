@@ -18,8 +18,8 @@ class Ellipse(object):
     and/or a Position for centroid shift.  Some examples are listed below.
 
     Keyword arguments can be used to set parameters of the shape distortion the same as for the
-    Shear class; or the parameter "dilation" can be used for re-sizing; or the parameters
-    "x_shift" and "y_shift" can be used for centroid shifts.  The galsim.Ellipse contains a C++
+    Shear class; or the parameter `dilation` can be used for re-sizing; or the parameters
+    `x_shift` and `y_shift` can be used for centroid shifts.  The galsim.Ellipse contains a C++
     CppEllipse object, and operations on Ellipse rely on wrapped methods of the CppEllipse.
 
     The following are all examples of valid calls to initialize a Ellipse object:
@@ -86,7 +86,7 @@ class Ellipse(object):
             else:
                 if not isinstance(use_shear, galsim.Shear):
                     raise TypeError("Shear passed to Ellipse constructor was not a Shear!")
-                # if shear was passed using the 'shear' keyword, then we should not allow any other args
+            # if shear was passed using the 'shear' keyword, then we should not allow any other args
                 if kwargs:
                     raise TypeError("Keyword arguments to Ellipse not permitted: %s"%kwargs.keys())
         else:
