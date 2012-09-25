@@ -4,19 +4,21 @@ import numpy as np
 import galsim
 import utilities
 
+version = '0.1'
+
 """@file base.py 
 Definitions for the GalSim base classes and associated methods
 
 This file includes the key parts of the user interface to GalSim: base classes representing surface
 brightness profiles for astronomical objects (galaxies, PSFs, pixel response).  These base classes
-are collectively known as GSObjects.  They include both simple objects like the galsim.Gaussian, a 2d 
-Gaussian intensity profile, and compound objects like the galsim.Add and galsim.Convolve, which 
+are collectively known as GSObjects.  They include both simple objects like the galsim.Gaussian, a 
+2d  Gaussian intensity profile, and compound objects like the galsim.Add and galsim.Convolve, which 
 represent the sum and convolution of multiple GSObjects, respectively. 
 
 These classes also have associated methods to (a) retrieve information (like the flux, half-light 
-radius, or intensity at a particular point); (b) carry out common operations, like shearing, rescaling
-of flux or size, rotating, and shifting; and (c) actually make images of the surface brightness 
-profiles.
+radius, or intensity at a particular point); (b) carry out common operations, like shearing, 
+rescaling of flux or size, rotating, and shifting; and (c) actually make images of the surface 
+brightness profiles.
 
 For a description of units conventions for scale radii for our base classes, see
 doc/GalSim_Quick_Reference.pdf section 2.2.  In short, any system that will ensure consistency
