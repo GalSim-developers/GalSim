@@ -23,44 +23,46 @@ namespace galsim {
         Position(const T xin=0, const T yin=0) : x(xin), y(yin) {}
 
         ///@brief Assignment.
-        Position& operator=(const Position rhs) 
+        Position& operator=(const Position<T>& rhs) 
         {
             if (&rhs == this) return *this;
             else { x=rhs.x; y=rhs.y; return *this; }
         }
 
         /// @brief Overloaded += operator, following standard vector algebra rules.
-        Position& operator+=(const Position rhs) { x+=rhs.x; y+=rhs.y; return *this; }
+        Position<T>& operator+=(const Position<T>& rhs) { x+=rhs.x; y+=rhs.y; return *this; }
 
         /// @brief Overloaded -= operator, following standard vector algebra rules.
-        Position& operator-=(const Position rhs) { x-=rhs.x; y-=rhs.y; return *this; }
+        Position<T>& operator-=(const Position<T>& rhs) { x-=rhs.x; y-=rhs.y; return *this; }
 
         /// @brief Overloaded *= operator for scalar multiplication.
-        Position& operator*=(const T rhs) { x*=rhs; y*=rhs; return *this; }
+        Position<T>& operator*=(const T rhs) { x*=rhs; y*=rhs; return *this; }
 
         /// @brief Overloaded /= operator for scalar division.
-        Position& operator/=(const T rhs) { x/=rhs; y/=rhs; return *this; }
+        Position<T>& operator/=(const T rhs) { x/=rhs; y/=rhs; return *this; }
 
         /// @brief Overloaded * vector multiplication operator for scalar on rhs.
-        Position operator*(const T rhs) const { return Position(x*rhs, y*rhs); }
+        Position<T> operator*(const T rhs) const { return Position<T>(x*rhs, y*rhs); }
 
         /// @brief Overloaded / vector division operator for scalar on rhs.
-        Position operator/(const T rhs) const { return Position(x/rhs, y/rhs); }
+        Position<T> operator/(const T rhs) const { return Position<T>(x/rhs, y/rhs); }
 
         /// @brief Unary negation (x, y) -> (-x, -y).
-        Position operator-() const { return Position(-x,-y); }
+        Position<T> operator-() const { return Position<T>(-x,-y); }
 
         /// @brief Overloaded vector + addition operator with a Position on the rhs.
-        Position operator+(Position<T> rhs) const { return Position(x+rhs.x,y+rhs.y); }
+        Position<T> operator+(const Position<T>& rhs) const 
+        { return Position<T>(x+rhs.x,y+rhs.y); }
 
         /// @brief Overloaded vector - subtraction operator with a Position on the rhs.
-        Position operator-(const Position<T> rhs) const { return Position(x-rhs.x,y-rhs.y); }
+        Position<T> operator-(const Position<T>& rhs) const 
+        { return Position<T>(x-rhs.x,y-rhs.y); }
 
         /// @brief Overloaded == relational equality operator.
-        bool operator==(const Position& rhs) const { return (x==rhs.x && y==rhs.y); }
+        bool operator==(const Position<T>& rhs) const { return (x==rhs.x && y==rhs.y); }
         
         /// @brief Overloaded != relational non-equality operator.
-        bool operator!=(const Position& rhs) const { return (x!=rhs.x || y!=rhs.y); }
+        bool operator!=(const Position<T>& rhs) const { return (x!=rhs.x || y!=rhs.y); }
 
         /// @brief Write (x, y) position to output stream.
         void write(std::ostream& fout) const { fout << "(" << x << "," << y << ")"; }
