@@ -56,36 +56,49 @@
         "type" : "G1G2",
         "g1" : -0.027,
         "g2" : 0.031
-    }
+    },
+
+    "#" : "Also apply a magnification mu = ( (1-kappa)^2 - |gamma|^2 )^-1",
+    "#" : "This conserves surface brightness, so it scale both the size and flux.",
+    "magnify" : 1.082
 },
 
-"#" : "For the galaxy file, We add the noise information to the image field.",
-"#" : "Note: since the output includes a data_cube output, which requires all the",
-"#" : "images to be the same size, GalSim will choose the size of the first image",
-"#" : "automatically from the profile, but then subsequent images will be forced to",
-"#" : "be the same size. ",
+"#" : "Define some other information about the images ",
 "image" : {
     "pixel_scale" : 0.15,
+
+    "#" : "If we specify the sky_level as an image attribute, it will be used",
+    "#" : "as a background level for the image.",
+    "sky_level" : 1e6,
+
+    "#" : "Since we already specified a sky_level for the whole image, we don't need",
+    "#" : "to repeat it for the noise.  So in fact, everything is default here.",
+    "#" : "So we can just set the noise to an empty dictionary, which means use all defaults.",
+    "#" : "(If we omit it entirely, that would mean no noise, which isn't what we want.)",
+    "noise" : {},
 
     "#" : "Define the initial random number seed",
     "random_seed" : 1512413,
 
-    "noise" : {
-        "sky_level" : 1e6
-    }
+    "#" : "Note: since the output includes a data_cube output, which requires all the",
+    "#" : "images to be the same size, GalSim will choose the size of the first image",
+    "#" : "automatically from the profile (since we aren't setting any image : size here),",
+    "#" : "but then subsequent images will be forced to be the same size as the first one."
 },
 
-"#" : "Define the galaxy profile",
-"#" : "We need to define where the real galaxy input catalog is.",
+"#" : "Define the input files",
 "input" : {
+    "#" : "In this case, we need to define where the real galaxy input catalog is.",
     "real_catalog" : {
         "image_dir" : "data",
         "file_name" : "real_galaxy_catalog_example.fits",
+
+	"#" : "This usually makes a big improvement in speed",
         "preload" : true
     }
 },
 
-"#" : "Define the output formats",
+"#" : "Define the name and format of the output file",
 "output" : {
     "type" : "DataCube",
     "dir" : "output_json",

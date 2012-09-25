@@ -1,28 +1,34 @@
 {
+"#" : "Demo #8",
 
-"#" : "JSON configuration file for use with the executable galsim_json",
-"#" : "From the examples directory, type:",
-"#" : "  galsim_json json/demo8a.json json/demo8b.json",
+"#" : "The eighth YAML configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be view in a window 100 characters wide.)",
 
-"#" : "This configuration file is designed to be equivalent to the example script called demo8.py",
+"#" : "In this script, we show how to build a configuration dict from within python, rather",
+"#" : "than using a config file.  The parallel tutorial examples/demo*.py have shown how to",
+"#" : "do the same thing as these demo*.yaml files directly in python.  Now we turn the tables",
+"#" : "and show how to use some of the machinery in the GalSim configuration processing ",
+"#" : "from within python itself.  As such, this config file doesn't add much in the way",
+"#" : "of new features.  The main one is the ability to build an image using multiple processes.",
+"#" : "We build the same image using a single process and again using 4 processes.",
 
-"#" : "   Make an image containing 10 x 10 postage stamps.",
-"#" : "   The galaxies are bulge + disk with parameters drawn from random variates",
-"#" : "   Each galaxy is drawn using photon shooting.",
+"#" : "New features introduced in this demo:",
 
-"#" : "   We do the same thing twice -- once with a single process, and again with ",
-"#" : "   multiprocessing.",
+"#" : "- image type : Tiled : stamp_size",
+"#" : "- image : nproc",
 
 "#" : "There are two .json files to do this.  The first one (demo8a.json) does the ",
 "#" : "run with just 1 process.  The second one (demo8b.json) is identical except for ",
 "#" : "setting nproc = 4 and outputting to a different file.",
 
+"#" : "Define the PSF profile",
 "psf" : {
     "type" : "Moffat",
     "beta" : 2.4,
     "fwhm" : 0.65
 },
 
+"#" : "Define the galaxy profile",
 "gal" : {
     "type" : "Sum",
     "items" : [
@@ -55,6 +61,7 @@
     "flux" : { "type" : "Random" , "min" : 1.0e4 , "max" : 1.0e5 }
 },
 
+"#" : "Define some other information about the images ",
 "image" : {
     "type" : "Tiled",
     "nx_tiles" : 10,
@@ -70,10 +77,10 @@
         "sky_level" : 1.0e4
     },
 
-    "random_seed" : 1512413
+    "random_seed" : 22345921
 },
 
-"#" : "The first version of this uses a single process",
+"#" : "Define the name and format of the output file",
 "output" : {
     "dir" : "output_json",
     "file_name" : "bpd_single.fits"

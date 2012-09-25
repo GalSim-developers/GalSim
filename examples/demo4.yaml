@@ -4,15 +4,15 @@
 # The fourth YAML configuration file in our tutorial about using Galsim config files
 # (This file is designed to be view in a window 100 characters wide.)
 #
-# This script is our first one to create multiple images.  Typically, you would want each object
-# to have at least some of its attributes vary when you are drawing multiple images (although 
-# not necessarily -- you might just want different noise realization of the same profile).  
-# The easiest way to do this is to read in the properties from a catalog, which is what we
-# do in this script.  The PSF is a truncated Moffat profile, and the galaxy is bulge plus disk.
-# Both components get many of its parameters from an input catalog.  We also shift the 
-# profile by a fraction of a pixel in each direction so the effect of pixelization varies
-# among the images.  Each galaxy has the same applied shear.  The noise is simple poisson noise.
-# We write the images out into a multi-extension fits file.
+# This script is our first one to create multiple images.  Typically, you would want each
+# object to have at least some of its attributes vary when you are drawing multiple images 
+# (although not necessarily -- you might just want different noise realization of the same 
+# profile).  The easiest way to do this is to read in the properties from a catalog, which is 
+# what we do in this script.  The PSF is a truncated Moffat profile, and the galaxy is bulge
+# plus disk.  Both components get many of its parameters from an input catalog.  We also
+# shift the profile by a fraction of a pixel in each direction so the effect of pixelization 
+# varies among the images.  Each galaxy has the same applied shear.  The noise is simple 
+# poisson noise.  We write the images out into a multi-extension fits file.
 #
 # New features introduced in this demo:
 #
@@ -46,10 +46,10 @@ psf :
     type : Moffat
     beta : 3.5
     fwhm : 
-        # These parameters do not need to be constant.  There are a number of ways to
+        # Parameters do not need to be constant.  There are a number of ways to
         # specify variables that might change from object to object.
         # In this case, the parameter specification also has a "type".
-        # For now we only have InputCatalog, which means read the value from a catalog:
+        # type = InputCatalog means read the value from a catalog:
         type : InputCatalog
 
         # InputCatalog requires the extra value of which column to use in the catalog:

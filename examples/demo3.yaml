@@ -74,8 +74,8 @@ psf :
             type : Kolmogorov
             fwhm : 2.1  # arcsec
 
-            # A shear at this level just applies to this component.
-            shear:
+            # An ellip at this level just applies to this component.
+            ellip:
                 type : EBeta
                 e : 0.13
                 beta : 0.81 radians

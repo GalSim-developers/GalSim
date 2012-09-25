@@ -35,10 +35,10 @@ time ../bin/demo8 || exit
 time ../bin/galsim_json json/demo8a.json json/demo8b.json || exit
 
 time ../bin/demo9 || echo "Sorry, sciPy required for running demo9"
-time ../bin/galsim_json demo9.json || echo "Sorry, sciPy required for running demo9"
+time ../bin/galsim_json json/demo9.json || echo "Sorry, sciPy required for running demo9"
 
 time ../bin/demo10 || exit
-time ../bin/galsim_json demo10.json || exit
+time ../bin/galsim_json json/demo10.json || exit
 
 echo 'Checking diffs: (No output means success)'
 
