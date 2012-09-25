@@ -467,20 +467,19 @@ class GSObject(object):
         flux, and that decide whether the clear the input Image before drawing into it.
 
         @param image  If provided, this will be the image on which to draw the profile.
-                      If image=None, then an automatically-sized image will be created.
-                      if image != None, but its bounds are undefined (e.g. if it was 
+                      If `image = None`, then an automatically-sized image will be created.
+                      If `image != None`, but its bounds are undefined (e.g. if it was 
                       constructed with `image = galsim.ImageF()`), then it will be resized
-                      appropriately based on the profile's size.
-                      (Default = None)
+                      appropriately based on the profile's size (default `image = None`).
 
         @param dx     If provided, use this as the pixel scale for the image.
-                      If dx is None and image != None, then take the provided image's pixel scale.
-                      If dx is None and image == None, then use the Nyquist scale = pi/maxK()
-                      If dx <= 0 (regardless of image), then use the Nyquist scale = pi/maxK()
-                      (Default = None)
+                      If `dx` is `None` and `image != None`, then take the provided image's pixel 
+                      scale.  If `dx` is `None` and `image == None`, then use the Nyquist scale 
+                      `= pi/maxK()`.  If `dx <= 0` (regardless of image), then use the Nyquist scale 
+                      `= pi/maxK()` (default `dx = None`).
 
-        @param gain   The number of photons per ADU ("analog to digital units", the units of the numbers output
-                      from a CCD).  (Default = 1.0)
+        @param gain   The number of photons per ADU ("analog to digital units", the units of the 
+                      numbers output from a CCD).  (Default `gain =  1.`).
 
         @param wmult  A factor by which to make an automatically-sized image larger than 
                       it would normally be made.  This factor also applies to any intermediate 
@@ -489,7 +488,7 @@ class GSObject(object):
                       (see include/galsim/SBProfile.h); however, if you see strange artifacts 
                       in the image, you might try using wmult > 1.  This will take longer of 
                       course, but it will produce more accurate images, since they will have 
-                      less "folding" in Fourier space.  (Default = 1.)
+                      less "folding" in Fourier space. (Default `wmult = 1.`).
 
         @param normalization  Two options for the normalization:
                               "flux" or "f" means that the sum of the output pixels is normalized
@@ -497,13 +496,12 @@ class GSObject(object):
                                      falls off the edge of the image of course.)
                               "surface brightness" or "sb" means that the output pixels sample
                                      the surface brightness distribution at each location.
-                              (Default = "flux")
+                              (Default `normalization = "flux"`)
 
         @param add_to_image  Whether to add flux to the existing image rather than clear out
                              anything in the image before drawing.
-                             Note: This requires that image be provided (i.e. not None) and 
-                             that it have defined bounds.
-                             (Default = False)
+                             Note: This requires that image be provided (i.e. `image` is not `None`) 
+                             and that it have defined bounds (default `add_to_image = False`).
 
         @returns      The drawn image.
         """
