@@ -540,7 +540,9 @@ class GSObject(object):
         """Draw an image of the object by shooting individual photons drawn from the surface 
         brightness profile of the object.
 
-        The drawShoot() method can create a new Image or can shoot photons which will be binned into
+        The drawShoot() method is used to draw an image of an object by shooting a number of photons
+        to randomly sample the profile of the object. The resulting image will thus have Poisson
+        noise due to the finite number of photons shot.  drawShoot() can create a new Image or use
         an existing one, depending on the choice of the `image` keyword parameter.  Other keywords
         of particular relevance for users are those that set the pixel scale for the image (`dx`),
         that choose the normalization convention for the flux (`normalization`), and that decide
