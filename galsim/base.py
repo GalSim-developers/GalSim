@@ -470,24 +470,26 @@ class GSObject(object):
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was 
-                      constructed with `image = galsim.ImageF()`), then it will be resized
-                      appropriately based on the profile's size (default `image = None`).
+                       constructed with `image = galsim.ImageF()`), then it will be resized
+                       appropriately based on the profile's size (default `image = None`).
 
         @param dx     If provided, use this as the pixel scale for the image.
                       If `dx` is `None` and `image != None`, then take the provided image's pixel 
-                      scale.  If `dx` is `None` and `image == None`, then use the Nyquist scale 
-                      `= pi/maxK()`.  If `dx <= 0` (regardless of image), then use the Nyquist scale 
-                      `= pi/maxK()` (default `dx = None`).
+                       scale.
+                      If `dx` is `None` and `image == None`, then use the Nyquist scale 
+                       `= pi/maxK()`.
+                      If `dx <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
+                      (Default `dx = None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
                       numbers output from a CCD).  (Default `gain =  1.`)
 
-        @param wmult  A factor by which to make an automatically-sized image larger than 
-                      it would normally be made.  This factor also applies to any intermediate 
-                      images during Fourier calculations.  The size of the intermediate images
-                      are normally automatically chosen to reach some preset accuracy targets 
-                      (see include/galsim/SBProfile.h); however, if you see strange artifacts 
-                      in the image, you might try using wmult > 1.  This will take longer of 
+        @param wmult  A factor by which to make an automatically-sized image larger than it would 
+                      normally be made.  This factor also applies to any intermediate images during
+                      Fourier calculations.  The size of the intermediate images are normally 
+                      automatically chosen to reach some preset accuracy targets (see 
+                      include/galsim/SBProfile.h); however, if you see strange artifacts in the 
+                      image, you might try using `wmult > 1`.  This will take longer of 
                       course, but it will produce more accurate images, since they will have 
                       less "folding" in Fourier space. (Default `wmult = 1.`)
 
@@ -556,15 +558,17 @@ class GSObject(object):
 
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
-                      If `image != None`, but its bounds are undefined (e.g. if it was 
-                      constructed with `image = galsim.ImageF()`), then it will be resized
-                      appropriately based on the profile's size (default `image = None`).
+                      If `image != None`, but its bounds are undefined (e.g. if it was constructed 
+                      with `image = galsim.ImageF()`), then it will be resized appropriately based 
+                      on the profile's size. (Default `image = None`.)
 
         @param dx     If provided, use this as the pixel scale for the image.
                       If `dx` is `None` and `image != None`, then take the provided image's pixel 
-                      scale.  If `dx` is `None` and `image == None`, then use the Nyquist scale 
-                      `= pi/maxK()`.  If `dx <= 0` (regardless of image), then use the Nyquist scale 
-                      `= pi/maxK()` (default `dx = None`).
+                       scale.
+                      If `dx` is `None` and `image == None`, then use the Nyquist scale 
+                       `= pi/maxK()`.
+                      If `dx <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
+                      (Default `dx = None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
                       numbers output from a CCD).  (Default `gain =  1.`)
@@ -595,7 +599,7 @@ class GSObject(object):
 
         @param uniform_deviate  If provided, a galsim.UniformDeviate to use for the random numbers
                                 If `uniform_deviate=None`, one will be automatically created, 
-                                using the time as a seed.
+                                 using the time as a seed.
                                 (Default `uniform_deviate = None`)
 
         @param max_extra_noise  If provided, the allowed extra noise in each pixel.
