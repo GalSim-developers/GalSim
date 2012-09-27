@@ -851,6 +851,50 @@ PyMODINIT_FUNC initcheck_python(void)
     config.Result(1)
     return 1
 
+
+def CheckPyTMV(config):
+    tmv_source_file = """
+#include "Python.h"
+#include "TMV_Sym.h"
+ 
+static void useTMV() {
+    tmv::SymMatrix<double> S(10,4.);
+    //tmv::Matrix<double> S(10,10,4.);
+    tmv::Matrix<double> m(10,3,2.);
+    tmv::Matrix<double> m2 = m / S;
+}
+
+static PyObject* run(PyObject* self, PyObject* args)
+{ 
+    useTMV();
+    return Py_BuildValue("i", 23); 
+}
+
+static PyMethodDef Methods[] = {
+    {"run",  run, METH_VARARGS, "return 23"},
+    {NULL, NULL, 0, NULL}
+};
+
+PyMODINIT_FUNC initcheck_tmv(void)
+{ Py_InitModule("check_tmv", Methods); }
+"""
+    config.Message('Checking if we can build module using TMV... ')
+
+    result = config.TryCompile(tmv_source_file,'.cpp')
+    if not result:
+        ErrorExit('Unable to compile a module using tmv')
+
+    result = (
+        CheckModuleLibs(config,[],tmv_source_file,'check_tmv') or
+        CheckModuleLibs(config,['mkl_rt'],tmv_source_file,'check_tmv') or
+        CheckModuleLibs(config,['mkl_base'],tmv_source_file,'check_tmv') )
+    if not result:
+        ErrorExit('Unable to build a python loadable module that uses tmv')
+   
+    config.Result(1)
+    return 1
+
+
 def CheckNumPy(config):
     numpy_source_file = """
 #include "Python.h"
@@ -1074,6 +1118,7 @@ def DoPyChecks(config):
     # These checks are only relevant for the pysrc compilation:
 
     config.CheckPython()
+    config.CheckPyTMV()
     config.CheckNumPy()
     config.CheckPyFITS() 
     config.CheckBoostPython()
@@ -1155,6 +1200,7 @@ def DoConfig(env):
         pyenv = env.Clone()
         config = pyenv.Configure(custom_tests = {
             'CheckPython' : CheckPython ,
+            'CheckPyTMV' : CheckPyTMV ,
             'CheckNumPy' : CheckNumPy ,
             'CheckBoostPython' : CheckBoostPython ,
             'CheckPyFITS' : CheckPyFITS ,
