@@ -884,10 +884,14 @@ PyMODINIT_FUNC initcheck_tmv(void)
     if not result:
         ErrorExit('Unable to compile a module using tmv')
 
+    # TMV finds the mkl libraries necessary for compiling an executable.  But sometimes
+    # there are extra libraries required for loading mkl from a python module.
+    # So if the first line fails, try adding a few mkl libraries that might make it work.
     result = (
         CheckModuleLibs(config,[],tmv_source_file,'check_tmv') or
         CheckModuleLibs(config,['mkl_rt'],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_base'],tmv_source_file,'check_tmv') )
+        CheckModuleLibs(config,['mkl_base'],tmv_source_file,'check_tmv') or
+        CheckModuleLibs(config,['mkl_mc'],tmv_source_file,'check_tmv') )
     if not result:
         ErrorExit('Unable to build a python loadable module that uses tmv')
    
@@ -1276,9 +1280,12 @@ if not GetOption('help'):
         ClearCache()
 
     if env['PYTHON'] == '':
-        env['PYTHON'] = default_python
-    python = env['PYTHON']
+        python = default_python
+    else:
+        python = env['PYTHON']
+        python = which(python)
     print 'Using python = ',python
+    env['PYTHON'] = python
 
     # Set PYPREFIX if not given:
     if env['PYPREFIX'] == '':
