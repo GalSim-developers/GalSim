@@ -1,3 +1,7 @@
+"""@file angle.py
+A few adjustments to the Angle class at the Python layer.
+"""
+
 import galsim
 
 galsim.AngleUnit.__doc__ = """A class for defining angular units in galsim.Angle objects.

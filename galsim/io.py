@@ -1,3 +1,7 @@
+"""@file io.py
+Routines for controlling catalog Input/Output with GalSim. 
+"""
+
 import galsim
 
 class InputCatalog(object):
