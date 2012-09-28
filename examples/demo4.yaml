@@ -9,7 +9,7 @@
 # (although not necessarily -- you might just want different noise realization of the same 
 # profile).  The easiest way to do this is to read in the properties from a catalog, which is 
 # what we do in this script.  The PSF is a truncated Moffat profile, and the galaxy is bulge
-# plus disk.  Both components get many of its parameters from an input catalog.  We also
+# plus disk.  Both components get many of their parameters from an input catalog.  We also
 # shift the profile by a fraction of a pixel in each direction so the effect of pixelization 
 # varies among the images.  Each galaxy has the same applied shear.  The noise is simple 
 # Poisson noise.  We write the images out into a multi-extension fits file.

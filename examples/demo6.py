@@ -49,7 +49,7 @@ def main(argv):
       - Galaxies are randomly rotated to remove the imprint of any lensing shears in the COSMOS
         data.
       - The same shear is applied to each galaxy.
-      - Noise is poisson using a nominal sky value of 1.e6
+      - Noise is Poisson using a nominal sky value of 1.e6
         the noise in the original COSMOS data.
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)

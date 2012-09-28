@@ -9,7 +9,7 @@ to have at least some of its attributes vary when you are drawing multiple image
 not necessarily -- you might just want different noise realization of the same profile).  
 The easiest way to do this is to read in the properties from a catalog, which is what we
 do in this script.  The PSF is a truncated Moffat profile, and the galaxy is bulge plus disk.
-Both components get many of its parameters from an input catalog.  We also shift the 
+Both components get many of their parameters from an input catalog.  We also shift the 
 profile by a fraction of a pixel in each direction so the effect of pixelization varies
 among the images.  Each galaxy has the same applied shear.  The noise is simple Poisson noise.
 We write the images out into a multi-extension fits file.
@@ -54,7 +54,7 @@ def main(argv):
         11 Galaxy dx (the two components have same center)
         12 Galaxy dy
       - Applied shear is the same for each galaxy
-      - Noise is poisson using a nominal sky value of 1.e6
+      - Noise is Poisson using a nominal sky value of 1.e6
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo4")
@@ -99,7 +99,7 @@ def main(argv):
         # Note: You may omit the flux, since the default is flux=1.
         psf = galsim.Moffat(beta=beta, fwhm=fwhm, trunc=trunc)
 
-        # Take the (e1,e2) shape parameters from the catalog as well.
+        # Take the (e1, e2) shape parameters from the catalog as well.
         psf.applyShear(e1=cat.getFloat(k,2), e2=cat.getFloat(k,3))
 
         pix = galsim.Pixel(pixel_scale)
@@ -112,7 +112,7 @@ def main(argv):
         bulge.applyShear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
 
         # The flux of an Add object is the sum of the component fluxes
-        gal = galsim.Add([disk,bulge])
+        gal = galsim.Add([disk, bulge])
         # This flux may be overridden by setFlux.  The relative fluxes of the components
         # remains the same, but the total flux is set to gal_flux.
         gal.setFlux(gal_flux)
@@ -127,7 +127,7 @@ def main(argv):
         # Draw the profile
         image = final.draw(image = galsim.ImageF(xsize, ysize), dx=pixel_scale)
 
-        # Add poisson noise to the image:
+        # Add Poisson noise to the image:
         image += sky_level * pixel_scale**2
         # The default gain, read_noise are 1 and 0, so we can omit them.
         # Also, use a different random seed for each object to get different noise realizations.

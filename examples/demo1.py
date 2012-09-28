@@ -51,7 +51,7 @@ def main(argv):
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo1") 
 
-    gal_flux = 1.e5    # total counds on the image
+    gal_flux = 1.e5    # total counts on the image
     gal_sigma = 2.     # arcsec
     psf_sigma = 1.     # arcsec
     pixel_scale = 0.2  # arcsec / pixel
