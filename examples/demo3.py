@@ -108,7 +108,7 @@ def main(argv):
     bulge = galsim.Sersic(bulge_n, half_light_radius=bulge_re)
     disk = galsim.Sersic(disk_n, half_light_radius=disk_re)
 
-    # Objects may be mutliplied by a scalar (which means scaling the flux) and also
+    # Objects may be multiplied by a scalar (which means scaling the flux) and also
     # added to each other.
     gal = bulge_frac * bulge + (1-bulge_frac) * disk
     # Could also have written the following, which does the same thing:
@@ -118,7 +118,7 @@ def main(argv):
     # Set the overall flux of the combined object.
     gal.setFlux(gal_flux)
 
-    # Set the shape of the galaxy according to axis ration and position angle
+    # Set the shape of the galaxy according to axis ratio and position angle
     # Note: All angles in GalSim must have explicit units.  Options are:
     #       galsim.radians
     #       galsim.degrees
@@ -134,7 +134,7 @@ def main(argv):
     atmos = galsim.Kolmogorov(fwhm=atmos_fwhm)
     # For the PSF shape here, we use ellipticity rather than axis ratio.
     # And the position angle can be either degrees or radians.  Here we chose radians.
-    atmos.applyShear(e=atmos_e , beta=atmos_beta*galsim.radians)
+    atmos.applyShear(e=atmos_e, beta=atmos_beta*galsim.radians)
     logger.debug('Made atmospheric PSF profile')
 
     # Define the optical part of the PSF.
@@ -171,12 +171,12 @@ def main(argv):
 
     # This time we specify a particular size for the image rather than let GalSim 
     # choose the size automatically.
-    image = galsim.ImageF(image_size,image_size)
+    image = galsim.ImageF(image_size, image_size)
     # Draw the image with a particular pixel scale.
     final.draw(image=image, dx=pixel_scale)
 
     # Also draw the effective PSF by itself and the optical PSF component alone.
-    image_epsf = galsim.ImageF(image_size,image_size)
+    image_epsf = galsim.ImageF(image_size, image_size)
     final_epsf.draw(image_epsf, dx=pixel_scale)
     image_opticalpsf = optics.draw(dx=lam_over_diam/2.)
     logger.debug('Made image of the profile')

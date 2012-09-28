@@ -196,7 +196,7 @@ def main(argv):
                 final_nopix.drawShoot(phot_image, max_extra_noise=sky_level_pixel/100, rng=rng)
                 t5 = time.time()
 
-                # For photon shooting, galaxy already has poisson noise, so we want to make 
+                # For photon shooting, galaxy already has Poisson noise, so we want to make 
                 # sure not to add that noise again!  Thus, we just add sky noise, which 
                 # is Poisson with the mean = sky_level_pixel
                 # Note: this won't add the mean level.  The effect on the pixels has an

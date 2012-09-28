@@ -51,7 +51,7 @@ def main(argv):
       - A second image is all galaxies.
       - Applied shear is the same for each galaxy.
       - Galaxies are oriented randomly, but in pairs to cancel shape noise.
-      - Noise is poisson using a nominal sky value of 1.e6.
+      - Noise is Poisson using a nominal sky value of 1.e6.
       - Galaxies are Exponential profiles.
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
