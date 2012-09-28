@@ -13,8 +13,8 @@ New features introduced in this demo:
 
 - obj = galsim.Exponential(flux, scale_radius)
 - obj = galsim.Moffat(beta, flux, half_light_radius)
-- obj.applyShear(g1,g2)  -- with explanation of other ways to specify shear
-- image = galsim.ImageF(image_size,image_size)
+- obj.applyShear(g1, g2)  -- with explanation of other ways to specify shear
+- image = galsim.ImageF(image_size, image_size)
 - image += constant
 - image -= constant
 - noise = galsim.CCDNoise(seed)

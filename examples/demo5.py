@@ -23,13 +23,13 @@ New features introduced in this demo:
 - pos = bounds.center()
 - pos.x, pos.y
 - sub_image = image[bounds]
-- obj2 = obj.createSheared(e,beta)
+- obj2 = obj.createSheared(e, beta)
 
 - Build a single large image, and access sub-images within it.
 - Set the galaxy size based on the psf size and a resolution factor.
-- Set the object's flux according to a target S/N vale.
+- Set the object's flux according to a target S/N value.
 - Use 90 degree-rotated pairs for the intrinsic galaxy shapes.
-- Shift by a random (dx,dy) drawn from a unit circle top hat.
+- Shift by a random (dx, dy) drawn from a unit circle top hat.
 """
 
 import sys

@@ -19,8 +19,8 @@
 # - obj type : Sersic (flux, n, half_light_radius)
 # - obj type : Kolmogorov (fwhm)
 # - obj type : OpticalPSF (lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)
-# - shear type : QBeta (q,beta) -- including how to specify an angle
-# - shear type : EBeta (q,beta) 
+# - shear type : QBeta (q, beta) -- including how to specify an angle
+# - shear type : EBeta (q, beta) 
 # - noise type : CCDNoise (sky_level, gain, read_noise)
 # - image : size
 # - image : wcs (shear)

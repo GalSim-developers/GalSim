@@ -25,7 +25,7 @@
 "#" : "- image : sky_level",
 "#" : "- value type : Sequence",
 "#" : "- output type : DataCube (file_name, dir, nimages)",
-"#" : "- Using YAML's multiple document feature to do more than one thing",
+"#" : "- Using JSON's multiple document feature to do more than one thing",
 
 "#" : "For this example, we actually have two config files, since we have two different kinds",
 "#" : "of output files to make.  The first, demo6a.json is for the psf output,",

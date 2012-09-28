@@ -205,9 +205,9 @@
     "#" : "The weights are calculated as the inverse variance in each pixel.",
     "weight" : {
         "#" : "Either file_name or hdu is required for weight.  In this case we write to the ",
-        "#" : "first hdu extension.  The main image is in the primary HDU, which is number 0.",
-        "#" : "Note: it is an error to skip hdu's, so if weight is the only other image, it must ",
-        "#" : "be in hud 1.  If weight, badpix and psf all specify an hdu value, then they must be",
+        "#" : "first HDU extension.  The main image is in the primary HDU, which is number 0.",
+        "#" : "Note: it is an error to skip HDU's, so if weight is the only other image, it must ",
+        "#" : "be in HDU 1.  If weight, badpix and psf all specify an HDU value, then they must be",
         "#" : "1, 2 and 3 in some order.",
         "#" : "Also, hdu is only valid for image.type = Fits (which is the default).",
         "hdu" : 2

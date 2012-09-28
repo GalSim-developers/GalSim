@@ -19,13 +19,13 @@
 "#" : "- obj type : Moffat (beta, fwhm, trunc)",
 "#" : "- obj type : DeVaucouleurs (flux, half_light_radius)",
 "#" : "- value type : InputCatalog (col)",
-"#" : "- shift type : XY (x,y)",
-"#" : "- shear type : E1E2 (e1,e2)",
+"#" : "- shift type : XY (x, y)",
+"#" : "- shear type : E1E2 (e1, e2)",
 "#" : "- image : xsize, ysize",
 "#" : "- input : catalog (file_name, dir)",
 "#" : "- output type : MultiFits (file_name, dir)",
 "#" : "- Using both ellip and shear for the same object",
-"#" : "- Using variables in a YAML file",
+"#" : "- Using variables in a JSON file",
 
 "#" : "Define the PSF profile",
 "psf" : {

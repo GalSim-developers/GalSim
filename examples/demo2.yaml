@@ -13,7 +13,7 @@
 #
 # - obj type : Exponential (flux, scale_radius)
 # - obj type : Moffat (flux, beta, half_light_radius)
-# - shear type : G1G2 (g1,g2)
+# - shear type : G1G2 (g1, g2)
 # - noise type : CCDNoise (sky_level)
 # - image : random_seed
  

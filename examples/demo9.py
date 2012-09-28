@@ -13,8 +13,8 @@ draw 20 lensed galaxies at random positions of the image.
 New features introduced in this demo:
 
 - image.copyFrom(image2)
-- im = galsim.ImageS(xsize,ysize)
-- pos = galsim.PositionD(x,y)
+- im = galsim.ImageS(xsize, ysize)
+- pos = galsim.PositionD(x, y)
 - nfw = galsim.NFWHalo(mass, conc, z, pos)
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMag(pos, z)
