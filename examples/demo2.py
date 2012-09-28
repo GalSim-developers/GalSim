@@ -100,7 +100,7 @@ def main(argv):
     # sky level.  This takes each pixel's current value and replaces it with a random
     # number drawn from a Poisson distribution with that mean value.  This matches the 
     # statistics of photons hitting the CCD.
-    # (The CCDNoise class can optionally take a gain a read_noise -- see demo3.py)
+    # (The CCDNoise class can optionally take a gain and a read_noise -- see demo3.py)
     image.addNoise(galsim.CCDNoise(random_seed))
 
     # Finally, we subtract off the sky flux, so the final image will have a background level
