@@ -4,7 +4,7 @@ Demo #9
 The ninth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
-This script simulates cluster lensing or galaxy-galaxy lensing.  The graviational shear 
+This script simulates cluster lensing or galaxy-galaxy lensing.  The gravitational shear
 applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations 
 of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
 has its own file, organized into 4 directories (one for each mass).  For each cluster, we
@@ -13,8 +13,8 @@ draw 20 lensed galaxies at random positions of the image.
 New features introduced in this demo:
 
 - image.copyFrom(image2)
-- im = galsim.ImageS(xsize,ysize)
-- pos = galsim.PositionD(x,y)
+- im = galsim.ImageS(xsize, ysize)
+- pos = galsim.PositionD(x, y)
 - nfw = galsim.NFWHalo(mass, conc, z, pos)
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMag(pos, z)
@@ -36,7 +36,7 @@ import galsim
 
 def main(argv):
     """
-    Make 4 directories, each with 5 files, each of which has 5 galaxies.
+    Make 4 directories, each with 5 files, each of which has 20 galaxies.
     
     Also, each directory corresponds to a different mass halo.
     The files in each direction are just different noise realizations and galaxy locations.
@@ -200,7 +200,7 @@ def main(argv):
         # Going to the next seed isn't really required, but it matches the behavior of the 
         # config parser, so doing this will result in identical output files.
         # If you didn't care about that, you could instead construct this as a continuation
-        # of the last rng from the above loop: ccdnoise = galsim.CCDNoise(rng)
+        # of the last RNG from the above loop: ccdnoise = galsim.CCDNoise(rng)
         ccdnoise = galsim.CCDNoise(seed+nobj)
         full_image.addNoise(ccdnoise)
         full_image -= sky_level_pixel

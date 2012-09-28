@@ -2,7 +2,7 @@
 # Demo #4
 #
 # The fourth YAML configuration file in our tutorial about using Galsim config files
-# (This file is designed to be view in a window 100 characters wide.)
+# (This file is designed to be viewed in a window 100 characters wide.)
 #
 # This script is our first one to create multiple images.  Typically, you would want each
 # object to have at least some of its attributes vary when you are drawing multiple images 
@@ -12,15 +12,15 @@
 # plus disk.  Both components get many of its parameters from an input catalog.  We also
 # shift the profile by a fraction of a pixel in each direction so the effect of pixelization 
 # varies among the images.  Each galaxy has the same applied shear.  The noise is simple 
-# poisson noise.  We write the images out into a multi-extension fits file.
+# Poisson noise.  We write the images out into a multi-extension fits file.
 #
 # New features introduced in this demo:
 #
 # - obj type : Moffat (beta, fwhm, trunc)
 # - obj type : DeVaucouleurs (flux, half_light_radius)
 # - value type : InputCatalog (col)
-# - shift type : XY (x,y)
-# - shear type : E1E2 (e1,e2)
+# - shift type : XY (x, y)
+# - shear type : E1E2 (e1, e2)
 # - image : xsize, ysize
 # - input : catalog (file_name, dir)
 # - output type : MultiFits (file_name, dir)

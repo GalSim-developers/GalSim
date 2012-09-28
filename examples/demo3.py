@@ -17,7 +17,7 @@ New features introduced in this demo:
 - obj = galsim.Sersic(n, flux, half_light_radius)
 - obj = galsim.Kolmogorov(fwhm)
 - obj = galsim.OpticalPSF(lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)
-- obj = galsim.Pixel(xw,yw)
+- obj = galsim.Pixel(xw, yw)
 - obj.applyShear(e, beta)  -- including how to specify an angle in GalSim
 - shear = galsim.Shear(q, beta)
 - obj.applyShear(shear)

@@ -1,7 +1,7 @@
 """
 Demo #1
 
-Ths first script in our tutorial about using GalSim in python scripts: examples/demo*.py.
+This is the first script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
 This first script is about as simple as it gets.  We draw an image of a single galaxy convolved 

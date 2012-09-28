@@ -13,7 +13,7 @@ The galaxy images include images of the effective PSF for the original observati
 so GalSim first deconvolves by that PSF, and then convolves by whatever PSF you desire.
 In this case, we use a double Gaussian PSF.  The galaxies are randomly rotated and then
 given an applied gravitational shear as well as gravitational magnification.
-The output for this script is to a FITS "data cube".  With DS9, this can be view with a
+The output for this script is to a FITS "data cube".  With DS9, this can be viewed with a
 slider to quickly move through the different images.
 
 

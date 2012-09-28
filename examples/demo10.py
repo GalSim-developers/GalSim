@@ -7,8 +7,8 @@ The tenth script in our tutorial about using GalSim in python scripts: examples/
 This script uses both a variable PSF and variable shear, taken from a power spectrum,
 along the lines of a Great10 challenge image.  The galaxies are placed on a grid
 (10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
-is 48 x 48 pixels.  Instead of putting the psf images on a separate image, we package them
-as the second hdu in the file.  For the galaxies, we use a random selection from 5 specific
+is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them
+as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
 RealGalaxy's, selected to be 5 particularly irregular ones, each with a random orientation.
 
 New features introduced in this demo:
@@ -21,7 +21,7 @@ New features introduced in this demo:
 - g1,g2 = ps.getShear(pos)
 
 - Choosing PSF parameters as a function of (x,y)
-- Selecting ReadGalaxy by ID rather than index.
+- Selecting RealGalaxy by ID rather than index.
 - Putting the PSF image in a second hdu in the same file as the main image.
 - Using PowerSpectrum for the applied shear.
 """
@@ -88,7 +88,7 @@ def main(argv):
     # each time, so it's a bit more efficient.
     gal_list = [ galsim.RealGalaxy(real_galaxy_catalog, id=id) for id in id_list ]
 
-    # Make the galaxies a bit larger than their original oberved size.
+    # Make the galaxies a bit larger than their original observed size.
     for gal in gal_list:
         gal.applyDilation(gal_dilation) 
 
@@ -166,11 +166,11 @@ def main(argv):
             # Note: numpy likes to access values by [iy,ix]
             gal.applyShear(g1 = grid_g1[iy,ix], g2 = grid_g2[iy,ix])
 
-            # Note: another way to access this after having build the g1,g2 grid
+            # Note: another way to access this after having built the g1,g2 grid
             # is to use ps.getShear(pos) which just returns a single shear for that position.
             # The provided position does not have to be on the original grid, but it does
             # need to be contained within the bounds of the full grid. 
-            # ie. only interpolations is allowed -- not extrapolation.
+            # i.e. only interpolation is allowed -- not extrapolation.
             alt_g1,alt_g2 = ps.getShear(pos)
             assert math.fabs(alt_g1 - grid_g1[iy,ix]) < 1.e-15
             assert math.fabs(alt_g2 - grid_g2[iy,ix]) < 1.e-15
@@ -193,13 +193,13 @@ def main(argv):
             flux = gal_signal_to_noise / sn_meas
             sub_gal_image *= flux
 
-            # Add Poisson noise -- the CCDNoise can also take another rng as its argument
+            # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
             # so it will be part of the same stream of random numbers as ud and gd.
             sub_gal_image += sky_level_pix
             sub_gal_image.addNoise(galsim.CCDNoise(rng))
             sub_gal_image -= sky_level_pix
 
-            # Draw the PSF image
+            # Draw the PSF image:
             # We use real space convolution to avoid some of the 
             # artifacts that can show up with Fourier convolution.
             # The level of the artifacts is quite low, but when drawing with

@@ -23,13 +23,13 @@ New features introduced in this demo:
 - pos = bounds.center()
 - pos.x, pos.y
 - sub_image = image[bounds]
-- obj2 = obj.createSheared(e,beta)
+- obj2 = obj.createSheared(e, beta)
 
 - Build a single large image, and access sub-images within it.
 - Set the galaxy size based on the psf size and a resolution factor.
-- Set the object's flux according to a target S/N vale.
+- Set the object's flux according to a target S/N value.
 - Use 90 degree-rotated pairs for the intrinsic galaxy shapes.
-- Shift by a random (dx,dy) drawn from a unit circle top hat.
+- Shift by a random (dx, dy) drawn from a unit circle top hat.
 """
 
 import sys
@@ -166,7 +166,7 @@ def main(argv):
             # version of this demo script (demo5.yaml).
             ud = galsim.UniformDeviate(random_seed+k)
 
-            # Any kind of random number generator can take another rng as its first 
+            # Any kind of random number generator can take another RNG as its first 
             # argument rather than a seed value.  This makes both objects use the same
             # underlying generator for their pseudo-random values.
             gd = galsim.GaussianDeviate(ud, sigma=gal_ellip_rms)
@@ -237,7 +237,7 @@ def main(argv):
             # Now we rescale the flux to get our desired S/N
             sub_gal_image *= flux
 
-            # Add Poisson noise -- the CCDNoise can also take another rng as its argument
+            # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
             # so it will be part of the same stream of random numbers as ud and gd.
             sub_gal_image += sky_level_pix
             sub_gal_image.addNoise(galsim.CCDNoise(ud))

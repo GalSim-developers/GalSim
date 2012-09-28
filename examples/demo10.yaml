@@ -2,13 +2,13 @@
 # Demo #10
 #
 # The tenth YAML configuration file in our tutorial about using Galsim config files
-# (This file is designed to be view in a window 100 characters wide.)
+# (This file is designed to be viewed in a window 100 characters wide.)
 #
 # This script uses both a variable PSF and variable shear, taken from a power spectrum,
 # along the lines of a Great10 challenge image.  The galaxies are placed on a grid
 # (10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
-# is 48 x 48 pixels.  Instead of putting the psf images on a separate image, we package them
-# as the second hdu in the file.  For the galaxies, we use a random selection from 5 specific
+# is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them
+# as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
 # RealGalaxy's, selected to be 5 particularly irregular ones, each with a random orientation.
 #
 # New features introduced in this demo:
@@ -62,7 +62,7 @@ gal :
         # Note: we could have made the type RealGalaxy and then have the id be a list
         #       with a random index.  However, doing it this way means that the Fourier
         #       transforms of the real galaxy images don't need to be recalculated each time,
-        #       so it's a bit more effficient.
+        #       so it's a bit more efficient.
         - { type : RealGalaxy , id : 106416 }
         - { type : RealGalaxy , id : 106731 }
         - { type : RealGalaxy , id : 108402 }
@@ -74,7 +74,7 @@ gal :
     rotation : { type : Random }
 
     shear : 
-        # For this demo, we use shears drawn from a power spectrum P(k) = k^1.5.
+        # For this demo, we use shears drawn from a power spectrum P(k) = k^1.8.
         # The power spectrum is set up below using input : power_spectrum.  See below.
         type : PowerSpectrumShear
 
@@ -127,7 +127,7 @@ output :
     dir : output_yaml
     file_name : power_spectrum.fits
 
-    # Put the psf image in hdu=1 (the first extension after tha primary hdu)
+    # Put the psf image in hdu=1 (the first extension after the primary HDU)
     psf : 
         hdu : 1
         # We use real space convolution to avoid some of the 

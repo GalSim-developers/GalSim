@@ -11,7 +11,7 @@ The easiest way to do this is to read in the properties from a catalog, which is
 do in this script.  The PSF is a truncated Moffat profile, and the galaxy is bulge plus disk.
 Both components get many of its parameters from an input catalog.  We also shift the 
 profile by a fraction of a pixel in each direction so the effect of pixelization varies
-among the images.  Each galaxy has the same applied shear.  The noise is simple poisson noise.
+among the images.  Each galaxy has the same applied shear.  The noise is simple Poisson noise.
 We write the images out into a multi-extension fits file.
 
 New features introduced in this demo:
@@ -39,7 +39,7 @@ def main(argv):
       - Only galaxies.  No stars.
       - PSF is Moffat
       - Each galaxy is bulge plus disk: deVaucouleurs + Exponential.
-      - The catlog's columsn are:
+      - The catalog's columns are:
          0 PSF beta
          1 PSF FWHM
          2 PSF e1
@@ -139,7 +139,7 @@ def main(argv):
         # Add the image to our list of images
         images.append(image)
     
-    # Now write the images to a multi-extension fits file.  Each image will be in its own hdu.
+    # Now write the images to a multi-extension fits file.  Each image will be in its own HDU.
     galsim.fits.writeMulti(images, multi_file_name)
     logger.info('Images written to multi-extension fits file %r',multi_file_name)
 

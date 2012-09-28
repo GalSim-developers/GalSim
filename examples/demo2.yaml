@@ -2,7 +2,7 @@
 # Demo #2
 #
 # The second YAML configuration file in our tutorial about using Galsim config files
-# (This file is designed to be view in a window 100 characters wide.)
+# (This file is designed to be viewed in a window 100 characters wide.)
 #
 # This script is a bit more sophisticated, but still pretty basic.  We're still only making
 # a single image, but now the galaxy has an exponential radial profile and is sheared.
@@ -13,7 +13,7 @@
 #
 # - obj type : Exponential (flux, scale_radius)
 # - obj type : Moffat (flux, beta, half_light_radius)
-# - shear type : G1G2 (g1,g2)
+# - shear type : G1G2 (g1, g2)
 # - noise type : CCDNoise (sky_level)
 # - image : random_seed
  
