@@ -462,6 +462,11 @@ namespace galsim {
         //@}
 
         /**
+         * @brief Set each element to its inverse: im(i,j) = 1/im(i,j)
+         */
+        void invertSelf() const;
+
+        /**
          *  @brief Return a pointer to the first pixel in the image.
          *
          *  This overrides the version in BaseImage, since this one returns a non-const
@@ -628,6 +633,11 @@ namespace galsim {
         Image<T>& operator=(T x) { fill(x); return *this; }
         void setZero() { fill(T(0)); }
         //@}
+
+        /**
+         * @brief Set each element to its inverse: im(i,j) = 1/im(i,j)
+         */
+        void invertSelf() { view().invertSelf(); }
 
         /**
          *  @brief Resize the image to a new bounds.  The values are left uninitialized.

@@ -53,3 +53,42 @@ class InputCatalog(object):
         # we have any str fields, they don't give an error here.  They'll only give an 
         # error if one tries to convert them to float at some point.
         self.data = loadtxt(self.file_name, comments=comments, dtype=str)
+
+    def nObjects(self):
+        """Return the number of objects in the catalog
+        """
+        return self.nobjects
+
+    def nCols(self):
+        """Return the number of columns in the catalog
+        """
+        return self.ncols
+
+    def get(self, index, col):
+        """Return the data for the given index and col as a string
+        """
+        if index < 0 or index >= self.nobjects:
+            raise ValueError("Object %d is invalid for catalog %s"%(index,self.file_name))
+        if col < 0 or col >= self.ncols:
+            raise ValueError("Column %d is invalid for catalog %s"%(col,self.file_name))
+        return self.data[index, col]
+
+    def getFloat(self, index, col):
+        """Return the data for the given index and col as a float if possible
+        """
+        try:
+            return float(self.get(index,col))
+        except:
+            raise TypeError("The data at (%d,%d) in catalog %s could not be converted to float"%(
+                    index,col,self.file_name))
+
+    def getInt(self, index, col):
+        """Return the data for the given index and col as an int if possible
+        """
+        try:
+            return int(self.get(index,col))
+        except:
+            raise TypeError("The data at (%d,%d) in catalog %s could not be converted to int"%(
+                    index,col,self.file_name))
+
+

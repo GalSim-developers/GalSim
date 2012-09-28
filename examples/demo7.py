@@ -1,5 +1,28 @@
 """
-Some example scripts to make multi-object images using the GalSim library.
+Demo #7
+
+The seventh script in our tutorial about using GalSim in python scripts: examples/demo*.py.
+(This file is designed to be viewed in a window 100 characters wide.)
+
+This script introduces drawing profiles with photon shooting rather than doing the 
+convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 different
+kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so 
+each of the 25 pairings is drawn 4 times with different realizations of the random numbers.
+The profiles are drawn twice, once with the FFT method, and once with photon shooting.
+The two images are drawn side by side so it is easy to visually compare the results.
+The 100 total profiles are written to a FITS data cube, which makes it easy to scroll
+through the images comparing the two drawing methods.
+
+
+New features introduced in this demo:
+
+- obj = galsim.Airy(lam_over_diam)
+- obj2 = obj.copy()
+- obj.applyDilation(scale)
+- image.setScale(pixel_scale)
+- obj.draw(image)  -- i.e. taking the scale from the image rather than a dx= argument
+- obj.drawShoot(image, max_extra_noise, rng)
+- noise = galsim.PoissonDeviate(rng, mean)
 """
 
 import sys
@@ -11,7 +34,6 @@ import time
 import galsim
 
 
-# Compare images of the same profile drawn using FFT convolution and photon shooting.
 def main(argv):
     """
     Make a fits image cube where each frame has two images of the same galaxy drawn 
@@ -30,7 +52,7 @@ def main(argv):
 
     file_name = os.path.join('output','cube_phot.fits')
 
-    random_seed = 1512413
+    random_seed = 553728
     sky_level = 1.e4        # ADU / arcsec^2
     pixel_scale = 0.28      # arcsec
     nx = 64
@@ -105,11 +127,10 @@ def main(argv):
             gal = gals[igal]
             gal_name = gal_names[igal]
             for i in range(4):
-                #logger.info('Start work on image %d',i)
+                logger.debug('Start work on image %d',i)
                 t1 = time.time()
 
                 # Initialize the random number generator we will be using.
-                #print 'seed = ',random_seed+k
                 rng = galsim.UniformDeviate(random_seed+k)
 
                 # Get an new copy, so we'll want to keep the original unmodified.
@@ -117,16 +138,13 @@ def main(argv):
 
                 # Generate random variates:
                 flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
-                #print 'flux = ',flux
                 gal1.setFlux(flux)
 
                 hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
-                #print 'scale = ',hlr
                 gal1.applyDilation(hlr)
 
                 beta_ellip = rng() * 2*math.pi * galsim.radians
                 ellip = rng() * (gal_e_max-gal_e_min) + gal_e_min
-                #print 'e,beta = ',ellip,beta_ellip
                 gal_shape = galsim.Shear(e=ellip, beta=beta_ellip)
                 gal1.applyShear(gal_shape)
 
@@ -137,36 +155,32 @@ def main(argv):
 
                 # Create the large, double width output image
                 image = galsim.ImageF(2*nx+2,ny)
+
+                # Rather than provide a dx= argument to the draw commands, we can also
+                # set the pixel scale in the image itself with setScale.
                 image.setScale(pixel_scale)
-                # Then assign the following two "ImageViews", fft_image and phot_image.
+
+                # Assign the following two "ImageViews", fft_image and phot_image.
                 # Using the syntax below, these are views into the larger image.  
                 # Changes/additions to the sub-images referenced by the views are automatically 
                 # reflected in the original image.
                 fft_image = image[galsim.BoundsI(1, nx, 1, ny)]
                 phot_image = image[galsim.BoundsI(nx+3, 2*nx+2, 1, ny)]
 
-                #logger.info('   Read in training sample galaxy and PSF from file')
+                logger.debug('   Read in training sample galaxy and PSF from file')
                 t2 = time.time()
 
                 # Draw the profile
                 final.draw(fft_image)
 
-                #logger.info('   Drew fft image.  Total drawn flux = %f.  .flux = %f',
-                        #fft_image.array.sum(),final.flux)
+                logger.debug('   Drew fft image.  Total drawn flux = %f.  .flux = %f',
+                        fft_image.array.sum(),final.getFlux())
                 t3 = time.time()
 
                 # Add Poisson noise
                 sky_level_pixel = sky_level * pixel_scale**2
                 fft_image += sky_level_pixel
-                # Again, default is gain=1, read_noise=0
-                # So this is just poisson noise with the current image flux values.
-                #fft_image.setOrigin(1,1)
-                #print 'sky_level_pixel = ',sky_level_pixel
-                #print 'im.scale = ',fft_image.scale
-                #print 'im.bounds = ',fft_image.bounds
-                #print 'before CCDNoise: rng() = ',rng()
                 fft_image.addNoise(galsim.CCDNoise(rng))
-                #print 'after CCDNoise: rng() = ',rng()
                 fft_image -= sky_level_pixel
 
                 t4 = time.time()
@@ -175,37 +189,22 @@ def main(argv):
                 # to match the output from the parsing of demo7.yaml.
                 rng = galsim.UniformDeviate(random_seed+k)
                 rng(); rng(); rng(); rng();
-                #print 'flux = ',flux
-                #print 'scale = ',hlr
-                #print 'e,beta = ',ellip,beta_ellip
 
                 # Repeat for photon shooting image.
                 # Photon shooting automatically convolves by the pixel, so we've made sure not
                 # to include it in the profile!
-                #phot_image.setOrigin(1,1)
-                #print 'noise_var = ',sky_level_pixel
-                #print 'im.scale = ',phot_image.scale
-                #print 'im.bounds = ',phot_image.bounds
-                #print 'before drawShoot: rng() = ',rng()
-                final_nopix.drawShoot(phot_image, max_extra_noise=sky_level_pixel/100, 
-                                      uniform_deviate=rng)
-                #print 'after drawShoot: rng() = ',rng()
-                #print k, gal_name, psf_name
-                #logger.info('   Drew phot image.  Total drawn flux = %f.  .flux = %f',
-                        #phot_image.array.sum(),final.flux)
+                final_nopix.drawShoot(phot_image, max_extra_noise=sky_level_pixel/100, rng=rng)
                 t5 = time.time()
 
                 # For photon shooting, galaxy already has poisson noise, so we want to make 
                 # sure not to add that noise again!  Thus, we just add sky noise, which 
                 # is Poisson with the mean = sky_level_pixel
-                #print 'im.scale = ',phot_image.scale
-                #print 'im.bounds = ',phot_image.bounds
-                #print 'before Poisson: rng() = ',rng()
+                # Note: this won't add the mean level.  The effect on the pixels has an
+                # expectation of 0 -- it just adds noise commensurate with the given mean.
                 phot_image.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
-                #print 'after Poisson: rng() = ',rng()
 
-                #logger.info('   Added Poisson noise.  Image fluxes are now %f and %f',
-                        #fft_image.array.sum(),phot_image.array.sum())
+                logger.debug('   Added Poisson noise.  Image fluxes are now %f and %f',
+                        fft_image.array.sum(),phot_image.array.sum())
                 t6 = time.time()
 
                 # Store that into the list of all images
@@ -214,8 +213,8 @@ def main(argv):
                 k = k+1
                 logger.info('%d: %s * %s, flux = %.2e, hlr = %.2f, ellip = (%.2f,%.2f)',
                         k,gal_name, psf_name, flux, hlr, gal_shape.getE1(), gal_shape.getE2())
+                logger.debug('   Times: %f, %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
 
-                #logger.info('   Times: %f, %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
                 psf_times[ipsf] += t6-t1
                 psf_fft_times[ipsf] += t3-t2
                 psf_phot_times[ipsf] += t5-t4
@@ -247,7 +246,7 @@ def main(argv):
     logger.info('')
 
     # Now write the image to disk.
-    galsim.fits.writeCube(all_images, file_name, clobber=True)
+    galsim.fits.writeCube(all_images, file_name)
     logger.info('Wrote fft image to fits data cube %r',file_name)
 
 

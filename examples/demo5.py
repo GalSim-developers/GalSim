@@ -1,5 +1,35 @@
 """
-Some example scripts to make multi-object images using the GalSim library.
+Demo #5
+
+The fifth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
+(This file is designed to be viewed in a window 100 characters wide.)
+
+This script is intended to mimic a Great08 challenge LowNoise image.  We produce a single image
+made up of tiles of postage stamps for each individual object.  (We only do 10 x 10 
+postage stamps rather than 100 x 100 as they did in the interest of time.)  Each postage
+stamp is 40 x 40 pixels.  One image is all stars.  A second image is all galaxies.
+The stars are truncated Moffat profiles.  The galaxies are Exponential profiles.
+(Great08 mixed pure bulge and pure disk for its LowNoise run.  We're just doing disks to 
+make things simpler.)  The galaxies are oriented randomly, but in 90 degree-rotated pairs to 
+cancel the effect of shape noise.  The applied shear is the same for each galaxy.  
+
+New features introduced in this demo:
+
+- ud = galsim.UniformDeviate(seed)
+- gd = galsim.GaussianDeviate(ud, sigma)
+- ccdnoise = galsim.CCDNoise(ud)
+- image *= scalar
+- bounds = galsim.BoundsI(xmin, xmax, ymin, ymax)
+- pos = bounds.center()
+- pos.x, pos.y
+- sub_image = image[bounds]
+- obj2 = obj.createSheared(e, beta)
+
+- Build a single large image, and access sub-images within it.
+- Set the galaxy size based on the psf size and a resolution factor.
+- Set the object's flux according to a target S/N value.
+- Use 90 degree-rotated pairs for the intrinsic galaxy shapes.
+- Shift by a random (dx, dy) drawn from a unit circle top hat.
 """
 
 import sys
@@ -9,16 +39,6 @@ import numpy
 import logging
 import time
 import galsim
-
-# Something along the lines of a Great08 (Bridle, et al, 2010) image
-# 
-# New features in this demo:
-#
-# - Building a single large image, and access sub-images within it
-# - Generating object properties from a (pseudo-) random number generator.
-# - galsim.BoundsI
-# - galsim.UniformDeviate
-# - galsim.GaussianDeviate
 
 def main(argv):
     """
@@ -32,7 +52,7 @@ def main(argv):
       - Applied shear is the same for each galaxy.
       - Galaxies are oriented randomly, but in pairs to cancel shape noise.
       - Noise is poisson using a nominal sky value of 1.e6.
-      - Galaxies are Sersic profiles.
+      - Galaxies are Exponential profiles.
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo5")
@@ -40,10 +60,10 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    nx_stamps = 10                  #
-    ny_stamps = 10                  #
-    nx_pixels = 40                  #
-    ny_pixels = 40                  #
+    nx_tiles = 10                   #
+    ny_tiles = 10                   #
+    stamp_xsize = 40                #
+    stamp_ysize = 40                #
 
     random_seed = 6424512           #
 
@@ -59,11 +79,6 @@ def main(argv):
 
     gal_file_name = os.path.join('output','g08_gal.fits')
     gal_signal_to_noise = 200       # Great08 "LowNoise" run
-
-    gal_n = 1                       # Use n=1 for "disk" type
-    # Great08 mixed pure bulge and pure disk for its LowNoise run.
-    # We're just doing disks to make things simpler.
-
     gal_resolution = 0.98           # r_gal / r_psf (use r = half_light_radius)
     # Note: Great08 defined their resolution as r_obs / r_psf, using the convolved 
     #       size rather than the pre-convolved size.  
@@ -75,34 +90,40 @@ def main(argv):
     gal_g1 = 0.013                  #
     gal_g2 = -0.008                 #
 
-    centroid_shift = 1.0            # arcsec (=pixels)
+    shift_radius = 1.0              # arcsec (=pixels)
 
     logger.info('Starting demo script 5 using:')
-    logger.info('    - image with %d x %d postage stamps',nx_stamps,ny_stamps)
-    logger.info('    - postage stamps of size %d x %d pixels',nx_pixels,ny_pixels)
+    logger.info('    - image with %d x %d postage stamps',nx_tiles,ny_tiles)
+    logger.info('    - postage stamps of size %d x %d pixels',stamp_xsize,stamp_ysize)
     logger.info('    - Moffat PSF (beta = %.1f, FWHM = %.2f, trunc = %.2f),',
             psf_beta,psf_fwhm,psf_trunc)
     logger.info('    - PSF ellip = (%.3f,%.3f)',psf_e1,psf_e2)
-    logger.info('    - Sersic galaxies (n = %.1f)',gal_n)
+    logger.info('    - Exponential galaxies')
     logger.info('    - Resolution (r_gal / r_psf) = %.2f',gal_resolution)
     logger.info('    - Ellipticities have rms = %.1f, max = %.1f',
             gal_ellip_rms, gal_ellip_max)
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
-    logger.info('    - Centroid shifts up to = %.2f pixels',centroid_shift)
+    logger.info('    - Centroid shifts up to = %.2f pixels',shift_radius)
 
 
     # Define the PSF profile
-    psf = galsim.Moffat(beta=psf_beta, flux=1., fwhm=psf_fwhm, trunc=psf_trunc)
-    psf_re = psf.getHalfLightRadius()  # Need this for later...
-    psf.applyShear(e1=psf_e1,e2=psf_e2)
-    logger.info('Made PSF profile')
+    psf = galsim.Moffat(beta=psf_beta, fwhm=psf_fwhm, trunc=psf_trunc)
 
-    pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
-    logger.info('Made pixel profile')
+    # When something can be constructed from multiple sizes, e.g. Moffat, then
+    # you can get any size out even if it wasn't the way the object was constructed.
+    # In this case, we extract the half-light radius, even though we built it with fwhm.
+    # We'll use this later to set the galaxy's half-light radius in terms of a resolution.
+    psf_re = psf.getHalfLightRadius()
+
+    psf.applyShear(e1=psf_e1,e2=psf_e2)
+    logger.debug('Made PSF profile')
+
+    pix = galsim.Pixel(pixel_scale)
+    logger.debug('Made pixel profile')
 
     final_psf = galsim.Convolve([psf,pix])
-    logger.info('Made final_psf profile')
+    logger.debug('Made final_psf profile')
 
 
     # Define the galaxy profile
@@ -111,35 +132,49 @@ def main(argv):
     gal_re = psf_re * gal_resolution
 
     # Make the galaxy profile starting with flux = 1.
-    gal = galsim.Sersic(gal_n, flux=1., half_light_radius=gal_re)
-    logger.info('Made galaxy profile')
+    gal = galsim.Exponential(flux=1., half_light_radius=gal_re)
+    logger.debug('Made galaxy profile')
 
     # This profile is placed with different orientations and noise realizations
     # at each postage stamp in the gal image.
-    gal_image = galsim.ImageF(nx_pixels * nx_stamps-1 , ny_pixels * ny_stamps-1)
-    psf_image = galsim.ImageF(nx_pixels * nx_stamps-1 , ny_pixels * ny_stamps-1)
+    gal_image = galsim.ImageF(stamp_xsize * nx_tiles-1 , stamp_ysize * ny_tiles-1)
+    psf_image = galsim.ImageF(stamp_xsize * nx_tiles-1 , stamp_ysize * ny_tiles-1)
 
-    # Set the pixel scale of these images:
+    # Set the pixel_scale of the images:
     gal_image.setScale(pixel_scale)
     psf_image.setScale(pixel_scale)
 
-    centroid_shift_sq = centroid_shift**2
+    shift_radius_sq = shift_radius**2
 
     first_in_pair = True  # Make pairs that are rotated by 45 degrees
 
     k = 0
-    for ix in range(nx_stamps):
-        for iy in range(ny_stamps):
+    for ix in range(nx_tiles):
+        for iy in range(ny_tiles):
+            # The normal procedure for setting random numbers in GalSim is to start a new
+            # random number generator for each object using sequential seed values.
+            # This sounds weird at first (especially if you were indoctrinated by Numerical 
+            # Recipes), but for the boost random number generator we use, the "random" 
+            # number sequences produced from sequential initial seeds are highly uncorrelated.
+            # 
+            # The reason for this procedure is that when we use multiple processes to build
+            # our images, we want to make sure that the results are deterministic regardless
+            # of the way the objects get parcelled out to the different processes. 
+            #
+            # Of course, this script isn't using multiple processes, so it isn't required here.
+            # However, we do it nonetheless in order to get the same results as the config
+            # version of this demo script (demo5.yaml).
+            ud = galsim.UniformDeviate(random_seed+k)
 
-            # Initialize the random number generator we will be using.
-            rng = galsim.UniformDeviate(random_seed+k)
-            #print 'seed = ',random_seed+k
-            gd = galsim.GaussianDeviate(rng, sigma=gal_ellip_rms)
+            # Any kind of random number generator can take another RNG as its first 
+            # argument rather than a seed value.  This makes both objects use the same
+            # underlying generator for their pseudo-random values.
+            gd = galsim.GaussianDeviate(ud, sigma=gal_ellip_rms)
 
             # The -1's in the next line are to provide a border of
             # 1 pixel between postage stamps
-            b = galsim.BoundsI(ix*nx_pixels+1 , (ix+1)*nx_pixels-1, 
-                               iy*ny_pixels+1 , (iy+1)*ny_pixels-1)
+            b = galsim.BoundsI(ix*stamp_xsize+1 , (ix+1)*stamp_xsize-1, 
+                               iy*stamp_ysize+1 , (iy+1)*stamp_ysize-1)
             sub_gal_image = gal_image[b]
             sub_psf_image = psf_image[b]
 
@@ -147,8 +182,7 @@ def main(argv):
             # but for simplicity, we just do them in sequential postage stamps.
             if first_in_pair:
                 # Use a random orientation:
-                beta = rng() * 2. * math.pi * galsim.radians
-                #print 'beta = ',beta
+                beta = ud() * 2. * math.pi * galsim.radians
 
                 # Determine the ellipticity to use for this galaxy.
                 ellip = 1
@@ -157,14 +191,11 @@ def main(argv):
                     # Python basically implements this as a macro, so gd() is called twice!
                     val = gd()
                     ellip = math.fabs(val)
-                #print 'ellip = ',ellip
 
                 first_in_pair = False
             else:
                 # Use the previous ellip and beta + 90 degrees
                 beta += 90 * galsim.degrees
-                #print 'ring beta = ',beta
-                #print 'ring ellip = ',ellip
                 first_in_pair = True
 
             # Make a new copy of the galaxy with an applied e1/e2-type distortion 
@@ -173,25 +204,22 @@ def main(argv):
 
             # Apply the gravitational reduced shear by specifying g1/g2
             this_gal.applyShear(g1=gal_g1, g2=gal_g2)
-            #print 'g1,g2 = ',gal_g1,gal_g2
 
-            # Apply a random centroid shift:
-            rsq = 2 * centroid_shift_sq
-            while (rsq > centroid_shift_sq):
-                dx = (2*rng()-1) * centroid_shift
-                dy = (2*rng()-1) * centroid_shift
+            # Apply a random shift_radius:
+            rsq = 2 * shift_radius_sq
+            while (rsq > shift_radius_sq):
+                dx = (2*ud()-1) * shift_radius
+                dy = (2*ud()-1) * shift_radius
                 rsq = dx**2 + dy**2
-            #print 'dx,dy = ',dx,dy
 
             this_gal.applyShift(dx,dy)
             this_psf = final_psf.createShifted(dx,dy)
 
-            # Make the final image, convolving with psf and pixel
+            # Make the final image, convolving with psf and pix
             final_gal = galsim.Convolve([psf,pix,this_gal])
 
             # Draw the image
-            #print 'pixel_scale = ',pixel_scale
-            final_gal.draw(sub_gal_image, dx=pixel_scale)
+            final_gal.draw(sub_gal_image)
 
             # Now determine what we need to do to get our desired S/N
             # There are lots of definitions of S/N, but here is the one used by Great08
@@ -207,24 +235,17 @@ def main(argv):
             sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
             flux = gal_signal_to_noise / sn_meas
             # Now we rescale the flux to get our desired S/N
-            #print 'noise_var = ',sky_level_pix
-            #print 'sn_meas = ',sn_meas
-            #print 'flux = ',flux
             sub_gal_image *= flux
 
-            # Add Poisson noise
+            # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
+            # so it will be part of the same stream of random numbers as ud and gd.
             sub_gal_image += sky_level_pix
-            # The default CCDNoise has gain=1 and read_noise=0 if
-            # these keyword args are not set, giving Poisson noise
-            # according to the image pixel count values.
-            #print 'before CCDNoise: rng() = ',rng()
-            sub_gal_image.addNoise(galsim.CCDNoise(rng))
-            #print 'after CCDNoise: rng() = ',rng()
+            sub_gal_image.addNoise(galsim.CCDNoise(ud))
             sub_gal_image -= sky_level_pix
 
             # Draw the PSF image
             # No noise on PSF images.  Just draw it as is.
-            this_psf.draw(sub_psf_image, dx=pixel_scale)
+            this_psf.draw(sub_psf_image)
 
             # for first instance, measure moments
             if ix==0 and iy==0:
@@ -244,10 +265,10 @@ def main(argv):
     logger.info('Done making images of postage stamps')
 
     # Now write the images to disk.
-    psf_image.write(psf_file_name, clobber=True)
+    psf_image.write(psf_file_name)
     logger.info('Wrote PSF file %s',psf_file_name)
 
-    gal_image.write(gal_file_name, clobber=True)
+    gal_image.write(gal_file_name)
     logger.info('Wrote image to %r',gal_file_name)  # using %r adds quotes around filename for us
 
 

@@ -48,7 +48,7 @@ def main(argv):
     # But for now, just do a basic setup.
     logging.basicConfig(
         format="%(message)s",
-        level=logging.DEBUG,
+        level=logging.INFO,
         stream=sys.stdout
     )
     logger = logging.getLogger('galsim_yaml')

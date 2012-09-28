@@ -11,9 +11,13 @@ def Bounds_repr(self):
 def Bounds_str(self):
     return "("+str(self.xMin)+", "+str(self.xMax)+", "+str(self.yMin)+", "+str(self.yMax)+")"
 
+def Bounds_getinitargs(self):
+    return self.xmin, self.xmax, self.ymin, self.ymax
+
 for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.__repr__ = Bounds_repr
     Class.__str__ = Bounds_str
+    Class.__getinitargs__ = Bounds_getinitargs
     Class.__doc__ = """A class for representing image bounds as 2D rectangles.
 
     BoundsD describes bounds with floating point values in x and y.
@@ -46,15 +50,23 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     `ymin`=`ymax`, which will have an undefined rectangle and the instance method .isDefined()
     will return false.  The first sets `xmin`=`xmax`=`ymin`=`ymax`=0:
 
-        >>> bounds = galsim.PositionD()
-        >>> bounds = galsim.PositionI()
+        >>> bounds = galsim.BoundsD()
+        >>> bounds = galsim.BoundsI()
 
     The second method sets both upper and lower rectangle bounds to be equal to some position:
 
-        >>> bounds = galsim.PositionD(galsim.PositionD(xmin, ymin))
-        >>> bounds = galsim.PositionI(galsim.PositionI(imin, jmin))
+        >>> bounds = galsim.BoundsD(galsim.PositionD(xmin, ymin))
+        >>> bounds = galsim.BoundsI(galsim.PositionI(imin, jmin))
 
     Once again, the I/D type of PositionI/D must match that of BoundsI/D.
+
+    For the latter two initializations, you would typically then add to the bounds with:
+
+        >>> bounds += pos1
+        >>> bounds += pos2
+        >>> [etc.]
+
+    Then the bounds will end up as the bounding box of all the positions that were added to it.
 
     Methods
     -------
@@ -117,6 +129,53 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
         >>> bounds.shift(galsim.PositionD(dx, dy))
 
     The type of PositionI/D should match that of the bounds instance.
+    """ 
+
+
+def Position_repr(self):
+    return (self.__class__.__name__+"(x="+str(self.x)+", y="+str(self.y)+")")
+
+def Position_str(self):
+    return "("+str(self.x)+", "+str(self.y)+")"
+
+def Position_getinitargs(self):
+    return self.x, self.y
+
+for Class in (_galsim.PositionD, _galsim.PositionI):
+    Class.__repr__ = Position_repr
+    Class.__str__ = Position_str
+    Class.__getinitargs__ = Position_getinitargs
+    Class.__doc__ = """A class for representing 2D positions.
+
+    PositionD describes a position with floating point values in x and y.
+    PositionI described a position with integer values in x and y.
+
+    Initialization
+    --------------
+    A PositionI or PositionD instance can be initialized simply as:
+
+        >>> pos = galsim.PositionD(x, y)
+        >>> pos = galsim.PositionI(ix, iy)
+
+    In the PositionI example above, `ix` & `iy` must both be integers to avoid an
+    ArgumentError exception.
+
+    Arithmetic
+    ----------
+    Most arithmetic that makes sense for a position is allowed:
+
+        >>> pos1 + pos2
+        >>> pos1 - pos2
+        >>> pos * x
+        >>> pos / x
+        >>> -pos
+        >>> pos1 += pos2
+        >>> pos1 -= pos2
+        >>> pos *= x
+        >>> pos -= x
+
+    Note though that the types generally need to match.  For example, you cannot multiply
+    a PositionI by a float or add a PositionI to a PositionD.
     """ 
 
 

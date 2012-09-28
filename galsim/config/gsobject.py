@@ -41,7 +41,7 @@ def BuildGSObject(config, key, base=None):
 
     # If we have previously saved an object and marked it as safe, then use it.
     if 'current_val' in ck and ck['safe']:
-        #print 'current is safe:  ',ck['current'], True
+        #print 'current is safe:  ',ck['current_val'], True
         return ck['current_val'], True
 
     # Change the value for valid aliases:
@@ -50,16 +50,21 @@ def BuildGSObject(config, key, base=None):
 
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [ 
-        'dilate', 'dilation', 'dilate_mu', 'dilation_mu',
+        'dilate', 'dilation', #'dilate_mu', 'dilation_mu',
         'ellip', 'rotate', 'rotation',
-        'magnify', 'magnification', 'magnify_mu', 'magnification_mu',
+        'magnify', 'magnification', #'magnify_mu', 'magnification_mu',
         'shear', 'shift', 
         'current_val', 'safe' ]
     # There are a few more that are specific to which key we have.
     if key == 'gal':
-        ignore += [ 'resolution', 'signal_to_noise' ]
+        ignore += [ 'resolution', 'signal_to_noise', 'redshift' ]
+        # If redshift is present, parse it here, since it might be needed by the Build functions.
+        # All we actually care about is setting the current_val, so don't assign to anything.
+        if 'redshift' in ck:
+            galsim.config.ParseValue(ck, 'redshift', base, float)
     elif key == 'psf':
         ignore += [ 'saved_re' ]
+
 
     # See if this type has a specialized build function:
     build_func_name  = '_Build' + type
@@ -177,13 +182,15 @@ def _BuildList(config, key, base, ignore):
     items = config['items']
     if not isinstance(items,list):
         raise AttributeError("items entry for config.%s entry is not a list."%type)
-    if 'index' not in config:
-        config['index'] = { 'type' : 'Sequence' , 'first' : 0 , 'last' : len(items)-1 }
+
+    # Setup the indexing sequence if it hasn't been specified using the length of items.
+    galsim.config.SetDefaultIndex(config, len(items))
     index, safe = galsim.config.ParseValue(config, 'index', base, int)
     if index < 0 or index >= len(items):
         raise AttributeError("index %d out of bounds for config.%s"%(index,type))
     #print items[index]['type']
     #print 'index = ',index,' From ',key,' List: ',items[index]
+
     gsobject, safe1 = BuildGSObject(items, index, base)
     safe = safe and safe1
 
@@ -286,14 +293,6 @@ def _TransformObject(gsobject, config, base):
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _DilateObject(gsobject, config, 'dilation', base)
         safe = safe and safe1
-    if 'dilate_mu' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _DilateMuObject(gsobject, config, 'dilate_mu', base)
-        safe = safe and safe1
-    if 'dilation_mu' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _DilateMuObject(gsobject, config, 'dilation_mu', base)
-        safe = safe and safe1
     if 'ellip' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _EllipObject(gsobject, config, 'ellip', base)
@@ -314,14 +313,6 @@ def _TransformObject(gsobject, config, base):
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnification', base)
         safe = safe and safe1
-    if 'magnify_mu' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _MagnifyMuObject(gsobject, config, 'magnify_mu', base)
-        safe = safe and safe1
-    if 'magnification_mu' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _MagnifyMuObject(gsobject, config, 'magnification_mu', base)
-        safe = safe and safe1
     if 'shear' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _EllipObject(gsobject, config, 'shear', base)
@@ -330,7 +321,6 @@ def _TransformObject(gsobject, config, base):
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _ShiftObject(gsobject, config, 'shift', base)
         safe = safe and safe1
-    #print 'Transformed: ',gsobject
     return gsobject, safe
 
 def _EllipObject(gsobject, config, key, base):
@@ -340,11 +330,8 @@ def _EllipObject(gsobject, config, key, base):
     @returns transformed GSObject.
     """
     shear, safe = galsim.config.ParseValue(config, key, base, galsim.Shear)
-    #print 'applyShear with ',shear
-    gsobject.applyShear(shear)
-    #print 'After applyShear, gsobject = ',gsobject, safe
+    gsobject = gsobject.createSheared(shear)
     return gsobject, safe
-
 
 def _RotateObject(gsobject, config, key, base):
     """@brief Applies rotation to a supplied GSObject based on user input.
@@ -352,9 +339,7 @@ def _RotateObject(gsobject, config, key, base):
     @returns transformed GSObject.
     """
     theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
-    #print 'theta = ',theta
-    gsobject.applyRotation(theta)
-    #print 'After applyRotation, gsobject = ',gsobject, safe
+    gsobject = gsobject.createRotated(theta)
     return gsobject, safe
 
 def _DilateObject(gsobject, config, key, base):
@@ -363,21 +348,7 @@ def _DilateObject(gsobject, config, key, base):
     @returns transformed GSObject.
     """
     scale, safe = galsim.config.ParseValue(config, key, base, float)
-    #print 'scale = ',scale
-    gsobject.applyDilation(scale)
-    #print 'After applyDilation, gsobject = ',gsobject, safe
-    return gsobject, safe
-
-def _DilateMuObject(gsobject, config, key, base):
-    """@brief Applies dilation to a supplied GSObject based on user input
-       according to a mu value rather than scale.  (scale = exp(mu))
-
-    @returns transformed GSObject.
-    """
-    mu, safe = galsim.config.ParseValue(config, key, base, float)
-    #print 'scale = ',scale
-    gsobject.applyDilation(exp(mu))
-    #print 'After applyDilation, gsobject = ',gsobject, safe
+    gsobject = gsobject.createDilated(scale)
     return gsobject, safe
 
 def _MagnifyObject(gsobject, config, key, base):
@@ -386,21 +357,7 @@ def _MagnifyObject(gsobject, config, key, base):
     @returns transformed GSObject.
     """
     scale, safe = galsim.config.ParseValue(config, key, base, float)
-    #print 'scale = ',scale
-    gsobject.applyMagnification(scale)
-    #print 'After applyMagnification, gsobject = ',gsobject, safe
-    return gsobject, safe
-
-def _MagnifyMuObject(gsobject, config, key, base):
-    """@brief Applies magnification to a supplied GSObject based on user input
-       according to a mu value rather than scale.  (scale = exp(mu))
-
-    @returns transformed GSObject.
-    """
-    mu, safe = galsim.config.ParseValue(config, key, base, float)
-    #print 'scale = ',scale
-    gsobject.applyMagnification(exp(mu))
-    #print 'After applyMagnification, gsobject = ',gsobject, safe
+    gsobject = gsobject.createMagnified(scale)
     return gsobject, safe
 
 def _ShiftObject(gsobject, config, key, base):
@@ -409,7 +366,6 @@ def _ShiftObject(gsobject, config, key, base):
     @returns transformed GSObject.
     """
     shift, safe = galsim.config.ParseValue(config, key, base, galsim.PositionD)
-    gsobject.applyShift(dx=shift.x, dy=shift.y)
-    #print 'Shifted: ',gsobject
+    gsobject = gsobject.createShifted(shift.x,shift.y)
     return gsobject, safe
 

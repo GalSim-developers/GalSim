@@ -1,18 +1,30 @@
+#
+# Demo #7
+#
+# The seventh YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script introduces drawing profiles with photon shooting rather than doing the 
+# convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 different
+# kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so 
+# each of the 25 pairings is drawn 4 times with different realizations of the random numbers.
+# The profiles are drawn twice, once with the FFT method, and once with photon shooting.
+# The two images are drawn side by side so it is easy to visually compare the results.
+# The 100 total profiles are written to a FITS data cube, which makes it easy to scroll
+# through the images comparing the two drawing methods.
+#
+# New features introduced in this demo:
+#
+# - obj type : List (items)
+# - obj type : Airy (lam_over_diam)
+# - obj : dilate
+# - value type : Sequence (first, last, repeat)
+# - value type : Random (min, max)
+# - image type : Tiled : xborder
+# - image : draw_method (fft or phot)
 
-# YAML configuration file for use with the executable galsim_yaml
-# Type:
-#   galsim_yaml demo7.yaml
-#
-# This configuration file is designed to be equivalent to the example script called demo7.py
-#
-#    Make a fits image cube where each frame has two images of the same galaxy drawn 
-#    with regular FFT convolution and with photon shooting.
-#
-#    We do this for 5 different PSFs and 5 different galaxies, each with 4 different (random)
-#    fluxes, sizes, and shapes.
-#
 
-# Define the PSF's
+# Define the PSF profiles
 psf : 
     type : List
     items :
@@ -77,6 +89,7 @@ gal :
         e : { type : Random , min : 0.0 , max : 0.8 }
         beta : { type : Random }
 
+
 # Define some other information about the images 
 image :
     # Each image in the data cube has two tiles.
@@ -107,9 +120,10 @@ image :
     # The usual case is to just set a single number, which really means that each object
     # gets a sequential value starting with this number.  In this case we repeat each value
     # two times, so the fft and phot images get the same values for the random parameters.
-    random_seed : { type : Sequence , first : 1512413 , repeat : 2 }
+    random_seed : { type : Sequence , first : 553728 , repeat : 2 }
 
-# Define the output formats
+
+# Define the name and format of the output file
 output :
     type : DataCube
 

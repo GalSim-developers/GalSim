@@ -1,0 +1,217 @@
+#
+# Demo #9
+#
+# The ninth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script simulates cluster lensing or galaxy-galaxy lensing.  The gravitational shear
+# applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations 
+# of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
+# has its own file, organized into 4 directories (one for each mass).  For each cluster, we
+# draw 20 lensed galaxies at random positions on the image.
+#
+# New features introduced in this demo:
+#
+# - shear_type : NFWHaloShear (redshift)
+# - float_type : NFWHaloMag (redshift)
+# - input : nfw_halo (mass, conc, redshift)
+# - shear_type : Eta1Eta2 (eta1, eta2)
+# - image type : Scattered (size, nobjects)
+# - str_value type : NumberedFile (root, num, ext, digits)
+# - output : nproc
+# - output : weight
+# - output : badpix
+
+
+# We again use the multiple document feature.  So start with the common information:
+
+# Define the PSF profile
+psf : 
+    type : Kolmogorov
+    fwhm : 0.5  # arcsec
+
+
+# Define the galaxy profile
+gal :
+    type : Exponential
+    half_light_radius : { type : Random , min : 0.4 , max : 1.2 }
+    flux : { type : Random , min : 1.0e4 , max : 1.0e6 }
+    ellip :
+        # The eta definition of shear is |eta| = ln(a/b) where a and b are (as usual)
+        # the semi-major and semi-minor axes.  This definition has the advantage that 
+        # it is well defined for all values from 0 to infinity, so we don't need to
+        # cut it off to avoid |e| > 1.
+        type : Eta1Eta2
+        eta1 : { type : RandomGaussian , sigma : 0.4 }
+        eta2 : { type : RandomGaussian , sigma : 0.4 }
+
+    magnification :
+        # For this demo, we use a model of on NFW halo for our magnification and shear.
+        # Both require that the galaxy to have a redshift attribute.
+        # We put the redshift at the gal level, rather than here, since we want to use the 
+        # same value for both mag and shear.
+        # They also require an input.nfw_halo field.  See below.
+        type : NFWHaloMag
+
+    shear:
+        type : NFWHaloShear
+
+    # Note: the redshift could be variable for each galaxy.  We just use a constant here.
+    redshift : 0.6 
+
+
+# Setup the NFW Halo:
+# This isn't really an "input" in the normal sense, but we put in input anything that
+# requires an initial setup.  That includes setting up the NFW Halo parameters.
+input :
+    nfw_halo : 
+        # Note: the input field gets processed each time we start a new output file
+        # So any non-constant variables here will change with that cadence.
+        # For our mass, we use each value for 5 sequential files, then change
+        # to the next mass in the list.
+        mass : 
+            type : List
+            items : [ 1.0e15, 7.0e14, 4.0e14, 2.0e14 ]
+            index : 
+                type : Sequence
+                first : 0
+                repeat : &n_clusters_per_mass 5
+                # Note: this is a good example of when the YAML named variables come in handy.
+                # We'll use this variable below when setting up the output files.
+
+        conc : 4  # The concentration parameter = virial radius / NFW scale radius
+        redshift : 0.3  # The redshift of the halo.
+
+        # These next two are optional.  If they are omitted, then (0.3, 0.7) are actually the 
+        # defaults.  If you only specify one of them, the other is set so that the total is 1.
+        # But you can define both values so that the total is not 1 if you want.
+        # Radiation is assumed to be zero and dark energy equation of state w = -1.
+        omega_m : 0.3
+        omega_lam : 0.7
+
+        # Another optional parameter for nfw_halo is pos, which specifies the location of 
+        # the halo with respect to the center of the image.  The default is (0,0).
+        # pos : 0,0
+
+
+
+# Define some other information about the images 
+image :
+
+    # A Scattered image means that the objects can be placed arbitrarily at any (x,y) value.
+    type : Scattered
+
+    # Either size or (xsize,ysize) is required to specify the size of the image.
+    size : 512  # pixels
+
+    # nobjects is required to specify how many objects to place on the image.
+    nobjects : 20
+
+    # You can optionally specify stamp_size or (stamp_xsize,stamp_ysize) to set the size of
+    # the postage stamp image to draw for each object.  However, if you omit these,
+    # then GalSim will automatically determine a good size to draw each object -- larger
+    # for larger objects, and smaller for smaller ones.  So this is usually the way to go.
+    
+    # Another optional parameter is center (which expects a "pos_value") to specify the location
+    # of the center of each object.  The default if this is omitted is random x from 
+    # 1..xsize and random y from 1..ysize.  i.e.
+    # center : 
+    #     type : XY 
+    #     x : { type : Random , min : 1 , max : xsize }
+    #     y : { type : Random , min : 1 , max : ysize }
+
+
+    pixel_scale : 0.19  # arcsec / pixel
+
+    noise :
+        sky_level : 1.0e6  # ADU / arcsec^2
+
+    random_seed : 8383721
+
+
+# Define the names and format of the output files
+output :
+
+    nfiles : 20
+
+    file_name :
+
+        # A NumberedFile type creates a string of the form rootNNNNext
+        # where the NNNN is a number that will typically be drawn from a Sequence.
+        # In our case, our file_name's will be:
+        #     cluster0001.fits
+        #     cluster0002.fits
+        #     cluster0003.fits
+        #     cluster0004.fits
+        #     cluster0005.fits
+        type : NumberedFile
+
+        # root specifies the text to go before the number
+        root : 'cluster'
+
+        # num specifies how to choose the number for each file. 
+        # If omitted, the default is simply a Sequence starting at 1.
+        # i.e. { type : Sequence , first : 1 }
+        num : 
+            type : Sequence
+            first : 1
+            # Here is a case where using a named variable comes in handy.
+            # This was defined about in input.nfw_halo.
+            last : *n_clusters_per_mass
+
+        # ext specifies the text to go after the number, if desired (default = None)
+        ext : '.fits'
+
+        # digits specifies how many digits to use in writing the number.  The default is
+        # to use as many as necessary, but if your numbers go above 9, then this makes
+        # the file names appear out of order in a directory listing.  So it is common 
+        # practice to pad the smaller numbers with 0's so file0099 will appear before file0100.
+        digits : 4
+
+
+    dir : 
+        # Our directory names wil be:
+        #     nfw1
+        #     nfw2
+        #     nfw3
+        #     nfw4
+        # as subdirectories of output_yaml.
+        type : NumberedFile
+        root : 'output_yaml/nfw'
+        num : 
+            type : Sequence
+            first : 1
+            last : 4
+
+            # For our directory name, we have each number in the sequence repeat 5 times
+            # before moving on to the next value, since we have 5 files to put in each directory.
+            repeat : *n_clusters_per_mass
+
+    # The weight field means that a weight image should be built and written out.
+    # The weights are calculated as the inverse variance in each pixel.
+    weight :
+        # Either file_name or hdu is required for weight.  In this case we write to the 
+        # first HDU extension.  The main image is in the primary HDU, which is number 0.
+        # Note: it is an error to skip HDU's, so if weight is the only other image, it must 
+        # be in HDU 1.  If weight, badpix and psf all specify an hdu value, then they must be
+        # 1, 2 and 3 in some order.
+        # Also, hdu is only valid for image.type = Fits (which is the default if unspecified).
+        hdu : 2
+
+    # It is common for astrometric images to also have a bad pixel mask.  We don't have any
+    # defect simulation currently, so our bad pixel masks are currently all zeros. 
+    # But someday, we plan to add defect functionality to GalSim, at which point, we'll
+    # be able to mark those defects on a bad pixel mask.
+    badpix :
+        hdu : 1
+
+    # nproc in the output field indicates that multiple processes should be used to 
+    # build the files.  This is a much more efficient way to parallelize than putting
+    # nproc in the image field (as in demo8.yaml), since it requires less communication 
+    # between the processes.  Unless you are building enormous files such that only one
+    # at a time can fit in memory, this will be the normal way you'll want to parallelize.
+    #
+    # Also, this time, we set nproc <= 0.  This means that GalSim should try to automatically
+    # determine the number of cpus you have and use that many processes.
+    nproc : -1
+

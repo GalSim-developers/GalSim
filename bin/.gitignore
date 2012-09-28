@@ -1,7 +1,9 @@
+
 # Everything
 *
 
 # Except for:
-.gitignore
-SConscript
-*.py
+!.gitignore
+!SConscript
+!*.py
+

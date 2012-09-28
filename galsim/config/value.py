@@ -1,5 +1,6 @@
 import galsim
 
+
 def ParseValue(config, param_name, base, value_type):
     """@brief Read or generate a parameter value from config.
 
@@ -11,7 +12,7 @@ def ParseValue(config, param_name, base, value_type):
 
     # First see if we can assign by param by a direct constant value
     if isinstance(param, value_type):
-        #print 'param == value_type: ',param,True
+        #print param_name,' = ',param
         return param, True
     elif not isinstance(param, dict):
         if value_type is galsim.Angle:
@@ -32,7 +33,7 @@ def ParseValue(config, param_name, base, value_type):
                     "Could not convert %s param = %s to type %s."%(param_name,param,value_type))
         # Save the converted type for next time.
         config[param_name] = val
-        #print 'param => value_type: ',val,True
+        #print param_name,' = ',val
         return val, True
     elif 'type' not in param:
         raise AttributeError(
@@ -40,18 +41,16 @@ def ParseValue(config, param_name, base, value_type):
                     %(param_name,param_name))
     else:
         # Otherwise, we need to generate the value according to its type
-        from galsim import Angle
-        from galsim import Shear
-        from galsim import PositionD
         valid_types = {
-            float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'Sequence', 'List' ],
-            int : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
-            bool : [ 'InputCatalog', 'Random', 'Sequence', 'List' ],
-            str : [ 'InputCatalog', 'List' ],
-            Angle : [ 'Rad', 'Deg', 'Random', 'List' ],
-            Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
-                      'Ring', 'List' ],
-            PositionD : [ 'XY', 'RandomCircle', 'List' ] 
+            float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'NFWHaloMag',
+                      'Sequence', 'List', 'Eval' ],
+            int : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
+            bool : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
+            str : [ 'InputCatalog', 'NumberedFile', 'List', 'Eval' ],
+            galsim.Angle : [ 'Rad', 'Deg', 'Random', 'List', 'Eval' ],
+            galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
+                             'Ring', 'NFWHaloShear', 'PowerSpectrumShear', 'List', 'Eval' ],
+            galsim.PositionD : [ 'XY', 'RandomCircle', 'List', 'Eval' ] 
         }
 
         type = param['type']
@@ -68,7 +67,8 @@ def ParseValue(config, param_name, base, value_type):
             
         if type not in valid_types[value_type]:
             raise AttributeError(
-                "Invalid value for %s.type=%s with value_type = %s."%(param_name,type,value_type))
+                "Invalid type = %s specified for parameter %s with value_type = %s."%(
+                        type, param_name, value_type))
 
         generate_func = eval('_GenerateFrom' + type)
         #print 'generate_func = ',generate_func
@@ -91,7 +91,7 @@ def _GetAngleValue(param, param_name):
     """ @brief Convert a string consisting of a value and an angle unit into an Angle.
     """
     try :
-        (value, unit) = param.rsplit(None,1)
+        value, unit = param.rsplit(None,1)
         value = float(value)
         unit = unit.lower()
         if unit.startswith('rad') :
@@ -110,6 +110,18 @@ def _GetAngleValue(param, param_name):
             raise AttributeError("Unknown Angle unit: %s for %s param"%(unit,param_name))
     except :
         raise AttributeError("Unable to parse %s param = %s as an Angle."%(param_name,param))
+
+
+def _GetPositionValue(param, param_name):
+    """ @brief Convert a string that looks like "a,b" into a galsim.PositionD.
+    """
+    try :
+        x, y = param.split(',')
+        x = x.strip()
+        y = y.strip()
+        return galsim.PositionD(x,y)
+    except :
+        raise AttributeError("Unable to parse %s param = %s as a PositionD."%(param_name,param))
 
 
 def _GetBoolValue(param, param_name):
@@ -182,6 +194,7 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
 
     return get
 
+
 def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
     """@brief Check and get all the parameters for a particular item
 
@@ -197,6 +210,7 @@ def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
     kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.iteritems()])
     return kwargs, safe
+
 
 def GetCurrentValue(config, param_name):
     """@brief Return the current value of a parameter (either stored or a simple value)
@@ -283,6 +297,7 @@ def _GenerateFromDeg(param, param_name, base, value_type):
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return kwargs['theta'] * galsim.degrees, safe
 
+
 def _GenerateFromRing(param, param_name, base, value_type):
     """@brief Return the next shear for a ring test.
     """
@@ -320,6 +335,7 @@ def _GenerateFromRing(param, param_name, base, value_type):
     #print 'return shear = ',current
     return current, False
 
+
 def _GenerateFromInputCatalog(param, param_name, base, value_type):
     """@brief Return a value read from an input catalog
     """
@@ -352,6 +368,7 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
     #print 'InputCatalog: ',str,val
     return val, False
 
+
 def _GenerateFromRandom(param, param_name, base, value_type):
     """@brief Return a random value drawn from a uniform distribution
     """
@@ -364,10 +381,14 @@ def _GenerateFromRandom(param, param_name, base, value_type):
     if value_type is galsim.Angle:
         import math
         CheckAllParams(param, param_name)
-        return ud() * 2 * math.pi * galsim.radians, False
+        val = ud() * 2 * math.pi * galsim.radians
+        #print 'Random angle = ',val
+        return val, False
     elif value_type is bool:
         CheckAllParams(param, param_name)
-        return ud() < 0.5, False
+        val = ud() < 0.5
+        #print 'Random bool = ',val
+        return val, False
     else:
         req = { 'min' : value_type , 'max' : value_type }
         kwargs, safe = GetAllParams(param, param_name, base, req=req)
@@ -375,14 +396,17 @@ def _GenerateFromRandom(param, param_name, base, value_type):
         min = kwargs['min']
         max = kwargs['max']
 
-        if value_type in [ int, bool ]:
+        if value_type is int:
             import math
             val = int(math.floor(ud() * (max-min+1))) + min
             # In case ud() == 1
             if val > max: val = max
         else:
             val = ud() * (max-min) + min
+
+        #print 'Random = ',val
         return val, False
+
 
 def _GenerateFromRandomGaussian(param, param_name, base, value_type):
     """@brief Return a random value drawn from a Gaussian distribution
@@ -449,9 +473,9 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
         val = gd()
         if 'mean' in kwargs: val += kwargs['mean']
 
-    #print 'ellip = ',val
     #print 'RandomGaussian: ',val
     return val, False
+
 
 def _GenerateFromRandomCircle(param, param_name, base, value_type):
     """@brief Return a PositionD drawn from a circular top hat distribution.
@@ -461,11 +485,17 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
     rng = base['rng']
 
     req = { 'radius' : float }
+    opt = { 'inner_radius' : float, 'center' : galsim.PositionD }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     radius = kwargs['radius']
 
     ud = galsim.UniformDeviate(rng)
-    max_rsq = radius*radius
+    max_rsq = radius**2
+    if 'inner_radius' in kwargs:
+        inner_radius = kwargs['inner_radius']
+        min_rsq = inner_radius**2
+    else:
+        min_rsq = 0.
     # Emulate a do-while loop
     while True:
         x = (2*ud()-1) * radius
@@ -473,7 +503,11 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
         rsq = x**2 + y**2
         if rsq <= max_rsq: break
     #print 'RandomCircle: ',(x,y)
-    return galsim.PositionD(x=x,y=y), False
+    pos = galsim.PositionD(x,y)
+    if 'center' in kwargs:
+        pos += params['center']
+    return pos, False
+
 
 def _GenerateFromSequence(param, param_name, base, value_type):
     """@brief Return next in a sequence of integers
@@ -523,6 +557,114 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     #print 'saved rep,current = ',param['rep'],param['current']
     return index, False
 
+
+def _GenerateFromNumberedFile(param, param_name, base, value_type):
+    """@brief Return a file_name using a root, a number, and an extension
+    """
+    #print 'Start NumberedFile for ',param_name,' -- param = ',param
+    if 'num' not in param:
+        param['num'] = { 'type' : 'Sequence', 'first' : 1 }
+    req = { 'root' : str , 'num' : int }
+    opt = { 'ext' : str , 'digits' : int }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+
+    template = kwargs['root']
+    if 'digits' in kwargs:
+        template += '%%0%dd'%kwargs['digits']
+    else:
+        template += '%d'
+    if 'ext' in kwargs:
+        template += kwargs['ext']
+    #print 'template = ',template
+    s = eval("'%s'%%%d"%(template,kwargs['num']))
+    #print 'num = ',kwargs['num']
+    #print 's = ',s
+    
+    return s, safe
+
+
+def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
+    """@brief Return a shear calculated from an NFWHalo object.
+    """
+    if 'pos' not in base:
+        raise ValueError("NFWHaloShear requested, but no position defined.")
+    pos = base['pos']
+
+    if 'gal' not in base or 'redshift' not in base['gal']:
+        raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
+    redshift = GetCurrentValue(base['gal'],'redshift')
+
+    if 'nfw_halo' not in base:
+        raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
+    
+    #print 'NFWHaloShear: pos = ',pos,' z = ',redshift
+    try:
+        g1,g2 = base['nfw_halo'].getShear(pos,redshift)
+        #print 'g1,g2 = ',g1,g2
+        shear = galsim.Shear(g1=g1,g2=g2)
+    except:
+        import warnings
+        warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
+                      "Using shear = 0.")
+        shear = galsim.Shear(g1=0,g2=0)
+    #print 'shear = ',shear
+    return shear, False
+
+
+def _GenerateFromNFWHaloMag(param, param_name, base, value_type):
+    """@brief Return a magnification calculated from an NFWHalo object.
+    """
+    if 'pos' not in base:
+        raise ValueError("NFWHaloShear requested, but no position defined.")
+    pos = base['pos']
+
+    if 'gal' not in base or 'redshift' not in base['gal']:
+        raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
+    redshift = GetCurrentValue(base['gal'],'redshift')
+
+    if 'nfw_halo' not in base:
+        raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
+    
+    #print 'NFWHaloMag: pos = ',pos,' z = ',redshift
+    mu = base['nfw_halo'].getMag(pos,redshift)
+    #print 'mu = ',mu
+
+    if mu < 0 or mu > 25:
+        import warnings
+        warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using scale=5."%mu)
+        scale = 5
+    else:
+        import math
+        scale = math.sqrt(mu)
+    #print 'scale = ',scale
+    return scale, False
+
+
+def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
+    """@brief Return a shear calculated from a PowerSpectrum object.
+    """
+    if 'pos' not in base:
+        raise ValueError("PowerSpectrumShear requested, but no position defined.")
+    pos = base['pos']
+
+    if 'power_spectrum' not in base:
+        raise ValueError("PowerSpectrumShear requested, but no input.power_spectrum defined.")
+    
+    #print 'PowerSpectrumShear: pos = ',pos
+
+    try:
+        g1,g2 = base['power_spectrum'].getShear(pos)
+        #print 'g1,g2 = ',g1,g2
+        shear = galsim.Shear(g1=g1,g2=g2)
+    except:
+        import warnings
+        warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +
+                      "Using shear = 0.")
+        shear = galsim.Shear(g1=0,g2=0)
+    #print 'shear = ',shear
+    return shear, False
+
+
 def _GenerateFromList(param, param_name, base, value_type):
     """@brief Return next item from a provided list
     """
@@ -544,6 +686,77 @@ def _GenerateFromList(param, param_name, base, value_type):
     safe = safe and safe1
     return val, safe
  
+def _GenerateFromEval(param, param_name, base, value_type):
+    """@brief Evaluate a string as the provided type
+    """
+    #print 'Start Eval for ',param_name
+    req = { 'str' : str }
+    opt = {}
+    for key in param.keys():
+        if key not in [ 'type' , 'str' ]:
+            if len(key) < 2:
+                raise AttributeError("Invalid user-defined variable %r"%key)
+            if key[0] == 'f':
+                opt[key] = float
+            elif key[0] == 'i':
+                opt[key] = int
+            elif key[0] == 'b':
+                opt[key] = bool
+            elif key[0] == 's':
+                opt[key] = str
+            elif key[0] == 'a':
+                opt[key] = galsim.Angle
+            elif key[0] == 'p':
+                opt[key] = galsim.PositionD
+            elif key[0] == 'g':
+                opt[key] = galsim.Shear
+            # else let GetAllParams rais an appropriate exception about unexpected key    
+    params, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+    string = params['str']
+    #print 'string = ',string
+
+    # Bring the user-defined variables into scope.
+    for key in opt.keys():
+        exec(key[1:] + ' = params[key]')
+        #print key[1:],'=',eval(key[1:])
+
+    # Also, we allow the use of math functions
+    import math
+    import numpy
+    import os
+
+    # Try evaluating the string as is.
+    try:
+        val = value_type(eval(string))
+        #print 'Simple success: val = ',val
+        return val, safe
+    except:
+        pass
+
+    # Then try bringing in the allowed variables to see if that works:
+    if 'pos' in base:
+        pos = base['pos']
+        #print 'pos = ',pos
+    if 'rng' in base:
+        rng = base['rng']
+    if 'catalog' in base:
+        catalog = base['catalog']
+    if 'real_catalog' in base:
+        real_catalog = base['real_catalog']
+    if 'nfw_halo' in base:
+        nfw_halo = base['nfw_halo']
+    if 'power_spectrum' in base:
+        power_spectrum = base['power_spectrum']
+
+    try:
+        val = value_type(eval(string))
+        #print 'Needed pos: val = ',val
+        return val, False
+    except:
+        raise ValueError("Unable to evaluate string %r as a %s for %s"%(
+                string,value_type,param_name))
+
+
 def SetDefaultIndex(config, num):
     """
     When the number of items in a list is known, we allow the user to omit some of 
@@ -565,6 +778,10 @@ def SetDefaultIndex(config, num):
                 index['first'] = num-1
             if 'last' not in index:
                 index['last'] = 0
-        elif type == 'Random' and 'max' not in index:
-            index['max'] = num-1
+        elif type == 'Random':
+            if 'max' not in index:
+                index['max'] = num-1
+            if 'min' not in index:
+                index['min'] = 0
+
 

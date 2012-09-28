@@ -1,22 +1,32 @@
+#
+# Demo #6
+#
+# The sixth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script uses real galaxy images from COSMOS observations.  The catalog of real galaxy
+# images distributed with GalSim only includes 100 galaxies, but you can download a much
+# larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link
+# to the download page.
+#
+# The galaxy images include images of the effective PSF for the original observations, 
+# so GalSim first deconvolves by that PSF, and then convolves by whatever PSF you desire.
+# In this case, we use a double Gaussian PSF.  The galaxies are randomly rotated and then
+# given an applied gravitational shear as well as gravitational magnification.
+# The output for this script is to a FITS "data cube".  With DS9, this can be viewed with a
+# slider to quickly move through the different images.
+#
+# New features introduced in this demo:
+#
+# - input : real_catalog (file_name, image_dir, preload)
+# - obj type : RealGalaxy (index)
+# - obj : rotate 
+# - obj : magnify
+# - image : sky_level
+# - value type : Sequence
+# - output type : DataCube (file_name, dir, nimages)
+# - Using YAML's multiple document feature to do more than one thing
 
-# YAML configuration file for use with the executable galsim_yaml
-# Type:
-#   galsim_yaml demo6.yaml
-#
-# This configuration file is designed to be equivalent to the example script called demo6.py
-#
-#    Make images similar to that done for the Great08 challenge:
-#      - Each fits file is 10 x 10 postage stamps.
-#        (The real Great08 images are 100x100, but in the interest of making the Demo
-#         script a bit quicker, we only build 100 stars and 100 galaxies.)
-#      - Each postage stamp is 40 x 40 pixels.
-#      - One image is all stars.
-#      - A second image is all galaxies.
-#      - Applied shear is the same for each galaxy.
-#      - Galaxies are oriented randomly, but in pairs to cancel shape noise.
-#      - Noise is poisson using a nominal sky value of 1.e6.
-#      - Galaxies are sersic profiles.
-#
 
 # In this file, we use yaml's multiple documents feature.
 # This can be useful if you are doing similar things, but have a couple differences
@@ -37,7 +47,7 @@
 
 # So start with the common information:
 
-# Define what kind of psf to use
+# Define the PSF profile
 psf : 
     type : Sum
     items :
@@ -45,18 +55,20 @@ psf :
         - { type : Gaussian, fwhm : 2.3, flux : 0.2 }
 
 
-# Define the pixel size
-# This time, we'll leave the size unspecified to let GalSim automatically choose 
-# an appropriate size.
+# Define some other information about the images 
 image :
+    # The pixel size applies to both outputs, so put that here in the first document.
     pixel_scale : 0.15  # arcsec / pixel
 
-    # Define the initial random number seed
-    random_seed : 1512413
+    # This time, we'll leave the size unspecified to let GalSim automatically choose 
+    # an appropriate size.  So no image : size item.
+    
+
 ---
 
-# The first specialization document is for the psf output.
+# The first specialization document is for the PSF output.
 
+# Define the name and format of the output file
 output :
     dir : output_yaml
     file_name : psf_real.fits
@@ -77,10 +89,11 @@ gal :
         #   first = 0
         #   last = <num entries in catalog> - 1
         #   step = 1
-        # If the sequential values get past max, they will repeat back at min, so it's
+        # If the sequential values get past last, they will repeat back at first, so it's
         # ok to have nobjects greater than the number of real galaxies in the catalog.
     
     rotate :
+        # An angle of type Random means uniform within 0 .. 2pi radians
         type : Random
 
     shear : 
@@ -88,23 +101,41 @@ gal :
         g1 : -0.027
         g2 : 0.031
 
-# We add the noise information to the image field.
-# Note: since the output includes a data_cube output, which requires all the
-# images to be the same size, GalSim will choose the size of the first image
-# automatically from the profile, but then subsequent images will be forced to
-# be the same size. 
-image :
-    noise :
-        sky_level : 1.e6  # ADU / arcsec^2
+    # Also apply a magnification mu = ( (1-kappa)^2 - |gamma|^2 )^-1
+    # This conserves surface brightness, so it scales both the size and flux.
+    magnify : 1.082
 
-# We need to define where the real galaxy input catalog is.
+# Define some other information about the images 
+image :
+    
+    # If we specify the sky_level as an image attribute, it will be used
+    # as a background level for the image.  
+    sky_level : 1.e6  # ADU / arcsec^2
+
+    # Since we already specified a sky_level for the whole image, we don't need
+    # to repeat it for the noise.  So in fact, everything is default here.
+    # So we can just set the noise to an empty dictionary, which means use all defaults.
+    # (If we omit it entirely, that would mean no noise, which isn't what we want.)
+    noise : {}
+
+    random_seed : 1512413
+
+    # Note: since the output includes a data_cube output, which requires all the
+    # images to be the same size, GalSim will choose the size of the first image
+    # automatically from the profile (since we aren't setting any image : size here), 
+    # but then subsequent images will be forced to be the same size as the first one.
+
+
+# Define the input files
 input :
+    # In this case, we need to define where the real galaxy input catalog is.
     real_catalog :
         image_dir : data
         file_name : real_galaxy_catalog_example.fits
         preload : True   # This usually makes a big improvement in speed
 
-# Define the output formats
+
+# Define the name and format of the output file
 output :
     type : DataCube
     dir : output_yaml
