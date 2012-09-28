@@ -200,7 +200,7 @@ def main(argv):
         # Going to the next seed isn't really required, but it matches the behavior of the 
         # config parser, so doing this will result in identical output files.
         # If you didn't care about that, you could instead construct this as a continuation
-        # of the last rng from the above loop: ccdnoise = galsim.CCDNoise(rng)
+        # of the last RNG from the above loop: ccdnoise = galsim.CCDNoise(rng)
         ccdnoise = galsim.CCDNoise(seed+nobj)
         full_image.addNoise(ccdnoise)
         full_image -= sky_level_pixel

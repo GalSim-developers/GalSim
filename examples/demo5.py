@@ -166,7 +166,7 @@ def main(argv):
             # version of this demo script (demo5.yaml).
             ud = galsim.UniformDeviate(random_seed+k)
 
-            # Any kind of random number generator can take another rng as its first 
+            # Any kind of random number generator can take another RNG as its first 
             # argument rather than a seed value.  This makes both objects use the same
             # underlying generator for their pseudo-random values.
             gd = galsim.GaussianDeviate(ud, sigma=gal_ellip_rms)
@@ -237,7 +237,7 @@ def main(argv):
             # Now we rescale the flux to get our desired S/N
             sub_gal_image *= flux
 
-            # Add Poisson noise -- the CCDNoise can also take another rng as its argument
+            # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
             # so it will be part of the same stream of random numbers as ud and gd.
             sub_gal_image += sky_level_pix
             sub_gal_image.addNoise(galsim.CCDNoise(ud))

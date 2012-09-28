@@ -166,11 +166,11 @@ def main(argv):
             # Note: numpy likes to access values by [iy,ix]
             gal.applyShear(g1 = grid_g1[iy,ix], g2 = grid_g2[iy,ix])
 
-            # Note: another way to access this after having build the g1,g2 grid
+            # Note: another way to access this after having built the g1,g2 grid
             # is to use ps.getShear(pos) which just returns a single shear for that position.
             # The provided position does not have to be on the original grid, but it does
             # need to be contained within the bounds of the full grid. 
-            # ie. only interpolations is allowed -- not extrapolation.
+            # i.e. only interpolation is allowed -- not extrapolation.
             alt_g1,alt_g2 = ps.getShear(pos)
             assert math.fabs(alt_g1 - grid_g1[iy,ix]) < 1.e-15
             assert math.fabs(alt_g2 - grid_g2[iy,ix]) < 1.e-15
@@ -193,13 +193,13 @@ def main(argv):
             flux = gal_signal_to_noise / sn_meas
             sub_gal_image *= flux
 
-            # Add Poisson noise -- the CCDNoise can also take another rng as its argument
+            # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
             # so it will be part of the same stream of random numbers as ud and gd.
             sub_gal_image += sky_level_pix
             sub_gal_image.addNoise(galsim.CCDNoise(rng))
             sub_gal_image -= sky_level_pix
 
-            # Draw the PSF image
+            # Draw the PSF image:
             # We use real space convolution to avoid some of the 
             # artifacts that can show up with Fourier convolution.
             # The level of the artifacts is quite low, but when drawing with
