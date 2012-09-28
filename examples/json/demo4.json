@@ -1,8 +1,8 @@
 {
 "#" : "Demo #4",
 
-"#" : "The fourth YAML configuration file in our tutorial about using Galsim config files",
-"#" : "(This file is designed to be view in a window 100 characters wide.)",
+"#" : "The fourth JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
 
 "#" : "This script is our first one to create multiple images.  Typically, you would want each",
 "#" : "object to have at least some of its attributes vary when you are drawing multiple images",
@@ -11,7 +11,7 @@
 "#" : "what we do in this script.  The PSF is a truncated Moffat profile, and the galaxy is bulge",
 "#" : "plus disk.  Both components get many of its parameters from an input catalog.  We also",
 "#" : "shift the profile by a fraction of a pixel in each direction so the effect of pixelization",
-"#" : "varies among the images.  Each galaxy has the same applied shear.  The noise is simple.",
+"#" : "varies among the images.  Each galaxy has the same applied shear.  The noise is simple",
 "#" : "Poisson noise.  We write the images out into a multi-extension fits file.",
 
 "#" : "New features introduced in this demo:",

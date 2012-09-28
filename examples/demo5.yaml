@@ -2,7 +2,7 @@
 # Demo #5
 #
 # The fifth YAML configuration file in our tutorial about using Galsim config files
-# (This file is designed to be view in a window 100 characters wide.)
+# (This file is designed to be viewed in a window 100 characters wide.)
 #
 # This script is intended to mimic a Great08 challenge LowNoise image.  We produce a single
 # image made up of tiles of postage stamps for each individual object.  (We only do 10 x 10 

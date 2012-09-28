@@ -4,7 +4,7 @@ Demo #9
 The ninth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
-This script simulates cluster lensing or galaxy-galaxy lensing.  The graviational shear 
+This script simulates cluster lensing or galaxy-galaxy lensing.  The gravitational shear
 applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations 
 of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
 has its own file, organized into 4 directories (one for each mass).  For each cluster, we
@@ -36,7 +36,7 @@ import galsim
 
 def main(argv):
     """
-    Make 4 directories, each with 5 files, each of which has 5 galaxies.
+    Make 4 directories, each with 5 files, each of which has 20 galaxies.
     
     Also, each directory corresponds to a different mass halo.
     The files in each direction are just different noise realizations and galaxy locations.

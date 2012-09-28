@@ -1,16 +1,16 @@
 {
 "#" : "Demo #1",
 
-"#" : "The first YAML configuration file in our tutorial about using Galsim config files",
-"#" : "(This file is designed to be view in a window 100 characters wide.)",
+"#" : "The first JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
 
-"#" : "Each of these demo*.yaml files are designed to be equivalent to the corresponding",
-"#" : "demo*.py file.  We expect that the config file usage will be easier for many people",
+"#" : "Each of these demo*.json files are designed to be equivalent to the corresponding",
+"#" : "../demo*.py file.  We expect that the config file usage will be easier for many people",
 "#" : "to get going with galsim, especially those who aren't very comfortable with writing ",
 "#" : "python code.  And even advanced pythonistas may find it more useful for many tasks than",
 "#" : "writing the corresponding python code.",
 
-"#" : "The executable that reads these YAML files is called galsim_yaml, which should be installed",
+"#" : "The executable that reads these JSON files is called galsim_json, which should be installed",
 "#" : "in your PREFIX/bin directory (after doing scons install, that is, where PREFIX is either ",
 "#" : "/usr/local or whatever other PREFIX you set when running scons).  So to run this config",
 "#" : "file, you should be able to type simply:",

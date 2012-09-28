@@ -1,10 +1,10 @@
 {
 "#" : "Demo #9",
 
-"#" : "The ninth YAML configuration file in our tutorial about using Galsim config files",
-"#" : "(This file is designed to be view in a window 100 characters wide.)",
+"#" : "The ninth JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
 
-"#" : "This script simulates cluster lensing or galaxy-galaxy lensing.  The graviational shear ",
+"#" : "This script simulates cluster lensing or galaxy-galaxy lensing.  The gravitational shear ",
 "#" : "applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations ",
 "#" : "of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster",
 "#" : "has its own file, organized into 4 directories (one for each mass).  For each cluster, we",
@@ -145,7 +145,7 @@
     "file_name" : {
 
         "#" : "A NumberedFile type creates a string of the form rootNNNNext",
-        "#" : "where the NNNN is a number that will typicallly be drawn from a Sequence.",
+        "#" : "where the NNNN is a number that will typically be drawn from a Sequence.",
         "#" : "In our case, our file_name's will be:",
         "#" : "    cluster0001.fits",
         "#" : "    cluster0002.fits",

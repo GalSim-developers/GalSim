@@ -2,7 +2,7 @@
 # Demo #6
 #
 # The sixth YAML configuration file in our tutorial about using Galsim config files
-# (This file is designed to be view in a window 100 characters wide.)
+# (This file is designed to be viewed in a window 100 characters wide.)
 #
 # This script uses real galaxy images from COSMOS observations.  The catalog of real galaxy
 # images distributed with GalSim only includes 100 galaxies, but you can download a much
@@ -13,7 +13,7 @@
 # so GalSim first deconvolves by that PSF, and then convolves by whatever PSF you desire.
 # In this case, we use a double Gaussian PSF.  The galaxies are randomly rotated and then
 # given an applied gravitational shear as well as gravitational magnification.
-# The output for this script is to a FITS "data cube".  With DS9, this can be view with a
+# The output for this script is to a FITS "data cube".  With DS9, this can be viewed with a
 # slider to quickly move through the different images.
 #
 # New features introduced in this demo:
@@ -102,7 +102,7 @@ gal :
         g2 : 0.031
 
     # Also apply a magnification mu = ( (1-kappa)^2 - |gamma|^2 )^-1
-    # This conserves surface brightness, so it scale both the size and flux.
+    # This conserves surface brightness, so it scales both the size and flux.
     magnify : 1.082
 
 # Define some other information about the images 

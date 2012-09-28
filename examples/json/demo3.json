@@ -1,8 +1,8 @@
 {
 "#" : "Demo #3",
 
-"#" : "The third YAML configuration file in our tutorial about using Galsim config files",
-"#" : "(This file is designed to be view in a window 100 characters wide.)",
+"#" : "The third JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
   
 "#" : "This script is getting reasonably close to including all the principal features of an image",
 "#" : "from a ground-based telescope.  The galaxy is a bulge plus disk, where each component is ",

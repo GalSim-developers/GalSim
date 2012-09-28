@@ -7,8 +7,8 @@ The tenth script in our tutorial about using GalSim in python scripts: examples/
 This script uses both a variable PSF and variable shear, taken from a power spectrum,
 along the lines of a Great10 challenge image.  The galaxies are placed on a grid
 (10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
-is 48 x 48 pixels.  Instead of putting the psf images on a separate image, we package them
-as the second hdu in the file.  For the galaxies, we use a random selection from 5 specific
+is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them
+as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
 RealGalaxy's, selected to be 5 particularly irregular ones, each with a random orientation.
 
 New features introduced in this demo:
@@ -21,7 +21,7 @@ New features introduced in this demo:
 - g1,g2 = ps.getShear(pos)
 
 - Choosing PSF parameters as a function of (x,y)
-- Selecting ReadGalaxy by ID rather than index.
+- Selecting RealGalaxy by ID rather than index.
 - Putting the PSF image in a second hdu in the same file as the main image.
 - Using PowerSpectrum for the applied shear.
 """
@@ -88,7 +88,7 @@ def main(argv):
     # each time, so it's a bit more efficient.
     gal_list = [ galsim.RealGalaxy(real_galaxy_catalog, id=id) for id in id_list ]
 
-    # Make the galaxies a bit larger than their original oberved size.
+    # Make the galaxies a bit larger than their original observed size.
     for gal in gal_list:
         gal.applyDilation(gal_dilation) 
 

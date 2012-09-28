@@ -1,8 +1,8 @@
 {
 "#" : "Demo #6",
   
-"#" : "The sixth YAML configuration file in our tutorial about using Galsim config files",
-"#" : "(This file is designed to be view in a window 100 characters wide.)",
+"#" : "The sixth JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
   
 "#" : "This script uses real galaxy images from COSMOS observations.  The catalog of real galaxy",
 "#" : "images distributed with GalSim only includes 100 galaxies, but you can download a much",

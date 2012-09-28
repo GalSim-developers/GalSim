@@ -1,8 +1,8 @@
 {
 "#" : "Demo #8",
 
-"#" : "The eighth YAML configuration file in our tutorial about using Galsim config files",
-"#" : "(This file is designed to be view in a window 100 characters wide.)",
+"#" : "The eighth JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
 
 "#" : "In this script, we show how to build a configuration dict from within python, rather",
 "#" : "than using a config file.  The parallel tutorial examples/demo*.py have shown how to",
