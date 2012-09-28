@@ -40,7 +40,7 @@ def main(argv):
       - PSF is Moffat
       - Each galaxy is bulge plus disk: deVaucouleurs + Exponential.
       - The catalog's columns are:
-         0 PSF beta
+         0 PSF beta (Moffat exponent)
          1 PSF FWHM
          2 PSF e1
          3 PSF e2
@@ -95,6 +95,8 @@ def main(argv):
         # Here we use fwhm, taking from the catalog as well.
         fwhm = cat.getFloat(k,1)
         # A Moffat profile may be truncated if desired
+        # The units for this are expected to be arcsec (or specifically -- whatever units
+        # you are using for all the size values as defined by the pixel_scale).
         trunc = cat.getFloat(k,4)
         # Note: You may omit the flux, since the default is flux=1.
         psf = galsim.Moffat(beta=beta, fwhm=fwhm, trunc=trunc)

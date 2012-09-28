@@ -4,10 +4,10 @@ Demo #5
 The fifth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
-This script is intended to mimic a Great08 challenge LowNoise image.  We produce a single image
-made up of tiles of postage stamps for each individual object.  (We only do 10 x 10 
-postage stamps rather than 100 x 100 as they did in the interest of time.)  Each postage
-stamp is 40 x 40 pixels.  One image is all stars.  A second image is all galaxies.
+This script is intended to mimic a Great08 (Bridle, et al, 2010) LowNoise image.
+We produce a single image made up of tiles of postage stamps for each individual object.  
+(We only do 10 x 10 postage stamps rather than 100 x 100 as they did in the interest of time.)  
+Each postage stamp is 40 x 40 pixels.  One image is all stars.  A second image is all galaxies.
 The stars are truncated Moffat profiles.  The galaxies are Exponential profiles.
 (Great08 mixed pure bulge and pure disk for its LowNoise run.  We're just doing disks to 
 make things simpler.)  The galaxies are oriented randomly, but in 90 degree-rotated pairs to 

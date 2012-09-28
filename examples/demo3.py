@@ -112,11 +112,15 @@ def main(argv):
     # added to each other.
     gal = bulge_frac * bulge + (1-bulge_frac) * disk
     # Could also have written the following, which does the same thing:
-    # gal = galsim.Add([ bulge.setFlux(bulge_frac) , disk.setFlux(1-bulge_frac) ])
+    #   gal = galsim.Add([ bulge.setFlux(bulge_frac) , disk.setFlux(1-bulge_frac) ])
     # Both syntaxes work with more than two summands as well.
 
     # Set the overall flux of the combined object.
     gal.setFlux(gal_flux)
+    # Since the total flux of the components was 1, we could also have written:
+    #   gal *= gal_flux
+    # The setFlux method will always set the flux to the given value, while `gal *= flux`
+    # will multiply whatever the current flux is by the given factor.
 
     # Set the shape of the galaxy according to axis ratio and position angle
     # Note: All angles in GalSim must have explicit units.  Options are:
@@ -152,6 +156,9 @@ def main(argv):
     logger.debug('Made optical PSF profile')
 
     # Now apply the wcs shear to the profile without the pix
+    # We may eventually have a somewhat more seamless way to handle things like a WCS
+    # that would potentially vary across the image and include more than just a distortion
+    # term.  But for now, we just apply a given distortion to the unpixellated profile.
     nopix = galsim.Convolve([atmos, optics, gal])
     psf = galsim.Convolve([atmos, optics])
     nopix.applyShear(g1=wcs_g1, g2=wcs_g2)
@@ -178,6 +185,8 @@ def main(argv):
     # Also draw the effective PSF by itself and the optical PSF component alone.
     image_epsf = galsim.ImageF(image_size, image_size)
     final_epsf.draw(image_epsf, dx=pixel_scale)
+    # Note: we draw the optical part of the PSF at its own Nyquist-sampled pixel size
+    # in order to better see the features of the (highly structured) profile.
     image_opticalpsf = optics.draw(dx=lam_over_diam/2.)
     logger.debug('Made image of the profile')
 

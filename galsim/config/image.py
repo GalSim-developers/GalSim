@@ -77,8 +77,8 @@ def BuildSingleImage(config, logger=None,
     """
     Build an image consisting of a single stamp
 
-    @param config     A configuration dict.
-    @param logger     If given, a logger object to log progress.
+    @param config              A configuration dict.
+    @param logger              If given, a logger object to log progress.
     @param make_psf_image      Whether to make psf_image
     @param make_weight_image   Whether to make weight_image
     @param make_badpix_image   Whether to make badpix_image
@@ -132,8 +132,8 @@ def BuildTiledImage(config, logger=None,
     """
     Build an image consisting of a tiled array of postage stamps
 
-    @param config     A configuration dict.
-    @param logger     If given, a logger object to log progress.
+    @param config              A configuration dict.
+    @param logger              If given, a logger object to log progress.
     @param make_psf_image      Whether to make psf_image
     @param make_weight_image   Whether to make weight_image
     @param make_badpix_image   Whether to make badpix_image
@@ -360,8 +360,8 @@ def BuildScatteredImage(config, logger=None,
     """
     Build an image containing multiple objects placed at arbitrary locations.
 
-    @param config     A configuration dict.
-    @param logger     If given, a logger object to log progress.
+    @param config              A configuration dict.
+    @param logger              If given, a logger object to log progress.
     @param make_psf_image      Whether to make psf_image
     @param make_weight_image   Whether to make weight_image
     @param make_badpix_image   Whether to make badpix_image

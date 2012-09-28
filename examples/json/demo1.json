@@ -69,6 +69,8 @@
     "#" : "In this case we use gaussian noise.",
     "noise" : {
         "type" : "Gaussian",
+
+        "#" : "sigma = standard deviation of the counts in each pixel",
         "sigma" : 30
     },
 

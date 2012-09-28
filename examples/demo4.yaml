@@ -44,7 +44,7 @@ some_variables :
 # Define the PSF profile
 psf : 
     type : Moffat
-    beta : 3.5
+    beta : 3.5   # Exponent of Moffat profile
     fwhm : 
         # Parameters do not need to be constant.  There are a number of ways to
         # specify variables that might change from object to object.
@@ -57,7 +57,10 @@ psf :
         # 0-based indexing scheme.
         col : 1
 
-    # You can also specify both of these on the same line using {}
+    # A Moffat profile may be truncated if desired
+    # The units for this are expected to be arcsec (or specifically -- whatever units
+    # you are using for all the size values as defined by the pixel_scale).
+    # Note: You can also specify a type along with all of its parameters using {}
     trunc : { type : InputCatalog , col : 4 }
 
     # The nesting goes as deep as it needs to

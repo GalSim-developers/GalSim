@@ -4,13 +4,13 @@
 # The tenth YAML configuration file in our tutorial about using Galsim config files
 # (This file is designed to be viewed in a window 100 characters wide.)
 #
-# This script uses both a variable PSF and variable shear, taken from a power spectrum,
-# along the lines of a Great10 challenge image.  The galaxies are placed on a grid
+# This script uses both a variable PSF and variable shear, taken from a power spectrum, along
+# the lines of a Great10 (Kitching, et al, 2012) image.  The galaxies are placed on a grid
 # (10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
 # is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them
 # as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
-# RealGalaxy's, selected to be 5 particularly irregular ones, each with a random orientation.
-# (These are taken from the same catalog of 100 objects that demo6 used.)
+# RealGalaxy objects, selected to be 5 particularly irregular ones, each with a random 
+# orientation.  (These are taken from the same catalog of 100 objects that demo6 used.)
 #
 # New features introduced in this demo:
 #

@@ -4,7 +4,7 @@ Demo #8
 The eighth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
-In this script, we show how to build a configuration dict from within python, rather
+In this script, we show how to run the GalSim config processing using a python dict rather
 than using a config file.  The parallel tutorial examples/demo*.yaml have shown how to
 do the same thing as these demo*.py files using a config file.  Now we turn the tables
 and show how to use some of the machinery in the GalSim configuration processing 
@@ -55,6 +55,8 @@ def main(argv):
     # We don't have any input files, so we don't need input.   And we're only going to 
     # have the config machinery build the images, so we don't need output.
     # And as usual, we'll use a simple square pixel, so we don't need pix.
+    # Note: This is true regardless of the draw method.  Even if draw_method (below) were fft,
+    # the config machinery would automatically create the square pixel for us.
 
     # We can define each attribute individually:
     config['psf'] = {}
@@ -152,6 +154,12 @@ def main(argv):
     # Build the image
     # All of the above functions have an optional kwarg, logger, which can take a 
     # logger object to output diagnostic information if desired.
+    # Since BuildImage returns a tuple of 4 images (see above) even though the latter
+    # three are all returned as None, we still need to deal with the return values.
+    # You could take [0] of the return value to just take the first image.  
+    # You could also assign them all to an appropriate name and then not use them.
+    # Another cute way to do it is to use an underscore for names of returned values
+    # that you are planning to ignore:
     image, _, _, _ = galsim.config.BuildImage(config, logger=logger)
     
     # At this point you could do something interesting with the image in memory.

@@ -33,6 +33,7 @@ gal :
 
     # Any number of items may be added together, so we specify them in a list.
     # Use one bullet for each item.
+    # Note: Each item in the Sum can have its own separate shear.  See demo4 for an example.
     items :
         -   # First the bulge:
             type : Sersic

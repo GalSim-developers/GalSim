@@ -55,7 +55,7 @@ gal :
 # We use a Gaussian again for simplicity, but one somewhat smaller than the galaxy.
 psf : 
     type : Gaussian
-    sigma : 1.0   # standard deviation of the counts in each pixel
+    sigma : 1.0   # arcsec
     # No need to specify a flux, since flux=1 is the right thing for a PSF.
 
 
@@ -68,7 +68,7 @@ image :
     # In this case we use gaussian noise.
     noise : 
         type : Gaussian
-        sigma : 30.   #  / pixel
+        sigma : 30.   # standard deviation of the counts in each pixel
 
     # You can also specify the size of the image if you want, but if you omit it
     # (as we do here), then GalSim will automatically size the image appropriately.
