@@ -8,7 +8,7 @@ This script introduces drawing profiles with photon shooting rather than doing t
 convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 different
 kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so 
 each of the 25 pairings is drawn 4 times with different realizations of the random numbers.
-The profiles are drawn twice, once with the FFT method, and once with photon shooting.
+The profiles are drawn twice: once with the FFT method, and once with photon shooting.
 The two images are drawn side by side so it is easy to visually compare the results.
 The 100 total profiles are written to a FITS data cube, which makes it easy to scroll
 through the images comparing the two drawing methods.
@@ -200,7 +200,7 @@ def main(argv):
                 # sure not to add that noise again!  Thus, we just add sky noise, which 
                 # is Poisson with the mean = sky_level_pixel
                 # Note: this won't add the mean level.  The effect on the pixels has an
-                # expectation of 0 -- it just adds noise commensurate with the given mean.
+                # expectation value of 0 -- it just adds noise commensurate with the given mean.
                 phot_image.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
 
                 logger.debug('   Added Poisson noise.  Image fluxes are now %f and %f',

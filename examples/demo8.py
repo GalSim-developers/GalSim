@@ -125,13 +125,13 @@ def main(argv):
     # The former in particular may be useful to run separately.  If you are using an input
     # catalog (or other item that requires setup), it will read the file(s) from disk and
     # save the catalog (or whatever) in the config dict in the way that further processing
-    # function expect.  However, we don't have any input field, so we don't need it here.
+    # functions expect.  However, we don't have any input field, so we don't need it here.
     #
     # The ProcessOutput function reads in the output field and then calls one of the following:
     #
     #     galsim.config.BuildFits(file_name, config)        -- build a regular fits file
     #     galsim.config.BuildMultiFits(file_name, config)   -- build a multi-extension fits file
-    #     galsim.config.BuildDataCute(file_name, config)    -- build a fits data cube
+    #     galsim.config.BuildDataCube(file_name, config)    -- build a fits data cube
     #
     # Finally, these functions all call the following function to process the image field
     # and actually build the images:
