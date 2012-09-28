@@ -49,7 +49,7 @@
 },
  
 
-"#" : "Technically, psf isn't required, but for astronomical images, we always have a PSF,",
+"#" : "Technically, PSF isn't required, but for astronomical images, we always have a PSF,",
 "#" : "so you'll usually want to define one.  (If it's omitted, the galaxy isn't convolved ",
 "#" : "by anything, so effectively a delta function PSF.)",
 "#" : "We use a Gaussian again for simplicity, but one somewhat smaller than the galaxy.",
