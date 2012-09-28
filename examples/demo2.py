@@ -39,15 +39,14 @@ def main(argv):
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo2") 
 
-    gal_flux = 1.e5    # ADU
+    gal_flux = 1.e5    # counts
     gal_r0 = 2.7       # arcsec
     g1 = 0.1           #
     g2 = 0.2           #
     psf_beta = 5       #
     psf_re = 1.0       # arcsec
     pixel_scale = 0.2  # arcsec / pixel
-    sky_level = 2.5e4  # ADU / arcsec^2
-    gain = 1.0         # ADU / e-
+    sky_level = 2.5e4  # counts / arcsec^2
 
     # This time use a particular seed, so the image is deterministic.
     random_seed = 1534225
@@ -92,13 +91,20 @@ def main(argv):
     image_epsf = final_epsf.draw(dx=pixel_scale)
     logger.debug('Made image of the profile')
 
-    # Add a constant sky level to the image.
+    # To get Poisson noise on the image, we will use a class called CCDNoise.
+    # However, we want the noise to correspond to what you would get with a significant
+    # flux from tke sky.  So first we have to add a constant sky level to the image.
     image += sky_level * pixel_scale**2
 
-    # Use this to add Poisson noise using the CCDNoise class.
+    # Now we can use the CCDNoise class to add Poisson noise to the image including the 
+    # sky level.  This takes each pixel's current value and replaces it with a random
+    # number drawn from a Poisson distribution with that mean value.  This matches the 
+    # statistics of photons hitting the CCD.
+    # (The CCDNoise class can optionally take a gain a read_noise -- see demo3.py)
     image.addNoise(galsim.CCDNoise(random_seed))
 
-    # Subtract off the sky.
+    # Finally, we subtract off the sky flux, so the final image will have a background level
+    # of 0 (with noise).  In other words the image is "sky subtracted".
     image -= sky_level * pixel_scale**2
     logger.debug('Added Poisson noise')
 

@@ -109,7 +109,7 @@ image :
 
     # You can optionally specify stamp_size or (stamp_xsize,stamp_ysize) to set the size of
     # the postage stamp image to draw for each object.  However, if you omit these,
-    # then galsim will automatically determine a good size to draw each object -- larger
+    # then GalSim will automatically determine a good size to draw each object -- larger
     # for larger objects, and smaller for smaller ones.  So this is usually the way to go.
     
     # Another optional parameter is center (which expects a "pos_value") to specify the location
@@ -191,8 +191,8 @@ output :
     # The weights are calculated as the inverse variance in each pixel.
     weight :
         # Either file_name or hdu is required for weight.  In this case we write to the 
-        # first hdu extension.  The main image is in the primary HDU, which is number 0.
-        # Note: it is an error to skip hdu's, so if weight is the only other image, it must 
+        # first HDU extension.  The main image is in the primary HDU, which is number 0.
+        # Note: it is an error to skip HDU's, so if weight is the only other image, it must 
         # be in HDU 1.  If weight, badpix and psf all specify an hdu value, then they must be
         # 1, 2 and 3 in some order.
         # Also, hdu is only valid for image.type = Fits (which is the default if unspecified).
@@ -211,7 +211,7 @@ output :
     # between the processes.  Unless you are building enormous files such that only one
     # at a time can fit in memory, this will be the normal way you'll want to parallelize.
     #
-    # Also, this time, we set nproc <= 0.  This means that galsim should try to automatically
+    # Also, this time, we set nproc <= 0.  This means that GalSim should try to automatically
     # determine the number of cpus you have and use that many processes.
     nproc : -1
 

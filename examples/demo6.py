@@ -92,7 +92,7 @@ def main(argv):
     real_galaxy_catalog.preload()
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
 
-    ## Make the ePSF
+    # Make the ePSF
     # first make the double Gaussian PSF
     psf1 = galsim.Gaussian(fwhm = psf_inner_fwhm, flux = psf_inner_fraction)
     psf2 = galsim.Gaussian(fwhm = psf_outer_fwhm, flux = psf_outer_fraction)

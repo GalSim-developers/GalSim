@@ -66,7 +66,7 @@ image :
 
 ---
 
-# The first specialization document is for the psf output.
+# The first specialization document is for the PSF output.
 
 # Define the name and format of the output file
 output :

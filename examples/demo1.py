@@ -4,6 +4,20 @@ Demo #1
 This is the first script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
+Each of these demo*.py files are designed to be equivalent to the corresponding
+demo*.yaml file.  If you are new to python, you should probably look at those files first
+as they will probably have a quicker learning curve for you.  Then you can look through these 
+python scripts, which show how to do the same thing.  Of course, experienced pythonistas
+may prefer to start with these scripts and then look at the corresponding YAML files.
+
+If you run `scons examples`, executable versions of these demo scripts will be created in 
+the GalSim bin directory.  So if that has been done, you can write either of the following
+to run this script:
+
+    ../bin/demo1
+    python demo1.py
+
+
 This first script is about as simple as it gets.  We draw an image of a single galaxy convolved 
 with a PSF and write it to disk.  We use a circular Gaussian profile for both the PSF and the 
 galaxy.  And we add a constant level of Gaussian noise to the image.
@@ -37,11 +51,11 @@ def main(argv):
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo1") 
 
-    gal_flux = 1.e5    # ADU
+    gal_flux = 1.e5    # total counds on the image
     gal_sigma = 2.     # arcsec
     psf_sigma = 1.     # arcsec
     pixel_scale = 0.2  # arcsec / pixel
-    noise = 30.        # ADU / pixel
+    noise = 30.        # standard deviation of the counts in each pixel
 
     logger.info('Starting demo script 1 using:')
     logger.info('    - circular Gaussian galaxy (flux = %.1e, sigma = %.1f),',gal_flux,gal_sigma)
@@ -54,7 +68,7 @@ def main(argv):
     logger.debug('Made galaxy profile')
 
     # Define the PSF profile
-    psf = galsim.Gaussian(flux=1., sigma=psf_sigma) # psf flux should always = 1
+    psf = galsim.Gaussian(flux=1., sigma=psf_sigma) # PSF flux should always = 1
     logger.debug('Made PSF profile')
 
     # Define the pixel size

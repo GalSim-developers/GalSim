@@ -22,7 +22,7 @@ New features introduced in this demo:
 
 - Choosing PSF parameters as a function of (x,y)
 - Selecting RealGalaxy by ID rather than index.
-- Putting the PSF image in a second hdu in the same file as the main image.
+- Putting the PSF image in a second HDU in the same file as the main image.
 - Using PowerSpectrum for the applied shear.
 """
 
@@ -39,10 +39,10 @@ def main(argv):
     Make images using variable PSF and shear:
       - The main image is 10 x 10 postage stamps.
       - Each postage stamp is 48 x 48 pixels.
-      - The second hdu has the corresponding PSF image.
+      - The second HDU has the corresponding PSF image.
       - Applied shear is from a power spectrum P(k) ~ k^1.8.
       - Galaxies are randomly oriented real galaxies.
-      - The PSF is Gaussian with fwhm,e,beta functions of (x,y)
+      - The PSF is Gaussian with FWHM, ellipticity and position angle functions of (x,y)
       - Noise is poisson using a nominal sky value of 1.e6.
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -54,18 +54,20 @@ def main(argv):
     n_tiles = 10                    # number of tiles in each direction.
     stamp_size = 48                 # pixels
 
-    random_seed = 3339201           #
-
     pixel_scale = 0.44              # arcsec / pixel
     sky_level = 1.e6                # ADU / arcsec^2
+
+    # The random seed is used for both the power spectrum realization and the random properties 
+    # of the galaxies.
+    random_seed = 3339201           
 
     file_name = os.path.join('output','power_spectrum.fits')
 
     # These will be create for each object below.  The values we'll use will be functions
     # of (x,y) relative to the center of the image.  (r = sqrt(x^2+y^2))
-    #psf_fwhm = 0.9 + 0.5 * (r/100)^2
-    #psf_e = 0.4 * (r/100)^1.5
-    #psf_beta = atan2(y/x) + pi/2
+    # psf_fwhm = 0.9 + 0.5 * (r/100)^2  -- arcsec
+    # psf_e = 0.4 * (r/100)^1.5         -- large value at the edge, so visible by eye.
+    # psf_beta = atan2(y/x) + pi/2      -- tangential pattern
 
     gal_signal_to_noise = 100       # Great08 "LowNoise" run
     gal_dilation = 3                # Make the galaxies a bit larger than their original size.
@@ -141,7 +143,7 @@ def main(argv):
             # The image comes out as about 211 arcsec across, so we define our variable
             # parameters in terms of (r/100 arcsec), so roughly the scale size of the image.
             r = math.sqrt(pos.x**2 + pos.y**2) / 100
-            psf_fwhm = 0.9 + 0.5 * r**2
+            psf_fwhm = 0.9 + 0.5 * r**2   # arcsec
             psf_e = 0.4 * r**1.5
             psf_beta = (math.atan2(pos.y,pos.x) + math.pi/2) * galsim.radians
 
@@ -172,6 +174,9 @@ def main(argv):
             # need to be contained within the bounds of the full grid. 
             # i.e. only interpolation is allowed -- not extrapolation.
             alt_g1,alt_g2 = ps.getShear(pos)
+
+            # These assert statements demonstrate the the values agree to 1.e-15.
+            # (They might not be exactly equal due to machine rounding, but close enough.)
             assert math.fabs(alt_g1 - grid_g1[iy,ix]) < 1.e-15
             assert math.fabs(alt_g2 - grid_g2[iy,ix]) < 1.e-15
 
@@ -180,7 +185,7 @@ def main(argv):
             dy = (ud()-0.5) * pixel_scale
             gal.applyShift(dx,dy)
 
-            # Make the final image, convolving with psf and pixel
+            # Make the final image, convolving with psf and pix
             final = galsim.Convolve([psf,pix,gal])
 
             # Draw the image

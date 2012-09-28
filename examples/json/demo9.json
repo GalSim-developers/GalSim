@@ -116,7 +116,7 @@
 
     "#" : "You can optionally specify stamp_size or (stamp_xsize,stamp_ysize) to set the size of",
     "#" : "the postage stamp image to draw for each object.  However, if you omit these,",
-    "#" : "then galsim will automatically determine a good size to draw each object -- larger",
+    "#" : "then GalSim will automatically determine a good size to draw each object -- larger",
     "#" : "for larger objects, and smaller for smaller ones.  So this is usually the way to go.",
     
     "#" : "Another optional parameter is center (which expects a pos_value) to specify the",
@@ -227,7 +227,7 @@
     "#" : "between the processes.  Unless you are building enormous files such that only one",
     "#" : "at a time can fit in memory, this will be the normal way you'll want to parallelize.",
 
-    "#" : "Also, this time, we set nproc <= 0.  This means that galsim should try to automatically",
+    "#" : "Also, this time, we set nproc <= 0.  This means that GalSim should try to automatically",
     "#" : "determine the number of cpus you have and use that many processes.",
     "nproc" : -1
 }

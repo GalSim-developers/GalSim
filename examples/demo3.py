@@ -55,7 +55,7 @@ def main(argv):
     logging.getLogger("demo3").addHandler(logFile)
     logger = logging.getLogger("demo3") 
 
-    gal_flux = 1.e6        # ADU
+    gal_flux = 1.e6        # ADU  ("Analog-to-digital units", the units of the numbers on a CCD)
     bulge_n = 3.5          #
     bulge_re = 2.3         # arcsec
     disk_n = 1.5           #
@@ -79,7 +79,7 @@ def main(argv):
     wcs_g1 = -0.02         #
     wcs_g2 = 0.01          #
     sky_level = 2.5e4      # ADU / arcsec^2
-    gain = 1.7             # e- / ADU
+    gain = 1.7             # photons / ADU
     read_noise = 0.3       # ADU / pixel
 
     random_seed = 1314662  
@@ -169,7 +169,7 @@ def main(argv):
     final_epsf = galsim.Convolve([psf, pix])
     logger.debug('Convolved components into final profile')
 
-    # This time we specify a particular size for the image rather than let galsim 
+    # This time we specify a particular size for the image rather than let GalSim 
     # choose the size automatically.
     image = galsim.ImageF(image_size,image_size)
     # Draw the image with a particular pixel scale.
@@ -184,7 +184,13 @@ def main(argv):
     # Add a constant sky level to the image.
     image += sky_level * pixel_scale**2
 
-    # Add Poisson noise and Gaussian read noise to the image using the CCDNoise class.
+    # This time, we pass gain and read_noise values to the CCDNoise class.  The gain
+    # is in units of photons/ADU.  Technically, real CCD's quote the gain as e-/ADU.
+    # An ideal CCD has one electron per incident photon, but real CCDs have quantum efficiencies
+    # less than 1, so not every photon triggers an electron.  We are essentially folding
+    # the quantum efficiency (and filter transmission and anything else like that) into the gain.
+    # The read_noise value is given as ADU/pixel.  This is modeled as a pure Gaussian noise
+    # added to the image after applying the pure Poisson noise.
     image.addNoise(galsim.CCDNoise(random_seed, gain=gain, read_noise=read_noise))
 
     # Subtract off the sky.

@@ -215,7 +215,7 @@ def main(argv):
             this_gal.applyShift(dx,dy)
             this_psf = final_psf.createShifted(dx,dy)
 
-            # Make the final image, convolving with psf and pixel
+            # Make the final image, convolving with psf and pix
             final_gal = galsim.Convolve([psf,pix,this_gal])
 
             # Draw the image

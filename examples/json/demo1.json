@@ -6,16 +6,21 @@
 
 "#" : "Each of these demo*.json files are designed to be equivalent to the corresponding",
 "#" : "../demo*.py file.  We expect that the config file usage will be easier for many people",
-"#" : "to get going with galsim, especially those who aren't very comfortable with writing ",
+"#" : "to get going with GalSim, especially those who aren't very comfortable with writing ",
 "#" : "python code.  And even advanced pythonistas may find it more useful for many tasks than",
 "#" : "writing the corresponding python code.",
 
 "#" : "The executable that reads these JSON files is called galsim_json, which should be installed",
-"#" : "in your PREFIX/bin directory (after doing scons install, that is, where PREFIX is either ",
+"#" : "in your PREFIX/bin directory (after doing `scons install`, that is, where PREFIX is either",
 "#" : "/usr/local or whatever other PREFIX you set when running scons).  So to run this config",
-"#" : "file, you should be able to type simply:",
+"#" : "file, you should be able to type simply (from the examples directory):",
 
-"#" : "    galsim_json demo1.json",
+"#" : "    galsim_json json/demo1.json",
+
+"#" : "If you haven't run `scons install` for whatever reason, you can instead write:",
+
+"#" : "    ../bin/galsim_json json/demo1.json",
+
 
 "#" : "This first config file is about as simple as it gets.  We draw an image of a single galaxy ",
 "#" : "convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the",
@@ -44,14 +49,14 @@
 },
  
 
-"#" : "Technically, psf isn't required, but for astronomical images, we always have a psf,",
+"#" : "Technically, psf isn't required, but for astronomical images, we always have a PSF,",
 "#" : "so you'll usually want to define one.  (If it's omitted, the galaxy isn't convolved ",
-"#" : "by anything, so effectively a delta function psf.)",
+"#" : "by anything, so effectively a delta function PSF.)",
 "#" : "We use a Gaussian again for simplicity, but one somewhat smaller than the galaxy.",
 "psf" : {
     "type" : "Gaussian",
     "sigma" : 1,
-    "#" : "No need to specify a flux, since flux=1 is the right thing for a psf."
+    "#" : "No need to specify a flux, since flux=1 is the right thing for a PSF."
 },
 
 

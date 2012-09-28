@@ -13,7 +13,7 @@
 "#" : "so GalSim first deconvolves by that PSF, and then convolves by whatever PSF you desire.",
 "#" : "In this case, we use a double Gaussian PSF.  The galaxies are randomly rotated and then",
 "#" : "given an applied gravitational shear as well as gravitational magnification.",
-"#" : "The output for this script is to a FITS data cube.  With DS9, this can be view with a",
+"#" : "The output for this script is to a FITS data cube.  With DS9, this can be viewed with a",
 "#" : "slider to quickly move through the different images.",
        
 "#" : "New features introduced in this demo:",
@@ -28,7 +28,7 @@
 "#" : "- Using JSON's multiple document feature to do more than one thing",
 
 "#" : "For this example, we actually have two config files, since we have two different kinds",
-"#" : "of output files to make.  The first, demo6a.json is for the psf output,",
+"#" : "of output files to make.  The first, demo6a.json is for the PSF output,",
 "#" : "and the second, demo6b.json is for the convolved galaxy images.",
 "#" : "Out JSON parser can take multiple input files on the command line, and will run all",
 "#" : "of them.",

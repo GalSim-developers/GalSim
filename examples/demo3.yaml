@@ -58,7 +58,7 @@ gal :
         beta : 23 degrees
  
     # The flux here also applies to the full galaxy object.
-    flux : 1.e6  # ADU
+    flux : 1.e6  # ADU ("Analog-to-digital units", the units of the numbers on a CCD)
 
 
 # Define the PSF profile

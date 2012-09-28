@@ -10,6 +10,7 @@
 "#" : "is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them",
 "#" : "as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific",
 "#" : "RealGalaxy's, selected to be 5 particularly irregular ones, each with a random orientation.",
+"#" : "(These are taken from the same catalog of 100 objects that demo6 used.)",
 
 "#" : "New features introduced in this demo:",
 
@@ -18,6 +19,7 @@
 "#" : "- RealGalaxy : id",
 "#" : "- image.psf : real_space",
 "#" : "- type : Eval using pos variable, user-defined variables and math functions",
+"#" : "- output : psf : hdu",
 
 
 "#" : "Define the PSF profile",
@@ -116,6 +118,8 @@
         "sky_level" : 1e6 
     },
 
+    "#" : "The random seed is used for both the power spectrum realization and the random",
+    "#" : "properties of the galaxies.",
     "random_seed" : 3339201
 },
 
@@ -148,7 +152,7 @@
     "dir" : "output_json",
     "file_name" : "power_spectrum.fits",
 
-    "#" : "Put the psf image in hdu=1 (the first extension after the primary HDU)",
+    "#" : "Put the PSF image in hdu=1 (the first extension after the primary HDU)",
     "psf" :  {
         "hdu" : 1,
         "#" : "We use real space convolution to avoid some of the ",
