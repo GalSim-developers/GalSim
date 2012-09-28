@@ -8,7 +8,7 @@
 "#" : "convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 different",
 "#" : "kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so ",
 "#" : "each of the 25 pairings is drawn 4 times with different realizations of the random numbers.",
-"#" : "The profiles are drawn twice, once with the FFT method, and once with photon shooting.",
+"#" : "The profiles are drawn twice: once with the FFT method, and once with photon shooting.",
 "#" : "The two images are drawn side by side so it is easy to visually compare the results.",
 "#" : "The 100 total profiles are written to a FITS data cube, which makes it easy to scroll",
 "#" : "through the images comparing the two drawing methods.",

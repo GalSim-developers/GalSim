@@ -26,7 +26,7 @@ New features introduced in this demo:
 - obj2 = obj.createSheared(e, beta)
 
 - Build a single large image, and access sub-images within it.
-- Set the galaxy size based on the psf size and a resolution factor.
+- Set the galaxy size based on the PSF size and a resolution factor.
 - Set the object's flux according to a target S/N value.
 - Use 90 degree-rotated pairs for the intrinsic galaxy shapes.
 - Shift by a random (dx, dy) drawn from a unit circle top hat.
