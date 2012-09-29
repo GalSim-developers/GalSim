@@ -41,6 +41,6 @@ void pyExportInt() {
 
 }
 
-} // namespace hsm
+} // namespace integ
 } // namespace galsim
 
