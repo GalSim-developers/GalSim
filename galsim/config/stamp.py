@@ -632,7 +632,7 @@ def AddNoisePhot(im, weight_im, noise, rng, sky_level):
         if weight_im:
             weight_im.copyFrom(im)
 
-        # For photon shooting, galaxy already has poisson noise, so we want 
+        # For photon shooting, galaxy already has Poisson noise, so we want 
         # to make sure not to add that again!
         if sky_level != 0.:
             sky_level_pixel = sky_level * pixel_scale**2
