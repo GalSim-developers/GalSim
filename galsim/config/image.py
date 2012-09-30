@@ -4,7 +4,7 @@ import galsim
 def BuildImage(config, logger=None, seeds=None,
                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
-    Build an image according the information in config.
+    Build an image according to the information in config.
 
     This function acts as a wrapper for:
         BuildSingleImage 
@@ -14,10 +14,10 @@ def BuildImage(config, logger=None, seeds=None,
 
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress.
-    @param seeds               If given, a list of seeds to use
-    @param make_psf_image      Whether to make psf_image
-    @param make_weight_image   Whether to make weight_image
-    @param make_badpix_image   Whether to make badpix_image
+    @param seeds               If given, a list of seeds to use.
+    @param make_psf_image      Whether to make psf_image.
+    @param make_weight_image   Whether to make weight_image.
+    @param make_badpix_image   Whether to make badpix_image.
 
     @return (image, psf_image, weight_image, badpix_image)  
 
@@ -79,9 +79,9 @@ def BuildSingleImage(config, logger=None,
 
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress.
-    @param make_psf_image      Whether to make psf_image
-    @param make_weight_image   Whether to make weight_image
-    @param make_badpix_image   Whether to make badpix_image
+    @param make_psf_image      Whether to make psf_image.
+    @param make_weight_image   Whether to make weight_image.
+    @param make_badpix_image   Whether to make badpix_image.
 
     @return (image, psf_image, weight_image, badpix_image)  
 
@@ -134,9 +134,9 @@ def BuildTiledImage(config, logger=None,
 
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress.
-    @param make_psf_image      Whether to make psf_image
-    @param make_weight_image   Whether to make weight_image
-    @param make_badpix_image   Whether to make badpix_image
+    @param make_psf_image      Whether to make psf_image.
+    @param make_weight_image   Whether to make weight_image.
+    @param make_badpix_image   Whether to make badpix_image.
 
     @return (image, psf_image, weight_image, badpix_image)  
 
@@ -362,9 +362,9 @@ def BuildScatteredImage(config, logger=None,
 
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress.
-    @param make_psf_image      Whether to make psf_image
-    @param make_weight_image   Whether to make weight_image
-    @param make_badpix_image   Whether to make badpix_image
+    @param make_psf_image      Whether to make psf_image.
+    @param make_weight_image   Whether to make weight_image.
+    @param make_badpix_image   Whether to make badpix_image.
 
     @return (image, psf_image, weight_image, badpix_image)  
 

@@ -8,17 +8,17 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, sky_level=None, do_noise
     """
     Build a number of postage stamp images as specified by the config dict.
 
-    @param nstamps             How many stamps to build
+    @param nstamps             How many stamps to build.
     @param config              A configuration dict.
-    @param xsize               The size of a single stamp in the x direction
-    @param ysize               The size of a single stamp in the y direction
+    @param xsize               The size of a single stamp in the x direction.
+    @param ysize               The size of a single stamp in the y direction.
     @param nproc               How many processes to use.
-    @param sky_level           The background sky level to add to the image
-    @param do_noise            Whether to add noise to the image (according to config['noise'])
+    @param sky_level           The background sky level to add to the image.
+    @param do_noise            Whether to add noise to the image (according to config['noise']).
     @param logger              If given, a logger object to log progress.
-    @param make_psf_image      Whether to make psf_image
-    @param make_weight_image   Whether to make weight_image
-    @param make_badpix_image   Whether to make badpix_image
+    @param make_psf_image      Whether to make psf_image.
+    @param make_weight_image   Whether to make weight_image.
+    @param make_badpix_image   Whether to make badpix_image.
 
     @return (images, psf_images, weight_images, badpix_images)  (All in tuple are lists)
     """
@@ -190,14 +190,14 @@ def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, 
 
     @param seed                The random number seed to use for this stamp.  0 means use time.
     @param config              A configuration dict.
-    @param xsize               The xsize of the image to build
-    @param ysize               The ysize of the image to build
-    @param sky_level           The background sky level to add to the image
-    @param do_noise            Whether to add noise to the image (according to config['noise'])
+    @param xsize               The xsize of the image to build.
+    @param ysize               The ysize of the image to build.
+    @param sky_level           The background sky level to add to the image.
+    @param do_noise            Whether to add noise to the image (according to config['noise']).
     @param logger              If given, a logger object to log progress.
-    @param make_psf_image      Whether to make psf_image
-    @param make_weight_image   Whether to make weight_image
-    @param make_badpix_image   Whether to make badpix_image
+    @param make_psf_image      Whether to make psf_image.
+    @param make_weight_image   Whether to make weight_image.
+    @param make_badpix_image   Whether to make badpix_image.
 
     @return image, psf_image, weight_image, badpix_image, time
     """
@@ -450,7 +450,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level, final_shift):
 def AddNoiseFFT(im, weight_im, noise, rng, sky_level):
     """
     Add noise to an image according to the noise specifications in the noise dict
-    appropriate for an image that has been drawn using the fft method.
+    appropriate for an image that has been drawn using the FFT method.
     """
     if not isinstance(noise, dict):
         raise AttributeError("image.noise is not a dict.")
@@ -582,7 +582,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level, final_shift):
 def AddNoisePhot(im, weight_im, noise, rng, sky_level):
     """
     Add noise to an image according to the noise specifications in the noise dict
-    appropriate for an image that has been drawn using the phot method.
+    appropriate for an image that has been drawn using the photon-shooting method.
     """
     if not isinstance(noise, dict):
         raise AttributeError("image.noise is not a dict.")

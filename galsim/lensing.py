@@ -548,7 +548,7 @@ class NFWHalo(object):
     @param redshift   Redshift of the halo.
     @param pos        Position of halo center (in arcsec). [default=PositionD(0,0)]
     @param omega_m    Omega_matter to pass to Cosmology constructor [default=None]
-    @param omega_lam  Omage_lambda to pass to Cosmology constructor [default=None]
+    @param omega_lam  Omega_lambda to pass to Cosmology constructor [default=None]
     @param cosmo      A Cosmology instance [default=None]
     """
     _req_params = { 'mass' : float , 'conc' : float , 'redshift' : float }
