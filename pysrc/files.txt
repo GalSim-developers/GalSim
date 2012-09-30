@@ -20,4 +20,4 @@ SBKolmogorov.cpp
 PhotonArray.cpp
 Random.cpp
 PSFCorr.cpp
-Int.cpp
+Integ.cpp

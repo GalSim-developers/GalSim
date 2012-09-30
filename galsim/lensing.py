@@ -415,7 +415,7 @@ class Cosmology(object):
             if z < z_ref:
                 raise ValueError("Redshift z must not be smaller than the reference redshift")
 
-            d = galsim.int1d(self.__angKernel, z_ref+1, z+1)
+            d = galsim.integ.int1d(self.__angKernel, z_ref+1, z+1)
             # check for curvature
             rk = (abs(self.omega_c))**0.5
             if (rk*d > 0.01):

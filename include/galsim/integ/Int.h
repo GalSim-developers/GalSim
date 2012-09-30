@@ -51,7 +51,7 @@
  * 
  *     There are two final arguments, which we've omitted so far, that can be used to specify
  *     the precision required.  First the relative error, then the absolute error.
- *     The defaults are 1.e-6 and 1.e-15 respectively, which are generally fine for most
+ *     The defaults are 1.e-6 and 1.e-12 respectively, which are generally fine for most
  *     purposes, but you can specify different values if you prefer.
  * 
  *     The absolute error only comes into play for results which are close to 
@@ -148,7 +148,7 @@ namespace integ {
     const double MOCK_INF = 1.e100;  ///< May be used to indicate infinity in integration regions.
     const double MOCK_INF2 = 1.e10;  ///< Anything larger than this is treated as infinity.
     const double DEFRELERR = 1.e-6;  ///< The default target relative error if not specified.
-    const double DEFABSERR = 1.e-15; ///< The default target absolute error if not specified.
+    const double DEFABSERR = 1.e-12; ///< The default target absolute error if not specified.
 
 
     /// An exception type thrown if the integrator encounters a problem.
