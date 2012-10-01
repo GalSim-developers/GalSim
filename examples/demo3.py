@@ -155,7 +155,7 @@ def main(argv):
                                obscuration = opt_obscuration)
     logger.debug('Made optical PSF profile')
 
-    # Now apply the wcs shear to the profile without the pix
+    # Now apply the wcs shear to the profile before pixelization.
     # We may eventually have a somewhat more seamless way to handle things like a WCS
     # that would potentially vary across the image and include more than just a distortion
     # term.  But for now, we just apply a given distortion to the unpixellated profile.
