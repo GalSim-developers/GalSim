@@ -342,10 +342,10 @@ def BuildTiledImage(config, logger=None,
             draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
             if draw_method == 'fft':
                 galsim.config.AddNoiseFFT(
-                    full_image,full_weight_image,config['image']['noise'],rng,sky_level)
+                    full_image,full_weight_image,config['image']['noise'],config,rng,sky_level)
             elif draw_method == 'phot':
                 galsim.config.AddNoisePhot(
-                    full_image,full_weight_image,config['image']['noise'],rng,sky_level)
+                    full_image,full_weight_image,config['image']['noise'],config,rng,sky_level)
             else:
                 raise AttributeError("Unknown draw_method %s."%draw_method)
         elif sky_level:
@@ -504,10 +504,10 @@ def BuildScatteredImage(config, logger=None,
         draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
         if draw_method == 'fft':
             galsim.config.AddNoiseFFT(
-                full_image,full_weight_image,config['image']['noise'],rng,sky_level)
+                full_image,full_weight_image,config['image']['noise'],config,rng,sky_level)
         elif draw_method == 'phot':
             galsim.config.AddNoisePhot(
-                full_image,full_weight_image,config['image']['noise'],rng,sky_level)
+                full_image,full_weight_image,config['image']['noise'],config,rng,sky_level)
         else:
             raise AttributeError("Unknown draw_method %s."%draw_method)
 

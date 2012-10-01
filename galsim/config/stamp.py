@@ -265,7 +265,7 @@ def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, 
             weight_im = None
         if do_noise:
             if 'noise' in config['image']:
-                AddNoiseFFT(im,weight_im,config['image']['noise'],rng,sky_level)
+                AddNoiseFFT(im,weight_im,config['image']['noise'],config,rng,sky_level)
             elif sky_level:
                 pixel_scale = im.getScale()
                 im += sky_level * pixel_scale**2
@@ -282,7 +282,7 @@ def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, 
             weight_im = None
         if do_noise:
             if 'noise' in config['image']:
-                AddNoisePhot(im,weight_im,config['image']['noise'],rng,sky_level)
+                AddNoisePhot(im,weight_im,config['image']['noise'],config,rng,sky_level)
             elif sky_level:
                 pixel_scale = im.getScale()
                 im += sky_level * pixel_scale**2
@@ -447,7 +447,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level, final_shift):
 
     return im
 
-def AddNoiseFFT(im, weight_im, noise, rng, sky_level):
+def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level):
     """
     Add noise to an image according to the noise specifications in the noise dict
     appropriate for an image that has been drawn using the FFT method.
@@ -464,6 +464,14 @@ def AddNoiseFFT(im, weight_im, noise, rng, sky_level):
     if sky_level:
         im += sky_level * pixel_scale**2
 
+    # Check if a weight image should include the object variance.
+    if weight_im:
+        include_obj_var = False
+        if ('output' in base and 'weight' in base['output'] and 
+            'include_obj_var' in base['output']['weight']):
+            include_obj_var = galsim.config.ParseValue(
+                base['output']['weight'], 'include_obj_var', base, bool)[0]
+
     # Then add the correct kind of noise
     if type == 'Gaussian':
         single = [ { 'sigma' : float , 'variance' : float } ]
@@ -477,10 +485,10 @@ def AddNoiseFFT(im, weight_im, noise, rng, sky_level):
         im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
 
         if weight_im:
-            weight_im.fill(sigma*sigma)
-
+            weight_im += sigma*sigma
         #if logger:
             #logger.debug('   Added Gaussian noise with sigma = %f',sigma)
+
     elif type == 'CCDNoise':
         req = {}
         opt = { 'gain' : float , 'read_noise' : float }
@@ -497,15 +505,19 @@ def AddNoiseFFT(im, weight_im, noise, rng, sky_level):
             sky_level_pixel = params['sky_level'] * pixel_scale**2
             im += sky_level_pixel
 
-        # The image right now has the variance in each pixel.  So before going on with the 
-        # noise, copy these over to the weight image and invert.
         if weight_im:
             import math
-            weight_im.copyFrom(im)
-            if gain != 1.0:
-                weight_im /= math.sqrt(gain)
-            if read_noise != 0.0:
-                weight_im += read_noise*read_noise
+            if include_obj_var:
+                # The image right now has the variance in each pixel.  So before going on with the 
+                # noise, copy these over to the weight image and invert.
+                weight_im.copyFrom(im)
+                if gain != 1.0:
+                    weight_im /= math.sqrt(gain)
+                if read_noise != 0.0:
+                    weight_im += read_noise*read_noise
+            else:
+                # Otherwise, just add the sky and read_noise:
+                weight_im += sky_level_pixel / math.sqrt(gain) + read_noise*read_noise
 
         #print 'before CCDNoise: rng() = ',rng()
         im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
@@ -579,7 +591,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level, final_shift):
 
     return im
     
-def AddNoisePhot(im, weight_im, noise, rng, sky_level):
+def AddNoisePhot(im, weight_im, noise, base, rng, sky_level):
     """
     Add noise to an image according to the noise specifications in the noise dict
     appropriate for an image that has been drawn using the photon-shooting method.
@@ -608,10 +620,10 @@ def AddNoisePhot(im, weight_im, noise, rng, sky_level):
         im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
 
         if weight_im:
-            weight_im.fill(sigma*sigma)
-
+            weight_im += sigma*sigma
         #if logger:
             #logger.debug('   Added Gaussian noise with sigma = %f',sigma)
+
     elif type == 'CCDNoise':
         req = {}
         opt = { 'gain' : float , 'read_noise' : float }
@@ -629,7 +641,7 @@ def AddNoisePhot(im, weight_im, noise, rng, sky_level):
         # We don't have an exact value for the variance in each pixel, but the drawn image
         # before adding the Poisson noise is our best guess for the variance from the 
         # object's flux, so just use that for starters.
-        if weight_im:
+        if weight_im and include_obj_var:
             weight_im.copyFrom(im)
 
         # For photon shooting, galaxy already has poisson noise, so we want 
@@ -645,14 +657,12 @@ def AddNoisePhot(im, weight_im, noise, rng, sky_level):
         # Add in these effects to the weight image:
         if weight_im:
             import math
-            if sky_level != 0.:
-                weight_im += sky_level_pixel / math.sqrt(gain)
-            if read_noise != 0.0:
-                weight_im += read_noise * read_noise
-                
+            if sky_level != 0.0 or read_noise != 0.0:
+                weight_im += sky_level_pixel / math.sqrt(gain) + read_noise * read_noise
         #if logger:
             #logger.debug('   Added CCD noise with sky_level = %f, ' +
                          #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
+
     else:
         raise AttributeError("Invalid type %s for noise",type)
 

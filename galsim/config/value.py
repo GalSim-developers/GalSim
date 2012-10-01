@@ -597,6 +597,10 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     if 'nfw_halo' not in base:
         raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
     
+    req = {}
+    # Only Check, not Get.  (There's nothing to get -- just make sure there aren't extra params.)
+    CheckAllParams(param, param_name, req=req)
+
     #print 'NFWHaloShear: pos = ',pos,' z = ',redshift
     try:
         g1,g2 = base['nfw_halo'].getShear(pos,redshift)
@@ -615,24 +619,32 @@ def _GenerateFromNFWHaloMag(param, param_name, base, value_type):
     """@brief Return a magnification calculated from an NFWHalo object.
     """
     if 'pos' not in base:
-        raise ValueError("NFWHaloShear requested, but no position defined.")
+        raise ValueError("NFWHaloMag requested, but no position defined.")
     pos = base['pos']
 
     if 'gal' not in base or 'redshift' not in base['gal']:
-        raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
+        raise ValueError("NFWHaloMag requested, but no gal.redshift defined.")
     redshift = GetCurrentValue(base['gal'],'redshift')
 
     if 'nfw_halo' not in base:
-        raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
+        raise ValueError("NFWHaloMag requested, but no input.nfw_halo defined.")
     
+    opt = { 'max_scale' : float }
+    kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
+
     #print 'NFWHaloMag: pos = ',pos,' z = ',redshift
     mu = base['nfw_halo'].getMag(pos,redshift)
     #print 'mu = ',mu
 
-    if mu < 0 or mu > 25:
+    max_scale = kwargs.get('max_scale', 5.)
+    if not max_scale > 0.: 
+        raise ValueError(
+            "Invalid max_scale=%f (must be > 0) for %s.type = NFWHaloMag"%(repeat,param_name))
+
+    if mu < 0 or mu > max_scale**2:
         import warnings
         warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using scale=5."%mu)
-        scale = 5
+        scale = max_scale
     else:
         import math
         scale = math.sqrt(mu)
@@ -650,8 +662,11 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     if 'power_spectrum' not in base:
         raise ValueError("PowerSpectrumShear requested, but no input.power_spectrum defined.")
     
-    #print 'PowerSpectrumShear: pos = ',pos
+    req = {}
+    # Only Check, not Get.  (There's nothing to get -- just make sure there aren't extra params.)
+    CheckAllParams(param, param_name, req=req)
 
+    #print 'PowerSpectrumShear: pos = ',pos
     try:
         g1,g2 = base['power_spectrum'].getShear(pos)
         #print 'g1,g2 = ',g1,g2

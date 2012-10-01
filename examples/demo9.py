@@ -12,10 +12,9 @@ draw 20 lensed galaxies at random positions of the image.
 
 New features introduced in this demo:
 
-- image.copyFrom(image2)
 - im = galsim.ImageS(xsize, ysize)
 - pos = galsim.PositionD(x, y)
-- nfw = galsim.NFWHalo(mass, conc, z, pos)
+- nfw = galsim.NFWHalo(mass, conc, z, pos, omega_m, omega_lam)
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMag(pos, z)
 
@@ -71,6 +70,8 @@ def main(argv):
     nfw_conc = 4           # concentration parameter = virial radius / NFW scale radius
     nfw_z_halo = 0.3       # redshift of the halo
     nfw_z_source = 0.6     # redshift of the lensed sources
+    omega_m = 0.3          # Omega matter for the background cosmology.
+    omega_lam = 0.7        # Omega lambda for the background cosmology.
 
     random_seed = 8383721
 
@@ -103,7 +104,15 @@ def main(argv):
         im_center = full_image.bounds.center()
         im_center = galsim.PositionD(im_center.x, im_center.y)
         nfw = galsim.NFWHalo(mass=mass, conc=nfw_conc, redshift=nfw_z_halo,
-                             pos=im_center*pixel_scale)
+                             halo_pos=im_center*pixel_scale,
+                             omega_m=omega_m, omega_lam=omega_lam)
+        # Note: the last two are optional.  If they are omitted, then (omega_m=0.3, omega_lam=0.7) 
+        # are actually the defaults.  If you only specify one of them, the other is set so that 
+        # the total is 1.  But you can define both values so that the total is not 1 if you want.
+        # Radiation is assumed to be zero and dark energy equation of state w = -1.
+        # If you want to include either radiation or more complicated dark energy models,
+        # you can define your own cosmology class that defines the functions a(z), E(a), and 
+        # Da(z_source, z_lens).  Then you can pass this to NFWHalo as a `cosmo` parameter.
 
         for k in range(nobj):
 
@@ -188,15 +197,6 @@ def main(argv):
         sky_level_pixel = sky_level * pixel_scale**2
         full_image += sky_level_pixel
 
-        # The image right now has the variance in each pixel.  So before going on with the 
-        # noise, copy these over to the weight image and invert.
-        # Note: Writing `weight_image = full_image` is wrong! 
-        #       In python this just declares weight_image to be another name for full_image.
-        #       We want to copy the values from full_image over to weight_image.
-        #       For GalSim images, we do this with the copyFrom method.
-        weight_image.copyFrom(full_image)
-        weight_image.invertSelf()
-
         # Going to the next seed isn't really required, but it matches the behavior of the 
         # config parser, so doing this will result in identical output files.
         # If you didn't care about that, you could instead construct this as a continuation
@@ -204,6 +204,13 @@ def main(argv):
         ccdnoise = galsim.CCDNoise(seed+nobj)
         full_image.addNoise(ccdnoise)
         full_image -= sky_level_pixel
+
+        # For the weight image, we only want the noise from the sky.  (If we were including
+        # read_noise, we'd want that as well.)  Including the Poisson noise from the objects
+        # as well tends to bias fits that use this as a weight, since the model becomes
+        # magnitude-dependent.
+        # The variance is just sky_level_pixel.  And we want the inverse of this.
+        weight_image.fill(1./sky_level_pixel)
 
         # Write the file to disk:
         galsim.fits.writeMulti([full_image, badpix_image, weight_image], file_name)

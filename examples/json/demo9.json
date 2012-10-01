@@ -93,12 +93,15 @@
         "#" : "defaults. If you only specify one of them, the other is set so that the total is 1.",
         "#" : "But you can define both values so that the total is not 1 if you want.",
         "#" : "Radiation is assumed to be zero and dark energy equation of state w = -1.",
+        "#" : "If you want to include either radiation or more complicated dark energy models,",
+        "#" : "you'll need to define your own cosmology class and use that in a Python script.",
+        "#" : "There is no way to include them currently from a config script.",
         "omega_m" : 0.3,
         "omega_lam" : 0.7,
 
-        "#" : "Another optional parameter for nfw_halo is pos, which specifies the location of ",
-        "#" : "the halo with respect to the center of the image.  The default is (0,0).",
-        "#" : "pos : 0,0"
+        "#" : "Another optional parameter for nfw_halo is halo_pos, which specifies the location",
+        "#" : "of the halo with respect to the center of the image.  The default is (0,0).",
+        "#" : "halo_pos : 0,0"
     }
 },
 
@@ -168,8 +171,12 @@
             "last" : 5
         },
 
-        "#" : "ext specifies the text to go after the number, if desired (default = None)",
-        "ext" : ".fits",
+        "#" : "ext specifies the text to go after the number, if desired.",
+        "#" : "The extension is usually set to a reasonable default.",
+        "#" : "For output.file_name, the default is '.fits'.",
+        "#" : "For an input ASCII catalog, the default is '.asc'.",
+        "#" : "For anything else (e.g. dir below) the default is '' (no extension)",
+        "#" :"ext : .fits",
 
         "#" : "digits specifies how many digits to use in writing the number.  The default is",
         "#" : "to use as many as necessary, but if your numbers go above 9, then this makes",
@@ -210,7 +217,12 @@
         "#" : "be in HDU 1.  If weight, badpix and psf all specify an HDU value, then they must be",
         "#" : "1, 2 and 3 in some order.",
         "#" : "Also, hdu is only valid for image.type = Fits (which is the default).",
-        "hdu" : 2
+        "hdu" : 2,
+
+        "#" : "The default behavior for a weight image is to not include the Poisson noise from",
+        "#" : "the objects themselves, but rather just the variance from the sky and read_noise.",
+        "#" : "If you would rather include the object noise, change this to True.",
+        "#":"include_obj_var : False"
     },
 
     "#" : "It is common for astrometric images to also have a bad pixel mask.  We don't have any",

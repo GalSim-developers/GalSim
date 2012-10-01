@@ -13,7 +13,6 @@ def ProcessInput(config, logger=None):
         config['real_catalog'] = the catalog specified by config.input.real_catalog, if provided.
         config['nfw_halo'] = an NFWHalo specified by config.input.nfw_halo, if provided.
     """
-
     # Process the input field (read any necessary input files)
     if 'input' in config:
         input = config['input']
@@ -30,6 +29,8 @@ def ProcessInput(config, logger=None):
         for key in [ k for k in input_type.keys() if k in input ]:
             field = input[key]
             field['type'] = input_type[key]
+            if key == 'catalog' and 'file_name' in field:
+                SetDefaultExt(field['file_name'],'.asc')
             input_obj = galsim.config.gsobject._BuildSimple(field, key, config, {})[0]
             if logger and  key in ['catalog', 'real_catalog']:
                 logger.info('Read %d objects from %s',input_obj.nobjects,key)
@@ -134,7 +135,7 @@ def Process(config, logger=None):
     build_func = eval('Build'+type)
 
     # We need to set up the list of random number seeds now, since we might need to 
-    # do this with multiple processors, so it we let the regular sequencing happen, 
+    # do this with multiple processors, so if we let the regular sequencing happen, 
     # it will get screwed up by the multi-processing.
     # Start with the number of files.
     if 'nfiles' in output:
@@ -180,6 +181,8 @@ def Process(config, logger=None):
         #print 'Single: nseed_per_image = ',nseed_per_image
 
     elif image_type == 'Scattered':
+        # In case any of these things are dicts with variable values, we don't want to mess
+        # up the sequence.  So deep copy the image dict before processing it.
         import copy
         image = copy.deepcopy(config['image'])
         if 'nobjects' not in image:
@@ -360,6 +363,7 @@ def Process(config, logger=None):
     for k in range(nfiles):
         # Get the file_name
         if 'file_name' in output:
+            SetDefaultExt(output['file_name'],'.fits')
             file_name = galsim.config.ParseValue(output, 'file_name', config, str)[0]
         elif 'root' in config:
             # If a file_name isn't specified, we use the name of the config file + '.fits'
@@ -394,6 +398,10 @@ def Process(config, logger=None):
             ignore = []
             if extra == 'psf': 
                 ignore.append('real_space')
+            if extra == 'weight': 
+                ignore.append('include_obj_var')
+            if 'file_name' in output_extra:
+                SetDefaultExt(output_extra['file_name'],'.fits')
             params, safe = galsim.config.GetAllParams(output_extra, extra, config,
                                                       single=single, ignore=ignore)
 
@@ -415,7 +423,7 @@ def Process(config, logger=None):
             ProcessInput(config, logger)
 
         # This is where we actually build the file.
-        # If we doing multiprocessing, we send this information off to the task_queue.
+        # If we're doing multiprocessing, we send this information off to the task_queue.
         # Otherwise, we just call build_func.
         if nproc > 1:
             import copy
@@ -759,4 +767,11 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None, seeds=None,
     t6 = time.time()
     return t6-t1
 
+def SetDefaultExt(config, ext):
+    """
+    Some items have a default extension for a NumberedFile type.
+    """
+    if ( isinstance(config,dict) and 'type' in config and 
+         config['type'] == 'NumberedFile' and 'ext' not in config ):
+        config['ext'] = ext
 

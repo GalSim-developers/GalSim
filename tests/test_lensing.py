@@ -8,13 +8,23 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-import galsim.lensing
-
 refdir = os.path.join(".", "lensing_reference_data") # Directory containing the reference
 
 def funcname():
     import inspect
     return inspect.stack()[1][3]
+
+# for simple demonstration purposes, a few very simple power-law power spectra that don't crash and
+# burn at k=0
+def pk2(k):
+    return k**(2.0)
+
+def pk1(k):
+    return k
+
+def pkflat(k):
+    # note: this gives random Gaussian shears with variance of 0.01
+    return 0.01
 
 def test_nfwhalo():
     import time
@@ -30,7 +40,7 @@ def test_nfwhalo():
 
     try:
         # set up the same halo
-        halo = galsim.lensing.NFWHalo(mass=1e15, conc=4, redshift=1)
+        halo = galsim.NFWHalo(mass=1e15, conc=4, redshift=1)
         pos_x = np.arange(1,600)
         pos_y = np.zeros_like(pos_x)
         z_s = 2
@@ -84,8 +94,7 @@ def test_shear_flatps():
     gd = galsim.GaussianDeviate(512342)
 
     # make a flat power spectrum for E, B modes
-    test_ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pkflat,
-                                           B_power_function=galsim.lensing.pkflat)
+    test_ps = galsim.PowerSpectrum(E_power_function=pkflat, B_power_function=pkflat)
     # get shears on 500x500 grid
     g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, rng=gd)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
@@ -106,7 +115,7 @@ def test_shear_flatps():
 
 
     # make a pure E-mode spectrum
-    test_ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pkflat)
+    test_ps = galsim.PowerSpectrum(E_power_function=pkflat)
     # get shears on 500x500 grid
     g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, rng=gd)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
@@ -136,7 +145,7 @@ def test_shear_flatps():
 
 
     # make a pure B-mode spectrum
-    test_ps = galsim.lensing.PowerSpectrum(B_power_function=galsim.lensing.pkflat)
+    test_ps = galsim.PowerSpectrum(B_power_function=pkflat)
     # get shears on 500x500 grid
     g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, rng=gd)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
@@ -173,8 +182,7 @@ def test_shear_seeds():
     t1 = time.time()
 
     # make a power spectrum for some E, B power function
-    test_ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pk2,
-                                           B_power_function=galsim.lensing.pkflat)
+    test_ps = galsim.PowerSpectrum(E_power_function=pk2, B_power_function=pkflat)
 
     # get shears on a grid w/o specifying seed
     g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx = 10)
@@ -217,8 +225,7 @@ def test_shear_reference():
     dx = 1.
 
     # define power spectrum
-    ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pk2,
-                                      B_power_function=galsim.lensing.pk1)
+    ps = galsim.PowerSpectrum(E_power_function=pk2, B_power_function=pk1)
     # get shears
     g1, g2 = ps.getShear(grid_spacing = dx, grid_nx = n, rng=rng)
 
