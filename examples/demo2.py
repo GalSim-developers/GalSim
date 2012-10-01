@@ -53,8 +53,8 @@ def main(argv):
 
     logger.info('Starting demo script 2 using:')
     logger.info('    - sheared (%.2f,%.2f) exponential galaxy (flux = %.1e, scale radius = %.2f),',
-            g1, g2, gal_flux, gal_r0)
-    logger.info('    - circular Moffat PSF (beta = %.1f, re = %.2f),', psf_beta,psf_re)
+                g1, g2, gal_flux, gal_r0)
+    logger.info('    - circular Moffat PSF (beta = %.1f, re = %.2f),', psf_beta, psf_re)
     logger.info('    - pixel scale = %.2f,', pixel_scale)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
 
@@ -130,7 +130,7 @@ def main(argv):
     else:
         gfac = 0.
     logger.info('    g1, g2 = %.3f, %.3f', 
-            gfac*results.corrected_shape.getE1(), gfac*results.corrected_shape.getE2())
+                gfac*results.corrected_shape.getE1(), gfac*results.corrected_shape.getE2())
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
     logger.info('    g1, g2 = %.3f, %.3f', g1,g2)
 
