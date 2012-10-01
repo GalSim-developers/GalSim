@@ -11,7 +11,7 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     @param min      The lower end of the integration bounds
     @param max      The upper end of the integration bounds
     @param rel_err  The desired relative error (default `rel_err = 1.e-6`)
-    @param abs_err  The desired absolute error (default `rel_err = 1.e-12`)
+    @param abs_err  The desired absolute error (default `abs_err = 1.e-12`)
     """
     min = float(min)
     max = float(max)
