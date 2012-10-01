@@ -725,7 +725,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
                 opt[key] = galsim.PositionD
             elif key[0] == 'g':
                 opt[key] = galsim.Shear
-            # else let GetAllParams rais an appropriate exception about unexpected key    
+            # else let GetAllParams raise an appropriate exception about unexpected key    
     params, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
     string = params['str']
     #print 'string = ',string
