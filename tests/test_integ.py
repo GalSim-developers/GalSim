@@ -124,6 +124,24 @@ def test_sinxsqexpabsx_infinite_limits():
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-inf, inf].")
 
+def test_invroot_finite_limits():
+    """Test the integration of |x|^(-1/2) across intervals [0,1], [0,300] (integrable pole at x=0).
+    """
+    # Define our test function
+    def test_func(x): return 1. / np.sqrt(np.abs(x))
+    test_integral = galsim.integ.int1d(test_func, 0, 1., test_rel_err, test_abs_err)
+    # test results easily calculated using Wolfram alpha
+    true_result = 2.
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
+        err_msg="|x|^(-1/2) integral failed across interval [0, 1].")
+
+    test_integral = galsim.integ.int1d(test_func, 0., 300., test_rel_err, test_abs_err)
+    true_result = 34.64101615137754587055
+    np.testing.assert_almost_equal(
+    test_integral, true_result, decimal=test_decimal, verbose=True,
+        err_msg="|x|^(-1/2) integral failed across interval [0, 20].")
+
 
 if __name__ == "__main__":
     test_gaussian_finite_limits()
