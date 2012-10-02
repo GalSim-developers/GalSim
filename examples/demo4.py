@@ -67,7 +67,7 @@ def main(argv):
     random_seed = 8241573
     sky_level = 1.e6                # ADU / arcsec^2
     pixel_scale = 1.0               # arcsec / pixel  (size units in input catalog are pixels)
-    gal_flux = 1.e6                 # arbitrary choise, makes nice (not too) noisy images
+    gal_flux = 1.e6                 # arbitrary choice, makes nice (not too) noisy images
     gal_g1 = -0.009                 #
     gal_g2 = 0.011                  #
     xsize = 64                      # pixels
@@ -84,6 +84,7 @@ def main(argv):
     # Read in the input catalog
     cat = galsim.InputCatalog(cat_file_name)
 
+    # save a list of the galaxy images in the "images" list variable:
     images = []
     for k in range(cat.nObjects()):
 
@@ -113,7 +114,8 @@ def main(argv):
         bulge = galsim.DeVaucouleurs(flux=0.4, half_light_radius=cat.getFloat(k,8))
         bulge.applyShear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
 
-        # The flux of an Add object is the sum of the component fluxes
+        # The flux of an Add object is the sum of the component fluxes.
+        # Note that in demo3.py, a similar addition was performed by the binary operator "+".
         gal = galsim.Add([disk, bulge])
         # This flux may be overridden by setFlux.  The relative fluxes of the components
         # remains the same, but the total flux is set to gal_flux.
