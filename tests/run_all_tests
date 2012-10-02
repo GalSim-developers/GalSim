@@ -13,3 +13,4 @@ python test_shear.py || exit
 python test_spline.py || exit
 python test_utilities.py || exit
 python test_lensing.py || exit
+python test_integ.py || exit

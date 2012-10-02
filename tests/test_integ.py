@@ -14,7 +14,8 @@ except ImportError:
 test_sigma = 7.                   # test value of Gaussian sigma for integral tests
 test_rel_err = 1.e-7              # the relative accuracy at which to test
 test_abs_err = 1.e-13             # the absolute accuracy at which to test
-test_mock_inf = 2.e10             # number that gets interpreted as infinity by integration routines
+test_mock_inf = 2.e10             # number large enough to get interpreted as infinity by 
+                                  # integration routines
 
 
 def test_gaussian_finite_limits():
@@ -70,7 +71,7 @@ def test_gaussian_infinite_limits():
         test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
         err_msg="Gaussian integral failed across interval [-inf, inf].")
 
-def test_sinxsq_finite_limits():
+def test_sinxsqexpabsx_finite_limits():
     """Test the integration of a slightly tricky oscillating sin(x^2) * exp(-|x|) function across 
     finite intervals [-1, 1], [0, 20], [-50, 40].
     """
@@ -96,7 +97,7 @@ def test_sinxsq_finite_limits():
         test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
         err_msg="Sin(x^2) integral failed across interval [-50, -40].")
 
-def test_sinxsq_infinite_limits():
+def test_sinxsqexpabsx_infinite_limits():
     """Test the integration of a slightly tricky oscillating sin(x^2) * exp(-|x|) function across 
     infinite intervals [0, inf], [-inf, 5.4], [-inf, inf].
     """
@@ -122,4 +123,11 @@ def test_sinxsq_infinite_limits():
     np.testing.assert_allclose(
         test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-inf, inf].")
+
+
+if __name__ == "__main__":
+    test_gaussian_finite_limits()
+    test_gaussian_infinite_limits()
+    test_sinxsqexpabsx_finite_limits()
+    test_sinxsqexpabsx_infinite_limits()
 
