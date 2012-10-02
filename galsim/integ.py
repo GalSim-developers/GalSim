@@ -8,8 +8,10 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     """Integrate a 1-dimensional function from min to max.
 
     @param func     The function to be integrated.  y = func(x) should be valid.
-    @param min      The lower end of the integration bounds
-    @param max      The upper end of the integration bounds
+    @param min      The lower end of the integration bounds (anything < -1.e10 is treated as
+                    negative infinity).
+    @param max      The upper end of the integration bounds (anything > 1.e10 is treated as positive
+                    infinity).
     @param rel_err  The desired relative error (default `rel_err = 1.e-6`)
     @param abs_err  The desired absolute error (default `abs_err = 1.e-12`)
     """
