@@ -146,32 +146,48 @@ def ErrorExit(*args, **kwargs):
         out.write(s + '\n')
     out.write('\n')
 
+    # Write out the current options:
+    out.write('Using the following options:'
+    for opt in opts.options:
+        out.write('   %s = %s'%(opt.key,env[opt.key])
+    out.write('\n')
+
+    # Write out the current environment:
+    out.write('The system environment is:')
+    for key in os.environ.keys():
+        out.write('   %s = %s'%(key,os.environ[key]))
+    out.write('\n')
+
+    out.write('The SCons environment is:')
+    for key in env.keys():
+        out.write('   %s = %s'%(key,env[key]))
+    out.write('\n')
+
     # Next put the full config.log in there.
     out.write('The full config.log file is:\n\n')
     shutil.copyfileobj(open("config.log","rb"),out)
     out.write('\n')
 
-    # If n > 0, then that means it could be helpful to see what the last n
-    # executables output.  SCons just uses >, not >&, so we'll repeat those
-    # runs here and get both.
-    if 'n' in kwargs.keys():
-        n = kwargs['n']
-        # This relies on the sort by time option of ls.  Not sure how universal this is...
-        try:
-            conftest_list = os.popen(
-                "ls -t .sconf_temp/conftest* | grep -v '\.out' | grep -v '\.cpp' \
-                    | grep -v '\.o'").readlines()
-            for i in range(n):
-                if len(conftest_list) > i:
-                    last_conftest = conftest_list[i].strip()
-                    conftest_out = os.popen(last_conftest).readlines()
-                    out.write('Output of the executable %s is:\n'%last_conftest)
-                    out.write(''.join(conftest_out) + '\n')
-                else:
-                    out.write('Expected at least %s conftest executables, but only found %s.\n'\
-                        % (n,len(conftest_list)))
-        except:
-            out.write("Error trying to get output of last conftest executable.")
+    # It is sometimes helpful to see the output of the scons executables.  
+    # SCons just uses >, not >&, so we'll repeat those runs here and get both.
+    try:
+        conftest_list = os.popen(
+            "ls -d .sconf_temp/conftest* | grep -v '\.out' | grep -v '\.cpp' "+
+            "| grep -v '\.o' | grep -v '\_mod'"
+            ).readlines()
+        for conftest in conftest_list:
+            conftest = conftest.strip()
+            if os.access(conftest, os.X_OK):
+                conftest_out = os.popen(conftest + " 2>&1").readlines()
+                out.write('Output of the executable %s is:\n'%conftest)
+                out.write(''.join(conftest_out) + '\n')
+            else:
+                python = env['PYTHON']
+                conftest_out = os.popen(python + " < " + conftest + " 2>&1").readlines()
+                out.write('Output of the python executable %s is:\n'%conftest)
+                out.write(''.join(conftest_out) + '\n')
+    except:
+        out.write("Error trying to get output of conftest executables.")
 
     print
     print 'Please fix the above error(s) and re-run scons'
