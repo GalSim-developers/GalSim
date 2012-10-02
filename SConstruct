@@ -147,26 +147,27 @@ def ErrorExit(*args, **kwargs):
     out.write('\n')
 
     # Write out the current options:
-    out.write('Using the following options:'
+    out.write('Using the following options:\n')
     for opt in opts.options:
-        out.write('   %s = %s'%(opt.key,env[opt.key])
+        out.write('   %s = %s\n'%(opt.key,env[opt.key]))
     out.write('\n')
 
     # Write out the current environment:
-    out.write('The system environment is:')
+    out.write('The system environment is:\n')
     for key in os.environ.keys():
-        out.write('   %s = %s'%(key,os.environ[key]))
+        out.write('   %s = %s\n'%(key,os.environ[key]))
     out.write('\n')
 
-    out.write('The SCons environment is:')
-    for key in env.keys():
-        out.write('   %s = %s'%(key,env[key]))
+    out.write('The SCons environment is:\n')
+    for key in env.Dictionary().keys():
+        out.write('   %s = %s\n'%(key,env[key]))
     out.write('\n')
 
     # Next put the full config.log in there.
-    out.write('The full config.log file is:\n\n')
+    out.write('The full config.log file is:\n')
+    out.write('==================\n')
     shutil.copyfileobj(open("config.log","rb"),out)
-    out.write('\n')
+    out.write('==================\n\n')
 
     # It is sometimes helpful to see the output of the scons executables.  
     # SCons just uses >, not >&, so we'll repeat those runs here and get both.
@@ -187,7 +188,7 @@ def ErrorExit(*args, **kwargs):
                 out.write('Output of the python executable %s is:\n'%conftest)
                 out.write(''.join(conftest_out) + '\n')
     except:
-        out.write("Error trying to get output of conftest executables.")
+        out.write("Error trying to get output of conftest executables.\n")
 
     print
     print 'Please fix the above error(s) and re-run scons'
@@ -907,7 +908,10 @@ PyMODINIT_FUNC initcheck_tmv(void)
         CheckModuleLibs(config,[],tmv_source_file,'check_tmv') or
         CheckModuleLibs(config,['mkl_rt'],tmv_source_file,'check_tmv') or
         CheckModuleLibs(config,['mkl_base'],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_mc'],tmv_source_file,'check_tmv') )
+        CheckModuleLibs(config,['mkl_mc3'],tmv_source_file,'check_tmv') or
+        CheckModuleLibs(config,['mkl_mc3','mkl_def'],tmv_source_file,'check_tmv') or
+        CheckModuleLibs(config,['mkl_mc'],tmv_source_file,'check_tmv') or
+        CheckModuleLibs(config,['mkl_mc','mkl_def'],tmv_source_file,'check_tmv') )
     if not result:
         ErrorExit('Unable to build a python loadable module that uses tmv')
    
