@@ -344,6 +344,10 @@ noise term, and a Gaussian read noise in electrons (if gain > 0.) or ADU (if gai
 these parameters set, the CCDNoise operates on an Image, adding noise to each pixel following this 
 model. 
 
+Note that galsim.CCDNoise assumes the image it is applying the Poisson noise to has the sky noise 
+included, hence generating the appropriate image noise.  The user is responsible for the 
+calculation of the sky noise level, as well as sky subtraction after the noise have been added.
+
 Initialization
 --------------
 
