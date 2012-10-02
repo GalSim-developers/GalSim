@@ -16,7 +16,7 @@ test_rel_err = 1.e-7              # the relative accuracy at which to test
 test_abs_err = 1.e-13             # the absolute accuracy at which to test
 test_mock_inf = 2.e10             # number large enough to get interpreted as infinity by 
                                   # integration routines
-
+test_decimal = 7
 
 def test_gaussian_finite_limits():
     """Test the integration of a 1D zero-mean Gaussian across intervals of [-1, 1], [0, 20]
@@ -28,20 +28,20 @@ def test_gaussian_finite_limits():
     test_integral = galsim.integ.int1d(test_func, -1., 1., test_rel_err, test_abs_err)
     # test results easily calculated using Wolfram alpha
     true_result = 1.99321805307377285009
-    np.testing.assert_allclose(
-        test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Gaussian integral failed across interval [-1, 1].")
 
     test_integral = galsim.integ.int1d(test_func, 0., 20., test_rel_err, test_abs_err)
     true_result = 8.73569586966967345835 
-    np.testing.assert_allclose(
-        test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Gaussian integral failed across interval [0, 20].")
 
     test_integral = galsim.integ.int1d(test_func, -50., -40., test_rel_err, test_abs_err)
     true_result = 9.66426031085587421984e-8
-    np.testing.assert_allclose(
-        test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Gaussian integral failed across interval [-50, -40].")
 
 def test_gaussian_infinite_limits():
@@ -54,21 +54,21 @@ def test_gaussian_infinite_limits():
     test_integral = galsim.integ.int1d(test_func, 0., test_mock_inf, test_rel_err, test_abs_err)
     # test results easily calculated using Wolfram alpha
     true_result = 8.77319896120850210849
-    np.testing.assert_allclose(
-        test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Gaussian integral failed across interval [0, inf].")
 
     test_integral = galsim.integ.int1d(test_func, -test_mock_inf, 5.4, test_rel_err, test_abs_err)
     true_result = 13.68221660030048620971
-    np.testing.assert_allclose(
-        test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Gaussian integral failed across interval [-inf, 5.4].")
 
     test_integral = galsim.integ.int1d(
         test_func, -test_mock_inf, test_mock_inf, test_rel_err, test_abs_err)
     true_result = 17.54639792241700421699
-    np.testing.assert_allclose(
-        test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Gaussian integral failed across interval [-inf, inf].")
 
 def test_sinxsqexpabsx_finite_limits():
@@ -81,20 +81,20 @@ def test_sinxsqexpabsx_finite_limits():
     test_integral = galsim.integ.int1d(test_func, -1., 1., test_rel_err, test_abs_err)
     # test results easily calculated using Wolfram alpha
     true_result = 0.30182513444548879567
-    np.testing.assert_allclose(
-        test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-1, 1].")
 
     test_integral = galsim.integ.int1d(test_func, 0., 20., test_rel_err, test_abs_err)
     true_result = 0.27051358019041255485 
-    np.testing.assert_allclose(
-        test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [0, 20].")
 
     test_integral = galsim.integ.int1d(test_func, -50., -40., test_rel_err, test_abs_err)
     true_result = 3.23169139033148542316e-20
-    np.testing.assert_allclose(
-        test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-50, -40].")
 
 def test_sinxsqexpabsx_infinite_limits():
@@ -107,21 +107,21 @@ def test_sinxsqexpabsx_infinite_limits():
     test_integral = galsim.integ.int1d(test_func, 0., test_mock_inf, test_rel_err, test_abs_err)
     # test results easily calculated using Wolfram alpha
     true_result = 0.27051358016221414426
-    np.testing.assert_allclose(
-        test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [0, inf].")
 
     test_integral = galsim.integ.int1d(test_func, -test_mock_inf, 5.4, test_rel_err, test_abs_err)
     true_result = 0.5413229824941895221
-    np.testing.assert_allclose(
-        test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-inf, 5.4].")
 
     test_integral = galsim.integ.int1d(
         test_func, -test_mock_inf, test_mock_inf, test_rel_err, test_abs_err)
     true_result = 0.54102716032442828852 
-    np.testing.assert_allclose(
-        test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-inf, inf].")
 
 
