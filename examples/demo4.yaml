@@ -36,7 +36,7 @@
 some_variables :
     - &sky_level  1.e6                # ADU / arcsec^2
     - &pixel_scale  1.0               # arcsec / pixel  (size units in input catalog are pixels)
-    - &gal_flux  1.e6                 # arbitrary choise, makes nice (not too) noisy images
+    - &gal_flux  1.e6                 # arbitrary choice, makes nice (not too) noisy images
     - &gal_g1  -0.009                 #
     - &gal_g2  0.011                  #
     - &image_size  64                 # pixels
