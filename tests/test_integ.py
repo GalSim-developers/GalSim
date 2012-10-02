@@ -83,19 +83,19 @@ def test_sinxsqexpabsx_finite_limits():
     true_result = 0.30182513444548879567
     np.testing.assert_allclose(
         test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
-        err_msg="Sin(x^2) integral failed across interval [-1, 1].")
+        err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-1, 1].")
 
     test_integral = galsim.integ.int1d(test_func, 0., 20., test_rel_err, test_abs_err)
     true_result = 0.27051358019041255485 
     np.testing.assert_allclose(
         test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
-        err_msg="Sin(x^2) integral failed across interval [0, 20].")
+        err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [0, 20].")
 
     test_integral = galsim.integ.int1d(test_func, -50., -40., test_rel_err, test_abs_err)
     true_result = 3.23169139033148542316e-20
     np.testing.assert_allclose(
         test_integral, true_result, rtol=test_rel_err, atol=test_abs_err, verbose=True,
-        err_msg="Sin(x^2) integral failed across interval [-50, -40].")
+        err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-50, -40].")
 
 def test_sinxsqexpabsx_infinite_limits():
     """Test the integration of a slightly tricky oscillating sin(x^2) * exp(-|x|) function across 
