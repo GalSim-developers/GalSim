@@ -64,6 +64,8 @@
 
     "#" : "If you want the random values to be deterministic, you can provide an initial seed.",
     "#" : "If this isn't set, then it will use the current time to create an initial seed.",
+    "#" : "This is the same seed that is used in demo2.py, which means the images produced",
+    "#" : "by the two methods will be precisely identical.",
     "random_seed" : 1534225
 },
 

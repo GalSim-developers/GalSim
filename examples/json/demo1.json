@@ -26,6 +26,9 @@
 "#" : "convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the",
 "#" : "PSF and the # galaxy.  And we add a constant level of Gaussian noise to the image.",
 
+"#" : "In each demo, we list the new features introduced in that demo file.  These will differ",
+"#" : "between the .py and .json files, since the two methods implement things different ways.",
+
 "#" : "New features introduced in this demo:",
 
 "#" : "- obj type : Gaussian (flux, sigma)",
@@ -58,6 +61,11 @@
     "sigma" : 1,
     "#" : "No need to specify a flux, since flux=1 is the right thing for a PSF."
 },
+
+
+"#" : "There is an optional pix field as well, which can define the profile of the pixel.",
+"#" : "However, you will almost never need to specify one. The default is to use the same pixel",
+"#" : "shape as the image uses, namely a square pixel whose size is image.pixel_scale (see below).",
 
 
 "#" : "The image field specifies some other information about the image to be drawn.",

@@ -6,7 +6,7 @@
 
 "#" : "In this script, we show how to run the GalSim config processing using a python dict rather",
 "#" : "than using a config file.  The parallel tutorial examples/demo*.py have shown how to",
-"#" : "do the same thing as these demo*.yaml files directly in python.  Now we turn the tables",
+"#" : "do the same thing as these demo*.json files directly in python.  Now we turn the tables",
 "#" : "and show how to use some of the machinery in the GalSim configuration processing ",
 "#" : "from within python itself.  As such, this config file doesn't add much in the way",
 "#" : "of new features.  The main one is the ability to build an image using multiple processes.",

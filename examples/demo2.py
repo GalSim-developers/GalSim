@@ -14,7 +14,6 @@ New features introduced in this demo:
 - obj = galsim.Exponential(flux, scale_radius)
 - obj = galsim.Moffat(beta, flux, half_light_radius)
 - obj.applyShear(g1, g2)  -- with explanation of other ways to specify shear
-- image = galsim.ImageF(image_size, image_size)
 - image += constant
 - image -= constant
 - noise = galsim.CCDNoise(seed)
@@ -49,6 +48,8 @@ def main(argv):
     sky_level = 2.5e4  # counts / arcsec^2
 
     # This time use a particular seed, so the image is deterministic.
+    # This is the same seed that is used in demo2.yaml, which means the images produced
+    # by the two methods will be precisely identical.
     random_seed = 1534225
 
     logger.info('Starting demo script 2 using:')
@@ -98,9 +99,12 @@ def main(argv):
 
     # Now we can use the CCDNoise class to add Poisson noise to the image including the 
     # sky level.  This takes each pixel's current value and replaces it with a random
-    # number drawn from a Poisson distribution with that mean value.  This matches the 
-    # statistics of photons hitting the CCD.
-    # (The CCDNoise class can optionally take a gain and a read_noise -- see demo3.py)
+    # integer drawn from a Poisson distribution with that mean value.  This matches the 
+    # statistics of photons hitting the CCD.  Note that while the values drawn from a 
+    # Poisson distribution are integers, they are still stored as floats.  In this case,
+    # they are stored as 16-bit floats, which is the default type of image created by
+    # GalSim's draw command.  Also, the CCDNoise class can optionally take a gain and a 
+    # read_noise.  We'll get to them in demo3.
     image.addNoise(galsim.CCDNoise(random_seed))
 
     # Finally, we subtract off the sky flux, so the final image will have a background level

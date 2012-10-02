@@ -212,7 +212,7 @@ def main(argv):
 
                 k = k+1
                 logger.info('%d: %s * %s, flux = %.2e, hlr = %.2f, ellip = (%.2f,%.2f)',
-                        k,gal_name, psf_name, flux, hlr, gal_shape.getE1(), gal_shape.getE2())
+                            k,gal_name, psf_name, flux, hlr, gal_shape.getE1(), gal_shape.getE2())
                 logger.debug('   Times: %f, %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
 
                 psf_times[ipsf] += t6-t1
@@ -237,12 +237,12 @@ def main(argv):
     logger.info('Breakdown by PSF type:')
     for ipsf in range(len(psfs)):
         logger.info('   %s: Total time = %f  (fft: %f, phot: %f)',
-            psf_names[ipsf],psf_times[ipsf],psf_fft_times[ipsf],psf_phot_times[ipsf])
+                    psf_names[ipsf],psf_times[ipsf],psf_fft_times[ipsf],psf_phot_times[ipsf])
     logger.info('')
     logger.info('Breakdown by Galaxy type:')
     for igal in range(len(gals)):
         logger.info('   %s: Total time = %f  (fft: %f, phot: %f)',
-            gal_names[igal],gal_times[igal],gal_fft_times[igal],gal_phot_times[igal])
+                    gal_names[igal],gal_times[igal],gal_fft_times[igal],gal_phot_times[igal])
     logger.info('')
 
     # Now write the image to disk.

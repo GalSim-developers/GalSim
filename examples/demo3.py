@@ -22,6 +22,7 @@ New features introduced in this demo:
 - shear = galsim.Shear(q, beta)
 - obj.applyShear(shear)
 - obj3 = x1 * obj1 + x2 * obj2
+- image = galsim.ImageF(image_size, image_size)
 - shear3 = shear1 + shear2
 - noise = galsim.CCDNoise(seed, gain, read_noise)
 """
@@ -87,16 +88,16 @@ def main(argv):
     logger.info('Starting demo script 3 using:')
     logger.info('    - Galaxy is bulge plus disk, flux = %.1e',gal_flux)
     logger.info('       - Bulge is Sersic (n = %.1f, re = %.2f), frac = %.1f',
-            bulge_n,bulge_re,bulge_frac)
+                bulge_n,bulge_re,bulge_frac)
     logger.info('       - Disk is Sersic (n = %.1f, re = %.2f), frac = %.1f',
-            disk_n,disk_re,1-bulge_frac)
+                disk_n,disk_re,1-bulge_frac)
     logger.info('       - Shape is q,beta (%.2f,%.2f deg)', gal_q, gal_beta)
     logger.info('    - Atmospheric PSF is Kolmogorov with fwhm = %.2f',atmos_fwhm)
     logger.info('       - Shape is e,beta (%.2f,%.2f rad)', atmos_e, atmos_beta)
     logger.info('    - Optical PSF has defocus = %.2f, astigmatism = (%.2f,%.2f),',
-            opt_defocus, opt_a1, opt_a2)
+                opt_defocus, opt_a1, opt_a2)
     logger.info('          coma = (%.2f,%.2f), lambda = %.0f nm, D = %.1f m', 
-            opt_c1, opt_c2, lam, tel_diam)
+                opt_c1, opt_c2, lam, tel_diam)
     logger.info('          obscuration linear size = %.1f',opt_obscuration)
     logger.info('    - pixel scale = %.2f,',pixel_scale)
     logger.info('    - WCS distortion = (%.2f,%.2f),',wcs_g1,wcs_g2)
@@ -155,12 +156,17 @@ def main(argv):
                                obscuration = opt_obscuration)
     logger.debug('Made optical PSF profile')
 
-    # Now apply the wcs shear to the profile before pixelization.
+    # Next we will convolve the psf and galaxy profiles. 
+    # Note: it's important to make sure the physical effects happen in the right order.
+    # The PSF and galaxy profiles should be convolved before the optical (WCS) distortion.  
+    # Then the pixelization is applied after that.
+    psf = galsim.Convolve([atmos, optics])
+    nopix = galsim.Convolve([psf, gal])
+    
+    # Now we can apply the WCS distortion (specified as g1,g2 in this case).
     # We may eventually have a somewhat more seamless way to handle things like a WCS
     # that would potentially vary across the image and include more than just a distortion
     # term.  But for now, we just apply a given distortion to the unpixellated profile.
-    nopix = galsim.Convolve([atmos, optics, gal])
-    psf = galsim.Convolve([atmos, optics])
     nopix.applyShear(g1=wcs_g1, g2=wcs_g2)
     psf.applyShear(g1=wcs_g1, g2=wcs_g2)
     logger.debug('Applied WCS distortion')
@@ -171,13 +177,20 @@ def main(argv):
     pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
     logger.debug('Made pixel profile')
 
-    # Final profile is the convolution of these.
+    # The final profile is the convolution of the WCS-sheared (psf+gal) profile with the pixel.
     final = galsim.Convolve([nopix, pix])
     final_epsf = galsim.Convolve([psf, pix])
     logger.debug('Convolved components into final profile')
 
     # This time we specify a particular size for the image rather than let GalSim 
-    # choose the size automatically.
+    # choose the size automatically.  GalSim has several kinds of images that it can use:
+    #   ImageF uses 32-bit floats    (like a C float, aka numpy.float32)
+    #   ImageD uses 64-bit floats    (like a C double, aka numpy.float64)
+    #   ImageS uses 16-bit integers  (usually like a C short, aka numpy.int16)
+    #   ImageI uses 32-bit integers  (usually like a C int, aka numpy.int32)
+    # If you let the GalSim draw command create the image for you, it will create an ImageF.
+    # However, if you can make a different type if you prefer.  In this case, we still use
+    # ImageF, since 32-bit floats are fine.  We just want to set the size explicitly.
     image = galsim.ImageF(image_size, image_size)
     # Draw the image with a particular pixel scale.
     final.draw(image=image, dx=pixel_scale)
@@ -225,7 +238,7 @@ def main(argv):
                 results.observed_shape.getE2(), results.moments_sigma)
     logger.info('When carrying out Regaussianization PSF correction, HSM reports')
     logger.info('    e1, e2 = %.3f, %.3f',
-            results.corrected_shape.getE1(), results.corrected_shape.getE2())
+                results.corrected_shape.getE1(), results.corrected_shape.getE2())
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
     # Convention for shear addition is to apply the second (RHS) term initially followed by the
     # first (LHS).

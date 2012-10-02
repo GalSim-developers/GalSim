@@ -26,6 +26,9 @@
 # convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the 
 # PSF and the galaxy.  And we add a constant level of Gaussian noise to the image.
 #
+# In each demo, we list the new features introduced in that demo file.  These will differ somewhat
+# between the .py and .yaml versions, since the two methods implement things in different ways.
+#
 # New features introduced in this demo:
 #
 # - obj type : Gaussian (flux, sigma)
@@ -42,7 +45,7 @@ gal :
     # Gaussian profiles have a number of possible size parameters, but
     # sigma is the most basic one.  
     # The others are fwhm and half_light_radius.  At least one of these must be specified.
-    sigma : 2.  # arcsec
+    sigma : 2  # arcsec
 
     # The default flux would be 1, but you would typically want to define the flux 
     # to be something other than that.
@@ -55,20 +58,25 @@ gal :
 # We use a Gaussian again for simplicity, but one somewhat smaller than the galaxy.
 psf : 
     type : Gaussian
-    sigma : 1.0   # arcsec
+    sigma : 1  # arcsec
     # No need to specify a flux, since flux=1 is the right thing for a PSF.
+
+
+# There is an optional pix field as well, which can define the profile of the pixel. 
+# However, you will almost never need to specify this one. The default is to use the same pixel
+# shape as the image uses, namely a square pixel whose size is image.pixel_scale (see below). 
 
 
 # The image field specifies some other information about the image to be drawn.
 image :
     # If pixel_scale isn't specified, then pixel_scale = 1 is assumed.
-    pixel_scale : 0.2   # arcsec / pixel
+    pixel_scale : 0.2  # arcsec / pixel
 
     # If you want noise in the image (which is typical) you specify that here.
     # In this case we use gaussian noise.
     noise : 
         type : Gaussian
-        sigma : 30.   # standard deviation of the counts in each pixel
+        sigma : 30  # standard deviation of the counts in each pixel
 
     # You can also specify the size of the image if you want, but if you omit it
     # (as we do here), then GalSim will automatically size the image appropriately.

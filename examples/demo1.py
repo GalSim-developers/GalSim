@@ -22,6 +22,9 @@ This first script is about as simple as it gets.  We draw an image of a single g
 with a PSF and write it to disk.  We use a circular Gaussian profile for both the PSF and the 
 galaxy.  And we add a constant level of Gaussian noise to the image.
 
+In each demo, we list the new features introduced in that demo file.  These will differ somewhat
+between the .py and .yaml versions, since the two methods implement things in different ways.
+
 New features introduced in this demo:
 
 - obj = galsim.Gaussian(flux, sigma)

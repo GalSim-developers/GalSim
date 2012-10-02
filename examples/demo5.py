@@ -96,12 +96,12 @@ def main(argv):
     logger.info('    - image with %d x %d postage stamps',nx_tiles,ny_tiles)
     logger.info('    - postage stamps of size %d x %d pixels',stamp_xsize,stamp_ysize)
     logger.info('    - Moffat PSF (beta = %.1f, FWHM = %.2f, trunc = %.2f),',
-            psf_beta,psf_fwhm,psf_trunc)
+                psf_beta,psf_fwhm,psf_trunc)
     logger.info('    - PSF ellip = (%.3f,%.3f)',psf_e1,psf_e2)
     logger.info('    - Exponential galaxies')
     logger.info('    - Resolution (r_gal / r_psf) = %.2f',gal_resolution)
     logger.info('    - Ellipticities have rms = %.1f, max = %.1f',
-            gal_ellip_rms, gal_ellip_max)
+                gal_ellip_rms, gal_ellip_max)
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
     logger.info('    - Centroid shifts up to = %.2f pixels',shift_radius)
@@ -259,7 +259,7 @@ def main(argv):
             x = b.center().x
             y = b.center().y
             logger.info('Galaxy (%d,%d): center = (%.0f,%0.f)  (e,beta) = (%.4f,%.3f)',
-                    ix,iy,x,y,ellip,beta/galsim.radians)
+                        ix,iy,x,y,ellip,beta/galsim.radians)
             k = k+1
 
     logger.info('Done making images of postage stamps')
