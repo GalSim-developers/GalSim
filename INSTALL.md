@@ -19,6 +19,9 @@ Table of Contents:
 1. Software required before building GalSim
 ===========================================
 
+Please note: Mac users who want to use fink can skip down to Section 4.i and use
+that to satisfy all dependencies before installing.
+
 i) Python (2.6 or 2.7 series), with some additional modules installed
 ---------------------------------------------------------------------
 
@@ -322,7 +325,7 @@ Python you are using.  You can check with
 
     python -c "import sys; print sys.path"
 
-If your PYPREFIX directory is not there, then python will not be able to find
+If your PYPREFIX directory is not there, then Python will not be able to find
 the installed galsim module.  You should therefore add this directory to your
 PYTHONPATH environment variable.  For example, if you use bash, then you 
 should add the line
@@ -368,8 +371,8 @@ above (see also http://nose.readthedocs.org/en/latest/). Many third party-
 maintained Python distributions, such as the Enthought Python Distribution,
 include `nosetests`.
 
-Note: if your system doesn't have `nosetests` installed, and you don't want to
-install it, you can run all the python tests with the script run_all_tests in
+Note: if your system does not have `nosetests` installed, and you do not want to
+install it, you can run all the Python tests with the script run_all_tests in
 the tests directory. If this finishes without an error, then all the tests
 have passed.
 
@@ -386,13 +389,13 @@ The examples directory also has a series of demo scripts:
 
 These can be considered a tutorial on getting up to speed with GalSim. Reading
 through these in order will introduce you to how to use most of the features of
-GalSim in python.
+GalSim in Python.
 
 There are also a corresponding set of config files:
     demo1.yaml, demo2.yaml, ...
 
 These files can be run using the executable galsim_yaml, and will produce the
-same output images as the python scripts. They are also well commented, and
+same output images as the Python scripts. They are also well commented, and
 can be considered a parallel tutorial for learning the config file usage of
 GalSim.
 
@@ -417,8 +420,8 @@ ii) Mac OSX
 a) Use of Fink -- the `fink` (http://www.finkproject.org) package management 
 software is popular with Mac users.  Once it is installed, you can get either
 most or all of the prerequisites using it, depending on whether you want
-to use GalSim with the fink version of python (`/sw/bin/python`) or the system 
-python (`/usr/bin/python`) or something else still.
+to use GalSim with the fink version of Python (e.g. that in `/sw/bin/python`) or
+the system Python (`/usr/bin/python`) or something else still.
 
 It is in general a good idea to update fink prior to installing any new modules:
 
@@ -426,33 +429,68 @@ It is in general a good idea to update fink prior to installing any new modules:
     fink update-all
 
 If you are happy with running GalSim using the fink version of python 2.7, you 
-can install everything with the following commands:
+can install everything with the following command:
 
-    fink install scons fftw3 tmv0 python27 numpy-py27 pyfits-py27 yaml-py27 \
-    	 boost1.35-python27
-    scons PYTHON=/sw/bin/python2.7 TMV_DIR=/sw 
-    scons install
+    fink install galsim
 
-(assuming your fink installation is in /sw.)
+and it should just work.  However, there are some caveats that are worth knowing
+about (assuming your fink installation is in `/sw`):
 
-To run the unit tests, you will also need nosetests, which you can also get 
-from fink:
+1. This will install GalSim as a module of the python2.7 installed by fink.  
+This is not the default Python (usually `/usr/bin/python` or some other package,
+such as EPD, if installed).  Any Python scripts you write that use the galsim 
+module should therefore have `#!/sw/bin/python2.7` as the  first line rather 
+than the usual `#!/usr/bin/env python`.  Similarly, if you want to use galsim 
+in an interactive Python session, you should run `/sw/bin/python2.7` (simply 
+`python2.7` may also work) rather than just `python`.  (Of course, you can 
+always change your `PATH` environment variable to make the fink Python the 
+system default if you wish...)
+
+2. The executables `galsim_yaml` and `galsim_json`, which parse YAML and JSON 
+configuration files, will be installed in `/sw/bin`.  You should not need to do
+anything special to use these, since `/sw/bin` should already be in your path if
+using fink.
+
+3. If you want to run through the example scripts (such as the demo tutorials 
+`demo1.py`, `demo2.py` etc. and the `.yaml` and `.json` config versions of the 
+same demos), you will still need to download the GalSim tarball.  But you can 
+skip all the instructions above about installation and just use the fink 
+version.  So `python2.7 demo1.py` (assuming `which python2.7` is the fink one) 
+and `galsim_yaml demo1.yaml` should run those scripts for you.   
+
+4. At the end of the fink installation, there will be a WARNING message.  Just 
+ignore it.  It happens because fink installs things a bit differently from how 
+we do it in the local build directory.  There are plans to suppress the warning
+in an imminent release version.
+
+If you want to work with GalSim as a developer, rather than just a user, then 
+you cannot use the fink-installed GalSim.  However, the process above will have
+installed all the prerequisites.  So `fink uninstall galsim` will leave you able
+to install GalSim using the master branch with:
+
+    scons TMV_DIR=/sw PYTHON=/sw/bin/python2.7
+
+from within the repository base directory.
+
+To run the unit tests, you will also need nosetests, which you can also get from
+fink:
 
     fink install nose-py27
     scons tests NOSETESTS=/sw/bin/nosetests
 
-If you want to use the system python, or some other version, then the fink 
-python installations will not work.  You will need to manually install
+If you want to use the system Python, or some other version, then the fink 
+Python installations will not work.  You will need to manually install
 NumPy, PyFITS, PyYAML and nose, for example using easy_install, with your
 chosen Python. 
 
-For the system python, you can use fink for Boost, but you will want a 
-different package than above:
+For the system Python, you can use fink for Boost, but you will want a 
+different package than the boost1.35.python27 that gets installed using
+`fink install galsim` above:
 
     fink install scons fftw3 tmv0 boost1.46.1.cmake
     scons TMV_DIR=/sw
 
-For other python versions, the fink-installed Boost usually will not work,
+For other Python versions, the fink-installed Boost usually will not work,
 so you can only use fink for SCons, FFTW and TMV.  So you will probably need
 to install Boost manually.  This can be done by following the instructions of 
 Section 1.v), above.
@@ -518,9 +556,9 @@ You can list these options from the command line with
    get caught in development.  TODO: Move this prescription that developers 
    should set it to True somewhere else. Maybe in the credo.txt file?
 
-* `PYTHON` (/usr/bin/env python) specifies which version of python you are 
+* `PYTHON` (/usr/bin/env python) specifies which version of Python you are 
    planning to use GalSim with.  If you choose not to use the default here, 
-   then you need to remember to use the correct python version 
+   then you need to remember to use the correct Python version 
 
 ### Flags about where to install the library and modules ###
 
@@ -600,9 +638,9 @@ You can list these options from the command line with
 ### Miscellaneous flags ###
 
 * `NOSETESTS` (nosetests) specifies which version of nosetests you want to use
-   for running the unit tests.  If you specified a non-default python, then 
+   for running the unit tests.  If you specified a non-default Python, then 
    there is a possibility that the standard nosetests executable in your path 
-   will not work (since it might be for a different version of python).  In 
+   will not work (since it might be for a different version of Python).  In 
    that case, specify the correct nosetests here.
 
 * `CACHE_LIB` (True) specifies whether to cache the results of the library 
