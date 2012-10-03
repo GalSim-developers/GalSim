@@ -463,6 +463,8 @@ namespace galsim {
 
         /**
          * @brief Set each element to its inverse: im(i,j) = 1/im(i,j)
+         *
+         * Note that if an element is zero, then this function quietly returns its inverse as zero.
          */
         void invertSelf() const;
 
@@ -636,6 +638,8 @@ namespace galsim {
 
         /**
          * @brief Set each element to its inverse: im(i,j) = 1/im(i,j)
+         *
+         * Note that if an element is zero, then this function quietly returns its inverse as zero.
          */
         void invertSelf() { view().invertSelf(); }
 
