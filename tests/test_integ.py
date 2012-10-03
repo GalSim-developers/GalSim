@@ -140,8 +140,30 @@ def test_invroot_finite_limits():
     test_integral = galsim.integ.int1d(test_func, 0., 300., test_rel_err, test_abs_err)
     true_result = 34.64101615137754587055
     np.testing.assert_almost_equal(
-    test_integral, true_result, decimal=test_decimal, verbose=True,
-        err_msg="|x|^(-1/2) integral failed across interval [0, 20].")
+        test_integral, true_result, decimal=test_decimal, verbose=True,
+        err_msg="|x|^(-1/2) integral failed across interval [0, 300].")
+
+def test_invroot_infinite_limits():
+    """Test the integration of |x|^(-2) across intervals [1,2], [1,inf].
+    Also check that [0,1] raises an exception.
+    """
+    # Define our test function
+    def test_func(x): return x**-2
+    test_integral = galsim.integ.int1d(test_func, 1., 2., test_rel_err, test_abs_err)
+    true_result = 0.5
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
+        err_msg="x^(-2) integral failed across interval [1, 2].")
+
+    test_integral = galsim.integ.int1d(test_func, 1., test_mock_inf, test_rel_err, test_abs_err)
+    true_result = 1.0
+    np.testing.assert_almost_equal(
+        test_integral, true_result, decimal=test_decimal, verbose=True,
+        err_msg="x^(-2) integral failed across interval [1, inf].")
+
+    np.testing.assert_raises(
+        RuntimeError,
+        galsim.integ.int1d, test_func, 0., 1., test_rel_err, test_abs_err)
 
 
 if __name__ == "__main__":
@@ -149,4 +171,6 @@ if __name__ == "__main__":
     test_gaussian_infinite_limits()
     test_sinxsqexpabsx_finite_limits()
     test_sinxsqexpabsx_infinite_limits()
+    test_invroot_finite_limits()
+    test_invroot_infinite_limits()
 
