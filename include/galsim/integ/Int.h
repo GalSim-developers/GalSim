@@ -706,24 +706,18 @@ namespace integ {
             reg.setArea(finalarea,finalerr);
 
             if (error_type == 1) {
-                std::ostringstream s;
-                s << "Type 1 roundoff's = "<<roundoff_type1;
-                s << ", Type 2 = "<<roundoff_type2<<std::endl;
-                s << "Roundoff error 1 prevents tolerance from being achieved ";
-                s << "in intGKP\n";
-                throw IntFailure(s.str());
+                integ_dbg2<<"Type 1 roundoff = "<<roundoff_type1<<std::endl;
+                integ_dbg2<<"Type 2 roundoff = "<<roundoff_type2<<std::endl;
+                throw IntFailure(
+                    "Roundoff error 1 prevents tolerance from being achieved in intGKP");
             } else if (error_type == 2) {
-                std::ostringstream s;
-                s << "Type 1 roundoff's = "<<roundoff_type1;
-                s << ", Type 2 = "<<roundoff_type2<<std::endl;
-                s << "Roundoff error 2 prevents tolerance from being achieved ";
-                s << "in intGKP\n";
-                throw IntFailure(s.str());
+                integ_dbg2<<"Type 1 roundoff = "<<roundoff_type1<<std::endl;
+                integ_dbg2<<"Type 2 roundoff = "<<roundoff_type2<<std::endl;
+                throw IntFailure(
+                    "Roundoff error 2 prevents tolerance from being achieved in intGKP");
             } else if (error_type == 3) {
-                std::ostringstream s;
-                s << "Bad integrand behavior found in the integration interval ";
-                s << "in intGKP\n";
-                throw IntFailure(s.str());
+                throw IntFailure(
+                    "Bad integrand behavior found in the integration interval in intGKP");
             }
         }
 
