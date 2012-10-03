@@ -28,6 +28,7 @@
 
 "#" : "In each demo, we list the new features introduced in that demo file.  These will differ",
 "#" : "between the .py and .json files, since the two methods implement things different ways.",
+"#" : "(demo*.py are python scripts, while demo*.yaml are configuration files.)",
 
 "#" : "New features introduced in this demo:",
 
@@ -66,6 +67,8 @@
 "#" : "There is an optional pix field as well, which can define the profile of the pixel.",
 "#" : "However, you will almost never need to specify one. The default is to use the same pixel",
 "#" : "shape as the image uses, namely a square pixel whose size is image.pixel_scale (see below).",
+"#" : "The config machinery will handle convolving by the pixel when necessary as was done ",
+"#" : "in demo1.py.  (It's not always necessary -- see demo7.py.)",
 
 
 "#" : "The image field specifies some other information about the image to be drawn.",

@@ -21,6 +21,14 @@
 #
 #     ../bin/galsim_yaml demo1.yaml
 #
+# If you don't have PyYAML installed, you can use JSON files instead.  The directory json has 
+# JSON configuration files that are exactly equivalent to these YAML files.  The YAML format
+# is a superset of the JSON format, so they are quite similar, but the YAML format is easier
+# to read and has a few extra nice features.  But if you don't want to install PyYAML for some
+# reason, you can use the json/demo*.json instead by typing (for demo1):
+#
+#     galsim_json json/demo1.json
+#
 #
 # This first config file is about as simple as it gets.  We draw an image of a single galaxy 
 # convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the 
@@ -28,6 +36,7 @@
 #
 # In each demo, we list the new features introduced in that demo file.  These will differ somewhat
 # between the .py and .yaml versions, since the two methods implement things in different ways.
+# (demo*.py are python scripts, while demo*.yaml are configuration files.)
 #
 # New features introduced in this demo:
 #
@@ -65,6 +74,8 @@ psf :
 # There is an optional pix field as well, which can define the profile of the pixel. 
 # However, you will almost never need to specify this one. The default is to use the same pixel
 # shape as the image uses, namely a square pixel whose size is image.pixel_scale (see below). 
+# The config machinery will handle convolving by the pixel when necessary as was done 
+# in demo1.py.  (It's not always necessary -- see demo7.py.)
 
 
 # The image field specifies some other information about the image to be drawn.

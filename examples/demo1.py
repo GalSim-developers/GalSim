@@ -4,11 +4,11 @@ Demo #1
 This is the first script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
-Each of these demo*.py files are designed to be equivalent to the corresponding
-demo*.yaml file.  If you are new to python, you should probably look at those files first
-as they will probably have a quicker learning curve for you.  Then you can look through these 
-python scripts, which show how to do the same thing.  Of course, experienced pythonistas
-may prefer to start with these scripts and then look at the corresponding YAML files.
+Each of these demo*.py files are designed to be equivalent to the corresponding demo*.yaml file 
+(or demo*.json -- found in the json directory).  If you are new to python, you should probably 
+look at those files first as they will probably have a quicker learning curve for you.  Then you 
+can look through these python scripts, which show how to do the same thing.  Of course, experienced
+pythonistas may prefer to start with these scripts and then look at the corresponding YAML files.
 
 If you run `scons examples`, executable versions of these demo scripts will be created in 
 the GalSim bin directory.  So if that has been done, you can write either of the following
@@ -23,7 +23,8 @@ with a PSF and write it to disk.  We use a circular Gaussian profile for both th
 galaxy.  And we add a constant level of Gaussian noise to the image.
 
 In each demo, we list the new features introduced in that demo file.  These will differ somewhat
-between the .py and .yaml versions, since the two methods implement things in different ways.
+between the .py and .yaml (or .json) versions, since the two methods implement things in different 
+ways.  (demo*.py are python scripts, while demo*.yaml and demo*.json are configuration files.)
 
 New features introduced in this demo:
 
