@@ -115,8 +115,10 @@ class PowerSpectrum(object):
 
     def getShear(self, pos=None, grid_spacing=None, grid_nx=None, rng=None,
                  interpolant=None, center=galsim.PositionD(0,0)):
-        """This function currently does two relatively separate things.  The plan is to split
-        it into two functions, but we haven't done so yet.  
+        """Generate a realization of the current power spectrum at the specified positions.
+
+        This function currently does two relatively separate things.  The plan is to split it into
+        two functions, but we haven't done so yet.
         
         First, it will generate a Gaussian random realization of the specified E and B mode shear
         power spectrum at a grid of positions, specified by the input parameters `grid_spacing` 
@@ -140,14 +142,16 @@ class PowerSpectrum(object):
         challenge, so when using codes that deal with GREAT10 challenge outputs, the sign of our g2
         shear component must be flipped.
 
-        Second, this function can interpolate between the grid points to find the shear values
-        for a given list of input positions (or just a single position).  This can be done
-        in conjunction with the first functionality, in which case the grid will be computed
-        using the `grid_*` parameters and then that new grid will be used to interpolate the 
-        shear values.  Or you can omit the `grid_*` parameters, in which case the funciton will
-        use the most recently computed grid from a previous call.  If you try to interpolate
-        a grid without having previously called `getShear` with the `grid_*` parameters, then
-        an exception will be raised.
+        Second, this function can interpolate between the grid points to find the shear values for a
+        given list of input positions (or just a single position).  This can be done in conjunction
+        with the first functionality, in which case the grid will be computed using the `grid_*`
+        parameters and then that new grid will be used to interpolate the shear values.  Or you can
+        omit the `grid_*` parameters, in which case the funciton will use the most recently computed
+        grid from a previous call.  Currently, if you try to interpolate a grid without having
+        previously called `getShear` with the `grid_*` parameters, then an exception will be raised.
+        A future version of the code will allow the estimation of shears on non-gridded points by
+        first automatically choosing a grid spacing on which to estimate gridded shears before
+        interpolating, but this functionality is not implemented yet.
 
         Some examples of how to use getShear:
 
@@ -220,7 +224,10 @@ class PowerSpectrum(object):
                                 to the requested positions.
                                 This is highly recommended to be Linear (which will become
                                 bi-linear, since it is in 2 dimensions).  Using other interpolants
-                                is likely to be inaccurate!  [default = galsim.Linear()]
+                                is likely to be inaccurate, though on small enough scales even the
+                                linear interpolant will be problematic.  A future version of the
+                                code will quantify this inaccuracy due to the interpolant in greater
+                                detail. [default = galsim.Linear()]
         @param center           (Optional) If setting up a new grid, define what position you
                                 want to consider the center of that grid. [default = (0,0)]
         
