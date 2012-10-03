@@ -189,7 +189,7 @@ def main(argv):
     #   ImageS uses 16-bit integers  (usually like a C short, aka numpy.int16)
     #   ImageI uses 32-bit integers  (usually like a C int, aka numpy.int32)
     # If you let the GalSim draw command create the image for you, it will create an ImageF.
-    # However, if you can make a different type if you prefer.  In this case, we still use
+    # However, you can make a different type if you prefer.  In this case, we still use
     # ImageF, since 32-bit floats are fine.  We just want to set the size explicitly.
     image = galsim.ImageF(image_size, image_size)
     # Draw the image with a particular pixel scale.

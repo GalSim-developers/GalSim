@@ -28,7 +28,7 @@
 
 "#" : "In each demo, we list the new features introduced in that demo file.  These will differ",
 "#" : "between the .py and .json files, since the two methods implement things different ways.",
-"#" : "(demo*.py are python scripts, while demo*.yaml are configuration files.)",
+"#" : "(demo*.py are python scripts, while demo*.json are configuration files.)",
 
 "#" : "New features introduced in this demo:",
 
