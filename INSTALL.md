@@ -63,17 +63,12 @@ The GalSim package also requires
   functionality, and can be omitted if users are happy to use JSON-style
   config parsing or prefer to write python scripts directly.
 
-* Optional dependency: the scientific Python module SciPy
-  (http://www.scipy.org).  SciPy is only required for generation of
-  shears due to an NFW halo.
-
 These should installed onto your Python system so that they can be imported by:
 
     >>> import numpy
     >>> import pyfits
     >>> import yaml [ if using the galsim_yaml executable or otherwise plan to
                       parse .yaml configuration files ]
-    >>> import scipy [ if generating shears according to an NFW halo ]
 
 within Python.  You can test this by loading up the Python interpreter for the
 version of Python you will be using with the GalSim toolkit. This is usually
