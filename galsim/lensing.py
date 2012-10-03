@@ -625,7 +625,7 @@ class NFWHalo(object):
         # calculate scale radius
         a = self.cosmo.a(self.z)
         # First we get the virial radius, which is defined for some spherical overdensity as
-        # 3 M / (4 pi r_vir)^3 = overdensity
+        # 3 M / [4 pi (r_vir)^3] = overdensity
         # Here we have overdensity = 200 * rhocrit, to determine R200. The factor of 1.63e-5 comes
         # from the following set of prefactors: (3 / (4 pi * 200 * rhocrit))^(1/3)
         # where rhocrit = 2.8e11 h^2 M_solar / Mpc^3.  The mass in the equation below is in
