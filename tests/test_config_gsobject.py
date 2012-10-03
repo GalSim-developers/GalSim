@@ -444,20 +444,26 @@ def test_pixel():
     gal2b = galsim.Pixel(xw = 1.7, yw = 1.7, flux = 100)
     gsobject_compare(gal2a, gal2b)
 
-    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
-    gal3b = galsim.Pixel(xw = 2, yw = 2.1, flux = 1.e6)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
-    gsobject_compare(gal3a, gal3b)
+    # The config stuff emits a warning about the rectangular pixel.
+    # We suppress that here, since we're doing it on purpose.
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
-    gal4b = galsim.Pixel(xw = 1, yw = 1.2, flux = 50)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
-    gsobject_compare(gal4a, gal4b)
+        gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+        gal3b = galsim.Pixel(xw = 2, yw = 2.1, flux = 1.e6)
+        gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+        gsobject_compare(gal3a, gal3b)
+
+        gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
+        gal4b = galsim.Pixel(xw = 1, yw = 1.2, flux = 50)
+        gal4b.applyDilation(3)
+        gal4b.applyShear(e1 = 0.3)
+        gal4b.applyRotation(12 * galsim.degrees)
+        gal4b.applyMagnification(1.03)
+        gal4b.applyShear(g1 = 0.03, g2 = -0.05)
+        gal4b.applyShift(dx = 0.7, dy = -1.2) 
+        gsobject_compare(gal4a, gal4b)
 
 
     t2 = time.time()

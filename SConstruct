@@ -146,32 +146,49 @@ def ErrorExit(*args, **kwargs):
         out.write(s + '\n')
     out.write('\n')
 
-    # Next put the full config.log in there.
-    out.write('The full config.log file is:\n\n')
-    shutil.copyfileobj(open("config.log","rb"),out)
+    # Write out the current options:
+    out.write('Using the following options:\n')
+    for opt in opts.options:
+        out.write('   %s = %s\n'%(opt.key,env[opt.key]))
     out.write('\n')
 
-    # If n > 0, then that means it could be helpful to see what the last n
-    # executables output.  SCons just uses >, not >&, so we'll repeat those
-    # runs here and get both.
-    if 'n' in kwargs.keys():
-        n = kwargs['n']
-        # This relies on the sort by time option of ls.  Not sure how universal this is...
-        try:
-            conftest_list = os.popen(
-                "ls -t .sconf_temp/conftest* | grep -v '\.out' | grep -v '\.cpp' \
-                    | grep -v '\.o'").readlines()
-            for i in range(n):
-                if len(conftest_list) > i:
-                    last_conftest = conftest_list[i].strip()
-                    conftest_out = os.popen(last_conftest).readlines()
-                    out.write('Output of the executable %s is:\n'%last_conftest)
-                    out.write(''.join(conftest_out) + '\n')
-                else:
-                    out.write('Expected at least %s conftest executables, but only found %s.\n'\
-                        % (n,len(conftest_list)))
-        except:
-            out.write("Error trying to get output of last conftest executable.")
+    # Write out the current environment:
+    out.write('The system environment is:\n')
+    for key in os.environ.keys():
+        out.write('   %s = %s\n'%(key,os.environ[key]))
+    out.write('\n')
+
+    out.write('The SCons environment is:\n')
+    for key in env.Dictionary().keys():
+        out.write('   %s = %s\n'%(key,env[key]))
+    out.write('\n')
+
+    # Next put the full config.log in there.
+    out.write('The full config.log file is:\n')
+    out.write('==================\n')
+    shutil.copyfileobj(open("config.log","rb"),out)
+    out.write('==================\n\n')
+
+    # It is sometimes helpful to see the output of the scons executables.  
+    # SCons just uses >, not >&, so we'll repeat those runs here and get both.
+    try:
+        conftest_list = os.popen(
+            "ls -d .sconf_temp/conftest* | grep -v '\.out' | grep -v '\.cpp' "+
+            "| grep -v '\.o' | grep -v '\_mod'"
+            ).readlines()
+        for conftest in conftest_list:
+            conftest = conftest.strip()
+            if os.access(conftest, os.X_OK):
+                conftest_out = os.popen(conftest + " 2>&1").readlines()
+                out.write('Output of the executable %s is:\n'%conftest)
+                out.write(''.join(conftest_out) + '\n')
+            else:
+                python = env['PYTHON']
+                conftest_out = os.popen(python + " < " + conftest + " 2>&1").readlines()
+                out.write('Output of the python executable %s is:\n'%conftest)
+                out.write(''.join(conftest_out) + '\n')
+    except:
+        out.write("Error trying to get output of conftest executables.\n")
 
     print
     print 'Please fix the above error(s) and re-run scons'
@@ -851,6 +868,57 @@ PyMODINIT_FUNC initcheck_python(void)
     config.Result(1)
     return 1
 
+
+def CheckPyTMV(config):
+    tmv_source_file = """
+#include "Python.h"
+#include "TMV_Sym.h"
+ 
+static void useTMV() {
+    tmv::SymMatrix<double> S(10,4.);
+    //tmv::Matrix<double> S(10,10,4.);
+    tmv::Matrix<double> m(10,3,2.);
+    tmv::Matrix<double> m2 = m / S;
+}
+
+static PyObject* run(PyObject* self, PyObject* args)
+{ 
+    useTMV();
+    return Py_BuildValue("i", 23); 
+}
+
+static PyMethodDef Methods[] = {
+    {"run",  run, METH_VARARGS, "return 23"},
+    {NULL, NULL, 0, NULL}
+};
+
+PyMODINIT_FUNC initcheck_tmv(void)
+{ Py_InitModule("check_tmv", Methods); }
+"""
+    config.Message('Checking if we can build module using TMV... ')
+
+    result = config.TryCompile(tmv_source_file,'.cpp')
+    if not result:
+        ErrorExit('Unable to compile a module using tmv')
+
+    # TMV finds the mkl libraries necessary for compiling an executable.  But sometimes
+    # there are extra libraries required for loading mkl from a python module.
+    # So if the first line fails, try adding a few mkl libraries that might make it work.
+    result = (
+        CheckModuleLibs(config,[],tmv_source_file,'check_tmv') or
+        CheckModuleLibs(config,['mkl_rt'],tmv_source_file,'check_tmv') or
+        CheckModuleLibs(config,['mkl_base'],tmv_source_file,'check_tmv') or
+        CheckModuleLibs(config,['mkl_mc3'],tmv_source_file,'check_tmv') or
+        CheckModuleLibs(config,['mkl_mc3','mkl_def'],tmv_source_file,'check_tmv') or
+        CheckModuleLibs(config,['mkl_mc'],tmv_source_file,'check_tmv') or
+        CheckModuleLibs(config,['mkl_mc','mkl_def'],tmv_source_file,'check_tmv') )
+    if not result:
+        ErrorExit('Unable to build a python loadable module that uses tmv')
+   
+    config.Result(1)
+    return 1
+
+
 def CheckNumPy(config):
     numpy_source_file = """
 #include "Python.h"
@@ -1074,6 +1142,7 @@ def DoPyChecks(config):
     # These checks are only relevant for the pysrc compilation:
 
     config.CheckPython()
+    config.CheckPyTMV()
     config.CheckNumPy()
     config.CheckPyFITS() 
     config.CheckBoostPython()
@@ -1155,6 +1224,7 @@ def DoConfig(env):
         pyenv = env.Clone()
         config = pyenv.Configure(custom_tests = {
             'CheckPython' : CheckPython ,
+            'CheckPyTMV' : CheckPyTMV ,
             'CheckNumPy' : CheckNumPy ,
             'CheckBoostPython' : CheckBoostPython ,
             'CheckPyFITS' : CheckPyFITS ,
@@ -1230,9 +1300,12 @@ if not GetOption('help'):
         ClearCache()
 
     if env['PYTHON'] == '':
-        env['PYTHON'] = default_python
-    python = env['PYTHON']
+        python = default_python
+    else:
+        python = env['PYTHON']
+        python = which(python)
     print 'Using python = ',python
+    env['PYTHON'] = python
 
     # Set PYPREFIX if not given:
     if env['PYPREFIX'] == '':

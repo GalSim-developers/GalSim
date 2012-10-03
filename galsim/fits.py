@@ -47,27 +47,34 @@ def write(image, fits, add_wcs=True, clobber=True):
         hdu = pyfits.ImageHDU(image.array)
     hdus.append(hdu)
 
-    hdu.header.update("GS_SCALE", image.scale, "GalSim Image scale")
-    hdu.header.update("GS_XMIN", image.xMin, "GalSim Image minimum X coordinate")
-    hdu.header.update("GS_YMIN", image.xMin, "GalSim Image minimum Y coordinate")
+    # In PyFITS 3.1, the update method was deprecated in favor of subscript assignment.
+    # When we no longer care about supporting versions before 3.1, we can switch these
+    # to e.g. hdu.header['GS_SCALE'] = (image.scale , "GalSim Image scale")
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    if add_wcs:
-        if isinstance(add_wcs, basestring):
-            wcsname = add_wcs
-        else:
-            wcsname = ""
-        hdu.header.update("CTYPE1" + wcsname, "LINEAR", "name of the coordinate axis")
-        hdu.header.update("CTYPE2" + wcsname, "LINEAR", "name of the coordinate axis")
-        hdu.header.update("CRVAL1" + wcsname, 0, 
-                          "coordinate system value at reference pixel")
-        hdu.header.update("CRVAL2" + wcsname, 0, 
-                          "coordinate system value at reference pixel")
-        hdu.header.update("CRPIX1" + wcsname, 1-image.xMin, "coordinate system reference pixel")
-        hdu.header.update("CRPIX2" + wcsname, 1-image.yMin, "coordinate system reference pixel")
-        hdu.header.update("CD1_1" + wcsname, image.scale, "CD1_1 = pixel_scale")
-        hdu.header.update("CD2_2" + wcsname, image.scale, "CD2_2 = pixel_scale")
-        hdu.header.update("CD1_2" + wcsname, 0, "CD1_2 = 0")
-        hdu.header.update("CD2_1" + wcsname, 0, "CD2_1 = 0")
+        hdu.header.update("GS_SCALE", image.scale, "GalSim Image scale")
+        hdu.header.update("GS_XMIN", image.xMin, "GalSim Image minimum X coordinate")
+        hdu.header.update("GS_YMIN", image.xMin, "GalSim Image minimum Y coordinate")
+
+        if add_wcs:
+            if isinstance(add_wcs, basestring):
+                wcsname = add_wcs
+            else:
+                wcsname = ""
+            hdu.header.update("CTYPE1" + wcsname, "LINEAR", "name of the coordinate axis")
+            hdu.header.update("CTYPE2" + wcsname, "LINEAR", "name of the coordinate axis")
+            hdu.header.update("CRVAL1" + wcsname, 0, 
+                            "coordinate system value at reference pixel")
+            hdu.header.update("CRVAL2" + wcsname, 0, 
+                            "coordinate system value at reference pixel")
+            hdu.header.update("CRPIX1" + wcsname, 1-image.xMin, "coordinate system reference pixel")
+            hdu.header.update("CRPIX2" + wcsname, 1-image.yMin, "coordinate system reference pixel")
+            hdu.header.update("CD1_1" + wcsname, image.scale, "CD1_1 = pixel_scale")
+            hdu.header.update("CD2_2" + wcsname, image.scale, "CD2_2 = pixel_scale")
+            hdu.header.update("CD1_2" + wcsname, 0, "CD1_2 = 0")
+            hdu.header.update("CD2_1" + wcsname, 0, "CD2_1 = 0")
     
     if isinstance(fits, basestring):
         if clobber and os.path.isfile(fits):
@@ -167,27 +174,31 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
         hdu = pyfits.ImageHDU(cube)
     hdus.append(hdu)
 
-    hdu.header.update("GS_SCALE", scale, "GalSim Image scale")
-    hdu.header.update("GS_XMIN", xMin, "GalSim Image minimum X coordinate")
-    hdu.header.update("GS_YMIN", xMin, "GalSim Image minimum Y coordinate")
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    if add_wcs:
-        if isinstance(add_wcs, basestring):
-            wcsname = add_wcs
-        else:
-            wcsname = ""
-        hdu.header.update("CTYPE1" + wcsname, "LINEAR", "name of the coordinate axis")
-        hdu.header.update("CTYPE2" + wcsname, "LINEAR", "name of the coordinate axis")
-        hdu.header.update("CRVAL1" + wcsname, xMin, 
-                          "coordinate system value at reference pixel")
-        hdu.header.update("CRVAL2" + wcsname, yMin, 
-                          "coordinate system value at reference pixel")
-        hdu.header.update("CRPIX1" + wcsname, 1, "coordinate system reference pixel")
-        hdu.header.update("CRPIX2" + wcsname, 1, "coordinate system reference pixel")
-        hdu.header.update("CD1_1" + wcsname, scale, "CD1_1 = pixel_scale")
-        hdu.header.update("CD2_2" + wcsname, scale, "CD2_2 = pixel_scale")
-        hdu.header.update("CD1_2" + wcsname, 0, "CD1_2 = 0")
-        hdu.header.update("CD2_1" + wcsname, 0, "CD2_1 = 0")
+        hdu.header.update("GS_SCALE", scale, "GalSim Image scale")
+        hdu.header.update("GS_XMIN", xMin, "GalSim Image minimum X coordinate")
+        hdu.header.update("GS_YMIN", xMin, "GalSim Image minimum Y coordinate")
+
+        if add_wcs:
+            if isinstance(add_wcs, basestring):
+                wcsname = add_wcs
+            else:
+                wcsname = ""
+            hdu.header.update("CTYPE1" + wcsname, "LINEAR", "name of the coordinate axis")
+            hdu.header.update("CTYPE2" + wcsname, "LINEAR", "name of the coordinate axis")
+            hdu.header.update("CRVAL1" + wcsname, xMin, 
+                            "coordinate system value at reference pixel")
+            hdu.header.update("CRVAL2" + wcsname, yMin, 
+                            "coordinate system value at reference pixel")
+            hdu.header.update("CRPIX1" + wcsname, 1, "coordinate system reference pixel")
+            hdu.header.update("CRPIX2" + wcsname, 1, "coordinate system reference pixel")
+            hdu.header.update("CD1_1" + wcsname, scale, "CD1_1 = pixel_scale")
+            hdu.header.update("CD2_2" + wcsname, scale, "CD2_2 = pixel_scale")
+            hdu.header.update("CD1_2" + wcsname, 0, "CD1_2 = 0")
+            hdu.header.update("CD2_1" + wcsname, 0, "CD2_1 = 0")
     
     if isinstance(fits, basestring):
         if clobber and os.path.isfile(fits):
