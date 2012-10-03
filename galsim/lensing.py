@@ -6,6 +6,7 @@ import numpy as np
 # A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
 def _convertPositions(pos, func):
     """Convert pos from the valid ways to input positions to two numpy arrays
+
        This is used by the functions getShear, getConvergence, and getMag for both 
        PowerSpectrum and NFWHalo (the former only has getShear currently).
     """
@@ -71,9 +72,10 @@ class PowerSpectrum(object):
 
     When creating a PowerSpectrum instance, the E and B mode power spectra can optionally be set at
     initialization or later on with the method set_power_functions.  Note that the power spectra
-    should be a function of k.  The typical thing is to just use a lambda function in Python such 
-    as `lambda k : k**2`.  But they can also be more compilcated user-defined functions that take
-    a single argument k and return the power at that k value.  They should be power P(k), not 
+    should be a function of k.  The typical thing is to just use a lambda function in Python (i.e.,
+    a function that is not associated with a name); for example, to define P(k)=k^2, one would use
+    `lambda k : k**2`.  But they can also be more complicated user-defined functions that take a
+    single argument k and return the power at that k value.  They should be power P(k), not
     Delta^2(k) = k^2 P(k) / 2pi.
 
     @param E_power_function A function or other callable that accepts a Numpy array of |k| values,
