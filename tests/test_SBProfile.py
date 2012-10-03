@@ -1247,19 +1247,25 @@ def test_convolve():
     psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible, trunc=4*fwhm_backwards_compatible,
                         flux=1)
     pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
-    # We'll do the real space convolution below
-    conv = galsim.Convolve([psf,pixel],real_space=False)
-    conv.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 4,
-            err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
+    # Note: Since both of these have hard edges, GalSim wants to do this with real_space=True.
+    # Here we are intentionally tesing the Fourier convolution, so we want to suppress the
+    # warning that GalSim emits.
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        # We'll do the real space convolution below
+        conv = galsim.Convolve([psf,pixel],real_space=False)
+        conv.draw(myImg,dx=0.2, normalization="surface brightness")
+        np.testing.assert_array_almost_equal(
+                myImg.array, savedImg.array, 4,
+                err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
 
-    # Other ways to do the convolution:
-    conv = galsim.Convolve(psf,pixel,real_space=False)
-    conv.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 4,
-            err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
+        # Other ways to do the convolution:
+        conv = galsim.Convolve(psf,pixel,real_space=False)
+        conv.draw(myImg,dx=0.2, normalization="surface brightness")
+        np.testing.assert_array_almost_equal(
+                myImg.array, savedImg.array, 4,
+                err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
  
     # Test photon shooting.
     do_shoot(conv,myImg,"Moffat * Pixel")
