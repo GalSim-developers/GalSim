@@ -10,11 +10,11 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     Example usage:
 
         >>> def func(x): return x**2
-        >>> galsim.int1d(func, 0, 1)
+        >>> galsim.integ.int1d(func, 0, 1)
         0.33333333333333337
-        >>> galsim.int1d(func, 0, 2)
+        >>> galsim.integ.int1d(func, 0, 2)
         2.666666666666667
-        >>> galsim.int1d(func, -1, 1)
+        >>> galsim.integ.int1d(func, -1, 1)
         0.66666666666666674
 
     @param func     The function to be integrated.  y = func(x) should be valid.
