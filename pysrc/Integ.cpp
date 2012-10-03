@@ -22,11 +22,16 @@ namespace {
     };
 
     // Integrate a python function using int1d.
-    double PyInt1d(const bp::object& func, double min, double max,
+    bp::tuple PyInt1d(const bp::object& func, double min, double max,
                    double rel_err=DEFRELERR, double abs_err=DEFABSERR)
     { 
         PyFunc pyfunc(func);
-        return int1d(pyfunc, min, max, rel_err, abs_err); 
+        try {
+            double res = int1d(pyfunc, min, max, rel_err, abs_err);
+            return bp::make_tuple(true, res);
+        } catch (std::exception& e) {
+            return bp::make_tuple(false, e.what());
+        }
     }
 
 } // anonymous
