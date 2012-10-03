@@ -360,6 +360,12 @@ def BuildGal(config, logger=None):
             psf_re = config['psf']['saved_re']
             resolution = galsim.config.ParseValue(config['gal'], 'resolution', config, float)[0]
             gal_re = resolution * psf_re
+            if 're_from_res' not in config['gal']:
+                # The first time, check that half_light_radius isn't also specified.
+                if 'half_light_radius' in config['gal']:
+                    raise AttributeError(
+                        'Cannot specify both gal.resolution and gal.half_light_radius')
+                config['gal']['re_from_res'] = True
             config['gal']['half_light_radius'] = gal_re
 
         gal = galsim.config.BuildGSObject(config, 'gal')[0]

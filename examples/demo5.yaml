@@ -64,7 +64,9 @@ gal :
     # to elliminate the effect of shape noise.  (To first order at least.)
     # In GalSim, we declare this as a "Ring" test.  The ring can have any number of
     # values set around a ring in e1-e2 space.  For 90 degree rotated pairs, this 
-    # corresponds to only 2 values on the "ring".
+    # corresponds to only 2 values on the "ring".  It is up to the user to make sure the
+    # total number of objects in an image is a multiple of num, otherwise the last "ring"
+    # won't get completed.  In this case 100 is divisible by 2, so it's fine.
     ellip : 
         type : Ring
         num : 2

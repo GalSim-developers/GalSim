@@ -57,7 +57,7 @@ def BuildGSObject(config, key, base=None):
         'current_val', 'safe' ]
     # There are a few more that are specific to which key we have.
     if key == 'gal':
-        ignore += [ 'resolution', 'signal_to_noise', 'redshift' ]
+        ignore += [ 'resolution', 'signal_to_noise', 'redshift', 're_from_res' ]
         # If redshift is present, parse it here, since it might be needed by the Build functions.
         # All we actually care about is setting the current_val, so don't assign to anything.
         if 'redshift' in ck:
