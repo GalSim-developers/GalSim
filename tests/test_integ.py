@@ -18,10 +18,17 @@ test_mock_inf = 2.e10             # number large enough to get interpreted as in
                                   # integration routines
 test_decimal = 7
 
+def funcname():
+    import inspect
+    return inspect.stack()[1][3]
+
 def test_gaussian_finite_limits():
     """Test the integration of a 1D zero-mean Gaussian across intervals of [-1, 1], [0, 20]
     and [-50, -40].
     """
+    import time
+    t1 = time.time()
+
     # Define our test function
     def test_func(x): return np.exp(-.5 * x**2 / test_sigma**2)
 
@@ -44,10 +51,16 @@ def test_gaussian_finite_limits():
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Gaussian integral failed across interval [-50, -40].")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_gaussian_infinite_limits():
     """Test the integration of a 1D zero-mean Gaussian across intervals of [0, inf], [-inf, 5.4]
     and [-inf, inf].
     """
+    import time
+    t1 = time.time()
+
     # Define our test function
     def test_func(x): return np.exp(-.5 * x**2 / test_sigma**2)
 
@@ -71,10 +84,16 @@ def test_gaussian_infinite_limits():
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Gaussian integral failed across interval [-inf, inf].")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_sinxsqexpabsx_finite_limits():
     """Test the integration of a slightly tricky oscillating sin(x^2) * exp(-|x|) function across 
     finite intervals [-1, 1], [0, 20], [-15, 14].
     """
+    import time
+    t1 = time.time()
+
     # Define our test function
     def test_func(x): return np.sin(x**2) * np.exp(-np.abs(x))
 
@@ -93,15 +112,20 @@ def test_sinxsqexpabsx_finite_limits():
 
     test_integral = galsim.integ.int1d(test_func, -15., -14., test_rel_err, test_abs_err)
     true_result = 7.81648378350593176887e-9
-    print test_integral
     np.testing.assert_almost_equal(
         (test_integral - true_result) / true_result, 0., decimal=test_decimal, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-15, -14].")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sinxsqexpabsx_infinite_limits():
     """Test the integration of a slightly tricky oscillating sin(x^2) * exp(-|x|) function across 
     infinite intervals [0, inf], [-inf, 5.4], [-inf, inf].
     """
+    import time
+    t1 = time.time()
+
     # Define our test function
     def test_func(x): return np.sin(x**2) * np.exp(-np.abs(x))
 
@@ -125,9 +149,15 @@ def test_sinxsqexpabsx_infinite_limits():
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-inf, inf].")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_invroot_finite_limits():
     """Test the integration of |x|^(-1/2) across intervals [0,1], [0,300] (integrable pole at x=0).
     """
+    import time
+    t1 = time.time()
+
     # Define our test function
     def test_func(x): return 1. / np.sqrt(np.abs(x))
     test_integral = galsim.integ.int1d(test_func, 0, 1., test_rel_err, test_abs_err)
@@ -143,10 +173,16 @@ def test_invroot_finite_limits():
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="|x|^(-1/2) integral failed across interval [0, 300].")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_invroot_infinite_limits():
     """Test the integration of |x|^(-2) across intervals [1,2], [1,inf].
     Also check that [0,1] raises an exception.
     """
+    import time
+    t1 = time.time()
+
     # Define our test function
     def test_func(x): return x**-2
     test_integral = galsim.integ.int1d(test_func, 1., 2., test_rel_err, test_abs_err)
@@ -164,6 +200,9 @@ def test_invroot_infinite_limits():
     np.testing.assert_raises(
         RuntimeError,
         galsim.integ.int1d, test_func, 0., 1., test_rel_err, test_abs_err)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
