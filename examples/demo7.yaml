@@ -115,7 +115,10 @@ image :
 
         # Here we introduce another notation for specifying a list in YAML.  The list of items
         # may be indicated with square brackets with the items separated by commas rather
-        # than using the - notation with one item per line.
+        # than using the - notation with one item per line.  This is the equivalent of
+	# items :
+	#     - { type : fft }
+	#     - { type : phot }
         items : [ fft , phot ]
 
         # The following sequence for index is automatically generated:

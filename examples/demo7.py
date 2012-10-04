@@ -133,7 +133,7 @@ def main(argv):
                 # Initialize the random number generator we will be using.
                 rng = galsim.UniformDeviate(random_seed+k)
 
-                # Get an new copy, so we'll want to keep the original unmodified.
+                # Get a new copy, we'll want to keep the original unmodified.
                 gal1 = gal.copy()
 
                 # Generate random variates:
@@ -174,7 +174,7 @@ def main(argv):
                 final.draw(fft_image)
 
                 logger.debug('   Drew fft image.  Total drawn flux = %f.  .flux = %f',
-                        fft_image.array.sum(),final.getFlux())
+                             fft_image.array.sum(),final.getFlux())
                 t3 = time.time()
 
                 # Add Poisson noise
@@ -204,7 +204,7 @@ def main(argv):
                 phot_image.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
 
                 logger.debug('   Added Poisson noise.  Image fluxes are now %f and %f',
-                        fft_image.array.sum(),phot_image.array.sum())
+                             fft_image.array.sum(), phot_image.array.sum())
                 t6 = time.time()
 
                 # Store that into the list of all images
