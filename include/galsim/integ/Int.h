@@ -851,7 +851,7 @@ namespace integ {
             success = true;
             err_msg = "";
             return res;
-        } catch (std::exception& e) {
+        } catch (IntFailure& e) {
             success = false;
             err_msg = e.what();
             return 0.;
