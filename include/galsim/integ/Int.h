@@ -834,6 +834,29 @@ namespace integ {
         IntRegion<typename UF::result_type> reg(min,max);
         return int1d(func,reg,relerr,abserr); 
     }
+    
+    template <class UF> 
+    inline typename UF::result_type int1d_nothrow(
+        const UF& func,  ///< The function to be integrated (may be a function object)
+        typename UF::result_type min, ///< The lower bound of the integration
+        typename UF::result_type max, ///< The upper bound of the integration
+        bool& success,  ///< Was the integration successful?
+        std::string& err_msg,  ///< If there is an error, the message goes here
+        const typename UF::result_type& relerr=DEFRELERR, ///< The target relative error
+        const typename UF::result_type& abserr=DEFABSERR  ///< The target absolute error
+    )
+    {
+        try {
+            double res = int1d(func, min, max, relerr, abserr);
+            success = true;
+            err_msg = "";
+            return res;
+        } catch (std::exception& e) {
+            success = false;
+            err_msg = e.what();
+            return 0.;
+        }
+    }
 
     namespace {
         template <class BF, class YREG> 

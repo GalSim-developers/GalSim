@@ -26,11 +26,13 @@ namespace {
                    double rel_err=DEFRELERR, double abs_err=DEFABSERR)
     { 
         PyFunc pyfunc(func);
-        try {
-            double res = int1d(pyfunc, min, max, rel_err, abs_err);
+        bool success;
+        std::string err_msg;
+        double res = int1d_nothrow(pyfunc, min, max, success, err_msg, rel_err, abs_err);
+        if (success) {
             return bp::make_tuple(true, res);
-        } catch (std::exception& e) {
-            return bp::make_tuple(false, e.what());
+        } else {
+            return bp::make_tuple(false, err_msg);
         }
     }
 
