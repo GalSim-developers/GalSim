@@ -119,23 +119,26 @@ def main(argv):
     # to do that here.  But if you also define the output field appropriately, that's the 
     # simplest way to process a config dict.
     #
-    # That function is essentially equivalent to the following two functions:
+    # That function runs through each output file specified, and for each one, it first
+    # processes the input field, then builds the file.  For the former it calls
     #
     #     galsim.config.ProcessInput(config)
-    #     galsim.config.ProcessOutput(config)
     #
-    # The former in particular may be useful to run separately.  If you are using an input
-    # catalog (or other item that requires setup), it will read the file(s) from disk and
+    # This function may be useful to call from within a python script.  If you are using an input
+    # catalog (or any other item that requires setup), it will read the file(s) from disk and
     # save the catalog (or whatever) in the config dict in the way that further processing
     # functions expect.  However, we don't have any input field, so we don't need it here.
     #
-    # The ProcessOutput function reads in the output field and then calls one of the following:
+    # To build the files, the Process function then calls one of the following:
     #
     #     galsim.config.BuildFits(file_name, config)        -- build a regular fits file
     #     galsim.config.BuildMultiFits(file_name, config)   -- build a multi-extension fits file
     #     galsim.config.BuildDataCube(file_name, config)    -- build a fits data cube
     #
-    # Finally, these functions all call the following function to process the image field
+    # Again, we'll forego that option here, so we can see how to use the config machinery
+    # to produce images that we can use from within python.
+    #
+    # Each of these functions call the following function to process the image field
     # and actually build the images:
     #
     #     galsim.config.BuildImage(config)
@@ -148,12 +151,16 @@ def main(argv):
     # images as well by setting the optional kwargs: make_psf_image=True, make_weight_image=True,
     # and make_badpix_image=True, respectively.
     #
+    # All of the above functions also have an optional kwarg, logger, which can take a 
+    # logger object to output diagnostic information if desired.  We'll use that option here
+    # to output the progress of the build as we go.  Our logger is set with level=logging.INFO
+    # which means it will output a modest amount of text along the way.  Using level=DEBUG will
+    # output a lot of text, useful when diagnosing a mysterious crash.  And level=WARNING 
+    # or higher will be pretty silent unless there is a problem.
 
     t1 = time.time()
 
     # Build the image
-    # All of the above functions have an optional kwarg, logger, which can take a 
-    # logger object to output diagnostic information if desired.
     # Since BuildImage returns a tuple of 4 images (see above) even though the latter
     # three are all returned as None, we still need to deal with the return values.
     # You could take [0] of the return value to just take the first image.  
@@ -163,17 +170,24 @@ def main(argv):
     image, _, _, _ = galsim.config.BuildImage(config, logger=logger)
     
     # At this point you could do something interesting with the image in memory.
+    # After all, that was kind of the point of using BuildImage rather than the other higher
+    # level processing functions described above.  So perhaps you could insert your shape
+    # measurement code here and pass it the image we just built.
+    #
     # However, we're going to be boring and just write it to a file.
     single_file_name = os.path.join('output','bpd_single.fits')
     image.write(single_file_name)
 
     t2 = time.time()
 
+    # Now let's do it again using multiple processes.  This is really easy to do
+    # using the config stuff.  It's just one extra parameter in the dict.
+
     # The config processing functions save various things in the dict as they go, so 
     # for the second pass, start with a pristine version of the config dict.
     config = save_config
 
-    # For this pass, we'll use 4 processes to build the image in parallel:
+    # Here we use 4 processes to build the image in parallel:
     nproc = 4
     config['image']['nproc'] = nproc
 
