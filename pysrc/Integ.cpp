@@ -23,7 +23,7 @@ namespace {
 
     // Integrate a python function using int1d.
     bp::tuple PyInt1d(const bp::object& func, double min, double max,
-                   double rel_err=DEFRELERR, double abs_err=DEFABSERR)
+                      double rel_err=DEFRELERR, double abs_err=DEFABSERR)
     { 
         PyFunc pyfunc(func);
         bool success;
