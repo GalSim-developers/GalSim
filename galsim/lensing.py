@@ -644,86 +644,90 @@ class NFWHalo(object):
         """
         return self.cosmo.omega_m/(self.cosmo.E(a)**2 * a**3)
 
-    def __farcth (self, r, out=None):
-        """Numerical implementation of integral functions of NFW profile
+    def __farcth (self, x, out=None):
+        """Numerical implementation of integral functions of a spherical NFW profile.
+
+        All expressions are a function of x, which is the radius r in units of the NFW scale radius,
+        r_s.  For the derivation of these functions, see for example Wright & Brainerd (2000, ApJ,
+        534, 34).
         """
         if out is None:
-            out = np.zeros_like(r)
+            out = np.zeros_like(x)
 
-        # 3 cases: r > 1, r < 1, and |r-1| < 0.001
-        mask = (r < 0.999)
+        # 3 cases: x > 1, x < 1, and |x-1| < 0.001
+        mask = (x < 0.999)
         if mask.any():
-            a = ((1.-r[mask])/(r[mask]+1.))**0.5
-            out[mask] = 0.5*np.log((1.+a)/(1.-a))/(1-r[mask]**2)**0.5
+            a = ((1.-x[mask])/(x[mask]+1.))**0.5
+            out[mask] = 0.5*np.log((1.+a)/(1.-a))/(1-x[mask]**2)**0.5
 
-        mask = (r > 1.001)
+        mask = (x > 1.001)
         if mask.any():
-            a = ((r[mask]-1.)/(r[mask]+1.))**0.5
-            out[mask] = np.arctan(a)/(r[mask]**2 - 1)**0.5
+            a = ((x[mask]-1.)/(x[mask]+1.))**0.5
+            out[mask] = np.arctan(a)/(x[mask]**2 - 1)**0.5
 
         # the approximation below has a maximum fractional error of 2.3e-7
-        mask = (r >= 0.999) & (r <= 1.001)
+        mask = (x >= 0.999) & (x <= 1.001)
         if mask.any():
-            out[mask] = 5./6. - r[mask]/3.
+            out[mask] = 5./6. - x[mask]/3.
 
         return out
 
-    def __kappa(self, r, ks, out=None):
+    def __kappa(self, x, ks, out=None):
         """Calculate convergence of halo.
 
-        @param r   Radial coordinate in units of r/rs (normalized to scale radius of halo).
+        @param x   Radial coordinate in units of rs (scale radius of halo), i.e., x=r/rs.
         @param ks  Lensing strength prefactor.
         @param out Numpy array into which results should be placed.
         """
         # convenience: call with single number
-        if isinstance(r, np.ndarray) == False:
-            return self.__kappa(np.array([r], dtype='float'), np.array([ks], dtype='float'))[0]
+        if isinstance(x, np.ndarray) == False:
+            return self.__kappa(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
 
         if out is None:
-            out = np.zeros_like(r)
+            out = np.zeros_like(x)
 
-        # 3 cases: r > 1, r < 1, and |r-1| < 0.001
-        mask = (r < 0.999)
+        # 3 cases: x > 1, x < 1, and |x-1| < 0.001
+        mask = (x < 0.999)
         if mask.any():
-            a = ((1 - r[mask])/(r[mask] + 1))**0.5
-            out[mask] = 2*ks[mask]/(r[mask]**2 - 1) * \
-                (1 - np.log((1 + a)/(1 - a))/(1 - r[mask]**2)**0.5)
+            a = ((1 - x[mask])/(x[mask] + 1))**0.5
+            out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * \
+                (1 - np.log((1 + a)/(1 - a))/(1 - x[mask]**2)**0.5)
 
-        mask = (r > 1.001)
+        mask = (x > 1.001)
         if mask.any():
-            a = ((r[mask] - 1)/(r[mask] + 1))**0.5
-            out[mask] = 2*ks[mask]/(r[mask]**2 - 1) * \
-                (1 - 2*np.arctan(a)/(r[mask]**2 - 1)**0.5)
+            a = ((x[mask] - 1)/(x[mask] + 1))**0.5
+            out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * \
+                (1 - 2*np.arctan(a)/(x[mask]**2 - 1)**0.5)
 
         # the approximation below has a maximum fractional error of 7.4e-7
-        mask = (r >= 0.999) & (r <= 1.001)
+        mask = (x >= 0.999) & (x <= 1.001)
         if mask.any():
-            out[mask] = ks[mask]*(22./15. - 0.8*r[mask])
+            out[mask] = ks[mask]*(22./15. - 0.8*x[mask])
 
         return out
 
-    def __gamma(self, r, ks, out=None):
+    def __gamma(self, x, ks, out=None):
         """Calculate tangential shear of halo.
 
-        @param r   Radial coordinate in units of r/rs (normalized to scale radius of halo).
+        @param x   Radial coordinate in units of rs (scale radius of halo), i.e., x=r/rs.
         @param ks  Lensing strength prefactor.
         @param out Numpy array into which results should be placed
         """
         # convenience: call with single number
-        if isinstance(r, np.ndarray) == False:
-            return self.__gamma(np.array([r], dtype='float'), np.array([ks], dtype='float'))[0]
+        if isinstance(x, np.ndarray) == False:
+            return self.__gamma(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
         if out is None:
-            out = np.zeros_like(r)
+            out = np.zeros_like(x)
 
-        mask = (r > 0.01)
+        mask = (x > 0.01)
         if mask.any():
-            out[mask] = 4*ks[mask]*(np.log(r[mask]/2) + 2*self.__farcth(r[mask])) * \
-                r[mask]**(-2) - self.__kappa(r[mask], ks[mask])
+            out[mask] = 4*ks[mask]*(np.log(x[mask]/2) + 2*self.__farcth(x[mask])) * \
+                x[mask]**(-2) - self.__kappa(x[mask], ks[mask])
 
         # the approximation below has a maximum fractional error of 1.1e-7
-        mask = (r <= 0.01)
+        mask = (x <= 0.01)
         if mask.any():
-            out[mask] = 4*ks[mask]*(0.25 + 0.125 * r[mask]**2 * (3.25 + 3.0*np.log(r[mask]/2)))
+            out[mask] = 4*ks[mask]*(0.25 + 0.125 * x[mask]**2 * (3.25 + 3.0*np.log(x[mask]/2)))
 
         return out
 
