@@ -51,7 +51,7 @@
  * 
  *     There are two final arguments, which we've omitted so far, that can be used to specify
  *     the precision required.  First the relative error, then the absolute error.
- *     The defaults are 1.e-6 and 1.e-15 respectively, which are generally fine for most
+ *     The defaults are 1.e-6 and 1.e-12 respectively, which are generally fine for most
  *     purposes, but you can specify different values if you prefer.
  * 
  *     The absolute error only comes into play for results which are close to 
@@ -148,16 +148,12 @@ namespace integ {
     const double MOCK_INF = 1.e100;  ///< May be used to indicate infinity in integration regions.
     const double MOCK_INF2 = 1.e10;  ///< Anything larger than this is treated as infinity.
     const double DEFRELERR = 1.e-6;  ///< The default target relative error if not specified.
-    const double DEFABSERR = 1.e-15; ///< The default target absolute error if not specified.
+    const double DEFABSERR = 1.e-12; ///< The default target absolute error if not specified.
 
 
     /// An exception type thrown if the integrator encounters a problem.
     struct IntFailure : public std::runtime_error
-    {
-        IntFailure(const std::string& s) : 
-            std::runtime_error(s.c_str())
-        {}
-    };
+    { IntFailure(const std::string& s) : std::runtime_error(s) {} };
 
 #ifdef NDEBUG
 #define integ_dbg1 if (false) (*dbgout)
@@ -334,9 +330,6 @@ namespace integ {
             }
         }
 
-        // All code between the @cond and @endcond is excluded from Doxygen documentation
-        //! @cond
-
         /**
          * @brief Add a split point to the current list to be used by the next subDivide call
          *
@@ -366,7 +359,6 @@ namespace integ {
         /// Setup an fxmap for this region.
         void useFXMap() 
         { _fxmap_source.reset(new std::map<T,T>()); fxmap = _fxmap_source.get(); }
-        //! @endcond
 
     private:
         T _a,_b,_error,_area;
@@ -380,127 +372,86 @@ namespace integ {
         boost::shared_ptr<std::map<T,T> > _fxmap_source;
     };
 
-    // All code between the @cond and @endcond is excluded from Doxygen documentation
-    //! @cond
+    namespace {
+        /// Rescale the error if int |f| dx or int |f-mean| dx are too large
+        template <class T> 
+        inline T rescaleError(
+            T err, ///< The current estimate of the error
+            const T& int_abs,     ///< An estimate of int |f| dx
+            const T& int_absdiff ///< An estimate of int |f-mean| dx
+        )
+        {
+            const T eps = std::numeric_limits<T>::epsilon();
+            const T minrep = std::numeric_limits<T>::min();
 
-    /// Rescale the error if int |f| dx or int |f-mean| dx are too large
-    template <class T> 
-    inline T rescaleError(
-        T err, ///< The current estimate of the error
-        const T& int_abs,     ///< An estimate of int |f| dx
-        const T& int_absdiff ///< An estimate of int |f-mean| dx
-    )
-    {
-        const T eps = std::numeric_limits<T>::epsilon();
-        const T minrep = std::numeric_limits<T>::min();
-
-        if (int_absdiff != 0. && err != 0.) {
-            const T scale = (200. * err / int_absdiff);
-            if (scale < 1.) err = int_absdiff * scale * sqrt(scale) ;
-            else err = int_absdiff ;
-        }
-        if (int_abs > minrep / (50. * eps)) {
-            const T min_err = 50. * eps * int_abs;
-            if (min_err > err) err = min_err;
-        }
-        return err;
-    }
-
-    /**
-     * @brief Non-adaptive GKP integration
-     *
-     * A non-adaptive integration of the function f over the region reg.
-     *
-     * The algorithm computes first a Gaussian quadrature value
-     * then successive Kronrod/Patterson extensions to this result.
-     * The functions terminates when the difference between successive
-     * approximations (rescaled according to rescaleError) is less than 
-     * either abserr or relerr * I, where I is the latest estimate of the 
-     * integral.
-     *
-     * The order of the Gauss/Kronron/Patterson scheme is determined
-     * by which file is included above.  Currently schemes starting 
-     * with order 1 and order 10 are calculated.  There seems to be 
-     * little practical difference in the integration times using 
-     * the two schemes, so I haven't bothered to calculate any more.
-     */
-    template <class UF> 
-    inline bool intGKPNA(
-        const UF& func, ///< The function to integrate
-        IntRegion<typename UF::result_type>& reg, ///< The region with the bounds
-        const typename UF::result_type relerr,  ///< The target relative error
-        const typename UF::result_type abserr  ///< The target absolute error
-    )
-    {
-        typedef typename UF::result_type T;
-        const T a = reg.left();
-        const T b = reg.right();
-
-        const T half_length =  0.5 * (b - a);
-        const T abs_half_length = std::abs(half_length);
-        const T center = 0.5 * (b + a);
-        const T f_center = func(center);
-        if (reg.fxmap) (*reg.fxmap)[center] = f_center;
-#ifdef COUNTFEVAL
-        nfeval++;
-#endif
-        const int nmax = 2*gkp_x<T>(NGKPLEVELS-1).size()-1;
-        static std::vector<T> fv1(nmax), fv2(nmax);
-
-        fv1.clear();
-        fv2.clear();
-        assert(fv1.size() == 0);
-        assert(fv2.size() == 0);
-        assert(int(fv1.capacity()) == nmax);
-        assert(int(fv2.capacity()) == nmax);
-
-        assert(gkp_wb<T>(0).size() == gkp_x<T>(0).size()+1);
-        T area1 = gkp_wb<T>(0).back() * f_center;
-        int n0 = gkp_x<T>(0).size();
-        for (int k=0; k<n0; k++) {
-            const T abscissa = half_length * gkp_x<T>(0)[k];
-            const T fval1 = func(center - abscissa);
-            const T fval2 = func(center + abscissa);
-            area1 += gkp_wb<T>(0)[k] * (fval1+fval2);
-            fv1.push_back(fval1);
-            fv2.push_back(fval2);
-            if (reg.fxmap) {
-                (*reg.fxmap)[center-abscissa] = fval1;
-                (*reg.fxmap)[center+abscissa] = fval2;
+            if (int_absdiff != 0. && err != 0.) {
+                const T scale = (200. * err / int_absdiff);
+                if (scale < 1.) err = int_absdiff * scale * sqrt(scale) ;
+                else err = int_absdiff ;
             }
-        }
-        area1 *= half_length;
-#ifdef COUNTFEVAL
-        nfeval+=gkp_x<T>(0).size()*2;
-#endif
-
-        integ_dbg2<<"level 0 rule: area = "<<area1<<std::endl;
-
-        T err=0; 
-        bool calc_int_abs = true;
-        T int_abs=0., int_absdiff=0.;
-        for (int level=1; level<NGKPLEVELS; level++) {
-            assert(gkp_wa<T>(level).size() == fv1.size());
-            assert(gkp_wa<T>(level).size() == fv2.size());
-            assert(gkp_wb<T>(level).size() == gkp_x<T>(level).size()+1);
-            T area2 = gkp_wb<T>(level).back() * f_center;
-            // int_abs = approximation to integral of abs(f)
-            if (calc_int_abs) int_abs = std::abs(area2);
-            for (size_t k=0; k<fv1.size(); k++) {
-                area2 += gkp_wa<T>(level)[k] * (fv1[k]+fv2[k]);
-                if (calc_int_abs) 
-                    int_abs += gkp_wa<T>(level)[k] *
-                        (std::abs(fv1[k]) + std::abs(fv2[k]));
+            if (int_abs > minrep / (50. * eps)) {
+                const T min_err = 50. * eps * int_abs;
+                if (min_err > err) err = min_err;
             }
-            int nl = gkp_x<T>(level).size();
-            for (int k=0; k<nl; k++) {
-                const T abscissa = half_length * gkp_x<T>(level)[k];
+            return err;
+        }
+
+        /**
+         * @brief Non-adaptive GKP integration
+         *
+         * A non-adaptive integration of the function f over the region reg.
+         *
+         * The algorithm computes first a Gaussian quadrature value
+         * then successive Kronrod/Patterson extensions to this result.
+         * The functions terminates when the difference between successive
+         * approximations (rescaled according to rescaleError) is less than 
+         * either abserr or relerr * I, where I is the latest estimate of the 
+         * integral.
+         *
+         * The order of the Gauss/Kronron/Patterson scheme is determined
+         * by which file is included above.  Currently schemes starting 
+         * with order 1 and order 10 are calculated.  There seems to be 
+         * little practical difference in the integration times using 
+         * the two schemes, so I haven't bothered to calculate any more.
+         */
+        template <class UF> 
+        inline bool intGKPNA(
+            const UF& func, ///< The function to integrate
+            IntRegion<typename UF::result_type>& reg, ///< The region with the bounds
+            const typename UF::result_type relerr,  ///< The target relative error
+            const typename UF::result_type abserr  ///< The target absolute error
+        )
+        {
+            typedef typename UF::result_type T;
+            const T a = reg.left();
+            const T b = reg.right();
+
+            const T half_length =  0.5 * (b - a);
+            const T abs_half_length = std::abs(half_length);
+            const T center = 0.5 * (b + a);
+            const T f_center = func(center);
+            if (reg.fxmap) (*reg.fxmap)[center] = f_center;
+#ifdef COUNTFEVAL
+            nfeval++;
+#endif
+            const int nmax = 2*gkp_x<T>(NGKPLEVELS-1).size()-1;
+            static std::vector<T> fv1(nmax), fv2(nmax);
+
+            fv1.clear();
+            fv2.clear();
+            assert(fv1.size() == 0);
+            assert(fv2.size() == 0);
+            assert(int(fv1.capacity()) == nmax);
+            assert(int(fv2.capacity()) == nmax);
+
+            assert(gkp_wb<T>(0).size() == gkp_x<T>(0).size()+1);
+            T area1 = gkp_wb<T>(0).back() * f_center;
+            int n0 = gkp_x<T>(0).size();
+            for (int k=0; k<n0; k++) {
+                const T abscissa = half_length * gkp_x<T>(0)[k];
                 const T fval1 = func(center - abscissa);
                 const T fval2 = func(center + abscissa);
-                const T fval = fval1 + fval2;
-                area2 += gkp_wb<T>(level)[k] * fval;
-                if (calc_int_abs) 
-                    int_abs += gkp_wb<T>(level)[k] * (std::abs(fval1) + std::abs(fval2));
+                area1 += gkp_wb<T>(0)[k] * (fval1+fval2);
                 fv1.push_back(fval1);
                 fv2.push_back(fval2);
                 if (reg.fxmap) {
@@ -508,271 +459,304 @@ namespace integ {
                     (*reg.fxmap)[center+abscissa] = fval2;
                 }
             }
+            area1 *= half_length;
 #ifdef COUNTFEVAL
-            nfeval+=gkp_x<T>(level).size()*2;
+            nfeval+=gkp_x<T>(0).size()*2;
 #endif
-            if (calc_int_abs) {
-                const T mean = area1*T(0.5);
-                // int_absdiff = approximation to the integral of abs(f-mean) 
-                int_absdiff = gkp_wb<T>(level).back() * std::abs(f_center-mean);
-                for (size_t k=0; k<gkp_wa<T>(level).size(); k++) {
-                    int_absdiff += gkp_wa<T>(level)[k] * 
-                        (std::abs(fv1[k]-mean) + std::abs(fv2[k]-mean));
+
+            integ_dbg2<<"level 0 rule: area = "<<area1<<std::endl;
+
+            T err=0; 
+            bool calc_int_abs = true;
+            T int_abs=0., int_absdiff=0.;
+            for (int level=1; level<NGKPLEVELS; level++) {
+                assert(gkp_wa<T>(level).size() == fv1.size());
+                assert(gkp_wa<T>(level).size() == fv2.size());
+                assert(gkp_wb<T>(level).size() == gkp_x<T>(level).size()+1);
+                T area2 = gkp_wb<T>(level).back() * f_center;
+                // int_abs = approximation to integral of abs(f)
+                if (calc_int_abs) int_abs = std::abs(area2);
+                for (size_t k=0; k<fv1.size(); k++) {
+                    area2 += gkp_wa<T>(level)[k] * (fv1[k]+fv2[k]);
+                    if (calc_int_abs) 
+                        int_abs += gkp_wa<T>(level)[k] *
+                            (std::abs(fv1[k]) + std::abs(fv2[k]));
                 }
-                for (size_t k=0; k<gkp_x<T>(level).size(); k++) {
-                    int_absdiff += gkp_wb<T>(level)[k] * 
-                        (std::abs(fv1[k]-mean) + std::abs(fv2[k]-mean));
+                int nl = gkp_x<T>(level).size();
+                for (int k=0; k<nl; k++) {
+                    const T abscissa = half_length * gkp_x<T>(level)[k];
+                    const T fval1 = func(center - abscissa);
+                    const T fval2 = func(center + abscissa);
+                    const T fval = fval1 + fval2;
+                    area2 += gkp_wb<T>(level)[k] * fval;
+                    if (calc_int_abs) 
+                        int_abs += gkp_wb<T>(level)[k] * (std::abs(fval1) + std::abs(fval2));
+                    fv1.push_back(fval1);
+                    fv2.push_back(fval2);
+                    if (reg.fxmap) {
+                        (*reg.fxmap)[center-abscissa] = fval1;
+                        (*reg.fxmap)[center+abscissa] = fval2;
+                    }
                 }
-                int_absdiff *= abs_half_length ;
-                int_abs *= abs_half_length;
+#ifdef COUNTFEVAL
+                nfeval+=gkp_x<T>(level).size()*2;
+#endif
+                if (calc_int_abs) {
+                    const T mean = area1*T(0.5);
+                    // int_absdiff = approximation to the integral of abs(f-mean) 
+                    int_absdiff = gkp_wb<T>(level).back() * std::abs(f_center-mean);
+                    for (size_t k=0; k<gkp_wa<T>(level).size(); k++) {
+                        int_absdiff += gkp_wa<T>(level)[k] * 
+                            (std::abs(fv1[k]-mean) + std::abs(fv2[k]-mean));
+                    }
+                    for (size_t k=0; k<gkp_x<T>(level).size(); k++) {
+                        int_absdiff += gkp_wb<T>(level)[k] * 
+                            (std::abs(fv1[k]-mean) + std::abs(fv2[k]-mean));
+                    }
+                    int_absdiff *= abs_half_length ;
+                    int_abs *= abs_half_length;
+                }
+                area2 *= half_length;
+                err = rescaleError(std::abs(area2-area1), int_abs, int_absdiff) ;
+                if (err < int_absdiff) calc_int_abs = false;
+
+                integ_dbg2<<"at level "<<level<<" area2 = "<<area2;
+                integ_dbg2<<" +- "<<err<<std::endl;
+                integ_dbg2<<"error was "<<std::abs(area2-area1)<<std::endl;
+                integ_dbg2<<"rescaled using int_abs = "<<int_abs<<", int_absdiff = "<<int_absdiff<<std::endl;
+
+                //  Test for convergence.
+                if (err < abserr || err < relerr * std::abs(area2)) {
+                    // Converged.  Return current estimate.
+                    reg.setArea(area2,err);
+                    return true;
+                }
+                area1 = area2;
             }
-            area2 *= half_length;
-            err = rescaleError(std::abs(area2-area1), int_abs, int_absdiff) ;
-            if (err < int_absdiff) calc_int_abs = false;
+            assert(int(fv1.size()) == nmax);
+            assert(int(fv2.size()) == nmax);
 
-            integ_dbg2<<"at level "<<level<<" area2 = "<<area2;
-            integ_dbg2<<" +- "<<err<<std::endl;
-            integ_dbg2<<"error was "<<std::abs(area2-area1)<<std::endl;
-            integ_dbg2<<"rescaled using int_abs = "<<int_abs<<", int_absdiff = "<<int_absdiff<<std::endl;
+            // Failed to converge.  Return with current estimate of area and error
+            reg.setArea(area1,err);
 
-            //  Test for convergence.
-            if (err < abserr || err < relerr * std::abs(area2)) {
-                // Converged.  Return current estimate.
-                reg.setArea(area2,err);
-                return true;
-            }
-            area1 = area2;
-        }
-        assert(int(fv1.size()) == nmax);
-        assert(int(fv2.size()) == nmax);
+            integ_dbg2<<"Failed to reach tolerance with highest-order GKP rule\n";
 
-        // Failed to converge.  Return with current estimate of area and error
-        reg.setArea(area1,err);
+            if (reg.fxmap) reg.findZeroCrossings();
 
-        integ_dbg2<<"Failed to reach tolerance with highest-order GKP rule\n";
-
-        if (reg.fxmap) reg.findZeroCrossings();
-
-        return false;
-    }
-
-    /**
-     * @brief Adaptive GKP integration
-     *
-     * An adaptive integration algorithm which computes the integral of f
-     * over the region reg.
-     *
-     * First the non-adaptive GKP algorithm is tried.
-     *
-     * If that is not accurate enough (according to the absolute and
-     * relative accuracies, abserr and relerr), the region is split in half, 
-     * and each new region is integrated.
-     *
-     * The routine continues by successively splitting the subregion
-     * which gave the largest absolute error until the integral converges.
-     *
-     * The area and estimated error are returned as reg.getArea() and reg.getErr()
-     */
-    template <class UF> 
-    inline void intGKP(
-        const UF& func, IntRegion<typename UF::result_type>& reg,
-        const typename UF::result_type relerr,
-        const typename UF::result_type abserr)
-    {
-        typedef typename UF::result_type T;
-        const T eps = std::numeric_limits<T>::epsilon();
-
-        integ_dbg2<<"Start intGKP\n";
-
-        assert(abserr >= 0.);
-        assert(relerr > 0.);
-
-        // Check for early exit:
-        if (reg.left() == reg.right()) {
-            integ_dbg2<<"left == right, so integral is trivially 0.\n";
-            reg.setArea(0.,0.);
-            return;
-        }
-
-        // Perform the first integration 
-        bool done = intGKPNA(func, reg, relerr, abserr);
-        if (done) {
-            integ_dbg2<<"GKPNA suceeded, so we're done.\n";
-            return;
+            return false;
         }
 
-        integ_dbg2<<"In adaptive GKP, failed first pass... subdividing\n";
-        integ_dbg2<<"Intial range = "<<reg.left()<<".."<<reg.right()<<std::endl;
+        /**
+         * @brief Adaptive GKP integration
+         *
+         * An adaptive integration algorithm which computes the integral of f
+         * over the region reg.
+         *
+         * First the non-adaptive GKP algorithm is tried.
+         *
+         * If that is not accurate enough (according to the absolute and
+         * relative accuracies, abserr and relerr), the region is split in half, 
+         * and each new region is integrated.
+         *
+         * The routine continues by successively splitting the subregion
+         * which gave the largest absolute error until the integral converges.
+         *
+         * The area and estimated error are returned as reg.getArea() and reg.getErr()
+         */
+        template <class UF> 
+        inline void intGKP(
+            const UF& func, IntRegion<typename UF::result_type>& reg,
+            const typename UF::result_type relerr,
+            const typename UF::result_type abserr)
+        {
+            typedef typename UF::result_type T;
+            const T eps = std::numeric_limits<T>::epsilon();
 
-        int roundoff_type1 = 0, error_type = 0;
-        T roundoff_type2 = 0.;
-        int iteration = 1;
+            integ_dbg2<<"Start intGKP\n";
 
-        // Keep track of all subdivision in a priority_queue.  
-        // The top() is always the largest value, and pop() removes it.
-        // We define < and > for IntRegoins such that the "largest" is the one 
-        // with the largest current error estimate.  This is the next one to be split 
-        // if we need to split further.
-        std::priority_queue<IntRegion<T>,std::vector<IntRegion<T> > > allregions;
-        allregions.push(reg);
-        T finalarea = reg.getArea();
-        T finalerr = reg.getErr();
-        T tolerance= std::max(abserr, relerr * std::abs(finalarea));
-        assert(finalerr > tolerance);
+            assert(abserr >= 0.);
+            assert(relerr > 0.);
 
-        while(!error_type && finalerr > tolerance) {
-            // Bisect the subinterval with the largest error estimate 
-            integ_dbg2<<"Current answer = "<<finalarea<<" +- "<<finalerr;
-            integ_dbg2<<"  (tol = "<<tolerance<<")\n";
-            IntRegion<T> parent = allregions.top(); 
-            allregions.pop();
-            integ_dbg2<<"Subdividing largest error region ";
-            integ_dbg2<<parent.left()<<".."<<parent.right()<<std::endl;
-            integ_dbg2<<"parent area = "<<parent.getArea();
-            integ_dbg2<<" +- "<<parent.getErr()<<std::endl;
-            std::vector<IntRegion<T> > children;
-            parent.subDivide(children);
-            // For "GKP", there are only two, but for GKPOSC, there is one 
-            // for each oscillation in region
-
-            // Try to do at least 3x better with the children
-            T factor = 3*children.size()*finalerr/tolerance;
-            T newabserr = std::abs(parent.getErr()/factor);
-            T newrelerr = newabserr/std::abs(parent.getArea());
-            integ_dbg2<<"New abserr,rel = "<<newabserr<<','<<newrelerr;
-            integ_dbg2<<"  ("<<children.size()<<" children)\n";
-
-            T newarea = T(0.0);
-            T newerror = 0.0;
-            for(size_t i=0;i<children.size();i++) {
-                IntRegion<T>& child = children[i];
-                integ_dbg2<<"Integrating child "<<child.left();
-                integ_dbg2<<".."<<child.right()<<std::endl;
-                bool converged;
-                converged = intGKPNA(func, child, newrelerr, newabserr);
-                integ_dbg2<<"child ("<<i+1<<'/'<<children.size()<<") ";
-                if (converged) {
-                    integ_dbg2<<" converged."; 
-                } else {
-                    integ_dbg2<<" failed.";
-                }
-                integ_dbg2<<"  Area = "<<child.getArea()<<
-                    " +- "<<child.getErr()<<std::endl;
-
-                newarea += child.getArea();
-                newerror += child.getErr();
-            }
-            integ_dbg2<<"Compare: newerr = "<<newerror;
-            integ_dbg2<<" to parent err = "<<parent.getErr()<<std::endl;
-
-            finalerr += (newerror - parent.getErr());
-            finalarea += newarea - parent.getArea();
-
-            T delta = parent.getArea() - newarea;
-            if (newerror <= parent.getErr() && std::abs(delta) <= parent.getErr()
-                && newerror >= 0.99 * parent.getErr()) {
-                integ_dbg2<<"roundoff type 1: delta/newarea = ";
-                integ_dbg2<<std::abs(delta)/std::abs(newarea);
-                integ_dbg2<<", newerror/error = "<<
-                    newerror/parent.getErr()<<std::endl;
-                roundoff_type1++;
-            }
-            if (iteration >= 10 && newerror > parent.getErr() && 
-                std::abs(delta) <= newerror-parent.getErr()) {
-                integ_dbg2<<"roundoff type 2: newerror/error = ";
-                integ_dbg2<<newerror/parent.getErr()<<std::endl;
-                roundoff_type2+=std::min(newerror/parent.getErr()-1.,T(1.));
+            // Check for early exit:
+            if (reg.left() == reg.right()) {
+                integ_dbg2<<"left == right, so integral is trivially 0.\n";
+                reg.setArea(0.,0.);
+                return;
             }
 
-            tolerance = std::max(abserr, relerr * std::abs(finalarea));
-            if (finalerr > tolerance) {
-                if (roundoff_type1 >= 200) {
-                    error_type = 1;    // round off error 
-                    integ_dbg2<<"GKP: Round off error 1\n";
-                }
-                if (roundoff_type2 >= 200.) {
-                    error_type = 2;    // round off error 
-                    integ_dbg2<<"GKP: Round off error 2\n";
-                }
-                const double parent_size = parent.right()-parent.left();
-                const double reg_size = reg.right()-parent.left();
-                if (std::abs(parent_size / reg_size) < eps) {
-                    error_type = 3; // found singularity
-                    integ_dbg2<<"GKP: Probable singularity\n";
-                }
+            // Perform the first integration 
+            bool done = intGKPNA(func, reg, relerr, abserr);
+            if (done) {
+                integ_dbg2<<"GKPNA suceeded, so we're done.\n";
+                return;
             }
-            for(size_t i=0;i<children.size();i++) allregions.push(children[i]);
-            iteration++;
-        } 
 
-        // Recalculate finalarea in case there are any slight rounding errors
-        finalarea=0.; finalerr=0.;
-        while (!allregions.empty()) {
-            const IntRegion<T>& r=allregions.top();
-            finalarea += r.getArea();
-            finalerr += r.getErr();
-            allregions.pop();
+            integ_dbg2<<"In adaptive GKP, failed first pass... subdividing\n";
+            integ_dbg2<<"Intial range = "<<reg.left()<<".."<<reg.right()<<std::endl;
+
+            int roundoff_type1 = 0, error_type = 0;
+            T roundoff_type2 = 0.;
+            int iteration = 1;
+
+            // Keep track of all subdivision in a priority_queue.  
+            // The top() is always the largest value, and pop() removes it.
+            // We define < and > for IntRegoins such that the "largest" is the one 
+            // with the largest current error estimate.  This is the next one to be split 
+            // if we need to split further.
+            std::priority_queue<IntRegion<T>,std::vector<IntRegion<T> > > allregions;
+            allregions.push(reg);
+            T finalarea = reg.getArea();
+            T finalerr = reg.getErr();
+            T tolerance= std::max(abserr, relerr * std::abs(finalarea));
+            assert(finalerr > tolerance);
+
+            while(!error_type && finalerr > tolerance) {
+                // Bisect the subinterval with the largest error estimate 
+                integ_dbg2<<"Current answer = "<<finalarea<<" +- "<<finalerr;
+                integ_dbg2<<"  (tol = "<<tolerance<<")\n";
+                IntRegion<T> parent = allregions.top(); 
+                allregions.pop();
+                integ_dbg2<<"Subdividing largest error region ";
+                integ_dbg2<<parent.left()<<".."<<parent.right()<<std::endl;
+                integ_dbg2<<"parent area = "<<parent.getArea();
+                integ_dbg2<<" +- "<<parent.getErr()<<std::endl;
+                std::vector<IntRegion<T> > children;
+                parent.subDivide(children);
+                // For "GKP", there are only two, but for GKPOSC, there is one 
+                // for each oscillation in region
+
+                // Try to do at least 3x better with the children
+                T factor = 3*children.size()*finalerr/tolerance;
+                T newabserr = std::abs(parent.getErr()/factor);
+                T newrelerr = newabserr/std::abs(parent.getArea());
+                integ_dbg2<<"New abserr,rel = "<<newabserr<<','<<newrelerr;
+                integ_dbg2<<"  ("<<children.size()<<" children)\n";
+
+                T newarea = T(0.0);
+                T newerror = 0.0;
+                for(size_t i=0;i<children.size();i++) {
+                    IntRegion<T>& child = children[i];
+                    integ_dbg2<<"Integrating child "<<child.left();
+                    integ_dbg2<<".."<<child.right()<<std::endl;
+                    bool converged;
+                    converged = intGKPNA(func, child, newrelerr, newabserr);
+                    integ_dbg2<<"child ("<<i+1<<'/'<<children.size()<<") ";
+                    if (converged) {
+                        integ_dbg2<<" converged."; 
+                    } else {
+                        integ_dbg2<<" failed.";
+                    }
+                    integ_dbg2<<"  Area = "<<child.getArea()<<
+                        " +- "<<child.getErr()<<std::endl;
+
+                    newarea += child.getArea();
+                    newerror += child.getErr();
+                }
+                integ_dbg2<<"Compare: newerr = "<<newerror;
+                integ_dbg2<<" to parent err = "<<parent.getErr()<<std::endl;
+
+                finalerr += (newerror - parent.getErr());
+                finalarea += newarea - parent.getArea();
+
+                T delta = parent.getArea() - newarea;
+                if (newerror <= parent.getErr() && std::abs(delta) <= parent.getErr()
+                    && newerror >= 0.99 * parent.getErr()) {
+                    integ_dbg2<<"roundoff type 1: delta/newarea = ";
+                    integ_dbg2<<std::abs(delta)/std::abs(newarea);
+                    integ_dbg2<<", newerror/error = "<<
+                        newerror/parent.getErr()<<std::endl;
+                    roundoff_type1++;
+                }
+                if (iteration >= 10 && newerror > parent.getErr() && 
+                    std::abs(delta) <= newerror-parent.getErr()) {
+                    integ_dbg2<<"roundoff type 2: newerror/error = ";
+                    integ_dbg2<<newerror/parent.getErr()<<std::endl;
+                    roundoff_type2+=std::min(newerror/parent.getErr()-1.,T(1.));
+                }
+
+                tolerance = std::max(abserr, relerr * std::abs(finalarea));
+                if (finalerr > tolerance) {
+                    if (roundoff_type1 >= 200) {
+                        error_type = 1;    // round off error 
+                        integ_dbg2<<"GKP: Round off error 1\n";
+                    }
+                    if (roundoff_type2 >= 200.) {
+                        error_type = 2;    // round off error 
+                        integ_dbg2<<"GKP: Round off error 2\n";
+                    }
+                    const double parent_size = parent.right()-parent.left();
+                    const double reg_size = reg.right()-parent.left();
+                    if (std::abs(parent_size / reg_size) < eps) {
+                        error_type = 3; // found singularity
+                        integ_dbg2<<"GKP: Probable singularity\n";
+                    }
+                }
+                for(size_t i=0;i<children.size();i++) allregions.push(children[i]);
+                iteration++;
+            } 
+
+            // Recalculate finalarea in case there are any slight rounding errors
+            finalarea=0.; finalerr=0.;
+            while (!allregions.empty()) {
+                const IntRegion<T>& r=allregions.top();
+                finalarea += r.getArea();
+                finalerr += r.getErr();
+                allregions.pop();
+            }
+            reg.setArea(finalarea,finalerr);
+
+            if (error_type == 1) {
+                integ_dbg2<<"Type 1 roundoff = "<<roundoff_type1<<std::endl;
+                integ_dbg2<<"Type 2 roundoff = "<<roundoff_type2<<std::endl;
+                throw IntFailure(
+                    "Roundoff error 1 prevents tolerance from being achieved in intGKP");
+            } else if (error_type == 2) {
+                integ_dbg2<<"Type 1 roundoff = "<<roundoff_type1<<std::endl;
+                integ_dbg2<<"Type 2 roundoff = "<<roundoff_type2<<std::endl;
+                throw IntFailure(
+                    "Roundoff error 2 prevents tolerance from being achieved in intGKP");
+            } else if (error_type == 3) {
+                throw IntFailure(
+                    "Bad integrand behavior found in the integration interval in intGKP");
+            }
         }
-        reg.setArea(finalarea,finalerr);
 
-        if (error_type == 1) {
-            std::ostringstream s;
-            s << "Type 1 roundoff's = "<<roundoff_type1;
-            s << ", Type 2 = "<<roundoff_type2<<std::endl;
-            s << "Roundoff error 1 prevents tolerance from being achieved ";
-            s << "in intGKP\n";
-            throw IntFailure(s.str());
-        } else if (error_type == 2) {
-            std::ostringstream s;
-            s << "Type 1 roundoff's = "<<roundoff_type1;
-            s << ", Type 2 = "<<roundoff_type2<<std::endl;
-            s << "Roundoff error 2 prevents tolerance from being achieved ";
-            s << "in intGKP\n";
-            throw IntFailure(s.str());
-        } else if (error_type == 3) {
-            std::ostringstream s;
-            s << "Bad integrand behavior found in the integration interval ";
-            s << "in intGKP\n";
-            throw IntFailure(s.str());
-        }
-    }
+        template <class UF> 
+        struct AuxFunc1 : // f(1/x-1) for int(a..infinity)
+            public std::unary_function<typename UF::argument_type,
+            typename UF::result_type> 
+        {
+        public:
+            AuxFunc1(const UF& _f) : f(_f) {}
+            typename UF::result_type operator()(
+                typename UF::argument_type x) const 
+            { return f(1./x-1.)/(x*x); }
+        private:
+            const UF& f;
+        };
 
-    template <class UF> 
-    struct AuxFunc1 : // f(1/x-1) for int(a..infinity)
-        public std::unary_function<typename UF::argument_type,
-        typename UF::result_type> 
-    {
-    public:
-        AuxFunc1(const UF& _f) : f(_f) {}
-        typename UF::result_type operator()(
-            typename UF::argument_type x) const 
-        { return f(1./x-1.)/(x*x); }
-    private:
-        const UF& f;
-    };
+        template <class UF> 
+        AuxFunc1<UF> inline Aux1(const UF& uf) 
+        { return AuxFunc1<UF>(uf); }
 
-    template <class UF> 
-    AuxFunc1<UF> inline Aux1(const UF& uf) 
-    { return AuxFunc1<UF>(uf); }
+        template <class UF> 
+        struct AuxFunc2 : // f(1/x+1) for int(-infinity..b)
+            public std::unary_function<typename UF::argument_type,
+            typename UF::result_type> 
+        {
+        public:
+            AuxFunc2(const UF& _f) : f(_f) {}
+            typename UF::result_type operator()(
+                typename UF::argument_type x) const 
+            { return f(1./x+1.)/(x*x); }
+        private:
+            const UF& f;
+        };
 
-    template <class UF> 
-    struct AuxFunc2 : // f(1/x+1) for int(-infinity..b)
-        public std::unary_function<typename UF::argument_type,
-        typename UF::result_type> 
-    {
-    public:
-        AuxFunc2(const UF& _f) : f(_f) {}
-        typename UF::result_type operator()(
-            typename UF::argument_type x) const 
-        { return f(1./x+1.)/(x*x); }
-    private:
-        const UF& f;
-    };
-
-    template <class UF> AuxFunc2<UF> 
-    inline Aux2(const UF& uf) 
-    { return AuxFunc2<UF>(uf); }
-    //! @endcond
+        template <class UF> AuxFunc2<UF> 
+        inline Aux2(const UF& uf) 
+        { return AuxFunc2<UF>(uf); }
+    } // anonymous namespace
 
     /// Perform a 1-dimensional integral using an IntRegion
     template <class UF> 
@@ -851,36 +835,35 @@ namespace integ {
         return int1d(func,reg,relerr,abserr); 
     }
 
-    // All code between the @cond and @endcond is excluded from Doxygen documentation
-    //! @cond
-    template <class BF, class YREG> 
-    class Int2DAuxType : 
-        public std::unary_function<typename BF::first_argument_type,typename BF::result_type> 
-    {
-    public:
-        Int2DAuxType(const BF& _func, const YREG& _yreg,
-                     const typename BF::result_type& _relerr,
-                     const typename BF::result_type& _abserr) :
-            func(_func),yreg(_yreg),relerr(_relerr),abserr(_abserr) 
-        {}
-
-        typename BF::result_type operator()(
-            typename BF::first_argument_type x) const 
+    namespace {
+        template <class BF, class YREG> 
+        class Int2DAuxType : 
+            public std::unary_function<typename BF::first_argument_type,typename BF::result_type> 
         {
-            typename YREG::result_type tempreg = yreg(x);
-            typename BF::result_type result = 
-                int1d(bind21(func,x),tempreg,relerr,abserr);
-            integ_dbg3<<"Evaluated int2dAux at x = "<<x;
-            integ_dbg3<<": f = "<<result<<" +- "<<tempreg.getErr()<<std::endl;
-            return result;
-        } 
+        public:
+            Int2DAuxType(const BF& _func, const YREG& _yreg,
+                         const typename BF::result_type& _relerr,
+                         const typename BF::result_type& _abserr) :
+                func(_func),yreg(_yreg),relerr(_relerr),abserr(_abserr) 
+            {}
 
-    private:
-        const BF& func;
-        const YREG& yreg;
-        typename BF::result_type relerr,abserr;
-    };
-    //! @endcond
+            typename BF::result_type operator()(
+                typename BF::first_argument_type x) const 
+            {
+                typename YREG::result_type tempreg = yreg(x);
+                typename BF::result_type result = 
+                    int1d(bind21(func,x),tempreg,relerr,abserr);
+                integ_dbg3<<"Evaluated int2dAux at x = "<<x;
+                integ_dbg3<<": f = "<<result<<" +- "<<tempreg.getErr()<<std::endl;
+                return result;
+            } 
+
+        private:
+            const BF& func;
+            const YREG& yreg;
+            typename BF::result_type relerr,abserr;
+        };
+    } // anonymous namespace
 
     /// Perform a 2-dimensional integral
     template <class BF, class YREG> 
@@ -901,37 +884,36 @@ namespace integ {
         return answer;
     }
 
-    // All code between the @cond and @endcond is excluded from Doxygen documentation
-    //! @cond
-    template <class TF, class YREG, class ZREG> 
-    class Int3DAuxType : 
-        public std::unary_function<typename TF::firstof3_argument_type,typename TF::result_type> 
-    {
-    public:
-        Int3DAuxType(const TF& _func, const YREG& _yreg, const ZREG& _zreg, 
-                     const typename TF::result_type& _relerr,
-                     const typename TF::result_type& _abserr) :
-            func(_func),yreg(_yreg),zreg(_zreg),relerr(_relerr),abserr(_abserr) 
-        {}
-
-        typename TF::result_type operator()(
-            typename TF::firstof3_argument_type x) const 
+    namespace {
+        template <class TF, class YREG, class ZREG> 
+        class Int3DAuxType : 
+            public std::unary_function<typename TF::firstof3_argument_type,typename TF::result_type> 
         {
-            typename YREG::result_type tempreg = yreg(x);
-            typename TF::result_type result = 
-                int2d(bind31(func,x),tempreg,bind21(zreg,x),relerr,abserr);
-            integ_dbg3<<"Evaluated int3dAux at x = "<<x;
-            integ_dbg3<<": f = "<<result<<" +- "<<tempreg.getErr()<<std::endl;
-            return result;
-        }
+        public:
+            Int3DAuxType(const TF& _func, const YREG& _yreg, const ZREG& _zreg, 
+                         const typename TF::result_type& _relerr,
+                         const typename TF::result_type& _abserr) :
+                func(_func),yreg(_yreg),zreg(_zreg),relerr(_relerr),abserr(_abserr) 
+            {}
 
-    private:
-        const TF& func;
-        const YREG& yreg;
-        const ZREG& zreg;
-        typename TF::result_type relerr,abserr;
-    };
-    //! @endcond
+            typename TF::result_type operator()(
+                typename TF::firstof3_argument_type x) const 
+            {
+                typename YREG::result_type tempreg = yreg(x);
+                typename TF::result_type result = 
+                    int2d(bind31(func,x),tempreg,bind21(zreg,x),relerr,abserr);
+                integ_dbg3<<"Evaluated int3dAux at x = "<<x;
+                integ_dbg3<<": f = "<<result<<" +- "<<tempreg.getErr()<<std::endl;
+                return result;
+            }
+
+        private:
+            const TF& func;
+            const YREG& yreg;
+            const ZREG& zreg;
+            typename TF::result_type relerr,abserr;
+        };
+    } // anonymous namespace
 
     /// Perform a 3-dimensional integral
     template <class TF, class YREG, class ZREG> 
@@ -956,28 +938,27 @@ namespace integ {
 
     // Helpers for constant regions for int2d, int3d:
 
-    // All code between the @cond and @endcond is excluded from Doxygen documentation
-    //! @cond
-    template <class T> 
-    struct ConstantReg1 : 
-        public std::unary_function<T, IntRegion<T> >
-    {
-        ConstantReg1(T a,T b) : ir(a,b) {}
-        ConstantReg1(const IntRegion<T>& r) : ir(r) {}
-        IntRegion<T> operator()(T x) const { return ir; }
-        IntRegion<T> ir;
-    };
+    namespace {
+        template <class T> 
+        struct ConstantReg1 : 
+            public std::unary_function<T, IntRegion<T> >
+        {
+            ConstantReg1(T a,T b) : ir(a,b) {}
+            ConstantReg1(const IntRegion<T>& r) : ir(r) {}
+            IntRegion<T> operator()(T x) const { return ir; }
+            IntRegion<T> ir;
+        };
 
-    template <class T> 
-    struct ConstantReg2 : 
-        public std::binary_function<T, T, IntRegion<T> >
-    {
-        ConstantReg2(T a,T b) : ir(a,b) {}
-        ConstantReg2(const IntRegion<T>& r) : ir(r) {}
-        IntRegion<T> operator()(T x, T y) const { return ir; }
-        IntRegion<T> ir;
-    };
-    //! @endcond
+        template <class T> 
+        struct ConstantReg2 : 
+            public std::binary_function<T, T, IntRegion<T> >
+        {
+            ConstantReg2(T a,T b) : ir(a,b) {}
+            ConstantReg2(const IntRegion<T>& r) : ir(r) {}
+            IntRegion<T> operator()(T x, T y) const { return ir; }
+            IntRegion<T> ir;
+        };
+    } // anonymous namespace
 
     /// Perform a 3-dimensional integral using constant IntRegions for both regions
     /// (i.e. the integral is over a square)

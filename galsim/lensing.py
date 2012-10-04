@@ -552,9 +552,8 @@ class Cosmology(object):
                 raise ValueError("Redshift z must not be negative")
             if z < z_ref:
                 raise ValueError("Redshift z must not be smaller than the reference redshift")
-            # TODO: We don't want to depend on scipy, so need to move this down to c++.
-            from scipy.integrate import quad
-            d = quad(self.__angKernel, z_ref+1, z+1)[0]
+
+            d = galsim.integ.int1d(self.__angKernel, z_ref+1, z+1)
             # check for curvature
             rk = (abs(self.omega_c))**0.5
             if (rk*d > 0.01):

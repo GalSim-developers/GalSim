@@ -16,3 +16,4 @@ from . import config
 from psfcorr import *
 from io import *
 from lensing import *
+from . import integ
