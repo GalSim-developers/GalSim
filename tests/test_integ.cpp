@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE( TestPole )
         1.,
         100 * test_rel_err);
 
-#if 1
+#if 0
     // This works if everything uses the same compiler.  But boost testing may have
     // been installed with a different compiler, in which case it is unable to catch
     // exceptions thrown from GalSim.  So we skip this test normally.
