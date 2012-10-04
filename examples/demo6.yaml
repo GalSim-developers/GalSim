@@ -110,7 +110,8 @@ gal :
 image :
     
     # If we specify the sky_level as an image attribute, it will be used
-    # as a background level for the image.  
+    # as a background level for the image.  (The background level per pixel is 
+    # 1.e6 * (0.15)^2 = 2250.)
     sky_level : 1.e6  # ADU / arcsec^2
 
     # Since we already specified a sky_level for the whole image, we don't need
