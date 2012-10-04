@@ -35,6 +35,9 @@ gal :
     # Use one bullet for each item.
     # Note: Each item in the Sum can have its own separate shear.  See demo4 for an example.
     items :
+        # Note the notation here for a list of items rather than a dict of key:value pairs.
+        # Each item is specified by an indented -.  Then another layer of indentation is 
+        # required for the key:value pairs for each item.
         -   # First the bulge:
             type : Sersic
             n : 3.5

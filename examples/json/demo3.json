@@ -32,7 +32,8 @@
     "type" : "Sum",
 
     "#" : "Any number of items may be added together, so we specify them in a list.",
-    "#" : "Use one bullet for each item.",
+    "#" : "A list is specified using square brackets with commas separating each item.",
+    "#" : "In this case, each item is a dict of key:value pairs for that component.",
     "#" : "Note: Each item in the Sum can have its own separate shear.  See demo4 for an example.",
     "items" : [
         {

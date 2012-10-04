@@ -52,6 +52,8 @@
 psf : 
     type : Sum
     items :
+        # Note: in this case, each item is small enough that we can put the whole dict on a 
+        # single line with the -.  No need for further indentation.
         - { type : Gaussian, fwhm : 0.6, flux : 0.8 }
         - { type : Gaussian, fwhm : 2.3, flux : 0.2 }
 

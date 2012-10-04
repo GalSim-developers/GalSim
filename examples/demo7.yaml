@@ -112,7 +112,12 @@ image :
     # images that compare the same object drawn both ways.
     draw_method :
         type : List
+
+        # Here we introduce another notation for specifying a list in YAML.  The list of items
+        # may be indicated with square brackets with the items separated by commas rather
+        # than using the - notation with one item per line.
         items : [ fft , phot ]
+
         # The following sequence for index is automatically generated:
         #index : { type : Sequence , first : 0 , last : 1 }
 
