@@ -28,49 +28,45 @@ def test_nfwhalo():
     # distance go from 1 .. 599 arcsec
     ref = np.loadtxt(refdir + '/nfw_lens.dat')
 
+    # set up the same halo
+    halo = galsim.lensing.NFWHalo(mass=1e15, conc=4, z=1, pos_x=0, pos_y=0)
+    pos_x = np.arange(1,600)
+    pos_y = np.zeros_like(pos_x)
+    z_s = 2
+    kappa = halo.getConvergence(pos_x, pos_y, z_s)
+    gamma1, gamma2 = halo.getShear(pos_x, pos_y, z_s, reduced=False)
+    g1, g2 = halo.getShear(pos_x, pos_y, z_s, reduced=True)
+
+    # check internal correctness:
+    # g1 = gamma1/(1-kappa), and g2 = 0
+    np.testing.assert_array_equal(g1, gamma1/(1-kappa),
+                                  err_msg="Computation of reduced shear g incorrect.")
+    np.testing.assert_array_equal(g2, np.zeros_like(g2),
+                                  err_msg="Computation of reduced shear g2 incorrect.")
+
+    # comparison to reference:
+    # tangential shear in x-direction is purely negative in g1
     try:
-        # set up the same halo
-        halo = galsim.lensing.NFWHalo(mass=1e15, conc=4, z=1, pos_x=0, pos_y=0)
-        pos_x = np.arange(1,600)
-        pos_y = np.zeros_like(pos_x)
-        z_s = 2
-        kappa = halo.getConvergence(pos_x, pos_y, z_s)
-        gamma1, gamma2 = halo.getShear(pos_x, pos_y, z_s, reduced=False)
-        g1, g2 = halo.getShear(pos_x, pos_y, z_s, reduced=True)
-
-        # check internal correctness:
-        # g1 = gamma1/(1-kappa), and g2 = 0
-        np.testing.assert_array_equal(g1, gamma1/(1-kappa),
-                                      err_msg="Computation of reduced shear g incorrect.")
-        np.testing.assert_array_equal(g2, np.zeros_like(g2),
-                                      err_msg="Computation of reduced shear g2 incorrect.")
-
-        # comparison to reference:
-        # tangential shear in x-direction is purely negative in g1
-        try:
-            np.testing.assert_allclose(
-                -ref[:,2], gamma1, rtol=1e-4,
-                err_msg="Computation of shear deviates from reference.")
-            np.testing.assert_allclose(
-                -ref[:,3], g1, rtol=1e-4,
-                err_msg="Computation of reduced shear deviates from reference.")
-            np.testing.assert_allclose(
-                ref[:,4], kappa, rtol=1e-4,
-                err_msg="Computation of convergence deviates from reference.")
-        except AttributeError:
-            # Older numpy versions don't have assert_allclose, so use this instead:
-            np.testing.assert_array_almost_equal(
-                -ref[:,2], gamma1, decimal=4,
-                err_msg="Computation of shear deviates from reference.")
-            np.testing.assert_array_almost_equal(
-                -ref[:,3], g1, decimal=4,
-                err_msg="Computation of reduced shear deviates from reference.")
-            np.testing.assert_array_almost_equal(
-                ref[:,4], kappa, decimal=4,
-                err_msg="Computation of convergence deviates from reference.")
-    except ImportError:
-        import warnings
-        warnings.warn("scipy not found! Integrator required for angular diameter distances")
+        np.testing.assert_allclose(
+            -ref[:,2], gamma1, rtol=1e-4,
+            err_msg="Computation of shear deviates from reference.")
+        np.testing.assert_allclose(
+            -ref[:,3], g1, rtol=1e-4,
+            err_msg="Computation of reduced shear deviates from reference.")
+        np.testing.assert_allclose(
+            ref[:,4], kappa, rtol=1e-4,
+            err_msg="Computation of convergence deviates from reference.")
+    except AttributeError:
+        # Older numpy versions don't have assert_allclose, so use this instead:
+        np.testing.assert_array_almost_equal(
+            -ref[:,2], gamma1, decimal=4,
+            err_msg="Computation of shear deviates from reference.")
+        np.testing.assert_array_almost_equal(
+            -ref[:,3], g1, decimal=4,
+            err_msg="Computation of reduced shear deviates from reference.")
+        np.testing.assert_array_almost_equal(
+            ref[:,4], kappa, decimal=4,
+            err_msg="Computation of convergence deviates from reference.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
