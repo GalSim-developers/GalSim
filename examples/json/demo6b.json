@@ -86,6 +86,10 @@
     "#" : "to repeat it for the noise.  So in fact, everything is default here.",
     "#" : "So we can just set the noise to an empty dictionary, which means use all defaults.",
     "#" : "(If we omit it entirely, that would mean no noise, which isn't what we want.)",
+
+    "#" : "Also, if we include a sky_level in noise in addition to the above image sky_level,",
+    "#" : "then both of them (added together) will be used for the noise, but only the ",
+    "#" : "image.sky_level will remain as the background level in the final image.",
     "noise" : {},
 
     "#" : "Define the initial random number seed",
