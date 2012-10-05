@@ -517,16 +517,16 @@ Boost.Python):
 Notes on MacPorts version of gcc with Mac OS X 10.5.8:
 If you have installed a MacPorts version of gcc (e.g., "mp-gcc47"), it may not 
 link correctly with the other MacPorts installed modules, which are compiled in
-the native gcc versions.  To check what gcc versions are available to you, try
+the system gcc versions.  To check what gcc versions are available to you, try
 the command
 
     port select --list gcc
 
-then switch to the native gcc version (either 4.0 or 4.2) with
+then switch to the system gcc version (either 4.0 or 4.2) with
 
     sudo port select --set gcc gcc42
 
-and compile GalSim with the native gcc.
+and compile GalSim with the system gcc.
 
 
 5. More SCons options
