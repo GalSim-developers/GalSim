@@ -495,7 +495,7 @@ so you can only use fink for SCons, FFTW and TMV.  So you will probably need
 to install Boost manually.  This can be done by following the instructions of 
 Section 1.v), above.
 
-b) Macports -- this is another popular Mac package management project
+b) MacPorts -- this is another popular Mac package management project
 (http://www.macports.org/) with similar functionality to fink, although TMV
 is not supported but can be easily installed by following the instructions
 in Section 1.iv).
@@ -506,13 +506,27 @@ modules:
     sudo port selfupdate
     sudo port upgrade outdated
 
-The following modules relevant to GalSim are available on Macports (note that
+The following modules relevant to GalSim are available on MacPorts (note that
 when using MacPorts to install Boost, you may need to explicitly indicate 
 Boost.Python):
 
     sudo port install scons fftw-3 python27 py27-nose py27-numpy py27-pyfits \
     	 py27-yaml
     sudo port install boost +python27
+
+Notes on MacPorts version of gcc with Mac OS X 10.5.8:
+If you have installed a MacPorts version of gcc (e.g., "mp-gcc47"), it may not 
+link correctly with the other MacPorts installed modules, which are compiled in
+the native gcc versions.  To check what gcc versions are available to you, try
+the command
+
+    port select --list gcc
+
+then switch to the native gcc version (either 4.0 or 4.2) with
+
+    sudo port select --set gcc gcc42
+
+and compile GalSim with the native gcc.
 
 
 5. More SCons options
