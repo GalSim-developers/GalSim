@@ -22,8 +22,8 @@ New features introduced in this demo:
 - galsim.config.ProcessInput(config)
 - galsim.config.ProcessOutput(config)
 - galsim.config.BuildFits(file_name, config)
-- galsim.config.BuildMultiFits(file_name, config)
-- galsim.config.BuildDataCube(file_name, config)
+- galsim.config.BuildMultiFits(file_name, nimages, config)
+- galsim.config.BuildDataCube(file_name, nimages, config)
 - galsim.config.BuildImage(config)
 - galsim.fits.read(file_name)
 """
@@ -131,9 +131,10 @@ def main(argv):
     #
     # To build the files, the Process function then calls one of the following:
     #
-    #     galsim.config.BuildFits(file_name, config)        -- build a regular fits file
-    #     galsim.config.BuildMultiFits(file_name, config)   -- build a multi-extension fits file
-    #     galsim.config.BuildDataCube(file_name, config)    -- build a fits data cube
+    #     galsim.config.BuildFits(file_name, config)               -- build a regular fits file
+    #     galsim.config.BuildMultiFits(file_name, nimages, config) -- build a multi-extension fits 
+    #                                                                 file
+    #     galsim.config.BuildDataCube(file_name, nimages, config)  -- build a fits data cube
     #
     # Again, we'll forego that option here, so we can see how to use the config machinery
     # to produce images that we can use from within python.
@@ -154,9 +155,9 @@ def main(argv):
     # All of the above functions also have an optional kwarg, logger, which can take a 
     # logger object to output diagnostic information if desired.  We'll use that option here
     # to output the progress of the build as we go.  Our logger is set with level=logging.INFO
-    # which means it will output a modest amount of text along the way.  Using level=DEBUG will
-    # output a lot of text, useful when diagnosing a mysterious crash.  And level=WARNING 
-    # or higher will be pretty silent unless there is a problem.
+    # which means it will output a modest amount of text along the way.  Using level=logging.DEBUG 
+    # will output a lot of text, useful when diagnosing a mysterious crash.  And using
+    # level=logging.WARNING or higher will be pretty silent unless there is a problem.
 
     t1 = time.time()
 

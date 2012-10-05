@@ -14,7 +14,7 @@
 #
 # New features introduced in this demo:
 #
-# - shear_type : PowerSpectrumShear 
+# - shear_value : PowerSpectrumShear 
 # - input : power_spectrum (e_power, b_power)
 # - RealGalaxy : id
 # - image.psf : real_space
