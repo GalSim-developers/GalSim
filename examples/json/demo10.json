@@ -1,0 +1,166 @@
+{
+"#" : "Demo #10",
+
+"#" : "The tenth JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
+
+"#" : "This script uses both a variable PSF and variable shear, taken from a power spectrum, along",
+"#" : "the lines of a Great10 (Kitching, et al, 2012) image.  The galaxies are placed on a grid",
+"#" : "(10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp",
+"#" : "is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them",
+"#" : "as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific",
+"#" : "RealGalaxy's, selected to be 5 particularly irregular ones, each with a random",
+"#" : "orientation.  (These are taken from the same catalog of 100 objects that demo6 used.)",
+
+"#" : "New features introduced in this demo:",
+
+"#" : "- shear_type : PowerSpectrumShear ",
+"#" : "- input : power_spectrum (e_power, b_power)",
+"#" : "- RealGalaxy : id",
+"#" : "- image.psf : real_space",
+"#" : "- type : Eval using pos variable, user-defined variables and math functions",
+"#" : "- output : psf : hdu",
+
+
+"#" : "Define the PSF profile",
+"psf" : {
+    "type" : "Gaussian",
+
+    "#" : "We saw the Eval type before (in demo3.json) as a way to do simple arithmetic.",
+    "#" : "It becomes much more powerful when you include variables in your equation.",
+    "#" : "One variable that is usable is `pos`, which is the position of the current ",
+    "#" : "object relative to the center of the image in arcsec.  This lets you define",
+    "#" : "any arbitrary function for a particular variable in terms of (x,y).",
+    "fwhm" : {
+        "type" : "Eval",
+        "str" : "0.9 + 0.5 * (pos.x**2 + pos.y**2) / 100**2"  
+    },
+
+    "ellip":{
+        "type" : "EBeta",
+
+        "#" : "We also allow any number of user-defined variables.",
+        "#" : "The first letter of the variable name indicates what type it is expected to be:",
+        "#" : "    f = float",
+        "#" : "    i = int",
+        "#" : "    b = bool",
+        "#" : "    s = string",
+        "#" : "    a = Angle",
+        "#" : "    p = Position",
+        "#" : "    g = Shear",
+        "#" : "Then we can use this variable (without the first letter) in our string:",
+        "e" : {
+            "type" : "Eval",
+            "fr" : { "type" : "Eval" , "str" : "(pos.x**2 + pos.y**2)**0.5" },
+            "str" : "0.4 * (r/100)**1.5"
+        },
+
+        "#" : "And you can also use anything in the Python math module:",
+        "beta" : {
+            "type" : "Eval",
+            "str" : "(math.atan2(pos.y,pos.x) + math.pi/2.) * galsim.radians"
+        }
+    }
+},
+
+
+"#" : "Define the galaxy profile",
+"gal" :{
+    "type" : "List",
+
+    "#" : "Note: we could have made the type RealGalaxy and then have the id be a list",
+    "#" : "      with a random index.  However, doing it this way means that the Fourier",
+    "#" : "      transforms of the real galaxy images don't need to be recalculated each time,",
+    "#" : "      so it's a bit more efficient.",
+    "items" : [
+        { "type" : "RealGalaxy" , "id" : 106416 },
+        { "type" : "RealGalaxy" , "id" : 106731 },
+        { "type" : "RealGalaxy" , "id" : 108402 },
+        { "type" : "RealGalaxy" , "id" : 116045 },
+        { "type" : "RealGalaxy" , "id" : 116448 }
+    ],
+    "index" : { "type" : "Random" },
+
+    "#" : "Make the galaxies a factor of 3 larger than their original observed size.",
+    "dilation" : 3 ,
+
+    "rotation" : { "type" : "Random" },
+
+    "shear" : {
+        "#" : "For this demo, we use shears drawn from a power spectrum P(k) = k^1.8.",
+        "#" : "The power spectrum is set up below using input : power_spectrum.  See below.",
+        "type" : "PowerSpectrumShear"
+    },
+
+    "shift" : {
+        "type" : "XY",
+        "#" : "Half a pixel in any direction",
+        "x" : { "type" : "Random" , "min" : -0.22 , "max" : 0.22 },
+        "y" : { "type" : "Random" , "min" : -0.22 , "max" : 0.22 }
+    },
+
+    "signal_to_noise" : 100
+},
+
+
+"#" : "Define some other information about the images ",
+"image" : {
+
+    "type" : "Tiled",
+    "nx_tiles" : 10,
+    "ny_tiles" : 10,
+
+    "stamp_size" : 48,
+
+    "pixel_scale" : 0.44 ,
+
+    "noise" : {
+        "sky_level" : 1e6 
+    },
+
+    "#" : "The random seed is used for both the power spectrum realization and the random",
+    "#" : "properties of the galaxies.",
+    "random_seed" : 3339201
+},
+
+
+"#" : "Define the input files",
+"input" : {
+    "#" : "In this case, we need to define where the real galaxy input catalog is.",
+    "real_catalog" : {
+        "image_dir" : "data",
+        "file_name" : "real_galaxy_catalog_example.fits",
+
+        "#" : "Not so important this time, since only using 5 items in the catalog.",
+        "preload" : false  
+    },
+
+    "#" : "We also initialize the power spectrum here.",
+    "#" : "There are two possible attributes for a power_spectrum: e_power and b_power.",
+    "#" : "You must specify at least one of them.",
+    "#" : "They are each strings that define a function of k.",
+    "power_spectrum" : {
+        "e_power" : "k**1.8",
+        "#" : "In this case we leave off b_power, so it is taken to be 0."
+    }
+},
+
+
+"#" : "Define the names and format of the output files",
+"output" : {
+
+    "dir" : "output_json",
+    "file_name" : "power_spectrum.fits",
+
+    "#" : "Put the PSF image in hdu=1 (the first extension after the primary HDU)",
+    "psf" :  {
+        "hdu" : 1,
+        "#" : "We use real space convolution to avoid some of the ",
+        "#" : "artifacts that can show up with Fourier convolution.",
+        "#" : "The level of the artifacts is quite low, but when drawing with",
+        "#" : "no noise, they are apparent with ds9's zscale viewing.",
+        "real_space" : true
+    }
+}
+
+}

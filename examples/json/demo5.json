@@ -1,31 +1,36 @@
 {
+"#" : "Demo #5",
 
-"#" : "JSON configuration file for use with the executable galsim_json",
-"#" : "From the examples directory, type:",
-"#" : "  galsim_json json/demo5.json",
+"#" : "The fifth JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
+  
+"#" : "This script is intended to mimic a Great08 (Bridle, et al, 2010) LowNoise image.",
+"#" : "We produce a single image made up of tiles of postage stamps for each individual object.",
+"#" : "(We only do 10x10 postage stamps rather than 100x100 as they did in the interest of time.)",
+"#" : "Each postage stamp is 40x40 pixels.  One image is all stars.  A second is all galaxies.",
+"#" : "The stars are truncated Moffat profiles.  The galaxies are Exponential profiles.",
+"#" : "(Great08 mixed pure bulge and pure disk for its LowNoise run.  We're just doing disks to ",
+"#" : "make things simpler.)  The galaxies are oriented randomly, but in 90 degree-rotated pairs",
+"#" : "to cancel the effect of shape noise.  The applied shear is the same for each galaxy.  ",
 
-"#" : "This configuration file is designed to be equivalent to the example script called demo5.py",
-
-"#" : "   Make images similar to that done for the Great08 challenge:",
-"#" : "     - Each fits file is 10 x 10 postage stamps.",
-"#" : "       (The real Great08 images are 100x100, but in the interest of making the Demo",
-"#" : "        script a bit quicker, we only build 100 stars and 100 galaxies.)",
-"#" : "     - Each postage stamp is 40 x 40 pixels.",
-"#" : "     - One image is all stars.",
-"#" : "     - A second image is all galaxies.",
-"#" : "     - Applied shear is the same for each galaxy.",
-"#" : "     - Galaxies are oriented randomly, but in pairs to cancel shape noise.",
-"#" : "     - Noise is poisson using a nominal sky value of 1.e6.",
-"#" : "     - Galaxies are sersic profiles.",
-
-
-"#" : "Define what kind of psf to use",
+"#" : "New features introduced in this demo:",
+   
+"#" : "- gal : resolution",
+"#" : "- gal : signal_to_noise",
+"#" : "- shear (or ellip) type : Ring (first, num)",
+"#" : "- value type : RandomGaussian (sigma, min, max)",
+"#" : "- angle type : Random",
+"#" : "- shift type : RandomCircle (radius)",
+"#" : "- image type : Tiled (nx_tiles, ny_tiles, stamp_xsize, stamp_ysize, border)",
+"#" : "- output type : Fits (file_name, dir)",
+    
+"#" : "Define the PSF profile",
 "psf" : {
     "type" : "Moffat",
     "beta" : 3,
     "fwhm" : 2.85,
 
-    "#" : "The Great08 images used a truncated Moffat profile",
+    "#" : "The Great08 images used a truncated Moffat profile at 2*FWHM",
     "trunc" : 5.70,
 
     "ellip" : {
@@ -35,13 +40,11 @@
     }
 },
 
-
 "#" : "Define the galaxy profile",
 "gal" : {
-    "type" : "Sersic",
     "#" : "Great08 mixed pure bulge and pure disk for its LowNoise run.",
     "#" : "We're just doing disks to make things simpler.",
-    "n" : 1,
+    "type" : "Exponential",
 
     "#" : "r_gal / r_psf  (use r = half_light_radius)",
     "#" : "This is in lieu of setting a size parameter directly.",
@@ -61,7 +64,9 @@
     "#" : "to elliminate the effect of shape noise.  (To first order at least.)",
     "#" : "In GalSim, we declare this as a Ring test.  The ring can have any number of",
     "#" : "values set around a ring in e1-e2 space.  For 90 degree rotated pairs, this ",
-    "#" : "corresponds to only 2 values on the ring.",
+    "#" : "corresponds to only 2 values on the ring.  It is up to the user to make sure the",
+    "#" : "total number of objects in an image is a multiple of num, otherwise the last ring",
+    "#" : "won't get completed.  In this case 100 is divisible by 2, so it's fine.",
     "ellip" : {
         "type" : "Ring",
         "num" : 2,
@@ -78,6 +83,7 @@
                 "max" : 0.6
             },
             "beta" : {
+	        "#" : "An angle of type Random means uniform within 0 .. 2pi radians",
                 "type" : "Random"
             }
         }
@@ -136,7 +142,7 @@
     "random_seed" : 6424512
 },
 
-"#" : "Define the output format",
+"#" : "Define the names and format of the output files",
 "output" : {
     "#" : "type defines what kind of file.",
     "#" : "Fits is actually the default if not specified, but we set it here anyway.",

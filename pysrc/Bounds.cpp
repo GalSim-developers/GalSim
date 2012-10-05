@@ -38,6 +38,7 @@ struct PyPosition {
             .def(bp::self != bp::self)
             .def(str(bp::self))
             .def("assign", &Position<T>::operator=, bp::return_self<>())
+            .enable_pickling()
             ;
     }
 
@@ -71,6 +72,7 @@ struct PyBounds {
             .def("area", &Bounds<T>::area)
             .def(str(bp::self))
             .def("assign", &Bounds<T>::operator=, bp::return_self<>())
+            .enable_pickling()
             ;
         ADD_CORNER(getXMin, setXMin, xMin);
         ADD_CORNER(getXMax, setXMax, xMax);

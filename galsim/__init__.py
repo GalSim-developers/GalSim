@@ -15,5 +15,5 @@ from . import random
 from . import config
 from psfcorr import *
 from io import *
-from . import lensing
+from lensing import *
 from . import integ

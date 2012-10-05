@@ -11,9 +11,13 @@ def Bounds_repr(self):
 def Bounds_str(self):
     return "("+str(self.xMin)+", "+str(self.xMax)+", "+str(self.yMin)+", "+str(self.yMax)+")"
 
+def Bounds_getinitargs(self):
+    return self.xmin, self.xmax, self.ymin, self.ymax
+
 for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.__repr__ = Bounds_repr
     Class.__str__ = Bounds_str
+    Class.__getinitargs__ = Bounds_getinitargs
     Class.__doc__ = """A class for representing image bounds as 2D rectangles.
 
     BoundsD describes bounds with floating point values in x and y.
@@ -46,15 +50,23 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     `ymin`=`ymax`, which will have an undefined rectangle and the instance method .isDefined()
     will return false.  The first sets `xmin`=`xmax`=`ymin`=`ymax`=0:
 
-        >>> bounds = galsim.PositionD()
-        >>> bounds = galsim.PositionI()
+        >>> bounds = galsim.BoundsD()
+        >>> bounds = galsim.BoundsI()
 
     The second method sets both upper and lower rectangle bounds to be equal to some position:
 
-        >>> bounds = galsim.PositionD(galsim.PositionD(xmin, ymin))
-        >>> bounds = galsim.PositionI(galsim.PositionI(imin, jmin))
+        >>> bounds = galsim.BoundsD(galsim.PositionD(xmin, ymin))
+        >>> bounds = galsim.BoundsI(galsim.PositionI(imin, jmin))
 
     Once again, the I/D type of PositionI/D must match that of BoundsI/D.
+
+    For the latter two initializations, you would typically then add to the bounds with:
+
+        >>> bounds += pos1
+        >>> bounds += pos2
+        >>> [etc.]
+
+    Then the bounds will end up as the bounding box of all the positions that were added to it.
 
     Methods
     -------

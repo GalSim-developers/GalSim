@@ -1,12 +1,50 @@
+#
+# Demo #1
+#
+# The first YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# Each of these demo*.yaml files are designed to be equivalent to the corresponding
+# demo*.py file.  We expect that the config file usage will be easier for many people
+# to get going with GalSim, especially those who aren't very comfortable with writing 
+# python code.  And even advanced pythonistas may find it more useful for many tasks than
+# writing the corresponding python code.
+#
+# The executable that reads these YAML files is called galsim_yaml, which should be installed
+# in your PREFIX/bin directory (after doing `scons install`, that is, where PREFIX is either 
+# /usr/local or whatever other PREFIX you set when running scons).  So to run this config
+# file, you should be able to type simply:
+#
+#     galsim_yaml demo1.yaml
+#
+# If you haven't run `scons install` for whatever reason, you can instead write:
+#
+#     ../bin/galsim_yaml demo1.yaml
+#
+# If you don't have PyYAML installed, you can use JSON files instead.  The directory json has 
+# JSON configuration files that are exactly equivalent to these YAML files.  The YAML format
+# is a superset of the JSON format, so they are quite similar, but the YAML format is easier
+# to read and has a few extra nice features.  But if you don't want to install PyYAML for some
+# reason, you can use the json/demo*.json instead by typing (for demo1):
+#
+#     galsim_json json/demo1.json
+#
+#
+# This first config file is about as simple as it gets.  We draw an image of a single galaxy 
+# convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the 
+# PSF and the galaxy.  And we add a constant level of Gaussian noise to the image.
+#
+# In each demo, we list the new features introduced in that demo file.  These will differ somewhat
+# between the .py and .yaml versions, since the two methods implement things in different ways.
+# (demo*.py are python scripts, while demo*.yaml are configuration files.)
+#
+# New features introduced in this demo:
+#
+# - obj type : Gaussian (flux, sigma)
+# - image : pixel_scale
+# - noise type : Gaussian (sigma)
+# - output : dir, file_name
 
-# YAML configuration file for use with the executable galsim_yaml
-# Type:
-#   galsim_yaml demo1.yaml
-#
-# This configuration file is designed to be equivalent to the example script called demo1.py.
-#
-# It's pretty close to the minimal configuration file that you might want to use.
-#
 
 # The gal field defines what kind of galaxy profile to use.
 gal :
@@ -16,33 +54,40 @@ gal :
     # Gaussian profiles have a number of possible size parameters, but
     # sigma is the most basic one.  
     # The others are fwhm and half_light_radius.  At least one of these must be specified.
-    sigma : 2.  # arcsec
+    sigma : 2  # arcsec
 
     # The default flux would be 1, but you would typically want to define the flux 
     # to be something other than that.
-    flux : 1.e5  # ADU
+    flux : 1.e5
  
 
-# Technically, psf isn't required, but for astronomical images, we always have a psf,
+# Technically, the psf field isn't required, but for astronomical images we always have a PSF
 # so you'll usually want to define one.  (If it's omitted, the galaxy isn't convolved 
-# by anything, so effectively a delta function psf.)
+# by anything, so effectively a delta function PSF.)
 # We use a Gaussian again for simplicity, but one somewhat smaller than the galaxy.
 psf : 
     type : Gaussian
-    sigma : 1.0   # arcsec
-    # No need to specify a flux, since flux=1 is the right thing for a psf.
+    sigma : 1  # arcsec
+    # No need to specify a flux, since flux=1 is the right thing for a PSF.
+
+
+# There is an optional pix field as well, which can define the profile of the pixel. 
+# However, you will almost never need to specify this one. The default is to use the same pixel
+# shape as the image uses, namely a square pixel whose size is image.pixel_scale (see below). 
+# The config machinery will handle convolving by the pixel when necessary as was done 
+# in demo1.py.  (It's not always necessary -- see demo7.py.)
 
 
 # The image field specifies some other information about the image to be drawn.
 image :
     # If pixel_scale isn't specified, then pixel_scale = 1 is assumed.
-    pixel_scale : 0.2   # arcsec / pixel
+    pixel_scale : 0.2  # arcsec / pixel
 
     # If you want noise in the image (which is typical) you specify that here.
     # In this case we use gaussian noise.
     noise : 
         type : Gaussian
-        sigma : 30.   # ADU / pixel
+        sigma : 30  # standard deviation of the counts in each pixel
 
     # You can also specify the size of the image if you want, but if you omit it
     # (as we do here), then GalSim will automatically size the image appropriately.
