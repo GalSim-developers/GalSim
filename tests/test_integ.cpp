@@ -22,6 +22,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
+#include <boost/test/floating_point_comparison.hpp>
 #include <boost/mpl/list.hpp>
 
 const double test_sigma = 7.;           // test value of Gaussian sigma for integral tests
