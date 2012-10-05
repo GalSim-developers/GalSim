@@ -1,30 +1,40 @@
 {
+"#" : "Demo #6",
+  
+"#" : "The sixth JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
+  
+"#" : "This script uses real galaxy images from COSMOS observations.  The catalog of real galaxy",
+"#" : "images distributed with GalSim only includes 100 galaxies, but you can download a much",
+"#" : "larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link",
+"#" : "to the download page.",
 
-"#" : "JSON configuration file for use with the executable galsim_json",
-"#" : "From the examples directory, type:",
-"#" : "  galsim_json json/demo6a.json json/demo6b.json",
+"#" : "The galaxy images include images of the effective PSF for the original observations, ",
+"#" : "so GalSim considers the galaxy profile to be the observed image deconvolved by that PSF.",
+"#" : "In this case, we then randomly rotate the galaxies, apply a given gravitational shear as ",
+"#" : "well as gravitational magnification, and then finally convolve by a double Gaussian PSF.",
+"#" : "The final image can of course have any pixel scale, not just that of the original images.",
+"#" : "The output for this script is to a FITS data cube.  With DS9, this can be viewed with a",
+"#" : "slider to quickly move through the different images.",
+       
+"#" : "New features introduced in this demo:",
 
-"#" : "This configuration file is designed to be equivalent to the example script called demo6.py",
-
-"#" : "   Make images similar to that done for the Great08 challenge:",
-"#" : "     - Each fits file is 10 x 10 postage stamps.",
-"#" : "       (The real Great08 images are 100x100, but in the interest of making the Demo",
-"#" : "        script a bit quicker, we only build 100 stars and 100 galaxies.)",
-"#" : "     - Each postage stamp is 40 x 40 pixels.",
-"#" : "     - One image is all stars.",
-"#" : "     - A second image is all galaxies.",
-"#" : "     - Applied shear is the same for each galaxy.",
-"#" : "     - Galaxies are oriented randomly, but in pairs to cancel shape noise.",
-"#" : "     - Noise is poisson using a nominal sky value of 1.e6.",
-"#" : "     - Galaxies are sersic profiles.",
+"#" : "- input : real_catalog (file_name, image_dir, preload)",
+"#" : "- obj type : RealGalaxy (index)",
+"#" : "- obj : rotate ",
+"#" : "- obj : magnify",
+"#" : "- image : sky_level",
+"#" : "- value type : Sequence",
+"#" : "- output type : DataCube (file_name, dir, nimages)",
+"#" : "- Using JSON's multiple document feature to do more than one thing",
 
 "#" : "For this example, we actually have two config files, since we have two different kinds",
-"#" : "of output files to make.  The first, demo6a.json is for the psf output,",
+"#" : "of output files to make.  The first, demo6a.json is for the PSF output,",
 "#" : "and the second, demo6b.json is for the convolved galaxy images.",
 "#" : "Out JSON parser can take multiple input files on the command line, and will run all",
 "#" : "of them.",
 
-"#" : "Define what kind of psf to use",
+"#" : "Define the PSF profile",
 "psf" : {
     "type" : "Sum",
     "items" : [
@@ -33,14 +43,17 @@
     ]
 },
 
-"#" : "Define the pixel size",
-"#" : "This time, we'll leave the size unspecified to let GalSim automatically choose ",
-"#" : "an appropriate size.",
+"#" : "Define some other information about the images ",
 "image" : {
     "pixel_scale" : 0.15,
 
     "#" : "Define the initial random number seed",
-    "random_seed" : 1512413
+    "random_seed" : 1512413,
+
+    "#" : "Note: since the output includes a data_cube output, which requires all the",
+    "#" : "images to be the same size, GalSim will choose the size of the first image",
+    "#" : "automatically from the profile (since we aren't setting any image : size here),",
+    "#" : "but then subsequent images will be forced to be the same size as the first one."
 },
 
 "output" : {

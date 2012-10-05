@@ -221,6 +221,13 @@ private:
 };
 
 template <typename T>
+class ReturnInverse
+{
+public: 
+    T operator()(const T val) const { return val==T(0) ? T(0) : T(1)/val; }
+};
+
+template <typename T>
 class ReturnSecond 
 {
 public:
@@ -233,6 +240,12 @@ template <typename T>
 void ImageView<T>::fill(T x) const 
 {
     transform_pixel(*this, ConstReturn<T>(x));
+}
+
+template <typename T>
+void ImageView<T>::invertSelf() const 
+{
+    transform_pixel(*this, ReturnInverse<T>());
 }
 
 template <typename T>

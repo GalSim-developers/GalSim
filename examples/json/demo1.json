@@ -1,12 +1,41 @@
 {
+"#" : "Demo #1",
 
-"#" : "JSON configuration file for use with the executable galsim_json",
-"#" : "From the examples directory, type:",
-"#" : "  galsim_json json/demo1.json",
+"#" : "The first JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
 
-"#" : "This configuration file is designed to be equivalent to the example script called demo1.py",
+"#" : "Each of these demo*.json files are designed to be equivalent to the corresponding",
+"#" : "../demo*.py file.  We expect that the config file usage will be easier for many people",
+"#" : "to get going with GalSim, especially those who aren't very comfortable with writing ",
+"#" : "python code.  And even advanced pythonistas may find it more useful for many tasks than",
+"#" : "writing the corresponding python code.",
 
-"#" : "It's pretty close to the minimal configuration file that you might want to use.",
+"#" : "The executable that reads these JSON files is called galsim_json, which should be installed",
+"#" : "in your PREFIX/bin directory (after doing `scons install`, that is, where PREFIX is either",
+"#" : "/usr/local or whatever other PREFIX you set when running scons).  So to run this config",
+"#" : "file, you should be able to type simply (from the examples directory):",
+
+"#" : "    galsim_json json/demo1.json",
+
+"#" : "If you haven't run `scons install` for whatever reason, you can instead write:",
+
+"#" : "    ../bin/galsim_json json/demo1.json",
+
+
+"#" : "This first config file is about as simple as it gets.  We draw an image of a single galaxy ",
+"#" : "convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the",
+"#" : "PSF and the # galaxy.  And we add a constant level of Gaussian noise to the image.",
+
+"#" : "In each demo, we list the new features introduced in that demo file.  These will differ",
+"#" : "between the .py and .json files, since the two methods implement things different ways.",
+"#" : "(demo*.py are python scripts, while demo*.json are configuration files.)",
+
+"#" : "New features introduced in this demo:",
+
+"#" : "- obj type : Gaussian (flux, sigma)",
+"#" : "- image : pixel_scale",
+"#" : "- noise type : Gaussian (sigma)",
+"#" : "- output : dir, file_name",
 
 "#" : "The gal field defines what kind of galaxy profile to use.",
 "gal" : {
@@ -24,15 +53,22 @@
 },
  
 
-"#" : "Technically, psf isn't required, but for astronomical images, we always have a psf,",
-"#" : "so you'll usually want to define one.  (If it's omitted, the galaxy isn't convolved ",
-"#" : "by anything, so effectively a delta function psf.)",
+"#" : "Technically, the psf field isn't required, but for astronomical images we always have a ",
+"#" : "PSF so you'll usually want to define one.  (If it's omitted, the galaxy isn't convolved ",
+"#" : "by anything, so effectively a delta function PSF.)",
 "#" : "We use a Gaussian again for simplicity, but one somewhat smaller than the galaxy.",
 "psf" : {
     "type" : "Gaussian",
     "sigma" : 1,
-    "#" : "No need to specify a flux, since flux=1 is the right thing for a psf."
+    "#" : "No need to specify a flux, since flux=1 is the right thing for a PSF."
 },
+
+
+"#" : "There is an optional pix field as well, which can define the profile of the pixel.",
+"#" : "However, you will almost never need to specify one. The default is to use the same pixel",
+"#" : "shape as the image uses, namely a square pixel whose size is image.pixel_scale (see below).",
+"#" : "The config machinery will handle convolving by the pixel when necessary as was done ",
+"#" : "in demo1.py.  (It's not always necessary -- see demo7.py.)",
 
 
 "#" : "The image field specifies some other information about the image to be drawn.",
@@ -44,6 +80,8 @@
     "#" : "In this case we use gaussian noise.",
     "noise" : {
         "type" : "Gaussian",
+
+        "#" : "sigma = standard deviation of the counts in each pixel",
         "sigma" : 30
     },
 

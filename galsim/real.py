@@ -164,7 +164,7 @@ class RealGalaxyCatalog(object):
 
 
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None, 
-            rand_rotate=True, uniform_deviate=None, target_flux=1000.0, image=None):
+            rand_rotate=True, rng=None, target_flux=1000.0, image=None):
     """Function to simulate images (no added noise) from real galaxy training data.
 
     This function takes a RealGalaxy from some training set, and manipulates it as needed to 
@@ -187,12 +187,13 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     @param g1                  First component of shear to impose (components defined with respect
                                to pixel coordinates), default `g1 = 0.`
     @param g2                  Second component of shear to impose, default `g2 = 0.`
-    @param rotation_angle      Angle by which to rotate the galaxy (must be a galsim.Angle() 
+    @param rotation_angle      Angle by which to rotate the galaxy (must be a galsim.Angle 
                                instance).
     @param rand_rotate         If `rand_rotate = True` (default) then impose a random rotation on 
                                the training galaxy; this is ignored if `rotation_angle` is set.
-    @param uniform_deviate     Uniform RNG to use for selection of the random rotation angle
-                               (optional, must be a galsim.UniformDeviate() if supplied).
+    @param rng                 A random number generator to use for selection of the random 
+                               rotation angle. (optional, may be any kind of galsim.BaseDeviate 
+                               or None)
     @param target_flux         The target flux in the output galaxy image, default 
                                `target_flux = 1000.`
     @param image               As with the GSObject.draw() function, if an image is provided,
@@ -240,8 +241,14 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     if rotation_angle != None:
         real_galaxy_copy.applyRotation(rotation_angle)
     elif rotation_angle == None and rand_rotate == True:
-        if uniform_deviate == None:
+        if rng == None:
             uniform_deviate = galsim.UniformDeviate()
+        elif isinstance(rng,galsim.UniformDeviate):
+            uniform_deviate = rng
+        elif isinstance(rng,galsim.BaseDeviate):
+            uniform_deviate = galsim.UniformDeviate(rng)
+        else:
+            raise TypeError("The rng provided to drawShoot is not a BaseDeviate")
         rand_angle = galsim.Angle(math.pi*uniform_deviate(), galsim.radians)
         real_galaxy_copy.applyRotation(rand_angle)
 

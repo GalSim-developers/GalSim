@@ -23,44 +23,46 @@ namespace galsim {
         Position(const T xin=0, const T yin=0) : x(xin), y(yin) {}
 
         ///@brief Assignment.
-        Position& operator=(const Position rhs) 
+        Position& operator=(const Position<T>& rhs) 
         {
             if (&rhs == this) return *this;
             else { x=rhs.x; y=rhs.y; return *this; }
         }
 
         /// @brief Overloaded += operator, following standard vector algebra rules.
-        Position& operator+=(const Position rhs) { x+=rhs.x; y+=rhs.y; return *this; }
+        Position<T>& operator+=(const Position<T>& rhs) { x+=rhs.x; y+=rhs.y; return *this; }
 
         /// @brief Overloaded -= operator, following standard vector algebra rules.
-        Position& operator-=(const Position rhs) { x-=rhs.x; y-=rhs.y; return *this; }
+        Position<T>& operator-=(const Position<T>& rhs) { x-=rhs.x; y-=rhs.y; return *this; }
 
         /// @brief Overloaded *= operator for scalar multiplication.
-        Position& operator*=(const T rhs) { x*=rhs; y*=rhs; return *this; }
+        Position<T>& operator*=(const T rhs) { x*=rhs; y*=rhs; return *this; }
 
         /// @brief Overloaded /= operator for scalar division.
-        Position& operator/=(const T rhs) { x/=rhs; y/=rhs; return *this; }
+        Position<T>& operator/=(const T rhs) { x/=rhs; y/=rhs; return *this; }
 
         /// @brief Overloaded * vector multiplication operator for scalar on rhs.
-        Position operator*(const T rhs) const { return Position(x*rhs, y*rhs); }
+        Position<T> operator*(const T rhs) const { return Position<T>(x*rhs, y*rhs); }
 
         /// @brief Overloaded / vector division operator for scalar on rhs.
-        Position operator/(const T rhs) const { return Position(x/rhs, y/rhs); }
+        Position<T> operator/(const T rhs) const { return Position<T>(x/rhs, y/rhs); }
 
         /// @brief Unary negation (x, y) -> (-x, -y).
-        Position operator-() const { return Position(-x,-y); }
+        Position<T> operator-() const { return Position<T>(-x,-y); }
 
         /// @brief Overloaded vector + addition operator with a Position on the rhs.
-        Position operator+(Position<T> rhs) const { return Position(x+rhs.x,y+rhs.y); }
+        Position<T> operator+(const Position<T>& rhs) const 
+        { return Position<T>(x+rhs.x,y+rhs.y); }
 
         /// @brief Overloaded vector - subtraction operator with a Position on the rhs.
-        Position operator-(const Position<T> rhs) const { return Position(x-rhs.x,y-rhs.y); }
+        Position<T> operator-(const Position<T>& rhs) const 
+        { return Position<T>(x-rhs.x,y-rhs.y); }
 
         /// @brief Overloaded == relational equality operator.
-        bool operator==(const Position& rhs) const { return (x==rhs.x && y==rhs.y); }
+        bool operator==(const Position<T>& rhs) const { return (x==rhs.x && y==rhs.y); }
         
         /// @brief Overloaded != relational non-equality operator.
-        bool operator!=(const Position& rhs) const { return (x!=rhs.x || y!=rhs.y); }
+        bool operator!=(const Position<T>& rhs) const { return (x!=rhs.x || y!=rhs.y); }
 
         /// @brief Write (x, y) position to output stream.
         void write(std::ostream& fout) const { fout << "(" << x << "," << y << ")"; }
@@ -257,9 +259,24 @@ namespace galsim {
         }
     }
 
+    // First the generic version:
+    template <class T, bool is_int>
+    struct CalculateCenter 
+    {
+        static Position<T> call(const Bounds<T>& b)
+        { return Position<T>((b.getXMin() + b.getXMax())/T(2),(b.getYMin() + b.getYMax())/T(2)); }
+    };
+    // Slightly different for integer types:
+    template <class T>
+    struct CalculateCenter<T, true>
+    {
+        static Position<T> call(const Bounds<T>& b)
+        { return Position<T>((b.getXMin()+b.getXMax()+1)/T(2),(b.getYMin()+b.getYMax()+1)/T(2)); }
+    };
+
     template <class T>
     Position<T> Bounds<T>::center() const
-    { return Position<T>((xmin + xmax)/T(2),(ymin + ymax)/T(2)); }
+    { return CalculateCenter<T,std::numeric_limits<T>::is_integer>::call(*this); }
 
     // & operator finds intersection, if any
     template <class T>

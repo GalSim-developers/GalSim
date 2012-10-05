@@ -23,15 +23,15 @@ GRIDSIZE = 10   # Number of postage stamps per square side of image
 
 MOFFAT_BETA = 3.5             # } Adopt GREAT08 PSF values for historicity!
 MOFFAT_FWHM = 2.85            # }
-MOFFAT_G1 = -0.019            # }
-MOFFAT_G2 = -0.007            # }
+MOFFAT_E1 = -0.019            # }
+MOFFAT_E2 = -0.007            # }
 MOFFAT_TRUNCATIONFWHM = 2.    # }
 
 EXPONENTIAL_HLR = 0.82 * MOFFAT_FWHM    # } Again, things are slightly more complex than this for
 DEVAUCOULEURS_HLR = 1.59 * MOFFAT_FWHM  # } actual GREAT08 images, but this is a starting example
                                         # } to adopt.
 
-EXPONENTIAL_DEVAUCOULEURS_SIGMA_G = 0.3  # } Approximate the ellipticity distribition as a Gaussian
+EXPONENTIAL_DEVAUCOULEURS_SIGMA_E = 0.3  # } Approximate the ellipticity distribition as a Gaussian
                                          # } with this sigma.
 
 GAL_CENTROID_SHIFT_RADIUS = 1.0  # Set the radius of centroid shifts (uniform within unit circle).
@@ -42,20 +42,12 @@ RNG_SEED = 1848
 NOBJECTS = GRIDSIZE * GRIDSIZE
 
 def make_default_input():
-    # Set the bounds
-    bounds_xmin, bounds_ymin = np.meshgrid(np.arange(GRIDSIZE) * STAMPSIZE,
-                                           np.arange(GRIDSIZE) * STAMPSIZE)
-    bounds_xmax, bounds_ymax = np.meshgrid((np.arange(GRIDSIZE) + 1) * STAMPSIZE - 1,
-                                           (np.arange(GRIDSIZE) + 1) * STAMPSIZE - 1)
-    bounds_xmin = bounds_xmin.flatten()
-    bounds_ymin = bounds_ymin.flatten()
-    bounds_xmax = bounds_xmax.flatten()
-    bounds_ymax = bounds_ymax.flatten()
-    # Then set the PSF catalogue values
+
+    # Set the PSF catalogue values
     moffat_beta = np.zeros(NOBJECTS) + MOFFAT_BETA
     moffat_fwhm = np.zeros(NOBJECTS) + MOFFAT_FWHM
-    moffat_g1 = np.zeros(NOBJECTS) + MOFFAT_G1
-    moffat_g2 = np.zeros(NOBJECTS) + MOFFAT_G2
+    moffat_e1 = np.zeros(NOBJECTS) + MOFFAT_E1
+    moffat_e2 = np.zeros(NOBJECTS) + MOFFAT_E2
     moffat_trunc = np.zeros(NOBJECTS) + MOFFAT_TRUNCATIONFWHM * MOFFAT_FWHM
     # Then set the exponential disc catalogue fixed values
     exponential_hlr = np.zeros(NOBJECTS) + EXPONENTIAL_HLR
@@ -63,21 +55,21 @@ def make_default_input():
     devaucouleurs_hlr = np.zeros(NOBJECTS) + DEVAUCOULEURS_HLR
     # Then set up the Gaussian RNG for making the ellipticity values
     urng = galsim.UniformDeviate(RNG_SEED)
-    gdist = galsim.GaussianDeviate(urng, sigma=EXPONENTIAL_DEVAUCOULEURS_SIGMA_G)
+    edist = galsim.GaussianDeviate(urng, sigma=EXPONENTIAL_DEVAUCOULEURS_SIGMA_E)
     # Slightly hokey way of making vectors of Gaussian deviates, using images... No direct NumPy
     # array-filling with galsim RNGs at the moment.
     #
     # In GREAT08 these galaxy ellipticies were made in rotated pairs to reduce shape noise, but for
     # this illustrative default file we do not do this.
     ime1 = galsim.ImageD(NOBJECTS, 1)
-    ime1.addNoise(gdist)
-    exponential_g1 = ime1.array.flatten()
+    ime1.addNoise(edist)
+    exponential_e1 = ime1.array.flatten()
     ime2 = galsim.ImageD(NOBJECTS, 1)
-    ime2.addNoise(gdist)
-    exponential_g2 = ime2.array.flatten()
+    ime2.addNoise(edist)
+    exponential_e2 = ime2.array.flatten()
     # Make galaxies co-elliptical
-    devaucouleurs_g1 = exponential_g1
-    devaucouleurs_g2 = exponential_g2
+    devaucouleurs_e1 = exponential_e1
+    devaucouleurs_e2 = exponential_e2
 
     # Add a centroid shift in drawn uniform randomly from the unit circle around (0., 0.)
     dx = np.empty(NOBJECTS)
@@ -94,10 +86,9 @@ def make_default_input():
     path, modfile = os.path.split(__file__)
     outfile = os.path.join(path, "galsim_default_input.asc")
     # Make a nice header with the default fields described
-    header = ("#  boundsi.xmin  boundsi.ymin  boundsi.xmax  boundsi.ymax"+
-              "  psf.beta  psf.fwhm  psf.g1  psf.g2  psf.trunc"+
-              "  gal.Exponential.half_light_radius  gal.Exponential.g1  gal.Exponential.g2"+
-              "  gal.DeVaucouleurs.half_light_radius  gal.DeVaucouleurs.g1  gal.DeVaucouleurs.g2"+
+    header = ("# psf.beta  psf.fwhm  psf.e1  psf.e2  psf.trunc"+
+              "  disk.hlr  disk.e1  disk.e2"+
+              "  bulge.hlr  bulge.e1  bulge.e2"+
               "  gal.shift.dx  gal.shift.dy \n")
     # Open the file and output the columns in the correct order, row-by-row
     output = open(outfile, "w")
@@ -105,12 +96,11 @@ def make_default_input():
     output.write("#\n")
     output.write(header)
     for i in xrange(NOBJECTS):
-        outline = ("%4d  %4d  %4d  %4d  %6.2f  %6.2f  %7.3f  %7.3f  %6.2f  %6.2f  %14.7f  %14.7f "+
+        outline = (" %6.2f  %6.2f  %7.3f  %7.3f  %6.2f  %6.2f  %14.7f  %14.7f "+
                    "%6.2f  %14.7f  %14.7f  %14.7f  %14.7f\n") % \
-            (bounds_xmin[i], bounds_ymin[i], bounds_xmax[i], bounds_ymax[i],
-             moffat_beta[i], moffat_fwhm[i], moffat_g1[i], moffat_g2[i], moffat_trunc[i],
-             exponential_hlr[i], exponential_g1[i], exponential_g2[i],
-             devaucouleurs_hlr[i], devaucouleurs_g1[i], devaucouleurs_g2[i], dx[i], dy[i])
+            (moffat_beta[i], moffat_fwhm[i], moffat_e1[i], moffat_e2[i], moffat_trunc[i],
+             exponential_hlr[i], exponential_e1[i], exponential_e2[i],
+             devaucouleurs_hlr[i], devaucouleurs_e1[i], devaucouleurs_e2[i], dx[i], dy[i])
         output.write(outline)
     output.close()
     

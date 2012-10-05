@@ -111,7 +111,7 @@ def do_shoot(prof, img, name):
     print 'img.max => ',img.array.max()
     print 'nphot = ',nphot
     img2 = img.copy()
-    prof.drawShoot(img2, n_photons=nphot, poisson_flux=False, uniform_deviate=glob_ud)
+    prof.drawShoot(img2, n_photons=nphot, poisson_flux=False, rng=glob_ud)
     print 'img2.sum => ',img2.array.sum()
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
@@ -146,12 +146,12 @@ def do_shoot(prof, img, name):
         nphot *= 10
         print 'nphot -> ',nphot
     prof.drawShoot(img, n_photons=nphot, normalization="surface brightness", poisson_flux=False,
-                   uniform_deviate=glob_ud)
+                   rng=glob_ud)
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
     np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, photon_decimal_test,
             err_msg="Photon shooting SB normalization for %s disagrees with expected result"%name)
     prof.drawShoot(img, n_photons=nphot, normalization="flux", poisson_flux=False,
-                   uniform_deviate=glob_ud)
+                   rng=glob_ud)
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
     np.testing.assert_almost_equal(img.array.sum(), test_flux, photon_decimal_test,
             err_msg="Photon shooting flux normalization for %s disagrees with expected result"%name)
@@ -1816,7 +1816,7 @@ def test_rescale():
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 2., 4,
             err_msg="Drawing Gaussian with add_to_image=True results in wrong flux")
     myImg2, tot = gauss.drawShoot(myImg2, add_to_image=True, poisson_flux=False,
-                                  uniform_deviate=glob_ud)
+                                  rng=glob_ud)
     print myImg2.array.sum(), tot
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3., 4,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=False "+
@@ -1824,7 +1824,7 @@ def test_rescale():
     np.testing.assert_almost_equal(tot/1.e5, 1., 4,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=False "+
                     "returned wrong tot")
-    myImg2, tot = gauss.drawShoot(myImg2, add_to_image=True, uniform_deviate=glob_ud)
+    myImg2, tot = gauss.drawShoot(myImg2, add_to_image=True, rng=glob_ud)
     print myImg2.array.sum(), tot
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 4., 1,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True results in wrong flux")
