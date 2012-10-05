@@ -33,6 +33,7 @@
 
 "#" : "Define the galaxy profile",
 "gal" : {
+    "#" : "Note: The randomized positions are determined by specifying image.type = 'Scattered'.",
     "type" : "Exponential",
     "half_light_radius" : { "type" : "Random" , "min" : 0.4 , "max" : 1.2 },
     "flux" : { "type" : "Random" , "min" : 1.0e4 , "max" : 1.0e6 },
