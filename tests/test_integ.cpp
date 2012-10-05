@@ -187,6 +187,10 @@ BOOST_AUTO_TEST_CASE( Test2d )
         galsim::integ::int2d(std::ptr_fun(twod_func),0.,1.,0.,1., test_rel_err, test_abs_err),
         1.75,
         100 * test_rel_err);
+
+    // This next one is an irrelevant test, but it suppresses a warning with gcc 4.2.1 that 
+    // for some reason doesn't get suppressed with the pragma at the top of this file.
+    BOOST_CHECK_SMALL(0., 0.1);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
