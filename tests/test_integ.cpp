@@ -22,6 +22,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
+#include <boost/test/floating_point_comparison.hpp>
 #include <boost/mpl/list.hpp>
 
 const double test_sigma = 7.;           // test value of Gaussian sigma for integral tests
@@ -169,9 +170,15 @@ BOOST_AUTO_TEST_CASE( TestPole )
         1.,
         100 * test_rel_err);
 
+#if 0
+    // This works if everything uses the same compiler.  But boost testing may have
+    // been installed with a different compiler, in which case it is unable to catch
+    // exceptions thrown from GalSim.  So we skip this test normally.
+    // (Developers working on the integrator should reenable this during development.)
     BOOST_CHECK_THROW(
         galsim::integ::int1d(powm2, 0., 1., test_rel_err, test_abs_err),
         galsim::integ::IntFailure);
+#endif
 }
 
 BOOST_AUTO_TEST_CASE( Test2d )
