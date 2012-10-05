@@ -33,9 +33,11 @@ psf :
 
 # Define the galaxy profile
 gal :
-    # Note: The randomized positions are determined by specifying image.type = 'Scattered'.
-    # Specifying gal.shift should be reserved for sub-pixel shifts for calculation 
-    # efficiency.  Large shifts are better specified in image.
+    # Note: The randomized positions are specifyed below with image.type = 'Scattered'
+    # rather than gal.shift as we used in demo4 and demo5.  The gal.shift field should be 
+    # reserved for shifts of a few pixels or less, nor for setting the position of the
+    # object in a large image.
+    
     type : Exponential
     half_light_radius : { type : Random , min : 0.4 , max : 1.2 }
     flux : { type : Random , min : 1.0e4 , max : 1.0e6 }
@@ -118,9 +120,12 @@ image :
     # then GalSim will automatically determine a good size to draw each object -- larger
     # for larger objects, and smaller for smaller ones.  So this is usually the way to go.
     
-    # Another optional parameter is center (which expects a "pos_value") to specify the location
-    # of the center of each object.  The default if this is omitted is random x from 
-    # 1..xsize and random y from 1..ysize.  i.e.
+    # Another optional parameter is center (which expects a "pos_value") to specify the 
+    # location of the center of each postage stamp.  The difference between this and 
+    # gal.shift is that gal.shift moves the object with respect to the center of the postage 
+    # stamp, while center sets the position of the postage stamp on the larger full image.
+    #
+    # The default if this is omitted is random x from 1..xsize and random y from 1..ysize.  i.e.
     # center : 
     #     type : XY 
     #     x : { type : Random , min : 1 , max : xsize }
