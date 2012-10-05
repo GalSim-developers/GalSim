@@ -22,8 +22,8 @@ New features introduced in this demo:
 - galsim.config.ProcessInput(config)
 - galsim.config.ProcessOutput(config)
 - galsim.config.BuildFits(file_name, config)
-- galsim.config.BuildMultiFits(file_name, config)
-- galsim.config.BuildDataCube(file_name, config)
+- galsim.config.BuildMultiFits(file_name, nimages, config)
+- galsim.config.BuildDataCube(file_name, nimages, config)
 - galsim.config.BuildImage(config)
 - galsim.fits.read(file_name)
 """
@@ -131,9 +131,10 @@ def main(argv):
     #
     # To build the files, the Process function then calls one of the following:
     #
-    #     galsim.config.BuildFits(file_name, config)        -- build a regular fits file
-    #     galsim.config.BuildMultiFits(file_name, config)   -- build a multi-extension fits file
-    #     galsim.config.BuildDataCube(file_name, config)    -- build a fits data cube
+    #     galsim.config.BuildFits(file_name, config)               -- build a regular fits file
+    #     galsim.config.BuildMultiFits(file_name, nimages, config) -- build a multi-extension fits 
+    #                                                                 file
+    #     galsim.config.BuildDataCube(file_name, nimages, config)  -- build a fits data cube
     #
     # Again, we'll forego that option here, so we can see how to use the config machinery
     # to produce images that we can use from within python.
