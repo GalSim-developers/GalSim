@@ -12,10 +12,10 @@
 
 "#" : "New features introduced in this demo:",
 
-"#" : "- shear_type : NFWHaloShear (redshift)",
-"#" : "- float_type : NFWHaloMag (redshift)",
+"#" : "- shear_value : NFWHaloShear (redshift)",
+"#" : "- float_value : NFWHaloMag (redshift)",
 "#" : "- input : nfw_halo (mass, conc, redshift)",
-"#" : "- shear_type : Eta1Eta2 (eta1, eta2)",
+"#" : "- shear_value : Eta1Eta2 (eta1, eta2)",
 "#" : "- image type : Scattered (size, nobjects)",
 "#" : "- str_value type : NumberedFile (root, num, ext, digits)",
 "#" : "- output : nproc",
