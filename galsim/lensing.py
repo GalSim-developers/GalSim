@@ -3,6 +3,44 @@
 import galsim
 import numpy as np
 
+# A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
+def _convertPositions(pos, func):
+    """Convert pos from the valid ways to input positions to two numpy arrays
+
+       This is used by the functions getShear, getConvergence, and getMag for both 
+       PowerSpectrum and NFWHalo (the former only has getShear currently).
+    """
+    try:
+        # Check for PositionD or PositionI:
+        if isinstance(pos,galsim.PositionD) or isinstance(pos,galsim.PositionI):
+            return ( np.array([pos.x], dtype='float'),
+                        np.array([pos.y], dtype='float') )
+
+        # Check for list of PositionD or PositionI:
+        # The only other options allow pos[0], so if this is invalid, an exception 
+        # will be raised and appropriately dealt with:
+        elif isinstance(pos[0],galsim.PositionD) or isinstance(pos[0],galsim.PositionI):
+            return ( np.array([p.x for p in pos], dtype='float'),
+                        np.array([p.y for p in pos], dtype='float') )
+
+        # Now pos must be a tuple of length 2
+        elif len(pos) != 2:
+            raise TypeError() # This will be caught below and raised with a better error msg.
+
+        # Check for (x,y):
+        elif isinstance(pos[0],float):
+            return ( np.array([pos[0]], dtype='float'),
+                        np.array([pos[1]], dtype='float') )
+
+        # Only other valid option is ( xlist , ylist )
+        else:
+            return ( np.array(pos[0], dtype='float'),
+                        np.array(pos[1], dtype='float') )
+
+    except:
+        raise TypeError("Unable to parse the input pos argument for %s."%func)
+            
+
 class PowerSpectrum(object):
     """Class to represent a lensing shear field according to some power spectrum P(k)
 
@@ -33,10 +71,12 @@ class PowerSpectrum(object):
     functionality.
 
     When creating a PowerSpectrum instance, the E and B mode power spectra can optionally be set at
-    initialization or later on with the method set_power_functions.  Note that the power spectra can
-    be ones provided in galsim.lensing (currently just a few simple power laws), or they can be
-    user-provided functions that take a single argument k and return the power at that k value.
-    They should be power P(k), not Delta^2(k) = k^2 P(k) / 2pi.
+    initialization or later on with the method set_power_functions.  Note that the power spectra
+    should be a function of k.  The typical thing is to just use a lambda function in Python (i.e.,
+    a function that is not associated with a name); for example, to define P(k)=k^2, one would use
+    `lambda k : k**2`.  But they can also be more complicated user-defined functions that take a
+    single argument k and return the power at that k value.  They should be power P(k), not
+    Delta^2(k) = k^2 P(k) / 2pi.
 
     @param E_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the E-mode power spectrum P_E(|k|) in an array of the same
@@ -48,18 +88,17 @@ class PowerSpectrum(object):
                             shape.  It should cope happily with |k|=0.  The function should return
                             the power spectrum desired in the B (curl) mode of the image.  Set to
                             None (default) for there to be no B-mode power.
-    @param units            A string specifying the units for the power spectrum.  This string is not
-                            used in any calculations, but is saved for later information. Currently
-                            we require a value of "arcsec", so the user must do any necessary
-                            conversions to ensure that this is the case.
+    @param units            The angular units used for the power spectrum (i.e. the units of 
+                            k^-1).  Currently only arcsec is implemented.
     """
-    def __init__(self, E_power_function=None, B_power_function=None, units="arcsec"):
+    def __init__(self, E_power_function=None, B_power_function=None, units=galsim.arcsec):
         self.p_E = E_power_function
         self.p_B = B_power_function
-        if units is not "arcsec":
+        if units is not galsim.arcsec:
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
 
-    def set_power_functions(self, E_power_function=None, B_power_function=None, units="arcsec"):
+    def set_power_functions(self, E_power_function=None, B_power_function=None,
+                            units=galsim.arcsec):
         """Set / change the functions that compute the E and B mode power spectra.
 
         @param E_power_function See description of this parameter in the documentation for the
@@ -71,22 +110,20 @@ class PowerSpectrum(object):
         """
         self.p_E = E_power_function
         self.p_B = B_power_function
-        if units is not "arcsec":
+        if units is not galsim.arcsec:
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
 
-    def getShear(self, x=None, y=None, grid_spacing=None, grid_nx=None, gaussian_deviate=None,
-                 interpolantxy=None):
-
+    def getShear(self, pos=None, grid_spacing=None, grid_nx=None, rng=None,
+                 interpolant=None, center=galsim.PositionD(0,0)):
         """Generate a realization of the current power spectrum at the specified positions.
 
-        Generate a Gaussian random realization of the specified E and B mode shear power spectra at
-        some set of locations.  This can be done in two ways: first, given arbitrary (x, y)
-        positions [NOT YET IMPLEMENTED]; or second, using grid_spacing and grid_nx to specify the
-        grid spacing and grid size for a grid of positions.  This code stores information about the
-        quantities used to generate the random shear field, generates shears using a
-        PowerSpectrumRealizer on a grid, and if necessary, interpolates to get g1 and g2 at the
-        specified positions.
+        This function currently does two relatively separate things.  The plan is to split it into
+        two functions, but we haven't done so yet.
         
+        First, it will generate a Gaussian random realization of the specified E and B mode shear
+        power spectrum at a grid of positions, specified by the input parameters `grid_spacing` 
+        (distance between grid points) and `grid_nx` (number of grid points in each direction.)  
+
         The normalization of the shears from a given power spectrum is defined as follows: if 
         P_E(k)=P_B(k)=P [const],
         i.e., white noise in both shear components, then the shears g1 and g2 will be random
@@ -105,98 +142,217 @@ class PowerSpectrum(object):
         challenge, so when using codes that deal with GREAT10 challenge outputs, the sign of our g2
         shear component must be flipped.
 
-        An example of how to use getShear is as follows, for the gridded case, where the choice of
-        grid_spacing indicates that the grid points are spaced by 1":
-        @code
-        my_ps = galsim.lensing.PowerSpectrum(galsim.lensing.pk2)
-        g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
-        @endcode
+        Second, this function can interpolate between the grid points to find the shear values for a
+        given list of input positions (or just a single position).  This can be done in conjunction
+        with the first functionality, in which case the grid will be computed using the `grid_*`
+        parameters and then that new grid will be used to interpolate the shear values.  Or you can
+        omit the `grid_*` parameters, in which case the funciton will use the most recently computed
+        grid from a previous call.  Currently, if you try to interpolate a grid without having
+        previously called `getShear` with the `grid_*` parameters, then an exception will be raised.
+        A future version of the code will allow the estimation of shears on non-gridded points by
+        first automatically choosing a grid spacing on which to estimate gridded shears before
+        interpolating, but this functionality is not implemented yet.
 
-        To define some other P(k), the user can do the following:
-        @code
-        def mypk(k):
-            return k**(0.1)
+        Some examples of how to use getShear:
 
-        my_ps = galsim.lensing.PowerSpectrum(mypk)
-        g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
-        @endcode
+        1. Create a grid of points separated by 1":
 
-        When using a non-gridded set of points, the code has to choose an appropriate spacing for a
-        grid and then interpolate the gridded shears to the specified set of points.  It does this
-        by requiring that the modification to the power spectrum due to a (bi)linear interpolant
-        should not be significant at the minimum separation between points.  The user should be
-        aware that use of an interpolant that is not linear does not change how this calculation is
-        done, and therefore it is necessary to test the fidelity of the recovered power spectrum for
-        any errors due to the chosen non-linear interpolant.
+               my_ps = galsim.PowerSpectrum(lambda k : k**2)
+               g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
 
-        For a given value of grid_spacing and grid_nx, we could get the x and y values on the
-        grid using
-        @code
-        import numpy as np
-        x, y = np.meshgrid(np.arange(0., grid_nx*grid_spacing, grid_spacing),
-                           np.arange(0., grid_nx*grid_spacing, grid_spacing))
-        @endcode
-        where we assume a minimum x and y value of zero for the grid.
+           The returned g1,g2 are 2-d numpy arrays of values, corresponding to the values of 
+           g1,g2 at the locations of the grid points.
 
-        @param x                List of x positions (it is up to the user to check that the units
-                                are consistent with those in the P(k) function, just as for the y
-                                and grid_spacing keywords).
-        @param y                List of y positions.
+           For a given value of grid_spacing and grid_nx, we could get the x and y values on the
+           grid using
+
+               import numpy as np
+               min = (-grid_nx/2 + 0.5) * grid_spacing
+               max = (grid_nx/2 - 0.5) * grid_spacing
+               x, y = np.meshgrid(np.arange(min,max,grid_spacing),
+                                  np.arange(min,max,grid_spacing))
+
+           where the center of the grid is taken to be (0,0).
+
+        2. Same thing, but use a particular rng and set the location of the center of the grid
+           to be something other than the default (0,0)
+
+               im = galsim.ImageF(512, 512)
+               g1, g2 = my_ps.getShear(grid_spacing = 8., grid_nx = 65.,
+                                       rng = galsim.BaseDeviate(1413231),
+                                       center = (256.5, 256.5) )
+
+        3. Use the previously created grid to get the shear for a particular point:
+
+               g1, g2 = my_ps.getShear(pos = galsim.PositionD(12, 412))
+
+           This time the returned values are just floats and correspond to the shear for the
+           provided position.
+
+        4. You can also provide a position as a tuple to save the explicit PositionD construction:
+
+               g1, g2 = my_ps.getShear(pos = (12, 412))
+
+        5. Get the shears for a bunch of points at once:
+        
+               xlist = [ 141, 313,  12, 241, 342 ]
+               ylist = [  75, 199, 306, 225, 489 ]
+               poslist = [ galsim.PositionD(xlist[i],ylist[i]) for i in range(len(xlist)) ]
+               g1, g2 = my_ps.getShear( poslist )
+               g1, g2 = my_ps.getShear( (xlist, ylist) )
+
+           Both calls do the same thing.  The returned g1, g2 this time are lists of g1, g2 values.
+           The lists are the same length as the number of input positions.
+
+
+        @param pos              Position(s) of the source(s), assumed to be post-lensing!  (It is 
+                                up to the user to check that the units are consistent with those in 
+                                the P(k) function, just as for the grid_spacing keyword.)
+                                Valid ways to input this:
+                                  - Single galsim.PositionD (or PositionI) instance
+                                  - tuple of floats: (x,y)
+                                  - list of galsim.PositionD (or PositionI) instances
+                                  - tuple of lists: ( xlist, ylist )
+                                pos may also be None to just build a gridded array of (g1,g2).
         @param grid_spacing     Spacing for an evenly spaced grid of points, in arcsec for
                                 consistency with the natural length scale of images created using
                                 the draw or drawShoot methods.
         @param grid_nx          Number of grid points in the x dimension.
-        @param gaussian_deviate (Optional) A galsim.GaussianDeviate object for drawing the random
+        @param rng              (Optional) A galsim.GaussianDeviate object for drawing the random
                                 numbers.  (Alternatively, any BaseDeviate can be used.)
-        @param interpolantxy    (Optional) Interpolant to use for interpolating the shears on a grid
-                                to the requested positions [default =
-                                galsim.InterpolantXY(galsim.Linear())].
-        @return g1,g2           Two Numpy arrays for the two shear components g_1 and g_2.
+        @param interpolant      (Optional) Interpolant to use for interpolating the shears on a grid
+                                to the requested positions.
+                                This is highly recommended to be Linear (which will become
+                                bi-linear, since it is in 2 dimensions).  Using other interpolants
+                                is likely to be inaccurate, though on small enough scales even the
+                                linear interpolant will be problematic.  A future version of the
+                                code will quantify this inaccuracy due to the interpolant in greater
+                                detail. [default = galsim.Linear()]
+        @param center           (Optional) If setting up a new grid, define what position you
+                                want to consider the center of that grid. [default = (0,0)]
+        
+        @return g1,g2           If given a single position: the two shear components g_1 and g_2.
+                                If given a list of positions: each is a python list of values.
+                                If pos=None, these are 2-d NumPy arrays.
         """
+        # This used to be part of the doc string.  It was moved here for now, since this 
+        # functionality isn't implemented yet.
+        #
+        # When using a non-gridded set of points, the code has to choose an appropriate spacing for
+        # a grid and then interpolate the gridded shears to the specified set of points.  It does
+        # this by requiring that the modification to the power spectrum due to a (bi)linear 
+        # interpolant should not be significant at the minimum separation between points.  The user
+        # should be aware that use of an interpolant that is not linear does not change how this 
+        # calculation is done, and therefore it is necessary to test the fidelity of the recovered 
+        # power spectrum for any errors due to the chosen non-linear interpolant.
 
-        # check input values for all keywords
-        # (1) check problem cases for irregularly spaced set of points
-        if x is not None or y is not None:
-            if x is None or y is None:
-                raise ValueError("When specifying points, must provide both x and y!")
-            if grid_spacing is not None or grid_nx is not None:
-                raise ValueError("When specifying points, do not also provide grid information!")
-        # (2) check problem cases for regular grid of points
+        # Convert to numpy arrays for internal usage:
+        if pos is not None:
+            pos_x, pos_y = _convertPositions(pos, 'getShear')
+            if grid_spacing is None and not hasattr(self,'sbii_g1'):
+                raise AttributeError(
+                    "Calling PowerSpectrum.getShear without grid parameters, and " +
+                    "no grid previously set up.")
+
+        # Check problem cases for regular grid of points
         if grid_spacing is not None or grid_nx is not None:
             if grid_spacing is None or grid_nx is None:
                 raise ValueError("When specifying grid, we require both a spacing and a size!")
-        # (3) make sure that we've specified some power spectrum
+
+        # Check if center is a Position
+        if isinstance(center,galsim.PositionD):
+            pass  # This is what it should be
+        elif isinstance(center,galsim.PositionI):
+            # Convert to a PositionD
+            center = galsim.PositionD(center.x, cetner.y)
+        elif isinstance(center, tuple) and len(center) == 2:
+            # Convert (x,y) tuple to PositionD
+            center = galsim.PositionD(center[0], center[1])
+        else:
+            raise TypeError("Unable to parse the input center argument for getShear")
+
+        # Make sure that we've specified some power spectrum
         if self.p_E is None and self.p_B is None:
             raise ValueError("Cannot generate shears when no E or B mode power spectrum are given!")
-        # (4) make a GaussianDeviate if necessary
-        if gaussian_deviate is None:
+
+        # Make a GaussianDeviate if necessary
+        if rng is None:
             gd = galsim.GaussianDeviate()
-        elif isinstance(gaussian_deviate, galsim.GaussianDeviate):
-            gd = gaussian_deviate
-        elif isinstance(gaussian_deviate, galsim.BaseDeviate):
-            gd = galsim.GaussianDeviate(gaussian_deviate)
+        elif isinstance(rng, galsim.GaussianDeviate):
+            gd = rng
+        elif isinstance(rng, galsim.BaseDeviate):
+            gd = galsim.GaussianDeviate(rng)
         else:
-            raise TypeError("The requested gaussian_deviate is not a BaseDeviate!")
-        # (5) set default interpolant if none given
-        if interpolantxy is None:
+            raise TypeError("The rng provided to getShear is not a BaseDeviate")
+
+        # Set default interpolant if none given
+        if interpolant is None:
             interpolantxy = galsim.InterpolantXY(galsim.Linear())
-        elif not isinstance(interpolantxy, galsim.InterpolantXY):
-            raise TypeError("Any input interpolantxy must be a galsim.InterpolantXY instance.")
-
-        # store some more information
-        self.interpolantxy = interpolantxy
-
-        if grid_spacing is not None:
-            # do the calculation on a grid
-            psr = PowerSpectrumRealizer(grid_nx, grid_nx, grid_spacing, self.p_E, self.p_B)
-            g1, g2 = psr(gaussian_deviate=gd)
+        elif isinstance(interpolant, galsim.Interpolant):
+            interpolantxy = galsim.InterpolantXY(interpolant)
+        elif isinstance(interpolant, galsim.InterpolantXY):
+            interpolantxy = interpolant
         else:
-            # for now, we cannot do this
-            raise NotImplementedError("Have not finished implementing the non-gridded case!")
+            raise TypeError("Invalid interpolant provided to PowerSpectrum.getShear")
 
-        # after making either gridded shears or shears at specified x, y positions, return g1 and g2
-        # arrays
-        return g1, g2
+        # Build the grid if requested.
+        if grid_spacing is not None:
+            self.psr = PowerSpectrumRealizer(grid_nx, grid_nx, grid_spacing, self.p_E, self.p_B)
+            self.grid_g1, self.grid_g2 = self.psr(gd)
+            
+            # Setup interpolated images
+            self.im_g1 = galsim.ImageViewD(self.grid_g1)
+            self.im_g1.setScale(grid_spacing)
+            self.sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp = interpolantxy)
+
+            self.im_g2 = galsim.ImageViewD(self.grid_g2)
+            self.im_g2.setScale(grid_spacing)
+            self.sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp = interpolantxy)
+
+            # Dealing with the center here is a bit confusing, especially if grid_nx is even.
+            # The InterpolatedImage will consider position (0,0) to correspond to 
+            # self.im_g1.bounds.center() on the image.  We call this nominal_center.
+            # However, if grid_nx is even, this is slightly up and to the right of the 
+            # true center. The true center x and y are at (1+grid_nx)/2 * grid_spacing.
+            # And finally, we may be passed a value to consider the center of the image.
+            b = self.im_g1.bounds
+            nominal_center = galsim.PositionD(b.center().x, b.center().y) * grid_spacing
+            true_center = galsim.PositionD( (1.+grid_nx)/2. , (1.+grid_nx)/2. ) * grid_spacing
+            
+            # The offset to be added to any position is then such that if we are 
+            # provided the target center position, the result will be the location of 
+            # the true center with respect to the nominal center.  In other words:
+            #   center + offset = true_center - nominal_center
+            self.offset = true_center - nominal_center - center
+
+            # Construct a bounds that we can use to check if a provided position will
+            # end up falling on the interpolating image.
+            self.bounds = galsim.BoundsD(b.xMin*grid_spacing, b.xMax*grid_spacing,
+                                         b.yMin*grid_spacing, b.yMax*grid_spacing)
+            self.bounds.shift(-nominal_center - self.offset)
+
+        if pos is None:
+            return self.grid_g1, self.grid_g2
+        else:
+            # interpolate if necessary
+            g1,g2 = [], []
+            for pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
+                # Check that the position is in the bounds of the interpolated image
+                if not self.bounds.includes(pos):
+                    import warnings
+                    warnings.warn(
+                        "Warning position (%f,%f) not within the bounds "%(pos.x,pos.y) +
+                        "of the gridded shear values: " + str(self.bounds) + 
+                        ".  Returning a shear of (0,0) for this point.")
+                    g1.append(0.)
+                    g2.append(0.)
+                else:
+                    g1.append(self.sbii_g1.xValue(pos+self.offset))
+                    g2.append(self.sbii_g2.xValue(pos+self.offset))
+            if len(pos_x) == 1:
+                return g1[0], g2[0]
+            else:
+                return g1, g2
 
 class PowerSpectrumRealizer(object):
     """Class for generating realizations of power spectra with any area and pixel size.
@@ -267,17 +423,17 @@ class PowerSpectrumRealizer(object):
         else:            self.amplitude_B = np.sqrt(self._generate_power_array(p_B))
 
 
-    def __call__(self, new_power=False, gaussian_deviate=None):
+    def __call__(self, gd, new_power=False):
         """Generate a realization of the current power spectrum.
         
+        @param gd               A gaussian deviate to use when generating the shear fields.
         @param new_power        If the power-spectrum functions that you specified are not
                                 deterministic then you can set this value to True to call them again
                                 to get new values.  For example, you could include a cosmic variance
                                 term in your power spectrum and get a new spectrum realization each
                                 time.
-        @param gaussian_deviate (Optional) gaussian deviate to use when generating the shear fields.
         
-        @return g1,g2               Two image arrays for the two shear components g_1 and g_2
+        @return g1,g2           Two image arrays for the two shear components g_1 and g_2
         """
         ISQRT2 = np.sqrt(1.0/2.0)
 
@@ -285,14 +441,8 @@ class PowerSpectrumRealizer(object):
         if new_power:
             self.set_power(self.p_E, self.p_B)
         
-        if gaussian_deviate is None:
-            gd = galsim.GaussianDeviate()
-        elif isinstance(gaussian_deviate, galsim.GaussianDeviate):
-            gd = gaussian_deviate
-        elif isinstance(gaussian_deviate, galsim.BaseDeviate):
-            gd = galsim.GaussianDeviate(gd)
-        else:
-            raise TypeError("The requested gaussian_deviate is not a BaseDeviate!")
+        if not isinstance(gd, galsim.GaussianDeviate):
+            raise TypeError("The gd provided to psr() is not a GaussianDeviate!")
 
         #Generate a random complex realization for the E-mode, if there is one
         if self.amplitude_E is not None:
@@ -315,9 +465,9 @@ class PowerSpectrumRealizer(object):
         g2_k = self._sin*E_k + self._cos*B_k
 
         #And go to real space to get the images
-        g1=g1_k.shape[0]*np.fft.irfft2(g1_k)
-        g2=g2_k.shape[0]*np.fft.irfft2(g2_k)
-        
+        g1=g1_k.shape[0]*np.fft.irfft2(g1_k, s=(self.nx,self.ny))
+        g2=g2_k.shape[0]*np.fft.irfft2(g2_k, s=(self.nx,self.ny))
+
         return g1, g2
 
     def _generate_power_array(self, power_function):
@@ -343,18 +493,6 @@ class PowerSpectrumRealizer(object):
         S[-kx,ky]=np.sin(TwoPsi)
         return C,S
 
-# for simple demonstration purposes, a few very simple power-law power spectra that don't crash and
-# burn at k=0
-def pk2(k):
-    return k**(2.0)
-
-def pk1(k):
-    return k
-
-def pkflat(k):
-    # note: this gives random Gaussian shears with variance of 0.01
-    return 0.01
-
 class Cosmology(object):
     """Basic cosmology calculations.
 
@@ -365,14 +503,14 @@ class Cosmology(object):
 
     Based on Matthias Bartelmann's libastro.
 
-    @param Omega_m Present day energy density of matter relative to critical density.
-    @param Omega_l Present day density of Dark Energy relative to critical density.
+    @param omega_m    Present day energy density of matter relative to critical density.
+    @param omega_lam  Present day density of Dark Energy relative to critical density.
     """
-    def __init__(self, Omega_m=0.3, Omega_l=0.7):
+    def __init__(self, omega_m=0.3, omega_lam=0.7):
         # no quintessence, no radiation in this universe!
-        self.omega_m = Omega_m
-        self.omega_l = Omega_l
-        self.omega_c = (1. - Omega_m - Omega_l)
+        self.omega_m = omega_m
+        self.omega_lam = omega_lam
+        self.omega_c = (1. - omega_m - omega_lam)
         self.omega_r = 0
     
     def a(self, z):
@@ -388,7 +526,7 @@ class Cosmology(object):
         @param a Scale factor
         """
         return (self.omega_r*a**(-4) + self.omega_m*a**(-3) + self.omega_c*a**(-2) + \
-                self.omega_l)**0.5
+                self.omega_lam)**0.5
 
     def __angKernel(self, x):
         """Integration kernel for angular diameter distance computation
@@ -434,26 +572,59 @@ class NFWHalo(object):
 
     Based on Matthias Bartelmann's libastro.
 
-    @param mass  Mass defined using a spherical overdensity of 200 times the critical density of the
-                 universe, in units of M_solar/h.
-    @param conc  Concentration parameter, i.e., ratio of virial radius to NFW scale radius.
-    @param z     Redshift
-    @param pos_x X-coordinate [arcsec]
-    @param pos_y Y-coordinate [arcsec]
-    @param cosmo A Cosmology instance
+    The cosmology to use can be set either by providing a Cosmology instance as cosmo,
+    or by providing omega_m and/or omega_lam.  
+    If only one of the latter is provided, the other is taken to be one minus that.
+    If no cosmology parameters are set, a default Cosmology() is constructed.
+
+    @param mass       Mass defined using a spherical overdensity of 200 times the critical density
+                      of the universe, in units of M_solar/h.
+    @param conc       Concentration parameter, i.e., ratio of virial radius to NFW scale radius.
+    @param redshift   Redshift of the halo.
+    @param halo_pos   Position of halo center (in arcsec). [default=PositionD(0,0)]
+    @param omega_m    Omega_matter to pass to Cosmology constructor [default=None]
+    @param omega_lam  Omega_lambda to pass to Cosmology constructor [default=None]
+    @param cosmo      A Cosmology instance [default=None]
     """
-    def __init__(self, mass=1e15, conc=4, z=0.3, pos_x=0, pos_y=0, cosmo=Cosmology()):
-        self.M = mass
-        self.c = conc
-        self.z = z
-        self.pos_x = pos_x
-        self.pos_y = pos_y
+    _req_params = { 'mass' : float , 'conc' : float , 'redshift' : float }
+    _opt_params = { 'halo_pos' : galsim.PositionD , 'omega_m' : float , 'omega_lam' : float }
+    _single_params = []
+
+    def __init__(self, mass, conc, redshift, halo_pos=galsim.PositionD(0,0), 
+                 omega_m=None, omega_lam=None, cosmo=None):
+        if omega_m or omega_lam:
+            if cosmo:
+                raise TypeError("NFWHalo constructor received both cosmo and omega parameters")
+            if not omega_m: omega_m = 1.-omega_lam
+            if not omega_lam: omega_lam = 1.-omega_m
+            cosmo = Cosmology(omega_m=omega_m, omega_lam=omega_lam)
+        elif not cosmo:
+            cosmo = Cosmology()
+        elif not isinstance(cosmo,Cosmology):
+            raise TypeError("Invalid cosmo parameter in NFWHalo constructor")
+
+        # Check if halo_pos is a Position
+        if isinstance(halo_pos,galsim.PositionD):
+            pass  # This is what it should be
+        elif isinstance(halo_pos,galsim.PositionI):
+            # Convert to a PositionD
+            halo_pos = galsim.PositionD(halo_pos.x, cetner.y)
+        elif isinstance(halo_pos, tuple) and len(halo_pos) == 2:
+            # Convert (x,y) tuple to PositionD
+            halo_pos = galsim.PositionD(halo_pos[0], halo_pos[1])
+        else:
+            raise TypeError("Unable to parse the input halo_pos argument for NFWHalo")
+
+        self.M = float(mass)
+        self.c = float(conc)
+        self.z = float(redshift)
+        self.halo_pos = halo_pos
         self.cosmo = cosmo
 
         # calculate scale radius
-        a = self.cosmo.a(z)
+        a = self.cosmo.a(self.z)
         # First we get the virial radius, which is defined for some spherical overdensity as
-        # 3 M / (4 pi r_vir)^3 = overdensity
+        # 3 M / [4 pi (r_vir)^3] = overdensity
         # Here we have overdensity = 200 * rhocrit, to determine R200. The factor of 1.63e-5 comes
         # from the following set of prefactors: (3 / (4 pi * 200 * rhocrit))^(1/3)
         # where rhocrit = 2.8e11 h^2 M_solar / Mpc^3.  The mass in the equation below is in
@@ -473,7 +644,11 @@ class NFWHalo(object):
         return self.cosmo.omega_m/(self.cosmo.E(a)**2 * a**3)
 
     def __farcth (self, x, out=None):
-        """Numerical implementation of integral functions of NFW profile
+        """Numerical implementation of integral functions of a spherical NFW profile.
+
+        All expressions are a function of x, which is the radius r in units of the NFW scale radius,
+        r_s.  For the derivation of these functions, see for example Wright & Brainerd (2000, ApJ,
+        534, 34).
         """
         if out is None:
             out = np.zeros_like(x)
@@ -499,7 +674,7 @@ class NFWHalo(object):
     def __kappa(self, x, ks, out=None):
         """Calculate convergence of halo.
 
-        @param x   Radial coordinate in units of r/rs (normalized to scale radius of halo).
+        @param x   Radial coordinate in units of rs (scale radius of halo), i.e., x=r/rs.
         @param ks  Lensing strength prefactor.
         @param out Numpy array into which results should be placed.
         """
@@ -533,7 +708,7 @@ class NFWHalo(object):
     def __gamma(self, x, ks, out=None):
         """Calculate tangential shear of halo.
 
-        @param x   Radial coordinate in units of r/rs (normalized to scale radius of halo).
+        @param x   Radial coordinate in units of rs (scale radius of halo), i.e., x=r/rs.
         @param ks  Lensing strength prefactor.
         @param out Numpy array into which results should be placed
         """
@@ -573,59 +748,115 @@ class NFWHalo(object):
         k_s = dl * self.rs * rho_s / Sigma_c
         return k_s
 
-    def getShear(self, pos_x, pos_y, z_s, units='arcsec', reduced=True):
+    def getShear(self, pos, z_s, units=galsim.arcsec, reduced=True):
         """Calculate (reduced) shear of halo at specified positions.
 
-        @param pos_x   X-coordinate(s) of the source, input as a numpy array. This is assumed to be
-                       post-lensing!
-        @param pos_y   Y-coordinate(s) of the source, input as a numpy array. This is assumed to be
-                       post-lensing!
-        @param z_s     Source redshift(s).
-        @param units   Units of coordinates (only arcsec implemented so far).
-        @param reduced Whether reduced shears are returned.
-        @return g1,g2  Numpy arrays containing the two shear components g_1 and g_2 at the specified
-                       position(s).
+        @param pos       Position(s) of the source(s), assumed to be post-lensing!
+                         Valid ways to input this:
+                           - Single galsim.PositionD (or PositionI) instance
+                           - tuple of floats: (x,y)
+                           - list of galsim.PositionD (or PositionI) instances
+                           - tuple of lists: ( xlist, ylist )
+        @param z_s       Source redshift(s).
+        @param units     Angular units of coordinates (only arcsec implemented so far).
+        @param reduced   Whether returned shear(s) should be reduced shears. (default=True)
+
+        @return (g1,g2)   [g1 and g2 are each a list if input was a list]
         """
-        if units != 'arcsec':
+        if units != galsim.arcsec:
             raise NotImplementedError("Only arcsec units implemented!")
 
-        x = ((pos_x - self.pos_x)**2 + (pos_y - self.pos_y)**2)**0.5/self.rs_arcsec
+        # Convert to numpy arrays for internal usage:
+        pos_x, pos_y = _convertPositions(pos, 'getShear')
+
+        r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
         ks = self.__ks(z_s)
         if isinstance(z_s, np.ndarray) == False:
-            ks = ks*np.ones_like(pos_x)
-        g = self.__gamma(x, ks)
+            ks = ks*np.ones_like(r)
+        g = self.__gamma(r, ks)
 
         # convert to observable = reduced shear
         if reduced:
-            kappa = self.__kappa(x, ks)
+            kappa = self.__kappa(r, ks)
             g /= 1 - kappa
 
-        # split into g1 and g2 component:
         # pure tangential shear, no cross component
-        phi = np.arctan2(pos_y - self.pos_y, pos_x - self.pos_x)
+        phi = np.arctan2(pos_y - self.halo_pos.y, pos_x - self.halo_pos.x)
         g1 = -g / (np.cos(2*phi) + np.sin(2*phi)*np.tan(2*phi))
         g2 = g1 * np.tan(2*phi)
-        return g1, g2
 
-    def getConvergence(self, pos_x, pos_y, z_s, units='arcsec'):
+        # Convert to a tuple of floats or lists of floats
+        if len(g) == 1:
+            return g1[0], g2[0]
+        else:
+            return g1.tolist(), g2.tolist()
+
+
+    def getConvergence(self, pos, z_s, units=galsim.arcsec):
         """Calculate convergence of halo at specified positions.
 
-        @param pos_x   X-coordinate(s) of the source, input as a Numpy array. This is assumed to be
-                       post-lensing!
-        @param pos_y   Y-coordinate(s) of the source, input as a Numpy array. This is assumed to be
-                       post-lensing!
+        @param pos     Position(s) of the source(s), assumed to be post-lensing!
+                       Valid ways to input this:
+                         - Single galsim.PositionD (or PositionI) instance
+                         - tuple of floats: (x,y)
+                         - list of galsim.PositionD (or PositionI) instances
+                         - tuple of lists: ( xlist, ylist )
         @param z_s     Source redshift(s)
-        @param units   Units of coordinates (only arcsec implemented so far).
-        @return kappa  Numpy array containing the convergence at the specified position(s)
+        @param units   Angular units of coordinates (only arcsec implemented so far).
+
+        @return kappa or list of kappa values
         """
-        if units != 'arcsec':
+        if units != galsim.arcsec:
             raise NotImplementedError("Only arcsec units implemented!")
 
-        x = ((pos_x - self.pos_x)**2 + (pos_y - self.pos_y)**2)**0.5/self.rs_arcsec
+        # Convert to numpy arrays for internal usage:
+        pos_x, pos_y = _convertPositions(pos, 'getKappa')
+
+        r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
         ks = self.__ks(z_s)
         if isinstance(z_s, np.ndarray) == False:
-            ks = ks*np.ones_like(pos_x)
-        return self.__kappa(x, ks)
+            ks = ks*np.ones_like(r)
+        kappa = self.__kappa(r, ks)
 
+        # Convert to a float or list of floats
+        if len(kappa) == 1:
+            return kappa[0]
+        else:
+            return [ k for k in kappa ]
+
+    def getMag(self, pos, z_s, units=galsim.arcsec):
+        """Calculate magnification of halo at specified positions.
+
+        @param pos     Position(s) of the source(s), assumed to be post-lensing!
+                       Valid ways to input this:
+                         - Single galsim.PositionD (or PositionI) instance
+                         - tuple of floats: (x,y)
+                         - list of galsim.PositionD (or PositionI) instances
+                         - tuple of lists: ( xlist, ylist )
+        @param z_s     Source redshift(s)
+        @param units   Angular units of coordinates (only arcsec implemented so far).
+        @return mu     Numpy array containing the magnification at the specified position(s)
+        """
+        if units != galsim.arcsec:
+            raise NotImplementedError("Only arcsec units implemented!")
+
+        # Convert to numpy arrays for internal usage:
+        pos_x, pos_y = _convertPositions(pos, 'getMag')
+
+        r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
+        # compute strength of lensing fields
+        ks = self.__ks(z_s)
+        if isinstance(z_s, np.ndarray) == False:
+            ks = ks*np.ones_like(r)
+        g = self.__gamma(r, ks)
+        kappa = self.__kappa(r, ks)
+
+        mu = 1. / ( (1.-kappa)**2 - g**2 )
+
+        # Convert to a float or list of floats
+        if len(mu) == 1:
+            return mu[0]
+        else:
+            return [ m for m in mu ]

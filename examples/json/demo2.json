@@ -1,14 +1,23 @@
 {
+"#" : "Demo #2",
 
-"#" : "JSON configuration file for use with the executable galsim_json",
-"#" : "From the examples directory, type:",
-"#" : "  galsim_json json/demo2.json",
+"#" : "The second JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
 
-"#" : "This configuration file is designed to be equivalent to the example script called demo2.py",
+"#" : "This script is a bit more sophisticated, but still pretty basic.  We're still only making",
+"#" : "a single image, but now the galaxy has an exponential radial profile and is sheared.",
+"#" : "The PSF is a circular Moffat profile.  And the noise is Poisson using the flux from both",
+"#" : "the object and a background sky level to determine the variance in each pixel.",
 
-"#" : "It's a little bit more sophisticated than script 1, using profiles other than Gaussians,",
-"#" : "and adding an applied shear.  It also uses Poisson noise.",
+"#" : "New features introduced in this demo:",
 
+"#" : "- obj type : Exponential (flux, scale_radius)",
+"#" : "- obj type : Moffat (flux, beta, half_light_radius)",
+"#" : "- shear type : G1G2 (g1, g2)",
+"#" : "- noise type : CCDNoise (sky_level)",
+"#" : "- image : random_seed",
+
+"#" : "Define the galaxy profile",
 "gal" : {
     "#" : "Exponential requires one of scale_radius, fwhm, or half_light_radius.",
     "type" : "Exponential",
@@ -27,6 +36,7 @@
     }
 },
  
+"#" : "Define the PSF profile",
 "psf" : {
     "#" : "A Moffat is a better approximation of ground-based PSFs than a Gaussian.",
     "#" : "F(r) = (1+(r/rd)^2)^(-beta)",
@@ -37,6 +47,7 @@
     "half_light_radius" : 1.0
 },
 
+"#" : "Define some other information about the images ",
 "image" : {
     "pixel_scale" : 0.2,
 
@@ -53,9 +64,12 @@
 
     "#" : "If you want the random values to be deterministic, you can provide an initial seed.",
     "#" : "If this isn't set, then it will use the current time to create an initial seed.",
+    "#" : "This is the same seed that is used in demo2.py, which means the images produced",
+    "#" : "by the two methods will be precisely identical.",
     "random_seed" : 1534225
 },
 
+"#" : "Define the name and format of the output file",
 "output" : {
     "dir" : "output_json",
     "file_name" : "demo2.fits"

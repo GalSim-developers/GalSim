@@ -289,6 +289,7 @@ struct PyImage {
             .def("copyFrom", &Image<T>::copyFrom)
             .def("fill", &Image<T>::fill)
             .def("setZero", &Image<T>::setZero)
+            .def("invertSelf", &Image<T>::invertSelf)
             .def("resize", &Image<T>::resize)
             .enable_pickling()
             ;
@@ -326,6 +327,7 @@ struct PyImage {
             .def("copyFrom", &ImageView<T>::copyFrom)
             .def("fill", &ImageView<T>::fill)
             .def("setZero", &ImageView<T>::setZero)
+            .def("invertSelf", &Image<T>::invertSelf)
             .enable_pickling()
             ;
         
