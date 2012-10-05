@@ -155,9 +155,9 @@ def main(argv):
     # All of the above functions also have an optional kwarg, logger, which can take a 
     # logger object to output diagnostic information if desired.  We'll use that option here
     # to output the progress of the build as we go.  Our logger is set with level=logging.INFO
-    # which means it will output a modest amount of text along the way.  Using level=DEBUG will
-    # output a lot of text, useful when diagnosing a mysterious crash.  And level=WARNING 
-    # or higher will be pretty silent unless there is a problem.
+    # which means it will output a modest amount of text along the way.  Using level=logging.DEBUG 
+    # will output a lot of text, useful when diagnosing a mysterious crash.  And using
+    # level=logging.WARNING or higher will be pretty silent unless there is a problem.
 
     t1 = time.time()
 
