@@ -149,8 +149,8 @@ def main(argv):
     first_in_pair = True  # Make pairs that are rotated by 45 degrees
 
     k = 0
-    for ix in range(nx_tiles):
-        for iy in range(ny_tiles):
+    for iy in range(ny_tiles):
+        for ix in range(nx_tiles):
             # The normal procedure for setting random numbers in GalSim is to start a new
             # random number generator for each object using sequential seed values.
             # This sounds weird at first (especially if you were indoctrinated by Numerical 

@@ -118,6 +118,15 @@
 
     "stamp_size" : 48,
 
+    "#" : "image type = Tiled has an optional field called order.",
+    "#" : "The default order in which to place the tiles is row-based: order = row. ",
+    "#" : "i.e. First the bottom row, then the next one up, and so on until the top row. ",
+    "#" : "Other options for the order parameters are column and random.",
+    "#" : "order = column specifies to start with the left column and proceeding to the right ",
+    "#" : "order = random specifies to place the postage stamps in a random order.",
+    "#" : "We use random here so the ring test galaxies don't appear in order along the rows.",
+    "order" : "random",
+
     "pixel_scale" : 0.44 ,
 
     "noise" : {

@@ -146,7 +146,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
-            'pixel_scale' : float , 'nproc' : int , 'sky_level' : float }
+            'pixel_scale' : float , 'nproc' : int , 'sky_level' : float, 
+            'order' : str }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
 
@@ -158,10 +159,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     stamp_xsize = params.get('stamp_xsize',stamp_size)
     stamp_ysize = params.get('stamp_ysize',stamp_size)
 
-    if (stamp_xsize == 0) != (stamp_ysize == 0):
+    if (stamp_xsize == 0) or (stamp_ysize == 0):
         raise AttributeError(
-            "Both (or neither) of image.stamp_xsize and image.stamp_ysize need to be "+
-            "defined and != 0.")
+            "Both image.stamp_xsize and image.stamp_ysize need to be defined and != 0.")
 
     border = params.get("border",0)
     xborder = params.get("xborder",border)
@@ -174,103 +174,80 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     #       this will add noise to the border region.  Not exactly the 
     #       design, but I didn't bother to do the bookkeeping right to 
     #       make the borders pure 0 in that case.
-
-    # If image_xsize and image_ysize were set in config, this overrides the read-in params.
-    if 'image_xsize' in config and 'image_ysize' in config:
-        stamp_xsize = (config['image_xsize']+xborder) / nx_tiles - xborder
-        stamp_ysize = (config['image_ysize']+yborder) / ny_tiles - yborder
-        full_xsize = (stamp_xsize + xborder) * nx_tiles - xborder
-        full_ysize = (stamp_ysize + yborder) * ny_tiles - yborder
-        if ( full_xsize != config['image_xsize'] or full_ysize != config['image_ysize'] ):
-            raise ValueError(
-                "Unable to reconcile saved image_xsize and image_ysize with current "+
-                "nx_tiles=%d, ny_tiles=%d, "%(nx_tiles,ny_tiles) +
-                "xborder=%d, yborder=%d\n"%(xborder,yborder) +
-                "Calculated full_size = (%d,%d) "%(full_xsize,full_ysize)+
-                "!= required (%d,%d)."%(config['image_xsize'],config['image_ysize']))
-
-    if stamp_xsize == 0:
-        first_images = galsim.config.BuildSingleStamp(
-            config=config, xsize=stamp_xsize, ysize=stamp_ysize, obj_num=obj_num,
-            sky_level=sky_level, do_noise=do_noise, logger=logger,
-            make_psf_image=make_psf_image, 
-            make_weight_image=make_weight_image,
-            make_badpix_image=make_badpix_image)
-        # Note: numpy shape is y,x
-        stamp_ysize, stamp_xsize = first_images[0].array.shape
-        images = [ first_images[0] ]
-        psf_images = [ first_images[1] ]
-        weight_images = [ first_images[2] ]
-        badpix_images = [ first_images[3] ]
-        nobjects -= 1
-        obj_num += 1
-    else:
-        images = []
-        psf_images = []
-        weight_images = []
-        badpix_images = []
-
+    
     full_xsize = (stamp_xsize + xborder) * nx_tiles - xborder
     full_ysize = (stamp_ysize + yborder) * ny_tiles - yborder
+
+    # If image_xsize and image_ysize were set in config, make sure it matches.
+    if ( 'image_xsize' in config and 'image_ysize' in config and
+         (full_xsize != config['image_xsize'] or full_ysize != config['image_ysize']) ):
+        raise ValueError(
+            "Unable to reconcile saved image_xsize and image_ysize with provided "+
+            "nx_tiles=%d, ny_tiles=%d, "%(nx_tiles,ny_tiles) +
+            "xborder=%d, yborder=%d\n"%(xborder,yborder) +
+            "Calculated full_size = (%d,%d) "%(full_xsize,full_ysize)+
+            "!= required (%d,%d)."%(config['image_xsize'],config['image_ysize']))
 
     pixel_scale = params.get('pixel_scale',1.0)
     config['pixel_scale'] = pixel_scale
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
 
-    # Define a 'center' field so the stamps can set their position appropriately in case
-    # we need it for PowerSpectum or NFWHalo.
-    config['image']['center'] = { 
-        'type' : 'XY' ,
-        'x' : { 'type' : 'Sequence' , 
-                'first' : stamp_xsize/2+1 , 
-                'step' : stamp_xsize + xborder ,
-                'last' : full_xsize ,
-                'repeat' : ny_tiles
-              },
-        'y' : { 'type' : 'Sequence' , 
-                'first' : stamp_ysize/2+1 , 
-                'step' : stamp_ysize + yborder ,
-                'last' : full_ysize 
-              },
-    }
+    # Set the rng to use for image stuff.
+    if 'random_seed' in config['image']:
+        config['seq_index'] = obj_num+nobjects
+        # Technically obj_num+nobjects will be the index of the random seed used for the next 
+        # image's first object (if there is a next image).  But I don't think that will have 
+        # any adverse effects.
+        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        rng = galsim.BaseDeviate(seed)
+    else:
+        rng = galsim.BaseDeviate()
 
-    # Set the rng to None.  We might create it next for building the power spectrum.
-    # Or we might build it later for adding noise.  But we don't want to create two.
-    rng = None
-
+    # If we have a power spectrum in config, we need to get a new realization at the start
+    # of each image.
     if 'power_spectrum' in config:
-        if len(images) == 1:
-            # If we already built the first image to figure out what size image to use, we will
-            # need to rebuild it with the correct shear for this power spectrum realization.
-            images = []
-            psf_images = []
-            weight_images = []
-            badpix_images = []
-            nobjects += 1
-            obj_num -= 1
-
-        # Get the next random number seed.
-        if 'random_seed' in config['image']:
-            config['seq_index'] = obj_num+nobjects
-            # Technically obj_num+nobjects will be the index of the random seed used for the next 
-            # image's first object (if there is a next image).  But I don't think that will have 
-            # any adverse effects.
-            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-            #print 'For power spectrum, seed = ',seed
-            rng = galsim.BaseDeviate(seed)
-        else:
-            rng = galsim.BaseDeviate()
         # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
         n_tiles = max(nx_tiles, ny_tiles)
         stamp_size = max(stamp_xsize, stamp_ysize)
         grid_dx = stamp_size * pixel_scale
-        #print 'n_tiles = ',n_tiles
-        #print 'stamp_size = ',stamp_size
 
         config['power_spectrum'].getShear(grid_spacing=grid_dx, grid_nx=n_tiles, rng=rng)
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
+
+    # Make a list of ix,iy values according to the specified order:
+    order = params.get('order','row').lower()
+    ix_list = []
+    iy_list = []
+    if order.startswith('row'):
+        for iy in range(ny_tiles):
+            for ix in range(nx_tiles):
+                ix_list.append(ix)
+                iy_list.append(iy)
+    elif order.startswith('col'):
+        for ix in range(nx_tiles):
+            for iy in range(ny_tiles):
+                ix_list.append(ix)
+                iy_list.append(iy)
+    elif order.startswith('rand'):
+        for ix in range(nx_tiles):
+            for iy in range(ny_tiles):
+                ix_list.append(ix)
+                iy_list.append(iy)
+        galsim.random.permute(rng, ix_list, iy_list)
+        
+    # Define a 'center' field so the stamps can set their position appropriately in case
+    # we need it for PowerSpectum or NFWHalo.
+    config['image']['center'] = { 
+        'type' : 'XY' ,
+        'x' : { 'type' : 'List',
+                'items' : [ ix * (stamp_xsize+xborder) + stamp_xsize/2 + 1 for ix in ix_list ]
+              },
+        'y' : { 'type' : 'List',
+                'items' : [ iy * (stamp_ysize+yborder) + stamp_ysize/2 + 1 for iy in iy_list ]
+              }
+    }
 
     nproc = params.get('nproc',1)
 
@@ -312,43 +289,30 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
 
-    images += stamp_images[0]
-    psf_images += stamp_images[1]
-    weight_images += stamp_images[2]
-    badpix_images += stamp_images[3]
+    images = stamp_images[0]
+    psf_images = stamp_images[1]
+    weight_images = stamp_images[2]
+    badpix_images = stamp_images[3]
 
-    k = 0
-    for ix in range(nx_tiles):
-        for iy in range(ny_tiles):
-            if k < len(images):
-                xmin = ix * (stamp_xsize + xborder) + 1
-                xmax = xmin + stamp_xsize-1
-                ymin = iy * (stamp_ysize + yborder) + 1
-                ymax = ymin + stamp_ysize-1
-                b = galsim.BoundsI(xmin,xmax,ymin,ymax)
-                full_image[b] += images[k]
-                if make_psf_image:
-                    full_psf_image[b] += psf_images[k]
-                if make_weight_image:
-                    full_weight_image[b] += weight_images[k]
-                if make_badpix_image:
-                    full_badpix_image[b] |= badpix_images[k]
-                k = k+1
+    for k in range(nobjects):
+        ix = ix_list[k]
+        iy = iy_list[k]
+        xmin = ix * (stamp_xsize + xborder) + 1
+        xmax = xmin + stamp_xsize-1
+        ymin = iy * (stamp_ysize + yborder) + 1
+        ymax = ymin + stamp_ysize-1
+        b = galsim.BoundsI(xmin,xmax,ymin,ymax)
+        full_image[b] += images[k]
+        if make_psf_image:
+            full_psf_image[b] += psf_images[k]
+        if make_weight_image:
+            full_weight_image[b] += weight_images[k]
+        if make_badpix_image:
+            full_badpix_image[b] |= badpix_images[k]
 
     if not do_noise:
         if 'noise' in config['image']:
             # If we didn't apply noise in each stamp, then we need to apply it now.
-
-            if not rng:
-                # Get the next random number seed.
-                if 'random_seed' in config['image']:
-                    config['seq_index'] = obj_num+nobjects
-                    seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-                    #print 'For noise, seed = ',seed
-                    rng = galsim.BaseDeviate(seed)
-                else:
-                    rng = galsim.BaseDeviate()
-
             draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
             if draw_method == 'fft':
                 galsim.config.AddNoiseFFT(
@@ -418,15 +382,41 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     sky_level = params.get('sky_level',None)
 
-    # If image_xsize and image_ysize were set in config, this overrides the read-in params.
-    if 'image_xsize' in config and 'image_ysize' in config:
-        full_xsize = config['image_xsize']
-        full_ysize = config['image_ysize']
+    # If image_xsize and image_ysize were set in config, make sure it matches.
+    if ( 'image_xsize' in config and 'image_ysize' in config and
+         (full_xsize != config['image_xsize'] or full_ysize != config['image_ysize']) ):
+        raise ValueError(
+            "Unable to reconcile saved image_xsize and image_ysize with provided "+
+            "xsize=%d, ysize=%d, "%(full_xsize,full_ysize))
 
     pixel_scale = params.get('pixel_scale',1.0)
     config['pixel_scale'] = pixel_scale
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
+
+    # Set the rng to use for image stuff.
+    if 'random_seed' in config['image']:
+        config['seq_index'] = obj_num+nobjects
+        # Technically obj_num+nobjects will be the index of the random seed used for the next 
+        # image's first object (if there is a next image).  But I don't think that will have 
+        # any adverse effects.
+        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        rng = galsim.BaseDeviate(seed)
+    else:
+        rng = galsim.BaseDeviate()
+
+    # If we have a power spectrum in config, we need to get a new realization at the start
+    # of each image.
+    if 'power_spectrum' in config:
+        # TODO: For now we use a grid spacing of 1/20 of the full size.  We are eventually
+        # going to have a better way to calculate a good grid spacing.  c.f. Issue #248.
+        full_size = max(full_xsize, full_ysize)
+        grid_dx = full_size * pixel_scale / 20.
+        grid_nx = 21
+
+        config['power_spectrum'].getShear(grid_spacing=grid_dx, grid_nx=grid_nx, rng=rng)
+        # We don't care about the output here.  This just builds the grid, which we'll
+        # access for each object using its position.
 
     if 'center' not in config['image']:
         config['image']['center'] = { 
@@ -434,8 +424,6 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             'x' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_xsize },
             'y' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_ysize }
         }
-
-    rng = None
 
     nproc = params.get('nproc',1)
 
@@ -506,17 +494,6 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     if 'noise' in config['image']:
         # Apply the noise to the full image
-
-        if not rng:
-            # Get the next random number seed.
-            if 'random_seed' in config['image']:
-                config['seq_index'] = obj_num+nobjects
-                seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-                #print 'For noise, seed = ',seed
-                rng = galsim.BaseDeviate(seed)
-            else:
-                rng = galsim.BaseDeviate()
-
         draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
         if draw_method == 'fft':
             galsim.config.AddNoiseFFT(

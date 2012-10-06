@@ -130,104 +130,113 @@ def main(argv):
 
     im_center = gal_image.bounds.center()
 
-    # Build each postage stamp:
-    k = 0
+    # We will place the tiles in a random order.  To do this, we make two lists for the 
+    # ix and iy values.  Then we apply a random permutation to the lists (in tandem).
+    ix_list = []
+    iy_list = []
     for ix in range(n_tiles):
         for iy in range(n_tiles):
-            # The seed here is augmented by k+1 rather than the usual k, since we already
-            # used a seed for the power spectrum above.
-            rng = galsim.BaseDeviate(random_seed+k)
+            ix_list.append(ix)
+            iy_list.append(iy)
+    galsim.random.permute(rng, ix_list, iy_list)
 
-            # Determine the bounds for this stamp and its center position.
-            b = galsim.BoundsI(ix*stamp_size+1 , (ix+1)*stamp_size, 
-                               iy*stamp_size+1 , (iy+1)*stamp_size)
-            sub_gal_image = gal_image[b]
-            sub_psf_image = psf_image[b]
+    # Build each postage stamp:
+    for k in range(nobj):
+        ix = ix_list[k]
+        iy = iy_list[k]
+        # The seed here is augmented by k+1 rather than the usual k, since we already
+        # used a seed for the power spectrum above.
+        rng = galsim.BaseDeviate(random_seed+k)
 
-            pos = b.center() - im_center
-            pos = galsim.PositionD(pos.x * pixel_scale , pos.y * pixel_scale)
-            # The image comes out as about 211 arcsec across, so we define our variable
-            # parameters in terms of (r/100 arcsec), so roughly the scale size of the image.
-            r = math.sqrt(pos.x**2 + pos.y**2) / 100
-            psf_fwhm = 0.9 + 0.5 * r**2   # arcsec
-            psf_e = 0.4 * r**1.5
-            psf_beta = (math.atan2(pos.y,pos.x) + math.pi/2) * galsim.radians
+        # Determine the bounds for this stamp and its center position.
+        b = galsim.BoundsI(ix*stamp_size+1 , (ix+1)*stamp_size, 
+                           iy*stamp_size+1 , (iy+1)*stamp_size)
+        sub_gal_image = gal_image[b]
+        sub_psf_image = psf_image[b]
 
-            # Define the PSF profile
-            psf = galsim.Gaussian(fwhm=psf_fwhm)
-            psf.applyShear(e=psf_e, beta=psf_beta)
+        pos = b.center() - im_center
+        pos = galsim.PositionD(pos.x * pixel_scale , pos.y * pixel_scale)
+        # The image comes out as about 211 arcsec across, so we define our variable
+        # parameters in terms of (r/100 arcsec), so roughly the scale size of the image.
+        r = math.sqrt(pos.x**2 + pos.y**2) / 100
+        psf_fwhm = 0.9 + 0.5 * r**2   # arcsec
+        psf_e = 0.4 * r**1.5
+        psf_beta = (math.atan2(pos.y,pos.x) + math.pi/2) * galsim.radians
 
-            # Define the pixel
-            pix = galsim.Pixel(pixel_scale)
+        # Define the PSF profile
+        psf = galsim.Gaussian(fwhm=psf_fwhm)
+        psf.applyShear(e=psf_e, beta=psf_beta)
 
-            # Define the galaxy profile:
+        # Define the pixel
+        pix = galsim.Pixel(pixel_scale)
 
-            # We're doing a ring test with 20 objects per ring, so the index is k/20 using
-            # integer math.
-            index = k / 20
-            gal = gal_list[index]
+        # Define the galaxy profile:
 
-            # Apply the rotation for the ring test: (k mod 20)/20 * 360 degrees
-            theta = (k % 20)/20. * 360. * galsim.degrees 
-            # This makes a new copy so we're not changing the object in the gal_list.
-            gal = gal.createRotated(theta)
+        # We're doing a ring test with 20 objects per ring, so the index is k/20 using
+        # integer math.
+        index = k / 20
+        gal = gal_list[index]
 
-            # Apply the shear from the power spectrum.
-            # Note: numpy likes to access values by [iy,ix]
-            gal.applyShear(g1 = grid_g1[iy,ix], g2 = grid_g2[iy,ix])
+        # Apply the rotation for the ring test: (k mod 20)/20 * 360 degrees
+        theta = (k % 20)/20. * 360. * galsim.degrees 
+        # This makes a new copy so we're not changing the object in the gal_list.
+        gal = gal.createRotated(theta)
 
-            # Note: another way to access this after having built the g1,g2 grid
-            # is to use ps.getShear(pos) which just returns a single shear for that position.
-            # The provided position does not have to be on the original grid, but it does
-            # need to be contained within the bounds of the full grid. 
-            # i.e. only interpolation is allowed -- not extrapolation.
-            alt_g1,alt_g2 = ps.getShear(pos)
+        # Apply the shear from the power spectrum.
+        # Note: numpy likes to access values by [iy,ix]
+        gal.applyShear(g1 = grid_g1[iy,ix], g2 = grid_g2[iy,ix])
 
-            # These assert statements demonstrate the the values agree to 1.e-15.
-            # (They might not be exactly equal due to numerical rounding errors, but close enough.)
-            assert math.fabs(alt_g1 - grid_g1[iy,ix]) < 1.e-15
-            assert math.fabs(alt_g2 - grid_g2[iy,ix]) < 1.e-15
+        # Note: another way to access this after having built the g1,g2 grid
+        # is to use ps.getShear(pos) which just returns a single shear for that position.
+        # The provided position does not have to be on the original grid, but it does
+        # need to be contained within the bounds of the full grid. 
+        # i.e. only interpolation is allowed -- not extrapolation.
+        alt_g1,alt_g2 = ps.getShear(pos)
 
-            # Apply a random shift within a square box the size of a pixel
-            ud = galsim.UniformDeviate(rng)
-            dx = (ud()-0.5) * pixel_scale
-            dy = (ud()-0.5) * pixel_scale
-            gal.applyShift(dx,dy)
+        # These assert statements demonstrate the the values agree to 1.e-15.
+        # (They might not be exactly equal due to numerical rounding errors, but close enough.)
+        assert math.fabs(alt_g1 - grid_g1[iy,ix]) < 1.e-15
+        assert math.fabs(alt_g2 - grid_g2[iy,ix]) < 1.e-15
 
-            # Make the final image, convolving with psf and pix
-            final = galsim.Convolve([psf,pix,gal])
+        # Apply a random shift within a square box the size of a pixel
+        ud = galsim.UniformDeviate(rng)
+        dx = (ud()-0.5) * pixel_scale
+        dy = (ud()-0.5) * pixel_scale
+        gal.applyShift(dx,dy)
 
-            # Draw the image
-            final.draw(sub_gal_image)
+        # Make the final image, convolving with psf and pix
+        final = galsim.Convolve([psf,pix,gal])
 
-            # Now determine what we need to do to get our desired S/N
-            # See demo5.py for the math behind this calculation.
-            sky_level_pix = sky_level * pixel_scale**2
-            sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
-            flux = gal_signal_to_noise / sn_meas
-            sub_gal_image *= flux
+        # Draw the image
+        final.draw(sub_gal_image)
 
-            # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
-            # so it will be part of the same stream of random numbers as ud and gd.
-            sub_gal_image += sky_level_pix
-            sub_gal_image.addNoise(galsim.CCDNoise(rng))
-            sub_gal_image -= sky_level_pix
+        # Now determine what we need to do to get our desired S/N
+        # See demo5.py for the math behind this calculation.
+        sky_level_pix = sky_level * pixel_scale**2
+        sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
+        flux = gal_signal_to_noise / sn_meas
+        sub_gal_image *= flux
 
-            # Draw the PSF image:
-            # We use real space convolution to avoid some of the 
-            # artifacts that can show up with Fourier convolution.
-            # The level of the artifacts is quite low, but when drawing with
-            # no noise, they are apparent with ds9's zscale viewing.
-            final_psf = galsim.Convolve([psf,pix], real_space=True)
+        # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
+        # so it will be part of the same stream of random numbers as ud and gd.
+        sub_gal_image += sky_level_pix
+        sub_gal_image.addNoise(galsim.CCDNoise(rng))
+        sub_gal_image -= sky_level_pix
 
-            # For the PSF image, we also shift the PSF by the same amount.
-            final_psf.applyShift(dx,dy)
+        # Draw the PSF image:
+        # We use real space convolution to avoid some of the 
+        # artifacts that can show up with Fourier convolution.
+        # The level of the artifacts is quite low, but when drawing with
+        # no noise, they are apparent with ds9's zscale viewing.
+        final_psf = galsim.Convolve([psf,pix], real_space=True)
 
-            # No noise on PSF images.  Just draw it as is.
-            final_psf.draw(sub_psf_image)
+        # For the PSF image, we also shift the PSF by the same amount.
+        final_psf.applyShift(dx,dy)
 
-            logger.info('Galaxy (%d,%d): position relative to center = %s', ix,iy,str(pos))
-            k = k+1
+        # No noise on PSF images.  Just draw it as is.
+        final_psf.draw(sub_psf_image)
+
+        logger.info('Galaxy (%d,%d): position relative to center = %s', ix,iy,str(pos))
 
     logger.info('Done making images of postage stamps')
 

@@ -135,3 +135,4 @@ def eval_sbinterpolatedimage(sbi, x_list, y_list):
     for x_ind in range(len(x_list)):
         vals.append(sbi.xValue(galsim.PositionD(x_list[x_ind], y_list[x_ind])))
     return vals
+
