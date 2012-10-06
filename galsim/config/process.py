@@ -25,7 +25,8 @@ def ProcessInput(config, file_num=0, logger=None):
         input_type = { 
                 'catalog' : 'InputCatalog' , 
                 'real_catalog' : 'RealGalaxyCatalog' ,
-                'nfw_halo' : 'NFWHalo'
+                'nfw_halo' : 'NFWHalo',
+                'power_spectrum' : 'PowerSpectrum'
                 }
         for key in [ k for k in input_type.keys() if k in input ]:
             field = input[key]
@@ -38,41 +39,8 @@ def ProcessInput(config, file_num=0, logger=None):
             # Store input_obj in the config for use by BuildGSObject function.
             config[key] = input_obj
 
-        # The PowerSpectrum initialization is a bit different, since we have to parse
-        # the functions, which are provided as strings.
-        if 'power_spectrum' in input:
-            opt = { 'e_power' : str , 'b_power' : str }
-            field = input['power_spectrum']
-            field['type'] = 'PowerSpectrum'
-            #print 'field = ',field
-            #print 'opt = ',opt
-            params = galsim.config.GetAllParams(field, 'power_spectrum', config, opt=opt)[0]
-            #print 'params = ',params
-            if 'e_power' in params:
-                try:
-                    E_power_function = eval('lambda k : ' + params['e_power'])
-                except:
-                    raise AttributeError('Unable to parse e_power = %s as a lambda function'
-                        %params['e_power'])
-            else:
-                E_power_function = None
-            if 'b_power' in params:
-                try:
-                    B_power_function = eval('lambda k : ' + params['e_power'])
-                except:
-                    raise AttributeError('Unable to parse e_power = %s as a lambda function'
-                        %params['e_power'])
-            else:
-                B_power_function = None
-            if not E_power_function and not B_power_function:
-                raise AttributeError(
-                    "At least one of the attributes e_power or b_power is required for " +
-                    "input.type = power_spectrum")
-            config['power_spectrum'] = galsim.PowerSpectrum(E_power_function, B_power_function)
-
         # Check that there are no other attributes specified.
         valid_keys = input_type.keys()
-        valid_keys += ['power_spectrum']
         galsim.config.CheckAllParams(input, 'input', ignore=valid_keys)
 
 

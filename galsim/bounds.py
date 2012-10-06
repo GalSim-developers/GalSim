@@ -5,14 +5,14 @@ A few adjustments to the Bounds class at the Python layer.
 from . import _galsim
 
 def Bounds_repr(self):
-    return (self.__class__.__name__+"(xmin="+str(self.xMin)+", xmax="+str(self.xMax)+
-            ", ymin="+str(self.yMin)+", ymax="+str(self.yMax)+")")
+    return (self.__class__.__name__+"(xMin="+str(self.xMin)+", xMax="+str(self.xMax)+
+            ", yMin="+str(self.yMin)+", yMax="+str(self.yMax)+")")
 
 def Bounds_str(self):
     return "("+str(self.xMin)+", "+str(self.xMax)+", "+str(self.yMin)+", "+str(self.yMax)+")"
 
 def Bounds_getinitargs(self):
-    return self.xmin, self.xmax, self.ymin, self.ymax
+    return self.xMin, self.xMax, self.yMin, self.yMax
 
 for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.__repr__ = Bounds_repr
@@ -23,7 +23,7 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     BoundsD describes bounds with floating point values in x and y.
     BoundsI described bounds with integer values in x and y.
 
-    The bounds are stored as four numbers in each instance, (xmin, ymin, xmax, ymax), with an
+    The bounds are stored as four numbers in each instance, (xMin, yMin, xMax, yMax), with an
     additional boolean switch to say whether or not the Bounds rectangle has been defined.  The
     rectangle is undefined if min>max in either direction.
 
@@ -32,30 +32,30 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     A BoundsI or BoundsD instance can be initialized in a variety of ways.  The most direct is via
     four scalars:
 
-        >>> bounds = galsim.BoundsD(xmin, ymin, xmax, ymax)
+        >>> bounds = galsim.BoundsD(xMin, yMin, xMax, yMax)
         >>> bounds = galsim.BoundsI(imin, jmin, imax, jmax)
 
     In the BoundsI example above, `imin`, `jmin`, `imax` & `jmax` must all be integers to avoid an
     ArgumentError exception.
 
     Another way to initialize a Bounds instance is using two galsim.PositionI/D instances, the first
-    for xmin/ymin and the second for `xmax`/`ymax`:
+    for xMin/yMin and the second for `xMax`/`yMax`:
 
-        >>> bounds = galsim.BoundsD(galsim.PositionD(xmin, ymin), galsim.PositionD(xmax, ymax))
+        >>> bounds = galsim.BoundsD(galsim.PositionD(xMin, yMin), galsim.PositionD(xMax, yMax))
         >>> bounds = galsim.BoundsI(galsim.PositionI(imin, jmin), galsim.PositionI(imax, jmax))
 
     In both the examples above, the I/D type of PositionI/D must match that of BoundsI/D.
 
-    Finally, there are a two ways to lazily initialize a bounds instance with `xmin`=`xmax`,
-    `ymin`=`ymax`, which will have an undefined rectangle and the instance method .isDefined()
-    will return false.  The first sets `xmin`=`xmax`=`ymin`=`ymax`=0:
+    Finally, there are a two ways to lazily initialize a bounds instance with `xMin`=`xMax`,
+    `yMin`=`yMax`, which will have an undefined rectangle and the instance method .isDefined()
+    will return false.  The first sets `xMin`=`xMax`=`yMin`=`yMax`=0:
 
         >>> bounds = galsim.BoundsD()
         >>> bounds = galsim.BoundsI()
 
     The second method sets both upper and lower rectangle bounds to be equal to some position:
 
-        >>> bounds = galsim.BoundsD(galsim.PositionD(xmin, ymin))
+        >>> bounds = galsim.BoundsD(galsim.PositionD(xMin, yMin))
         >>> bounds = galsim.BoundsI(galsim.PositionI(imin, jmin))
 
     Once again, the I/D type of PositionI/D must match that of BoundsI/D.
@@ -77,13 +77,13 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.area.__func__.__doc__ = """Return the area of the enclosed region.
 
     The area is a bit different for integer-type BoundsI and float-type BoundsD instances.
-    For floating point types, it is simply (xmax-xmin)*(ymax-ymin).  However, for integer types, we
+    For floating point types, it is simply (xMax-xMin)*(yMax-yMin).  However, for integer types, we
     add 1 to each size to correctly count the number of pixels being described by the bounding box.
     """
 
     Class.addBorder.__func__.__doc__ = """Add a border of the specified width to the Bounds.
 
-    The bounds rectangle must be defined, i.e. xmax > xmin, ymax > min.
+    The bounds rectangle must be defined, i.e. xMax > xMin, yMax > min.
     """
 
     Class.center.__func__.__doc__ = "Return the central point of the Bounds as a Position."
@@ -108,14 +108,14 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
 
     Class.expand.__func__.__doc__ = "Grow the Bounds by the supplied factor about the center."
     Class.isDefined.__func__.__doc__ = "Test whether Bounds rectangle is defined."
-    Class.getXMin.__func__.__doc__ = "Get the value of xmin."
-    Class.getXMax.__func__.__doc__ = "Get the value of xmax."
-    Class.getYMin.__func__.__doc__ = "Get the value of ymin."
-    Class.getYMax.__func__.__doc__ = "Get the value of ymax."
-    Class.setXMin.__func__.__doc__ = "Set the value of xmin."
-    Class.setXMax.__func__.__doc__ = "Set the value of xmax."
-    Class.setYMin.__func__.__doc__ = "Set the value of ymin."
-    Class.setYMax.__func__.__doc__ = "Set the value of ymax."
+    Class.getXMin.__func__.__doc__ = "Get the value of xMin."
+    Class.getXMax.__func__.__doc__ = "Get the value of xMax."
+    Class.getYMin.__func__.__doc__ = "Get the value of yMin."
+    Class.getYMax.__func__.__doc__ = "Get the value of yMax."
+    Class.setXMin.__func__.__doc__ = "Set the value of xMin."
+    Class.setXMax.__func__.__doc__ = "Set the value of xMax."
+    Class.setYMin.__func__.__doc__ = "Set the value of yMin."
+    Class.setYMax.__func__.__doc__ = "Set the value of yMax."
     Class.shift.__func__.__doc__ = """Shift the Bounds instance by a supplied dx, dy.
 
     Calling Examples

@@ -90,7 +90,7 @@ def test_shear_flatps():
     gd = galsim.GaussianDeviate(512342)
 
     # make a flat power spectrum for E, B modes
-    test_ps = galsim.PowerSpectrum(E_power_function=pkflat, B_power_function=pkflat)
+    test_ps = galsim.PowerSpectrum(e_power_function=pkflat, b_power_function=pkflat)
     # get shears on 500x500 grid
     g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, rng=gd)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
@@ -111,7 +111,7 @@ def test_shear_flatps():
 
 
     # make a pure E-mode spectrum
-    test_ps = galsim.PowerSpectrum(E_power_function=pkflat)
+    test_ps = galsim.PowerSpectrum(e_power_function=pkflat)
     # get shears on 500x500 grid
     g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, rng=gd)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
@@ -141,7 +141,7 @@ def test_shear_flatps():
 
 
     # make a pure B-mode spectrum
-    test_ps = galsim.PowerSpectrum(B_power_function=pkflat)
+    test_ps = galsim.PowerSpectrum(b_power_function=pkflat)
     # get shears on 500x500 grid
     g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, rng=gd)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
@@ -178,7 +178,7 @@ def test_shear_seeds():
     t1 = time.time()
 
     # make a power spectrum for some E, B power function
-    test_ps = galsim.PowerSpectrum(E_power_function=pk2, B_power_function=pkflat)
+    test_ps = galsim.PowerSpectrum(e_power_function=pk2, b_power_function=pkflat)
 
     # get shears on a grid w/o specifying seed
     g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx = 10)
@@ -221,7 +221,7 @@ def test_shear_reference():
     dx = 1.
 
     # define power spectrum
-    ps = galsim.PowerSpectrum(E_power_function=pk2, B_power_function=pk1)
+    ps = galsim.PowerSpectrum(e_power_function=pk2, b_power_function=pk1)
     # get shears
     g1, g2 = ps.getShear(grid_spacing = dx, grid_nx = n, rng=rng)
 

@@ -201,11 +201,11 @@ def Image_copy(self):
 
 # Some functions to enable pickling of images
 def ImageView_getinitargs(self):
-    return self.array, self.xMin, self.yMin
+    return self.array, self.xMin, self.yMin, self.scale
 
 # An image is really pickled as an ImageView
 def Image_getstate(self):
-    return self.array, self.xMin, self.yMin
+    return self.array, self.xMin, self.yMin, self.scale
 
 def Image_setstate(self, args):
     type = args[0].dtype.type

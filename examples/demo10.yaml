@@ -15,7 +15,7 @@
 # New features introduced in this demo:
 #
 # - shear_value : PowerSpectrumShear 
-# - input : power_spectrum (e_power, b_power)
+# - input : power_spectrum (e_power_function, b_power_function)
 # - RealGalaxy : id
 # - image.psf : real_space
 # - type : Eval using pos variable, user-defined variables and math functions
@@ -91,6 +91,8 @@ gal :
 
 # Define some other information about the images 
 image :
+    # TODO: Temporary for working on issue #291
+    nproc : 4
 
     type : Tiled
     nx_tiles : 10
@@ -117,12 +119,12 @@ input :
         preload : False   # Not so important this time, since only using 5 items in the catalog.
 
     # We also initialize the power spectrum here.
-    # There are two possible attributes for a power_spectrum: e_power and b_power.
+    # There are two possible attributes for a power_spectrum: e_power_function and b_power_function.
     # You must specify at least one of them.
     # They are each strings that define a function of k.
     power_spectrum :
-        e_power : 'k**1.8'
-        # In this case we leave off b_power, so it is taken to be 0.
+        e_power_function : 'k**1.8'
+        # In this case we leave off b_power_function, so it is taken to be 0.
 
 
 # Define the names and format of the output files

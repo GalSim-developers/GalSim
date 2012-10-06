@@ -17,7 +17,7 @@ New features introduced in this demo:
 - rng = galsim.BaseDeviate(seed)
 - obj = galsim.RealGalaxy(real_galaxy_catalog, id)
 - obj = galsim.Convolve([list], real_space)
-- ps = galsim.PowerSpectrum(E_power_function, B_power_function)
+- ps = galsim.PowerSpectrum(e_power_function, b_power_function)
 - g1,g2 = ps.getShear(grid_spacing, grid_nx, rng)
 - g1,g2 = ps.getShear(pos)
 
@@ -97,13 +97,13 @@ def main(argv):
 
     # Setup the PowerSpectrum object we'll be using:
     ps = galsim.PowerSpectrum(lambda k : k**1.8)
-    # The parameter here is E_power_function which defines the E-mode power to use.
+    # The parameter here is e_power_function which defines the E-mode power to use.
 
-    # There is also a B_power_function if you want to include any B-mode power:
-    #     ps = galsim.PowerSpectrum(E_power_function, B_power_function)
+    # There is also a b_power_function if you want to include any B-mode power:
+    #     ps = galsim.PowerSpectrum(e_power_function, b_power_function)
 
-    # You may even omit the E_power_function argument and have a pure B-mode power spectrum.
-    #     ps = galsim.PowerSpectrum(B_power_function = B_power_function)
+    # You may even omit the e_power_function argument and have a pure B-mode power spectrum.
+    #     ps = galsim.PowerSpectrum(b_power_function = b_power_function)
 
 
     # Now have it build a grid of shear values for us to use.

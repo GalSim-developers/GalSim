@@ -35,19 +35,35 @@ def BuildStamps(nobjects, config, xsize, ysize,
             info is passed through from the input queue.
             proc is the process name.
         """
-        for (kwargs, info) in iter(input.get, 'STOP'):
-            result = BuildSingleStamp(**kwargs)
-            output.put( (result, info, current_process().name) )
+        import copy
+        for (kwargs, config, obj_num, nobj, info) in iter(input.get, 'STOP'):
+            #print 'In worker.'
+            #print 'got obj_num = ',obj_num
+            #print 'nobj = ',nobj
+            #print 'info = ',info
+            results = []
+            # Make new copies of config and kwargs so we can update them without
+            # clobbering the versions for other tasks on the queue.
+            # (The config modifications come in BuildSingleStamp.)
+            config = copy.copy(config)
+            kwargs = copy.copy(kwargs)
+            for i in range(nobj):
+                kwargs['config'] = config
+                kwargs['obj_num'] = obj_num + i
+                results.append(BuildSingleStamp(**kwargs))
+            output.put( (results, info, current_process().name) )
     
     # The kwargs to pass to build_func.
     # We'll be adding to this below...
-    kwargs = { 'config' : config,
-               'xsize' : xsize, 'ysize' : ysize, 
-               'sky_level' : sky_level,
-               'do_noise' : do_noise,
-               'make_psf_image' : make_psf_image,
-               'make_weight_image' : make_weight_image,
-               'make_badpix_image' : make_badpix_image }
+    kwargs = {
+        'xsize' : xsize, 'ysize' : ysize, 
+        'sky_level' : sky_level,
+        'do_noise' : do_noise,
+        'make_psf_image' : make_psf_image,
+        'make_weight_image' : make_weight_image,
+        'make_badpix_image' : make_badpix_image
+    }
+    # Apparently the logger isn't picklable, so can't send that as an arg.
 
     if nproc > nobjects:
         import warnings
@@ -72,7 +88,6 @@ def BuildStamps(nobjects, config, xsize, ysize,
                 "config.image.nproc <= 0, but unable to determine number of cpus.")
     
     if nproc > 1:
-
         from multiprocessing import Process, Queue, current_process
 
         # Initialize the images list to have the correct size.
@@ -84,17 +99,28 @@ def BuildStamps(nobjects, config, xsize, ysize,
         weight_images = [ None for i in range(nobjects) ]
         badpix_images = [ None for i in range(nobjects) ]
 
+        # Number of objects to do in each task:
+        # At most nobjects / nproc.
+        # At least 1 normally, but number in Ring if doing a Ring test
+        # Shoot for gemoetric mean of these two.
+        max_nobj = nobjects / nproc
+        min_nobj = 1
+        if max_nobj < min_nobj: 
+            nobj_per_task = min_nobj
+        else:
+            import math
+            # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
+            nobj_per_task = min_nobj * int(math.sqrt(float(max_nobj) / float(min_nobj)))
+
         # Set up the task list
         task_queue = Queue()
-        for k in range(nobjects):
-            # Need to make a new copy of kwargs, otherwise python's shallow copying 
-            # means that each task ends up getting the same kwargs object, each with the 
-            # same obj_num value.  Not what we want.
-            new_kwargs = {}
-            new_kwargs.update(kwargs)
-            new_kwargs['obj_num'] = obj_num+k
-            # Apparently the logger isn't picklable, so can't send that as an arg.
-            task_queue.put( ( new_kwargs, k) )
+        for k in range(0,nobjects,nobj_per_task):
+            # Send kwargs, config, obj_num, nobj, k
+            if k + nobj_per_task > nobjects:
+                task_queue.put( ( kwargs, config, obj_num+k, nobjects-k, k ) )
+            else:
+                task_queue.put( ( kwargs, config, obj_num+k, nobj_per_task, k ) )
+            #print 'put task ',obj_num+k,nobj_per_task,k
 
         # Run the tasks
         # Each Process command starts up a parallel process that will keep checking the queue 
@@ -104,22 +130,24 @@ def BuildStamps(nobjects, config, xsize, ysize,
         for j in range(nproc):
             Process(target=worker, args=(task_queue, done_queue)).start()
 
-        # In the meanwhile, the main process keeps going.  We pull each image off of the 
-        # done_queue and put it in the appropriate place on the main image.  
+        # In the meanwhile, the main process keeps going.  We pull each set of images off of the 
+        # done_queue and put them in the appropriate place in the lists.
         # This loop is happening while the other processes are still working on their tasks.
         # You'll see that these logging statements get print out as the stamp images are still 
         # being drawn.  
-        for i in range(nobjects):
-            result, k, proc = done_queue.get()
-            images[k] = result[0]
-            psf_images[k] = result[1]
-            weight_images[k] = result[2]
-            badpix_images[k] = result[3]
-            if logger:
-                # Note: numpy shape is y,x
-                ys, xs = result[0].array.shape
-                t = result[4]
-                logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', proc, k, xs, ys, t)
+        for i in range(0,nobjects,nobj_per_task):
+            results, k, proc = done_queue.get()
+            for result in results:
+                images[k] = result[0]
+                psf_images[k] = result[1]
+                weight_images[k] = result[2]
+                badpix_images[k] = result[3]
+                if logger:
+                    # Note: numpy shape is y,x
+                    ys, xs = result[0].array.shape
+                    t = result[4]
+                    logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', proc, k, xs, ys, t)
+                k += 1
 
         # Stop the processes
         # The 'STOP's could have been put on the task list before starting the processes, or you
@@ -141,6 +169,9 @@ def BuildStamps(nobjects, config, xsize, ysize,
 
         for k in range(nobjects):
             kwargs['obj_num'] = obj_num+k
+            kwargs['config'] = config
+            kwargs['obj_num'] = obj_num+k
+            kwargs['logger'] = logger
             result = BuildSingleStamp(**kwargs)
             images += [ result[0] ]
             psf_images += [ result[1] ]

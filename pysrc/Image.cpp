@@ -203,22 +203,24 @@ struct PyImage {
         );
     }
 
-    static ImageView<T> * makeFromArray(bp::object const & array, int xMin, int yMin) {
+    static ImageView<T>* makeFromArray(
+        const bp::object& array, int xMin, int yMin, double scale) 
+    {
         Bounds<int> bounds;
         int stride = 0;
         T * data = 0;
         boost::shared_ptr<T> owner;
-        double scale = 1.;
         buildConstructorArgs(array, xMin, yMin, false, data, owner, stride, bounds);
         return new ImageView<T>(data, owner, stride, bounds, scale);
     }
 
-    static ConstImageView<T> * makeConstFromArray(bp::object const & array, int xMin, int yMin) {
+    static ConstImageView<T>* makeConstFromArray(
+        const bp::object& array, int xMin, int yMin, double scale) 
+    {
         Bounds<int> bounds;
         int stride = 0;
         T * data = 0;
         boost::shared_ptr<T> owner;
-        double scale = 1.;
         buildConstructorArgs(array, xMin, yMin, true, data, owner, stride, bounds);
         return new ConstImageView<T>(data, owner, stride, bounds, scale);
     }
@@ -313,7 +315,8 @@ struct PyImage {
                 "__init__",
                 bp::make_constructor(
                     makeFromArray, bp::default_call_policies(),
-                    (bp::arg("array"), bp::arg("xMin")=1, bp::arg("yMin")=1)
+                    (bp::arg("array"), bp::arg("xMin")=1, bp::arg("yMin")=1, 
+                     bp::arg("scale")=1.0)
                 )
             )
             .def(bp::init<ImageView<T> const &>(bp::args("other")))
@@ -350,7 +353,8 @@ struct PyImage {
                 "__init__",
                 bp::make_constructor(
                     makeConstFromArray, bp::default_call_policies(),
-                    (bp::arg("array"), bp::arg("xMin")=1, bp::arg("yMin")=1)
+                    (bp::arg("array"), bp::arg("xMin")=1, bp::arg("yMin")=1,
+                     bp::arg("scale")=1.0)
                 )
             )
             .def(bp::init<BaseImage<T> const &>(bp::args("other")))
