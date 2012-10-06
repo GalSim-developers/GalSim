@@ -482,7 +482,7 @@ def test_angle_value():
     np.testing.assert_almost_equal(str1.rad(), 0.73)
 
     str2 = galsim.config.ParseValue(config,'str2',config, galsim.Angle)[0]
-    np.testing.assert_almost_equal(str2 / galsim.degrees, -120)
+    np.testing.assert_almost_equal(str2 / galsim.degrees, 240)
 
     str3 = galsim.config.ParseValue(config,'str3',config, galsim.Angle)[0]
     np.testing.assert_almost_equal(str3.rad(), 1.2)
@@ -494,7 +494,7 @@ def test_angle_value():
     np.testing.assert_almost_equal(str5.rad(), math.pi/2)
 
     str6 = galsim.config.ParseValue(config,'str6',config, galsim.Angle)[0]
-    np.testing.assert_almost_equal(str6.rad(), -math.pi/4)
+    np.testing.assert_almost_equal(str6.rad(), 7*math.pi/4)
 
     str7 = galsim.config.ParseValue(config,'str7',config, galsim.Angle)[0]
     np.testing.assert_almost_equal(str7 / galsim.degrees, -4)
@@ -520,7 +520,6 @@ def test_angle_value():
     for k in range(6):
         ran1 = galsim.config.ParseValue(config,'ran1',config, galsim.Angle)[0]
         theta = rng() * 2 * math.pi
-        if theta > math.pi: theta -= 2*math.pi
         np.testing.assert_almost_equal(ran1.rad(), theta)
 
     # Test values generated from a Sequence
@@ -531,8 +530,8 @@ def test_angle_value():
         seq1.append(galsim.config.ParseValue(config,'seq1',config, galsim.Angle)[0].rad())
         seq2.append(galsim.config.ParseValue(config,'seq2',config, galsim.Angle)[0]/galsim.degrees)
 
-    np.testing.assert_array_almost_equal(seq1, [ 0, 1, 2, 3, 4-2*math.pi, 5-2*math.pi ])
-    np.testing.assert_array_almost_equal(seq2, [ 45, 125, -155, -75, 5, 85 ])
+    np.testing.assert_array_almost_equal(seq1, [ 0, 1, 2, 3, 4, 5 ])
+    np.testing.assert_array_almost_equal(seq2, [ 45, 125, 205, 285, 365, 445 ])
 
     # Test values taken from a List
     list1 = []
@@ -562,15 +561,6 @@ def test_shear_value():
         's5' : { 'type' : 'Eta1Eta2', 'eta1' : 0.5, 'eta2' : -0.1 },
         's6' : { 'type' : 'EtaBeta', 'eta' : 0.5, 'beta' : 0.1 * galsim.radians },
         's7' : { 'type' : 'QBeta', 'q' : 0.5, 'beta' : 0.1 * galsim.radians },
-        'ring1' : { 'type' : 'Ring' ,
-                    'first' : { 'type' : 'E1E2', 
-                                'e1' : { 'type' : 'List' , 
-                                         'items' : [ 0.3, 0.2, 0.8 ] ,
-                                         'index' : { 'type' : 'Sequence', 'repeat' : 2 },
-                                       },
-                                'e2' : 0.1 },
-                    'num' : 2 },
-        'ring2' : { 'type' : 'Ring' , 'first' : galsim.Shear(e2=0.3), 'num' : 10 },
         'list1' : { 'type' : 'List',
                     'items' : [ galsim.Shear(g1 = 0.2, g2 = -0.3),
                                 galsim.Shear(g1 = -0.5, g2 = 0.2),
@@ -620,53 +610,6 @@ def test_shear_value():
     q = (1-g)/(1+g)
     np.testing.assert_almost_equal(q, 0.5)
     np.testing.assert_almost_equal(s7.getBeta().rad(), 0.1)
-
-    # Test values generated from a Ring:
-    ring1 = []
-    for k in range(6):
-        config['seq_index'] = k
-        ring1.append(galsim.config.ParseValue(config,'ring1',config, galsim.Shear)[0])
-
-    np.testing.assert_almost_equal(ring1[0].getE1(), 0.3)
-    np.testing.assert_almost_equal(ring1[0].getE2(), 0.1)
-    np.testing.assert_almost_equal(ring1[1].getE1(), -0.3)
-    np.testing.assert_almost_equal(ring1[1].getE2(), -0.1)
-    np.testing.assert_almost_equal(ring1[2].getE1(), 0.2)
-    np.testing.assert_almost_equal(ring1[2].getE2(), 0.1)
-    np.testing.assert_almost_equal(ring1[3].getE1(), -0.2)
-    np.testing.assert_almost_equal(ring1[3].getE2(), -0.1)
-    np.testing.assert_almost_equal(ring1[4].getE1(), 0.8)
-    np.testing.assert_almost_equal(ring1[4].getE2(), 0.1)
-    np.testing.assert_almost_equal(ring1[5].getE1(), -0.8)
-    np.testing.assert_almost_equal(ring1[5].getE2(), -0.1)
-
-    ring2 = []
-    for k in range(11):
-        config['seq_index'] = k
-        ring2.append(galsim.config.ParseValue(config,'ring2',config, galsim.Shear)[0])
-
-    np.testing.assert_almost_equal(ring2[0].getE(), 0.3)
-    np.testing.assert_almost_equal(ring2[0].getBeta() / galsim.degrees, 45)
-    np.testing.assert_almost_equal(ring2[1].getE(), 0.3)
-    np.testing.assert_almost_equal(ring2[1].getBeta() / galsim.degrees, 63)
-    np.testing.assert_almost_equal(ring2[2].getE(), 0.3)
-    np.testing.assert_almost_equal(ring2[2].getBeta() / galsim.degrees, 81)
-    np.testing.assert_almost_equal(ring2[3].getE(), 0.3)
-    np.testing.assert_almost_equal(ring2[3].getBeta() / galsim.degrees, -81)
-    np.testing.assert_almost_equal(ring2[4].getE(), 0.3)
-    np.testing.assert_almost_equal(ring2[4].getBeta() / galsim.degrees, -63)
-    np.testing.assert_almost_equal(ring2[5].getE(), 0.3)
-    np.testing.assert_almost_equal(ring2[5].getBeta() / galsim.degrees, -45)
-    np.testing.assert_almost_equal(ring2[6].getE(), 0.3)
-    np.testing.assert_almost_equal(ring2[6].getBeta() / galsim.degrees, -27)
-    np.testing.assert_almost_equal(ring2[7].getE(), 0.3)
-    np.testing.assert_almost_equal(ring2[7].getBeta() / galsim.degrees, -9)
-    np.testing.assert_almost_equal(ring2[8].getE(), 0.3)
-    np.testing.assert_almost_equal(ring2[8].getBeta() / galsim.degrees, 9)
-    np.testing.assert_almost_equal(ring2[9].getE(), 0.3)
-    np.testing.assert_almost_equal(ring2[9].getBeta() / galsim.degrees, 27)
-    np.testing.assert_almost_equal(ring2[10].getE(), 0.3)
-    np.testing.assert_almost_equal(ring2[10].getBeta() / galsim.degrees, 45)
 
     # Test values taken from a List
     list1 = []

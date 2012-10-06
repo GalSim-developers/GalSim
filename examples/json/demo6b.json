@@ -108,7 +108,7 @@
         "image_dir" : "data",
         "file_name" : "real_galaxy_catalog_example.fits",
 
-	"#" : "This usually makes a big improvement in speed",
+        "#" : "This usually makes a big improvement in speed",
         "preload" : true
     }
 },

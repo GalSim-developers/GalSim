@@ -105,12 +105,18 @@ def BuildStamps(nobjects, config, xsize, ysize,
         # Shoot for gemoetric mean of these two.
         max_nobj = nobjects / nproc
         min_nobj = 1
+        #print 'gal' in config
+        if ( 'gal' in config and isinstance(config['gal'],dict) and 'type' in config['gal'] and
+             config['gal']['type'] == 'Ring' and 'num' in config['gal'] ):
+            min_nobj = galsim.config.ParseValue(config['gal'], 'num', config, int)[0]
+            #print 'Found ring: num = ',min_nobj
         if max_nobj < min_nobj: 
             nobj_per_task = min_nobj
         else:
             import math
             # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
             nobj_per_task = min_nobj * int(math.sqrt(float(max_nobj) / float(min_nobj)))
+        #print 'nobj_per_task = ',nobj_per_task
 
         # Set up the task list
         task_queue = Queue()
@@ -356,28 +362,8 @@ def BuildGal(config, logger=None):
     """
  
     if 'gal' in config:
-        # If we are specifying the size according to a resolution, then we 
-        # need to get the PSF's half_light_radius.
         if not isinstance(config['gal'], dict):
             raise AttributeError("config.gal is not a dict.")
-        if 'resolution' in config['gal']:
-            if 'psf' not in config:
-                raise AttributeError(
-                    "Cannot use gal.resolution if no psf is set.")
-            if 'saved_re' not in config['psf']:
-                raise AttributeError(
-                    'Cannot use gal.resolution with psf.type = %s'%config['psf']['type'])
-            psf_re = config['psf']['saved_re']
-            resolution = galsim.config.ParseValue(config['gal'], 'resolution', config, float)[0]
-            gal_re = resolution * psf_re
-            if 're_from_res' not in config['gal']:
-                # The first time, check that half_light_radius isn't also specified.
-                if 'half_light_radius' in config['gal']:
-                    raise AttributeError(
-                        'Cannot specify both gal.resolution and gal.half_light_radius')
-                config['gal']['re_from_res'] = True
-            config['gal']['half_light_radius'] = gal_re
-
         gal = galsim.config.BuildGSObject(config, 'gal')[0]
     else:
         gal = None

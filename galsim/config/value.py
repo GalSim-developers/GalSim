@@ -49,7 +49,7 @@ def ParseValue(config, param_name, base, value_type):
             str : [ 'InputCatalog', 'NumberedFile', 'List', 'Eval' ],
             galsim.Angle : [ 'Rad', 'Deg', 'Random', 'List', 'Eval' ],
             galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
-                             'Ring', 'NFWHaloShear', 'PowerSpectrumShear', 'List', 'Eval' ],
+                             'NFWHaloShear', 'PowerSpectrumShear', 'List', 'Eval' ],
             galsim.PositionD : [ 'XY', 'RandomCircle', 'List', 'Eval' ] 
         }
 
@@ -298,44 +298,6 @@ def _GenerateFromDeg(param, param_name, base, value_type):
     return kwargs['theta'] * galsim.degrees, safe
 
 
-def _GenerateFromRing(param, param_name, base, value_type):
-    """@brief Return the next shear for a ring test.
-    """
-    req = { 'num' : int, 'first' : galsim.Shear }
-    ignore = [ 'i', 'current' ]
-    # Only Check, not Get.  We don't want to generate first if it's not time yet.
-    CheckAllParams(param, param_name, req=req, ignore=ignore)
-
-    num, safe = ParseValue(param, 'num', base, int)
-    #print 'In Ring parameter'
-    # We store the current index in the ring and the last value in the dictionary,
-    # so they will be available next time we get here.
-    i = param.get('i',num)
-    #print 'i = ',i
-    if i == num:
-        #print 'at i = num'
-        current, safe = ParseValue(param, 'first', base, galsim.Shear)
-        i = 1
-    elif num == 2:  # Special easy case for only 2 in ring.
-        #print 'i = ',i,' Simple case of n=2'
-        current = -param['current']
-        #print 'ring beta = ',current.beta
-        #print 'ring ellip = ',current.e
-        i = i + 1
-    else:
-        import math
-        #print 'i = ',i
-        s = param['current']
-        current = galsim.Shear(g=s.g, beta=s.beta + math.pi/num * galsim.radians)
-        #print 'ring beta = ',current.beta
-        #print 'ring ellip = ',current.e
-        i = i + 1
-    param['i'] = i
-    param['current'] = current
-    #print 'return shear = ',current
-    return current, False
-
-
 def _GenerateFromInputCatalog(param, param_name, base, value_type):
     """@brief Return a value read from an input catalog
     """
@@ -437,7 +399,6 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
         base['current_gdsigma'] = sigma
 
     if 'min' in kwargs or 'max' in kwargs:
-        import math
         # Clip at min/max.
         # However, special cases if min == mean or max == mean
         #  -- can use fabs to double the chances of falling in the range.
@@ -462,6 +423,7 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
     
         # Emulate a do-while loop
         #print 'sigma = ',sigma
+        import math
         while True:
             val = gd()
             #print 'val = ',val

@@ -9,8 +9,9 @@ the lines of a Great10 (Kitching, et al, 2012) image.  The galaxies are placed o
 (10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
 is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them
 as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
-RealGalaxy objects, selected to be 5 particularly irregular ones, each with a random 
-orientation.  (These are taken from the same catalog of 100 objects that demo6 used.)
+RealGalaxy objects, selected to be 5 particularly irregular ones. (These are taken from 
+the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring 
+test of 20 each.
 
 New features introduced in this demo:
 
@@ -25,6 +26,7 @@ New features introduced in this demo:
 - Selecting RealGalaxy by ID rather than index.
 - Putting the PSF image in a second HDU in the same file as the main image.
 - Using PowerSpectrum for the applied shear.
+- Doing a full ring test (i.e. not just 90 degree rotated pairs)
 """
 
 import sys
@@ -106,7 +108,6 @@ def main(argv):
     #     ps = galsim.PowerSpectrum(b_power_function = b_power_function)
 
 
-    # Now have it build a grid of shear values for us to use.
     # All the random number generator classes derive from BaseDeviate.
     # When we construct another kind of deviate class from any other
     # kind of deviate class, the two share the same underlying random number
@@ -117,6 +118,8 @@ def main(argv):
     # The seeds for the objects are random_seed..random_seed+nobj-1, so use the next one.
     nobj = n_tiles * n_tiles
     rng = galsim.BaseDeviate(random_seed+nobj)
+
+    # Now have the PowerSpectrum object build a grid of shear values for us to use.
     grid_g1, grid_g2 = ps.getShear(grid_spacing=stamp_size*pixel_scale, grid_nx=n_tiles, rng=rng)
 
     # Setup the images:
@@ -158,12 +161,14 @@ def main(argv):
             pix = galsim.Pixel(pixel_scale)
 
             # Define the galaxy profile:
-            ud = galsim.UniformDeviate(rng)
-            index = int(ud() * len(gal_list))
+
+            # We're doing a ring test with 20 objects per ring, so the index is k/20 using
+            # integer math.
+            index = k / 20
             gal = gal_list[index]
 
-            # Apply a random rotation:
-            theta = ud() * 360 * galsim.degrees 
+            # Apply the rotation for the ring test: (k mod 20)/20 * 360 degrees
+            theta = (k % 20)/20. * 360. * galsim.degrees 
             # This makes a new copy so we're not changing the object in the gal_list.
             gal = gal.createRotated(theta)
 
@@ -179,11 +184,12 @@ def main(argv):
             alt_g1,alt_g2 = ps.getShear(pos)
 
             # These assert statements demonstrate the the values agree to 1.e-15.
-            # (They might not be exactly equal due to machine rounding, but close enough.)
+            # (They might not be exactly equal due to numerical rounding errors, but close enough.)
             assert math.fabs(alt_g1 - grid_g1[iy,ix]) < 1.e-15
             assert math.fabs(alt_g2 - grid_g2[iy,ix]) < 1.e-15
 
             # Apply a random shift within a square box the size of a pixel
+            ud = galsim.UniformDeviate(rng)
             dx = (ud()-0.5) * pixel_scale
             dy = (ud()-0.5) * pixel_scale
             gal.applyShift(dx,dy)

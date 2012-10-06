@@ -9,8 +9,9 @@
 # (10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
 # is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them
 # as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
-# RealGalaxy objects, selected to be 5 particularly irregular ones, each with a random 
-# orientation.  (These are taken from the same catalog of 100 objects that demo6 used.)
+# RealGalaxy objects, selected to be 5 particularly irregular ones.  (These are taken from 
+# the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring 
+# test of 20 each.
 #
 # New features introduced in this demo:
 #
@@ -19,7 +20,8 @@
 # - RealGalaxy : id
 # - image.psf : real_space
 # - type : Eval using pos variable, user-defined variables and math functions
-# - output : psf : hdu
+# - gal type : Ring (first, num, full_rotation)
+# - output.psf : hdu
 #
 
 
@@ -59,21 +61,27 @@ psf :
 
 # Define the galaxy profile
 gal :
-    type : List
-    items : 
-        # Note: we could have made the type RealGalaxy and then have the id be a list
-        #       with a random index.  However, doing it this way means that the Fourier
-        #       transforms of the real galaxy images don't need to be recalculated each time,
-        #       so it's a bit more efficient.
-        - { type : RealGalaxy , id : 106416 }
-        - { type : RealGalaxy , id : 106731 }
-        - { type : RealGalaxy , id : 108402 }
-        - { type : RealGalaxy , id : 116045 }
-        - { type : RealGalaxy , id : 116448 }
-    index : { type : Random }
+    type : Ring
+    num : &num_in_ring 20
+    first :
+        type : RealGalaxy
+        id : 
+            type : List
+            items : [ 106416, 106731, 108402, 116045, 116448 ]
+            # Because this is in a Ring, the "first" item only gets accessed every 20 objects.
+            # However, all sequences are indexed by the overall object number, so in order to 
+            # step through this sequence once for each time into the "first" item, we need
+            # to set index to repeat 20 times before moving on to the next item.
+            # We again use the convenient YAML variable name notation to do so.
+            index : { type : Sequence , repeat : *num_in_ring }
 
-    dilation : 3  # Make the galaxies a factor of 3 larger than their original observed size.
-    rotation : { type : Random }
+        dilation : 3  # Make the galaxies a factor of 3 larger than their original observed size.
+
+    # If your underlying galaxy (defined in first) has rotational symmetry (e.g. a sheared 
+    # exponential profile), then you would typically want the full rotation spanned by the 
+    # ring test to be 180 degrees.  However, in this case, the underlying real galaxies
+    # do not have this symmetry.  So we want the ring to span a full rotation of 360 degrees.
+    full_rotation : 360 deg
 
     shear : 
         # For this demo, we use shears drawn from a power spectrum P(k) = k^1.8.
@@ -82,7 +90,7 @@ gal :
 
     shift : 
         type : XY
-        # Half a pixel in any direction
+        # Half a pixel (0.22 arcsec) in either direction
         x : { type : Random , min : -0.22 , max : 0.22 }
         y : { type : Random , min : -0.22 , max : 0.22 }
 
@@ -119,8 +127,8 @@ input :
         preload : False   # Not so important this time, since only using 5 items in the catalog.
 
     # We also initialize the power spectrum here.
-    # There are two possible attributes for a power_spectrum: e_power_function and b_power_function.
-    # You must specify at least one of them.
+    # There are two possible attributes for a power_spectrum: e_power_function and 
+    # b_power_function.  You must specify at least one of them.
     # They are each strings that define a function of k.
     power_spectrum :
         e_power_function : 'k**1.8'

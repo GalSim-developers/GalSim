@@ -356,8 +356,8 @@ class PowerSpectrum(object):
 
             # Construct a bounds that we can use to check if a provided position will
             # end up falling on the interpolating image.
-            self.bounds = galsim.BoundsD(b.xMin*grid_spacing, b.xMax*grid_spacing,
-                                         b.yMin*grid_spacing, b.yMax*grid_spacing)
+            self.bounds = galsim.BoundsD((b.xMin-0.5)*grid_spacing, (b.xMax+0.5)*grid_spacing,
+                                         (b.yMin-0.5)*grid_spacing, (b.yMax+0.5)*grid_spacing)
             self.bounds.shift(-nominal_center - self.offset)
 
         if pos is None:
