@@ -34,8 +34,8 @@ time ../bin/galsim_yaml demo7.yaml || exit
 time ../bin/demo8 || exit
 time ../bin/galsim_yaml demo8.yaml || exit
 
-time ../bin/demo9 || echo "Sorry, sciPy required for running demo9"
-time ../bin/galsim_yaml demo9.yaml || echo "Sorry, sciPy required for running demo9"
+time ../bin/demo9 || exit
+time ../bin/galsim_yaml demo9.yaml || exit
 
 time ../bin/demo10 || exit
 time ../bin/galsim_yaml demo10.yaml || exit

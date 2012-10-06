@@ -1,7 +1,7 @@
 
 import galsim
 
-def BuildImage(config, logger=None, seeds=None,
+def BuildImage(config, logger=None, image_num=0, obj_num=0,
                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build an image according to the information in config.
@@ -14,7 +14,8 @@ def BuildImage(config, logger=None, seeds=None,
 
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress.
-    @param seeds               If given, a list of seeds to use.
+    @param image_num           If given, the current image_num (default = 0)
+    @param obj_num             If given, the current obj_num (default = 0)
     @param make_psf_image      Whether to make psf_image.
     @param make_weight_image   Whether to make weight_image.
     @param make_badpix_image   Whether to make badpix_image.
@@ -24,7 +25,6 @@ def BuildImage(config, logger=None, seeds=None,
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.
     """
-
     # Make config['image'] exist if it doesn't yet.
     if 'image' not in config:
         config['image'] = {}
@@ -32,18 +32,13 @@ def BuildImage(config, logger=None, seeds=None,
     if not isinstance(image, dict):
         raise AttributeError("config.image is not a dict.")
 
-    #print 'BuildImage: seeds = ',seeds
-    #print 'len(seeds) = ',len(seeds)
-    if seeds:
-        image['random_seed'] = { 'type' : 'List' , 'items' : seeds }
-    else:
-        # Normally, random_seed is just a number, which really means to use that number
-        # for the first item and go up sequentially from there for each object.
-        # However, we allow for random_seed to be a gettable parameter, so for the 
-        # normal case, we just convert it into a Sequence.
-        if 'random_seed' in image and not isinstance(image['random_seed'],dict):
-            first_seed = galsim.config.ParseValue(image, 'random_seed', config, int)[0]
-            image['random_seed'] = { 'type' : 'Sequence' , 'first' : first_seed }
+    # Normally, random_seed is just a number, which really means to use that number
+    # for the first item and go up sequentially from there for each object.
+    # However, we allow for random_seed to be a gettable parameter, so for the 
+    # normal case, we just convert it into a Sequence.
+    if 'random_seed' in image and not isinstance(image['random_seed'],dict):
+        first_seed = galsim.config.ParseValue(image, 'random_seed', config, int)[0]
+        image['random_seed'] = { 'type' : 'Sequence' , 'first' : first_seed }
 
     if 'draw_method' not in image:
         image['draw_method'] = 'fft'
@@ -59,6 +54,7 @@ def BuildImage(config, logger=None, seeds=None,
     build_func = eval('Build' + type + 'Image')
     all_images = build_func(
             config=config, logger=logger,
+            image_num=image_num, obj_num=obj_num,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -72,13 +68,15 @@ def BuildImage(config, logger=None, seeds=None,
     return all_images
 
 
-def BuildSingleImage(config, logger=None,
+def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build an image consisting of a single stamp
 
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress.
+    @param image_num           If given, the current image_num (default = 0)
+    @param obj_num             If given, the current obj_num (default = 0)
     @param make_psf_image      Whether to make psf_image.
     @param make_weight_image   Whether to make weight_image.
     @param make_badpix_image   Whether to make badpix_image.
@@ -88,8 +86,10 @@ def BuildSingleImage(config, logger=None,
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
-    ignore = [ 'draw_method', 'noise', 'wcs', 'nproc' ]
-    opt = { 'random_seed' : int , 'size' : int , 'xsize' : int , 'ysize' : int ,
+    config['seq_index'] = image_num
+
+    ignore = [ 'draw_method', 'noise', 'wcs', 'nproc' , 'random_seed' ]
+    opt = { 'size' : int , 'xsize' : int , 'ysize' : int ,
             'pixel_scale' : float , 'sky_level' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
@@ -112,28 +112,25 @@ def BuildSingleImage(config, logger=None,
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
 
-    if 'random_seed' in params:
-        seed = params['random_seed']
-    else:
-        seed = None
-
     sky_level = params.get('sky_level',None)
 
     return galsim.config.BuildSingleStamp(
-            seed=seed, config=config, xsize=xsize, ysize=ysize, 
+            config=config, xsize=xsize, ysize=ysize, obj_num=obj_num,
             sky_level=sky_level, do_noise=True, logger=logger,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
 
 
-def BuildTiledImage(config, logger=None,
+def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                     make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build an image consisting of a tiled array of postage stamps
 
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress.
+    @param image_num           If given, the current image_num (default = 0)
+    @param obj_num             If given, the current obj_num (default = 0)
     @param make_psf_image      Whether to make psf_image.
     @param make_weight_image   Whether to make weight_image.
     @param make_badpix_image   Whether to make badpix_image.
@@ -143,6 +140,8 @@ def BuildTiledImage(config, logger=None,
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
+    config['seq_index'] = image_num
+
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'center' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
@@ -153,7 +152,7 @@ def BuildTiledImage(config, logger=None,
 
     nx_tiles = params['nx_tiles']
     ny_tiles = params['ny_tiles']
-    nstamps = nx_tiles * ny_tiles
+    nobjects = nx_tiles * ny_tiles
 
     stamp_size = params.get('stamp_size',0)
     stamp_xsize = params.get('stamp_xsize',stamp_size)
@@ -191,13 +190,8 @@ def BuildTiledImage(config, logger=None,
                 "!= required (%d,%d)."%(config['image_xsize'],config['image_ysize']))
 
     if stamp_xsize == 0:
-        if 'random_seed' in config['image']:
-            seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-            #print 'First tile: seed = ',seed
-        else:
-            seed = None
         first_images = galsim.config.BuildSingleStamp(
-            seed=seed, config=config, xsize=stamp_xsize, ysize=stamp_ysize, 
+            config=config, xsize=stamp_xsize, ysize=stamp_ysize, obj_num=obj_num,
             sky_level=sky_level, do_noise=do_noise, logger=logger,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
@@ -208,7 +202,8 @@ def BuildTiledImage(config, logger=None,
         psf_images = [ first_images[1] ]
         weight_images = [ first_images[2] ]
         badpix_images = [ first_images[3] ]
-        nstamps -= 1
+        nobjects -= 1
+        obj_num += 1
     else:
         images = []
         psf_images = []
@@ -245,8 +240,22 @@ def BuildTiledImage(config, logger=None,
     rng = None
 
     if 'power_spectrum' in config:
+        if len(images) == 1:
+            # If we already built the first image to figure out what size image to use, we will
+            # need to rebuild it with the correct shear for this power spectrum realization.
+            images = []
+            psf_images = []
+            weight_images = []
+            badpix_images = []
+            nobjects += 1
+            obj_num -= 1
+
         # Get the next random number seed.
         if 'random_seed' in config['image']:
+            config['seq_index'] = obj_num+nobjects
+            # Technically obj_num+nobjects will be the index of the random seed used for the next 
+            # image's first object (if there is a next image).  But I don't think that will have 
+            # any adverse effects.
             seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
             #print 'For power spectrum, seed = ',seed
             rng = galsim.BaseDeviate(seed)
@@ -259,8 +268,7 @@ def BuildTiledImage(config, logger=None,
         #print 'n_tiles = ',n_tiles
         #print 'stamp_size = ',stamp_size
 
-        g1,g2 = config['power_spectrum'].getShear(grid_spacing=grid_dx, grid_nx=n_tiles, rng=rng)
-        #print 'g1,g2 = ',g1,g2
+        config['power_spectrum'].getShear(grid_spacing=grid_dx, grid_nx=n_tiles, rng=rng)
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
@@ -297,7 +305,8 @@ def BuildTiledImage(config, logger=None,
         full_badpix_image = None
 
     stamp_images = galsim.config.BuildStamps(
-            nstamps=nstamps, config=config, xsize=stamp_xsize, ysize=stamp_ysize,
+            nobjects=nobjects, config=config,
+            xsize=stamp_xsize, ysize=stamp_ysize, obj_num=obj_num, 
             nproc=nproc, sky_level=sky_level, do_noise=do_noise, logger=logger,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
@@ -333,6 +342,7 @@ def BuildTiledImage(config, logger=None,
             if not rng:
                 # Get the next random number seed.
                 if 'random_seed' in config['image']:
+                    config['seq_index'] = obj_num+nobjects
                     seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
                     #print 'For noise, seed = ',seed
                     rng = galsim.BaseDeviate(seed)
@@ -355,13 +365,15 @@ def BuildTiledImage(config, logger=None,
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
 
-def BuildScatteredImage(config, logger=None,
+def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                         make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build an image containing multiple objects placed at arbitrary locations.
 
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress.
+    @param image_num           If given, the current image_num (default = 0)
+    @param obj_num             If given, the current obj_num (default = 0)
     @param make_psf_image      Whether to make psf_image.
     @param make_weight_image   Whether to make weight_image.
     @param make_badpix_image   Whether to make badpix_image.
@@ -371,6 +383,8 @@ def BuildScatteredImage(config, logger=None,
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
+    config['seq_index'] = image_num
+
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' , 'center' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
@@ -456,7 +470,8 @@ def BuildScatteredImage(config, logger=None,
         full_badpix_image = None
 
     stamp_images = galsim.config.BuildStamps(
-            nstamps=nobjects, config=config, xsize=stamp_xsize, ysize=stamp_ysize,
+            nobjects=nobjects, config=config,
+            xsize=stamp_xsize, ysize=stamp_ysize, obj_num=obj_num,
             nproc=nproc, sky_level=sky_level, do_noise=False, logger=logger,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
@@ -495,6 +510,7 @@ def BuildScatteredImage(config, logger=None,
         if not rng:
             # Get the next random number seed.
             if 'random_seed' in config['image']:
+                config['seq_index'] = obj_num+nobjects
                 seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
                 #print 'For noise, seed = ',seed
                 rng = galsim.BaseDeviate(seed)

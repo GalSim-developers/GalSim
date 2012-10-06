@@ -514,47 +514,57 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     """
     #print 'Start Sequence for ',param_name,' -- param = ',param
     opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type, 'repeat' : int }
-    ignore = { 'rep' : int, 'current' : int }
-    kwargs, safe = GetAllParams(param, param_name, base, opt=opt, ignore=ignore)
+    kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
 
     step = kwargs.get('step',1)
     first = kwargs.get('first',0)
     last = kwargs.get('last',None)
     repeat = kwargs.get('repeat',1)
+    #print 'first, step, last, repeat = ',first,step,last,repeat
     if repeat <= 0:
         raise ValueError(
             "Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(repeat,param_name))
-    #print 'first, step, repeat = ',first,step,repeat
 
     if value_type is bool:
         # Then there are only really two valid sequences: Either 010101... or 101010...
         # Aside from the repeat value of course.
         if first:
             first = 1
-            last = 0
             step = -1
+            n_items = 2
         else:
             first = 0
             step = 1
-            last = 1
-        #print 'first, last, step, repeat => ',first,last,step,repeat
+            n_items = 2
+        #print 'bool sequence: first, step, repeat, n => ',first,step,repeat,n_items
 
-    rep = param.get('rep',0)
-    index = param.get('current',first)
-    #print 'From saved: rep = ',rep,' index = ',index
-    if rep < repeat:
-        rep = rep + 1
+    elif value_type is float:
+        if last is not None:
+            n_items = int( (last-first)/step + 0.5 ) + 1
+        else:
+            n_items = None
+        #print 'float sequence: first, step, repeat, n => ',first,step,repeat,n_items
     else:
-        rep = 1
-        index = index + step
-        if (last is not None and 
-                ( (step > 0 and index > last) or
-                  (step < 0 and index < last) ) ):
-            index = first
-    param['rep'] = rep
-    param['current'] = index
-    #print 'index = ',index
-    #print 'saved rep,current = ',param['rep'],param['current']
+        if last is not None:
+            n_items = (last - first)/step + 1
+        else:
+            n_items = None
+        #print 'int sequence: first, step, repeat, n => ',first,step,repeat,n_items
+
+    k = base['seq_index']
+    #print 'k = ',k
+
+    k = k / repeat
+    #print 'k/repeat = ',k
+
+    if n_items is not None and n_items > 0:
+        #print 'n_items = ',n_items
+        k = k % n_items
+        #print 'k%n_items = ',k
+
+    index = first + k*step
+    #print 'first + k*step = ',index
+
     return index, False
 
 

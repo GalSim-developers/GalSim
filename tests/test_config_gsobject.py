@@ -501,21 +501,25 @@ def test_realgalaxy():
     real_cat = galsim.RealGalaxyCatalog(
         image_dir=real_gal_dir, file_name=real_gal_cat, preload=True)
 
+    config['seq_index'] = 0
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b = galsim.RealGalaxy(real_cat, index=0)
     gsobject_compare(gal1a, gal1b, True)
 
+    config['seq_index'] = 1
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
     gal2b = galsim.RealGalaxy(real_cat, index = 23)
     gal2b.setFlux(100)
     gsobject_compare(gal2a, gal2b, True)
 
+    config['seq_index'] = 2
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.RealGalaxy(real_cat, index = 17)
     gal3b.setFlux(1.e6)
     gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b, True)
 
+    config['seq_index'] = 3
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.RealGalaxy(real_cat, index = 5)
     gal4b.setFlux(50)
@@ -707,19 +711,23 @@ def test_list():
         }
     }
 
+    config['seq_index'] = 0
     gal = galsim.config.BuildGSObject(config, 'gal')[0]
     gal1b = galsim.Gaussian(sigma = 2)
     gsobject_compare(gal, gal1b)
 
+    config['seq_index'] = 1
     gal = galsim.config.BuildGSObject(config, 'gal')[0]
     gal2b = galsim.Gaussian(fwhm = 2, flux = 100)
     gsobject_compare(gal, gal2b)
 
+    config['seq_index'] = 2
     gal = galsim.config.BuildGSObject(config, 'gal')[0]
     gal3b = galsim.Gaussian(half_light_radius = 2, flux = 1.e6)
     gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal, gal3b)
 
+    config['seq_index'] = 3
     gal = galsim.config.BuildGSObject(config, 'gal')[0]
     gal4b = galsim.Gaussian(sigma = 1, flux = 50)
     gal4b.applyDilation(3)

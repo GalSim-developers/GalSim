@@ -114,7 +114,9 @@ def main(argv):
     # explicitly and then construct anything else you need from that.
     # Note: A BaseDeviate cannot be used to generate any values.  It can
     # only be used in the constructor for other kinds of deviates.
-    rng = galsim.BaseDeviate(random_seed)
+    # The seeds for the objects are random_seed..random_seed+nobj-1, so use the next one.
+    nobj = n_tiles * n_tiles
+    rng = galsim.BaseDeviate(random_seed+nobj)
     grid_g1, grid_g2 = ps.getShear(grid_spacing=stamp_size*pixel_scale, grid_nx=n_tiles, rng=rng)
 
     # Setup the images:
@@ -131,7 +133,7 @@ def main(argv):
         for iy in range(n_tiles):
             # The seed here is augmented by k+1 rather than the usual k, since we already
             # used a seed for the power spectrum above.
-            rng = galsim.BaseDeviate(random_seed+k+1)
+            rng = galsim.BaseDeviate(random_seed+k)
 
             # Determine the bounds for this stamp and its center position.
             b = galsim.BoundsI(ix*stamp_size+1 , (ix+1)*stamp_size, 

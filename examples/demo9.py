@@ -246,6 +246,7 @@ def main(argv):
     except:
         nproc = 2
         logger.info("Unable to determine ncpu.  Using %d processes",nproc)
+    nproc = 1
 
     # Set up the task list
     task_queue = Queue()
@@ -263,7 +264,7 @@ def main(argv):
             # Our extra info is just the file name that we use to write out which file finished.
             task_queue.put( ( (seed, full_name, mass), full_name ) )
             # Need to step by the number of galaxies in each file.
-            seed += nobj+1
+            seed += nobj
 
     # Run the tasks
     # Each Process command starts up a parallel process that will keep checking the queue 

@@ -3,15 +3,17 @@ import time
 import galsim
 
 
-def BuildStamps(nstamps, config, xsize, ysize, nproc=1, sky_level=None, do_noise=True, logger=None,
+def BuildStamps(nobjects, config, xsize, ysize, 
+                obj_num=0, nproc=1, sky_level=None, do_noise=True, logger=None,
                 make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build a number of postage stamp images as specified by the config dict.
 
-    @param nstamps             How many stamps to build.
+    @param nobjects            How many postage stamps to build.
     @param config              A configuration dict.
     @param xsize               The size of a single stamp in the x direction.
     @param ysize               The size of a single stamp in the y direction.
+    @param obj_num             If given, the current obj_num (default = 0)
     @param nproc               How many processes to use.
     @param sky_level           The background sky level to add to the image.
     @param do_noise            Whether to add noise to the image (according to config['noise']).
@@ -47,20 +49,20 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, sky_level=None, do_noise
                'make_weight_image' : make_weight_image,
                'make_badpix_image' : make_badpix_image }
 
-    if nproc > nstamps:
+    if nproc > nobjects:
         import warnings
         warnings.warn(
             "Trying to use more processes than objects: image.nproc=%d, "%nproc +
-            "nstamps=%d.  Reducing nproc to %d."%(nstamps,nstamps))
-        nproc = nstamps
+            "nobjects=%d.  Reducing nproc to %d."%(nobjects,nobjects))
+        nproc = nobjects
 
     if nproc <= 0:
         # Try to figure out a good number of processes to use
         try:
             from multiprocessing import cpu_count
             ncpu = cpu_count()
-            if ncpu > nstamps:
-                nproc = nstamps
+            if ncpu > nobjects:
+                nproc = nobjects
             else:
                 nproc = ncpu
             if logger:
@@ -73,43 +75,24 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, sky_level=None, do_noise
 
         from multiprocessing import Process, Queue, current_process
 
-        # Don't save any 'current_val' results in the config, so we don't waste time sending
-        # pickled versions of things back and forth.
-        # TODO: This means things like gal.resolution won't work.  Once we are able to 
-        # pickle GSObjects, we should send the constructed object, rather than config.
-        config['no_save'] = True
-
         # Initialize the images list to have the correct size.
         # This is important here, since we'll be getting back images in a random order,
         # and we need them to go in the right places (in order to have deterministic
         # output files).  So we initialize the list to be the right size.
-        images = [ None for i in range(nstamps) ]
-        psf_images = [ None for i in range(nstamps) ]
-        weight_images = [ None for i in range(nstamps) ]
-        badpix_images = [ None for i in range(nstamps) ]
+        images = [ None for i in range(nobjects) ]
+        psf_images = [ None for i in range(nobjects) ]
+        weight_images = [ None for i in range(nobjects) ]
+        badpix_images = [ None for i in range(nobjects) ]
 
         # Set up the task list
         task_queue = Queue()
-        for k in range(nstamps):
-            # Note: we currently pull out the seed from config, since that is always
-            # going to get clobbered by the multi-processing, since it involves a state
-            # variable.  However, there may be other items in config that have state 
-            # variables as well.  So the long term solution will be to construct the 
-            # full profile in the main processor, and then send that to each of the 
-            # parallel processors to draw the image.  But that will require our GSObjects
-            # to be picklable, which they aren't currently.
-            if 'random_seed' in config['image']:
-                seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-                'Using seed = ',seed
-            else:
-                seed = None
+        for k in range(nobjects):
             # Need to make a new copy of kwargs, otherwise python's shallow copying 
             # means that each task ends up getting the same kwargs object, each with the 
-            # same seed value.  Not what we want.
+            # same obj_num value.  Not what we want.
             new_kwargs = {}
             new_kwargs.update(kwargs)
-            new_kwargs['seed'] = seed
-            #print 'k = ',k,' seed = ',seed
+            new_kwargs['obj_num'] = obj_num+k
             # Apparently the logger isn't picklable, so can't send that as an arg.
             task_queue.put( ( new_kwargs, k) )
 
@@ -126,7 +109,7 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, sky_level=None, do_noise
         # This loop is happening while the other processes are still working on their tasks.
         # You'll see that these logging statements get print out as the stamp images are still 
         # being drawn.  
-        for i in range(nstamps):
+        for i in range(nobjects):
             result, k, proc = done_queue.get()
             images[k] = result[0]
             psf_images[k] = result[1]
@@ -136,8 +119,7 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, sky_level=None, do_noise
                 # Note: numpy shape is y,x
                 ys, xs = result[0].array.shape
                 t = result[4]
-                logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', 
-                            proc, k, xs, ys, t)
+                logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', proc, k, xs, ys, t)
 
         # Stop the processes
         # The 'STOP's could have been put on the task list before starting the processes, or you
@@ -157,14 +139,8 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, sky_level=None, do_noise
         weight_images = []
         badpix_images = []
 
-        for k in range(nstamps):
-            if 'random_seed' in config['image']:
-                seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-                'Using seed = ',seed
-            else:
-                seed = None
-            kwargs['seed'] = seed
-
+        for k in range(nobjects):
+            kwargs['obj_num'] = obj_num+k
             result = BuildSingleStamp(**kwargs)
             images += [ result[0] ]
             psf_images += [ result[1] ]
@@ -183,15 +159,16 @@ def BuildStamps(nstamps, config, xsize, ysize, nproc=1, sky_level=None, do_noise
     return images, psf_images, weight_images, badpix_images
  
 
-def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, logger=None,
+def BuildSingleStamp(config, xsize, ysize,
+                     obj_num=0, sky_level=None, do_noise=True, logger=None,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
-    Build a single image using the given seed and config file
+    Build a single image using the given config file
 
-    @param seed                The random number seed to use for this stamp.  0 means use time.
     @param config              A configuration dict.
     @param xsize               The xsize of the image to build.
     @param ysize               The ysize of the image to build.
+    @param obj_num             If given, the current obj_num (default = 0)
     @param sky_level           The background sky level to add to the image.
     @param do_noise            Whether to add noise to the image (according to config['noise']).
     @param logger              If given, a logger object to log progress.
@@ -203,9 +180,11 @@ def BuildSingleStamp(seed, config, xsize, ysize, sky_level=None, do_noise=True, 
     """
     t1 = time.time()
 
+    config['seq_index'] = obj_num 
     # Initialize the random number generator we will be using.
-    #print 'Build single stamp: seed = ',seed
-    if seed:
+    if 'random_seed' in config['image']:
+        seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+        #print 'Using seed = ',seed
         rng = galsim.UniformDeviate(seed)
     else:
         rng = galsim.UniformDeviate()

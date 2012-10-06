@@ -233,5 +233,5 @@ output :
     #
     # Also, this time, we set nproc <= 0.  This means that GalSim should try to automatically
     # determine the number of CPUs you have and use that many processes.
-    nproc : -1
+    #nproc : -1
 
