@@ -112,6 +112,9 @@ gal :
 
 # Define some other information about the images 
 image :
+    # TODO: Temporary for issue #291
+    nproc : 4
+
     # type defines what kind of image to build.
     # The default is Single, which means one postage stamp per image .
     # Tiled means to make an image with nx_tiles x ny_tiles of postage stamps

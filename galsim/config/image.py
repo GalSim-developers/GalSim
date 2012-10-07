@@ -1,6 +1,188 @@
 
 import galsim
 
+def BuildImages(nimages, config, logger=None, image_num=0, obj_num=0, nproc=1,
+                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
+    """
+    Build a number of postage stamp images as specified by the config dict.
+
+    @param nimages             How many images to build.
+    @param config              A configuration dict.
+    @param logger              If given, a logger object to log progress.
+    @param image_num           If given, the current image_num (default = 0)
+    @param obj_num             If given, the current obj_num (default = 0)
+    @param nproc               How many processes to use.
+    @param make_psf_image      Whether to make psf_image.
+    @param make_weight_image   Whether to make weight_image.
+    @param make_badpix_image   Whether to make badpix_image.
+
+    @return (images, psf_images, weight_images, badpix_images)  (All in tuple are lists)
+    """
+    import time
+    def worker(input, output):
+        for (kwargs, config, image_num, obj_num, nim, info) in iter(input.get, 'STOP'):
+            results = []
+            # Make new copies of config and kwargs so we can update them without
+            # clobbering the versions for other tasks on the queue.
+            import copy
+            kwargs1 = copy.copy(kwargs)
+            config1 = copy.deepcopy(config)
+            for i in range(nim):
+                t1 = time.time()
+                kwargs1['config'] = config1
+                kwargs1['image_num'] = image_num + i
+                kwargs1['obj_num'] = obj_num
+                im = BuildImage(**kwargs1)
+                obj_num += galsim.config.GetNObjForImage(config, image_num+i)
+                t2 = time.time()
+                results.append( [im[0], im[1], im[2], im[3], t2-t1 ] )
+            output.put( (results, info, current_process().name) )
+    
+    # The kwargs to pass to BuildImage
+    kwargs = {
+        'make_psf_image' : make_psf_image,
+        'make_weight_image' : make_weight_image,
+        'make_badpix_image' : make_badpix_image
+    }
+    # Apparently the logger isn't picklable, so can't send that as an arg.
+
+    if nproc > nimages:
+        import warnings
+        warnings.warn(
+            "Trying to use more processes than images: output.nproc=%d, "%nproc +
+            "nimages=%d.  Reducing nproc to %d."%(nimages,nimages))
+        nproc = nimages
+
+    if nproc <= 0:
+        # Try to figure out a good number of processes to use
+        try:
+            from multiprocessing import cpu_count
+            ncpu = cpu_count()
+            if ncpu > nimages:
+                nproc = nimages
+            else:
+                nproc = ncpu
+            if logger:
+                logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
+        except:
+            raise AttributeError(
+                "config.image.nproc <= 0, but unable to determine number of cpus.")
+    
+    if nproc > 1:
+        from multiprocessing import Process, Queue, current_process
+
+        # Initialize the images list to have the correct size.
+        # This is important here, since we'll be getting back images in a random order,
+        # and we need them to go in the right places (in order to have deterministic
+        # output files).  So we initialize the list to be the right size.
+        images = [ None for i in range(nimages) ]
+        psf_images = [ None for i in range(nimages) ]
+        weight_images = [ None for i in range(nimages) ]
+        badpix_images = [ None for i in range(nimages) ]
+
+        # Number of images to do in each task:
+        # At most nimages / nproc.
+        # At least 1 normally, but number in Ring if doing a Ring test
+        # Shoot for gemoetric mean of these two.
+        max_nim = nimages / nproc
+        min_nim = 1
+        #print 'gal' in config
+        if ( ('image' not in config or 'type' not in config['image'] or 
+                 config['image']['type'] == 'Single') and
+             'gal' in config and isinstance(config['gal'],dict) and 'type' in config['gal'] and
+             config['gal']['type'] == 'Ring' and 'num' in config['gal'] ):
+            min_nim = galsim.config.ParseValue(config['gal'], 'num', config, int)[0]
+            #print 'Found ring: num = ',min_nim
+        if max_nim < min_nim: 
+            nim_per_task = min_nim
+        else:
+            import math
+            # This formula keeps nim a multiple of min_nim, so Rings are intact.
+            nim_per_task = min_nim * int(math.sqrt(float(max_nim) / float(min_nim)))
+        #print 'nim_per_task = ',nim_per_task
+
+        # Set up the task list
+        task_queue = Queue()
+        for k in range(0,nimages,nim_per_task):
+            # Send kwargs, config, im_num, nim, k
+            if k + nim_per_task > nimages:
+                task_queue.put( ( kwargs, config, image_num+k, obj_num, nimages-k, k ) )
+            else:
+                task_queue.put( ( kwargs, config, image_num+k, obj_num, nim_per_task, k ) )
+            for i in range(nim_per_task):
+                obj_num += galsim.config.GetNObjForImage(config, image_num+k+i)
+
+        # Run the tasks
+        # Each Process command starts up a parallel process that will keep checking the queue 
+        # for a new task. If there is one there, it grabs it and does it. If not, it waits 
+        # until there is one to grab. When it finds a 'STOP', it shuts down. 
+        done_queue = Queue()
+        for j in range(nproc):
+            Process(target=worker, args=(task_queue, done_queue)).start()
+
+        # In the meanwhile, the main process keeps going.  We pull each set of images off of the 
+        # done_queue and put them in the appropriate place in the lists.
+        # This loop is happening while the other processes are still working on their tasks.
+        # You'll see that these logging statements get print out as the stamp images are still 
+        # being drawn.  
+        for i in range(0,nimages,nim_per_task):
+            results, k, proc = done_queue.get()
+            for result in results:
+                images[k] = result[0]
+                psf_images[k] = result[1]
+                weight_images[k] = result[2]
+                badpix_images[k] = result[3]
+                if logger:
+                    # Note: numpy shape is y,x
+                    ys, xs = result[0].array.shape
+                    t = result[4]
+                    logger.info('%s: Image %d: size = %d x %d, time = %f sec', 
+                                proc, image_num+k, xs, ys, t)
+                k += 1
+
+        # Stop the processes
+        # The 'STOP's could have been put on the task list before starting the processes, or you
+        # can wait.  In some cases it can be useful to clear out the done_queue (as we just did)
+        # and then add on some more tasks.  We don't need that here, but it's perfectly fine to do.
+        # Once you are done with the processes, putting nproc 'STOP's will stop them all.
+        # This is important, because the program will keep running as long as there are running
+        # processes, even if the main process gets to the end.  So you do want to make sure to 
+        # add those 'STOP's at some point!
+        for j in range(nproc):
+            task_queue.put('STOP')
+        task_queue.close()
+
+    else : # nproc == 1
+
+        images = []
+        psf_images = []
+        weight_images = []
+        badpix_images = []
+
+        for k in range(nimages):
+            t1 = time.time()
+            kwargs['config'] = config
+            kwargs['image_num'] = image_num+k
+            kwargs['obj_num'] = obj_num
+            kwargs['logger'] = logger
+            result = BuildImage(**kwargs)
+            images += [ result[0] ]
+            psf_images += [ result[1] ]
+            weight_images += [ result[2] ]
+            badpix_images += [ result[3] ]
+            t2 = time.time()
+            if logger:
+                # Note: numpy shape is y,x
+                ys, xs = result[0].array.shape
+                logger.info('Image %d: size = %d x %d, time = %f sec', image_num+k, xs, ys, t2-t1)
+            obj_num += galsim.config.GetNObjForImage(config, image_num+k)
+
+    if logger:
+        logger.info('Done making images')
+
+    return images, psf_images, weight_images, badpix_images
+ 
+
 def BuildImage(config, logger=None, image_num=0, obj_num=0,
                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """

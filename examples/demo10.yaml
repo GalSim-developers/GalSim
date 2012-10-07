@@ -99,8 +99,8 @@ gal :
 
 # Define some other information about the images 
 image :
-    # TODO: Temporary for working on issue #291
-    nproc : 4
+    # TODO: Temporary (?) for issue #291
+    nproc : 5
 
     type : Tiled
     nx_tiles : 10

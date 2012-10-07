@@ -246,7 +246,6 @@ def main(argv):
     except:
         nproc = 2
         logger.info("Unable to determine ncpu.  Using %d processes",nproc)
-    nproc = 1
 
     # Set up the task list
     task_queue = Queue()

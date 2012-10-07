@@ -105,7 +105,6 @@ input :
 
 # Define some other information about the images 
 image :
-
     # A Scattered image means that the objects can be placed arbitrarily at any (x,y) value.
     type : Scattered
 
@@ -142,7 +141,6 @@ image :
 
 # Define the names and format of the output files
 output :
-
     nfiles : 20
 
     file_name :
@@ -233,5 +231,5 @@ output :
     #
     # Also, this time, we set nproc <= 0.  This means that GalSim should try to automatically
     # determine the number of CPUs you have and use that many processes.
-    #nproc : -1
+    nproc : -1
 

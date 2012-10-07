@@ -145,6 +145,9 @@ input :
 
 # Define the name and format of the output file
 output :
+    # TODO: Temporary for issue #291
+    nproc : 4
+
     # type = MultiFits means to use a multi-extension fits file
     type : MultiFits
 
@@ -154,5 +157,5 @@ output :
     # You can specify how many extensions to write to the file with nimages, 
     # but in this case, since we are using an input catalog, the default 
     # value is to do the number of entries in the catalog.
-    #nimages = 100
+    #nimages : 100
 

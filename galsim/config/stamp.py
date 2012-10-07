@@ -25,32 +25,18 @@ def BuildStamps(nobjects, config, xsize, ysize,
     @return (images, psf_images, weight_images, badpix_images)  (All in tuple are lists)
     """
     def worker(input, output):
-        """
-        input is a queue with (args, info) tuples:
-            kwargs are the arguments to pass to BuildSingleStamp
-            info is passed along to the output queue.
-        output is a queue storing (result, info, proc) tuples:
-            result is the returned tuple from BuildSingleStamp: 
-                (image, psf_image, weight_image, badpix_image, time).
-            info is passed through from the input queue.
-            proc is the process name.
-        """
-        import copy
         for (kwargs, config, obj_num, nobj, info) in iter(input.get, 'STOP'):
-            #print 'In worker.'
-            #print 'got obj_num = ',obj_num
-            #print 'nobj = ',nobj
-            #print 'info = ',info
             results = []
             # Make new copies of config and kwargs so we can update them without
             # clobbering the versions for other tasks on the queue.
             # (The config modifications come in BuildSingleStamp.)
-            config = copy.copy(config)
-            kwargs = copy.copy(kwargs)
+            import copy
+            kwargs1 = copy.copy(kwargs)
+            config1 = copy.deepcopy(config)
             for i in range(nobj):
-                kwargs['config'] = config
-                kwargs['obj_num'] = obj_num + i
-                results.append(BuildSingleStamp(**kwargs))
+                kwargs1['config'] = config1
+                kwargs1['obj_num'] = obj_num + i
+                results.append(BuildSingleStamp(**kwargs1))
             output.put( (results, info, current_process().name) )
     
     # The kwargs to pass to build_func.
@@ -105,18 +91,15 @@ def BuildStamps(nobjects, config, xsize, ysize,
         # Shoot for gemoetric mean of these two.
         max_nobj = nobjects / nproc
         min_nobj = 1
-        #print 'gal' in config
         if ( 'gal' in config and isinstance(config['gal'],dict) and 'type' in config['gal'] and
              config['gal']['type'] == 'Ring' and 'num' in config['gal'] ):
             min_nobj = galsim.config.ParseValue(config['gal'], 'num', config, int)[0]
-            #print 'Found ring: num = ',min_nobj
         if max_nobj < min_nobj: 
             nobj_per_task = min_nobj
         else:
             import math
             # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
             nobj_per_task = min_nobj * int(math.sqrt(float(max_nobj) / float(min_nobj)))
-        #print 'nobj_per_task = ',nobj_per_task
 
         # Set up the task list
         task_queue = Queue()
@@ -126,7 +109,6 @@ def BuildStamps(nobjects, config, xsize, ysize,
                 task_queue.put( ( kwargs, config, obj_num+k, nobjects-k, k ) )
             else:
                 task_queue.put( ( kwargs, config, obj_num+k, nobj_per_task, k ) )
-            #print 'put task ',obj_num+k,nobj_per_task,k
 
         # Run the tasks
         # Each Process command starts up a parallel process that will keep checking the queue 
@@ -152,7 +134,8 @@ def BuildStamps(nobjects, config, xsize, ysize,
                     # Note: numpy shape is y,x
                     ys, xs = result[0].array.shape
                     t = result[4]
-                    logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', proc, k, xs, ys, t)
+                    logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', 
+                                proc, obj_num+k, xs, ys, t)
                 k += 1
 
         # Stop the processes
@@ -165,6 +148,8 @@ def BuildStamps(nobjects, config, xsize, ysize,
         # add those 'STOP's at some point!
         for j in range(nproc):
             task_queue.put('STOP')
+        task_queue.close()
+
 
     else : # nproc == 1
 
@@ -187,7 +172,7 @@ def BuildStamps(nobjects, config, xsize, ysize,
                 # Note: numpy shape is y,x
                 ys, xs = result[0].array.shape
                 t = result[4]
-                logger.info('Stamp %d: size = %d x %d, time = %f sec', k, xs, ys, t)
+                logger.info('Stamp %d: size = %d x %d, time = %f sec', obj_num+k, xs, ys, t)
 
 
     if logger:

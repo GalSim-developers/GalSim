@@ -135,6 +135,7 @@ def Process(config, logger=None):
     if nproc > nfiles:
         if nfiles == 1 and (type == 'MultiFits' or type == 'DataCube'):
             kwargs['nproc'] = nproc 
+            nproc = 1
         else:
             import warnings
             warnings.warn(
@@ -172,18 +173,9 @@ def Process(config, logger=None):
         from multiprocessing import Process, Queue, current_process
 
         def worker(input, output):
-            """
-            input is a queue with (args, info) tuples:
-                kwargs are the arguments to pass to build_func
-                info is passed along to the output queue.
-            output is a queue storing (result, info, proc) tuples:
-                result is the returned value from build_func (file_name, time).
-                info is passed through from the input queue.
-                proc is the process name.
-            """
-            for (kwargs, info) in iter(input.get, 'STOP'):
+            for (kwargs, file_num, file_name) in iter(input.get, 'STOP'):
                 result = build_func(**kwargs)
-                output.put( (result, info, current_process().name) )
+                output.put( (result, file_num, file_name, current_process().name) )
 
         # Set up the task list
         task_queue = Queue()
@@ -263,17 +255,16 @@ def Process(config, logger=None):
         # Otherwise, we just call build_func.
         if nproc > 1:
             import copy
-            new_kwargs = {}
-            new_kwargs.update(kwargs)
+            new_kwargs = copy.copy(kwargs)
             new_kwargs['config'] = copy.deepcopy(config)
-            task_queue.put( (new_kwargs, file_name) )
+            task_queue.put( (new_kwargs, file_num, file_name) )
         else:
             kwargs['config'] = config
             # Apparently the logger isn't picklable, so can't send that for nproc > 1
             kwargs['logger'] = logger 
             t = build_func(**kwargs)
             if logger:
-                logger.info('Built file %s: total time = %f sec', file_name, t)
+                logger.info('File %d = %s: total time = %f sec', file_num, file_name, t)
 
         nobj = nobj_func(config,file_num,image_num)
         # nobj is a list of nobj for each image in that file.
@@ -292,13 +283,15 @@ def Process(config, logger=None):
 
         # Log the results.
         for k in range(nfiles):
-            t, file_name, proc = done_queue.get()
+            t, file_num, file_name, proc = done_queue.get()
             if logger:
-                logger.info('%s: File %s: total time = %f sec', proc, file_name, t)
+                logger.info('%s: File %d = %s: total time = %f sec',
+                            proc, file_num, file_name, t)
 
         # Stop the processes
         for j in range(nproc):
             task_queue.put('STOP')
+        task_queue.close()
 
     if logger:
         logger.info('Done building files')
@@ -440,34 +433,17 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
     else:
         make_badpix_image = False
 
-    if nproc > 1:
-        import warnings
-        warnings.warn("Sorry, multiple processes not currently implemented for BuildMultiFits.")
+    all_images = galsim.config.BuildImages(
+        nimages, config=config, logger=logger,
+        image_num=image_num, obj_num=obj_num, nproc=nproc,
+        make_psf_image=make_psf_image, 
+        make_weight_image=make_weight_image,
+        make_badpix_image=make_badpix_image)
 
-    main_images = []
-    psf_images = []
-    weight_images = []
-    badpix_images = []
-    for k in range(nimages):
-        t2 = time.time()
-        all_images = galsim.config.BuildImage(
-                config=config, logger=logger, image_num=image_num+k, obj_num=obj_num,
-                make_psf_image=make_psf_image, 
-                make_weight_image=make_weight_image,
-                make_badpix_image=make_badpix_image)
-        # returns a tuple ( main_image, psf_image, weight_image, badpix_image )
-        t3 = time.time()
-        main_images += [ all_images[0] ]
-        psf_images += [ all_images[1] ]
-        weight_images += [ all_images[2] ]
-        badpix_images += [ all_images[3] ]
-        obj_num += GetNObjForImage(config, image_num+k)
-
-        if logger:
-            # Note: numpy shape is y,x
-            ys, xs = all_images[0].array.shape
-            logger.info('Image %d: size = %d x %d, time = %f sec', k, xs, ys, t3-t2)
-
+    main_images = all_images[0]
+    psf_images = all_images[1]
+    weight_images = all_images[2]
+    badpix_images = all_images[3]
 
     galsim.fits.writeMulti(main_images, file_name)
     if logger:
@@ -489,8 +465,8 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
             logger.info('Wrote badpix images to multi-extension fits file %r',badpix_file_name)
 
 
-    t4 = time.time()
-    return t4-t1
+    t2 = time.time()
+    return t2-t1
 
 
 def BuildDataCube(file_name, nimages, config, nproc=1, logger=None, 
@@ -529,19 +505,14 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
     else:
         make_badpix_image = False
 
-    if make_badpix_image:
-        raise NotImplementedError("Sorry, badpix image output is not currently implemented.")
-
-    if nproc > 1:
-        import warnings
-        warnings.warn("Sorry, multiple processe not currently implemented for BuildMultiFits.")
-
     # All images need to be the same size for a data cube.
     # Enforce this by buliding the first image outside the below loop and setting
     # config['image_xsize'] and config['image_ysize'] to be the size of the first image.
     t2 = time.time()
+    import copy
+    config1 = copy.deepcopy(config)
     all_images = galsim.config.BuildImage(
-            config=config, logger=logger, image_num=image_num, obj_num=obj_num,
+            config=config1, logger=logger, image_num=image_num, obj_num=obj_num,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -550,7 +521,7 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
     if logger:
         # Note: numpy shape is y,x
         ys, xs = all_images[0].array.shape
-        logger.info('Image 0: size = %d x %d, time = %f sec', xs, ys, t3-t2)
+        logger.info('Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t3-t2)
 
     # Note: numpy shape is y,x
     image_ysize, image_xsize = all_images[0].array.shape
@@ -562,23 +533,17 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
     weight_images = [ all_images[2] ]
     badpix_images = [ all_images[3] ]
 
-    for k in range(1,nimages):
-        t4 = time.time()
-        all_images = galsim.config.BuildImage(
-                config=config, logger=logger, image_num=image_num+k, obj_num=obj_num,
-                make_psf_image=make_psf_image, 
-                make_weight_image=make_weight_image,
-                make_badpix_image=make_badpix_image)
-        t5 = time.time()
-        main_images += [ all_images[0] ]
-        psf_images += [ all_images[1] ]
-        weight_images += [ all_images[2] ]
-        badpix_images += [ all_images[3] ]
-        obj_num += GetNObjForImage(config, image_num+k)
-        if logger:
-            # Note: numpy shape is y,x
-            ys, xs = all_images[0].array.shape
-            logger.info('Image %d: size = %d x %d, time = %f sec', k, xs, ys, t5-t4)
+    all_images = galsim.config.BuildImages(
+        nimages-1, config=config, logger=logger,
+        image_num=image_num+1, obj_num=obj_num, nproc=nproc, 
+        make_psf_image=make_psf_image, 
+        make_weight_image=make_weight_image,
+        make_badpix_image=make_badpix_image)
+
+    main_images += all_images[0]
+    psf_images += all_images[1]
+    weight_images += all_images[2]
+    badpix_images += all_images[3]
 
     galsim.fits.writeCube(main_images, file_name)
     if logger:
@@ -599,8 +564,8 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
         if logger:
             logger.info('Wrote badpix images to fits data cube %r',badpix_file_name)
 
-    t6 = time.time()
-    return t6-t1
+    t4 = time.time()
+    return t4-t1
 
 def GetNObjForFits(config, file_num, image_num):
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]

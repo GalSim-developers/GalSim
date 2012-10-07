@@ -286,7 +286,7 @@ def _BuildPixel(config, key, base, ignore):
     try:
         return galsim.Pixel(**kwargs), safe
     except Exception, err_msg:
-        raise RuntimeError("Unable to construct Pixel object with kwargs=%s."%str(kwargs) +
+        raise RuntimeError("Unable to construct Pixel object with kwargs=%s.\n"%str(kwargs) +
                            "Original error message: %s"%err_msg)
 
 
@@ -316,7 +316,7 @@ def _BuildRealGalaxy(config, key, base, ignore):
     try:
         return galsim.RealGalaxy(real_cat, **kwargs), safe
     except Exception, err_msg:
-        raise RuntimeError("Unable to construct RealGalaxy object with kwargs=%s."%str(kwargs) +
+        raise RuntimeError("Unable to construct RealGalaxy object with kwargs=%s.\n"%str(kwargs) +
                            "Original error message: %s"%err_msg)
 
 
@@ -337,7 +337,7 @@ def _BuildSimple(config, key, base, ignore):
         init_func = eval("galsim."+type)
         return init_func(**kwargs), safe
     except Exception, err_msg:
-        raise RuntimeError("Unable to construct %s object with kwargs=%s."%(type,str(kwargs)) +
+        raise RuntimeError("Unable to construct %s object with kwargs=%s.\n"%(type,str(kwargs)) +
                            "Original error message: %s"%err_msg)
 
 

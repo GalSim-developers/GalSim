@@ -139,11 +139,15 @@ input :
     real_catalog :
         image_dir : data
         file_name : real_galaxy_catalog_example.fits
+        # TODO: Temporarily disabled for issue #291
         preload : True   # This usually makes a big improvement in speed
 
 
 # Define the name and format of the output file
 output :
+    # TODO: Temporary for issue #291
+    nproc : 4
+
     type : DataCube
     dir : output_yaml
     file_name : cube_real.fits
