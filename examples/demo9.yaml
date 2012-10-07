@@ -105,6 +105,9 @@ input :
 
 # Define some other information about the images 
 image :
+    # TODO: Temporary for issue #291 (Note: can't have both nproc here and in output.)
+    nproc : 4
+
     # A Scattered image means that the objects can be placed arbitrarily at any (x,y) value.
     type : Scattered
 
@@ -231,5 +234,6 @@ output :
     #
     # Also, this time, we set nproc <= 0.  This means that GalSim should try to automatically
     # determine the number of CPUs you have and use that many processes.
-    nproc : -1
+    # TODO: Temporarily disabled.  Can only have either this or image.nproc
+    #nproc : -1
 

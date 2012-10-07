@@ -47,10 +47,10 @@ def BuildImages(nimages, config, logger=None, image_num=0, obj_num=0, nproc=1,
     # Apparently the logger isn't picklable, so can't send that as an arg.
 
     if nproc > nimages:
-        import warnings
-        warnings.warn(
-            "Trying to use more processes than images: output.nproc=%d, "%nproc +
-            "nimages=%d.  Reducing nproc to %d."%(nimages,nimages))
+        if logger:
+            logger.warn(
+                "Trying to use more processes than images: output.nproc=%d, "%nproc +
+                "nimages=%d.  Reducing nproc to %d."%(nimages,nimages))
         nproc = nimages
 
     if nproc <= 0:
@@ -117,8 +117,11 @@ def BuildImages(nimages, config, logger=None, image_num=0, obj_num=0, nproc=1,
         # for a new task. If there is one there, it grabs it and does it. If not, it waits 
         # until there is one to grab. When it finds a 'STOP', it shuts down. 
         done_queue = Queue()
+        p_list = []
         for j in range(nproc):
-            Process(target=worker, args=(task_queue, done_queue)).start()
+            p = Process(target=worker, args=(task_queue, done_queue), name='Process-%d'%(j+1))
+            p.start()
+            p_list.append(p)
 
         # In the meanwhile, the main process keeps going.  We pull each set of images off of the 
         # done_queue and put them in the appropriate place in the lists.
@@ -150,6 +153,8 @@ def BuildImages(nimages, config, logger=None, image_num=0, obj_num=0, nproc=1,
         # add those 'STOP's at some point!
         for j in range(nproc):
             task_queue.put('STOP')
+        for j in range(nproc):
+            p_list[j].join()
         task_queue.close()
 
     else : # nproc == 1
@@ -178,7 +183,7 @@ def BuildImages(nimages, config, logger=None, image_num=0, obj_num=0, nproc=1,
             obj_num += galsim.config.GetNObjForImage(config, image_num+k)
 
     if logger:
-        logger.info('Done making images')
+        logger.debug('Done making images')
 
     return images, psf_images, weight_images, badpix_images
  
@@ -658,11 +663,11 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         #print 'full bounds = ',full_image.bounds
         #print 'Overlap = ',bounds
         if (not bounds.isDefined()):
-            import warnings
-            warnings.warn(
-                "Object centered at (%d,%d) is entirely off the main image,\n"%(
+            if logger:
+                logger.warn(
+                    "Object centered at (%d,%d) is entirely off the main image,\n"%(
                         image[k].bounds.center().x, image[k].bounds.center().y) +
-                "whose bounds are (%d,%d,%d,%d)."%(
+                    "whose bounds are (%d,%d,%d,%d)."%(
                         full_image.bounds.xmin, full_image.bounds.xmax,
                         full_image.bounds.ymin, full_image.bounds.ymax))
         full_image[bounds] += images[k][bounds]

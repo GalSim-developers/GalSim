@@ -137,10 +137,10 @@ def Process(config, logger=None):
             kwargs['nproc'] = nproc 
             nproc = 1
         else:
-            import warnings
-            warnings.warn(
-                "Trying to use more processes than files: output.nproc=%d, "%nproc +
-                "output.nfiles=%d.  Reducing nproc to %d."%(nfiles,nfiles))
+            if logger:
+                logger.warn(
+                    "Trying to use more processes than files: output.nproc=%d, "%nproc +
+                    "output.nfiles=%d.  Reducing nproc to %d."%(nfiles,nfiles))
             nproc = nfiles
     if nproc <= 0:
         # Try to figure out a good number of processes to use
@@ -151,7 +151,7 @@ def Process(config, logger=None):
                 kwargs['nproc'] = ncpu # Use this value in BuildImage rather than here.
                 nproc = 1
                 if logger:
-                    logger.info("ncpu = %d.",ncpu)
+                    logger.debug("ncpu = %d.",ncpu)
             else:
                 if ncpu > nfiles:
                     nproc = nfiles
@@ -160,8 +160,8 @@ def Process(config, logger=None):
                 if logger:
                     logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
         except:
-            warnings.warn(
-                "config.output.nproc <= 0, but unable to determine number of cpus.")
+            if logger:
+                logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
             nproc = 1
             if logger:
                 logger.info("Unable to determine ncpu.  Using %d processes",nproc)
@@ -264,7 +264,7 @@ def Process(config, logger=None):
             kwargs['logger'] = logger 
             t = build_func(**kwargs)
             if logger:
-                logger.info('File %d = %s: total time = %f sec', file_num, file_name, t)
+                logger.warn('File %d = %s: total time = %f sec', file_num, file_name, t)
 
         nobj = nobj_func(config,file_num,image_num)
         # nobj is a list of nobj for each image in that file.
@@ -278,23 +278,28 @@ def Process(config, logger=None):
     if nproc > 1:
         # Run the tasks
         done_queue = Queue()
+        p_list = []
         for j in range(nproc):
-            Process(target=worker, args=(task_queue, done_queue)).start()
+            p = Process(target=worker, args=(task_queue, done_queue), name='Process-%d'%(j+1))
+            p.start()
+            p_list.append(p)
 
         # Log the results.
         for k in range(nfiles):
             t, file_num, file_name, proc = done_queue.get()
             if logger:
-                logger.info('%s: File %d = %s: total time = %f sec',
+                logger.warn('%s: File %d = %s: total time = %f sec',
                             proc, file_num, file_name, t)
 
         # Stop the processes
         for j in range(nproc):
             task_queue.put('STOP')
+        for j in range(nproc):
+            p_list[j].join()
         task_queue.close()
 
     if logger:
-        logger.info('Done building files')
+        logger.debug('Done building files')
 
 
 def BuildFits(file_name, config, logger=None, 
@@ -374,24 +379,24 @@ def BuildFits(file_name, config, logger=None,
     galsim.fits.writeMulti(hdulist, file_name)
     if logger:
         if len(hdus.keys()) == 1:
-            logger.info('Wrote image to fits file %r',file_name)
+            logger.debug('Wrote image to fits file %r',file_name)
         else:
-            logger.info('Wrote image (with extra hdus) to multi-extension fits file %r',file_name)
+            logger.debug('Wrote image (with extra hdus) to multi-extension fits file %r',file_name)
 
     if psf_file_name:
         all_images[1].write(psf_file_name)
         if logger:
-            logger.info('Wrote psf image to fits file %r',psf_file_name)
+            logger.debug('Wrote psf image to fits file %r',psf_file_name)
 
     if weight_file_name:
         all_images[2].write(weight_file_name)
         if logger:
-            logger.info('Wrote weight image to fits file %r',weight_file_name)
+            logger.debug('Wrote weight image to fits file %r',weight_file_name)
 
     if badpix_file_name:
         all_images[3].write(badpix_file_name)
         if logger:
-            logger.info('Wrote badpix image to fits file %r',badpix_file_name)
+            logger.debug('Wrote badpix image to fits file %r',badpix_file_name)
 
     t2 = time.time()
     return t2-t1
@@ -447,22 +452,22 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
 
     galsim.fits.writeMulti(main_images, file_name)
     if logger:
-        logger.info('Wrote images to multi-extension fits file %r',file_name)
+        logger.debug('Wrote images to multi-extension fits file %r',file_name)
 
     if psf_file_name:
         galsim.fits.writeMulti(psf_images, psf_file_name)
         if logger:
-            logger.info('Wrote psf images to multi-extension fits file %r',psf_file_name)
+            logger.debug('Wrote psf images to multi-extension fits file %r',psf_file_name)
 
     if weight_file_name:
         galsim.fits.writeMulti(weight_images, weight_file_name)
         if logger:
-            logger.info('Wrote weight images to multi-extension fits file %r',weight_file_name)
+            logger.debug('Wrote weight images to multi-extension fits file %r',weight_file_name)
 
     if badpix_file_name:
         galsim.fits.writeMulti(badpix_images, badpix_file_name)
         if logger:
-            logger.info('Wrote badpix images to multi-extension fits file %r',badpix_file_name)
+            logger.debug('Wrote badpix images to multi-extension fits file %r',badpix_file_name)
 
 
     t2 = time.time()
@@ -547,22 +552,22 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
 
     galsim.fits.writeCube(main_images, file_name)
     if logger:
-        logger.info('Wrote image to fits data cube %r',file_name)
+        logger.debug('Wrote image to fits data cube %r',file_name)
 
     if psf_file_name:
         galsim.fits.writeCube(psf_images, psf_file_name)
         if logger:
-            logger.info('Wrote psf images to fits data cube %r',psf_file_name)
+            logger.debug('Wrote psf images to fits data cube %r',psf_file_name)
 
     if weight_file_name:
         galsim.fits.writeCube(weight_images, weight_file_name)
         if logger:
-            logger.info('Wrote weight images to fits data cube %r',weight_file_name)
+            logger.debug('Wrote weight images to fits data cube %r',weight_file_name)
 
     if badpix_file_name:
         galsim.fits.writeCube(badpix_images, badpix_file_name)
         if logger:
-            logger.info('Wrote badpix images to fits data cube %r',badpix_file_name)
+            logger.debug('Wrote badpix images to fits data cube %r',badpix_file_name)
 
     t4 = time.time()
     return t4-t1

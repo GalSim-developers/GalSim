@@ -52,10 +52,10 @@ def BuildStamps(nobjects, config, xsize, ysize,
     # Apparently the logger isn't picklable, so can't send that as an arg.
 
     if nproc > nobjects:
-        import warnings
-        warnings.warn(
-            "Trying to use more processes than objects: image.nproc=%d, "%nproc +
-            "nobjects=%d.  Reducing nproc to %d."%(nobjects,nobjects))
+        if logger:
+            logger.warn(
+                "Trying to use more processes than objects: image.nproc=%d, "%nproc +
+                "nobjects=%d.  Reducing nproc to %d."%(nobjects,nobjects))
         nproc = nobjects
 
     if nproc <= 0:
@@ -115,8 +115,16 @@ def BuildStamps(nobjects, config, xsize, ysize,
         # for a new task. If there is one there, it grabs it and does it. If not, it waits 
         # until there is one to grab. When it finds a 'STOP', it shuts down. 
         done_queue = Queue()
+        p_list = []
         for j in range(nproc):
-            Process(target=worker, args=(task_queue, done_queue)).start()
+            # The name is actually the default name for the first time we do this,
+            # but after that it just keeps incrementing the numbers, rather than starting
+            # over at Process-1.  As far as I can tell, it's not actually spawning more 
+            # processes, so for the sake of the info output, we name the processes 
+            # explicitly.
+            p = Process(target=worker, args=(task_queue, done_queue), name='Process-%d'%(j+1))
+            p.start()
+            p_list.append(p)
 
         # In the meanwhile, the main process keeps going.  We pull each set of images off of the 
         # done_queue and put them in the appropriate place in the lists.
@@ -148,8 +156,9 @@ def BuildStamps(nobjects, config, xsize, ysize,
         # add those 'STOP's at some point!
         for j in range(nproc):
             task_queue.put('STOP')
+        for j in range(nproc):
+            p_list[j].join()
         task_queue.close()
-
 
     else : # nproc == 1
 
@@ -176,7 +185,7 @@ def BuildStamps(nobjects, config, xsize, ysize,
 
 
     if logger:
-        logger.info('Done making images')
+        logger.debug('Done making stamps')
 
     return images, psf_images, weight_images, badpix_images
  
@@ -206,7 +215,6 @@ def BuildSingleStamp(config, xsize, ysize,
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:
         seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-        #print 'Using seed = ',seed
         rng = galsim.UniformDeviate(seed)
     else:
         rng = galsim.UniformDeviate()
@@ -219,17 +227,12 @@ def BuildSingleStamp(config, xsize, ysize,
     if 'center' in config['image']:
         import math
         center = galsim.config.ParseValue(config['image'],'center',config,galsim.PositionD)[0]
-        #print 'center x,y = ',center.x,center.y
         icenter = galsim.PositionI(
             int(math.floor(center.x+0.5)),
             int(math.floor(center.y+0.5)) )
         final_shift = galsim.PositionD(center.x-icenter.x , center.y-icenter.y)
         # Calculate and save the position relative to the image center
         config['pos'] = (center - config['image_cen']) * config['pixel_scale']
-        #print 'center = ',center
-        #print 'image_cen = ',config['image_cen']
-        #print 'pos = ',center - config['image_cen']
-        #print 'pos => ',config['pos']
     else:
         center = None
         icenter = None
@@ -243,30 +246,25 @@ def BuildSingleStamp(config, xsize, ysize,
 
     gal = BuildGal(config,logger)
     t4 = time.time()
-    #print 'seed, gal.flux = ',seed,gal.getFlux()
 
     # Check that we have at least gal or psf.
     if not (gal or psf):
         raise AttributeError("At least one of gal or psf must be specified in config.")
 
-    #print 'config[image] = ',config['image']
     draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
-    #print 'draw = ',draw_method
     if draw_method == 'fft':
         im = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level,final_shift)
         if icenter:
             im.setCenter(icenter.x, icenter.y)
         if make_weight_image:
             weight_im = galsim.ImageF(im.bounds)
-            #print 'make weight_im from im.bounds = ',im.bounds
-            #print 'weight_im.bounds = ',weight_im.bounds
             weight_im.setScale(im.scale)
             weight_im.setZero()
         else:
             weight_im = None
         if do_noise:
             if 'noise' in config['image']:
-                AddNoiseFFT(im,weight_im,config['image']['noise'],config,rng,sky_level)
+                AddNoiseFFT(im,weight_im,config['image']['noise'],config,rng,sky_level,logger)
             elif sky_level:
                 pixel_scale = im.getScale()
                 im += sky_level * pixel_scale**2
@@ -283,7 +281,7 @@ def BuildSingleStamp(config, xsize, ysize,
             weight_im = None
         if do_noise:
             if 'noise' in config['image']:
-                AddNoisePhot(im,weight_im,config['image']['noise'],config,rng,sky_level)
+                AddNoisePhot(im,weight_im,config['image']['noise'],config,rng,sky_level,logger)
             elif sky_level:
                 pixel_scale = im.getScale()
                 im += sky_level * pixel_scale**2
@@ -388,10 +386,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level, final_shift):
 
     if final_shift:
         final.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
-        #print 'shift by ',final_shift.x,final_shift.y
-        #print 'which in arcsec is ',final_shift.x*pixel_scale,final_shift.y*pixel_scale
 
-    #print 'final.flux = ',final.getFlux()
     if xsize:
         im = galsim.ImageF(xsize, ysize)
     else:
@@ -427,14 +422,11 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level, final_shift):
         sn_meas = math.sqrt( numpy.sum(im.array**2) / noise_var )
         # Now we rescale the flux to get our desired S/N
         flux = sn_target / sn_meas
-        #print 'noise_var = ',noise_var
-        #print 'sn_meas = ',sn_meas
-        #print 'flux = ',flux
         im *= flux
 
     return im
 
-def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level):
+def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
     """
     Add noise to an image according to the noise specifications in the noise dict
     appropriate for an image that has been drawn using the FFT method.
@@ -473,8 +465,8 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level):
 
         if weight_im:
             weight_im += sigma*sigma
-        #if logger:
-            #logger.debug('   Added Gaussian noise with sigma = %f',sigma)
+        if logger:
+            logger.debug('   Added Gaussian noise with sigma = %f',sigma)
 
     elif type == 'CCDNoise':
         req = {}
@@ -506,14 +498,12 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level):
                 # Otherwise, just add the sky and read_noise:
                 weight_im += sky_level_pixel / math.sqrt(gain) + read_noise*read_noise
 
-        #print 'before CCDNoise: rng() = ',rng()
         im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
-        #print 'after CCDNoise: rng() = ',rng()
         if 'sky_level' in params:
             im -= sky_level_pixel
-        #if logger:
-            #logger.debug('   Added CCD noise with sky_level = %f, ' +
-                         #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
+        if logger:
+            logger.debug('   Added CCD noise with sky_level = %f, ' +
+                         'gain = %f, read_noise = %f',sky_level,gain,read_noise)
     else:
         raise AttributeError("Invalid type %s for noise"%type)
 
@@ -578,7 +568,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level, final_shift):
 
     return im
     
-def AddNoisePhot(im, weight_im, noise, base, rng, sky_level):
+def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
     """
     Add noise to an image according to the noise specifications in the noise dict
     appropriate for an image that has been drawn using the photon-shooting method.
@@ -608,8 +598,8 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level):
 
         if weight_im:
             weight_im += sigma*sigma
-        #if logger:
-            #logger.debug('   Added Gaussian noise with sigma = %f',sigma)
+        if logger:
+            logger.debug('   Added Gaussian noise with sigma = %f',sigma)
 
     elif type == 'CCDNoise':
         req = {}
@@ -646,9 +636,9 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level):
             import math
             if sky_level != 0.0 or read_noise != 0.0:
                 weight_im += sky_level_pixel / math.sqrt(gain) + read_noise * read_noise
-        #if logger:
-            #logger.debug('   Added CCD noise with sky_level = %f, ' +
-                         #'gain = %f, read_noise = %f',sky_level,gain,read_noise)
+        if logger:
+            logger.debug('   Added CCD noise with sky_level = %f, ' +
+                         'gain = %f, read_noise = %f',sky_level,gain,read_noise)
 
     else:
         raise AttributeError("Invalid type %s for noise",type)
