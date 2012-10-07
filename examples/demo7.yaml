@@ -18,9 +18,9 @@
 # - obj type : List (items)
 # - obj type : Airy (lam_over_diam)
 # - obj : dilate
-# - value type : Sequence (first, last, repeat)
+# - value type : Sequence (..., repeat)
 # - value type : Random (min, max)
-# - image type : Tiled : xborder
+# - image type : Tiled (..., stamp_size, xborder, yborder)
 # - image : draw_method (fft or phot)
 
 
@@ -96,10 +96,15 @@ image :
     type : Tiled
     nx_tiles : 2
     ny_tiles : 1
-    xborder : 2  # 2 pixel border between fft and phot images
 
-    stamp_xsize : 64
-    stamp_ysize : 64
+    # Use a 2 pixel border between fft and phot images.
+    # Rather than specify a single border for both directions, you can also specify
+    # xborder and/or yborder separately.  Here we use xborder.
+    xborder : 2
+
+    # Rather than specify stamp_xsize and stamp_ysize separately, you can also just
+    # specify a single stamp_size.
+    stamp_size : 64
 
     pixel_scale : 0.28  # arcsec / pixel
 

@@ -20,8 +20,9 @@
 # - RealGalaxy : id
 # - image.psf : real_space
 # - type : Eval using pos variable, user-defined variables and math functions
-# - gal type : Ring (first, num, full_rotation)
+# - gal type : Ring (..., full_rotation)
 # - output.psf : hdu
+# - image type : Tiled (..., order)
 #
 
 

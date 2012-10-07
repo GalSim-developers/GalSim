@@ -21,6 +21,7 @@ New features introduced in this demo:
 - ps = galsim.PowerSpectrum(e_power_function, b_power_function)
 - g1,g2 = ps.getShear(grid_spacing, grid_nx, rng)
 - g1,g2 = ps.getShear(pos)
+- galsim.random.permute(rng, list1, list2, ...)
 
 - Choosing PSF parameters as a function of (x,y)
 - Selecting RealGalaxy by ID rather than index.
@@ -138,6 +139,9 @@ def main(argv):
         for iy in range(n_tiles):
             ix_list.append(ix)
             iy_list.append(iy)
+    # This next function will use the given random number generator, rng, and use it to
+    # randomly permute any number of lists.  All lists will have the same random permutation
+    # applied.
     galsim.random.permute(rng, ix_list, iy_list)
 
     # Build each postage stamp:
@@ -214,8 +218,8 @@ def main(argv):
         # See demo5.py for the math behind this calculation.
         sky_level_pix = sky_level * pixel_scale**2
         sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
-        flux = gal_signal_to_noise / sn_meas
-        sub_gal_image *= flux
+        flux_scaling = gal_signal_to_noise / sn_meas
+        sub_gal_image *= flux_scaling
 
         # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
         # so it will be part of the same stream of random numbers as ud and gd.
