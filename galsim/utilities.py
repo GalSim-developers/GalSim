@@ -74,6 +74,7 @@ class AttributeDict(object):
     so that Jim's previous default attribute behaviour is also replicated.
     """
     def __init__(self):
+        import collections
         object.__setattr__(self, "__dict__", collections.defaultdict(AttributeDict))
 
     def __getattr__(self, name):
