@@ -45,9 +45,9 @@ def main(argv):
       - Each postage stamp is 48 x 48 pixels.
       - The second HDU has the corresponding PSF image.
       - Applied shear is from a power spectrum P(k) ~ k^1.8.
-      - Galaxies are randomly oriented real galaxies.
+      - Galaxies are real galaxies oriented in a ring test of 20 each.
       - The PSF is Gaussian with FWHM, ellipticity and position angle functions of (x,y)
-      - Noise is poisson using a nominal sky value of 1.e6.
+      - Noise is Poisson using a nominal sky value of 1.e6.
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo10")
@@ -67,7 +67,7 @@ def main(argv):
 
     file_name = os.path.join('output','power_spectrum.fits')
 
-    # These will be create for each object below.  The values we'll use will be functions
+    # These will be created for each object below.  The values we'll use will be functions
     # of (x,y) relative to the center of the image.  (r = sqrt(x^2+y^2))
     # psf_fwhm = 0.9 + 0.5 * (r/100)^2  -- arcsec
     # psf_e = 0.4 * (r/100)^1.5         -- large value at the edge, so visible by eye.
@@ -100,7 +100,7 @@ def main(argv):
 
     # Setup the PowerSpectrum object we'll be using:
     ps = galsim.PowerSpectrum(lambda k : k**1.8)
-    # The parameter here is e_power_function which defines the E-mode power to use.
+    # The argument here is "e_power_function" which defines the E-mode power to use.
 
     # There is also a b_power_function if you want to include any B-mode power:
     #     ps = galsim.PowerSpectrum(e_power_function, b_power_function)
@@ -116,7 +116,8 @@ def main(argv):
     # explicitly and then construct anything else you need from that.
     # Note: A BaseDeviate cannot be used to generate any values.  It can
     # only be used in the constructor for other kinds of deviates.
-    # The seeds for the objects are random_seed..random_seed+nobj-1, so use the next one.
+    # The seeds for the objects are random_seed..random_seed+nobj-1 (which comes later), 
+    # so use the next one.
     nobj = n_tiles * n_tiles
     rng = galsim.BaseDeviate(random_seed+nobj)
 
@@ -149,7 +150,7 @@ def main(argv):
         ix = ix_list[k]
         iy = iy_list[k]
         # The seed here is augmented by k+1 rather than the usual k, since we already
-        # used a seed for the power spectrum above.
+        # used a seed for the power spectrum shear realization above.
         rng = galsim.BaseDeviate(random_seed+k)
 
         # Determine the bounds for this stamp and its center position.
@@ -222,7 +223,7 @@ def main(argv):
         sub_gal_image *= flux_scaling
 
         # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
-        # so it will be part of the same stream of random numbers as ud and gd.
+        # so it will be part of the same stream of random numbers as ud above.
         sub_gal_image += sky_level_pix
         sub_gal_image.addNoise(galsim.CCDNoise(rng))
         sub_gal_image -= sky_level_pix
