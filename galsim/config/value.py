@@ -205,7 +205,7 @@ def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
     safe = True
     for (key, value_type) in sorted(get.items()):
         val, safe1 = ParseValue(param, key, base, value_type)
-        safe = safe1 and safe
+        safe = safe and safe1
         kwargs[key] = val
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
     kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.iteritems()])
@@ -683,32 +683,40 @@ def _GenerateFromList(param, param_name, base, value_type):
     safe = safe and safe1
     return val, safe
  
+def type_by_letter(key):
+    if len(key) < 2:
+        raise AttributeError("Invalid user-defined variable %r"%key)
+    if key[0] == 'f':
+        return float
+    elif key[0] == 'i':
+        return int
+    elif key[0] == 'b':
+        return bool
+    elif key[0] == 's':
+        return str
+    elif key[0] == 'a':
+        return galsim.Angle
+    elif key[0] == 'p':
+        return galsim.PositionD
+    elif key[0] == 'g':
+        return galsim.Shear
+    else:
+        raise AttributeError("Invalid Eval variable: %s (starts with an invalid letter)"%key)
+
 def _GenerateFromEval(param, param_name, base, value_type):
     """@brief Evaluate a string as the provided type
     """
     #print 'Start Eval for ',param_name
     req = { 'str' : str }
     opt = {}
+    ignore = [ 'type' , 'current_val' ]
     for key in param.keys():
-        if key not in [ 'type' , 'str' ]:
-            if len(key) < 2:
-                raise AttributeError("Invalid user-defined variable %r"%key)
-            if key[0] == 'f':
-                opt[key] = float
-            elif key[0] == 'i':
-                opt[key] = int
-            elif key[0] == 'b':
-                opt[key] = bool
-            elif key[0] == 's':
-                opt[key] = str
-            elif key[0] == 'a':
-                opt[key] = galsim.Angle
-            elif key[0] == 'p':
-                opt[key] = galsim.PositionD
-            elif key[0] == 'g':
-                opt[key] = galsim.Shear
-            # else let GetAllParams raise an appropriate exception about unexpected key    
-    params, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+        if key not in (ignore + req.keys()):
+            opt[key] = type_by_letter(key)
+    #print 'opt = ',opt
+            
+    params, safe = GetAllParams(param, param_name, base, req=req, opt=opt, ignore=ignore)
+    #print 'params = ',params
     string = params['str']
     #print 'string = ',string
 
@@ -716,6 +724,24 @@ def _GenerateFromEval(param, param_name, base, value_type):
     for key in opt.keys():
         exec(key[1:] + ' = params[key]')
         #print key[1:],'=',eval(key[1:])
+
+    # Also bring in any top level eval_variables
+    if 'eval_variables' in base:
+        #print 'found eval_variables = ',base['eval_variables']
+        if not isinstance(base['eval_variables'],dict):
+            raise AttributeError("eval_variables must be a dict")
+        opt = {}
+        for key in base['eval_variables'].keys():
+            if key not in ignore:
+                opt[key] = type_by_letter(key)
+        #print 'opt = ',opt
+        params, safe1 = GetAllParams(base['eval_variables'], 'eval_variables', base, opt=opt,
+                                     ignore=ignore)
+        #print 'params = ',params
+        safe = safe and safe1
+        for key in opt.keys():
+            exec(key[1:] + ' = params[key]')
+            #print key[1:],'=',eval(key[1:])
 
     # Also, we allow the use of math functions
     import math

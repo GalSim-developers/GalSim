@@ -17,15 +17,15 @@
 #
 # - obj type : Ring (..., full_rotation)
 # - obj type : RealGalaxy (..., id)
-# - obj type : Eval using pos variable, user-defined variables and math functions
+# - type : Eval using pos variable, user-defined variables and math functions
+# - top level field eval_variables
 # - shear_value : PowerSpectrumShear 
-# - shift_value : RTheta (r, theta)
+# - pos_value : RTheta (r, theta)
 # - image type : Tiled (..., order)
 # - image.psf : real_space
 # - input : power_spectrum (e_power_function, b_power_function)
 # - output.psf : hdu
 #
-
 
 # Define the PSF profile
 psf : 
@@ -92,17 +92,27 @@ gal :
 
     shift : 
         type : RTheta
-        # Half a pixel (0.22 arcsec) in a random direction
-        r : 0.22
+        # Half a pixel in a random direction
+        # This time, we use the pixel_scale variable defined in eval_variables (below), 
+        # so we don't need to define it here.
+        r : { type : Eval , str : 'pixel_scale * 0.5' }
         theta : { type : Random }
 
     signal_to_noise : 100
 
 
+# Anything defined in eval_variables will be available for all Eval commands, so you don't 
+# have to repeat them for each one.  This is most useful when the same variable is used 
+# in multiple places.  In this case, we use the pixel_scale for the shift above, and also
+# as a trivial evaluation for the image pixel_scale below.
+eval_variables :
+    fpixel_scale : 0.44  # arcsec / pixel
+
+
 # Define some other information about the images 
 image :
     # TODO: Temporary (?) for issue #291
-    nproc : 5
+    #nproc : 5
 
     type : Tiled
     nx_tiles : 10
@@ -119,7 +129,7 @@ image :
     # We use 'random' here so the ring test galaxies don't appear in order along the rows.
     order : 'random'
 
-    pixel_scale : 0.44  # arcsec / pixel
+    pixel_scale : { type : Eval , str : 'pixel_scale' }
 
     noise :
         sky_level : 1.e6  # ADU / arcsec^2

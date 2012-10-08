@@ -40,6 +40,7 @@
 #
 # New features introduced in this demo:
 #
+# - top level fields gal, psf, image, output
 # - obj type : Gaussian (flux, sigma)
 # - image : pixel_scale
 # - noise type : Gaussian (sigma)

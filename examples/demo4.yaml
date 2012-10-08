@@ -22,8 +22,10 @@
 # - shift type : XY (x, y)
 # - shear type : E1E2 (e1, e2)
 # - image : xsize, ysize
+# - top level field input
 # - input : catalog (file_name, dir)
 # - output type : MultiFits (file_name, dir)
+#
 # - Using both ellip and shear for the same object
 # - Using variables in a YAML file
  
