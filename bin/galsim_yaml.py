@@ -33,31 +33,88 @@ def MergeConfig(config1, config2, logger=None):
                             "one takes precedence",key)
             pass
 
+def parse_args():
+    """Handle the command line arguments using either argparse (if available) or optparse.
+    """
+
+    # Short description strings common to both parsing mechanisms
+    description = "galsim_yaml: YAML configuration file parser for GalSim"
+    epilog = "For JSON-formatted configuration files, use galsim_json"
+    
+    try:
+        import argparse
+        
+        # Build the parser and add arguments
+        parser = argparse.ArgumentParser(description=description, add_help=True, epilog=epilog)
+        parser.add_argument('config_file', type=str, help='the YAML configuration file')
+        parser.add_argument(
+            '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
+            help='integer verbosity level: min=0, max=3 [default=2]')
+        parser.add_argument(
+            '-l', '--log_file', type=str, action='store', default=None,
+            help='filename for storing logging output [default is to stream to stdout]')
+        args = parser.parse_args()
+
+    except ImportError:
+
+        # Use optparse instead
+        import optparse
+
+        # Usage string not automatically generated for optparse, so generate it
+        usage = "Usage: galsim_yaml [-h] [-v {0,1,2,3}] [-l LOG_FILE] config_file"
+        # Build the parser
+        parser = optparse.OptionParser(usage=usage, epilog=epilog, description=description)
+        # optparse only allows string choices, so take verbosity as a string and make it int later
+        parser.add_option(
+            '-v', '--verbosity', type="choice", action='store', choices=('0', '1', '2', '3'),
+            default='2', help='integer verbosity level: min=0, max=3 [default=2]')
+        parser.add_option(
+            '-l', '--log_file', type=str, action='store', default=None,
+            help='filename for storing logging output [default is to stream to stdout]')
+        (options, posargs) = parser.parse_args()
+
+        # Since optparse doesn't put all the positional arguments together with the options,
+        # make a galsim.AttributeDict() (functionally very similar to an optparse.Values instance
+        # such as options) to store everything.
+        args = galsim.utilities.AttributeDict()
+        args.verbosity = int(options.verbosity) # remembering to convert to an integer type
+        args.log_file = options.log_file
+        # Parse the positional arguments by hand
+        if len(posargs) == 1:
+            args.config_file = posargs[0]
+        else:
+            print usage
+            if len(posargs) == 0:
+                sys.exit('galsim_yaml: error: too few arguments')
+            else:
+                argstring = posargs[1]
+                for addme in posargs[2:]:
+                    argstring = argstring+' '+addme
+                sys.exit('galsim_yaml: error: unrecognised arguments: '+argstring)
+
+    # Return the args
+    return args
+
+
 def main(argv):
 
-    if len(argv) < 2: 
-        print 'Usage: galsim_yaml config_file'
-        sys.exit("No configuration file specified")
+    args = parse_args()
 
-    # TODO: Should have a nice way of specifying a verbosity level...
-    # Then we can just pass that verbosity into the logger.
-    # Can also have the logging go to a file, etc.
-    #  -- Note: should use optparse rather than argparse, since we want it to work for 
-    #           python 2.6, and we probably don't need any of the extra features that 
-    #           argparse provides.
-    # But for now, just do a basic setup.
-    logging.basicConfig(
-        format="%(message)s",
-        level=logging.INFO,
-        stream=sys.stdout
-    )
+    # Parse the integer verbosity level from the commandl ine args into a logging_level string
+    logging_level = {0: "CRITICAL", 1: "WARNING", 2: "INFO", 3: "DEBUG"}[args.verbosity]
+
+    # Setup logging to go to sys.stdout or (if requested) to an output file
+    if args.log_file is None:
+        logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
+    else:
+        logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
     logger = logging.getLogger('galsim_yaml')
-
+    
     # To turn off logging:
     #logger.propagate = False
 
-    config_file = argv[1]
-    logger.info('Using config file %s',config_file)
+    config_file = args.config_file
+    logger.info('Using config file %s', config_file)
 
     all_config = [ c for c in yaml.load_all(open(config_file).read()) ]
     logger.info('Successfully read in config file.')
@@ -91,6 +148,7 @@ def main(argv):
 
         # Process the configuration
         galsim.config.Process(config, logger)
-    
+
+
 if __name__ == "__main__":
     main(sys.argv)
