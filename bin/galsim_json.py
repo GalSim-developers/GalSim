@@ -19,7 +19,7 @@ def parse_args():
     
     try:
         import argparse
-        raise ImportError
+        
         # Build the parser and add arguments
         parser = argparse.ArgumentParser(description=description, add_help=True, epilog=epilog)
         parser.add_argument(
@@ -65,6 +65,7 @@ def parse_args():
             print usage
             sys.exit('galsim_json: error: too few arguments')
 
+    # Return the args
     return args
 
 def main():
