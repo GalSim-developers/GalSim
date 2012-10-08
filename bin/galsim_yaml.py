@@ -56,7 +56,6 @@ def parse_args():
         args = parser.parse_args()
 
     except ImportError:
-
         # Use optparse instead
         import optparse
 
@@ -96,8 +95,7 @@ def parse_args():
     return args
 
 
-def main(argv):
-
+def main():
     args = parse_args()
 
     # Parse the integer verbosity level from the commandl ine args into a logging_level string
@@ -151,4 +149,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
