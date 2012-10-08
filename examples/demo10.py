@@ -202,10 +202,12 @@ def main(argv):
         assert math.fabs(alt_g1 - grid_g1[iy,ix]) < 1.e-15
         assert math.fabs(alt_g2 - grid_g2[iy,ix]) < 1.e-15
 
-        # Apply a random shift within a square box the size of a pixel
+        # Apply half-pixel shift in a random direction.
+        shift_r = pixel_scale * 0.5
         ud = galsim.UniformDeviate(rng)
-        dx = (ud()-0.5) * pixel_scale
-        dy = (ud()-0.5) * pixel_scale
+        theta = ud() * 2. * math.pi
+        dx = shift_r * math.cos(theta)
+        dy = shift_r * math.sin(theta)
         gal.applyShift(dx,dy)
 
         # Make the final image, convolving with psf and pix

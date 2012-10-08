@@ -50,7 +50,7 @@ def ParseValue(config, param_name, base, value_type):
             galsim.Angle : [ 'Rad', 'Deg', 'Random', 'List', 'Eval' ],
             galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
                              'NFWHaloShear', 'PowerSpectrumShear', 'List', 'Eval' ],
-            galsim.PositionD : [ 'XY', 'RandomCircle', 'List', 'Eval' ] 
+            galsim.PositionD : [ 'XY', 'RTheta', 'RandomCircle', 'List', 'Eval' ] 
         }
 
         type = param['type']
@@ -282,6 +282,16 @@ def _GenerateFromXY(param, param_name, base, value_type):
     req = { 'x' : float, 'y' : float }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return galsim.PositionD(**kwargs), safe
+
+def _GenerateFromRTheta(param, param_name, base, value_type):
+    """@brief Return a PositionD constructed from given (r,theta)
+    """
+    req = { 'r' : float, 'theta' : galsim.Angle }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    r = kwargs['r']
+    theta = kwargs['theta']
+    import math
+    return galsim.PositionD(r*math.cos(theta.rad()), r*math.sin(theta.rad())), safe
 
 def _GenerateFromRad(param, param_name, base, value_type):
     """@brief Return an Angle constructed from given theta in radians

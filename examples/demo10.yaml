@@ -15,14 +15,15 @@
 #
 # New features introduced in this demo:
 #
+# - obj type : Ring (..., full_rotation)
+# - obj type : RealGalaxy (..., id)
+# - obj type : Eval using pos variable, user-defined variables and math functions
 # - shear_value : PowerSpectrumShear 
-# - input : power_spectrum (e_power_function, b_power_function)
-# - RealGalaxy : id
-# - image.psf : real_space
-# - type : Eval using pos variable, user-defined variables and math functions
-# - gal type : Ring (..., full_rotation)
-# - output.psf : hdu
+# - shift_value : RTheta (r, theta)
 # - image type : Tiled (..., order)
+# - image.psf : real_space
+# - input : power_spectrum (e_power_function, b_power_function)
+# - output.psf : hdu
 #
 
 
@@ -90,10 +91,10 @@ gal :
         type : PowerSpectrumShear
 
     shift : 
-        type : XY
-        # Half a pixel (0.22 arcsec) in either direction
-        x : { type : Random , min : -0.22 , max : 0.22 }
-        y : { type : Random , min : -0.22 , max : 0.22 }
+        type : RTheta
+        # Half a pixel (0.22 arcsec) in a random direction
+        r : 0.22
+        theta : { type : Random }
 
     signal_to_noise : 100
 
