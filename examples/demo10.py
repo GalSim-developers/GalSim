@@ -147,13 +147,12 @@ def main(argv):
 
     # Build each postage stamp:
     for k in range(nobj):
-        ix = ix_list[k]
-        iy = iy_list[k]
-        # The seed here is augmented by k+1 rather than the usual k, since we already
-        # used a seed for the power spectrum shear realization above.
+        # The usual random number generator using a different seed for each galaxy.
         rng = galsim.BaseDeviate(random_seed+k)
 
         # Determine the bounds for this stamp and its center position.
+        ix = ix_list[k]
+        iy = iy_list[k]
         b = galsim.BoundsI(ix*stamp_size+1 , (ix+1)*stamp_size, 
                            iy*stamp_size+1 , (iy+1)*stamp_size)
         sub_gal_image = gal_image[b]
