@@ -600,7 +600,7 @@ def test_Image_inplace_add():
         np.testing.assert_array_equal((3 * ref_array).astype(types[i]), image1.array,
                 err_msg="Inplace add in Image class does not match reference for dtype = "
                 +str(types[i]))
-        for j in xrange(ntypes):
+        for j in xrange(i): # Only add simpler types to this one.
             image2_init_func = eval("galsim.ImageView"+tchar[j])
             image1 = image_init_func(ref_array.astype(types[i]))
             image2 = image2_init_func((2 * ref_array).astype(types[j]))
@@ -632,7 +632,7 @@ def test_Image_inplace_subtract():
         np.testing.assert_array_equal(ref_array.astype(types[i]), image2.array,
                 err_msg="Inplace subtract in Image class does"
                 +" not match reference for dtype = "+str(types[i]))
-        for j in xrange(ntypes):
+        for j in xrange(i): # Only subtract simpler types from this one.
             image2_init_func = eval("galsim.ImageView"+tchar[j])
             image1 = image_init_func(ref_array.astype(types[i]))
             image2 = image2_init_func((2 * ref_array).astype(types[j]))
@@ -664,7 +664,7 @@ def test_Image_inplace_multiply():
         np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image2.array,
                 err_msg="Inplace multiply in Image class does not match reference for dtype = "
                 +str(types[i]))
-        for j in xrange(ntypes):
+        for j in xrange(i): # Only multiply simpler types to this one.
             image2_init_func = eval("galsim.ImageView"+tchar[j])
             image1 = image_init_func(ref_array.astype(types[i]))
             image2 = image2_init_func((2 * ref_array).astype(types[j]))
@@ -696,7 +696,7 @@ def test_Image_inplace_divide():
         np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image2.array,
                 err_msg="Inplace divide in Image class does not match reference for dtype = "
                 +str(types[i]))
-        for j in xrange(ntypes):
+        for j in xrange(i): # Only divide simpler types into this one.
             image2_init_func = eval("galsim.ImageView"+tchar[j])
             image1 = image_init_func((ref_array+1).astype(types[i]))
             image2 = image2_init_func((2 * (ref_array+1)**2).astype(types[j]))
