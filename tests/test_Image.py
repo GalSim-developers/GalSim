@@ -914,7 +914,7 @@ def test_ConstImageView_array_constness():
         image = image_init_func(ref_array.astype(types[i]))
         try:
             image.array[1, 2] = 666
-        except RuntimeError:
+        except RuntimeError, ValueError:
             pass
         except:
             assert False, "Unexpected error: "+str(sys.exc_info()[0])
