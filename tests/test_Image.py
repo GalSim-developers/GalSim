@@ -618,25 +618,25 @@ def test_Image_inplace_subtract():
     t1 = time.time()
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
-        image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
-        image2 = galsim.ImageView[types[i]]((2 * ref_array).astype(types[i]))
-        image2 -= image1
-        np.testing.assert_array_equal(ref_array.astype(types[i]), image2.array,
+        image1 = galsim.ImageView[types[i]]((2 * ref_array).astype(types[i]))
+        image2 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image1 -= image2
+        np.testing.assert_array_equal(ref_array.astype(types[i]), image1.array,
                 err_msg="Inplace subtract in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
-        image1 = image_init_func(ref_array.astype(types[i]))
-        image2 = image_init_func((2 * ref_array).astype(types[i]))
-        image2 -= image1
-        np.testing.assert_array_equal(ref_array.astype(types[i]), image2.array,
+        image1 = image_init_func((2 * ref_array).astype(types[i]))
+        image2 = image_init_func(ref_array.astype(types[i]))
+        image1 -= image2
+        np.testing.assert_array_equal(ref_array.astype(types[i]), image1.array,
                 err_msg="Inplace subtract in Image class does"
                 +" not match reference for dtype = "+str(types[i]))
         for j in xrange(i): # Only subtract simpler types from this one.
             image2_init_func = eval("galsim.ImageView"+tchar[j])
-            image1 = image_init_func(ref_array.astype(types[i]))
-            image2 = image2_init_func((2 * ref_array).astype(types[j]))
-            image2 -= image1
+            image1 = image2_init_func((2 * ref_array).astype(types[j]))
+            image2 = image_init_func(ref_array.astype(types[i]))
+            image1 -= image2
             np.testing.assert_array_equal(ref_array.astype(types[i]), image1.array,
                     err_msg="Inplace subtract in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
@@ -652,24 +652,24 @@ def test_Image_inplace_multiply():
         # First try using the dictionary-type Image init
         image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
         image2 = galsim.ImageView[types[i]]((2 * ref_array).astype(types[i]))
-        image2 *= image1
-        np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image2.array,
+        image1 *= image2
+        np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image1.array,
                 err_msg="Inplace multiply in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
         image1 = image_init_func(ref_array.astype(types[i]))
         image2 = image_init_func((2 * ref_array).astype(types[i]))
-        image2 *= image1
-        np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image2.array,
+        image1 *= image2
+        np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image1.array,
                 err_msg="Inplace multiply in Image class does not match reference for dtype = "
                 +str(types[i]))
         for j in xrange(i): # Only multiply simpler types to this one.
             image2_init_func = eval("galsim.ImageView"+tchar[j])
             image1 = image_init_func(ref_array.astype(types[i]))
             image2 = image2_init_func((2 * ref_array).astype(types[j]))
-            image2 *= image1
-            np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image2.array,
+            image1 *= image2
+            np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image1.array,
                     err_msg="Inplace multiply in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
     t2 = time.time()
@@ -682,26 +682,26 @@ def test_Image_inplace_divide():
     t1 = time.time()
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
-        image1 = galsim.ImageView[types[i]]((ref_array + 1).astype(types[i]))
-        image2 = galsim.ImageView[types[i]]((2 * (ref_array + 1)**2).astype(types[i]))
-        image2 /= image1
-        np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image2.array,
+        image1 = galsim.ImageView[types[i]]((2 * (ref_array + 1)**2).astype(types[i]))
+        image2 = galsim.ImageView[types[i]]((ref_array + 1).astype(types[i]))
+        image1 /= image2
+        np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image1.array,
                 err_msg="Inplace divide in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.ImageView"+tchar[i])
-        image1 = image_init_func((ref_array + 1).astype(types[i]))
-        image2 = image_init_func((2 * (ref_array + 1)**2).astype(types[i]))
-        image2 /= image1
-        np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image2.array,
+        image1 = image_init_func((2 * (ref_array + 1)**2).astype(types[i]))
+        image2 = image_init_func((ref_array + 1).astype(types[i]))
+        image1 /= image2
+        np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image1.array,
                 err_msg="Inplace divide in Image class does not match reference for dtype = "
                 +str(types[i]))
         for j in xrange(i): # Only divide simpler types into this one.
             image2_init_func = eval("galsim.ImageView"+tchar[j])
-            image1 = image_init_func((ref_array+1).astype(types[i]))
-            image2 = image2_init_func((2 * (ref_array+1)**2).astype(types[j]))
-            image2 /= image1
-            np.testing.assert_array_equal((2 * (ref_array+1)).astype(types[i]), image2.array,
+            image1 = image2_init_func((2 * (ref_array+1)**2).astype(types[j]))
+            image2 = image_init_func((ref_array+1).astype(types[i]))
+            image1 /= image2
+            np.testing.assert_array_equal((2 * (ref_array+1)).astype(types[i]), image1.array,
                     err_msg="Inplace divide in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
     t2 = time.time()
