@@ -18,8 +18,6 @@
 # - obj type : Ring (..., full_rotation)
 # - obj type : RealGalaxy (..., id)
 # - type : Eval using pos variable, user-defined variables and math functions
-#          (for other GalSim-privided variables, see 
-#           https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation)
 # - top level field eval_variables
 # - shear_value : PowerSpectrumShear 
 # - pos_value : RTheta (r, theta)
@@ -38,6 +36,8 @@ psf :
         # One variable that is usable is `pos`, which is the position of the current 
         # object relative to the center of the image in arcsec.  This lets you define
         # any arbitrary function for a particular variable in terms of (x,y).
+        # For a list of the other GalSim-privided variables, see 
+        # https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation
         type : Eval
         str : '0.9 + 0.5 * (pos.x**2 + pos.y**2) / 100**2'  # 0.9 + 0.5 * (r/100 arcsec)^2
 
