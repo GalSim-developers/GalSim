@@ -904,7 +904,8 @@ def test_ConstImageView_array_constness():
         image = galsim.ConstImageView[types[i]](ref_array.astype(types[i]))
         try:
             image.array[1, 2] = 666
-        except RuntimeError:
+        # Apparently some numpy versions raise a RuntimeError, others a ValueError.
+        except RuntimeError, ValueError:
             pass
         except:
             assert False, "Unexpected error: "+str(sys.exc_info()[0])
