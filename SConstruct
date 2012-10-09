@@ -172,23 +172,25 @@ def ErrorExit(*args, **kwargs):
     # It is sometimes helpful to see the output of the scons executables.  
     # SCons just uses >, not >&, so we'll repeat those runs here and get both.
     try:
-        conftest_list = os.popen(
-            "ls -d .sconf_temp/conftest* | grep -v '\.out' | grep -v '\.cpp' "+
-            "| grep -v '\.o' | grep -v '\_mod'"
-            ).readlines()
+        import subprocess
+        cmd = ("ls -d .sconf_temp/conftest* | grep -v '\.out' | grep -v '\.cpp' "+
+               "| grep -v '\.o' | grep -v '\_mod'")
+        p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
+        conftest_list = p.stdout.readlines()
         for conftest in conftest_list:
             conftest = conftest.strip()
             if os.access(conftest, os.X_OK):
-                conftest_out = os.popen(conftest + " 2>&1").readlines()
-                out.write('Output of the executable %s is:\n'%conftest)
-                out.write(''.join(conftest_out) + '\n')
+                cmd = conftest
             else:
-                python = env['PYTHON']
-                conftest_out = os.popen(python + " < " + conftest + " 2>&1").readlines()
-                out.write('Output of the python executable %s is:\n'%conftest)
-                out.write(''.join(conftest_out) + '\n')
+                cmd = env['PYTHON'] + " < " + conftest
+            p = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                 shell=True)
+            conftest_out = p.stdout.readlines()
+            out.write('Output of the command %s is:\n'%cmd)
+            out.write(''.join(conftest_out) + '\n')
     except:
         out.write("Error trying to get output of conftest executables.\n")
+        out.write(sys.exc_info()[0])
 
     print
     print 'Please fix the above error(s) and re-run scons'
@@ -598,14 +600,6 @@ def AddExtraPaths(env):
     env.PrependENVPath('PATH', bin_paths)
     env.Prepend(LIBPATH= lib_paths)
     env.Prepend(CPPPATH= cpp_paths)
-
-    # Also make sure PYPREFIX and environ(PYTHONPATH) are in sys.path
-    if not os.path.abspath(env['PYPREFIX']) in sys.path:
-        sys.path.append(os.path.abspath(env['PYPREFIX']))
-    if (env['IMPORT_ENV'] and os.environ.has_key('PYTHONPATH') and
-        not os.path.abspath(os.environ['PYTHONPATH']) in sys.path):
-        sys.path.append(os.path.abspath(os.environ['PYTHONPATH']))
-
 
 def ReadFileList(fname):
     """
