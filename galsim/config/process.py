@@ -264,7 +264,7 @@ def Process(config, logger=None):
             kwargs['logger'] = logger 
             t = build_func(**kwargs)
             if logger:
-                logger.warn('File %d = %s: total time = %f sec', file_num, file_name, t)
+                logger.warn('File %d = %s: time = %f sec', file_num, file_name, t)
 
         nobj = nobj_func(config,file_num,image_num)
         # nobj is a list of nobj for each image in that file.
@@ -288,8 +288,7 @@ def Process(config, logger=None):
         for k in range(nfiles):
             t, file_num, file_name, proc = done_queue.get()
             if logger:
-                logger.warn('%s: File %d = %s: total time = %f sec',
-                            proc, file_num, file_name, t)
+                logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
 
         # Stop the processes
         for j in range(nproc):
