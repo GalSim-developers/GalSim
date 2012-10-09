@@ -99,7 +99,11 @@ def main():
     args = parse_args()
 
     # Parse the integer verbosity level from the commandl ine args into a logging_level string
-    logging_level = {0: "CRITICAL", 1: "WARNING", 2: "INFO", 3: "DEBUG"}[args.verbosity]
+    logging_levels = { 0: logging.CRITICAL, 
+                       1: logging.WARNING,
+                       2: logging.INFO,
+                       3: logging.DEBUG }
+    logging_level = logging_levels[args.verbosity]
 
     # Setup logging to go to sys.stdout or (if requested) to an output file
     if args.log_file is None:
@@ -108,15 +112,11 @@ def main():
         logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
     logger = logging.getLogger('galsim_yaml')
     
-    # To turn off logging:
-    #logger.propagate = False
-
     config_file = args.config_file
     logger.info('Using config file %s', config_file)
 
     all_config = [ c for c in yaml.load_all(open(config_file).read()) ]
-    logger.info('Successfully read in config file.')
-    #print 'all_config = ',all_config
+    logger.debug('Successfully read in config file.')
 
     # If there is only 1 yaml document, then it is of course used for the configuration.
     # If there are multiple yamls documents, then the first one defines a common starting
@@ -142,7 +142,8 @@ def main():
 
         # Merge the base_config information into this config file.
         MergeConfig(config,base_config)
-        #print 'config = ',config
+
+        logger.debug("Process config dict: \n%s", config)
 
         # Process the configuration
         galsim.config.Process(config, logger)

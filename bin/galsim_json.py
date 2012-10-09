@@ -72,7 +72,11 @@ def main():
     args = parse_args()
 
     # Parse the integer verbosity level from the commandl ine args into a logging_level string
-    logging_level = {0: "CRITICAL", 1: "WARNING", 2: "INFO", 3: "DEBUG"}[args.verbosity]
+    logging_levels = { 0: logging.CRITICAL, 
+                       1: logging.WARNING,
+                       2: logging.INFO,
+                       3: logging.DEBUG }
+    logging_level = logging_levels[args.verbosity]
 
     # Setup logging to go to sys.stdout or (if requested) to an output file
     if args.log_file is None:
@@ -88,11 +92,13 @@ def main():
         logger.info('Using config file %s', config_file)
 
         config = json.load(open(config_file))
-        logger.info('Successfully read in config file.')
+        logger.debug('Successfully read in config file.')
 
         # Set the root value
         if 'root' not in config:
             config['root'] = os.path.splitext(config_file)[0]
+
+        logger.debug("Process config dict: \n%s", config)
 
         # Process the configuration
         galsim.config.Process(config, logger)
