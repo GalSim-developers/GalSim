@@ -208,9 +208,8 @@ def Process(config, logger=None):
         # Prepend a dir to the beginning of the filename if requested.
         if 'dir' in output:
             dir = galsim.config.ParseValue(output, 'dir', config, str)[0]
-            if dir:
-                if not os.path.isdir(dir): os.mkdir(dir)
-                file_name = os.path.join(dir,file_name)
+            if dir and not os.path.isdir(dir): os.mkdir(dir)
+            file_name = os.path.join(dir,file_name)
         else:
             dir = None
 
@@ -251,9 +250,9 @@ def Process(config, logger=None):
                 extra_file_name = params['file_name']
                 if 'dir' in params:
                     dir = params['dir']
+                    if dir and not os.path.isdir(dir): os.mkdir(dir)
                 # else keep dir from above.
                 if dir:
-                    if not os.path.isdir(dir): os.mkdir(dir)
                     extra_file_name = os.path.join(dir,extra_file_name)
                 # If we already wrote this file, skip it this time around.
                 # (Typically this is applicable for psf, where we only want 1 psf file.)
