@@ -834,7 +834,7 @@ namespace integ {
         IntRegion<typename UF::result_type> reg(min,max);
         return int1d(func,reg,relerr,abserr); 
     }
-    
+
     namespace {
         template <class BF, class YREG> 
         class Int2DAuxType : 

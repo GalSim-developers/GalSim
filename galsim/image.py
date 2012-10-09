@@ -108,9 +108,12 @@ def Image_getitem(self, key):
     return self.subImage(key)
 
 def Image_add(self, other):
-    ret = self.copy()
-    ret += other
-    return ret
+    try:
+        result = self.array[:,:] + other.array
+    except AttributeError:
+        result = self.array[:,:] + other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_iadd(self, other):
     try:
@@ -120,9 +123,12 @@ def Image_iadd(self, other):
     return self
 
 def Image_sub(self, other):
-    ret = self.copy()
-    ret -= other
-    return ret
+    try:
+        result = self.array[:,:] - other.array
+    except AttributeError:
+        result = self.array[:,:] - other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_isub(self, other):
     try:
@@ -132,9 +138,12 @@ def Image_isub(self, other):
     return self
 
 def Image_mul(self, other):
-    ret = self.copy()
-    ret *= other
-    return ret
+    try:
+        result = self.array[:,:] * other.array
+    except AttributeError:
+        result = self.array[:,:] * other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_imul(self, other):
     try:
@@ -144,9 +153,12 @@ def Image_imul(self, other):
     return self
 
 def Image_div(self, other):
-    ret = self.copy()
-    ret /= other
-    return ret
+    try:
+        result = self.array[:,:] / other.array
+    except AttributeError:
+        result = self.array[:,:] / other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_idiv(self, other):
     try:
@@ -157,9 +169,12 @@ def Image_idiv(self, other):
 
 # Define &, ^ and | only for integer-type images
 def Image_and(self, other):
-    ret = self.copy()
-    ret &= other
-    return ret
+    try:
+        result = self.array[:,:] & other.array
+    except AttributeError:
+        result = self.array[:,:] & other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_iand(self, other):
     try:
@@ -169,9 +184,12 @@ def Image_iand(self, other):
     return self
 
 def Image_xor(self, other):
-    ret = self.copy()
-    ret ^= other
-    return ret
+    try:
+        result = self.array[:,:] ^ other.array
+    except AttributeError:
+        result = self.array[:,:] ^ other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_ixor(self, other):
     try:
@@ -181,9 +199,12 @@ def Image_ixor(self, other):
     return self
 
 def Image_or(self, other):
-    ret = self.copy()
-    ret |= other
-    return ret
+    try:
+        result = self.array[:,:] | other.array
+    except AttributeError:
+        result = self.array[:,:] | other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_ior(self, other):
     try:
