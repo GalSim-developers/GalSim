@@ -121,10 +121,6 @@ def Process(config, logger=None):
         nfiles = 1 
     #print 'nfiles = ',nfiles
 
-    # The kwargs to pass to build_func
-    # We'll be building this up as we go...
-    kwargs = {}
-
     # Figure out how many processes we will use for building the files.
     # (If nfiles = 1, but nimages > 1, we'll do the multi-processing at the image stage.)
     if 'nproc' in output:
@@ -132,9 +128,11 @@ def Process(config, logger=None):
     else:
         nproc = 1 
 
+    # If set, nproc2 will be passed to the build funtion to be acted on at that level.
+    nproc2 = None
     if nproc > nfiles:
         if nfiles == 1 and (type == 'MultiFits' or type == 'DataCube'):
-            kwargs['nproc'] = nproc 
+            nproc2 = nproc 
             nproc = 1
         else:
             if logger:
@@ -148,7 +146,7 @@ def Process(config, logger=None):
             from multiprocessing import cpu_count
             ncpu = cpu_count()
             if nfiles == 1 and (type == 'MultiFits' or type == 'DataCube'):
-                kwargs['nproc'] = ncpu # Use this value in BuildImage rather than here.
+                nproc2 = ncpu # Use this value in BuildImage rather than here.
                 nproc = 1
                 if logger:
                     logger.debug("ncpu = %d.",ncpu)
@@ -184,9 +182,19 @@ def Process(config, logger=None):
 
     image_num = 0
     obj_num = 0
+
+    extra_keys = [ 'psf', 'weight', 'badpix' ]
+    last_file_name = {}
+    for key in extra_keys:
+        last_file_name[key] = None
+
     for file_num in range(nfiles):
-        # Get the file_name
+        # Set the index for any sequences in the input or output parameters.
+        # These sequences are indexed by the file_num.
+        # (In image, they are indexed by image_num, and after that by obj_num.)
         config['seq_index'] = file_num
+
+        # Get the file_name
         if 'file_name' in output:
             SetDefaultExt(output['file_name'],'.fits')
             file_name = galsim.config.ParseValue(output, 'file_name', config, str)[0]
@@ -200,15 +208,20 @@ def Process(config, logger=None):
         # Prepend a dir to the beginning of the filename if requested.
         if 'dir' in output:
             dir = galsim.config.ParseValue(output, 'dir', config, str)[0]
-            if not os.path.isdir(dir): os.mkdir(dir)
-            file_name = os.path.join(dir,file_name)
+            if dir:
+                if not os.path.isdir(dir): os.mkdir(dir)
+                file_name = os.path.join(dir,file_name)
         else:
             dir = None
 
         # Assign some of the kwargs we know now:
-        kwargs['file_name'] = file_name
-        kwargs['image_num'] = image_num
-        kwargs['obj_num'] = obj_num
+        kwargs = {
+            'file_name' : file_name,
+            'image_num' : image_num,
+            'obj_num' : obj_num
+        }
+        if nproc2:
+            kwargs['nproc'] = nproc2
 
         if type in [ 'MultiFits', 'DataCube' ]:
             if 'nimages' not in output:
@@ -216,34 +229,48 @@ def Process(config, logger=None):
             kwargs['nimages'] = galsim.config.ParseValue(output, 'nimages', config, int)[0]
 
         # Check if we need to build extra images for write out as well
-        for extra in [ key for key in [ 'psf' , 'weight', 'badpix' ] if key in output ]:
+        for extra_key in [ key for key in extra_keys if key in output ]:
             #print 'extra = ',extra
             extra_file_name = None
-            output_extra = output[extra]
+            output_extra = output[extra_key]
 
             output_extra['type'] = 'default'
             single = [ { 'file_name' : str, 'hdu' : int } ]
+            opt = { 'dir' : str }
             ignore = []
-            if extra == 'psf': 
+            if extra_key == 'psf': 
                 ignore.append('real_space')
-            if extra == 'weight': 
+            if extra_key == 'weight': 
                 ignore.append('include_obj_var')
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
-            params, safe = galsim.config.GetAllParams(output_extra, extra, config,
-                                                      single=single, ignore=ignore)
+            params, safe = galsim.config.GetAllParams(output_extra, extra_key, config,
+                                                      opt=opt, single=single, ignore=ignore)
 
             if 'file_name' in params:
                 extra_file_name = params['file_name']
+                if 'dir' in params:
+                    dir = params['dir']
+                # else keep dir from above.
                 if dir:
+                    if not os.path.isdir(dir): os.mkdir(dir)
                     extra_file_name = os.path.join(dir,extra_file_name)
-                kwargs[ extra+'_file_name' ] = extra_file_name
+                # If we already wrote this file, skip it this time around.
+                # (Typically this is applicable for psf, where we only want 1 psf file.)
+                #print 'last_file_name for ',key,' = ',last_file_name[key]
+                #print 'extra_file_name = ',extra_file_name
+                if last_file_name[key] == extra_file_name:
+                    #print 'skipping'
+                    continue
+                #print 'assigning this to kwargs'
+                kwargs[ extra_key+'_file_name' ] = extra_file_name
+                last_file_name[key] = extra_file_name
             elif type != 'Fits':
                 raise AttributeError(
-                    "Only the file_name version of %s output is possible for "%extra+
+                    "Only the file_name version of %s output is possible for "%extra_key+
                     "output type == %s."%type)
             else:
-                kwargs[ extra+'_hdu' ] = params['hdu']
+                kwargs[ extra_key+'_hdu' ] = params['hdu']
     
         # Before building each file, (re-)process the input field.
         #print 'Before re-processInput k = ',k
@@ -255,9 +282,8 @@ def Process(config, logger=None):
         # Otherwise, we just call build_func.
         if nproc > 1:
             import copy
-            new_kwargs = copy.copy(kwargs)
-            new_kwargs['config'] = copy.deepcopy(config)
-            task_queue.put( (new_kwargs, file_num, file_name) )
+            kwargs['config'] = copy.deepcopy(config)
+            task_queue.put( (kwargs, file_num, file_name) )
         else:
             kwargs['config'] = config
             # Apparently the logger isn't picklable, so can't send that for nproc > 1
