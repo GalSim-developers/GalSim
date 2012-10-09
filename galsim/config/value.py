@@ -485,17 +485,23 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     """@brief Return next in a sequence of integers
     """
     #print 'Start Sequence for ',param_name,' -- param = ',param
-    opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type, 'repeat' : int }
+    opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type,
+            'repeat' : int, 'nitems' : int }
     kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
 
     step = kwargs.get('step',1)
     first = kwargs.get('first',0)
-    last = kwargs.get('last',None)
     repeat = kwargs.get('repeat',1)
-    #print 'first, step, last, repeat = ',first,step,last,repeat
+    last = kwargs.get('last',None)
+    nitems = kwargs.get('nitems',None)
+    #print 'first, step, last, repeat, nitems = ',first,step,last,repeat,nitems
     if repeat <= 0:
         raise ValueError(
             "Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(repeat,param_name))
+    if last is not None and nitems is not None:
+        raise AttributeError(
+            "At most one of the attributes last and nitems is allowed for %s.type = Sequence"%(
+                param_name))
 
     if value_type is bool:
         # Then there are only really two valid sequences: Either 010101... or 101010...
@@ -503,25 +509,21 @@ def _GenerateFromSequence(param, param_name, base, value_type):
         if first:
             first = 1
             step = -1
-            n_items = 2
+            nitems = 2
         else:
             first = 0
             step = 1
-            n_items = 2
-        #print 'bool sequence: first, step, repeat, n => ',first,step,repeat,n_items
+            nitems = 2
+        #print 'bool sequence: first, step, repeat, n => ',first,step,repeat,nitems
 
     elif value_type is float:
         if last is not None:
-            n_items = int( (last-first)/step + 0.5 ) + 1
-        else:
-            n_items = None
-        #print 'float sequence: first, step, repeat, n => ',first,step,repeat,n_items
+            nitems = int( (last-first)/step + 0.5 ) + 1
+        #print 'float sequence: first, step, repeat, n => ',first,step,repeat,nitems
     else:
         if last is not None:
-            n_items = (last - first)/step + 1
-        else:
-            n_items = None
-        #print 'int sequence: first, step, repeat, n => ',first,step,repeat,n_items
+            nitems = (last - first)/step + 1
+        #print 'int sequence: first, step, repeat, n => ',first,step,repeat,nitems
 
     k = base['seq_index']
     #print 'k = ',k
@@ -529,10 +531,10 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     k = k / repeat
     #print 'k/repeat = ',k
 
-    if n_items is not None and n_items > 0:
-        #print 'n_items = ',n_items
-        k = k % n_items
-        #print 'k%n_items = ',k
+    if nitems is not None and nitems > 0:
+        #print 'nitems = ',nitems
+        k = k % nitems
+        #print 'k%nitems = ',k
 
     index = first + k*step
     #print 'first + k*step = ',index
@@ -545,7 +547,7 @@ def _GenerateFromNumberedFile(param, param_name, base, value_type):
     """
     #print 'Start NumberedFile for ',param_name,' -- param = ',param
     if 'num' not in param:
-        param['num'] = { 'type' : 'Sequence', 'first' : 1 }
+        param['num'] = { 'type' : 'Sequence' }
     req = { 'root' : str , 'num' : int }
     opt = { 'ext' : str , 'digits' : int }
     kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
@@ -787,19 +789,19 @@ def SetDefaultIndex(config, num):
     size of the list, catalog, etc.
     """
     if 'index' not in config:
-        config['index'] = { 'type' : 'Sequence', 'last' : num-1 }
+        config['index'] = { 'type' : 'Sequence', 'nitems' : num }
     elif isinstance(config['index'],dict) and 'type' in config['index'] :
         index = config['index']
         type = index['type']
         if ( type == 'Sequence' and 
              ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) ) and
-             'last' not in index ):
+             'last' not in index and 'nitems' not in index ):
             index['last'] = num-1
         elif ( type == 'Sequence' and 
              ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
             if 'first' not in index:
                 index['first'] = num-1
-            if 'last' not in index:
+            if 'last' not in index and 'nitems' not in index:
                 index['last'] = 0
         elif type == 'Random':
             if 'max' not in index:

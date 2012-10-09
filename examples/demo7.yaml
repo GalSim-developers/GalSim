@@ -57,8 +57,8 @@ psf :
 
     index : 
         type : Sequence
-        first : 0
-        last : 4
+        # The index item for a List automatically has first and last set appropriately
+        # (0 and 4 in this case).  However, we do want to set repeat.
         repeat : 40  # How many times to repeat the same value before moving on.
 
 
@@ -78,8 +78,6 @@ gal :
                 - { type : Sersic , n : 1.5 , half_light_radius : 1.2 , flux : 0.6 }
     index :
         type : Sequence
-        first : 0
-        last : 4
         repeat : 8  # This will repeat each 8 times, but also go through the full list 5 times
 
     flux : { type : Random , min : 1.e4 , max : 1.e5 }

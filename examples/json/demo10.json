@@ -104,8 +104,8 @@
     "shift" : {
         "type" : "RTheta",
         "#" : "Half a pixel in a random direction",
-	"#" : "This time, we use the pixel_scale variable defined in eval_variables (below),",
-	"#" : "so we don't need to define it here.",
+        "#" : "This time, we use the pixel_scale variable defined in eval_variables (below),",
+        "#" : "so we don't need to define it here.",
         "r" : { "type" : "Eval" , "str" : "pixel_scale * 0.5" },
         "theta" : { "type" : "Random" }
     },

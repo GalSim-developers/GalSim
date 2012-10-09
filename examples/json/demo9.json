@@ -18,6 +18,7 @@
 "#" : "- shear_value : Eta1Eta2 (eta1, eta2)",
 "#" : "- image type : Scattered (size, nobjects)",
 "#" : "- str_value type : NumberedFile (root, num, ext, digits)",
+"#" : "- value type : Sequence (..., nitems)",
 "#" : "- output : nproc",
 "#" : "- output : weight",
 "#" : "- output : badpix",
@@ -83,7 +84,6 @@
             "items" : [ 1.0e15, 7.0e14, 4.0e14, 2.0e14 ],
             "index" : {
                 "type" : "Sequence",
-                "first" : 0,
                 "repeat" : 5
             }
         },
@@ -171,13 +171,14 @@
 
         "#" : "num specifies how to choose the number for each file. ",
         "#" : "If omitted, the default is simply a Sequence starting at 1.",
-        "#" : "i.e. { type : Sequence , first : 1 }",
+        "#" : "i.e. num : { type : Sequence , first : 1 }",
+        "#" : "However, we want the sequence to start over every 5 files, so we need to define it.",
         "num" : {
             "type" : "Sequence",
-            "first" : 1,
-            "#" : "Here is a case where using a named variable comes in handy.",
-            "#" : "This was defined about in input.nfw_halo.",
-            "last" : 5
+            "first" : 0,
+            "#" : "An alternate way to set the number of items in a Sequence is nitems instead of",
+            "#" : "last.  Here, last = nitems-1.",
+            "nitems" : 5
         },
 
         "#" : "ext specifies the text to go after the number, if desired.",
@@ -208,7 +209,6 @@
         "num" : {
             "type" : "Sequence",
             "first" : 1,
-            "last" : 4,
 
             "#" : "For our directory name, we have each number in the sequence repeat 5 times",
             "#" : "before moving on to the next value, since we have 5 files to put in each ",

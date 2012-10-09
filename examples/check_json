@@ -34,8 +34,8 @@ time ../bin/galsim_json json/demo7.json || exit
 time ../bin/demo8 || exit
 time ../bin/galsim_json json/demo8a.json json/demo8b.json || exit
 
-time ../bin/demo9 || echo "Sorry, sciPy required for running demo9"
-time ../bin/galsim_json json/demo9.json || echo "Sorry, sciPy required for running demo9"
+time ../bin/demo9 || exit
+time ../bin/galsim_json json/demo9.json || exit
 
 time ../bin/demo10 || exit
 time ../bin/galsim_json json/demo10.json || exit
@@ -76,7 +76,7 @@ diff output/bpd_multi.fits output_json/bpd_multi.fits
 # demo9:
 for dir_num in {1..4} 
 do
-    for file_num in {1..5}
+    for file_num in {0..4}
     do
         file_name=nfw$dir_num/cluster000$file_num.fits
 	diff output/$file_name output_json/$file_name

@@ -256,7 +256,7 @@ def main(argv):
         dir = os.path.join('output',dir_name)
         if not os.path.isdir(dir): os.mkdir(dir)
         for j in range(nfiles):
-            file_name = "cluster%04d.fits"%(j+1)
+            file_name = "cluster%04d.fits"%j
             full_name = os.path.join(dir,file_name)
             # We put on the task queue the args to the buld_file function and
             # some extra info to pass through to the output queue.

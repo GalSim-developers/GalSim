@@ -76,7 +76,7 @@ diff output/bpd_multi.fits output_yaml/bpd_multi.fits
 # demo9:
 for dir_num in {1..4} 
 do
-    for file_num in {1..5}
+    for file_num in {0..4}
     do
         file_name=nfw$dir_num/cluster000$file_num.fits
 	diff output/$file_name output_yaml/$file_name
