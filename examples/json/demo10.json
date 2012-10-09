@@ -18,6 +18,8 @@
 "#" : "- obj type : Ring (..., full_rotation)",
 "#" : "- obj type : RealGalaxy (..., id)",
 "#" : "- type : Eval using pos variable, user-defined variables and math functions",
+"#" : "         (for other GalSim-privided variables, see",
+"#" : "          https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation)",
 "#" : "- top level field eval_variables",
 "#" : "- shear_value : PowerSpectrumShear",
 "#" : "- pos_value : RTheta (r, theta)",
