@@ -209,6 +209,7 @@
         "num" : {
             "type" : "Sequence",
             "first" : 1,
+            "last" : 4,
 
             "#" : "For our directory name, we have each number in the sequence repeat 5 times",
             "#" : "before moving on to the next value, since we have 5 files to put in each ",

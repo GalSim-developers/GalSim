@@ -139,7 +139,6 @@ input :
     real_catalog :
         image_dir : data
         file_name : real_galaxy_catalog_example.fits
-        # TODO: Temporarily disabled for issue #291
         preload : True   # This usually makes a big improvement in speed
 
 
