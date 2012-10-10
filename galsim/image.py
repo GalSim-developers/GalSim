@@ -5,11 +5,10 @@ docstrings.
 from . import _galsim
 import numpy
 
-# Sometimes there are two numpy.int32 types.  This can lead to some confusion when doing
-# arithmetic with images.  So just make sure both of them point to ImageI in the Image dict.
-# One of them is what you get when you just write numpy.int32.  The other is what numpy 
-# decides an int32 value + 1 is.  The first one is usually the one that's already in the
-# Image dict, but we assign both versions just to be sure.
+# Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion 
+# when doing arithmetic with images.  So just make sure both of them point to ImageI in the Image 
+# dict.  One of them is what you get when you just write numpy.int32.  The other is what numpy 
+# decides an int32 value + 1 is.  The first one is usually the one that's already in the Image dict,# but we assign both versions just to be sure.
 
 _galsim.Image[numpy.int32] = _galsim.ImageI
 _galsim.ImageView[numpy.int32] = _galsim.ImageViewI
@@ -19,6 +18,10 @@ alt_int32 = ( numpy.array([0]).astype(numpy.int32) + 1 ).dtype.type
 _galsim.Image[alt_int32] = _galsim.ImageI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
+
+# For more information regarding this rather unexpected behaviour for numpy.int32 types, see
+# the following (closed, marked "wontfix") ticket on the numpy issue tracker:
+# http://projects.scipy.org/numpy/ticket/1246
 
 
 # First of all we add docstrings to the Image, ImageView and ConstImageView classes for each of the
