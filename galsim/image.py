@@ -8,7 +8,8 @@ import numpy
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion 
 # when doing arithmetic with images.  So just make sure both of them point to ImageI in the Image 
 # dict.  One of them is what you get when you just write numpy.int32.  The other is what numpy 
-# decides an int32 value + 1 is.  The first one is usually the one that's already in the Image dict,# but we assign both versions just to be sure.
+# decides an int32 value + 1 is.  The first one is usually the one that's already in the Image dict,
+# but we assign both versions just to be sure.
 
 _galsim.Image[numpy.int32] = _galsim.ImageI
 _galsim.ImageView[numpy.int32] = _galsim.ImageViewI
