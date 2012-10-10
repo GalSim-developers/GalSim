@@ -3,6 +3,23 @@ A few adjustments to the galsim.Image classes at the Python layer, including the
 docstrings.
 """
 from . import _galsim
+import numpy
+
+# Sometimes there are two numpy.int32 types.  This can lead to some confusion when doing
+# arithmetic with images.  So just make sure both of them point to ImageI in the Image dict.
+# One of them is what you get when you just write numpy.int32.  The other is what numpy 
+# decides an int32 value + 1 is.  The first one is usually the one that's already in the
+# Image dict, but we assign both versions just to be sure.
+
+_galsim.Image[numpy.int32] = _galsim.ImageI
+_galsim.ImageView[numpy.int32] = _galsim.ImageViewI
+_galsim.ConstImageView[numpy.int32] = _galsim.ConstImageViewI
+
+alt_int32 = ( numpy.array([0]).astype(numpy.int32) + 1 ).dtype.type
+_galsim.Image[alt_int32] = _galsim.ImageI
+_galsim.ImageView[alt_int32] = _galsim.ImageViewI
+_galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
+
 
 # First of all we add docstrings to the Image, ImageView and ConstImageView classes for each of the
 # S, F, I & D datatypes
@@ -108,9 +125,12 @@ def Image_getitem(self, key):
     return self.subImage(key)
 
 def Image_add(self, other):
-    ret = self.copy()
-    ret += other
-    return ret
+    try:
+        result = self.array[:,:] + other.array
+    except AttributeError:
+        result = self.array[:,:] + other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_iadd(self, other):
     try:
@@ -120,9 +140,12 @@ def Image_iadd(self, other):
     return self
 
 def Image_sub(self, other):
-    ret = self.copy()
-    ret -= other
-    return ret
+    try:
+        result = self.array[:,:] - other.array
+    except AttributeError:
+        result = self.array[:,:] - other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_isub(self, other):
     try:
@@ -132,9 +155,12 @@ def Image_isub(self, other):
     return self
 
 def Image_mul(self, other):
-    ret = self.copy()
-    ret *= other
-    return ret
+    try:
+        result = self.array[:,:] * other.array
+    except AttributeError:
+        result = self.array[:,:] * other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_imul(self, other):
     try:
@@ -144,9 +170,12 @@ def Image_imul(self, other):
     return self
 
 def Image_div(self, other):
-    ret = self.copy()
-    ret /= other
-    return ret
+    try:
+        result = self.array[:,:] / other.array
+    except AttributeError:
+        result = self.array[:,:] / other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_idiv(self, other):
     try:
@@ -157,9 +186,12 @@ def Image_idiv(self, other):
 
 # Define &, ^ and | only for integer-type images
 def Image_and(self, other):
-    ret = self.copy()
-    ret &= other
-    return ret
+    try:
+        result = self.array[:,:] & other.array
+    except AttributeError:
+        result = self.array[:,:] & other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_iand(self, other):
     try:
@@ -169,9 +201,12 @@ def Image_iand(self, other):
     return self
 
 def Image_xor(self, other):
-    ret = self.copy()
-    ret ^= other
-    return ret
+    try:
+        result = self.array[:,:] ^ other.array
+    except AttributeError:
+        result = self.array[:,:] ^ other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_ixor(self, other):
     try:
@@ -181,9 +216,12 @@ def Image_ixor(self, other):
     return self
 
 def Image_or(self, other):
-    ret = self.copy()
-    ret |= other
-    return ret
+    try:
+        result = self.array[:,:] | other.array
+    except AttributeError:
+        result = self.array[:,:] | other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_ior(self, other):
     try:
