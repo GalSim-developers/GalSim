@@ -24,20 +24,35 @@ for subdir in subdir_list:
 # that they should add that path to their PYTHONPATH environment variable.
 def CheckPyPrefix(target, source, env):
     import subprocess
-    cmd = "%s -c \"import sys; print sys.path\""%(env['PYTHON'])
+
+    # Get sys.path for the intended python version.
+    python = env['PYTHON']
+    cmd = "%s -c \"import sys; print sys.path\""%python
     p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
     sys_path = p.stdout.read().strip()
     sys_path = eval(sys_path)
-    if env['PYPREFIX'] not in sys_path:
+
+    # Convert everything to an abspath to make sure everyone is using the same notation.
+    pyprefix = os.path.abspath(env['PYPREFIX'])
+    sys_path = [ os.path.abspath(d) for d in sys_path ]
+
+    # If installing into a staging area, try stripping off an initial INSTALL_PREFIX
+    # from pyprefix and put on FINAL_PREFIX instead.
+    if ( pyprefix not in sys_path and 
+         env['FINAL_PREFIX'] != env['INSTALL_PREFIX'] and 
+         pyprefix.startswith(env['INSTALL_PREFIX']) ):
+        pyprefix = pyprefix.replace(env['INSTALL_PREFIX'],env['FINAL_PREFIX'],1)
+        
+    if pyprefix not in sys_path:
         print
-        print 'WARNING: The python installation prefix: %s'%env['PYPREFIX']
-        print '         is not in the search path for %s.'%env['PYTHON']
+        print 'WARNING: The python installation prefix: %s'%pyprefix
+        print '         is not in the search path for %s.'%python
         print
         print '         You should add this directory to your PYTHONPATH environment'
         print '         variable so python will find the installed galsim modules.'
         print
         print '         For example, if you use bash, you should add the line:'
-        print '             export PYTHONPATH=$PYTHONPATH:%s'%env['PYPREFIX']
+        print '             export PYTHONPATH=$PYTHONPATH:%s'%pyprefix
         print '         to your .bashrc or .bash_profile file.'
         print
 
