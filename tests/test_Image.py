@@ -904,8 +904,14 @@ def test_ConstImageView_array_constness():
         image = galsim.ConstImageView[types[i]](ref_array.astype(types[i]))
         try:
             image.array[1, 2] = 666
-        # Apparently some numpy versions raise a RuntimeError, others a ValueError.
-        except (RuntimeError, ValueError):
+        # Apparently older numpy versions might raise a RuntimeError, a ValueError, or a TypeError
+        # when trying to write to arrays that have writeable=False. 
+        # From the numpy 1.7.0 release notes:
+        #     Attempting to write to a read-only array (one with
+        #     ``arr.flags.writeable`` set to ``False``) used to raise either a
+        #     RuntimeError, ValueError, or TypeError inconsistently, depending on
+        #     which code path was taken. It now consistently raises a ValueError.
+        except (RuntimeError, ValueError, TypeError):
             pass
         except:
             assert False, "Unexpected error: "+str(sys.exc_info()[0])
@@ -914,7 +920,7 @@ def test_ConstImageView_array_constness():
         image = image_init_func(ref_array.astype(types[i]))
         try:
             image.array[1, 2] = 666
-        except (RuntimeError, ValueError):
+        except (RuntimeError, ValueError, TypeError):
             pass
         except:
             assert False, "Unexpected error: "+str(sys.exc_info()[0])
