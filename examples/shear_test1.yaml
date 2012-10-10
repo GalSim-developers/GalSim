@@ -1,0 +1,240 @@
+# This is a GalSim configuration file.  To run it, (using galsim v0.2 or later) do
+#
+#     galsim_yaml shear_test1.yaml
+#
+# It builds a bunch of files with tiled postage stamps where all the galaxies have the same
+# applied shear: (0.03, 0.02).
+#
+# All files have 1024 galaxies (32 x 32 tiled postage stamps) drawn at a signal-to-noise of 1000.
+# The pixel scale is 0.27 arcsec/pixel, and the PSF is Kolmogorov with fwhm = 0.8 arcsec.
+# The galaxy orientations are done in rings of 16 with the first orientation in each ring random.
+#
+# Different directories correpond to different galaxy profiles.  
+# 
+#     profile01   Gaussian 
+#     profile02   Exponential
+#     profile03   DeVaucouleurs
+#     profile04   Concentric Bulge + Disk
+#     profile05   Orthogonal Bulge + Disk (each has e=0.2 in orthogonal directions)
+#     profile06   Off-center Bulge + Disk (also a relative shift of 0.2 arcsec in random dir)
+#
+# Within each directory, there are 3 different ellipticities and  5 different resolutions.
+# For the Bulge+Disk profiles, the overall ellipticity is applied in a random direction
+# relative to the Bulge and Disk ellipticities.  Also, note that the final "ellipticity"
+# in those cases won't necessarily match the given number, depending on the weighting used.
+# Also, the half-light radius won't be quite correct for those either, but it should be close.
+#
+# The file names look like:
+#
+#     ellip00hlr05.fits  for e = 0.0, half-light radius = 0.5
+#
+#     ellip values are 00, 03, 06 for e = 0.0, 0.3 and 0.6.
+#     hlr values are 04, 08, 12, 16, 20 for half-light radius = 0.4, 0.8, 1.2, 1.6 and 2.0.
+#
+
+# Some variables that you might want to change.  These will be used below:
+# Parameters below that use Eval can use these variable names (less the first letter, which
+# defines what type the variable is).  We also tag them as YAML-style variables, so we can 
+# use them in that way as well.
+eval_variables:
+    inprof : &nprof 6
+
+    ffirst_ellip : &first_ellip 0.0
+    fellip_step : &ellip_step 0.3
+    inellip : &nellip 3
+
+    ffirst_hlr : &first_hlr 0.4
+    fhlr_step : &hlr_step 0.4
+    inhlr : &nhlr 5
+
+    inx : &nx 32
+    iny : &ny 32
+    istamp_size : &stamp_size 64
+
+    fpixel_scale : &pixel_scale 0.27
+
+    fsn : &sn 1.e3
+
+    fg1 : &g1 0.03
+    fg2 : &g2 0.02
+
+# For the PSF, we just use a simple Komogorov spectrum.  Slightly more realistic than a 
+# Gaussian, but ellipticity, never mind things like realistic coma or astigmatism.
+# GalSim has those, but for this test we're concentrating on the galaxy properties.
+psf :
+    type : Kolmogorov
+    fwhm : 0.8
+
+gal : 
+    # The galaxies are generated in rings of 16
+    type : Ring
+    num : 16
+    first :
+        # The kind of galaxy is different for each profile directory.
+        type : List
+        items :
+            # A simple Gaussian.  For now hlr = 1.  We'll dilate it below.
+            - { type : Gaussian, half_light_radius : 1 }
+
+            # An exponential disk galaxy.
+            - { type : Exponential, half_light_radius : 1 }
+
+            # A DeVaucouleurs elliptical galaxy.
+            - { type : DeVaucouleurs, half_light_radius : 1 }
+
+            # Bulge + Disk.  The net hlr may not be exactly 1, but it's probably close (-ish).
+            # The flux values here represent relative flux.  The overall flux will be set 
+            # below according to the signal-to-noise.
+            - 
+                type : Sum
+                items : 
+                    - 
+                        type : Exponential 
+                        flux : 0.7 
+                        half_light_radius : 1.2 
+                    -  
+                        type : DeVaucouleurs 
+                        flux : 0.3 
+                        half_light_radius : 0.5
+
+            # Shear each component in opposite directions by e=0.2.  When the overall ellipticity
+            # is applied (below), it will be in a random direction relative to these shapes.
+            - 
+                type : Sum
+                items : 
+                    - 
+                        type : Exponential
+                        flux : 0.7
+                        half_light_radius : 1.2 
+                        ellip : { type : E1E2, e1 : 0.2 , e2 : 0 } 
+                    - 
+                        type : DeVaucouleurs
+                        flux : 0.3
+                        half_light_radius : 0.5
+                        ellip : { type : E1E2, e1 : -0.2 , e2 : 0 } 
+
+            # Finally, also shift the bulge by 0.2 arcsec in a random direction.
+            - 
+                type : Sum
+                items : 
+                    - 
+                        type : Exponential
+                        flux : 0.7
+                        half_light_radius : 1.2 
+                        ellip : { type : E1E2, e1 : 0.2 , e2 : 0 }
+                    -  
+                        type : DeVaucouleurs
+                        flux : 0.3
+                        half_light_radius : 0.5
+                        ellip : { type : E1E2, e1 : -0.2 , e2 : 0 }
+                        shift : { type : RTheta, r : 0.2, theta : { type : Random } } 
+
+        # Need to repeat each kind of galaxy for nellip * nhlr * nx * ny objects.
+        index : 
+            type : Sequence
+            repeat : { type : Eval, str : 'nellip * nhlr * nx * ny' }
+
+        # The ellipticity is random orientation for the first element in each ring.
+        # And the magnitude is (0.0, 0.3, 0.6) incrementing every nhlr * nx * ny objects.
+        ellip :
+            type : EBeta
+            e : 
+                type : Sequence
+                first : *first_ellip
+                step : *ellip_step
+                nitems : *nellip
+                repeat : { type : Eval, str : 'nhlr * nx * ny' }
+            beta : { type : Random }
+
+        # This is where we actually set the half-light radius.
+        # This increments every nx * ny objects.
+        dilation :
+            type : Sequence
+            first : *first_hlr
+            step : *hlr_step
+            nitems : *nhlr
+            repeat : { type : Eval, str : 'nx * ny' }
+
+    # The signal-to-noise of the galaxy.
+    signal_to_noise : *sn
+
+    # The applied shear is the same for every galaxy.
+    shear : 
+        type : G1G2
+        g1 : *g1
+        g2 : *g2
+
+    # A random shift within a 1 pixel circle.
+    shift : 
+        type : RandomCircle
+        radius : *pixel_scale
+
+image :
+    # The pixel scale in arcsec / pixel.
+    pixel_scale : *pixel_scale
+
+    # nx x ny postage stamps on each image.
+    type : Tiled
+    nx_tiles : *nx
+    ny_tiles : *ny
+    stamp_size : *stamp_size
+
+    # The initial random_seed.  (Still deterministic even with multiple processes.)
+    random_seed : 2352423
+
+    # This doesn't matter much, since we set the S/N above.  It just sets an overall scale for 
+    # the pixel values to something reasonable.  
+    noise : { sky_level : 1.e6 }  
+
+output :
+    # nproc = -1 means to try to determine the number of cpus and use that.
+    nproc : -1
+
+    # How many files?  nprof * nellip * nhlr
+    nfiles : { type : Eval, str : 'nprof * nellip * nhlr' }
+
+    # Directory will be profileNN where NN goes from 01..06.
+    # So the profile number increments by 1 every nellip * nhlr files.
+    dir :
+        type : NumberedFile
+        root : 'profile'
+        num : 
+            type : Sequence
+            first : 1
+            repeat : { type : Eval, str : 'nellip * nhlr' }
+        digits : 2
+
+    file_name :
+        type : Eval
+        str : "str1 + str2 + '.fits'"
+        # The first part of the file name is ellipNN where NN = 00, 03, 06.
+        # So it increments by ellip_step*10 every nhlr files.
+        # After nitems=nellip, it repeats the sequence.
+        sstr1 : 
+            type : NumberedFile
+            root : 'ellip'
+            num :
+                type : Sequence
+                first : { type : Eval, str : 'first_ellip * 10' }
+                step : { type : Eval, str : 'ellip_step * 10' }
+                nitems : *nellip
+                repeat : *nhlr
+            digits : 2
+        # The second part of the file name is hlrNN where NN = 04, 08, 12, 16, 20.
+        # So it increments by hlr_step*10 every file (i.e. no repeat field).
+        # After nitems=nhlr, it repeats the sequence.
+        sstr2 : 
+            type : NumberedFile
+            root : 'hlr'
+            num :
+                type : Sequence
+                first : { type : Eval, str : 'first_hlr * 10' }
+                step : { type : Eval, str : 'hlr_step * 10' }
+                nitems : *nhlr
+            digits : 2
+
+    # Also output a file with the (noise-free) psf.  This will be created once per directory.
+    # You could specify dir="" or some other directory, in which case only one file would
+    # be created in total, but currently a version of psf.fits is built in each directory.
+    psf :
+        file_name : 'psf.fits'
