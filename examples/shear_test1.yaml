@@ -2,14 +2,14 @@
 #
 #     galsim_yaml shear_test1.yaml
 #
-# It builds a bunch of files with tiled postage stamps where all the galaxies have the same
-# applied shear: (0.03, 0.02).
+# It builds 16 files per directory, each file with tiled postage stamps where all the galaxies
+# have the same applied shear: (0.03, 0.02).
 #
 # All files have 1024 galaxies (32 x 32 tiled postage stamps) drawn at a signal-to-noise of 1000.
 # The pixel scale is 0.27 arcsec/pixel, and the PSF is Kolmogorov with fwhm = 0.8 arcsec.
 # The galaxy orientations are done in rings of 16 with the first orientation in each ring random.
 #
-# Different directories correpond to different galaxy profiles.  
+# Different directories correspond to different galaxy profiles.
 # 
 #     profile01   Gaussian 
 #     profile02   Exponential
@@ -31,6 +31,7 @@
 #     ellip values are 00, 03, 06 for e = 0.0, 0.3 and 0.6.
 #     hlr values are 04, 08, 12, 16, 20 for half-light radius = 0.4, 0.8, 1.2, 1.6 and 2.0.
 #
+# There are 15 galaxy files in total per directory.  One additional file contains the PSF.
 
 # Some variables that you might want to change.  These will be used below:
 # Parameters below that use Eval can use these variable names (less the first letter, which
@@ -71,6 +72,10 @@ gal :
     num : 16
     first :
         # The kind of galaxy is different for each profile directory.
+        # The first item must be of a valid gal type; here it is of the List type.
+        # The number of repetitions of each of the galaxy type is specified in List.index,
+        # which ensures that each file and directory is of a single galaxy type.
+        # The number of items in this List is expected to be nprof, the variable defined above.
         type : List
         items :
             # A simple Gaussian.  For now hlr = 1.  We'll dilate it below.
@@ -130,6 +135,9 @@ gal :
                         shift : { type : RTheta, r : 0.2, theta : { type : Random } } 
 
         # Need to repeat each kind of galaxy for nellip * nhlr * nx * ny objects.
+        # (The same object of a set of orientations, as specifed in Ring.num, repeats itself
+        # until it fills this number of objects.  Note that nx * ny, the number of objects in a
+        # single file, must be divisible by Ring.num for the Ring to be complete within the file.)
         index : 
             type : Sequence
             repeat : { type : Eval, str : 'nellip * nhlr * nx * ny' }
@@ -187,7 +195,7 @@ image :
     noise : { sky_level : 1.e6 }  
 
 output :
-    # nproc = -1 means to try to determine the number of cpus and use that.
+    # nproc = -1 means to try to determine the number of CPUs and use that.
     nproc : -1
 
     # How many files?  nprof * nellip * nhlr
@@ -233,7 +241,7 @@ output :
                 nitems : *nhlr
             digits : 2
 
-    # Also output a file with the (noise-free) psf.  This will be created once per directory.
+    # Also output a file with the (noise-free) PSF.  This will be created once per directory.
     # You could specify dir="" or some other directory, in which case only one file would
     # be created in total, but currently a version of psf.fits is built in each directory.
     psf :
