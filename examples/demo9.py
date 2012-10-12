@@ -56,7 +56,7 @@ def main(argv):
     nobj = 20  # number of objects to draw for each file
 
     image_size = 512       # pixels
-    pixel_scale = 0.19     # arcsec / pixel
+    pixel_scale = 0.20     # arcsec / pixel
     sky_level = 1.e6       # ADU / arcsec^2
 
     psf_fwhm = 0.5         # arcsec

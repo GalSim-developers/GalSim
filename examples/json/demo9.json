@@ -140,7 +140,7 @@
     "#" : "    y : { type : Random , min : 1 , max : ysize }",
     "#" : "}",
 
-    "pixel_scale" : 0.19,
+    "pixel_scale" : 0.20,
 
     "noise" : {
         "sky_level" : 1.0e6

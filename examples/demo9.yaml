@@ -131,7 +131,7 @@ image :
     #     y : { type : Random , min : 1 , max : ysize }
 
 
-    pixel_scale : 0.19  # arcsec / pixel
+    pixel_scale : 0.20  # arcsec / pixel
 
     noise :
         sky_level : 1.0e6  # ADU / arcsec^2
