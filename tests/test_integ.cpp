@@ -18,6 +18,13 @@
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
 
+// Only clang seems to have this
+#ifdef __clang__
+#if __has_warning("-Wlogical-op-parentheses")
+#pragma GCC diagnostic ignored "-Wlogical-op-parentheses"
+#endif
+#endif
+
 #endif
 
 #include <boost/test/unit_test.hpp>
