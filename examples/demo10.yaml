@@ -120,7 +120,9 @@ eval_variables :
 
 # Define some other information about the images 
 image :
-    # TODO: Temporary (?) for issue #291
+    # Note: The corresponding python script, demo10.py, is only done using a single process
+    # to make it a little easier to follow the GalSim code.  See demo9.py for an example of
+    # how to do this with multiple processes.
     nproc : 5
 
     type : Tiled

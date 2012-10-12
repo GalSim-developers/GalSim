@@ -147,8 +147,6 @@ input :
 
 # Define the name and format of the output file
 output :
-    # TODO: Temporary for issue #291
-    nproc : 4
 
     # type = MultiFits means to use a multi-extension fits file
     type : MultiFits
