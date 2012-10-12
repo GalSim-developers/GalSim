@@ -71,7 +71,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    # Parse the integer verbosity level from the commandl ine args into a logging_level string
+    # Parse the integer verbosity level from the command line args into a logging_level string
     logging_levels = { 0: logging.CRITICAL, 
                        1: logging.WARNING,
                        2: logging.INFO,
