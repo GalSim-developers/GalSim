@@ -124,7 +124,7 @@ struct PyImage {
     static bp::object getConstArray(bp::object image) { return getArrayImpl(image, true); }
 
     static void buildConstructorArgs(
-        bp::object const & array, int xMin, int yMin, bool isConst,
+        bp::object const & array, int xmin, int ymin, bool isConst,
         T * & data, boost::shared_ptr<T> & owner, int & stride, Bounds<int> & bounds
     ) {
         if (!PyArray_Check(array.ptr())) {
@@ -198,30 +198,30 @@ struct PyImage {
             );
         }
         bounds = Bounds<int>(
-            xMin, xMin + PyArray_DIM(array.ptr(), 1) - 1,
-            yMin, yMin + PyArray_DIM(array.ptr(), 0) - 1
+            xmin, xmin + PyArray_DIM(array.ptr(), 1) - 1,
+            ymin, ymin + PyArray_DIM(array.ptr(), 0) - 1
         );
     }
 
     static ImageView<T>* makeFromArray(
-        const bp::object& array, int xMin, int yMin, double scale) 
+        const bp::object& array, int xmin, int ymin, double scale) 
     {
         Bounds<int> bounds;
         int stride = 0;
         T * data = 0;
         boost::shared_ptr<T> owner;
-        buildConstructorArgs(array, xMin, yMin, false, data, owner, stride, bounds);
+        buildConstructorArgs(array, xmin, ymin, false, data, owner, stride, bounds);
         return new ImageView<T>(data, owner, stride, bounds, scale);
     }
 
     static ConstImageView<T>* makeConstFromArray(
-        const bp::object& array, int xMin, int yMin, double scale) 
+        const bp::object& array, int xmin, int ymin, double scale) 
     {
         Bounds<int> bounds;
         int stride = 0;
         T * data = 0;
         boost::shared_ptr<T> owner;
-        buildConstructorArgs(array, xMin, yMin, true, data, owner, stride, bounds);
+        buildConstructorArgs(array, xmin, ymin, true, data, owner, stride, bounds);
         return new ConstImageView<T>(data, owner, stride, bounds, scale);
     }
 
@@ -262,10 +262,10 @@ struct PyImage {
             .def("getBounds", getBounds)
             .add_property("bounds", getBounds)
             ;
-        ADD_CORNER(pyBaseImage, getXMin, xMin);
-        ADD_CORNER(pyBaseImage, getYMin, yMin);
-        ADD_CORNER(pyBaseImage, getXMax, xMax);
-        ADD_CORNER(pyBaseImage, getYMax, yMax);
+        ADD_CORNER(pyBaseImage, getXMin, xmin);
+        ADD_CORNER(pyBaseImage, getYMin, ymin);
+        ADD_CORNER(pyBaseImage, getXMax, xmax);
+        ADD_CORNER(pyBaseImage, getYMax, ymax);
         
 
         bp::class_< Image<T>, bp::bases< BaseImage<T> > >
@@ -315,7 +315,7 @@ struct PyImage {
                 "__init__",
                 bp::make_constructor(
                     makeFromArray, bp::default_call_policies(),
-                    (bp::arg("array"), bp::arg("xMin")=1, bp::arg("yMin")=1, 
+                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1, 
                      bp::arg("scale")=1.0)
                 )
             )
@@ -353,7 +353,7 @@ struct PyImage {
                 "__init__",
                 bp::make_constructor(
                     makeConstFromArray, bp::default_call_policies(),
-                    (bp::arg("array"), bp::arg("xMin")=1, bp::arg("yMin")=1,
+                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1,
                      bp::arg("scale")=1.0)
                 )
             )
