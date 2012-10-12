@@ -27,6 +27,7 @@ struct PyAngle {
             .def(bp::init<double, AngleUnit>(bp::args("val","unit")))
             .def(bp::init<const Angle&>(bp::args("rhs")))
             .def("rad", &Angle::rad)
+            .def("wrap", &Angle::wrap)
             .def(bp::self / bp::other<AngleUnit>())
             .def(bp::self * bp::other<double>())
             .def(bp::other<double>() * bp::self)

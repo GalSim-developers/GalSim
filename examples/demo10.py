@@ -9,22 +9,25 @@ the lines of a Great10 (Kitching, et al, 2012) image.  The galaxies are placed o
 (10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
 is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them
 as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
-RealGalaxy objects, selected to be 5 particularly irregular ones, each with a random 
-orientation.  (These are taken from the same catalog of 100 objects that demo6 used.)
+RealGalaxy objects, selected to be 5 particularly irregular ones. (These are taken from 
+the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring 
+test (Nakajima & Bernstein 2007) of 20 each.
 
 New features introduced in this demo:
 
 - rng = galsim.BaseDeviate(seed)
 - obj = galsim.RealGalaxy(real_galaxy_catalog, id)
 - obj = galsim.Convolve([list], real_space)
-- ps = galsim.PowerSpectrum(E_power_function, B_power_function)
+- ps = galsim.PowerSpectrum(e_power_function, b_power_function)
 - g1,g2 = ps.getShear(grid_spacing, grid_nx, rng)
 - g1,g2 = ps.getShear(pos)
+- galsim.random.permute(rng, list1, list2, ...)
 
 - Choosing PSF parameters as a function of (x,y)
 - Selecting RealGalaxy by ID rather than index.
 - Putting the PSF image in a second HDU in the same file as the main image.
 - Using PowerSpectrum for the applied shear.
+- Doing a full ring test (i.e. not just 90 degree rotated pairs)
 """
 
 import sys
@@ -42,9 +45,9 @@ def main(argv):
       - Each postage stamp is 48 x 48 pixels.
       - The second HDU has the corresponding PSF image.
       - Applied shear is from a power spectrum P(k) ~ k^1.8.
-      - Galaxies are randomly oriented real galaxies.
+      - Galaxies are real galaxies oriented in a ring test of 20 each.
       - The PSF is Gaussian with FWHM, ellipticity and position angle functions of (x,y)
-      - Noise is poisson using a nominal sky value of 1.e6.
+      - Noise is Poisson using a nominal sky value of 1.e6.
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo10")
@@ -64,7 +67,7 @@ def main(argv):
 
     file_name = os.path.join('output','power_spectrum.fits')
 
-    # These will be create for each object below.  The values we'll use will be functions
+    # These will be created for each object below.  The values we'll use will be functions
     # of (x,y) relative to the center of the image.  (r = sqrt(x^2+y^2))
     # psf_fwhm = 0.9 + 0.5 * (r/100)^2  -- arcsec
     # psf_e = 0.4 * (r/100)^1.5         -- large value at the edge, so visible by eye.
@@ -97,16 +100,15 @@ def main(argv):
 
     # Setup the PowerSpectrum object we'll be using:
     ps = galsim.PowerSpectrum(lambda k : k**1.8)
-    # The parameter here is E_power_function which defines the E-mode power to use.
+    # The argument here is "e_power_function" which defines the E-mode power to use.
 
-    # There is also a B_power_function if you want to include any B-mode power:
-    #     ps = galsim.PowerSpectrum(E_power_function, B_power_function)
+    # There is also a b_power_function if you want to include any B-mode power:
+    #     ps = galsim.PowerSpectrum(e_power_function, b_power_function)
 
-    # You may even omit the E_power_function argument and have a pure B-mode power spectrum.
-    #     ps = galsim.PowerSpectrum(B_power_function = B_power_function)
+    # You may even omit the e_power_function argument and have a pure B-mode power spectrum.
+    #     ps = galsim.PowerSpectrum(b_power_function = b_power_function)
 
 
-    # Now have it build a grid of shear values for us to use.
     # All the random number generator classes derive from BaseDeviate.
     # When we construct another kind of deviate class from any other
     # kind of deviate class, the two share the same underlying random number
@@ -114,7 +116,12 @@ def main(argv):
     # explicitly and then construct anything else you need from that.
     # Note: A BaseDeviate cannot be used to generate any values.  It can
     # only be used in the constructor for other kinds of deviates.
-    rng = galsim.BaseDeviate(random_seed)
+    # The seeds for the objects are random_seed..random_seed+nobj-1 (which comes later), 
+    # so use the next one.
+    nobj = n_tiles * n_tiles
+    rng = galsim.BaseDeviate(random_seed+nobj)
+
+    # Now have the PowerSpectrum object build a grid of shear values for us to use.
     grid_g1, grid_g2 = ps.getShear(grid_spacing=stamp_size*pixel_scale, grid_nx=n_tiles, rng=rng)
 
     # Setup the images:
@@ -125,101 +132,120 @@ def main(argv):
 
     im_center = gal_image.bounds.center()
 
-    # Build each postage stamp:
-    k = 0
+    # We will place the tiles in a random order.  To do this, we make two lists for the 
+    # ix and iy values.  Then we apply a random permutation to the lists (in tandem).
+    ix_list = []
+    iy_list = []
     for ix in range(n_tiles):
         for iy in range(n_tiles):
-            # The seed here is augmented by k+1 rather than the usual k, since we already
-            # used a seed for the power spectrum above.
-            rng = galsim.BaseDeviate(random_seed+k+1)
+            ix_list.append(ix)
+            iy_list.append(iy)
+    # This next function will use the given random number generator, rng, and use it to
+    # randomly permute any number of lists.  All lists will have the same random permutation
+    # applied.
+    galsim.random.permute(rng, ix_list, iy_list)
 
-            # Determine the bounds for this stamp and its center position.
-            b = galsim.BoundsI(ix*stamp_size+1 , (ix+1)*stamp_size, 
-                               iy*stamp_size+1 , (iy+1)*stamp_size)
-            sub_gal_image = gal_image[b]
-            sub_psf_image = psf_image[b]
+    # Build each postage stamp:
+    for k in range(nobj):
+        # The usual random number generator using a different seed for each galaxy.
+        rng = galsim.BaseDeviate(random_seed+k)
 
-            pos = b.center() - im_center
-            pos = galsim.PositionD(pos.x * pixel_scale , pos.y * pixel_scale)
-            # The image comes out as about 211 arcsec across, so we define our variable
-            # parameters in terms of (r/100 arcsec), so roughly the scale size of the image.
-            r = math.sqrt(pos.x**2 + pos.y**2) / 100
-            psf_fwhm = 0.9 + 0.5 * r**2   # arcsec
-            psf_e = 0.4 * r**1.5
-            psf_beta = (math.atan2(pos.y,pos.x) + math.pi/2) * galsim.radians
+        # Determine the bounds for this stamp and its center position.
+        ix = ix_list[k]
+        iy = iy_list[k]
+        b = galsim.BoundsI(ix*stamp_size+1 , (ix+1)*stamp_size, 
+                           iy*stamp_size+1 , (iy+1)*stamp_size)
+        sub_gal_image = gal_image[b]
+        sub_psf_image = psf_image[b]
 
-            # Define the PSF profile
-            psf = galsim.Gaussian(fwhm=psf_fwhm)
-            psf.applyShear(e=psf_e, beta=psf_beta)
+        pos = b.center() - im_center
+        pos = galsim.PositionD(pos.x * pixel_scale , pos.y * pixel_scale)
+        # The image comes out as about 211 arcsec across, so we define our variable
+        # parameters in terms of (r/100 arcsec), so roughly the scale size of the image.
+        r = math.sqrt(pos.x**2 + pos.y**2) / 100
+        psf_fwhm = 0.9 + 0.5 * r**2   # arcsec
+        psf_e = 0.4 * r**1.5
+        psf_beta = (math.atan2(pos.y,pos.x) + math.pi/2) * galsim.radians
 
-            # Define the pixel
-            pix = galsim.Pixel(pixel_scale)
+        # Define the PSF profile
+        psf = galsim.Gaussian(fwhm=psf_fwhm)
+        psf.applyShear(e=psf_e, beta=psf_beta)
 
-            # Define the galaxy profile:
-            ud = galsim.UniformDeviate(rng)
-            index = int(ud() * len(gal_list))
-            gal = gal_list[index]
+        # Define the pixel
+        pix = galsim.Pixel(pixel_scale)
 
-            # Apply a random rotation:
-            theta = ud() * 360 * galsim.degrees 
-            # This makes a new copy so we're not changing the object in the gal_list.
-            gal = gal.createRotated(theta)
+        # Define the galaxy profile:
 
-            # Apply the shear from the power spectrum.
-            # Note: numpy likes to access values by [iy,ix]
-            gal.applyShear(g1 = grid_g1[iy,ix], g2 = grid_g2[iy,ix])
+        # For this demo, we are doing a ring test where the same galaxy profile is drawn at many
+        # orientations stepped uniformly in angle, making a ring in e1-e2 space.
+        # We're drawing each profile at 20 different orientations and then skipping to the
+        # next galaxy in the list.  So theta steps by 1/20 * 360 degrees:
+        theta = k/20. * 360. * galsim.degrees
 
-            # Note: another way to access this after having built the g1,g2 grid
-            # is to use ps.getShear(pos) which just returns a single shear for that position.
-            # The provided position does not have to be on the original grid, but it does
-            # need to be contained within the bounds of the full grid. 
-            # i.e. only interpolation is allowed -- not extrapolation.
-            alt_g1,alt_g2 = ps.getShear(pos)
+        # The index needs to increment every 20 objects so we use k/20 using integer math.
+        index = k / 20
+        gal = gal_list[index]
 
-            # These assert statements demonstrate the the values agree to 1.e-15.
-            # (They might not be exactly equal due to machine rounding, but close enough.)
-            assert math.fabs(alt_g1 - grid_g1[iy,ix]) < 1.e-15
-            assert math.fabs(alt_g2 - grid_g2[iy,ix]) < 1.e-15
+        # This makes a new copy so we're not changing the object in the gal_list.
+        gal = gal.createRotated(theta)
 
-            # Apply a random shift within a square box the size of a pixel
-            dx = (ud()-0.5) * pixel_scale
-            dy = (ud()-0.5) * pixel_scale
-            gal.applyShift(dx,dy)
+        # Apply the shear from the power spectrum.
+        # Note: numpy likes to access values by [iy,ix]
+        gal.applyShear(g1 = grid_g1[iy,ix], g2 = grid_g2[iy,ix])
 
-            # Make the final image, convolving with psf and pix
-            final = galsim.Convolve([psf,pix,gal])
+        # Note: another way to access this after having built the g1,g2 grid
+        # is to use ps.getShear(pos) which just returns a single shear for that position.
+        # The provided position does not have to be on the original grid, but it does
+        # need to be contained within the bounds of the full grid. 
+        # i.e. only interpolation is allowed -- not extrapolation.
+        alt_g1,alt_g2 = ps.getShear(pos)
 
-            # Draw the image
-            final.draw(sub_gal_image)
+        # These assert statements demonstrate the the values agree to 1.e-15.
+        # (They might not be exactly equal due to numerical rounding errors, but close enough.)
+        assert math.fabs(alt_g1 - grid_g1[iy,ix]) < 1.e-15
+        assert math.fabs(alt_g2 - grid_g2[iy,ix]) < 1.e-15
 
-            # Now determine what we need to do to get our desired S/N
-            # See demo5.py for the math behind this calculation.
-            sky_level_pix = sky_level * pixel_scale**2
-            sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
-            flux = gal_signal_to_noise / sn_meas
-            sub_gal_image *= flux
+        # Apply half-pixel shift in a random direction.
+        shift_r = pixel_scale * 0.5
+        ud = galsim.UniformDeviate(rng)
+        theta = ud() * 2. * math.pi
+        dx = shift_r * math.cos(theta)
+        dy = shift_r * math.sin(theta)
+        gal.applyShift(dx,dy)
 
-            # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
-            # so it will be part of the same stream of random numbers as ud and gd.
-            sub_gal_image += sky_level_pix
-            sub_gal_image.addNoise(galsim.CCDNoise(rng))
-            sub_gal_image -= sky_level_pix
+        # Make the final image, convolving with psf and pix
+        final = galsim.Convolve([psf,pix,gal])
 
-            # Draw the PSF image:
-            # We use real space convolution to avoid some of the 
-            # artifacts that can show up with Fourier convolution.
-            # The level of the artifacts is quite low, but when drawing with
-            # no noise, they are apparent with ds9's zscale viewing.
-            final_psf = galsim.Convolve([psf,pix], real_space=True)
+        # Draw the image
+        final.draw(sub_gal_image)
 
-            # For the PSF image, we also shift the PSF by the same amount.
-            final_psf.applyShift(dx,dy)
+        # Now determine what we need to do to get our desired S/N
+        # See demo5.py for the math behind this calculation.
+        sky_level_pix = sky_level * pixel_scale**2
+        sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
+        flux_scaling = gal_signal_to_noise / sn_meas
+        sub_gal_image *= flux_scaling
 
-            # No noise on PSF images.  Just draw it as is.
-            final_psf.draw(sub_psf_image)
+        # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
+        # so it will be part of the same stream of random numbers as ud above.
+        sub_gal_image += sky_level_pix
+        sub_gal_image.addNoise(galsim.CCDNoise(rng))
+        sub_gal_image -= sky_level_pix
 
-            logger.info('Galaxy (%d,%d): position relative to center = %s', ix,iy,str(pos))
-            k = k+1
+        # Draw the PSF image:
+        # We use real space convolution to avoid some of the 
+        # artifacts that can show up with Fourier convolution.
+        # The level of the artifacts is quite low, but when drawing with
+        # no noise, they are apparent with ds9's zscale viewing.
+        final_psf = galsim.Convolve([psf,pix], real_space=True)
+
+        # For the PSF image, we also shift the PSF by the same amount.
+        final_psf.applyShift(dx,dy)
+
+        # No noise on PSF images.  Just draw it as is.
+        final_psf.draw(sub_psf_image)
+
+        logger.info('Galaxy (%d,%d): position relative to center = %s', ix,iy,str(pos))
 
     logger.info('Done making images of postage stamps')
 

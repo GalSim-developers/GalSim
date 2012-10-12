@@ -88,11 +88,8 @@ class RealGalaxyCatalog(object):
             print e
             raise RuntimeError("Unable to read real galaxy catalog %s."%self.file_name)
 
-        if preload:
-            self.preload()
-            self.preloaded = True
-        else:
-            self.preloaded = False
+        self.preloaded = False
+        self.do_preload = preload
 
         # eventually I think we'll want information about the training dataset, 
         # i.e. (dataset, ID within dataset)
@@ -139,6 +136,8 @@ class RealGalaxyCatalog(object):
         import pyfits
         import os
         import numpy
+        if self.do_preload and not self.preloaded:
+            self.preload()
         if self.preloaded:
             array = self.loaded_files[self.gal_file_name[i]][self.gal_hdu[i]].data
         else:
@@ -155,6 +154,8 @@ class RealGalaxyCatalog(object):
         import pyfits
         import os
         import numpy
+        if self.do_preload and not self.preloaded:
+            self.preload()
         if self.preloaded:
             array = self.loaded_files[self.PSF_file_name[i]][self.PSF_hdu[i]].data
         else:

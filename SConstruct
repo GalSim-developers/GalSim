@@ -1298,6 +1298,8 @@ if not GetOption('help'):
     else:
         python = env['PYTHON']
         python = which(python)
+        if python == None:
+            ErrorExit('Specified python not found in path: %s' % env['PYTHON'])
     print 'Using python = ',python
     env['PYTHON'] = python
 

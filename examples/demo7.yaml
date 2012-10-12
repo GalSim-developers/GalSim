@@ -18,9 +18,9 @@
 # - obj type : List (items)
 # - obj type : Airy (lam_over_diam)
 # - obj : dilate
-# - value type : Sequence (first, last, repeat)
+# - value type : Sequence (..., repeat)
 # - value type : Random (min, max)
-# - image type : Tiled : xborder
+# - image type : Tiled (..., stamp_size, xborder, yborder)
 # - image : draw_method (fft or phot)
 
 
@@ -78,9 +78,10 @@ gal :
                 - { type : Sersic , n : 1.5 , half_light_radius : 1.2 , flux : 0.6 }
     index :
         type : Sequence
-        first : 0
-        last : 4
-        repeat : 8  # This will repeat each 8 times, but also go through the full list 5 times
+        # The index item for a List automatically has first and last set appropriately
+        # (0 and 4 in this case).  So we can omit them, and just specify repeat.
+        # This will repeat each 8 times, but also go through the full list 5 times
+        repeat : 8 
 
     flux : { type : Random , min : 1.e4 , max : 1.e5 }
     dilate : { type : Random , min : 0.3 , max : 1.3 }
@@ -96,10 +97,15 @@ image :
     type : Tiled
     nx_tiles : 2
     ny_tiles : 1
-    xborder : 2  # 2 pixel border between fft and phot images
 
-    stamp_xsize : 64
-    stamp_ysize : 64
+    # Use a 2 pixel border between fft and phot images.
+    # Rather than specify a single border for both directions, you can also specify
+    # xborder and/or yborder separately.  Here we use xborder.
+    xborder : 2
+
+    # Rather than specify stamp_xsize and stamp_ysize separately, you can also just
+    # specify a single stamp_size.
+    stamp_size : 64
 
     pixel_scale : 0.28  # arcsec / pixel
 
@@ -134,8 +140,6 @@ image :
 # Define the name and format of the output file
 output :
     type : DataCube
-
     dir : output_yaml
     file_name : cube_phot.fits
-    
     nimages : 100

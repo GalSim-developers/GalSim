@@ -24,7 +24,7 @@
 "#" : "- obj : rotate ",
 "#" : "- obj : magnify",
 "#" : "- image : sky_level",
-"#" : "- value type : Sequence",
+"#" : "- value type : Sequence (first, last, step)",
 "#" : "- output type : DataCube (file_name, dir, nimages)",
 "#" : "- Using JSON's multiple document feature to do more than one thing",
 

@@ -16,14 +16,16 @@
 #
 # New features introduced in this demo:
 #
-# - obj type : Moffat (beta, fwhm, trunc)
+# - obj type : Moffat (..., trunc)
 # - obj type : DeVaucouleurs (flux, half_light_radius)
 # - value type : InputCatalog (col)
 # - shift type : XY (x, y)
 # - shear type : E1E2 (e1, e2)
 # - image : xsize, ysize
+# - top level field input
 # - input : catalog (file_name, dir)
 # - output type : MultiFits (file_name, dir)
+#
 # - Using both ellip and shear for the same object
 # - Using variables in a YAML file
  
@@ -145,6 +147,7 @@ input :
 
 # Define the name and format of the output file
 output :
+
     # type = MultiFits means to use a multi-extension fits file
     type : MultiFits
 
@@ -154,5 +157,5 @@ output :
     # You can specify how many extensions to write to the file with nimages, 
     # but in this case, since we are using an input catalog, the default 
     # value is to do the number of entries in the catalog.
-    #nimages = 100
+    #nimages : 100
 

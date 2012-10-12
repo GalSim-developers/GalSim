@@ -9,12 +9,11 @@
 # do the same thing as these demo*.yaml files directly in python.  Now we turn the tables
 # and show how to use some of the machinery in the GalSim configuration processing 
 # from within python itself.  As such, this config file doesn't add much in the way
-# of new features.  The main one is the ability to build an image using multiple processes.
+# of new features -- just the ability to build an image using multiple processes.
 # We build the same image using a single process and again using 4 processes.
 #
 # New features introduced in this demo:
 #
-# - image type : Tiled : stamp_size
 # - image : nproc
 
 

@@ -78,38 +78,69 @@ class PowerSpectrum(object):
     single argument k and return the power at that k value.  They should be power P(k), not
     Delta^2(k) = k^2 P(k) / 2pi.
 
-    @param E_power_function A function or other callable that accepts a Numpy array of |k| values,
+    @param e_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the E-mode power spectrum P_E(|k|) in an array of the same
                             shape.  It should cope happily with |k|=0.  The function should return
                             the power spectrum desired in the E (gradient) mode of the image.  Set
                             to None (default) for there to be no E-mode power.
-    @param B_power_function A function or other callable that accepts a Numpy array of |k| values,
+                            It may also be a string that can be converted to a function using
+                            eval('lambda k : ' + e_power_function)
+    @param b_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the B-mode power spectrum P_B(|k|) in an array of the same
                             shape.  It should cope happily with |k|=0.  The function should return
                             the power spectrum desired in the B (curl) mode of the image.  Set to
                             None (default) for there to be no B-mode power.
+                            It may also be a string that can be converted to a function using
+                            eval('lambda k : ' + b_power_function)
     @param units            The angular units used for the power spectrum (i.e. the units of 
                             k^-1).  Currently only arcsec is implemented.
     """
-    def __init__(self, E_power_function=None, B_power_function=None, units=galsim.arcsec):
-        self.p_E = E_power_function
-        self.p_B = B_power_function
+    _req_params = {}
+    _opt_params = { 'e_power_function' : str, 'b_power_function' : str }
+    _single_params = []
+    def __init__(self, e_power_function=None, b_power_function=None, units=galsim.arcsec):
+        # Check that the power functions are valid:
+        for pf_str in [ 'e_power_function', 'b_power_function' ]:
+            pf = eval(pf_str)
+            if pf is not None:
+                if isinstance(pf,str):
+                    try : 
+                        pf = eval('lambda k : ' + pf)
+                    except :
+                        raise AttributeError(
+                            "Unable to turn %s = %s into a valid function"%(pf_str,pf))
+                try:
+                    f1 = pf(1.)
+                except:
+                    raise AttributeError("%s is not a valid function"%pf_str)
+                try:
+                    f0 = pf(0.)
+                except:
+                    raise AttributeError("%s is not well-behaved at k=0"%pf_str)
+
+        # Check that at least one is not None
+        if e_power_function is None and b_power_function is None:
+            raise AttributeError(
+                "At least one of e_power_function or b_power_function must be provided.")
+                
+        self.p_E = e_power_function
+        self.p_B = b_power_function
         if units is not galsim.arcsec:
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
 
-    def set_power_functions(self, E_power_function=None, B_power_function=None,
+    def set_power_functions(self, e_power_function=None, b_power_function=None,
                             units=galsim.arcsec):
         """Set / change the functions that compute the E and B mode power spectra.
 
-        @param E_power_function See description of this parameter in the documentation for the
+        @param e_power_function See description of this parameter in the documentation for the
                                 PowerSpectrum class.
-        @param B_power_function See description of this parameter in the documentation for the
+        @param b_power_function See description of this parameter in the documentation for the
                                 PowerSpectrum class.
         @param units            See description of this parameter in the documentation for the
                                 PowerSpectrum class.
         """
-        self.p_E = E_power_function
-        self.p_B = B_power_function
+        self.p_E = e_power_function
+        self.p_B = b_power_function
         if units is not galsim.arcsec:
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
 
@@ -249,7 +280,7 @@ class PowerSpectrum(object):
         # Convert to numpy arrays for internal usage:
         if pos is not None:
             pos_x, pos_y = _convertPositions(pos, 'getShear')
-            if grid_spacing is None and not hasattr(self,'sbii_g1'):
+            if grid_spacing is None and not hasattr(self,'im_g1'):
                 raise AttributeError(
                     "Calling PowerSpectrum.getShear without grid parameters, and " +
                     "no grid previously set up.")
@@ -297,17 +328,15 @@ class PowerSpectrum(object):
 
         # Build the grid if requested.
         if grid_spacing is not None:
-            self.psr = PowerSpectrumRealizer(grid_nx, grid_nx, grid_spacing, self.p_E, self.p_B)
-            self.grid_g1, self.grid_g2 = self.psr(gd)
+            psr = PowerSpectrumRealizer(grid_nx, grid_nx, grid_spacing, self.p_E, self.p_B)
+            self.grid_g1, self.grid_g2 = psr(gd)
             
             # Setup interpolated images
             self.im_g1 = galsim.ImageViewD(self.grid_g1)
             self.im_g1.setScale(grid_spacing)
-            self.sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp = interpolantxy)
 
             self.im_g2 = galsim.ImageViewD(self.grid_g2)
             self.im_g2.setScale(grid_spacing)
-            self.sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp = interpolantxy)
 
             # Dealing with the center here is a bit confusing, especially if grid_nx is even.
             # The InterpolatedImage will consider position (0,0) to correspond to 
@@ -327,8 +356,8 @@ class PowerSpectrum(object):
 
             # Construct a bounds that we can use to check if a provided position will
             # end up falling on the interpolating image.
-            self.bounds = galsim.BoundsD(b.xMin*grid_spacing, b.xMax*grid_spacing,
-                                         b.yMin*grid_spacing, b.yMax*grid_spacing)
+            self.bounds = galsim.BoundsD((b.xmin-0.5)*grid_spacing, (b.xmax+0.5)*grid_spacing,
+                                         (b.ymin-0.5)*grid_spacing, (b.ymax+0.5)*grid_spacing)
             self.bounds.shift(-nominal_center - self.offset)
 
         if pos is None:
@@ -347,8 +376,10 @@ class PowerSpectrum(object):
                     g1.append(0.)
                     g2.append(0.)
                 else:
-                    g1.append(self.sbii_g1.xValue(pos+self.offset))
-                    g2.append(self.sbii_g2.xValue(pos+self.offset))
+                    sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp = interpolantxy)
+                    sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp = interpolantxy)
+                    g1.append(sbii_g1.xValue(pos+self.offset))
+                    g2.append(sbii_g2.xValue(pos+self.offset))
             if len(pos_x) == 1:
                 return g1[0], g2[0]
             else:
@@ -366,14 +397,14 @@ class PowerSpectrumRealizer(object):
     @param ny               The y-dimension of the desired image.
     @param pixel_size       The size of the pixel sides, in units consistent with the units expected
                             by the power spectrum functions.
-    @param E_power_function See description of this parameter in the documentation for the
+    @param e_power_function See description of this parameter in the documentation for the
                             PowerSpectrum class.
-    @param B_power_function See description of this parameter in the documentation for the
+    @param b_power_function See description of this parameter in the documentation for the
                             PowerSpectrum class.
     """
-    def __init__(self, nx, ny, pixel_size, E_power_function, B_power_function):
+    def __init__(self, nx, ny, pixel_size, e_power_function, b_power_function):
         self.set_size(nx, ny, pixel_size, False)
-        self.set_power(E_power_function, B_power_function)
+        self.set_power(e_power_function, b_power_function)
         
     def set_size(self, nx, ny, pixel_size, remake_power=True):
         """Change the size of the array you want to simulate.
@@ -409,11 +440,17 @@ class PowerSpectrumRealizer(object):
         
         This function re-generates the grids that the power spectrum is computed over.
         
-        @param p_E See description of the E_power_function parameter in the documentation for the
+        @param p_E See description of the e_power_function parameter in the documentation for the
                    PowerSpectrum class.
-        @param p_B See description of the B_power_function parameter in the documentation for the
+        @param p_B See description of the b_power_function parameter in the documentation for the
                    PowerSpectrum class.
         """
+        # Convert from strings if necessary
+        if p_E is not None and isinstance(p_E,str):
+            p_E = eval('lambda k : ' + p_E)
+        if p_B is not None and isinstance(p_B,str):
+            p_B = eval('lambda k : ' + p_B)
+
         self.p_E = p_E
         self.p_B = p_B
         if p_E is None:  self.amplitude_E = None

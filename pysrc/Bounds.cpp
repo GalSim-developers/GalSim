@@ -74,10 +74,10 @@ struct PyBounds {
             .def("assign", &Bounds<T>::operator=, bp::return_self<>())
             .enable_pickling()
             ;
-        ADD_CORNER(getXMin, setXMin, xMin);
-        ADD_CORNER(getXMax, setXMax, xMax);
-        ADD_CORNER(getYMin, setYMin, yMin);
-        ADD_CORNER(getYMax, setYMax, yMax);
+        ADD_CORNER(getXMin, setXMin, xmin);
+        ADD_CORNER(getXMax, setXMax, xmax);
+        ADD_CORNER(getYMin, setYMin, ymin);
+        ADD_CORNER(getYMax, setYMax, ymax);
     }
 
 };

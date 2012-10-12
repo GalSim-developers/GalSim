@@ -56,7 +56,7 @@ def main(argv):
     nobj = 20  # number of objects to draw for each file
 
     image_size = 512       # pixels
-    pixel_scale = 0.19     # arcsec / pixel
+    pixel_scale = 0.20     # arcsec / pixel
     sky_level = 1.e6       # ADU / arcsec^2
 
     psf_fwhm = 0.5         # arcsec
@@ -256,14 +256,14 @@ def main(argv):
         dir = os.path.join('output',dir_name)
         if not os.path.isdir(dir): os.mkdir(dir)
         for j in range(nfiles):
-            file_name = "cluster%04d.fits"%(j+1)
+            file_name = "cluster%04d.fits"%j
             full_name = os.path.join(dir,file_name)
             # We put on the task queue the args to the buld_file function and
             # some extra info to pass through to the output queue.
             # Our extra info is just the file name that we use to write out which file finished.
             task_queue.put( ( (seed, full_name, mass), full_name ) )
             # Need to step by the number of galaxies in each file.
-            seed += nobj+1
+            seed += nobj
 
     # Run the tasks
     # Each Process command starts up a parallel process that will keep checking the queue 

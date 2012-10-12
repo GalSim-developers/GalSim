@@ -77,7 +77,7 @@ for Class in _galsim.ImageView.itervalues():
 
     From Python, the only way to explicitly construct an ImageView is
 
-        >>> imv = ImageView(array, xMin=1, yMin=1)       # numpy array and origin
+        >>> imv = ImageView(array, xmin=1, ymin=1)       # numpy array and origin
 
     However, ImageView instances are also the return type of several functions such as
 
@@ -116,7 +116,7 @@ for Class in _galsim.ConstImageView.itervalues():
 
     From Python, the only way to explicitly construct an ConstImageView is
 
-        >>> cimv = ConstImageView(array, xMin=1, yMin=1)       # NumPy array and origin
+        >>> cimv = ConstImageView(array, xmin=1, ymin=1)       # NumPy array and origin
 
     which works just like the version for ImageView except that the resulting object cannot be used
     to modify the array.
@@ -243,11 +243,11 @@ def Image_copy(self):
 
 # Some functions to enable pickling of images
 def ImageView_getinitargs(self):
-    return self.array, self.xMin, self.yMin
+    return self.array, self.xmin, self.ymin, self.scale
 
 # An image is really pickled as an ImageView
 def Image_getstate(self):
-    return self.array, self.xMin, self.yMin
+    return self.array, self.xmin, self.ymin, self.scale
 
 def Image_setstate(self, args):
     type = args[0].dtype.type

@@ -2,7 +2,6 @@
 import numpy as np
 import os
 import sys
-import math
 
 try:
     import galsim
@@ -18,24 +17,18 @@ def funcname():
 def gsobject_compare(obj1, obj2, conv=False):
     """Helper function to check that two GSObjects are equivalent
     """
-    #print 'gsobject_compare ',obj1,obj2,conv
     # For difficult profiles, convolve by a gaussian to smooth out the profile.
     # This makes the comparison much faster without changing the validity of the test.
     if conv:
-        #print 'convolve by gaussian'
         gauss = galsim.Gaussian(sigma=2)
         obj1 = galsim.Convolve([obj1,gauss])
         obj2 = galsim.Convolve([obj2,gauss])
 
     im1 = galsim.ImageF(16,16)
     im2 = galsim.ImageF(16,16)
-    #print 'before draw'
     obj1.draw(dx=0.2, image=im1)
-    #print 'after draw1'
     obj2.draw(dx=0.2, image=im2)
-    #print 'after draw2'
     np.testing.assert_array_almost_equal(im1.array, im2.array, 9)
-    #print 'after test'
 
 
 def test_gaussian():
@@ -501,21 +494,25 @@ def test_realgalaxy():
     real_cat = galsim.RealGalaxyCatalog(
         image_dir=real_gal_dir, file_name=real_gal_cat, preload=True)
 
+    config['seq_index'] = 0
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b = galsim.RealGalaxy(real_cat, index=0)
     gsobject_compare(gal1a, gal1b, True)
 
+    config['seq_index'] = 1
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
     gal2b = galsim.RealGalaxy(real_cat, index = 23)
     gal2b.setFlux(100)
     gsobject_compare(gal2a, gal2b, True)
 
+    config['seq_index'] = 2
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.RealGalaxy(real_cat, index = 17)
     gal3b.setFlux(1.e6)
     gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b, True)
 
+    config['seq_index'] = 3
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.RealGalaxy(real_cat, index = 5)
     gal4b.setFlux(50)
@@ -707,19 +704,23 @@ def test_list():
         }
     }
 
+    config['seq_index'] = 0
     gal = galsim.config.BuildGSObject(config, 'gal')[0]
     gal1b = galsim.Gaussian(sigma = 2)
     gsobject_compare(gal, gal1b)
 
+    config['seq_index'] = 1
     gal = galsim.config.BuildGSObject(config, 'gal')[0]
     gal2b = galsim.Gaussian(fwhm = 2, flux = 100)
     gsobject_compare(gal, gal2b)
 
+    config['seq_index'] = 2
     gal = galsim.config.BuildGSObject(config, 'gal')[0]
     gal3b = galsim.Gaussian(half_light_radius = 2, flux = 1.e6)
     gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal, gal3b)
 
+    config['seq_index'] = 3
     gal = galsim.config.BuildGSObject(config, 'gal')[0]
     gal4b = galsim.Gaussian(sigma = 1, flux = 50)
     gal4b.applyDilation(3)
@@ -729,6 +730,90 @@ def test_list():
     gal4b.applyShear(g1 = 0.03, g2 = -0.05)
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal, gal4b)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_ring():
+    """Test building a GSObject from a ring test:
+    """
+    import time
+    t1 = time.time()
+
+    config = {
+        'gal' : { 
+            'type' : 'Ring' ,
+            'num' : 2,
+            'first' : { 
+                'type' : 'Gaussian' ,
+                'sigma' : 2 , 
+                'ellip' : {
+                    'type' : 'E1E2',
+                    'e1' : { 'type' : 'List' ,
+                             'items' : [ 0.3, 0.2, 0.8 ],
+                             'index' : { 'type' : 'Sequence', 'repeat' : 2 } },
+                    'e2' : 0.1
+                }
+            }
+        }
+    }
+
+    gauss = galsim.Gaussian(sigma=2)
+    e1_list = [ 0.3, -0.3, 0.2, -0.2, 0.8, -0.8 ]
+    e2_list = [ 0.1, -0.1, 0.1, -0.1, 0.1, -0.1 ]
+
+    for k in range(6):
+        config['seq_index'] = k
+        gal = galsim.config.BuildGSObject(config, 'gal')[0]
+        gal1 = gauss.createSheared(e1=e1_list[k], e2=e2_list[k])
+        gsobject_compare(gal, gal1)
+
+    config = {
+        'gal' : {
+            'type' : 'Ring' ,
+            'num' : 10,
+            'first' : { 'type' : 'Exponential', 'half_light_radius' : 2,
+                        'ellip' : galsim.Shear(e2=0.3) },
+        }
+    }
+
+    disk = galsim.Exponential(half_light_radius=2)
+    disk.applyShear(e2=0.3)
+
+    for k in range(25):
+        config['seq_index'] = k
+        gal = galsim.config.BuildGSObject(config, 'gal')[0]
+        gal2 = disk.createRotated(theta = k * 18 * galsim.degrees)
+        gsobject_compare(gal, gal2)
+
+    config = {
+        'gal' : {
+            'type' : 'Ring' ,
+            'num' : 20,
+            'full_rotation' : 360. * galsim.degrees,
+            'first' : { 
+                'type' : 'Sum',
+                'items' : [
+                    { 'type' : 'Exponential', 'half_light_radius' : 2,
+                      'ellip' : galsim.Shear(e2=0.3) },
+                    { 'type' : 'Sersic', 'n' : 3, 'half_light_radius' : 1.3, 
+                      'ellip' : galsim.Shear(e1=0.12,e2=-0.08) } 
+                ]
+            }
+        }
+    }
+
+    disk = galsim.Exponential(half_light_radius=2)
+    disk.applyShear(e2=0.3)
+    bulge = galsim.Sersic(n=3,half_light_radius=1.3)
+    bulge.applyShear(e1=0.12,e2=-0.08)
+    sum = disk + bulge
+
+    for k in range(25):
+        config['seq_index'] = k
+        gal = galsim.config.BuildGSObject(config, 'gal')[0]
+        gal3 = sum.createRotated(theta = k * 18 * galsim.degrees)
+        gsobject_compare(gal, gal3)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -747,5 +832,6 @@ if __name__ == "__main__":
     test_add()
     test_convolve()
     test_list()
+    test_ring()
 
 

@@ -171,10 +171,10 @@ namespace galsim {
         /**
          *  @brief Shift the bounding box of the image, changing the logical location of the pixels.
          *
-         *  xMin_new = xMin + dx
-         *  xMax_new = xMax + dx
-         *  yMin_new = yMin + dy
-         *  yMax_new = yMax + dy
+         *  xmin_new = xmin + dx
+         *  xmax_new = xmax + dx
+         *  ymin_new = ymin + dy
+         *  ymax_new = ymax + dy
          */
         void shift(int dx, int dy) { this->_bounds.shift(dx, dy); }
 
@@ -183,10 +183,10 @@ namespace galsim {
          *
          *  (x0,y0) becomes the new lower-left corner of the image.
          *
-         *  xMin_new = x0
-         *  xMax_new = x0 + xMax - xMin
-         *  yMin_new = y0
-         *  yMax_new = y0 + yMax - yMin
+         *  xmin_new = x0
+         *  xmax_new = x0 + xmax - xmin
+         *  ymin_new = y0
+         *  ymax_new = y0 + ymax - ymin
          */
         void setOrigin(int x0, int y0) { shift(x0 - this->getXMin(), y0 - this->getYMin()); }
 
@@ -202,10 +202,10 @@ namespace galsim {
          *  If the x range is even, then the new center will be x0 + 1/2.
          *  Likewisw for y.
          *
-         *  xMin_new = x0 - (xMax - xMin)/2
-         *  xMax_new = xMin_new + xMax - xMin
-         *  yMin_new = y0 - (yMax - yMin)/2
-         *  yMax_new = yMin_new + yMax - yMin
+         *  xmin_new = x0 - (xmax - xmin)/2
+         *  xmax_new = xmin_new + xmax - xmin
+         *  ymin_new = y0 - (ymax - ymin)/2
+         *  ymax_new = ymin_new + ymax - ymin
          */
         void setCenter(int x0, int y0) 
         { 

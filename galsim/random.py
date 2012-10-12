@@ -4,6 +4,29 @@ Addition of docstrings to the Random deviate classes at the Python layer.
 """
 from . import _galsim
 
+def permute(rng, *args):
+    """Randomly permute one or more lists.
+
+    If more than one list is given, then all lists will have the same random permutation 
+    applied to it.
+
+    @param rng    The random number generator to use. (This will be converted to a UniformDeviate.)
+    @param args   Any number of lists to be permuted.
+    """
+    ud = _galsim.UniformDeviate(rng)
+    if len(args) == 0: return
+
+    # We use an algorithm called the Knuth shuffle, which is based on the Fisher-Yates shuffle.
+    # See http://en.wikipedia.org/wiki/Fisher-Yates_shuffle for more information.
+    n = len(args[0])
+    for i in range(n-1,1,-1):
+        j = int((i+1) * ud())
+        if j == i+1: j = i  # I'm not sure if this is possible, but just in case...
+        for list in args:
+            list[i], list[j] = list[j], list[i]
+
+
+
 # BaseDeviate docstrings
 _galsim.BaseDeviate.__doc__ = """
 Base class for all the various random deviates.
@@ -605,3 +628,4 @@ Returns a Chi2-distributed deviate with current n degrees of freedom.
 """
 _galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution n degrees of freedom."
 _galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution n degrees of freedom."
+
