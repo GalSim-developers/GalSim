@@ -176,13 +176,16 @@ def main(argv):
 
         # Define the galaxy profile:
 
-        # We're doing a ring test with 20 objects per ring, so the index is k/20 using
-        # integer math.
+        # For this demo, we are doing a ring test where the same galaxy profile is drawn at many
+        # orientations stepped uniformly in angle, making a ring in e1-e2 space.
+        # We're drawing each profile at 20 different orientations and then skipping to the
+        # next galaxy in the list.  So theta steps by k/20 * 360 degrees:
+        theta = k/20. * 360. * galsim.degrees
+
+        # The index needs to increment every 20 objects so we use k/20 using integer math.
         index = k / 20
         gal = gal_list[index]
 
-        # Apply the rotation for the ring test: (k mod 20)/20 * 360 degrees
-        theta = (k % 20)/20. * 360. * galsim.degrees 
         # This makes a new copy so we're not changing the object in the gal_list.
         gal = gal.createRotated(theta)
 

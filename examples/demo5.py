@@ -10,8 +10,9 @@ We produce a single image made up of tiles of postage stamps for each individual
 Each postage stamp is 40 x 40 pixels.  One image is all stars.  A second image is all galaxies.
 The stars are truncated Moffat profiles.  The galaxies are Exponential profiles.
 (Great08 mixed pure bulge and pure disk for its LowNoise run.  We're just doing disks to 
-make things simpler.)  The galaxies are oriented randomly, but in 90 degree-rotated pairs to 
-cancel the effect of shape noise.  The applied shear is the same for each galaxy.  
+make things simpler. However see demo3 for an example of using bulge+disk galaxies.)
+The galaxies are oriented randomly, but in 90 degree-rotated pairs to cancel the effect of
+shape noise.  The applied shear is the same for each galaxy.
 
 New features introduced in this demo:
 

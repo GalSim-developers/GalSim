@@ -74,7 +74,12 @@
 "#" : "Define the galaxy profile",
 "gal" :{
     "type" : "Ring",
+
+    "#" : "Last time we used Ring (demo5), we had num=2 to make pairs of 90 degree rotated",
+    "#" : "galaxies.  This example is more like a typical ring test where the same galaxy profile",
+    "#" : "is drawn at many orientations stepped uniformly in angle, making a ring in e1-e2 space.",
     "num" : 20,
+
     "first" : {
         "type" : "RealGalaxy",
         "id" : {
@@ -87,7 +92,8 @@
             "index" : { "type" : "Sequence" , "repeat" : 20 }
         },
 
-        "#" : "Make the galaxies a factor of 3 larger than their original observed size.",
+        "#" : "Make the galaxies a factor of 3 larger (in linear size, not area) than their",
+        "#" : "original observed size.",
         "dilation" : 3
     },
 

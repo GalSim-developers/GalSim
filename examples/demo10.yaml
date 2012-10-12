@@ -66,7 +66,12 @@ psf :
 # Define the galaxy profile
 gal :
     type : Ring
+
+    # Last time we used Ring (demo5), we had num=2 to make pairs of 90 degree rotated
+    # galaxies.  This example is more like a typical ring test where the same galaxy profile
+    # is drawn at many orientations stepped uniformly in angle, making a ring in e1-e2 space.
     num : &num_in_ring 20
+
     first :
         type : RealGalaxy
         id : 
@@ -79,7 +84,9 @@ gal :
             # We again use the convenient YAML variable name notation to do so.
             index : { type : Sequence , repeat : *num_in_ring }
 
-        dilation : 3  # Make the galaxies a factor of 3 larger than their original observed size.
+        # Make the galaxies a factor of 3 larger (in linear size, not area) than their
+        # original observed size.
+        dilation : 3
 
     # If your underlying galaxy (defined in first) has rotational symmetry (e.g. a sheared 
     # exponential profile), then you would typically want the full rotation spanned by the 
