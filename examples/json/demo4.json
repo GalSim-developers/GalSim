@@ -16,12 +16,13 @@
 
 "#" : "New features introduced in this demo:",
 
-"#" : "- obj type : Moffat (beta, fwhm, trunc)",
+"#" : "- obj type : Moffat (..., trunc)",
 "#" : "- obj type : DeVaucouleurs (flux, half_light_radius)",
 "#" : "- value type : InputCatalog (col)",
 "#" : "- shift type : XY (x, y)",
 "#" : "- shear type : E1E2 (e1, e2)",
 "#" : "- image : xsize, ysize",
+"#" : "- top level field input",
 "#" : "- input : catalog (file_name, dir)",
 "#" : "- output type : MultiFits (file_name, dir)",
 "#" : "- Using both ellip and shear for the same object",

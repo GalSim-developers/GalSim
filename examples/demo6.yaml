@@ -24,7 +24,7 @@
 # - obj : rotate 
 # - obj : magnify
 # - image : sky_level
-# - value type : Sequence
+# - value type : Sequence (first, last, step)
 # - output type : DataCube (file_name, dir, nimages)
 # - Using YAML's multiple document feature to do more than one thing
 
@@ -32,9 +32,8 @@
 # In this file, we use yaml's multiple documents feature.
 # This can be useful if you are doing similar things, but have a couple differences
 # for the different output files.
-# In this case, we output the PSF image as a single-image fits file, 
-# and the galaxies are output as 100 images in both a multi-extension fits file
-# and a fits data cube.
+# In this case, we output the PSF image in the first document, and the data cube of the galaxies
+# in the second document.
 
 # The multiple yaml documents are separated by a line with three dashes "---"
 # The first document has all the parts that are common to all the output files.

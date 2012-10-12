@@ -48,11 +48,16 @@ def BuildGSObject(config, key, base=None):
     if type == 'Sum': type = 'Add'
     if type == 'Convolution': type = 'Convolve'
 
+    # Ring is only allowed for top level gal (since it requires special handling in 
+    # multiprocessing, and that's the only place we look for it currently).
+    if type == 'Ring' and key != 'gal':
+        raise AttributeError("Ring type only allowed for top level gal")
+
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [ 
-        'dilate', 'dilation', #'dilate_mu', 'dilation_mu',
+        'dilate', 'dilation',
         'ellip', 'rotate', 'rotation',
-        'magnify', 'magnification', #'magnify_mu', 'magnification_mu',
+        'magnify', 'magnification',
         'shear', 'shift', 
         'current_val', 'safe' ]
     # There are a few more that are specific to which key we have.
@@ -64,7 +69,31 @@ def BuildGSObject(config, key, base=None):
             galsim.config.ParseValue(ck, 'redshift', base, float)
     elif key == 'psf':
         ignore += [ 'saved_re' ]
+    elif key != 'pix':
+        # As long as key isn't psf or pix, allow resolution.
+        # Ideally, we'd like to check that it's something within the gal hierarchy, but
+        # I don't know an easy way to do that.
+        ignore += [ 'resolution' , 're_from_res' ]
 
+    # If we are specifying the size according to a resolution, then we 
+    # need to get the PSF's half_light_radius.
+    if 'resolution' in ck:
+        if 'psf' not in base:
+            raise AttributeError(
+                "Cannot use gal.resolution if no psf is set.")
+        if 'saved_re' not in base['psf']:
+            raise AttributeError(
+                'Cannot use gal.resolution with psf.type = %s'%base['psf']['type'])
+        psf_re = base['psf']['saved_re']
+        resolution = galsim.config.ParseValue(ck, 'resolution', base, float)[0]
+        gal_re = resolution * psf_re
+        if 're_from_res' not in ck:
+            # The first time, check that half_light_radius isn't also specified.
+            if 'half_light_radius' in ck:
+                raise AttributeError(
+                    'Cannot specify both gal.resolution and gal.half_light_radius')
+            ck['re_from_res'] = True
+        ck['half_light_radius'] = gal_re
 
     # See if this type has a specialized build function:
     build_func_name  = '_Build' + type
@@ -202,6 +231,41 @@ def _BuildList(config, key, base, ignore):
 
     return gsobject, safe
 
+def _BuildRing(config, key, base, ignore):
+    """@brief  Build a GSObject in a Ring
+    """
+    req = { 'num' : int, 'first' : dict }
+    opt = { 'full_rotation' : galsim.Angle }
+    # Only Check, not Get.  We need to handle first a bit differently, since it's a gsobject.
+    galsim.config.CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
+
+    num = galsim.config.ParseValue(config, 'num', base, int)[0]
+    if num <= 0:
+        raise ValueError("Attribute num for gal.type == Ring must be > 0")
+
+    if 'full_rotation' in config:
+        full_rotation = galsim.config.ParseValue(config, 'full_rotation', base, galsim.Angle)[0]
+    else:
+        import math
+        full_rotation = math.pi * galsim.radians
+
+    dtheta = full_rotation / num
+    #print 'dtheta = ',dtheta
+
+    k = base['seq_index']
+    #print 'k = ',k
+    if k % num == 0:
+        #print 'first pass -- rebuilding'
+        # Then this is the first in the Ring.  
+        gsobject = BuildGSObject(config, 'first', base)[0]
+    else:
+        #print 'not first pass rotate by ',dtheta
+        if not isinstance(config['first'],dict) or 'current_val' not in config['first']:
+            raise RuntimeError("Building Ring after the first item, but no current_val stored.")
+        gsobject = config['first']['current_val'].createRotated(k*dtheta)
+
+    return gsobject, False
+
 
 def _BuildPixel(config, key, base, ignore):
     """@brief Build a Pixel type GSObject from user input.
@@ -222,7 +286,7 @@ def _BuildPixel(config, key, base, ignore):
     try:
         return galsim.Pixel(**kwargs), safe
     except Exception, err_msg:
-        raise RuntimeError("Unable to construct Pixel object with kwargs=%s."%str(kwargs) +
+        raise RuntimeError("Unable to construct Pixel object with kwargs=%s.\n"%str(kwargs) +
                            "Original error message: %s"%err_msg)
 
 
@@ -252,7 +316,7 @@ def _BuildRealGalaxy(config, key, base, ignore):
     try:
         return galsim.RealGalaxy(real_cat, **kwargs), safe
     except Exception, err_msg:
-        raise RuntimeError("Unable to construct RealGalaxy object with kwargs=%s."%str(kwargs) +
+        raise RuntimeError("Unable to construct RealGalaxy object with kwargs=%s.\n"%str(kwargs) +
                            "Original error message: %s"%err_msg)
 
 
@@ -273,7 +337,7 @@ def _BuildSimple(config, key, base, ignore):
         init_func = eval("galsim."+type)
         return init_func(**kwargs), safe
     except Exception, err_msg:
-        raise RuntimeError("Unable to construct %s object with kwargs=%s."%(type,str(kwargs)) +
+        raise RuntimeError("Unable to construct %s object with kwargs=%s.\n"%(type,str(kwargs)) +
                            "Original error message: %s"%err_msg)
 
 

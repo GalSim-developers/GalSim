@@ -41,7 +41,7 @@
             "type" : "Sersic",
             "n" : 3.5,
             "half_light_radius" : 2.3,
-	    "#" : "flux here is used to mean fractional flux",
+            "#" : "flux here is used to mean fractional flux",
             "flux" : 0.3 
         }, 
         {

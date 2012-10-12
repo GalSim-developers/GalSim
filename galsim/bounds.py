@@ -5,11 +5,11 @@ A few adjustments to the Bounds class at the Python layer.
 from . import _galsim
 
 def Bounds_repr(self):
-    return (self.__class__.__name__+"(xmin="+str(self.xMin)+", xmax="+str(self.xMax)+
-            ", ymin="+str(self.yMin)+", ymax="+str(self.yMax)+")")
+    return (self.__class__.__name__+"(xmin="+str(self.xmin)+", xmax="+str(self.xmax)+
+            ", ymin="+str(self.ymin)+", ymax="+str(self.ymax)+")")
 
 def Bounds_str(self):
-    return "("+str(self.xMin)+", "+str(self.xMax)+", "+str(self.yMin)+", "+str(self.yMax)+")"
+    return "("+str(self.xmin)+", "+str(self.xmax)+", "+str(self.ymin)+", "+str(self.ymax)+")"
 
 def Bounds_getinitargs(self):
     return self.xmin, self.xmax, self.ymin, self.ymax
@@ -83,7 +83,7 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
 
     Class.addBorder.__func__.__doc__ = """Add a border of the specified width to the Bounds.
 
-    The bounds rectangle must be defined, i.e. xmax > xmin, ymax > min.
+    The bounds rectangle must be defined, i.e. xmax > xmin, ymax > ymin.
     """
 
     Class.center.__func__.__doc__ = "Return the central point of the Bounds as a Position."

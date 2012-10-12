@@ -49,8 +49,8 @@ def ParseValue(config, param_name, base, value_type):
             str : [ 'InputCatalog', 'NumberedFile', 'List', 'Eval' ],
             galsim.Angle : [ 'Rad', 'Deg', 'Random', 'List', 'Eval' ],
             galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
-                             'Ring', 'NFWHaloShear', 'PowerSpectrumShear', 'List', 'Eval' ],
-            galsim.PositionD : [ 'XY', 'RandomCircle', 'List', 'Eval' ] 
+                             'NFWHaloShear', 'PowerSpectrumShear', 'List', 'Eval' ],
+            galsim.PositionD : [ 'XY', 'RTheta', 'RandomCircle', 'List', 'Eval' ] 
         }
 
         type = param['type']
@@ -205,7 +205,7 @@ def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
     safe = True
     for (key, value_type) in sorted(get.items()):
         val, safe1 = ParseValue(param, key, base, value_type)
-        safe = safe1 and safe
+        safe = safe and safe1
         kwargs[key] = val
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
     kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.iteritems()])
@@ -283,6 +283,16 @@ def _GenerateFromXY(param, param_name, base, value_type):
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return galsim.PositionD(**kwargs), safe
 
+def _GenerateFromRTheta(param, param_name, base, value_type):
+    """@brief Return a PositionD constructed from given (r,theta)
+    """
+    req = { 'r' : float, 'theta' : galsim.Angle }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    r = kwargs['r']
+    theta = kwargs['theta']
+    import math
+    return galsim.PositionD(r*math.cos(theta.rad()), r*math.sin(theta.rad())), safe
+
 def _GenerateFromRad(param, param_name, base, value_type):
     """@brief Return an Angle constructed from given theta in radians
     """
@@ -296,44 +306,6 @@ def _GenerateFromDeg(param, param_name, base, value_type):
     req = { 'theta' : float }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return kwargs['theta'] * galsim.degrees, safe
-
-
-def _GenerateFromRing(param, param_name, base, value_type):
-    """@brief Return the next shear for a ring test.
-    """
-    req = { 'num' : int, 'first' : galsim.Shear }
-    ignore = [ 'i', 'current' ]
-    # Only Check, not Get.  We don't want to generate first if it's not time yet.
-    CheckAllParams(param, param_name, req=req, ignore=ignore)
-
-    num, safe = ParseValue(param, 'num', base, int)
-    #print 'In Ring parameter'
-    # We store the current index in the ring and the last value in the dictionary,
-    # so they will be available next time we get here.
-    i = param.get('i',num)
-    #print 'i = ',i
-    if i == num:
-        #print 'at i = num'
-        current, safe = ParseValue(param, 'first', base, galsim.Shear)
-        i = 1
-    elif num == 2:  # Special easy case for only 2 in ring.
-        #print 'i = ',i,' Simple case of n=2'
-        current = -param['current']
-        #print 'ring beta = ',current.beta
-        #print 'ring ellip = ',current.e
-        i = i + 1
-    else:
-        import math
-        #print 'i = ',i
-        s = param['current']
-        current = galsim.Shear(g=s.g, beta=s.beta + math.pi/num * galsim.radians)
-        #print 'ring beta = ',current.beta
-        #print 'ring ellip = ',current.e
-        i = i + 1
-    param['i'] = i
-    param['current'] = current
-    #print 'return shear = ',current
-    return current, False
 
 
 def _GenerateFromInputCatalog(param, param_name, base, value_type):
@@ -437,7 +409,6 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
         base['current_gdsigma'] = sigma
 
     if 'min' in kwargs or 'max' in kwargs:
-        import math
         # Clip at min/max.
         # However, special cases if min == mean or max == mean
         #  -- can use fabs to double the chances of falling in the range.
@@ -462,6 +433,7 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
     
         # Emulate a do-while loop
         #print 'sigma = ',sigma
+        import math
         while True:
             val = gd()
             #print 'val = ',val
@@ -513,48 +485,60 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     """@brief Return next in a sequence of integers
     """
     #print 'Start Sequence for ',param_name,' -- param = ',param
-    opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type, 'repeat' : int }
-    ignore = { 'rep' : int, 'current' : int }
-    kwargs, safe = GetAllParams(param, param_name, base, opt=opt, ignore=ignore)
+    opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type,
+            'repeat' : int, 'nitems' : int }
+    kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
 
     step = kwargs.get('step',1)
     first = kwargs.get('first',0)
-    last = kwargs.get('last',None)
     repeat = kwargs.get('repeat',1)
+    last = kwargs.get('last',None)
+    nitems = kwargs.get('nitems',None)
+    #print 'first, step, last, repeat, nitems = ',first,step,last,repeat,nitems
     if repeat <= 0:
         raise ValueError(
             "Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(repeat,param_name))
-    #print 'first, step, repeat = ',first,step,repeat
+    if last is not None and nitems is not None:
+        raise AttributeError(
+            "At most one of the attributes last and nitems is allowed for %s.type = Sequence"%(
+                param_name))
 
     if value_type is bool:
         # Then there are only really two valid sequences: Either 010101... or 101010...
         # Aside from the repeat value of course.
         if first:
             first = 1
-            last = 0
             step = -1
+            nitems = 2
         else:
             first = 0
             step = 1
-            last = 1
-        #print 'first, last, step, repeat => ',first,last,step,repeat
+            nitems = 2
+        #print 'bool sequence: first, step, repeat, n => ',first,step,repeat,nitems
 
-    rep = param.get('rep',0)
-    index = param.get('current',first)
-    #print 'From saved: rep = ',rep,' index = ',index
-    if rep < repeat:
-        rep = rep + 1
+    elif value_type is float:
+        if last is not None:
+            nitems = int( (last-first)/step + 0.5 ) + 1
+        #print 'float sequence: first, step, repeat, n => ',first,step,repeat,nitems
     else:
-        rep = 1
-        index = index + step
-        if (last is not None and 
-                ( (step > 0 and index > last) or
-                  (step < 0 and index < last) ) ):
-            index = first
-    param['rep'] = rep
-    param['current'] = index
-    #print 'index = ',index
-    #print 'saved rep,current = ',param['rep'],param['current']
+        if last is not None:
+            nitems = (last - first)/step + 1
+        #print 'int sequence: first, step, repeat, n => ',first,step,repeat,nitems
+
+    k = base['seq_index']
+    #print 'k = ',k
+
+    k = k / repeat
+    #print 'k/repeat = ',k
+
+    if nitems is not None and nitems > 0:
+        #print 'nitems = ',nitems
+        k = k % nitems
+        #print 'k%nitems = ',k
+
+    index = first + k*step
+    #print 'first + k*step = ',index
+
     return index, False
 
 
@@ -563,7 +547,7 @@ def _GenerateFromNumberedFile(param, param_name, base, value_type):
     """
     #print 'Start NumberedFile for ',param_name,' -- param = ',param
     if 'num' not in param:
-        param['num'] = { 'type' : 'Sequence', 'first' : 1 }
+        param['num'] = { 'type' : 'Sequence' }
     req = { 'root' : str , 'num' : int }
     opt = { 'ext' : str , 'digits' : int }
     kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
@@ -701,32 +685,40 @@ def _GenerateFromList(param, param_name, base, value_type):
     safe = safe and safe1
     return val, safe
  
+def type_by_letter(key):
+    if len(key) < 2:
+        raise AttributeError("Invalid user-defined variable %r"%key)
+    if key[0] == 'f':
+        return float
+    elif key[0] == 'i':
+        return int
+    elif key[0] == 'b':
+        return bool
+    elif key[0] == 's':
+        return str
+    elif key[0] == 'a':
+        return galsim.Angle
+    elif key[0] == 'p':
+        return galsim.PositionD
+    elif key[0] == 'g':
+        return galsim.Shear
+    else:
+        raise AttributeError("Invalid Eval variable: %s (starts with an invalid letter)"%key)
+
 def _GenerateFromEval(param, param_name, base, value_type):
     """@brief Evaluate a string as the provided type
     """
     #print 'Start Eval for ',param_name
     req = { 'str' : str }
     opt = {}
+    ignore = [ 'type' , 'current_val' ]
     for key in param.keys():
-        if key not in [ 'type' , 'str' ]:
-            if len(key) < 2:
-                raise AttributeError("Invalid user-defined variable %r"%key)
-            if key[0] == 'f':
-                opt[key] = float
-            elif key[0] == 'i':
-                opt[key] = int
-            elif key[0] == 'b':
-                opt[key] = bool
-            elif key[0] == 's':
-                opt[key] = str
-            elif key[0] == 'a':
-                opt[key] = galsim.Angle
-            elif key[0] == 'p':
-                opt[key] = galsim.PositionD
-            elif key[0] == 'g':
-                opt[key] = galsim.Shear
-            # else let GetAllParams raise an appropriate exception about unexpected key    
-    params, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+        if key not in (ignore + req.keys()):
+            opt[key] = type_by_letter(key)
+    #print 'opt = ',opt
+            
+    params, safe = GetAllParams(param, param_name, base, req=req, opt=opt, ignore=ignore)
+    #print 'params = ',params
     string = params['str']
     #print 'string = ',string
 
@@ -734,6 +726,24 @@ def _GenerateFromEval(param, param_name, base, value_type):
     for key in opt.keys():
         exec(key[1:] + ' = params[key]')
         #print key[1:],'=',eval(key[1:])
+
+    # Also bring in any top level eval_variables
+    if 'eval_variables' in base:
+        #print 'found eval_variables = ',base['eval_variables']
+        if not isinstance(base['eval_variables'],dict):
+            raise AttributeError("eval_variables must be a dict")
+        opt = {}
+        for key in base['eval_variables'].keys():
+            if key not in ignore:
+                opt[key] = type_by_letter(key)
+        #print 'opt = ',opt
+        params, safe1 = GetAllParams(base['eval_variables'], 'eval_variables', base, opt=opt,
+                                     ignore=ignore)
+        #print 'params = ',params
+        safe = safe and safe1
+        for key in opt.keys():
+            exec(key[1:] + ' = params[key]')
+            #print key[1:],'=',eval(key[1:])
 
     # Also, we allow the use of math functions
     import math
@@ -779,19 +789,19 @@ def SetDefaultIndex(config, num):
     size of the list, catalog, etc.
     """
     if 'index' not in config:
-        config['index'] = { 'type' : 'Sequence', 'last' : num-1 }
+        config['index'] = { 'type' : 'Sequence', 'nitems' : num }
     elif isinstance(config['index'],dict) and 'type' in config['index'] :
         index = config['index']
         type = index['type']
         if ( type == 'Sequence' and 
              ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) ) and
-             'last' not in index ):
+             'last' not in index and 'nitems' not in index ):
             index['last'] = num-1
         elif ( type == 'Sequence' and 
              ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
             if 'first' not in index:
                 index['first'] = num-1
-            if 'last' not in index:
+            if 'last' not in index and 'nitems' not in index:
                 index['last'] = 0
         elif type == 'Random':
             if 'max' not in index:

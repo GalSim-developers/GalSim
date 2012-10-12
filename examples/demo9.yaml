@@ -18,6 +18,7 @@
 # - shear_value : Eta1Eta2 (eta1, eta2)
 # - image type : Scattered (size, nobjects)
 # - str_value type : NumberedFile (root, num, ext, digits)
+# - value type : Sequence (..., nitems)
 # - output : nproc
 # - output : weight
 # - output : badpix
@@ -79,10 +80,9 @@ input :
             items : [ 1.0e15, 7.0e14, 4.0e14, 2.0e14 ]
             index : 
                 type : Sequence
-                first : 0
-                repeat : &n_clusters_per_mass 5
                 # Note: this is a good example of when the YAML named variables come in handy.
                 # We'll use this variable below when setting up the output files.
+                repeat : &n_clusters_per_mass 5
 
         conc : 4  # The concentration parameter = virial radius / NFW scale radius
         redshift : 0.3  # The redshift of the halo.
@@ -105,7 +105,6 @@ input :
 
 # Define some other information about the images 
 image :
-
     # A Scattered image means that the objects can be placed arbitrarily at any (x,y) value.
     type : Scattered
 
@@ -132,7 +131,7 @@ image :
     #     y : { type : Random , min : 1 , max : ysize }
 
 
-    pixel_scale : 0.19  # arcsec / pixel
+    pixel_scale : 0.20  # arcsec / pixel
 
     noise :
         sky_level : 1.0e6  # ADU / arcsec^2
@@ -142,7 +141,6 @@ image :
 
 # Define the names and format of the output files
 output :
-
     nfiles : 20
 
     file_name :
@@ -150,25 +148,28 @@ output :
         # A NumberedFile type creates a string of the form rootNNNNext
         # where the NNNN is a number that will typically be drawn from a Sequence.
         # In our case, our file_name's will be:
+        #     cluster0000.fits
         #     cluster0001.fits
         #     cluster0002.fits
         #     cluster0003.fits
         #     cluster0004.fits
-        #     cluster0005.fits
         type : NumberedFile
 
         # root specifies the text to go before the number
         root : 'cluster'
 
         # num specifies how to choose the number for each file. 
-        # If omitted, the default is simply a Sequence starting at 1.
-        # i.e. { type : Sequence , first : 1 }
+        # If omitted, the default is simply a Sequence starting at 0.
+        # i.e. num : { type : Sequence , first : 0 }
+        # However, we want the sequence to start over every 5 files, so we need to define it.
         num : 
             type : Sequence
-            first : 1
-            # Here is a case where using a named variable comes in handy.
-            # This was defined about in input.nfw_halo.
-            last : *n_clusters_per_mass
+            first : 0
+
+            # An alternate way to set the number of items in a Sequence is nitems instead of
+            # last.  Here, last = nitems-1, so nitems is more convenient, since we have
+            # n_clusters_per mass stored as a named variable (defined above in input.nfw_halo).
+            nitems : *n_clusters_per_mass
 
         # ext specifies the text to go after the number, if desired.
         # The extension is usually set to a reasonable default.

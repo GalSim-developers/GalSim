@@ -3,7 +3,7 @@ import os
 import time
 import galsim
 
-def ProcessInput(config, logger=None):
+def ProcessInput(config, file_num=0, logger=None):
     """
     Process the input field, reading in any specified input files or setting up
     any objects that need to be initialized.
@@ -13,6 +13,7 @@ def ProcessInput(config, logger=None):
         config['real_catalog'] = the catalog specified by config.input.real_catalog, if provided.
         config['nfw_halo'] = an NFWHalo specified by config.input.nfw_halo, if provided.
     """
+    config['seq_index'] = file_num
     # Process the input field (read any necessary input files)
     if 'input' in config:
         input = config['input']
@@ -24,7 +25,8 @@ def ProcessInput(config, logger=None):
         input_type = { 
                 'catalog' : 'InputCatalog' , 
                 'real_catalog' : 'RealGalaxyCatalog' ,
-                'nfw_halo' : 'NFWHalo'
+                'nfw_halo' : 'NFWHalo',
+                'power_spectrum' : 'PowerSpectrum'
                 }
         for key in [ k for k in input_type.keys() if k in input ]:
             field = input[key]
@@ -37,41 +39,8 @@ def ProcessInput(config, logger=None):
             # Store input_obj in the config for use by BuildGSObject function.
             config[key] = input_obj
 
-        # The PowerSpectrum initialization is a bit different, since we have to parse
-        # the functions, which are provided as strings.
-        if 'power_spectrum' in input:
-            opt = { 'e_power' : str , 'b_power' : str }
-            field = input['power_spectrum']
-            field['type'] = 'PowerSpectrum'
-            #print 'field = ',field
-            #print 'opt = ',opt
-            params = galsim.config.GetAllParams(field, 'power_spectrum', config, opt=opt)[0]
-            #print 'params = ',params
-            if 'e_power' in params:
-                try:
-                    E_power_function = eval('lambda k : ' + params['e_power'])
-                except:
-                    raise AttributeError('Unable to parse e_power = %s as a lambda function'
-                        %params['e_power'])
-            else:
-                E_power_function = None
-            if 'b_power' in params:
-                try:
-                    B_power_function = eval('lambda k : ' + params['e_power'])
-                except:
-                    raise AttributeError('Unable to parse e_power = %s as a lambda function'
-                        %params['e_power'])
-            else:
-                B_power_function = None
-            if not E_power_function and not B_power_function:
-                raise AttributeError(
-                    "At least one of the attributes e_power or b_power is required for " +
-                    "input.type = power_spectrum")
-            config['power_spectrum'] = galsim.PowerSpectrum(E_power_function, B_power_function)
-
         # Check that there are no other attributes specified.
         valid_keys = input_type.keys()
-        valid_keys += ['power_spectrum']
         galsim.config.CheckAllParams(input, 'input', ignore=valid_keys)
 
 
@@ -103,10 +72,15 @@ def Process(config, logger=None):
         output['type'] = 'Fits' 
     type = output['type']
 
+    # Check that the type is valid
+    valid_types = [ 'Fits' , 'MultiFits', 'DataCube' ]
+    if type not in valid_types:
+        raise AttributeError("Invalid output.type=%s."%type)
+
     # Process the input field.  We'll do this again before subsequent files, 
     # but we may need some information from the input catalogs to help out on 
     # the number of images and such.
-    ProcessInput(config, logger)
+    ProcessInput(config, file_num=0, logger=logger)
 
     # If (1) type is MultiFits or DataCube,
     #    (2) the image type is Single, and
@@ -133,168 +107,19 @@ def Process(config, logger=None):
 
     # build_func is the function we'll call to build each file.
     build_func = eval('Build'+type)
+    # nobj_func is the function that builds the nobj_per_file list
+    nobj_func = eval('GetNObjFor'+type)
 
-    # We need to set up the list of random number seeds now, since we might need to 
-    # do this with multiple processors, so if we let the regular sequencing happen, 
-    # it will get screwed up by the multi-processing.
+    # We need to know how many objects we'll need for each file (and each image within each file)
+    # to get the indexing correct for any sequence items.  (e.g. random_seed)
+    # If we use multiple processors and let the regular sequencing happen, 
+    # it will get screwed up by the multi-processing potentially happening out of order.
     # Start with the number of files.
     if 'nfiles' in output:
         nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
     else:
         nfiles = 1 
     #print 'nfiles = ',nfiles
-
-    # Now let's figure out how many images we need to build in each file.
-    # We'll put this in a list, since it's conceivable that the nimages parameter
-    # is different for each file.  (Weird though it may seem.)
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
- 
-    if type == 'Fits':
-        galsim.config.CheckAllParams(output, 'output', ignore=ignore)
-        nimages_per_file = [ 1 ] * nfiles
-        #print 'Fits: nimages_per_file = ',nimages_per_file
-
-    elif type == 'MultiFits' or type == 'DataCube':
-        req = { 'nimages' : int }
-        galsim.config.CheckAllParams(output, 'output', req=req, ignore=ignore)
-        if isinstance(output['nimages'],dict):
-            nimages_per_file = []
-            for k in range(nfiles):
-                nimages = galsim.config.ParseValue(output,'nimages',config,int)[0]
-                nimages_per_file.append(nimages)
-        else:
-            nimages = galsim.config.ParseValue(output,'nimages',config,int)[0]
-            nimages_per_file = [ nimages ] * nfiles
-        #print '%s: nimages_per_file = '%type,nimages_per_file
-
-    else:
-        raise AttributeError("Invalid output.type=%s."%type)
-
-    # Finally, we figure out how many objects will be drawn in each image
-    if 'image' in config and 'type' in config['image']:
-        image_type = config['image']['type']
-    else:
-        image_type = 'Single'
-
-    if image_type == 'Single':
-        nseed_per_image = [ [ 1 ] * nim for nim in nimages_per_file ]
-        #print 'Single: nseed_per_image = ',nseed_per_image
-
-    elif image_type == 'Scattered':
-        # In case any of these things are dicts with variable values, we don't want to mess
-        # up the sequence.  So deep copy the image dict before processing it.
-        import copy
-        image = copy.deepcopy(config['image'])
-        if 'nobjects' not in image:
-            raise AttributeError(
-                "Attribute nobjects is required for image.type = Scattered")
-        if isinstance(image['nobjects'],dict):
-            nseed_per_image = []
-            for k in range(nfiles):
-                nseed_per_image.append([])
-                for j in range(nimages_per_file[k]):
-                    # Note: For this and (maybe) Tiled, we declare one extra seed per image
-                    #       than the number of objects to account for an rng that might be 
-                    #       necessary adding noise to the full image after building all
-                    #       the postage stamps.
-                    nseed = galsim.config.ParseValue(image,'nobjects',config,int)[0] + 1
-                    nseed_per_image[k].append(nseed)
-        else:
-            nseed = galsim.config.ParseValue(image,'nobjects',config,int)[0] + 1
-            nseed_per_image = [ [ nseed ] * nim for nim in nimages_per_file ]
-
-    elif image_type == 'Tiled':
-        # In case any of these things are dicts with variable values, we don't want to mess
-        # up the sequence.  So deep copy the image dict before processing it.
-        import copy
-        image = copy.deepcopy(config['image'])
-        if 'nx_tiles' not in image or 'ny_tiles' not in image:
-            raise AttributeError(
-                "Attributes nx_tiles and ny_tiles are required for image.type = Tiled")
-
-        if ( isinstance(image['nx_tiles'],dict) or isinstance(image['ny_tiles'],dict) or
-             ( 'border' in image and isinstance(image['border'],dict) ) or
-             ( 'xborder' in image and isinstance(image['xborder'],dict) ) or
-             ( 'yborder' in image and isinstance(image['yborder'],dict) ) ):
-            nseed_per_image = []
-            for k in range(nfiles):
-                nseed_per_image.append([])
-                for j in range(nimages_per_file[k]):
-                    nx = galsim.config.ParseValue(image,'nx_tiles',config,int)[0]
-                    ny = galsim.config.ParseValue(image,'ny_tiles',config,int)[0]
-                    nseed = nx*ny
-                    if 'input' in config and 'power_spectrum' in config['input']:
-                        nseed += 1
-                    elif 'noise' in image:
-                        if 'border' in image:
-                            border = galsim.config.ParseValue(image,'border',config,int)[0]
-                        else:
-                            border = 0
-                        if 'xborder' in image:
-                            xborder = galsim.config.ParseValue(image,'xborder',config,int)[0]
-                        else:
-                            xborder = border
-                        if 'yborder' in image:
-                            yborder = galsim.config.ParseValue(image,'yborder',config,int)[0]
-                        else:
-                            yborder = border
-                        if xborder < 0 or yborder < 0:
-                            nseed += 1
-                    nseed_per_image[k].append(nseed)
-        else:
-            nx = galsim.config.ParseValue(image,'nx_tiles',config,int)[0]
-            ny = galsim.config.ParseValue(image,'ny_tiles',config,int)[0]
-            nseed = nx*ny
-            if 'input' in config and 'power_spectrum' in config['input']:
-                nseed += 1
-            elif 'noise' in image:
-                if 'border' in image:
-                    border = galsim.config.ParseValue(image,'border',config,int)[0]
-                else:
-                    border = 0
-                if 'xborder' in image:
-                    xborder = galsim.config.ParseValue(image,'xborder',config,int)[0]
-                else:
-                    xborder = border
-                if 'yborder' in image:
-                    yborder = galsim.config.ParseValue(image,'yborder',config,int)[0]
-                else:
-                    yborder = border
-                if xborder < 0 or yborder < 0:
-                    nseed += 1
-            nseed_per_image = [ [ nseed ] * nim for nim in nimages_per_file ]
-
-    else:
-        raise AttributeError("Invalid image.type=%s."%image_type)
-
-    # OK, now we have what we need to build a list of list of list of seed values:
-    if ( 'image' in config and 'random_seed' in config['image']):
-        if isinstance(config['image']['random_seed'],dict):
-            seeds = []
-            for k in range(nfiles):
-                seeds.append([])
-                for j in range(nimages_per_file[k]):
-                    seeds[k].append([])
-                    for i in range(nseed_per_image[k][j]):
-                        s = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-                        seeds[k][j].append(s)
-        else:
-            s = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-            seeds = []
-            for k in range(nfiles):
-                seeds.append([])
-                for j in range(nimages_per_file[k]):
-                    seeds[k].append([])
-                    for i in range(nseed_per_image[k][j]):
-                        seeds[k][j].append(s)
-                        s = s + 1
-    else:
-        seeds = [ [ None ] * nimages for nimages in nimages_per_file ]
-    #print 'seeds = ',seeds
-
-    # The kwargs to pass to build_func
-    # We'll be building this up as we go...
-    kwargs = {}
 
     # Figure out how many processes we will use for building the files.
     # (If nfiles = 1, but nimages > 1, we'll do the multi-processing at the image stage.)
@@ -303,14 +128,17 @@ def Process(config, logger=None):
     else:
         nproc = 1 
 
+    # If set, nproc2 will be passed to the build function to be acted on at that level.
+    nproc2 = None
     if nproc > nfiles:
         if nfiles == 1 and (type == 'MultiFits' or type == 'DataCube'):
-            kwargs['nproc'] = nproc 
+            nproc2 = nproc 
+            nproc = 1
         else:
-            import warnings
-            warnings.warn(
-                "Trying to use more processes than files: output.nproc=%d, "%nproc +
-                "output.nfiles=%d.  Reducing nproc to %d."%(nfiles,nfiles))
+            if logger:
+                logger.warn(
+                    "Trying to use more processes than files: output.nproc=%d, "%nproc +
+                    "output.nfiles=%d.  Reducing nproc to %d."%(nfiles,nfiles))
             nproc = nfiles
     if nproc <= 0:
         # Try to figure out a good number of processes to use
@@ -318,10 +146,10 @@ def Process(config, logger=None):
             from multiprocessing import cpu_count
             ncpu = cpu_count()
             if nfiles == 1 and (type == 'MultiFits' or type == 'DataCube'):
-                kwargs['nproc'] = ncpu # Use this value in BuildImage rather than here.
+                nproc2 = ncpu # Use this value in BuildImage rather than here.
                 nproc = 1
                 if logger:
-                    logger.info("ncpu = %d.",ncpu)
+                    logger.debug("ncpu = %d.",ncpu)
             else:
                 if ncpu > nfiles:
                     nproc = nfiles
@@ -330,8 +158,8 @@ def Process(config, logger=None):
                 if logger:
                     logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
         except:
-            warnings.warn(
-                "config.output.nproc <= 0, but unable to determine number of cpus.")
+            if logger:
+                logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
             nproc = 1
             if logger:
                 logger.info("Unable to determine ncpu.  Using %d processes",nproc)
@@ -343,24 +171,29 @@ def Process(config, logger=None):
         from multiprocessing import Process, Queue, current_process
 
         def worker(input, output):
-            """
-            input is a queue with (args, info) tuples:
-                kwargs are the arguments to pass to build_func
-                info is passed along to the output queue.
-            output is a queue storing (result, info, proc) tuples:
-                result is the returned value from build_func (file_name, time).
-                info is passed through from the input queue.
-                proc is the process name.
-            """
-            for (kwargs, info) in iter(input.get, 'STOP'):
+            for (kwargs, file_num, file_name) in iter(input.get, 'STOP'):
                 result = build_func(**kwargs)
-                output.put( (result, info, current_process().name) )
+                output.put( (result, file_num, file_name, current_process().name) )
 
         # Set up the task list
         task_queue = Queue()
 
     # Now start working on the files.
-    for k in range(nfiles):
+
+    image_num = 0
+    obj_num = 0
+
+    extra_keys = [ 'psf', 'weight', 'badpix' ]
+    last_file_name = {}
+    for key in extra_keys:
+        last_file_name[key] = None
+
+    for file_num in range(nfiles):
+        # Set the index for any sequences in the input or output parameters.
+        # These sequences are indexed by the file_num.
+        # (In image, they are indexed by image_num, and after that by obj_num.)
+        config['seq_index'] = file_num
+
         # Get the file_name
         if 'file_name' in output:
             SetDefaultExt(output['file_name'],'.fits')
@@ -375,93 +208,126 @@ def Process(config, logger=None):
         # Prepend a dir to the beginning of the filename if requested.
         if 'dir' in output:
             dir = galsim.config.ParseValue(output, 'dir', config, str)[0]
-            if not os.path.isdir(dir): os.mkdir(dir)
+            if dir and not os.path.isdir(dir): os.mkdir(dir)
             file_name = os.path.join(dir,file_name)
         else:
             dir = None
 
         # Assign some of the kwargs we know now:
-        kwargs['file_name'] = file_name
-        kwargs['seeds'] = seeds[k]
+        kwargs = {
+            'file_name' : file_name,
+            'image_num' : image_num,
+            'obj_num' : obj_num
+        }
+        if nproc2:
+            kwargs['nproc'] = nproc2
 
-        if type == 'MultiFits' or type == 'DataCube':
-            kwargs['nimages'] = len(seeds[k])
+        if type in [ 'MultiFits', 'DataCube' ]:
+            if 'nimages' not in output:
+                raise AttributeError("Attribute nimages is required for output.type = %s"%type)
+            kwargs['nimages'] = galsim.config.ParseValue(output, 'nimages', config, int)[0]
 
         # Check if we need to build extra images for write out as well
-        for extra in [ key for key in [ 'psf' , 'weight', 'badpix' ] if key in output ]:
+        for extra_key in [ key for key in extra_keys if key in output ]:
             #print 'extra = ',extra
             extra_file_name = None
-            output_extra = output[extra]
+            output_extra = output[extra_key]
 
             output_extra['type'] = 'default'
             single = [ { 'file_name' : str, 'hdu' : int } ]
+            opt = { 'dir' : str }
             ignore = []
-            if extra == 'psf': 
+            if extra_key == 'psf': 
                 ignore.append('real_space')
-            if extra == 'weight': 
+            if extra_key == 'weight': 
                 ignore.append('include_obj_var')
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
-            params, safe = galsim.config.GetAllParams(output_extra, extra, config,
-                                                      single=single, ignore=ignore)
+            params, safe = galsim.config.GetAllParams(output_extra, extra_key, config,
+                                                      opt=opt, single=single, ignore=ignore)
 
             if 'file_name' in params:
                 extra_file_name = params['file_name']
+                if 'dir' in params:
+                    dir = params['dir']
+                    if dir and not os.path.isdir(dir): os.mkdir(dir)
+                # else keep dir from above.
                 if dir:
                     extra_file_name = os.path.join(dir,extra_file_name)
-                kwargs[ extra+'_file_name' ] = extra_file_name
+                # If we already wrote this file, skip it this time around.
+                # (Typically this is applicable for psf, where we only want 1 psf file.)
+                #print 'last_file_name for ',key,' = ',last_file_name[key]
+                #print 'extra_file_name = ',extra_file_name
+                if last_file_name[key] == extra_file_name:
+                    #print 'skipping'
+                    continue
+                #print 'assigning this to kwargs'
+                kwargs[ extra_key+'_file_name' ] = extra_file_name
+                last_file_name[key] = extra_file_name
             elif type != 'Fits':
                 raise AttributeError(
-                    "Only the file_name version of %s output is possible for "%extra+
+                    "Only the file_name version of %s output is possible for "%extra_key+
                     "output type == %s."%type)
             else:
-                kwargs[ extra+'_hdu' ] = params['hdu']
+                kwargs[ extra_key+'_hdu' ] = params['hdu']
     
         # Before building each file, (re-)process the input field.
         #print 'Before re-processInput k = ',k
-        if k > 0:
-            ProcessInput(config, logger)
+        if file_num > 0:
+            ProcessInput(config, file_num=file_num, logger=logger)
 
         # This is where we actually build the file.
         # If we're doing multiprocessing, we send this information off to the task_queue.
         # Otherwise, we just call build_func.
         if nproc > 1:
             import copy
-            new_kwargs = {}
-            new_kwargs.update(kwargs)
-            new_kwargs['config'] = copy.deepcopy(config)
-            task_queue.put( (new_kwargs, file_name) )
+            kwargs['config'] = copy.deepcopy(config)
+            task_queue.put( (kwargs, file_num, file_name) )
         else:
             kwargs['config'] = config
             # Apparently the logger isn't picklable, so can't send that for nproc > 1
             kwargs['logger'] = logger 
             t = build_func(**kwargs)
             if logger:
-                logger.info('Built file %s: total time = %f sec', file_name, t)
+                logger.warn('File %d = %s: time = %f sec', file_num, file_name, t)
+
+        nobj = nobj_func(config,file_num,image_num)
+        # nobj is a list of nobj for each image in that file.
+        # So len(nobj) = nimages and sum(nobj) is the total number of objects
+        image_num += len(nobj)
+        obj_num += sum(nobj)
+
 
     # If we're doing multiprocessing, here is the machinery to run through the task_queue
     # and process the results.
     if nproc > 1:
         # Run the tasks
         done_queue = Queue()
+        p_list = []
         for j in range(nproc):
-            Process(target=worker, args=(task_queue, done_queue)).start()
+            p = Process(target=worker, args=(task_queue, done_queue), name='Process-%d'%(j+1))
+            p.start()
+            p_list.append(p)
 
         # Log the results.
         for k in range(nfiles):
-            t, file_name, proc = done_queue.get()
+            t, file_num, file_name, proc = done_queue.get()
             if logger:
-                logger.info('%s: File %s: total time = %f sec', proc, file_name, t)
+                logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
 
         # Stop the processes
         for j in range(nproc):
             task_queue.put('STOP')
+        for j in range(nproc):
+            p_list[j].join()
+        task_queue.close()
 
     if logger:
-        logger.info('Done building files')
+        logger.debug('Done building files')
 
 
-def BuildFits(file_name, config, logger=None, seeds=None,
+def BuildFits(file_name, config, logger=None, 
+              image_num=0, obj_num=0,
               psf_file_name=None, psf_hdu=None,
               weight_file_name=None, weight_hdu=None,
               badpix_file_name=None, badpix_hdu=None):
@@ -471,7 +337,8 @@ def BuildFits(file_name, config, logger=None, seeds=None,
     @param file_name         The name of the output file.
     @param config            A configuration dict.
     @param logger            If given, a logger object to log progress.
-    @param seeds             If given, the seeds to use.  Otherwise get from the config file.
+    @param image_num         If given, the current image_num (default = 0)
+    @param obj_num           If given, the current obj_num (default = 0)
     @param psf_file_name     If given, write a psf image to this file
     @param psf_hdu           If given, write a psf image to this hdu in file_name
     @param weight_file_name  If given, write a weight image to this file
@@ -519,13 +386,8 @@ def BuildFits(file_name, config, logger=None, seeds=None,
         if h not in hdus.keys():
             raise ValueError("Image for hdu %d not found.  Cannot skip hdus."%h)
 
-    if seeds:
-        assert isinstance(seeds,list)
-        assert len(seeds) == 1
-        seeds = seeds[0]
-
     all_images = galsim.config.BuildImage(
-            config=config, logger=logger, seeds=seeds,
+            config=config, logger=logger, image_num=image_num, obj_num=obj_num,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -541,30 +403,31 @@ def BuildFits(file_name, config, logger=None, seeds=None,
     galsim.fits.writeMulti(hdulist, file_name)
     if logger:
         if len(hdus.keys()) == 1:
-            logger.info('Wrote image to fits file %r',file_name)
+            logger.debug('Wrote image to fits file %r',file_name)
         else:
-            logger.info('Wrote image (with extra hdus) to multi-extension fits file %r',file_name)
+            logger.debug('Wrote image (with extra hdus) to multi-extension fits file %r',file_name)
 
     if psf_file_name:
         all_images[1].write(psf_file_name)
         if logger:
-            logger.info('Wrote psf image to fits file %r',psf_file_name)
+            logger.debug('Wrote psf image to fits file %r',psf_file_name)
 
     if weight_file_name:
         all_images[2].write(weight_file_name)
         if logger:
-            logger.info('Wrote weight image to fits file %r',weight_file_name)
+            logger.debug('Wrote weight image to fits file %r',weight_file_name)
 
     if badpix_file_name:
         all_images[3].write(badpix_file_name)
         if logger:
-            logger.info('Wrote badpix image to fits file %r',badpix_file_name)
+            logger.debug('Wrote badpix image to fits file %r',badpix_file_name)
 
     t2 = time.time()
     return t2-t1
 
 
-def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None, seeds=None,
+def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
+                   image_num=0, obj_num=0,
                    psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
     Build a multi-extension fits file as specified in config.
@@ -574,7 +437,8 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None, seeds=None,
     @param config            A configuration dict.
     @param nproc             How many processes to use.
     @param logger            If given, a logger object to log progress.
-    @param seeds             If given, the seeds to use
+    @param image_num         If given, the current image_num (default = 0)
+    @param obj_num           If given, the current obj_num (default = 0)
     @param psf_file_name     If given, write a psf image to this file
     @param weight_file_name  If given, write a weight image to this file
     @param badpix_file_name  If given, write a badpix image to this file
@@ -598,65 +462,44 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None, seeds=None,
     else:
         make_badpix_image = False
 
-    if nproc > 1:
-        import warnings
-        warnings.warn("Sorry, multiple processes not currently implemented for BuildMultiFits.")
+    all_images = galsim.config.BuildImages(
+        nimages, config=config, logger=logger,
+        image_num=image_num, obj_num=obj_num, nproc=nproc,
+        make_psf_image=make_psf_image, 
+        make_weight_image=make_weight_image,
+        make_badpix_image=make_badpix_image)
 
-    if seeds:
-        assert isinstance(seeds,list)
-        assert len(seeds) == nimages
-    else:
-        seeds = [ None ] * nimages
-
-    main_images = []
-    psf_images = []
-    weight_images = []
-    badpix_images = []
-    for k in range(nimages):
-        t2 = time.time()
-        all_images = galsim.config.BuildImage(
-                config=config, logger=logger, seeds=seeds[k],
-                make_psf_image=make_psf_image, 
-                make_weight_image=make_weight_image,
-                make_badpix_image=make_badpix_image)
-        # returns a tuple ( main_image, psf_image, weight_image, badpix_image )
-        t3 = time.time()
-        main_images += [ all_images[0] ]
-        psf_images += [ all_images[1] ]
-        weight_images += [ all_images[2] ]
-        badpix_images += [ all_images[3] ]
-
-        if logger:
-            # Note: numpy shape is y,x
-            ys, xs = all_images[0].array.shape
-            logger.info('Image %d: size = %d x %d, time = %f sec', k, xs, ys, t3-t2)
-
+    main_images = all_images[0]
+    psf_images = all_images[1]
+    weight_images = all_images[2]
+    badpix_images = all_images[3]
 
     galsim.fits.writeMulti(main_images, file_name)
     if logger:
-        logger.info('Wrote images to multi-extension fits file %r',file_name)
+        logger.debug('Wrote images to multi-extension fits file %r',file_name)
 
     if psf_file_name:
         galsim.fits.writeMulti(psf_images, psf_file_name)
         if logger:
-            logger.info('Wrote psf images to multi-extension fits file %r',psf_file_name)
+            logger.debug('Wrote psf images to multi-extension fits file %r',psf_file_name)
 
     if weight_file_name:
         galsim.fits.writeMulti(weight_images, weight_file_name)
         if logger:
-            logger.info('Wrote weight images to multi-extension fits file %r',weight_file_name)
+            logger.debug('Wrote weight images to multi-extension fits file %r',weight_file_name)
 
     if badpix_file_name:
         galsim.fits.writeMulti(badpix_images, badpix_file_name)
         if logger:
-            logger.info('Wrote badpix images to multi-extension fits file %r',badpix_file_name)
+            logger.debug('Wrote badpix images to multi-extension fits file %r',badpix_file_name)
 
 
-    t4 = time.time()
-    return t4-t1
+    t2 = time.time()
+    return t2-t1
 
 
-def BuildDataCube(file_name, nimages, config, nproc=1, logger=None, seeds=None,
+def BuildDataCube(file_name, nimages, config, nproc=1, logger=None, 
+                  image_num=0, obj_num=0,
                   psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
     Build a multi-image fits data cube as specified in config.
@@ -666,7 +509,8 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None, seeds=None,
     @param config            A configuration dict.
     @param nproc             How many processes to use.
     @param logger            If given, a logger object to log progress.
-    @param seeds             If given, the seeds to use
+    @param image_num         If given, the current image_num (default = 0)
+    @param obj_num           If given, the current obj_num (default = 0)
     @param psf_file_name     If given, write a psf image to this file
     @param weight_file_name  If given, write a weight image to this file
     @param badpix_file_name  If given, write a badpix image to this file
@@ -690,33 +534,23 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None, seeds=None,
     else:
         make_badpix_image = False
 
-    if make_badpix_image:
-        raise NotImplementedError("Sorry, badpix image output is not currently implemented.")
-
-    if nproc > 1:
-        import warnings
-        warnings.warn("Sorry, multiple processe not currently implemented for BuildMultiFits.")
-
-    if seeds:
-        assert isinstance(seeds,list)
-        assert len(seeds) == nimages
-    else:
-        seeds = [ None ] * nimages
-
     # All images need to be the same size for a data cube.
     # Enforce this by buliding the first image outside the below loop and setting
     # config['image_xsize'] and config['image_ysize'] to be the size of the first image.
     t2 = time.time()
+    import copy
+    config1 = copy.deepcopy(config)
     all_images = galsim.config.BuildImage(
-            config=config, logger=logger, seeds=seeds[0],
+            config=config1, logger=logger, image_num=image_num, obj_num=obj_num,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
+    obj_num += GetNObjForImage(config, image_num)
     t3 = time.time()
     if logger:
         # Note: numpy shape is y,x
         ys, xs = all_images[0].array.shape
-        logger.info('Image 0: size = %d x %d, time = %f sec', xs, ys, t3-t2)
+        logger.info('Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t3-t2)
 
     # Note: numpy shape is y,x
     image_ysize, image_xsize = all_images[0].array.shape
@@ -728,44 +562,91 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None, seeds=None,
     weight_images = [ all_images[2] ]
     badpix_images = [ all_images[3] ]
 
-    for k in range(1,nimages):
-        t4 = time.time()
-        all_images = galsim.config.BuildImage(
-                config=config, logger=logger, seeds=seeds[k],
-                make_psf_image=make_psf_image, 
-                make_weight_image=make_weight_image,
-                make_badpix_image=make_badpix_image)
-        t5 = time.time()
-        main_images += [ all_images[0] ]
-        psf_images += [ all_images[1] ]
-        weight_images += [ all_images[2] ]
-        badpix_images += [ all_images[3] ]
-        if logger:
-            # Note: numpy shape is y,x
-            ys, xs = all_images[0].array.shape
-            logger.info('Image %d: size = %d x %d, time = %f sec', k, xs, ys, t5-t4)
+    all_images = galsim.config.BuildImages(
+        nimages-1, config=config, logger=logger,
+        image_num=image_num+1, obj_num=obj_num, nproc=nproc, 
+        make_psf_image=make_psf_image, 
+        make_weight_image=make_weight_image,
+        make_badpix_image=make_badpix_image)
+
+    main_images += all_images[0]
+    psf_images += all_images[1]
+    weight_images += all_images[2]
+    badpix_images += all_images[3]
 
     galsim.fits.writeCube(main_images, file_name)
     if logger:
-        logger.info('Wrote image to fits data cube %r',file_name)
+        logger.debug('Wrote image to fits data cube %r',file_name)
 
     if psf_file_name:
         galsim.fits.writeCube(psf_images, psf_file_name)
         if logger:
-            logger.info('Wrote psf images to fits data cube %r',psf_file_name)
+            logger.debug('Wrote psf images to fits data cube %r',psf_file_name)
 
     if weight_file_name:
         galsim.fits.writeCube(weight_images, weight_file_name)
         if logger:
-            logger.info('Wrote weight images to fits data cube %r',weight_file_name)
+            logger.debug('Wrote weight images to fits data cube %r',weight_file_name)
 
     if badpix_file_name:
         galsim.fits.writeCube(badpix_images, badpix_file_name)
         if logger:
-            logger.info('Wrote badpix images to fits data cube %r',badpix_file_name)
+            logger.debug('Wrote badpix images to fits data cube %r',badpix_file_name)
 
-    t6 = time.time()
-    return t6-t1
+    t4 = time.time()
+    return t4-t1
+
+def GetNObjForFits(config, file_num, image_num):
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
+    galsim.config.CheckAllParams(config['output'], 'output', ignore=ignore)
+    nobj = [ GetNObjForImage(config, image_num) ]
+    return nobj
+    
+def GetNObjForMultiFits(config, file_num, image_num):
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
+    req = { 'nimages' : int }
+    params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
+    config['seq_index'] = file_num
+    nimages = params['nimages']
+    nobj = []
+    for j in range(nimages):
+        nobj.append(GetNObjForImage(config, image_num+j))
+    return nobj
+
+def GetNObjForDataCube(config, file_num, image_num):
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
+    req = { 'nimages' : int }
+    params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
+    config['seq_index'] = file_num
+    nimages = params['nimages']
+    nobj = []
+    for j in range(nimages):
+        nobj.append(GetNObjForImage(config, image_num+j))
+    return nobj
+ 
+def GetNObjForImage(config, image_num):
+    if 'image' in config and 'type' in config['image']:
+        image_type = config['image']['type']
+    else:
+        image_type = 'Single'
+
+    config['seq_index'] = image_num
+
+    if image_type == 'Single':
+        return 1
+    elif image_type == 'Scattered':
+        if 'nobjects' not in config['image']:
+            raise AttributeError("Attribute nobjects is required for image.type = Scattered")
+        return galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
+    elif image_type == 'Tiled':
+        if 'nx_tiles' not in config['image'] or 'ny_tiles' not in config['image']:
+            raise AttributeError(
+                "Attributes nx_tiles and ny_tiles are required for image.type = Tiled")
+        nx = galsim.config.ParseValue(config['image'],'nx_tiles',config,int)[0]
+        ny = galsim.config.ParseValue(config['image'],'ny_tiles',config,int)[0]
+        return nx*ny
+    else:
+        raise AttributeError("Invalid image.type=%s."%image_type)
 
 def SetDefaultExt(config, ext):
     """

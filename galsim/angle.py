@@ -89,6 +89,18 @@ Allowed arithmetic with Angles include the following:
 Operations on Numpy arrays containing Angles are permitted, provided that they are within the bounds
 of the allowed operations on Angles listed above (e.g., addition/subtraction of Angles,
 multiplication of an Angle by a float, but not multiplication of Angles together).
+
+Wrapping
+--------
+
+Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.
+If you want your angles to be wrapped to [-pi,pi) radians, you can do this by calling
+
+    >>> theta.wrap()
+
+This could be appropriate before testing for the equality of two angles for example, or 
+calculating the difference between them.
+
 """
 
 def __str__(self):

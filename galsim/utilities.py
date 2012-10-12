@@ -74,6 +74,7 @@ class AttributeDict(object):
     so that Jim's previous default attribute behaviour is also replicated.
     """
     def __init__(self):
+        import collections
         object.__setattr__(self, "__dict__", collections.defaultdict(AttributeDict))
 
     def __getattr__(self, name):
@@ -135,3 +136,4 @@ def eval_sbinterpolatedimage(sbi, x_list, y_list):
     for x_ind in range(len(x_list)):
         vals.append(sbi.xValue(galsim.PositionD(x_list[x_ind], y_list[x_ind])))
     return vals
+
