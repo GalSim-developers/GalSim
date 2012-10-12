@@ -2,7 +2,7 @@ import numpy as np
 import galsim
 
 # The reference data for this test was generated with this script, using the version of the code on
-# branch #216 at commit 1d1e0242858bb12465393234810a97fbda166b8a
+# branch #291 at commit 7a1852ede4480f5b366c5f8ac0fe3fa01b9d39dc
 
 # random seed, etc.
 outfile = 'shearfield_reference.dat'
