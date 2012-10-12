@@ -61,7 +61,7 @@ eval_variables:
     fg2 : &g2 0.02
 
 # For the PSF, we just use a simple Komogorov spectrum.  Slightly more realistic than a 
-# Gaussian, but ellipticity, never mind things like realistic coma or astigmatism.
+# Gaussian, but with no ellipticity, never mind things like realistic coma or astigmatism.
 # GalSim has those, but for this test we're concentrating on the galaxy properties.
 psf :
     type : Kolmogorov

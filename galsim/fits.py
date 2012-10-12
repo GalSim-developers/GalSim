@@ -55,8 +55,8 @@ def write(image, fits, add_wcs=True, clobber=True):
         warnings.simplefilter("ignore")
 
         hdu.header.update("GS_SCALE", image.scale, "GalSim Image scale")
-        hdu.header.update("GS_XMIN", image.xMin, "GalSim Image minimum X coordinate")
-        hdu.header.update("GS_YMIN", image.xMin, "GalSim Image minimum Y coordinate")
+        hdu.header.update("GS_XMIN", image.xmin, "GalSim Image minimum X coordinate")
+        hdu.header.update("GS_YMIN", image.xmin, "GalSim Image minimum Y coordinate")
 
         if add_wcs:
             if isinstance(add_wcs, basestring):
@@ -69,8 +69,8 @@ def write(image, fits, add_wcs=True, clobber=True):
                             "coordinate system value at reference pixel")
             hdu.header.update("CRVAL2" + wcsname, 0, 
                             "coordinate system value at reference pixel")
-            hdu.header.update("CRPIX1" + wcsname, 1-image.xMin, "coordinate system reference pixel")
-            hdu.header.update("CRPIX2" + wcsname, 1-image.yMin, "coordinate system reference pixel")
+            hdu.header.update("CRPIX1" + wcsname, 1-image.xmin, "coordinate system reference pixel")
+            hdu.header.update("CRPIX2" + wcsname, 1-image.ymin, "coordinate system reference pixel")
             hdu.header.update("CD1_1" + wcsname, image.scale, "CD1_1 = pixel_scale")
             hdu.header.update("CD2_2" + wcsname, image.scale, "CD2_2 = pixel_scale")
             hdu.header.update("CD1_2" + wcsname, 0, "CD1_2 = 0")
@@ -143,26 +143,26 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
         ny = cube.shape[2]
         # Use default values for xmin, ymin, scale
         scale = 1
-        xMin = 1
-        yMin = 1
+        xmin = 1
+        ymin = 1
     except:
         nimages = len(image_list)
         if (nimages == 0):
             raise IndexError("In writeCube: image_list has no images")
         im = image_list[0]
-        nx = im.xMax - im.xMin + 1
-        ny = im.yMax - im.yMin + 1
+        nx = im.xmax - im.xmin + 1
+        ny = im.ymax - im.ymin + 1
         scale = im.scale
-        xMin = im.xMin
-        yMin = im.yMin
+        xmin = im.xmin
+        ymin = im.ymin
         # Note: numpy shape is y,x
         array_shape = (nimages, ny, nx)
         cube = numpy.array([[[]]])
         cube.resize(array_shape)
         for k in range(nimages):
             im = image_list[k]
-            nx_k = im.xMax-im.xMin+1
-            ny_k = im.yMax-im.yMin+1
+            nx_k = im.xmax-im.xmin+1
+            ny_k = im.ymax-im.ymin+1
             if nx_k != nx or ny_k != ny:
                 raise IndexError("In writeCube: image %d has the wrong shape"%k +
                     "Shape is (%d,%d).  Should be (%d,%d)"%(nx_k,ny_k,nx,ny))
@@ -179,8 +179,8 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
         warnings.simplefilter("ignore")
 
         hdu.header.update("GS_SCALE", scale, "GalSim Image scale")
-        hdu.header.update("GS_XMIN", xMin, "GalSim Image minimum X coordinate")
-        hdu.header.update("GS_YMIN", xMin, "GalSim Image minimum Y coordinate")
+        hdu.header.update("GS_XMIN", xmin, "GalSim Image minimum X coordinate")
+        hdu.header.update("GS_YMIN", xmin, "GalSim Image minimum Y coordinate")
 
         if add_wcs:
             if isinstance(add_wcs, basestring):
@@ -189,9 +189,9 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
                 wcsname = ""
             hdu.header.update("CTYPE1" + wcsname, "LINEAR", "name of the coordinate axis")
             hdu.header.update("CTYPE2" + wcsname, "LINEAR", "name of the coordinate axis")
-            hdu.header.update("CRVAL1" + wcsname, xMin, 
+            hdu.header.update("CRVAL1" + wcsname, xmin, 
                             "coordinate system value at reference pixel")
-            hdu.header.update("CRVAL2" + wcsname, yMin, 
+            hdu.header.update("CRVAL2" + wcsname, ymin, 
                             "coordinate system value at reference pixel")
             hdu.header.update("CRPIX1" + wcsname, 1, "coordinate system reference pixel")
             hdu.header.update("CRPIX2" + wcsname, 1, "coordinate system reference pixel")
@@ -211,7 +211,7 @@ def read(fits):
 
     Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
     `short`, `int`, `float`, and `double`).  If the FITS header has GS_* keywords, these will be 
-    used to initialize the bounding box and scale.  If not, the bounding box will have `(xMin,yMin)`
+    used to initialize the bounding box and scale.  If not, the bounding box will have `(xmin,ymin)`
     at `(1,1)` and the scale will be set to 1.0.
 
     This function is called as `im = galsim.fits.read(...)`
@@ -227,8 +227,8 @@ def read(fits):
         fits = pyfits.open(fits)
     if isinstance(fits, pyfits.HDUList):
         fits = fits[0]
-    xMin = fits.header.get("GS_XMIN", 1)
-    yMin = fits.header.get("GS_YMIN", 1)
+    xmin = fits.header.get("GS_XMIN", 1)
+    ymin = fits.header.get("GS_YMIN", 1)
     scale = fits.header.get("GS_SCALE", 1.0)
     pixel = fits.data.dtype.type
     try:
@@ -247,7 +247,7 @@ def read(fits):
     else:
         fits.data.byteswap(True)   # Note inplace is just an arg, not a kwarg, inplace=True throws
                                    # a TypeError exception in EPD Python 2.7.2
-    image = Class(array=fits.data, xMin=xMin, yMin=yMin)
+    image = Class(array=fits.data, xmin=xmin, ymin=ymin)
     image.scale = scale
     return image
 
@@ -256,7 +256,7 @@ def readMulti(fits):
 
     Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
     `short`, `int`, `float`, and `double`).  If the FITS header has GS_* keywords, these will be 
-    used to initialize the bounding box and scale.  If not, the bounding box will have `(xMin,yMin)`
+    used to initialize the bounding box and scale.  If not, the bounding box will have `(xmin,ymin)`
     at `(1,1)` and the scale will be set to 1.0.
 
     This function is called as `im = galsim.fits.readMulti(...)`
@@ -286,7 +286,7 @@ def readCube(fits):
     Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
     `short`, `int`, `float`, and `double`).  If the FITS header has GS_* keywords, these will be  
     used to initialize the bounding boxes and scales.  If not, the bounding boxes will have 
-    `(xMin,yMin)` at `(1,1)` and the scale will be set to 1.0.
+    `(xmin,ymin)` at `(1,1)` and the scale will be set to 1.0.
 
     This function is called as `image_list = galsim.fits.readCube(...)`
 
@@ -303,8 +303,8 @@ def readCube(fits):
     if isinstance(fits, pyfits.HDUList):
         fits = fits[0]
 
-    xMin = fits.header.get("GS_XMIN", 1)
-    yMin = fits.header.get("GS_YMIN", 1)
+    xmin = fits.header.get("GS_XMIN", 1)
+    ymin = fits.header.get("GS_YMIN", 1)
     scale = fits.header.get("GS_SCALE", 1.0)
     pixel = fits.data.dtype.type
 
@@ -328,7 +328,7 @@ def readCube(fits):
     nimages = fits.data.shape[0]
     image_list = []
     for k in range(nimages):
-        image = Class(array=fits.data[k,:,:], xMin=xMin, yMin=yMin)
+        image = Class(array=fits.data[k,:,:], xmin=xmin, ymin=ymin)
         image.scale = scale
         image_list.append(image)
     return image_list

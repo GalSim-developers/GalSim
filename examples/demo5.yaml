@@ -67,7 +67,7 @@ gal :
         resolution : 0.98
 
         ellip : 
-            # The first value in each pair has a ellipticity drawn from a 
+            # The first value in each pair has an ellipticity drawn from a 
             # Gaussian distribution with rms=0.2.
             # We clip this at a maximum of 0.6 to keep the ellipticities from
             # getting too extreme.

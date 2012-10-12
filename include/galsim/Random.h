@@ -103,7 +103,7 @@ namespace galsim {
          *
          * @param[in] lseed A long-integer seed for the RNG.
          */
-        BaseDeviate(long lseed) : _rng(new rng_type(lseed)) {} 
+        BaseDeviate(long lseed) : _rng(new rng_type()) { seed(lseed); }
 
         /**
          * @brief Construct a new BaseDeviate, sharing the random number generator with rhs.
@@ -131,7 +131,7 @@ namespace galsim {
          *
          * Note that this will reseed all Deviates currently sharing the RNG with this one.
          */
-        void seed(long lseed) { _rng->seed(lseed); }
+        void seed(long lseed);
 
         /**
          * @brief Like seed(), but severs the relationship between other Deviates.
@@ -147,7 +147,7 @@ namespace galsim {
          * Other Deviates that had been using the same RNG will be unaffected, while this 
          * Deviate will obtain a fresh RNG seeding by the current time.
          */
-        void reset(long lseed) { _rng.reset(new rng_type(lseed)); }
+        void reset(long lseed) { _rng.reset(new rng_type()); seed(lseed); }
 
         /**
          * @brief Make this object share its random number generator with another Deviate.
