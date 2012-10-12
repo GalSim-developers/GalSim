@@ -197,9 +197,12 @@ def test_invroot_infinite_limits():
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="x^(-2) integral failed across interval [1, inf].")
 
-    np.testing.assert_raises(
-        RuntimeError,
-        galsim.integ.int1d, test_func, 0., 1., test_rel_err, test_abs_err)
+    try:
+        np.testing.assert_raises(
+            RuntimeError,
+            galsim.integ.int1d, test_func, 0., 1., test_rel_err, test_abs_err)
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
