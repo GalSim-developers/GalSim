@@ -125,6 +125,7 @@
 
 "#" : "Define some other information about the images ",
 "image" : {
+    "nproc" : 5,
 
     "type" : "Tiled",
     "nx_tiles" : 10,

@@ -114,7 +114,7 @@ eval_variables :
 # Define some other information about the images 
 image :
     # TODO: Temporary (?) for issue #291
-    #nproc : 5
+    nproc : 5
 
     type : Tiled
     nx_tiles : 10
