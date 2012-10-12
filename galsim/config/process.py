@@ -128,7 +128,7 @@ def Process(config, logger=None):
     else:
         nproc = 1 
 
-    # If set, nproc2 will be passed to the build funtion to be acted on at that level.
+    # If set, nproc2 will be passed to the build function to be acted on at that level.
     nproc2 = None
     if nproc > nfiles:
         if nfiles == 1 and (type == 'MultiFits' or type == 'DataCube'):
