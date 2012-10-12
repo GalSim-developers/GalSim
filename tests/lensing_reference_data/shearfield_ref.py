@@ -6,17 +6,16 @@ import galsim
 
 # random seed, etc.
 outfile = 'shearfield_reference.dat'
-rng = galsim.UniformDeviate(14136)
+rng = galsim.BaseDeviate(14136)
 
 # make grid params
 n = 10
 dx = 1.
 
 # define power spectrum
-ps = galsim.lensing.PowerSpectrum(E_power_function=galsim.lensing.pk2,
-                                  B_power_function=galsim.lensing.pk1)
+ps = galsim.lensing.PowerSpectrum(e_power_function="k**2", b_power_function="k")
 # get shears
-g1, g2 = ps.getShear(grid_spacing = dx, grid_nx = n, gaussian_deviate=rng)
+g1, g2 = ps.getShear(grid_spacing = dx, grid_nx = n, rng=rng)
 
 # write to file
 g1vec = g1.reshape(n*n)
