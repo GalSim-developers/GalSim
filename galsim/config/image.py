@@ -405,23 +405,15 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     # Make a list of ix,iy values according to the specified order:
     order = params.get('order','row').lower()
-    ix_list = []
-    iy_list = []
     if order.startswith('row'):
-        for iy in range(ny_tiles):
-            for ix in range(nx_tiles):
-                ix_list.append(ix)
-                iy_list.append(iy)
+        ix_list = [ ix for iy in range(ny_tiles) for ix in range(nx_tiles) ]
+        iy_list = [ iy for iy in range(ny_tiles) for ix in range(nx_tiles) ]
     elif order.startswith('col'):
-        for ix in range(nx_tiles):
-            for iy in range(ny_tiles):
-                ix_list.append(ix)
-                iy_list.append(iy)
+        ix_list = [ ix for ix in range(nx_tiles) for iy in range(ny_tiles) ]
+        iy_list = [ iy for ix in range(nx_tiles) for iy in range(ny_tiles) ]
     elif order.startswith('rand'):
-        for ix in range(nx_tiles):
-            for iy in range(ny_tiles):
-                ix_list.append(ix)
-                iy_list.append(iy)
+        ix_list = [ ix for ix in range(nx_tiles) for iy in range(ny_tiles) ]
+        iy_list = [ iy for ix in range(nx_tiles) for iy in range(ny_tiles) ]
         galsim.random.permute(rng, ix_list, iy_list)
         
     # Define a 'center' field so the stamps can set their position appropriately in case
