@@ -88,7 +88,7 @@ def BuildStamps(nobjects, config, xsize, ysize,
         # Number of objects to do in each task:
         # At most nobjects / nproc.
         # At least 1 normally, but number in Ring if doing a Ring test
-        # Shoot for gemoetric mean of these two.
+        # Shoot for geometric mean of these two.
         max_nobj = nobjects / nproc
         min_nobj = 1
         if ( 'gal' in config and isinstance(config['gal'],dict) and 'type' in config['gal'] and
