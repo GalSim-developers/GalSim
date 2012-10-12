@@ -11,7 +11,7 @@ is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we pa
 as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
 RealGalaxy objects, selected to be 5 particularly irregular ones. (These are taken from 
 the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring 
-test of 20 each.
+test (Nakajima & Bernstein 2007) of 20 each.
 
 New features introduced in this demo:
 
