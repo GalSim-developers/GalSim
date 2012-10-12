@@ -15,7 +15,7 @@
  *  - Include scalar = Angle / AngleUnit
  *  - Removed non-sensical Angle = Angle * Angle
  *  - Remove templates.  Let compiler convert types to double as needed.
- *  - Can wrap values to [0,2pi) if desired by calling theta.wrap().
+ *  - Can wrap values to [-pi,pi) if desired by calling theta.wrap().
  *  - Changed names of arcminutes -> arcmin and arcseconds -> arcsec.
  *  - Removed some extra functions that I don't think we need.
  *  - Switch to galsim namespace.
