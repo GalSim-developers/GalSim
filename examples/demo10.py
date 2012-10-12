@@ -179,7 +179,7 @@ def main(argv):
         # For this demo, we are doing a ring test where the same galaxy profile is drawn at many
         # orientations stepped uniformly in angle, making a ring in e1-e2 space.
         # We're drawing each profile at 20 different orientations and then skipping to the
-        # next galaxy in the list.  So theta steps by k/20 * 360 degrees:
+        # next galaxy in the list.  So theta steps by 1/20 * 360 degrees:
         theta = k/20. * 360. * galsim.degrees
 
         # The index needs to increment every 20 objects so we use k/20 using integer math.
