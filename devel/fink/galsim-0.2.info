@@ -8,7 +8,7 @@ Maintainer: Mike Jarvis <mikejarvis17@gmail.com>
 BuildDepends: scons, boost1.35.python27, tmv0, fftw3, fink (>= 0.28)
 Depends: python27, numpy-py27, pyfits-py27, boost1.35.python27-shlibs, yaml-py27, tmv0-shlibs, fftw3-shlibs
 Source: https://github.com/downloads/GalSim-developers/GalSim/GalSim-v%v.tar.gz
-Source-MD5: 6c1a38d9a6a00102dc8498521662b476
+Source-MD5: eec78115008d020591ebffb77a0f462d
 GCC: 4.0
 NoSetMAKEFLAGS: true
 UseMaxBuildJobs: true
