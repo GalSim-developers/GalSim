@@ -65,22 +65,6 @@ class RealGalaxyCatalog(object):
         self.file_name = os.path.join(dir,self.file_name)
 
         import pyfits
-        cat = pyfits.getdata(filename)
-        self.filename = filename # store the filename from which the catalog was read
-        self.imagedir = imagedir # store the directory containing all image files (gal, PSF)
-        self.n = len(cat) # number of objects in the catalog
-        self.ident = cat.field('ident') # ID for object in the training sample
-        self.gal_filename = cat.field('gal_filename') # file containing the galaxy image
-        self.PSF_filename = cat.field('PSF_filename') # file containing the PSF image
-        self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
-        self.PSF_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
-        self.pixel_scale = cat.field('pixel_scale') # pixel scale for the image (could be different
-        self.variance = cat.field('noise_variance') # noise variance for image
-        # if we have training data from other datasets... let's be general here and make it a vector
-        # in case of mixed training set)
-        self.mag = cat.field('mag') # apparent magnitude
-        self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., "F814W"
-        self.weight = cat.field('weight') # weight factor to account for size-dependent probability
         try:
             cat = pyfits.getdata(self.file_name)
             self.nobjects = len(cat) # number of objects in the catalog
@@ -96,6 +80,7 @@ class RealGalaxyCatalog(object):
             self.pixel_scale = cat.field('pixel_scale') # pixel scale for image (could be different
             # if we have training data from other datasets... let's be general here and make it a 
             # vector in case of mixed training set)
+            self.variance = cat.field('noise_variance') # noise variance for image
             self.mag = cat.field('mag')   # apparent magnitude
             self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
             self.weight = cat.field('weight') # weight factor to account for size-dependent
