@@ -1,0 +1,89 @@
+{
+"#" : "Demo #8",
+
+"#" : "The eighth JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
+
+"#" : "In this script, we show how to run the GalSim config processing using a python dict rather",
+"#" : "than using a config file.  The parallel tutorial examples/demo*.py have shown how to",
+"#" : "do the same thing as these demo*.json files directly in python.  Now we turn the tables",
+"#" : "and show how to use some of the machinery in the GalSim configuration processing ",
+"#" : "from within python itself.  As such, this config file doesn't add much in the way",
+"#" : "of new features -- just the ability to build an image using multiple processes.",
+"#" : "We build the same image using a single process and again using 4 processes.",
+
+"#" : "New features introduced in this demo:",
+
+"#" : "- image : nproc",
+
+"#" : "There are two .json files to do this.  The first one (demo8a.json) does the ",
+"#" : "run with just 1 process.  The second one (demo8b.json) is identical except for ",
+"#" : "setting nproc = 4 and outputting to a different file.",
+
+"#" : "Define the PSF profile",
+"psf" : {
+    "type" : "Moffat",
+    "beta" : 2.4,
+    "fwhm" : 0.65
+},
+
+"#" : "Define the galaxy profile",
+"gal" : {
+    "type" : "Sum",
+    "items" : [
+        {
+            "type" : "Sersic",
+            "n" : 3.6,
+            "half_light_radius" : { "type" : "Random" , "min" : 0.3 , "max" : 0.9 },
+            "flux" : { "type" : "Random" , "min" : 0.1 , "max" : 0.5 },
+            "ellip" : {
+                "type" : "EBeta",
+                "e" : { "type" : "Random" , "min" : 0.0 , "max" : 0.3 },
+                "beta" : { "type" : "Random" }
+            }
+        },
+        {
+            "type" : "Sersic",
+            "n" : 1.5,
+            "half_light_radius" : { "type" : "Random" , "min" : 0.5 , "max" : 1.5 },
+            "#" : "Special: if the last item in a Sum doesn't have a flux specified,",
+            "#" : "then it is given whatever is needed to bring the total to 1.",
+            "#" : "This is especially useful when other components have a random value.",
+            "ellip" : {
+                "type" : "EBeta",
+                "e" : { "type" : "Random" , "min" : 0.2 , "max" : 0.8 },
+                "beta" : { "type" : "Random" }
+            }
+        }
+    ],
+
+    "flux" : { "type" : "Random" , "min" : 1.0e4 , "max" : 1.0e5 }
+},
+
+"#" : "Define some other information about the images ",
+"image" : {
+    "type" : "Tiled",
+    "nx_tiles" : 10,
+    "ny_tiles" : 10,
+
+    "stamp_size" : 64,
+
+    "pixel_scale" : 0.28,
+
+    "draw_method" : "phot",
+
+    "noise" : {
+        "sky_level" : 1.0e4
+    },
+
+    "random_seed" : 22345921
+},
+
+"#" : "Define the name and format of the output file",
+"output" : {
+    "dir" : "output_json",
+    "file_name" : "bpd_single.fits"
+}
+
+}
+

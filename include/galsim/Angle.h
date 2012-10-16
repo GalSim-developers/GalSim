@@ -15,7 +15,7 @@
  *  - Include scalar = Angle / AngleUnit
  *  - Removed non-sensical Angle = Angle * Angle
  *  - Remove templates.  Let compiler convert types to double as needed.
- *  - Always keep values wrapped to [0,2pi) rather than require user to call wrap().
+ *  - Can wrap values to [-pi,pi) if desired by calling theta.wrap().
  *  - Changed names of arcminutes -> arcmin and arcseconds -> arcsec.
  *  - Removed some extra functions that I don't think we need.
  *  - Switch to galsim namespace.
@@ -71,8 +71,7 @@ namespace galsim {
     const AngleUnit arcmin(M_PI/60./180.); ///< constant with units of arcminutes
     const AngleUnit arcsec(M_PI/3600./180.); ///< constant with units of arcseconds
 
-    /**************************************************************************************/
-    /*
+    /**
      *  @brief A class representing an Angle
      *
      *  Angles are a value with an AngleUnit.
@@ -124,7 +123,7 @@ namespace galsim {
     class Angle {
     public:
         /** Construct an Angle with the specified value (interpreted in the given units) */
-        explicit Angle(double val, AngleUnit unit) : _val(val*unit._val) { wrap(); }
+        explicit Angle(double val, AngleUnit unit) : _val(val*unit._val) {}
         /** Default constructor is 0 radians */
         Angle() : _val(0) {}
         /** Copy constructor. */
@@ -138,8 +137,8 @@ namespace galsim {
 
         //@{
         /// Define arithmetic for scaling an Angle
-        Angle& operator*=(double scale) { _val *= scale; wrap(); return *this; }
-        Angle& operator/=(double scale) { _val /= scale; wrap(); return *this; }
+        Angle& operator*=(double scale) { _val *= scale; return *this; }
+        Angle& operator/=(double scale) { _val /= scale; return *this; }
         Angle operator*(double scale) const { Angle theta = *this; theta *= scale; return theta; }
         friend Angle operator*(double scale, Angle theta) { return theta * scale; }
         Angle operator/(double scale) const { Angle theta = *this; theta /= scale; return theta; }
@@ -147,8 +146,8 @@ namespace galsim {
         
         //@{
         /// Define arithmetic for adding/subtracting two Angles
-        Angle& operator+=(Angle rhs) { _val += rhs._val; wrap(); return *this; }
-        Angle& operator-=(Angle rhs) { _val -= rhs._val; wrap(); return *this; }
+        Angle& operator+=(Angle rhs) { _val += rhs._val; return *this; }
+        Angle& operator-=(Angle rhs) { _val -= rhs._val; return *this; }
         Angle operator+(Angle rhs) const { Angle theta = *this; theta += rhs; return theta; }
         Angle operator-(Angle rhs) const { Angle theta = *this; theta -= rhs; return theta; }
         //@}
@@ -167,25 +166,20 @@ namespace galsim {
         friend std::ostream& operator<<(std::ostream& os, Angle theta)
         { os << theta._val; return os; }
 
-    private:
-        /// Wraps this angle to the range [0, 2 pi)
+        /// Wraps this angle to the range (-pi, pi]
         void wrap() {
             const double TWOPI = 2.*M_PI;
             _val = std::fmod(_val, TWOPI); // now in range (-TWOPI, TWOPI)
-            if (_val < 0.0) _val += TWOPI;
-            // if _val was -epsilon, adding 360.0 gives 360.0-epsilon = 360.0 which is actually 0.0
-            // Thus, a rare equivalence conditional test for a double ...
-            if (_val == TWOPI) _val = 0.0;
+            if (_val <= -M_PI) _val += TWOPI;
+            if (_val > M_PI) _val -= TWOPI;
         }
 
+    private:
         double _val;
     };
 
     /// Define conversion from value to an Angle
     inline Angle operator*(double val, AngleUnit unit) { return Angle(val,unit); }
-    // I don't define unit * value, since that just seems weird.
-    // Also, I'd rather have this in the Angle class, but I couldn't figure out
-    // how to wrap it.
 
 
 }

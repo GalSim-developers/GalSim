@@ -99,8 +99,9 @@ namespace galsim {
 
     // Override x-domain writing so we can partially fill pixels at edge of box.
     template <typename T>
-    double SBBox::SBBoxImpl::fillXImage(ImageView<T>& I, double dx, double gain) const 
+    double SBBox::SBBoxImpl::fillXImage(ImageView<T>& I, double gain) const 
     {
+        double dx = I.getScale();
         // Pixel index where edge of box falls:
         int xedge = int( std::ceil(_xw / (2*dx) - 0.5) );
         int yedge = int( std::ceil(_yw / (2*dx) - 0.5) );
@@ -113,18 +114,16 @@ namespace galsim {
         if (yedge==0) yfrac = _yw/dx;
 
         double totalflux = 0.;
-        gain *= _norm; // gain is now total normalization.
+        double norm = _norm / gain; // norm is now total normalization.
         for (int i=I.getXMin(); i<=I.getXMax(); ++i) if (std::abs(i) <= xedge) {
-            double xfac = std::abs(i)==xedge ? gain*xfrac : gain;
+            double xfac = std::abs(i)==xedge ? norm*xfrac : norm;
 
             for (int j=I.getYMin(); j<=I.getYMax(); ++j) if (std::abs(j) <= yedge) {
                 double temp = std::abs(j)==yedge ? xfac*yfrac : xfac;
-                temp *= gain;
                 I(i,j) += T(temp);
                 totalflux += temp;
             }
         }
-        I.setScale(dx);
 
         return totalflux * (dx*dx);
     }

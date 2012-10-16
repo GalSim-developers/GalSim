@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 This script can be run from the command-line to check the properties of images, in particular, the
 adaptive moments that come from iteratively determining the best-fit Gaussian for the object at the

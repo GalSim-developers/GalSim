@@ -1,7 +1,29 @@
-"""
-A few adjustments to the Image classes at the Python layer, including the addition of docstrings.
+"""@file image.py
+A few adjustments to the galsim.Image classes at the Python layer, including the addition of 
+docstrings.
 """
 from . import _galsim
+import numpy
+
+# Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion 
+# when doing arithmetic with images.  So just make sure both of them point to ImageI in the Image 
+# dict.  One of them is what you get when you just write numpy.int32.  The other is what numpy 
+# decides an int32 value + 1 is.  The first one is usually the one that's already in the Image dict,
+# but we assign both versions just to be sure.
+
+_galsim.Image[numpy.int32] = _galsim.ImageI
+_galsim.ImageView[numpy.int32] = _galsim.ImageViewI
+_galsim.ConstImageView[numpy.int32] = _galsim.ConstImageViewI
+
+alt_int32 = ( numpy.array([0]).astype(numpy.int32) + 1 ).dtype.type
+_galsim.Image[alt_int32] = _galsim.ImageI
+_galsim.ImageView[alt_int32] = _galsim.ImageViewI
+_galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
+
+# For more information regarding this rather unexpected behaviour for numpy.int32 types, see
+# the following (closed, marked "wontfix") ticket on the numpy issue tracker:
+# http://projects.scipy.org/numpy/ticket/1246
+
 
 # First of all we add docstrings to the Image, ImageView and ConstImageView classes for each of the
 # S, F, I & D datatypes
@@ -35,6 +57,9 @@ for Class in _galsim.Image.itervalues():
     The individual elements in the array attribute are accessed as im.array[y,x], matching the
     standard numpy convention, while the Image class's own accessors are all (x,y).
     """
+    Class.getScale.__func__.__doc__ = "Get the sample scale dx for the image."
+    Class.setScale.__func__.__doc__ = "Set the sample scale dx for the image."
+
 
 for Class in _galsim.ImageView.itervalues():
     Class.__doc__ = """
@@ -52,14 +77,14 @@ for Class in _galsim.ImageView.itervalues():
 
     From Python, the only way to explicitly construct an ImageView is
 
-    >>> imv = ImageView(array, xMin=1, yMin=1)       # numpy array and origin
+        >>> imv = ImageView(array, xmin=1, ymin=1)       # numpy array and origin
 
     However, ImageView instances are also the return type of several functions such as
 
-    >>> im.view()
-    >>> im.subImage(bounds)
-    >>> im[bounds]                                   # (equivalent to the subImage call above)
-    >>> galsim.fits.read(...)
+        >>> im.view()
+        >>> im.subImage(bounds)
+        >>> im[bounds]                                   # (equivalent to the subImage call above)
+        >>> galsim.fits.read(...)
     
     The array argument to the constructor must have contiguous values along rows, which should be
     the case for newly-constructed arrays, but may not be true for some views and generally will not
@@ -91,7 +116,7 @@ for Class in _galsim.ConstImageView.itervalues():
 
     From Python, the only way to explicitly construct an ConstImageView is
 
-    >>> cimv = ConstImageView(array, xMin=1, yMin=1)       # NumPy array and origin
+        >>> cimv = ConstImageView(array, xmin=1, ymin=1)       # NumPy array and origin
 
     which works just like the version for ImageView except that the resulting object cannot be used
     to modify the array.
@@ -104,9 +129,12 @@ def Image_getitem(self, key):
     return self.subImage(key)
 
 def Image_add(self, other):
-    ret = self.copy()
-    ret += other
-    return ret
+    try:
+        result = self.array[:,:] + other.array
+    except AttributeError:
+        result = self.array[:,:] + other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_iadd(self, other):
     try:
@@ -116,9 +144,12 @@ def Image_iadd(self, other):
     return self
 
 def Image_sub(self, other):
-    ret = self.copy()
-    ret -= other
-    return ret
+    try:
+        result = self.array[:,:] - other.array
+    except AttributeError:
+        result = self.array[:,:] - other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_isub(self, other):
     try:
@@ -128,9 +159,12 @@ def Image_isub(self, other):
     return self
 
 def Image_mul(self, other):
-    ret = self.copy()
-    ret *= other
-    return ret
+    try:
+        result = self.array[:,:] * other.array
+    except AttributeError:
+        result = self.array[:,:] * other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_imul(self, other):
     try:
@@ -140,9 +174,12 @@ def Image_imul(self, other):
     return self
 
 def Image_div(self, other):
-    ret = self.copy()
-    ret /= other
-    return ret
+    try:
+        result = self.array[:,:] / other.array
+    except AttributeError:
+        result = self.array[:,:] / other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
 
 def Image_idiv(self, other):
     try:
@@ -151,22 +188,69 @@ def Image_idiv(self, other):
         self.array[:,:] /= other
     return self
 
+# Define &, ^ and | only for integer-type images
+def Image_and(self, other):
+    try:
+        result = self.array[:,:] & other.array
+    except AttributeError:
+        result = self.array[:,:] & other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
+
+def Image_iand(self, other):
+    try:
+        self.array[:,:] &= other.array
+    except AttributeError:
+        self.array[:,:] &= other
+    return self
+
+def Image_xor(self, other):
+    try:
+        result = self.array[:,:] ^ other.array
+    except AttributeError:
+        result = self.array[:,:] ^ other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
+
+def Image_ixor(self, other):
+    try:
+        self.array[:,:] ^= other.array
+    except AttributeError:
+        self.array[:,:] ^= other
+    return self
+
+def Image_or(self, other):
+    try:
+        result = self.array[:,:] | other.array
+    except AttributeError:
+        result = self.array[:,:] | other
+    type = result.dtype.type
+    return _galsim.ImageView[type](result)
+
+def Image_ior(self, other):
+    try:
+        self.array[:,:] |= other.array
+    except AttributeError:
+        self.array[:,:] |= other
+    return self
+
+
 def Image_copy(self):
     # self can be an Image or an ImageView, but the return type needs to be an Image.
     # So use the array.dtype.type attribute to get the type of the underlying data,
     # which in turn can be used to index our Image dictionary:
     return _galsim.Image[self.array.dtype.type](self)
 
-# Some function to enable pickling of images
+# Some functions to enable pickling of images
 def ImageView_getinitargs(self):
-    return self.array, self.xMin, self.yMin
+    return self.array, self.xmin, self.ymin, self.scale
 
 # An image is really pickled as an ImageView
 def Image_getstate(self):
-    return self.array, self.xMin, self.yMin
+    return self.array, self.xmin, self.ymin, self.scale
 
 def Image_setstate(self, args):
-    type = self.array.dtype.type
+    type = args[0].dtype.type
     self.__class__ = _galsim.ImageView[type]
     self.__init__(*args)
 
@@ -220,5 +304,17 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__truediv__ = Image_div
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
+
+import numpy as np
+for int_type in [ np.int16, np.int32 ]:
+    for Class in [ _galsim.Image[int_type], _galsim.ImageView[int_type],
+                   _galsim.ConstImageView[int_type] ]:
+        Class.__and__ = Image_and
+        Class.__xor__ = Image_xor
+        Class.__or__ = Image_or
+    for Class in [ _galsim.Image[int_type], _galsim.ImageView[int_type] ]:
+        Class.__iand__ = Image_iand
+        Class.__ixor__ = Image_ixor
+        Class.__ior__ = Image_ior
 
 del Class    # cleanup public namespace

@@ -26,24 +26,24 @@ testseed = 1000 # seed used for UniformDeviate for all tests
 # Warning! If you change testseed, then all of the *Result variables below must change as well.
 
 # the right answer for the first three uniform deviates produced from testseed
-uResult = (0.6535895883571357, 0.20552172302268445, 0.11500694020651281)
+uResult = (0.11860922840423882, 0.21456799632869661, 0.43088198406621814)
 
 # mean, sigma to use for Gaussian tests
 gMean = 4.7
 gSigma = 3.2
 # the right answer for the first three Gaussian deviates produced from testseed
-gResult = (3.464038348789816, 2.9155603332579436, 7.995607564277979)
+gResult = (6.3344979808161215, 6.2082355273987861, -0.069894693358302007)
 
 # N, p to use for binomial tests
 bN = 10
 bp = 0.7
 # the right answer for the first three binomial deviates produced from testseed
-bResult = (6, 8, 9)
+bResult = (9, 8, 7)
 
 # mean to use for Poisson tests
 pMean = 7
 # the right answer for the first three Poisson deviates produced from testseed
-pResult = (8, 5, 4)
+pResult = (4, 5, 6)
 
 # gain, read noise to use for CCD noise tests
 cGain = 3.
@@ -57,28 +57,28 @@ typestrings = ("S", "I", "F", "D")
 sky = 50.
 
 # Tabulated results
-cResultS = np.array([[55, 47], [44, 54]], dtype=np.int16)
-cResultI = np.array([[55, 47], [44, 54]], dtype=np.int32)
-cResultF = np.array([[55.894428, 47.926445], [44.766380, 54.509399]], dtype=np.float32)
-cResultD = np.array([[55.894425874146336, 47.926443828684981],
-                     [44.766381648303245, 54.509402357022211]], dtype=np.float64)
+cResultS = np.array([[44, 47], [50, 49]], dtype=np.int16)
+cResultI = np.array([[44, 47], [50, 49]], dtype=np.int32)
+cResultF = np.array([[44.45332718, 47.79725266], [50.67744064, 49.58272934]], dtype=np.float32)
+cResultD = np.array([[44.453328440057618, 47.797254142519577], 
+                     [50.677442088335162, 49.582730949808081]],dtype=np.float64)
 
 # a & b to use for Weibull tests
 wA = 4.
 wB = 9.
 # Tabulated results for Weibull
-wResult = (9.13234684792985, 6.233146513996428, 5.320941931556709)
+wResult = (5.3648053017485591, 6.3093033550873878, 7.7982696798921074)
 
 # alpha & beta to use for Gamma tests
 gammaAlpha = 1.5
 gammaBeta = 4.5
 # Tabulated results for Weibull
-gammaResult = (7.044528184548506, 1.2478440729556932, 7.261520614904038)
+gammaResult = (4.7375613139927157, 15.272973580418618, 21.485016362839747)
 
 # n to use for Chi2 tests
 chi2N = 30
 # Tabulated results for Chi2
-chi2Result = (32.070036783568476, 26.303957298429747, 23.438338438325008)
+chi2Result = (32.209933900954049, 50.040002656028513, 24.301442486313896)
 
 def funcname():
     import inspect
@@ -208,7 +208,7 @@ def test_poisson_image():
     p = galsim.PoissonDeviate(u, mean=pMean)
     testimage = galsim.ImageViewI(np.zeros((3, 1), dtype=np.int32))
     testimage.addNoise(p)
-    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(pResult),
+    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(pResult)-pMean,
                                err_msg="PoissonDeviate generator applied to Images does not "
                                        "reproduce expected sequence")
     t2 = time.time()
@@ -394,7 +394,7 @@ def test_multiprocess():
     for i in range(len(seeds)):
         list, proc, args = done_queue.get()
         seed = args[0]
-        print 'list for %d was calculated by process %s to be %s'%(seed, proc, list)
+        #print 'list for %d was calculated by process %s to be %s'%(seed, proc, list)
         np.testing.assert_array_equal(
                 list, ref_lists[seed], 
                 err_msg="Random numbers are different when using multiprocessing")
@@ -402,6 +402,9 @@ def test_multiprocess():
     # Stop the processes:
     for k in range(nproc):
         task_queue.put('STOP')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_uniform_rand()

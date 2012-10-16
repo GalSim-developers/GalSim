@@ -21,14 +21,14 @@
 
 #include "Image.h"
 #ifdef DIVERT_BOOST_RANDOM
-#include "galsim/boost1_48_0.random/mersenne_twister.hpp"
-#include "galsim/boost1_48_0.random/normal_distribution.hpp"
-#include "galsim/boost1_48_0.random/binomial_distribution.hpp"
-#include "galsim/boost1_48_0.random/poisson_distribution.hpp"
-#include "galsim/boost1_48_0.random/uniform_real_distribution.hpp"
-#include "galsim/boost1_48_0.random/weibull_distribution.hpp"
-#include "galsim/boost1_48_0.random/gamma_distribution.hpp"
-#include "galsim/boost1_48_0.random/chi_squared_distribution.hpp"
+#include "galsim/boost1_48_0/random/mersenne_twister.hpp"
+#include "galsim/boost1_48_0/random/normal_distribution.hpp"
+#include "galsim/boost1_48_0/random/binomial_distribution.hpp"
+#include "galsim/boost1_48_0/random/poisson_distribution.hpp"
+#include "galsim/boost1_48_0/random/uniform_real_distribution.hpp"
+#include "galsim/boost1_48_0/random/weibull_distribution.hpp"
+#include "galsim/boost1_48_0/random/gamma_distribution.hpp"
+#include "galsim/boost1_48_0/random/chi_squared_distribution.hpp"
 #else
 #include "boost/random/mersenne_twister.hpp"
 #include "boost/random/normal_distribution.hpp"
@@ -96,19 +96,19 @@ namespace galsim {
          * Note that microsecond counter is the seed, so BaseDeviates constructed in rapid
          * succession will not be independent. 
          */
-        BaseDeviate() : _rng(new rng_type()) { seedtime(); } 
+        BaseDeviate() : _rng(new rng_type()) { seedtime(); }
 
         /**
          * @brief Construct and seed a new BaseDeviate, using the provided value as seed.
          *
          * @param[in] lseed A long-integer seed for the RNG.
          */
-        BaseDeviate(long lseed) : _rng(new rng_type(lseed)) {} 
+        BaseDeviate(long lseed) : _rng(new rng_type()) { seed(lseed); }
 
         /**
          * @brief Construct a new BaseDeviate, sharing the random number generator with rhs.
          */
-        BaseDeviate(const BaseDeviate& rhs) : _rng(rhs._rng) {} 
+        BaseDeviate(const BaseDeviate& rhs) : _rng(rhs._rng) {}
 
         /**
          * @brief Destructor
@@ -131,7 +131,7 @@ namespace galsim {
          *
          * Note that this will reseed all Deviates currently sharing the RNG with this one.
          */
-        void seed(long lseed) { _rng->seed(lseed); }
+        void seed(long lseed);
 
         /**
          * @brief Like seed(), but severs the relationship between other Deviates.
@@ -147,7 +147,7 @@ namespace galsim {
          * Other Deviates that had been using the same RNG will be unaffected, while this 
          * Deviate will obtain a fresh RNG seeding by the current time.
          */
-        void reset(long lseed) { _rng.reset(new rng_type(lseed)); }
+        void reset(long lseed) { _rng.reset(new rng_type()); seed(lseed); }
 
         /**
          * @brief Make this object share its random number generator with another Deviate.
@@ -454,12 +454,19 @@ namespace galsim {
         }
 
         /**
-         * @brief Add Poisson pseudo-random deviates to every element in a supplied Image.
+         * @brief Apply Poisson pseudo-random deviates to every element in a supplied Image.
+         *
+         * This adds Poisson noise with the given mean to the image, and then subtracts off
+         * that mean value again, so the expected value is 0.
          *
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+        void applyTo(ImageView<T> data) 
+        { 
+            ApplyDeviateToImage(*this, data); 
+            data -= T(getMean());
+        }
 
     private:
         boost::random::poisson_distribution<> _pd;

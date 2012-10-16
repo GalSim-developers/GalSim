@@ -1,0 +1,145 @@
+#
+# Demo #7
+#
+# The seventh YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script introduces drawing profiles with photon shooting rather than doing the 
+# convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 different
+# kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so 
+# each of the 25 pairings is drawn 4 times with different realizations of the random numbers.
+# The profiles are drawn twice: once with the FFT method, and once with photon shooting.
+# The two images are drawn side by side so it is easy to visually compare the results.
+# The 100 total profiles are written to a FITS data cube, which makes it easy to scroll
+# through the images comparing the two drawing methods.
+#
+# New features introduced in this demo:
+#
+# - obj type : List (items)
+# - obj type : Airy (lam_over_diam)
+# - obj : dilate
+# - value type : Sequence (..., repeat)
+# - value type : Random (min, max)
+# - image type : Tiled (..., stamp_size, xborder, yborder)
+# - image : draw_method (fft or phot)
+
+
+# Define the PSF profiles
+psf : 
+    type : List
+    items :
+        -
+            type : Gaussian
+            fwhm : 0.65
+        -
+            type : Moffat
+            fwhm : 0.65
+            beta : 2.4
+        -
+            type : Sum
+            items :
+                - { type : Gaussian , flux : 0.8 , fwhm : 0.65 }
+                - { type : Gaussian , flux : 0.2 , fwhm : 1.3 }
+        -
+            type : Convolution
+            items :
+                - { type : Gaussian , fwhm : 0.65 }
+                - { type : OpticalPSF , 
+                    lam_over_diam : 0.39 , obscuration : 0.4 ,
+                    defocus : 0.1 , spher : -0.3 ,
+                    astig1 : 0.3 , astig2 : -0.2 ,
+                    coma1 : 0.2 , coma2 : 0.1 }
+        -
+            type : Convolution
+            items :
+                - { type : Kolmogorov , fwhm : 0.65 }
+                - { type : Airy , lam_over_diam : 0.195 }
+
+    index : 
+        type : Sequence
+        first : 0
+        last : 4
+        repeat : 40  # How many times to repeat the same value before moving on.
+
+
+# Define the galaxy profiles
+gal :
+    type : List
+    items : 
+        # The sizes here start as 1, but we dilate the profile below:
+        - { type : Gaussian , half_light_radius : 1 }
+        - { type : Exponential , half_light_radius : 1 }
+        - { type : DeVaucouleurs , half_light_radius : 1 }
+        - { type : Sersic , n : 2.5 , half_light_radius : 1 }
+        -  
+            type : Sum 
+            items :
+                - { type : Sersic , n : 3.2 , half_light_radius : 0.7 , flux : 0.4 }
+                - { type : Sersic , n : 1.5 , half_light_radius : 1.2 , flux : 0.6 }
+    index :
+        type : Sequence
+        # The index item for a List automatically has first and last set appropriately
+        # (0 and 4 in this case).  So we can omit them, and just specify repeat.
+        # This will repeat each 8 times, but also go through the full list 5 times
+        repeat : 8 
+
+    flux : { type : Random , min : 1.e4 , max : 1.e5 }
+    dilate : { type : Random , min : 0.3 , max : 1.3 }
+    ellip : 
+        type : EBeta
+        e : { type : Random , min : 0.0 , max : 0.8 }
+        beta : { type : Random }
+
+
+# Define some other information about the images 
+image :
+    # Each image in the data cube has two tiles.
+    type : Tiled
+    nx_tiles : 2
+    ny_tiles : 1
+
+    # Use a 2 pixel border between fft and phot images.
+    # Rather than specify a single border for both directions, you can also specify
+    # xborder and/or yborder separately.  Here we use xborder.
+    xborder : 2
+
+    # Rather than specify stamp_xsize and stamp_ysize separately, you can also just
+    # specify a single stamp_size.
+    stamp_size : 64
+
+    pixel_scale : 0.28  # arcsec / pixel
+
+    # Define what kind of noise to use
+    noise : 
+        sky_level : 1.e4  # ADU / arcsec^2
+    
+    # This is a pretty contrived item.  Normally, you would just choose either
+    # fft or phot.  But here we alternate between the two of them to make 
+    # images that compare the same object drawn both ways.
+    draw_method :
+        type : List
+
+        # Here we introduce another notation for specifying a list in YAML.  The list of items
+        # may be indicated with square brackets with the items separated by commas rather
+        # than using the - notation with one item per line.  This is equivalent to
+        # items :
+        #     - fft
+        #     - phot
+        items : [ fft , phot ]
+
+        # The following sequence for index is automatically generated:
+        #index : { type : Sequence , first : 0 , last : 1 }
+
+    # This is also pretty contrived.  It is really only relevant for this particular example.  
+    # The usual case is to just set a single number, which really means that each object
+    # gets a sequential value starting with this number.  In this case we repeat each value
+    # two times, so the fft and phot images get the same values for the random parameters.
+    random_seed : { type : Sequence , first : 553728 , repeat : 2 }
+
+
+# Define the name and format of the output file
+output :
+    type : DataCube
+    dir : output_yaml
+    file_name : cube_phot.fits
+    nimages : 100

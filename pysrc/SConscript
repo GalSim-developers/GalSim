@@ -6,13 +6,18 @@ import glob
 
 Import('env')
 ReadFileList=env['__readfunc']
-pyenv = env.Clone()
+
+try:
+    pyenv = env['pyenv'].Clone()
+except:
+    # scons -c doesn't end up making src_env, so just use regular env.
+    pyenv = env.Clone()
 
 pyenv.Append(LIBS=["galsim"])
 pyenv['OBJPREFIX'] = '.obj/'
 
 lib_dir = 'lib'
-lib_install_dir = os.path.join(env['PYPREFIX'], lib_dir)
+lib_install_dir = os.path.join(env['FINAL_PREFIX'], lib_dir)
 
 # Include the library location within the modules.
 # TODO: Check if we still need this, now that we are using LoadableModule
@@ -45,11 +50,8 @@ mod_files.extend(ReadFileList('files.txt'))
 # Library file containing generic code
 obj_mod = env1.SharedObject(mod_files)
 
-# MJ: Seems weird that we need to explicitly specify the suffix, but on Macs it doesn't get
-# set to this (at least with SCons 2.0), and .so is required.
-mod = env1.LoadableModule(
-        os.path.join('#galsim','_galsim'), obj_mod,
-        SHLIBPREFIX="", LDMODULESUFFIX='.so')
+mod = env1.LoadableModule(os.path.join('#galsim','_galsim'), obj_mod,
+                          LDMODULEPREFIX='', LDMODULESUFFIX='.so')
 mod_targets = [mod]
 
 # NB: With LoadableModule (rather than SharedLibrary), we don't need the RenameLib stuff on Macs.

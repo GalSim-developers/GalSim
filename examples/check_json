@@ -1,0 +1,88 @@
+#!/bin/bash
+
+if [ ! -d "output" ]; then
+    mkdir output
+fi
+if [ ! -d "output_json" ]; then
+    mkdir output_json
+fi
+
+/bin/rm -rf output/*
+/bin/rm -rf output_json/*
+
+time ../bin/demo1 || exit
+time ../bin/galsim_json json/demo1.json || exit
+
+time ../bin/demo2 || exit
+time ../bin/galsim_json json/demo2.json || exit
+
+time ../bin/demo3 || exit
+time ../bin/galsim_json json/demo3.json || exit
+
+time ../bin/demo4 || exit
+time ../bin/galsim_json json/demo4.json || exit
+
+time ../bin/demo5 || exit
+time ../bin/galsim_json json/demo5.json || exit
+
+time ../bin/demo6 || exit
+time ../bin/galsim_json json/demo6a.json json/demo6b.json || exit
+
+time ../bin/demo7 || exit
+time ../bin/galsim_json json/demo7.json || exit
+
+time ../bin/demo8 || exit
+time ../bin/galsim_json json/demo8a.json json/demo8b.json || exit
+
+time ../bin/demo9 || exit
+time ../bin/galsim_json json/demo9.json || exit
+
+time ../bin/demo10 || exit
+time ../bin/galsim_json json/demo10.json || exit
+
+echo 'Checking diffs: (No output means success)'
+
+# demo1:
+# Don't check demo1, since it doesn't use a deterministic seed.
+# If you add an initial seed in both places, then you can uncomment 
+# the next line and it should work.
+#diff output/demo1.fits output_json/demo1.fits 
+
+# demo2:
+diff output/demo2.fits output_json/demo2.fits 
+
+# demo3:
+diff output/demo3.fits output_json/demo3.fits 
+diff output/demo3_epsf.fits output_json/demo3_epsf.fits 
+
+# demo4:
+diff output/multi.fits output_json/multi.fits 
+
+# demo5:
+diff output/g08_psf.fits output_json/g08_psf.fits
+diff output/g08_gal.fits output_json/g08_gal.fits
+
+# demo6:
+diff output/psf_real.fits output_json/psf_real.fits
+diff output/cube_real.fits output_json/cube_real.fits 
+
+# demo7:
+diff output/cube_phot.fits output_json/cube_phot.fits 
+
+# demo8:
+diff output/bpd_single.fits output_json/bpd_single.fits 
+diff output/bpd_multi.fits output_json/bpd_multi.fits 
+
+# demo9:
+for dir_num in {1..4} 
+do
+    for file_num in {0..4}
+    do
+        file_name=nfw$dir_num/cluster000$file_num.fits
+	diff output/$file_name output_json/$file_name
+    done
+done
+
+# demo10:
+diff output/power_spectrum.fits output_json/power_spectrum.fits 
+

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 A simple script based originally on script 4 from MultiObjectDemo.py.  
 The point of the test is to which interpolant is the best choice for OpticalPSF.
@@ -56,7 +55,7 @@ def Script4():
         i2d = galsim.InterpolantXY(i1d)
         optics = galsim.OpticalPSF(
                 interpolantxy = i2d,
-                lam_over_D = 0.6 * psf_fwhm,
+                lam_over_diam = 0.6 * psf_fwhm,
                 obscuration = 0.4,
                 defocus = 0.1,
                 astig1 = 0.3, astig2 = -0.2,
@@ -69,7 +68,7 @@ def Script4():
         optics = galsim.OpticalPSF(
                 interpolantxy = i2d,
                 oversampling = 5,
-                lam_over_D = 0.6 * psf_fwhm,
+                lam_over_diam = 0.6 * psf_fwhm,
                 obscuration = 0.4,
                 defocus = 0.1,
                 astig1 = 0.3, astig2 = -0.2,

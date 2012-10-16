@@ -367,25 +367,25 @@ namespace galsim {
     // Returns total flux
     template <typename T>
     double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<T>& I, double dx, double gain) const 
+        ImageView<T>& I, double gain) const 
     {
+        double dx = I.getScale();
         if ( dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
             double sum=0.;
             for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
                 for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {
                     Position<double> x(ix*dx,iy*dx);
-                    T val = gain * xValue(x);
+                    T val = xValue(x) / gain;
                     sum += val;
                     I(ix,iy) += val;
                 }
             }
-            I.setScale(dx);
             return sum;
         } else {
             // Otherwise just use the normal routine to fill the grid:
             // Note that we need to call doFillXImage, not fillXImage here,
             // to avoid the virtual function resolution.
-            return SBProfileImpl::doFillXImage(I,dx,gain);
+            return SBProfileImpl::doFillXImage(I,gain);
         }
     }
 
@@ -484,7 +484,7 @@ namespace galsim {
         }
         dbg<<"Done: flux = "<<flux<<std::endl;
         // Should have added up to the total flux.
-        assert( std::abs(flux - fluxTot) < 1.e-6 );
+        assert( std::abs(flux - fluxTot) < 1.e-6 * fluxTot );
         if (d1 == 0) {
             dbg<<"No smaller radius found.  Keep current value of stepk\n";
             return;
@@ -531,42 +531,25 @@ namespace galsim {
         double dk = _ktab->getDk();
         double dk2 = dk*dk;
 
-        // This may not be the most efficient way to do this, but it's probably not 
-        // too bad.  I make a list of pairs of (R, kval) then I sort this by R and
-        // find the last kval in the sorted list that is above the threshold.
-
-        // Build the vector.
-        std::vector<std::pair<double,double> > vals(N*N);
-        for(int ix=-N/2, j=0; ix<N/2; ++ix) for(int iy=-N/2; iy<N/2; ++iy, ++j) {
-            double ksq = (ix*ix + iy*iy) * dk2;
-            vals[j].first = ksq;
-            vals[j].second = std::norm(_ktab->kval(ix,iy));
-        }
-
-        // Sort the vector by the first element in the pair (= ksq)
-        std::sort(vals.begin(), vals.end(), PairSorter());
-
-        // Find the last element in the sorted list with kval > thresh
+        // Among the elements with kval > thresh, find the one with the maximum ksq
         double thresh = sbp::maxk_threshold * getFlux();
-        thresh *= thresh; // Since values are |kval|^2.
-        std::vector<std::pair<double, double> >::reverse_iterator iter = 
-            std::find_if(vals.rbegin(), vals.rend(), AboveThresh(thresh));
-        assert(iter != vals.rend());
-        if (iter == vals.rbegin()) {
-            dbg<<"The largest ksq in the vector already has kval > thresh";
-            dbg<<"This probably means that the image isn't large enough!.";
-            return;
+        thresh *= thresh; // Since values will be |kval|^2.
+        double maxk_ksq = 0.;
+        double maxk_norm_kval = 0.;
+        for(int ix=-N/2, j=0; ix<N/2; ++ix) for(int iy=-N/2; iy<N/2; ++iy, ++j) {
+            double norm_kval = std::norm(_ktab->kval(ix,iy));
+            if (norm_kval > thresh) {
+                double ksq = (ix*ix + iy*iy) * dk2;
+                if (ksq  > maxk_ksq) {
+                    maxk_ksq = ksq;
+                    maxk_norm_kval = norm_kval;
+                }
+            }
         }
-
-        // Take the prev value, which will be at a radius where all k values at that 
-        // radius and farther out are below the threshold.
-        --iter; // --, not ++, since we are iterating in reverse order in the vector.
+        dbg<<"Found |kval|^2 = "<<maxk_norm_kval<<" at ksq = "<<maxk_ksq<<std::endl;
 
         // Check if we want to use the new value.  (Only if smaller than the current value.)
-        double ksq = iter->first;
-        double norm_kval = iter->second;
-        dbg<<"Found |kval|^2 = "<<norm_kval<<" at ksq = "<<ksq<<std::endl;
-        double new_maxk = sqrt(ksq);
+        double new_maxk = sqrt(maxk_ksq);
         dbg<<"new_maxk = "<<new_maxk<<std::endl;
         if (new_maxk < _maxk) {
             dbg<<"New value is smaller, so update\n";
@@ -713,8 +696,8 @@ namespace galsim {
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance);
 
     template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<float>& I, double dx, double gain) const;
+        ImageView<float>& I, double gain) const;
     template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<double>& I, double dx, double gain) const;
+        ImageView<double>& I, double gain) const;
 }
 

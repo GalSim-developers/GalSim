@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 This script can be run from the command-line to carry out PSF correction on images, parallel to
 MeasMoments.py

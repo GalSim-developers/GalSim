@@ -1,0 +1,105 @@
+{
+"#" : "Demo #1",
+
+"#" : "The first JSON configuration file in our tutorial about using Galsim config files",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
+
+"#" : "Each of these demo*.json files are designed to be equivalent to the corresponding",
+"#" : "../demo*.py file.  We expect that the config file usage will be easier for many people",
+"#" : "to get going with GalSim, especially those who aren't very comfortable with writing ",
+"#" : "python code.  And even advanced pythonistas may find it more useful for many tasks than",
+"#" : "writing the corresponding python code.",
+
+"#" : "The executable that reads these JSON files is called galsim_json, which should be installed",
+"#" : "in your PREFIX/bin directory (after doing `scons install`, that is, where PREFIX is either",
+"#" : "/usr/local or whatever other PREFIX you set when running scons).  So to run this config",
+"#" : "file, you should be able to type simply (from the examples directory):",
+
+"#" : "    galsim_json json/demo1.json",
+
+"#" : "If you haven't run `scons install` for whatever reason, you can instead write:",
+
+"#" : "    ../bin/galsim_json json/demo1.json",
+
+"#" : "See https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation for ",
+"#" : "more complete documentation about how to use the GalSim configuration machinery.",
+
+
+"#" : "This first config file is about as simple as it gets.  We draw an image of a single galaxy ",
+"#" : "convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the",
+"#" : "PSF and the # galaxy.  And we add a constant level of Gaussian noise to the image.",
+
+"#" : "In each demo, we list the new features introduced in that demo file.  These will differ",
+"#" : "between the .py and .json files, since the two methods implement things different ways.",
+"#" : "(demo*.py are python scripts, while demo*.json are configuration files.)",
+
+"#" : "New features introduced in this demo:",
+
+"#" : "- top level fields gal, psf, image, output",
+"#" : "- obj type : Gaussian (flux, sigma)",
+"#" : "- image : pixel_scale",
+"#" : "- noise type : Gaussian (sigma)",
+"#" : "- output : dir, file_name",
+
+"#" : "The gal field defines what kind of galaxy profile to use.",
+"gal" : {
+    "#" : "One of the simplest profiles is a Gaussian.",
+    "type" : "Gaussian",
+
+    "#" : "Gaussian profiles have a number of possible size parameters, but",
+    "#" : "sigma is the most basic one.  ",
+    "#" : "The others are fwhm and half_light_radius.  At least one of these must be specified.",
+    "sigma" : 2,
+
+    "#" : "The default flux would be 1, but you would typically want to define the flux ",
+    "#" : "to be something other than that.",
+    "flux" : 1e5
+},
+ 
+
+"#" : "Technically, the psf field isn't required, but for astronomical images we always have a ",
+"#" : "PSF so you'll usually want to define one.  (If it's omitted, the galaxy isn't convolved ",
+"#" : "by anything, so effectively a delta function PSF.)",
+"#" : "We use a Gaussian again for simplicity, but one somewhat smaller than the galaxy.",
+"psf" : {
+    "type" : "Gaussian",
+    "sigma" : 1,
+    "#" : "No need to specify a flux, since flux=1 is the right thing for a PSF."
+},
+
+
+"#" : "There is an optional pix field as well, which can define the profile of the pixel.",
+"#" : "However, you will almost never need to specify one. The default is to use the same pixel",
+"#" : "shape as the image uses, namely a square pixel whose size is image.pixel_scale (see below).",
+"#" : "The config machinery will handle convolving by the pixel when necessary as was done ",
+"#" : "in demo1.py.  (It's not always necessary -- see demo7.py.)",
+
+
+"#" : "The image field specifies some other information about the image to be drawn.",
+"image" : {
+    "#" : "If pixel_scale isn't specified, then pixel_scale = 1 is assumed.",
+    "pixel_scale" : 0.2,
+
+    "#" : "If you want noise in the image (which is typical) you specify that here.",
+    "#" : "In this case we use gaussian noise.",
+    "noise" : {
+        "type" : "Gaussian",
+
+        "#" : "sigma = standard deviation of the counts in each pixel",
+        "sigma" : 30
+    },
+
+    "#" : "You can also specify the size of the image if you want, but if you omit it",
+    "#" : "(as we do here), then GalSim will automatically size the image appropriately."
+},
+
+"#" : "Typically, you will want to specify the output format and file name.",
+"#" : "If this is omitted, the output will be to a fits file with the same root name as the ",
+"#" : "config file (so demo1.fits in this case), but that's usually not a great choice.",
+"#" : "So at the very least, you would typically want to specify at least the file_name.",
+"output" : {
+    "dir" : "output_json",
+    "file_name" : "demo1.fits"
+}
+    
+}

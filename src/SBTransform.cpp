@@ -7,8 +7,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -295,10 +295,10 @@ namespace galsim {
 
         // Figure out which function we need for kValue and kValueNoPhase
         if (std::abs(_absdet-1.) < sbp::kvalue_accuracy) {
-            xdbg<<"absdet = "<<_absdet*_fluxScaling<<" = 1, so use NoDet version.\n";
+            xdbg<<"absdet*fluxScaling = "<<_absdet<<" = 1, so use NoDet version.\n";
             _kValueNoPhase = &SBTransform::_kValueNoPhaseNoDet;
         } else {
-            xdbg<<"absdet = "<<_absdet*_fluxScaling<<" != 1, so use WithDet version.\n";
+            xdbg<<"absdet*fluxScaling = "<<_absdet<<" != 1, so use WithDet version.\n";
             _kValueNoPhase = &SBTransform::_kValueNoPhaseWithDet;
         }
         if (_cen.x == 0. && _cen.y == 0.) _kValue = _kValueNoPhase;
@@ -440,6 +440,14 @@ namespace galsim {
         int N = kt.getN();
         double dk = kt.getDk();
 
+        dbg<<"Start SBTransformation fillKGrid\n";
+        dbg<<"N = "<<N<<", dk = "<<dk<<std::endl;
+        dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
+        dbg<<"_cen = "<<_cen<<std::endl;
+        dbg<<"_invdet = "<<_invdet<<std::endl;
+        dbg<<"_absdet = "<<_absdet<<std::endl;
+        dbg<<"_fluxScaling = "<<_fluxScaling<<std::endl;
+
 #if 0
         // The simpler version, saved for reference
         if (_cen.x==0. && _cen.y==0.) {
@@ -455,7 +463,7 @@ namespace galsim {
             std::complex<double> dxexp(0,-dk*_cen.x),   dyexp(0,-dk*_cen.y);
             std::complex<double> dxphase(std::exp(dxexp)), dyphase(std::exp(dyexp));
             // xphase, yphase: current phase value
-            std::complex<double> yphase(std::exp(-dyexp*N/2.));
+            std::complex<double> yphase(std::exp(-dyexp*double(N)/2.));
             for (int iy = -N/2; iy < N/2; iy++) {
                 std::complex<double> phase = yphase; // since kx=0 to start
                 // Only ix>=0 since it's Hermitian:
@@ -470,14 +478,6 @@ namespace galsim {
 #else
         // A faster version that pulls out all the if statements
         // and keeps track of fwdT(k) as we go
-
-        dbg<<"Start Transformation fillKGrid\n";
-        dbg<<"N = "<<N<<", dk = "<<dk<<std::endl;
-        dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
-        dbg<<"_cen = "<<_cen<<std::endl;
-        dbg<<"_invdet = "<<_invdet<<std::endl;
-        dbg<<"_absdet = "<<_absdet<<std::endl;
-        dbg<<"_fluxScaling = "<<_fluxScaling<<std::endl;
 
         if (_mA == 1. && _mB == 0. && _mC == 0. && _mD == 1. && 
             _cen.x == 0. && _cen.y == 0.) {

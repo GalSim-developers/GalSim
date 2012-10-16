@@ -1,40 +1,45 @@
-"""@file ellipse.py @brief A few adjustments to the Ellipse class at the Python layer.
+"""@file ellipse.py
+A few adjustments to the Ellipse class at the Python layer.
 """
 
 from . import _galsim
 import galsim
 
+
+
+class Ellipse(object):
+    """A class to represent ellipses in a variety of ways.
+
+    The galsim Ellipse class (galsim.Ellipse) represents a shear (shape distortion), dilation,
+    and/or centroid shift.
+
+    The python Ellipse class can be initialized in a variety of ways.  Unnamed arguments must be a
+    galsim.Shear object for shape distortion (see galsim.shear.Shear for doxygen documentation), a
+    float for dilation (via the mu parameter), and/or a Position for centroid shift.  Some examples
+    are listed below.
+
+    Keyword arguments can be used to set parameters of the shape distortion the same as for the
+    Shear class; or the parameter `dilation` can be used for re-sizing; or the parameters
+    `x_shift` and `y_shift` can be used for centroid shifts.  The galsim.Ellipse contains a C++
+    CppEllipse object, and operations on Ellipse rely on wrapped methods of the CppEllipse.
+
+    The following are all examples of valid calls to initialize a Ellipse object:
+    
+        >>> s = galsim.Shear(g1=0.05, g2=0.05)
+        >>> shift = galsim.PositionD(0.0, 0.2)
+        >>> ell = galsim.Ellipse()            # an empty ellipse, i.e. no shear, dilation, shift
+        >>> ell = galsim.Ellipse(s)           # represents shearing by s only
+        >>> ell = galsim.Ellipse(shear = s)   # same as previous, but with keyword explicitly named
+        >>> ell = galsim.Ellipse(s, shift)       # shear and shift
+        >>> ell = galsim.Ellipse(shift, s)       # can specify the arguments in any order
+        >>> ell = galsim.Ellipse(s, y_shift=0.2) # same as previous, specifying the y shift directly
+        >>> ell = galsim.Ellipse(mu=0.0, shear=s)         # no dilation, but shear by s
+        >>> ell = galsim.Ellipse(shift, g1=0.05, g2=0.05) # arguments can be used to specify a shear
+        >>> ell = galsim.Ellipse(mu=0.5, g=0.5, beta=45.0*galsim.degrees) # dilation, shear via
+                                                                          # keyword argument
 """
-@brief A class to represent ellipses in a variety of ways.
-
-The galsim Ellipse class (galsim.Ellipse) represents a shear (shape distortion), dilation, and/or
-centroid shift.
-
-The python Ellipse class can be initialized in a variety of ways.  Unnamed arguments must be a
-galsim.shear.Shear object for shape distortion, a float for dilation, and/or a Position for centroid
-shift.  Keyword arguments can be used to set parameters of the shape distortion the same as for the
-Shear class; or the parameter "dilation" can be used for re-sizing; or the parameters "x_shift" and
-"y_shift" can be used for centroid shifts.  The galsim.Ellipse contains a C++ CppEllipse object, and
-operations on Ellipse rely on wrapped methods of the CppEllipse.
-
-The following are all examples of valid calls to initialize a Ellipse object:
-@code
-s = galsim.Shear(g1=0.05, g2=0.05)
-shift = galsim.PositionD(0.0, 0.2)
-ell = galsim.Ellipse() # an empty ellipse, i.e. no shearing, dilation, shifting
-ell = galsim.Ellipse(s) # represents shearing by s only
-ell = galsim.Ellipse(shear = s) # same as previous, but with keyword explicitly named
-ell = galsim.Ellipse(s, shift) # shear and shift
-ell = galsim.Ellipse(shift, s) # can specify the arguments in any order
-ell = galsim.Ellipse(s, y_shift = 0.2) # same as previous, specifying the y shift directly
-ell = galsim.Ellipse(dilation = 0.0, shear = s) # no dilation, but shear by s
-ell = galsim.Ellipse(shift, g1=0.05, g2=0.05) # arguments can be used to specify a shear
-ell = galsim.Ellipse(dilation=0.5, g=0.5, beta=45.0*galsim.degrees) # dilation, shear via keyword argument
-@endcode
-"""
-class Ellipse:
     def __init__(self, *args, **kwargs):
-        use_dil = None
+        use_mu = None
         use_shear = None
         use_shift = None
 
@@ -52,9 +57,9 @@ class Ellipse:
                             raise TypeError("Ellipse received >1 unnamed Shear arguments!")
                         use_shear = this_arg
                     elif isinstance(this_arg, float):
-                        if use_dil is not None:
+                        if use_mu is not None:
                             raise TypeError("Ellipse received >1 unnamed float/double arguments!")
-                        use_dil = this_arg
+                        use_mu = this_arg
                     elif isinstance(this_arg, _galsim.PositionD):
                         if use_shift is not None:
                             raise TypeError("Ellipse received >1 unnamed Position arguments!")
@@ -66,8 +71,8 @@ class Ellipse:
         # If no args, check kwargs: we start by checking for dilation or shifts, because there is a
         # limited set of allowed keyword arguments to specify those, whereas for shear there are
         # many allowed keyword arguments (see documentation for Shear)
-        if use_dil is None:
-            use_dil = kwargs.pop('dilation', 0.0)
+        if use_mu is None:
+            use_mu = kwargs.pop('mu', 0.0)
         if use_shift is None:
             x_shift = kwargs.pop('x_shift', 0.0)
             y_shift = kwargs.pop('y_shift', 0.0)
@@ -82,7 +87,7 @@ class Ellipse:
             else:
                 if not isinstance(use_shear, galsim.Shear):
                     raise TypeError("Shear passed to Ellipse constructor was not a Shear!")
-                # if shear was passed using the 'shear' keyword, then we should not allow any other args
+            # if shear was passed using the 'shear' keyword, then we should not allow any other args
                 if kwargs:
                     raise TypeError("Keyword arguments to Ellipse not permitted: %s"%kwargs.keys())
         else:
@@ -91,7 +96,7 @@ class Ellipse:
             if kwargs:
                 raise TypeError("Keyword arguments to Ellipse not permitted: %s"%kwargs.keys())     
 
-        self._ellipse = _galsim._CppEllipse(s = use_shear._shear, mu = use_dil, p = use_shift)
+        self._ellipse = _galsim._CppEllipse(s = use_shear._shear, mu = use_mu, p = use_shift)
 
     # below, we propagate through all the methods from C++ #
 
@@ -131,12 +136,14 @@ class Ellipse:
     def __repr__(self):
         shear = self.getS()  # extract the e1 and e2 from the Shear instance
         x0 = self.getX0()    # extract the x0 and y0 from a Position instance
-        return (self.__class__.__name__+"(g1="+str(shear.getG1())+", g2="+str(shear.getG2())+
-                ", mu="+str(self.getMu())+", x="+str(x0.x)+", y="+str(x0.y)+")")
+        return (
+            self.__class__.__name__+"(g1="+str(shear.getG1())+", g2="+str(shear.getG2())+
+            ", mu="+str(self.getMu())+", x_shift="+str(x0.x)+", y_shift="+str(x0.y)+")")
 
     def __str__(self):
         shear = self.getS()  # extract the e1 and e2 from the Shear instance
         x0 = self.getX0()    # extract the x0 and y0 from a Position instance
-        return ("("+str(shear.getG1())+", "+str(shear.getG2())+", "+str(self.getMu())+", "
-                +str(x0.x)+", "+str(x0.y)+")")
+        return (
+            "("+str(shear.getG1())+", "+str(shear.getG2())+", "+str(self.getMu())+", "
+            +str(x0.x)+", "+str(x0.y)+")")
 

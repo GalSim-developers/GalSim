@@ -1,63 +1,94 @@
+"""@file io.py
+Routines for controlling catalog Input/Output with GalSim. 
+"""
+
 import galsim
 
-def ReadInputCat(config, cat_file_name=None, filetype="ASCII", comments="#"):
-    """@brief Read in an input catalog for object-by-object parameter specification.
+class InputCatalog(object):
+    """A class storing the data from an input catalog.
 
-    @param config         A configuration galsim.Config instance containing all the required
-                          information for running GalSim in Multi-Object mode.
-    @param cat_file_name  Filename of the input catalog.
-    @param filetype       Either 'ASCII' (currently the only, default, option) or (soon) 'FITS'.
-    @param comments       The character used to indicate the start of a comment in an ASCII catalog
-                          (default='#').
+    Each row corresponds to a different object to be built, and each column stores some item of
+    information about that object (e.g. flux or half_light_radius).
 
-    @returns A galsim.Config instance, each attribute of which is a vector of parameter values of
-             length equal to the number of valid rows in the input catalog.
-
-    Does some checking for sensible inputs, unlike the functions it calls (ReadAsciiInputCat()
-    and ReadFitsInputCat()).
+    @param file_name     Filename of the input catalog. (Required)
+    @param dir           Directory catalog is in.
+    @param file_type     Either 'ASCII' (currently the only, default, option) or (soon) 'FITS'.
+                         (TODO: default = determine from extension or, if that fails, ASCII)
+    @param comments      The character used to indicate the start of a comment in an
+                         ASCII catalog.  (default='#').
     """
-    # First check for sensible inputs
-    if cat_file_name == None:
-        raise IOError("No filename given!")
+    _req_params = { 'file_name' : str }
+    _opt_params = { 'dir' : str , 'file_type' : str , 'comments' : str }
+    _single_params = []
 
-    # Raise an apologetic exception for FITS input-wanting users
-    if filetype.upper() == "FITS":
-        raise NotImplementedError("FITS catalog inputs not yet implemented, sorry!")
-    # Then read in from the ASCII-type catalogs
-    elif filetype.upper() ==  "ASCII":
-        input_cat = ReadAsciiInputCat(cat_file_name=cat_file_name, comments=comments)
-    else:
-        raise AttributeError("User must specify input catalog file type as either 'ASCII' "+
-                             "or 'FITS' (case-insensitive).")
-    # Return catalog to the user
-    return input_cat
+    def __init__(self, file_name, dir=None, file_type='ASCII', comments='#'):
+        # First build full file_name
+        self.file_name = file_name
+        if dir:
+            import os
+            self.file_name = os.path.join(dir,self.file_name)
+    
+        # Raise an apologetic exception for FITS input-wanting users
+        self.file_type = file_type
+        if self.file_type.upper() == 'FITS':
+            raise NotImplementedError("FITS catalog inputs not yet implemented, sorry!")
+        # Then read in from the ASCII-type catalogs
+        elif self.file_type.upper() ==  'ASCII':
+            self.read_ascii(comments)
+        else:
+            raise AttributeError("User must specify input catalog file type as either 'ASCII' "+
+                                 "or 'FITS' (case-insensitive).")
+        # Also store the number of objects as nobjects for easy access by other routines
+        self.nobjects = self.data.shape[0]
+        self.ncols = self.data.shape[1]
 
-def ReadAsciiInputCat(cat_file_name=None, comments="#"):
-    """@brief Read in an input catalog from an ASCII file.
+    def read_ascii(self, comments):
+        """Read in an input catalog from an ASCII file.
 
-    @param cat_file_name  Filename of the input catalog.
-    @param comments       The character used to indicate the start of a comment in an ASCII catalog
-                          (default='#').
+        Does not check for sensible inputs, leaving this up to the wrapper function read.
+        """
+        from numpy import loadtxt
+        # Read in the data using the numpy convenience function
+        # Note: we leave the data as str, rather than convert to float, so that if
+        # we have any str fields, they don't give an error here.  They'll only give an 
+        # error if one tries to convert them to float at some point.
+        self.data = loadtxt(self.file_name, comments=comments, dtype=str)
 
-    @returns A galsim.Config instance, containing useful metadata and the ASCII table itself stored
-             as a NumPy array in the .data attribute.
+    def nObjects(self):
+        """Return the number of objects in the catalog
+        """
+        return self.nobjects
 
-    Does not check for sensible inputs, leaving this up to the wrapper function ReadInputCat().
-    """
-    from numpy import loadtxt
-    # Initialize the Config() ready for storing the field values
-    input_cat = galsim.Config()
-    # Store basic meta data
-    input_cat.cat_file_name = cat_file_name
-    # Read in the data using the numpy convenience function
-    input_cat.data = loadtxt(cat_file_name, comments=comments)
-    # Also store the number of objects as input_cat.nobjects for easy access by other routines
-    input_cat.nobjects = input_cat.data.shape[0]
-    # Store that this is an ASCII catalog
-    input_cat.type = 'ASCII'
-    # Keep track of which row we should read from.  Start at 0.
-    input_cat.current = 0
-    # Return catalog to the user
-    return input_cat
+    def nCols(self):
+        """Return the number of columns in the catalog
+        """
+        return self.ncols
+
+    def get(self, index, col):
+        """Return the data for the given index and col as a string
+        """
+        if index < 0 or index >= self.nobjects:
+            raise ValueError("Object %d is invalid for catalog %s"%(index,self.file_name))
+        if col < 0 or col >= self.ncols:
+            raise ValueError("Column %d is invalid for catalog %s"%(col,self.file_name))
+        return self.data[index, col]
+
+    def getFloat(self, index, col):
+        """Return the data for the given index and col as a float if possible
+        """
+        try:
+            return float(self.get(index,col))
+        except:
+            raise TypeError("The data at (%d,%d) in catalog %s could not be converted to float"%(
+                    index,col,self.file_name))
+
+    def getInt(self, index, col):
+        """Return the data for the given index and col as an int if possible
+        """
+        try:
+            return int(self.get(index,col))
+        except:
+            raise TypeError("The data at (%d,%d) in catalog %s could not be converted to int"%(
+                    index,col,self.file_name))
 
 
