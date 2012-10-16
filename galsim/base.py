@@ -1525,16 +1525,8 @@ class RealGalaxy(GSObject):
             self.pad_variance=0.
         # note: will be adding more parameters here about noise properties etc., but let's be basic
         # for now
-
-        self.original_image = galsim.SBInterpolatedImage(gal_image, self.Interpolant2D, 
-                                                         dx=self.pixel_scale, 
-                                                         pad_variance=self.pad_variance)
-        self.original_PSF = galsim.SBInterpolatedImage(PSF_image, self.Interpolant2D,
-                                                       dx=self.pixel_scale)
-
-        # save the original image and PSF too
         self.original_image = galsim.SBInterpolatedImage(
-            gal_image, self.interpolant, dx=self.pixel_scale)
+            gal_image, self.interpolant, dx=self.pixel_scale, pad_variance=self.pad_variance)
         self.original_PSF = galsim.SBInterpolatedImage(
             PSF_image, self.interpolant, dx=self.pixel_scale)
         
