@@ -658,7 +658,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             if logger:
                 logger.warn(
                     "Object centered at (%d,%d) is entirely off the main image,\n"%(
-                        image[k].bounds.center().x, image[k].bounds.center().y) +
+                        images[k].bounds.center().x, images[k].bounds.center().y) +
                     "whose bounds are (%d,%d,%d,%d)."%(
                         full_image.bounds.xmin, full_image.bounds.xmax,
                         full_image.bounds.ymin, full_image.bounds.ymax))
