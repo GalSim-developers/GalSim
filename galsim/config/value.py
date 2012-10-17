@@ -458,7 +458,7 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
 
     req = { 'radius' : float }
     opt = { 'inner_radius' : float, 'center' : galsim.PositionD }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
     radius = kwargs['radius']
 
     ud = galsim.UniformDeviate(rng)
@@ -473,11 +473,13 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
         x = (2*ud()-1) * radius
         y = (2*ud()-1) * radius
         rsq = x**2 + y**2
-        if rsq <= max_rsq: break
-    #print 'RandomCircle: ',(x,y)
+        if rsq >= min_rsq and rsq <= max_rsq: break
+
     pos = galsim.PositionD(x,y)
     if 'center' in kwargs:
-        pos += params['center']
+        pos += kwargs['center']
+
+    print 'RandomCircle: ',pos
     return pos, False
 
 
