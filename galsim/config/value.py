@@ -479,7 +479,7 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
     if 'center' in kwargs:
         pos += kwargs['center']
 
-    print 'RandomCircle: ',pos
+    #print 'RandomCircle: ',pos
     return pos, False
 
 
