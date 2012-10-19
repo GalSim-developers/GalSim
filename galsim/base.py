@@ -33,6 +33,8 @@ class GSObject(object):
     methods and attributes, particularly those from the C++ SBProfile classes.
     """
     def __init__(self, SBProfile):
+        if not isinstance(SBProfile, galsim.SBProfile):
+            raise TypeError("GSObject must be initialized with an SBProfile!")
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
     
     # Make op+ of two GSObjects work to return an Add object
