@@ -633,6 +633,7 @@ int main()
   tmv::SymMatrix<double> S(10,4.);
   //tmv::Matrix<double> S(10,10,4.);
   tmv::Matrix<double> m(10,3,2.);
+  S += 50.;
   tmv::Matrix<double> m2 = m / S;
   return 0;
 }
@@ -872,6 +873,7 @@ static void useTMV() {
     tmv::SymMatrix<double> S(10,4.);
     //tmv::Matrix<double> S(10,10,4.);
     tmv::Matrix<double> m(10,3,2.);
+    S += 50.;
     tmv::Matrix<double> m2 = m / S;
 }
 
