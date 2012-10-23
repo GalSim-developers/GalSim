@@ -44,6 +44,7 @@ opts.Add('CXX','Name of c++ compiler')
 opts.Add('FLAGS','Compile flags to send to the compiler','')
 opts.Add('EXTRA_FLAGS','Extra flags to send to the compiler','')
 opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
+opts.Add(BoolVariable('EXTRA_DEBUG','Turn on extra debugging info',False))
 opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', True))
 opts.Add('PYTHON','Name of python executable','')
 
@@ -227,7 +228,9 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-pg'])
                 env.Append(LINKFLAGS=['-pg'])
             if env['WARN']:
-                env.Append(CCFLAGS=['-g3','-Wall','-Werror'])
+                env.Append(CCFLAGS=['-Wall','-Werror'])
+            if env['EXTRA_DEBUG']:
+                env.Append(CCFLAGS=['-g3'])
     
         elif compiler == 'clang++':
             env.Replace(CCFLAGS=['-O2'])
@@ -235,7 +238,9 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-pg'])
                 env.Append(LINKFLAGS=['-pg'])
             if env['WARN']:
-                env.Append(CCFLAGS=['-g3','-Wall','-Werror'])
+                env.Append(CCFLAGS=['-Wall','-Werror'])
+            if env['EXTRA_DEBUG']:
+                env.Append(CCFLAGS=['-g3'])
     
         elif compiler == 'icpc':
             env.Replace(CCFLAGS=['-O2'])
@@ -245,24 +250,28 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-pg'])
                 env.Append(LINKFLAGS=['-pg'])
             if env['WARN']:
-                env.Append(CCFLAGS=['-g','-Wall','-Werror','-wd279,383,810,981'])
+                env.Append(CCFLAGS=['-Wall','-Werror','-wd279,383,810,981'])
                 if version >= 9:
                     env.Append(CCFLAGS=['-wd1572'])
                 if version >= 11:
                     env.Append(CCFLAGS=['-wd2259'])
+            if env['EXTRA_DEBUG']:
+                env.Append(CCFLAGS=['-g'])
 
         elif compiler == 'pgCC':
             env.Replace(CCFLAGS=['-O2','-fast','-Mcache_align'])
             if env['WITH_PROF']:
                 env.Append(CCFLAGS=['-pg'])
                 env.Append(LINKFLAGS=['-pg'])
-            if env['WARN']:
+            if env['EXTRA_DEBUG']:
                 env.Append(CCFLAGS=['-g'])
 
         elif compiler == 'CC':
             env.Replace(CCFLAGS=['-O2','-fast','-instances=semiexplicit'])
             if env['WARN']:
-                env.Append(CCFLAGS=['-g','+w'])
+                env.Append(CCFLAGS=['+w'])
+            if env['EXTRA_DEBUG']:
+                env.Append(CCFLAGS=['-g'])
 
         elif compiler == 'cl':
             env.Replace(CCFLAGS=['/EHsc','/nologo','/O2','/Oi'])
