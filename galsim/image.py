@@ -8,14 +8,22 @@ import numpy
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion 
 # when doing arithmetic with images.  So just make sure both of them point to ImageI in the Image 
 # dict.  One of them is what you get when you just write numpy.int32.  The other is what numpy 
-# decides an int32 value + 1 is.  The first one is usually the one that's already in the Image dict,
+# decides an int16 + int32 is.  The first one is usually the one that's already in the Image dict,
 # but we assign both versions just to be sure.
 
 _galsim.Image[numpy.int32] = _galsim.ImageI
 _galsim.ImageView[numpy.int32] = _galsim.ImageViewI
 _galsim.ConstImageView[numpy.int32] = _galsim.ConstImageViewI
 
-alt_int32 = ( numpy.array([0]).astype(numpy.int32) + 1 ).dtype.type
+alt_int32 = ( numpy.array([0]).astype(numpy.int32) + 1).dtype.type
+_galsim.Image[alt_int32] = _galsim.ImageI
+_galsim.ImageView[alt_int32] = _galsim.ImageViewI
+_galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
+
+# On some systems, the above doesn't work, but this next one does.  I'll leave both active,
+# just in case there are systems where this doesn't work but the above does.
+alt_int32 = ( numpy.array([0]).astype(numpy.int16) + 
+              numpy.array([0]).astype(numpy.int32) ).dtype.type
 _galsim.Image[alt_int32] = _galsim.ImageI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
@@ -133,8 +141,8 @@ def Image_add(self, other):
         result = self.array[:,:] + other.array
     except AttributeError:
         result = self.array[:,:] + other
-    type = result.dtype.type
-    return _galsim.ImageView[type](result)
+    res_type = result.dtype.type
+    return _galsim.ImageView[res_type](result)
 
 def Image_iadd(self, other):
     try:
@@ -148,8 +156,8 @@ def Image_sub(self, other):
         result = self.array[:,:] - other.array
     except AttributeError:
         result = self.array[:,:] - other
-    type = result.dtype.type
-    return _galsim.ImageView[type](result)
+    res_type = result.dtype.type
+    return _galsim.ImageView[res_type](result)
 
 def Image_isub(self, other):
     try:
@@ -163,8 +171,8 @@ def Image_mul(self, other):
         result = self.array[:,:] * other.array
     except AttributeError:
         result = self.array[:,:] * other
-    type = result.dtype.type
-    return _galsim.ImageView[type](result)
+    res_type = result.dtype.type
+    return _galsim.ImageView[res_type](result)
 
 def Image_imul(self, other):
     try:
@@ -178,8 +186,8 @@ def Image_div(self, other):
         result = self.array[:,:] / other.array
     except AttributeError:
         result = self.array[:,:] / other
-    type = result.dtype.type
-    return _galsim.ImageView[type](result)
+    res_type = result.dtype.type
+    return _galsim.ImageView[res_type](result)
 
 def Image_idiv(self, other):
     try:
@@ -194,8 +202,8 @@ def Image_and(self, other):
         result = self.array[:,:] & other.array
     except AttributeError:
         result = self.array[:,:] & other
-    type = result.dtype.type
-    return _galsim.ImageView[type](result)
+    res_type = result.dtype.type
+    return _galsim.ImageView[res_type](result)
 
 def Image_iand(self, other):
     try:
@@ -209,8 +217,8 @@ def Image_xor(self, other):
         result = self.array[:,:] ^ other.array
     except AttributeError:
         result = self.array[:,:] ^ other
-    type = result.dtype.type
-    return _galsim.ImageView[type](result)
+    res_type = result.dtype.type
+    return _galsim.ImageView[res_type](result)
 
 def Image_ixor(self, other):
     try:
@@ -224,8 +232,8 @@ def Image_or(self, other):
         result = self.array[:,:] | other.array
     except AttributeError:
         result = self.array[:,:] | other
-    type = result.dtype.type
-    return _galsim.ImageView[type](result)
+    res_type = result.dtype.type
+    return _galsim.ImageView[res_type](result)
 
 def Image_ior(self, other):
     try:
@@ -250,8 +258,8 @@ def Image_getstate(self):
     return self.array, self.xmin, self.ymin, self.scale
 
 def Image_setstate(self, args):
-    type = args[0].dtype.type
-    self.__class__ = _galsim.ImageView[type]
+    self_type = args[0].dtype.type
+    self.__class__ = _galsim.ImageView[self_type]
     self.__init__(*args)
 
 # inject these as methods of Image classes

@@ -238,8 +238,8 @@ def main(argv):
     try:
         from multiprocessing import cpu_count
         ncpu = cpu_count()
-        if ncpu > nfiles:
-            nproc = nfiles
+        if ncpu > ntot:
+            nproc = ntot
         else:
             nproc = ncpu
         logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
