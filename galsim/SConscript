@@ -34,16 +34,18 @@ def CheckPyPrefix(target, source, env):
 
     # Convert everything to an abspath to make sure everyone is using the same notation.
     pyprefix = os.path.abspath(env['PYPREFIX'])
-    sys_path = [ os.path.abspath(d) for d in sys_path ]
+    real_pyprefix = os.path.realpath(pyprefix)
+    sys_path = [ os.path.realpath(os.path.abspath(d)) for d in sys_path ]
 
     # If installing into a staging area, try stripping off an initial INSTALL_PREFIX
     # from pyprefix and put on FINAL_PREFIX instead.
-    if ( pyprefix not in sys_path and 
+    if ( real_pyprefix not in sys_path and 
          env['FINAL_PREFIX'] != env['INSTALL_PREFIX'] and 
          pyprefix.startswith(env['INSTALL_PREFIX']) ):
         pyprefix = pyprefix.replace(env['INSTALL_PREFIX'],env['FINAL_PREFIX'],1)
+        real_pyprefix = os.path.realpath(pyprefix)
         
-    if pyprefix not in sys_path:
+    if real_pyprefix not in sys_path:
         print
         print 'WARNING: The python installation prefix: %s'%pyprefix
         print '         is not in the search path for %s.'%python
