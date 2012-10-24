@@ -628,18 +628,97 @@ def ReadFileList(fname):
     return files
 
 
+def TryRunResult(config,text,name):
+    # Check if a particular program (given as text) is compilable, runs, and returns the 
+    # right value.
+    
+    config.sconf.pspawn = config.sconf.env['PSPAWN'] 
+    save_spawn = config.sconf.env['SPAWN'] 
+    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper 
+
+    # First use the normal TryRun command
+    ok, out = config.TryRun(text,'.cpp')
+
+    config.sconf.env['SPAWN'] = save_spawn 
+
+    # We have an arbitrary requirement that the executable output the answer 23.
+    # So if we didn't get this answer, then something must have gone wrong.
+    if out.strip() != '23':
+        ok = False
+
+    return ok
+
+
 def CheckLibs(config,try_libs,source_file):
-    init_libs = config.env['LIBS']
+    init_libs = []
+    if 'LIBS' in config.env._dict.keys():
+        init_libs = config.env['LIBS']
+
     config.env.PrependUnique(LIBS=try_libs)
-    result = config.TryLink(source_file,'.cpp')
+    result = TryRunResult(config,source_file,'.cpp')
+
+    # Sometimes we need to add a directory to RPATH, so try each one.
+    if not result and 'LIBPATH' in config.env._dict.keys():
+        init_rpath = []
+        if 'RPATH' in config.env._dict.keys():
+            init_rpath = config.env['RPATH']
+
+        for rpath in config.env['LIBPATH']:
+            config.env.PrependUnique(RPATH=rpath)
+            result = TryRunResult(config,source_file,'.cpp')
+            if result: 
+                break
+            else:
+                config.env.Replace(RPATH=init_rpath)
+
+        # If that doesn't work, also try adding all of them, just in case we need more than one.
+        if not result :
+            config.env.PrependUnique(RPATH=config.env['LIBPATH'])
+            result = TryRunResult(config,source_file,'.cpp')
+            if not result:
+                config.env.Replace(RPATH=init_rpath)
+
+    # If nothing worked, go back to the original LIBS
     if not result :
         config.env.Replace(LIBS=init_libs)
     return result
-      
+ 
+
+def CheckFFTW(config):
+    fftw_source_file = """
+#include "fftw3.h"
+#include <iostream>
+int main()
+{
+  double* ar = (double*) fftw_malloc(sizeof(double)*64);
+  fftw_complex* ac = (fftw_complex*) fftw_malloc(sizeof(double)*2*64);
+  fftw_plan plan = fftw_plan_dft_r2c_2d(8,8,ar,ac,FFTW_MEASURE);
+  fftw_destroy_plan(plan);
+  fftw_free(ar);
+  fftw_free(ac);
+  std::cout<<"23"<<std::endl;
+  return 0;
+}
+"""
+    config.Message('Checking for correct FFTW linkage... ')
+    if not config.TryCompile(fftw_source_file,'.cpp'):
+        ErrorExit(
+            'Error: fftw file failed to compile.',
+            'Check that the correct location is specified for FFTW_DIR')
+
+    if not CheckLibs(config,['fftw3'],fftw_source_file):
+        ErrorExit(
+            'Error: fftw file failed to link correctly',
+            'Check that the correct location is specified for FFTW_DIR') 
+
+    config.Result(1)
+    return 1
+
 
 def CheckTMV(config):
     tmv_source_file = """
 #include "TMV_Sym.h"
+#include <iostream>
 int main()
 {
   tmv::SymMatrix<double> S(10,4.);
@@ -647,10 +726,10 @@ int main()
   tmv::Matrix<double> m(10,3,2.);
   S += 50.;
   tmv::Matrix<double> m2 = m / S;
+  std::cout<<"23"<<std::endl;
   return 0;
 }
 """
-
     print 'Checking for correct TMV linkage... (this may take a little while)'
     config.Message('Checking for correct TMV linkage... ')
 
@@ -747,9 +826,35 @@ def TryModule(config,text,name):
 
 
 def CheckModuleLibs(config,try_libs,source_file,name):
-    init_libs = config.env['LIBS']
+    init_libs = []
+    if 'LIBS' in config.env._dict.keys():
+        init_libs = config.env['LIBS']
+
     config.env.PrependUnique(LIBS=try_libs)
     result = TryModule(config,source_file,name)
+
+    # Sometimes we need to add a directory to RPATH, so try each one.
+    if not result and 'LIBPATH' in config.env._dict.keys():
+        init_rpath = []
+        if 'RPATH' in config.env._dict.keys():
+            init_rpath = config.env['RPATH']
+
+        for rpath in config.env['LIBPATH']:
+            config.env.PrependUnique(RPATH=rpath)
+            result = TryModule(config,source_file,name)
+            if result: 
+                break
+            else:
+                config.env.Replace(RPATH=init_rpath)
+
+        # If that doesn't work, also try adding all of them, just in case we need more than one.
+        if not result :
+            config.env.PrependUnique(RPATH=config.env['LIBPATH'])
+            result = TryModule(config,source_file,name)
+            if not result:
+                config.env.Replace(RPATH=init_rpath)
+
+    # If nothing worked, go back to the original LIBS
     if not result :
         config.env.Replace(LIBS=init_libs)
     return result
@@ -1092,27 +1197,38 @@ def FindTmvLinkFile(config):
 
 def DoCppChecks(config):
     """
-    Check for some headers.  
+    Check for some headers and libraries.
     """
 
-    # Check for fftw3
-    if not config.CheckLibWithHeader('fftw3','fftw3.h',language='C++'):
+    #####
+    # Check for fftw3:
+
+    # First do a simple check that the library and header are in the path.
+    if not config.CheckHeader('fftw3.h',language='C++'):
         ErrorExit(
-            'fftw3 not found',
+            'fftw3.h not found',
             'You should specify the location of fftw3 as FFTW_DIR=...')
 
-    # Check for boost
+    config.CheckFFTW()
+
+    #####
+    # Check for boost:
+
+    # At the C++ level, we only need boost header files, so no need to check libraries.
+    # Use boost/shared_ptr.hpp as a representative choice.
     if not config.CheckHeader('boost/shared_ptr.hpp',language='C++'):
         ErrorExit(
             'Boost not found',
             'You should specify the location of Boost as BOOST_DIR=...')
 
-    # Check for tmv
+    #####
+    # Check for tmv:
+
     # First do a simple check that the library and header are in the path.
     # We check the linking with the BLAS library below.
     if not config.CheckHeader('TMV.h',language='C++'):
         ErrorExit(
-            'TMV not found',
+            'TMV.h not found',
             'You should specify the location of TMV as TMV_DIR=...')
 
     compiler = config.env['CXXTYPE']
@@ -1143,8 +1259,8 @@ def DoCppChecks(config):
         config.env['LINKFLAGS'].remove('-openmp')
         config.env.AppendUnique(LINKFLAGS='-fopenmp')
 
+    # Finally, do the tests for the TMV library linkage:
     config.CheckTMV()
-
 
 def DoPyChecks(config):
     # These checks are only relevant for the pysrc compilation:
@@ -1225,6 +1341,7 @@ def DoConfig(env):
         # Add out custom configuration tests
         config = env.Configure(custom_tests = {
             'CheckTMV' : CheckTMV ,
+            'CheckFFTW' : CheckFFTW ,
             })
         DoCppChecks(config)
         env = config.Finish()
