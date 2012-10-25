@@ -11,3 +11,14 @@
 
 #include "Random.h"
 #include "Image.h"
+
+namespace galsim {
+
+    class NoiseCorrFunc
+    {
+    public:
+
+      NoiseCorrFunc(vector<double> )
+
+}
+
