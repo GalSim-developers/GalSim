@@ -19,7 +19,7 @@ Table of Contents:
 1. Software required before building GalSim
 ===========================================
 
-Please note: Mac users who want to use fink can skip down to Section 4.i and use
+Please note: Mac users who want to use fink can skip down to Section 4.ii and use
 that to satisfy all dependencies before installing.
 
 i) Python (2.6 or 2.7 series), with some additional modules installed
