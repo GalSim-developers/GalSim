@@ -31,36 +31,35 @@ def main(argv):
     rootname = argv[1]
     xshift = float(argv[2]) if len(argv) > 2 else 0.
     yshift = float(argv[3]) if len(argv) > 3 else 0.
-    s = galsim.Shear()
-    s.setG1G2(g1, g2)
+    s = galsim.Shear(g1=g1, g2=g2)
     # Rachel is probably using the (1+g, 1-g) form of shear matrix,
     # which means there is some (de)magnification, by my definition:
     e = galsim.Ellipse(s, -(g1*g1+g2*g2), galsim.PositionD(xshift,yshift));
 
     galaxyImg = galsim.fits.read(rootname + "_masknoise.fits")
-    galaxy = galsim.SBInterpolatedImage(galaxyImg, l32d, dxHST, 1.0)
+    galaxy = galsim.GSObject(galsim.SBInterpolatedImage(galaxyImg, xInterp=l32d, dx=dxHST, pad_factor=1.0))
     galaxy.setFlux(0.804*1000.*dxSDSS*dxSDSS)
 
     psf1Img = galsim.fits.read(rootname + ".psf.fits")
-    psf1 = galsim.SBInterpolatedImage(psf1Img, l32d, dxHST, 2.)
+    psf1 = galsim.GSObject(galsim.SBInterpolatedImage(psf1Img, xInterp=l32d, dx=dxHST, pad_factor=2.))
     psf1.setFlux(1.)
 
     psf2Img = galsim.fits.read(rootname + ".sdsspsf.fits")
-    psf2 = galsim.SBInterpolatedImage(psf2Img, l32d, dxSDSS, 2.)
+    psf2 = galsim.GSObject(galsim.SBInterpolatedImage(psf2Img, xInterp=l32d, dx=dxSDSS, pad_factor=2.))
     psf2.setFlux(1.)
 
     outImg = galsim.fits.read(rootname + ".g1_0.02.g2_0.00.fits")
-    result = outImg.duplicate()
+    result = outImg.copy()
 
-    psfInv = galsim.SBDeconvolve(psf1)
-    deconv = galsim.SBConvolve([galaxy, psfInv])
-    sheared = deconv.distort(e)
-    out = galsim.SBConvolve([sheared, psf2])
+    psfInv = galsim.Deconvolve(psf1)
+    deconv = galsim.Convolve(galaxy, psfInv)
+    sheared = deconv.createTransformed(e)
+    out = galsim.Convolve(sheared, psf2)
 
-    out.draw(result, dxSDSS)
-    result.write(rootname + ".gary.fits")
+    test_outImg = out.draw(result, dx=dxSDSS)
+    test_outImg.write(rootname + ".gary.fits")
     result += psfSky
-    result -= outImg
+    result -= test_outImg
     result.write(rootname + ".diff.fits")
 
 if __name__ == "__main__":
