@@ -2,6 +2,10 @@
 SBProfile-based implementation of SHERA, with comparison to actual
 SHERA results.  Currently, can only be run in the examples/ directory as 
 python Shera.py data/147246.0_150.416558_1.998697 
+
+Note that a better example of how to manipulate real galaxy training data with GalSim can be found
+in RealDemo.py or in demos 6 and 10.  In particular, those demos use the RealGalaxy base class which
+was has functions that automatically carry out many of the steps below.
 """
 
 # This machinery lets us run Python examples even though they aren't positioned
