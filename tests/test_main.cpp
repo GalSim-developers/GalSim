@@ -2,8 +2,14 @@
 #define BOOST_TEST_MODULE Main
 
 // icpc pretends to be GNUC, since it thinks it's compliant, but it's not.
-// It doesn't understand "pragma GCC"
-#ifndef __INTEL_COMPILER
+// It doesn't understand #pragma GCC
+// Rather, it uses #pragma warning(disable:nn)
+#ifdef __INTEL_COMPILER
+
+// Disable "overloaded virtual function ... is only partially overridden"
+#pragma warning(disable:654)
+
+#else
 
 // The boost unit tests have some unused variables, so suppress the warnings about that.
 // I think pragma GCC was introduced in gcc 4.2, so guard for >= that version 

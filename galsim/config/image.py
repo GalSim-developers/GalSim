@@ -654,22 +654,22 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         #print 'stamp bounds = ',images[k].bounds
         #print 'full bounds = ',full_image.bounds
         #print 'Overlap = ',bounds
-        if (not bounds.isDefined()):
+        if bounds.isDefined():
+            full_image[bounds] += images[k][bounds]
+            if make_psf_image:
+                full_psf_image[bounds] += psf_images[k][bounds]
+            if make_weight_image:
+                full_weight_image[bounds] += weight_images[k][bounds]
+            if make_badpix_image:
+                full_badpix_image[bounds] |= badpix_images[k][bounds]
+        else:
             if logger:
                 logger.warn(
                     "Object centered at (%d,%d) is entirely off the main image,\n"%(
-                        image[k].bounds.center().x, image[k].bounds.center().y) +
+                        images[k].bounds.center().x, images[k].bounds.center().y) +
                     "whose bounds are (%d,%d,%d,%d)."%(
                         full_image.bounds.xmin, full_image.bounds.xmax,
                         full_image.bounds.ymin, full_image.bounds.ymax))
-        full_image[bounds] += images[k][bounds]
-
-        if make_psf_image:
-            full_psf_image[bounds] += psf_images[k][bounds]
-        if make_weight_image:
-            full_weight_image[bounds] += weight_images[k][bounds]
-        if make_badpix_image:
-            full_badpix_image[bounds] |= badpix_images[k][bounds]
 
     if 'noise' in config['image']:
         # Apply the noise to the full image
