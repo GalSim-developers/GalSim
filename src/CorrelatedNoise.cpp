@@ -2,6 +2,8 @@
 
 //#define DEBUGLOGGING
 
+#include "CorrelatedNoise.h"
+
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
@@ -21,4 +23,42 @@ int verbose_level = 2;
  * efficiency hit from leaving them in the code.
  */
 #endif
+
+namespace galsim {
+
+    // Here we redefine the xValue and kValue (as compared to the SBProfile versions) to enforce
+    // two-fold rotational symmetry.
+
+    double CorrelatedNoise::CorrelatedNoiseImpl::xValue(const Position<double>& p) const 
+    {
+        if ( p.y >= 0. ) {
+            return _xtab->interpolate(p.x, p.y, *_xInterp);
+        } else {
+            return _xtab->interpolate(-p.x, -p.y, *_xInterp);
+        }
+    }
+
+    std::complex<double> CorrelatedNoise::CorrelatedNoiseImpl::kValue(
+        const Position<double> &p) const
+    {
+        const double TWOPI = 2.*M_PI;
+
+        // Don't bother if the desired k value is cut off by the x interpolant:
+
+        double ux = p.x*_multi.getScale()/TWOPI;
+        if (std::abs(ux) > _xInterp->urange()) return std::complex<double>(0.,0.);
+        double uy = p.y*_multi.getScale()/TWOPI;
+        if (std::abs(uy) > _xInterp->urange()) return std::complex<double>(0.,0.);
+        double xKernelTransform = _xInterp->uval(ux, uy);
+
+        checkK();  // this, along with a bunch of other stuff, comes from the SBInterpolatedImage
+
+        if ( p.y >= 0. ) {
+            return xKernelTransform * _ktab->interpolate(p.x, p.y, *_kInterp);
+        } else {
+            return xKernelTransform * _ktab->interpolate(-p.x, -p.y, *_kInterp);
+        }
+    }
+
+}
 
