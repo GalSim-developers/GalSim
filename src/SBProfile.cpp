@@ -279,7 +279,11 @@ namespace galsim {
         dbg<<"Start fourierDraw"<<std::endl;
         double dx = I.getScale();
         Bounds<int> imgBounds; // Bounds for output image
-        dbg << " maxK() " << maxK() << " dx " << dx << std::endl;
+        dbg<<"  maxK() = "<<maxK()<<" dx "<<dx<<std::endl;
+        dbg<<"  stepK() = "<<stepK()<<std::endl;
+        dbg<<"  image bounds = "<<I.getBounds()<<std::endl;
+        dbg<<"  image scale = "<<I.getScale()<<std::endl;
+        dbg<<"  wmult = "<<wmult<<std::endl;
 
         int Nnofold = getGoodImageSize(dx,wmult);
         dbg<<"Nnofold = "<<Nnofold<<std::endl;
