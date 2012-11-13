@@ -7,10 +7,8 @@
  * properties of noise in Images.
  */
 
-#include <vector>
-
-#include "Random.h"
-#include "Image.h"
+#include "SBInterpolatedImageImpl.h"
+#include "SBInterpolatedImage.h"
 
 namespace galsim {
 
@@ -83,11 +81,46 @@ namespace galsim {
         /// @brief Destructor
         ~NoiseCorrFunc();
 
+        ///
+        double xValue(const Position<double>& p) const;
+
+    protected:
+
+        class NoiseCorrFuncImpl: public SBInterpolatedImage::SBInterpolatedImageImpl
+        {
+        public:
+            /** 
+             * @brief Return value of correlation function at a chosen 2D position in real space.
+             *
+             * Reflects two-fold rotational symmetry of the correlation function, so that
+             *
+             *     xValue(p) = xValue(-p)
+             *
+             * Assume all are real-valued.  xValue() may not be implemented for derived classes 
+             * (SBConvolve) that require an FFT to determine real-space values.  In this case, an 
+             * SBError will be thrown.
+             *
+             * @param[in] p 2D position in real space.
+             */
+	    double xValue(const Position<double>& p) const;
+
+            /**
+             * @brief Return value of SBProfile at a chosen 2D position in k space.
+             *
+             * Reflects two-fold rotational symmetry of the correlation function, so that
+             *
+             *     kValue(k) = kValue(-k)
+             *
+             * @param[in] k 2D position in k space.
+             */
+	    std::complex<double> kValue(const Position<double>& p) const;
+	}
+
     private:
         // op= is undefined
         void operator=(const SBInterpolatedImage& rhs);
 
-        // Most of the SBProfile methods are not available
+        // Most of the SBProfile methods are not going to be available eventually...
         
     };
 }
