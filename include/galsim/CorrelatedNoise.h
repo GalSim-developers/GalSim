@@ -137,7 +137,7 @@ namespace galsim {
              * @param[in] k 2D position in k space.
              */
 	    std::complex<double> kValue(const Position<double>& p) const;
-	}
+	};
 
     private:
         // op= is undefined
@@ -147,4 +147,4 @@ namespace galsim {
         
     };
 }
-
+#endif

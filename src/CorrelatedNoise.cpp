@@ -29,7 +29,7 @@ namespace galsim {
     // Here we redefine the xValue and kValue (as compared to the SBProfile versions) to enforce
     // two-fold rotational symmetry.
 
-    double CorrelatedNoise::CorrelatedNoiseImpl::xValue(const Position<double>& p) const 
+    double NoiseCorrFunc::NoiseCorrFuncImpl::xValue(const Position<double>& p) const 
     {
         if ( p.y >= 0. ) {
             return _xtab->interpolate(p.x, p.y, *_xInterp);
@@ -38,7 +38,7 @@ namespace galsim {
         }
     }
 
-    std::complex<double> CorrelatedNoise::CorrelatedNoiseImpl::kValue(
+    std::complex<double> NoiseCorrFunc::NoiseCorrFuncImpl::kValue(
         const Position<double> &p) const
     {
         const double TWOPI = 2.*M_PI;

@@ -110,7 +110,7 @@ namespace galsim {
         double doFillXImage(ImageView<double>& I, double gain) const
         { return fillXImage(I,gain); }
 
-    private:
+    protected:  // Made protected so that these can be used in the derived NoiseCorrFunc class
 
         MultipleImageHelper _multi;
         std::vector<double> _wts;
