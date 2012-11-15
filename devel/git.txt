@@ -156,6 +156,9 @@ at the beginning of a word:
 git checkout '#12'
 git merge '#12'
 
+To add the branch name in this format to each commit message, automatically (this is useful for
+getting commits listed on Github issue pages), see the file commit-msg in this directory.
+
 --- Tags ---
 
 We will be creating tags corresponding to all completed milestones and code releases.  By default,
