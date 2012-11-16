@@ -41,6 +41,7 @@ struct PyCppHSMShapeData {
             .def_readwrite("observed_shape", &CppHSMShapeData::observed_shape)
             .def_readwrite("moments_sigma", &CppHSMShapeData::moments_sigma)
             .def_readwrite("moments_amp", &CppHSMShapeData::moments_amp)
+            .def_readwrite("moments_rho4", &CppHSMShapeData::moments_rho4)
             .def_readwrite("moments_centroid", &CppHSMShapeData::moments_centroid)
             .def_readwrite("moments_n_iter", &CppHSMShapeData::moments_n_iter)
             .def_readwrite("correction_status", &CppHSMShapeData::correction_status)
