@@ -165,11 +165,11 @@ def test_real_galaxy_saved():
     sbp_res = sim_image.FindAdaptiveMom()
     shera_res = shera_image.FindAdaptiveMom()
 
-    np.testing.assert_almost_equal(sbp_res.observed_shape.getE1(),
-                                   shera_res.observed_shape.getE1(), 2,
+    np.testing.assert_almost_equal(sbp_res.observed_shape.e1,
+                                   shera_res.observed_shape.e1, 2,
                                    err_msg = "Error in comparison with SHERA result: e1")
-    np.testing.assert_almost_equal(sbp_res.observed_shape.getE2(),
-                                   shera_res.observed_shape.getE2(), 2,
+    np.testing.assert_almost_equal(sbp_res.observed_shape.e2,
+                                   shera_res.observed_shape.e2, 2,
                                    err_msg = "Error in comparison with SHERA result: e2")
     np.testing.assert_almost_equal(sbp_res.moments_sigma, shera_res.moments_sigma, 2,
                                    err_msg = "Error in comparison with SHERA result: sigma")
