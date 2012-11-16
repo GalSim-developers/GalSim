@@ -46,8 +46,11 @@ class HSMShapeData(object):
     - moments_sigma: size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
       not measured.
 
-    - moments_amp: total image intensity for best-fit elliptical Gaussian from adaptive moments.
-      This is related to flux via flux = (total image intensity)*(pixel scale)^2.
+    - moments_amp: total image intensity for best-fit elliptical Gaussian from adaptive moments.  If
+      image was drawn using the "flux" normalization, then this field is simply equal to the image
+      flux (for objects that follow a Gaussian light distribution, otherwise it is something
+      approximating the flux).  If the image was drawn using the "surface brightness" normalization,
+      then moments_amp relates to the flux via flux = (moments_amp)*(pixel scale)^2.
 
     - moments_centroid: a galsim.PositionD object representing the centroid based on adaptive
       moments.
