@@ -52,7 +52,26 @@ namespace galsim {
     template <typename T>
     Image<T> getCovarianceMatrix(ImageView<T> image) const
     {
-        
+        int xmin = image.getXMin();
+        int ymin = image.getYMin();
+        int xmax = image.getXMax();
+        int ymax = image.getYMax();
+        int xdim = 1 + xmax - xmin;
+        int ydim = 1 + ymax - ymin;
+        int covdim = xdim * ydim;
+        double dx = image.getScale();
+
+        Image<T> cov = Image<T>(covdim, covdim, T(0));
+        for (int i=0; i<covdim; i++){
+
+	  for (int j=i; j<covdim; j++){
+
+	    cov.setValue(i, j, );
+
+          }
+
+        }
+
     }
 
     // Here we redefine the xValue and kValue (as compared to the SBProfile versions) to enforce

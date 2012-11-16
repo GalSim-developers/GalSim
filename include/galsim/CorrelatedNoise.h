@@ -104,6 +104,21 @@ namespace galsim {
         /// @brief Destructor
         ~NoiseCorrFunc();
 
+        /** 
+         * @brief Return value of correlation function at a chosen 2D position in real space.
+         *
+         * Reflects two-fold rotational symmetry of the correlation function, so that
+         *
+         *     xValue(p) = xValue(-p)
+         *
+         * Assume all are real-valued.  xValue() may not be implemented for derived classes 
+         * (SBConvolve) that require an FFT to determine real-space values.  In this case, an 
+         * SBError will be thrown.
+         *
+         * @param[in] p 2D position in real space.
+         */
+        double xValue(const Position<double>& p) const {return NoiseCorrFuncImpl::xValue(p);}
+
         /**
          * @brief Return a noise covariance matrix between every element in an input image.
          */
