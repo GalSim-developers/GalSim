@@ -104,6 +104,12 @@ namespace galsim {
         /// @brief Destructor
         ~NoiseCorrFunc();
 
+        /**
+         * @brief Return a noise covariance matrix between every element in an input image.
+         */
+        template <typename T>
+        Image<T> getCovarianceMatrix(ImageView<T> image) const;
+
     protected:
 
         class NoiseCorrFuncImpl: public SBInterpolatedImage::SBInterpolatedImageImpl

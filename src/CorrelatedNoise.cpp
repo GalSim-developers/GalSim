@@ -3,6 +3,7 @@
 //#define DEBUGLOGGING
 
 #include <complex>
+#include "Image.h"
 #include "SBInterpolatedImageImpl.h"
 #include "SBInterpolatedImage.h"
 #include "CorrelatedNoise.h"
@@ -46,6 +47,13 @@ namespace galsim {
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double dx, double pad_factor) : 
         SBInterpolatedImageImpl(image, xInterp, kInterp, dx, pad_factor) {}
+
+    //
+    template <typename T>
+    Image<T> getCovarianceMatrix(ImageView<T> image) const
+    {
+        
+    }
 
     // Here we redefine the xValue and kValue (as compared to the SBProfile versions) to enforce
     // two-fold rotational symmetry.
