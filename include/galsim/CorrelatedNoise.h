@@ -109,6 +109,14 @@ namespace galsim {
         class NoiseCorrFuncImpl: public SBInterpolatedImage::SBInterpolatedImageImpl
         {
         public:
+
+            template <typename T> 
+            NoiseCorrFuncImpl(
+                const BaseImage<T>& image, 
+                boost::shared_ptr<Interpolant2d> xInterp,
+                boost::shared_ptr<Interpolant2d> kInterp,
+                double dx, double pad_factor);
+
             /** 
              * @brief Return value of correlation function at a chosen 2D position in real space.
              *
@@ -134,14 +142,15 @@ namespace galsim {
              * @param[in] k 2D position in k space.
              */
 	    std::complex<double> kValue(const Position<double>& p) const;
-	};
 
-    private:
-        // op= is undefined
-        void operator=(const SBInterpolatedImage& rhs);
+        private:
 
-        // Most of the SBProfile methods are not going to be available eventually...
+            // Copy constructor and op= are undefined.
+            NoiseCorrFuncImpl(const NoiseCorrFuncImpl& rhs);
+            void operator=(const NoiseCorrFuncImpl& rhs);
         
+            // Most of the SBProfile methods are not going to be available eventually...?
+        };
     };
 }
 #endif

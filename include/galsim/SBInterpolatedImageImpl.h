@@ -154,6 +154,8 @@ namespace galsim {
         mutable double _negativeFlux;    ///< Sum of all negative pixels' flux
         mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
 
+    private:
+
         // Copy constructor and op= are undefined.
         SBInterpolatedImageImpl(const SBInterpolatedImageImpl& rhs);
         void operator=(const SBInterpolatedImageImpl& rhs);

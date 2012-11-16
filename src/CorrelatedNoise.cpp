@@ -2,6 +2,9 @@
 
 //#define DEBUGLOGGING
 
+#include <complex>
+#include "SBInterpolatedImageImpl.h"
+#include "SBInterpolatedImage.h"
 #include "CorrelatedNoise.h"
 
 #ifdef DEBUGLOGGING
@@ -26,17 +29,23 @@ int verbose_level = 2;
 
 namespace galsim {
 
-  template <typename T>
-  NoiseCorrFunc::NoiseCorrFunc(
-      const BaseImage<T>& image,
-      boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
-      double dx, double pad_factor) :
-      SBProfile(new NoiseCorrFuncImpl(image,xInterp,kInterp,dx,pad_factor)) {}
+    template <typename T>
+    NoiseCorrFunc::NoiseCorrFunc(
+        const BaseImage<T>& image,
+        boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
+        double dx, double pad_factor) :
+        SBInterpolatedImage(new NoiseCorrFuncImpl(image,xInterp,kInterp,dx,pad_factor)) {}
 
-  //NoiseCorrFunc::NoiseCorrFunc(const NoiseCorrFunc& rhs) : 
-  //    SBInterpolatedImage::SBInterpolatedImage(rhs) {}
+    NoiseCorrFunc::NoiseCorrFunc(const NoiseCorrFunc& rhs) : SBInterpolatedImage(rhs) {}
   
-  NoiseCorrFunc::~NoiseCorrFunc() {}
+    NoiseCorrFunc::~NoiseCorrFunc() {}
+
+    template <typename T>
+    NoiseCorrFunc::NoiseCorrFuncImpl::NoiseCorrFuncImpl(
+        const BaseImage<T>& image, 
+        boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
+        double dx, double pad_factor) : 
+        SBInterpolatedImageImpl(image, xInterp, kInterp, dx, pad_factor) {}
 
     // Here we redefine the xValue and kValue (as compared to the SBProfile versions) to enforce
     // two-fold rotational symmetry.
@@ -71,6 +80,33 @@ namespace galsim {
             return xKernelTransform * _ktab->interpolate(-p.x, -p.y, *_kInterp);
         }
     }
+
+    // instantiate template functions for expected image types
+    template NoiseCorrFunc::NoiseCorrFunc(
+        const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
+    template NoiseCorrFunc::NoiseCorrFunc(
+        const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
+    template NoiseCorrFunc::NoiseCorrFunc(
+        const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
+    template NoiseCorrFunc::NoiseCorrFunc(
+        const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
+
+    template NoiseCorrFunc::NoiseCorrFuncImpl::NoiseCorrFuncImpl(
+        const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
+    template NoiseCorrFunc::NoiseCorrFuncImpl::NoiseCorrFuncImpl(
+        const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
+    template NoiseCorrFunc::NoiseCorrFuncImpl::NoiseCorrFuncImpl(
+        const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
+    template NoiseCorrFunc::NoiseCorrFuncImpl::NoiseCorrFuncImpl(
+        const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
 
 }
 
