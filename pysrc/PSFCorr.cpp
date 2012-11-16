@@ -35,7 +35,7 @@ struct PyCppHSMShapeData {
             "functions.  See C++ docs for more detail.\n"
             ;
 
-        bp::class_<CppHSMShapeData>("CppHSMShapeData", doc, bp::init<>())
+        bp::class_<CppHSMShapeData>("_CppHSMShapeData", doc, bp::init<>())
             .def_readwrite("image_bounds", &CppHSMShapeData::image_bounds)
             .def_readwrite("moments_status", &CppHSMShapeData::moments_status)
             .def_readwrite("observed_shape", &CppHSMShapeData::observed_shape)

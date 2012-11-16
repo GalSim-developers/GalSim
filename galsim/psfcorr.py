@@ -6,7 +6,8 @@ Routines for adaptive moment estimation and PSF correction.
 This file contains the python interface to C++ routines for estimation of second moments of images,
 and for carrying out PSF correction using a variety of algorithms.  The algorithms are described in
 Hirata & Seljak (2003; MNRAS, 343, 459), and were tested/characterized using real data in Mandelbaum
-et al. (2005; MNRAS, 361, 1287).
+et al. (2005; MNRAS, 361, 1287).  We also define a python-level container for the outputs of these
+codes, HSMShapeData, analogous to the C++-level CppHSMShapeData.
 
 The moments that are estimated are "adaptive moments" (see the first paper cited above for details);
 that is, they use an elliptical Gaussian weight that is matched to the image of the object being
@@ -24,6 +25,81 @@ measured.  The PSF correction includes several algorithms:
 These are all based on correction of moments, but with different sets of assumptions.  For more
 detailed discussion on all of these algorithms, see the relevant papers above.
 """
+
+class HSMShapeData(object):
+    """A class to contain the outputs of using the HSM shape and moments measurement routines.
+
+    At the C++ level, we have a container for the outputs of the HSM shape measurement routines.
+    The HSMShapeData class is the analogous object at the python level.  It contains the following
+    information about moment measurement (from either EstimateShearHSM or FindAdaptiveMom):
+
+    - image_bounds: a galsim.Bounds object describing the image.
+    - moments_status: the status flag resulting from moments measurement; -1 indicates no attempt to
+      measure, 0 indicates success.
+    - observed_shape: a galsim.Shear object representing the observed shape based on adaptive
+      moments.
+    - moments_sigma: size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
+      not measured.
+    - moments_amp: total image intensity for best-fit elliptical Gaussian from adaptive moments.
+      This is related to flux via flux = (total image intensity)*(pixel scale)^2.
+    - moments_centroid: a galsim.PositionD object representing the centroid based on adaptive
+      moments.
+    - moments_rho4: the weighted radial fourth moment of the image.
+    - moments_n_iter: number of iterations needed to get adaptive moments, or 0 if not measured.
+
+    If EstimateShearHSM was used, then the following fields related to PSF-corrected shape will also
+    be populated:
+
+    - correction_status: the status flag resulting from PSF correction; -1 indicates no attempt to
+      measure, 0 indicates success.
+    - corrected_shape: a galsim.Shear object representing the PSF-corrected shape.
+    - corrected_shape_err: shape measurement uncertainty sigma_gamma per component.
+    - correction_method: a string indicating the method of PSF correction (will be "None" if
+      PSF-correction was not carried out).
+    - resolution_factor: Resolution factor R_2;  0 indicates object is consistent with a PSF, 1 indicates
+      perfect resolution.
+    - error_message: a string containing any error messages from the attempt to carry out
+      PSF-correction.
+
+    The HSMShapeData object can be initialized completely empty, or with a CppHSMShapeData that is
+    returned from calling the C++ routines for moments measurement and PSF correction.
+    """
+    def __init__(self, *args):
+        # arg checking: require either a CppHSMShapeData, or nothing
+        if len(args) > 1:
+            raise TypeError("Too many arguments to initialize HSMShapeData!")
+        elif len(args) == 1:
+            if not isinstance(args[0], _galsim._CppHSMShapeData):
+                raise TypeError("Argument to initialize HSMShapeData must be a _CppHSMShapeData!")
+            self.image_bounds = args[0].image_bounds
+            self.moments_status = args[0].moments_status
+            self.observed_shape = galsim.Shear(args[0].observed_shape)
+            self.moments_sigma = args[0].moments_sigma
+            self.moments_amp = args[0].moments_amp
+            self.moments_centroid = args[0].moments_centroid
+            self.moments_rho4 = args[0].moments_rho4
+            self.moments_n_iter = args[0].moments_n_iter
+            self.correction_status = args[0].correction_status
+            self.corrected_shape = galsim.Shear(args[0].corrected_shape)
+            self.corrected_shape_err = args[0].corrected_shape_err
+            self.correction_method = args[0].correction_method
+            self.resolution_factor = args[0].resolution_factor
+            self.error_message = args[0].error_message
+        else:
+            self.image_bounds = galsim.BoundsD()
+            self.moments_status = -1
+            self.observed_shape = galsim.Shear()
+            self.moments_sigma = -1.0
+            self.moments_amp = -1.0
+            self.moments_centroid = galsim.PositionD()
+            self.moments_rho4 = -1.0
+            self.moments_n_iter = 0
+            self.correction_status = -1
+            self.corrected_shape = galsim.Shear()
+            self.corrected_shape_err = -1.0
+            self.correction_method = "None"
+            self.resolution_factor = -1.0
+            self.error_message = ""
 
 def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS", flags = 0xe,
                      guess_sig_gal = 5.0, guess_sig_PSF = 3.0, precision = 1.0e-6,
@@ -119,9 +195,9 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
         if (strict == True):
             raise err
         else:
-            result = _galsim.HSMShapeData()
+            result = _galsim._CppHSMShapeData()
             result.error_message = err.message
-    return result
+    return galsim.HSMShapeData(result)
 
 def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
                     guess_y_centroid = -1000.0, strict = True):
@@ -183,9 +259,9 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
         if (strict == True):
             raise err
         else:
-            result = _galsim.HSMShapeData()
+            result = _galsim._CppHSMShapeData()
             result.error_message = err.message
-    return result
+    return galsim.HSMShapeData(result)
 
 # make FindAdaptiveMom a method of Image and ImageView classes
 for Class in _galsim.ImageView.itervalues():
