@@ -523,11 +523,10 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
 
     for t in types:
         dirtag = t+'_DIR'
-        if env[dirtag] == '':
-            continue
         tdir = FindPathInEnv(env, dirtag)
         if tdir is None:
-            print 'Warning, could not find specified %s = %s'%(dirtag,env[dirtag])
+            if env[dirtag] != '':
+                print 'Warning, could not find specified %s = %s'%(dirtag,env[dirtag])
             continue
 
         AddPath(bin_paths, os.path.join(tdir, 'bin'))
