@@ -96,16 +96,13 @@ namespace galsim {
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
             boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
-            double dx=0., double pad_factor=0.);
+           double dx=0., double pad_factor=0.);
 
         /// @brief Copy Constructor.
         NoiseCorrFunc(const NoiseCorrFunc& rhs);
 
         /// @brief Destructor
         ~NoiseCorrFunc();
-
-        ///
-        double xValue(const Position<double>& p) const;
 
     protected:
 

@@ -26,6 +26,18 @@ int verbose_level = 2;
 
 namespace galsim {
 
+  template <typename T>
+  NoiseCorrFunc::NoiseCorrFunc(
+      const BaseImage<T>& image,
+      boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
+      double dx, double pad_factor) :
+      SBProfile(new NoiseCorrFuncImpl(image,xInterp,kInterp,dx,pad_factor)) {}
+
+  //NoiseCorrFunc::NoiseCorrFunc(const NoiseCorrFunc& rhs) : 
+  //    SBInterpolatedImage::SBInterpolatedImage(rhs) {}
+  
+  NoiseCorrFunc::~NoiseCorrFunc() {}
+
     // Here we redefine the xValue and kValue (as compared to the SBProfile versions) to enforce
     // two-fold rotational symmetry.
 
