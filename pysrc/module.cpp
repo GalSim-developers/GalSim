@@ -25,6 +25,7 @@ namespace galsim {
     void pyExportSBInterpolatedImage();
     void pyExportSBKolmogorov();
     void pyExportRandom();
+    void pyExportNoiseCorrFunc();
 
     namespace hsm {
         void pyExportPSFCorr();
