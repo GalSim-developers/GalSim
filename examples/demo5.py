@@ -251,11 +251,15 @@ def main(argv):
             # for first instance, measure moments
             if ix==0 and iy==0:
                 psf_shape = sub_psf_image.FindAdaptiveMom()
-                g_to_e = psf_shape.observed_shape.getG() / psf_shape.observed_shape.getE()
+                temp_e = psf_shape.observed_shape.e
+                if temp_e > 0.0:
+                    g_to_e = psf_shape.observed_shape.g / temp_e
+                else:
+                    g_to_e = 0.0
                 logger.info('Measured best-fit elliptical Gaussian for first PSF image: ')
                 logger.info('  g1, g2, sigma = %7.4f, %7.4f, %7.4f (pixels)',
-                            g_to_e*psf_shape.observed_shape.getE1(),
-                            g_to_e*psf_shape.observed_shape.getE2(), psf_shape.moments_sigma)
+                            g_to_e*psf_shape.observed_shape.e1,
+                            g_to_e*psf_shape.observed_shape.e2, psf_shape.moments_sigma)
 
             x = b.center().x
             y = b.center().y

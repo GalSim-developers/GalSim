@@ -234,17 +234,17 @@ def main(argv):
     results = galsim.EstimateShearHSM(image, image_epsf)
 
     logger.info('HSM reports that the image has observed shape and size:')
-    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.getE1(),
-                results.observed_shape.getE2(), results.moments_sigma)
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.e1,
+                results.observed_shape.e2, results.moments_sigma)
     logger.info('When carrying out Regaussianization PSF correction, HSM reports')
     logger.info('    e1, e2 = %.3f, %.3f',
-                results.corrected_shape.getE1(), results.corrected_shape.getE2())
+                results.corrected_shape.e1, results.corrected_shape.e2)
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
     # Convention for shear addition is to apply the second (RHS) term initially followed by the
     # first (LHS).
     # So wcs needs to be LHS and galaxy shape RHS.
     total_shape = galsim.Shear(g1=wcs_g1, g2=wcs_g2) + gal_shape
-    logger.info('    e1, e2 = %.3f, %.3f', total_shape.getE1(), total_shape.getE2())
+    logger.info('    e1, e2 = %.3f, %.3f', total_shape.e1, total_shape.e2)
 
 if __name__ == "__main__":
     main(sys.argv)
