@@ -9,7 +9,6 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
-import galsim.utilities
 
 # set up any necessary info for tests
 ### Note: changes to either of the tests below might require regeneration of the catalog and image
