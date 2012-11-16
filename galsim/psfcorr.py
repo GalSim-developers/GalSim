@@ -34,17 +34,24 @@ class HSMShapeData(object):
     information about moment measurement (from either EstimateShearHSM or FindAdaptiveMom):
 
     - image_bounds: a galsim.Bounds object describing the image.
+
     - moments_status: the status flag resulting from moments measurement; -1 indicates no attempt to
       measure, 0 indicates success.
+
     - observed_shape: a galsim.Shear object representing the observed shape based on adaptive
       moments.
+
     - moments_sigma: size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
       not measured.
+
     - moments_amp: total image intensity for best-fit elliptical Gaussian from adaptive moments.
       This is related to flux via flux = (total image intensity)*(pixel scale)^2.
+
     - moments_centroid: a galsim.PositionD object representing the centroid based on adaptive
       moments.
+
     - moments_rho4: the weighted radial fourth moment of the image.
+
     - moments_n_iter: number of iterations needed to get adaptive moments, or 0 if not measured.
 
     If EstimateShearHSM was used, then the following fields related to PSF-corrected shape will also
@@ -52,12 +59,17 @@ class HSMShapeData(object):
 
     - correction_status: the status flag resulting from PSF correction; -1 indicates no attempt to
       measure, 0 indicates success.
+
     - corrected_shape: a galsim.Shear object representing the PSF-corrected shape.
+
     - corrected_shape_err: shape measurement uncertainty sigma_gamma per component.
+
     - correction_method: a string indicating the method of PSF correction (will be "None" if
       PSF-correction was not carried out).
+
     - resolution_factor: Resolution factor R_2;  0 indicates object is consistent with a PSF, 1 indicates
       perfect resolution.
+
     - error_message: a string containing any error messages from the attempt to carry out
       PSF-correction.
 
