@@ -8,7 +8,8 @@ This file contains the python interface to C++ routines for estimation of second
 and for carrying out PSF correction using a variety of algorithms.  The algorithms are described in
 Hirata & Seljak (2003; MNRAS, 343, 459), and were tested/characterized using real data in Mandelbaum
 et al. (2005; MNRAS, 361, 1287).  We also define a python-level container for the outputs of these
-codes, HSMShapeData, analogous to the C++-level CppHSMShapeData.
+codes, HSMShapeData, analogous to the C++-level CppHSMShapeData.  Note that these routines for
+moment measurement and shear estimation are not accessible via config, only via python.
 
 The moments that are estimated are "adaptive moments" (see the first paper cited above for details);
 that is, they use an elliptical Gaussian weight that is matched to the image of the object being
