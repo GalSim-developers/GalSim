@@ -1,4 +1,5 @@
 from . import _galsim
+import galsim
 
 """@file psfcorr.py 
 Routines for adaptive moment estimation and PSF correction.
@@ -98,12 +99,12 @@ class HSMShapeData(object):
             self.resolution_factor = args[0].resolution_factor
             self.error_message = args[0].error_message
         else:
-            self.image_bounds = galsim.BoundsD()
+            self.image_bounds = _galsim.BoundsD()
             self.moments_status = -1
             self.observed_shape = galsim.Shear()
             self.moments_sigma = -1.0
             self.moments_amp = -1.0
-            self.moments_centroid = galsim.PositionD()
+            self.moments_centroid = _galsim.PositionD()
             self.moments_rho4 = -1.0
             self.moments_n_iter = 0
             self.correction_status = -1
@@ -209,7 +210,7 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
         else:
             result = _galsim._CppHSMShapeData()
             result.error_message = err.message
-    return galsim.HSMShapeData(result)
+    return HSMShapeData(result)
 
 def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
                     guess_y_centroid = -1000.0, strict = True):
@@ -273,7 +274,7 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
         else:
             result = _galsim._CppHSMShapeData()
             result.error_message = err.message
-    return galsim.HSMShapeData(result)
+    return HSMShapeData(result)
 
 # make FindAdaptiveMom a method of Image and ImageView classes
 for Class in _galsim.ImageView.itervalues():
