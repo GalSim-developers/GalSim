@@ -7,19 +7,19 @@ namespace galsim {
 namespace hsm {
 namespace {
 
-struct PyHSMShapeData {
+struct PyCppHSMShapeData {
 
     template <typename U, typename V>
     static void wrapTemplates() {
-        typedef HSMShapeData (* FAM_func)(const ImageView<U> &, double, double, double, double);
+        typedef CppHSMShapeData (* FAM_func)(const ImageView<U> &, double, double, double, double);
         bp::def("_FindAdaptiveMomView",
                 FAM_func(&FindAdaptiveMomView),
                 (bp::arg("object_image"), bp::arg("guess_sig")=5.0, bp::arg("precision")=1.0e-6,
                  bp::arg("guess_x_centroid")=-1000.0, bp::arg("guess_y_centroid")=-1000.0),
                 "Find adaptive moments of an image (with some optional args).");
 
-        typedef HSMShapeData (* ESH_func)(const ImageView<U> &, const ImageView<V> &, float, const char *,
-                                          unsigned long, double, double, double, double, double);
+        typedef CppHSMShapeData (* ESH_func)(const ImageView<U> &, const ImageView<V> &, float, const char *,
+                                             unsigned long, double, double, double, double, double);
         bp::def("_EstimateShearHSMView",
                 ESH_func(&EstimateShearHSMView),
                 (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("sky_var")=0.0,
@@ -31,24 +31,24 @@ struct PyHSMShapeData {
 
     static void wrap() {
         static char const * doc = 
-            "HSMShapeData object represents information from the HSM moments and PSF-correction\n"
+            "CppHSMShapeData object represents information from the HSM moments and PSF-correction\n"
             "functions.  See C++ docs for more detail.\n"
             ;
 
-        bp::class_<HSMShapeData>("HSMShapeData", doc, bp::init<>())
-            .def_readwrite("image_bounds", &HSMShapeData::image_bounds)
-            .def_readwrite("moments_status", &HSMShapeData::moments_status)
-            .def_readwrite("observed_shape", &HSMShapeData::observed_shape)
-            .def_readwrite("moments_sigma", &HSMShapeData::moments_sigma)
-            .def_readwrite("moments_amp", &HSMShapeData::moments_amp)
-            .def_readwrite("moments_centroid", &HSMShapeData::moments_centroid)
-            .def_readwrite("moments_n_iter", &HSMShapeData::moments_n_iter)
-            .def_readwrite("correction_status", &HSMShapeData::correction_status)
-            .def_readwrite("corrected_shape", &HSMShapeData::corrected_shape)
-            .def_readwrite("corrected_shape_err", &HSMShapeData::corrected_shape_err)
-            .def_readwrite("correction_method", &HSMShapeData::correction_method)
-            .def_readwrite("resolution_factor", &HSMShapeData::resolution_factor)
-            .def_readwrite("error_message", &HSMShapeData::error_message)
+        bp::class_<CppHSMShapeData>("CppHSMShapeData", doc, bp::init<>())
+            .def_readwrite("image_bounds", &CppHSMShapeData::image_bounds)
+            .def_readwrite("moments_status", &CppHSMShapeData::moments_status)
+            .def_readwrite("observed_shape", &CppHSMShapeData::observed_shape)
+            .def_readwrite("moments_sigma", &CppHSMShapeData::moments_sigma)
+            .def_readwrite("moments_amp", &CppHSMShapeData::moments_amp)
+            .def_readwrite("moments_centroid", &CppHSMShapeData::moments_centroid)
+            .def_readwrite("moments_n_iter", &CppHSMShapeData::moments_n_iter)
+            .def_readwrite("correction_status", &CppHSMShapeData::correction_status)
+            .def_readwrite("corrected_shape", &CppHSMShapeData::corrected_shape)
+            .def_readwrite("corrected_shape_err", &CppHSMShapeData::corrected_shape_err)
+            .def_readwrite("correction_method", &CppHSMShapeData::correction_method)
+            .def_readwrite("resolution_factor", &CppHSMShapeData::resolution_factor)
+            .def_readwrite("error_message", &CppHSMShapeData::error_message)
             ;
 
         wrapTemplates<float, float>();
@@ -62,7 +62,7 @@ struct PyHSMShapeData {
 } // anonymous
 
 void pyExportPSFCorr() {
-    PyHSMShapeData::wrap();
+    PyCppHSMShapeData::wrap();
 }
 
 } // namespace hsm
