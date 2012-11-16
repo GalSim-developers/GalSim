@@ -59,6 +59,7 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBInterpolatedImage();
     galsim::pyExportSBKolmogorov();
     galsim::pyExportRandom();
+    galsim::pyExportNoiseCorrFunc();
     galsim::hsm::pyExportPSFCorr();
     galsim::integ::pyExportInteg();
 }
