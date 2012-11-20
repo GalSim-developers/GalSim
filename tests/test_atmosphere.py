@@ -10,8 +10,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-import galsim.atmosphere
-
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
                                                           # images. 
 

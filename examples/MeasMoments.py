@@ -51,8 +51,8 @@ if sky_level > 0.:
 result = galsim.FindAdaptiveMom(image, guess_sig = guess_sigma)
 
 # manipulate results to get moments
-e1_val = result.observed_shape.getE1()
-e2_val = result.observed_shape.getE2()
+e1_val = result.observed_shape.e1
+e2_val = result.observed_shape.e2
 a_val = (1.0 + e1_val) / (1.0 - e1_val)
 b_val = np.sqrt(a_val - (0.5*(1.0+a_val)*e2_val)**2)
 mxx = a_val * (result.moments_sigma**2) / b_val

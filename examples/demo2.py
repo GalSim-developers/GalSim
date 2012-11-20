@@ -125,16 +125,16 @@ def main(argv):
     results = galsim.EstimateShearHSM(image, image_epsf)
 
     logger.info('HSM reports that the image has observed shape and size:')
-    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.getE1(),
-                results.observed_shape.getE2(), results.moments_sigma)
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.e1,
+                results.observed_shape.e2, results.moments_sigma)
     logger.info('When carrying out Regaussianization PSF correction, HSM reports')
-    e_temp = results.corrected_shape.getE()
+    e_temp = results.corrected_shape.e
     if e_temp > 0.:
-        gfac = results.corrected_shape.getG()/e_temp
+        gfac = results.corrected_shape.g/e_temp
     else:
         gfac = 0.
     logger.info('    g1, g2 = %.3f, %.3f', 
-                gfac*results.corrected_shape.getE1(), gfac*results.corrected_shape.getE2())
+                gfac*results.corrected_shape.e1, gfac*results.corrected_shape.e2)
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
     logger.info('    g1, g2 = %.3f, %.3f', g1,g2)
 
