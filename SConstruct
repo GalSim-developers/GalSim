@@ -702,7 +702,9 @@ def CheckLibsFull(config,try_libs,source_file):
         if 'RPATH' in config.env._dict.keys():
             init_rpath = config.env['RPATH']
 
-        for rpath in config.env['LIBPATH']:
+        library_path=os.environ['LIBRARY_PATH']
+        library_path=library_path.split(os.pathsep)
+        for rpath in library_path:
             config.env.PrependUnique(RPATH=rpath)
             result = TryRunResult(config,source_file,'.cpp')
             if result: 
@@ -712,7 +714,7 @@ def CheckLibsFull(config,try_libs,source_file):
 
         # If that doesn't work, also try adding all of them, just in case we need more than one.
         if not result :
-            config.env.PrependUnique(RPATH=config.env['LIBPATH'])
+            config.env.PrependUnique(RPATH=library_path)
             result = TryRunResult(config,source_file,'.cpp')
             if not result:
                 config.env.Replace(RPATH=init_rpath)
