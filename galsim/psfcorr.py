@@ -72,14 +72,15 @@ class HSMShapeData(object):
     - correction_method: a string indicating the method of PSF correction (will be "None" if
       PSF-correction was not carried out).
 
-    - resolution_factor: Resolution factor R_2;  0 indicates object is consistent with a PSF, 1 indicates
-      perfect resolution.
+    - resolution_factor: Resolution factor R_2;  0 indicates object is consistent with a PSF, 1
+      indicates perfect resolution.
 
     - error_message: a string containing any error messages from the attempt to carry out
       PSF-correction.
 
-    The HSMShapeData object can be initialized completely empty, or with a CppHSMShapeData that is
-    returned from calling the C++ routines for moments measurement and PSF correction.
+    The HSMShapeData object can be initialized completely empty, or can be returned from the
+    routines that measure object moments (FindAdaptiveMom) and carry out PSF correction
+    (EstimateShearHSM).
     """
     def __init__(self, *args):
         # arg checking: require either a CppHSMShapeData, or nothing
