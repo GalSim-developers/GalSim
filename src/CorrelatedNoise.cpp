@@ -50,23 +50,29 @@ namespace galsim {
 
     //
     template <typename T>
-    Image<T> getCovarianceMatrix(ImageView<T> image) const
+    Image<T> NoiseCorrFunc::getCovarianceMatrix(ImageView<T> image) const
     {
-        int xmin = image.getXMin();
-        int ymin = image.getYMin();
-        int xmax = image.getXMax();
-        int ymax = image.getYMax();
-        int xdim = 1 + xmax - xmin;
-        int ydim = 1 + ymax - ymin;
-        int covdim = xdim * ydim;
+        int imin = image.getXMin();
+        int jmin = image.getYMin();
+        int imax = image.getXMax();
+        int jmax = image.getYMax();
+        int idim = 1 + imax - imin;
+        int jdim = 1 + jmax - jmin;
+        int covdim = idim * jdim;
         double dx = image.getScale();
 
+        int k, ell;
         Image<T> cov = Image<T>(covdim, covdim, T(0));
         for (int i=0; i<covdim; i++){
 
 	  for (int j=i; j<covdim; j++){
 
-	    cov.setValue(i, j, );
+            k = std::abs((i / idim) - (j / jdim));  // using integer division rules here
+            ell = (j % jdim) - (i % idim);
+            double xk = k * dx;
+            double yell = ell * dx;
+            Position<T> p = Position<T>(xk, yell);
+	    cov.setValue(i, j, xValue(p));
 
           }
 
