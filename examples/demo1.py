@@ -104,8 +104,8 @@ def main(argv):
     results = image.FindAdaptiveMom()
 
     logger.info('HSM reports that the image has observed shape and size:')
-    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.getE1(),
-                results.observed_shape.getE2(), results.moments_sigma)
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.e1,
+                results.observed_shape.e2, results.moments_sigma)
     logger.info('Expected values in the limit that pixel response and noise are negligible:')
     logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f', 0.0, 0.0, 
                 math.sqrt(gal_sigma**2 + psf_sigma**2)/pixel_scale) 

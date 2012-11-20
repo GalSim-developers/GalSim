@@ -86,10 +86,10 @@ def test_moments_basic():
                 np.testing.assert_almost_equal(np.fabs(result.moments_sigma-sig/pixel_scale), 0.0,
                                                err_msg = "- incorrect dsigma", decimal = decimal)
                 # make sure we find the right e
-                np.testing.assert_almost_equal(result.observed_shape.getE1(),
+                np.testing.assert_almost_equal(result.observed_shape.e1,
                                                distortion_1, err_msg = "- incorrect e1",
                                                decimal = decimal_shape)
-                np.testing.assert_almost_equal(result.observed_shape.getE2(),
+                np.testing.assert_almost_equal(result.observed_shape.e2,
                                                distortion_2, err_msg = "- incorrect e2",
                                                decimal = decimal_shape)
     t2 = time.time()
@@ -114,10 +114,10 @@ def test_shearest_basic():
                 epsf_image = psf.draw(dx = pixel_scale)
                 result = galsim.EstimateShearHSM(final_image, epsf_image)
                 # make sure we find the right e after PSF correction
-                np.testing.assert_almost_equal(result.corrected_shape.getE1(),
+                np.testing.assert_almost_equal(result.corrected_shape.e1,
                                                distortion_1, err_msg = "- incorrect e1",
                                                decimal = decimal_shape)
-                np.testing.assert_almost_equal(result.corrected_shape.getE2(),
+                np.testing.assert_almost_equal(result.corrected_shape.e2,
                                                distortion_2, err_msg = "- incorrect e2",
                                                decimal = decimal_shape)
     t2 = time.time()
@@ -148,10 +148,10 @@ def test_shearest_precomputed():
                                              = y_centroid[index])
 
             # compare results with precomputed
-            np.testing.assert_almost_equal(result.corrected_shape.getE1(),
+            np.testing.assert_almost_equal(result.corrected_shape.e1,
                                            e1_expected[index][method_index], decimal =
                                            decimal_shape)
-            np.testing.assert_almost_equal(result.corrected_shape.getE2(),
+            np.testing.assert_almost_equal(result.corrected_shape.e2,
                                            e2_expected[index][method_index], decimal =
                                            decimal_shape)
             np.testing.assert_almost_equal(result.resolution_factor,
