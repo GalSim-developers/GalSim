@@ -61,23 +61,25 @@ namespace galsim {
         int covdim = idim * jdim;
         double dx = image.getScale();
 
-        int k, ell;
+        int k, ell; // k and l are indices that refer to image pixel separation vectors in the 
+	            // correlation func.
+        double x_k, y_ell; // physical vector separations in the correlation func, dx * k etc.
         Image<T> cov = Image<T>(covdim, covdim, T(0));
         for (int i=0; i<covdim; i++){
 
 	  for (int j=i; j<covdim; j++){
 
-            k = std::abs((i / idim) - (j / jdim));  // using integer division rules here
+            k = (j / jdim) - (i / idim);  // using integer division rules here
             ell = (j % jdim) - (i % idim);
-            double xk = k * dx;
-            double yell = ell * dx;
-            Position<T> p = Position<T>(xk, yell);
-	    cov.setValue(i, j, xValue(p));
+            x_k = k * dx;
+            y_ell = ell * dx;
+            Position<T> p = Position<T>(x_k, y_ell);
+	    cov.setValue(i, j, _pimpl->xValue(p));
 
           }
 
         }
-
+	return cov;
     }
 
     // Here we redefine the xValue and kValue (as compared to the SBProfile versions) to enforce

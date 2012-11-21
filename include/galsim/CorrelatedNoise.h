@@ -117,7 +117,7 @@ namespace galsim {
          *
          * @param[in] p 2D position in real space.
          */
-        double xValue(const Position<double>& p) const {return NoiseCorrFuncImpl::xValue(p);}
+        double xValue(const Position<double>& p) const {return _pimpl->xValue(p);}
 
         /**
          * @brief Return a noise covariance matrix between every element in an input image.
