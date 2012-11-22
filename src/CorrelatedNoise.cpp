@@ -71,8 +71,8 @@ namespace galsim {
 
             k = (j / jdim) - (i / idim);  // using integer division rules here
             ell = (j % jdim) - (i % idim);
-            x_k = k * dx;
-            y_ell = ell * dx;
+            x_k = double(k) * dx;
+            y_ell = double(ell) * dx;
             Position<T> p = Position<T>(x_k, y_ell);
 	    cov.setValue(i, j, _pimpl->xValue(p));
 
