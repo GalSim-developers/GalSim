@@ -40,9 +40,9 @@ namespace galsim {
      * table/image.
      *
      * This class inherits much from SBInterpolatedImage to store the 2D correlation function.
-     * The NoiseCorrFunc and SBInterpolatedImage classes represent a profile (supplied as an image
-     * an image), including rules for how to interpolate the profile between the supplied pixel
-     * values.  Many of the SBProfile methods are, however, disabled.
+     * The NoiseCorrFunc and SBInterpolatedImage classes represent a profile (supplied as an image),
+     * including rules for how to interpolate the profile between the supplied pixel values.  Many
+     * of the SBProfile methods are, however, disabled.
      *
      * NoiseCorrFunc also imposes two-fold rotational symmetry: any pixels in the negative region 
      * of the input image below the line y = 0 will be ignored.
