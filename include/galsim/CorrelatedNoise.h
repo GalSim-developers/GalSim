@@ -44,8 +44,10 @@ namespace galsim {
      * including rules for how to interpolate the profile between the supplied pixel values.  Many
      * of the SBProfile methods are, however, disabled.
      *
-     * NoiseCorrFunc also imposes two-fold rotational symmetry: any pixels in the negative region 
-     * of the input image below the line y = 0 will be ignored.
+     * NoiseCorrFunc also imposes two-fold rotational symmetry: any pixels in the positive region 
+     * of the input image above the line y = 0 will be ignored.  The reason we use the y-negative
+     * part of the input image is due to the way that the SBInterpolated image defines the center of
+     * the distribution.
      *
      * It is assumed that the input image oversamples the correlation function profile they 
      * represent.  maxK() is set at the Nyquist frequency of the input image, although it should be

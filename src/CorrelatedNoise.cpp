@@ -87,7 +87,7 @@ namespace galsim {
 
     double SBNoiseCF::SBNoiseCFImpl::xValue(const Position<double>& p) const 
     {
-        if ( p.y >= 0. ) {
+        if ( p.y <= 0. ) {
             return _xtab->interpolate(p.x, p.y, *_xInterp);
         } else {
             return _xtab->interpolate(-p.x, -p.y, *_xInterp);
@@ -109,7 +109,7 @@ namespace galsim {
 
         checkK();  // this, along with a bunch of other stuff, comes from the SBInterpolatedImage
 
-        if ( p.y >= 0. ) {
+        if ( p.y <= 0. ) {
             return xKernelTransform * _ktab->interpolate(p.x, p.y, *_kInterp);
         } else {
             return xKernelTransform * _ktab->interpolate(-p.x, -p.y, *_kInterp);
