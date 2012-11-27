@@ -31,18 +31,18 @@ int verbose_level = 2;
 namespace galsim {
 
     template <typename T>
-    NoiseCorrFunc::NoiseCorrFunc(
+    SBNoiseCF::SBNoiseCF(
         const BaseImage<T>& image,
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double dx, double pad_factor) :
-        SBInterpolatedImage(new NoiseCorrFuncImpl(image,xInterp,kInterp,dx,pad_factor)) {}
+        SBInterpolatedImage(new SBNoiseCFImpl(image,xInterp,kInterp,dx,pad_factor)) {}
 
-    NoiseCorrFunc::NoiseCorrFunc(const NoiseCorrFunc& rhs) : SBInterpolatedImage(rhs) {}
+    SBNoiseCF::SBNoiseCF(const SBNoiseCF& rhs) : SBInterpolatedImage(rhs) {}
   
-    NoiseCorrFunc::~NoiseCorrFunc() {}
+    SBNoiseCF::~SBNoiseCF() {}
 
     template <typename T>
-    NoiseCorrFunc::NoiseCorrFuncImpl::NoiseCorrFuncImpl(
+    SBNoiseCF::SBNoiseCFImpl::SBNoiseCFImpl(
         const BaseImage<T>& image, 
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double dx, double pad_factor) : 
@@ -50,7 +50,7 @@ namespace galsim {
 
     //
     template <typename T>
-    Image<T> NoiseCorrFunc::getCovarianceMatrix(ImageView<T> image) const
+    Image<T> SBNoiseCF::getCovarianceMatrix(ImageView<T> image) const
     {
         int imin = image.getXMin();
         int jmin = image.getYMin();
@@ -85,7 +85,7 @@ namespace galsim {
     // Here we redefine the xValue and kValue (as compared to the SBProfile versions) to enforce
     // two-fold rotational symmetry.
 
-    double NoiseCorrFunc::NoiseCorrFuncImpl::xValue(const Position<double>& p) const 
+    double SBNoiseCF::SBNoiseCFImpl::xValue(const Position<double>& p) const 
     {
         if ( p.y >= 0. ) {
             return _xtab->interpolate(p.x, p.y, *_xInterp);
@@ -94,7 +94,7 @@ namespace galsim {
         }
     }
 
-    std::complex<double> NoiseCorrFunc::NoiseCorrFuncImpl::kValue(
+    std::complex<double> SBNoiseCF::SBNoiseCFImpl::kValue(
         const Position<double> &p) const
     {
         const double TWOPI = 2.*M_PI;
@@ -117,29 +117,29 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template NoiseCorrFunc::NoiseCorrFunc(
+    template SBNoiseCF::SBNoiseCF(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template NoiseCorrFunc::NoiseCorrFunc(
+    template SBNoiseCF::SBNoiseCF(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template NoiseCorrFunc::NoiseCorrFunc(
+    template SBNoiseCF::SBNoiseCF(
         const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template NoiseCorrFunc::NoiseCorrFunc(
+    template SBNoiseCF::SBNoiseCF(
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
 
-    template NoiseCorrFunc::NoiseCorrFuncImpl::NoiseCorrFuncImpl(
+    template SBNoiseCF::SBNoiseCFImpl::SBNoiseCFImpl(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template NoiseCorrFunc::NoiseCorrFuncImpl::NoiseCorrFuncImpl(
+    template SBNoiseCF::SBNoiseCFImpl::SBNoiseCFImpl(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template NoiseCorrFunc::NoiseCorrFuncImpl::NoiseCorrFuncImpl(
+    template SBNoiseCF::SBNoiseCFImpl::SBNoiseCFImpl(
         const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template NoiseCorrFunc::NoiseCorrFuncImpl::NoiseCorrFuncImpl(
+    template SBNoiseCF::SBNoiseCFImpl::SBNoiseCFImpl(
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
 

@@ -75,7 +75,7 @@ namespace galsim {
      * There are also optional arguments for the pixel size (default is to get it from
      * the image), and a factor by which to pad the image (default = 4).
      */
-    class NoiseCorrFunc: public SBInterpolatedImage
+    class SBNoiseCF: public SBInterpolatedImage
     {
     public:
         /** 
@@ -91,18 +91,17 @@ namespace galsim {
          * @param[in] pad_factor Multiple by which to increase the image size when zero-padding for 
          *                      the Fourier transform (default `pad_factor = 4`)
          */
-        template <typename T> 
-        NoiseCorrFunc(
+        template <typename T> SBNoiseCF(
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
             boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
            double dx=0., double pad_factor=0.);
 
         /// @brief Copy Constructor.
-        NoiseCorrFunc(const NoiseCorrFunc& rhs);
+        SBNoiseCF(const SBNoiseCF& rhs);
 
         /// @brief Destructor
-        ~NoiseCorrFunc();
+        ~SBNoiseCF();
 
         /** 
          * @brief Return value of correlation function at a chosen 2D position in real space.
@@ -127,12 +126,12 @@ namespace galsim {
 
     protected:
 
-        class NoiseCorrFuncImpl: public SBInterpolatedImage::SBInterpolatedImageImpl
+        class SBNoiseCFImpl: public SBInterpolatedImage::SBInterpolatedImageImpl
         {
         public:
 
             template <typename T> 
-            NoiseCorrFuncImpl(
+            SBNoiseCFImpl(
                 const BaseImage<T>& image, 
                 boost::shared_ptr<Interpolant2d> xInterp,
                 boost::shared_ptr<Interpolant2d> kInterp,
@@ -167,8 +166,8 @@ namespace galsim {
         private:
 
             // Copy constructor and op= are undefined.
-            NoiseCorrFuncImpl(const NoiseCorrFuncImpl& rhs);
-            void operator=(const NoiseCorrFuncImpl& rhs);
+            SBNoiseCFImpl(const SBNoiseCFImpl& rhs);
+            void operator=(const SBNoiseCFImpl& rhs);
         
             // Most of the SBProfile methods are not going to be available eventually...?
         };

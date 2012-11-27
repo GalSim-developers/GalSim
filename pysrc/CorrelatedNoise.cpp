@@ -7,7 +7,7 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PyNoiseCorrFunc
+    struct PySBNoiseCF
     {
 
         template <typename U, typename W>
@@ -26,18 +26,18 @@ namespace galsim {
         }
 
         static void wrap() {
-            bp::class_< NoiseCorrFunc, bp::bases<SBProfile> > pyNoiseCorrFunc(
-                "NoiseCorrFunc", bp::init<const NoiseCorrFunc &>()
+            bp::class_< SBNoiseCF, bp::bases<SBProfile> > pySBNoiseCF(
+                "SBNoiseCF", bp::init<const SBNoiseCF &>()
             );
-            wrapTemplates<float>(pyNoiseCorrFunc);
-            wrapTemplates<double>(pyNoiseCorrFunc);
-            wrapTemplates<short>(pyNoiseCorrFunc);
-            wrapTemplates<int>(pyNoiseCorrFunc);
+            wrapTemplates<float>(pySBNoiseCF);
+            wrapTemplates<double>(pySBNoiseCF);
+            wrapTemplates<short>(pySBNoiseCF);
+            wrapTemplates<int>(pySBNoiseCF);
         }
 
     };
 
-    void pyExportNoiseCorrFunc() 
+    void pyExportSBNoiseCF() 
     {
         // We wrap Interpolant classes as opaque, construct-only objects; we just
         // need to be able to make them from Python and pass them to C++.
@@ -71,7 +71,7 @@ namespace galsim {
             "Quintic", bp::init<double>(bp::arg("tol")=1E-4)
         );
 
-        PyNoiseCorrFunc::wrap();
+        PySBNoiseCF::wrap();
     }
 
 } // namespace galsim
