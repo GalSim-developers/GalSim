@@ -91,7 +91,8 @@ namespace galsim {
          * @param[in] pad_factor Multiple by which to increase the image size when zero-padding for 
          *                      the Fourier transform (default `pad_factor = 4`)
          */
-        template <typename T> SBNoiseCF(
+        template <typename T>
+        SBNoiseCF(
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
             boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
