@@ -528,6 +528,13 @@ then switch to the system gcc version (either 4.0 or 4.2) with
 
 and compile GalSim with the system gcc.
 
+c) Homebrew (http://mxcl.github.com/homebrew/) -- another package manager for
+Max OSX.  Currently GalSim v0.2 is available on homebrew, so it (plus
+dependencies) should be installable via
+
+    brew tap camphogg/science
+    brew install gal-sim
+
 
 5. More SCons options
 =====================
