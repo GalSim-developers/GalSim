@@ -30,6 +30,7 @@ int verbose_level = 2;
  */
 
 #include <complex>
+#include "TMV_Sym.h"
 #include "SBInterpolatedImageImpl.h"
 #include "SBInterpolatedImage.h"
 #include "Random.h"
@@ -123,7 +124,18 @@ namespace galsim {
         double xValue(const Position<double>& p) const {return _pimpl->xValue(p);}
 
         /**
-         * @brief Return a noise covariance matrix between every element in an input image.
+         * @brief Return, as a square Image, a noise covariance matrix between every element in an 
+         * input Image with pixel scale dx.
+         *
+         * The matrix is symmetric, and therefore only the upper triangular elements are actually
+         * written into.  The rest are initialized and remain as zero.
+         *
+         * Currently, this actually copies elements from an internal calculation of the covariance
+         * matrix (using Mike Jarvis' TMV library).  It could, therefore, be calculated more 
+         * efficiently by direct assignment.  However, as this public member function is forseen
+         * as being mainly for visualization/checking purposes, we go via the TMV intermediary to 
+         * avoid code duplication.  If, in future, it becomes critical to speed up this function
+         * this can be revisted.
          */
         template <typename T>
         Image<double> getCovarianceMatrix(ImageView<T> image, double dx) const;
@@ -132,10 +144,23 @@ namespace galsim {
          * @brief Apply noise with this correlation function to an input image.
          */
         template <typename T>
-        void applyNoiseTo(ImageView<T> image, BaseDeviate bd) const;
+        void applyNoiseTo(ImageView<T> image, double dx, BaseDeviate bd) const;
 
     protected:
 
+         /**
+         * @brief Return, as a TMV SymMatrix, a noise covariance matrix between every element in 
+         * an input Image with pixel scale dx.
+         *
+         * The TMV SymMatrix uses FortranStyle indexing (to match the FITS-compliant usage in Image)
+         * along with ColumnMajor ordering (the default), and Upper triangle storage.
+         */
+        template <typename T>
+        tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> getCovarianceSymMatrix(
+            ImageView<T> image, double dx) const;
+
+
+        // pimpl
         class SBCorrFuncImpl: public SBInterpolatedImage::SBInterpolatedImageImpl
         {
         public:
@@ -179,7 +204,6 @@ namespace galsim {
             SBCorrFuncImpl(const SBCorrFuncImpl& rhs);
             void operator=(const SBCorrFuncImpl& rhs);
         
-            // Most of the SBProfile methods are not going to be available eventually...?
         };
     };
 }

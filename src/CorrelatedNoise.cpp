@@ -48,11 +48,38 @@ namespace galsim {
         double dx, double pad_factor) : 
         SBInterpolatedImageImpl(image, xInterp, kInterp, dx, pad_factor) {}
 
-    //
+    // Covariance matrix calculation using the dimensions of an input image, and a scale dx
     template <typename T>
     Image<double> SBCorrFunc::getCovarianceMatrix(ImageView<T> image, double dx) const
     {
         // Calculate the required dimensions
+        int idim = 1 + image.getXMax() - image.getXMin();
+        int jdim = 1 + image.getYMax() - image.getYMin();
+        int covdim = idim * jdim;
+        
+        tmv::SymMatrix<double, 
+            tmv::FortranStyle|tmv::Upper> symcov = getCovarianceSymMatrix(image, dx);
+
+        Image<double> cov = Image<double>(covdim, covdim, 0.);
+
+        for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
+	                               // start from 1!!
+	    for (int j=i; j<=covdim; j++){
+
+	        cov.setValue(i, j, symcov(i, j)); // fill in the upper triangle with the
+                                                       // correct CorrFunc value
+            }
+
+        }
+	return cov;
+    }
+
+
+    template <typename T>
+    tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> SBCorrFunc::getCovarianceSymMatrix(
+        ImageView<T> image, double dx) const
+    {
+         // Calculate the required dimensions
         int idim = 1 + image.getXMax() - image.getXMin();
         int jdim = 1 + image.getYMax() - image.getYMin();
         int covdim = idim * jdim;
@@ -62,23 +89,42 @@ namespace galsim {
         int k, ell; // k and l are indices that refer to image pixel separation vectors in the 
 	            // correlation func.
         double x_k, y_ell; // physical vector separations in the correlation func, dx * k etc.
-        Image<double> cov = Image<double>(covdim, covdim, 0.);
+
+        tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> cov = tmv::SymMatrix<
+            double, tmv::FortranStyle|tmv::Upper>(covdim);
+
         for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
 	                               // start from 1!!
 	    for (int j=i; j<=covdim; j++){
 
-                k = (j / idim) - (i / jdim);  // using integer division rules here
-                ell = (j % idim) - (i % jdim);
+                k = (j / jdim) - (i / idim);  // using integer division rules here
+                ell = (j % jdim) - (i % idim);
                 x_k = double(k) * dx;
                 y_ell = double(ell) * dx;
                 Position<double> p = Position<double>(x_k, y_ell);
-	        cov.setValue(i, j, _pimpl->xValue(p)); // fill in the upper triangle with the
-                                                       // correct CorrFunc value
+	        cov(i, j) = _pimpl->xValue(p); // fill in the upper triangle with the
+                                               // correct CorrFunc value
             }
 
         }
 	return cov;
     }
+
+
+    template <typename T>
+    void SBCorrFunc::applyNoiseTo(ImageView<T> image, double dx, BaseDeviate bd) const
+    {
+        // Calculate the required dimensions
+        int idim = 1 + image.getXMax() - image.getXMin();
+        int jdim = 1 + image.getYMax() - image.getYMin();
+        int covdim = idim * jdim;
+ 
+        // Get the covariance matrix for an image of these dimensions and input scale
+        Image<double> cov = SBCorrFunc::getCovarianceMatrix(image, dx);
+
+
+    }
+
 
     // Here we redefine the xValue and kValue (as compared to the SBProfile versions) to enforce
     // two-fold rotational symmetry.
