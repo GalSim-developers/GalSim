@@ -31,18 +31,18 @@ int verbose_level = 2;
 namespace galsim {
 
     template <typename T>
-    SBNoiseCF::SBNoiseCF(
+    SBCorrFunc::SBCorrFunc(
         const BaseImage<T>& image,
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double dx, double pad_factor) :
-        SBInterpolatedImage(new SBNoiseCFImpl(image,xInterp,kInterp,dx,pad_factor)) {}
+        SBInterpolatedImage(new SBCorrFuncImpl(image,xInterp,kInterp,dx,pad_factor)) {}
 
-    SBNoiseCF::SBNoiseCF(const SBNoiseCF& rhs) : SBInterpolatedImage(rhs) {}
+    SBCorrFunc::SBCorrFunc(const SBCorrFunc& rhs) : SBInterpolatedImage(rhs) {}
   
-    SBNoiseCF::~SBNoiseCF() {}
+    SBCorrFunc::~SBCorrFunc() {}
 
     template <typename T>
-    SBNoiseCF::SBNoiseCFImpl::SBNoiseCFImpl(
+    SBCorrFunc::SBCorrFuncImpl::SBCorrFuncImpl(
         const BaseImage<T>& image, 
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double dx, double pad_factor) : 
@@ -50,7 +50,7 @@ namespace galsim {
 
     //
     template <typename T>
-    Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<T> image, double dx) const
+    Image<double> SBCorrFunc::getCovarianceMatrix(ImageView<T> image, double dx) const
     {
         // Calculate the required dimensions
         int idim = 1 + image.getXMax() - image.getXMin();
@@ -65,16 +65,16 @@ namespace galsim {
         Image<double> cov = Image<double>(covdim, covdim, 0.);
         for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
 	                               // start from 1!!
-	  for (int j=i; j<=covdim; j++){
+	    for (int j=i; j<=covdim; j++){
 
-            k = (j / idim) - (i / jdim);  // using integer division rules here
-            ell = (j % idim) - (i % jdim);
-            x_k = double(k) * dx;
-            y_ell = double(ell) * dx;
-            Position<double> p = Position<double>(x_k, y_ell);
-	    cov.setValue(i, j, _pimpl->xValue(p));
-
-          }
+                k = (j / idim) - (i / jdim);  // using integer division rules here
+                ell = (j % idim) - (i % jdim);
+                x_k = double(k) * dx;
+                y_ell = double(ell) * dx;
+                Position<double> p = Position<double>(x_k, y_ell);
+	        cov.setValue(i, j, _pimpl->xValue(p)); // fill in the upper triangle with the
+                                                       // correct CorrFunc value
+            }
 
         }
 	return cov;
@@ -83,7 +83,7 @@ namespace galsim {
     // Here we redefine the xValue and kValue (as compared to the SBProfile versions) to enforce
     // two-fold rotational symmetry.
 
-    double SBNoiseCF::SBNoiseCFImpl::xValue(const Position<double>& p) const 
+    double SBCorrFunc::SBCorrFuncImpl::xValue(const Position<double>& p) const 
     {
         if ( p.y <= 0. ) {
             return _xtab->interpolate(p.x, p.y, *_xInterp);
@@ -92,7 +92,7 @@ namespace galsim {
         }
     }
 
-    std::complex<double> SBNoiseCF::SBNoiseCFImpl::kValue(
+    std::complex<double> SBCorrFunc::SBCorrFuncImpl::kValue(
         const Position<double> &p) const
     {
         const double TWOPI = 2.*M_PI;
@@ -115,36 +115,40 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template SBNoiseCF::SBNoiseCF(
+    template SBCorrFunc::SBCorrFunc(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template SBNoiseCF::SBNoiseCF(
+    template SBCorrFunc::SBCorrFunc(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template SBNoiseCF::SBNoiseCF(
+    template SBCorrFunc::SBCorrFunc(
         const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template SBNoiseCF::SBNoiseCF(
+    template SBCorrFunc::SBCorrFunc(
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
 
-    template SBNoiseCF::SBNoiseCFImpl::SBNoiseCFImpl(
+    template SBCorrFunc::SBCorrFuncImpl::SBCorrFuncImpl(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template SBNoiseCF::SBNoiseCFImpl::SBNoiseCFImpl(
+    template SBCorrFunc::SBCorrFuncImpl::SBCorrFuncImpl(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template SBNoiseCF::SBNoiseCFImpl::SBNoiseCFImpl(
+    template SBCorrFunc::SBCorrFuncImpl::SBCorrFuncImpl(
         const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template SBNoiseCF::SBNoiseCFImpl::SBNoiseCFImpl(
+    template SBCorrFunc::SBCorrFuncImpl::SBCorrFuncImpl(
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
 
-    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<float> image, double dx) const;
-    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<double> image, double dx) const;
-    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<int> image, double dx) const;
-    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<short> image, double dx) const;
+    template Image<double> SBCorrFunc::getCovarianceMatrix(
+        ImageView<float> image, double dx) const;
+    template Image<double> SBCorrFunc::getCovarianceMatrix(
+        ImageView<double> image, double dx) const;
+    template Image<double> SBCorrFunc::getCovarianceMatrix(
+        ImageView<int> image, double dx) const;
+    template Image<double> SBCorrFunc::getCovarianceMatrix(
+        ImageView<short> image, double dx) const;
 
 }
 

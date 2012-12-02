@@ -17,7 +17,6 @@ if __name__ == "__main__":
     oncf = galsim.correlatednoise.CorrFunc(onoise)
     print oncf.SBProfile.xValue(galsim.PositionD(0, 0))
 
-    plt.figure()
     testim = galsim.ImageD(10, 10)
     cv = encf.SBProfile.getCovarianceMatrix(testim.view(), dx=1.)
     #plt.pcolor(cv.array); plt.colorbar()

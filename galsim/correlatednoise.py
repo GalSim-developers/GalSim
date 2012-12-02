@@ -21,7 +21,7 @@ class CorrFunc(base.GSObject):
         yxroll = (cf_array.shape[0] / 2, cf_array.shape[1] / 2)
         cf_array = np.ascontiguousarray(utilities.roll2d(cf_array, yxroll))
         self.cf_image = _galsim.ImageViewD(cf_array)
-        base.GSObject.__init__(self, _galsim.SBNoiseCF(self.cf_image))
+        base.GSObject.__init__(self, _galsim.SBCorrFunc(self.cf_image))
 
 # Make a function for returning Noise correlation
 def Image_getCorrFunc(image):

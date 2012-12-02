@@ -77,7 +77,7 @@ namespace galsim {
      * There are also optional arguments for the pixel size (default is to get it from
      * the image), and a factor by which to pad the image (default = 4).
      */
-    class SBNoiseCF: public SBInterpolatedImage
+    class SBCorrFunc: public SBInterpolatedImage
     {
     public:
         /** 
@@ -94,17 +94,17 @@ namespace galsim {
          *                      the Fourier transform (default `pad_factor = 4`)
          */
         template <typename T>
-        SBNoiseCF(
+        SBCorrFunc(
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
             boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
            double dx=0., double pad_factor=0.);
 
         /// @brief Copy Constructor.
-        SBNoiseCF(const SBNoiseCF& rhs);
+        SBCorrFunc(const SBCorrFunc& rhs);
 
         /// @brief Destructor
-        ~SBNoiseCF();
+        ~SBCorrFunc();
 
         /** 
          * @brief Return value of correlation function at a chosen 2D position in real space.
@@ -129,12 +129,12 @@ namespace galsim {
 
     protected:
 
-        class SBNoiseCFImpl: public SBInterpolatedImage::SBInterpolatedImageImpl
+        class SBCorrFuncImpl: public SBInterpolatedImage::SBInterpolatedImageImpl
         {
         public:
 
             template <typename T> 
-            SBNoiseCFImpl(
+            SBCorrFuncImpl(
                 const BaseImage<T>& image, 
                 boost::shared_ptr<Interpolant2d> xInterp,
                 boost::shared_ptr<Interpolant2d> kInterp,
@@ -169,8 +169,8 @@ namespace galsim {
         private:
 
             // Copy constructor and op= are undefined.
-            SBNoiseCFImpl(const SBNoiseCFImpl& rhs);
-            void operator=(const SBNoiseCFImpl& rhs);
+            SBCorrFuncImpl(const SBCorrFuncImpl& rhs);
+            void operator=(const SBCorrFuncImpl& rhs);
         
             // Most of the SBProfile methods are not going to be available eventually...?
         };
