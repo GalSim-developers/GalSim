@@ -22,12 +22,11 @@ namespace galsim {
                           bp::arg("kInterp")=bp::object(),
                           bp::arg("dx")=0., bp::arg("pad_factor")=0.)
                      ))
-	          .def(
-                      "getCovarianceMatrix", (
-                          Image<double> (SBNoiseCF::*) (ImageView<U>) 
-		          const)&SBNoiseCF::getCovarianceMatrix, 
-                       bp::args("image"),
-                       "Return the covariance matrix for an input image based on this SBNoiseCF.")
+	         .def(
+                     "getCovarianceMatrix", (
+                         Image<double> (SBNoiseCF::*) (ImageView<U>, double) 
+                         const)&SBNoiseCF::getCovarianceMatrix, 
+                      (bp::arg("image"), bp::arg("dx")=0.))
                   ;
         }
 

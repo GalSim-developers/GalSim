@@ -50,24 +50,25 @@ namespace galsim {
 
     //
     template <typename T>
-    Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<T> image) const
+    Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<T> image, double dx) const
     {
         // Calculate the required dimensions
         int idim = 1 + image.getXMax() - image.getXMin();
         int jdim = 1 + image.getYMax() - image.getYMin();
         int covdim = idim * jdim;
-        double dx = image.getScale();
+        
+        if (dx <=0.) dx = image.getScale(); // use the image scale if dx is set less than zero
 
         int k, ell; // k and l are indices that refer to image pixel separation vectors in the 
 	            // correlation func.
         double x_k, y_ell; // physical vector separations in the correlation func, dx * k etc.
         Image<double> cov = Image<double>(covdim, covdim, 0.);
-        for (int i=0; i<covdim; i++){
+        for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
+	                               // start from 1!!
+	  for (int j=i; j<=covdim; j++){
 
-	  for (int j=i; j<covdim; j++){
-
-            k = (j / jdim) - (i / idim);  // using integer division rules here
-            ell = (j % jdim) - (i % idim);
+            k = (j / idim) - (i / jdim);  // using integer division rules here
+            ell = (j % idim) - (i % jdim);
             x_k = double(k) * dx;
             y_ell = double(ell) * dx;
             Position<double> p = Position<double>(x_k, y_ell);
@@ -140,10 +141,10 @@ namespace galsim {
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
 
-    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<float> image) const;
-    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<double> image) const;
-    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<int> image) const;
-    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<short> image) const;
+    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<float> image, double dx) const;
+    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<double> image, double dx) const;
+    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<int> image, double dx) const;
+    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<short> image, double dx) const;
 
 }
 

@@ -125,7 +125,7 @@ namespace galsim {
          * @brief Return a noise covariance matrix between every element in an input image.
          */
         template <typename T>
-        Image<double> getCovarianceMatrix(ImageView<T> image) const;
+        Image<double> getCovarianceMatrix(ImageView<T> image, double dx) const;
 
     protected:
 
