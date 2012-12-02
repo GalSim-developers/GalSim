@@ -12,7 +12,7 @@ class CorrFunc(base.GSObject):
     """A class describing 2D Correlation Functions calculated from Images.
     """
 
-    def __init__(self, image):
+    def __init__(self, image, dx=0.):
         # Build a noise correlation function from the input image, first get the CF using DFTs
         ft_array = np.fft.fft2(image.array)
         cf_array = ((np.fft.ifft2(ft_array * ft_array.conj())).real /
@@ -21,7 +21,7 @@ class CorrFunc(base.GSObject):
         yxroll = (cf_array.shape[0] / 2, cf_array.shape[1] / 2)
         cf_array = np.ascontiguousarray(utilities.roll2d(cf_array, yxroll))
         self.cf_image = _galsim.ImageViewD(cf_array)
-        base.GSObject.__init__(self, _galsim.SBCorrFunc(self.cf_image))
+        base.GSObject.__init__(self, _galsim.SBCorrFunc(self.cf_image, dx=dx))
 
 # Make a function for returning Noise correlation
 def Image_getCorrFunc(image):
