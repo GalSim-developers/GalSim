@@ -50,21 +50,18 @@ namespace galsim {
 
     //
     template <typename T>
-    Image<T> SBNoiseCF::getCovarianceMatrix(ImageView<T> image) const
+    Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<T> image) const
     {
-        int imin = image.getXMin();
-        int jmin = image.getYMin();
-        int imax = image.getXMax();
-        int jmax = image.getYMax();
-        int idim = 1 + imax - imin;
-        int jdim = 1 + jmax - jmin;
+        // Calculate the required dimensions
+        int idim = 1 + image.getXMax() - image.getXMin();
+        int jdim = 1 + image.getYMax() - image.getYMin();
         int covdim = idim * jdim;
         double dx = image.getScale();
 
         int k, ell; // k and l are indices that refer to image pixel separation vectors in the 
 	            // correlation func.
         double x_k, y_ell; // physical vector separations in the correlation func, dx * k etc.
-        Image<T> cov = Image<T>(covdim, covdim, T(0));
+        Image<double> cov = Image<double>(covdim, covdim, 0.);
         for (int i=0; i<covdim; i++){
 
 	  for (int j=i; j<covdim; j++){
@@ -73,7 +70,7 @@ namespace galsim {
             ell = (j % jdim) - (i % idim);
             x_k = double(k) * dx;
             y_ell = double(ell) * dx;
-            Position<T> p = Position<T>(x_k, y_ell);
+            Position<double> p = Position<double>(x_k, y_ell);
 	    cov.setValue(i, j, _pimpl->xValue(p));
 
           }
@@ -142,6 +139,11 @@ namespace galsim {
     template SBNoiseCF::SBNoiseCFImpl::SBNoiseCFImpl(
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
+
+    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<float> image) const;
+    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<double> image) const;
+    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<int> image) const;
+    template Image<double> SBNoiseCF::getCovarianceMatrix(ImageView<short> image) const;
 
 }
 
