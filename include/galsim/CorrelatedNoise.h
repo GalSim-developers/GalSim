@@ -32,6 +32,7 @@ int verbose_level = 2;
 #include <complex>
 #include "SBInterpolatedImageImpl.h"
 #include "SBInterpolatedImage.h"
+#include "Random.h"
 
 namespace galsim {
 
@@ -126,6 +127,12 @@ namespace galsim {
          */
         template <typename T>
         Image<double> getCovarianceMatrix(ImageView<T> image, double dx) const;
+
+        /**
+         * @brief Apply noise with this correlation function to an input image.
+         */
+        template <typename T>
+        void applyNoiseTo(ImageView<T> image, BaseDeviate bd) const;
 
     protected:
 
