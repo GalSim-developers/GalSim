@@ -54,7 +54,4 @@ if __name__ == "__main__":
     plt.figure()
     plt.pcolor(xcv.array); plt.colorbar()
     plt.title('CorrFunc.getCovarianceMatrix() with noise correlated in x direction')
-    plt.show()
 
-
-    
