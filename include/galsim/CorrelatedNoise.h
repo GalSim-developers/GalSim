@@ -140,12 +140,6 @@ namespace galsim {
         template <typename T>
         Image<double> getCovarianceMatrix(ImageView<T> image, double dx) const;
 
-        /**
-         * @brief Apply noise with this correlation function to an input image.
-         */
-        template <typename T>
-        void applyNoiseTo(ImageView<T> image, double dx, BaseDeviate bd) const;
-
     protected:
 
          /**

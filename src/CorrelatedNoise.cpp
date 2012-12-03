@@ -111,21 +111,6 @@ namespace galsim {
     }
 
 
-    template <typename T>
-    void SBCorrFunc::applyNoiseTo(ImageView<T> image, double dx, BaseDeviate bd) const
-    {
-        // Calculate the required dimensions
-        int idim = 1 + image.getXMax() - image.getXMin();
-        int jdim = 1 + image.getYMax() - image.getYMin();
-        int covdim = idim * jdim;
- 
-        // Get the covariance matrix for an image of these dimensions and input scale
-        Image<double> cov = SBCorrFunc::getCovarianceMatrix(image, dx);
-
-
-    }
-
-
     // Here we redefine the xValue and kValue (as compared to the SBProfile versions) to enforce
     // two-fold rotational symmetry.
 
