@@ -36,13 +36,14 @@ class CorrFunc(base.GSObject):
         base.GSObject.__init__(self, _galsim.SBCorrFunc(self.original_cf_image, dx=dx))
 
     def applyNoiseTo(self, image, dx=0., dev=None):
-        """Apply noise with this correlation function to an input Image.
+        """Apply noise as a Gaussian random field with this correlation function to an input Image.
 
         If the optional image pixel scale `dx` is not specified, `image.getScale()` is used for the
         input image pixel separation.
         
         If an optional random deviate `dev` is supplied, the application of noise will share the
-        same underlying random number generator.
+        same underlying random number generator when generating the vector of unit variance
+        Gaussians that seed the (Gaussian) noise field.
         """
         # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate        # noise according to the correlation function represented by this instance.  An alternative
         # would be to use the covariance matrices and eigendecomposition.  However, although the
