@@ -46,17 +46,18 @@ def CheckPyPrefix(target, source, env):
         real_pyprefix = os.path.realpath(pyprefix)
         
     if real_pyprefix not in sys_path:
-        print
-        print 'WARNING: The python installation prefix: %s'%pyprefix
-        print '         is not in the search path for %s.'%python
-        print
-        print '         You should add this directory to your PYTHONPATH environment'
-        print '         variable so python will find the installed galsim modules.'
-        print
-        print '         For example, if you use bash, you should add the line:'
-        print '             export PYTHONPATH=$PYTHONPATH:%s'%pyprefix
-        print '         to your .bashrc or .bash_profile file.'
-        print
+        env['final_messages'].append("""
+WARNING: The python installation prefix: %s
+         is not in the search path for %s.
+
+         You should add this directory to your PYTHONPATH environment
+         variable so python will find the installed galsim modules.
+
+         For example, if you use bash, you should add the line:
+             export PYTHONPATH=$PYTHONPATH:%s
+         to your .bashrc or .bash_profile file.
+"""%(pyprefix,python,pyprefix))
+
 
 env['BUILDERS']['CheckPyPrefix'] = Builder(action = CheckPyPrefix)
 
@@ -68,11 +69,13 @@ if 'install' in COMMAND_LINE_TARGETS:
         installed_py += env.Install(dir=python_install_subdir[i], source=py_files_sub[i])
 
     env.Alias(target='install', source=installed_py)
+    env['all_builds'] += installed_py
 
     check = env.CheckPyPrefix(target='#/check', source=None)
     Depends(check,[installed_py, '#pysrc', '#bin', python_install_dir])
     AlwaysBuild(check)
     env.Alias(target='install', source=check)
+    env['all_builds'] += check
 
 
 if 'uninstall' in COMMAND_LINE_TARGETS:

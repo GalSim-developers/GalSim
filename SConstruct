@@ -1197,15 +1197,16 @@ except:
     config.Result(result)
 
     if not result:
-        print
-        print "Warning: There seems to be a mismatch between this C++ compiler and the one"
-        print "         that was used to build python."
-        print "         This should not affect normal usage of GalSim.  However, exceptions"
-        print "         thrown in the C++ layer are not being correctly propagated to the"
-        print "         python layer, so the error text will not be very informative."
-        print
+        config.env['final_messages'].append("""
+WARNING: There seems to be a mismatch between this C++ compiler and the one
+         that was used to build python.
+         This should not affect normal usage of GalSim.  However, exceptions
+         thrown in the C++ layer are not being correctly propagated to the
+         python layer, so the error text for C++ run-time errors  will not 
+         be very informative.
+""")
 
-    return 1
+    return result
 
 
 def FindPathInEnv(env, dirtag):
@@ -1448,6 +1449,7 @@ def DoConfig(env):
             })
         DoPyChecks(config)
         pyenv = config.Finish()
+        env['final_messages'] = pyenv['final_messages']
 
         env['pyenv'] = pyenv
 
@@ -1505,6 +1507,12 @@ print 'Type scons -h for a full list of available options.'
 
 opts.Save(config_file,env)
 Help(opts.GenerateHelpText(env))
+
+# Keep track of messages to print at the end.
+env['final_messages'] = []
+# Everything we are going to build so we can have the final message depend on these.
+env['all_builds'] = []
+
 
 if not GetOption('help'):
 
@@ -1575,4 +1583,18 @@ if not GetOption('help'):
 
     SConscript(script_files, exports='env')
 
+    # Print out anything we've put into the final_messages list.
+    def FinalMessages(target, source, env):
+        for msg in env['final_messages']:
+            print
+            print msg
 
+    env['BUILDERS']['FinalMessages'] = Builder(action = FinalMessages)
+    final = env.FinalMessages(target='#/final', source=None)
+    Depends(final,env['all_builds'])
+    AlwaysBuild(final)
+    Default(final)
+    if 'install' in COMMAND_LINE_TARGETS:
+        env.Alias(target='install', source=final)
+    print 'all_builds = ',env['all_builds']
+    print 'final = ',final
