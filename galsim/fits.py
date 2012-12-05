@@ -161,7 +161,6 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
         # Note: numpy shape is y,x
         array_shape = (nimages, ny, nx)
         cube = numpy.array(array_shape, dtype=dtype)
-        cube.resize(array_shape)
         for k in range(nimages):
             im = image_list[k]
             nx_k = im.xmax-im.xmin+1
