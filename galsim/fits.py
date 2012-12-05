@@ -136,7 +136,9 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
     else:
         hdus = pyfits.HDUList()
 
-    try:
+    is_all_numpy = (isinstance(image_list, numpy.ndarray) or
+                    all(isinstance(item, numpy.ndarray) for item in image_list))
+    if is_all_numpy:
         cube = numpy.asarray(image_list)
         nimages = cube.shape[0]
         nx = cube.shape[1]
@@ -145,11 +147,12 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
         scale = 1
         xmin = 1
         ymin = 1
-    except:
+    else:
         nimages = len(image_list)
         if (nimages == 0):
             raise IndexError("In writeCube: image_list has no images")
         im = image_list[0]
+        dtype = im.array.dtype
         nx = im.xmax - im.xmin + 1
         ny = im.ymax - im.ymin + 1
         scale = im.scale
@@ -157,7 +160,7 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
         ymin = im.ymin
         # Note: numpy shape is y,x
         array_shape = (nimages, ny, nx)
-        cube = numpy.array([[[]]])
+        cube = numpy.array(array_shape, dtype=dtype)
         cube.resize(array_shape)
         for k in range(nimages):
             im = image_list[k]
