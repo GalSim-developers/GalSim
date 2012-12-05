@@ -147,7 +147,7 @@ def main(argv):
 
     shift_radius_sq = shift_radius**2
 
-    first_in_pair = True  # Make pairs that are rotated by 45 degrees
+    first_in_pair = True  # Make pairs that are rotated by 90 degrees
 
     k = 0
     for iy in range(ny_tiles):
