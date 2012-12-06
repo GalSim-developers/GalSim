@@ -296,6 +296,7 @@ def test_Image_FITS_IO():
 
         # Check pyfits read for sanity
         test_array = pyfits.getdata(test_cube_file)
+        assert test_array.dtype.type == types[i], "%s != %s" % (test_array.dtype.type, types[i])
         for k in range(nimages):
             np.testing.assert_array_equal((ref_array+k).astype(types[i]), test_array[k,:,:],
                     err_msg="PyFITS failing to read cube file.")
