@@ -831,7 +831,7 @@ def TryScript(config,text,executable):
     else:
         return 0, ""
 
-def TryModule(config,text,name):
+def TryModule(config,text,name,pyscript=""):
     # Check if a particular program (given as text) is compilable as a python module.
     
     config.sconf.pspawn = config.sconf.env['PSPAWN'] 
@@ -854,8 +854,11 @@ def TryModule(config,text,name):
     if not ok: return 0
 
     # Finally try to import and run the module in python:
-    text2 = "import sys; sys.path.append('%s'); import %s; print %s.run()"%(dir,name,name)
-    ok, out = TryScript(config,text2,python)
+    if pyscript == "":
+        pyscript = "import sys\nsys.path.append('%s')\nimport %s\nprint %s.run()"%(dir,name,name)
+    else:
+        pyscript = "import sys\nsys.path.append('%s')\n"%dir + pyscript
+    ok, out = TryScript(config,pyscript,python)
 
     config.sconf.env['SPAWN'] = save_spawn 
 
@@ -1161,6 +1164,51 @@ BOOST_PYTHON_MODULE(check_bp) {
     config.Result(1)
     return 1
 
+# If the compiler is incompatible with the compiler that was used to build python,
+# then there can be problems with the exception passing between the C++ layer and the
+# python layer.  We don't know any solution to this, but it's worth letting the user
+# know that C++ exceptions might be a bit uninformative.
+def CheckPythonExcept(config):
+    cpp_source_file = """
+#include "boost/python.hpp"
+#include <stdexcept>
+
+void run_throw() { throw std::runtime_error("test error handling"); }
+
+BOOST_PYTHON_MODULE(test_throw) {
+    boost::python::def("run",&run_throw);
+}
+"""
+    py_source_file = """
+import test_throw
+try:
+    test_throw.run()
+    print 0
+except RuntimeError, e:
+    if str(e) == 'test error handling':
+        print 23
+    else:
+        print 0
+except:
+    print 0
+"""
+    config.Message('Checking if C++ exceptions are propagated up to python... ')
+    result = TryModule(config,cpp_source_file,"test_throw",py_source_file)
+    config.Result(result)
+
+    if not result:
+        config.env['final_messages'].append("""
+WARNING: There seems to be a mismatch between this C++ compiler and the one
+         that was used to build python.
+         This should not affect normal usage of GalSim.  However, exceptions
+         thrown in the C++ layer are not being correctly propagated to the
+         python layer, so the error text for C++ run-time errors  will not 
+         be very informative.
+""")
+
+    return result
+
+
 def FindPathInEnv(env, dirtag):
     """
     Find the path tag in the environment and return
@@ -1313,6 +1361,7 @@ def DoPyChecks(config):
     config.CheckNumPy()
     config.CheckPyFITS() 
     config.CheckBoostPython()
+    config.CheckPythonExcept()
 
 
 def GetNCPU():
@@ -1394,11 +1443,13 @@ def DoConfig(env):
             'CheckPython' : CheckPython ,
             'CheckPyTMV' : CheckPyTMV ,
             'CheckNumPy' : CheckNumPy ,
-            'CheckBoostPython' : CheckBoostPython ,
             'CheckPyFITS' : CheckPyFITS ,
+            'CheckBoostPython' : CheckBoostPython ,
+            'CheckPythonExcept' : CheckPythonExcept ,
             })
         DoPyChecks(config)
         pyenv = config.Finish()
+        env['final_messages'] = pyenv['final_messages']
 
         env['pyenv'] = pyenv
 
@@ -1456,6 +1507,12 @@ print 'Type scons -h for a full list of available options.'
 
 opts.Save(config_file,env)
 Help(opts.GenerateHelpText(env))
+
+# Keep track of messages to print at the end.
+env['final_messages'] = []
+# Everything we are going to build so we can have the final message depend on these.
+env['all_builds'] = []
+
 
 if not GetOption('help'):
 
@@ -1526,4 +1583,18 @@ if not GetOption('help'):
 
     SConscript(script_files, exports='env')
 
+    # Print out anything we've put into the final_messages list.
+    def FinalMessages(target, source, env):
+        for msg in env['final_messages']:
+            print
+            print msg
 
+    env['BUILDERS']['FinalMessages'] = Builder(action = FinalMessages)
+    final = env.FinalMessages(target='#/final', source=None)
+    Depends(final,env['all_builds'])
+    AlwaysBuild(final)
+    Default(final)
+    if 'install' in COMMAND_LINE_TARGETS:
+        env.Alias(target='install', source=final)
+    print 'all_builds = ',env['all_builds']
+    print 'final = ',final
