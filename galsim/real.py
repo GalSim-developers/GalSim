@@ -28,12 +28,18 @@ class RealGalaxyCatalog(object):
     realistic galaxies. We assume that all files containing the images (galaxies and PSFs) live in
     one directory; they could be individual files, or multiple HDUs of the same file.  Currently
     there is no functionality that lets this be a FITS data cube, because we assume that the object
-    postage stamps will in general need to be different sizes depending on the galaxy size.  For
-    example, if the catalog is called `'catalog.fits'` and is in the working directory, and the 
-    images are in a subdirectory called `'images'`, then the RealGalaxyCatalog can be read in as 
+    postage stamps will in general need to be different sizes depending on the galaxy size.  
+
+    If the catalog and the galaxy/PSF image files are in the same subdirectory called `'images'`, 
+    and the catalog file is called `'catalog.fits'`, then the RealGalaxyCatalog can be read in as 
     follows:
 
-        >>> my_rgc = galsim.RealGalaxyCatalog('./catalog.fits', 'images')
+        >>> my_rgc = galsim.RealGalaxyCatalog('catalog.fits', 'images')
+
+    If the image files are in the subdirectory called `'images'`, but the catalog is in the current
+    directory, the RealGalaxyCatalog can be read in as:
+
+        >>> my_rgc = galsim.RealGalaxyCatalog('catalog.fits', 'images', dir='.')
 
     To explore for the future: scaling with number of galaxies, adding more information as needed,
     and other i/o related issues.
