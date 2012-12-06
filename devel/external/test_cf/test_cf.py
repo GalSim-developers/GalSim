@@ -26,6 +26,7 @@ if __name__ == "__main__":
     ynoise = galsim.ImageViewD(enoise.array[:, :] + np.roll(enoise.array, 1, axis=0))
     plt.pcolor(ynoise.array); plt.colorbar()
     plt.title('Noise correlated in y direction')
+    plt.savefig('ynoise.png')
 
     yncf = galsim.correlatednoise.CorrFunc(ynoise)
     yim = galsim.ImageD(IMSIZE, IMSIZE)
@@ -33,16 +34,19 @@ if __name__ == "__main__":
     plt.figure()
     plt.pcolor(yim.array); plt.colorbar()
     plt.title('CorrFunc with noise correlated in y direction')
+    plt.savefig('ycorrfunc.png')
     ycv = yncf.SBProfile.getCovarianceMatrix(testim.view(), dx=1.)
     plt.figure()
     plt.pcolor(ycv.array); plt.colorbar()
     plt.title('CorrFunc.getCovarianceMatrix() with noise correlated in y direction')
-
+    plt.savefig('ycovmatrix.png')
+    
     # Then construct an image with noise correlated in the x direction
     plt.figure()
     xnoise = galsim.ImageViewD(enoise.array[:, :] + np.roll(enoise.array, 1, axis=1))
     plt.pcolor(xnoise.array); plt.colorbar()
     plt.title('Noise correlated in x direction')
+    plt.savefig('xnoise.png')
 
     xncf = galsim.correlatednoise.CorrFunc(xnoise)
     xim = galsim.ImageD(IMSIZE, IMSIZE)
@@ -50,8 +54,19 @@ if __name__ == "__main__":
     plt.figure()
     plt.pcolor(xim.array); plt.colorbar()
     plt.title('CorrFunc with noise correlated in x direction')
+    plt.savefig('xcorrfunc.png')
     xcv = xncf.SBProfile.getCovarianceMatrix(testim.view(), dx=1.)
     plt.figure()
     plt.pcolor(xcv.array); plt.colorbar()
     plt.title('CorrFunc.getCovarianceMatrix() with noise correlated in x direction')
+    plt.savefig('xcovmatrix.png')
+
+    # Plot a hires, rotated, ycf
+    yim2 = galsim.ImageD(IMSIZE * 3, IMSIZE * 3)
+    yncf2 = yncf.createRotated(20. * galsim.degrees)
+    yncf2.draw(yim2, dx=0.4)
+    plt.figure()
+    plt.pcolor(yim2.array); plt.colorbar()
+    plt.title('CorrFunc with noise correlated in y direction (at 0.4 pix resolution, rotated by 20 deg)')
+    plt.savefig('ycorrfunc_hires_rot20.png')
 
