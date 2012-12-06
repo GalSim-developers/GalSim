@@ -714,8 +714,8 @@ class GSObject(object):
         return image, added_flux
 
     def drawK(self, re=None, im=None, dk=None, gain=1., wmult=1., add_to_image=False):
-        """Draws the k-space Images (real and imaginary parts) of the object, with bounds optionally
-        set by input Images.
+        """Draws the k-space Images (real and imaginary parts) of the object, with bounds
+        optionally set by input Images.
 
         Normalization is always such that re(0,0) = flux.
 
