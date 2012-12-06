@@ -10,6 +10,32 @@ from . import utilities
 
 class CorrFunc(base.GSObject):
     """A class describing 2D Correlation Functions calculated from Images.
+
+    Has an SBCorrFunc in the SBProfile attribute.  For more details of the SBCorrFunc object, please
+    see the documentation produced by doxygen.
+
+    Initialization
+    --------------
+    A CorrFunc is initialized using an input Image (or ImageView) instance.  The correlation
+    function for that image is then calculated from its pixel values using the NumPy FFT functions.
+    Optionally, the pixel scale for the input `image` can be specified using the `dx` keyword
+    argument. 
+
+    If `dx` is not set the value returned by `image.getScale()` is used unless this is <= 0, in
+    which case a scale of 1 is assumed.
+
+    Examples:
+
+    >>> cf = galsim.CorrFunc(image)
+
+    >>> cf = galsim.CorrFunc(image, dx=0.2)
+
+    Methods
+    -------
+    The CorrFunc is a GSObject, and inherits most of the GSObject methods (draw(), drawShoot(),
+    applyShear() etc.) and operator bindings.  
+
+    However, some methods are purposefully not implemented, e.g. applyShift(), createShifted().
     """
 
     def __init__(self, image, dx=0.):
@@ -92,6 +118,16 @@ class CorrFunc(base.GSObject):
         # Make contiguous and add to the image
         image += _galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
         return image
+
+    def applyShift(self):
+        """The applyShift() method is not available for the CorrFunc.
+        """
+        raise NotImplementedError("applyShift() not available for CorrFunc objects.")
+
+    def createShifted(self):
+        """The createShifted() method is not available for the CorrFunc.
+        """
+        raise NotImplementedError("createShifted() not available for CorrFunc objects.")
 
 
 # Make a function for returning Noise correlation
