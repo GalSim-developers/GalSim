@@ -523,11 +523,10 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
 
     for t in types:
         dirtag = t+'_DIR'
-        if env[dirtag] == '':
-            continue
         tdir = FindPathInEnv(env, dirtag)
         if tdir is None:
-            print 'Warning, could not find specified %s = %s'%(dirtag,env[dirtag])
+            if env[dirtag] != '':
+                print 'Warning, could not find specified %s = %s'%(dirtag,env[dirtag])
             continue
 
         AddPath(bin_paths, os.path.join(tdir, 'bin'))
@@ -609,6 +608,11 @@ def AddExtraPaths(env):
         paths=paths.split(os.pathsep)
         AddPath(lib_paths, paths)
 
+    if env['IMPORT_PATHS'] and os.environ.has_key('DYLD_LIBRARY_PATH'):
+        paths=os.environ['DYLD_LIBRARY_PATH']
+        paths=paths.split(os.pathsep)
+        AddPath(lib_paths, paths)
+
     env.PrependENVPath('PATH', bin_paths)
     env.Prepend(LIBPATH= lib_paths)
     env.Prepend(CPPPATH= cpp_paths)
@@ -649,7 +653,21 @@ def TryRunResult(config,text,name):
     return ok
 
 
-def CheckLibs(config,try_libs,source_file):
+def CheckLibsSimple(config,try_libs,source_file):
+    init_libs = []
+    if 'LIBS' in config.env._dict.keys():
+        init_libs = config.env['LIBS']
+
+    config.env.PrependUnique(LIBS=try_libs)
+    result = TryRunResult(config,source_file,'.cpp')
+
+    # If that didn't work, go back to the original LIBS
+    if not result :
+        config.env.Replace(LIBS=init_libs)
+    return result
+ 
+
+def CheckLibsFull(config,try_libs,source_file):
     init_libs = []
     if 'LIBS' in config.env._dict.keys():
         init_libs = config.env['LIBS']
@@ -674,6 +692,29 @@ def CheckLibs(config,try_libs,source_file):
         # If that doesn't work, also try adding all of them, just in case we need more than one.
         if not result :
             config.env.PrependUnique(RPATH=config.env['LIBPATH'])
+            result = TryRunResult(config,source_file,'.cpp')
+            if not result:
+                config.env.Replace(RPATH=init_rpath)
+
+    # Next try the LIBRARY_PATH to see if any of these help.
+    if not result and 'LIBRARY_PATH' in os.environ.keys():
+        init_rpath = []
+        if 'RPATH' in config.env._dict.keys():
+            init_rpath = config.env['RPATH']
+
+        library_path=os.environ['LIBRARY_PATH']
+        library_path=library_path.split(os.pathsep)
+        for rpath in library_path:
+            config.env.PrependUnique(RPATH=rpath)
+            result = TryRunResult(config,source_file,'.cpp')
+            if result: 
+                break
+            else:
+                config.env.Replace(RPATH=init_rpath)
+
+        # If that doesn't work, also try adding all of them, just in case we need more than one.
+        if not result :
+            config.env.PrependUnique(RPATH=library_path)
             result = TryRunResult(config,source_file,'.cpp')
             if not result:
                 config.env.Replace(RPATH=init_rpath)
@@ -706,7 +747,7 @@ int main()
             'Error: fftw file failed to compile.',
             'Check that the correct location is specified for FFTW_DIR')
 
-    if not CheckLibs(config,['fftw3'],fftw_source_file):
+    if not CheckLibsFull(config,['fftw3'],fftw_source_file):
         ErrorExit(
             'Error: fftw file failed to link correctly',
             'Check that the correct location is specified for FFTW_DIR') 
@@ -740,8 +781,10 @@ int main()
             'Check that the correct location is specified for TMV_DIR')
 
     result = (
-        CheckLibs(config,['tmv_symband','tmv'],tmv_source_file) or
-        CheckLibs(config,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
+        CheckLibsSimple(config,['tmv_symband','tmv'],tmv_source_file) or
+        CheckLibsSimple(config,['tmv_symband','tmv','irc','imf'],tmv_source_file) or
+        CheckLibsFull(config,['tmv_symband','tmv'],tmv_source_file) or
+        CheckLibsFull(config,['tmv_symband','tmv','irc','imf'],tmv_source_file) )
     if not result:
         ErrorExit(
             'Error: TMV file failed to link correctly',

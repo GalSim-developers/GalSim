@@ -8,8 +8,6 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
-import galsim.utilities
-import galsim.optics
 
 
 testshape = (512, 512)  # shape of image arrays for all tests
