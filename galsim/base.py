@@ -714,8 +714,8 @@ class GSObject(object):
         return image, added_flux
 
     def drawK(self, re=None, im=None, dk=None, gain=1., wmult=1., add_to_image=False):
-        """Draws the k-space Images (real and imaginary parts) of the object, w
-        ith bounds optionally set by input Images.
+        """Draws the k-space Images (real and imaginary parts) of the object, with bounds optionally
+        set by input Images.
 
         Normalization is always such that re(0,0) = flux.
 
@@ -725,7 +725,7 @@ class GSObject(object):
                         constructed with `re = galsim.ImageF()`), then it will be resized
                         appropriately based on the profile's size (default `re = None`).
 
-        @param im     If provided, this will be the imagnary part of the k-space image.
+        @param im     If provided, this will be the imaginary part of the k-space image.
                       A provided im must match the size and scale of re.
                       If `im = None`, then an automatically-sized image will be created.
                       If `im != None`, but its bounds are undefined (e.g. if it was 
