@@ -709,6 +709,80 @@ class GSObject(object):
 
         return image, added_flux
 
+    def drawK(self, re=None, im=None, dk=None, gain=1., wmult=1., add_to_image=False):
+        """Draws the k-space Images (real and imaginary parts) of the object, w
+        ith bounds optionally set by input Images.
+
+        Normalization is always such that re(0,0) = flux.
+
+        @param re     If provided, this will be the real part of the k-space image.
+                      If `re = None`, then an automatically-sized image will be created.
+                      If `re != None`, but its bounds are undefined (e.g. if it was 
+                        constructed with `re = galsim.ImageF()`), then it will be resized
+                        appropriately based on the profile's size (default `re = None`).
+
+        @param im     If provided, this will be the imagnary part of the k-space image.
+                      A provided im must match the size and scale of re.
+                      If `im = None`, then an automatically-sized image will be created.
+                      If `im != None`, but its bounds are undefined (e.g. if it was 
+                        constructed with `im = galsim.ImageF()`), then it will be resized
+                        appropriately based on the profile's size (default `im = None`).
+
+        @param dk     If provided, use this as the pixel scale for the images.
+                      If `dk` is `None` and `re, im != None`, then take the provided images' pixel 
+                        scale (which must be equal).
+                      If `dk` is `None` and `re, im == None`, then use the Nyquist scale 
+                        `= pi/maxK()`.
+                      If `dk <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
+                      (Default `dk = None`.)
+
+        @param gain   The number of photons per ADU ("analog to digital units", the units of the 
+                      numbers output from a CCD).  (Default `gain =  1.`)
+
+        @param wmult  A factor by which to make an automatically-sized image larger than it would 
+                      normally be made.  This factor also applies to any intermediate images during
+                      Fourier calculations.  The size of the intermediate images are normally 
+                      automatically chosen to reach some preset accuracy targets (see 
+                      include/galsim/SBProfile.h); however, if you see strange artifacts in the 
+                      image, you might try using `wmult > 1`.  This will take longer of 
+                      course, but it will produce more accurate images, since they will have 
+                      less "folding" in Fourier space. (Default `wmult = 1.`)
+
+        @param add_to_image  Whether to add to the existing images rather than clear out
+                             anything in the image before drawing.
+                             Note: This requires that images be provided (i.e. `re`, `im` are
+                             not `None`) and that they have defined bounds (default 
+                             `add_to_image = False`).
+
+        @returns      (re, im)  (created if necessary)
+        """
+        # Make sure the type of gain is correct and has a valid value:
+        if type(gain) != float:
+            gain = float(gain)
+        if gain <= 0.:
+            raise ValueError("Invalid gain <= 0. in draw command")
+        if re == None:
+            if im != None:
+                raise ValueError("re is None, but im is not None")
+        else:
+            if im == None:
+                raise ValueError("im is None, but re is not None")
+            if dx is None:
+                if re.getScale() != im.getScale():
+                    raise ValueError("re and im do not have the same input scale")
+            if re.getBounds().isDefined() or im.getBounds().isDefined():
+                if re.getBounds() != im.getBounds():
+                    raise ValueError("re and im do not have the same defined bounds")
+
+        # Make sure images are setup correctly
+        re, dk = self._draw_setup_image(re,dk,wmult,add_to_image)
+        im, dk = self._draw_setup_image(im,dk,wmult,add_to_image)
+
+        self.SBProfile.drawK(re.view(), im.view(), gain, wmult)
+
+        return re,im
+
+
 
 # --- Now defining the derived classes ---
 #
