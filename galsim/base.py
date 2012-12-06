@@ -540,7 +540,7 @@ class GSObject(object):
 
     def drawShoot(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
                   add_to_image=False, n_photons=0., rng=None,
-                  max_extra_noise=0., poisson_flux=True):
+                  max_extra_noise=0., poisson_flux=None):
         """Draw an image of the object by shooting individual photons drawn from the surface 
         brightness profile of the object.
 
@@ -631,7 +631,8 @@ class GSObject(object):
 
         @param poisson_flux     Whether to allow total object flux scaling to vary according to 
                                 Poisson statistics for `n_photons` samples (default 
-                                `poisson_flux = True`).
+                                `poisson_flux = True` unless n_photons is given, in which case
+                                the default is `poisson_flux = False`).
 
         @returns  The tuple (image, added_flux), where image is the input with drawn photons 
                   added and added_flux is the total flux of photons that landed inside the image 
@@ -664,6 +665,9 @@ class GSObject(object):
             n_photons = float(n_photons)
         if n_photons < 0.:
             raise ValueError("Invalid n_photons < 0. in draw command")
+        if poisson_flux == None:
+            if n_photons == 0.: poisson_flux = True
+            else: poisson_flux = False
 
         # Make sure the type of max_extra_noise is correct and has a valid value:
         if type(max_extra_noise) != float:
