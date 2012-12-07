@@ -471,7 +471,7 @@ def test_realgalaxy():
     # I don't want to gratuitously copy the real_catalog catalog, so use the 
     # version in the examples directory.
     real_gal_dir = os.path.join('..','examples','data')
-    real_gal_cat = os.path.join(real_gal_dir,'real_galaxy_catalog_example.fits')
+    real_gal_cat = 'real_galaxy_catalog_example.fits'
     config = {
         'input' : { 'real_catalog' : 
                         { 'image_dir' : real_gal_dir , 
