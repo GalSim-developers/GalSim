@@ -48,7 +48,7 @@ class RealGalaxyCatalog(object):
     In the above case, and the following two examples below, the galaxy/PSF image files are stored
     in the directory `/data3/scratch/user_name/galsim/real_galaxy_data/images`.
 
-    The default behavior is changed if the `image_dir` specifies directory.  In this case, 
+    The default behavior is changed if the `image_dir` specifies a directory.  In this case, 
     `image_dir` is interpreted as the full path:
 
         >>> file_name = '/data3/scratch/user_name/galsim/real_galaxy_data/real_galaxy_catalog.fits'
@@ -57,7 +57,7 @@ class RealGalaxyCatalog(object):
 
     When `dir` is specified, it will specify the catalog as `dir/file_name`, and look for the
     galaxy/PSF image files in `dir/image_dir` (this will happen whether the `image_dir` specifies
-    directory or not):
+    a directory or not):
 
         >>> catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
         >>> file_name = 'real_galaxy_catalog.fits'
