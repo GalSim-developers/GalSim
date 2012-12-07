@@ -36,33 +36,33 @@ class RealGalaxyCatalog(object):
     directory, and the galaxy/PSF image files are in a subdirectory called `'images'`, then the 
     RealGalaxyCatalog can be read in as follows:
 
-        >>> my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits', 'images')
+        >>> my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits', image_dir='images')
 
     If the real galaxy catalog is in some far-flung directory, and the galaxy/PSF image files are in 
     its subdirectory, one only needs to specify the long directory name once:
 
         >>> file_name = '/data3/scratch/user_name/galsim/real_galaxy_data/real_galaxy_catalog.fits'
         >>> image_dir = 'images'
-        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir)
+        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir)
 
     In the above case, and the following two examples below, the galaxy/PSF image files are stored
     in the directory `/data3/scratch/user_name/galsim/real_galaxy_data/images`.
 
-    The default behavior is changed if the `image_dir` specifies directory(s).  In this case, 
+    The default behavior is changed if the `image_dir` specifies directory.  In this case, 
     `image_dir` is interpreted as the full path:
 
         >>> file_name = '/data3/scratch/user_name/galsim/real_galaxy_data/real_galaxy_catalog.fits'
         >>> image_dir = '/data3/scratch/user_name/galsim/real_galaxy_data/images'
-        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir)
+        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir)
 
     When `dir` is specified, it will specify the catalog as `dir/file_name`, and look for the
     galaxy/PSF image files in `dir/image_dir` (this will happen whether the `image_dir` specifies
-    directory(s) or not):
+    directory or not):
 
         >>> catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
         >>> file_name = 'real_galaxy_catalog.fits'
         >>> image_dir = 'images'
-        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir, dir=catalog_dir)
+        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir, dir=catalog_dir)
 
     To explore for the future: scaling with number of galaxies, adding more information as needed,
     and other i/o related issues.
