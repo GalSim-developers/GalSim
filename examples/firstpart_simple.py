@@ -20,7 +20,7 @@ gal_list = []
 
 ## loop over all 100 real galaxies in example catalog
 cat_file_name = 'real_galaxy_catalog_example.fits'
-image_dir = '/Users/rmandelb/great3/GalSim/examples/data' # only works on Rachel's Mac!
+image_dir = 'data' # only works on Rachel's Mac!
 real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, image_dir)
 real_galaxy_catalog.preload()
 for i in range(len(real_galaxy_catalog.ident)):
