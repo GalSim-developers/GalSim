@@ -336,12 +336,12 @@ namespace galsim {
 
         // Create a matrix containing basis values at vector of input points.
         // Output matrix has m(i,j) = jth basis function at ith point
-        static tmv::Matrix<double>* basis(
+        static boost::shared_ptr<tmv::Matrix<double> > basis(
             const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
             int order, double sigma=1.);
 
         // Create design matrix, including factors of 1/sigma stored in invsig
-        static tmv::Matrix<double>* design(
+        static boost::shared_ptr<tmv::Matrix<double> > design(
             const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
             const tmv::Vector<double>& invsig, int order, double sigma=1.);
 
