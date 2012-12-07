@@ -258,8 +258,7 @@ namespace galsim {
     {
         Position<double> x3(-x0);
         x3 /= expmu;
-        CppEllipse* temp = new CppEllipse(-s, -mu, s.inv(x3));
-        return *temp;
+        return CppEllipse(-s, -mu, s.inv(x3));
     }
 
     CppEllipse& CppEllipse::operator+=(const CppEllipse& e2) 
