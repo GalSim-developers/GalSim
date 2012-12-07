@@ -30,7 +30,7 @@ class RealGalaxyCatalog(object):
     there is no functionality that lets this be a FITS data cube, because we assume that the object
     postage stamps will in general need to be different sizes depending on the galaxy size.  
 
-    The default behavior or initialization assumes that the set of galaxy/PSF image files (e.g., 
+    The default behavior of catalog input assumes that the set of galaxy/PSF image files (e.g., 
     `'real_galaxy_images_1.fits'`, `'real_galaxy_PSF_images_1.fits'`, etc.) are in a subdirectory of
     where the catalog file (`'real_galaxy_catalog.fits'`) is.  If the catalog file is in the working
     directory, and the galaxy/PSF image files are in a subdirectory called `'images'`, then the 
@@ -55,14 +55,14 @@ class RealGalaxyCatalog(object):
         >>> image_dir = '/data3/scratch/user_name/galsim/real_galaxy_data/images'
         >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir)
 
-    When `catalog_dir` is specified, it will specify the catalog as `catalog_dir/file_name`, and
-    look for the galaxy/PSF image files in `catalog_dir/image_dir` (this will happen whether the
-    `image_dir` specifies directory(s) or not):
+    When `dir` is specified, it will specify the catalog as `dir/file_name`, and look for the
+    galaxy/PSF image files in `dir/image_dir` (this will happen whether the `image_dir` specifies
+    directory(s) or not):
 
         >>> catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
         >>> file_name = 'real_galaxy_catalog.fits'
         >>> image_dir = 'images'
-        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir, catalog_dir=catalog_dir)
+        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir, dir=catalog_dir)
 
     To explore for the future: scaling with number of galaxies, adding more information as needed,
     and other i/o related issues.
@@ -74,30 +74,30 @@ class RealGalaxyCatalog(object):
     sample of 26k training galaxies, see the RealGalaxy Data Download Page on the GalSim Wiki:
     https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data%20Download%20Page
 
-    @param file_name    The file containing the catalog.
-    @param image_dir    If a string containing no `/`, it is the relative path from the location of
-                        the catalog file to the directory containing the galaxy/PDF images.
-                        If a path (a string containing `/`), it is the full path to the directory
-                        containing the galaxy/PDF images.
-    @param catalog_dir  The directory of catalog file (optional).  
-    @param preload      Whether to preload the header information. (default `preload = False`)
+    @param file_name  The file containing the catalog.
+    @param image_dir  If a string containing no `/`, it is the relative path from the location of
+                      the catalog file to the directory containing the galaxy/PDF images.
+                      If a path (a string containing `/`), it is the full path to the directory
+                      containing the galaxy/PDF images.
+    @param dir        The directory of catalog file (optional).
+    @param preload    Whether to preload the header information. (default `preload = False`)
     """
     _req_params = { 'file_name' : str , 'image_dir' : str }
-    _opt_params = { 'catalog_dir' : str, 'preload' : bool }
+    _opt_params = { 'dir' : str, 'preload' : bool }
     _single_params = []
 
-    def __init__(self, file_name, image_dir, catalog_dir=None, preload=False):
+    def __init__(self, file_name, image_dir, dir=None, preload=False):
         import os
         # First build full file_name
-        if catalog_dir is None: 
+        if dir is None:
             self.file_name = file_name
             if os.path.dirname(image_dir) == '':
                 self.image_dir = os.path.join(os.path.dirname(self.file_name),image_dir)
             else:
                 self.image_dir = image_dir
         else:
-            self.file_name = os.path.join(catalog_dir,file_name)
-            self.image_dir = os.path.join(catalog_dir,image_dir)
+            self.file_name = os.path.join(dir,file_name)
+            self.image_dir = os.path.join(dir,image_dir)
         if not os.path.isdir(image_dir):
             raise RuntimeError(image_dir+' directory does not exist!')
 
