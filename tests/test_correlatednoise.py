@@ -96,9 +96,8 @@ def test_uncorrelated_noise_symmetry():
         pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
         cf_test1 = ncf.xValue(pos)
         cf_test2 = ncf.xValue(-pos)
-        # Then test this estimated value is good to within our chosen decimal place of zero
-        np.testing.assert_allclose(
-            cf_test1, cf_test2, rtol=1.e-15, # this should be good to machine precision
+        np.testing.assert_equal(
+            cf_test1, cf_test2,
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric.")
 
@@ -121,7 +120,7 @@ def test_uncorrelated_noise_90degree_rotation():
         ncf_test2.applyRotation(angle) 
         # then check some positions
         for i in range(npos_test):
-            rpos = glob_ud() * smallim_size # this can go outside lookup table bounds
+            rpos = glob_ud() * smallim_size
             tpos = 2. * np.pi * glob_ud()
             pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
             cf_ref = ncf_ref.xValue(pos)
@@ -227,13 +226,12 @@ def test_xcorr_noise_90degree_rotation(): # probably only need to do the x direc
         ncf_test2.applyRotation(angle) 
         # then check some positions
         for i in range(npos_test):
-            rpos = glob_ud() * smallim_size # this can go outside lookup table bounds
+            rpos = glob_ud() * smallim_size # look in the vicinity of the action near the centre
             tpos = 2. * np.pi * glob_ud()
             pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
             cf_ref = ncf_ref.xValue(pos)
             cf_test1 = ncf_test1.xValue(pos)
             cf_test2 = ncf_test2.xValue(pos) 
-            # Then test these estimated value is good to within our chosen decimal place
             np.testing.assert_allclose(
                 cf_ref, cf_test1, rtol=1.e-7, # these should be good at high, FFT-dependent acc. 
                 err_msg="Noise correlated in the x direction failed 90 degree createRotated() "+
@@ -242,4 +240,34 @@ def test_xcorr_noise_90degree_rotation(): # probably only need to do the x direc
                 cf_ref, cf_test2, rtol=1.e-7,
                 err_msg="Noise correlated in the x direction failed 90 degree applyRotation() "+
                 "method test.")
+
+def test_arbitrary_rotation():
+    """Check that rotated correlation function xValues() are correct.
+    """
+    ncf = galsim.correlatednoise.CorrFunc(xnoise_large, dx=1.) # use something not purely zero r>0
+    for i in range(npos_test):
+        rot_angle = 2. * np.pi * glob_ud()
+        rpos = glob_ud() * smallim_size # look in the vicinity of the action near the centre
+        tpos = 2. * np.pi * glob_ud()
+        # get reference test position
+        pos_ref = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
+        # then a rotated version
+        pos_rot = galsim.PositionD(pos_ref.x * np.cos(rot_angle) + pos_ref.y * np.sin(rot_angle),
+                                   -pos_ref.x * np.sin(rot_angle) + pos_ref.y * np.cos(rot_angle))
+        # then create rotated ncfs for comparison
+        ncf_rot1 = ncf.createRotated(rot_angle * galsim.radians)
+        ncf_rot2 = ncf.copy()
+        ncf_rot2.applyRotation(rot_angle * galsim.radians)
+        np.testing.assert_allclose(
+            ncf.xValue(pos_rot), ncf_rot1.xValue(pos_ref), 
+            rtol=1.e-7, # this should be good at very high accuracy 
+            err_msg="Noise correlated in the x direction failed createRotated() "+
+            "method test for arbitrary rotations.")
+        np.testing.assert_allclose(
+            ncf.xValue(pos_rot), ncf_rot2.xValue(pos_ref), 
+            rtol=1.e-7, # ditto
+            err_msg="Noise correlated in the x direction failed applyRotation() "+
+            "method test for arbitrary rotations.")
+
+
 
