@@ -25,6 +25,17 @@ uncorr_noise_small.addNoise(gd)
 uncorr_noise_large = galsim.ImageD(largeim_size, largeim_size)
 uncorr_noise_large.addNoise(gd)
 
+# make some x-correlated noise using shift and add
+xnoise_large = galsim.ImageViewD(
+    uncorr_noise_large.array + np.roll(uncorr_noise_large.array, 1, axis=1)) # note NumPy thus [y,x]
+xnoise_large *= (np.sqrt(2.) / 2.) # make unit variance
+ 
+# make some y-correlated noise using shift and add
+ynoise_large = galsim.ImageViewD(
+    uncorr_noise_large.array + np.roll(uncorr_noise_large.array, 1, axis=0)) # note NumPy thus [y,x]
+ynoise_large *= (np.sqrt(2.) / 2.) # make unit variance
+ 
+
 # relative tolerance for large image comparisons (still needs to include some stochasticity margin)
 rtol_large = 0.01
 # decimal place for absolute comparisons with large images (ditto)
@@ -44,7 +55,9 @@ def test_uncorrelated_noise_zero_lag():
         ncf = galsim.correlatednoise.CorrFunc(noise_test)
         cf_zero = ncf.xValue(galsim.PositionD(0., 0.))
         # Then test this estimated value is good to 1% of the input variance; we expect this!
-        np.testing.assert_allclose(cf_zero, sigma**2, rtol=rtol_large, atol=0.)
+        np.testing.assert_allclose(
+            cf_zero, sigma**2, rtol=rtol_large, atol=0.,
+            err_msg="Zero distance noise correlation value does not match input noise variance.")
 
 def test_uncorrelated_noise_nonzero_lag():
     """Test that the non-zero lag correlation of an input uncorrelated noise field is zero at some
@@ -60,5 +73,45 @@ def test_uncorrelated_noise_nonzero_lag():
         pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
         cf_test_value = ncf.xValue(pos)
         # Then test this estimated value is good to within our chosen decimal place of zero
-        np.testing.assert_almost_equal(cf_test_value, 0., decimal=decimal_large)
+        np.testing.assert_almost_equal(
+            cf_test_value, 0., decimal=decimal_large,
+            err_msg="Non-zero distance noise correlation value not sufficiently close to target "+
+            "value of zero.")
+
+def test_uncorrelated_noise_symmetry():
+    """Test that the non-zero lag correlation of an input uncorrelated noise field has two-fold
+    rotational symmetry.
+    """
+    ncf = galsim.correlatednoise.CorrFunc(uncorr_noise_large, dx=1.)
+    # set up some random positions (within and outside) the bounds of the table inside the corrfunc
+    # then test
+    for i in range(npos_test):
+        rpos = glob_ud() *largeim_size # this can go outside lookup table bounds
+        tpos = 2. * np.pi * glob_ud()
+        pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
+        cf_test1 = ncf.xValue(pos)
+        cf_test2 = ncf.xValue(-pos)
+        # Then test this estimated value is good to within our chosen decimal place of zero
+        np.testing.assert_allclose(
+            cf_test1, cf_test2, rtol=1.e-15, # this should be good to machine precision
+            err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
+            "symmetric.")
+
+def test_xcorr_noise_basics():
+    """Test the basic properties of a noise field, correlated in the x direction, generated using
+    a simple shift-add prescription.
+    """
+    # use the xnoise defined above to make the x correlation function
+    xncf = galsim.correlatednoise.CorrFunc(xnoise_large)
+    # Then test the zero-lag value is good to 1% of the input variance; we expect this!
+    cf_zero = xncf.xValue(galsim.PositionD(0., 0.))
+    np.testing.assert_allclose(
+        cf_zero, 1., rtol=rtol_large, atol=0.,
+        err_msg="Zero distance noise correlation value does not match input noise variance.")
+    # Then test the (1, 0) value is good to 1% of the input variance (0.5); we expect this!
+    cf_10 = xncf.xValue(galsim.PositionD(1., 0.))
+    np.testing.assert_allclose(
+        cf_10, .5, rtol=rtol_large, atol=0.,
+        err_msg="Noise correlation value at (1, 0) does not match input covariance.")
+
 
