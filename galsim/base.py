@@ -1213,7 +1213,7 @@ class OpticalPSF(GSObject):
             quintic = galsim.Quintic(tol=1.e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(self.interpolant, galsim.InterpolantXY) is False:
+            if isinstance(interpolant, galsim.InterpolantXY) is False:
                 raise RuntimeError('Specified interpolant is not an InterpolantXY!')
             self.interpolant = interpolant
             
