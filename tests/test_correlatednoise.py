@@ -206,8 +206,8 @@ def test_ycorr_noise_symmetry():
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric for y correlated noise field.")
 
-def test_xcorr_noise_90degree_rotation(): # probably only need to do the x direction for this test
-                                          # if the previous tests have passed OK
+def test_90degree_rotation(): # probably only need to do the x direction for this test if the 
+                              # previous tests have passed OK
     """Test that the CorrFunc rotation methods produces the same output as initializing with a 90
     degree-rotated input field, this time with a noise field that's correlated in the x direction..
     """
@@ -242,9 +242,10 @@ def test_xcorr_noise_90degree_rotation(): # probably only need to do the x direc
                 "method test.")
 
 def test_arbitrary_rotation():
-    """Check that rotated correlation function xValues() are correct.
+    """Check that rotated correlation function xValues() are correct for a correlation function with
+    something in it.
     """
-    ncf = galsim.correlatednoise.CorrFunc(xnoise_large, dx=1.) # use something not purely zero r>0
+    ncf = galsim.correlatednoise.CorrFunc(ynoise_small, dx=1.) # use something not purely zero r>0
     for i in range(npos_test):
         rot_angle = 2. * np.pi * glob_ud()
         rpos = glob_ud() * smallim_size # look in the vicinity of the action near the centre
@@ -261,13 +262,34 @@ def test_arbitrary_rotation():
         np.testing.assert_allclose(
             ncf.xValue(pos_rot), ncf_rot1.xValue(pos_ref), 
             rtol=1.e-7, # this should be good at very high accuracy 
-            err_msg="Noise correlated in the x direction failed createRotated() "+
+            err_msg="Noise correlated in the y direction failed createRotated() "+
             "method test for arbitrary rotations.")
         np.testing.assert_allclose(
             ncf.xValue(pos_rot), ncf_rot2.xValue(pos_ref), 
             rtol=1.e-7, # ditto
-            err_msg="Noise correlated in the x direction failed applyRotation() "+
+            err_msg="Noise correlated in the y direction failed applyRotation() "+
             "method test for arbitrary rotations.")
+
+def test_scaling_magnification():
+    """Test the scaling and magnification of correlation functions.
+    """
+    ncf = galsim.correlatednoise.CorrFunc(ynoise_small)
+    scalings = [7.e-13, 424., 7.9e23]
+    for scale in scalings:
+       ncf_test1 = ncf.createMagnified(scale)
+       ncf_test2 = ncf.copy() 
+       ncf_test2.applyMagnification(scale)
+       for i in range(npos_test):
+           rpos = glob_ud() * 0.1 * smallim_size * scale # vicinity of the centre
+           tpos = 2. * np.pi * glob_ud()
+           pos_ref = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
+           np.testing.assert_allclose(
+               ncf_test1.xValue(pos_ref), ncf.xValue(pos_ref / scale), rtol=1.e-7,
+               err_msg="Noise correlated in the y direction failed createMagnified() scaling test.")
+           np.testing.assert_allclose(
+               ncf_test2.xValue(pos_ref), ncf.xValue(pos_ref / scale), rtol=1.e-7,
+               err_msg="Noise correlated in the y direction failed applyMagnification() scaling "+
+               "test.")
 
 
 
