@@ -291,5 +291,13 @@ def test_scaling_magnification():
                err_msg="Noise correlated in the y direction failed applyMagnification() scaling "+
                "test.")
 
+def test_output_generation_basic():
+    pass
+
+def test_output_generation_rotated():
+    pass
+
+def test_output_generation_magnified():
+    pass
 
 
