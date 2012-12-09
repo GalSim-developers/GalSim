@@ -30,11 +30,15 @@ class RealGalaxyCatalog(object):
     there is no functionality that lets this be a FITS data cube, because we assume that the object
     postage stamps will in general need to be different sizes depending on the galaxy size.  
 
-    The default behavior of catalog input assumes that the set of galaxy/PSF image files (e.g., 
-    `'real_galaxy_images_1.fits'`, `'real_galaxy_PSF_images_1.fits'`, etc.) are in a subdirectory of
-    where the catalog file (`'real_galaxy_catalog.fits'`) is.  If the catalog file is in the working
-    directory, and the galaxy/PSF image files are in a subdirectory called `'images'`, then the 
-    RealGalaxyCatalog can be read in as follows:
+    If only the catalog name (`'real_galaxy_catalog.fits'`) is specified, then the set of galaxy/PSF
+    image files (e.g., `'real_galaxy_images_1.fits'`, `'real_galaxy_PSF_images_1.fits'`, etc.) are
+    assumed to be in the directory as the catalog file (in the following example, in the current 
+    working directory `./`):
+
+        >>> my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits')
+
+    If `image_dir` is specified, the set of galaxy/PSF image files is assumed to be in the
+    subdirectory of where the catalog is (in the following example, `./images`):
 
         >>> my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits', image_dir='images')
 
@@ -45,19 +49,25 @@ class RealGalaxyCatalog(object):
         >>> image_dir = 'images'
         >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir)
 
-    In the above case, and the following two examples below, the galaxy/PSF image files are stored
-    in the directory `/data3/scratch/user_name/galsim/real_galaxy_data/images`.
+    In the above case, the galaxy/PSF image files are in the directory 
+    `/data3/scratch/user_name/galsim/real_galaxy_data/images/`.
 
-    The default behavior is changed if the `image_dir` specifies a directory.  In this case, 
+    The above behavior is changed if the `image_dir` specifies a directory.  In this case, 
     `image_dir` is interpreted as the full path:
 
         >>> file_name = '/data3/scratch/user_name/galsim/real_galaxy_data/real_galaxy_catalog.fits'
         >>> image_dir = '/data3/scratch/user_name/galsim/real_galaxy_data/images'
         >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir)
 
-    When `dir` is specified, it will specify the catalog as `dir/file_name`, and look for the
-    galaxy/PSF image files in `dir/image_dir` (this will happen whether the `image_dir` specifies
-    a directory or not):
+    When `dir` is specified without `image_dir` being specified, both the catalog and
+    the set of galaxy/PSF images will be searched for under the directory `dir`:
+
+        >>> catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
+        >>> file_name = 'real_galaxy_catalog.fits'
+        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, dir=catalog_dir)
+
+    If the `image_dir` is specified in addition to `dir`, the catalog name is specified as 
+    `dir/file_name`, while the galaxy/PSF image files will be searched for under `dir/image_dir`:
 
         >>> catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
         >>> file_name = 'real_galaxy_catalog.fits'
@@ -82,24 +92,29 @@ class RealGalaxyCatalog(object):
     @param dir        The directory of catalog file (optional).
     @param preload    Whether to preload the header information. (default `preload = False`)
     """
-    _req_params = { 'file_name' : str , 'image_dir' : str }
-    _opt_params = { 'dir' : str, 'preload' : bool }
+    _req_params = { 'file_name' : str }
+    _opt_params = { 'image_dir' : str , 'dir' : str, 'preload' : bool }
     _single_params = []
 
-    def __init__(self, file_name, image_dir, dir=None, preload=False):
+    def __init__(self, file_name, image_dir=None, dir=None, preload=False):
         import os
         # First build full file_name
         if dir is None:
             self.file_name = file_name
-            if os.path.dirname(image_dir) == '':
+            if image_dir == None:
+                self.image_dir = os.path.dirname(file_name)
+            elif os.path.dirname(image_dir) == '':
                 self.image_dir = os.path.join(os.path.dirname(self.file_name),image_dir)
             else:
                 self.image_dir = image_dir
         else:
             self.file_name = os.path.join(dir,file_name)
-            self.image_dir = os.path.join(dir,image_dir)
-        if not os.path.isdir(image_dir):
-            raise RuntimeError(image_dir+' directory does not exist!')
+            if image_dir == None:
+                self.image_dir = dir
+            else:
+                self.image_dir = os.path.join(dir,image_dir)
+        if not os.path.isdir(self.image_dir):
+            raise RuntimeError(self.image_dir+' directory does not exist!')
 
         import pyfits
         try:
