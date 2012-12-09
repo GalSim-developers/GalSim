@@ -37,8 +37,7 @@ class CorrFunc(base.GSObject):
 
     However, some methods are purposefully not implemented, e.g. applyShift(), createShifted().
     """
-
-    def __init__(self, image, dx=0.):
+    def __init__(self, image, dx=0., interpolant=None):
         # Build a noise correlation function from the input image, first get the CF using DFTs
         ft_array = np.fft.fft2(image.array)
 
@@ -56,10 +55,30 @@ class CorrFunc(base.GSObject):
         # Store the original image scale if set
         if dx > 0.:
             self.original_cf_image.setScale(dx)
+        elif image.getScale > 0.:
+            self.original_cf_image.setScale(image.getScale())
+        else:
+            self.original_cf_image.setScale(1.)
+
+        # If interpolant not specified on input, use a high-ish polynomial
+        if interpolant == None:
+            quintic = _galsim.Quintic(tol=1.e-4)
+            self.interpolant = _galsim.InterpolantXY(quintic)
+        else:
+            if isinstance(self.interpolant, _galsim.InterpolantXY) is False:
+                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+            self.interpolant = interpolant
+
+        # Setup a store for later, containing array representations of the sqrt(PowerSpectrum)
+        # [useful for later applying noise to images according to this correlation function].
+        # Stores data as (rootps, dx) tuples.
+        self.rootps_store = [
+            (np.sqrt(self.original_ps_image.array), self.original_cf_image.getScale())]
 
         # Then initialize...
         # TODO: Decide on best default interpolant, and allow optional setting via kwarg on init
-        base.GSObject.__init__(self, _galsim.SBCorrFunc(self.original_cf_image, dx=dx))
+        base.GSObject.__init__(
+            self, _galsim.SBCorrFunc(self.original_cf_image, self.interpolant, dx=dx))
 
     def applyNoiseTo(self, image, dx=0., dev=None):
         """Apply noise as a Gaussian random field with this correlation function to an input Image.
@@ -86,14 +105,17 @@ class CorrFunc(base.GSObject):
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field:
 
         # First check whether we can just use the stored power spectrum (no drawing necessary if so)
-        if image.array.shape == self.original_ps_image.array.shape:
-            if ((dx <= 0. and self.original_cf_image.getScale() == 1.) or
-                (dx == self.original_cf_image.getScale())):
-                rootps = np.sqrt(self.original_ps_image.array) # Actually we want sqrt(PS)
+        use_stored = False
+        for rootps_array, scale in self.rootps_store:
+            if image.array.shape == rootps_array.shape:
+                if ((dx <= 0. and scale == 1.) or (dx == scale)):
+                    use_stored = True
+                    rootps = rootps_array
+                    break
 
         # If not, draw the correlation function to the desired size and resolution, then DFT to
         # generate the required array of the square root of the power spectrum
-        else:
+        if use_stored is False:
             newcf = _galsim.ImageD(image.bounds) # set the correlation func to be the correct size
             # set the scale based on dx...
             if dx <= 0.:
@@ -109,6 +131,8 @@ class CorrFunc(base.GSObject):
             rolled_cf_array = utilities.roll2d(
                 newcf.array, (-newcf.array.shape[0] / 2, -newcf.array.shape[1] / 2))
             rootps = np.sqrt(np.abs(np.fft.fft2(rolled_cf_array)) * np.product(image.array.shape))
+            # Then add this and the relevant scale to the rootps_store for later use
+            self.rootps_store.append((rootps, newcf.getScale()))
 
         # Finally generate a random field in Fourier space with the right PS, and inverse DFT back,
         # including factor of sqrt(2) to account for only adding noise to the real component:
