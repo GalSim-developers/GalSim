@@ -7,8 +7,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -38,7 +38,8 @@ namespace galsim {
         _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _norm(_flux/_re_sq),
         _info(nmap.get(_n))
     {
-        _ksq_max = _info->getKsqMax() * _re_sq;
+        _ksq_max = _info->getKsqMax() / _re_sq;
+        dbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
     }
 
     double SBSersic::SBSersicImpl::xValue(const Position<double>& p) const
@@ -209,8 +210,11 @@ namespace galsim {
             if (n_below_thresh == 5) break;
         }
         _maxK = exp(maxlogk);
+        xdbg<<"maxlogk = "<<maxlogk<<std::endl;
         xdbg<<"maxK with val >= "<<sbp::maxk_threshold<<" = "<<_maxK<<std::endl;
         _ksq_max = exp(_ft.argMax());
+        xdbg<<"ft.argMax = "<<_ft.argMax()<<std::endl;
+        xdbg<<"ksq_max = "<<_ksq_max<<std::endl;
 
         // Next, set up the classes for photon shooting
         _radial.reset(new SersicRadialFunction(_n, _b));
