@@ -20,7 +20,7 @@ slider to quickly move through the different images.
 
 New features introduced in this demo:
 
-- real_cat = galsim.RealGalaxyCatalog(file_name, image_dir)
+- real_cat = galsim.RealGalaxyCatalog(file_name, dir)
 - real_cat.preload()
 - obj = galsim.Gaussian(fwhm, flux)
 - obj = galsim.RealGalaxy(real_cat, index)
@@ -59,7 +59,7 @@ def main(argv):
     # Define some parameters we'll use below.
 
     cat_file_name = 'real_galaxy_catalog_example.fits'
-    image_dir = 'data'
+    dir = 'data'
     cube_file_name = os.path.join('output','cube_real.fits')
     psf_file_name = os.path.join('output','psf_real.fits')
 
@@ -84,7 +84,11 @@ def main(argv):
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
     
     # Read in galaxy catalog
-    real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, image_dir)
+    # Note: dir is the directory both for the catalog itself and also the directory prefix
+    # for the image files listed in the catalog.
+    # If the images are in a different directory, you may also specify image_dir, which gives
+    # the relative path from dir to wherever the images are located.
+    real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
 
     # Preloading the header information usually speeds up subsequent access.
     # Basically, it tells pyfits to read all the headers in once and save them, rather
