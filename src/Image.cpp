@@ -76,7 +76,7 @@ void BaseImage<T>::allocateMem()
     // for whether this is necessary.
     _stride = this->_bounds.getXMax() - this->_bounds.getXMin() + 1;
 
-    int nElements = _stride * (this->_bounds.getYMax() - this->_bounds.getYMin() + 1);
+    ptrdiff_t nElements = _stride * (this->_bounds.getYMax() - this->_bounds.getYMin() + 1);
     if (_stride <= 0 || nElements <= 0) {
         std::ostringstream oss;
         oss << "Attempt to create an Image with defined but invalid Bounds ("<<this->_bounds<<")\n";
