@@ -65,7 +65,7 @@ class CorrFunc(base.GSObject):
             quintic = _galsim.Quintic(tol=1.e-4)
             self.interpolant = _galsim.InterpolantXY(quintic)
         else:
-            if isinstance(self.interpolant, _galsim.InterpolantXY) is False:
+            if isinstance(interpolant, _galsim.InterpolantXY) is False:
                 raise RuntimeError('Specified interpolant is not an InterpolantXY!')
             self.interpolant = interpolant
 
