@@ -308,22 +308,22 @@ def test_draw():
     ncf.draw(testim1, dx=1.)
     # Commented stuff below makes some plots showing slightly weird edge behaviour of draw
     #
-    import matplotlib.pyplot as plt
-    plt.pcolor(testim1.array); plt.colorbar()
-    plt.title('CF drawn by CorrFunc')
-    plt.savefig('cf_drawn.pdf')
-    plt.figure()
-    plt.pcolor(ncf.original_cf_image.array); plt.colorbar()
-    plt.title('Original CF image')
-    plt.savefig('cf_original.pdf')
-    plt.figure()
-    plt.pcolor(cf_array); plt.colorbar()
-    plt.title('Independently calculated original CF image')
-    plt.figure()
-    plt.pcolor(testim1.array - cf_array); plt.colorbar()
-    plt.title('Difference between CorrFunc drawn CF and original')
-    plt.savefig('cf_drawn_residual.pdf')
-    plt.show()
+    #import matplotlib.pyplot as plt
+    #plt.pcolor(testim1.array); plt.colorbar()
+    #plt.title('CF drawn by CorrFunc')
+    #plt.savefig('cf_drawn.pdf')
+    #plt.figure()
+    #plt.pcolor(ncf.original_cf_image.array); plt.colorbar()
+    #plt.title('Original CF image')
+    #plt.savefig('cf_original.pdf')
+    #plt.figure()
+    #plt.pcolor(cf_array); plt.colorbar()
+    #plt.title('Independently calculated original CF image')
+    #plt.figure()
+    #plt.pcolor(testim1.array - cf_array); plt.colorbar()
+    #plt.title('Difference between CorrFunc drawn CF and original')
+    #plt.savefig('cf_drawn_residual.pdf')
+    #plt.show()
     
     # then compare the arrays: note the need to take a border, this is illustrated by the commented
     # code above (something weird on left edge of the drawn image)
