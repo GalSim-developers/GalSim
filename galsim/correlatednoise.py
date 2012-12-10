@@ -42,22 +42,26 @@ class CorrFunc(base.GSObject):
         ft_array = np.fft.fft2(image.array)
 
         # Calculate the power spectrum then correlation function
-        ps_array = (ft_array * ft_array.conj()).real
+        ps_array = np.abs(ft_array * ft_array.conj())
         cf_array = (np.fft.ifft2(ps_array)).real / float(np.product(np.shape(ft_array)))
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
         cf_array = utilities.roll2d(cf_array, (cf_array.shape[0] / 2, cf_array.shape[1] / 2))
 
-        # Store local copies of the the original power spectrum and correlation function
+        # Store local copies of the the original image, power spectrum and correlation function
+        self.original_image = image
         self.original_ps_image = _galsim.ImageViewD(np.ascontiguousarray(ps_array))
         self.original_cf_image = _galsim.ImageViewD(np.ascontiguousarray(cf_array))
 
         # Store the original image scale if set
         if dx > 0.:
+            self.original_image.setScale(dx)
             self.original_cf_image.setScale(dx)
         elif image.getScale > 0.:
             self.original_cf_image.setScale(image.getScale())
-        else:
+        else: # sometimes Images are instantiated with scale=0, in which case we will assume unit
+              # pixel scale
+            self.original_image.setScale(1.)
             self.original_cf_image.setScale(1.)
 
         # If interpolant not specified on input, use a high-ish polynomial
@@ -143,6 +147,16 @@ class CorrFunc(base.GSObject):
         image += _galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
         return image
 
+    # Make a copy of the CorrFunc
+    def copy(self):
+        """Returns a copy of the CorrFunc.
+        """
+        # Re-initialize a return CorrFunc with self's original image
+        # TODO: this is currently somewhat slow as it redoes the internal FFTs
+        ret = CorrFunc(
+            self.original_image, dx=self.original_image.getScale(), interpolant=self.interpolant)
+        return ret
+
     def applyShift(self):
         """The applyShift() method is not available for the CorrFunc.
         """
@@ -152,6 +166,90 @@ class CorrFunc(base.GSObject):
         """The createShifted() method is not available for the CorrFunc.
         """
         raise NotImplementedError("createShifted() not available for CorrFunc objects.")
+
+    def applyRotation(self, theta):
+        """Apply a rotation theta to this object.
+           
+        After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
+        class implementation of this method.  This is to allow CorrFunc methods to be available
+        after transformation, such as .applyNoiseTo().
+
+        @param theta Rotation angle (Angle object, +ve anticlockwise).
+        """
+        base.GSObject.applyRotation(self, theta)
+        self.__class__ = CorrFunc
+
+    def applyShear(self, *args, **kwargs):
+        """Apply a shear to this object, where arguments are either a galsim.Shear, or arguments
+        that will be used to initialize one.
+
+        For more details about the allowed keyword arguments, see the documentation for galsim.Shear
+        (for doxygen documentation, see galsim.shear.Shear).
+
+        After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
+        class implementation of this method.  This is to allow CorrFunc methods to be available
+        after transformation, such as .applyNoiseTo().
+        """
+        base.GSObject.applyShear(self, *args, **kwargs)
+        self.__class__ = CorrFunc
+
+    def applyDilation(self, scale):
+        """Apply a dilation of the linear size by the given scale.
+
+        Scales the linear dimensions of the image by the factor scale.
+        e.g. `half_light_radius` <-- `half_light_radius * scale`
+
+        This operation preserves flux.
+        See applyMagnification() for a version that preserves surface brightness, and thus 
+        changes the flux.
+
+        After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
+        class implementation of this method.  This is to allow CorrFunc methods to be available
+        after transformation, such as .applyNoiseTo().
+
+        @param scale The linear rescaling factor to apply.
+        """
+        base.GSObject.applyDilation(self, scale)
+        self.__class = CorrFunc
+
+    def applyMagnification(self, scale):
+        """"Apply a magnification by the given scale, scaling the linear size by scale and the flux 
+        by scale^2.  
+        
+        Scales the linear dimensions of the image by the factor scale.
+        e.g. `half_light_radius` <-- `half_light_radius * scale`
+
+        This operation preserves surface brightness, which means that the flux is scales 
+        with the change in area.  
+        See applyDilation for a version that preserves flux.
+
+        After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
+        class implementation of this method.  This is to allow CorrFunc methods to be available
+        after transformation, such as .applyNoiseTo().
+
+        @param scale The linear rescaling factor to apply.
+        """
+        base.GSObject.applyMagnification(self, scale)
+        self.__class__ = CorrFunc
+
+    def applyTransformation(self, ellipse):
+        """Apply a galsim.Ellipse distortion to this object.
+           
+        galsim.Ellipse objects can be initialized in a variety of ways (see documentation of this
+        class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
+
+        Note: if the ellipse includes a dilation, then this transformation will not be
+        flux-conserving.  It conserves surface brightness instead.  Thus, the flux will increase by
+        the increase in area = dilation^2.
+
+        After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
+        class implementation of this method.  This is to allow CorrFunc methods to be available
+        after transformation, such as .applyNoiseTo().
+
+        @param ellipse The galsim.Ellipse transformation to apply
+        """
+        base.GSObject.applyTransformation(self, ellipse)
+        self.__class__ = CorrFunc
 
 
 # Make a function for returning Noise correlation
