@@ -44,38 +44,6 @@ namespace galsim {
 
     void pyExportSBCorrFunc() 
     {
-        // We wrap Interpolant classes as opaque, construct-only objects; we just
-        // need to be able to make them from Python and pass them to C++.
-        bp::class_<Interpolant,boost::noncopyable>("Interpolant", bp::no_init);
-        bp::class_<Interpolant2d,boost::noncopyable>("Interpolant2d", bp::no_init);
-        bp::class_<InterpolantXY,bp::bases<Interpolant2d>,boost::noncopyable>(
-            "InterpolantXY",
-            bp::init<boost::shared_ptr<Interpolant> >(bp::arg("i1d"))
-        );
-        bp::class_<Delta,bp::bases<Interpolant>,boost::noncopyable>(
-            "Delta", bp::init<double>(bp::arg("tol")=1E-3)
-        );
-        bp::class_<Nearest,bp::bases<Interpolant>,boost::noncopyable>(
-            "Nearest", bp::init<double>(bp::arg("tol")=1E-3)
-        );
-        bp::class_<SincInterpolant,bp::bases<Interpolant>,boost::noncopyable>(
-            "SincInterpolant", bp::init<double>(bp::arg("tol")=1E-3)
-        );
-        bp::class_<Linear,bp::bases<Interpolant>,boost::noncopyable>(
-            "Linear", bp::init<double>(bp::arg("tol")=1E-3)
-        );
-        bp::class_<Lanczos,bp::bases<Interpolant>,boost::noncopyable>(
-            "Lanczos", bp::init<int,bool,double>(
-                (bp::arg("n"), bp::arg("conserve_flux")=false, bp::arg("tol")=1E-3)
-            )
-        );
-        bp::class_<Cubic,bp::bases<Interpolant>,boost::noncopyable>(
-            "Cubic", bp::init<double>(bp::arg("tol")=1E-4)
-        );
-        bp::class_<Quintic,bp::bases<Interpolant>,boost::noncopyable>(
-            "Quintic", bp::init<double>(bp::arg("tol")=1E-4)
-        );
-
         PySBCorrFunc::wrap();
     }
 

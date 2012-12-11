@@ -76,10 +76,14 @@ namespace galsim {
         // need to be able to make them from Python and pass them to C++.
         bp::class_<Interpolant,boost::noncopyable>("Interpolant", bp::no_init);
         bp::class_<Interpolant2d,boost::noncopyable>("Interpolant2d", bp::no_init);
-        bp::class_<InterpolantXY,bp::bases<Interpolant2d>,boost::noncopyable>(
+        bp::class_<InterpolantXY,bp::bases<Interpolant2d>,boost::noncopyable> pyInterpolantXY(
             "InterpolantXY",
             bp::init<boost::shared_ptr<Interpolant> >(bp::arg("i1d"))
         );
+        //#TODO: Get Jim to take a look at wrapping the below for me!
+        //pyInterpolantXY
+	//  .def("get1D", (boost::shared_ptr<Interpolant>())&InterpolantXY::get1d)
+	//;
         bp::class_<Delta,bp::bases<Interpolant>,boost::noncopyable>(
             "Delta", bp::init<double>(bp::arg("tol")=1E-3)
         );
