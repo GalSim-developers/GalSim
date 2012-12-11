@@ -155,8 +155,6 @@ class CorrFunc(base.GSObject):
         action item.  All other attributes (e.g. rootps_store, original_image) are copyable and
         copied.
         """
-        # Re-initialize a return CorrFunc with self's original image
-        # TODO: this is currently somewhat slow as it redoes the internal FFTs
         sbp = self.SBProfile.__class__(self.SBProfile)
         ret = base.GSObject(sbp)
         ret.__class__ = self.__class__
