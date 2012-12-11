@@ -164,7 +164,7 @@ class CorrFunc(base.GSObject):
         ret.original_cf_image = self.original_cf_image.copy()
         ret.original_ps_image = self.original_ps_image.copy()
         import copy
-        #TODO: currently
+        #TODO: Currently we cannot copy the interpolant, ask Jim
         #ret.interpolant = _galsim.InterpolantXY(self.interpolant)
         ret.rootps_store = copy.deepcopy(self.rootps_store) # possible thanks to Jim's pickling work
         return ret
