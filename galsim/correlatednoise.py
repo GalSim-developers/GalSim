@@ -150,11 +150,23 @@ class CorrFunc(base.GSObject):
     # Make a copy of the CorrFunc
     def copy(self):
         """Returns a copy of the CorrFunc.
+
+        Currently, the interpolant attribute is not being copied over, and getting this fixed is an
+        action item.  All other attributes (e.g. rootps_store, original_image) are copyable and
+        copied.
         """
         # Re-initialize a return CorrFunc with self's original image
         # TODO: this is currently somewhat slow as it redoes the internal FFTs
-        ret = CorrFunc(
-            self.original_image, dx=self.original_image.getScale(), interpolant=self.interpolant)
+        sbp = self.SBProfile.__class__(self.SBProfile)
+        ret = base.GSObject(sbp)
+        ret.__class__ = self.__class__
+        ret.original_image = self.original_image.copy()
+        ret.original_cf_image = self.original_cf_image.copy()
+        ret.original_ps_image = self.original_ps_image.copy()
+        import copy
+        #TODO: currently
+        #ret.interpolant = _galsim.InterpolantXY(self.interpolant)
+        ret.rootps_store = copy.deepcopy(self.rootps_store) # possible thanks to Jim's pickling work
         return ret
 
     def applyShift(self):
