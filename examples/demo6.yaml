@@ -19,7 +19,7 @@
 #
 # New features introduced in this demo:
 #
-# - input : real_catalog (file_name, image_dir, preload)
+# - input : real_catalog (file_name, dir, image_dir, preload)
 # - obj type : RealGalaxy (index)
 # - obj : rotate 
 # - obj : magnify
@@ -136,8 +136,12 @@ image :
 # Define the input files
 input :
     # In this case, we need to define where the real galaxy input catalog is.
+    # Note: dir is the directory both for the catalog itself and also the directory prefix
+    # for the image files listed in the catalog.
+    # If the images are in a different directory, you may also specify image_dir, which gives
+    # the relative path from dir to wherever the images are located.
     real_catalog :
-        image_dir : data
+        dir : data
         file_name : real_galaxy_catalog_example.fits
         preload : True   # This usually makes a big improvement in speed
 
