@@ -326,8 +326,6 @@ namespace hsm {
             gal_data.sigma = results.moments_sigma;
             results.correction_status = general_shear_estimator(&gal_rect_image, &PSF_rect_image,
                                                                 &gal_data, &PSF_data, (char *)shear_est, flags);
-            deallocate_rect_image(&gal_rect_image);
-            deallocate_rect_image(&PSF_rect_image);
 
             if (gal_data.meas_type == 'e') {
                 results.corrected_shape.setE1E2(gal_data.e1, gal_data.e2);
@@ -350,6 +348,8 @@ namespace hsm {
             if (results.resolution_factor <= 0.) {
                 throw "Unphysical situation: galaxy convolved with PSF is smaller than PSF!\n";
             }
+            deallocate_rect_image(&gal_rect_image);
+            deallocate_rect_image(&PSF_rect_image);
         }
         catch (char *err_msg) {
             results.error_message = err_msg;
@@ -403,11 +403,11 @@ namespace hsm {
                             precision, &(results.moments_n_iter));
 
             // repackage outputs from find_ellipmom_2 to the output CppHSMShapeData struct
-            deallocate_rect_image(&object_rect_image);
             results.moments_amp = 2.0*amp;
             results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
             results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_yy));
             results.moments_status = 0;
+            deallocate_rect_image(&object_rect_image);
         }
         catch (char *err_msg) {
             results.error_message = err_msg;
