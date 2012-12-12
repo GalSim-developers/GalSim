@@ -132,10 +132,10 @@ namespace galsim {
          *
          * Currently, this actually copies elements from an internal calculation of the covariance
          * matrix (using Mike Jarvis' TMV library).  It could, therefore, be calculated more 
-         * efficiently by direct assignment.  However, as this public member function is forseen
+         * efficiently by direct assignment.  However, as this public member function is foreseen
          * as being mainly for visualization/checking purposes, we go via the TMV intermediary to 
          * avoid code duplication.  If, in future, it becomes critical to speed up this function
-         * this can be revisted.
+         * this can be revisited.
          */
         template <typename T>
         Image<double> getCovarianceMatrix(ImageView<T> image, double dx) const;
