@@ -1350,7 +1350,13 @@ class Sersic(GSObject):
     """A class describing Sersic profile objects.  Has an SBSersic in the SBProfile attribute.
 
     For more details of the Sersic Surface Brightness profile, please see the SBSersic documentation
-    produced by doxygen, or refer to http://en.wikipedia.org/wiki/Sersic_profile.
+    produced by doxygen, or refer to http://en.wikipedia.org/wiki/Sersic_profile.  Note that the
+    first time an Sersic is created with a particular n, the code does various calculations that get
+    stored for future use.  The number of n values for which information can be stored is hard-wired
+    in SBSersicImpl.h, as a variable named MAX_SERSIC_TABLES, which is set to 100 by default.  Those
+    who wish to call SBSersic more than 100 times with different n in the same script will have to
+    recompile with that variable set to a different value.  Note that this will increase memory
+    usage but not change the accuracy of profile determination.
 
     Initialization
     --------------

@@ -15,7 +15,13 @@ namespace galsim {
      * The Sersic Surface Brightness Profile is characterized by three properties: its Sersic index
      * `n`, its `flux` and the half-light radius `re`.  Given these properties, the surface
      * brightness profile scales as I(r) propto exp[-(r/r_0)^{1/n}].  Currently the code is limited
-     * to 0.5<=n<=4.2, with an exception thrown for values outside that range.
+     * to 0.5<=n<=4.2, with an exception thrown for values outside that range.  The first time an
+     * SBSersic is created with a particular n, the code does various calculations that get stored
+     * for future use.  The number of n values for which information can be stored is hard-wired in
+     * SBSersicImpl.h, as a variable named MAX_SERSIC_TABLES, which is set to 100 by default.  Those
+     * who wish to call SBSersic more than 100 times with different n in the same script will have
+     * to recompile with that variable set to a different value.  Note that this will increase
+     * memory usage but not change the accuracy of profile determination.
      *
      * There are several special cases of the Sersic profile that have their own SBProfiles: n=4
      * (SBDeVaucouleurs), n=1 (SBExponential), n=0.5 (SBGaussian).  These special cases use several
