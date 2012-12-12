@@ -375,7 +375,7 @@ def test_output_generation_rotated():
         ncf_2ndlevel = galsim.correlatednoise.CorrFunc(outimage, dx=1.)
         outim1 = galsim.ImageD(smallim_size, smallim_size)
         outim2 = galsim.ImageD(smallim_size, smallim_size)
-	ncf_rot.draw(outim1, dx=1.)
+        ncf_rot.draw(outim1, dx=1.)
         ncf_2ndlevel.draw(outim2, dx=1.)
         #import matplotlib.pyplot as plt
         #plt.pcolor(outim1.array, vmin=-.1, vmax=1.1); plt.colorbar()
@@ -405,7 +405,7 @@ def test_output_generation_magnified():
         ncf_2ndlevel = galsim.correlatednoise.CorrFunc(outimage, dx=1.)
         outim1 = galsim.ImageD(smallim_size, smallim_size)
         outim2 = galsim.ImageD(smallim_size, smallim_size)
-	ncf_scl.draw(outim1, dx=1.)
+        ncf_scl.draw(outim1, dx=1.)
         ncf_2ndlevel.draw(outim2, dx=1.)
         #import matplotlib.pyplot as plt
         #plt.pcolor(outim1.array, vmin=-.1, vmax=1.1); plt.colorbar()
