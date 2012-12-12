@@ -13,8 +13,8 @@ except ImportError:
 # set up any necessary info for tests
 ### Note: changes to either of the tests below might require regeneration of the catalog and image
 ### files that are saved here.  Modify with care!!!
-catalog_file = 'test_catalog.fits'
-image_dir = 'real_comparison_images'
+image_dir = './real_comparison_images'
+catalog_file = os.path.join(image_dir,'test_catalog.fits')
 
 ind_fake = 1 # index of mock galaxy (Gaussian) in catalog
 fake_gal_fwhm = 0.7 # arcsec

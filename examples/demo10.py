@@ -80,8 +80,8 @@ def main(argv):
  
     # Read in galaxy catalog
     cat_file_name = 'real_galaxy_catalog_example.fits'
-    image_dir = 'data'
-    real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, image_dir)
+    dir = 'data'
+    real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
     real_galaxy_catalog.preload()
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
 
