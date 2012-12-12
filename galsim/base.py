@@ -251,7 +251,7 @@ class GSObject(object):
         Scales the linear dimensions of the image by the factor scale.
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
-        This operation preserves surface brightness, which means that the flux is scales 
+        This operation preserves surface brightness, which means that the flux scales 
         with the change in area.  
         See applyDilation for a version that preserves flux.
 

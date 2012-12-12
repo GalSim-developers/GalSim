@@ -64,7 +64,7 @@ class CorrFunc(base.GSObject):
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
         cf_array = utilities.roll2d(cf_array, (cf_array.shape[0] / 2, cf_array.shape[1] / 2))
 
-        # Store local copies of the the original image, power spectrum and correlation function
+        # Store local copies of the original image, power spectrum and correlation function
         self.original_image = image
         self.original_ps_image = _galsim.ImageViewD(np.ascontiguousarray(ps_array))
         self.original_cf_image = _galsim.ImageViewD(np.ascontiguousarray(cf_array))
@@ -110,7 +110,8 @@ class CorrFunc(base.GSObject):
         same underlying random number generator when generating the vector of unit variance
         Gaussians that seed the (Gaussian) noise field.
         """
-        # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate        # noise according to the correlation function represented by this instance.  An alternative
+        # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
+        # noise according to the correlation function represented by this instance.  An alternative
         # would be to use the covariance matrices and eigendecomposition.  However, although the
         # latter is necessary for whitening, it is an O(N^6) operations for an NxN image!
         # FFT-based noise realization is O(2 N^2 log[N]) so we use it for this simpler (non-
@@ -245,7 +246,7 @@ class CorrFunc(base.GSObject):
         Scales the linear dimensions of the image by the factor scale.
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
-        This operation preserves surface brightness, which means that the flux is scales 
+        This operation preserves surface brightness, which means that the flux scales 
         with the change in area.  
         See applyDilation for a version that preserves flux.
 
