@@ -63,15 +63,15 @@ namespace galsim {
         Image<double> cov = Image<double>(covdim, covdim, 0.);
 
         for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
-	                               // start from 1!!
-	    for (int j=i; j<=covdim; j++){
+                                       // start from 1!!
+            for (int j=i; j<=covdim; j++){
 
-	        cov.setValue(i, j, symcov(i, j)); // fill in the upper triangle with the
+                cov.setValue(i, j, symcov(i, j)); // fill in the upper triangle with the
                                                        // correct CorrFunc value
             }
 
         }
-	return cov;
+        return cov;
     }
 
 
@@ -87,27 +87,27 @@ namespace galsim {
         if (dx <=0.) dx = image.getScale(); // use the image scale if dx is set less than zero
 
         int k, ell; // k and l are indices that refer to image pixel separation vectors in the 
-	            // correlation func.
+                    // correlation func.
         double x_k, y_ell; // physical vector separations in the correlation func, dx * k etc.
 
         tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> cov = tmv::SymMatrix<
             double, tmv::FortranStyle|tmv::Upper>(covdim);
 
         for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
-	                               // start from 1!!
-	    for (int j=i; j<=covdim; j++){
+                                       // start from 1!!
+            for (int j=i; j<=covdim; j++){
 
                 k = (j / jdim) - (i / idim);  // using integer division rules here
                 ell = (j % jdim) - (i % idim);
                 x_k = double(k) * dx;
                 y_ell = double(ell) * dx;
                 Position<double> p = Position<double>(x_k, y_ell);
-	        cov(i, j) = _pimpl->xValue(p); // fill in the upper triangle with the
+                cov(i, j) = _pimpl->xValue(p); // fill in the upper triangle with the
                                                // correct CorrFunc value
             }
 
         }
-	return cov;
+        return cov;
     }
 
 

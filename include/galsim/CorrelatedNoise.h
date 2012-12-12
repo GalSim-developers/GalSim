@@ -179,7 +179,7 @@ namespace galsim {
              *
              * @param[in] p 2D position in real space.
              */
-	    double xValue(const Position<double>& p) const;
+        double xValue(const Position<double>& p) const;
 
             /**
              * @brief Return value of SBProfile at a chosen 2D position in k space.
@@ -190,7 +190,7 @@ namespace galsim {
              *
              * @param[in] k 2D position in k space.
              */
-	    std::complex<double> kValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& p) const;
 
         private:
 
