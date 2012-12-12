@@ -22,7 +22,7 @@ namespace galsim {
                           bp::arg("kInterp")=bp::object(),
                           bp::arg("dx")=0., bp::arg("pad_factor")=0.)
                      ))
-	         .def(
+               .def(
                      "getCovarianceMatrix", (
                          Image<double> (SBCorrFunc::*) (ImageView<U>, double) 
                          const)&SBCorrFunc::getCovarianceMatrix, 
