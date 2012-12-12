@@ -154,7 +154,7 @@ image :
 input :
     # In this case, we need to define where the real galaxy input catalog is.
     real_catalog :
-        image_dir : data
+        dir : data
         file_name : real_galaxy_catalog_example.fits
         preload : False   # Not so important this time, since only using 5 items in the catalog.
 
