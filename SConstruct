@@ -1596,5 +1596,3 @@ if not GetOption('help'):
     Default(final)
     if 'install' in COMMAND_LINE_TARGETS:
         env.Alias(target='install', source=final)
-    print 'all_builds = ',env['all_builds']
-    print 'final = ',final
