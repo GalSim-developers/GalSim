@@ -41,10 +41,9 @@ ynoise_small = galsim.ImageViewD(
     uncorr_noise_small.array + np.roll(uncorr_noise_small.array, 1, axis=0)) # note NumPy thus [y,x]
 ynoise_small *= (np.sqrt(2.) / 2.) # make unit variance
 
-# relative tolerance for large image comparisons (still needs to include some stochasticity margin)
-rtol_test = 0.01
-# decimal place for absolute comparisons with large images (ditto)
-decimal_test = 2
+# decimals for comparison (one for fine detail, another for comparing stochastic quantities)
+decimal_approx = 2
+decimal_precise = 10
 
 # number of positions to test in nonzero lag uncorrelated tests
 npos_test = 25
@@ -60,8 +59,8 @@ def test_uncorrelated_noise_zero_lag():
         ncf = galsim.correlatednoise.CorrFunc(noise_test, dx=1.)
         cf_zero = ncf.xValue(galsim.PositionD(0., 0.))
         # Then test this estimated value is good to 1% of the input variance; we expect this!
-        np.testing.assert_allclose(
-            cf_zero, sigma**2, rtol=rtol_test, atol=0.,
+        np.testing.assert_almost_equal(
+            cf_zero / sigma**2, 1., decimal=decimal_approx,
             err_msg="Zero distance noise correlation value does not match input noise variance.")
 
 def test_uncorrelated_noise_nonzero_lag():
@@ -79,7 +78,7 @@ def test_uncorrelated_noise_nonzero_lag():
         cf_test_value = ncf.xValue(pos)
         # Then test this estimated value is good to within our chosen decimal place of zero
         np.testing.assert_almost_equal(
-            cf_test_value, 0., decimal=decimal_test,
+            cf_test_value, 0., decimal=decimal_approx,
             err_msg="Non-zero distance noise correlation value not sufficiently close to target "+
             "value of zero.")
 
@@ -117,7 +116,7 @@ def test_uncorrelated_noise_90degree_rotation():
         ncf_test1 = ncf.createRotated(angle)
         # then we'll check the createRotation() method
         ncf_test2 = ncf.copy()
-        ncf_test2.applyRotation(angle) 
+        ncf_test2.applyRotation(angle)
         # then check some positions
         for i in range(npos_test):
             rpos = glob_ud() * smallim_size
@@ -127,11 +126,11 @@ def test_uncorrelated_noise_90degree_rotation():
             cf_test1 = ncf_test1.xValue(pos)
             cf_test2 = ncf_test2.xValue(pos) 
             # Then test these estimated value is good to within our chosen decimal place
-            np.testing.assert_allclose(
-                cf_ref, cf_test1, rtol=1.e-7, # these should be good at high, FFT-dependent acc.
+            np.testing.assert_almost_equal(
+                cf_ref / cf_test1, 1., decimal=decimal_precise, # slightly FFT-dependent accuracy
                 err_msg="Uncorrelated noise failed 90 degree createRotated() method test.")
-            np.testing.assert_allclose(
-                cf_ref, cf_test2, rtol=1.e-7,
+            np.testing.assert_almost_equal(
+                cf_ref / cf_test2, 1., decimal=decimal_precise,
                 err_msg="Uncorrelated noise failed 90 degree applyRotation() method test.")
 
 def test_xcorr_noise_basics():
@@ -142,13 +141,13 @@ def test_xcorr_noise_basics():
     xncf = galsim.correlatednoise.CorrFunc(xnoise_large, dx=1.)
     # Then test the zero-lag value is good to 1% of the input variance; we expect this!
     cf_zero = xncf.xValue(galsim.PositionD(0., 0.))
-    np.testing.assert_allclose(
-        cf_zero, 1., rtol=rtol_test, atol=0.,
+    np.testing.assert_almost_equal(
+        cf_zero, 1., decimal=decimal_approx,
         err_msg="Zero distance noise correlation value does not match input noise variance.")
     # Then test the (1, 0) value is good to 1% of the input variance (0.5); we expect this!
     cf_10 = xncf.xValue(galsim.PositionD(1., 0.))
-    np.testing.assert_allclose(
-        cf_10, .5, rtol=rtol_test, atol=0.,
+    np.testing.assert_almost_equal(
+        cf_10, .5, decimal=decimal_approx,
         err_msg="Noise correlation value at (1, 0) does not match input covariance.")
 
 def test_ycorr_noise_basics():
@@ -159,13 +158,13 @@ def test_ycorr_noise_basics():
     yncf = galsim.correlatednoise.CorrFunc(ynoise_large, dx=1.)
     # Then test the zero-lag value is good to 1% of the input variance; we expect this!
     cf_zero = yncf.xValue(galsim.PositionD(0., 0.))
-    np.testing.assert_allclose(
-        cf_zero, 1., rtol=rtol_test, atol=0.,
+    np.testing.assert_almost_equal(
+        cf_zero, 1., decimal=decimal_approx,
         err_msg="Zero distance noise correlation value does not match input noise variance.")
     # Then test the (1, 0) value is good to 1% of the input variance (0.5); we expect this!
     cf_01 = yncf.xValue(galsim.PositionD(0., 1.))
-    np.testing.assert_allclose(
-        cf_01, .5, rtol=rtol_test, atol=0.,
+    np.testing.assert_almost_equal(
+        cf_01, .5, decimal=decimal_approx,
         err_msg="Noise correlation value at (0, 1) does not match input covariance.")
 
 def test_xcorr_noise_symmetry():
@@ -182,8 +181,8 @@ def test_xcorr_noise_symmetry():
         cf_test1 = ncf.xValue(pos)
         cf_test2 = ncf.xValue(-pos)
         # Then test this estimated value is good to within our chosen decimal place of zero
-        np.testing.assert_allclose(
-            cf_test1, cf_test2, rtol=1.e-15, # this should be good to machine precision
+        np.testing.assert_almost_equal(
+            cf_test1, cf_test2, decimal=decimal_precise, # should be good to machine precision
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric for x correlated noise field.")
 
@@ -201,8 +200,8 @@ def test_ycorr_noise_symmetry():
         cf_test1 = ncf.xValue(pos)
         cf_test2 = ncf.xValue(-pos)
         # Then test this estimated value is good to within our chosen decimal place of zero
-        np.testing.assert_allclose(
-            cf_test1, cf_test2, rtol=1.e-15, # this should be good to machine precision
+        np.testing.assert_almost_equal(
+            cf_test1, cf_test2, decimal=decimal_precise, # should be good to machine precision
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric for y correlated noise field.")
 
@@ -232,12 +231,12 @@ def test_90degree_rotation(): # probably only need to do the x direction for thi
             cf_ref = ncf_ref.xValue(pos)
             cf_test1 = ncf_test1.xValue(pos)
             cf_test2 = ncf_test2.xValue(pos) 
-            np.testing.assert_allclose(
-                cf_ref, cf_test1, rtol=1.e-7, # these should be good at high, FFT-dependent acc. 
+            np.testing.assert_almost_equal(
+                cf_ref, cf_test1, decimal=decimal_precise, # should be accurate, but FFT-dependent 
                 err_msg="Noise correlated in the x direction failed 90 degree createRotated() "+
                 "method test.")
-            np.testing.assert_allclose(
-                cf_ref, cf_test2, rtol=1.e-7,
+            np.testing.assert_almost_equal(
+                cf_ref, cf_test2, decimal=decimal_precise,
                 err_msg="Noise correlated in the x direction failed 90 degree applyRotation() "+
                 "method test.")
 
@@ -259,14 +258,14 @@ def test_arbitrary_rotation():
         ncf_rot1 = ncf.createRotated(rot_angle * galsim.radians)
         ncf_rot2 = ncf.copy()
         ncf_rot2.applyRotation(rot_angle * galsim.radians)
-        np.testing.assert_allclose(
+        np.testing.assert_almost_equal(
             ncf.xValue(pos_rot), ncf_rot1.xValue(pos_ref), 
-            rtol=1.e-7, # this should be good at very high accuracy 
+            decimal=decimal_precise, # this should be good at very high accuracy 
             err_msg="Noise correlated in the y direction failed createRotated() "+
             "method test for arbitrary rotations.")
-        np.testing.assert_allclose(
+        np.testing.assert_almost_equal(
             ncf.xValue(pos_rot), ncf_rot2.xValue(pos_ref), 
-            rtol=1.e-7, # ditto
+            decimal=decimal_precise, # ditto
             err_msg="Noise correlated in the y direction failed applyRotation() "+
             "method test for arbitrary rotations.")
 
@@ -280,14 +279,14 @@ def test_scaling_magnification():
        ncf_test2 = ncf.copy() 
        ncf_test2.applyMagnification(scale)
        for i in range(npos_test):
-           rpos = glob_ud() * 0.1 * smallim_size * scale # vicinity of the centre
+           rpos = glob_ud() * 0.1 * smallim_size * scale # look in vicinity of the centre
            tpos = 2. * np.pi * glob_ud()
            pos_ref = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
-           np.testing.assert_allclose(
-               ncf_test1.xValue(pos_ref), ncf.xValue(pos_ref / scale), rtol=1.e-7,
+           np.testing.assert_almost_equal(
+               ncf_test1.xValue(pos_ref), ncf.xValue(pos_ref / scale), decimal=decimal_precise,
                err_msg="Noise correlated in the y direction failed createMagnified() scaling test.")
-           np.testing.assert_allclose(
-               ncf_test2.xValue(pos_ref), ncf.xValue(pos_ref / scale), rtol=1.e-7,
+           np.testing.assert_almost_equal(
+               ncf_test2.xValue(pos_ref), ncf.xValue(pos_ref / scale), decimal=decimal_precise,
                err_msg="Noise correlated in the y direction failed applyMagnification() scaling "+
                "test.")
 
@@ -328,10 +327,10 @@ def test_draw():
     # then compare the arrays: note the need to take a border, this is illustrated by the commented
     # code above (something weird on left edge of the drawn image)
     np.testing.assert_array_almost_equal(
-        testim1.array[1:-1, 1:-1], ncf.original_cf_image.array[1:-1, 1:-1], decimal=decimal_test, 
+        testim1.array[1:-1, 1:-1], ncf.original_cf_image.array[1:-1, 1:-1], decimal=decimal_approx, 
         err_msg="Drawn image does not match internal correlation function.")
     np.testing.assert_array_almost_equal(
-        testim1.array[1:-1, 1:-1], cf_array[1:-1, 1:-1], decimal=decimal_test, 
+        testim1.array[1:-1, 1:-1], cf_array[1:-1, 1:-1], decimal=decimal_approx, 
         err_msg="Drawn image does not match independently calculated correlation function.")
 
 def test_output_generation_basic():
