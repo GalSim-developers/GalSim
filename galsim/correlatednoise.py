@@ -93,7 +93,7 @@ class CorrFunc(base.GSObject):
         # Setup a store for later, containing array representations of the sqrt(PowerSpectrum)
         # [useful for later applying noise to images according to this correlation function].
         # Stores data as (rootps, dx) tuples.
-        self.rootps_store = [
+        self._rootps_store = [
             (np.sqrt(self.original_ps_image.array), self.original_cf_image.getScale())]
 
         # Then initialize...
@@ -102,7 +102,7 @@ class CorrFunc(base.GSObject):
             self, _galsim.SBCorrFunc(self.original_cf_image, self.interpolant, dx=dx))
 
     def applyNoiseTo(self, image, dx=0., dev=None):
-        """Apply noise as a Gaussian random field with this correlation function to an input Image.
+        """Add noise as a Gaussian random field with this correlation function to an input Image.
 
         If the optional image pixel scale `dx` is not specified, `image.getScale()` is used for the
         input image pixel separation.
@@ -128,7 +128,7 @@ class CorrFunc(base.GSObject):
 
         # First check whether we can just use the stored power spectrum (no drawing necessary if so)
         use_stored = False
-        for rootps_array, scale in self.rootps_store:
+        for rootps_array, scale in self._rootps_store:
             if image.array.shape == rootps_array.shape:
                 if ((dx <= 0. and scale == 1.) or (dx == scale)):
                     use_stored = True
@@ -153,8 +153,8 @@ class CorrFunc(base.GSObject):
             rolled_cf_array = utilities.roll2d(
                 newcf.array, (-newcf.array.shape[0] / 2, -newcf.array.shape[1] / 2))
             rootps = np.sqrt(np.abs(np.fft.fft2(rolled_cf_array)) * np.product(image.array.shape))
-            # Then add this and the relevant scale to the rootps_store for later use
-            self.rootps_store.append((rootps, newcf.getScale()))
+            # Then add this and the relevant scale to the _rootps_store for later use
+            self._rootps_store.append((rootps, newcf.getScale()))
 
         # Finally generate a random field in Fourier space with the right PS, and inverse DFT back,
         # including factor of sqrt(2) to account for only adding noise to the real component:
@@ -179,7 +179,7 @@ class CorrFunc(base.GSObject):
         ret.original_cf_image = self.original_cf_image.copy()
         ret.original_ps_image = self.original_ps_image.copy()
         ret.interpolant = self.interpolant
-        ret.rootps_store = copy.deepcopy(self.rootps_store) # possible thanks to Jim's pickling work
+        ret._rootps_store = copy.deepcopy(self._rootps_store) # possible due to Jim's image pickling
         return ret
 
     def applyShift(self):
@@ -197,11 +197,12 @@ class CorrFunc(base.GSObject):
            
         After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
         class implementation of this method.  This is to allow CorrFunc methods to be available
-        after transformation, such as .applyNoiseTo().
+        after transformation, such as .applyNoiseTo().  Resets the internal _rootps_store.
 
         @param theta Rotation angle (Angle object, +ve anticlockwise).
         """
         base.GSObject.applyRotation(self, theta)
+        self._rootps_store = []
         self.__class__ = CorrFunc
 
     def applyShear(self, *args, **kwargs):
@@ -213,9 +214,10 @@ class CorrFunc(base.GSObject):
 
         After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
         class implementation of this method.  This is to allow CorrFunc methods to be available
-        after transformation, such as .applyNoiseTo().
+        after transformation, such as .applyNoiseTo().  Resets the internal _rootps_store.
         """
         base.GSObject.applyShear(self, *args, **kwargs)
+        self._rootps_store = []
         self.__class__ = CorrFunc
 
     def applyDilation(self, scale):
@@ -230,11 +232,12 @@ class CorrFunc(base.GSObject):
 
         After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
         class implementation of this method.  This is to allow CorrFunc methods to be available
-        after transformation, such as .applyNoiseTo().
+        after transformation, such as .applyNoiseTo().  Resets the internal _rootps_store.
 
         @param scale The linear rescaling factor to apply.
         """
         base.GSObject.applyDilation(self, scale)
+        self._rootps_store = []
         self.__class = CorrFunc
 
     def applyMagnification(self, scale):
@@ -250,11 +253,12 @@ class CorrFunc(base.GSObject):
 
         After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
         class implementation of this method.  This is to allow CorrFunc methods to be available
-        after transformation, such as .applyNoiseTo().
+        after transformation, such as .applyNoiseTo().  Resets the internal _rootps_store.
 
         @param scale The linear rescaling factor to apply.
         """
         base.GSObject.applyMagnification(self, scale)
+        self._rootps_store = []
         self.__class__ = CorrFunc
 
     def applyTransformation(self, ellipse):
@@ -269,11 +273,12 @@ class CorrFunc(base.GSObject):
 
         After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
         class implementation of this method.  This is to allow CorrFunc methods to be available
-        after transformation, such as .applyNoiseTo().
+        after transformation, such as .applyNoiseTo().  Resets the internal _rootps_store.
 
         @param ellipse The galsim.Ellipse transformation to apply
         """
         base.GSObject.applyTransformation(self, ellipse)
+        self._rootps_store = []
         self.__class__ = CorrFunc
 
 
