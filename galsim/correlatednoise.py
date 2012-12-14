@@ -74,7 +74,7 @@ class CorrFunc(base.GSObject):
         if dx > 0.:
             self.original_image.setScale(dx)
             self.original_cf_image.setScale(dx)
-        elif image.getScale > 0.:
+        elif image.getScale() > 0.:
             self.original_cf_image.setScale(image.getScale())
         else: # sometimes Images are instantiated with scale=0, in which case we will assume unit
               # pixel scale
