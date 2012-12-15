@@ -21,11 +21,7 @@
   along with meas_shape.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************/
 
-//#include <cstdlib>
-//#include <cmath>
-//#include <iostream>
 #include <string>
-
 #define TMV_DEBUG
 #include "TMV.h"
 #include "hsm/PSFCorr.h"
@@ -68,11 +64,6 @@ namespace hsm {
         double guess_sig_PSF, double precision,
         double guess_x_centroid, double guess_y_centroid) 
     {
-        //std::cout<<"Start EstimateShearHSMView:\n";
-        //std::cout<<"sky_var = "<<sky_var<<std::endl;
-        //std::cout<<"shear_est = "<<shear_est<<std::endl;
-        //std::cout<<"guess cen = "<<guess_x_centroid<<","<<guess_y_centroid<<std::endl;
-        //std::cout<<"flags = "<<flags<<std::endl;
         // define variables, create output CppHSMShapeData struct, etc.
         CppHSMShapeData results;
         ObjectData gal_data, PSF_data;
@@ -104,40 +95,21 @@ namespace hsm {
         results.correction_method = shear_est;
         Image<int> gal_mask(gal_image.getBounds());
         Image<int> PSF_mask(PSF_image.getBounds());
-        //std::cout<<"gal_bounds = "<<gal_image.getBounds()<<std::endl;
-        //std::cout<<"PSF_bounds = "<<PSF_image.getBounds()<<std::endl;
-        //std::cout<<"Before fill\n";
-        //std::cout<<"gal_mask(-1,1) = "<<gal_mask(-1,1)<<std::endl;
-        //std::cout<<"PSF_mask(-1,1) = "<<PSF_mask(-1,1)<<std::endl;
         gal_mask.fill(1);
         PSF_mask.fill(1);
-        //std::cout<<"After fill\n";
-        //std::cout<<"gal_mask(-1,1) = "<<gal_mask(-1,1)<<std::endl;
-        //std::cout<<"PSF_mask(-1,1) = "<<PSF_mask(-1,1)<<std::endl;
         ConstImageView<T> gal_image_cview = gal_image;
         ConstImageView<U> PSF_image_cview = PSF_image;
         ConstImageView<int> gal_mask_view = gal_mask.view();
         ConstImageView<int> PSF_mask_view = PSF_mask.view();
-        //std::cout<<"gal_mask(-1,1) = "<<gal_mask(-1,1)<<std::endl;
-        //std::cout<<"gal_mask_view(-1,1) = "<<gal_mask_view(-1,1)<<std::endl;
-        //std::cout<<"PSF_mask(-1,1) = "<<PSF_mask(-1,1)<<std::endl;
-        //std::cout<<"PSF_mask_view(-1,1) = "<<PSF_mask_view(-1,1)<<std::endl;
         try {
             find_ellipmom_2(gal_image_cview, gal_mask_view, amp, gal_data.x0,
                             gal_data.y0, m_xx, m_xy, m_yy, results.moments_rho4,
                             precision, results.moments_n_iter);
-            //std::cout<<"After find_ellipmom_2\n";
-            //std::cout<<"cen = "<<gal_data.x0<<","<<gal_data.y0<<std::endl;
-            //std::cout<<"m = "<<m_xx<<','<<m_xy<<','<<m_yy<<std::endl;
-            //std::cout<<"rho4 = "<<results.moments_rho4<<std::endl;
-            //std::cout<<"niter = "<<results.moments_n_iter<<std::endl;
             // repackage outputs to the output CppHSMShapeData struct
             results.moments_amp = 2.0*amp;
             results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
             results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_yy));
             results.moments_status = 0;
-            //std::cout<<"amp = "<<results.moments_amp<<std::endl;
-            //std::cout<<"sigma = "<<results.moments_sigma<<std::endl;
 
             // and if that worked, try doing PSF correction
             gal_data.sigma = results.moments_sigma;
@@ -162,9 +134,6 @@ namespace hsm {
             results.moments_sigma = gal_data.sigma;
             results.moments_amp = gal_data.flux;
             results.resolution_factor = gal_data.resolution;
-            //std::cout<<"corr shape_err = "<<results.corrected_shape_err<<std::endl;
-            //std::cout<<"sigma = "<<results.moments_sigma<<std::endl;
-            //std::cout<<"amp = "<<results.moments_amp<<std::endl;
 
             if (results.resolution_factor <= 0.) {
                 throw "Unphysical situation: galaxy convolved with PSF is smaller than PSF!\n";
@@ -446,8 +415,8 @@ namespace hsm {
         int ymax = data.getYMax();
         int nx = xmax-xmin+1;
         int ny = ymax-ymin+1;
-        tmv::Matrix<double> psi_x(max_order,nx-1);
-        tmv::Matrix<double> psi_y(max_order,ny-1);
+        tmv::Matrix<double> psi_x(max_order+1,nx);
+        tmv::Matrix<double> psi_y(max_order+1,ny);
 
         /* Compute wavefunctions */
         qho1d_wf_1(nx, (double)xmin - x0, 1., max_order, sigma, psi_x);
@@ -503,7 +472,7 @@ namespace hsm {
         double convergence_factor = 1; /* Ensure at least one iteration. */
 
         num_iter = 0;
-        tmv::Matrix<double> iter_moments(ADAPT_ORDER,ADAPT_ORDER);
+        tmv::Matrix<double> iter_moments(ADAPT_ORDER+1,ADAPT_ORDER+1);
 
 #ifdef N_CHECKVAL
         if (epsilon <= 0) {
@@ -782,14 +751,6 @@ namespace hsm {
         ConstImageView<U> image2, ConstImageView<int> mask2, 
         ImageView<T> image_out, ConstImageView<int> mask_out)
     {
-        //std::cout<<"Start fast_convolve_image_1\n";
-        //std::cout<<"image1.bounds = "<<image1.getBounds()<<std::endl;
-        //std::cout<<"mask1.bounds = "<<mask1.getBounds()<<std::endl;
-        //std::cout<<"image2.bounds = "<<image2.getBounds()<<std::endl;
-        //std::cout<<"mask2.bounds = "<<mask2.getBounds()<<std::endl;
-        //std::cout<<"mask1(-1,1) = "<<mask1(-1,1)<<std::endl;
-        //std::cout<<"mask2(-1,1) = "<<mask2(-1,1)<<std::endl;
-
         long dim1x, dim1y, dim1o, dim1, dim2, dim3, dim4;
         double xr,xi,yr,yi;
         long i,i_conj,j,k,ii,ii_conj;
@@ -808,7 +769,6 @@ namespace hsm {
         dim2 = dim1 << 1;
         dim3 = dim2 * dim2;
         dim4 = dim3 << 1;
-        //std::cout<<"dim1,2,3,4 = "<<dim1<<','<<dim2<<','<<dim3<<','<<dim4<<std::endl;
 
         /* Allocate & initialize memory */
         tmv::Matrix<double> m1(dim1,dim1,0.);
@@ -818,27 +778,14 @@ namespace hsm {
         tmv::Vector<double> Bx(dim4,0.);
 
         /* Build input maps */
-        //std::cout<<"mask1(-1,1) = "<<mask1(-1,1)<<std::endl;
-        //std::cout<<"image1.bounds = "<<image1.getBounds()<<std::endl;
         for(int x=image1.getXMin();x<=image1.getXMax();x++)
-            for(int y=image1.getYMin();y<=image1.getYMax();y++) {
-                //std::cout<<"mask1("<<x<<','<<y<<") = "<<mask1(x,y)<<std::endl;
-                if (mask1(x,y)) {
+            for(int y=image1.getYMin();y<=image1.getYMax();y++) 
+                if (mask1(x,y)) 
                     m1(x-image1.getXMin(),y-image1.getYMin()) = image1(x,y);
-                    //std::cout<<"m1("<<x-image1.getXMin()<<','<<y-image1.getYMin()<<") = "<<image1(x,y)<<std::endl;
-                }
-            }
-        //std::cout<<"m1 = "<<m1<<std::endl;
-        //std::cout<<"mask1(-1,1) = "<<mask1(-1,1)<<std::endl;
-        //std::cout<<"mask2(-1,1) = "<<mask2(-1,1)<<std::endl;
         for(i=image2.getXMin();i<=image2.getXMax();i++)
             for(j=image2.getYMin();j<=image2.getYMax();j++)
-                if (mask2(i,j)) {
+                if (mask2(i,j)) 
                     m2(i-image2.getXMin(),j-image2.getYMin()) = image2(i,j);
-                    //std::cout<<"m2("<<i-image2.getXMin()<<','<<j-image2.getYMin()<<") = "<<image2(i,j)<<std::endl;
-                }
-        //std::cout<<"m2 = "<<m2<<std::endl;
-        //std::cout<<"mask2(-1,1) = "<<mask2(-1,1)<<std::endl;
 
         /* Build the arrays for FFT -
          * - put m1 and m2 into the real and imaginary parts of Bx, respectively. */
@@ -847,14 +794,12 @@ namespace hsm {
             Bx[k  ] = m1[i][j];
             Bx[k+1] = m2[i][j];
         }
-        //std::cout<<"Bx = "<<Bx<<std::endl;
 
         /* We've filled only part of Bx, the other locations are for
          * zero padding.  First we separate the real (m1) and imaginary (m2) parts of the FFT,
          * then multiply to get the convolution.
          */
         fourier_trans_1(Bx.ptr(),dim3,1);
-        //std::cout<<"After fourier_trans: Bx = "<<Bx<<std::endl;
         for(i=0;i<dim3;i++) {
             i_conj = i==0? 0: dim3-i;      /* part of FFT of B holding complex conjugate mode */
             ii      = 2*i;
@@ -866,13 +811,10 @@ namespace hsm {
             Ax[ii  ] = xr*yr-xi*yi;      /* complex multiplication */
             Ax[ii+1] = xr*yi+xi*yr;
         }
-        //std::cout<<"Ax = "<<Ax<<std::endl;
         fourier_trans_1(Ax.ptr(),dim3,-1);   /* Reverse FFT Ax to get convolved image */
-        //std::cout<<"After fourier_trans: Ax = "<<Ax<<std::endl;
         for(i=0;i<dim1;i++)
             for(j=0;j<dim1;j++)
                 mout[i][j] = Ax[2*(dim2*i+j)] / (double)dim3;
-        //std::cout<<"mout = "<<mout<<std::endl;
 
         /* Calculate the effective bounding box for the output image,
          * [out_xmin..out_xmax][out_ymin..out_ymax], and the offset between mout and
@@ -887,8 +829,6 @@ namespace hsm {
         if (out_ymin<image_out.getYMin()) out_ymin = image_out.getYMin();
         if (out_ymax>image_out.getYMax()) out_ymax = image_out.getYMax();
 
-        //std::cout<<"out_xmin,max,ref = "<<out_xmin<<','<<out_xmax<<','<<out_xref<<std::endl;
-        //std::cout<<"out_ymin,max,ref = "<<out_ymin<<','<<out_ymax<<','<<out_yref<<std::endl;
         /* And now do the writing */
         for(i=out_xmin;i<=out_xmax;i++)
             for(j=out_ymin;j<=out_ymax;j++)
@@ -1109,8 +1049,8 @@ namespace hsm {
 #define FAILED_MOMENTS (-1000.0)
         e1 = e2 = R = FAILED_MOMENTS;
 
-        tmv::Matrix<double> moments(KSB_MOMENTS_MAX,KSB_MOMENTS_MAX);
-        tmv::Matrix<double> psfmoms(KSB_MOMENTS_MAX,KSB_MOMENTS_MAX);
+        tmv::Matrix<double> moments(KSB_MOMENTS_MAX+1,KSB_MOMENTS_MAX+1);
+        tmv::Matrix<double> psfmoms(KSB_MOMENTS_MAX+1,KSB_MOMENTS_MAX+1);
 
         /* Determine the adaptive variance of the measured galaxy */
         x0 = x0_gal;
@@ -1304,11 +1244,6 @@ namespace hsm {
         double& y0_gal, double& sig_gal, double& x0_psf, double& y0_psf,
         double& sig_psf, double& flux_gal) 
     {
-        //std::cout<<"Start psf_corr_reguass\n";
-        //std::cout<<"flags = "<<flags<<std::endl;
-        //std::cout<<"gal_mask(-1,1) = "<<gal_mask(-1,1)<<std::endl;
-        //std::cout<<"PSF_mask(-1,1) = "<<PSF_mask(-1,1)<<std::endl;
-
         int num_iter;
         unsigned int status = 0;
         double A_g, Mxxpsf, Mxypsf, Myypsf, rho4psf, flux_psf, sum;
@@ -1328,7 +1263,6 @@ namespace hsm {
          * as failures.
          */
         e1 = e2 = R = FAILED_MOMENTS;
-        //std::cout<<"initial e1,e2,R = "<<e1<<','<<e2<<','<<R<<std::endl;
 
         /* Get the PSF flux */
         flux_psf = 0;
@@ -1336,35 +1270,21 @@ namespace hsm {
             for(int x=PSF_image.getXMin();x<=PSF_image.getXMax();x++)
                 if (PSF_mask(x,y))
                     flux_psf += PSF_image(x,y);
-        //std::cout<<"flux_psf = "<<flux_psf<<std::endl;
 
         /* Recompute the galaxy flux only if the relevant flag is set */
-        //std::cout<<"flags = "<<flags<<std::endl;
-        //std::cout<<"gal_mask(-1,1) = "<<gal_mask(-1,1)<<std::endl;
-        //std::cout<<"PSF_mask(-1,1) = "<<PSF_mask(-1,1)<<std::endl;
         if (flags & 0x00000001) {
             flux_gal = 0;
             for(int y=gal_image.getYMin();y<=gal_image.getYMax();y++)
                 for(int x=gal_image.getXMin();x<=gal_image.getXMax();x++)
-                    if (gal_mask(x,y)) {
+                    if (gal_mask(x,y)) 
                         flux_gal += gal_image(x,y);
-                        //std::cout<<x<<','<<y<<": flux_gal += "<<gal_image(x,y)<<" -> "<<flux_gal<<std::endl;
-                    }
         }
-        //std::cout<<"flux_gal = "<<flux_gal<<std::endl;
-        //std::cout<<"gal_mask(-1,1) = "<<gal_mask(-1,1)<<std::endl;
-        //std::cout<<"PSF_mask(-1,1) = "<<PSF_mask(-1,1)<<std::endl;
 
         /* Get the elliptical adaptive moments of PSF */
         Mxxpsf = Myypsf = sig_psf * sig_psf;
         Mxypsf = 0.;
         find_ellipmom_2(PSF_image, PSF_mask, A_g, x0_psf, y0_psf, Mxxpsf, Mxypsf, Myypsf, rho4psf,
                         1.0e-6, num_iter);
-        //std::cout<<"After find_ellipmom_2\n";
-        //std::cout<<"A_g = "<<A_g<<std::endl;
-        //std::cout<<"x0,y0 = "<<x0_psf<<','<<y0_psf<<std::endl;
-        //std::cout<<"M = "<<Mxxpsf<<','<<Mxypsf<<','<<Myypsf<<std::endl;
-        //std::cout<<"rho4psf = "<<rho4psf<<std::endl;
 
         if (num_iter == NUM_ITER_DEFAULT) {
             x0_psf = x0_old;
@@ -1377,11 +1297,6 @@ namespace hsm {
         Mxygal = 0.;
         find_ellipmom_2(gal_image, gal_mask, A_I, x0_gal, y0_gal, Mxxgal, Mxygal, Myygal, rho4gal,
                         1.0e-6, num_iter);
-        //std::cout<<"After find_ellipmom_2\n";
-        //std::cout<<"A_I = "<<A_I<<std::endl;
-        //std::cout<<"x0,y0 = "<<x0_gal<<','<<y0_gal<<std::endl;
-        //std::cout<<"M = "<<Mxxgal<<','<<Mxygal<<','<<Myygal<<std::endl;
-        //std::cout<<"rho4gal = "<<rho4gal<<std::endl;
 
         if (num_iter == NUM_ITER_DEFAULT) {
             x0_gal = x0_old;
@@ -1393,7 +1308,6 @@ namespace hsm {
         if (flags & 0x00000002) {
             flux_gal = rho4gal * A_I;
         }
-        //std::cout<<"flux_gal = "<<flux_gal<<std::endl;
 
         /* Compute approximate deconvolved moments (i.e. without non-Gaussianity correction).
          * We also test this matrix for positive definiteness.
@@ -1423,10 +1337,6 @@ namespace hsm {
         detMf = Mfxx*Mfyy - Mfxy*Mfxy;
 
 #endif
-        //std::cout<<"Mf = "<<Mfxx<<','<<Mfxy<<','<<Mfyy<<std::endl;
-        //std::cout<<"detMf = "<<detMf<<std::endl;
-        //std::cout<<"status = "<<status<<std::endl;
-
 
         /* Test to see if anything has gone wrong -- if so, complain! */
         if (status) return (status);
@@ -1458,7 +1368,6 @@ namespace hsm {
         Minvf_yy =  Mfxx/detMf;
         sum = 0.;
         Bounds<int> fgauss_bounds(fgauss_xmin, fgauss_xmax, fgauss_ymin, fgauss_ymax);
-        //std::cout<<"fgauss_bounds = "<<fgauss_bounds<<std::endl;
         Image<double> fgauss(fgauss_bounds);
         for(int y=fgauss.getYMin();y<=fgauss.getYMax();y++) {
             for(int x=fgauss.getXMin();x<=fgauss.getXMax();x++) {
@@ -1470,9 +1379,7 @@ namespace hsm {
         }
 
         /* Properly normalize fgauss */
-        //std::cout<<"Multiply fgauss by "<<(flux_gal/(sum*flux_psf));
         fgauss *= flux_gal/(sum*flux_psf);
-        //std::cout<<"Done.\n";
         Image<int> fgauss_mask(fgauss_bounds);
         fgauss_mask.fill(1);
         ConstImageView<int> fgauss_mask_view = fgauss_mask.view();
@@ -1498,7 +1405,6 @@ namespace hsm {
             if (PSF_image.getYMax() <= pymax) pymax = PSF_image.getYMax();
             pbounds = Bounds<int>(pxmin,pxmax,pymin,pymax);
         }
-        //std::cout<<"pbounds = "<<pbounds<<std::endl;
 
         /* Now let's compute the residual from the PSF fit.  This is called
          * - epsilon in Hirata & Seljak.
@@ -1509,7 +1415,6 @@ namespace hsm {
         Minvpsf_xy = -Mxypsf/detM;
         Minvpsf_yy =  Mxxpsf/detM;
         center_amp_psf = flux_psf / (2.*M_PI * std::sqrt(detM));
-        //std::cout<<"center_amp_psf = "<<center_amp_psf<<std::endl;
         for(int y=pbounds.getYMin();y<=pbounds.getYMax();y++) {
             for(int x=pbounds.getXMin();x<=pbounds.getXMax();x++) {
                 dx = x - x0_psf;
@@ -1520,7 +1425,6 @@ namespace hsm {
                         exp (-0.5 * ( Minvpsf_xx*dx*dx + Minvpsf_yy*dy*dy ) - Minvpsf_xy*dx*dy);
             }
         }
-        //std::cout<<"After compute PSF_resid\n";
 
         /* Now compute the re-Gaussianized galaxy image */
         Image<double> Iprime = gal_image;
@@ -1528,24 +1432,12 @@ namespace hsm {
         ConstImageView<double> PSF_resid_view = PSF_resid.view();
         ImageView<double> Iprime_view = Iprime.view();
         ConstImageView<double> Iprime_cview = Iprime_view;
-        //std::cout<<"Before fast_convolve_image_1\n";
-        //std::cout<<"fgauss.bounds = "<<fgauss.getBounds()<<"  "<<fgauss_view.getBounds()<<std::endl;
-        //std::cout<<"PSF_resid.bounds = "<<PSF_resid.getBounds()<<"  "<<PSF_resid_view.getBounds()<<std::endl;
-        //std::cout<<"Iprime.bounds = "<<Iprime.getBounds()<<"  "<<Iprime_view.getBounds()<<std::endl;
-        //std::cout<<"gal_mask(-1,1) = "<<gal_mask(-1,1)<<std::endl;
-        //std::cout<<"PSF_mask(-1,1) = "<<PSF_mask(-1,1)<<std::endl;
         fast_convolve_image_1(fgauss_view, fgauss_mask_view, PSF_resid_view, PSF_mask,
                               Iprime_view, gal_mask);
-        //std::cout<<"After convolve\n";
 
         /* Now that Iprime is constructed, we measure it */
         find_ellipmom_2(Iprime_cview, gal_mask, A_I, x0_gal, y0_gal, Mxxgal, Mxygal, Myygal,
                         rho4gal, 1.0e-6, num_iter);
-        //std::cout<<"After find_ellipmom_2\n";
-        //std::cout<<"A_I = "<<A_I<<std::endl;
-        //std::cout<<"x0,y0 = "<<x0_gal<<','<<y0_gal<<std::endl;
-        //std::cout<<"M = "<<Mxxgal<<','<<Mxygal<<','<<Myygal<<std::endl;
-        //std::cout<<"rho4gal = "<<rho4gal<<std::endl;
         if (num_iter == NUM_ITER_DEFAULT) {
             x0_gal = x0_old;
             y0_gal = y0_old;
@@ -1563,18 +1455,11 @@ namespace hsm {
         Tpsf  = Mxxpsf + Myypsf;
         e1psf = (Mxxpsf - Myypsf) / Tpsf;
         e2psf = 2 * Mxypsf / Tpsf;
-        //std::cout<<"T,e1,e2 gal = "<<Tgal<<','<<e1gal<<','<<e2gal<<std::endl;
-        //std::cout<<"T,e1,e2 psf = "<<Tpsf<<','<<e1psf<<','<<e2psf<<std::endl;
 
-        //std::cout<<"Before psf_corr_bj\n";
-        //std::cout<<"e1,e2 = "<<e1<<','<<e2<<std::endl;
         psf_corr_bj(Tpsf/Tgal, e1psf, e2psf, 0., e1gal, e2gal, 0.5*rho4gal-1., e1, e2); 
         /* Use 0 for radial 4th moment of PSF because it's been * re-Gaussianized.  */
-        //std::cout<<"After psf_corr_bj\n";
-        //std::cout<<"e1,e2 = "<<e1<<','<<e2<<std::endl;
 
         R = 1. - Tpsf/Tgal;
-        //std::cout<<"R = "<<R<<std::endl;
 
         return status;
     }
@@ -1604,10 +1489,6 @@ namespace hsm {
         ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est,
         unsigned long flags) 
     {
-        //std::cout<<"Start general_shear_estimator\n";
-        //std::cout<<"gal_mask(-1,1) = "<<gal_mask(-1,1)<<std::endl;
-        //std::cout<<"PSF_mask(-1,1) = "<<PSF_mask(-1,1)<<std::endl;
-        //std::cout<<"shear_est = "<<shear_est<<std::endl;
         unsigned int status = 0;
         int num_iter;
         double x0, y0, R;
@@ -1623,18 +1504,12 @@ namespace hsm {
             Mxx_psf = Myy_psf = PSF_data.sigma * PSF_data.sigma; Mxy_psf = 0.;
             find_ellipmom_2(PSF_image, PSF_mask, A_psf, x0, y0, Mxx_psf, Mxy_psf, Myy_psf,
                             rho4_psf, 1.0e-6, num_iter);
-            //std::cout<<"After find_ellipmom_2\n";
-            //std::cout<<"A_psf = "<<A_psf<<std::endl;
-            //std::cout<<"x0,y0 = "<<x0<<','<<y0<<std::endl;
-            //std::cout<<"M_psf = "<<Mxx_psf<<','<<Mxy_psf<<','<<Myy_psf<<std::endl;
-            //std::cout<<"rho4_psf = "<<rho4_psf<<std::endl;
             if (num_iter == NUM_ITER_DEFAULT) {
                 return 1;
             } else {
                 PSF_data.x0 = x0;
                 PSF_data.y0 = y0;
                 PSF_data.sigma = std::pow( Mxx_psf * Myy_psf - Mxy_psf * Mxy_psf, 0.25);
-                //std::cout<<"PSF_data = "<<PSF_data.x0<<','<<PSF_data.y0<<','<<PSF_data.sigma<<std::endl;
             }
 
             /* Measure the galaxy */
@@ -1643,11 +1518,6 @@ namespace hsm {
             Mxx_gal = Myy_gal = gal_data.sigma * gal_data.sigma; Mxy_gal = 0.;
             find_ellipmom_2(gal_image, gal_mask, A_gal, x0, y0, Mxx_gal, Mxy_gal,
                             Myy_gal, rho4_gal, 1.0e-6, num_iter);
-            //std::cout<<"After find_ellipmom_2\n";
-            //std::cout<<"A_gal = "<<A_gal<<std::endl;
-            //std::cout<<"x0,y0 = "<<x0<<','<<y0<<std::endl;
-            //std::cout<<"M_gal = "<<Mxx_gal<<','<<Mxy_gal<<','<<Myy_gal<<std::endl;
-            //std::cout<<"rho4_gal = "<<rho4_gal<<std::endl;
             if (num_iter == NUM_ITER_DEFAULT) {
                 return 1;
             } else {
@@ -1655,7 +1525,6 @@ namespace hsm {
                 gal_data.y0 = y0;
                 gal_data.sigma = std::pow( Mxx_gal * Myy_gal - Mxy_gal * Mxy_gal, 0.25);
                 gal_data.flux = 2.0 * A_gal;
-                //std::cout<<"gal_data = "<<gal_data.x0<<','<<gal_data.y0<<','<<gal_data.sigma<<','<<gal_data.flux<<std::endl;
             }
 
             /* Perform PSF correction */
@@ -1692,12 +1561,6 @@ namespace hsm {
                 PSF_data.y0, PSF_data.sigma, gal_data.flux);
             gal_data.meas_type = 'e';
             gal_data.responsivity = 1.;
-
-            //std::cout<<"After psf_corr_regauss\n";
-            //std::cout<<"PSPSFata = "<<PSF_data.x0<<','<<PSF_data.y0<<','<<PSF_data.sigma<<std::endl;
-            //std::cout<<"gal_data = "<<gal_data.x0<<','<<gal_data.y0<<','<<gal_data.sigma<<','<<gal_data.flux<<std::endl;
-            //std::cout<<"e1,e2 = "<<gal_data.e1<<','<<gal_data.e2<<std::endl;
-            //std::cout<<"R = "<<R<<std::endl;
 
         } else {
             return 0x4000;
