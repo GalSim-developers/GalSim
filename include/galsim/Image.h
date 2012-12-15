@@ -452,6 +452,13 @@ namespace galsim {
         const ImageView<T>& operator=(const ImageView<T>& rhs) 
         { if (this != &rhs) copyFrom(rhs); return *this; }
 
+        /**
+         *  @brief Allow copy from a different type
+         */
+        template <typename U>
+        const ImageView<T>& operator=(const BaseImage<U>& rhs) 
+        { if (this != &rhs) copyFrom(rhs); return *this; }
+
         //@{
         /**
          *  @brief Assignment with a scalar.
@@ -553,6 +560,24 @@ namespace galsim {
          *  If not, an exception will be thrown.
          */
         void copyFrom(const BaseImage<T>& rhs) const;
+
+        /**
+         *  @brief Deep copy may be from a different type of image.
+         *
+         *  Do this inline, so we don't have to worry about instantiating all pairs of types.
+         */
+        template <class U>
+        void copyFrom(const BaseImage<U>& rhs) const
+        {
+            if (!this->getBounds().isSameShapeAs(rhs.getBounds()))
+                throw ImageError("Attempt im1 = im2, but bounds not the same shape");
+            for (int y=this->getYMin(), y2=rhs.getYMin(); y <= this->getYMax(); ++y, ++y2) {
+                iterator it1 = rowBegin(y);
+                const iterator ee = rowEnd(y);      
+                typename BaseImage<U>::const_iterator it2 = rhs.rowBegin(y2);
+                while (it1 != ee) *(it1++) = *(it2++);
+            }
+        }
     };
 
     /**
@@ -607,9 +632,12 @@ namespace galsim {
         { rhs.assignTo(view()); }
 
         /**
-         *  @brief If rhs is a BaseImage, then also get the scale
+         *  @brief If rhs is a BaseImage, then also get the scale.  
+         *
+         *  Also, BaseImage type doesn't have to match.
          */
-        Image(const BaseImage<T>& rhs) : BaseImage<T>(rhs.getBounds(), rhs.getScale())
+        template <typename U>
+        Image(const BaseImage<U>& rhs) : BaseImage<T>(rhs.getBounds(), rhs.getScale())
         { copyFrom(rhs); }
 
         /**
@@ -625,7 +653,14 @@ namespace galsim {
          *  @brief Repeat for Image to prevent compiler from making the default op=
          */
         Image<T>& operator=(const Image<T>& rhs)
-        { if (this != &rhs) view().copyFrom(rhs); return *this; }
+        { if (this != &rhs) copyFrom(rhs); return *this; }
+
+        /**
+         *  @brief Copy from BaseImage allowed for different types.
+         */
+        template <typename U>
+        Image<T>& operator=(const BaseImage<U>& rhs)
+        { if (this != &rhs) copyFrom(rhs); return *this; }
 
         //@{
         /**
@@ -780,7 +815,8 @@ namespace galsim {
          *  The bounds must be commensurate (i.e. the same shape).
          *  If not, an exception will be thrown.
          */
-        void copyFrom(const BaseImage<T>& rhs) { view().copyFrom(rhs); }
+        template <typename U>
+        void copyFrom(const BaseImage<U>& rhs) { view().copyFrom(rhs); }
     };
 
 } // namespace galsim
