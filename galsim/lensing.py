@@ -555,7 +555,7 @@ class PowerSpectrumRealizer(object):
         settings = np.seterr(invalid='ignore')
         kx = self.kx/(self.pixel_size*self.nx)
         ky = self.ky/(self.pixel_size*self.ny)
-        F = self.k**2 / (kx + 1j*ky)**2
+        F = self.k**2 / (ky + 1j*kx)**2
                 
         #Set the DC term to zero.
         F[0,0]=0.0
