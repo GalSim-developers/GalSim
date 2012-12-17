@@ -460,7 +460,7 @@ class PowerSpectrumRealizer(object):
         else:            self.amplitude_B = np.sqrt(self._generate_power_array(p_B))
 
 
-    def __call__(self, gd, new_power=False):
+    def __call__(self, gd, new_power=False, get_kappa=False):
         """Generate a realization of the current power spectrum.
         
         @param gd               A gaussian deviate to use when generating the shear fields.
@@ -501,11 +501,21 @@ class PowerSpectrumRealizer(object):
         g1_k = self._cos*E_k - self._sin*B_k
         g2_k = self._sin*E_k + self._cos*B_k
 
+        #Get kappa, the magnification field.
+        #Based on equations from the HyperSuprimeCam white paper
+        #TODO: add citation.
+        if get_kappa:
+            kappa_k = self.k**2 / (self.kx + 1j*self.ky)**2 * (g1_k + 1j*g2_k)
+            kappa_k[self.k==0] = 0
+            kappa = kappa_k.shape[0]*np.fft.irfft2(kappa_k, s=(self.nx,self.ny))
+
         #And go to real space to get the images
         g1=g1_k.shape[0]*np.fft.irfft2(g1_k, s=(self.nx,self.ny))
         g2=g2_k.shape[0]*np.fft.irfft2(g2_k, s=(self.nx,self.ny))
-
-        return g1, g2
+        if get_kappa:
+            return g1, g2, kappa
+        else:
+            return g1, g2
 
     def _generate_power_array(self, power_function):
         #Internal function to generate the result of a power function evaluated on a grid,
