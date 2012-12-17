@@ -148,11 +148,30 @@ class CorrFunc(base.GSObject):
             else:
                 newcf.setScale(dx)
             # Then draw this correlation function into an array
-            self.draw(newcf, dx=None) # setting dx=None here uses the newcf image scale set above
+            self.draw(newcf, dx=None, normalization="sb") # setting dx=None here uses the newcf
+                                                          # image scale set above
             # Roll to put the origin at the lower left pixel before FT-ing to get the PS...
             rolled_cf_array = utilities.roll2d(
                 newcf.array, (-newcf.array.shape[0] / 2, -newcf.array.shape[1] / 2))
-            rootps = np.sqrt(np.abs(np.fft.fft2(rolled_cf_array)) * np.product(image.array.shape))
+            # DEBUGGING UNDERSTANDING:
+            import matplotlib.pyplot as plt
+            plt.figure()
+            # plot this stored, internal representation of the discrete CF which will be used
+            # to generate the requested noise field
+            plt.pcolor(newcf.array[240-15:240+15, 240-15:240+15], vmax=1.1, vmin=-.1)
+            plt.colorbar()
+            plt.title("CF [internal]")
+            plt.savefig('cf_internal.png')
+            # Then calculate the sqrt(PS) that will be used to generate the actual noise
+            rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
+            plt.figure()
+            plt.pcolor(np.log10(rootps**2), vmax=8, vmin=0.)
+            plt.colorbar()
+            # Print some useful info then plot
+            print 'Mean PS [internal]  = {:f}'.format(
+                np.mean(rootps**2) / np.product(image.array.shape))
+            plt.title("log10(PS) [internal]")
+            plt.savefig('logps_internal.png')
             # Then add this and the relevant scale to the _rootps_store for later use
             self._rootps_store.append((rootps, newcf.getScale()))
 
