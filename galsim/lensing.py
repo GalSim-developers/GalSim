@@ -430,7 +430,7 @@ class PowerSpectrumRealizer(object):
         self.k=((kx/(pixel_size*nx))**2+(ky/(pixel_size*ny))**2)**0.5
         
         #Compute the spin weightings
-        self._cos, self._sin = self._generate_spin_weightings()
+        self._cos, self._sin, self._kap = self._generate_spin_weightings()
         
         #Optionally (because this may be the first time we run this, or we may be about to change
         #these functions), re-build the power grids for the new sizes
@@ -508,24 +508,12 @@ class PowerSpectrumRealizer(object):
         if get_kappa:
             #Get the part that ensures consistency with the shears
             kappa_k = (g1_k + 1j*g2_k)
-
-            #Get the geometric factor.  
-            #The clearest way to do this unfortunately 
-            #has a divide by zero at k_x = k_y = 0, so we suppress
-            #that warning.
-            settings = np.seterr(invalid='ignore')
-            kx = self.kx/(self.pixel_size*self.nx)
-            ky = self.ky/(self.pixel_size*self.ny)
-            f = self.k**2 / (kx + 1j*ky)**2
-            np.seterr(**settings)
-
+   
             #Preserving the structure of the Fourier packing,
             #we scale by the geometric factor.  It is real so
             #we do not need a conjugation
-            kappa_k[  self.kx, self.ky] *= f
-            kappa_k[ -self.kx, self.ky] *= f
-            #Set the DC term to zero.
-            kappa_k[0,0] = 0
+            kappa_k[  self.kx, self.ky] *= self._kap
+            kappa_k[ -self.kx, self.ky] *= self._kap
 
             #Transform into real space
             kappa = kappa_k.shape[0]*np.fft.irfft2(kappa_k,s=(self.nx,self.ny))
@@ -559,7 +547,21 @@ class PowerSpectrumRealizer(object):
         S[kx,ky]=np.sin(TwoPsi)
         C[-kx,ky]=-np.cos(TwoPsi)
         S[-kx,ky]=np.sin(TwoPsi)
-        return C,S
+
+        #Get the geometric factor.  
+        #The clearest way to do this unfortunately 
+        #has a divide by zero at k_x = k_y = 0, so we suppress
+        #that warning.
+        settings = np.seterr(invalid='ignore')
+        kx = self.kx/(self.pixel_size*self.nx)
+        ky = self.ky/(self.pixel_size*self.ny)
+        F = self.k**2 / (kx + 1j*ky)**2
+                
+        #Set the DC term to zero.
+        F[0,0]=0.0
+        np.seterr(**settings)
+
+        return C,S,F
 
 class Cosmology(object):
     """Basic cosmology calculations.
