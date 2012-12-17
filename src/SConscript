@@ -34,7 +34,9 @@ for d in subdirs:
 
 if env1['MEM_TEST']:
     print 'Using mmgr.cpp'
-    lib_files += ['mmgr.cpp']
+    # put mmgr.cpp first, so its static variable is the first one registered.
+    # otherwise the memory leak reports a bunch of static variables being leaks.
+    lib_files.insert(0, 'mmgr.cpp')
 
 # Library file containing generic code
 obj_lib = env1.SharedObject(lib_files)
