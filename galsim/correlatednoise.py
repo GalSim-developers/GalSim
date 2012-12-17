@@ -127,7 +127,12 @@ class CorrFunc(base.GSObject):
         if dev is None:
             g = _galsim.GaussianDeviate()
         else:
-            g = _galsim.GaussianDeviate(dev)
+            if isinstance(dev, _galsim.BaseDeviate):
+                g = _galsim.GaussianDeviate(dev)
+            else:
+                raise TypeError(
+                    "Supplied input keyword dev must be a galsim.BaseDeviate or derived class "+
+                    "(e.g. galsim.UniformDeviate, galsim.GaussianDeviate).")
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field:
 
