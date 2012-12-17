@@ -97,7 +97,6 @@ class CorrFunc(base.GSObject):
             (np.sqrt(self.original_ps_image.array), self.original_cf_image.getScale())]
 
         # Then initialize...
-        # TODO: Decide on best default interpolant, and allow optional setting via kwarg on init
         base.GSObject.__init__(
             self, _galsim.SBCorrFunc(self.original_cf_image, self.interpolant, dx=dx))
 
