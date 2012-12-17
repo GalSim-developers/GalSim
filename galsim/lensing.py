@@ -507,13 +507,12 @@ class PowerSpectrumRealizer(object):
         #TODO: add citation.
         if get_kappa:
             #Get the part that ensures consistency with the shears
-            kappa_k = (g1_k + 1j*g2_k)
+            kappa_k = g1_k + 1j*g2_k
    
             #Preserving the structure of the Fourier packing,
-            #we scale by the geometric factor.  It is real so
-            #we do not need a conjugation
+            #we scale by the geometric factor.
             kappa_k[  self.kx, self.ky] *= self._kap
-            kappa_k[ -self.kx, self.ky] *= self._kap
+            kappa_k[ -self.kx, self.ky] *= np.conjugate(self._kap)
 
             #Transform into real space
             kappa = kappa_k.shape[0]*np.fft.irfft2(kappa_k,s=(self.nx,self.ny))
