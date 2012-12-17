@@ -109,13 +109,19 @@ class CorrFunc(base.GSObject):
         If an optional random deviate `dev` is supplied, the application of noise will share the
         same underlying random number generator when generating the vector of unit variance
         Gaussians that seed the (Gaussian) noise field.
+
+        @param image The input Image object.
+        @param dx    The pixel scale to adopt for the input image; should use the same units the
+                     CorrFunc instance for which this is a method.  If is specified,
+                     `image.getScale()` is used instead.
+        @param dev   Optional random deviate from which to draw pseudo-random numbers in generating
+                     the noise field.
         """
         # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
         # noise according to the correlation function represented by this instance.  An alternative
-        # would be to use the covariance matrices and eigendecomposition.  However, although the
-        # latter is necessary for whitening, it is an O(N^6) operations for an NxN image!
-        # FFT-based noise realization is O(2 N^2 log[N]) so we use it for this simpler (non-
-        # whitening) application.
+        # would be to use the covariance matrices and eigendecomposition.  However, it is O(N^6)
+        # operations for an NxN image!  FFT-based noise realization is O(2 N^2 log[N]) so we use it
+        # for noise generation applications.
 
         # Set up the Gaussian random deviate we will need later
         if dev is None:
