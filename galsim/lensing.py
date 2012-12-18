@@ -430,7 +430,7 @@ class PowerSpectrumRealizer(object):
         self.k=((kx/(pixel_size*nx))**2+(ky/(pixel_size*ny))**2)**0.5
         
         #Compute the spin weightings
-        self._cos, self._sin, self._kap = self._generate_spin_weightings()
+        self._cos, self._sin = self._generate_spin_weightings()
         
         #Optionally (because this may be the first time we run this, or we may be about to change
         #these functions), re-build the power grids for the new sizes
@@ -503,16 +503,29 @@ class PowerSpectrumRealizer(object):
         g2_k = self._sin*E_k + self._cos*B_k
 
         #Get kappa, the magnification field.
-        #Based on equations from the HyperSuprimeCam white paper
-        #TODO: add citation.
         if get_kappa:
-            #Get the part that ensures consistency with the shears
-            kappa_k = g1_k + 1j*g2_k
-   
-            #Preserving the structure of the Fourier packing,
-            #we scale by the geometric factor.
-            kappa_k[  self.kx, self.ky] *= self._kap
-            kappa_k[ -self.kx, self.ky] *= np.conjugate(self._kap)
+            #Convert the self.kx, which are indices, into
+            #kx, which are wavenumbers
+            kx = self.kx/(self.pixel_size*self.nx)
+            ky = self.ky/(self.pixel_size*self.ny)
+
+            #Set up the convergence field in Fourier space - 
+            #same structure as the shear fields
+            kappa_k = np.zeros_like(g1_k)
+
+            #Compute the convergence fourier components
+            #using the simple relation in Kaiser & Squires 1994, equation 2.1.12
+            #To avoid NaNs we set the (0,0) DC term in k**2 to unity first, and then 
+            #set the corresponding kappa term to zero manually
+            k2 = self.k**2
+            k2[0,0] = 1
+            kappa_k[ self.kx, self.ky] =  -g1_k[ self.kx, self.ky] * (kx**2 - ky**2) / k2
+            kappa_k[ self.kx, self.ky] += -g2_k[ self.kx, self.ky] * 2*kx * ky / k2
+            kappa_k[-self.kx, self.ky] =  -g1_k[-self.kx, self.ky] * ((-kx)**2 - ky**2) / k2
+            kappa_k[-self.kx, self.ky] += -g2_k[-self.kx, self.ky] * 2*(-kx) * ky / k2
+
+            #Set the DC term to zero
+            kappa_k[0,0] = 0
 
             #Transform into real space
             kappa = kappa_k.shape[0]*np.fft.irfft2(kappa_k,s=(self.nx,self.ny))
@@ -547,20 +560,7 @@ class PowerSpectrumRealizer(object):
         C[-kx,ky]=-np.cos(TwoPsi)
         S[-kx,ky]=np.sin(TwoPsi)
 
-        #Get the geometric factor.  
-        #The clearest way to do this unfortunately 
-        #has a divide by zero at k_x = k_y = 0, so we suppress
-        #that warning.
-        settings = np.seterr(invalid='ignore')
-        kx = self.kx/(self.pixel_size*self.nx)
-        ky = self.ky/(self.pixel_size*self.ny)
-        F = self.k**2 / (ky + 1j*kx)**2
-                
-        #Set the DC term to zero.
-        F[0,0]=0.0
-        np.seterr(**settings)
-
-        return C,S,F
+        return C,S
 
 class Cosmology(object):
     """Basic cosmology calculations.
