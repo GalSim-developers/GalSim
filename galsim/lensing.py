@@ -557,8 +557,8 @@ class PowerSpectrumRealizer(object):
         TwoPsi=2*np.arctan2(1.0*self.ky, 1.0*self.kx)
         C[kx,ky]=np.cos(TwoPsi)
         S[kx,ky]=np.sin(TwoPsi)
-        C[-kx,ky]=-np.cos(TwoPsi)
-        S[-kx,ky]=np.sin(TwoPsi)
+        C[-kx,ky]=np.cos(TwoPsi)
+        S[-kx,ky]=-np.sin(TwoPsi)
 
         return C,S
 
