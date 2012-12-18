@@ -52,6 +52,7 @@ obj_mod = env1.SharedObject(mod_files)
 
 mod = env1.LoadableModule(os.path.join('#galsim','_galsim'), obj_mod,
                           LDMODULEPREFIX='', LDMODULESUFFIX='.so')
+
 mod_targets = [mod]
 
 # NB: With LoadableModule (rather than SharedLibrary), we don't need the RenameLib stuff on Macs.
@@ -62,6 +63,9 @@ if 'install' in COMMAND_LINE_TARGETS:
 
     installed_mod = env1.Install(dir=python_install_dir, source=mod_targets)
     env1.Alias(target='install', source=installed_mod)
+    env['all_builds'] += installed_mod
+else:
+    env['all_builds'] += mod
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
     # There is no env.Uninstall method, we must build our own

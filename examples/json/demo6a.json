@@ -19,7 +19,7 @@
        
 "#" : "New features introduced in this demo:",
 
-"#" : "- input : real_catalog (file_name, image_dir, preload)",
+"#" : "- input : real_catalog (file_name, dir, image_dir, preload)",
 "#" : "- obj type : RealGalaxy (index)",
 "#" : "- obj : rotate ",
 "#" : "- obj : magnify",
