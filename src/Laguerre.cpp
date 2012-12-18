@@ -213,13 +213,14 @@ namespace galsim {
         }
     }
 
-    tmv::Matrix<double>* LVector::basis(
+    boost::shared_ptr<tmv::Matrix<double> > LVector::basis(
         const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
         int order, double sigma) 
     {
         assert(xunit.size()==yunit.size());
         //**/Stopwatch s; s.start();
-        tmv::Matrix<double>* mr = new tmv::Matrix<double>(xunit.size(), PQIndex::size(order));
+        boost::shared_ptr<tmv::Matrix<double> > mr(
+            new tmv::Matrix<double>(xunit.size(), PQIndex::size(order)));
         //**/s.stop(); std::cerr << "setup: " << s << "sec" << std::endl;
         basis(*mr, xunit, yunit, order, sigma);
         return mr;
@@ -240,12 +241,13 @@ namespace galsim {
         }
     }
 
-    tmv::Matrix<double>* LVector::design(
+    boost::shared_ptr<tmv::Matrix<double> > LVector::design(
         const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
         const tmv::Vector<double>& invsig, int order, double sigma) 
     {
         //**/Stopwatch s; s.start();
-        tmv::Matrix<double>* mr = new tmv::Matrix<double>(xunit.size(), PQIndex::size(order),0.);
+        boost::shared_ptr<tmv::Matrix<double> > mr(
+            new tmv::Matrix<double>(xunit.size(), PQIndex::size(order),0.));
         //**/s.stop(); std::cerr << "setup: " << s << "sec" << std::endl;
         design(*mr, xunit, yunit, invsig, order, sigma);
         return mr;
