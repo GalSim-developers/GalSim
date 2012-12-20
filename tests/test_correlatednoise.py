@@ -466,3 +466,20 @@ def test_output_generation_magnified():
             testim.array, refim.array, decimal=decimal_approx,
             err_msg="Generated noise field (scaled) does not match input correlation properties.")
 
+if __name__ == "__main__":
+    test_uncorrelated_noise_zero_lag()
+    test_uncorrelated_noise_nonzero_lag()
+    test_uncorrelated_noise_symmetry()
+    test_uncorrelated_noise_90degree_rotation()
+    test_xcorr_noise_basics()
+    test_ycorr_noise_basics()
+    test_xcorr_noise_symmetry()
+    test_ycorr_noise_symmetry()
+    test_90degree_rotation()
+    test_arbitrary_rotation()
+    test_scaling_magnification()
+    test_draw()
+    test_output_generation_basic()
+    test_output_generation_rotated()
+    test_output_generation_magnified()
+
