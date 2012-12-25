@@ -203,7 +203,6 @@ def EstimateShearHSM(gal_image, PSF_image, gal_mask_image = None, sky_var = 0.0,
                              HSMShapeData object.
     @return                  A HSMShapeData object containing the results of shape measurement.
     """
-    import numpy as np
     gal_image_view = gal_image.view()
     PSF_image_view = PSF_image.view()
     # if no mask image was supplied, make an int array (the same size as the galaxy image) filled
@@ -213,6 +212,7 @@ def EstimateShearHSM(gal_image, PSF_image, gal_mask_image = None, sky_var = 0.0,
     else:
         # check the supplied mask - is it the right type?  does it have the right bounds?  any
         # unknown values?
+        import numpy as np
         if gal_mask_image.bounds != gal_image.bounds:
             raise ValueError("Mask image does not have same bounds as the galaxy image!")
         if isinstance(gal_mask_image.view(), galsim.ImageViewI) == False:
@@ -292,7 +292,6 @@ def FindAdaptiveMom(object_image, object_mask_image = None, guess_sig = 5.0, pre
                              HSMShapeData object.
     @return                  A HSMShapeData object containing the results of moment measurement.
     """
-    import numpy as np
     object_image_view = object_image.view()
     # if no mask image was supplied, make an int array (the same size as the galaxy image) filled
     # with 1's
@@ -301,6 +300,7 @@ def FindAdaptiveMom(object_image, object_mask_image = None, guess_sig = 5.0, pre
     else:
         # check the supplied mask - is it the right type?  does it have the right bounds?  any
         # unknown values?
+        import numpy as np
         if object_mask_image.bounds != object_image.bounds:
             raise ValueError("Mask image does not have same bounds as the object image!")
         if isinstance(object_mask_image.view(), galsim.ImageViewI) == False:
