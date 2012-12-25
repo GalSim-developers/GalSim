@@ -177,7 +177,111 @@ def test_shearest_precomputed():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_masks():
+    """Test that moments and shear estimation routines respond appropriately to masks."""
+    # set up some toy galaxy and PSF
+    my_sigma = 1.0
+    my_pixscale = 0.1
+    my_g1 = 0.15
+    my_g2 = -0.4
+    imsize = 256
+    g = galsim.Gaussian(sigma = my_sigma)
+    p = galsim.Gaussian(sigma = my_sigma) # the ePSF is Gaussian (kind of silly but it means we can
+                                     # predict results exactly)
+    g.applyShear(g1=my_g1, g2=my_g2)
+    obj = galsim.Convolve(g, p)
+    im = galsim.ImageF(imsize, imsize)
+    p_im = galsim.ImageF(imsize, imsize)
+    im = obj.draw(image = im, dx = my_pixscale)
+    p_im = p.draw(image = p_im, dx = my_pixscale)
+
+    # make some screwy masks that should cause issues, and check that the exception is thrown
+    ## mask of floats
+    mask_im = galsim.ImageF(imsize, imsize)
+    np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, mask_im)
+    np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, mask_im)
+    ## mask different size from image
+    mask_im = galsim.ImageI(imsize, 2*imsize)
+    np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, mask_im)
+    np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, mask_im)
+    ## mask has weird values
+    mask_im = galsim.ImageI(imsize, imsize)-3
+    np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, mask_im)
+    np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, mask_im)
+    ## mask excludes all pixels
+    mask_im = galsim.ImageI(imsize, imsize)
+    np.testing.assert_raises(RuntimeError, galsim.FindAdaptiveMom, im, mask_im)
+    np.testing.assert_raises(RuntimeError, galsim.EstimateShearHSM, im, p_im, mask_im)
+
+    # check moments, shear without mask
+    resm = im.FindAdaptiveMom()
+    ress = galsim.EstimateShearHSM(im, p_im)
+
+    # check moments, shear with mask that includes all pixels
+    maskall1 = galsim.ImageI(imsize, imsize) + 1
+    resm_maskall1 = im.FindAdaptiveMom(maskall1)
+    ress_maskall1 = galsim.EstimateShearHSM(im, p_im, maskall1)
+    np.testing.assert_equal(resm.observed_shape.e1, resm_maskall1.observed_shape.e1,
+        err_msg="e1 from FindAdaptiveMom changes when using inclusive mask")
+    np.testing.assert_equal(resm.observed_shape.e2, resm_maskall1.observed_shape.e2,
+        err_msg="e2 from FindAdaptiveMom changes when using inclusive mask")
+    np.testing.assert_equal(resm.moments_sigma, resm_maskall1.moments_sigma,
+        err_msg="sigma from FindAdaptiveMom changes when using inclusive mask")
+    np.testing.assert_equal(ress.observed_shape.e1, ress_maskall1.observed_shape.e1,
+        err_msg="observed e1 from EstimateShearHSM changes when using inclusive mask")
+    np.testing.assert_equal(ress.observed_shape.e2, ress_maskall1.observed_shape.e2,
+        err_msg="observed e2 from EstimateShearHSM changes when using inclusive mask")
+    np.testing.assert_equal(ress.moments_sigma, ress_maskall1.moments_sigma,
+        err_msg="observed sigma from EstimateShearHSM changes when using inclusive mask")
+    np.testing.assert_equal(ress.corrected_e1, ress_maskall1.corrected_e1,
+        err_msg="corrected e1 from EstimateShearHSM changes when using inclusive mask")
+    np.testing.assert_equal(ress.corrected_e2, ress_maskall1.corrected_e2,
+        err_msg="corrected e2 from EstimateShearHSM changes when using inclusive mask")
+    np.testing.assert_equal(ress.resolution_factor, ress_maskall1.resolution_factor,
+        err_msg="resolution factor from EstimateShearHSM changes when using inclusive mask")
+
+    # check moments and shears with mask of edges, should be nearly the same
+    # (this seems dumb, but it's helpful for keeping track of whether the pointers in the C++ code
+    # are being properly updated despite the masks.  If we monkey in that code again, it will be a
+    # useful check.)
+    maskedge = galsim.ImageI(imsize, imsize) + 1
+    xmin = maskedge.xmin
+    xmax = maskedge.xmax
+    ymin = maskedge.ymin
+    ymax = maskedge.ymax
+    edgenum = 3
+    for ind1 in range(xmin, xmax+1):
+        for ind2 in range(ymin, ymax+1):
+            if (ind1 <= (xmin+edgenum)) or (ind1 >= (xmax-edgenum)) or (ind2 <= (ymin+edgenum)) or (ind2 >= (ymax-edgenum)):
+                maskedge.setValue(ind1, ind2, 0)
+    resm_maskedge = im.FindAdaptiveMom(maskedge)
+    ress_maskedge = galsim.EstimateShearHSM(im, p_im, maskedge)
+    test_decimal = 4
+    np.testing.assert_almost_equal(resm.observed_shape.e1, resm_maskedge.observed_shape.e1,
+        decimal=test_decimal, err_msg="e1 from FindAdaptiveMom changes when masking edge")
+    np.testing.assert_almost_equal(resm.observed_shape.e2, resm_maskedge.observed_shape.e2,
+        decimal=test_decimal, err_msg="e2 from FindAdaptiveMom changes when masking edge")
+    np.testing.assert_almost_equal(resm.moments_sigma, resm_maskedge.moments_sigma,
+        decimal=test_decimal, err_msg="sigma from FindAdaptiveMom changes when masking edge")
+    np.testing.assert_almost_equal(ress.observed_shape.e1, ress_maskedge.observed_shape.e1,
+        decimal=test_decimal, err_msg="observed e1 from EstimateShearHSM changes when masking edge")
+    np.testing.assert_almost_equal(ress.observed_shape.e2, ress_maskedge.observed_shape.e2,
+        decimal=test_decimal, err_msg="observed e2 from EstimateShearHSM changes when masking edge")
+    np.testing.assert_almost_equal(ress.moments_sigma, ress_maskedge.moments_sigma,
+        decimal=test_decimal,
+        err_msg="observed sigma from EstimateShearHSM changes when masking edge")
+    np.testing.assert_almost_equal(ress.corrected_e1, ress_maskedge.corrected_e1,
+        decimal=test_decimal,
+        err_msg="corrected e1 from EstimateShearHSM changes when masking edge")
+    np.testing.assert_almost_equal(ress.corrected_e2, ress_maskedge.corrected_e2,
+        decimal=test_decimal,
+        err_msg="corrected e2 from EstimateShearHSM changes when masking edge")
+    np.testing.assert_almost_equal(ress.resolution_factor, ress_maskedge.resolution_factor,
+        decimal=test_decimal,
+        err_msg="resolution factor from EstimateShearHSM changes when masking edge")
+
 if __name__ == "__main__":
     test_moments_basic()
     test_shearest_basic()
     test_shearest_precomputed()
+    test_masks()
