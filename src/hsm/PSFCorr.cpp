@@ -54,6 +54,12 @@ namespace hsm {
     // keeping galaxies that would have failed for that reason.  If they later turn out to be too
     // small to really use, this will be reflected in the final estimate of the resolution factor,
     // and they can be rejected after the fact.
+#define MAX_MOMENT_NSIG2 25.0
+    // MAX_MOMENT_NSIG2: if this is defined, then it's used to decide how many sigma^2 into the
+    // Gaussian adaptive moment to extend the moment calculation, with the weight being defined as 0
+    // beyond this point.  i.e., if MAX_MOMENT_NSIG2 is set to 25, then the Gaussian is extended to
+    // (r^2/sigma^2)=25, with proper accounting for elliptical geometry.  If this parameter is not
+    // defined, then the weight is never set to zero and the exponential function is always called.
 
     // Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.
     template <typename T, typename U>
@@ -531,7 +537,8 @@ namespace hsm {
      * rho4 = int rho^4 f(r) w(r)
      *
      * where w(r) = exp(-rho^2/2), rho^2 = (x-x0) * M^{-1} * (y-y0),
-     * M = adaptive covariance matrix.
+     * M = adaptive covariance matrix, and note that the weight may be set to zero for rho^2 >
+     * MAX_MOMENT_NSIG2 if that parameter is defined.
      *
      * Arguments:
      *   data: the input image (ImageView format)
@@ -594,18 +601,24 @@ namespace hsm {
                  */
                 x_x0 += 1.;
                 double rho2 = Minv_yy__y_y0__y_y0 + TwoMinv_xy__y_y0*x_x0 + *(mxxptr++);
-                double intensity = std::exp(-0.5 * rho2) * *(imageptr++);
+#ifdef MAX_MOMENT_NSIG2
+                if (rho2 < MAX_MOMENT_NSIG2) {
+#endif
+                    double intensity = std::exp(-0.5 * rho2) * *(imageptr++);
 
-                /* Now do the addition */
-                double intensity__x_x0 = intensity * x_x0;
-                double intensity__y_y0 = intensity * y_y0;
-                A    += intensity;
-                Bx   += intensity__x_x0;
-                By   += intensity__y_y0;
-                Cxx  += intensity__x_x0 * x_x0;
-                Cxy  += intensity__x_x0 * y_y0;
-                Cyy  += intensity__y_y0 * y_y0;
-                rho4w+= intensity * rho2 * rho2;
+                    /* Now do the addition */
+                    double intensity__x_x0 = intensity * x_x0;
+                    double intensity__y_y0 = intensity * y_y0;
+                    A    += intensity;
+                    Bx   += intensity__x_x0;
+                    By   += intensity__y_y0;
+                    Cxx  += intensity__x_x0 * x_x0;
+                    Cxy  += intensity__x_x0 * y_y0;
+                    Cyy  += intensity__y_y0 * y_y0;
+                    rho4w+= intensity * rho2 * rho2;
+#ifdef MAX_MOMENT_NSIG2
+                }
+#endif
             }
         }
     }
