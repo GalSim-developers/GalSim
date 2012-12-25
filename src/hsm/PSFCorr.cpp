@@ -617,6 +617,9 @@ namespace hsm {
                     Cyy  += intensity__y_y0 * y_y0;
                     rho4w+= intensity * rho2 * rho2;
 #ifdef MAX_MOMENT_NSIG2
+                } else {
+                    // just step to the next pixel in the image, don't do any math
+                    *(imageptr++);
                 }
 #endif
             }
