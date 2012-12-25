@@ -26,6 +26,28 @@
 #include "TMV.h"
 #include "hsm/PSFCorr.h"
 
+//#define DEBUGLOGGING
+#ifdef DEBUGLOGGING
+#include <fstream>
+std::ostream* dbgout = new std::ofstream("debug.out");
+int verbose_level = 2;
+// There are three levels of verbosity which can be helpful when debugging,
+// which are written as dbg, xdbg, xxdbg (all defined in Std.h).
+// It's Mike's way to have debug statements in the code that are really easy to turn 
+// on and off.
+//
+// If DEBUGLOGGING is #defined, then these write out to *dbgout, according to the value
+// of verbose_level.
+// dbg requires verbose_level >= 1
+// xdbg requires verbose_level >= 2
+// xxdbg requires verbose_level >= 3
+//
+// If DEBUGLOGGING is not defined, the all three becomes just `if (false) std::cerr`,
+// so the compiler parses the statement fine, but trivially optimizes the code away,
+// so there is no efficiency hit from leaving them in the code.
+#endif
+
+
 namespace galsim {
 namespace hsm {
 
@@ -82,6 +104,8 @@ namespace hsm {
         ObjectData gal_data, PSF_data;
         double amp, m_xx, m_xy, m_yy;
 
+        dbg<<"Start EstimateShearHSMView"<<std::endl;
+        dbg<<"Setting defaults and so on before calling general_shear_estimator"<<std::endl;
         // Set defaults etc. and pass to general_shear_estimator
         if (guess_x_centroid != -1000.0) {
             gal_data.x0 = guess_x_centroid;
@@ -113,10 +137,12 @@ namespace hsm {
         ConstImageView<int> gal_mask_view = gal_mask_image;
         ConstImageView<int> PSF_mask_view = PSF_mask.view();
         try {
+            dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
             find_ellipmom_2(gal_image_cview, gal_mask_view, amp, gal_data.x0,
                             gal_data.y0, m_xx, m_xy, m_yy, results.moments_rho4,
                             precision, results.moments_n_iter);
             // repackage outputs to the output CppHSMShapeData struct
+            dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
             results.moments_amp = 2.0*amp;
             results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
             results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_yy));
@@ -124,9 +150,11 @@ namespace hsm {
 
             // and if that worked, try doing PSF correction
             gal_data.sigma = results.moments_sigma;
+            dbg<<"About to get shear using general_shear_estimator"<<std::endl;
             results.correction_status = general_shear_estimator(
                 gal_image_cview, gal_mask_view, PSF_image_cview, PSF_mask_view,
                 gal_data, PSF_data, shear_est, flags);
+            dbg<<"Repackaging general_shear_estimator results"<<std::endl;
 
             if (gal_data.meas_type == 'e') {
                 results.corrected_shape.setE1E2(gal_data.e1, gal_data.e2);
@@ -152,9 +180,11 @@ namespace hsm {
         }
         catch (char *err_msg) {
             results.error_message = err_msg;
+            dbg<<"Caught an error: "<<err_msg<<std::endl;
             throw HSMError(err_msg);
         }
 
+        dbg<<"Exiting EstimateShearHSMView"<<std::endl;
         return results;
     }
 
@@ -166,6 +196,8 @@ namespace hsm {
         double guess_sig, double precision, double guess_x_centroid,
         double guess_y_centroid) 
     {
+        dbg<<"Start FindAdaptiveMomView"<<std::endl;
+        dbg<<"Setting defaults and so on before calling find_ellipmom_2"<<std::endl;
         // define variables, create output CppHSMShapeData struct, etc.
         CppHSMShapeData results;
         double amp, m_xx, m_xy, m_yy;
@@ -190,9 +222,11 @@ namespace hsm {
         ConstImageView<T> object_image_cview = object_image;
         ConstImageView<int> object_mask_view = object_mask_image;
         try {
+            dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
             find_ellipmom_2(object_image_cview, object_mask_view, amp, results.moments_centroid.x,
                             results.moments_centroid.y, m_xx, m_xy, m_yy, results.moments_rho4,
                             precision, results.moments_n_iter);
+            dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
 
             // repackage outputs from find_ellipmom_2 to the output CppHSMShapeData struct
             results.moments_amp = 2.0*amp;
@@ -207,9 +241,11 @@ namespace hsm {
             results.moments_centroid.y = 0.0;
             results.moments_rho4 = -1.0;
             results.moments_n_iter = 0;
+            dbg<<"Caught an error: "<<err_msg<<std::endl;
             throw HSMError(err_msg);
         }
 
+        dbg<<"Exiting FindAdaptiveMomView"<<std::endl;
         return results;
     }
 
@@ -565,10 +601,14 @@ namespace hsm {
         double Mxy, double Myy, double& A, double& Bx, double& By, double& Cxx,
         double& Cxy, double& Cyy, double& rho4w) 
     {
+        //long npix=0;
         long xmin = data.getXMin();
         long xmax = data.getXMax();
         long ymin = data.getYMin();
         long ymax = data.getYMax();
+        dbg<<"Entering find_ellipmom_1 with Mxx, Myy, Mxy: "<<Mxx<<" "<<Myy<<" "<<Mxy<<std::endl;
+        dbg<<"x0, y0: "<<x0<<" "<<y0<<std::endl;
+        dbg<<"xmin, xmax: "<<xmin<<" "<<xmax<<std::endl;
 
         /* Compute M^{-1} for use in computing weights */
         double detM = Mxx * Myy - Mxy * Mxy;
@@ -598,35 +638,50 @@ namespace hsm {
             double TwoMinv_xy__y_y0 = TwoMinv_xy * y_y0;
             double Minv_yy__y_y0__y_y0 = Minv_yy * y_y0 * y_y0;
             const double* mxxptr = Minv_xx__x_x0__x_x0.cptr();
-            for(long x=xmin;x<=xmax;x++) if (*(maskptr++)) {
-                /* Compute displacement from weight centroid, then
-                 * get elliptical radius and weight.
-                 */
-                x_x0 += 1.;
-                double rho2 = Minv_yy__y_y0__y_y0 + TwoMinv_xy__y_y0*x_x0 + *(mxxptr++);
+            for(long x=xmin;x<=xmax;x++) {
+                x_x0 += 1.; // do this increment to x_x0 out here, before the following if
+                            // statement, because it has to happen whether we actually use the pixel
+                            // or not if we want to properly track where we are in the image
+                if (*(maskptr++)) {
+                    //npix++;
+                    /* Compute displacement from weight centroid, then
+                     * get elliptical radius and weight.
+                     */
+                    double rho2 = Minv_yy__y_y0__y_y0 + TwoMinv_xy__y_y0*x_x0 + *(mxxptr++);
+                    dbg<<"Using pixel: "<<x<<" "<<y<<" with value "<<*(imageptr)<<" rho2 "<<rho2<<" x_x0 "<<x_x0<<" y_y0 "<<y_y0<<std::endl;
 #ifdef MAX_MOMENT_NSIG2
-                if (rho2 < MAX_MOMENT_NSIG2) {
+                    if (rho2 < MAX_MOMENT_NSIG2) {
 #endif
-                    double intensity = std::exp(-0.5 * rho2) * *(imageptr++);
+                        double intensity = std::exp(-0.5 * rho2) * *(imageptr++);
 
-                    /* Now do the addition */
-                    double intensity__x_x0 = intensity * x_x0;
-                    double intensity__y_y0 = intensity * y_y0;
-                    A    += intensity;
-                    Bx   += intensity__x_x0;
-                    By   += intensity__y_y0;
-                    Cxx  += intensity__x_x0 * x_x0;
-                    Cxy  += intensity__x_x0 * y_y0;
-                    Cyy  += intensity__y_y0 * y_y0;
-                    rho4w+= intensity * rho2 * rho2;
+                        /* Now do the addition */
+                        double intensity__x_x0 = intensity * x_x0;
+                        double intensity__y_y0 = intensity * y_y0;
+                        A    += intensity;
+                        Bx   += intensity__x_x0;
+                        By   += intensity__y_y0;
+                        Cxx  += intensity__x_x0 * x_x0;
+                        Cxy  += intensity__x_x0 * y_y0;
+                        Cyy  += intensity__y_y0 * y_y0;
+                        rho4w+= intensity * rho2 * rho2;
 #ifdef MAX_MOMENT_NSIG2
-                } else {
-                    // just step to the next pixel in the image, don't do any math
-                    *(imageptr++);
-                }
+                    } else {
+                        // if we are skipping this pixel because it's too far from center of
+                        // Gaussian, then just increment the pointer to the next pixel in the image,
+                        // don't waste time doing any math for this pixel
+                        *(imageptr++);
+                    }
 #endif
+                } else {
+                    // we still have to increment pointers when jumping over masked pixels,
+                    // otherwise serious badness will happen.
+                    *(imageptr++);
+                    *(mxxptr++);
+                }
             }
         }
+        //dbg<<"Number of pixels used: "<<npix<<std::endl;
+        dbg<<"Exiting find_ellipmom_1 with results: "<<A<<" "<<Bx<<" "<<By<<" "<<Cxx<<" "<<Cyy<<" "<<Cxy<<" "<<rho4w<<std::endl;
     }
 
     /* find_ellipmom_2
