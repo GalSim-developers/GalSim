@@ -62,10 +62,10 @@ namespace hsm {
      * Describe the hsm shape-related parameters of some object (usually galaxy) before and after
      * PSF correction.  All ellipticities are defined as (1-q^2)/(1+q^2), with the 1st component
      * aligned with the pixel grid and the 2nd aligned at 45 degrees with respect to it.  There are
-     * two choices for measurement type: 'e' = Bernstein & Jarvis (2002) ellipticity, 'g' = shear
-     * estimator = shear*responsivity.  The sigma is defined based on the observed moments M_xx,
-     * M_xy, and M_yy as sigma = (Mxx Myy - M_xy^2)^(1/4) = [ det(M) ]^(1/4)
-     */
+     * two choices for measurement type: 'e' = Bernstein & Jarvis (2002) ellipticity (or
+     * distortion), 'g' = shear estimator = shear*responsivity.  The sigma is defined based on the
+     * observed moments M_xx, M_xy, and M_yy as sigma = (Mxx Myy - M_xy^2)^(1/4) = 
+     * [ det(M) ]^(1/4). */
     struct ObjectData 
     {
         double x0; ///< x centroid position within the postage stamp
@@ -82,10 +82,15 @@ namespace hsm {
     /**
      * @brief Struct containing information about the shape of an object.
      *
-     * This hsm representation of an object shape contains two CppShear objects, one for the
-     * observed shape and one after PSF correction.  It also contains information about what PSF
-     * correction was used; if no PSF correction was carried out and only the observed moments were
-     * measured, the PSF correction method will be 'None'.
+     * This representation of an object shape contains information about observed shapes and shape
+     * estimators after PSF correction.  It also contains information about what PSF correction was
+     * used; if no PSF correction was carried out and only the observed moments were measured, the
+     * PSF correction method will be 'None'.  Note that observed shapes are bounded to lie in the
+     * range |e| < 1 or |g| < 1, so they can be represented using a CppShear object.  In contrast,
+     * the PSF-corrected distortions and shears are not bounded at a maximum of 1 since they are
+     * shear estimators, and placing such a bound would bias the mean.  Thus, the corrected results
+     * are not represented using CppShear objects, since it may not be possible to make a meaningful
+     * per-object conversion from distortion to shear (e.g., if |e|>1).
      */
     struct CppHSMShapeData
     {
@@ -122,13 +127,30 @@ namespace hsm {
         /// @brief Status after carrying out PSF correction; -1 indicates no attempt to do so
         int correction_status;
 
-        /// @brief galsim::CppShear object representing the PSF-corrected shape
-        CppShear corrected_shape;
+        /// @brief Estimated e1 after correcting for effects of the PSF, for methods that return a
+        /// distortion.  Default value -10 if no correction carried out.
+        float corrected_e1;
+
+        /// @brief Estimated e2 after correcting for effects of the PSF, for methods that return a
+        /// distortion.  Default value -10 if no correction carried out.
+        float corrected_e2;
+
+        /// @brief Estimated g1 after correcting for effects of the PSF, for methods that return a
+        /// shear.  Default value -10 if no correction carried out.
+        float corrected_g1;
+
+        /// @brief Estimated g2 after correcting for effects of the PSF, for methods that return a
+        /// shear.  Default value -10 if no correction carried out.
+        float corrected_g2;
+
+        /// @brief 'e' for PSF correction methods that return a distortion, 'g' for methods that
+        /// return a shear.  "None" if PSF correction was not done.
+        std::string meas_type;
 
         /// @brief Shape measurement uncertainty sigma_gamma (not sigma_e) per component
         float corrected_shape_err;
 
-        /// @brief String indicating PSF-correction method; "None" if PSF correction was not done
+        /// @brief String indicating PSF-correction method; "None" if PSF correction was not done.
         std::string correction_method;
 
         /// @brief Resolution factor R_2; 0 indicates object is consistent with a PSF, 1 indicates
@@ -143,7 +165,8 @@ namespace hsm {
         CppHSMShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
             observed_shape(galsim::CppShear()), moments_sigma(-1.), moments_amp(-1.),
             moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
-            correction_status(-1), corrected_shape(galsim::CppShear()), corrected_shape_err(-1.),
+            correction_status(-1), corrected_e1(-10.), corrected_e2(-10.), corrected_g1(-10.), 
+            corrected_g2(-10.), meas_type("None"), corrected_shape_err(-1.),
             correction_method("None"), resolution_factor(-1.), error_message("")
         {}
     };

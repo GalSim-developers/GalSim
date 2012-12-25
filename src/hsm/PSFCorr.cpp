@@ -156,10 +156,13 @@ namespace hsm {
                 gal_data, PSF_data, shear_est, flags);
             dbg<<"Repackaging general_shear_estimator results"<<std::endl;
 
+            results.meas_type = gal_data.meas_type;
             if (gal_data.meas_type == 'e') {
-                results.corrected_shape.setE1E2(gal_data.e1, gal_data.e2);
+                results.corrected_e1 = gal_data.e1;
+                results.corrected_e2 = gal_data.e2;
             } else if (gal_data.meas_type == 'g') {
-                results.corrected_shape.setG1G2(gal_data.e1, gal_data.e2);
+                results.corrected_g1 = gal_data.e1;
+                results.corrected_g2 = gal_data.e2;
             } else {
                 throw "Unknown shape measurement type!\n";
             }

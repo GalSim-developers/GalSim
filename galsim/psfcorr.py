@@ -13,7 +13,10 @@ moment measurement and shear estimation are not accessible via config, only via 
 
 The moments that are estimated are "adaptive moments" (see the first paper cited above for details);
 that is, they use an elliptical Gaussian weight that is matched to the image of the object being
-measured.  The PSF correction includes several algorithms:
+measured.  The observed moments can be represented as a Gaussian sigma and a Shear object
+representing the shape.
+
+The PSF correction includes several algorithms:
 
 - One from Kaiser, Squires, & Broadhurts (1995), "KSB"
 
@@ -24,8 +27,12 @@ measured.  The PSF correction includes several algorithms:
 
 - One new method from Hirata & Seljak (2003), "REGAUSS"
 
-These are all based on correction of moments, but with different sets of assumptions.  For more
-detailed discussion on all of these algorithms, see the relevant papers above.
+These methods return shear (or shape) estimators, which may not in fact satisfy conditions like
+|e|<=1, and so they are represented simply as e1/e2 or g1/g2 (depending on the method) rather than
+using a Shear object, which IS required to satisfy |e|<=1. 
+
+These methods are all based on correction of moments, but with different sets of assumptions.  For
+more detailed discussion on all of these algorithms, see the relevant papers above.
 """
 
 class HSMShapeData(object):
@@ -65,7 +72,11 @@ class HSMShapeData(object):
     - correction_status: the status flag resulting from PSF correction; -1 indicates no attempt to
       measure, 0 indicates success.
 
-    - corrected_shape: a galsim.Shear object representing the PSF-corrected shape.
+    - corrected_e1, corrected_e2, corrected_g1, corrected_g2: floats representing the estimated
+      shear after removing the effects of the PSF.  Either e1/e2 or g1/g2 will differ from the
+      default values of -10, with the choice of shape to use determined by the quantity meas_type (a
+      string that equals either 'e' or 'g') or, equivalently, by the correction method (since the
+      correction method determines what quantity is estimated, either the shear or the distortion).
 
     - corrected_shape_err: shape measurement uncertainty sigma_gamma per component.
 
@@ -98,7 +109,11 @@ class HSMShapeData(object):
             self.moments_rho4 = args[0].moments_rho4
             self.moments_n_iter = args[0].moments_n_iter
             self.correction_status = args[0].correction_status
-            self.corrected_shape = galsim.Shear(args[0].corrected_shape)
+            self.corrected_e1 = args[0].corrected_e1
+            self.corrected_e2 = args[0].corrected_e2
+            self.corrected_g1 = args[0].corrected_g1
+            self.corrected_g2 = args[0].corrected_g2
+            self.meas_type = args[0].meas_type
             self.corrected_shape_err = args[0].corrected_shape_err
             self.correction_method = args[0].correction_method
             self.resolution_factor = args[0].resolution_factor
@@ -113,7 +128,11 @@ class HSMShapeData(object):
             self.moments_rho4 = -1.0
             self.moments_n_iter = 0
             self.correction_status = -1
-            self.corrected_shape = galsim.Shear()
+            self.corrected_e1 = -10.
+            self.corrected_e2 = -10.
+            self.corrected_g1 = -10.
+            self.corrected_g2 = -10.
+            self.meas_type = "None"
             self.corrected_shape_err = -1.0
             self.correction_method = "None"
             self.resolution_factor = -1.0
@@ -158,10 +177,10 @@ def EstimateShearHSM(gal_image, PSF_image, gal_mask_image = None, sky_var = 0.0,
         >>> final_epsf_image = final_epsf.draw(dx = 0.2)
         >>> result = galsim.EstimateShearHSM(final_image, final_epsf_image)
     
-    After running the above code, `result.observed_shape` ["shape" = distortion, the
-    (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is `(0.0876162,1.23478e-17)` and
-    `result.corrected_shape` is `(0.0993412,-1.86255e-09)`, compared with the expected
-    `(0.09975, 0)` for a perfect PSF correction method.
+    After running the above code, `result.observed_shape` ["shape" = distortion, the (a^2 -
+    b^2)/(a^2 + b^2) definition of ellipticity] is `(0.0876162,1.23478e-17)` and
+    `result.corrected_e1`, `result_corrected_e2` are `(0.0993412,-1.86255e-09)`, compared with the
+    expected `(0.09975, 0)` for a perfect PSF correction method.
 
     The code below gives an example of how one could run this routine on a large batch of galaxies,
     explicitly catching and tracking any failures:
