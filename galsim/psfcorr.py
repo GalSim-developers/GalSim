@@ -119,9 +119,10 @@ class HSMShapeData(object):
             self.resolution_factor = -1.0
             self.error_message = ""
 
-def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS", flags = 0xe,
-                     guess_sig_gal = 5.0, guess_sig_PSF = 3.0, precision = 1.0e-6,
-                     guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True):
+def EstimateShearHSM(gal_image, PSF_image, gal_mask_image = None, sky_var = 0.0, shear_est =
+                     "REGAUSS", flags = 0xe, guess_sig_gal = 5.0, guess_sig_PSF = 3.0,
+                     precision = 1.0e-6, guess_x_centroid = -1000.0, guess_y_centroid = -1000.0,
+                     strict = True):
     """Carry out moments-based PSF correction routines.
 
     Carry out PSF correction using one of the methods of the HSM package (see references in
@@ -176,6 +177,9 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
 
     @param gal_image         The Image or ImageView of the galaxy being measured.
     @param PSF_image         The Image or ImageView for the PSF.
+    @param gal_mask_image    The Image or ImageView corresponding to the mask image for the galaxy
+                             being measured (should be integer array, 1=use pixel and 0=do not use
+                             pixel).
     @param sky_var           The variance of the sky level, used for estimating uncertainty on the
                              measured shape; default `sky_var = 0.`.
     @param shear_est         A string indicating the desired method of PSF correction: REGAUSS,
@@ -201,8 +205,14 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
     """
     gal_image_view = gal_image.view()
     PSF_image_view = PSF_image.view()
+    # if no mask image was supplied, make an int array (the same size as the galaxy image) filled
+    # with 1's
+    if gal_mask_image == None:
+        gal_mask_image = galsim.ImageI(gal_image.bounds)+1
+    gal_mask_image_view = gal_mask_image.view()
     try:
-        result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, sky_var = sky_var,
+        result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, gal_mask_image_view,
+                                               sky_var = sky_var,
                                                shear_est = shear_est, flags = flags,
                                                guess_sig_gal = guess_sig_gal,
                                                guess_sig_PSF = guess_sig_PSF,
@@ -217,8 +227,8 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
             result.error_message = err.message
     return HSMShapeData(result)
 
-def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
-                    guess_y_centroid = -1000.0, strict = True):
+def FindAdaptiveMom(object_image, object_mask_image = None, guess_sig = 5.0, precision = 1.0e-6,
+                    guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True):
     """Measure adaptive moments of an object.
 
     This method estimates the best-fit elliptical Gaussian to the object (see Hirata & Seljak 2003
@@ -253,6 +263,9 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
     shear `g`, the conformal shear `eta`, and so on.
 
     @param object_image      The Image or ImageView for the object being measured.
+    @param object_mask_image The Image or ImageView corresponding to the mask image for the object
+                             being measured (should be integer array, 1=use pixel and 0=do not use
+                             pixel).
     @param guess_sig         Optional argument with an initial guess for the Gaussian sigma of the
                              object, default `guess_sig = 5.0` (pixels).
     @param precision         The convergence criterion for the moments; default `precision = 1e-6`.
@@ -269,9 +282,15 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
     @return                  A HSMShapeData object containing the results of moment measurement.
     """
     object_image_view = object_image.view()
+    # if no mask image was supplied, make an int array (the same size as the galaxy image) filled
+    # with 1's
+    if object_mask_image == None:
+        object_mask_image = galsim.ImageI(object_image.bounds)+1
+    object_mask_image_view = object_mask_image.view()
     try:
-        result = _galsim._FindAdaptiveMomView(object_image_view, guess_sig = guess_sig, precision =
-                                              precision, guess_x_centroid = guess_x_centroid,
+        result = _galsim._FindAdaptiveMomView(object_image_view, object_mask_image_view,
+                                              guess_sig = guess_sig, precision =  precision,
+                                              guess_x_centroid = guess_x_centroid,
                                               guess_y_centroid = guess_y_centroid)
     except RuntimeError as err:
         if (strict == True):
