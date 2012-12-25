@@ -30,13 +30,14 @@ im_epsf = epsf.draw(image = im_epsf, dx=pixel_scale)
 # get adaptive moments some number of times so we can average over the calls to get an average speed
 t1 = time.time()
 for i in range(ntest):
-    res = im_obj.FindAdaptiveMom()
+    res = im_obj.FindAdaptiveMom(strict=False)
 t2 = time.time()
 time_per_call = (t2-t1)/ntest
 # check results
 print "For image size ",imsize," per side, no noise, time to get moments was ",time_per_call," per call"
 print "Results for sigma: ",res.moments_sigma
 print "Expected (ignoring pixel): ",exp_sigma
+print "Error message: ",res.error_message
 
 # for 48x48 image, Gaussian PSF with FWHM=2.5 pix and Gaussian galaxy with same size, make noisy image
 # get adaptive moments some number of times so we can average over the calls to get an average speed
@@ -52,13 +53,14 @@ for i in range(ntest):
     tmp_im.addNoise(galsim.CCDNoise(ud))
     tmp_im -= sky_level_pix
     t1 = time.time()
-    res = tmp_im.FindAdaptiveMom()
+    res = tmp_im.FindAdaptiveMom(strict=False)
     t2 = time.time()
     tot_time_meas += (t2-t1)
 time_per_call = tot_time_meas / ntest
 # check results
 print "For image size ",imsize," per side, with noise, time to get moments was ",time_per_call," per call"
 print "Final results for e1, e2, sigma: ",res.moments_sigma
+print "Error message: ",res.error_message
 
 # check how it scales if the image size is larger
 
