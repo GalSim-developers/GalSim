@@ -11,18 +11,21 @@ struct PyCppHSMShapeData {
 
     template <typename U, typename V>
     static void wrapTemplates() {
-        typedef CppHSMShapeData (* FAM_func)(const ImageView<U> &, double, double, double, double);
+        typedef CppHSMShapeData (* FAM_func)(const ImageView<U> &, const ImageView<int> &, 
+                                             double, double, double, double);
         bp::def("_FindAdaptiveMomView",
                 FAM_func(&FindAdaptiveMomView),
-                (bp::arg("object_image"), bp::arg("guess_sig")=5.0, bp::arg("precision")=1.0e-6,
-                 bp::arg("guess_x_centroid")=-1000.0, bp::arg("guess_y_centroid")=-1000.0),
+                (bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0, 
+                 bp::arg("precision")=1.0e-6, bp::arg("guess_x_centroid")=-1000.0, 
+                 bp::arg("guess_y_centroid")=-1000.0),
                 "Find adaptive moments of an image (with some optional args).");
 
-        typedef CppHSMShapeData (* ESH_func)(const ImageView<U> &, const ImageView<V> &, float, const char *,
+        typedef CppHSMShapeData (* ESH_func)(const ImageView<U> &, const ImageView<V> &, 
+                                             const ImageView<int> &, float, const char *,
                                              unsigned long, double, double, double, double, double);
         bp::def("_EstimateShearHSMView",
                 ESH_func(&EstimateShearHSMView),
-                (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("sky_var")=0.0,
+                (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("gal_mask_image"), bp::arg("sky_var")=0.0,
                  bp::arg("shear_est")="REGAUSS", bp::arg("flags")=0xe, bp::arg("guess_sig_gal")=5.0,
                  bp::arg("guess_sig_PSF")=3.0, bp::arg("precision")=1.0e-6, bp::arg("guess_x_centroid")=-1000.0,
                  bp::arg("guess_y_centroid")=-1000.0),

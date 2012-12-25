@@ -71,6 +71,7 @@ namespace hsm {
     template <typename T, typename U>
     CppHSMShapeData EstimateShearHSMView(
         const ImageView<T>& gal_image, const ImageView<U>& PSF_image,
+        const ImageView<int> &gal_mask_image,
         float sky_var, const char* shear_est,
         unsigned long flags, double guess_sig_gal,
         double guess_sig_PSF, double precision,
@@ -105,13 +106,11 @@ namespace hsm {
         // call general_shear_estimator
         results.image_bounds = gal_image.getBounds();
         results.correction_method = shear_est;
-        Image<int> gal_mask(gal_image.getBounds());
         Image<int> PSF_mask(PSF_image.getBounds());
-        gal_mask.fill(1);
         PSF_mask.fill(1);
         ConstImageView<T> gal_image_cview = gal_image;
         ConstImageView<U> PSF_image_cview = PSF_image;
-        ConstImageView<int> gal_mask_view = gal_mask.view();
+        ConstImageView<int> gal_mask_view = gal_mask_image;
         ConstImageView<int> PSF_mask_view = PSF_mask.view();
         try {
             find_ellipmom_2(gal_image_cview, gal_mask_view, amp, gal_data.x0,
@@ -163,8 +162,8 @@ namespace hsm {
     // find_ellipmom_2.
     template <typename T>
     CppHSMShapeData FindAdaptiveMomView(
-        const ImageView<T>& object_image, double guess_sig,
-        double precision, double guess_x_centroid,
+        const ImageView<T>& object_image, const ImageView<int> &object_mask_image, 
+        double guess_sig, double precision, double guess_x_centroid,
         double guess_y_centroid) 
     {
         // define variables, create output CppHSMShapeData struct, etc.
@@ -188,10 +187,8 @@ namespace hsm {
 
         // call find_ellipmom_2
         results.image_bounds = object_image.getBounds();
-        Image<int> object_mask(object_image.getBounds());
-        object_mask.fill(1);
         ConstImageView<T> object_image_cview = object_image;
-        ConstImageView<int> object_mask_view = object_mask.view();
+        ConstImageView<int> object_mask_view = object_mask_image;
         try {
             find_ellipmom_2(object_image_cview, object_mask_view, amp, results.moments_centroid.x,
                             results.moments_centroid.y, m_xx, m_xy, m_yy, results.moments_rho4,
@@ -1596,34 +1593,75 @@ namespace hsm {
     // instantiate template classes for expected types
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<float>& gal_image, const ImageView<float>& PSF_image,
+        const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
         double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<double>& gal_image, const ImageView<double>& PSF_image,
+        const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
         double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<float>& gal_image, const ImageView<double>& PSF_image,
+        const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
         double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<double>& gal_image, const ImageView<float>& PSF_image,
+        const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
         double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<int>& gal_image, const ImageView<int>& PSF_image,
+        const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
         double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
 
     template CppHSMShapeData FindAdaptiveMomView(
-        const ImageView<float>& object_image, double guess_sig, double precision,
-        double guess_x_centroid, double guess_y_centroid);
+        const ImageView<float>& object_image, const ImageView<int> &object_mask_image,
+        double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid);
     template CppHSMShapeData FindAdaptiveMomView(
-        const ImageView<double>& object_image, double guess_sig, double precision,
-        double guess_x_centroid, double guess_y_centroid);
+        const ImageView<double>& object_image, const ImageView<int> &object_mask_image,
+        double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid);
     template CppHSMShapeData FindAdaptiveMomView(
-        const ImageView<int>& object_image, double guess_sig, double precision,
-        double guess_x_centroid, double guess_y_centroid);
+        const ImageView<int>& object_image, const ImageView<int> &object_mask_image,
+        double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid);
+
+    template unsigned int general_shear_estimator(
+        ConstImageView<float> gal_image, ConstImageView<int> gal_mask, 
+        ConstImageView<float> PSF_image, ConstImageView<int> PSF_mask, 
+        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
+        unsigned long flags);
+    template unsigned int general_shear_estimator(
+        ConstImageView<float> gal_image, ConstImageView<int> gal_mask, 
+        ConstImageView<double> PSF_image, ConstImageView<int> PSF_mask, 
+        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
+        unsigned long flags);
+    template unsigned int general_shear_estimator(
+        ConstImageView<double> gal_image, ConstImageView<int> gal_mask, 
+        ConstImageView<float> PSF_image, ConstImageView<int> PSF_mask, 
+        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
+        unsigned long flags);
+    template unsigned int general_shear_estimator(
+        ConstImageView<double> gal_image, ConstImageView<int> gal_mask, 
+        ConstImageView<double> PSF_image, ConstImageView<int> PSF_mask, 
+        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
+        unsigned long flags);
+    template unsigned int general_shear_estimator(
+        ConstImageView<int> gal_image, ConstImageView<int> gal_mask, 
+        ConstImageView<int> PSF_image, ConstImageView<int> PSF_mask, 
+        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
+        unsigned long flags);
+
+    template void find_ellipmom_2(
+        ConstImageView<double> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter);
+    template void find_ellipmom_2(
+        ConstImageView<float> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter);
+    template void find_ellipmom_2(
+        ConstImageView<int> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter);
 
 }
 }
