@@ -79,27 +79,6 @@ namespace hsm {
         double resolution; ///< resolution factor (0=unresolved, 1=resolved) 
     };
   
-    /* rectangular image type */
-  
-    /**
-     * @brief Represents an image in the way that the hsm code expects to see.
-     *
-     * The hsm representation of an image of some object, with arbitrary pixel indexing, the image
-     * itself, and a mask image. The mask image indicates which pixels to use (1) and which to
-     * ignore (0).  All values must be 0 or 1.  While the mask functionality underwent basic testing
-     * to weed out obvious mistakes, it was not used for the science that came out of the hsm code,
-     * so it could conceivably have some subtle bugs. 
-     */
-    struct RectImage 
-    {
-        long xmin; ///< Lower x boundary for image
-        long xmax; ///< Upper x boundary for image
-        long ymin; ///< Lower y boundary for image
-        long ymax; ///< Upper y boundary for image
-        double **image; ///< The actual image
-        int **mask; ///< The mask image 
-    };
-
     /**
      * @brief Struct containing information about the shape of an object.
      *
@@ -176,13 +155,14 @@ namespace hsm {
      *
      * A template function to carry out one of the multiple possible methods of PSF correction using
      * the HSM package, directly accessing the input ImageViews.  The input arguments get repackaged
-     * into RectImage and ObjectData structs before calling general_shear_estimator.  Results for
-     * the shape measurement are returned as CppHSMShapeData.  There are two arguments that have
-     * default values, namely shear_est (the type of shear estimator) and flags (for the REGAUSS
-     * method only).
+     * before calling general_shear_estimator, and results for the shape measurement are returned as
+     * CppHSMShapeData.  There are two arguments that have default values, namely shear_est (the
+     * type of shear estimator) and flags (for the REGAUSS method only).
      *
      * @param[in] gal_image The ImageView for the galaxy being measured
      * @param[in] PSF_image The ImageView for the PSF
+     * @param[in] gal_mask_image The ImageView for the mask image to be applied to the galaxy being
+     *            measured (integer array, 1=use pixel and 0=do not use pixel).
      * @param[in] sky_var The variance of the sky level, used for estimating uncertainty on the
      *            measured shape; default 0.
      * @param[in] *shear_est A string indicating the desired method of PSF correction: REGAUSS,
@@ -202,6 +182,7 @@ namespace hsm {
      */
     template <typename T, typename U>
         CppHSMShapeData EstimateShearHSMView(const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
+                                             const ImageView<int> &gal_mask_image,
                                              float sky_var = 0.0, const char *shear_est = "REGAUSS",
                                              unsigned long flags = 0xe, double guess_sig_gal = 5.0,
                                              double guess_sig_PSF = 3.0, double precision = 1.0e-6,
@@ -219,6 +200,8 @@ namespace hsm {
      * moments that are measured are the same as those used for the weight function.  
      *
      * @param[in] object_image The ImageView for the object being measured.
+     * @param[in] object_mask_image The ImageView for the mask image to be applied to the object
+     *            being measured (integer array, 1=use pixel and 0=do not use pixel).
      * @param[in] guess_sig Optional argument with an initial guess for the Gaussian sigma of
      *            the object, default 5.0 (pixels).
      * @param[in] precision The convergence criterion for the moments; default 1e-6.
@@ -229,27 +212,12 @@ namespace hsm {
      * @return A CppHSMShapeData object containing the results of moment measurement.
      */
     template <typename T>
-        CppHSMShapeData FindAdaptiveMomView(const ImageView<T> &object_image, double guess_sig = 5.0,
-                                            double precision = 1.0e-6, double guess_x_centroid = -1000.0,
+        CppHSMShapeData FindAdaptiveMomView(const ImageView<T> &object_image,
+                                            const ImageView<int> &object_mask_image,
+                                            double guess_sig = 5.0, double precision = 1.0e-6, 
+                                            double guess_x_centroid = -1000.0,
                                             double guess_y_centroid = -1000.0);
 
-    /**
-     * @brief Allocate memory for a RectImage representing the image of some object
-     *
-     * @param[in] *A The pointer to the RectImage
-     * @param[in] xmin The lower x boundary for the image
-     * @param[in] xmax The upper x boundary for the imgae
-     * @param[in] ymin The lower y boundary for the image
-     * @param[in] ymax The upper y boundary for the image
-     */
-    void allocate_rect_image(RectImage *A, long xmin, long xmax, long ymin, long ymax);
-  
-    /**
-     * @brief De-allocate memory for a RectImage
-     * @param[in] *A The pointer to the RectImage
-     */
-    void deallocate_rect_image(RectImage *A);
-  
     /**
      * @brief Carry out PSF correction.
      *
@@ -259,18 +227,22 @@ namespace hsm {
      * follows: 0x1=recompute galaxy flux by summing unmasked pixels, 0x2=recompute galaxy flux from
      * Gaussian-quartic fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save time,
      * 0x8=cut off PSF residual at NSIG_RG2 to save time.    
-     * @param[in] *gal_image The RectImage object for the galaxy
-     * @param[in] *PSF The RectImage object for the PSF
-     * @param[in] *gal_data The ObjectData object for the galaxy
-     * @param[in] *PSF_data The ObjectData object for the PSF
-     * @param[in] *shear_est A string indicating the desired method of PSF correction: REGAUSS,
+     * @param[in] gal_image The galaxy Image.
+     * @param[in] gal_mask The galaxy mask Image (integers: 1=use pixel, 0=do not use pixel).
+     * @param[in] PSF_image The PSF Image.
+     * @param[in] PSF_mask The PSF mask Image (integers: 1=use pixel, 0=do not use pixel).
+     * @param[in] gal_data The ObjectData object for the galaxy
+     * @param[in] PSF_data The ObjectData object for the PSF
+     * @param[in] shear_est A string indicating the desired method of PSF correction: REGAUSS,
      *            LINEAR, BJ, or KSB
      * @param[in] flags A parameter for REGAUSS (typical usage is 0xe).
      * @return A status flag that should be zero if the measurement was successful.
      */
+    template <typename T, typename U>
     unsigned int general_shear_estimator(
-        RectImage *gal_image, RectImage *PSF, ObjectData *gal_data, ObjectData *PSF_data, 
-        char *shear_est, unsigned long flags);
+        ConstImageView<T> gal_image, ConstImageView<int> gal_mask, ConstImageView<U> PSF_image, 
+        ConstImageView<int> PSF_mask, ObjectData& gal_data, ObjectData& PSF_data, 
+        const std::string& shear_est, unsigned long flags);
 
     /**
      * @brief Measure the adaptive moments of an object.
@@ -281,20 +253,23 @@ namespace hsm {
      * used as a weight function, computing the weighted moments, recomputing the moments using the
      * result of the previous step as the weight function, and so on until the moments that are
      * measured are the same as those used for the weight function.
-     * @param[in] *data The RectImage for the object being measured.
-     * @param[out] *A The amplitude of the best-fit elliptical Gaussian (total image intensity for
+     * @param[in] data The Image for the object being measured.
+     * @param[in] data The mask Image for the object being measured  (integers: 1=use pixel, 0=do
+     *                 not use pixel).
+     * @param[out] A The amplitude of the best-fit elliptical Gaussian (total image intensity for
      *             the Gaussian is 2A). 
-     * @param[out] *x0 The x centroid of the best-fit elliptical Gaussian
-     * @param[out] *y0 The y centroid of the best-fit elliptical Gaussian
-     * @param[out] *Mxx The xx component of the moment matrix
-     * @param[out] *Mxy The xy component of the moment matrix
-     * @param[out] *Myy The yy component of the moment matrix
-     * @param[out] *rho4 The weighted radial fourth moment
-     * @param[in] epsilon The required level of accuracy
-     * @param[out] *num_iter The number of iterations needed to converge
+     * @param[out] x0 The x centroid of the best-fit elliptical Gaussian.
+     * @param[out] y0 The y centroid of the best-fit elliptical Gaussian.
+     * @param[out] Mxx The xx component of the moment matrix.
+     * @param[out] Mxy The xy component of the moment matrix.
+     * @param[out] Myy The yy component of the moment matrix.
+     * @param[out] rho4 The weighted radial fourth moment.
+     * @param[in] epsilon The required level of accuracy.
+     * @param[out] num_iter The number of iterations needed to converge.
      */
+    template <typename T>
     void find_ellipmom_2(
-        RectImage *data, double *A, double *x0, double *y0,
-        double *Mxx, double *Mxy, double *Myy, double *rho4, double epsilon, int *num_iter);
+        ConstImageView<T> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter);
   
 }}
