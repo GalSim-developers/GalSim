@@ -60,6 +60,12 @@ namespace hsm {
     // beyond this point.  i.e., if MAX_MOMENT_NSIG2 is set to 25, then the Gaussian is extended to
     // (r^2/sigma^2)=25, with proper accounting for elliptical geometry.  If this parameter is not
     // defined, then the weight is never set to zero and the exponential function is always called.
+    // Note: GalSim example script test_mom_timing.py was used to choose a value of 25 as being
+    // optimal, in that for the cases that were tested, the speedups were typically factors of
+    // several, but the results of moments and shear estimation were changed by <10^-5.  Not all
+    // possible cases were checked, and so for use of this code for unusual cases, it is recommended
+    // to either not define MAX_MOMENT_NSIG2 (no optimization at all), or to set up some more tests
+    // that can be done with various values of MAX_MOMENT_NSIG2.
 
     // Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.
     template <typename T, typename U>
