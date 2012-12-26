@@ -559,9 +559,9 @@ namespace hsm {
             sigma += dsigma * sigma;
 
             if (++num_iter > MAX_MOM2_ITER) {
-                fprintf(stderr,"Warning: too many iterations in find_mom_2.\n");
                 convergence_factor = 0.;
                 num_iter = NUM_ITER_DEFAULT;
+                throw "Warning: too many iterations in find_mom_2.\n";
             }
         }
 
@@ -1521,7 +1521,7 @@ namespace hsm {
             status |= 0x0008;
         }
         if (Mxxgal<=0 || Myygal<=0 || Mxxgal*Myygal<=Mxygal*Mxygal ) {
-            fprintf(stderr, "Error: non positive definite adaptive moments.\n");
+            throw "Error: non positive definite adaptive moments.\n";
         }
         sig_gal = std::pow( Mxxgal*Myygal - Mxygal*Mxygal, 0.25);
 
