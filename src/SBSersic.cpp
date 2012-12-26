@@ -136,7 +136,7 @@ namespace galsim {
     SBSersic::SersicInfo::SersicInfo(double n) : _n(n), _inv2n(1./(2.*n)) 
     {
         // Going to constrain range of allowed n to those for which testing was done
-        if (_n<0.5 || _n>4.2) throw SBError("Requested Sersic index out of range");
+        if (_n<0.5 || _n>6.0) throw SBError("Requested Sersic index out of range");
 
         // Formula for b from Ciotti & Bertin (1999)
         _b = 2.*_n - (1./3.)
