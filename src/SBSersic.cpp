@@ -185,14 +185,20 @@ namespace galsim {
         double hankel_norm = _n*gamma2n/b2n;
         dbg<<"hankel_norm = "<<hankel_norm<<std::endl;
 
-        // Along the way, find the last k that has a kValue > 1.e-3
-        double maxlogk = 0.;
         // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
         int n_below_thresh = 0;
 
         double integ_maxR = findMaxR(sbp::kvalue_accuracy * hankel_norm,gamma2n);
         //double integ_maxR = integ::MOCK_INF;
 
+        // There are two "max k" values that we care about.
+        // 1) _maxK is where |f| <= maxk_threshold
+        // 2) _ksq_max is where |f| <= kvalue_accuracy
+        // The two thresholds are typically different, since they are used in different ways.
+        // We keep track of maxlogk_1 and maxlogk_2 to keep track of each of these.
+        double maxlogk_1 = 0.;
+        double maxlogk_2 = 0.;
+        
         double dlogk = 0.1;
         // Don't go past k = 500
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
@@ -203,17 +209,23 @@ namespace galsim {
             xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<std::endl;
             _ft.addEntry(logk,val);
 
-            if (std::abs(val) > sbp::maxk_threshold) maxlogk = logk;
+            if (std::abs(val) > sbp::maxk_threshold) maxlogk_1 = logk;
+            if (std::abs(val) > sbp::kvalue_accuracy) maxlogk_2 = logk;
 
             if (std::abs(val) > sbp::kvalue_accuracy) n_below_thresh = 0;
             else ++n_below_thresh;
             if (n_below_thresh == 5) break;
         }
-        _maxK = exp(maxlogk);
-        xdbg<<"maxlogk = "<<maxlogk<<std::endl;
+        // These marked the last value that didn't satisfy our requirement, so just go to 
+        // the next value.
+        maxlogk_1 += dlogk;
+        maxlogk_2 += dlogk;
+        _maxK = exp(maxlogk_1);
+        xdbg<<"maxlogk_1 = "<<maxlogk_1<<std::endl;
         xdbg<<"maxK with val >= "<<sbp::maxk_threshold<<" = "<<_maxK<<std::endl;
-        _ksq_max = exp(_ft.argMax());
+        _ksq_max = exp(2.*maxlogk_2);
         xdbg<<"ft.argMax = "<<_ft.argMax()<<std::endl;
+        xdbg<<"maxlogk_2 = "<<maxlogk_2<<std::endl;
         xdbg<<"ksq_max = "<<_ksq_max<<std::endl;
 
         // Next, set up the classes for photon shooting
