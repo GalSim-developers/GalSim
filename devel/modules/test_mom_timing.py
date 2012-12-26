@@ -5,7 +5,7 @@ import numpy
 
 imsize = 48
 nmult = 5 # i.e., consider 1*imsize linear scale, 2*imsize linear scale, up to (nmult-1)*imsize linear scale
-psf_fwhm = 2.5
+psf_fwhm = 3.5
 pixel_scale = 1.0
 ntest = 200
 sky_level = 1.0e6
