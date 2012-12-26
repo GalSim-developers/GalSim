@@ -93,7 +93,7 @@ t2 = time.time()
 time_per_call = (t2-t1)/ntest
 # check results
 print "\nFor image size ",imsize," per side, no noise, time to estimate shear was ",time_per_call," per call"
-print "Results for e1, e2: ",res.corrected_shape.e1, res.corrected_shape.e2
+print "Results for e1, e2: ",res.corrected_e1, res.corrected_e2
 print "Expected: ",gal_e1, gal_e2
 
 # do shear estimation in the noisy case
@@ -112,8 +112,8 @@ for i in range(ntest):
     res = galsim.EstimateShearHSM(tmp_im, im_epsf)
     t2 = time.time()
     tot_time_meas += (t2-t1)
-    mean_e1 += res.corrected_shape.e1
-    mean_e2 += res.corrected_shape.e2
+    mean_e1 += res.corrected_e1
+    mean_e2 += res.corrected_e2
 time_per_call = tot_time_meas / ntest
 mean_e1 /= ntest
 mean_e2 /= ntest
@@ -151,7 +151,7 @@ time_shear /= ntest
 # check results
 print "\nFor Kolmogorov, Pixel, Sersic, ",imsize," per side, no noise, time to get moments was ",time_mom," per call"
 print "time to estimate shear was ",time_shear," per call"
-print "Results for e1, e2 (corrected): ",res2.corrected_shape.e1, res2.corrected_shape.e2
+print "Results for e1, e2 (corrected): ",res2.corrected_e1, res2.corrected_e2
 print "Results for sigma observed: ",res1.moments_sigma
 
 # and also Sersic n=3 with an Airy
@@ -182,5 +182,5 @@ time_shear /= ntest
 # check results
 print "\nFor Airy, Pixel, Sersic, ",imsize," per side, no noise, time to get moments was ",time_mom," per call"
 print "time to estimate shear was ",time_shear," per call"
-print "Results for e1, e2 (corrected): ",res2.corrected_shape.e1, res2.corrected_shape.e2
+print "Results for e1, e2 (corrected): ",res2.corrected_e1, res2.corrected_e2
 print "Results for sigma observed: ",res1.moments_sigma
