@@ -46,10 +46,12 @@ namespace galsim {
      * including rules for how to interpolate the profile between the supplied pixel values.  Many
      * of the SBProfile methods are, however, disabled.
      *
-     * NoiseCorrFunc also imposes two-fold rotational symmetry: any pixels in the positive region 
-     * of the input image above the line y = 0 will be ignored.  The reason we use the y-negative
-     * part of the input image is due to the way that the SBInterpolated image defines the center of
-     * the distribution.
+     * NoiseCorrFunc also imposes two-fold rotational symmetry: almost all pixels in the positive
+     * region of the input image above the line y = 0 will be ignored.  The reason we use the 
+     * y-negative part of the input image is due to the way that the SBInterpolated image defines 
+     * the center of the distribution.  However, see
+     * https://github.com/GalSim-developers/GalSim/pull/329#discussion-diff-2381280 for a more
+     * detailed discussion of how two-fold rotational symmetry is imposed internally. 
      *
      * It is assumed that the input image oversamples the correlation function profile they 
      * represent.  maxK() is set at the Nyquist frequency of the input image, although it should be
@@ -198,13 +200,13 @@ namespace galsim {
             SBCorrFuncImpl(const SBCorrFuncImpl& rhs);
             void operator=(const SBCorrFuncImpl& rhs);
 
-            const int _Ni; ///< Dimension of input lookup table for correlation function along i
-            const int _Nj; ///< Dimension of input lookup table for correlation function along j
+            const int _Ni; // dimension of input lookup table for correlation function along i
+            const int _Nj; // ditto for j
 
-            bool _is_even; ///< Stores whether correlation function lookup table is even sized
-            double _shdim; ///< Stores the shorter, half size of even dimensioned lookup tables
-
-            void initialize(); ///< Put code common to both constructors here.
+            bool _is_even; // used to denote whether the correlation function lookup table is even
+                           // dimensioned
+            double _shdim; // used to store the shorter, half dimension size of even dimensioned
+                           // lookup tables
 
         };
     };
