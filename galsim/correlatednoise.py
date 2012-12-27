@@ -96,9 +96,12 @@ class CorrFunc(base.GSObject):
         self._rootps_store = [
             (np.sqrt(self.original_ps_image.array), self.original_cf_image.getScale())]
 
+            #test = np.ones(image.array.shape)
+            #testim = _galsim.ImageViewD(test)
+
         # Then initialize...
         base.GSObject.__init__(
-            self, _galsim.SBCorrFunc(self.original_cf_image, self.interpolant, dx=dx))
+            self, _galsim.SBCorrFunc(self.original_cf_image, self.interpolant, dx=self.original_image.getScale()))
 
     def applyNoiseTo(self, image, dx=0., dev=None):
         """Add noise as a Gaussian random field with this correlation function to an input Image.

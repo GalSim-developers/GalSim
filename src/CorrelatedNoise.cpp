@@ -45,35 +45,50 @@ namespace galsim {
     SBCorrFunc::SBCorrFuncImpl::SBCorrFuncImpl(
         const BaseImage<T>& image, 
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
-        double dx, double pad_factor) : 
-        SBInterpolatedImageImpl(image, xInterp, kInterp, dx, pad_factor) {}
+        double dx, double pad_factor) :
+        SBInterpolatedImageImpl(image, xInterp, kInterp, dx, pad_factor),
+        _Ni(1 + image.getXMax() - image.getXMin()), _Nj(1 + image.getYMax() - image.getYMin())
+        { initialize(); }
+
+    void SBCorrFunc::SBCorrFuncImpl::initialize()
+    {
+        dbg<<"Initializing image with _Ni, _Nj = "<<_Ni<<", "<<_Nj<<std::endl;
+        // Perform a check for the (required) squareness of the input lookup table
+        if ( _Ni != _Nj ) { 
+            throw ImageError("Input lookup table is not square as required for the SBCorrFunc");
+        }
+        // Then work out if image is even and store the shorter half dimension if so (for xValue)
+        if ( _Ni % 2 == 0 ){
+            _is_even = true;
+            _shdim = double(_Ni / 2 - 1) * _multi.getScale();
+        } else {
+            _is_even = false;
+            _shdim = 0.; // Make this obviously wrong: should only be invoked if _is_even==true
+        }
+        dbg<<"Storing _is_even = "<<_is_even<<", short half dimension = "<<_shdim<<std::endl;
+    }
 
     // Covariance matrix calculation using the dimensions of an input image, and a scale dx
     template <typename T>
     Image<double> SBCorrFunc::getCovarianceMatrix(ImageView<T> image, double dx) const
     {
-        // Calculate the required dimensions
+        // Calculate the required dimensions of the input image
         int idim = 1 + image.getXMax() - image.getXMin();
         int jdim = 1 + image.getYMax() - image.getYMin();
         int covdim = idim * jdim;
-        
         tmv::SymMatrix<double, 
             tmv::FortranStyle|tmv::Upper> symcov = getCovarianceSymMatrix(image, dx);
-
         Image<double> cov = Image<double>(covdim, covdim, 0.);
 
         for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
                                        // start from 1!!
             for (int j=i; j<=covdim; j++){
-
                 cov.setValue(i, j, symcov(i, j)); // fill in the upper triangle with the
-                                                       // correct CorrFunc value
+                                                  // correct CorrFunc value
             }
-
         }
         return cov;
     }
-
 
     template <typename T>
     tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> SBCorrFunc::getCovarianceSymMatrix(
@@ -111,15 +126,44 @@ namespace galsim {
     }
 
 
-    // Here we redefine the xValue and kValue (as compared to the SBProfile versions) to enforce
-    // two-fold rotational symmetry.
-
+    /* Here we redefine the xValue (as compared to the SBProfile version) to enforce two-fold
+     * rotational symmetry.
+     */
     double SBCorrFunc::SBCorrFuncImpl::xValue(const Position<double>& p) const 
     {
-        if ( p.y <= 0. ) {
-            return _xtab->interpolate(p.x, p.y, *_xInterp);
+        /*
+         * Here we do some case switching to access only part of the stored data table, enforcing
+         * two-fold rotational symmetry by taking data only from the region y < 0. where possible.
+         *
+         * There is an additional subtlety for even dimensioned data tables. As discussed in the
+         * Pull Request for this addition to GalSim, see
+         * https://github.com/GalSim-developers/GalSim/pull/329#discussion-diff-2381280, the shape
+         * of the region in the data table that needs to be accessed is slightly non-trivial.  We 
+         * use the entire region with y < 0., but also need to access to the upper half of the 
+         * left-most column of data: this is not present in the lower right quadrant of the data
+         * table, and so we redirect to the upper left if necessary.
+         */
+        if ( _is_even ) {
+            //double dist_to_edge = _shdim * _multi.getScale();
+            if ( p.y <= 0. ) {
+                if ( p.x > _shdim ) {
+                    return _xtab->interpolate(-p.x, -p.y, *_xInterp);
+                } else {
+                    return _xtab->interpolate(p.x, p.y, *_xInterp);
+                }
+            } else {
+                if ( p.x < -_shdim ) {
+                    return _xtab->interpolate(p.x, p.y, *_xInterp);
+                } else {
+                    return _xtab->interpolate(-p.x, -p.y, *_xInterp);
+                }
+            }
         } else {
-            return _xtab->interpolate(-p.x, -p.y, *_xInterp);
+            if ( p.y <= 0. ) {
+                return _xtab->interpolate(p.x, p.y, *_xInterp);
+            } else {
+                return _xtab->interpolate(-p.x, -p.y, *_xInterp);                
+            }
         }
     }
 
@@ -129,7 +173,6 @@ namespace galsim {
         const double TWOPI = 2.*M_PI;
 
         // Don't bother if the desired k value is cut off by the x interpolant:
-
         double ux = p.x*_multi.getScale()/TWOPI;
         if (std::abs(ux) > _xInterp->urange()) return std::complex<double>(0.,0.);
         double uy = p.y*_multi.getScale()/TWOPI;
@@ -138,11 +181,11 @@ namespace galsim {
 
         checkK();  // this, along with a bunch of other stuff, comes from the SBInterpolatedImage
 
-        if ( p.y <= 0. ) {
-            return xKernelTransform * _ktab->interpolate(p.x, p.y, *_kInterp);
-        } else {
-            return xKernelTransform * _ktab->interpolate(-p.x, -p.y, *_kInterp);
-        }
+        /* 
+         * the stored table will have been derived from the DFT of an image generated by xValue()
+         * calls, and so we need not repeat the detailed case switching used in that function here
+         */
+        return xKernelTransform * _ktab->interpolate(p.x, p.y, *_kInterp);
     }
 
     // instantiate template functions for expected image types

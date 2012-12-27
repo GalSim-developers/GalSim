@@ -197,7 +197,15 @@ namespace galsim {
             // Copy constructor and op= are undefined.
             SBCorrFuncImpl(const SBCorrFuncImpl& rhs);
             void operator=(const SBCorrFuncImpl& rhs);
-        
+
+            const int _Ni; ///< Dimension of input lookup table for correlation function along i
+            const int _Nj; ///< Dimension of input lookup table for correlation function along j
+
+            bool _is_even; ///< Stores whether correlation function lookup table is even sized
+            double _shdim; ///< Stores the shorter, half size of even dimensioned lookup tables
+
+            void initialize(); ///< Put code common to both constructors here.
+
         };
     };
 }
