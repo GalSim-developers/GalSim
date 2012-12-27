@@ -208,6 +208,8 @@ namespace galsim {
             double _shdim; // used to store the shorter, half dimension size of even dimensioned
                            // lookup tables
 
+            void initialize(); ///< Put code common to both constructors here.
+
         };
     };
 }
