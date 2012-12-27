@@ -57,15 +57,6 @@ namespace galsim {
         if ( _Ni != _Nj ) { 
             throw ImageError("Input lookup table is not square as required for the SBCorrFunc");
         }
-        // Then work out if image is even and store the shorter half dimension if so (for xValue)
-        if ( _Ni % 2 == 0 ){
-            _is_even = true;
-            _shdim = double(_Ni / 2 - 1) * _multi.getScale();
-        } else {
-            _is_even = false;
-            _shdim = 0.; // Make this obviously wrong: should only be invoked if _is_even==true
-        }
-        dbg<<"Storing _is_even = "<<_is_even<<", short half dimension = "<<_shdim<<std::endl;
     }
 
     // Covariance matrix calculation using the dimensions of an input image, and a scale dx
@@ -133,7 +124,7 @@ namespace galsim {
     {
         /*
          * Here we do some case switching to access only part of the stored data table, enforcing
-         * two-fold rotational symmetry by taking data only from the region y < 0. where possible.
+         * two-fold rotational symmetry by taking data only from the region x+y <= 0. where possible.
          *
          * There is an additional subtlety for even dimensioned data tables. As discussed in the
          * Pull Request for this addition to GalSim, see
@@ -143,27 +134,10 @@ namespace galsim {
          * left-most column of data: this is not present in the lower right quadrant of the data
          * table, and so we redirect to the upper left if necessary.
          */
-        if ( _is_even ) {
-            //double dist_to_edge = _shdim * _multi.getScale();
-            if ( p.y <= 0. ) {
-                if ( p.x > _shdim ) {
-                    return _xtab->interpolate(-p.x, -p.y, *_xInterp);
-                } else {
-                    return _xtab->interpolate(p.x, p.y, *_xInterp);
-                }
-            } else {
-                if ( p.x < -_shdim ) {
-                    return _xtab->interpolate(p.x, p.y, *_xInterp);
-                } else {
-                    return _xtab->interpolate(-p.x, -p.y, *_xInterp);
-                }
-            }
+        if ( p.x + p.y <= 0. ) {
+            return _xtab->interpolate(p.x, p.y, *_xInterp);
         } else {
-            if ( p.y <= 0. ) {
-                return _xtab->interpolate(p.x, p.y, *_xInterp);
-            } else {
-                return _xtab->interpolate(-p.x, -p.y, *_xInterp);                
-            }
+            return _xtab->interpolate(-p.x, -p.y, *_xInterp);                
         }
     }
 
