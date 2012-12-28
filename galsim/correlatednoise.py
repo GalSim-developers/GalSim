@@ -26,7 +26,7 @@ class CorrFunc(base.GSObject):
 
     Basic example:
 
-    >>> cf = galsim.correlatednoise.CorrFunc(image)
+        >>> cf = galsim.correlatednoise.CorrFunc(image)
 
     Instantiates a CorrFunc using the pixel scale information contained in image.getScale()
     (assumes the scale is unity if image.getScale() <= 0.)
@@ -34,13 +34,13 @@ class CorrFunc(base.GSObject):
     Optional Inputs
     ---------------
 
-    >>> cf = galsim.correlatednoise.CorrFunc(image, dx=0.2)
+        >>> cf = galsim.correlatednoise.CorrFunc(image, dx=0.2)
 
     The example above instantiates a CorrFunc, but forces the use of the pixel scale dx to set the
     units of the internal lookup table.
 
-    >>> cf = galsim.correlatednoise.CorrFunc(image,
-    ...     interpolant=galsim.InterpolantXY(galsim.Lanczos(5, tol=1.e-4))
+        >>> cf = galsim.correlatednoise.CorrFunc(image,
+        ...     interpolant=galsim.InterpolantXY(galsim.Lanczos(5, tol=1.e-4))
 
     The example above instantiates a CorrFunc, but forces the use of a non-default interpolant for
     interpolation of the internal lookup table.  Must be an InterpolantXY instance.
