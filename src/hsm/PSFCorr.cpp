@@ -672,14 +672,14 @@ namespace hsm {
                         // if we are skipping this pixel because it's too far from center of
                         // Gaussian, then just increment the pointer to the next pixel in the image,
                         // don't waste time doing any math for this pixel
-                        *(imageptr++);
+                        ++imageptr;
                     }
 #endif
                 } else {
                     // we still have to increment pointers when jumping over masked pixels,
                     // otherwise serious badness will happen.
-                    *(imageptr++);
-                    *(mxxptr++);
+                    ++imageptr;
+                    ++mxxptr;
                 }
             }
         }
