@@ -179,6 +179,8 @@ def test_shearest_precomputed():
 
 def test_masks():
     """Test that moments and shear estimation routines respond appropriately to masks."""
+    import time
+    t1 = time.time()
     # set up some toy galaxy and PSF
     my_sigma = 1.0
     my_pixscale = 0.1
@@ -279,6 +281,8 @@ def test_masks():
     np.testing.assert_almost_equal(ress.resolution_factor, ress_maskedge.resolution_factor,
         decimal=test_decimal,
         err_msg="resolution factor from EstimateShearHSM changes when masking edge")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_moments_basic()
