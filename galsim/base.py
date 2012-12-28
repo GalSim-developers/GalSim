@@ -1377,9 +1377,10 @@ class InterpolatedImage(GSObject):
             raise ValueError("Need an SBInterpolatedImage or an Image to initialize an InterpolatedImage!")
 
         # Check for valid normalization
-        if not normalization.lower() in ("flux", "f", "surface brightness", "sb") and normalization != None:
-            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
-                              "'f', 'surface brightness', 'sb', or None.") % normalization)
+        if normalization != None:
+            if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
+                raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                                  "'f', 'surface brightness', 'sb', or None.") % normalization)
 
         # Cannot set dx if using an SBInterpolatedImage
         if sbinterpolatedimage != None and dx != None:
@@ -1430,8 +1431,9 @@ class InterpolatedImage(GSObject):
             sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx)
 
             # Do any flux rescaling that is required by normalization convention for image
-            if normalization.lower() == 'flux' or normalization.lower() == 'f':
-                sbinterpolatedimage.setFlux(sbinterpolatedimage.getFlux()/(dx**2))
+            if normalization != None:
+                if normalization.lower() == 'flux' or normalization.lower() == 'f':
+                    sbinterpolatedimage.setFlux(sbinterpolatedimage.getFlux()/(dx**2))
             # if normalization is None or 'sb' then use SBInterpolated default assumption, no
             # rescaling needed
 
