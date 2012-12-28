@@ -676,9 +676,9 @@ class GSObject(object):
         # Setup the uniform_deviate if not provided one.
         if rng == None:
             uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(rng,galsim.UniformDeviate):
+        elif isinstance(rng, galsim.UniformDeviate):
             uniform_deviate = rng
-        elif isinstance(rng,galsim.BaseDeviate):
+        elif isinstance(rng, galsim.BaseDeviate):
             # If it's another kind of BaseDeviate, we can convert
             uniform_deviate = galsim.UniformDeviate(rng)
         else:
@@ -1291,7 +1291,7 @@ class OpticalPSF(GSObject):
             quintic = galsim.Quintic(tol=1.e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(self.interpolant, galsim.InterpolantXY) is False:
+            if isinstance(interpolant, galsim.InterpolantXY) is False:
                 raise RuntimeError('Specified interpolant is not an InterpolantXY!')
             self.interpolant = interpolant
             
