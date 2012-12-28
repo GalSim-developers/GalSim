@@ -31,7 +31,6 @@ int verbose_level = 2;
 
 #include <complex>
 #include "TMV_Sym.h"
-#include "SBInterpolatedImageImpl.h"
 #include "SBInterpolatedImage.h"
 #include "Random.h"
 
@@ -126,6 +125,17 @@ namespace galsim {
         double xValue(const Position<double>& p) const {return _pimpl->xValue(p);}
 
         /**
+         * @brief Return value of correlation function at a chosen 2D position in k space.
+         *
+         * Reflects two-fold rotational symmetry of the correlation function, so that
+         *
+         *     kValue(k) = kValue(-k)
+         *
+         * @param[in] k 2D position in k space.
+         */
+        std::complex<double> kValue(const Position<double>& p) const {return _pimpl->kValue(p);}
+
+        /**
          * @brief Return, as a square Image, a noise covariance matrix between every element in an 
          * input Image with pixel scale dx.
          *
@@ -144,6 +154,8 @@ namespace galsim {
 
     protected:
 
+        class SBCorrFuncImpl;
+
          /**
          * @brief Return, as a TMV SymMatrix, a noise covariance matrix between every element in 
          * an input Image with pixel scale dx.
@@ -155,62 +167,7 @@ namespace galsim {
         tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> getCovarianceSymMatrix(
             ImageView<T> image, double dx) const;
 
-
-        // pimpl
-        class SBCorrFuncImpl: public SBInterpolatedImage::SBInterpolatedImageImpl
-        {
-        public:
-
-            template <typename T> 
-            SBCorrFuncImpl(
-                const BaseImage<T>& image, 
-                boost::shared_ptr<Interpolant2d> xInterp,
-                boost::shared_ptr<Interpolant2d> kInterp,
-                double dx, double pad_factor);
-
-            /** 
-             * @brief Return value of correlation function at a chosen 2D position in real space.
-             *
-             * Reflects two-fold rotational symmetry of the correlation function, so that
-             *
-             *     xValue(p) = xValue(-p)
-             *
-             * Assume all are real-valued.  xValue() may not be implemented for derived classes 
-             * (SBConvolve) that require an FFT to determine real-space values.  In this case, an 
-             * SBError will be thrown.
-             *
-             * @param[in] p 2D position in real space.
-             */
-        double xValue(const Position<double>& p) const;
-
-            /**
-             * @brief Return value of SBProfile at a chosen 2D position in k space.
-             *
-             * Reflects two-fold rotational symmetry of the correlation function, so that
-             *
-             *     kValue(k) = kValue(-k)
-             *
-             * @param[in] k 2D position in k space.
-             */
-        std::complex<double> kValue(const Position<double>& p) const;
-
-        private:
-
-            // Copy constructor and op= are undefined.
-            SBCorrFuncImpl(const SBCorrFuncImpl& rhs);
-            void operator=(const SBCorrFuncImpl& rhs);
-
-            const int _Ni; // dimension of input lookup table for correlation function along i
-            const int _Nj; // ditto for j
-
-            bool _is_even; // used to denote whether the correlation function lookup table is even
-                           // dimensioned
-            double _shdim; // used to store the shorter, half dimension size of even dimensioned
-                           // lookup tables
-
-            void initialize(); ///< Put code common to both constructors here.
-
-        };
     };
+
 }
 #endif

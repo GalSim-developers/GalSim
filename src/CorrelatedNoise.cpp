@@ -4,8 +4,7 @@
 
 #include <complex>
 #include "Image.h"
-#include "SBInterpolatedImageImpl.h"
-#include "SBInterpolatedImage.h"
+#include "CorrelatedNoiseImpl.h"
 #include "CorrelatedNoise.h"
 
 #ifdef DEBUGLOGGING
