@@ -1310,30 +1310,30 @@ class InterpolatedImage(GSObject):
     for the purpose of carrying out transformations.
 
     The input Image and an interpolant are used to create an SBInterpolatedImage; if no interpolant
-    is specified then a Lanczos with n=5 is used.
+    is specified then a Lanczos with n=5 is used.  The InterpolatedImage class is useful if you have
+    a non-parametric description of an object as an Image, that you wish to manipulate / transform
+    using GSObject methods such as applyShear(), applyMagnification(), applyShift(), etc.
 
     The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
     brightness?  Since our default for drawing Images using draw() and drawShoot() is that
     `normalization == 'flux'` (i.e., sum of pixel values equals the object flux), the default for the
     InterpolatedImage class is to assume the same flux normalization.  However, the user can specify
-    'surface brightness' normalization if desired, or alternatively, can omit the `normalization`
-    keyword and instead specify the desired flux for the object.
+    'surface brightness' normalization if desired, or alternatively, can instead specify the desired
+    flux for the object.
 
-    EDIT ALL DOX BELOW:
-    Input aberration coefficients are assumed to be supplied in units of incident light wavelength,
-    and correspond to the conventions adopted here:
-    http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
+    If the input Image has a scale associated with it, then there is no need to specify an input
+    scale `dx`.
 
     Initialization
     --------------
     
-        >>> optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0.,
-                                            coma1=0., coma2=0., spher=0., circular_pupil=True,
-                                            obscuration=0., interpolant=None, oversampling=1.5,
-                                            pad_factor=1.5)
+        >>> interpolated_image = galsim.InterpolatedImage(image, interpolant = None,
+                                                          normalization = 'f', dx = None,
+                                                          flux = None)
 
-    Initializes optical_psf as a galsim.OpticalPSF() instance.
+    Initializes interpolated_image as a galsim.InterpolatedImage() instance.
 
+    EDIT ALL DOX BELOW:
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
     @param defocus         Defocus in units of incident light wavelength.
