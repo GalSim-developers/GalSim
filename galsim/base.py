@@ -1356,7 +1356,7 @@ class InterpolatedImage(GSObject):
 
     # Initialization parameters of the object, with type information
     # EDIT: update these as needed while coding this up
-    _req_params = { "image" : ????}
+    _req_params = { } #"image" : ????}
     _opt_params = {
         "interpolant" : galsim.InterpolantXY ,
         "normalization" : str ,
@@ -1412,7 +1412,7 @@ class InterpolatedImage(GSObject):
         if normalization.lower() == 'flux' or normalization.lower() == 'f':
             sbinterpolatedimage.setFlux(sbinterpolatedimage.getFlux()/(dx**2))
         # Or if the user specified a flux, then set to that flux value.
-        else if flux != None:
+        elif flux != None:
             if type(flux) != flux:
                 flux = float(flux)
             sbinterpolatedimage.setFlux(flux)
