@@ -1356,35 +1356,21 @@ class InterpolatedImage(GSObject):
 
     # Initialization parameters of the object, with type information
     # EDIT: update these as needed while coding this up
-    _req_params = { }
+    _req_params = { "image" : ????}
     _opt_params = {
         "interpolant" : galsim.InterpolantXY ,
         "normalization" : str ,
         "dx" : float ,
         "flux" : float
         }
-    _single_params = [ { "sbinterpolatedimage" : galsim.SBInterpolatedImage, "image" : galsim.Image} ]
+    _single_params = [ ]
 
     # --- Public Class methods ---
-    def __init__(self, sbinterpolatedimage = None, image = None, interpolant = None,
-                 normalization = None, dx = None, flux = None):
+    def __init__(self, image, interpolant = None, normalization = 'flux', dx = None, flux = None):
 
-        # Check args:
-        # Should have either SBInterpolatedImage or Image,
-        if (sbinterpolatedimage != None and image != None):
-            raise ValueError("Cannot initialize InterpolatedImage in two ways!")
-        if (sbinterpolatedimage == None and image == None):
-            raise ValueError("Need an SBInterpolatedImage or an Image to initialize an InterpolatedImage!")
-
-        # Check for valid normalization
-        if normalization != None:
-            if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
-                raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
-                                  "'f', 'surface brightness', 'sb', or None.") % normalization)
-
-        # Cannot set dx if using an SBInterpolatedImage
-        if sbinterpolatedimage != None and dx != None:
-            raise ValueError("Cannot set dx for SBInterpolatedImage inputs!")
+        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
+            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                              "'f', 'surface brightness', or 'sb'.") % normalization)
 
         # Throw exception if both normalization is set and flux are set, because the former implies
         # that GalSim should figure it out based on the inputs and the normalization scheme, but the
@@ -1393,56 +1379,45 @@ class InterpolatedImage(GSObject):
             raise ValueError("Conflicting choices for flux normalization, use either "+
                              "normalization or flux!")
 
-        # Normalization is only for images (to say what normalization was used to draw them), so
-        # raise an exception if normalization is set when an SBInterpolatedImage is used to
-        # initialize this GSObject
-        if normalization != None and sbinterpolatedimage != None:
-            raise ValueError("Cannot set normalization when initializing with an SBInterpolatedImage!")
+        # Check for interpolant, otherwise setup default.
+        # If interpolant not specified on input, use a high-ish n lanczos
+        if interpolant == None:
+            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
+            self.interpolant = galsim.InterpolantXY(lan5)
+        else:
+            if not isinstance(interpolant, galsim.InterpolantXY):
+                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+            self.interpolant = interpolant
 
-        # If we already have an SBInterpolatedImage then there's almost nothing to do.  Almost all
-        # of the rest of the work relates to getting an Image properly turned into an
-        # SBInterpolatedImage.
-        if image != None:
-            # Check for interpolant, otherwise setup default.
-            # If interpolant not specified on input, use a high-ish n lanczos
-            if interpolant == None:
-                lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
-                self.interpolant = galsim.InterpolantXY(lan5)
-            else:
-                if not isinstance(interpolant, galsim.InterpolantXY):
-                    raise RuntimeError('Specified interpolant is not an InterpolantXY!')
-                self.interpolant = interpolant
+        # Check for input dx, and check whether Image already has one set.  At the end of this
+        # code block, either an exception will have been raised, or the input image will have a
+        # valid scale set.
+        if dx == None:
+            dx = image.getScale()
+            if dx == 0:
+                raise ValueError("No information given with Image or keywords about pixel scale!")
+        else:
+            if (image.getScale() > 0 and dx != image.getScale()):
+                raise ValueError("Input value of dx disagrees with dx.getScale()!")
+            if type(dx) != float:
+                dx = float(dx)
+            image.setScale(dx)
 
-            # Check for input dx, and check whether Image already has one set.  At the end of this
-            # code block, either an exception will have been raised, or the input image will have a
-            # valid scale set.
-            if dx == None:
-                dx = image.getScale()
-                if dx == 0:
-                    raise ValueError("No information given with Image or keywords about pixel scale!")
-            else:
-                if (image.getScale() > 0 and dx != image.getScale()):
-                    raise ValueError("Input value of dx disagrees with dx.getScale()!")
-                if type(dx) != float:
-                    dx = float(dx)
-                image.setScale(dx)
+        # If an image was provided, then make the SBInterpolatedImage out of it
+        sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx)
 
-            # If an image was provided, then make the SBInterpolatedImage out of it
-            sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx)
-
-            # Do any flux rescaling that is required by normalization convention for image
-            if normalization != None:
-                if normalization.lower() == 'flux' or normalization.lower() == 'f':
-                    sbinterpolatedimage.setFlux(sbinterpolatedimage.getFlux()/(dx**2))
-            # if normalization is None or 'sb' then use SBInterpolated default assumption, no
-            # rescaling needed
-
-        # Regardless of whether we were given an SBInterpolatedImage or an Image, we have to make it
-        # have the requested flux.
-        if flux != None:
+        # If the user specified a flux normalization for the input Image, then since
+        # SBInterpolatedImage works in terms of surface brightness, have to rescale the values to
+        # get proper normalization.
+        if normalization.lower() == 'flux' or normalization.lower() == 'f':
+            sbinterpolatedimage.setFlux(sbinterpolatedimage.getFlux()/(dx**2))
+        # Or if the user specified a flux, then set to that flux value.
+        else if flux != None:
             if type(flux) != flux:
                 flux = float(flux)
             sbinterpolatedimage.setFlux(flux)
+        # If the input Image normalization is 'sb' then since that is the SBInterpolated default
+        # assumption, no rescaling is needed.
         
         # Initialize the SBProfile
         GSObject.__init__(self, sbinterpolatedimage)
