@@ -227,7 +227,7 @@ def EstimateShearHSM(gal_image, PSF_image, gal_mask_image = None, sky_var = 0.0,
     # if no mask image was supplied, make an int array (the same size as the galaxy image) filled
     # with 1's
     if gal_mask_image == None:
-        gal_mask_image = galsim.ImageI(gal_image.bounds)+1
+        gal_mask_image = galsim.ImageI(bounds=gal_image.bounds, init_value=1)
     else:
         # check the supplied mask - is it the right type?  does it have the right bounds?  any
         # unknown values?
@@ -315,7 +315,7 @@ def FindAdaptiveMom(object_image, object_mask_image = None, guess_sig = 5.0, pre
     # if no mask image was supplied, make an int array (the same size as the galaxy image) filled
     # with 1's
     if object_mask_image == None:
-        object_mask_image = galsim.ImageI(object_image.bounds)+1
+        object_mask_image = galsim.ImageI(bounds=object_image.bounds, init_value=1)
     else:
         # check the supplied mask - is it the right type?  does it have the right bounds?  any
         # unknown values?
