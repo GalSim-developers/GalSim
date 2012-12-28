@@ -1367,7 +1367,7 @@ class InterpolatedImage(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, sbinterpolatedimage = None, image = None, interpolant = None,
-                 normalization = 'flux', dx = None, flux = None):
+                 normalization = None, dx = None, flux = None):
 
         # Check args:
         # Should have either SBInterpolatedImage or Image,
@@ -1432,6 +1432,8 @@ class InterpolatedImage(GSObject):
             # Do any flux rescaling that is required by normalization convention for image
             if normalization.lower() == 'flux' or normalization.lower() == 'f':
                 sbinterpolatedimage.setFlux(sbinterpolatedimage.getFlux()/(dx**2))
+            # if normalization is None or 'sb' then use SBInterpolated default assumption, no
+            # rescaling needed
 
         # Regardless of whether we were given an SBInterpolatedImage or an Image, we have to make it
         # have the requested flux.
