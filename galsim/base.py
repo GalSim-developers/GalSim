@@ -1430,7 +1430,7 @@ class InterpolatedImage(GSObject):
             sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx)
 
             # Do any flux rescaling that is required by normalization convention for image
-            if normalization.lower() is 'flux' or normalization.lower() is 'f':
+            if normalization.lower() == 'flux' or normalization.lower() == 'f':
                 sbinterpolatedimage.setFlux(sbinterpolatedimage.getFlux()/(dx**2))
 
         # Regardless of whether we were given an SBInterpolatedImage or an Image, we have to make it
