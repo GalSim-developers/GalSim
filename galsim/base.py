@@ -1392,6 +1392,12 @@ class InterpolatedImage(GSObject):
             raise ValueError("Conflicting choices for flux normalization, use either "+
                              "normalization or flux!")
 
+        # Normalization is only for images (to say what normalization was used to draw them), so
+        # raise an exception if normalization is set when an SBInterpolatedImage is used to
+        # initialize this GSObject
+        if normalization != None and sbinterpolatedimage != None:
+            raise ValueError("Cannot set normalization when initializing with an SBInterpolatedImage!")
+
         # If we already have an SBInterpolatedImage then there's almost nothing to do.  Almost all
         # of the rest of the work relates to getting an Image properly turned into an
         # SBInterpolatedImage.
