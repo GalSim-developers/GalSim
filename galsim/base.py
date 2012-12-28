@@ -1306,8 +1306,18 @@ class OpticalPSF(GSObject):
         self.SBProfile.calculateMaxK()
 
 class InterpolatedImage(GSObject):
-    """TO EDIT: A class describing aberrated PSFs due to telescope optics.  Has an
-    SBInterpolatedImage in the SBProfile attribute.
+    """A class describing non-parametric objects specified using an Image, which can be interpolated
+    for the purpose of carrying out transformations.
+
+    The input Image and an interpolant are used to create an SBInterpolatedImage; if no interpolant
+    is specified then a Lanczos with n=5 is used.
+
+    The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
+    brightness?  Since our default for drawing Images using draw() and drawShoot() is that
+    `normalization == 'flux'` (i.e., sum of pixel values equals the object flux), the default for the
+    InterpolatedImage class is to assume the same flux normalization.  However, the user can specify
+    'surface brightness' normalization if desired, or alternatively, can omit the `normalization`
+    keyword and instead specify the desired flux for the object.
 
     EDIT ALL DOX BELOW:
     Input aberration coefficients are assumed to be supplied in units of incident light wavelength,
@@ -1372,13 +1382,6 @@ class InterpolatedImage(GSObject):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
                               "'f', 'surface brightness', or 'sb'.") % normalization)
 
-        # Throw exception if both normalization is set and flux are set, because the former implies
-        # that GalSim should figure it out based on the inputs and the normalization scheme, but the
-        # latter implies forcing to some value
-        if normalization != None and flux != None:
-            raise ValueError("Conflicting choices for flux normalization, use either "+
-                             "normalization or flux!")
-
         # Check for interpolant, otherwise setup default.
         # If interpolant not specified on input, use a high-ish n lanczos
         if interpolant == None:
@@ -1406,16 +1409,16 @@ class InterpolatedImage(GSObject):
         # If an image was provided, then make the SBInterpolatedImage out of it
         sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx)
 
-        # If the user specified a flux normalization for the input Image, then since
-        # SBInterpolatedImage works in terms of surface brightness, have to rescale the values to
-        # get proper normalization.
-        if normalization.lower() == 'flux' or normalization.lower() == 'f':
-            sbinterpolatedimage.setFlux(sbinterpolatedimage.getFlux()/(dx**2))
-        # Or if the user specified a flux, then set to that flux value.
-        elif flux != None:
+        # If the user specified a flux, then set to that flux value.
+        if flux != None:
             if type(flux) != flux:
                 flux = float(flux)
             sbinterpolatedimage.setFlux(flux)
+        # If the user specified a flux normalization for the input Image, then since
+        # SBInterpolatedImage works in terms of surface brightness, have to rescale the values to
+        # get proper normalization.
+        elif flux == None and (normalization.lower() == 'flux' or normalization.lower() == 'f'):
+            sbinterpolatedimage.setFlux(sbinterpolatedimage.getFlux()/(dx**2))
         # If the input Image normalization is 'sb' then since that is the SBInterpolated default
         # assumption, no rescaling is needed.
         
