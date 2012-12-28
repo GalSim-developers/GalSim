@@ -21,3 +21,4 @@ PhotonArray.cpp
 Random.cpp
 PSFCorr.cpp
 Integ.cpp
+Table.cpp
