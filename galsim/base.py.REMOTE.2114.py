@@ -85,8 +85,7 @@ class GSObject(object):
 
         This preserves the original type of the object, so if the caller is a Gaussian (for 
         example), the copy will also be a Gaussian, and can thus call the methods that are not in 
-        GSObject, but are in Gaussian (e.g. getSigma()).  However, not necessarily all instance
-        attributes will be copied across (e.g. the interpolant stored by an OpticalPSF object).
+        GSObject, but are in Gaussian (e.g. getSigma()).
         """
         # Re-initialize a return GSObject with self's SBProfile
         sbp = self.SBProfile.__class__(self.SBProfile)
@@ -251,7 +250,7 @@ class GSObject(object):
         Scales the linear dimensions of the image by the factor scale.
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
-        This operation preserves surface brightness, which means that the flux scales 
+        This operation preserves surface brightness, which means that the flux is scales 
         with the change in area.  
         See applyDilation for a version that preserves flux.
 
@@ -1287,16 +1286,12 @@ class OpticalPSF(GSObject):
             astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
             circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
         
-<<<<<<< HEAD
-        # If interpolant not specified on input, use a high-ish polynomial
-=======
         # If interpolant not specified on input, use a Quintic interpolant
->>>>>>> master
         if interpolant == None:
             quintic = galsim.Quintic(tol=1.e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(interpolant, galsim.InterpolantXY) is False:
+            if isinstance(self.interpolant, galsim.InterpolantXY) is False:
                 raise RuntimeError('Specified interpolant is not an InterpolantXY!')
             self.interpolant = interpolant
             
