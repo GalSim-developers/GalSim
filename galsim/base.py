@@ -1305,6 +1305,102 @@ class OpticalPSF(GSObject):
         self.SBProfile.calculateStepK()
         self.SBProfile.calculateMaxK()
 
+class InterpolatedImage(GSObject):
+    """TO EDIT: A class describing aberrated PSFs due to telescope optics.  Has an
+    SBInterpolatedImage in the SBProfile attribute.
+
+    EDIT ALL DOX BELOW:
+    Input aberration coefficients are assumed to be supplied in units of incident light wavelength,
+    and correspond to the conventions adopted here:
+    http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
+
+    Initialization
+    --------------
+    
+        >>> optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0.,
+                                            coma1=0., coma2=0., spher=0., circular_pupil=True,
+                                            obscuration=0., interpolant=None, oversampling=1.5,
+                                            pad_factor=1.5)
+
+    Initializes optical_psf as a galsim.OpticalPSF() instance.
+
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
+    @param defocus         Defocus in units of incident light wavelength.
+    @param astig1          First component of astigmatism (like e1) in units of incident light
+                           wavelength.
+    @param astig2          Second component of astigmatism (like e2) in units of incident light
+                           wavelength.
+    @param coma1           Coma along x in units of incident light wavelength.
+    @param coma2           Coma along y in units of incident light wavelength.
+    @param spher           Spherical aberration in units of incident light wavelength.
+    @param circular_pupil  Adopt a circular pupil? Alternative is square.
+    @param obscuration     Linear dimension of central obscuration as fraction of pupil linear 
+                           dimension, [0., 1.) [default `obscuration = 0.`].
+    @param interpolant     Optional keyword for specifying the interpolation scheme [default 
+                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].
+    @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
+                           [default `oversampling = 1.5`], setting oversampling < 1 will produce 
+                           aliasing in the PSF (not good).
+    @param pad_factor      Additional multiple by which to zero-pad the PSF image to avoid folding
+                           compared to what would be employed for a simple galsim.Airy 
+                           [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 
+                           increased for stronger aberrations, i.e. those larger than order unity.
+    @param flux            Total flux of the profile [default `flux=1.`].
+     
+    Methods
+    -------
+    The OpticalPSF is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
+    applyShear() etc.) and operator bindings.
+    """
+
+    # Initialization parameters of the object, with type information
+    # EDIT: update these as needed while coding this up
+    _req_params = { }
+    _opt_params = {
+        "interpolant" : galsim.InterpolantXY ,
+        "normalization" : str ,
+        "dx" : float ,
+        "flux" : float
+        }
+    _single_params = [ { "sbinterpolatedimage" : galsim.SBInterpolatedImage, "image" : galsim.Image} ]
+
+    # --- Public Class methods ---
+    def __init__(self, sbinterpolatedimage = None, image = None, interpolant = None, normalization =
+                 'flux', dx = None, flux = None):
+
+        # Check args:
+        # Should have either SBInterpolatedImage or Image, but not both or neither
+
+        # Check for interpolant, otherwise setup default
+        # If interpolant not specified on input, use a high-ish n lanczos
+        if interpolant == None:
+            quintic = galsim.Quintic(tol=1.e-4)
+            self.interpolant = galsim.InterpolantXY(quintic)
+        else:
+            if isinstance(self.interpolant, galsim.InterpolantXY) is False:
+                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
+            self.interpolant = interpolant
+
+        # Check for normalization (including 'flux'/'f' or whatever other options we normally have)
+
+        # Throw exception if both normalization is set and flux are set, because the former implies
+        # that GalSim should figure it out based on the inputs and the normalization scheme, but the
+        # latter implies forcing to some value
+
+        # Check for input dx, and check whether Image already has one set
+
+
+        # If an image was provided, then make the SBInterpolatedImage out of it
+        # Do any flux rescaling that is required either by args or by normalization
+
+        
+        # Initialize the SBProfile
+        GSObject.__init__(
+            self, galsim.SBInterpolatedImage(optimage, self.interpolant, dx=dx_lookup))
+
+        # save any other information we might want to save
+
 
 class Pixel(GSObject):
     """A class describing pixels.  Has an SBBox in the SBProfile attribute.
