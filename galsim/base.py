@@ -1286,7 +1286,7 @@ class OpticalPSF(GSObject):
             astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
             circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
         
-        # If interpolant not specified on input, use a high-ish n lanczos
+        # If interpolant not specified on input, use a Quintic interpolant
         if interpolant == None:
             quintic = galsim.Quintic(tol=1.e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
