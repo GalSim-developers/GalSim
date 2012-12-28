@@ -122,7 +122,7 @@ namespace galsim {
          *
          * @param[in] p 2D position in real space.
          */
-        double xValue(const Position<double>& p) const {return _pimpl->xValue(p);}
+        double xValue(const Position<double>& p) const;
 
         /**
          * @brief Return value of correlation function at a chosen 2D position in k space.
@@ -133,7 +133,7 @@ namespace galsim {
          *
          * @param[in] k 2D position in k space.
          */
-        std::complex<double> kValue(const Position<double>& p) const {return _pimpl->kValue(p);}
+        std::complex<double> kValue(const Position<double>& k) const;
 
         /**
          * @brief Return, as a square Image, a noise covariance matrix between every element in an 
