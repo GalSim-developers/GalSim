@@ -234,7 +234,7 @@ def EstimateShearHSM(gal_image, PSF_image, gal_mask_image = None, sky_var = 0.0,
         import numpy as np
         if gal_mask_image.bounds != gal_image.bounds:
             raise ValueError("Mask image does not have same bounds as the galaxy image!")
-        if isinstance(gal_mask_image.view(), galsim.ImageViewI) == False:
+        if not isinstance(gal_mask_image.view(), galsim.ImageViewI):
             raise ValueError("Supplied mask image is not an integer image!")
         if (np.max(gal_mask_image.array) > 1) or (np.min(gal_mask_image.array) < 0):
             raise ValueError("Mask image contains values that are not 0 or 1!")
@@ -322,7 +322,7 @@ def FindAdaptiveMom(object_image, object_mask_image = None, guess_sig = 5.0, pre
         import numpy as np
         if object_mask_image.bounds != object_image.bounds:
             raise ValueError("Mask image does not have same bounds as the object image!")
-        if isinstance(object_mask_image.view(), galsim.ImageViewI) == False:
+        if not isinstance(object_mask_image.view(), galsim.ImageViewI):
             raise ValueError("Supplied mask image is not an integer image!")
         if (np.max(object_mask_image.array) > 1) or (np.min(object_mask_image.array) < 0):
             raise ValueError("Mask image contains values that are not 0 or 1!")
