@@ -177,8 +177,8 @@ def EstimateShearHSM(gal_image, PSF_image, gal_mask_image = None, sky_var = 0.0,
         >>> final_epsf_image = final_epsf.draw(dx = 0.2)
         >>> result = galsim.EstimateShearHSM(final_image, final_epsf_image)
     
-    After running the above code, `result.observed_shape` ["shape" = distortion, the (a^2 -
-    b^2)/(a^2 + b^2) definition of ellipticity] is `(0.0876162,1.23478e-17)` and
+    After running the above code, `result.observed_shape` ["shape" = distortion, the 
+    (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is `(0.0876162,1.23478e-17)` and
     `result.corrected_e1`, `result_corrected_e2` are `(0.0993412,-1.86255e-09)`, compared with the
     expected `(0.09975, 0)` for a perfect PSF correction method.
 
