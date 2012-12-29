@@ -94,9 +94,11 @@ namespace galsim {
     public:
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
-         * image of the Correlation function.
+         * image of the Correlation Function.
          *
-         * @param[in] image     Input Image (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] image     Input Image (any of ImageF, ImageD, ImageS, ImageI), must be odd
+         *                      integer in size along each dimension, and be centred on the central
+         *                      pixel.
          * @param[in] xInterp   Interpolation scheme to adopt between pixels 
          * @param[in] kInterp   Interpolation scheme to adopt in k-space
          * @param[in] dx        Stepsize between pixels in image data table (default value of 
