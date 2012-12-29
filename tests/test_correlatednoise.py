@@ -137,10 +137,10 @@ def test_uncorrelated_noise_90degree_rotation():
             cf_test2 = ncf_test2.xValue(pos) 
             # Then test these estimated value is good to within our chosen decimal place
             np.testing.assert_almost_equal(
-                cf_ref / cf_test1, 1., decimal=decimal_precise, # slightly FFT-dependent accuracy
+                cf_ref, cf_test1, decimal=decimal_precise, # slightly FFT-dependent accuracy
                 err_msg="Uncorrelated noise failed 90 degree createRotated() method test.")
             np.testing.assert_almost_equal(
-                cf_ref / cf_test2, 1., decimal=decimal_precise,
+                cf_ref, cf_test2, decimal=decimal_precise,
                 err_msg="Uncorrelated noise failed 90 degree applyRotation() method test.")
 
 def test_xcorr_noise_basics():
@@ -181,11 +181,11 @@ def test_xcorr_noise_symmetry():
     """Test that the non-zero lag correlation of an input x correlated noise field has two-fold
     rotational symmetry.
     """
-    ncf = galsim.correlatednoise.CorrFunc(xnoise_large, dx=1.) # the small image is fine here
+    ncf = galsim.correlatednoise.CorrFunc(xnoise_small, dx=1.) # the small image is fine here
     # set up some random positions (within and outside) the bounds of the table inside the corrfunc
     # then test
     for i in range(npos_test):
-        rpos = glob_ud() *largeim_size # this can go outside lookup table bounds
+        rpos = glob_ud() * smallim_size # this can go outside lookup table bounds
         tpos = 2. * np.pi * glob_ud()
         pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
         cf_test1 = ncf.xValue(pos)
@@ -200,11 +200,11 @@ def test_ycorr_noise_symmetry():
     """Test that the non-zero lag correlation of an input y correlated noise field has two-fold
     rotational symmetry.
     """
-    ncf = galsim.correlatednoise.CorrFunc(ynoise_large, dx=1.) # the small image is fine here
+    ncf = galsim.correlatednoise.CorrFunc(ynoise_small, dx=1.) # the small image is fine here
     # set up some random positions (within and outside) the bounds of the table inside the corrfunc
     # then test
     for i in range(npos_test):
-        rpos = glob_ud() *largeim_size # this can go outside lookup table bounds
+        rpos = glob_ud() * smallim_size # this can go outside lookup table bounds
         tpos = 2. * np.pi * glob_ud()
         pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
         cf_test1 = ncf.xValue(pos)
