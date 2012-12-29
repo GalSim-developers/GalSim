@@ -57,11 +57,6 @@ namespace galsim {
             const int _Ni; // dimension of input lookup table for correlation function along i
             const int _Nj; // ditto for j
 
-            bool _is_even; // used to denote whether the correlation function lookup table is even
-                           // dimensioned
-            double _shdim; // used to store the shorter, half dimension size of even dimensioned
-                           // lookup tables
-
             void initialize(); ///< Put code common to both constructors here.
 
     };
