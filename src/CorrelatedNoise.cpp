@@ -52,9 +52,11 @@ namespace galsim {
     void SBCorrFunc::SBCorrFuncImpl::initialize()
     {
         dbg<<"Initializing image with _Ni, _Nj = "<<_Ni<<", "<<_Nj<<std::endl;
-        // Perform a check for the (required) squareness of the input lookup table
-        if ( _Ni != _Nj ) { 
-            throw ImageError("Input lookup table is not square as required for the SBCorrFunc");
+        // Perform a check for the oddness of both dimensions of the input lookup table
+        if (( _Ni % 2 == 0 ) | ( _Nj % 2 == 0) ) { 
+            throw ImageError(
+                "Input lookup table is not odd in both dimensions as required for the SBCorrFunc"
+            );
         }
     }
 
@@ -123,7 +125,9 @@ namespace galsim {
     {
         /*
          * Here we do some case switching to access only part of the stored data table, enforcing
-         * two-fold rotational symmetry by taking data only from the region x+y <= 0. where possible.
+         * two-fold rotational symmetry by taking data only from the region y <= 0.
+         *
+         * TODO: Rewrite comments below with updated methodology
          *
          * There is an additional subtlety for even dimensioned data tables. As discussed in the
          * Pull Request for this addition to GalSim, see
@@ -133,7 +137,7 @@ namespace galsim {
          * left-most column of data: this is not present in the lower right quadrant of the data
          * table, and so we redirect to the upper left if necessary.
          */
-        if ( p.x + p.y <= 0. ) {
+        if ( p.y <= 0. ) {
             return _xtab->interpolate(p.x, p.y, *_xInterp);
         } else {
             return _xtab->interpolate(-p.x, -p.y, *_xInterp);                
