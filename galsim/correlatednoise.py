@@ -55,17 +55,41 @@ class CorrFunc(base.GSObject):
     However, some methods are purposefully not implemented, e.g. applyShift(), createShifted().
     """
     def __init__(self, image, dx=0., interpolant=None):
-        # Build a noise correlation function from the input image, first get the CF using DFTs
-        ft_array = np.fft.fft2(image.array)
+        # Build a noise correlation function (CF) from the input image, using DFTs
 
-        # Calculate the power spectrum then correlation function
+        # Calculate the power spectrum then a (preliminary) CF 
+        ft_array = np.fft.fft2(image.array)
         ps_array = np.abs(ft_array * ft_array.conj())
-        cf_array = (np.fft.ifft2(ps_array)).real / float(np.product(np.shape(ft_array)))
+        cf_array_prelim = (np.fft.ifft2(ps_array)).real / float(np.product(np.shape(ft_array)))
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
-        cf_array = utilities.roll2d(cf_array, (cf_array.shape[0] / 2, cf_array.shape[1] / 2))
+        cf_array_prelim = utilities.roll2d(
+            cf_array_prelim, (cf_array_prelim.shape[0] / 2, cf_array_prelim.shape[1] / 2))
 
-        # Store local copies of the original image, power spectrum and correlation function
+        # The underlying C++ object is expecting the CF to be represented by an odd-dimensioned 
+        # array with the central pixel denoting the zero-distance correlation (variance), even 
+        # even if the input image was even-dimensioned on one or both sides.
+        # We therefore copy-paste and zero pad the CF calculated above to ensure that these
+        # expectations are met. 
+        #
+        # Determine the largest dimension of the input image, and use it to generate an empty CF 
+        # array for final output, padding by one to make odd if necessary:
+        cf_array = np.zeros((
+            1 + 2 * (cf_array_prelim.shape[0] / 2), 
+            1 + 2 * (cf_array_prelim.shape[1] / 2))) # using integer division
+        # Then put the data from the prelim CF into this array
+        cf_array[0:cf_array_prelim.shape[0], 0:cf_array_prelim.shape[1]] = cf_array_prelim
+        # Then copy-invert-paste data from the leftmost column to the rightmost column, and lowest
+        # row to the uppermost row, if the the original CF had even dimensions in the x and y 
+        # directions, respectively (remembering again that NumPy stores data [y,x] in arrays)
+        if cf_array_prelim.shape[1] % 2 == 0: # first do x
+            lhs_column = cf_array[:, 0]
+            cf_array[:, cf_array_prelim.shape[1]] = lhs_column[::-1] # inverts order as required
+        if cf_array_prelim.shape[0] % 2 == 0: # then do y
+            bottom_row = cf_array[0, :]
+            cf_array[cf_array_prelim.shape[0], :] = bottom_row[::-1] # inverts order as required
+
+        # Store local copies of the original image, power spectrum and modified correlation function
         self.original_image = image
         self.original_ps_image = _galsim.ImageViewD(np.ascontiguousarray(ps_array))
         self.original_cf_image = _galsim.ImageViewD(np.ascontiguousarray(cf_array))
