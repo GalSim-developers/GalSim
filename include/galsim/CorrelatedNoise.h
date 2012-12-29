@@ -41,18 +41,27 @@ namespace galsim {
      * table/image.
      *
      * This class inherits much from SBInterpolatedImage to store the 2D correlation function.
-     * The NoiseCorrFunc and SBInterpolatedImage classes represent a profile (supplied as an image),
+     * The SBCorrFunc and SBInterpolatedImage classes represent a profile (supplied as an image),
      * including rules for how to interpolate the profile between the supplied pixel values.  Many
      * of the SBProfile methods are, however, disabled.
      *
-     * NoiseCorrFunc also imposes two-fold rotational symmetry: almost all pixels in the positive
+     * The input data table is assumed to be odd integer-sized in both dimensions (e.g. 31 x 31 or
+     * 27 x 45) and centred on the central pixel.
+     *
+     * SBCorrFunc also imposes two-fold rotational symmetry: all pixels in the positive
      * region of the input image above the line y = 0 will be ignored.  The reason we use the 
      * y-negative part of the input image is due to the way that the SBInterpolated image defines 
-     * the center of the distribution.  However, see
-     * https://github.com/GalSim-developers/GalSim/pull/329#discussion-diff-2381280 for a more
-     * detailed discussion of how two-fold rotational symmetry is imposed internally. 
+     * the center of the distribution.  However, in order for this simple prescription to work
+     * requires input data tables with odd numbered dimensions, as discussed here
+     * https://github.com/GalSim-developers/GalSim/pull/329#discussion-diff-2381280  
      *
-     * It is assumed that the input image oversamples the correlation function profile they 
+     * The SBCorrFunc therefore checks to see whether the input data table is odd dimensioned, and
+     * will throw an ImageError if not.  In GalSim, the SBCorrFunc is used by the CorrFunc class to
+     * store correlation functions based on both even and odd sized images: within the `__init__`
+     * function this class copies symmetric lookup table data to ensure that all the inputs to the
+     * SBCorrFunc are odd integer in each dimension.
+     *
+     * It is also assumed that the input image oversamples the correlation function profile they 
      * represent.  maxK() is set at the Nyquist frequency of the input image, although it should be
      * noted that interpolants other than the ideal sinc function may make the max frequency higher
      * than this.  The output is required to be periodic on a scale > original image extent + kernel
