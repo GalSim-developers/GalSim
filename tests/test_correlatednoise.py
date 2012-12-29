@@ -54,7 +54,7 @@ decimal_approx = 2
 decimal_precise = 10
 
 # number of positions to test in nonzero lag uncorrelated tests
-npos_test = 25
+npos_test = 7
 
 # number of CorrFuncs to average over to get slightly better statistics for noise generation test
 nsum_test = 5
@@ -315,32 +315,13 @@ def test_draw():
     ncf = galsim.correlatednoise.CorrFunc(xnoise_small, dx=1.)
     testim1 = galsim.ImageD(smallim_size, smallim_size)
     ncf.draw(testim1, dx=1.)
-    # Commented stuff below makes some plots showing slightly weird edge behaviour of draw
-    #
-    import matplotlib.pyplot as plt
-    plt.pcolor(testim1.array); plt.colorbar()
-    plt.title('CF drawn by CorrFunc')
-    plt.savefig('cf_drawn.pdf')
-    plt.figure()
-    plt.pcolor(ncf.original_cf_image.array); plt.colorbar()
-    plt.title('Original CF image')
-    plt.savefig('cf_original.pdf')
-    plt.figure()
-    plt.pcolor(cf_array); plt.colorbar()
-    plt.title('Independently calculated original CF image')
-    plt.figure()
-    plt.pcolor(testim1.array - cf_array); plt.colorbar()
-    plt.title('Difference between CorrFunc drawn CF and original')
-    plt.savefig('cf_drawn_residual.pdf')
-    plt.show()
-    
-    # then compare the arrays: note the need to take a border, this is illustrated by the commented
+    # Then compare the arrays: note the need to take a border, this is illustrated by the commented
     # code above (something weird on left edge of the drawn image)
     np.testing.assert_array_almost_equal(
-        testim1.array[1:-1, 1:-1], ncf.original_cf_image.array[1:-1, 1:-1], decimal=decimal_approx, 
+        testim1.array, ncf.original_cf_image.array, decimal=decimal_approx, 
         err_msg="Drawn image does not match internal correlation function.")
     np.testing.assert_array_almost_equal(
-        testim1.array[1:-1, 1:-1], cf_array[1:-1, 1:-1], decimal=decimal_approx, 
+        testim1.array, cf_array, decimal=decimal_approx, 
         err_msg="Drawn image does not match independently calculated correlation function.")
 
 def test_output_generation_basic():
@@ -442,44 +423,44 @@ def test_output_generation_magnified():
         ncf_2ndlevel.draw(testim, dx=1., normalization="surface brightness")
         # DEBUGGING: plot these average "generated" CF and PS, and take the difference between these
         # and the "internal" functions used to generate them
-        import matplotlib.pyplot as plt
-        plt.figure()
-        plt.pcolor(testim.array, vmax=1.1, vmin=-.1); plt.colorbar()
-        plt.title('CF [generated]')
-        plt.savefig('cf_generated.png')
-        plt.figure()
-        plt.pcolor(np.log10(ps), vmax=8., vmin=0.); plt.colorbar()
-        plt.title('log10(PS) [generated]')
-        print "Mean PS [generated]  = {:f}".format(np.mean(ps) / np.product(ps.shape))
-        plt.savefig('logps_generated.png')
-        plt.figure()
+        #import matplotlib.pyplot as plt
+        #plt.figure()
+        #plt.pcolor(testim.array, vmax=1.1, vmin=-.1); plt.colorbar()
+        #plt.title('CF [generated]')
+        #plt.savefig('cf_generated.png')
+        #plt.figure()
+        #plt.pcolor(np.log10(ps), vmax=8., vmin=0.); plt.colorbar()
+        #plt.title('log10(PS) [generated]')
+        #print "Mean PS [generated]  = {:f}".format(np.mean(ps) / np.product(ps.shape))
+        #plt.savefig('logps_generated.png')
+        #plt.figure()
         # difference between averaged PS of output noise fields and the stored, internal PS used to
         # generate these fields (sqrt of which is stored in ncf_scl._rootps_store)
-        ps_difference = ps - ncf_scl._rootps_store[-1][0]**2 # most recently saved _rootps_store
-        plt.pcolor(ps_difference, vmax=5.e6, vmin=-5.e6); plt.colorbar() # plot difference
-        print "Mean difference [generated minus internal]= {:f}".format(
-            np.mean(ps_difference) / np.product(ps.shape))
-        plt.title('PS difference [generated minus internal]')
-        plt.savefig('ps_difference.png')
-        plt.show()
+        #ps_difference = ps - ncf_scl._rootps_store[-1][0]**2 # most recently saved _rootps_store
+        #plt.pcolor(ps_difference, vmax=5.e6, vmin=-5.e6); plt.colorbar() # plot difference
+        #print "Mean difference [generated minus internal]= {:f}".format(
+        #    np.mean(ps_difference) / np.product(ps.shape))
+        #plt.title('PS difference [generated minus internal]')
+        #plt.savefig('ps_difference.png')
+        #plt.show()
         np.testing.assert_array_almost_equal(
             testim.array, refim.array, decimal=decimal_approx,
             err_msg="Generated noise field (scaled) does not match input correlation properties.")
 
 if __name__ == "__main__":
-    #test_uncorrelated_noise_zero_lag()
-    #test_uncorrelated_noise_nonzero_lag()
-    #test_uncorrelated_noise_symmetry()
-    #test_uncorrelated_noise_90degree_rotation()
-    #test_xcorr_noise_basics()
-    #test_ycorr_noise_basics()
-    #test_xcorr_noise_symmetry()
-    #test_ycorr_noise_symmetry()
-    #test_90degree_rotation()
-    #test_arbitrary_rotation()
-    #test_scaling_magnification()
+    test_uncorrelated_noise_zero_lag()
+    test_uncorrelated_noise_nonzero_lag()
+    test_uncorrelated_noise_symmetry()
+    test_uncorrelated_noise_90degree_rotation()
+    test_xcorr_noise_basics()
+    test_ycorr_noise_basics()
+    test_xcorr_noise_symmetry()
+    test_ycorr_noise_symmetry()
+    test_90degree_rotation()
+    test_arbitrary_rotation()
+    test_scaling_magnification()
     test_draw()
-    #test_output_generation_basic()
-    #test_output_generation_rotated()
-    #test_output_generation_magnified()
+    test_output_generation_basic()
+    test_output_generation_rotated()
+    test_output_generation_magnified()
 
