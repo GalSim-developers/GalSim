@@ -199,8 +199,10 @@ class CorrFunc(base.GSObject):
             #plt.colorbar()
             #plt.title("CF [internal]")
             #plt.savefig('cf_internal.png')
+
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
-            #rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
+            rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
+
             #plt.figure()
             #plt.pcolor(np.log10(rootps**2), vmax=8, vmin=0.)
             #plt.colorbar()
@@ -209,6 +211,7 @@ class CorrFunc(base.GSObject):
             #    np.mean(rootps**2) / np.product(image.array.shape))
             #plt.title("log10(PS) [internal]")
             #plt.savefig('logps_internal.png')
+
             # Then add this and the relevant scale to the _rootps_store for later use
             self._rootps_store.append((rootps, newcf.getScale()))
 
