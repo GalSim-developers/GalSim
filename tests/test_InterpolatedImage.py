@@ -219,8 +219,6 @@ def test_fluxnorm():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-#def test_dx(): e.g., check overriding etc.
-#
 def test_exceptions():
     """Test failure modes for InterpolatedImage class.
     """
@@ -246,15 +244,21 @@ def test_exceptions():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-#
+
 #def test_operations():
+# To test: +, *, /, scaleFlux, setFlux, applyTransformation, applyDilation, applyMagnification,
+# applyShear, applyRotation, applyShift
+#
+#def test_real():
+# To test: nyquistDx, centroid, xValue, isAnalyticX, isAxisymmetric, hasHardEdges
 #
 #def test_fourier()
+# To test: maxK, stepK, isAnalyticK, kValue
 
 if __name__ == "__main__":
     test_roundtrip()
     test_fluxnorm()
-#    test_dx()
     test_exceptions()
 #    test_operations()
+#    test_real()
 #    test_fourier()

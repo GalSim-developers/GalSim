@@ -1350,7 +1350,8 @@ class InterpolatedImage(GSObject):
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
     @param pad_factor      Factor by which to pad the Image when creating the SBInterpolatedImage;
-                           `pad_factor <= 0` results in the use of the default value, 4.
+                           `pad_factor <= 0` results in the use of the default value, 4.  Note that
+                           the padding is with zeros; could be changed in future.
                            (Default `pad_factor = 0`.)
      
     Methods
