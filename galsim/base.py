@@ -956,8 +956,11 @@ class AtmosphericPSF(GSObject):
                            [r0 ~ lambda^(-6/5)].
     @param fwhm            FWHM of the Kolmogorov PSF.
                            Either `fwhm` or `lam_over_r0` (and only one) must be specified.
-    @param interpolant     Optional keyword for specifying the interpolation scheme [default
-                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`]
+    @param interpolant     Optional keyword for specifying the interpolation scheme [default 
+                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].  Any
+                           one-dimensional interpolants supplied, e.g. `galsim.Cubic`, 
+                           `galsim.Linear` etc., will be converted to a two-dimensional
+                           `galsim.InterpolantXY` object before use.
     @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
                            [default `oversampling = 1.5`], setting `oversampling < 1` will produce 
                            aliasing in the PSF (not good).
@@ -1007,9 +1010,13 @@ class AtmosphericPSF(GSObject):
             quintic = galsim.Quintic(tol=1e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(interpolant, galsim.InterpolantXY) is False:
-                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
-            self.interpolant = interpolant
+            if isinstance(interpolant, galsim.Interpolant):
+                self.interpolant = galsim.InterpolantXY(interpolant)
+            elif isinstance(interpolant, galsim.InterpolantXY):
+                self.interpolant = interpolant
+            else:
+                raise RuntimeError(
+                    'Specified interpolant is not an Interpolant or InterpolantXY instance!')
 
         # Then initialize the SBProfile
         GSObject.__init__(
@@ -1226,7 +1233,10 @@ class OpticalPSF(GSObject):
     @param obscuration     Linear dimension of central obscuration as fraction of pupil linear 
                            dimension, [0., 1.) [default `obscuration = 0.`].
     @param interpolant     Optional keyword for specifying the interpolation scheme [default 
-                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].
+                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].  Any
+                           one-dimensional interpolants supplied, e.g. `galsim.Cubic`, 
+                           `galsim.Linear` etc., will be converted to a two-dimensional
+                           `galsim.InterpolantXY` object before use.
     @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
                            [default `oversampling = 1.5`], setting oversampling < 1 will produce 
                            aliasing in the PSF (not good).
@@ -1292,10 +1302,14 @@ class OpticalPSF(GSObject):
             quintic = galsim.Quintic(tol=1.e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(interpolant, galsim.InterpolantXY) is False:
-                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
-            self.interpolant = interpolant
-            
+            if isinstance(interpolant, galsim.Interpolant):
+                self.interpolant = galsim.InterpolantXY(interpolant)
+            elif isinstance(interpolant, galsim.InterpolantXY):
+                self.interpolant = interpolant
+            else:
+                raise RuntimeError(
+                    'Specified interpolant is not an Interpolant or InterpolantXY instance!')
+ 
         # Initialize the SBProfile
         GSObject.__init__(
             self, galsim.SBInterpolatedImage(optimage, self.interpolant, dx=dx_lookup))
