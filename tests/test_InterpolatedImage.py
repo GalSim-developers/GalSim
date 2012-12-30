@@ -166,8 +166,59 @@ def test_roundtrip():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-#def test_fluxnorm():
-#
+def test_fluxnorm():
+    """Test that InterpolatedImage class responds properly to instructions about flux normalization.
+    """
+    import time
+    t1 = time.time()
+
+    # define values
+    im_lin_scale = 5 # make an image with this linear scale
+    im_fill_value = 3. # fill it with this number
+    im_scale = 1.3
+
+    # First, make some Image with some total flux value (sum of pixel values) and scale
+    im = galsim.ImageF(im_lin_scale, im_lin_scale)
+    im.fill(im_fill_value)
+    im.setScale(im_scale)
+    total_flux = im_fill_value*(im_lin_scale**2)
+    np.testing.assert_equal(total_flux, im.array.sum(),
+                            err_msg='Created array with wrong total flux')
+
+    # Check that if we make an InterpolatedImage with flux normalization, it keeps that flux
+    interp = galsim.InterpolatedImage(im) # note, flux normalization is the default
+    np.testing.assert_equal(total_flux, interp.getFlux(),
+                            err_msg='Did not keep flux normalization')
+    # Check that this is preserved when drawing
+    im2 = interp.draw(dx = im_scale)
+    np.testing.assert_equal(total_flux, im2.array.sum(),
+                            err_msg='Drawn image does not have expected flux normalization')
+
+    # Now make an InterpolatedImage but tell it sb normalization
+    interp_sb = galsim.InterpolatedImage(im, normalization = 'sb')
+    # Check that when drawing, the sum is equal to what we expect if the original image had been
+    # surface brightness
+    im3 = interp_sb.draw(dx = im_scale)
+    np.testing.assert_almost_equal(total_flux*(im_scale**2), im3.array.sum(), decimal=6,
+                                   err_msg='Did not use surface brightness normalization')
+    # Check that when drawing with sb normalization, the sum is the same as the original
+    im4 = interp_sb.draw(dx = im_scale, normalization = 'sb')
+    np.testing.assert_almost_equal(total_flux, im4.array.sum(), decimal=6,
+                                   err_msg='Failed roundtrip for sb normalization')
+
+    # Finally make an InterpolatedImage but give it some other flux value
+    interp_flux = galsim.InterpolatedImage(im, flux=test_flux)
+    # Check that it has that flux
+    np.testing.assert_equal(test_flux, interp_flux.getFlux(),
+                            err_msg = 'InterpolatedImage did not use flux keyword')
+    # Check that this is preserved when drawing
+    im5 = interp_flux.draw(dx = im_scale)
+    np.testing.assert_almost_equal(test_flux, im5.array.sum(), decimal=6,
+                                   err_msg = 'Drawn image does not reflect flux keyword')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 #def test_dx(): e.g., check overriding etc.
 #
 def test_exceptions():
@@ -177,29 +228,20 @@ def test_exceptions():
     t1 = time.time()
 
     # What if it receives as input something that is not an Image? Give it a GSObject to check.
-    print "Giving it a Gaussian input instead of image"
     g = galsim.Gaussian(sigma=1.)
     np.testing.assert_raises(ValueError, galsim.InterpolatedImage, g)
-
     # What if Image does not have a scale set, but dx keyword is not specified?
-    print "Giving it an Image without a scale, but also without specifying dx"
     im = galsim.ImageF(5, 5)
     np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
-
     # Image must have bounds defined
-    print "Giving it an Image with a scale, but without bounds defined"
     im = galsim.ImageF()
     im.setScale(1.)
     np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
-
     # Weird flux normalization
-    print "Testing weird flux normalization"
     im = galsim.ImageF(5, 5)
     im.setScale(1.)
     np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im, normalization = 'foo')
-
     # Weird interpolant - give it something random like a GSObject
-    print "Testing weird interpolant"
     np.testing.assert_raises(RuntimeError, galsim.InterpolatedImage, im, interpolant = g)
 
     t2 = time.time()
@@ -211,7 +253,7 @@ def test_exceptions():
 
 if __name__ == "__main__":
     test_roundtrip()
-#    test_fluxnorm()
+    test_fluxnorm()
 #    test_dx()
     test_exceptions()
 #    test_operations()
