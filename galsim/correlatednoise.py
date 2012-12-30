@@ -43,7 +43,9 @@ class CorrFunc(base.GSObject):
         ...     interpolant=galsim.InterpolantXY(galsim.Lanczos(5, tol=1.e-4))
 
     The example above instantiates a CorrFunc, but forces the use of a non-default interpolant for
-    interpolation of the internal lookup table.  Must be an InterpolantXY instance.
+    interpolation of the internal lookup table.  Must be an InterpolantXY instance or an Interpolant
+    instance (if the latter one-dimensional case is supplied an InterpolantXY will be automatically
+    generated from it).
 
     The default interpolant if None is set is a galsim.InterpolantXY(galsim.Quintic(tol=1.e-4)).
 
@@ -110,9 +112,13 @@ class CorrFunc(base.GSObject):
             quintic = _galsim.Quintic(tol=1.e-4)
             self.interpolant = _galsim.InterpolantXY(quintic)
         else:
-            if isinstance(interpolant, _galsim.InterpolantXY) is False:
-                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
-            self.interpolant = interpolant
+            if isinstance(interpolant, _galsim.Interpolant):
+                self.interpolant = galsim.InterpolantXY(interpolant)
+            elif isinstance(interpolant, _galsim.InterpolantXY):
+                self.interpolant = interpolant
+            else:
+                raise RuntimeError(
+                    'Specified interpolant is not an Interpolant or InterpolantXY instance!')
 
         # Setup a store for later, containing array representations of the sqrt(PowerSpectrum)
         # [useful for later applying noise to images according to this correlation function].
