@@ -113,7 +113,7 @@ class CorrFunc(base.GSObject):
             self.interpolant = _galsim.InterpolantXY(quintic)
         else:
             if isinstance(interpolant, _galsim.Interpolant):
-                self.interpolant = galsim.InterpolantXY(interpolant)
+                self.interpolant = _galsim.InterpolantXY(interpolant)
             elif isinstance(interpolant, _galsim.InterpolantXY):
                 self.interpolant = interpolant
             else:
