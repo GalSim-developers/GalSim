@@ -34,7 +34,7 @@ test_sersic_n = [1.5, 2.5]
 # for flux normalization tests
 test_flux = 1.8
 
-# Use a deterministic random number generator so we don't fail tests becaus of rare flukes
+# Use a deterministic random number generator so we don't fail tests because of rare flukes
 # in the random numbers.
 glob_ud = galsim.UniformDeviate(12345)
 
