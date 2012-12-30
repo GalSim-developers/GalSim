@@ -1420,7 +1420,8 @@ class InterpolatedImage(GSObject):
         # If the user specified a flux normalization for the input Image, then since
         # SBInterpolatedImage works in terms of surface brightness, have to rescale the values to
         # get proper normalization.
-        elif flux == None and (normalization.lower() == 'flux' or normalization.lower() == 'f'):
+        elif flux == None and (normalization.lower() == 'flux' or normalization.lower() == 'f') \
+                and sbinterpolatedimage.getFlux() != 0.0:
             sbinterpolatedimage.setFlux(sbinterpolatedimage.getFlux()/(dx**2))
         # If the input Image normalization is 'sb' then since that is the SBInterpolated default
         # assumption, no rescaling is needed.
