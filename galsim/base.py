@@ -498,7 +498,7 @@ class GSObject(object):
                       less "folding" in Fourier space. (Default `wmult = 1.`)
 
         @param normalization  Two options for the normalization:
-                                "flux" or "f" means that the sum of the output pixels is normalized
+                              "flux" or "f" means that the sum of the output pixels is normalized
                                   to be equal to the total flux.  (Modulo any flux that falls off 
                                   the edge of the image of course.)
                               "surface brightness" or "sb" means that the output pixels sample
@@ -1312,7 +1312,8 @@ class InterpolatedImage(GSObject):
     The input Image and an interpolant are used to create an SBInterpolatedImage; if no interpolant
     is specified then a Lanczos with n=5 is used.  The InterpolatedImage class is useful if you have
     a non-parametric description of an object as an Image, that you wish to manipulate / transform
-    using GSObject methods such as applyShear(), applyMagnification(), applyShift(), etc.
+    using GSObject methods such as applyShear(), applyMagnification(), applyShift(), etc.  The input
+    Image can be any BaseImage (i.e., Image, ImageView, or ConstImageView).
 
     The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
     brightness?  Since our default for drawing Images using draw() and drawShoot() is that
@@ -1333,42 +1334,33 @@ class InterpolatedImage(GSObject):
 
     Initializes interpolated_image as a galsim.InterpolatedImage() instance.
 
-    EDIT ALL DOX BELOW:
-    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
-                           (user responsible for consistency).
-    @param defocus         Defocus in units of incident light wavelength.
-    @param astig1          First component of astigmatism (like e1) in units of incident light
-                           wavelength.
-    @param astig2          Second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param coma1           Coma along x in units of incident light wavelength.
-    @param coma2           Coma along y in units of incident light wavelength.
-    @param spher           Spherical aberration in units of incident light wavelength.
-    @param circular_pupil  Adopt a circular pupil? Alternative is square.
-    @param obscuration     Linear dimension of central obscuration as fraction of pupil linear 
-                           dimension, [0., 1.) [default `obscuration = 0.`].
+    @param image           The Image from which to construct the object.
     @param interpolant     Optional keyword for specifying the interpolation scheme [default 
-                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].
-    @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
-                           [default `oversampling = 1.5`], setting oversampling < 1 will produce 
-                           aliasing in the PSF (not good).
-    @param pad_factor      Additional multiple by which to zero-pad the PSF image to avoid folding
-                           compared to what would be employed for a simple galsim.Airy 
-                           [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 
-                           increased for stronger aberrations, i.e. those larger than order unity.
-    @param flux            Total flux of the profile [default `flux=1.`].
+                           is 5th order Lanczos].
+    @param normalization   Two options for specifying the normalization of the input Image:
+                              "flux" or "f" means that the sum of the pixels is normalized
+                                  to be equal to the total flux.
+                              "surface brightness" or "sb" means that the pixels sample
+                                  the surface brightness distribution at each location.
+                              [Default `normalization = "flux"`]
+    @param dx              If provided, use this as the pixel scale for the Image; this will
+                           override the pixel scale stored by the provided Image, in any.  If `dx`
+                           is `None`, then take the provided image's pixel scale.
+                           (Default `dx = None`.)
+    @param flux            Optionally specify a total flux for the object, which overrides the
+                           implied flux normalization from the Image itself.
      
     Methods
     -------
-    The OpticalPSF is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
-    applyShear() etc.) and operator bindings.
+    The InterpolatedImage is a GSObject, and inherits all of the GSObject methods (draw(),
+    drawShoot(), applyShear() etc.) and operator bindings.
     """
 
     # Initialization parameters of the object, with type information
     # EDIT: update these as needed while coding this up
-    _req_params = { } #"image" : ????}
+    _req_params = { } #"image" : str}
     _opt_params = {
-        "interpolant" : galsim.InterpolantXY ,
+        "interpolant" : str , # ??
         "normalization" : str ,
         "dx" : float ,
         "flux" : float
@@ -1400,8 +1392,6 @@ class InterpolatedImage(GSObject):
             if dx == 0:
                 raise ValueError("No information given with Image or keywords about pixel scale!")
         else:
-            if (image.getScale() > 0 and dx != image.getScale()):
-                raise ValueError("Input value of dx disagrees with dx.getScale()!")
             if type(dx) != float:
                 dx = float(dx)
             image.setScale(dx)
