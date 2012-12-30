@@ -1350,8 +1350,8 @@ class InterpolatedImage(GSObject):
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
     @param pad_factor      Factor by which to pad the Image when creating the SBInterpolatedImage;
-                           default value of 0 results in the use of the default value in the C++,
-                           which is 4.
+                           `pad_factor <= 0` results in the use of the default value, 4.
+                           (Default `pad_factor = 0`.)
      
     Methods
     -------
@@ -1373,6 +1373,14 @@ class InterpolatedImage(GSObject):
     # --- Public Class methods ---
     def __init__(self, image, interpolant = None, normalization = 'flux', dx = None, flux = None,
                  pad_factor = 0.):
+
+        # make sure image is really an image
+        if not isinstance(image, galsim.BaseImageF) and not isinstance(image, galsim.BaseImageD):
+            raise ValueError("Supplied image is not an image of floats or doubles!")
+
+        # it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor
+        if not image.getBounds().isDefined():
+            raise ValueError("Supplied image does not have bounds defined!")
 
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
@@ -1402,7 +1410,7 @@ class InterpolatedImage(GSObject):
 
         # If an image was provided, then make the SBInterpolatedImage out of it
         sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx,
-                                                         pad_factor=0.)
+                                                         pad_factor=pad_factor)
 
         # If the user specified a flux, then set to that flux value.
         if flux != None:
