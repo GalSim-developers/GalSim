@@ -27,6 +27,8 @@ def pkflat(k):
     return 0.01
 
 def test_nfwhalo():
+    """Test that NFWHalo computations are consistent with expectations from external reference
+    """
     import time
     t1 = time.time()
 
