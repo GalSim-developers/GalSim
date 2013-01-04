@@ -34,6 +34,11 @@ namespace galsim {
                      (double (SBProfile::*)(ImageView<U>, double, double) const)&SBProfile::draw,
                      (bp::arg("image"), bp::arg("gain")=1., bp::arg("wmult")=1.),
                      "Draw in-place and return the summed flux.")
+                .def("drawK", 
+                     (void (SBProfile::*)(ImageView<U>, ImageView<U>, 
+                                          double, double) const)&SBProfile::drawK,
+                     (bp::arg("re"), bp::arg("im"), bp::arg("gain")=1., bp::arg("wmult")=1.),
+                     "Draw k-space image (real and imaginary components).")
                 ;
         }
 

@@ -108,7 +108,7 @@ namespace hsm {
      * correction was used; if no PSF correction was carried out and only the observed moments were
      * measured, the PSF correction method will be 'None'.
      */
-    struct HSMShapeData
+    struct CppHSMShapeData
     {
         /// @brief galsim::Bounds object describing the image of the object
         Bounds<int> image_bounds;
@@ -161,7 +161,7 @@ namespace hsm {
         std::string error_message;
 
         /// @brief Constructor, setting defaults
-        HSMShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
+        CppHSMShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
             observed_shape(galsim::CppShear()), moments_sigma(-1.), moments_amp(-1.),
             moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
             correction_status(-1), corrected_shape(galsim::CppShear()), corrected_shape_err(-1.),
@@ -177,7 +177,7 @@ namespace hsm {
      * A template function to carry out one of the multiple possible methods of PSF correction using
      * the HSM package, directly accessing the input ImageViews.  The input arguments get repackaged
      * into RectImage and ObjectData structs before calling general_shear_estimator.  Results for
-     * the shape measurement are returned as HSMShapeData.  There are two arguments that have
+     * the shape measurement are returned as CppHSMShapeData.  There are two arguments that have
      * default values, namely shear_est (the type of shear estimator) and flags (for the REGAUSS
      * method only).
      *
@@ -198,15 +198,15 @@ namespace hsm {
      *            galaxy; if not set, then the code will try the center of the image.
      * @param[in] guess_y_centroid Optional argument with an initial guess for the y centroid of the
      *            galaxy; if not set, then the code will try the center of the image.
-     * @return A HSMShapeData object containing the results of shape measurement. 
+     * @return A CppHSMShapeData object containing the results of shape measurement.
      */
     template <typename T, typename U>
-        HSMShapeData EstimateShearHSMView(const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
-                                          float sky_var = 0.0, const char *shear_est = "REGAUSS",
-                                          unsigned long flags = 0xe, double guess_sig_gal = 5.0,
-                                          double guess_sig_PSF = 3.0, double precision = 1.0e-6,
-                                          double guess_x_centroid = -1000.0,
-                                          double guess_y_centroid = -1000.0);
+        CppHSMShapeData EstimateShearHSMView(const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
+                                             float sky_var = 0.0, const char *shear_est = "REGAUSS",
+                                             unsigned long flags = 0xe, double guess_sig_gal = 5.0,
+                                             double guess_sig_PSF = 3.0, double precision = 1.0e-6,
+                                             double guess_x_centroid = -1000.0,
+                                             double guess_y_centroid = -1000.0);
 
     /**
      * @brief Measure the adaptive moments of an object directly using ImageViews.
@@ -226,12 +226,12 @@ namespace hsm {
      *            galaxy; if not set, then the code will try the center of the image.
      * @param[in] guess_y_centroid Optional argument with an initial guess for the y centroid of the
      *            galaxy; if not set, then the code will try the center of the image.
-     * @return A HSMShapeData object containing the results of moment measurement.
+     * @return A CppHSMShapeData object containing the results of moment measurement.
      */
     template <typename T>
-        HSMShapeData FindAdaptiveMomView(const ImageView<T> &object_image, double guess_sig = 5.0,
-                                         double precision = 1.0e-6, double guess_x_centroid = -1000.0,
-                                         double guess_y_centroid = -1000.0);
+        CppHSMShapeData FindAdaptiveMomView(const ImageView<T> &object_image, double guess_sig = 5.0,
+                                            double precision = 1.0e-6, double guess_x_centroid = -1000.0,
+                                            double guess_y_centroid = -1000.0);
 
     /**
      * @brief Allocate memory for a RectImage representing the image of some object

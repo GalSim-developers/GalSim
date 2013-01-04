@@ -5,7 +5,7 @@ python test_artifacts.py || exit
 python test_atmosphere.py || exit
 python test_config_gsobject.py || exit
 python test_config_value.py || exit
-python test_hsm.py || exit
+python test_psfcorr.py || exit
 python test_optics.py || exit
 python test_random.py || exit
 python test_real.py || exit

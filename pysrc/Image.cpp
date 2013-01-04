@@ -267,6 +267,7 @@ struct PyImage {
         ADD_CORNER(pyBaseImage, getXMax, xmax);
         ADD_CORNER(pyBaseImage, getYMax, ymax);
         
+        typedef void (Image<T>::* copyFrom_func_type)(const BaseImage<T>&);
 
         bp::class_< Image<T>, bp::bases< BaseImage<T> > >
             pyImage(("Image" + suffix).c_str(), "", bp::no_init);
@@ -288,7 +289,7 @@ struct PyImage {
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
             .def("setValue", &Image<T>::setValue, bp::args("x","y","value"))
-            .def("copyFrom", &Image<T>::copyFrom)
+            .def("copyFrom", copyFrom_func_type(&Image<T>::copyFrom))
             .def("fill", &Image<T>::fill)
             .def("setZero", &Image<T>::setZero)
             .def("invertSelf", &Image<T>::invertSelf)
@@ -302,6 +303,8 @@ struct PyImage {
     static bp::object wrapImageView(std::string const & suffix) {
         
         // Note that docstrings are now added in galsim/image.py
+
+        typedef void (ImageView<T>::* copyFrom_func_type)(const BaseImage<T>&) const;
 
         bp::object at = bp::make_function(
             &ImageView<T>::at,
@@ -327,7 +330,7 @@ struct PyImage {
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
             .def("setValue", &ImageView<T>::setValue, bp::args("x","y","value"))
-            .def("copyFrom", &ImageView<T>::copyFrom)
+            .def("copyFrom", copyFrom_func_type(&ImageView<T>::copyFrom))
             .def("fill", &ImageView<T>::fill)
             .def("setZero", &ImageView<T>::setZero)
             .def("invertSelf", &Image<T>::invertSelf)

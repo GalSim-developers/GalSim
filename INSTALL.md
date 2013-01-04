@@ -19,7 +19,7 @@ Table of Contents:
 1. Software required before building GalSim
 ===========================================
 
-Please note: Mac users who want to use fink can skip down to Section 4.i and use
+Please note: Mac users who want to use fink can skip down to Section 4.ii and use
 that to satisfy all dependencies before installing.
 
 i) Python (2.6 or 2.7 series), with some additional modules installed
@@ -527,6 +527,13 @@ then switch to the system gcc version (either 4.0 or 4.2) with
     sudo port select --set gcc gcc42
 
 and compile GalSim with the system gcc.
+
+c) Homebrew (http://mxcl.github.com/homebrew/) -- another package manager for
+Max OSX.  Currently GalSim v0.2 is available on homebrew, so it (plus
+dependencies) should be installable via
+
+    brew tap camphogg/science
+    brew install gal-sim
 
 
 5. More SCons options

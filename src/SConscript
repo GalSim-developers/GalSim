@@ -34,7 +34,9 @@ for d in subdirs:
 
 if env1['MEM_TEST']:
     print 'Using mmgr.cpp'
-    lib_files += ['mmgr.cpp']
+    # put mmgr.cpp first, so its static variable is the first one registered.
+    # otherwise the memory leak reports a bunch of static variables being leaks.
+    lib_files.insert(0, 'mmgr.cpp')
 
 # Library file containing generic code
 obj_lib = env1.SharedObject(lib_files)
@@ -136,7 +138,6 @@ link = env1.Command( link_name , lib , SymLink, LibName=lib_short_name)
 Default(link)
 
 lib_targets = [lib]
-
 Default(lib_targets)
 
 if 'install' in COMMAND_LINE_TARGETS:
@@ -148,6 +149,8 @@ if 'install' in COMMAND_LINE_TARGETS:
         LibName=lib_final_name)
 
     env1.Alias(target='install', source=[installed_lib, installed_link])
+    env['all_builds'] += installed_lib
+    env['all_builds'] += installed_link
 
     #hfiles1 = os.listdir(GetBuildPath('#include'))
     #hfiles = []
@@ -155,6 +158,9 @@ if 'install' in COMMAND_LINE_TARGETS:
         #hfiles += [os.path.join('#include',f)]
     #installed_h = env1.Install(dir=header_install_dir, source=hfiles)
     #env1.Alias(target='install', source=installed_h)
+else:
+    env['all_builds'] += lib
+    env['all_builds'] += link
 
 
 if 'uninstall' in COMMAND_LINE_TARGETS:

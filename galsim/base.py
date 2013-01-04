@@ -24,7 +24,7 @@ import numpy as np
 import galsim
 import utilities
 
-version = '0.2'
+version = '0.2.1'
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
@@ -33,6 +33,8 @@ class GSObject(object):
     methods and attributes, particularly those from the C++ SBProfile classes.
     """
     def __init__(self, SBProfile):
+        if not isinstance(SBProfile, galsim.SBProfile):
+            raise TypeError("GSObject must be initialized with an SBProfile!")
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
     
     # Make op+ of two GSObjects work to return an Add object
@@ -538,7 +540,7 @@ class GSObject(object):
 
     def drawShoot(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
                   add_to_image=False, n_photons=0., rng=None,
-                  max_extra_noise=0., poisson_flux=True):
+                  max_extra_noise=0., poisson_flux=None):
         """Draw an image of the object by shooting individual photons drawn from the surface 
         brightness profile of the object.
 
@@ -629,7 +631,8 @@ class GSObject(object):
 
         @param poisson_flux     Whether to allow total object flux scaling to vary according to 
                                 Poisson statistics for `n_photons` samples (default 
-                                `poisson_flux = True`).
+                                `poisson_flux = True` unless n_photons is given, in which case
+                                the default is `poisson_flux = False`).
 
         @returns  The tuple (image, added_flux), where image is the input with drawn photons 
                   added and added_flux is the total flux of photons that landed inside the image 
@@ -662,6 +665,9 @@ class GSObject(object):
             n_photons = float(n_photons)
         if n_photons < 0.:
             raise ValueError("Invalid n_photons < 0. in draw command")
+        if poisson_flux == None:
+            if n_photons == 0.: poisson_flux = True
+            else: poisson_flux = False
 
         # Make sure the type of max_extra_noise is correct and has a valid value:
         if type(max_extra_noise) != float:
@@ -670,9 +676,9 @@ class GSObject(object):
         # Setup the uniform_deviate if not provided one.
         if rng == None:
             uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(rng,galsim.UniformDeviate):
+        elif isinstance(rng, galsim.UniformDeviate):
             uniform_deviate = rng
-        elif isinstance(rng,galsim.BaseDeviate):
+        elif isinstance(rng, galsim.BaseDeviate):
             # If it's another kind of BaseDeviate, we can convert
             uniform_deviate = galsim.UniformDeviate(rng)
         else:
@@ -706,6 +712,80 @@ class GSObject(object):
                 "objects.")
 
         return image, added_flux
+
+    def drawK(self, re=None, im=None, dk=None, gain=1., wmult=1., add_to_image=False):
+        """Draws the k-space Images (real and imaginary parts) of the object, with bounds
+        optionally set by input Images.
+
+        Normalization is always such that re(0,0) = flux.
+
+        @param re     If provided, this will be the real part of the k-space image.
+                      If `re = None`, then an automatically-sized image will be created.
+                      If `re != None`, but its bounds are undefined (e.g. if it was 
+                        constructed with `re = galsim.ImageF()`), then it will be resized
+                        appropriately based on the profile's size (default `re = None`).
+
+        @param im     If provided, this will be the imaginary part of the k-space image.
+                      A provided im must match the size and scale of re.
+                      If `im = None`, then an automatically-sized image will be created.
+                      If `im != None`, but its bounds are undefined (e.g. if it was 
+                        constructed with `im = galsim.ImageF()`), then it will be resized
+                        appropriately based on the profile's size (default `im = None`).
+
+        @param dk     If provided, use this as the pixel scale for the images.
+                      If `dk` is `None` and `re, im != None`, then take the provided images' pixel 
+                        scale (which must be equal).
+                      If `dk` is `None` and `re, im == None`, then use the Nyquist scale 
+                        `= pi/maxK()`.
+                      If `dk <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
+                      (Default `dk = None`.)
+
+        @param gain   The number of photons per ADU ("analog to digital units", the units of the 
+                      numbers output from a CCD).  (Default `gain =  1.`)
+
+        @param wmult  A factor by which to make an automatically-sized image larger than it would 
+                      normally be made.  This factor also applies to any intermediate images during
+                      Fourier calculations.  The size of the intermediate images are normally 
+                      automatically chosen to reach some preset accuracy targets (see 
+                      include/galsim/SBProfile.h); however, if you see strange artifacts in the 
+                      image, you might try using `wmult > 1`.  This will take longer of 
+                      course, but it will produce more accurate images, since they will have 
+                      less "folding" in Fourier space. (Default `wmult = 1.`)
+
+        @param add_to_image  Whether to add to the existing images rather than clear out
+                             anything in the image before drawing.
+                             Note: This requires that images be provided (i.e. `re`, `im` are
+                             not `None`) and that they have defined bounds (default 
+                             `add_to_image = False`).
+
+        @returns      (re, im)  (created if necessary)
+        """
+        # Make sure the type of gain is correct and has a valid value:
+        if type(gain) != float:
+            gain = float(gain)
+        if gain <= 0.:
+            raise ValueError("Invalid gain <= 0. in draw command")
+        if re == None:
+            if im != None:
+                raise ValueError("re is None, but im is not None")
+        else:
+            if im == None:
+                raise ValueError("im is None, but re is not None")
+            if dx is None:
+                if re.getScale() != im.getScale():
+                    raise ValueError("re and im do not have the same input scale")
+            if re.getBounds().isDefined() or im.getBounds().isDefined():
+                if re.getBounds() != im.getBounds():
+                    raise ValueError("re and im do not have the same defined bounds")
+
+        # Make sure images are setup correctly
+        re, dk = self._draw_setup_image(re,dk,wmult,add_to_image)
+        im, dk = self._draw_setup_image(im,dk,wmult,add_to_image)
+
+        self.SBProfile.drawK(re.view(), im.view(), gain, wmult)
+
+        return re,im
+
 
 
 # --- Now defining the derived classes ---
@@ -875,8 +955,11 @@ class AtmosphericPSF(GSObject):
                            [r0 ~ lambda^(-6/5)].
     @param fwhm            FWHM of the Kolmogorov PSF.
                            Either `fwhm` or `lam_over_r0` (and only one) must be specified.
-    @param interpolant     Optional keyword for specifying the interpolation scheme [default
-                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`]
+    @param interpolant     Optional keyword for specifying the interpolation scheme [default 
+                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].  Any
+                           one-dimensional interpolants supplied, e.g. `galsim.Cubic`, 
+                           `galsim.Linear` etc., will be converted to a two-dimensional
+                           `galsim.InterpolantXY` object before use.
     @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
                            [default `oversampling = 1.5`], setting `oversampling < 1` will produce 
                            aliasing in the PSF (not good).
@@ -926,9 +1009,13 @@ class AtmosphericPSF(GSObject):
             quintic = galsim.Quintic(tol=1e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(interpolant, galsim.InterpolantXY) is False:
-                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
-            self.interpolant = interpolant
+            if isinstance(interpolant, galsim.Interpolant):
+                self.interpolant = galsim.InterpolantXY(interpolant)
+            elif isinstance(interpolant, galsim.InterpolantXY):
+                self.interpolant = interpolant
+            else:
+                raise RuntimeError(
+                    'Specified interpolant is not an Interpolant or InterpolantXY instance!')
 
         # Then initialize the SBProfile
         GSObject.__init__(
@@ -1145,7 +1232,10 @@ class OpticalPSF(GSObject):
     @param obscuration     Linear dimension of central obscuration as fraction of pupil linear 
                            dimension, [0., 1.) [default `obscuration = 0.`].
     @param interpolant     Optional keyword for specifying the interpolation scheme [default 
-                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].
+                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].  Any
+                           one-dimensional interpolants supplied, e.g. `galsim.Cubic`, 
+                           `galsim.Linear` etc., will be converted to a two-dimensional
+                           `galsim.InterpolantXY` object before use.
     @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
                            [default `oversampling = 1.5`], setting oversampling < 1 will produce 
                            aliasing in the PSF (not good).
@@ -1206,14 +1296,18 @@ class OpticalPSF(GSObject):
             astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
             circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
         
-        # If interpolant not specified on input, use a high-ish n lanczos
+        # If interpolant not specified on input, use a Quintic interpolant
         if interpolant == None:
             quintic = galsim.Quintic(tol=1.e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(self.interpolant, galsim.InterpolantXY) is False:
-                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
-            self.interpolant = interpolant
+            if isinstance(interpolant, galsim.Interpolant):
+                self.interpolant = galsim.InterpolantXY(interpolant)
+            elif isinstance(interpolant, galsim.InterpolantXY):
+                self.interpolant = interpolant
+            else:
+                raise RuntimeError(
+                    'Specified interpolant is not an Interpolant or InterpolantXY instance!')
             
         # Initialize the SBProfile
         GSObject.__init__(
