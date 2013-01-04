@@ -270,8 +270,7 @@ def test_operations_simple():
     gal.setFlux(gal_flux)
     pix = galsim.Pixel(pix_scale)
     obj = galsim.Convolve(gal, pix)
-    im = galsim.ImageD(im_size, im_size)
-    im = obj.draw(image = im, dx=pix_scale)
+    im = obj.draw(dx=pix_scale)
 
     # Turn it into an InterpolatedImage with default param settings
     int_im = galsim.InterpolatedImage(im)
