@@ -245,20 +245,110 @@ def test_exceptions():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-#def test_operations():
-# To test: +, *, /, scaleFlux, setFlux, applyTransformation, applyDilation, applyMagnification,
-# applyShear, applyRotation, applyShift
-#
-#def test_real():
-# To test: nyquistDx, centroid, xValue, isAnalyticX, isAxisymmetric, hasHardEdges
-#
-#def test_fourier()
-# To test: maxK, stepK, isAnalyticK, kValue
+def test_operations_simple():
+    """Simple test of operations on InterpolatedImage: shear, magnification, rotation, shifting."""
+    import time
+    t1 = time.time()
+
+    # Make some nontrivial image that can be described in terms of sums and convolutions of GSObjects
+    gal_flux = 1000.
+    pix_scale = 0.15 # arcsec
+    bulge_frac = 0.3
+    bulge_hlr = 0.3 # arcsec
+    bulge_e = 0.15
+    bulge_pos_angle = 30.*galsim.degrees
+    disk_hlr = 0.6 # arcsec
+    disk_e = 0.5
+    disk_pos_angle = 60.*galsim.degrees
+    im_size = 256
+
+    bulge = galsim.Sersic(4, half_light_radius=bulge_hlr)
+    bulge.applyShear(e=bulge_e, beta=bulge_pos_angle)
+    disk = galsim.Exponential(half_light_radius = disk_hlr)
+    disk.applyShear(e=disk_e, beta=disk_pos_angle)
+    gal = bulge_frac*bulge + (1.-bulge_frac)*disk
+    gal.setFlux(gal_flux)
+    pix = galsim.Pixel(pix_scale)
+    obj = galsim.Convolve(gal, pix)
+    im = galsim.ImageD(im_size, im_size)
+    im = obj.draw(image = im, dx=pix_scale)
+
+    # Turn it into an InterpolatedImage with default param settings
+    int_im = galsim.InterpolatedImage(im)
+
+    # Shear it, and compare with expectations from GSObjects directly
+    test_g1=-0.07
+    test_g2=0.1
+    test_decimal=2 # in % difference, i.e. 2 means 1% agreement
+    comp_region=30 # compare the central region of this linear size
+    test_int_im = int_im.createSheared(g1=test_g1, g2=test_g2)
+    ref_obj = obj.createSheared(g1=test_g1, g2=test_g2)
+    # make large images
+    im = galsim.ImageD(im_size, im_size)
+    ref_im = galsim.ImageD(im_size, im_size)
+    im = test_int_im.draw(image=im, dx=pix_scale)
+    ref_im = ref_obj.draw(image=ref_im, dx=pix_scale)
+    # define subregion for comparison
+    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
+    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
+    im_sub = im.subImage(new_bounds)
+    ref_im_sub = ref_im.subImage(new_bounds)
+    im_sub.write('im.fits')
+    ref_im_sub.write('ref_im.fits')
+    diff_im=im_sub-ref_im_sub
+    diff_im.write('diff_im.fits')
+    rel = diff_im/im_sub
+    rel.write('rel_im.fits')
+    zeros_arr = np.zeros((comp_region, comp_region))
+    # require relative difference to be smaller than some amount
+    np.testing.assert_array_almost_equal(rel.array, zeros_arr, 
+        test_decimal,
+        err_msg='Sheared InterpolatedImage disagrees with reference')
+
+    # Magnify it, and compare with expectations from GSObjects directly
+    test_mag = 1.08
+    test_decimal=2 # in % difference, i.e. 2 means 1% agreement
+    comp_region=30 # compare the central region of this linear size
+    test_int_im = int_im.createMagnified(test_mag)
+    ref_obj = obj.createMagnified(test_mag)
+    # make large images
+    im = galsim.ImageD(im_size, im_size)
+    ref_im = galsim.ImageD(im_size, im_size)
+    im = test_int_im.draw(image=im, dx=pix_scale)
+    ref_im = ref_obj.draw(image=ref_im, dx=pix_scale)
+    # define subregion for comparison
+    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
+    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
+    im_sub = im.subImage(new_bounds)
+    ref_im_sub = ref_im.subImage(new_bounds)
+    im_sub.write('im.fits')
+    ref_im_sub.write('ref_im.fits')
+    diff_im=im_sub-ref_im_sub
+    diff_im.write('diff_im.fits')
+    rel = diff_im/im_sub
+    rel.write('rel_im.fits')
+    zeros_arr = np.zeros((comp_region, comp_region))
+    # require relative difference to be smaller than some amount
+    np.testing.assert_array_almost_equal(rel.array, zeros_arr, 
+        test_decimal,
+        err_msg='Magnified InterpolatedImage disagrees with reference')
+
+    # Rotate it, and compare with expectations from GSObjects directly
+    # Shift it, and compare with expectations from GSObjects directly
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_operations():
+    """Test of operations on complicated InterpolatedImage: shear, magnification, rotation, shifting."""
+    # Make some nontrivial image that is not analytic
+    # Shear by some amount and make sure change in moments is as expected
+    # Magnify by some amount and make sure change is as expected
+    # Rotate, make sure change in moments is as expected
+    # Shift, make sure change in moments is as expected
 
 if __name__ == "__main__":
     test_roundtrip()
     test_fluxnorm()
     test_exceptions()
+    test_operations_simple()
 #    test_operations()
-#    test_real()
-#    test_fourier()
