@@ -1323,11 +1323,11 @@ class InterpolatedImage(GSObject):
     """A class describing non-parametric objects specified using an Image, which can be interpolated
     for the purpose of carrying out transformations.
 
-    The input Image and an interpolant are used to create an SBInterpolatedImage; if no interpolant
-    is specified then a Lanczos with n=5 is used.  The InterpolatedImage class is useful if you have
-    a non-parametric description of an object as an Image, that you wish to manipulate / transform
-    using GSObject methods such as applyShear(), applyMagnification(), applyShift(), etc.  The input
-    Image can be any BaseImage (i.e., Image, ImageView, or ConstImageView).
+    The input Image and an interpolant are used to create an SBInterpolatedImage.  The
+    InterpolatedImage class is useful if you have a non-parametric description of an object as an
+    Image, that you wish to manipulate / transform using GSObject methods such as applyShear(),
+    applyMagnification(), applyShift(), etc.  The input Image can be any BaseImage (i.e., Image,
+    ImageView, or ConstImageView).
 
     The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
     brightness?  Since our default for drawing Images using draw() and drawShoot() is that
@@ -1338,6 +1338,22 @@ class InterpolatedImage(GSObject):
 
     If the input Image has a scale associated with it, then there is no need to specify an input
     scale `dx`.
+
+    If no interpolant is specified then by default a quintic interpolant is used.  The user also has
+    to specify how much zero-padding to include around an input image; by default, a value of 4 is
+    used.  Note that both the interpolant and the `pad_factor` determine the accuracy of
+    interpolation on the Image when carrying out operations such as shifting, shearing, dilating,
+    and rotating.  For some details of the typical accuracy of interpolants used in GalSim as a
+    function of the amount of padding, see Table 1 in devel/modules/finterp.pdf in the GalSim
+    repository.  A quick summary is that for precise calculations (~1% accuracy or better),
+    nearest-neighbor and linear interpolants should not be used; cubic, quintic, and Lanczos with
+    n=3 are acceptable with >4x padding; and higher-order Lanczos is okay even with just 2x padding.
+    There is a tradeoff between speed and accuracy, and from this perspective, the quintic
+    interpolant with 4x padding seems optimal (errors <0.001), though for precise tests of shears
+    even greater accuracy is needed, so either 6x padding should be used, or a higher order Lanczos
+    interpolant should be used (modified to conserve flux).  The user is given complete freedom to
+    choose interpolants and pad factors, and no warnings are raised when the code is modified to
+    choose some combination that is known to give significant error.
 
     Initialization
     --------------
@@ -1350,7 +1366,7 @@ class InterpolatedImage(GSObject):
 
     @param image           The Image from which to construct the object.
     @param interpolant     Optional keyword for specifying the interpolation scheme [default 
-                           is 5th order Lanczos].
+                           is quintic].
     @param normalization   Two options for specifying the normalization of the input Image:
                               "flux" or "f" means that the sum of the pixels is normalized
                                   to be equal to the total flux.
@@ -1401,15 +1417,17 @@ class InterpolatedImage(GSObject):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
                               "'f', 'surface brightness', or 'sb'.") % normalization)
 
-        # Check for interpolant, otherwise setup default.
-        # If interpolant not specified on input, use a high-ish n lanczos
         if interpolant == None:
-            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
+            lan5 = galsim.Quintic(tol=1e-4)
             self.interpolant = galsim.InterpolantXY(lan5)
         else:
-            if not isinstance(interpolant, galsim.InterpolantXY):
-                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
-            self.interpolant = interpolant
+            if isinstance(interpolant, galsim.Interpolant):
+                self.interpolant = galsim.InterpolantXY(interpolant)
+            elif isinstance(interpolant, galsim.InterpolantXY):
+                self.interpolant = interpolant
+            else:
+                raise RuntimeError(
+                    'Specified interpolant is not an Interpolant or InterpolantXY instance!')
 
         # Check for input dx, and check whether Image already has one set.  At the end of this
         # code block, either an exception will have been raised, or the input image will have a
