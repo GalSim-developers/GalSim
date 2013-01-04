@@ -85,7 +85,8 @@ class GSObject(object):
 
         This preserves the original type of the object, so if the caller is a Gaussian (for 
         example), the copy will also be a Gaussian, and can thus call the methods that are not in 
-        GSObject, but are in Gaussian (e.g. getSigma()).
+        GSObject, but are in Gaussian (e.g. getSigma()).  However, not necessarily all instance
+        attributes will be copied across (e.g. the interpolant stored by an OpticalPSF object).
         """
         # Re-initialize a return GSObject with self's SBProfile
         sbp = self.SBProfile.__class__(self.SBProfile)
@@ -250,7 +251,7 @@ class GSObject(object):
         Scales the linear dimensions of the image by the factor scale.
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
-        This operation preserves surface brightness, which means that the flux is scales 
+        This operation preserves surface brightness, which means that the flux scales 
         with the change in area.  
         See applyDilation for a version that preserves flux.
 
@@ -676,9 +677,9 @@ class GSObject(object):
         # Setup the uniform_deviate if not provided one.
         if rng == None:
             uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(rng, galsim.UniformDeviate):
+        elif isinstance(rng,galsim.UniformDeviate):
             uniform_deviate = rng
-        elif isinstance(rng, galsim.BaseDeviate):
+        elif isinstance(rng,galsim.BaseDeviate):
             # If it's another kind of BaseDeviate, we can convert
             uniform_deviate = galsim.UniformDeviate(rng)
         else:
@@ -1308,7 +1309,7 @@ class OpticalPSF(GSObject):
             else:
                 raise RuntimeError(
                     'Specified interpolant is not an Interpolant or InterpolantXY instance!')
-            
+ 
         # Initialize the SBProfile
         GSObject.__init__(
             self, galsim.SBInterpolatedImage(optimage, self.interpolant, dx=dx_lookup))
