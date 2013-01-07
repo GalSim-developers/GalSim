@@ -64,34 +64,34 @@ namespace hsm {
     /**
      * @brief A parameter for optimizing calculations of adaptive moments by cutting off profiles.
      *
-     * If this parameter is defined, then it's used to decide how many sigma^2 into the
+     * This parameter is used to decide how many sigma^2 into the
      * Gaussian adaptive moment to extend the moment calculation, with the weight being defined as 0
      * beyond this point.  i.e., if max_moment_nsig2 is set to 25, then the Gaussian is extended to
-     * (r^2/sigma^2)=25, with proper accounting for elliptical geometry.  If this parameter is not
-     * defined, then the weight is never set to zero and the exponential function is always
+     * (r^2/sigma^2)=25, with proper accounting for elliptical geometry.  If this parameter is set
+     * to some very large number, then the weight is never set to zero and the exponential function is always
      * called. Note: GalSim script devel/modules/test_mom_timing.py was used to choose a value of 25
      * as being optimal, in that for the cases that were tested, the speedups were typically factors
-     * of  several, but the results of moments and shear estimation were changed by <10^-5.  Not all
-     * possible cases were checked, and so for use of this code for unusual cases, it is recommended
-     * to either not define max_moment_nsig2 (no optimization at all), or to set up some more tests
-     * that can be done with various values of max_moment_nsig2.
+     * of several, but the results of moments and shear estimation were changed by <10^-5.  Not all
+     * possible cases were checked, and so for use of this code for unusual cases, we recommend that
+     * users check that this value does not affect accuracy, and/or set it to some large value to
+     * completely disable this optimization.
      */
     const double max_moment_nsig2 = 25.0;
 
     /**
      * @brief A parameter for how strictly the re-Gaussianization code treats small galaxies.
      *
-     * If this parameter is 1, then the re-Gaussianization code is does not impose a cut on the
+     * If this parameter is 1, then the re-Gaussianization code does not impose a cut on the
      * apparent resolution before trying to measure the PSF-corrected shape of the galaxy; if 0,
      * then it is stricter.  Using the default value of 1 prevents the re-Gaussianization PSF
      * correction from completely failing at the beginning, before trying to do PSF correction, due
      * to the crudest possible PSF correction (Gaussian approximation) suggesting that the galaxy is
      * very small.  This could happen for some usable galaxies particularly when they have very
      * non-Gaussian surface brightness profiles -- for example, if there's a prominent bulge that
-     * the adaptive moments attempt to fit, ignoring the more extended disk.  Setting
-     * a value of 1 is useful for keeping galaxies that would have failed for that reason.  If they
-     * later turn out to be too small to really use, this will be reflected in the final estimate of
-     * the resolution factor, and they can be rejected after the fact.
+     * the adaptive moments attempt to fit, ignoring the more extended disk.  Setting a value of 1
+     * is useful for keeping galaxies that would have failed for that reason.  If they later turn
+     * out to be too small to really use, this will be reflected in the final estimate of the
+     * resolution factor, and they can be rejected after the fact.
      */
     const int regauss_too_small = 1;
 

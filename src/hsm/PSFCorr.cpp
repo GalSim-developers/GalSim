@@ -621,9 +621,7 @@ namespace hsm {
                      */
                     double rho2 = Minv_yy__y_y0__y_y0 + TwoMinv_xy__y_y0*x_x0 + *(mxxptr++);
                     dbg<<"Using pixel: "<<x<<" "<<y<<" with value "<<*(imageptr)<<" rho2 "<<rho2<<" x_x0 "<<x_x0<<" y_y0 "<<y_y0<<std::endl;
-#ifdef hsm::max_moment_nsig2
                     if (rho2 < hsm::max_moment_nsig2) {
-#endif
                         double intensity = std::exp(-0.5 * rho2) * *(imageptr++);
 
                         /* Now do the addition */
@@ -636,14 +634,12 @@ namespace hsm {
                         Cxy  += intensity__x_x0 * y_y0;
                         Cyy  += intensity__y_y0 * y_y0;
                         rho4w+= intensity * rho2 * rho2;
-#ifdef hsm::max_moment_nsig2
                     } else {
                         // if we are skipping this pixel because it's too far from center of
                         // Gaussian, then just increment the pointer to the next pixel in the image,
                         // don't waste time doing any math for this pixel
                         ++imageptr;
                     }
-#endif
                 } else {
                     // we still have to increment pointers when jumping over masked pixels,
                     // otherwise serious badness will happen.
