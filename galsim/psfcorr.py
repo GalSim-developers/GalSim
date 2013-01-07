@@ -138,8 +138,8 @@ class HSMShapeData(object):
             self.resolution_factor = -1.0
             self.error_message = ""
 
-def EstimateShearHSM(gal_image, PSF_image, gal_mask_image = None, sky_var = 0.0, shear_est =
-                     "REGAUSS", flags = 0xe, guess_sig_gal = 5.0, guess_sig_PSF = 3.0,
+def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var = 0.0,
+                     shear_est = "REGAUSS", flags = 0xe, guess_sig_gal = 5.0, guess_sig_PSF = 3.0,
                      precision = 1.0e-6, guess_x_centroid = -1000.0, guess_y_centroid = -1000.0,
                      strict = True):
     """Carry out moments-based PSF correction routines.
@@ -196,9 +196,15 @@ def EstimateShearHSM(gal_image, PSF_image, gal_mask_image = None, sky_var = 0.0,
 
     @param gal_image         The Image or ImageView of the galaxy being measured.
     @param PSF_image         The Image or ImageView for the PSF.
-    @param gal_mask_image    The Image or ImageView corresponding to the mask image for the galaxy
-                             being measured (should be integer array, 1=use pixel and 0=do not use
-                             pixel).
+    @param weight            The optional weight image for the galaxy being measured.  Can be an int
+                             or a float array.  Currently, GalSim does not account for the variation
+                             in non-zero weights, i.e., a weight map is converted to an image with 0
+                             and 1 for pixels that are not and are used.  Full use of spatial
+                             variation in non-zero weights will be included in a future version of
+                             the code.
+    @param badpix            The optional bad pixel mask for the image being used.  Zero should be
+                             used for pixels that are good, and any nonzero value indicates a bad
+                             pixel.
     @param sky_var           The variance of the sky level, used for estimating uncertainty on the
                              measured shape; default `sky_var = 0.`.
     @param shear_est         A string indicating the desired method of PSF correction: REGAUSS,
@@ -224,24 +230,38 @@ def EstimateShearHSM(gal_image, PSF_image, gal_mask_image = None, sky_var = 0.0,
     """
     gal_image_view = gal_image.view()
     PSF_image_view = PSF_image.view()
-    # if no mask image was supplied, make an int array (the same size as the galaxy image) filled
-    # with 1's
-    if gal_mask_image == None:
-        gal_mask_image = galsim.ImageI(bounds=gal_image.bounds, init_value=1)
+    # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
+    if weight == None:
+        weight = galsim.ImageI(bounds=gal_image.bounds, init_value=1)
     else:
-        # check the supplied mask - is it the right type?  does it have the right bounds?  any
-        # unknown values?
-        import numpy as np
-        if gal_mask_image.bounds != gal_image.bounds:
-            raise ValueError("Mask image does not have same bounds as the galaxy image!")
-        if not isinstance(gal_mask_image.view(), galsim.ImageViewI):
-            raise ValueError("Supplied mask image is not an integer image!")
-        if (np.max(gal_mask_image.array) > 1) or (np.min(gal_mask_image.array) < 0):
-            raise ValueError("Mask image contains values that are not 0 or 1!")
+        # if weight image was supplied, check if it has the right bounds
+        if weight.bounds != gal_image.bounds:
+            raise ValueError("Weight image does not have same bounds as the galaxy image!")
+        # then check if it requires conversion, which is necessary if the input weight image is not
+        # ints
+        if not isinstance(weight.view(), galsim.ImageViewI):
+            import numpy as np
+            orig_weight_arr = weight.view().array
+            weight_arr = np.zeros_like(orig_weight_arr)
+            weight_arr[orig_weight_arr > 0.] = 1
+            weight = galsim.ImageViewI(weight_arr.astype(np.int32))
+            weight.bounds = gal_image.bounds
 
-    gal_mask_image_view = gal_mask_image.view()
+    # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
+    # image; also check bounds
+    if badpix != None:
+        if badpix.bounds != gal_image.bounds:
+            raise ValueError("Badpix image does not have the same bounds as the galaxy image!")
+        import numpy as np
+        orig_weight_arr = weight.view().array
+        new_weight_arr = np.copy(orig_weight_arr)
+        new_weight_arr[badpix.view().array != 0] = 0
+        weight = galsim.ImageViewI(new_weight_arr.astype(np.int32))
+        weight.bounds = gal_image.bounds
+
+    weight_view = weight.view()
     try:
-        result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, gal_mask_image_view,
+        result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, weight_view,
                                                sky_var = sky_var,
                                                shear_est = shear_est, flags = flags,
                                                guess_sig_gal = guess_sig_gal,
@@ -257,7 +277,7 @@ def EstimateShearHSM(gal_image, PSF_image, gal_mask_image = None, sky_var = 0.0,
             result.error_message = err.message
     return HSMShapeData(result)
 
-def FindAdaptiveMom(object_image, object_mask_image = None, guess_sig = 5.0, precision = 1.0e-6,
+def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0, precision = 1.0e-6,
                     guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True):
     """Measure adaptive moments of an object.
 
@@ -293,9 +313,15 @@ def FindAdaptiveMom(object_image, object_mask_image = None, guess_sig = 5.0, pre
     shear `g`, the conformal shear `eta`, and so on.
 
     @param object_image      The Image or ImageView for the object being measured.
-    @param object_mask_image The Image or ImageView corresponding to the mask image for the object
-                             being measured (should be integer array, 1=use pixel and 0=do not use
-                             pixel).
+    @param weight            The optional weight image for the object being measured.  Can be an int
+                             or a float array.  Currently, GalSim does not account for the variation
+                             in non-zero weights, i.e., a weight map is converted to an image with 0
+                             and 1 for pixels that are not and are used.  Full use of spatial
+                             variation in non-zero weights will be included in a future version of
+                             the code.
+    @param badpix            The optional bad pixel mask for the image being used.  Zero should be
+                             used for pixels that are good, and any nonzero value indicates a bad
+                             pixel.
     @param guess_sig         Optional argument with an initial guess for the Gaussian sigma of the
                              object, default `guess_sig = 5.0` (pixels).
     @param precision         The convergence criterion for the moments; default `precision = 1e-6`.
@@ -312,23 +338,39 @@ def FindAdaptiveMom(object_image, object_mask_image = None, guess_sig = 5.0, pre
     @return                  A HSMShapeData object containing the results of moment measurement.
     """
     object_image_view = object_image.view()
-    # if no mask image was supplied, make an int array (the same size as the galaxy image) filled
-    # with 1's
-    if object_mask_image == None:
-        object_mask_image = galsim.ImageI(bounds=object_image.bounds, init_value=1)
+    # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
+    if weight == None:
+        weight = galsim.ImageI(bounds=object_image.bounds, init_value=1)
     else:
-        # check the supplied mask - is it the right type?  does it have the right bounds?  any
-        # unknown values?
+        # if weight image was supplied, check if it has the right bounds
+        if weight.bounds != object_image.bounds:
+            raise ValueError("Weight image does not have same bounds as image being measured!")
+        # then check if it requires conversion, which is necessary if the input weight image is not
+        # ints
+        if not isinstance(weight.view(), galsim.ImageViewI):
+            import numpy as np
+            orig_weight_arr = weight.view().array
+            weight_arr = np.zeros_like(orig_weight_arr)
+            weight_arr[orig_weight_arr > 0.] = 1
+            weight = galsim.ImageViewI(weight_arr.astype(np.int32))
+            weight.bounds = object_image.bounds
+
+    # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
+    # image; also check bounds
+    if badpix != None:
+        if badpix.bounds != object_image.bounds:
+            raise ValueError("Badpix image does not have the same bounds as image being measured!")
         import numpy as np
-        if object_mask_image.bounds != object_image.bounds:
-            raise ValueError("Mask image does not have same bounds as the object image!")
-        if not isinstance(object_mask_image.view(), galsim.ImageViewI):
-            raise ValueError("Supplied mask image is not an integer image!")
-        if (np.max(object_mask_image.array) > 1) or (np.min(object_mask_image.array) < 0):
-            raise ValueError("Mask image contains values that are not 0 or 1!")
-    object_mask_image_view = object_mask_image.view()
+        orig_weight_arr = weight.view().array
+        new_weight_arr = np.copy(orig_weight_arr)
+        new_weight_arr[badpix.view().array != 0] = 0
+        weight = galsim.ImageViewI(new_weight_arr.astype(np.int32))
+        weight.bounds = object_image.bounds
+
+    weight_view = weight.view()
+
     try:
-        result = _galsim._FindAdaptiveMomView(object_image_view, object_mask_image_view,
+        result = _galsim._FindAdaptiveMomView(object_image_view, weight_view,
                                               guess_sig = guess_sig, precision =  precision,
                                               guess_x_centroid = guess_x_centroid,
                                               guess_y_centroid = guess_y_centroid)
