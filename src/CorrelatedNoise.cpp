@@ -36,7 +36,9 @@ namespace galsim {
         double dx, double pad_factor) :
         SBInterpolatedImage(new CorrelationFunctionImpl(image,xInterp,kInterp,dx,pad_factor)) {}
 
-    CorrelationFunction::CorrelationFunction(const CorrelationFunction& rhs) : SBInterpolatedImage(rhs) {}
+    CorrelationFunction::CorrelationFunction(
+        const CorrelationFunction& rhs
+    ) : SBInterpolatedImage(rhs) {}
   
     CorrelationFunction::~CorrelationFunction() {}
 
@@ -55,7 +57,7 @@ namespace galsim {
         // Perform a check for the oddness of both dimensions of the input lookup table
         if (( _Ni % 2 == 0 ) | ( _Nj % 2 == 0) ) { 
             throw ImageError(
-                "Input lookup table is not odd in both dimensions as required for the CorrelationFunction"
+                "Input lookup table is not odd in both dimensions as required"
             );
         }
     }
@@ -83,7 +85,9 @@ namespace galsim {
     }
 
     template <typename T>
-    tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> CorrelationFunction::getCovarianceSymMatrix(
+    tmv::SymMatrix<
+        double, tmv::FortranStyle|tmv::Upper
+    > CorrelationFunction::getCovarianceSymMatrix(
         ImageView<T> image, double dx) const
     {
          // Calculate the required dimensions
